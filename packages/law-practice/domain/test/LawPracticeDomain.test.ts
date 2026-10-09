@@ -431,6 +431,8 @@ describe("@beep/law-practice-domain", () => {
     Effect.fnUntraced(function* () {
       const input = {
         ...productEntityFixtureInput("LawPracticeMatter", 5),
+        deletedAt: null,
+        deletedByPrincipal: null,
         displayName: "Patent Application",
         fixtureKey: "matter.patent",
         legalClientFixtureKey: "legal-client.acme",
@@ -453,6 +455,8 @@ describe("@beep/law-practice-domain", () => {
     Effect.fnUntraced(function* () {
       const input = {
         ...productEntityFixtureInput("LawPracticeOfficeAction", 10),
+        deletedAt: null,
+        deletedByPrincipal: null,
         applicationNumber: "16/123,456",
         fixtureKey: "office-action.first",
         matterFixtureKey: "matter.patent",
@@ -472,6 +476,8 @@ describe("@beep/law-practice-domain", () => {
     Effect.fnUntraced(function* () {
       const input = {
         ...productEntityFixtureInput("LawPracticeClaim", 11),
+        deletedAt: null,
+        deletedByPrincipal: null,
         claimNumber: 1,
         fixtureKey: "claim.1",
         independent: true,
@@ -492,6 +498,8 @@ describe("@beep/law-practice-domain", () => {
     Effect.fnUntraced(function* () {
       const input = {
         ...productEntityFixtureInput("LawPracticePriorArtReference", 12),
+        deletedAt: null,
+        deletedByPrincipal: null,
         documentNumber: "US 9,999,999 B2",
         fixtureKey: "prior-art.smith",
         officeActionFixtureKey: "office-action.first",
@@ -510,6 +518,8 @@ describe("@beep/law-practice-domain", () => {
     Effect.fnUntraced(function* () {
       const input = {
         ...productEntityFixtureInput("LawPracticeRejection", 13),
+        deletedAt: null,
+        deletedByPrincipal: null,
         claimFixtureKey: "claim.1",
         fixtureKey: "rejection-one-zero-two",
         ground: { referenceFixtureKey: "prior-art.smith", statute: "102" },
@@ -528,6 +538,8 @@ describe("@beep/law-practice-domain", () => {
     Effect.fnUntraced(function* () {
       const input = {
         ...productEntityFixtureInput("LawPracticeDistinction", 14),
+        deletedAt: null,
+        deletedByPrincipal: null,
         anchor: { endChar: 14, quote: "a claimed fact", startChar: 0 },
         claimFixtureKey: "claim.1",
         detail: { kind: "missing_limitation", limitation: "a hinge coupling the lid to the base" },
@@ -549,12 +561,16 @@ describe("@beep/law-practice-domain", () => {
     Effect.fnUntraced(function* () {
       const legalClientInput = {
         ...productEntityFixtureInput("LawPracticeLegalClient", 20),
+        deletedAt: null,
+        deletedByPrincipal: null,
         displayName: "Acme Robotics",
         fixtureKey: "legal-client.acme",
         status: "active_client",
       };
       const legalContactInput = {
         ...productEntityFixtureInput("LawPracticeLegalContact", 21),
+        deletedAt: null,
+        deletedByPrincipal: null,
         displayName: "Ada Founder",
         fixtureKey: "contact.ada",
         legalClientFixtureKey: "legal-client.acme",
@@ -562,6 +578,8 @@ describe("@beep/law-practice-domain", () => {
       };
       const patentAssetInput = {
         ...productEntityFixtureInput("LawPracticePatentAsset", 22),
+        deletedAt: null,
+        deletedByPrincipal: null,
         fixtureKey: "patent-asset.hinge",
         matterFixtureKey: "matter.hinge",
         status: "pre_filing",

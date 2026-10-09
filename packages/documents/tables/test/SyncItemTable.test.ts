@@ -44,6 +44,8 @@ const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null
 
 const syncItemRow = (insert: SyncItemInsert, id: number): SyncItemRow => ({
   ...insert,
+  deletedAt: insert.deletedAt ?? null,
+  deletedByPrincipal: insert.deletedByPrincipal ?? null,
   id,
   contentDigest: absentAsNull(insert.contentDigest),
   contentSizeBytes: absentAsNull(insert.contentSizeBytes),
@@ -63,6 +65,8 @@ const indexConfigNamed = (name: string) =>
 
 const fileRow = {
   ...productEntityFixtureInput(DocumentsIdentity.SyncItemId.entityType, 10),
+  deletedAt: null,
+  deletedByPrincipal: null,
   contentDigest: "abc123",
   contentSizeBytes: 2048,
   itemKind: "file",

@@ -47,6 +47,8 @@ const indexConfigNamed = (name: string) =>
 
 const uploadRow = {
   ...productEntityFixtureInput(DocumentsIdentity.SyncOperationId.entityType, 20),
+  deletedAt: null,
+  deletedByPrincipal: null,
   attemptCount: 0,
   idempotencyKey: "sync-item-1:uploadFile:4",
   inputContentDigest: "abc123",
@@ -118,6 +120,8 @@ describe("SyncOperation table", () => {
       const roundTripped = yield* Effect.fromResult(
         fromSyncOperationRow({
           ...insert,
+          deletedAt: insert.deletedAt ?? null,
+          deletedByPrincipal: insert.deletedByPrincipal ?? null,
           id: 20,
           // $inferInsert types nullable columns as `value | null | undefined`; the
           // select-row converter expects `value | null`, so resolve absent
@@ -145,6 +149,8 @@ describe("SyncOperation table", () => {
       }
       const decoded = fromSyncOperationRow({
         ...insert.success,
+        deletedAt: insert.success.deletedAt ?? null,
+        deletedByPrincipal: insert.success.deletedByPrincipal ?? null,
         id: syncOperation.id,
         inputContentDigest: insert.success.inputContentDigest ?? null,
         lastError: insert.success.lastError ?? null,

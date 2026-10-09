@@ -52,7 +52,14 @@ describe("Worker table", () => {
         config.indexes.find((index) => index.config.name === "architecture_lab_worker_public_id_unique_idx")?.config
           .unique
       ).toBe(true);
-      expect(fromWorkerRow({ ...row, id }).displayName).toBe("Ada Lovelace");
+      expect(
+        fromWorkerRow({
+          ...row,
+          deletedAt: row.deletedAt ?? null,
+          deletedByPrincipal: row.deletedByPrincipal ?? null,
+          id,
+        }).displayName
+      ).toBe("Ada Lovelace");
     })
   );
 
@@ -62,7 +69,12 @@ describe("Worker table", () => {
     ([worker]) =>
       Effect.sync(() => {
         const insert = toWorkerInsert(worker);
-        const decoded = fromWorkerRow({ ...insert, id: worker.id });
+        const decoded = fromWorkerRow({
+          ...insert,
+          deletedAt: insert.deletedAt ?? null,
+          deletedByPrincipal: insert.deletedByPrincipal ?? null,
+          id: worker.id,
+        });
 
         expect(WorkerEquivalence(decoded, worker)).toBe(true);
       }),

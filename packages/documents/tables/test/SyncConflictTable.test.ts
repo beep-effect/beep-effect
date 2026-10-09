@@ -47,6 +47,8 @@ const indexConfigNamed = (name: string) =>
 
 const mappedDriftRow = {
   ...productEntityFixtureInput(DocumentsIdentity.SyncConflictId.entityType, 40),
+  deletedAt: null,
+  deletedByPrincipal: null,
   conflictKind: "remoteEdit",
   localRelPath: "matters/client-default/complaint.pdf",
   provider: "box",
@@ -112,6 +114,8 @@ describe("SyncConflict table", () => {
       const roundTripped = yield* Effect.fromResult(
         fromSyncConflictRow({
           ...insert,
+          deletedAt: insert.deletedAt ?? null,
+          deletedByPrincipal: insert.deletedByPrincipal ?? null,
           id: 40,
           // $inferInsert types nullable columns as `value | null | undefined`; the
           // select-row converter expects `value | null`, so resolve absent
@@ -140,6 +144,8 @@ describe("SyncConflict table", () => {
       }
       const decoded = fromSyncConflictRow({
         ...insert.success,
+        deletedAt: insert.success.deletedAt ?? null,
+        deletedByPrincipal: insert.success.deletedByPrincipal ?? null,
         id: syncConflict.id,
         localRelPath: insert.success.localRelPath ?? null,
         remoteEventId: insert.success.remoteEventId ?? null,
