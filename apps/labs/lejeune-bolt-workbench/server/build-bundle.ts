@@ -673,8 +673,10 @@ const configuredBuild = Effect.gen(function* () {
 });
 
 const BaseLayer = Layer.mergeAll(BunServices.layer, BunCrypto.layer);
-const main = Effect.scoped(
-  Layer.build(BaseLayer).pipe(Effect.flatMap((context) => configuredBuild.pipe(Effect.provide(context))))
+const main = BaseLayer.pipe(
+  Layer.build,
+  Effect.flatMap((context) => configuredBuild.pipe(Effect.provide(context))),
+  Effect.scoped
 );
 
 if (import.meta.main) {

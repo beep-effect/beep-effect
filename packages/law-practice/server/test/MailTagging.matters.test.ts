@@ -322,18 +322,17 @@ describe("MailTagging practice-KG matter directory", () => {
         const path = yield* Path.Path;
         const directory = yield* temporaryDirectory;
         const databasePath = path.join(directory, "format-2.duckdb");
-        yield* oneRun(
-          Effect.flatMap(
-            serviceOf(DuckDb)(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))),
-            (db) =>
-              db.runMany([
-                "CREATE TABLE matters (family_key VARCHAR, client VARCHAR, epistemic_status VARCHAR)",
-                "INSERT INTO matters VALUES ('1234.10001', '1234', 'derived-from-official-records'), ('30003', NULL, 'mention-derived')",
-                "CREATE TABLE matter_dockets (docket_key VARCHAR, docket VARCHAR, family_key VARCHAR, application_numbers VARCHAR[], patent_numbers VARCHAR[])",
-                "INSERT INTO matter_dockets VALUES ('1234.10001US01', '10001US01', '1234.10001', ['16123456'], [])",
-              ])
-          )
+        const createTables = Effect.flatMap(
+          serviceOf(DuckDb)(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))),
+          (db) =>
+            db.runMany([
+              "CREATE TABLE matters (family_key VARCHAR, client VARCHAR, epistemic_status VARCHAR)",
+              "INSERT INTO matters VALUES ('1234.10001', '1234', 'derived-from-official-records'), ('30003', NULL, 'mention-derived')",
+              "CREATE TABLE matter_dockets (docket_key VARCHAR, docket VARCHAR, family_key VARCHAR, application_numbers VARCHAR[], patent_numbers VARCHAR[])",
+              "INSERT INTO matter_dockets VALUES ('1234.10001US01', '10001US01', '1234.10001', ['16123456'], [])",
+            ])
         );
+        yield* oneRun(createTables);
         const index = yield* snapshotOf({ directory, databasePath, evidence: "off" });
 
         expect(A.map(index.entries, (entry) => [entry.matterKey, entry.applicationNumbers])).toStrictEqual([
@@ -425,9 +424,10 @@ describe("MailTagging practice-KG matter directory", () => {
         const path = yield* Path.Path;
         const directory = yield* temporaryDirectory;
         const databasePath = path.join(directory, "empty.duckdb");
-        yield* oneRun(
-          Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))).pipe(Effect.asVoid)
+        const build = Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))).pipe(
+          Effect.asVoid
         );
+        yield* oneRun(build);
         const error = yield* Effect.flip(snapshotOf({ directory, databasePath }));
 
         assertInstanceOf(error, MailTaggingPortError);

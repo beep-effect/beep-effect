@@ -418,7 +418,7 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         yield* addProcess(fs, OTHER.pid, OTHER.startTime);
         yield* leaveLock(OTHER);
 
-        const failure = yield* failureOf(Layer.launch(makeDocketFileStoreLayer(storeOptions)));
+        const failure = yield* makeDocketFileStoreLayer(storeOptions).pipe(Layer.launch, failureOf);
 
         assertSome(
           O.map(failure, (error) => [error.stage, error.cause]),

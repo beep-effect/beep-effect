@@ -208,11 +208,10 @@ export const generateF1Pdfs = Effect.fn("generateF1Pdfs")(function* (outputDirec
 });
 
 if (import.meta.main) {
-  BunRuntime.runMain(
-    Effect.scoped(
-      Layer.build(BunServices.layer).pipe(
-        Effect.flatMap((context) => generateF1Pdfs(DEFAULT_OUTPUT_DIRECTORY).pipe(Effect.provide(context)))
-      )
-    )
+  BunServices.layer.pipe(
+    Layer.build,
+    Effect.flatMap((context) => generateF1Pdfs(DEFAULT_OUTPUT_DIRECTORY).pipe(Effect.provide(context))),
+    Effect.scoped,
+    BunRuntime.runMain
   );
 }

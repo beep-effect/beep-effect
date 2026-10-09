@@ -526,7 +526,7 @@ describe("@beep/box", () => {
         JSON.stringify(encode(B.BoxError, error)),
         String(error),
         JSON.stringify(error),
-        Cause.pretty(Cause.fail(error)),
+        Cause.fail(error).pipe(Cause.pretty),
       ];
 
       for (const rendered of renderedForms) {

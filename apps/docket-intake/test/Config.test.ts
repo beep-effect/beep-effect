@@ -95,7 +95,7 @@ describe("@beep/docket-intake configuration", () => {
       ]);
 
       for (const result of results) {
-        assertTrue(Exit.isFailure(result));
+        result.pipe(Exit.isFailure, assertTrue);
       }
     })
   );

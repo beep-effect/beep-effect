@@ -425,7 +425,7 @@ describe("PackageJson schema", () => {
         { onExcessProperty: "error" }
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
 
       const beepExit = decodeUnknownNpmPackageJsonExit(
         {
@@ -437,197 +437,141 @@ describe("PackageJson schema", () => {
         { onExcessProperty: "error" }
       );
 
-      assertTrue(Exit.isFailure(beepExit));
+      beepExit.pipe(Exit.isFailure, assertTrue);
     });
   });
 
   describe("malformed structures", () => {
     it("rejects missing name field", () => {
-      assertTrue(Exit.isFailure(decodePackageJsonExit({ version: "1.0.0" })));
+      decodePackageJsonExit({ version: "1.0.0" }).pipe(Exit.isFailure, assertTrue);
     });
 
     it("rejects empty string names", () => {
-      assertTrue(Exit.isFailure(decodePackageJsonExit({ name: "" })));
+      decodePackageJsonExit({ name: "" }).pipe(Exit.isFailure, assertTrue);
     });
 
     it("rejects invalid package names", () => {
-      assertTrue(Exit.isFailure(decodePackageJsonExit({ name: "Invalid Name" })));
+      decodePackageJsonExit({ name: "Invalid Name" }).pipe(Exit.isFailure, assertTrue);
     });
 
     it("rejects invalid package type values", () => {
-      assertTrue(
-        Exit.isFailure(
-          decodePackageJsonExit({
-            name: "pkg",
-            type: "esm",
-          })
-        )
-      );
+      decodePackageJsonExit({
+        name: "pkg",
+        type: "esm",
+      }).pipe(Exit.isFailure, assertTrue);
     });
 
     it("rejects repository objects without required type", () => {
-      assertTrue(
-        Exit.isFailure(
-          decodePackageJsonExit({
-            name: "pkg",
-            repository: {
-              url: "git@github.com:user/repo.git",
-            },
-          })
-        )
-      );
+      decodePackageJsonExit({
+        name: "pkg",
+        repository: {
+          url: "git@github.com:user/repo.git",
+        },
+      }).pipe(Exit.isFailure, assertTrue);
     });
 
     it("rejects funding objects without a url", () => {
-      assertTrue(
-        Exit.isFailure(
-          decodePackageJsonExit({
-            name: "pkg",
-            funding: {
-              type: "github",
-            },
-          })
-        )
-      );
+      decodePackageJsonExit({
+        name: "pkg",
+        funding: {
+          type: "github",
+        },
+      }).pipe(Exit.isFailure, assertTrue);
     });
 
     it("rejects exports objects with invalid keys", () => {
-      assertTrue(
-        Exit.isFailure(
-          decodePackageJsonExit({
-            name: "pkg",
-            exports: {
-              "1invalid": "./dist/index.js",
-            },
-          })
-        )
-      );
+      decodePackageJsonExit({
+        name: "pkg",
+        exports: {
+          "1invalid": "./dist/index.js",
+        },
+      }).pipe(Exit.isFailure, assertTrue);
     });
 
     it("rejects imports objects with invalid keys", () => {
-      assertTrue(
-        Exit.isFailure(
-          decodePackageJsonExit({
-            name: "pkg",
-            imports: {
-              internal: "./src/internal.ts",
-            },
-          })
-        )
-      );
+      decodePackageJsonExit({
+        name: "pkg",
+        imports: {
+          internal: "./src/internal.ts",
+        },
+      }).pipe(Exit.isFailure, assertTrue);
     });
 
     it("rejects workspaces as a string", () => {
-      assertTrue(
-        Exit.isFailure(
-          decodePackageJsonExit({
-            name: "pkg",
-            workspaces: "packages/*",
-          })
-        )
-      );
+      decodePackageJsonExit({
+        name: "pkg",
+        workspaces: "packages/*",
+      }).pipe(Exit.isFailure, assertTrue);
     });
 
     it("rejects unexpected top-level keys", () => {
-      assertTrue(
-        Exit.isFailure(
-          decodePackageJsonExit({
-            name: "pkg",
-            unexpected: true,
-          })
-        )
-      );
+      decodePackageJsonExit({
+        name: "pkg",
+        unexpected: true,
+      }).pipe(Exit.isFailure, assertTrue);
     });
 
     it("rejects private as a string", () => {
-      assertTrue(
-        Exit.isFailure(
-          decodePackageJsonExit({
-            name: "pkg",
-            private: "true",
-          })
-        )
-      );
+      decodePackageJsonExit({
+        name: "pkg",
+        private: "true",
+      }).pipe(Exit.isFailure, assertTrue);
     });
 
     it("rejects dependency records with invalid keys or empty values", () => {
-      assertTrue(
-        Exit.isFailure(
-          decodePackageJsonExit({
-            name: "pkg",
-            dependencies: {
-              "Invalid Name": "catalog:",
-            },
-          })
-        )
-      );
+      decodePackageJsonExit({
+        name: "pkg",
+        dependencies: {
+          "Invalid Name": "catalog:",
+        },
+      }).pipe(Exit.isFailure, assertTrue);
 
-      assertTrue(
-        Exit.isFailure(
-          decodePackageJsonExit({
-            name: "pkg",
-            beep: {
-              family: "ecosystem",
-              kind: "modeling",
-            },
-          })
-        )
-      );
+      decodePackageJsonExit({
+        name: "pkg",
+        beep: {
+          family: "ecosystem",
+          kind: "modeling",
+        },
+      }).pipe(Exit.isFailure, assertTrue);
 
-      assertTrue(
-        Exit.isFailure(
-          decodePackageJsonExit({
-            name: "pkg",
-            dependencies: {
-              effect: "",
-            },
-          })
-        )
-      );
+      decodePackageJsonExit({
+        name: "pkg",
+        dependencies: {
+          effect: "",
+        },
+      }).pipe(Exit.isFailure, assertTrue);
     });
 
     it("rejects invalid repo-local beep package metadata", () => {
-      assertTrue(
-        Exit.isFailure(
-          decodePackageJsonExit({
-            name: "pkg",
-            beep: {
-              family: "shared",
-            },
-          })
-        )
-      );
+      decodePackageJsonExit({
+        name: "pkg",
+        beep: {
+          family: "shared",
+        },
+      }).pipe(Exit.isFailure, assertTrue);
 
-      assertTrue(
-        Exit.isFailure(
-          decodePackageJsonExit({
-            name: "pkg",
-            beep: {
-              family: "drivers",
-              kind: "modeling",
-            },
-          })
-        )
-      );
+      decodePackageJsonExit({
+        name: "pkg",
+        beep: {
+          family: "drivers",
+          kind: "modeling",
+        },
+      }).pipe(Exit.isFailure, assertTrue);
 
-      assertTrue(
-        Exit.isFailure(
-          decodePackageJsonExit({
-            name: "pkg",
-            beep: {
-              family: "foundation",
-            },
-          })
-        )
-      );
+      decodePackageJsonExit({
+        name: "pkg",
+        beep: {
+          family: "foundation",
+        },
+      }).pipe(Exit.isFailure, assertTrue);
     });
 
     it("rejects non-object input", () => {
-      assertTrue(Exit.isFailure(decodePackageJsonExit("not-an-object")));
-      assertTrue(Exit.isFailure(decodePackageJsonExit(42)));
-      assertTrue(Exit.isFailure(decodePackageJsonExit(null)));
-      assertTrue(Exit.isFailure(decodePackageJsonExit(undefined)));
-      assertTrue(Exit.isFailure(decodePackageJsonExit([])));
+      decodePackageJsonExit("not-an-object").pipe(Exit.isFailure, assertTrue);
+      decodePackageJsonExit(42).pipe(Exit.isFailure, assertTrue);
+      decodePackageJsonExit(null).pipe(Exit.isFailure, assertTrue);
+      decodePackageJsonExit(undefined).pipe(Exit.isFailure, assertTrue);
+      decodePackageJsonExit([]).pipe(Exit.isFailure, assertTrue);
     });
   });
 
@@ -661,7 +605,7 @@ describe("PackageJson schema", () => {
         { onExcessProperty: "error" }
       );
 
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     });
 
     it("decodes a real-world workspace package shape from this repo", () => {

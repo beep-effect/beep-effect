@@ -29,11 +29,9 @@ import { liveWiring } from "./runtime/Layer.ts";
  * @category utilities
  * @since 0.0.0
  */
-export const main = Effect.scoped(
-  Layer.build(
-    Layer.effectDiscard(Command.run(makeCommand(liveWiring), { version: "0.0.0" })).pipe(
-      Layer.provide(BunServices.layer),
-      Layer.provide(Layer.succeed(Logger.LogToStderr, true))
-    )
-  )
+export const main = Layer.effectDiscard(Command.run(makeCommand(liveWiring), { version: "0.0.0" })).pipe(
+  Layer.provide(BunServices.layer),
+  Layer.provide(Layer.succeed(Logger.LogToStderr, true)),
+  Layer.build,
+  Effect.scoped
 );

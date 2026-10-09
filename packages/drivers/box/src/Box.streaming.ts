@@ -819,10 +819,10 @@ const byteInputToReadable = (method: BoxMethodName, value: unknown): Effect.Effe
     );
   }
   if (value instanceof Uint8Array) {
-    return Effect.succeed(NodeStream.toReadableNever(Stream.make(value)));
+    return Stream.make(value).pipe(NodeStream.toReadableNever, Effect.succeed);
   }
   if (Stream.isStream(value)) {
-    return Effect.succeed(NodeStream.toReadableNever(value));
+    return value.pipe(NodeStream.toReadableNever, Effect.succeed);
   }
   return Effect.succeed(value);
 };

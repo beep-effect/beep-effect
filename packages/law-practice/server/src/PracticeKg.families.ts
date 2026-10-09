@@ -701,7 +701,7 @@ export const reconcileAnchors = (
     }
   );
   return A.sort(
-    A.fromIterable(MutableHashMap.values(anchors)),
+    anchors.pipe(MutableHashMap.values, A.fromIterable),
     Order.mapInput(
       Order.String,
       (anchor: PracticeKgAnchorRecord) => `${anchor.applicationNumber ?? ""}\u0000${anchor.patentNumber ?? ""}`

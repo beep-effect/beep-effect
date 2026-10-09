@@ -58,10 +58,10 @@ describe("EvidenceVerification", () => {
       Effect.sync(() => {
         const equivalent = S.toEquivalence(EvidenceVerificationManifestation);
         const result = equivalent(
-          Result.getOrThrow(
-            decodeUnknownEvidenceVerificationManifestationResult(
-              Result.getOrThrow(encodeEvidenceVerificationManifestationResult(value))
-            )
+          encodeEvidenceVerificationManifestationResult(value).pipe(
+            Result.getOrThrow,
+            decodeUnknownEvidenceVerificationManifestationResult,
+            Result.getOrThrow
           ),
           value
         );

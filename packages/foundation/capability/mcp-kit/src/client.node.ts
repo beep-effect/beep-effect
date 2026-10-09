@@ -56,7 +56,7 @@ export const layerProtocolStdioCommand = (options: {
       yield* Stream.fromQueue(outbound).pipe(Stream.run(handle.stdin), Effect.orDie, Effect.forkScoped);
       return layerProtocolNdjson({
         write: (line) => Queue.offer(outbound, encoder.encode(`${line}\n`)),
-        lines: Stream.orDie(decodeLines(handle.stdout)),
+        lines: handle.stdout.pipe(decodeLines, Stream.orDie),
         client: options.client,
       });
     })

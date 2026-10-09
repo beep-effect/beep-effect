@@ -414,8 +414,10 @@ export const WinkNlpToolkitLive: Layer.Layer<
         function* ({ text }) {
           yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
           const document = yield* tokenization.document(text, "bag-of-words");
+          const tokenCounts = document.tokens.pipe(Chunk.toReadonlyArray, tokenBagOfWords);
+          const entries = R.toEntries(tokenCounts);
           const terms = pipe(
-            R.toEntries(tokenBagOfWords(Chunk.toReadonlyArray(document.tokens))),
+            entries,
             A.map(([value, count]) => ({ count, value })),
             A.sortBy(
               descendingNumber((entry) => entry.count),
@@ -444,11 +446,11 @@ export const WinkNlpToolkitLive: Layer.Layer<
 
           const score = yield* similarity.bowCosine(
             BagOfWords.make({
-              bow: tokenBagOfWords(Chunk.toReadonlyArray(doc1.tokens)),
+              bow: doc1.tokens.pipe(Chunk.toReadonlyArray, tokenBagOfWords),
               documentId: doc1.id,
             }),
             BagOfWords.make({
-              bow: tokenBagOfWords(Chunk.toReadonlyArray(doc2.tokens)),
+              bow: doc2.tokens.pipe(Chunk.toReadonlyArray, tokenBagOfWords),
               documentId: doc2.id,
             })
           );

@@ -259,7 +259,7 @@ it.prop(
   "round-trips source-derived PROV timestamps through the canonical wire format",
   [Arbitrary.schema(ProvDateTime)],
   ([instant]) => {
-    const encoded = Result.getOrThrow(encodeProvDateTimeResult(instant));
+    const encoded = instant.pipe(encodeProvDateTimeResult, Result.getOrThrow);
     const decoded = Result.getOrThrow(decodeProvDateTimeResult(encoded));
     pipe(equivalentProvDateTime(decoded, instant), assertTrue);
   },

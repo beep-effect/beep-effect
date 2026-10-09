@@ -604,4 +604,4 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
 export const sanitizedToolkit = <Tools extends Record<string, AiTool.Any>>(
   toolkit: Toolkit.Toolkit<Tools>
 ): Layer.Layer<never, never, AiTool.HandlersFor<Tools> | Exclude<AiTool.HandlerServices<Tools>, McpRequestContext>> =>
-  Layer.effectDiscard(registerSanitizedToolkit(toolkit)).pipe(Layer.provide(McpServer.McpServer.layer));
+  toolkit.pipe(registerSanitizedToolkit, Layer.effectDiscard, Layer.provide(McpServer.McpServer.layer));

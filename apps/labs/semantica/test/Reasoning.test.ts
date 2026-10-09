@@ -186,7 +186,7 @@ describe("C2 declarative reasoner", () => {
             { cwd: process.cwd(), stderr: "pipe", stdout: "pipe" }
           );
           const [crashOutput, crashExit] = yield* Effect.all(
-            [Stream.mkString(Stream.decodeText(crash.stdout)), Effect.exit(crash.exitCode)],
+            [crash.stdout.pipe(Stream.decodeText, Stream.mkString), Effect.exit(crash.exitCode)],
             { concurrency: "unbounded" }
           ).pipe(Effect.timeout("30 seconds"));
           expect(crashOutput).toContain("projection-state-committed");

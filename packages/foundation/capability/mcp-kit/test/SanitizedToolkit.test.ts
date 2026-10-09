@@ -553,10 +553,12 @@ describe("sanitizedToolkit", () => {
   it.effect(
     "refuses to register a strict dynamic tool",
     Effect.fnUntraced(function* () {
-      const exit = yield* Effect.exit(
-        Effect.scoped(
-          Layer.build(sanitizedToolkit(StrictDynamicToolkit).pipe(Layer.provide(StrictDynamicHandlersLive)))
-        )
+      const exit = yield* StrictDynamicToolkit.pipe(
+        sanitizedToolkit,
+        Layer.provide(StrictDynamicHandlersLive),
+        Layer.build,
+        Effect.scoped,
+        Effect.exit
       );
 
       // Strictness is an Effect Schema decode option; there is nothing to

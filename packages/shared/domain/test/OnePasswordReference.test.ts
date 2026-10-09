@@ -10,7 +10,7 @@ const decodeOnePasswordReference = S.decodeUnknownEffect(OnePasswordReference);
 
 const expectDecodeFailure = Effect.fn("OnePasswordReferenceTest.expectDecodeFailure")(function* (input: unknown) {
   const exit = yield* Effect.exit(decodeOnePasswordReference(input));
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
 });
 
 describe("OnePasswordReference", () => {

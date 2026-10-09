@@ -359,7 +359,7 @@ describe("extraction batch pairing", () => {
           "",
         ],
       ]) {
-        const error = yield* Effect.scoped(Effect.flip(Layer.build(batches(extract!, critic!))));
+        const error = yield* batches(extract!, critic!).pipe(Layer.build, Effect.flip, Effect.scoped);
         expect(["invalid-input", "conflicting-records"]).toContain(error.reason);
         expect(String(error)).not.toContain("bad-private-line");
       }

@@ -30,8 +30,9 @@ const writeAll = Effect.forEach(assets, writeAsset, { discard: true }).pipe(
   Effect.andThen(Console.log(`rendered ${A.length(assets)} files`))
 );
 
-const program = Effect.scoped(
-  Layer.build(BunServices.layer).pipe(Effect.flatMap((context) => writeAll.pipe(Effect.provide(context))))
+const program = Layer.build(BunServices.layer).pipe(
+  Effect.flatMap((context) => writeAll.pipe(Effect.provide(context))),
+  Effect.scoped
 );
 
 BunRuntime.runMain(program);

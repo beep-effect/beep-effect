@@ -386,22 +386,22 @@ const ProviderLayer = LangExtractServiceLive.pipe(
 );
 const RuntimeLayer = Layer.merge(BunServices.layer, BunCrypto.layer);
 const AppLayer = ProviderLayer.pipe(Layer.provideMerge(RuntimeLayer));
-const main = Effect.scoped(
-  Layer.build(RuntimeLayer).pipe(
-    Effect.flatMap((runtimeContext) =>
-      prepareRecordingTarget().pipe(
-        Effect.provide(runtimeContext),
-        Effect.flatMap((target) =>
-          Layer.build(AppLayer).pipe(
-            Effect.mapError((cause) =>
-              providerSmokeErrorWithCause("provider-runtime", "The provider runtime could not be initialized.", cause)
-            ),
-            Effect.flatMap((context) => recordProviderSmoke(target).pipe(Effect.provide(context)))
-          )
+const main = RuntimeLayer.pipe(
+  Layer.build,
+  Effect.flatMap((runtimeContext) =>
+    prepareRecordingTarget().pipe(
+      Effect.provide(runtimeContext),
+      Effect.flatMap((target) =>
+        Layer.build(AppLayer).pipe(
+          Effect.mapError((cause) =>
+            providerSmokeErrorWithCause("provider-runtime", "The provider runtime could not be initialized.", cause)
+          ),
+          Effect.flatMap((context) => recordProviderSmoke(target).pipe(Effect.provide(context)))
         )
       )
     )
-  )
+  ),
+  Effect.scoped
 );
 
 if (import.meta.main) {

@@ -510,7 +510,7 @@ const titled = (input: CritiqueInput, title: string): boolean =>
 
 const entriesOf = Effect.gen(function* () {
   const harness = yield* Harness;
-  return A.fromIterable(HashMap.values(yield* Ref.get(harness.entries)));
+  return (yield* Ref.get(harness.entries)).pipe(HashMap.values, A.fromIterable);
 });
 
 const kinds = (entries: ReadonlyArray<DocketCalendarEntry>, kind: DocketCalendarEntry["kind"]) =>
@@ -1740,7 +1740,7 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const resumed = yield* intake.pollOnce(TODAY);
         const settled = yield* ledgerRecord("m1");
 
-        assertTrue(Exit.isFailure(killed));
+        killed.pipe(Exit.isFailure, assertTrue);
         // The kill left round 1 in the ledger and no attempt counted against the message.
         assertSome(
           O.map(interrupted, (record) => [tagOf(record.outcome), record.attempts, O.isSome(record.review)]),

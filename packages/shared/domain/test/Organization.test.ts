@@ -19,7 +19,7 @@ const decodeOrganizationId = S.decodeUnknownEffect(Shared.OrganizationId);
 
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {
   const exit = yield* Effect.exit(effect);
-  assertTrue(Exit.isFailure(exit));
+  exit.pipe(Exit.isFailure, assertTrue);
 });
 
 const systemPrincipal = {

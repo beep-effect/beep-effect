@@ -237,16 +237,20 @@ const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): Ai
     const [defaultExecutable, args] = commandFor(paths, provider);
     const options = AiProviderCliProbeOptions.make(inputOptions ?? {});
     const allowedExecutable = expandTildePath(defaultExecutable);
-    const executable = yield* Effect.filterOrFail(
-      Effect.succeed(expandTildePath(O.getOrElse(options.executable, () => defaultExecutable))),
-      (candidate) => executableEquivalence(candidate, allowedExecutable),
-      () =>
-        AiProviderCliError.make({
-          command: O.none(),
-          message: "Executable override is not allowed for this provider CLI status command.",
-          operation: "checkAuth",
-          provider,
-        })
+    const executable = yield* options.executable.pipe(
+      O.getOrElse(() => defaultExecutable),
+      expandTildePath,
+      Effect.succeed,
+      Effect.filterOrFail(
+        (candidate) => executableEquivalence(candidate, allowedExecutable),
+        () =>
+          AiProviderCliError.make({
+            command: O.none(),
+            message: "Executable override is not allowed for this provider CLI status command.",
+            operation: "checkAuth",
+            provider,
+          })
+      )
     );
     const result = yield* runner(
       AiProviderCliRunRequest.make({

@@ -59,7 +59,7 @@ const roundTrip = Effect.fn("ExiftoolLive.roundTrip")(function* (fileName: strin
   const exiftool = yield* Exiftool;
   const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-exiftool-live-" });
   const filePath = path.join(tmpDir, fileName);
-  const bytes = yield* Effect.orDie(Effect.fromResult(Base64.decode(base64)));
+  const bytes = yield* Base64.decode(base64).pipe(Effect.fromResult, Effect.orDie);
   yield* fs.writeFile(filePath, bytes);
 
   const written = yield* exiftool.writeXmpPacket(

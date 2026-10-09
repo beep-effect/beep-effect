@@ -144,7 +144,11 @@ const runWith = <A, E, R, ROut, E2, R2>(
   program: Effect.Effect<A, E, R>,
   layer: Layer.Layer<ROut, E2, R2>
 ): Effect.Effect<A, E | E2, Exclude<R, ROut> | R2> =>
-  Effect.scoped(Effect.flatMap(Layer.build(layer), (context) => Effect.provide(program, context)));
+  layer.pipe(
+    Layer.build,
+    Effect.flatMap((context) => Effect.provide(program, context)),
+    Effect.scoped
+  );
 
 // The start of a first run: `--since`, else DOCKET_INTAKE_START_AT, else now.
 const startOf = Effect.fnUntraced(function* (config: DocketIntakeAppConfig, flagged: O.Option<DateTime.Utc>) {
@@ -177,12 +181,11 @@ export const makeHandlers = <E1, R1, E2, R2, E3, R3>(wiring: DocketIntakeWiring<
   const withIntake = Effect.fnUntraced(function* (flagged: O.Option<DateTime.Utc>, program: IntakeProgram) {
     const config = yield* DocketIntakeAppConfigFromEnv;
     const startAt = yield* startOf(config, flagged);
-    yield* Effect.scoped(
-      Layer.build(
-        Layer.effectDiscard(Effect.andThen(seedCursor(startAt), program(config))).pipe(
-          Layer.provide(wiring.intake({ config, initialSince: startAt }))
-        )
-      )
+    yield* Effect.andThen(seedCursor(startAt), program(config)).pipe(
+      Layer.effectDiscard,
+      Layer.provide(wiring.intake({ config, initialSince: startAt })),
+      Layer.build,
+      Effect.scoped
     );
   });
 
@@ -229,8 +232,11 @@ export const makeHandlers = <E1, R1, E2, R2, E3, R3>(wiring: DocketIntakeWiring<
     }),
     smoke: Effect.fnUntraced(function* (flags: { readonly write: boolean }) {
       const config = yield* DocketIntakeAppConfigFromEnv;
-      yield* Effect.scoped(
-        Layer.build(Layer.effectDiscard(smoke(config, flags.write)).pipe(Layer.provide(wiring.mailbox(config))))
+      yield* smoke(config, flags.write).pipe(
+        Layer.effectDiscard,
+        Layer.provide(wiring.mailbox(config)),
+        Layer.build,
+        Effect.scoped
       );
     }),
     undo: Effect.fnUntraced(function* (flags: {

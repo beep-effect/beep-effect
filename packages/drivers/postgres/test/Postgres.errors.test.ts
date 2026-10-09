@@ -534,7 +534,7 @@ describe("Postgres formatting", () => {
         params: ["a@example.com"],
       }
     );
-    const rendered = formatPostgresErrorWith(createColors(false))(Cause.fail(causeError));
+    const rendered = causeError.pipe(Cause.fail, formatPostgresErrorWith(createColors(false)));
 
     expect(rendered).toContain("operation query");
     expect(rendered).toContain("23505");

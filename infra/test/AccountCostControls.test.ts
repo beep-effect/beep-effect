@@ -156,7 +156,7 @@ describe("@beep/infra AccountCostControls", { concurrent: false }, () => {
       for (const key of ["App", "Project", "ManagedBy", "beep-ci", "ghr:environment", "DataClass"]) {
         expect(resource(`cost-tag-${key}`)).toEqual({ tagKey: key, status: "Active" });
       }
-      expect(A.sort(A.fromIterable(MutableHashMap.values(types)), Order.String)).toEqual([
+      expect(A.sort(types.pipe(MutableHashMap.values, A.fromIterable), Order.String)).toEqual([
         "aws:budgets/budget:Budget",
         "aws:computeoptimizer/enrollmentStatus:EnrollmentStatus",
         "aws:costexplorer/anomalyMonitor:AnomalyMonitor",

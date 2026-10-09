@@ -99,7 +99,7 @@ const Providers = Layer.mergeAll(
       MailboxShape.make({
         listMessagesSince: () =>
           Effect.map(Ref.get(inbox.message), (message) => MailPage.make({ envelopes: [message] })),
-        getEnvelope: () => Effect.asSome(Ref.get(inbox.message)),
+        getEnvelope: () => inbox.message.pipe(Ref.get, Effect.asSome),
         setCategories: (request) =>
           Ref.update(inbox.message, (message) => MailEnvelope.make({ ...message, categories: request.categories })),
         ensureMasterCategories: (intents) => Effect.succeed(intents.length),

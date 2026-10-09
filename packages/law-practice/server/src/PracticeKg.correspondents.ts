@@ -818,31 +818,31 @@ export const buildPracticeKgCorrespondentTables = (
 ): PracticeKgCorrespondentTables => {
   const isPractice = isPracticeKgPracticeAddress(input.practiceDomains);
   const byAddress = contactsByAddress(input.contacts);
-  const correspondents = A.map(
-    A.fromIterable(MutableHashMap.values(tallyMessages(input))),
-    ({ address, familyKey, tally }) => {
-      const contact = pipe(MutableHashMap.get(byAddress, address), O.flatMap(soleContactOf));
-      return PracticeKgCorrespondentRow.make({
-        address,
-        ccCount: HashSet.size(tally.cc),
-        contactId: O.getOrNull(O.map(contact, ({ contact: owner }) => owner.contactId)),
-        displayName: pipe(
-          O.map(contact, ({ contact: owner }) => owner.displayName),
-          O.orElse(() => tally.headerName),
-          O.getOrNull
-        ),
-        epistemicStatus: "mention-derived",
-        familyKey,
-        firstAt: O.getOrNull(tally.firstAt),
-        fromCount: HashSet.size(tally.from),
-        isPracticeAddress: isPractice(address),
-        lastAt: O.getOrNull(tally.lastAt),
-        messageCount: HashSet.size(tally.messages),
-        roleAddress: O.exists(contact, ({ role }) => role),
-        toCount: HashSet.size(tally.to),
-      });
-    }
-  );
+  const talliedMessages = tallyMessages(input);
+  const values = MutableHashMap.values(talliedMessages);
+  const tallies = A.fromIterable(values);
+  const correspondents = A.map(tallies, ({ address, familyKey, tally }) => {
+    const contact = pipe(MutableHashMap.get(byAddress, address), O.flatMap(soleContactOf));
+    return PracticeKgCorrespondentRow.make({
+      address,
+      ccCount: HashSet.size(tally.cc),
+      contactId: O.getOrNull(O.map(contact, ({ contact: owner }) => owner.contactId)),
+      displayName: pipe(
+        O.map(contact, ({ contact: owner }) => owner.displayName),
+        O.orElse(() => tally.headerName),
+        O.getOrNull
+      ),
+      epistemicStatus: "mention-derived",
+      familyKey,
+      firstAt: O.getOrNull(tally.firstAt),
+      fromCount: HashSet.size(tally.from),
+      isPracticeAddress: isPractice(address),
+      lastAt: O.getOrNull(tally.lastAt),
+      messageCount: HashSet.size(tally.messages),
+      roleAddress: O.exists(contact, ({ role }) => role),
+      toCount: HashSet.size(tally.to),
+    });
+  });
   const links = A.flatMap(input.contacts, (contact) =>
     A.map(contact.links, (link) => PracticeKgContactClientLinkRow.make({ ...link, contactId: contact.contactId }))
   );

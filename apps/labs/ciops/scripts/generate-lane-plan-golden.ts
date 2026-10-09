@@ -75,10 +75,10 @@ const generate = Effect.gen(function* () {
 // strictEffectProvide bans Layer-provide outside composed entry layers, so the
 // scoped context build below provides the platform and service as a Context.
 BunRuntime.runMain(
-  Effect.scoped(
-    Effect.flatMap(
-      Layer.build(CiOpsProjectionLive.pipe(Layer.provideMerge(Layer.merge(BunFileSystem.layer, BunCrypto.layer)))),
-      (context) => Effect.provide(generate, context)
-    )
+  CiOpsProjectionLive.pipe(
+    Layer.provideMerge(Layer.merge(BunFileSystem.layer, BunCrypto.layer)),
+    Layer.build,
+    Effect.flatMap((context) => Effect.provide(generate, context)),
+    Effect.scoped
   )
 );

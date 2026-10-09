@@ -28,7 +28,7 @@ export const runEntrypoint = <A, E>(input: {
   readonly program: Effect.Effect<A, E, BunServices.BunServices>;
 }): void => {
   if (input.isMain) {
-    const main = Effect.scoped(Layer.build(Layer.effectDiscard(input.program).pipe(Layer.provide(BunServices.layer))));
+    const main = input.program.pipe(Layer.effectDiscard, Layer.provide(BunServices.layer), Layer.build, Effect.scoped);
     BunRuntime.runMain(main);
   }
 };

@@ -268,8 +268,11 @@ describe("ThreadStore in-memory", () => {
           randomBytes: (size) => new Uint8Array(size).fill(1),
         })
       );
-      const exit = yield* Effect.exit(
-        Effect.scoped(Layer.build(ThreadStoreInMemoryLayer.pipe(Layer.provide(FailingInitializationCryptoLayer))))
+      const exit = yield* ThreadStoreInMemoryLayer.pipe(
+        Layer.provide(FailingInitializationCryptoLayer),
+        Layer.build,
+        Effect.scoped,
+        Effect.exit
       );
 
       pipe(exit, Exit.isFailure, assertTrue);

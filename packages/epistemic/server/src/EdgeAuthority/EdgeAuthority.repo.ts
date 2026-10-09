@@ -440,7 +440,7 @@ export const makeDrizzleEdgeAuthorityRepository = Effect.fn("Epistemic.EdgeAutho
       A.head(rows),
       O.match({
         onNone: () => Effect.succeed(O.none<EdgeVersion>()),
-        onSome: (row) => Effect.asSome(Effect.fromResult(fromEdgeVersionRow(row))),
+        onSome: (row) => fromEdgeVersionRow(row).pipe(Effect.fromResult, Effect.asSome),
       }),
       readUnavailable(operation)
     );

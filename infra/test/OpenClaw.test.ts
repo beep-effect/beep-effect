@@ -137,8 +137,12 @@ const runCrypto = <A, E>(effect: Effect.Effect<A, E, Crypto.Crypto>) =>
 
 const defaultArgs = OpenClawStackArgs.new(identity, deploymentConfig);
 const defaultGeneration = runCrypto(makeOpenClawGeneration(defaultArgs));
-const parseDocument = (json: string): { readonly [key: string]: unknown } =>
-  O.getOrThrow(pipe(Result.getOrThrow(decodeJsonResult(json)), O.liftPredicate(P.isObject)));
+const parseDocument = (json: string): { readonly [key: string]: unknown } => {
+  const parsed = decodeJsonResult(json);
+  const decoded = parsed.pipe(Result.getOrThrow);
+  const validated = O.liftPredicate(P.isObject)(decoded);
+  return validated.pipe(O.getOrThrow);
+};
 
 /**
  * Unwrap a rendered `/bin/bash --noprofile --norc -p -c '<body>'` command back into the body the

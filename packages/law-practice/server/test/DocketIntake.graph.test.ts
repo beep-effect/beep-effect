@@ -470,7 +470,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
         const testHttp = yield* GraphTestHttp;
         yield* testHttp.failFolderLookups;
 
-        const failure = yield* failureOf(Layer.launch(makeDocketGraphLayer(graphConfig())));
+        const failure = yield* makeDocketGraphLayer(graphConfig()).pipe(Layer.launch, failureOf);
 
         assertSome(
           O.map(failure, (error) => [error.stage, error.cause]),

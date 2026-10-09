@@ -519,14 +519,10 @@ describe("gov-legal MCP frozen contract", () => {
     "fails closed on cross-driver normalization collisions",
     Effect.fnUntraced(function* () {
       const error = assertCollision(
-        yield* Effect.result(
-          withToolNameCrypto(
-            buildToolNameCollisionReport([
-              ToolNameCandidate.make({ source: "agency.alpha", operationId: "search" }),
-              ToolNameCandidate.make({ source: "agency_alpha", operationId: "search" }),
-            ])
-          )
-        ),
+        yield* buildToolNameCollisionReport([
+          ToolNameCandidate.make({ source: "agency.alpha", operationId: "search" }),
+          ToolNameCandidate.make({ source: "agency_alpha", operationId: "search" }),
+        ]).pipe(withToolNameCrypto, Effect.result),
         "duplicate_normalized"
       );
       assert.deepEqual(error.collisionKeys, ["agency_alpha_search"]);
@@ -561,14 +557,10 @@ describe("gov-legal MCP frozen contract", () => {
     "marks punctuation normalization duplicates before failing",
     Effect.fnUntraced(function* () {
       const error = assertCollision(
-        yield* Effect.result(
-          withToolNameCrypto(
-            buildToolNameCollisionReport([
-              ToolNameCandidate.make({ source: "ecfr", operationId: "search.results" }),
-              ToolNameCandidate.make({ source: "ecfr", operationId: "search/results" }),
-            ])
-          )
-        ),
+        yield* buildToolNameCollisionReport([
+          ToolNameCandidate.make({ source: "ecfr", operationId: "search.results" }),
+          ToolNameCandidate.make({ source: "ecfr", operationId: "search/results" }),
+        ]).pipe(withToolNameCrypto, Effect.result),
         "duplicate_normalized"
       );
       assert.isTrue(A.every(error.report.candidates, (row) => row.duplicateVerdict === "duplicate_normalized"));
@@ -598,7 +590,7 @@ describe("gov-legal MCP frozen contract", () => {
       assert.strictEqual(firstRow.finalWireName.length, 64);
       assert.strictEqual(firstRow.finalWireName, secondRow.finalWireName);
       const error = assertCollision(
-        yield* Effect.result(withToolNameCrypto(buildToolNameCollisionReport([first, second]))),
+        yield* buildToolNameCollisionReport([first, second]).pipe(withToolNameCrypto, Effect.result),
         "duplicate_final"
       );
       assert.isTrue(A.every(error.report.candidates, (row) => row.duplicateVerdict === "duplicate_final"));

@@ -92,7 +92,7 @@ describe("@beep/docket-intake poll cycle", () => {
 
         const first = yield* pollCycle(fixtureConfig);
         const afterFirst = yield* store.load;
-        const entries = A.fromIterable(HashMap.values(yield* Ref.get(harness.entries)));
+        const entries = (yield* Ref.get(harness.entries)).pipe(HashMap.values, A.fromIterable);
         const second = yield* pollCycle(fixtureConfig);
 
         expect([first.seen, first.processed, first.entered, first.failed]).toStrictEqual([1, 1, 1, 0]);
@@ -129,9 +129,10 @@ describe("@beep/docket-intake poll cycle", () => {
         const files = A.sort(yield* fs.readDirectory(DIGESTS), Str.Order);
         const dayOne = yield* fs.readFileString(`${DIGESTS}/1969-12-28.md`);
         const dayTwo = yield* fs.readFileString(`${DIGESTS}/1969-12-29.md`);
-        const digestEntries = A.filter(
-          A.fromIterable(HashMap.values(yield* Ref.get(harness.entries))),
-          (entry) => entry.kind === "digest"
+        const digestEntries = (yield* Ref.get(harness.entries)).pipe(
+          HashMap.values,
+          A.fromIterable,
+          A.filter((entry) => entry.kind === "digest")
         );
 
         expect(files).toStrictEqual(["1969-12-28.md", "1969-12-29.md", "1969-12-30.md"]);

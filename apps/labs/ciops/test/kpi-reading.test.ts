@@ -436,7 +436,7 @@ describe("@beep/ciops KPI reading", () => {
         expect(A.length(changeEventTable)).toBe(44);
         A.forEach(A.zip(blocks, changeEventTable), ([block, row]) => {
           expect(Str.startsWith(`${row.id}\n`)(block)).toBe(true);
-          expect(block).toContain(`landedAt: "${Str.replace(".000Z", "Z")(DateTime.formatIso(row.landedAt))}"`);
+          expect(block).toContain(`landedAt: "${row.landedAt.pipe(DateTime.formatIso, Str.replace(".000Z", "Z"))}"`);
           expect(block).toContain(`mergeCommit: ${row.mergeCommit}`);
         });
       })

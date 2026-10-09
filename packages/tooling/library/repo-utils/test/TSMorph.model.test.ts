@@ -156,8 +156,8 @@ describe("TSMorph model taxonomy", () => {
         expect(yield* decodeTsConfigFilePath("packages/foo/tsconfig.build.json")).toBe(
           "packages/foo/tsconfig.build.json"
         );
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeTsConfigFilePath("packages/foo/tsconfig.ts"))));
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeTsConfigFilePath("packages/foo/tsconfig#dev.json"))));
+        (yield* Effect.exit(decodeTsConfigFilePath("packages/foo/tsconfig.ts"))).pipe(Exit.isFailure, assertTrue);
+        (yield* Effect.exit(decodeTsConfigFilePath("packages/foo/tsconfig#dev.json"))).pipe(Exit.isFailure, assertTrue);
       })
     );
 
@@ -167,12 +167,12 @@ describe("TSMorph model taxonomy", () => {
         expect(yield* decodeTypeScriptImplementationFilePath("src/main.ts")).toBe("src/main.ts");
         expect(yield* decodeTypeScriptImplementationFilePath("src/component.tsx")).toBe("src/component.tsx");
         expect(yield* decodeTypeScriptImplementationFilePath("src/module.mts")).toBe("src/module.mts");
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeTypeScriptImplementationFilePath("src/types.d.ts"))));
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeTypeScriptImplementationFilePath("src/main.js"))));
+        (yield* Effect.exit(decodeTypeScriptImplementationFilePath("src/types.d.ts"))).pipe(Exit.isFailure, assertTrue);
+        (yield* Effect.exit(decodeTypeScriptImplementationFilePath("src/main.js"))).pipe(Exit.isFailure, assertTrue);
 
         expect(yield* decodeTypeScriptDeclarationFilePath("src/types.d.ts")).toBe("src/types.d.ts");
         expect(yield* decodeTypeScriptDeclarationFilePath("src/types.d.mts")).toBe("src/types.d.mts");
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeTypeScriptDeclarationFilePath("src/main.ts"))));
+        (yield* Effect.exit(decodeTypeScriptDeclarationFilePath("src/main.ts"))).pipe(Exit.isFailure, assertTrue);
 
         expect(yield* decodeTypeScriptFilePath("src/main.ts")).toBe("src/main.ts");
         expect(yield* decodeTypeScriptFilePath("src/types.d.ts")).toBe("src/types.d.ts");
@@ -183,9 +183,9 @@ describe("TSMorph model taxonomy", () => {
       "keeps SymbolFilePath implementation-only and delimiter-safe",
       Effect.fnUntraced(function* () {
         expect(yield* decodeSymbolFilePath("src/main.ts")).toBe("src/main.ts");
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeSymbolFilePath("src/types.d.ts"))));
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeSymbolFilePath("src::main.ts"))));
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeSymbolFilePath("src/main#one.ts"))));
+        (yield* Effect.exit(decodeSymbolFilePath("src/types.d.ts"))).pipe(Exit.isFailure, assertTrue);
+        (yield* Effect.exit(decodeSymbolFilePath("src::main.ts"))).pipe(Exit.isFailure, assertTrue);
+        (yield* Effect.exit(decodeSymbolFilePath("src/main#one.ts"))).pipe(Exit.isFailure, assertTrue);
       })
     );
   });
@@ -309,9 +309,9 @@ describe("TSMorph model taxonomy", () => {
         expect(yield* decodeInternalProject(project)).toBe(project);
         expect(yield* decodeInternalSourceFile(sourceFile)).toBe(sourceFile);
         expect(yield* decodeInternalNode(classDeclaration)).toBe(classDeclaration);
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeInternalProject({}))));
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeInternalSourceFile({}))));
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeInternalNode({}))));
+        (yield* Effect.exit(decodeInternalProject({}))).pipe(Exit.isFailure, assertTrue);
+        (yield* Effect.exit(decodeInternalSourceFile({}))).pipe(Exit.isFailure, assertTrue);
+        (yield* Effect.exit(decodeInternalNode({}))).pipe(Exit.isFailure, assertTrue);
       })
     );
   });
@@ -322,12 +322,15 @@ describe("TSMorph model taxonomy", () => {
       Effect.fnUntraced(function* () {
         expect(yield* decodeSymbolQualifiedName("UserService")).toBe("UserService");
         expect(yield* decodeSymbolQualifiedName("UserService.login")).toBe("UserService.login");
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeSymbolQualifiedName("UserService.#login"))));
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeSymbolQualifiedName("UserService.[Symbol.iterator]"))));
+        (yield* Effect.exit(decodeSymbolQualifiedName("UserService.#login"))).pipe(Exit.isFailure, assertTrue);
+        (yield* Effect.exit(decodeSymbolQualifiedName("UserService.[Symbol.iterator]"))).pipe(
+          Exit.isFailure,
+          assertTrue
+        );
 
         expect(yield* decodeSymbolKind("MethodDeclaration")).toBe("MethodDeclaration");
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeSymbolKind("QualifiedName"))));
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeSymbolKind("Identifier"))));
+        (yield* Effect.exit(decodeSymbolKind("QualifiedName"))).pipe(Exit.isFailure, assertTrue);
+        (yield* Effect.exit(decodeSymbolKind("Identifier"))).pipe(Exit.isFailure, assertTrue);
       })
     );
 

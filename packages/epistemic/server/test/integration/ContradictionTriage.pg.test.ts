@@ -73,10 +73,8 @@ import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
-const externalUrl = pipe(
-  Effect.runSync(Config.option(Config.String("BEEP_EPISTEMIC_CONTRADICTION_PG_URL"))),
-  O.getOrElse(() => "")
-);
+const externalUrlConfig = Config.option(Config.String("BEEP_EPISTEMIC_CONTRADICTION_PG_URL"));
+const externalUrl = Effect.runSync(externalUrlConfig).pipe(O.getOrElse(() => ""));
 
 const migrationsFolder = fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
 const migrationsSchema = "epistemic_contradiction_acceptance";

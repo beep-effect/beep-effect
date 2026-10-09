@@ -234,7 +234,7 @@ describe("practice-mail-tagging watch", () => {
     it.effect("stops with exit code 3 on throttling and never calls the provider again", () =>
       Effect.gen(function* () {
         yield* failNextListings([MailTaggingPortError.throttled("Mailbox", "listMessagesSince", "HTTP 429")]);
-        const fiber = yield* Effect.forkChild(refusal(run(["watch", "--yes"])));
+        const fiber = yield* run(["watch", "--yes"]).pipe(refusal, Effect.forkChild);
         yield* TestClock.adjust(pollInterval);
         const error = yield* Fiber.join(fiber);
         yield* TestClock.adjust(pollInterval);

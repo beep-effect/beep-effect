@@ -314,9 +314,9 @@ describe("@beep/pdf-tools service", () => {
         "stops the run at the configured timeout and reports tool-failed",
         Effect.fnUntraced(function* () {
           const tools = yield* PdfTools;
-          const fiber = yield* Effect.forkChild(
-            Effect.flip(tools.pageText(PageTextRequest.make({ pdfPath: "sheets.pdf", page: 1 })))
-          );
+          const fiber = yield* tools
+            .pageText(PageTextRequest.make({ pdfPath: "sheets.pdf", page: 1 }))
+            .pipe(Effect.flip, Effect.forkChild);
           yield* TestClock.adjust("4 seconds");
           expect(fiber.pollUnsafe()).toBeUndefined();
           yield* TestClock.adjust("2 seconds");

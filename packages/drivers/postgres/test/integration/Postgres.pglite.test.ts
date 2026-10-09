@@ -70,7 +70,10 @@ const bundleNotesMigration = {
 };
 
 const makePostgresClientLayer = () =>
-  Layer.unwrap(Effect.map(Effect.service(NativePgClient.PgClient), PostgresClient.fromPgClient)).pipe(
+  NativePgClient.PgClient.pipe(
+    Effect.service,
+    Effect.map(PostgresClient.fromPgClient),
+    Layer.unwrap,
     Layer.provideMerge(makePgliteLayer())
   );
 

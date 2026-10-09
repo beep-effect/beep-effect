@@ -763,7 +763,7 @@ const pinnedInputSection = (summary: LiveEvidenceSummary, paths: LiveEvidencePat
     `- Journal SHA-256: ${cell(window.journalSha256)} (typed constant, asserted against the bytes before replay)`,
     `- Manifest: ${cell(paths.manifest)}`,
     `- Manifest SHA-256: ${cell(window.manifestSha256)} (typed constant, asserted against the bytes)`,
-    `- Retained window (canonical root): ${cell(DateTime.formatIso(window.firstRetainedInstant))} to ${cell(DateTime.formatIso(window.lastRetainedInstant))}, asserted against \`admission_roots[0].window\` and against the journal's first and last row instants`,
+    `- Retained window (canonical root): ${window.firstRetainedInstant.pipe(DateTime.formatIso, cell)} to ${window.lastRetainedInstant.pipe(DateTime.formatIso, cell)}, asserted against \`admission_roots[0].window\` and against the journal's first and last row instants`,
     `- Pre-v3 chains: ${window.preV3Chains}, asserted against \`admission_roots[0].window.released_only_chains\` and \`loss_population.chain_counts.pre-v3\` (that member name counts the pre-v3 class, chains with no retained enqueue, not release-only chains)`,
     `- Policy A-Box: ${cell(paths.abox)} (SHA-256 ${cell(summary.policySha256)})`,
     `- Events: ${report.eventCount} (${report.admittedCount} admitted, ${report.releasedCount} released or lease-evicted, ${skipped} skipped terminal row(s), ${neutral} ledger-neutral)`,
@@ -891,7 +891,7 @@ const legacyDrainLines = (arm: Cq009LegacyDrainArm): ReadonlyArray<string> => [
 ];
 
 const censorshipLine = (censorship: Cq009Censorship): string =>
-  `What this evaluation cannot see: rows before ${cell(DateTime.formatIso(censorship.firstRetainedInstant))} or after ${cell(DateTime.formatIso(censorship.lastRetainedInstant))} (the retained window); the ${censorship.preV3Chains} pre-v3 chain(s), whose enqueue rows were trimmed; ${censorship.ledgerCensoredVerdicts} ledger-censored verdict(s), whose replayed ledger lacked a pre-window grant; ${censorship.withdrawnRows} withdrawn and ${censorship.ticketEvictedRows} ticket-evicted request row(s), which never became grants; ${A.length(censorship.grantsActiveAtFirstEdge)} grant(s) active at the first edge${nonceList(censorship.grantsActiveAtFirstEdge)}, outside the replayed set; and ${A.length(censorship.grantsActiveAtLastEdge)} grant(s) still active at the last edge${nonceList(censorship.grantsActiveAtLastEdge)}, whose later overlaps are unseen.`;
+  `What this evaluation cannot see: rows before ${censorship.firstRetainedInstant.pipe(DateTime.formatIso, cell)} or after ${censorship.lastRetainedInstant.pipe(DateTime.formatIso, cell)} (the retained window); the ${censorship.preV3Chains} pre-v3 chain(s), whose enqueue rows were trimmed; ${censorship.ledgerCensoredVerdicts} ledger-censored verdict(s), whose replayed ledger lacked a pre-window grant; ${censorship.withdrawnRows} withdrawn and ${censorship.ticketEvictedRows} ticket-evicted request row(s), which never became grants; ${A.length(censorship.grantsActiveAtFirstEdge)} grant(s) active at the first edge${nonceList(censorship.grantsActiveAtFirstEdge)}, outside the replayed set; and ${A.length(censorship.grantsActiveAtLastEdge)} grant(s) still active at the last edge${nonceList(censorship.grantsActiveAtLastEdge)}, whose later overlaps are unseen.`;
 
 const cq009Section = (live: LiveReplayReport): ReadonlyArray<string> => [
   "## CQ-009",

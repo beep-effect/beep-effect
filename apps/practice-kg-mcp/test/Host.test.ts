@@ -193,8 +193,8 @@ for (const [adapter, services] of [
           yield* fs.writeFileString(path.join(bundleDir, "bundle.manifest.json"), "not-json");
           const invalid = yield* Effect.result(loadPracticeKgBundleContext(bundleDir));
 
-          assertTrue(Result.isFailure(missing));
-          assertTrue(Result.isFailure(invalid));
+          missing.pipe(Result.isFailure, assertTrue);
+          invalid.pipe(Result.isFailure, assertTrue);
           if (Result.isFailure(missing) && Result.isFailure(invalid)) {
             expect(missing.failure).toBeInstanceOf(PracticeKgHostError);
             expect(missing.failure.message).toContain("Failed reading practice KG bundle manifest");
@@ -211,7 +211,7 @@ for (const [adapter, services] of [
           const bundleDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-host-" });
           yield* fs.writeFileString(path.join(bundleDir, "bundle.manifest.json"), "{}");
           const invalid = yield* Effect.result(loadPracticeKgBundleContext(bundleDir));
-          assertTrue(Result.isFailure(invalid));
+          if (!Result.isFailure(invalid)) throw new Error("Expected a failed manifest result");
           expect(invalid.failure).toBeInstanceOf(PracticeKgHostError);
           expect(invalid.failure.message).toBe(
             `Practice KG bundle manifest at "${path.join(bundleDir, "bundle.manifest.json")}" is invalid.`

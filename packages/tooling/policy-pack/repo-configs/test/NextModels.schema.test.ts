@@ -186,24 +186,22 @@ describe("Next route schemas", () => {
 
   it.effect("rejects invalid route discriminators and redirect mode mixing", () =>
     Effect.gen(function* () {
-      assertTrue(
-        Exit.isFailure(yield* Effect.exit(decodeUnknownRouteHas({ type: "host", key: "host", value: "example.com" })))
+      (yield* Effect.exit(decodeUnknownRouteHas({ type: "host", key: "host", value: "example.com" }))).pipe(
+        Exit.isFailure,
+        assertTrue
       );
-      assertTrue(
-        Exit.isFailure(yield* Effect.exit(decodeRewrite({ source: "/old", destination: "/new", basePath: true })))
+      (yield* Effect.exit(decodeRewrite({ source: "/old", destination: "/new", basePath: true }))).pipe(
+        Exit.isFailure,
+        assertTrue
       );
-      assertTrue(
-        Exit.isFailure(
-          yield* Effect.exit(
-            decodeUnknownRedirect({
-              source: "/old",
-              destination: "/new",
-              permanent: true,
-              statusCode: 308,
-            })
-          )
-        )
-      );
+      (yield* Effect.exit(
+        decodeUnknownRedirect({
+          source: "/old",
+          destination: "/new",
+          permanent: true,
+          statusCode: 308,
+        })
+      )).pipe(Exit.isFailure, assertTrue);
     })
   );
 });
@@ -229,34 +227,30 @@ describe("Next image schemas", () => {
 
   it.effect("rejects out-of-domain image quality values", () =>
     Effect.gen(function* () {
-      assertTrue(
-        Exit.isFailure(
-          yield* Effect.exit(
-            decodeUnknownImageConfigComplete({
-              deviceSizes: [640],
-              imageSizes: [32],
-              loader: "default",
-              path: "/_next/image",
-              loaderFile: "",
-              disableStaticImages: false,
-              minimumCacheTTL: 0,
-              formats: ["image/webp"],
-              maximumDiskCacheSize: undefined,
-              maximumRedirects: 0,
-              maximumResponseBody: 0,
-              dangerouslyAllowLocalIP: false,
-              dangerouslyAllowSVG: false,
-              contentSecurityPolicy: "",
-              contentDispositionType: "attachment",
-              localPatterns: undefined,
-              remotePatterns: [],
-              qualities: [101],
-              unoptimized: false,
-              customCacheHandler: false,
-            })
-          )
-        )
-      );
+      (yield* Effect.exit(
+        decodeUnknownImageConfigComplete({
+          deviceSizes: [640],
+          imageSizes: [32],
+          loader: "default",
+          path: "/_next/image",
+          loaderFile: "",
+          disableStaticImages: false,
+          minimumCacheTTL: 0,
+          formats: ["image/webp"],
+          maximumDiskCacheSize: undefined,
+          maximumRedirects: 0,
+          maximumResponseBody: 0,
+          dangerouslyAllowLocalIP: false,
+          dangerouslyAllowSVG: false,
+          contentSecurityPolicy: "",
+          contentDispositionType: "attachment",
+          localPatterns: undefined,
+          remotePatterns: [],
+          qualities: [101],
+          unoptimized: false,
+          customCacheHandler: false,
+        })
+      )).pipe(Exit.isFailure, assertTrue);
     })
   );
 });
@@ -284,8 +278,8 @@ describe("Next compiler schemas", () => {
 
   it.effect("rejects non-object Sass options and non-string implementations", () =>
     Effect.gen(function* () {
-      assertTrue(Exit.isFailure(yield* Effect.exit(decodeSassOptions(["sass"]))));
-      assertTrue(Exit.isFailure(yield* Effect.exit(decodeSassOptions({ implementation: false }))));
+      (yield* Effect.exit(decodeSassOptions(["sass"]))).pipe(Exit.isFailure, assertTrue);
+      (yield* Effect.exit(decodeSassOptions({ implementation: false }))).pipe(Exit.isFailure, assertTrue);
     })
   );
 });

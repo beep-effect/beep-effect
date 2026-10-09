@@ -575,8 +575,12 @@ const isPreV3Chain = (tags: ReadonlyArray<JournalTag>): boolean =>
   !A.some(tags, (tag) => HashSet.has(preV3ExcludedTags, tag)) &&
   (A.contains(tags, "admission-admitted") || A.contains(tags, "admission-released"));
 
-const preV3ChainNonces = (events: ReadonlyArray<AdmissionJournalEvent>): HashSet.HashSet<string> =>
-  HashSet.fromIterable(HashMap.keys(HashMap.filter(chainTagsByNonce(events), isPreV3Chain)));
+const preV3ChainNonces = (events: ReadonlyArray<AdmissionJournalEvent>): HashSet.HashSet<string> => {
+  const chains = chainTagsByNonce(events);
+  const retained = HashMap.filter(chains, isPreV3Chain);
+  const nonces = HashMap.keys(retained);
+  return HashSet.fromIterable(nonces);
+};
 
 // Pre-v3 chains that kept an admitted row, so they replay instead of skipping.
 const replayedPreV3Chains = (events: ReadonlyArray<AdmissionJournalEvent>): HashSet.HashSet<string> =>

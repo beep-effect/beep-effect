@@ -236,7 +236,9 @@ export const planLanes = Effect.fn("LanePlan.planLanes")(function* (
   yield* requireCoherentLanes(lanes, precedences);
   const graph = buildLaneGraph(lanes, precedences);
   yield* failOnCycle(graph);
-  const order = A.fromIterable(Graph.values(Graph.topo(graph)));
+  const orderedGraph = Graph.topo(graph);
+  const values = Graph.values(orderedGraph);
+  const order = A.fromIterable(values);
   yield* requireRankAgreement(lanes, order);
   return A.map(order, (laneId, laneStepIndex) => LaneStep.make({ laneStepIndex, laneId }));
 });

@@ -125,14 +125,16 @@ export const loadPracticeKgBundleContext = Effect.fn("PracticeKgHost.loadBundle"
  * @since 0.0.0
  */
 export const makePracticeKgHostResourcesLayer = (context: PracticeKgBundleContext) =>
-  Layer.unwrap(
-    Effect.map(Effect.service(Path.Path), (path) =>
+  Path.Path.pipe(
+    Effect.service,
+    Effect.map((path) =>
       Layer.mergeAll(
         makePracticeKgPgliteLayer(path.join(context.bundleDir, "kg.pglite")),
         makePracticeKgDuckDbLayer(path.join(context.bundleDir, "practice.duckdb")),
         Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(context))
       )
-    )
+    ),
+    Layer.unwrap
   );
 
 /**

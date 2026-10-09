@@ -213,7 +213,7 @@ describe("@beep/box conflict detail", () => {
     const rendered = A.flatMap([folderCreateConflictBody, fileUploadConflictBody], (body) => {
       const error = B.BoxError.fromUnknown("uploads.uploadFile", sdkFailure(body));
       return [
-        Result.getOrThrow(encodeBoxError(error)),
+        encodeBoxError(error).pipe(Result.getOrThrow),
         JSON.stringify(error),
         JSON.stringify(B.BoxError.toDiagnostic(error)),
         String(error),

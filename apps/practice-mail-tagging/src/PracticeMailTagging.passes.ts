@@ -198,7 +198,8 @@ export const makeMailTaggingPasses: {
   const inFreshPass =
     (runId: TaggingRunId) =>
     <A>(use: Effect.Effect<A, MailTaggingPassFailure, MailTaggingJob | MailTaggingUndo>) =>
-      Layer.build(Layer.fresh(passLayer(runId))).pipe(
+      Layer.fresh(passLayer(runId)).pipe(
+        Layer.build,
         Effect.flatMap((services) => Effect.provide(use, services)),
         Effect.scoped,
         Effect.mapError(PracticeMailTaggingError.fromPass)

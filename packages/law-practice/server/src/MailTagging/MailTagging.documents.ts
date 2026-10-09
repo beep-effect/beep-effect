@@ -121,7 +121,9 @@ const portFailure = (error: BoxError): MailTaggingPortError =>
 
 // A taken name is an answer; every other driver failure stays a failure.
 const refused = (error: BoxError): Effect.Effect<DocumentUploadResult, MailTaggingPortError> =>
-  isNameTaken(error) && !isThrottled(error) ? Effect.succeed(nameTaken(error)) : Effect.fail(portFailure(error));
+  isNameTaken(error) && !isThrottled(error)
+    ? error.pipe(nameTaken, Effect.succeed)
+    : error.pipe(portFailure, Effect.fail);
 
 const payloadOf = (request: UploadDocumentRequest): BoxUploadFilePayload => ({
   requestBody: {

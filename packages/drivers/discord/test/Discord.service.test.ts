@@ -250,8 +250,10 @@ describe("@beep/discord", () => {
       ErrorReasonArbitrary,
     ],
     ([config, channelRequest, createMessageRequest, channelProof, messageProof, errorReason]) => {
-      const normalizedConfig = Result.getOrThrow(
-        decodeDiscordConfigInputResult(Result.getOrThrow(encodeDiscordConfigInputResult(config)))
+      const normalizedConfig = encodeDiscordConfigInputResult(config).pipe(
+        Result.getOrThrow,
+        decodeDiscordConfigInputResult,
+        Result.getOrThrow
       );
 
       expectEncodedRoundTrip(DiscordConfigInput, normalizedConfig);

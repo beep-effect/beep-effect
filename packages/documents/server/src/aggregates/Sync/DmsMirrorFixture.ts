@@ -390,8 +390,9 @@ export const makeDmsMirrorFixture = Effect.fn($I`makeDmsMirrorFixture`)(function
     parentId: O.Option<string>,
     name: string
   ): O.Option<FixtureItemState> =>
-    pipe(
-      A.fromIterable(HashMap.values(items)),
+    items.pipe(
+      HashMap.values,
+      A.fromIterable,
       A.findFirst((item) => item.itemKind === itemKind && item.name === name && sameParent(item.parentId, parentId))
     );
 
@@ -540,8 +541,11 @@ export const makeDmsMirrorFixture = Effect.fn($I`makeDmsMirrorFixture`)(function
     requestedStreamPositions: Ref.get(requestedRef),
     snapshotTree: Effect.gen(function* () {
       const items = yield* Ref.get(itemsRef);
-      return R.fromEntries(
-        A.map(A.fromIterable(HashMap.values(items)), (item) => [treePath(items, item), nodeOf(item)] as const)
+      return items.pipe(
+        HashMap.values,
+        A.fromIterable,
+        A.map((item) => [treePath(items, item), nodeOf(item)] as const),
+        R.fromEntries
       );
     }),
   });

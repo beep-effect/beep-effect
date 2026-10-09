@@ -254,7 +254,7 @@ describe("LeJeune transactional bundle builder", () => {
           inputFor(bundleRoot, mutableRoot, path.resolve("src/fixtures/provider-recording.json"))
         ).pipe(Effect.provideService(FileSystem.FileSystem, interruptingFileSystem), Effect.forkChild);
         yield* Deferred.await(claimed);
-        const interrupt = yield* Effect.forkChild(Fiber.interrupt(build));
+        const interrupt = yield* build.pipe(Fiber.interrupt, Effect.forkChild);
         yield* Deferred.succeed(releaseClaim, undefined);
         const exit = yield* Fiber.await(build);
         yield* Fiber.join(interrupt);

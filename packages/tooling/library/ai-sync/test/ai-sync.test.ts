@@ -558,7 +558,7 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
           'model = "gpt-5"\n\n[skills]\ninclude_instructions = "definitely"\n'
         );
         const invalid = yield* Effect.exit(validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" }));
-        assertTrue(Exit.isFailure(invalid));
+        invalid.pipe(Exit.isFailure, assertTrue);
         expect(String(invalid)).toContain('["skills"]["include_instructions"]');
 
         yield* writeText(path.join(tmpDir, ".codex/config.toml"), 'model = "gpt-5\n[skills\n');

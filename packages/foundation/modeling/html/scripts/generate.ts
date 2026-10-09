@@ -4194,8 +4194,10 @@ const program = Effect.gen(function* () {
 
 const runtimeLayer = Layer.mergeAll(Logger.layer([Logger.consolePretty()]), NodeServices.layer);
 
-const main = Effect.scoped(
-  Layer.build(runtimeLayer).pipe(Effect.flatMap((context) => Effect.provide(program, context)))
+const main = runtimeLayer.pipe(
+  Layer.build,
+  Effect.flatMap((context) => Effect.provide(program, context)),
+  Effect.scoped
 );
 
 if (import.meta.main) {

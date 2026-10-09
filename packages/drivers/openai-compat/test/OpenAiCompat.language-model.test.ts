@@ -212,7 +212,10 @@ describe("OpenAiCompat language model", () => {
   it.effect(
     "supports data-last codecs and model construction",
     Effect.fnUntraced(function* () {
-      const response = yield* decodeChatCompletionResponse()(Result.getOrThrow(encodeResponse(makeResponse("hello"))));
+      const response = yield* encodeResponse(makeResponse("hello")).pipe(
+        Result.getOrThrow,
+        decodeChatCompletionResponse()
+      );
       const chunk = yield* decodeChatCompletionChunk()({
         choices: [{ delta: { content: "hello", role: "assistant" }, index: 0 }],
       });

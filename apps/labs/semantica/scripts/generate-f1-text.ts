@@ -63,11 +63,10 @@ export const generateF1TextFixtures = Effect.fn("generateF1TextFixtures")(functi
 });
 
 if (import.meta.main) {
-  BunRuntime.runMain(
-    Effect.scoped(
-      Layer.build(BunServices.layer).pipe(
-        Effect.flatMap((context) => generateF1TextFixtures(DEFAULT_OUTPUT_DIRECTORY).pipe(Effect.provide(context)))
-      )
-    )
+  BunServices.layer.pipe(
+    Layer.build,
+    Effect.flatMap((context) => generateF1TextFixtures(DEFAULT_OUTPUT_DIRECTORY).pipe(Effect.provide(context))),
+    Effect.scoped,
+    BunRuntime.runMain
   );
 }

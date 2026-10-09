@@ -70,10 +70,9 @@ const generateToolNameCollisionReport = Effect.fn("GovLegalMcp.generateToolNameC
   yield* Effect.log(`Generated ${reportPath} and ${versionPath}`);
 });
 
-const program = Effect.scoped(
-  Layer.build(NodeServices.layer).pipe(
-    Effect.flatMap((context) => generateToolNameCollisionReport().pipe(Effect.provide(context)))
-  )
+const program = Layer.build(NodeServices.layer).pipe(
+  Effect.flatMap((context) => generateToolNameCollisionReport().pipe(Effect.provide(context))),
+  Effect.scoped
 );
 
 NodeRuntime.runMain(program);

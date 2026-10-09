@@ -43,11 +43,10 @@ const duckStore = (path: Path.Path, dir: string) =>
 // The old bundle's DuckDB is read-only and multi-process, so it opens beside the new one.
 // Its failures name the old bundle: the new bundle's own read shares the same message otherwise.
 const comparisonAgainst = (path: Path.Path, dir: string) => (next: PracticeKgMatterTables) =>
-  Effect.scoped(
-    Layer.build(duckStore(path, dir)).pipe(
-      Effect.flatMap((context) => readPracticeKgMatterTables.pipe(Effect.provide(context)))
-    )
-  ).pipe(
+  duckStore(path, dir).pipe(
+    Layer.build,
+    Effect.flatMap((context) => readPracticeKgMatterTables.pipe(Effect.provide(context))),
+    Effect.scoped,
     PracticeKgProjectionError.mapError(
       `Practice KG matter tables of the --compare-to bundle "${dir}" could not be read.`
     ),
@@ -66,22 +65,20 @@ const verifyCommand = Command.make(
       makePracticeKgPgliteLayer(path.join(flags.bundleDir, "kg.pglite")),
       duckStore(path, flags.bundleDir)
     );
-    const { diff, summary } = yield* Effect.scoped(
-      Layer.build(stores).pipe(
-        Effect.flatMap((context) =>
-          Effect.gen(function* () {
-            // The summary is verified and printed before the old bundle is touched,
-            // so a --compare-to failure never hides the new bundle's verification.
-            const summary = yield* verifyPracticeKgBundle;
-            yield* printJson(summary);
-            const diff = yield* O.match(flags.compareTo, {
-              onNone: () => Effect.succeedNone,
-              onSome: (dir) => Effect.asSome(Effect.flatMap(readPracticeKgMatterTables, comparisonAgainst(path, dir))),
-            });
-            return { diff, summary };
-          }).pipe(Effect.provide(context))
-        )
-      )
+    const { diff, summary } = yield* stores.pipe(
+      Layer.build,
+      Effect.flatMap((context) =>
+        Effect.gen(function* () {
+          const summary = yield* verifyPracticeKgBundle;
+          yield* printJson(summary);
+          const diff = yield* O.match(flags.compareTo, {
+            onNone: () => Effect.succeedNone,
+            onSome: (dir) => Effect.asSome(Effect.flatMap(readPracticeKgMatterTables, comparisonAgainst(path, dir))),
+          });
+          return { diff, summary };
+        }).pipe(Effect.provide(context))
+      ),
+      Effect.scoped
     );
     yield* O.match(diff, { onNone: () => Effect.void, onSome: printJson });
     yield* Effect.succeed(summary).pipe(

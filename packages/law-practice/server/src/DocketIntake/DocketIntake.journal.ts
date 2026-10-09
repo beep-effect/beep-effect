@@ -102,7 +102,7 @@ const compactInstant = Str.replace(/[-:.]/g, "");
  * @since 0.0.0
  */
 export const makeDocketRunId = (instant: DateTime.DateTime): DocketRunId =>
-  DocketRunId.make(`run-${compactInstant(DateTime.formatIso(DateTime.toUtc(instant)))}`);
+  DocketRunId.make(`run-${instant.pipe(DateTime.toUtc, DateTime.formatIso, compactInstant)}`);
 
 /**
  * What one journal line records.

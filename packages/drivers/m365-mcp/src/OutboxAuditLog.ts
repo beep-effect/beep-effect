@@ -545,7 +545,7 @@ const failure = (reason: OutboxAuditErrorReason, message: string) => (): OutboxA
  * @since 0.1.0
  */
 export const outboxAuditFileName = (record: OutboxAuditRecord): string =>
-  `${Str.slice(0, MONTH_PREFIX_LENGTH)(DateTime.formatIso(record.at))}${AUDIT_FILE_SUFFIX}`;
+  `${record.at.pipe(DateTime.formatIso, Str.slice(0, MONTH_PREFIX_LENGTH))}${AUDIT_FILE_SUFFIX}`;
 
 const makeLog = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;

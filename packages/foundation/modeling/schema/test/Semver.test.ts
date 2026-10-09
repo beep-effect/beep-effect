@@ -19,7 +19,7 @@ const expectDecodeFailure = <A, E>(effect: Effect.Effect<A, E>, input: string): 
 
     assertTrue(Exit.isFailure(exit), `Expected schema failure for ${input}`);
     if (Exit.isFailure(exit)) {
-      assertTrue(O.isSome(Cause.findErrorOption(exit.cause)), `Expected typed failure for ${input}`);
+      assertTrue(exit.cause.pipe(Cause.findErrorOption, O.isSome), `Expected typed failure for ${input}`);
     }
   });
 

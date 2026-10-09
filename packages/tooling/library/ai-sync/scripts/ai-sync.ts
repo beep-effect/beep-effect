@@ -83,16 +83,15 @@ const program = Match.value(command).pipe(
   )
 );
 
-const main = Effect.scoped(
-  Layer.build(runtimeLayer).pipe(
-    Effect.flatMap((context) =>
-      program.pipe(
-        Effect.catchTag("AiSyncError", reportError),
-        Effect.flatMap((code) => (code === 0 ? Effect.void : Effect.fail(AiSyncExitError.make({ exitCode: code })))),
-        Effect.provide(context)
-      )
+const main = Layer.build(runtimeLayer).pipe(
+  Effect.flatMap((context) =>
+    program.pipe(
+      Effect.catchTag("AiSyncError", reportError),
+      Effect.flatMap((code) => (code === 0 ? Effect.void : Effect.fail(AiSyncExitError.make({ exitCode: code })))),
+      Effect.provide(context)
     )
-  )
+  ),
+  Effect.scoped
 );
 
 NodeRuntime.runMain(main);

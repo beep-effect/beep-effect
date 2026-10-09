@@ -100,7 +100,7 @@ describe("Fn thunks", () => {
         error: S.String,
       });
       const impl = schema.implementEffect(() => Effect.die("boom"));
-      const cause = yield* Effect.flip(Effect.sandbox(impl()));
+      const cause = yield* impl().pipe(Effect.sandbox, Effect.flip);
 
       expect(Cause.hasDies(cause)).toBe(true);
       expect(Cause.hasFails(cause)).toBe(false);

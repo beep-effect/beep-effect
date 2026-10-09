@@ -101,7 +101,7 @@ const InnerPortsLayer = Layer.effectContext(
         DocketCalendar,
         DocketCalendar.of({
           create: Effect.fnUntraced(function* () {
-            return yield* Effect.flatten(Ref.get(inner.create));
+            return yield* inner.create.pipe(Ref.get, Effect.flatten);
           }),
           findByKey: Effect.fnUntraced(function* () {
             return yield* Ref.get(inner.found);
@@ -112,7 +112,7 @@ const InnerPortsLayer = Layer.effectContext(
         DocketMailbox,
         DocketMailbox.of({
           markEntered: Effect.fnUntraced(function* () {
-            yield* Effect.flatten(Ref.get(inner.mark));
+            yield* inner.mark.pipe(Ref.get, Effect.flatten);
           }),
           receivedSince: Effect.fnUntraced(function* () {
             return yield* Effect.succeed([message]);
@@ -384,7 +384,7 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
         yield* calendar.findByKey(entry.key);
         const lines = yield* journalLines;
 
-        assertTrue(Exit.hasDies(crashed));
+        crashed.pipe(Exit.hasDies, assertTrue);
         assertSome(found, written);
         expect(
           A.map(lines, (line) => [line.kind, line.runId, O.getOrNull(line.eventId), O.getOrNull(line.idempotencyKey)])
@@ -419,7 +419,7 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
 
         const exit = yield* Effect.exit(calendar.create(entry));
 
-        assertTrue(Exit.hasDies(exit));
+        exit.pipe(Exit.hasDies, assertTrue);
       })
     );
   });

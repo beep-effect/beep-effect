@@ -69,8 +69,9 @@ const program = Effect.gen(function* () {
   yield* Console.log(`[allowlist-codegen] diagnostics=${snapshot.diagnostics.length}`);
 });
 
-const main = Effect.scoped(
-  Layer.build(NodeServices.layer).pipe(Effect.flatMap((context) => Effect.provide(program, context)))
+const main = Layer.build(NodeServices.layer).pipe(
+  Effect.flatMap((context) => Effect.provide(program, context)),
+  Effect.scoped
 );
 
 NodeRuntime.runMain(main);

@@ -41,7 +41,11 @@ import type { DuckDBConnection } from "@duckdb/node-api";
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+    layer.pipe(
+      Layer.build,
+      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+      Effect.scoped
+    );
 
 class NativeTestDirectory extends Context.Service<NativeTestDirectory, string>()(
   "@beep/duckdb/test/DuckDb.service.test/NativeTestDirectory"
@@ -705,25 +709,24 @@ describe("@beep/duckdb", { concurrent: false }, () => {
         Promise.resolve(fakeInstance as unknown as Awaited<ReturnType<typeof DuckDBInstance.create>>);
       yield* patchDuckDbInstanceCreate(fakeCreate);
 
-      yield* Effect.scoped(
-        Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))).pipe(
-          Effect.flatMap((context) =>
-            Effect.gen(function* () {
-              const queryFiber = yield* Effect.gen(function* () {
-                const duckdb = yield* DuckDb;
-                yield* duckdb.query("SELECT 1 AS value");
-              }).pipe(Effect.provide(context), Effect.forkChild({ startImmediately: true }));
+      yield* Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))).pipe(
+        Effect.flatMap((context) =>
+          Effect.gen(function* () {
+            const queryFiber = yield* Effect.gen(function* () {
+              const duckdb = yield* DuckDb;
+              yield* duckdb.query("SELECT 1 AS value");
+            }).pipe(Effect.provide(context), Effect.forkChild({ startImmediately: true }));
 
-              yield* awaitLatch(connectStarted);
-              yield* Fiber.interrupt(queryFiber).pipe(Effect.forkChild({ startImmediately: true }));
-              yield* liveSleep(25);
-              expect(connectionCloseAttempts).toBe(0);
-              expect(instanceCloseAttempts).toBe(0);
-              connect.resolve(fakeConnection as unknown as DuckDBConnection);
-              yield* Fiber.await(queryFiber);
-            }).pipe(Effect.ensuring(Effect.sync(() => connect.resolve(fakeConnection as unknown as DuckDBConnection))))
-          )
-        )
+            yield* awaitLatch(connectStarted);
+            yield* Fiber.interrupt(queryFiber).pipe(Effect.forkChild({ startImmediately: true }));
+            yield* liveSleep(25);
+            expect(connectionCloseAttempts).toBe(0);
+            expect(instanceCloseAttempts).toBe(0);
+            connect.resolve(fakeConnection as unknown as DuckDBConnection);
+            yield* Fiber.await(queryFiber);
+          }).pipe(Effect.ensuring(Effect.sync(() => connect.resolve(fakeConnection as unknown as DuckDBConnection))))
+        ),
+        Effect.scoped
       );
 
       expect(connectionCloseAttempts).toBe(1);

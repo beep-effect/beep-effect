@@ -820,7 +820,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
               cause: O.some(error),
               detail: Inspectable.toStringUnknown(error, 0),
             });
-        return handleTermination(Effect.succeed(normalized));
+        return normalized.pipe(Effect.succeed, handleTermination);
       },
       onSuccess: () =>
         handleTermination(

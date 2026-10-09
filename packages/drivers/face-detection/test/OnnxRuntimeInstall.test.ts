@@ -160,7 +160,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ONNX Runtime's patched 
     Effect.fnUntraced(function* () {
       const { fs, temp, destination, install } = yield* fixture;
       const error = yield* install(zipSync({ other: binary })).pipe(
-        Effect.catchCause((cause) => Effect.succeed(Cause.pretty(cause)))
+        Effect.catchCause((cause) => cause.pipe(Cause.pretty, Effect.succeed))
       );
       expect(error).toContain(`Failed to find ${entry}`);
       expect(yield* fs.exists(destination)).toBe(false);
@@ -173,7 +173,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ONNX Runtime's patched 
     Effect.fnUntraced(function* () {
       const { fs, temp, destination, install } = yield* fixture;
       const error = yield* install(strToU8("not a ZIP archive")).pipe(
-        Effect.catchCause((cause) => Effect.succeed(Cause.pretty(cause)))
+        Effect.catchCause((cause) => cause.pipe(Cause.pretty, Effect.succeed))
       );
       expect(error).toContain("Failed to open NuGet package");
       expect(yield* fs.exists(destination)).toBe(false);

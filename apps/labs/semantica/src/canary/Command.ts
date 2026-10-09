@@ -225,17 +225,18 @@ const runGoldProposal = Effect.fn("SemanticaCanary.runGoldProposal")(function* (
     Layer.provide(identity),
     Layer.provide(Layer.succeed(LabConfig, selectedConfig))
   );
-  return yield* Effect.scoped(
-    Layer.build(Layer.merge(model, identity)).pipe(
-      Effect.flatMap((modelContext) =>
-        proposeGold({
-          manifestPath: options.manifest,
-          outputDirectory: "fixtures/gold/v1",
-          paper: options.paper,
-          subset: options.subset,
-        }).pipe(Effect.provide(modelContext))
-      )
-    )
+  return yield* model.pipe(
+    Layer.merge(identity),
+    Layer.build,
+    Effect.flatMap((modelContext) =>
+      proposeGold({
+        manifestPath: options.manifest,
+        outputDirectory: "fixtures/gold/v1",
+        paper: options.paper,
+        subset: options.subset,
+      }).pipe(Effect.provide(modelContext))
+    ),
+    Effect.scoped
   );
 });
 

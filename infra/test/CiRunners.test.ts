@@ -78,7 +78,7 @@ const provisionCiRunnersStack = Effect.fnUntraced(function* (
             }
             const result = { id: `${args.name}-id`, state: args.inputs };
             return args.name === heldAssociationName
-              ? runPromise(Deferred.await(associationGate).pipe(Effect.as(result)))
+              ? associationGate.pipe(Deferred.await, Effect.as(result), runPromise)
               : result;
           },
         },

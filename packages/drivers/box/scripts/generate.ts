@@ -1819,14 +1819,14 @@ const MainLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 
 // Build the platform layers into a Context once and provide it at this entry point,
 // keeping scope lifetimes correct and satisfying effect(strictEffectProvide).
-const program = Effect.scoped(
-  Layer.build(MainLive).pipe(
-    Effect.flatMap(
-      Effect.fnUntraced(function* (context) {
-        return yield* generate.pipe(Effect.provide(context));
-      })
-    )
-  )
+const program = MainLive.pipe(
+  Layer.build,
+  Effect.flatMap(
+    Effect.fnUntraced(function* (context) {
+      return yield* generate.pipe(Effect.provide(context));
+    })
+  ),
+  Effect.scoped
 );
 
 BunRuntime.runMain(program);

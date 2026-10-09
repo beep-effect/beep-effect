@@ -134,25 +134,31 @@ describe("@beep/ai-provider-cli", () => {
       ).toBe(exitCode);
       expect(
         sameProcessResult(
-          Result.getOrThrow(
-            decodeAiProviderCliProcessResultResult(
-              Result.getOrThrow(encodeAiProviderCliProcessResultResult(processResult))
-            )
+          encodeAiProviderCliProcessResultResult(processResult).pipe(
+            Result.getOrThrow,
+            decodeAiProviderCliProcessResultResult,
+            Result.getOrThrow
           ),
           processResult
         )
       ).toBe(true);
       expect(
         sameAuthProbe(
-          Result.getOrThrow(
-            decodeAiProviderCliAuthProbeResult(Result.getOrThrow(encodeAiProviderCliAuthProbeResult(authProbe)))
+          encodeAiProviderCliAuthProbeResult(authProbe).pipe(
+            Result.getOrThrow,
+            decodeAiProviderCliAuthProbeResult,
+            Result.getOrThrow
           ),
           authProbe
         )
       ).toBe(true);
       expect(
         sameError(
-          Result.getOrThrow(decodeAiProviderCliErrorResult(Result.getOrThrow(encodeAiProviderCliErrorResult(error)))),
+          encodeAiProviderCliErrorResult(error).pipe(
+            Result.getOrThrow,
+            decodeAiProviderCliErrorResult,
+            Result.getOrThrow
+          ),
           error
         )
       ).toBe(true);

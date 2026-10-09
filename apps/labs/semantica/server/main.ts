@@ -7,10 +7,10 @@ import * as Layer from "effect/Layer";
 import { CanaryCommand } from "@/canary/Command";
 import { RuntimeLayer } from "@/runtime/Layer";
 
-const Main = Effect.scoped(
-  Layer.build(RuntimeLayer).pipe(
-    Effect.flatMap((context) => Command.run(CanaryCommand, { version: "0.0.0" }).pipe(Effect.provide(context)))
-  )
+const Main = RuntimeLayer.pipe(
+  Layer.build,
+  Effect.flatMap((context) => Command.run(CanaryCommand, { version: "0.0.0" }).pipe(Effect.provide(context))),
+  Effect.scoped
 );
 
 BunRuntime.runMain(Main);

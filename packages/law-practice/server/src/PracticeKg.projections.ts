@@ -722,13 +722,17 @@ const buildGraphRows = (
   projectArchiveLinks(
     sink,
     catalogRows,
-    A.filter(A.fromIterable(MutableHashMap.values(nodes)), (node) => node.kind === "email_archive")
+    nodes.pipe(
+      MutableHashMap.values,
+      A.fromIterable,
+      A.filter((node) => node.kind === "email_archive")
+    )
   );
 
   return {
-    edges: A.sort(A.fromIterable(MutableHashMap.values(edges)), Order.mapInput(Order.String, edgeKey)),
+    edges: A.sort(edges.pipe(MutableHashMap.values, A.fromIterable), Order.mapInput(Order.String, edgeKey)),
     nodes: A.sort(
-      A.fromIterable(MutableHashMap.values(nodes)),
+      nodes.pipe(MutableHashMap.values, A.fromIterable),
       Order.mapInput(Order.String, (node: PracticeKgNodeRow) => node.iri)
     ),
   };

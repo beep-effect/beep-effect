@@ -156,7 +156,7 @@ const makeCatalog = Effect.fn("PracticeKgSmoke.makeCatalog")(function* (database
       [FixtureDigest]
     );
   });
-  yield* Effect.scoped(Layer.build(Layer.effectDiscard(populateCatalog).pipe(Layer.provide(catalogLayer))));
+  yield* populateCatalog.pipe(Layer.effectDiscard, Layer.provide(catalogLayer), Layer.build, Effect.scoped);
 });
 
 /**
@@ -207,7 +207,7 @@ export const makePracticeKgSmokeBundle = Effect.fn("PracticeKgSmoke.makeFixtureB
       skipEmails: true,
     })
   );
-  yield* Effect.scoped(Layer.build(Layer.effectDiscard(buildBundle).pipe(Layer.provide(buildLayer))));
+  yield* buildBundle.pipe(Layer.effectDiscard, Layer.provide(buildLayer), Layer.build, Effect.scoped);
   return bundleOut;
 });
 

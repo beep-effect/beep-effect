@@ -846,7 +846,7 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
       Effect.map((listing): O.Option<BoxProviderId> => MutableHashMap.get(listing.folders, planned.folder.nameKey)),
       Effect.catchTags({
         BoxContentMigrationBudgetError: () => Effect.fail(localFailure("budget-exhausted")),
-        BoxError: (error) => Effect.fail(providerFailure(error)),
+        BoxError: (error) => error.pipe(providerFailure, Effect.fail),
       }),
       Effect.result
     );

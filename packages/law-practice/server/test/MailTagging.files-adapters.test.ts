@@ -217,15 +217,11 @@ describe("MailTagging file adapters", () => {
             expect(yield* linesOf(ledger)).toStrictEqual([]);
           })
         );
-        const failed = yield* Effect.exit(
-          oneRun(
-            Effect.gen(function* () {
-              const meter = yield* meterAt(ledger, "run-0002");
-              yield* meter.record(box(4));
-              return yield* Effect.fail("upload refused");
-            })
-          )
-        );
+        const failed = yield* Effect.gen(function* () {
+          const meter = yield* meterAt(ledger, "run-0002");
+          yield* meter.record(box(4));
+          return yield* Effect.fail("upload refused");
+        }).pipe(oneRun, Effect.exit);
         yield* oneRun(meterAt(ledger, "run-0003"));
 
         expect(failed._tag).toBe("Failure");

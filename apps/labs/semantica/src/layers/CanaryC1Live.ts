@@ -260,16 +260,17 @@ const makeCanaryC1 = Effect.fn("CanaryC1.make")(function* <E>(
       Layer.provide(Layer.succeed(ProviderCache, providerCache))
     );
     const embeddingStartedAt = yield* Clock.currentTimeMillis;
-    const embedded = yield* Effect.scoped(
-      Layer.build(embeddingLayer).pipe(
-        Effect.flatMap((context) =>
-          Embedder.pipe(
-            Effect.flatMap((service) => service.embed(inputs)),
-            Effect.provide(context)
-          )
+    const embedded = yield* embeddingLayer.pipe(
+      Layer.build,
+      Effect.flatMap((context) =>
+        Embedder.pipe(
+          Effect.flatMap((service) => service.embed(inputs)),
+          Effect.provide(context)
         )
-      )
-    ).pipe(Effect.mapError(() => failed("embedding-degraded", "The live OpenAI embedding provider was unavailable.")));
+      ),
+      Effect.scoped,
+      Effect.mapError(() => failed("embedding-degraded", "The live OpenAI embedding provider was unavailable."))
+    );
     const embeddingEndedAt = yield* Clock.currentTimeMillis;
     if (A.isReadonlyArrayNonEmpty(embedded.degraded)) {
       return yield* failed(

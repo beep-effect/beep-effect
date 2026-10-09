@@ -50,10 +50,8 @@ import type { EdgeAuthorityError, EdgeAuthorityRepositoryShape } from "@beep/epi
 
 // Config boot snapshot of the lane selector, per the makePgliteIntegrationGate precedent:
 // Node-safe and law-clean, and the operator exports the variable before the process starts.
-const externalUrl = pipe(
-  Effect.runSync(Config.option(Config.String("BEEP_EPISTEMIC_PG_URL"))),
-  O.getOrElse(() => "")
-);
+const externalUrlConfig = Config.option(Config.String("BEEP_EPISTEMIC_PG_URL"));
+const externalUrl = Effect.runSync(externalUrlConfig).pipe(O.getOrElse(() => ""));
 
 const migrationsFolder = fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
 const migrationsSchema = "epistemic_edge_journal";

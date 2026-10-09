@@ -171,7 +171,7 @@ describe("@beep/law-practice-domain DocketDeadline", () => {
         })
       );
       const decoded = O.map(resolved, (due) =>
-        Result.getOrThrow(S.decodeResult(DocketDueDate)(Result.getOrThrow(S.encodeResult(DocketDueDate)(due))))
+        S.encodeResult(DocketDueDate)(due).pipe(Result.getOrThrow, S.decodeResult(DocketDueDate), Result.getOrThrow)
       );
 
       assertTrue(

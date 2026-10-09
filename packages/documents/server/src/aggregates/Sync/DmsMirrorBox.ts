@@ -503,13 +503,13 @@ const makeMirrorRootResolver = (box: BoxShape, config: BoxMirrorConfigValue) => 
             lookupFolderId(BOX_ROOT_FOLDER_ID, config.mirrorRootName).pipe(
               Effect.flatMap(
                 O.match({
-                  onNone: () => Effect.fail(boxUnavailable(error)),
+                  onNone: () => error.pipe(boxUnavailable, Effect.fail),
                   onSome: Effect.succeed,
                 })
               )
             )
           ),
-          Effect.catchTag("BoxError", (error) => Effect.fail(boxUnavailable(error)))
+          Effect.catchTag("BoxError", (error) => error.pipe(boxUnavailable, Effect.fail))
         )
       )
     );
@@ -603,7 +603,7 @@ export const makeDmsMirrorBox = Effect.fn($I`makeDmsMirrorBox`)(function* () {
         lookupFolderId(parentId, input.name).pipe(
           Effect.flatMap(
             O.match({
-              onNone: () => Effect.fail(boxUnavailable(error)),
+              onNone: () => error.pipe(boxUnavailable, Effect.fail),
               onSome: (existingId) =>
                 Effect.succeed<RemoteItemFields>({
                   itemKind: SyncItemKind.Enum.folder,
@@ -615,7 +615,7 @@ export const makeDmsMirrorBox = Effect.fn($I`makeDmsMirrorBox`)(function* () {
           )
         )
       ),
-      Effect.catchTag("BoxError", (error) => Effect.fail(boxUnavailable(error)))
+      Effect.catchTag("BoxError", (error) => error.pipe(boxUnavailable, Effect.fail))
     );
 
     return yield* remoteItem(mirrorRootId, fields);
@@ -639,7 +639,7 @@ export const makeDmsMirrorBox = Effect.fn($I`makeDmsMirrorBox`)(function* () {
           lookupFileId(parentId, input.name).pipe(
             Effect.flatMap(
               O.match({
-                onNone: () => Effect.fail(boxUnavailable(error)),
+                onNone: () => error.pipe(boxUnavailable, Effect.fail),
                 onSome: (existingId) =>
                   box.uploads
                     .uploadFileVersion({
@@ -651,7 +651,7 @@ export const makeDmsMirrorBox = Effect.fn($I`makeDmsMirrorBox`)(function* () {
             )
           )
         ),
-        Effect.catchTag("BoxError", (error) => Effect.fail(boxUnavailable(error)))
+        Effect.catchTag("BoxError", (error) => error.pipe(boxUnavailable, Effect.fail))
       );
     const fields = yield* firstUploadedFileFields(files);
 

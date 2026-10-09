@@ -109,8 +109,9 @@ const fixtureGrant = ExecutionGrant.make({
  * @category fixtures
  * @since 0.0.0
  */
-export const fixtureFrozenGrantSet: FrozenGrantSet = Result.getOrThrow(
-  freezeGrantSet(Result.getOrThrow(addGrant(emptyDraftGrantSet(defaultPolicyRevision), fixtureGrant)), fixtureFrozenAt)
+const draftGrantSet = addGrant(emptyDraftGrantSet(defaultPolicyRevision), fixtureGrant).pipe(Result.getOrThrow);
+export const fixtureFrozenGrantSet: FrozenGrantSet = freezeGrantSet(draftGrantSet, fixtureFrozenAt).pipe(
+  Result.getOrThrow
 );
 
 /**

@@ -78,11 +78,15 @@ describe("@beep/openai", () => {
     "round-trips schema-derived OpenAI options through encoded form",
     [EmbeddingModelOptionsArbitrary, LanguageModelOptionsArbitrary],
     ([embeddingOptions, languageOptions]) => {
-      const decodedEmbeddingOptions = Result.getOrThrow(
-        decodeEmbeddingModelOptions(Result.getOrThrow(encodeEmbeddingModelOptions(embeddingOptions)))
+      const decodedEmbeddingOptions = encodeEmbeddingModelOptions(embeddingOptions).pipe(
+        Result.getOrThrow,
+        decodeEmbeddingModelOptions,
+        Result.getOrThrow
       );
-      const decodedLanguageOptions = Result.getOrThrow(
-        decodeLanguageModelOptions(Result.getOrThrow(encodeLanguageModelOptions(languageOptions)))
+      const decodedLanguageOptions = encodeLanguageModelOptions(languageOptions).pipe(
+        Result.getOrThrow,
+        decodeLanguageModelOptions,
+        Result.getOrThrow
       );
 
       expect(Eq.equals(decodedEmbeddingOptions, embeddingOptions)).toBe(true);

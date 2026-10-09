@@ -268,32 +268,40 @@ describe("@beep/openclaw intent models", () => {
       ).toBe(version);
       expect(
         sameProviderApiKey(
-          Result.getOrThrow(
-            decodeOpenclawProviderApiKeyResult(Result.getOrThrow(encodeOpenclawProviderApiKeyResult(apiKey)))
+          encodeOpenclawProviderApiKeyResult(apiKey).pipe(
+            Result.getOrThrow,
+            decodeOpenclawProviderApiKeyResult,
+            Result.getOrThrow
           ),
           apiKey
         )
       ).toBe(true);
       expect(
         sameGatewayIntent(
-          Result.getOrThrow(
-            decodeOpenclawGatewayIntentResult(Result.getOrThrow(encodeOpenclawGatewayIntentResult(gateway)))
+          encodeOpenclawGatewayIntentResult(gateway).pipe(
+            Result.getOrThrow,
+            decodeOpenclawGatewayIntentResult,
+            Result.getOrThrow
           ),
           gateway
         )
       ).toBe(true);
       expect(
         sameTelegramIntent(
-          Result.getOrThrow(
-            decodeOpenclawTelegramIntentResult(Result.getOrThrow(encodeOpenclawTelegramIntentResult(telegram)))
+          encodeOpenclawTelegramIntentResult(telegram).pipe(
+            Result.getOrThrow,
+            decodeOpenclawTelegramIntentResult,
+            Result.getOrThrow
           ),
           telegram
         )
       ).toBe(true);
       expect(
         sameDeploymentIntent(
-          Result.getOrThrow(
-            decodeOpenclawDeploymentIntentResult(Result.getOrThrow(encodeOpenclawDeploymentIntentResult(deployment)))
+          encodeOpenclawDeploymentIntentResult(deployment).pipe(
+            Result.getOrThrow,
+            decodeOpenclawDeploymentIntentResult,
+            Result.getOrThrow
           ),
           deployment
         )

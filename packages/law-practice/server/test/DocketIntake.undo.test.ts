@@ -274,7 +274,7 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
           messagesGone: 2,
           unmarked: 3,
         });
-        expect(A.sort(A.fromIterable(HashMap.keys(yield* Ref.get(fake.events))), Str.Order)).toStrictEqual([
+        expect(A.sort((yield* Ref.get(fake.events)).pipe(HashMap.keys, A.fromIterable), Str.Order)).toStrictEqual([
           "e-other",
           "e-recategorised",
           "e-verified",
@@ -367,7 +367,7 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
           ["e-uncategorised", "keep"],
           ["e-adopted", "delete"],
         ]);
-        expect(A.sort(A.fromIterable(HashMap.keys(yield* Ref.get(fake.events))), Str.Order)).toStrictEqual([
+        expect(A.sort((yield* Ref.get(fake.events)).pipe(HashMap.keys, A.fromIterable), Str.Order)).toStrictEqual([
           "e-client-added",
           "e-uncategorised",
           "e-verified-added",

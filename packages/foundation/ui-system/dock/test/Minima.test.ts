@@ -170,7 +170,7 @@ describe("reactive title minima", () => {
       });
 
       const [minima, exit] = yield* settledAtomValue(minimaAtom, capture.completed);
-      assertTrue(Exit.isSuccess(exit));
+      exit.pipe(Exit.isSuccess, assertTrue);
       expect(minima).toEqual(titleMinima(metrics, workspace, chrome));
     })
   );
@@ -228,8 +228,8 @@ describe("reactive title minima", () => {
         infeasible.groupBoxAtom(groupOne),
         capture.completed
       );
-      assertTrue(Exit.isSuccess(feasibleExit));
-      assertTrue(Exit.isSuccess(infeasibleExit));
+      feasibleExit.pipe(Exit.isSuccess, assertTrue);
+      infeasibleExit.pipe(Exit.isSuccess, assertTrue);
       const feasibleBox = O.getOrThrow(feasibleValue);
       const infeasibleBox = O.getOrThrow(infeasibleValue);
       expect(feasibleBox.width).toBeGreaterThanOrEqual(requirement);

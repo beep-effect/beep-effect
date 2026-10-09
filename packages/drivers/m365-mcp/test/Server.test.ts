@@ -257,14 +257,16 @@ describe("M365 MCP server", () => {
     ([failure, config]) => {
       assert.isTrue(
         sameM365ToolError(
-          Result.getOrThrow(decodeM365ToolErrorResult(Result.getOrThrow(encodeM365ToolErrorResult(failure)))),
+          encodeM365ToolErrorResult(failure).pipe(Result.getOrThrow, decodeM365ToolErrorResult, Result.getOrThrow),
           failure
         )
       );
       assert.isTrue(
         sameM365McpServerConfig(
-          Result.getOrThrow(
-            decodeM365McpServerConfigResult(Result.getOrThrow(encodeM365McpServerConfigResult(config)))
+          encodeM365McpServerConfigResult(config).pipe(
+            Result.getOrThrow,
+            decodeM365McpServerConfigResult,
+            Result.getOrThrow
           ),
           config
         )

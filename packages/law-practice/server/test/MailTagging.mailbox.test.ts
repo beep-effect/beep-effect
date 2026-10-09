@@ -411,7 +411,7 @@ describe("MailTagging M365 mailbox", () => {
       });
       const alwaysStale = yield* mailboxOver({
         getMessage: () => counted(Effect.succeed(full)),
-        updateMessageCategories: () => counted(Effect.fail(status(412))),
+        updateMessageCategories: () => status(412).pipe(Effect.fail, counted),
       });
       const gone = yield* mailboxOver({
         getMessage: () => Effect.fail(status(404)),

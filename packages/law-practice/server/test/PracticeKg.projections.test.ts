@@ -222,10 +222,8 @@ const normalizedPatentFixture = Md.make([
 ]);
 
 const testLayer = NodeServices.layer;
-const realCorpusEnabled = O.getOrElse(
-  Effect.runSync(Config.option(Config.Boolean("BEEP_TEST_OPPOLD_CORPUS"))),
-  () => false
-);
+const realCorpusConfig = Config.option(Config.Boolean("BEEP_TEST_OPPOLD_CORPUS"));
+const realCorpusEnabled = Effect.runSync(realCorpusConfig).pipe(O.getOrElse(() => false));
 
 const withDuckDb =
   (databasePath: string) =>

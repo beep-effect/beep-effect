@@ -103,18 +103,18 @@ describe("@beep/anthropic", () => {
 
       expect(
         sameApproximatePrice(
-          Result.getOrThrow(decodeApproximatePrice(Result.getOrThrow(encodeApproximatePrice(price)))),
+          encodeApproximatePrice(price).pipe(Result.getOrThrow, decodeApproximatePrice, Result.getOrThrow),
           price
         )
       ).toBe(true);
       expect(
         sameLanguageModelOptions(
-          Result.getOrThrow(decodeLanguageModelOptions(Result.getOrThrow(encodeLanguageModelOptions(options)))),
+          encodeLanguageModelOptions(options).pipe(Result.getOrThrow, decodeLanguageModelOptions, Result.getOrThrow),
           options
         )
       ).toBe(true);
       expect(
-        sameRepairError(Result.getOrThrow(decodeRepairError(Result.getOrThrow(encodeRepairError(error)))), error)
+        sameRepairError(error.pipe(encodeRepairError, Result.getOrThrow, decodeRepairError, Result.getOrThrow), error)
       ).toBe(true);
     },
     { arbitrary: fcRuns(50) }

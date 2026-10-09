@@ -114,18 +114,17 @@ const buildCommand = Command.make(
     }
     yield* fs.makeDirectory(resolvedBundleOut, { recursive: true });
     const build = buildPracticeKgBundle(options);
-    yield* Effect.scoped(
-      Layer.build(makePracticeKgBuildLayer(path.join(resolvedBundleOut, "kg.pglite"))).pipe(
-        Effect.flatMap((context) => build.pipe(Effect.provide(context)))
-      )
+    yield* Layer.build(makePracticeKgBuildLayer(path.join(resolvedBundleOut, "kg.pglite"))).pipe(
+      Effect.flatMap((context) => build.pipe(Effect.provide(context))),
+      Effect.scoped
     );
   })
 );
 
-const program = Effect.scoped(
-  Layer.build(BunServices.layer).pipe(
-    Effect.flatMap((context) => Command.run(buildCommand, { version: "0.0.0" }).pipe(Effect.provide(context)))
-  )
+const program = BunServices.layer.pipe(
+  Layer.build,
+  Effect.flatMap((context) => Command.run(buildCommand, { version: "0.0.0" }).pipe(Effect.provide(context))),
+  Effect.scoped
 );
 
 BunRuntime.runMain(program);

@@ -36,7 +36,7 @@ const usageExit = (): never => {
 };
 
 const bundleProbe = Effect.gen(function* () {
-  yield* Effect.scoped(Layer.build(RuntimeLayer));
+  yield* RuntimeLayer.pipe(Layer.build, Effect.scoped);
   process.stdout.write("bundle-ready\n");
 });
 
@@ -45,7 +45,11 @@ const makeProvideServices = (ledgerRoot: string, runtimeMode: typeof RuntimeMode
   const rdfLayer = RdfProjectionLive.pipe(Layer.provide(OxigraphSparqlQueryServiceLive), Layer.provide(LabConfigLive));
   const services = Layer.merge(ledgerLayer, rdfLayer).pipe(Layer.provide(BunServices.layer));
   return <A2, E, R>(effect: Effect.Effect<A2, E, R>) =>
-    Effect.scoped(Layer.build(services).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+    services.pipe(
+      Layer.build,
+      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+      Effect.scoped
+    );
 };
 
 type ProvideServices = ReturnType<typeof makeProvideServices>;

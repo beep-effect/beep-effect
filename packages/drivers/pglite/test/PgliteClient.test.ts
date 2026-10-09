@@ -45,7 +45,7 @@ describe("PgliteError", () => {
     "round-trips schema-derived driver errors through their encoded shape",
     [PgliteErrorArbitrary],
     ([error]) => {
-      const encoded = Result.getOrThrow(encodePgliteError(error));
+      const encoded = error.pipe(encodePgliteError, Result.getOrThrow);
       const decoded = Result.getOrThrow(decodePgliteError(encoded));
 
       expect(decoded).toEqual(error);

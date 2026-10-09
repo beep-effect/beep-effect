@@ -299,8 +299,10 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
     Effect.flatMap(Ref.get(runs), (map) =>
       O.match(HashMap.get(map, runId), {
         onNone: () =>
-          Effect.flatMap(Effect.orDie(Effect.fromResult(freezeRunFor(runId, now))), (created) =>
-            Effect.as(Ref.update(runs, HashMap.set(runId, created)), created)
+          freezeRunFor(runId, now).pipe(
+            Effect.fromResult,
+            Effect.orDie,
+            Effect.flatMap((created) => Effect.as(Ref.update(runs, HashMap.set(runId, created)), created))
           ),
         onSome: Effect.succeed,
       })

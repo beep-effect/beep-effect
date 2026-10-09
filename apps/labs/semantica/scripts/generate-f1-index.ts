@@ -143,9 +143,10 @@ const generateF1Index = Effect.gen(function* () {
 });
 
 if (import.meta.main) {
-  BunRuntime.runMain(
-    Effect.scoped(
-      Layer.build(BunServices.layer).pipe(Effect.flatMap((context) => generateF1Index.pipe(Effect.provide(context))))
-    )
+  BunServices.layer.pipe(
+    Layer.build,
+    Effect.flatMap((context) => generateF1Index.pipe(Effect.provide(context))),
+    Effect.scoped,
+    BunRuntime.runMain
   );
 }
