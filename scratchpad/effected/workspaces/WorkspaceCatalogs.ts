@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // pnpm catalogs: the `CatalogSet` value, the service that assembles it for a
 // workspace, and the real implementation of `@effected/npm`'s `CatalogResolver`
 // contract.
@@ -34,6 +35,8 @@ import type { LockfileReadFailure } from "./LockfileReader.ts";
 import { LockfileReader } from "./LockfileReader.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
+
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
 
 /**
  * Each importer's dependency-name → resolved-version map, keyed by importer path
@@ -159,10 +162,7 @@ export class CatalogSet extends Schema.Class<CatalogSet>("CatalogSet")({
 	 * @param text - The raw root `package.json` text.
 	 */
 	static readonly fromManifestWorkspaces = Effect.fn("CatalogSet.fromManifestWorkspaces")(function* (text: string) {
-		const manifest = yield* Effect.try({
-			try: () => JSON.parse(text) as unknown,
-			catch: (cause) => CatalogAssemblyError.make({ source: "manifest", path: "package.json", cause }),
-		});
+		const manifest = yield* Schema.decodeEffect(JsonValue)(text).pipe(Effect.mapError((cause) => CatalogAssemblyError.make({ source: "manifest", path: "package.json", cause })));
 		if (!isObject(manifest)) {
 			return yield* CatalogAssemblyError.make({
 					source: "manifest",
@@ -436,7 +436,10 @@ interface Assembled {
  * it. Not part of the public surface; `WorkspaceSnapshots` imports it
  * directly.
  */
-export const injectFromDocument = (
+export const injectFromDocument: {
+	(root: string, document: unknown, inline: CatalogSet, context: HookReplayContext): (hooks: ConfigDependencyHooksShape) => Effect.Effect<{ readonly injected: CatalogSet; readonly injection: HookInjection }, CatalogAssemblyError>;
+	(hooks: ConfigDependencyHooksShape, root: string, document: unknown, inline: CatalogSet, context: HookReplayContext): Effect.Effect<{ readonly injected: CatalogSet; readonly injection: HookInjection }, CatalogAssemblyError>;
+} = dual(5, (
 	hooks: ConfigDependencyHooksShape,
 	root: string,
 	document: unknown,
@@ -446,7 +449,7 @@ export const injectFromDocument = (
 	Effect.map(
 		hooks.inject(root, configDependenciesOf(document), inline.entries, inlinePeerDependencyRules(document), context),
 		(injection) => ({ injected: CatalogSet.fromCatalogs(injection.catalogs), injection }),
-	);
+	));
 
 /**
  * The {@link WorkspaceCatalogs} service shape.
@@ -973,8 +976,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 		Effect.gen(function* () {
 			const catalogs = yield* WorkspaceCatalogs;
 			return {
-				rangeOf: (packageName: string, catalog: Option.Option<string>) =>
-					catalogs.set().pipe(
+				rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: Option.Option<string>) => catalogs.set().pipe(
 						Effect.map((set) => set.rangeOf(packageName, catalog)),
 						Effect.catchTag("WorkspaceRootNotFoundError", (cause) =>
 							Effect.fail(
@@ -987,7 +989,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 								}),
 							),
 						),
-					),
+					)),
 			};
 		}),
 	);

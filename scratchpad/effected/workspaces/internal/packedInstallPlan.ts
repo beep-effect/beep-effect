@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // Everything PackedInstall decides that does not need a process: which
 // variables leak the parent manager's context, what each manager's consumer
 // project looks like, and how each spells "skip lifecycle scripts". Pure, so
@@ -55,7 +56,10 @@ export const versionOf = (stdout: string): string | undefined => {
 };
 
 /** The carrier first, then the rest of the closure; the failure names the first package the workspace lacks. */
-export const closureOf = (
+export const closureOf: {
+	(carrier: string, closure: ReadonlyArray<string> | "auto"): (packages: ReadonlyArray<WorkspacePackage>) => Result.Result<ReadonlyArray<WorkspacePackage>, string>;
+	(packages: ReadonlyArray<WorkspacePackage>, carrier: string, closure: ReadonlyArray<string> | "auto"): Result.Result<ReadonlyArray<WorkspacePackage>, string>;
+} = dual(3, (
 	packages: ReadonlyArray<WorkspacePackage>,
 	carrier: string,
 	closure: ReadonlyArray<string> | "auto",
@@ -85,7 +89,7 @@ export const closureOf = (
 		}
 	}
 	return Result.succeed(ordered);
-};
+});
 
 /** What one consumer project needs. */
 export interface ConsumerInput {
@@ -177,7 +181,10 @@ export const consumerFiles = (
 };
 
 /** The install argv, lifecycle scripts skipped the way this manager spells it. */
-export const installArgs = (manager: PackageManagerName, version: string): ReadonlyArray<string> => {
+export const installArgs: {
+	(version: string): (manager: PackageManagerName) => ReadonlyArray<string>;
+	(manager: PackageManagerName, version: string): ReadonlyArray<string>;
+} = dual(2, (manager: PackageManagerName, version: string): ReadonlyArray<string> => {
 	switch (manager) {
 		case "npm":
 			return ["install", "--ignore-scripts", "--no-audit", "--no-fund"];
@@ -190,7 +197,7 @@ export const installArgs = (manager: PackageManagerName, version: string): Reado
 		case "bun":
 			return ["install", "--ignore-scripts"];
 	}
-};
+});
 
 /**
  * A specifier no consumer outside the workspace can resolve: `workspace:`,
@@ -248,7 +255,10 @@ export const readPackedManifest = (manifestJson: string): Result.Result<PackedMa
  * a `bin` string when `name` is the unscoped package name. `undefined` when
  * the manifest is not a JSON object or declares no such bin.
  */
-export const binTargetOf = (manifestJson: string, name: string): string | undefined => {
+export const binTargetOf: {
+	(name: string): (manifestJson: string) => string | undefined;
+	(manifestJson: string, name: string): string | undefined;
+} = dual(2, (manifestJson: string, name: string): string | undefined => {
 	let manifest: unknown;
 	try {
 		manifest = JSON.parse(manifestJson);
@@ -263,7 +273,7 @@ export const binTargetOf = (manifestJson: string, name: string): string | undefi
 	if (!Predicate.isObject(bin) || Array.isArray(bin)) return undefined;
 	const target = (bin as Record<string, unknown>)[name];
 	return typeof target === "string" && Object.hasOwn(bin, name) ? target : undefined;
-};
+});
 
 /** Every specifier in a packed manifest's runtime maps that only the workspace could resolve (see `UNRESOLVABLE`). */
 export const unresolvedSpecifiers = (manifestJson: string): Result.Result<ReadonlyArray<string>, unknown> =>
@@ -276,7 +286,10 @@ export const unresolvedSpecifiers = (manifestJson: string): Result.Result<Readon
  * could pass on the wrong package. `PackedInstall.run` refuses it unless the
  * caller shares bin names deliberately (`allowSharedBins`).
  */
-export const binConflict = (
+export const binConflict: {
+	(others: ReadonlyArray<{ readonly name: string; readonly bins: ReadonlyArray<string> }>): (carrier: { readonly name: string; readonly bins: ReadonlyArray<string> }) => { readonly bin: string; readonly package: string } | undefined;
+	(carrier: { readonly name: string; readonly bins: ReadonlyArray<string> }, others: ReadonlyArray<{ readonly name: string; readonly bins: ReadonlyArray<string> }>): { readonly bin: string; readonly package: string } | undefined;
+} = dual(2, (
 	carrier: { readonly name: string; readonly bins: ReadonlyArray<string> },
 	others: ReadonlyArray<{ readonly name: string; readonly bins: ReadonlyArray<string> }>,
 ): { readonly bin: string; readonly package: string } | undefined => {
@@ -285,7 +298,7 @@ export const binConflict = (
 		if (other !== undefined) return { bin, package: other.name };
 	}
 	return undefined;
-};
+});
 
 /** A bare package name, scoped or not: an override key carrying a selector (`a>b`, `a@1`) is not one. */
 const BARE_NAME = /^(?:@[^/@\s>]+\/)?[^/@\s>]+$/;

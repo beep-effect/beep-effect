@@ -218,6 +218,7 @@ export class VersioningStrategy extends Schema.Class<VersioningStrategy>("Versio
 		if (this.perPackageTags) {
 			return releases.map((release) => ReleaseTag.scoped(release.name, release.version, options));
 		}
-		return [ReleaseTag.single(releases[0].version, options)];
+		const first = releases[0];
+		return first === undefined ? [] : [ReleaseTag.single(first.version, options)];
 	}
 }

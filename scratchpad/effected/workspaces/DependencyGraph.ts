@@ -149,6 +149,7 @@ export class DependencyGraph extends Schema.Class<DependencyGraph>("DependencyGr
 
 			while (stack.length > 0) {
 				const frame = stack[stack.length - 1];
+				if (frame === undefined) break;
 				if (frame.cursor >= frame.deps.length) {
 					onStack.delete(frame.node);
 					stack.pop();
@@ -156,6 +157,7 @@ export class DependencyGraph extends Schema.Class<DependencyGraph>("DependencyGr
 				}
 				const next = frame.deps[frame.cursor];
 				frame.cursor += 1;
+				if (next === undefined) continue;
 				if (onStack.has(next)) return true;
 				if (visited.has(next)) continue;
 				visited.add(next);

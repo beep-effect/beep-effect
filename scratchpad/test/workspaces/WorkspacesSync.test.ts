@@ -541,11 +541,13 @@ describe("getWorkspacePackagesSync — version-less manifests and skip reporting
 				packages.map((pkg) => pkg.name),
 				["root", "@x/bare", "@x/versioned"],
 			);
-			assert.isTrue(packages[0].isRootWorkspace);
+			const [root, bare, versioned] = packages;
+			if (root === undefined || bare === undefined || versioned === undefined) return assert.fail("expected three packages");
+			assert.isTrue(root.isRootWorkspace);
 			// Absent — never a placeholder, never a present `undefined` key.
-			assert.isFalse(Object.hasOwn(packages[0], "version"));
-			assert.isFalse(Object.hasOwn(packages[1], "version"));
-			assert.strictEqual(packages[2].version, "1.0.0");
+			assert.isFalse(Object.hasOwn(root, "version"));
+			assert.isFalse(Object.hasOwn(bare, "version"));
+			assert.strictEqual(versioned.version, "1.0.0");
 		}),
 	);
 

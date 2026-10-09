@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // The ONE workspace traversal.
 //
 // Both entry points drive this state machine: the Effect enumerator
@@ -32,7 +33,10 @@ export interface TraversalStop {
 export const isPruned = (entry: string): boolean => PRUNED_DIRECTORIES.has(entry);
 
 /** Join root-relative POSIX segments; `""` is the root itself. */
-export const joinRelative = (base: string, entry: string): string => (base === "" ? entry : `${base}/${entry}`);
+export const joinRelative: {
+	(entry: string): (base: string) => string;
+	(base: string, entry: string): string;
+} = dual(2, (base: string, entry: string): string => (base === "" ? entry : `${base}/${entry}`));
 
 /**
  * Whether `maxDepth` is a usable bound.

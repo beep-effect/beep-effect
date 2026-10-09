@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // The fetch rung of the config-dependency ladder: when neither
 // `node_modules/.pnpm-config` nor any discovered store holds the version a
 // side DECLARES, have pnpm put exactly that version into the store, verified
@@ -207,7 +208,10 @@ export const registrySettingsOf = (document: unknown): RegistrySettings => {
  * JSON-quoted string, which YAML reads verbatim, so no declared text can
  * change the document's structure.
  */
-export const scratchWorkspaceYaml = (
+export const scratchWorkspaceYaml: {
+	(version: string, settings?: RegistrySettings): (name: string) => string;
+	(name: string, version: string, settings?: RegistrySettings): string;
+} = dual((args) => typeof args[1] === "string", (
 	name: string,
 	version: string,
 	settings: RegistrySettings = { registries: {} },
@@ -220,7 +224,7 @@ export const scratchWorkspaceYaml = (
 		for (const [scope, url] of scopes) lines.push(`  ${JSON.stringify(scope)}: ${JSON.stringify(url)}`);
 	}
 	return `${lines.join("\n")}\n`;
-};
+});
 
 /** Whether `error` is a node filesystem "no such file" failure. */
 const isNotFound = (error: unknown): boolean => Predicate.isObject(error) && error.code === "ENOENT";
@@ -272,7 +276,10 @@ export const storeDirArgument = (stores: ReadonlyArray<string>): string | undefi
 };
 
 /** The pnpm argv for the verified fetch. */
-export const fetchArgs = (scratch: string, stores: ReadonlyArray<string>): ReadonlyArray<string> => {
+export const fetchArgs: {
+	(stores: ReadonlyArray<string>): (scratch: string) => ReadonlyArray<string>;
+	(scratch: string, stores: ReadonlyArray<string>): ReadonlyArray<string>;
+} = dual(2, (scratch: string, stores: ReadonlyArray<string>): ReadonlyArray<string> => {
 	const storeDir = storeDirArgument(stores);
 	return [
 		"install",
@@ -281,7 +288,7 @@ export const fetchArgs = (scratch: string, stores: ReadonlyArray<string>): Reado
 		scratch,
 		...(storeDir === undefined ? [] : ["--store-dir", storeDir]),
 	];
-};
+});
 
 /** Whether `resolved` sits under a store's `links/<name>/<version>/` tree. */
 const isStoreEntry = (resolved: string, name: string, version: string): boolean =>
@@ -328,15 +335,17 @@ export const makeFetchConfigDependency =
 					(dir) => Effect.promise(() => rm(dir, { recursive: true, force: true }).catch(() => undefined)),
 				);
 				const lockfile = scratchLockfile(name, version, integrity);
-				yield* io("writing the scratch workspace", async () => {
-					await writeFile(join(scratch, "pnpm-workspace.yaml"), scratchWorkspaceYaml(name, version, settings));
-					await writeFile(join(scratch, "pnpm-lock.yaml"), lockfile);
+				yield* io("writing the scratch workspace", () =>
+					writeFile(join(scratch, "pnpm-workspace.yaml"), scratchWorkspaceYaml(name, version, settings))
+						.then(() => writeFile(join(scratch, "pnpm-lock.yaml"), lockfile))
+						.then(() =>
 					// Copied as-is, never read: it may carry auth. The scratch's release
 					// removes it with the rest of the directory.
-					await copyFile(join(request.root, ".npmrc"), join(scratch, ".npmrc")).catch((error: unknown) => {
+					copyFile(join(request.root, ".npmrc"), join(scratch, ".npmrc")).catch((error: unknown) => {
 						if (!isNotFound(error)) throw error;
-					});
-				});
+					}),
+						),
+				);
 
 				const command = ChildProcess.make("pnpm", fetchArgs(scratch, request.stores), { cwd: scratch });
 				yield* Run.text(command, { timeout: FETCH_TIMEOUT }).pipe(

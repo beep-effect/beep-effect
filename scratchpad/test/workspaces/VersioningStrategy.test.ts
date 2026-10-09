@@ -27,8 +27,7 @@ const pkg = (name: string) =>
 /** A detector that publishes exactly the named packages and nothing else. */
 const publishes = (...names: ReadonlyArray<string>) =>
 	Layer.succeed(PublishabilityDetector, {
-		detect: (candidate: WorkspacePackage) =>
-			Effect.succeed(
+		detect: Effect.fn("PublishabilityDetector.detect")((candidate: WorkspacePackage) => Effect.succeed(
 				names.includes(candidate.name)
 					? [
 							PublishTarget.make({
@@ -39,7 +38,7 @@ const publishes = (...names: ReadonlyArray<string>) =>
 							}),
 						]
 					: [],
-			),
+			)),
 	});
 
 describe("VersioningStrategy.classify", () => {
@@ -245,8 +244,7 @@ describe("VersioningStrategy.detect — concurrency", () => {
 			const maxInFlight = yield* Ref.make(0);
 
 			const publishingDetector = Layer.succeed(PublishabilityDetector, {
-				detect: (candidate: WorkspacePackage) =>
-					Effect.gen(function* () {
+				detect: Effect.fn("PublishabilityDetector.detect")(function* (candidate: WorkspacePackage) {
 						yield* Ref.update(inFlight, (n) => n + 1);
 						const running = yield* Ref.get(inFlight);
 						yield* Ref.update(maxInFlight, (n) => Math.max(n, running));

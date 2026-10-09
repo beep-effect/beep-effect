@@ -26,12 +26,14 @@ import { dirname, join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, describe, layer } from "@effect/vitest";
 import { Run } from "../../../effected/commands/index.ts";
-import { Duration, Effect, Layer } from "effect";
+import { Duration, Effect, Layer, Result, Schema } from "effect";
 import { ChildProcess } from "effect/process";
 import type { PackageManagerName } from "../../../effected/workspaces/index.ts";
 import { Workspaces } from "../../../effected/workspaces/index.ts";
 import type { InstalledConsumer, PackedInstallBudget } from "../../../effected/workspaces/testing.ts";
 import { PackedInstall } from "../../../effected/workspaces/testing.ts";
+
+const JsonValue = Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown));
 
 const CARRIER = "@effected/packed-install-fixture-carrier";
 const LIB = "@effected/packed-install-fixture-lib";
@@ -293,8 +295,7 @@ const guards = (...runs: ReadonlyArray<PackedInstallBudget>) => {
 const readJson = (file: string): Record<string, unknown> => JSON.parse(readFileSync(file, "utf8"));
 
 /** Every consumer-side fact the install path promises, for one consumer. */
-const assertConsumer = (consumer: InstalledConsumer, tarballs: Readonly<Record<string, string>>) =>
-	Effect.gen(function* () {
+const assertConsumer = Effect.fn("assertConsumer")(function* (consumer: InstalledConsumer, tarballs: Readonly<Record<string, string>>) {
 		const scratch = dirname(consumer.directory);
 		// The realpath'd scratch: file: specs and the install cwd agree.
 		assert.strictEqual(consumer.directory, realpathSync(consumer.directory), consumer.manager);
@@ -385,7 +386,7 @@ describe("PackedInstall against a real fixture workspace", () => {
 							const carrierTarball = result.tarballs[CARRIER] ?? "";
 							const packed = spawnSync("tar", ["-xzOf", carrierTarball, "package/package.json"], { encoding: "utf8" });
 							assert.strictEqual(packed.status, 0, packed.stderr);
-							assert.deepStrictEqual(JSON.parse(packed.stdout).dependencies, { [LIB]: VERSION });
+							assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(packed.stdout)).dependencies, { [LIB]: VERSION });
 							for (const consumer of result.consumers) yield* assertConsumer(consumer, result.tarballs);
 							const scratch = dirname(result.consumers[0]?.directory ?? "");
 							assert.isTrue(existsSync(scratch), "the scratch directory exists while the scope is open");
@@ -418,7 +419,7 @@ describe("PackedInstall against a real fixture workspace", () => {
 					});
 					assert.strictEqual(packed.status, 0, packed.stderr);
 					// pnpm rewrote workspace:^ to the lib's version.
-					assert.deepStrictEqual(JSON.parse(packed.stdout).dependencies, { [LIB]: `^${VERSION}` });
+					assert.deepStrictEqual(Result.getOrThrow(Schema.decodeResult(JsonValue)(packed.stdout)).dependencies, { [LIB]: `^${VERSION}` });
 					assert.deepStrictEqual(
 						result.consumers.map((consumer) => consumer.manager),
 						[...sourceManagers],
@@ -659,8 +660,7 @@ describe("PackedInstall overrides: a dependency no registry has, supplied from o
 	const linkedManagers = (["npm", "pnpm", "yarn", "bun"] as const).filter((pm) => VERSIONS[pm] !== undefined);
 
 	/** The bin reaches external through bridge, by runBin and by the command runBin builds, under every consumer. */
-	const assertLinked = (consumers: ReadonlyArray<InstalledConsumer>) =>
-		Effect.gen(function* () {
+	const assertLinked = Effect.fn("assertLinked")(function* (consumers: ReadonlyArray<InstalledConsumer>) {
 			assert.deepStrictEqual(
 				consumers.map((consumer) => consumer.manager),
 				[...linkedManagers],

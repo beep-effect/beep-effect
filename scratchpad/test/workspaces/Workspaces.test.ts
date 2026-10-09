@@ -136,8 +136,7 @@ const CUSTOM_REGISTRY = "https://npm.internal.test/";
 
 /** A detector nothing in this package would ever produce by accident. */
 const customDetector = Layer.succeed(PublishabilityDetector, {
-	detect: (pkg: WorkspacePackage) =>
-		Effect.succeed([
+	detect: Effect.fn("PublishabilityDetector.detect")((pkg: WorkspacePackage) => Effect.succeed([
 			PublishTarget.make({
 				name: pkg.name,
 				registry: CUSTOM_REGISTRY,
@@ -145,7 +144,7 @@ const customDetector = Layer.succeed(PublishabilityDetector, {
 				access: "restricted",
 				provenance: false,
 			}),
-		]),
+		])),
 });
 
 /** Resolves whichever detector is in context and reports its registry. */

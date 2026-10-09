@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // The `packages:` enumerator. `@effected/glob` classifies the pattern set and
 // tells us, per wildcard, whether it can cross a segment boundary; when it can,
 // a trailing `/**` earns a real descent rather than a one-level read.
@@ -43,7 +44,10 @@ const baseOf = (pattern: GlobPattern): string => pattern.enumerationPrefix.repla
  * (literal or wildcard), and is rejected by no exclude. Results are sorted by
  * relative path.
  */
-export const enumerate = (
+export const enumerate: {
+	(globs: GlobSet, options?: EnumerateOptions): (root: string) => Effect.Effect<ReadonlyArray<EnumeratedDirectory>, EnumerationFailure, FileSystem.FileSystem | Path.Path>;
+	(root: string, globs: GlobSet, options?: EnumerateOptions): Effect.Effect<ReadonlyArray<EnumeratedDirectory>, EnumerationFailure, FileSystem.FileSystem | Path.Path>;
+} = dual((args) => typeof args[0] === "string" && args.length >= 2, (
 	root: string,
 	globs: GlobSet,
 	options?: EnumerateOptions,
@@ -181,4 +185,4 @@ export const enumerate = (
 		}
 		results.sort((a, b) => (a.relativePath < b.relativePath ? -1 : a.relativePath > b.relativePath ? 1 : 0));
 		return results;
-	});
+	}));

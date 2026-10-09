@@ -18,6 +18,8 @@ import { WorkspacePackage } from "./WorkspacePackage.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
 
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
+
 /**
  * Raised when a workspace member's `package.json` cannot be read, parsed, or
  * used — it is missing, malformed, or lacks a `name`.
@@ -318,10 +320,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 								(cause) => WorkspaceDiscoveryError.make({ root, path: packageJsonPath, kind: "read", cause }),
 							),
 						);
-					const parsed = yield* Effect.try({
-						try: () => JSON.parse(content) as unknown,
-						catch: (cause) => WorkspaceDiscoveryError.make({ root, path: packageJsonPath, kind: "invalidJson", cause }),
-					});
+					const parsed = yield* Schema.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause) => WorkspaceDiscoveryError.make({ root, path: packageJsonPath, kind: "invalidJson", cause })));
 
 					// `JSON.parse` never returns `undefined`, so a guard on `undefined`
 					// alone does not cover a manifest whose entire content is `null`, `42`
@@ -869,7 +868,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 				return index;
 			};
 			return {
-				versionOf: (packageName: string) => {
+				versionOf: Effect.fn("WorkspaceResolver.versionOf")((packageName: string) => {
 					const specifier = `workspace:${packageName}`;
 					return discovery.listPackages().pipe(
 						Effect.mapError((cause) => DependencyResolutionError.make({ specifier, cause })),
@@ -886,7 +885,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 								: Effect.succeedSome(version);
 						}),
 					);
-				},
+				}),
 			};
 		}),
 	);

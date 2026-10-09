@@ -1,6 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import { GlobPattern } from "../../effected/glob/index.ts";
-import { Option, Schema } from "effect";
+import { Option, Schema, Result } from "effect";
 import { PublishConfig, WorkspacePackage } from "../../effected/workspaces/index.ts";
 
 const base = {
@@ -178,18 +178,18 @@ describe("WorkspacePackage", () => {
 	it("publishConfig.linkDirectory round-trips through decode and encode", () => {
 		// The pnpm dist-linking field: `directory` says what publishes,
 		// `linkDirectory` says workspace links point there during development.
-		const decoded = Schema.decodeSync(PublishConfig)({ directory: "dist/dev/pkg", linkDirectory: true });
+		const decoded = Result.getOrThrow(Schema.decodeResult(PublishConfig)({ directory: "dist/dev/pkg", linkDirectory: true }));
 		assert.isTrue(decoded.linkDirectory);
 		assert.strictEqual(decoded.directory, "dist/dev/pkg");
 
-		const encoded = Schema.encodeUnknownSync(PublishConfig)(decoded);
+		const encoded = Result.getOrThrow(Schema.encodeUnknownResult(PublishConfig)(decoded));
 		assert.deepStrictEqual(encoded, { directory: "dist/dev/pkg", linkDirectory: true });
 	});
 
 	it("publishConfig.linkDirectory is an optionalKey — absent stays absent, never explicit undefined", () => {
-		const absent = Schema.decodeSync(PublishConfig)({ access: "public" });
+		const absent = Result.getOrThrow(Schema.decodeResult(PublishConfig)({ access: "public" }));
 		assert.isFalse("linkDirectory" in absent);
-		assert.isFalse("linkDirectory" in Schema.encodeUnknownSync(PublishConfig)(absent));
+		assert.isFalse("linkDirectory" in Result.getOrThrow(Schema.encodeUnknownResult(PublishConfig)(absent)));
 
 		const explicit = PublishConfig.make({ linkDirectory: false });
 		assert.isFalse(explicit.linkDirectory);
@@ -253,8 +253,8 @@ describe("WorkspacePackage.manifestRecord", () => {
 				sideEffects: false,
 			},
 		});
-		const wire = JSON.parse(JSON.stringify(Schema.encodeUnknownSync(WorkspacePackage)(pkg))) as unknown;
-		const decoded = Schema.decodeUnknownSync(WorkspacePackage)(wire);
+		const wire = JSON.parse(JSON.stringify(Result.getOrThrow(Schema.encodeUnknownResult(WorkspacePackage)(pkg)))) as unknown;
+		const decoded = Result.getOrThrow(Schema.decodeUnknownResult(WorkspacePackage)(wire));
 		assert.deepStrictEqual(decoded.manifestRecord, pkg.manifestRecord);
 		assert.deepStrictEqual(decoded.dependencies, { effect: "^4.0.0" });
 	});
@@ -270,7 +270,7 @@ describe("WorkspacePackage.manifestRecord", () => {
 			relativePath: "packages/old",
 			workspaceRoot: "/repo",
 		};
-		const decoded = Schema.decodeSync(WorkspacePackage)(legacy);
+		const decoded = Result.getOrThrow(Schema.decodeResult(WorkspacePackage)(legacy));
 		assert.deepStrictEqual(decoded.manifestRecord, {});
 	});
 
@@ -290,6 +290,6 @@ describe("WorkspacePackage.manifestRecord", () => {
 			packageJsonPath: "/repo/packages/old/package.json",
 			relativePath: "packages/old",
 		};
-		assert.throws(() => Schema.decodeUnknownSync(WorkspacePackage)(preField));
+		assert.throws(() => Result.getOrThrow(Schema.decodeUnknownResult(WorkspacePackage)(preField)));
 	});
 });

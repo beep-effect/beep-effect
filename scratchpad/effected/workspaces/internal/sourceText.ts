@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // The one lexer behind SourceBoundary: a single pass that tells code from
 // comments and literals, so a scanner looking for real references never trips
 // on prose, a string, template text or a regex body — and never lets a "/*"
@@ -339,7 +340,10 @@ const isPropertyKey = (code: string, before: number, after: number): boolean => 
  * (`child.process`), a longer identifier, a private field and an object-literal
  * key or type member are not.
  */
-export const references = (code: string, name: string): ReadonlyArray<number> => {
+export const references: {
+	(name: string): (code: string) => ReadonlyArray<number>;
+	(code: string, name: string): ReadonlyArray<number>;
+} = dual(2, (code: string, name: string): ReadonlyArray<number> => {
 	const found: Array<number> = [];
 	for (let at = code.indexOf(name); at !== -1; at = code.indexOf(name, at + name.length)) {
 		const before = code[at - 1];
@@ -361,7 +365,7 @@ export const references = (code: string, name: string): ReadonlyArray<number> =>
 		if (GLOBAL_OBJECTS.has(code.slice(start + 1, end + 1))) found.push(at);
 	}
 	return found;
-};
+});
 
 /** The identifier ending at or before `end` (skipping whitespace); `""` when it is itself a member access. */
 const wordEndingAt = (code: string, end: number): string => {

@@ -31,13 +31,15 @@ import { pathToFileURL } from "node:url";
 import { Run } from "../commands/index.ts";
 import type { PartialReleaseAgeGate } from "../npm/index.ts";
 import { CatalogAssemblyError } from "../npm/index.ts";
-import { Context, Duration, Effect, Layer, Predicate, Schema } from "effect";
+import { Context, Duration, Effect, Layer, Predicate, Schema, Result } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import type { CatalogEntries } from "./internal/catalogs.ts";
 import { normalize } from "./internal/catalogs.ts";
 import { makeFetchConfigDependency } from "./internal/configDependencyFetch.ts";
 import type { ResolvedPnpmfile } from "./internal/configDependencyResolution.ts";
 import { lookupPnpmfiles, resolvePnpmfiles } from "./internal/configDependencyResolution.ts";
+
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
 
 /**
  * The pnpm config surface a `pnpmfile.cjs` `updateConfig` hook reads and
@@ -653,11 +655,11 @@ export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks
 	 * the default catalog path provably executes no config-dependency code.
 	 */
 	static readonly layerNoop: Layer.Layer<ConfigDependencyHooks> = Layer.succeed(ConfigDependencyHooks, {
-		inject: (_root, _configDependencies, seed, rules) =>
+		inject: Effect.fn("ConfigDependencyHooks.inject")((_root: string, _configDependencies: Readonly<Record<string, string>>, seed: Readonly<Record<string, Readonly<Record<string, string>>>>, rules: PeerDependencyRules | undefined) =>
 			// The seed passes through untouched on every slice, rules included: a
 			// no-op replay changes nothing, and returning empty rules here would be
 			// indistinguishable from a workspace that declares none.
-			Effect.succeed(untouched(seed, rules)),
+			Effect.succeed(untouched(seed, rules))),
 	});
 
 	/**
@@ -694,8 +696,7 @@ export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks
 	 * `Workspaces` composites of the same name.
 	 */
 	static readonly layerLive: Layer.Layer<ConfigDependencyHooks> = Layer.succeed(ConfigDependencyHooks, {
-		inject: (root, configDependencies, seed, rules, context) =>
-			Effect.gen(function* () {
+		inject: Effect.fn("ConfigDependencyHooks.inject")(function* (root: string, configDependencies: Readonly<Record<string, string>>, seed: Readonly<Record<string, Readonly<Record<string, string>>>>, rules: PeerDependencyRules | undefined, context: HookReplayContext | undefined) {
 				if (Object.keys(configDependencies).length === 0) return untouched(seed, rules);
 				const pnpmfiles = yield* resolvePnpmfiles(root, configDependencies, { side: context });
 				return yield* replayInProcess(pnpmfiles, seed, rules);
@@ -741,8 +742,7 @@ export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks
 	 */
 	static readonly layerFrom = (entries: Readonly<Record<string, string>>): Layer.Layer<ConfigDependencyHooks> =>
 		Layer.succeed(ConfigDependencyHooks, {
-			inject: (_root, configDependencies, seed, rules) =>
-				Effect.gen(function* () {
+			inject: Effect.fn("ConfigDependencyHooks.inject")(function* (_root: string, configDependencies: Readonly<Record<string, string>>, seed: Readonly<Record<string, Readonly<Record<string, string>>>>, rules: PeerDependencyRules | undefined) {
 					if (Object.keys(configDependencies).length === 0) return untouched(seed, rules);
 					const pnpmfiles = yield* lookupPnpmfiles(entries, configDependencies);
 					return yield* replayInProcess(pnpmfiles, seed, rules);
@@ -836,8 +836,7 @@ export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks
 				const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
 				const fetch = makeFetchConfigDependency(spawner);
 				return {
-					inject: (root, configDependencies, seed, rules, context) =>
-						Effect.gen(function* () {
+					inject: Effect.fn("ConfigDependencyHooks.inject")(function* (root: string, configDependencies: Readonly<Record<string, string>>, seed: Readonly<Record<string, Readonly<Record<string, string>>>>, rules: PeerDependencyRules | undefined, context: HookReplayContext | undefined) {
 							if (Object.keys(configDependencies).length === 0) return untouched(seed, rules);
 
 							// Resolve in the parent: the `..` refusal and the declared-version
@@ -864,13 +863,13 @@ export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks
 								"--input-type=module",
 								"-e",
 								REPLAY_SCRIPT,
-								JSON.stringify(seed),
+								Result.getOrThrow(Schema.encodeResult(JsonValue)(seed)),
 								// The rules seed rides the same argv channel as the catalog seed —
 								// never spliced into the program text, which must stay a static
 								// string (a bundler compiles an interpolated dynamic import into an
 								// unresolvable context module).
-								JSON.stringify(rules ?? NO_PEER_RULES),
-								JSON.stringify(loadable),
+								Result.getOrThrow(Schema.encodeResult(JsonValue)(rules ?? NO_PEER_RULES)),
+								Result.getOrThrow(Schema.encodeResult(JsonValue)(loadable)),
 							]);
 							// The replay executes arbitrary config-dependency code; bound it, or a
 							// spinning pnpmfile hangs catalog assembly for the whole program. On
@@ -879,7 +878,7 @@ export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks
 							// any other transport failure.
 							const payload = yield* Run.jsonLine(command, ReplayPayload, { timeout: REPLAY_TIMEOUT }).pipe(
 								Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-								Effect.catch((cause) => Effect.fail(CatalogAssemblyError.make({ source: "hooks", path: root, cause }))),
+								Effect.mapError((cause) => CatalogAssemblyError.make({ source: "hooks", path: root, cause })),
 							);
 
 							// A serialized per-name failure: the child reports a real load/replay

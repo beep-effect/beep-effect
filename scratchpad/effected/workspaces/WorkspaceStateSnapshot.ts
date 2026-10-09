@@ -495,8 +495,7 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 				// The same precedence `resolve` applies — own catalogs, then the seed.
 				// A resolver that ignored the seed would answer differently from
 				// `resolve` on the very snapshot it is bound to.
-				rangeOf: (packageName: string, catalog: Option.Option<string>) =>
-					Effect.succeed(this.#catalogRange(packageName, catalog)),
+				rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: Option.Option<string>) => Effect.succeed(this.#catalogRange(packageName, catalog))),
 			});
 		}
 		return this.#catalogResolver;
@@ -513,7 +512,7 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 				// The contract reserves `none` for a NON-member, so a known member that
 				// declared no version fails typed — the same answer the discovery-backed
 				// resolver gives.
-				versionOf: (packageName: string) => {
+				versionOf: Effect.fn("WorkspaceResolver.versionOf")((packageName: string): Effect.Effect<Option.Option<string>, DependencyResolutionError> => {
 					const member = this.#packages().get(packageName);
 					if (member === undefined) return Effect.succeed(Option.none<string>());
 					const version = member.version;
@@ -527,7 +526,7 @@ export class WorkspaceStateSnapshot extends Schema.Class<WorkspaceStateSnapshot>
 						);
 					}
 					return Effect.succeedSome(version);
-				},
+				}),
 			});
 		}
 		return this.#workspaceResolver;

@@ -1,4 +1,5 @@
 // @effect-diagnostics nodeBuiltinImport:skip-file
+import { dual } from "effect/Function";
 // On-disk fixtures for the config-dependency resolution ladder: a fake
 // `node_modules/.pnpm-config/<name>` install, a fake pnpm store `links/` tree,
 // and the `.modules.yaml` that points one at the other. Real filesystem by
@@ -7,6 +8,8 @@
 
 import { mkdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+
+type Pnpmfile = readonly [filename: string, source: string];
 
 /** A pnpmfile whose hook injects `hooked-dep` at `range` into the default catalog — the value proves WHICH file ran. */
 export const pnpmfileInjecting = (range: string): string =>
@@ -32,13 +35,19 @@ export const pnpmfileInjectingCjs = (range: string): string =>
 	].join("\n");
 
 /** Write `dir/package.json` with `name` and `version`, creating the directory. */
-export const writeManifest = (dir: string, name: string, version: string | undefined): void => {
+export const writeManifest: {
+	(name: string, version: string | undefined): (dir: string) => void;
+	(dir: string, name: string, version: string | undefined): void;
+} = dual(3, (dir: string, name: string, version: string | undefined): void => {
 	mkdirSync(dir, { recursive: true });
 	writeFileSync(join(dir, "package.json"), JSON.stringify(version === undefined ? { name } : { name, version }));
-};
+});
 
 /** The `<root>/node_modules/.pnpm-config/<name>` directory. */
-export const installedDir = (root: string, name: string): string => join(root, "node_modules", ".pnpm-config", name);
+export const installedDir: {
+	(name: string): (root: string) => string;
+	(root: string, name: string): string;
+} = dual(2, (root: string, name: string): string => join(root, "node_modules", ".pnpm-config", name));
 
 /**
  * Install `name@version` under `.pnpm-config` as a REAL directory (not a
@@ -57,39 +66,51 @@ export const installConfigDependency = (
 };
 
 /** The `<store>/links/<name>/<version>/<hash>/node_modules/<name>` directory. */
-export const storeLinkDir = (store: string, name: string, version: string, hash: string): string =>
-	join(store, "links", name, version, hash, "node_modules", name);
+export const storeLinkDir: {
+	(name: string, version: string, hash: string): (store: string) => string;
+	(store: string, name: string, version: string, hash: string): string;
+} = dual(4, (store: string, name: string, version: string, hash: string): string =>
+	join(store, "links", name, version, hash, "node_modules", name));
 
 /**
  * Populate a fake store with `name@version` under `hash`, with an optional
  * pnpmfile. Returns the package directory.
  */
-export const storeConfigDependency = (
+export const storeConfigDependency: {
+	(name: string, version: string, hash: string, pnpmfile?: Pnpmfile): (store: string) => string;
+	(store: string, name: string, version: string, hash: string, pnpmfile?: Pnpmfile): string;
+} = dual((args) => typeof args[3] === "string", (
 	store: string,
 	name: string,
 	version: string,
 	hash: string,
-	pnpmfile?: readonly [filename: string, source: string],
+	pnpmfile?: Pnpmfile,
 ): string => {
 	const dir = storeLinkDir(store, name, version, hash);
 	writeManifest(dir, name, version);
 	if (pnpmfile !== undefined) writeFileSync(join(dir, pnpmfile[0]), pnpmfile[1]);
 	return dir;
-};
+});
 
 /** Symlink `.pnpm-config/<name>` at the store's copy, the way pnpm installs a config dependency. */
-export const linkConfigDependency = (root: string, name: string, target: string): void => {
+export const linkConfigDependency: {
+	(name: string, target: string): (root: string) => void;
+	(root: string, name: string, target: string): void;
+} = dual(3, (root: string, name: string, target: string): void => {
 	const link = installedDir(root, name);
 	mkdirSync(dirname(link), { recursive: true });
 	symlinkSync(target, link, "dir");
-};
+});
 
 /** Write `<root>/node_modules/.modules.yaml` naming `store` as pnpm does (quoted keys). */
-export const writeModulesYaml = (root: string, store: string): void => {
+export const writeModulesYaml: {
+	(store: string): (root: string) => void;
+	(root: string, store: string): void;
+} = dual(2, (root: string, store: string): void => {
 	const dir = join(root, "node_modules");
 	mkdirSync(dir, { recursive: true });
 	writeFileSync(join(dir, ".modules.yaml"), `"layoutVersion": 5\n"storeDir": ${JSON.stringify(store)}\n`);
-};
+});
 
 /**
  * The fake `pnpm` executable {@link writeFakePnpm} installs: a stand-in for

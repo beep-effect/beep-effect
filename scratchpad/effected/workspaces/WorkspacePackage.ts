@@ -13,6 +13,8 @@ import { Package } from "../package-json/index.ts";
 import type { PlatformError } from "effect";
 import { Effect, FileSystem, Option, Schema } from "effect";
 
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
+
 const EMPTY: Record<string, string> = Object.freeze(Object.create(null) as Record<string, string>);
 
 // The frozen empty default for `manifestRecord`, shared like the dependency-map
@@ -209,7 +211,7 @@ export class WorkspacePackage extends Schema.Class<WorkspacePackage>("WorkspaceP
 	/** The npm scope (`@org`), or `Option.none()` for an unscoped name. */
 	get scope(): Option.Option<string> {
 		const match = /^(@[^/]+)\//.exec(this.name);
-		return match === null ? Option.none() : Option.some(match[1]);
+		return Option.fromUndefinedOr(match?.[1]);
 	}
 
 	/** The name with any scope stripped. */
@@ -318,7 +320,10 @@ export class WorkspacePackage extends Schema.Class<WorkspacePackage>("WorkspaceP
 
 		for (const [name, version] of Object.entries(mine)) {
 			if (!Object.hasOwn(theirs, name)) added[name] = version;
-			else if (theirs[name] !== version) changed[name] = { from: theirs[name], to: version };
+			else {
+				const previous = theirs[name];
+				if (previous !== undefined && previous !== version) changed[name] = { from: previous, to: version };
+			}
 		}
 		for (const [name, version] of Object.entries(theirs)) {
 			if (!Object.hasOwn(mine, name)) removed[name] = version;
@@ -359,10 +364,7 @@ export class WorkspacePackage extends Schema.Class<WorkspacePackage>("WorkspaceP
 						WorkspaceManifestError.make({ packageJsonPath: self.packageJsonPath, kind: "read", cause }),
 				),
 			);
-		const raw = yield* Effect.try({
-			try: () => JSON.parse(content) as unknown,
-			catch: (cause) => WorkspaceManifestError.make({ packageJsonPath: self.packageJsonPath, kind: "decode", cause }),
-		});
+		const raw = yield* Schema.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause) => WorkspaceManifestError.make({ packageJsonPath: self.packageJsonPath, kind: "decode", cause })));
 		return yield* Package.decode(raw).pipe(
 			Effect.mapError(
 				(cause) => WorkspaceManifestError.make({ packageJsonPath: self.packageJsonPath, kind: "decode", cause }),

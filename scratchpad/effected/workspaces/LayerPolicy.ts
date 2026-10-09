@@ -3,6 +3,8 @@ import { DependencyField } from "../npm/index.ts";
 import { Effect, FileSystem, Result, Schema } from "effect";
 import { ALL_DEPENDENCY_FIELDS } from "./internal/dependencyFields.ts";
 
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
+
 const REQUIRED_EDGE = /^\S+ -> \S+$/u;
 
 /** `input` without `keys`, when it is a plain object; anything else passes through for the schema to reject. */
@@ -131,10 +133,7 @@ export class LayerPolicy extends Schema.Class<LayerPolicy>("LayerPolicy")({
 		const text = yield* fs
 			.readFileString(path)
 			.pipe(Effect.mapError((cause) => LayerPolicyError.make({ reason: "read", path, cause })));
-		const json = yield* Effect.try({
-			try: () => JSON.parse(text) as unknown,
-			catch: (cause) => LayerPolicyError.make({ reason: "json", path, cause }),
-		});
+		const json = yield* Schema.decodeEffect(JsonValue)(text).pipe(Effect.mapError((cause) => LayerPolicyError.make({ reason: "json", path, cause })));
 		return yield* LayerPolicy.decode(json, { path, allowKeys: options?.allowKeys });
 	});
 }

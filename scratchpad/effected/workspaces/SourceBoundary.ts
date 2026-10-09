@@ -660,14 +660,12 @@ export class SourceBoundary {
 				// stat follows links, so a dangling one fails NotFound; it has nothing to scan, so skip it.
 				// A NotFound on an entry that is not a link still fails: nothing may drop out of the scan silently.
 				const found = yield* fs.stat(full).pipe(
-					Effect.map(Option.some),
-					Effect.catch((error) =>
-						error.reason._tag === "NotFound"
-							? fs.readLink(full).pipe(
+					Effect.asSome,
+					Effect.catchIf((error) => error.reason._tag === "NotFound", (error) =>
+						fs.readLink(full).pipe(
 									Effect.as(Option.none<FileSystem.File.Info>()),
 									Effect.mapError(() => error),
-								)
-							: Effect.fail(error),
+							),
 					),
 				);
 				if (Option.isNone(found)) continue;

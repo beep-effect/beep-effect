@@ -18,6 +18,8 @@ import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
 
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
+
 /**
  * Raised when the workspace's lockfile cannot be read off disk.
  *
@@ -235,10 +237,7 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 					// `JSON.parse` returns `undefined` for nothing: a manifest of `null`
 					// parses to `null`, and reading `.name` off it would throw a TypeError
 					// as an unhandled DEFECT. Narrow to a plain object before touching it.
-					const parsed = yield* Effect.try({
-						try: () => JSON.parse(content) as unknown,
-						catch: () => undefined,
-					}).pipe(Effect.orElseSucceed(() => undefined as unknown));
+					const parsed = yield* Schema.decodeEffect(JsonValue)(content).pipe(Effect.orElseSucceed(() => undefined));
 					if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return Option.none<string>();
 					const name = (parsed as Record<string, unknown>).name;
 					return typeof name === "string" && name.length > 0 ? Option.some(name) : Option.none<string>();

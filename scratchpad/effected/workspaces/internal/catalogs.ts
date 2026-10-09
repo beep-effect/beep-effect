@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // The ONLY module that imports `@pnpm/catalogs.*`.
 //
 // Those four packages are what make this package integrated tier: they are
@@ -83,7 +84,10 @@ const define = (target: Record<string, unknown>, key: string, value: unknown): v
  * catalog entry — an ordinary `Option.none()` to the caller), and a
  * `CatalogMisconfiguration` when pnpm reports the catalog itself is malformed.
  */
-export const rangeOf = (
+export const rangeOf: {
+	(dependency: string, specifier: string): (catalogs: Catalogs) => string | undefined | CatalogMisconfiguration;
+	(catalogs: Catalogs, dependency: string, specifier: string): string | undefined | CatalogMisconfiguration;
+} = dual(3, (
 	catalogs: Catalogs,
 	dependency: string,
 	specifier: string,
@@ -95,4 +99,4 @@ export const rangeOf = (
 		misconfiguration: (bad) => ({ catalogName: bad.catalogName, detail: bad.error.message }),
 		unused: () => undefined,
 	});
-};
+});

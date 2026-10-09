@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // The importer → instance join shared by every walk over a parsed lockfile
 // (`PeerCheck`, `DuplicateCheck`). One implementation, so the two checks cannot
 // disagree about which importers are answerable, and so the root-importer
@@ -46,7 +47,10 @@ export type ImporterRoots =
  * Returns `undefined` when the importer cannot be resolved at all, which every
  * caller reports rather than treating as "no problems here".
  */
-export const rootInstances = (
+export const rootInstances: {
+	(importerPath: string, index: InstanceIndex): (lockfile: Lockfile) => ImporterRoots | undefined;
+	(lockfile: Lockfile, importerPath: string, index: InstanceIndex): ImporterRoots | undefined;
+} = dual(3, (
 	lockfile: Lockfile,
 	importerPath: string,
 	index: InstanceIndex,
@@ -86,4 +90,4 @@ export const rootInstances = (
 	// unresolvable; one whose every dependency failed to join is not.
 	if (!resolvable && importer.value.dependencies.length > 0) return undefined;
 	return { _tag: "dependencies", instances };
-};
+});

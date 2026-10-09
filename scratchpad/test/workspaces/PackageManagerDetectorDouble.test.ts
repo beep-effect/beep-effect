@@ -54,7 +54,6 @@ describe("PackageManagerDetector.makeTest", () => {
 			// Assert helpers are not type predicates, so narrow with a real `if`.
 			if (!Exit.isFailure(exit)) {
 				assert.fail("expected the unstubbed member to die");
-				return;
 			}
 			// A DEFECT, not a typed failure — the discriminating half. An
 			// implementation that returned `PackageManagerDetectionError` instead
@@ -71,7 +70,6 @@ describe("PackageManagerDetector.makeTest", () => {
 			const exit = yield* Effect.exit(PackageManagerDetector.makeTest().detect("/repo"));
 			if (!Exit.isFailure(exit)) {
 				assert.fail("expected the unstubbed member to die");
-				return;
 			}
 			const die = exit.cause.reasons.find(Cause.isDieReason);
 			assert.instanceOf(die?.defect, Error);
@@ -115,7 +113,6 @@ describe("PackageManagerDetector.layerTest", () => {
 			const exit = yield* Effect.exit(detector.detect("/repo"));
 			if (!Exit.isFailure(exit)) {
 				assert.fail("expected the unstubbed member to die");
-				return;
 			}
 			assert.isTrue(Cause.hasDies(exit.cause));
 		}).pipe(Effect.provide(PackageManagerDetector.layerTest())),

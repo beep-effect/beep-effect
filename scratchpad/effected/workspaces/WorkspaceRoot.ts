@@ -6,7 +6,9 @@
 // root above it.
 
 import { Walker } from "../walker/index.ts";
-import { Context, Effect, FileSystem, Layer, Option, Path, Schema } from "effect";
+import { Context, Effect, FileSystem, Layer, Option, Path, Schema, Result } from "effect";
+
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
 
 /**
  * The marker filenames {@link WorkspaceRoot} probes for, in priority order.
@@ -116,7 +118,7 @@ const isWorkspaceRoot = (dir: string): Effect.Effect<boolean, never, FileSystem.
 		// defect, so it is wrapped at the point it can throw rather than trusted
 		// to a catch further out.
 		const parsed = yield* Effect.try({
-			try: () => JSON.parse(content) as Record<string, unknown>,
+			try: () => Result.getOrThrow(Schema.decodeResult(JsonValue)(content)) as Record<string, unknown>,
 			catch: () => undefined,
 		}).pipe(Effect.orElseSucceed(() => ({}) as Record<string, unknown>));
 

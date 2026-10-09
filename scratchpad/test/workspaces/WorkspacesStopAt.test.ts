@@ -77,8 +77,7 @@ const outerGit: Layer.Layer<Git> = Git.layerTest({
 });
 
 /** Assert `effect` fails with the not-found error for the nested checkout, carrying the ceiling. */
-const refusesOuter = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-	Effect.gen(function* () {
+const refusesOuter = Effect.fn("refusesOuter")(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
 		const error = yield* Effect.flip(effect);
 		assert.instanceOf(error, WorkspaceRootNotFoundError);
 		assert.strictEqual(error.searchPath, CWD);

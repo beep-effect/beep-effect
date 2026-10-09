@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // The layer-bound root lookup every root-consuming service shares.
 //
 // `WorkspaceDiscovery`, `LockfileReader`, `WorkspaceCatalogs` and
@@ -19,11 +20,14 @@ export interface LayerRootOptions {
  * Resolve the workspace root a layer's options name. `Effect.suspend` so the
  * ambient `process.cwd()` is read at first use, not at layer construction.
  */
-export const findLayerRoot = (
+export const findLayerRoot: {
+	(options: LayerRootOptions | undefined): (roots: WorkspaceRootShape) => Effect.Effect<string, WorkspaceRootNotFoundError>;
+	(roots: WorkspaceRootShape, options: LayerRootOptions | undefined): Effect.Effect<string, WorkspaceRootNotFoundError>;
+} = dual(2, (
 	roots: WorkspaceRootShape,
 	options: LayerRootOptions | undefined,
 ): Effect.Effect<string, WorkspaceRootNotFoundError> =>
 	Effect.suspend(() => {
 		const stopAt = options?.stopAt;
 		return roots.find(options?.cwd ?? process.cwd(), stopAt === undefined ? undefined : { stopAt });
-	});
+	}));

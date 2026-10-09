@@ -333,7 +333,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 							// A malformed lockfile at the ref is a broken RECORD, not a
 							// broken source of truth — degrade to no catalogs, exactly as
 							// the live WorkspaceCatalogs does for an unreadable lockfile.
-							Effect.catch(() => Effect.succeed(EMPTY_LOCKFILE_RECORD)),
+							Effect.orElseSucceed(() => EMPTY_LOCKFILE_RECORD),
 						),
 				});
 

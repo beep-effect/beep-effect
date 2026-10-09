@@ -2,8 +2,8 @@
 import { assert, describe, it, layer } from "@effect/vitest";
 import { Git, GitCommandError, LsTreeEntry } from "../../effected/git/index.ts";
 import { CatalogAssemblyError, CatalogResolver, WorkspaceResolver } from "../../effected/npm/index.ts";
-import { Effect, Equal, Layer, Option, Schema } from "effect";
-import type { HookInjection, HookReplay } from "../../effected/workspaces/index.ts";
+import { Effect, Equal, Layer, Option, Schema, Result } from "effect";
+import type { HookInjection, HookReplay, PeerDependencyRules } from "../../effected/workspaces/index.ts";
 import {
 	CatalogSet,
 	ConfigDependencyHooks,
@@ -318,24 +318,24 @@ describe('WorkspaceStateSnapshot — a version-less member is absent, never `""`
 	});
 
 	it('a snapshot serialized with the old `""` sentinel decodes to the absent key', () => {
-		const legacy = Schema.decodeSync(PackageStateSnapshot)({
+		const legacy = Result.getOrThrow(Schema.decodeResult(PackageStateSnapshot)({
 			name: "@x/bare",
 			version: "",
 			relativePath: "packages/bare",
-		});
+		}));
 		assert.isFalse(Object.hasOwn(legacy, "version"));
 		assert.isTrue(Equal.equals(legacy, bareVersionSnapshot.packages[0]));
 		// Control: a real version survives the same decode.
-		const versioned = Schema.decodeSync(PackageStateSnapshot)({
+		const versioned = Result.getOrThrow(Schema.decodeResult(PackageStateSnapshot)({
 			name: "@x/alpha",
 			version: "1.2.3",
 			relativePath: "packages/alpha",
-		});
+		}));
 		assert.strictEqual(versioned.version, "1.2.3");
 	});
 
 	it("encoding omits the key rather than writing a placeholder", () => {
-		const encoded = Schema.encodeSync(PackageStateSnapshot)(bareVersionSnapshot.packages[0] as PackageStateSnapshot);
+		const encoded = Result.getOrThrow(Schema.encodeResult(PackageStateSnapshot)(bareVersionSnapshot.packages[0] as PackageStateSnapshot));
 		assert.isFalse(Object.hasOwn(encoded, "version"));
 	});
 
@@ -604,8 +604,7 @@ interface InjectCall {
 const recordingHooks = (answers: Readonly<Record<string, Readonly<Record<string, string>>>>) => {
 	const calls: Array<InjectCall> = [];
 	const layer = Layer.succeed(ConfigDependencyHooks, {
-		inject: (root, configDependencies, seed, rules) =>
-			Effect.sync(() => {
+		inject: Effect.fn("ConfigDependencyHooks.inject")((root: string, configDependencies: Readonly<Record<string, string>>, seed: Readonly<Record<string, Readonly<Record<string, string>>>>, rules: PeerDependencyRules | undefined) => Effect.sync(() => {
 				calls.push({ root, configDependencies, seed, rules });
 				let injected: Record<string, string> = {};
 				const replays: Record<string, HookReplay> = {};
@@ -620,7 +619,7 @@ const recordingHooks = (answers: Readonly<Record<string, Readonly<Record<string,
 					peerDependencyRules: rules ?? { allowedVersions: {}, ignoreMissing: [], allowAny: [] },
 					replays,
 				};
-			}),
+			})),
 	});
 	return { calls, layer };
 };
@@ -733,14 +732,13 @@ describe("WorkspaceSnapshots.at — under layerNoop the ref read executes nothin
 
 describe("WorkspaceSnapshots.at — a hook replay failure at the ref surfaces typed", () => {
 	const failing = Layer.succeed(ConfigDependencyHooks, {
-		inject: (_root, configDependencies) =>
-			Effect.fail(
+		inject: Effect.fn("ConfigDependencyHooks.inject")((_root: string, configDependencies: Readonly<Record<string, string>>) => Effect.fail(
 				CatalogAssemblyError.make({
 					source: "hooks",
 					path: Object.keys(configDependencies)[0] ?? "",
 					cause: new Error("not installed"),
 				}),
-			),
+			)),
 	});
 	layer(snapshotsLayer(scriptGit(replayRefTrees), replayMarker, "/repo", undefined, failing))((it) => {
 		it.effect("fails at(ref) with the hooks-source CatalogAssemblyError, never a silent skip", () =>

@@ -24,8 +24,7 @@ describe("enumerate — literal pattern probes", () => {
 		const Counted = Layer.mergeAll(
 			MemoryFileSystem.layerWith(tree, {
 				faults: (base) => ({
-					exists: (path) =>
-						Effect.gen(function* () {
+					exists: Effect.fn("exists")(function* (path: string) {
 							inFlight += 1;
 							maxInFlight = Math.max(maxInFlight, inFlight);
 							yield* Effect.yieldNow;

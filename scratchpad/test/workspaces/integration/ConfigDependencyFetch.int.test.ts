@@ -177,8 +177,7 @@ const InProcess = () =>
 	Workspaces.layerWithGitAndConfigDependencies({ cwd: root }).pipe(Layer.provideMerge(NodeServices.layer));
 
 /** `at(ref)`'s failure, which must be a typed hooks-source assembly error. */
-const failureAt = (ref: string) =>
-	Effect.gen(function* () {
+const failureAt = Effect.fn("failureAt")(function* (ref: string) {
 		const snapshots = yield* WorkspaceSnapshots;
 		const error = yield* Effect.flip(snapshots.at(ref));
 		assert.instanceOf(error, CatalogAssemblyError);

@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // The synchronous escape hatch — over CONSUMER-SUPPLIED operations.
 //
 // Vitest's config-time project discovery cannot await, and it is the reason
@@ -402,7 +403,10 @@ export interface FindWorkspaceRootSyncOptions extends WorkspacesSyncOptions {
  *
  * @public
  */
-export const findWorkspaceRootSync = (cwd: string, options: FindWorkspaceRootSyncOptions): string | null => {
+export const findWorkspaceRootSync: {
+	(options: FindWorkspaceRootSyncOptions): (cwd: string) => string | null;
+	(cwd: string, options: FindWorkspaceRootSyncOptions): string | null;
+} = dual(2, (cwd: string, options: FindWorkspaceRootSyncOptions): string | null => {
 	const { fileSystem, path } = options;
 	let current = path.resolve(cwd);
 	// Resolved at lookup time, exactly as `WorkspaceRoot.find` resolves it: the
@@ -424,7 +428,7 @@ export const findWorkspaceRootSync = (cwd: string, options: FindWorkspaceRootSyn
 		current = parent;
 	}
 	return null;
-};
+});
 
 /** The workspace `packages:` patterns for `root`, matching `internal/patterns.ts`'s precedence. */
 const readPatternsSync = (options: WorkspacesSyncOptions, root: string): ReadonlyArray<string> => {
@@ -613,7 +617,10 @@ export interface GetWorkspacePackagesSyncOptions extends WorkspacesSyncOptions {
  *
  * @public
  */
-export const getWorkspacePackagesSync = (
+export const getWorkspacePackagesSync: {
+	(options: GetWorkspacePackagesSyncOptions): (root: string) => ReadonlyArray<WorkspacePackage>;
+	(root: string, options: GetWorkspacePackagesSyncOptions): ReadonlyArray<WorkspacePackage>;
+} = dual(2, (
 	root: string,
 	options: GetWorkspacePackagesSyncOptions,
 ): ReadonlyArray<WorkspacePackage> => {
@@ -705,4 +712,4 @@ export const getWorkspacePackagesSync = (
 	if (Schema.is(WorkspacePackage)(rootPackage)) return [rootPackage, ...members];
 	options.onSkip?.(rootPackage);
 	return members;
-};
+});

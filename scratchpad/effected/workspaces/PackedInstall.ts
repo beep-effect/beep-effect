@@ -22,6 +22,8 @@ import { PackageManagerName } from "./PackageManagerName.ts";
 import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
 import type { WorkspacePackage } from "./WorkspacePackage.ts";
 
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
+
 /**
  * Where each closure package is packed from.
  *
@@ -406,10 +408,7 @@ export class InstalledConsumer extends Schema.Class<InstalledConsumer>("Installe
 				const manifest = path.join(dir, "package.json");
 				if (!(yield* fs.exists(manifest).pipe(Effect.mapError(io(`could not inspect ${manifest}`))))) continue;
 				const text = yield* fs.readFileString(manifest).pipe(Effect.mapError(io(`could not read ${manifest}`)));
-				const parsed: unknown = yield* Effect.try({
-					try: () => JSON.parse(text),
-					catch: io(`${manifest} is not JSON`),
-				});
+				const parsed: unknown = yield* Schema.decodeEffect(JsonValue)(text).pipe(Effect.mapError(io(`${manifest} is not JSON`)));
 				const named =
 					typeof parsed === "object" && parsed !== null ? (parsed as { readonly name?: unknown }).name : undefined;
 				if (typeof named === "string") return { package: named, target };
@@ -784,8 +783,7 @@ const namesOf = (plan: ClosurePlan): ReadonlyArray<string> => [
  * The one implementation of "what does this run pack", behind both
  * `PackedInstall.closure` and `PackedInstall.run`, so the two cannot drift.
  */
-const planClosure = (carrier: string, options: PackedInstallClosureOptions) =>
-	Effect.gen(function* () {
+const planClosure = Effect.fn("planClosure")(function* (carrier: string, options: PackedInstallClosureOptions) {
 		const fs = yield* FileSystem.FileSystem;
 		const path = yield* Path.Path;
 		const discovery = yield* WorkspaceDiscovery;
@@ -1207,7 +1205,7 @@ export class PackedInstall {
 		const probes = yield* Effect.forEach(managers, (manager) =>
 			Run.collect(command(manager, ["--version"], scratch), { timeout: PROBE_TIMEOUT }).pipe(
 				Effect.map((output) => (output.succeeded ? versionOf(output.stdout) : undefined)),
-				Effect.catch(() => Effect.succeed(undefined)),
+				Effect.orElseSucceed(() => undefined),
 				Effect.map((version) => ({ manager, version })),
 			),
 		);
@@ -1228,8 +1226,7 @@ export class PackedInstall {
 		const source = options.packFrom ?? DEFAULT_PACK_FROM;
 		const packTimeout = options.packTimeout ?? DEFAULT_PACK_TIMEOUT;
 		/** `npm pack` or `pnpm pack` in `cwd` into an empty `destination`; the one tarball it wrote. */
-		const pack = (name: string, cwd: string, packer: "npm" | "pnpm", destination: string) =>
-			Effect.gen(function* () {
+		const pack = Effect.fn("pack")(function* (name: string, cwd: string, packer: "npm" | "pnpm", destination: string) {
 				yield* fs
 					.makeDirectory(destination, { recursive: true })
 					.pipe(Effect.mapError(io(`could not create ${destination}`)));
@@ -1274,8 +1271,7 @@ export class PackedInstall {
 				return path.join(destination, only);
 			});
 		/** The packed manifest, read with `tar` from `cwd`, refused if only a workspace could resolve it. */
-		const inspect = (name: string, tarball: string, cwd: string) =>
-			Effect.gen(function* () {
+		const inspect = Effect.fn("inspect")(function* (name: string, tarball: string, cwd: string) {
 				const text = yield* Run.text(command("tar", ["-xzOf", tarball, "package/package.json"], cwd), {
 					timeout: MANIFEST_TIMEOUT,
 				}).pipe(
@@ -1412,7 +1408,7 @@ export class PackedInstall {
 									? "node_modules/.bin is empty"
 									: `node_modules/.bin holds: ${[...names].sort().join(", ")}`,
 							),
-							Effect.catch(() => Effect.succeed("node_modules/.bin does not exist or cannot be listed")),
+							Effect.orElseSucceed(() => "node_modules/.bin does not exist or cannot be listed"),
 						);
 						return yield* failure(
 							"MissingBin",

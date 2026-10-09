@@ -243,7 +243,10 @@ describe("PublishabilityDetector — the npm semantics", () => {
 					}),
 				);
 				assert.lengthOf(targets, 1);
-				assert.strictEqual(targets[0].access, "restricted");
+				const target = targets[0];
+				assert.isDefined(target);
+				if (target === undefined) return assert.fail("expected a publish target");
+				assert.strictEqual(target.access, "restricted");
 			}),
 		);
 
@@ -252,10 +255,13 @@ describe("PublishabilityDetector — the npm semantics", () => {
 				const detector = yield* PublishabilityDetector;
 				const targets = yield* detector.detect(WorkspacePackage.make({ name: "@x/p", ...location }));
 				assert.lengthOf(targets, 1);
-				assert.strictEqual(targets[0].registry, "https://registry.npmjs.org/");
-				assert.strictEqual(targets[0].directory, ".");
-				assert.strictEqual(targets[0].access, "public");
-				assert.isFalse(targets[0].provenance);
+				const target = targets[0];
+				assert.isDefined(target);
+				if (target === undefined) return assert.fail("expected a publish target");
+				assert.strictEqual(target.registry, "https://registry.npmjs.org/");
+				assert.strictEqual(target.directory, ".");
+				assert.strictEqual(target.access, "public");
+				assert.isFalse(target.provenance);
 			}),
 		);
 
@@ -269,8 +275,10 @@ describe("PublishabilityDetector — the npm semantics", () => {
 						publishConfig: { registry: "https://npm.internal/", directory: "dist/npm" },
 					}),
 				);
-				assert.strictEqual(targets[0].registry, "https://npm.internal/");
-				assert.strictEqual(targets[0].directory, "dist/npm");
+				const target = targets[0];
+				if (target === undefined) return assert.fail("expected a publish target");
+				assert.strictEqual(target.registry, "https://npm.internal/");
+				assert.strictEqual(target.directory, "dist/npm");
 			}),
 		);
 	});

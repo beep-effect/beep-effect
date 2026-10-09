@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // What the config-dependency ladder (`configDependencyResolution.ts`) and its
 // fetch rung (`configDependencyFetch.ts`) share: the typed `hooks` failure,
 // the absent-or-typed `node:fs` read, the manifest-version reading, and the
@@ -11,8 +12,10 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { CatalogAssemblyError } from "../../npm/index.ts";
-import { Effect, Option, Predicate } from "effect";
+import { Effect, Option, Predicate, Schema } from "effect";
 import type { HookReplayContext } from "../ConfigDependencyHooks.ts";
+
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
 
 /** The typed `hooks`-source failure every rung of the ladder reports through. */
 export const hooksError = (
@@ -38,16 +41,17 @@ const isAbsent = (cause: unknown): boolean =>
  * and ANY other rejection (`EACCES`, `EIO`, …) to a typed `hooks` error
  * attributed to `path` — never a silent skip.
  */
-export const ioOrNone = <A>(
+export const ioOrNone: {
+	<A>(run: () => Promise<A>): (path: string) => Effect.Effect<Option.Option<A>, CatalogAssemblyError>;
+	<A>(path: string, run: () => Promise<A>): Effect.Effect<Option.Option<A>, CatalogAssemblyError>;
+} = dual(2, <A>(
 	path: string,
 	run: () => Promise<A>,
 ): Effect.Effect<Option.Option<A>, CatalogAssemblyError> =>
-	Effect.tryPromise({ try: run, catch: (cause) => cause }).pipe(
-		Effect.map(Option.some),
-		Effect.catch((cause) =>
-			isAbsent(cause) ? Effect.succeed(Option.none<A>()) : Effect.fail(hooksError(path, cause)),
-		),
-	);
+	Effect.tryPromise({ try: run, catch: (cause) => hooksError(path, cause) }).pipe(
+		Effect.asSome,
+		Effect.catchIf((error) => isAbsent(error.cause), () => Effect.succeedNone),
+	));
 
 /**
  * What the `package.json` in a directory says about its version: there is no
@@ -63,8 +67,11 @@ const ABSENT: ManifestVersion = { _tag: "absent" };
 const UNVERSIONED: ManifestVersion = { _tag: "unversioned" };
 
 /** Whether a manifest carries exactly `declared`. Only a `version` state can. */
-export const carries = (manifest: ManifestVersion, declared: string): boolean =>
-	manifest._tag === "version" && manifest.version === declared;
+export const carries: {
+	(declared: string): (manifest: ManifestVersion) => boolean;
+	(manifest: ManifestVersion, declared: string): boolean;
+} = dual(2, (manifest: ManifestVersion, declared: string): boolean =>
+	manifest._tag === "version" && manifest.version === declared);
 
 /**
  * The version state of the `package.json` in `dir`: `absent` when there is
@@ -72,14 +79,15 @@ export const carries = (manifest: ManifestVersion, declared: string): boolean =>
  * typed on any other IO failure or on unparseable JSON — a manifest that
  * exists but cannot be read is not evidence of absence.
  */
-export const manifestVersion = (name: string, dir: string): Effect.Effect<ManifestVersion, CatalogAssemblyError> =>
+export const manifestVersion: {
+	(dir: string): (name: string) => Effect.Effect<ManifestVersion, CatalogAssemblyError>;
+	(name: string, dir: string): Effect.Effect<ManifestVersion, CatalogAssemblyError>;
+} = dual(2, (name: string, dir: string): Effect.Effect<ManifestVersion, CatalogAssemblyError> =>
 	ioOrNone(name, () => readFile(join(dir, "package.json"), "utf8")).pipe(
 		Effect.flatMap((text) => {
 			if (Option.isNone(text)) return Effect.succeed(ABSENT);
-			return Effect.try({
-				try: () => JSON.parse(text.value) as unknown,
-				catch: (cause) => hooksError(name, cause),
-			}).pipe(
+			return Schema.decodeEffect(JsonValue)(text.value).pipe(
+				Effect.mapError((cause) => hooksError(name, cause)),
 				Effect.map(
 					(parsed): ManifestVersion =>
 						Predicate.isObject(parsed) && typeof parsed.version === "string" && parsed.version !== ""
@@ -88,4 +96,4 @@ export const manifestVersion = (name: string, dir: string): Effect.Effect<Manife
 				),
 			);
 		}),
-	);
+	));

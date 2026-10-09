@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // The lockfile-importer fallback for `catalog:` specifiers a snapshot's catalog
 // set cannot resolve.
 //
@@ -108,7 +109,10 @@ export const importerVersionsOf = (lockfile: Lockfile): VersionIndex => {
  * that case there is no single correct answer, so this yields nothing and the
  * caller keeps today's behavior (no row) rather than inventing a wrong one.
  */
-export const unanimousVersionOf = (index: VersionIndex, dependency: string): string | undefined => {
+export const unanimousVersionOf: {
+	(dependency: string): (index: VersionIndex) => string | undefined;
+	(index: VersionIndex, dependency: string): string | undefined;
+} = dual(2, (index: VersionIndex, dependency: string): string | undefined => {
 	let agreed: string | undefined;
 	for (const versions of Object.values(index)) {
 		const version = versions[dependency];
@@ -120,4 +124,4 @@ export const unanimousVersionOf = (index: VersionIndex, dependency: string): str
 		if (agreed !== version) return undefined;
 	}
 	return agreed;
-};
+});

@@ -1,9 +1,11 @@
 import { assert, describe, it, layer } from "@effect/vitest";
 import { ScriptedSpawner } from "../../effected/commands/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { ConfigProvider, Effect, Layer, Path, Redacted, Stream } from "effect";
+import { ConfigProvider, Effect, Layer, Path, Redacted, Stream, Result, Schema } from "effect";
 import { WorkspaceDiscovery, WorkspacePackage } from "../../effected/workspaces/index.ts";
 import { InstalledConsumer, PackedInstall } from "../../effected/workspaces/testing.ts";
+
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
 
 const carrier = WorkspacePackage.make({
 	name: "@x/carrier",
@@ -86,7 +88,7 @@ describe("PackedInstall.preflight and gate", () => {
 			const missing = { ready: false, missing: ["/a/package.json", "/b/package.json"] };
 			for (const env of [{}, { CI: "" }, { CI: "0" }, { CI: "false" }, { CI: "FALSE" }]) {
 				const gate = yield* PackedInstall.gate(missing).pipe(withEnv(env));
-				assert.strictEqual(gate.action, "skip", JSON.stringify(env));
+				assert.strictEqual(gate.action, "skip", Result.getOrThrow(Schema.encodeResult(JsonValue)(env)));
 				assert.include(gate.message, "/a/package.json, /b/package.json");
 				assert.include(gate.message, "build:prod");
 			}

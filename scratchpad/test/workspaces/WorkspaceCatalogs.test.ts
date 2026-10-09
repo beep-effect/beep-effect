@@ -120,7 +120,9 @@ describe("CatalogSet", () => {
 		const hostile = JSON.parse('{"default": {"__proto__": "1.0.0"}}') as unknown;
 		const set = CatalogSet.fromLockfileCatalogs(hostile);
 		assert.isUndefined((Object.prototype as unknown as Record<string, unknown>)["1.0.0"]);
-		assert.isTrue(Object.hasOwn(set.entries.default, "__proto__"));
+		const entries = set.entries.default;
+		if (entries === undefined) return assert.fail("expected the default catalog");
+		assert.isTrue(Object.hasOwn(entries, "__proto__"));
 	});
 });
 
@@ -362,7 +364,7 @@ const bunProbeFailTree: Tree = {
 
 describe("WorkspaceCatalogs — a bun/package.json presence-probe failure is not silent absence", () => {
 	const bunProbeFailLayer = WorkspaceCatalogs.layer({ cwd: "/repo" }).pipe(
-		Layer.provide(Layer.succeed(WorkspaceRoot, { find: () => Effect.succeed("/repo") })),
+		Layer.provide(Layer.succeed(WorkspaceRoot, { find: Effect.fn("WorkspaceRoot.find")(() => Effect.succeed("/repo")) })),
 		Layer.provide(
 			Layer.mock(LockfileReader, {
 				read: () =>

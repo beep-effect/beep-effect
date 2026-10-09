@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // Resolving a declared pnpm config dependency to the pnpmfile of the version
 // it DECLARES — not whatever happens to be installed right now.
 //
@@ -186,9 +187,9 @@ const storesFromEnvironment = (root: string): Effect.Effect<ReadonlyArray<string
 		const env = process.env;
 		const platform = process.platform;
 		const roots: Array<string> = [];
-		if (env.PNPM_HOME) roots.push(join(env.PNPM_HOME, "store"));
-		if (env.XDG_DATA_HOME) roots.push(join(env.XDG_DATA_HOME, "pnpm", "store"));
-		if (platform === "win32" && env.LOCALAPPDATA) roots.push(join(env.LOCALAPPDATA, "pnpm", "store"));
+		if (env.PNPM_HOME !== undefined && env.PNPM_HOME !== "") roots.push(join(env.PNPM_HOME, "store"));
+		if (env.XDG_DATA_HOME !== undefined && env.XDG_DATA_HOME !== "") roots.push(join(env.XDG_DATA_HOME, "pnpm", "store"));
+		if (platform === "win32" && env.LOCALAPPDATA !== undefined && env.LOCALAPPDATA !== "") roots.push(join(env.LOCALAPPDATA, "pnpm", "store"));
 		const home = homedir();
 		roots.push(PackageManagerCache.defaultDirectory("pnpm", { platform, home }));
 		// The XDG path is also searched off-platform: a pnpm installed through its
@@ -435,7 +436,10 @@ export interface ResolveOptions {
  * `CatalogAssemblyError`. `options.fetch`, when wired, is tried for a version
  * found nowhere before that fails.
  */
-export const resolvePnpmfiles = (
+export const resolvePnpmfiles: {
+	(configDependencies: Readonly<Record<string, string>>, options?: ResolveOptions): (root: string) => Effect.Effect<ReadonlyArray<ResolvedPnpmfile>, CatalogAssemblyError>;
+	(root: string, configDependencies: Readonly<Record<string, string>>, options?: ResolveOptions): Effect.Effect<ReadonlyArray<ResolvedPnpmfile>, CatalogAssemblyError>;
+} = dual((args) => typeof args[0] === "string" && args.length >= 2, (
 	root: string,
 	configDependencies: Readonly<Record<string, string>>,
 	options: ResolveOptions = {},
@@ -450,7 +454,7 @@ export const resolvePnpmfiles = (
 		const lockfile = options.side?.lockfile;
 		const locks: RecordedLocks =
 			lockfile === undefined
-				? Effect.succeed(undefined)
+				? Effect.as(Effect.void, undefined)
 				: yield* memoizeSuccess(PnpmEnvLockfile.configDependencies(lockfile));
 		return yield* Effect.forEach(
 			entries,
@@ -463,7 +467,7 @@ export const resolvePnpmfiles = (
 				}),
 			{ concurrency: "unbounded" },
 		);
-	});
+	}));
 
 /**
  * The `layerFrom` counterpart of {@link resolvePnpmfiles}: look each declared
@@ -471,7 +475,10 @@ export const resolvePnpmfiles = (
  * Same order, same `..` refusal, same fail-closed shape for a missing entry
  * — no filesystem is consulted, so it is safe under any `FileSystem` layer.
  */
-export const lookupPnpmfiles = (
+export const lookupPnpmfiles: {
+	(configDependencies: Readonly<Record<string, string>>): (entries: Readonly<Record<string, string>>) => Effect.Effect<ReadonlyArray<ResolvedPnpmfile>, CatalogAssemblyError>;
+	(entries: Readonly<Record<string, string>>, configDependencies: Readonly<Record<string, string>>): Effect.Effect<ReadonlyArray<ResolvedPnpmfile>, CatalogAssemblyError>;
+} = dual(2, (
 	entries: Readonly<Record<string, string>>,
 	configDependencies: Readonly<Record<string, string>>,
 ): Effect.Effect<ReadonlyArray<ResolvedPnpmfile>, CatalogAssemblyError> =>
@@ -494,4 +501,4 @@ export const lookupPnpmfiles = (
 			}
 			return Effect.succeed({ name, version, source: "supplied", path } satisfies ResolvedPnpmfile);
 		}),
-	);
+	));

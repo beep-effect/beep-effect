@@ -11,6 +11,8 @@ import { PackageManager } from "../package-json/index.ts";
 import { Context, Effect, FileSystem, Layer, Option, Path, Schema } from "effect";
 import { WorkspaceManifestError } from "./WorkspacePackage.ts";
 
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
+
 /**
  * The four package managers this package understands.
  *
@@ -290,10 +292,7 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 					.readFileString(packageJsonPath)
 					.pipe(Effect.mapError((cause) => WorkspaceManifestError.make({ packageJsonPath, kind: "read", cause })));
 
-				const parsed = yield* Effect.try({
-					try: () => JSON.parse(content) as unknown,
-					catch: (cause) => WorkspaceManifestError.make({ packageJsonPath, kind: "decode", cause }),
-				});
+				const parsed = yield* Schema.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause) => WorkspaceManifestError.make({ packageJsonPath, kind: "decode", cause })));
 
 				if (!isPlainObject(parsed)) {
 					return yield* WorkspaceManifestError.make({

@@ -235,7 +235,11 @@ const resolveManifest: (
 	CatalogAssemblyError | DependencyResolutionError | UnresolvedDependencyError,
 	FileSystem.FileSystem | Path.Path
 > = Effect.fn("Workspaces.resolveManifest")(function* (manifest: Manifest, options?: WorkspacesOptions) {
-	return yield* manifest.resolve().pipe(Effect.provide(resolverLayer(options)));
+	return yield* Effect.scoped(
+		Layer.build(resolverLayer(options)).pipe(
+			Effect.flatMap((context) => manifest.resolve().pipe(Effect.provideContext(context))),
+		),
+	);
 });
 
 // Implementation of Workspaces.localExecLayer; the public contract lives on the static.

@@ -1100,8 +1100,7 @@ describe("PeerCheck.run — ignoreMissing and allowAny", () => {
 	});
 
 	/** Runs the fixture under one rule configuration and pins it to its oracle file. */
-	const agrees = (dir: string, options: Parameters<typeof PeerCheck.run>[1], file: string) =>
-		Effect.gen(function* () {
+	const agrees = Effect.fn("agrees")(function* (dir: string, options: Parameters<typeof PeerCheck.run>[1], file: string) {
 			const report = PeerCheck.run(yield* parse(dir), options);
 			assert.isTrue(report.supported);
 			// Supplied rules with these axes populated are FULLY applied, so the

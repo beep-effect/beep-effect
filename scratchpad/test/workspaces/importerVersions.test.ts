@@ -12,7 +12,7 @@
 
 import { assert, describe, it } from "@effect/vitest";
 import { Lockfile } from "../../effected/lockfiles/index.ts";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option, Schema, Result } from "effect";
 import { CatalogSet, WorkspaceStateSnapshot } from "../../effected/workspaces/index.ts";
 import { importerVersionsOf, unanimousVersionOf } from "../../effected/workspaces/internal/importerVersions.ts";
 
@@ -168,10 +168,10 @@ describe("WorkspaceStateSnapshot — wire compatibility", () => {
 		// The field is optional precisely so older serialized snapshots survive; an
 		// absent index simply makes the fallback inert, which is the behavior those
 		// values were captured under.
-		const decoded = Schema.decodeSync(WorkspaceStateSnapshot)({
+		const decoded = Result.getOrThrow(Schema.decodeResult(WorkspaceStateSnapshot)({
 			packages: [],
 			catalogs: { entries: {} },
-		});
+		}));
 		assert.isTrue(Option.isNone(decoded.resolve("effect", "catalog:effect:peers")));
 	});
 });

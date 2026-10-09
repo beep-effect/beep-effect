@@ -56,8 +56,10 @@ describe("WorkspaceDiscovery — one-level patterns", () => {
 					packages.map((pkg) => pkg.name),
 					["root", "@x/web", "@x/alpha", "@x/beta"],
 				);
-				assert.isTrue(packages[0].isRootWorkspace);
-				assert.strictEqual(packages[0].relativePath, ".");
+				const root = packages[0];
+				if (root === undefined) return assert.fail("expected the root package");
+				assert.isTrue(root.isRootWorkspace);
+				assert.strictEqual(root.relativePath, ".");
 			}),
 		);
 
@@ -360,6 +362,7 @@ describe("WorkspaceDiscovery — a manifest without a version is discovered (#47
 					["root", "@x/bare", "@x/versioned"],
 				);
 				const root = packages[0];
+				if (root === undefined) return assert.fail("expected the root package");
 				assert.isTrue(root.isRootWorkspace);
 				// Absent, not a placeholder: no `"0.0.0"`, no `""`, and no present
 				// `undefined` key either (exact-optional semantics).

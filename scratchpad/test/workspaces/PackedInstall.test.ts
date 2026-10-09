@@ -3,9 +3,11 @@ import type { SpawnScript } from "../../effected/commands/index.ts";
 import { ScriptedSpawner } from "../../effected/commands/index.ts";
 import type { MemoryFileSystemSeed } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { Duration, Effect, FileSystem, Layer, Path, PlatformError, Redacted } from "effect";
+import { Duration, Effect, FileSystem, Layer, Path, PlatformError, Redacted, Result, Schema } from "effect";
 import { WorkspaceDiscovery, WorkspaceInfo, WorkspacePackage } from "../../effected/workspaces/index.ts";
 import { InstalledConsumer, PackedInstall } from "../../effected/workspaces/testing.ts";
+
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
 
 const carrier = WorkspacePackage.make({
 	name: "@x/carrier",
@@ -365,7 +367,7 @@ describe("PackedInstall.run past the pack", () => {
 				}
 
 				const fs = yield* FileSystem.FileSystem;
-				const npmManifest = JSON.parse(yield* fs.readFileString("/scratch/consumer-npm/package.json")) as Record<
+				const npmManifest = Result.getOrThrow(Schema.decodeResult(JsonValue)(yield* fs.readFileString("/scratch/consumer-npm/package.json"))) as Record<
 					string,
 					unknown
 				>;
@@ -607,10 +609,9 @@ describe("PackedInstall.run past the pack", () => {
 				WithRoot(root),
 			),
 		);
-	const readManifest = (file: string) =>
-		Effect.gen(function* () {
+	const readManifest = Effect.fn("readManifest")(function* (file: string) {
 			const fs = yield* FileSystem.FileSystem;
-			return JSON.parse(yield* fs.readFileString(file)) as Record<string, Record<string, string>>;
+			return Result.getOrThrow(Schema.decodeResult(JsonValue)(yield* fs.readFileString(file))) as Record<string, Record<string, string>>;
 		});
 
 	const overridden = ScriptedSpawner.make(packedManifests());
@@ -741,8 +742,7 @@ describe("PackedInstall.run past the pack", () => {
 			"/broken/pnpm-workspace.yaml": "overrides: [unclosed\n",
 		}),
 	)((it) => {
-		const reject = (overrides: Record<string, string>, message: string) =>
-			Effect.gen(function* () {
+		const reject = Effect.fn("reject")(function* (overrides: Record<string, string>, message: string) {
 				const error = yield* Effect.flip(PackedInstall.closure("@x/carrier", { overrides }));
 				assert.deepStrictEqual([error.reason, error.message], ["InvalidOverride", message]);
 			});

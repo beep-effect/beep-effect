@@ -31,21 +31,19 @@ import {
 /** A detector that reports `name` at any root. */
 const detects = (name: PackageManagerName, runtime: "node" | "bun" = "node") =>
 	Layer.succeed(PackageManagerDetector, {
-		detect: () =>
-			Effect.succeed(
+		detect: Effect.fn("PackageManagerDetector.detect")(() => Effect.succeed(
 				// The declaration-tier evidence is the one rung valid for every manager.
 				DetectedPackageManager.make({ name, version: Option.none(), runtime, evidence: "package.json#packageManager" }),
-			),
+			)),
 	});
 
 /** A detector that fails the way `failure` says. */
 const detectorFailing = (failure: PackageManagerDetectionError | WorkspaceManifestError) =>
-	Layer.succeed(PackageManagerDetector, { detect: () => Effect.fail(failure) });
+	Layer.succeed(PackageManagerDetector, { detect: Effect.fn("PackageManagerDetector.detect")(() => Effect.fail(failure)) });
 
 /** A root resolver that never finds a workspace. */
 const noRoot = Layer.succeed(WorkspaceRoot, {
-	find: (cwd: string) =>
-		Effect.fail(WorkspaceRootNotFoundError.make({ searchPath: cwd, markers: ["pnpm-workspace.yaml"] })),
+	find: Effect.fn("WorkspaceRoot.find")((cwd: string) => Effect.fail(WorkspaceRootNotFoundError.make({ searchPath: cwd, markers: ["pnpm-workspace.yaml"] }))),
 });
 
 const contextOf = (layers: Layer.Layer<PackageManagerDetector | WorkspaceRoot>) =>
@@ -81,7 +79,6 @@ describe("Workspaces.localExecLayer — a detected workspace", () => {
 			const context = yield* contextOf(workspaceAt("/repo", detects("pnpm")));
 			if (Option.isNone(context)) {
 				assert.fail("expected a context");
-				return;
 			}
 			assert.strictEqual(context.value.directory, "/repo");
 		}),
@@ -93,7 +90,6 @@ describe("Workspaces.localExecLayer — a detected workspace", () => {
 				const context = yield* contextOf(workspaceAt("/repo", detects(name, name === "bun" ? "bun" : "node")));
 				if (Option.isNone(context)) {
 					assert.fail(`expected a context for ${name}`);
-					return;
 				}
 				const expected = LocalExec.prefixes(name);
 				assert.strictEqual(context.value.label, name, `${name} label`);
@@ -202,11 +198,10 @@ describe("Workspaces.localExecLayer — cwd", () => {
 			const recordingRoot = Layer.succeed(WorkspaceRoot, {
 				// Wrapped in `suspend` so the push happens when the effect RUNS, not
 				// when it is built — an eager recorder logs calls that never executed.
-				find: (cwd: string) =>
-					Effect.suspend(() => {
+				find: Effect.fn("WorkspaceRoot.find")((cwd: string) => Effect.suspend(() => {
 						seen.push(cwd);
 						return Effect.succeed("/repo");
-					}),
+					})),
 			});
 			const context = yield* Effect.flatMap(LocalExec, (local) => local.context).pipe(
 				Effect.provide(

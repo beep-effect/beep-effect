@@ -1,3 +1,4 @@
+import { dual } from "effect/Function";
 // In-memory filesystem fixtures.
 //
 // The volume is `@effected/memfs`, a real virtual POSIX filesystem, so the
@@ -78,9 +79,15 @@ export const platform = (tree: Tree, options: FileSystemOptions = {}): Layer.Lay
 	Layer.mergeAll(fileSystem(tree, options), Path.layer);
 
 /** A root `package.json` declaring npm-style workspaces. */
-export const rootManifest = (patterns: ReadonlyArray<string>, extra: Record<string, unknown> = {}): string =>
-	JSON.stringify({ name: "root", version: "0.0.0", private: true, workspaces: patterns, ...extra });
+export const rootManifest: {
+	(extra?: Record<string, unknown>): (patterns: ReadonlyArray<string>) => string;
+	(patterns: ReadonlyArray<string>, extra?: Record<string, unknown>): string;
+} = dual((args) => Array.isArray(args[0]), (patterns: ReadonlyArray<string>, extra: Record<string, unknown> = {}): string =>
+	JSON.stringify({ name: "root", version: "0.0.0", private: true, workspaces: patterns, ...extra }));
 
 /** A member `package.json`. */
-export const manifest = (name: string, fields: Record<string, unknown> = {}): string =>
-	JSON.stringify({ name, version: "1.0.0", ...fields });
+export const manifest: {
+	(fields?: Record<string, unknown>): (name: string) => string;
+	(name: string, fields?: Record<string, unknown>): string;
+} = dual((args) => typeof args[0] === "string", (name: string, fields: Record<string, unknown> = {}): string =>
+	JSON.stringify({ name, version: "1.0.0", ...fields }));
