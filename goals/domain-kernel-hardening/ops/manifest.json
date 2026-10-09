@@ -3,14 +3,15 @@
   "initiative": {
     "id": "domain-kernel-hardening",
     "title": "Domain Kernel Hardening",
-    "status": "paused",
+    "status": "active",
     "created": "2026-06-29",
-    "updated": "2026-07-11",
+    "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/domain-kernel-hardening",
-  "lifecycle": "paused",
-  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when KG tables approach scale (opens with PRD P2 librarian).",
+  "lifecycle": "active",
+  "statusNote": "Resumed 2026-10-09 under the corpus-ingestion run-order program; resume condition met by the practice-kg bundle v2 plan.",
+  "researchReports": ["research/SOURCES.md"],
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -30,7 +31,8 @@
     "goals/domain-kernel-hardening/README.md",
     "goals/domain-kernel-hardening/SPEC.md",
     "goals/domain-kernel-hardening/PLAN.md",
-    "goals/domain-kernel-hardening/GOAL.md"
+    "goals/domain-kernel-hardening/GOAL.md",
+    "goals/domain-kernel-hardening/research/SOURCES.md"
   ],
   "agentLaunchers": [
     {
@@ -45,7 +47,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",

@@ -286,6 +286,7 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
     checkCount: S.optionalKey(S.Finite),
     failingCheckCount: S.optionalKey(S.Finite),
     isDraft: S.optionalKey(S.Boolean),
+    isCrossRepository: S.optionalKey(S.Boolean),
     labels: S.Array(S.String).pipe(
       S.withConstructorDefault(Effect.succeed(yeetStatusRemoteLabelsDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(yeetStatusRemoteLabelsDefault))
@@ -428,6 +429,7 @@ class GhStatusPullRequest extends S.Class<GhStatusPullRequest>($I`GhStatusPullRe
     id: S.String,
     headRefOid: S.String,
     isDraft: S.Boolean,
+    isCrossRepository: S.Boolean.pipe(S.withDecodingDefaultTypeKey(Effect.succeed(false))),
     labels: S.Array(GhStatusLabel).pipe(
       S.withConstructorDefault(Effect.succeed(ghStatusPullRequestLabelsDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(ghStatusPullRequestLabelsDefault))
@@ -1368,7 +1370,12 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
   }
   const result = yield* runRepoCommandCapture(
     "gh",
-    ["pr", "view", "--json", "id,number,url,state,mergeable,mergeStateStatus,isDraft,reviewDecision,headRefOid,labels"],
+    [
+      "pr",
+      "view",
+      "--json",
+      "id,number,url,state,mergeable,mergeStateStatus,isDraft,isCrossRepository,reviewDecision,headRefOid,labels",
+    ],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to inspect PR for yeet status.")));
   if (result.exitCode !== 0) {
@@ -1443,6 +1450,7 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
       )
     ),
     isDraft: view.isDraft,
+    isCrossRepository: view.isCrossRepository,
     labels: A.map(view.labels, (label) => label.name),
     number: view.number,
     state: view.state,

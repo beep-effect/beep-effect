@@ -2,13 +2,13 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
 
-Harden the shared-kernel persisted-entity base (`BaseEntity`) once, so every
+Harden the shared-kernel persisted-entity audit pack (`EntityKit.auditColumns`) once, so every
 product slice inherits soft-delete, a single canonical audit base, and the typed
 domain-error (`.errors.ts`) convention the rest of the domain-layer hardening
 builds on. (The `TemporalValidity`/`DomainEvent` VOs are deliberately deferred to
@@ -42,14 +42,13 @@ in [`MAP.md`](../../explorations/domain-layer-hardening/MAP.md).
 
 ## Current Phase
 
-`P0 Research` — confirm the `BaseEntity`/`DomainModel`/`persist` surface and the
-soft-delete persistence strategy before any edit. Next concrete action: inspect
-`packages/shared/domain/src/entity/ProductEntity.ts` and
-`packages/foundation/modeling/schema/src/{DomainModel.ts,EntitySchema/*}`.
+`P1 Implement` — apply the measured GeneratedByApp nullable codecs with
+constructor and decoding defaults; add the error role module and generated
+migration under the explicit SPEC contract. P0 prototype has been reverted.
 
 ## Latest Evidence
 
-Not started.
+`research/p0-kernel-surface-2026-10-09.md` — completed surface map, both encoding measurements, chosen design and migration preview.
 
 ## Notes
 

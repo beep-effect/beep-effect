@@ -245,7 +245,8 @@ const ghKey = (invocation: Invocation): string =>
 // captured from the sequential implementation with the temp root replaced by
 // `<root>`, the run id digest replaced by `<run>`, and createdAt at the
 // TestClock epoch. The one later edit is the suggested closeout command, which
-// dropped its review-bot gates after W10.
+// dropped its review-bot gates after W10. RSC E additionally records the
+// explicit same-repository posture while retaining the polling output contract.
 const PRE_CHANGE_SNAPSHOT_JSON = [
   '{"base":"origin/main","branch":"feature/chain","closeout":{"detail":"no closeout artifact found for ',
   'this branch","path":"<root>/.beep/yeet/runs/feature_chain-<run>/pr-closeout.json","state":"missing"}',
@@ -260,7 +261,7 @@ const PRE_CHANGE_SNAPSHOT_JSON = [
   'Check","startedAt":"2026-09-25T18:21:00Z"},{"name":"Check / Lint","outcome":"pass","required":false,',
   '"link":"https://github.com/beep/beep/actions/runs/77/job/3","signal":{"bucket":"pass","state":"',
   'SUCCESS"},"workflow":"Check","startedAt":"2026-09-25T18:10:00Z","completedAt":"2026-09-25T18:15:00Z"',
-  '}],"checkCount":4,"failingCheckCount":2,"isDraft":false,"labels":["ready-for-heavy"],"',
+  '}],"checkCount":4,"failingCheckCount":2,"isDraft":false,"isCrossRepository":false,"labels":["ready-for-heavy"],"',
   'mergeStateStatus":"BLOCKED","mergeable":"MERGEABLE","number":1311,"pendingCheckCount":1,"',
   'requiredCheckCount":2,"failingRequiredCheckCount":1,"pendingRequiredCheckCount":1,"',
   'optionalCheckCount":2,"failingOptionalCheckCount":1,"pendingOptionalCheckCount":0,"',
@@ -333,7 +334,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("yeet status chain (W10)", (i
       expect(A.length(gh)).toBe(5);
       expect(A.length(invocations) - A.length(gh)).toBe(7);
       expect(A.map(A.take(gh, 1), ghKey)).toStrictEqual([
-        "pr view --json id,number,url,state,mergeable,mergeStateStatus,isDraft,reviewDecision,headRefOid,labels",
+        "pr view --json id,number,url,state,mergeable,mergeStateStatus,isDraft,isCrossRepository,reviewDecision,headRefOid,labels",
       ]);
       expect(A.sort(A.map(A.drop(gh, 1), ghKey), Order.String)).toStrictEqual([
         "api graphql -f -F id=PR_chain",

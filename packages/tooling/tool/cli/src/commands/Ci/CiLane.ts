@@ -318,8 +318,12 @@ export const DocgenLaneMode = LiteralKit(DOCGEN_LANE_MODE_VALUES).pipe(
  */
 export type DocgenLaneMode = typeof DocgenLaneMode.Type;
 
+const CiWorkflow = LiteralKit(["check", "heavy", "storybook"]).pipe(
+  $I.annoteSchema("CiWorkflow", { description: "The workflow that produces a declared CI lane context." })
+);
+
 /**
- * Machine-readable descriptor for one check.yml lane.
+ * Machine-readable descriptor for a hosted workflow lane.
  *
  * **Example** (Configure a CI lane)
  *
@@ -344,6 +348,10 @@ export class CiLaneDescriptor extends S.Class<CiLaneDescriptor>($I`CiLaneDescrip
   {
     id: S.String,
     contextName: S.String,
+    workflow: CiWorkflow.pipe(
+      S.withConstructorDefault(Effect.succeed(CiWorkflow.Enum.check)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(CiWorkflow.Enum.check))
+    ),
     required: S.Boolean,
     laneClass: CiLaneClass,
     replay: CiLaneReplay,
@@ -351,14 +359,14 @@ export class CiLaneDescriptor extends S.Class<CiLaneDescriptor>($I`CiLaneDescrip
     notes: S.optionalKey(S.String),
   },
   $I.annote("CiLaneDescriptor", {
-    description: "Machine-readable descriptor for one check.yml CI lane.",
+    description: "Machine-readable descriptor for a hosted CI lane.",
   })
 ) {}
 
 const TURBO_SHAPE_FLAGS = ["--affected", "--base", "--summarize"] as const;
 
 /**
- * Full lane inventory for check.yml, including CI-only residue.
+ * Hosted lane inventory for check, heavy and storybook workflows.
  *
  * Order mirrors the packet parity table
  * (`goals/one-round-loop/research/ci-lane-parity.md`).
@@ -383,7 +391,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "ci-native",
     replay: "none",
     flags: [],
-    notes: "Inline github-script API labeling; PR-only; no local replay.",
+    notes: "CLI-owned label diff; same-repository PR only.",
   }),
   CiLaneDescriptor.make({
     id: "lint",
@@ -395,8 +403,9 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   }),
   CiLaneDescriptor.make({
     id: "lint-policy",
+    workflow: "heavy",
     contextName: "Heavy / Lint Policy",
-    required: true,
+    required: false,
     laneClass: "cli-runnable",
     replay: "exact",
     flags: [],
@@ -412,6 +421,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   }),
   CiLaneDescriptor.make({
     id: "check",
+    workflow: "heavy",
     contextName: "Heavy / Check",
     required: true,
     laneClass: "cli-runnable",
@@ -430,6 +440,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   }),
   CiLaneDescriptor.make({
     id: "test-integration",
+    workflow: "heavy",
     contextName: "Heavy / Test Integration",
     required: true,
     laneClass: "cli-runnable",
@@ -438,8 +449,9 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   }),
   CiLaneDescriptor.make({
     id: "coverage",
+    workflow: "heavy",
     contextName: "Heavy / Coverage Regression",
-    required: true,
+    required: false,
     laneClass: "cli-runnable",
     replay: "exact",
     flags: [...TURBO_SHAPE_FLAGS],
@@ -448,6 +460,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   }),
   CiLaneDescriptor.make({
     id: "docgen",
+    workflow: "heavy",
     contextName: "Heavy / Docgen",
     required: true,
     laneClass: "workflow-gated",
@@ -457,6 +470,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   }),
   CiLaneDescriptor.make({
     id: "doctest",
+    workflow: "heavy",
     contextName: "Heavy / Doctest",
     required: true,
     laneClass: "workflow-gated",
@@ -519,7 +533,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   CiLaneDescriptor.make({
     id: "jsdoc-ratchet",
     contextName: "JSDoc Ratchet",
-    required: false,
+    required: true,
     laneClass: "cli-runnable",
     replay: "exact",
     flags: ["--inventory"],
@@ -534,6 +548,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   // a stable green history.
   CiLaneDescriptor.make({
     id: "build",
+    workflow: "heavy",
     contextName: "Heavy / Build",
     required: false,
     laneClass: "cli-runnable",
@@ -632,6 +647,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   // ruleset 10240248 without a stable green history.
   CiLaneDescriptor.make({
     id: "storybook",
+    workflow: "storybook",
     contextName: "Storybook",
     required: false,
     laneClass: "workflow-gated",
