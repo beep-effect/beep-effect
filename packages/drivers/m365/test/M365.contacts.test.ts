@@ -40,7 +40,7 @@ class Capture extends S.Class<Capture>("@beep/m365/test/contacts/Capture")({
   body: S.Option(S.Unknown),
 }) {}
 class Captures extends Context.Service<Captures, Ref.Ref<ReadonlyArray<Capture>>>()(
-  "@beep/m365/test/contacts/Captures"
+  "@beep/m365/test/M365.contacts.test/Captures"
 ) {}
 const CapturesLive = Layer.effect(Captures, Ref.make<ReadonlyArray<Capture>>([]));
 const draft = M365ContactDraft.make({
@@ -70,19 +70,19 @@ const layer = (appOnly: boolean, status = 200, transport = false, retries = 0) =
       const captures = yield* Captures;
       return HttpClient.make(
         Effect.fnUntraced(function* (request) {
-          const url = O.getOrThrow(HttpClientRequest.toUrl(request)).toString();
+          const url = request.pipe(HttpClientRequest.toUrl, O.getOrThrow).toString();
           const body =
             request.body._tag === "Uint8Array"
-              ? S.decodeUnknownOption(S.fromJsonString(S.Unknown))(new TextDecoder().decode(request.body.body))
+              ? S.decodeOption(S.fromJsonString(S.Unknown))(new TextDecoder().decode(request.body.body))
               : O.none();
           yield* Ref.update(
             captures,
             A.append(Capture.make({ method: request.method, url, headers: request.headers, body }))
           );
           if (transport)
-            return yield* Effect.fail(
-              new HttpClientError.HttpClientError({ reason: new HttpClientError.TransportError({ request }) })
-            );
+            return yield* new HttpClientError.HttpClientError({
+              reason: new HttpClientError.TransportError({ request }),
+            });
           const payload =
             request.method === "POST"
               ? url.endsWith("contactFolders")
@@ -136,7 +136,7 @@ describe("contact verbs", () => {
     "accepts only approved delegated read scopes",
     Effect.fnUntraced(function* () {
       const config = { tenantId: "common", clientId: "fixture-client" };
-      const accepted = yield* S.decodeUnknownEffect(M365ConfigInput)({ ...config, scopes: ["User.Read", "Mail.Read"] });
+      const accepted = yield* S.decodeEffect(M365ConfigInput)({ ...config, scopes: ["User.Read", "Mail.Read"] });
       expect(accepted.scopes).toEqual(["User.Read", "Mail.Read"]);
       for (const scope of ["Contacts.ReadWrite", "Mail.Send", "Files.ReadWrite.All", "unlisted-scope"]) {
         const result = yield* Effect.exit(S.decodeUnknownEffect(M365ConfigInput)({ ...config, scopes: [scope] }));
@@ -147,10 +147,10 @@ describe("contact verbs", () => {
   for (const appOnly of [false, true]) {
     const userId = appOnly ? O.some("fixture-mailbox") : O.none();
     const route = appOnly ? `${base}/users/fixture-mailbox` : `${base}/me`;
-    it.effect(
-      `creates and deletes contacts and folders on ${appOnly ? "app-only" : "delegated"}`,
-      Effect.fnUntraced(
-        function* () {
+    it.layer(layer(appOnly))((it) => {
+      it.effect(
+        `creates and deletes contacts and folders on ${appOnly ? "app-only" : "delegated"}`,
+        Effect.fnUntraced(function* () {
           const m365 = yield* M365;
           const contact = yield* m365.createContact(
             M365CreateContactRequest.make({ userId, contact: draft, folderId: O.some("folder-fixture") })
@@ -196,15 +196,14 @@ describe("contact verbs", () => {
             O.map(A.get(captures, 2), (capture) => capture.headers["if-match"]),
             'W/"version-1"'
           );
-        },
-        Effect.provide(layer(appOnly))
-      )
-    );
+        })
+      );
+    });
 
-    it.effect(
-      `lists default, folder and child resources on ${appOnly ? "app-only" : "delegated"}`,
-      Effect.fnUntraced(
-        function* () {
+    it.layer(layer(appOnly))((it) => {
+      it.effect(
+        `lists default, folder and child resources on ${appOnly ? "app-only" : "delegated"}`,
+        Effect.fnUntraced(function* () {
           const m365 = yield* M365;
           const contacts = yield* m365.listContacts(M365ListContactsRequest.make({ userId, expandMarker: true }));
           const folders = yield* m365.listContactFolders(
@@ -227,36 +226,34 @@ describe("contact verbs", () => {
             O.map(A.get(captures, 2), (capture) => capture.url),
             `${route}/contactFolders/folder-fixture/contacts`
           );
-        },
-        Effect.provide(layer(appOnly))
-      )
-    );
+        })
+      );
+    });
 
     for (const [status, transport, reason] of [
       [429, false, "throttled"],
       [503, false, "ambiguous write"],
       [200, true, "ambiguous write"],
     ] satisfies ReadonlyArray<readonly [number, boolean, string]>) {
-      it.effect(
-        `never replays ${appOnly ? "app-only" : "delegated"} contact POST after ${reason} ${status}`,
-        Effect.fnUntraced(
-          function* () {
+      it.layer(layer(appOnly, status, transport, 3))((it) => {
+        it.effect(
+          `never replays ${appOnly ? "app-only" : "delegated"} contact POST after ${reason} ${status}`,
+          Effect.fnUntraced(function* () {
             const m365 = yield* M365;
             assertSome(
               yield* failed(m365.createContact(M365CreateContactRequest.make({ userId, contact: draft }))),
               reason
             );
             expect(yield* Ref.get(yield* Captures)).toHaveLength(1);
-          },
-          Effect.provide(layer(appOnly, status, transport, 3))
-        )
-      );
+          })
+        );
+      });
     }
   }
-  it.effect(
-    "accepts same-mailbox continuation with equivalent path encoding",
-    Effect.fnUntraced(
-      function* () {
+  it.layer(layer(true))((it) => {
+    it.effect(
+      "accepts same-mailbox continuation with equivalent path encoding",
+      Effect.fnUntraced(function* () {
         const m365 = yield* M365;
         const page = yield* m365.listContacts(
           M365ListContactsRequest.make({
@@ -266,14 +263,13 @@ describe("contact verbs", () => {
         );
         expect(page.value).toHaveLength(1);
         expect(yield* Ref.get(yield* Captures)).toHaveLength(1);
-      },
-      Effect.provide(layer(true))
-    )
-  );
-  it.effect(
-    "refuses all app-only /me addressing and cross-mailbox pagination",
-    Effect.fnUntraced(
-      function* () {
+      })
+    );
+  });
+  it.layer(layer(true))((it) => {
+    it.effect(
+      "refuses all app-only /me addressing and cross-mailbox pagination",
+      Effect.fnUntraced(function* () {
         const m365 = yield* M365;
         const failures = yield* Effect.all(
           [
@@ -303,14 +299,13 @@ describe("contact verbs", () => {
         );
         for (const failure of failures) assertSome(failure, "request encoding");
         expect(yield* Ref.get(yield* Captures)).toHaveLength(0);
-      },
-      Effect.provide(layer(true))
-    )
-  );
+      })
+    );
+  });
   it.effect(
     "round-trips null-safe response models",
     Effect.fnUntraced(function* () {
-      const contact = yield* S.decodeUnknownEffect(GraphContact)(wire);
+      const contact = yield* S.decodeEffect(GraphContact)(wire);
       const encoded = yield* S.encodeEffect(GraphContact)(contact);
       expect(encoded).not.toHaveProperty("givenName");
       assertNone(contact.givenName);
