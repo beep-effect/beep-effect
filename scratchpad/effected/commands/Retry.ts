@@ -14,7 +14,18 @@ import type { CommandFailedError } from "./Run.ts";
  * Exported so a caller extends the set through
  * {@link Retry.transient}'s `also` rather than forking the list.
  *
+ * **Example** (Inspect a recognized network failure)
+ *
+ * ```ts
+ * import { TRANSIENT_PATTERNS } from "@beep/scratchpad/effected/commands/Retry";
+ * import * as A from "effect/Array";
+ *
+ * console.log(A.contains(TRANSIENT_PATTERNS, "ECONNRESET")) // true
+ * ```
+ *
  * @public
+ * @category constants
+ * @since 0.0.0
  */
 export const TRANSIENT_PATTERNS: ReadonlyArray<string> = [
 	"EAI_AGAIN",
@@ -80,48 +91,100 @@ const transient = (options?: {
  * This is composable vocabulary rather than a retrying runner, because core's
  * `Effect.retry` already accepts `{ while, schedule, times }`.
  *
+ * **Example** (Inspect the default retry budget)
+ *
+ * ```ts
+ * import { Retry } from "@beep/scratchpad/effected/commands/Retry";
+ *
+ * console.log(Retry.transient().times) // 2
+ * ```
+ *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class Retry {
 	private constructor() {}
 
 	/**
-  * Whether a failure looks like a transport hiccup worth retrying.
-  *
-  * **Details**
-  *
-  * Two classifications are structural rather than textual, and both matter more
-  * than the pattern list:
-  *
-  * - **A missing executable is never transient.** Retrying cannot install a
-  *   tool, so `kind: "spawn"` with {@link CommandFailedError.notFound} is
-  *   permanent however many attempts remain.
-  * - **A timeout is not transient by default.** A command that hangs
-  *   deterministically would burn its entire ceiling on every attempt; a caller
-  *   who knows better opts in via {@link Retry.transient}'s `while`.
-  *
-  * Any other spawn failure (a busy or momentarily locked binary) *is* treated as
-  * transient — that condition does clear.
-  */
+	 * Whether a failure looks like a transport hiccup worth retrying.
+	 *
+	 * **Details**
+	 *
+	 * Two classifications are structural rather than textual, and both matter more
+	 * than the pattern list:
+	 *
+	 * - **A missing executable is never transient.** Retrying cannot install a
+	 *   tool, so `kind: "spawn"` with {@link CommandFailedError.notFound} is
+	 *   permanent however many attempts remain.
+	 * - **A timeout is not transient by default.** A command that hangs
+	 *   deterministically would burn its entire ceiling on every attempt; a caller
+	 *   who knows better opts in via {@link Retry.transient}'s `while`.
+	 *
+	 * Any other spawn failure (a busy or momentarily locked binary) *is* treated as
+	 * transient — that condition does clear.
+	 *
+	 * **Example** (Classify a reset connection)
+	 *
+	 * ```ts
+	 * import { Retry } from "@beep/scratchpad/effected/commands/Retry";
+	 * import { CommandFailedError } from "@beep/scratchpad/effected/commands/Run";
+	 *
+	 * const error = CommandFailedError.make({ command: "fetch", args: [], kind: "nonZero", stderr: "ECONNRESET" });
+	 * console.log(Retry.isTransient(error)) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly isTransient = isTransient;
 
 	/**
 	 * A ready-made policy for `Effect.retry`: transient failures only, on a jittered
 	 * exponential backoff, with a bounded attempt budget.
 	 *
-	 * @remarks
-	 * This is vocabulary, not a runner — the caller keeps control of composition:
+	 * **Details**
 	 *
-	 * ```ts
-	 * Run.text(command).pipe(Effect.retry(Retry.transient()))
-	 * ```
+	 * This is vocabulary, not a runner — the caller keeps control of composition:
 	 *
 	 * A caller needing to repair state between attempts (resetting a working tree,
 	 * say) composes `Effect.retryOrElse` or `Effect.tapError` itself; that reset is
 	 * domain logic and does not belong in a retry policy.
+	 *
+	 * **Example** (Compose a bounded retry policy)
+	 *
+	 * ```ts
+	 * import { Retry } from "@beep/scratchpad/effected/commands/Retry";
+	 * import { CommandFailedError, Run } from "@beep/scratchpad/effected/commands/Run";
+	 * import * as S from "effect/Schema";
+	 * import * as Effect from "effect/Effect";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 *
+	 * const command = ChildProcess.make("curl", ["https://example.com"]);
+	 * const policy = Retry.transient();
+	 * const program = Run.text(command).pipe(Effect.retry({
+	 *   ...policy,
+	 *   while: (error) => S.is(CommandFailedError)(error) && policy.while(error),
+	 * }));
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	static readonly transient = transient;
 
-	/** Substrings matched against a failure to classify it as transient. See {@link TRANSIENT_PATTERNS}. */
+	/**
+	 * Substrings matched against a failure to classify it as transient. See {@link TRANSIENT_PATTERNS}.
+	 *
+	 * **Example** (Inspect the class network patterns)
+	 *
+	 * ```ts
+	 * import { Retry } from "@beep/scratchpad/effected/commands/Retry";
+	 * import * as A from "effect/Array";
+	 *
+	 * console.log(A.contains(Retry.TRANSIENT_PATTERNS, "EAI_AGAIN")) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly TRANSIENT_PATTERNS = TRANSIENT_PATTERNS;
 }

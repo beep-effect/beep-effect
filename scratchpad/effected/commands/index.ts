@@ -14,7 +14,7 @@
  * **Example** (Resolve Biome through pnpm and run a check)
  *
  * ```ts
- * import { LocalExec, Run, Tool, ToolDiscovery } from "./index.ts";
+ * import { LocalExec, Run, Tool, ToolDiscovery } from "@beep/scratchpad/effected/commands/index";
  * import { NodeServices } from "@effect/platform-node";
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";

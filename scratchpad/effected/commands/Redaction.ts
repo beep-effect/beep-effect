@@ -6,7 +6,17 @@ import * as Redacted from "effect/Redacted";
 /**
  * The placeholder every redaction writes in place of a secret.
  *
+ * **Example** (Inspect the secret placeholder)
+ *
+ * ```ts
+ * import { REDACTED } from "@beep/scratchpad/effected/commands/Redaction";
+ *
+ * console.log(REDACTED) // ***
+ * ```
+ *
  * @public
+ * @category constants
+ * @since 0.0.0
  */
 export const REDACTED = "***";
 
@@ -21,7 +31,18 @@ export const REDACTED = "***";
  * {@link Redaction.applyArgs}, which redacts by **value**: the caller says what
  * its secrets are and every occurrence goes, whatever flag carried it.
  *
+ * **Example** (Recognize a secret flag)
+ *
+ * ```ts
+ * import { SECRET_FLAGS } from "@beep/scratchpad/effected/commands/Redaction";
+ * import * as HashSet from "effect/HashSet";
+ *
+ * console.log(HashSet.has(SECRET_FLAGS, "--token")) // true
+ * ```
+ *
  * @public
+ * @category constants
+ * @since 0.0.0
  */
 export const SECRET_FLAGS: HashSet.HashSet<string> = HashSet.fromIterable([
 	"--access-token",
@@ -123,48 +144,103 @@ const scrubArgs = (
  * {@link Redaction.scrubArgs} is a **flag heuristic** that runs in addition, for
  * the secrets a caller forgot to declare.
  *
+ * **Example** (Scrub an inline credential)
+ *
+ * ```ts
+ * import { Redaction } from "@beep/scratchpad/effected/commands/Redaction";
+ *
+ * console.log(Redaction.scrubArgs(["--token=abc"]).join(" ")) // --token=***
+ * ```
+ *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class Redaction {
 	private constructor() {}
 
 	/**
-  * Replaces every occurrence of every secret's value in `text` with
-  * {@link REDACTED}.
-  *
-  * **Gotchas**
-  *
-  * Exact, literal matching — no pattern compilation, no encoding-aware search. A
-  * secret that reaches the text base64-encoded, URL-encoded, or split across a
-  * line break is **not** found; declare the encoded form as a secret too if that
-  * is a real risk.
-  *
-  * A secret composed only of the placeholder's own characters (`*`, `**`, `***`)
-  * cannot be fully removed, because the replacement reintroduces it. That is a
-  * documented limitation, not a defect.
-  */
+	 * Replaces every occurrence of every secret's value in `text` with
+	 * {@link REDACTED}.
+	 *
+	 * **Gotchas**
+	 *
+	 * Exact, literal matching — no pattern compilation, no encoding-aware search. A
+	 * secret that reaches the text base64-encoded, URL-encoded, or split across a
+	 * line break is **not** found; declare the encoded form as a secret too if that
+	 * is a real risk.
+	 *
+	 * A secret composed only of the placeholder's own characters (`*`, `**`, `***`)
+	 * cannot be fully removed, because the replacement reintroduces it. That is a
+	 * documented limitation, not a defect.
+	 *
+	 * **Example** (Remove a declared secret from output)
+	 *
+	 * ```ts
+	 * import { Redaction } from "@beep/scratchpad/effected/commands/Redaction";
+	 * import * as Redacted from "effect/Redacted";
+	 *
+	 * console.log(Redaction.apply("token=abc", [Redacted.make("abc")])) // token=***
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly apply = apply;
 
 	/**
 	 * {@link Redaction.apply} over each entry of an argv array. An entry is
 	 * redacted whether it *is* a secret or merely *contains* one
 	 * (`--url=https://u:s3cr3t@host`).
+	 *
+	 * **Example** (Remove a secret embedded in an argument)
+	 *
+	 * ```ts
+	 * import { Redaction } from "@beep/scratchpad/effected/commands/Redaction";
+	 * import * as Redacted from "effect/Redacted";
+	 *
+	 * console.log(Redaction.applyArgs(["--url=https://u:s3cr3t@host"], [Redacted.make("s3cr3t")]).join(" ")) // --url=https://u:***@host
+	 * ```
+	 *
+	 * @since 0.0.0
 	 */
 	static readonly applyArgs = applyArgs;
 
 	/**
-  * Heuristic backstop: redact any argv value that is introduced by a known
-  * secret-bearing flag or npm auth key, in either the separated
-  * (`--token abc`) or inline (`--token=abc`) form.
-  *
-  * **Gotchas**
-  *
-  * This catches secrets the caller forgot to declare; it cannot catch a flag
-  * nobody listed. Prefer {@link Redaction.applyArgs} with the actual
-  * `Redacted` values — this runs *in addition*, never instead.
-  */
+	 * Heuristic backstop: redact any argv value that is introduced by a known
+	 * secret-bearing flag or npm auth key, in either the separated
+	 * (`--token abc`) or inline (`--token=abc`) form.
+	 *
+	 * **Gotchas**
+	 *
+	 * This catches secrets the caller forgot to declare; it cannot catch a flag
+	 * nobody listed. Prefer {@link Redaction.applyArgs} with the actual
+	 * `Redacted` values — this runs *in addition*, never instead.
+	 *
+	 * **Example** (Scrub separated and inline credentials)
+	 *
+	 * ```ts
+	 * import { Redaction } from "@beep/scratchpad/effected/commands/Redaction";
+	 *
+	 * console.log(Redaction.scrubArgs(["--token", "abc", "--password=xyz"]).join(" ")) // --token *** --password=***
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly scrubArgs = scrubArgs;
 
-	/** Flags treated as secret-bearing by {@link Redaction.scrubArgs}. See {@link SECRET_FLAGS}. */
+	/**
+	 * Flags treated as secret-bearing by {@link Redaction.scrubArgs}. See {@link SECRET_FLAGS}.
+	 *
+	 * **Example** (Inspect the class secret flag set)
+	 *
+	 * ```ts
+	 * import { Redaction } from "@beep/scratchpad/effected/commands/Redaction";
+	 * import * as HashSet from "effect/HashSet";
+	 *
+	 * console.log(HashSet.has(Redaction.SECRET_FLAGS, "--password")) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
 	static readonly SECRET_FLAGS = SECRET_FLAGS;
 }

@@ -8,7 +8,21 @@ import { dual } from "effect/Function";
 
 const $I = $ScratchpadId.create("effected/commands/internal/capture");
 
-/** Raised when a captured stream exceeds its byte budget; mapped by Run. */
+/**
+ * Raised when a captured stream exceeds its byte budget; mapped by Run.
+ *
+ * **Example** (Inspect the exceeded byte budget)
+ *
+ * ```ts
+ * import { OutputTooLarge } from "@beep/scratchpad/effected/commands/internal/capture";
+ *
+ * const error = OutputTooLarge.make({ limit: 1024 });
+ * console.log(error.limit) // 1024
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
 export class OutputTooLarge extends S.TaggedError<OutputTooLarge>($I`OutputTooLarge`)("OutputTooLarge", {
  limit: S.Finite.annotateKey({ description: "The configured byte budget for this stream." }),
 }, $I.annote("OutputTooLarge", { description: "A captured stream exceeded its byte budget." })) {}
@@ -24,6 +38,20 @@ export class OutputTooLarge extends S.TaggedError<OutputTooLarge>($I`OutputTooLa
  * spent, which is the exact failure the budget exists to prevent. Counting is
  * on raw bytes, before decoding, because bytes are what the process actually
  * produced.
+ *
+ * **Example** (Collect text within its byte budget)
+ *
+ * ```ts
+ * import { collectBounded } from "@beep/scratchpad/effected/commands/internal/capture";
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
+ *
+ * const bytes = Stream.make(new TextEncoder().encode("hello"));
+ * console.log(Effect.runSync(collectBounded(bytes, 5))) // hello
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const collectBounded: {
 	(limit: number): (stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>) => Effect.Effect<string, PlatformError.PlatformError | OutputTooLarge>;

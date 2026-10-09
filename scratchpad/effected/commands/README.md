@@ -1,39 +1,13 @@
 # commands (lab port of @effected/commands)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fcommands?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/commands)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
 
 Structured command running and CLI tool discovery over Effect's core `ChildProcessSpawner` contract. `Run.collect` / `text` / `lines` / `json` turn a spawned process into a typed result instead of a bag of streams to check by hand, and `ToolDiscovery` answers "is `biome` here, and which copy should I run" without a shell probe. `effect` is the only dependency of any kind.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/commands
 
 Every subprocess concept in this package is core's, and no implementation of one is. A predecessor version of this package tried the opposite twice: first inventing its own `Command`/`CommandRunner` types, then — after deleting those — quietly re-implementing core's spawner underneath core's own names. Neither survived review. `Run` is free functions over core's `ChildProcess.Command` and `ChildProcessSpawner`, never a second runner service wrapping them, and this package supplies only what core deliberately leaves unclassified: a typed outcome for a non-zero exit, secret redaction, transience vocabulary, and tool discovery.
 
 Two of core's sharper edges get one clean fix each. `ChildProcess.setEnv` merges values into the command's environment but never sets `extendEnv`, so a command built with bare `setEnv({ TOKEN: x })` spawns a child whose *entire* environment is that one variable — no `PATH`, no `HOME`, silent at the type level. `Run.extendEnv` adds variables without losing the parent environment. And a non-zero exit, which core reports as a plain success, becomes a typed `CommandFailedError` for `Run.text`, `Run.lines` and `Run.json` — the three combinators whose callers actually want to branch on failure.
-
-## Install
-
-```bash
-npm install @effected/commands effect
-```
-
-```bash
-pnpm add @effected/commands effect
-```
 
 Requires Node.js >=24.11.0. `effect` v4 is the only peer dependency, and the only dependency of any kind — no `node:child_process` import, no platform package, no parallel command vocabulary.
 
@@ -46,10 +20,10 @@ All `@effected/*` packages are ESM-only: the exports maps publish only `import` 
 Run a command and get back trimmed stdout, with a non-zero exit as a typed failure instead of a stray stderr string to parse:
 
 ```ts
-import { Run } from "@effected/commands";
+import { Run } from "@beep/scratchpad/effected/commands/Run";
 import { NodeServices } from "@effect/platform-node";
-import { Effect } from "effect";
-import { ChildProcess } from "effect/process";
+import * as Effect from "effect/Effect";
+import * as ChildProcess from "effect/process/ChildProcess";
 
 const program = Run.text(ChildProcess.make("git", ["rev-parse", "--short", "HEAD"]));
 
@@ -60,9 +34,13 @@ Effect.runPromise(program.pipe(Effect.provide(NodeServices.layer))).then(console
 Resolve a CLI tool before running it, globally or through a project's package manager:
 
 ```ts
-import { Run, Tool, ToolDiscovery, LocalExec } from "@effected/commands";
+import { Run } from "@beep/scratchpad/effected/commands/Run";
+import { Tool } from "@beep/scratchpad/effected/commands/Tool";
+import { ToolDiscovery } from "@beep/scratchpad/effected/commands/ToolDiscovery";
+import { LocalExec } from "@beep/scratchpad/effected/commands/LocalExec";
 import { NodeServices } from "@effect/platform-node";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 const program = Effect.gen(function* () {
   const discovery = yield* ToolDiscovery;

@@ -33,7 +33,18 @@ class ScriptedPipelineError extends S.TaggedError<ScriptedPipelineError>($I`Scri
  * absent executable ({@link ScriptedSpawner.notFound}) or a permission failure
  * ({@link ScriptedSpawner.permissionDenied}).
  *
+ * **Example** (Decode a silent success script)
+ *
+ * ```ts
+ * import { ScriptResult } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ScriptResult)({})) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ScriptResult = S.Union([
  S.instanceOf(PlatformError.PlatformError),
@@ -44,6 +55,12 @@ export const ScriptResult = S.Union([
   hang: S.optional(S.Boolean).annotateKey({ description: "Whether exitCode remains unresolved." }),
  }),
 ]).pipe($I.annoteSchema("ScriptResult", { description: "A scripted completed run or an opaque platform spawn failure." }));
+/**
+ * Decoded scripted spawn outcome.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ScriptResult = typeof ScriptResult.Type;
 
 /**
@@ -51,6 +68,8 @@ export type ScriptResult = typeof ScriptResult.Type;
  * argv in, a {@link ScriptResult} out.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type SpawnScript = (command: string, args: ReadonlyArray<string>) => ScriptResult;
 
@@ -102,7 +121,19 @@ const CommandOptions = S.Struct({
  * script returned a `PlatformError`) is still a record, which is what makes
  * probe-counting assertions honest.
  *
+ * **Example** (Validate a recorded spawn)
+ *
+ * ```ts
+ * import { SpawnRecord } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+ * import * as S from "effect/Schema";
+ *
+ * const record = { command: "git", args: [], cwd: undefined, env: undefined, extendEnv: undefined, options: {}, unrefed: false };
+ * console.log(S.is(SpawnRecord)(record)) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const SpawnRecord = S.Struct({
  /** The executable. */
@@ -120,6 +151,12 @@ export const SpawnRecord = S.Struct({
  /** Set when the handle's unref effect actually runs. */
  unrefed: S.Boolean.annotateKey({ description: "Live state set when unref actually runs." }),
 }).pipe($I.annoteSchema("SpawnRecord", { description: "An observed spawn with its full options and live unref state." }));
+/**
+ * Decoded spawn observation including live unref state.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SpawnRecord = typeof SpawnRecord.Type;
 
 // Implementation of the byte streams a handle serves; one UTF-8 chunk.
@@ -161,30 +198,66 @@ const spawnError = (tag: "NotFound" | "PermissionDenied", command: string, code:
  * **Example** (Script a Git revision lookup and inspect its spawn)
  *
  * ```ts
- * import { Run, ScriptedSpawner } from "./index.ts";
+ * import { Run } from "@beep/scratchpad/effected/commands/Run";
+ * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+ * import * as ChildProcess from "effect/process/ChildProcess";
  * import * as Effect from "effect/Effect";
- * import { ChildProcess } from "effect/process";
  *
- * // One call scripts the whole spawner contract:
- * const spawner = ScriptedSpawner.make((command, args) =>
- *   command === "git" ? { stdout: "abc123\n" } : ScriptedSpawner.notFound(command),
- * );
  *
- * const program = Run.text(ChildProcess.make("git", ["rev-parse", "HEAD"])).pipe(
- *   Effect.provide(spawner.layer),
- * );
- *
- * const sha = await Effect.runPromise(program); // "abc123"
- * // spawner.spawns[0]?.command === "git"
- * // spawner.spawns[0]?.args     — ["rev-parse", "HEAD"]
+ * const spawner = ScriptedSpawner.make(() => ({ stdout: "abc123\n" }));
+ * const program = Run.text(ChildProcess.make("git", ["rev-parse", "HEAD"])).pipe(Effect.provide(spawner.layer));
+ * const result = await Effect.runPromise(program);
+ * console.log(`${result} ${spawner.spawns[0]?.command} ${spawner.spawns[0]?.args.join(" ")}`) // abc123 git rev-parse HEAD
  * ```
  *
  * @public
+ * @category testing
+ * @since 0.0.0
  */
 export class ScriptedSpawner {
-	/** A Layer providing core's `ChildProcessSpawner`, answering from the script. */
+	/**
+	 * A Layer providing core's `ChildProcessSpawner`, answering from the script.
+	 *
+	 * **Example** (Provide the scripted spawner layer)
+	 *
+	 * ```ts
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 *
+	 * const spawner = ScriptedSpawner.make(() => ({ stdout: "abc123\n" }));
+	 * const program = Run.text(ChildProcess.make("git", ["rev-parse", "HEAD"])).pipe(Effect.provide(spawner.layer));
+	 * const result = await Effect.runPromise(program);
+	 * console.log(`${result} ${spawner.spawns[0]?.command} ${spawner.spawns[0]?.args.join(" ")}`) // abc123 git rev-parse HEAD
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	readonly layer: Layer.Layer<ChildProcessSpawner.ChildProcessSpawner>;
-	/** The spawns observed so far, in call order. Reads live — assert after running. */
+	/**
+	 * The spawns observed so far, in call order. Reads live — assert after running.
+	 *
+	 * **Example** (Observe spawns after execution)
+	 *
+	 * ```ts
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+	 * import * as ChildProcess from "effect/process/ChildProcess";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 *
+	 * const spawner = ScriptedSpawner.make(() => ({ stdout: "abc123\n" }));
+	 * const program = Run.text(ChildProcess.make("git", ["rev-parse", "HEAD"])).pipe(Effect.provide(spawner.layer));
+	 * const result = await Effect.runPromise(program);
+	 * console.log(`${result} ${spawner.spawns[0]?.command} ${spawner.spawns[0]?.args.join(" ")}`) // abc123 git rev-parse HEAD
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	readonly spawns: ReadonlyArray<SpawnRecord>;
 
 	private constructor(layer: Layer.Layer<ChildProcessSpawner.ChildProcessSpawner>, spawns: ReadonlyArray<SpawnRecord>) {
@@ -193,17 +266,29 @@ export class ScriptedSpawner {
 	}
 
 	/**
-  * A scripted spawner: `script` receives the executable and argv of each
-  * spawn and returns either a completed-run {@link ScriptResult} or a
-  * `PlatformError` to fail the spawn with.
-  *
-  * **Details**
-  *
-  * The handle a completed run serves reports `pid` `4242`, `isRunning`
-  * `false`, and drains `stdin`; `exitCode` resolves to the scripted `exit`
-  * (or never, under `hang: true`). Running the handle's `unref` — as
-  * `Run.detach` does — flips the record's `unrefed` flag.
-  */
+	 * A scripted spawner: `script` receives the executable and argv of each
+	 * spawn and returns either a completed-run {@link ScriptResult} or a
+	 * `PlatformError` to fail the spawn with.
+	 *
+	 * **Details**
+	 *
+	 * The handle a completed run serves reports `pid` `4242`, `isRunning`
+	 * `false`, and drains `stdin`; `exitCode` resolves to the scripted `exit`
+	 * (or never, under `hang: true`). Running the handle's `unref` — as
+	 * `Run.detach` does — flips the record's `unrefed` flag.
+	 *
+	 * **Example** (Create a silent success spawner)
+	 *
+	 * ```ts
+	 * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+	 *
+	 * const spawner = ScriptedSpawner.make(() => ({}));
+	 * console.log(spawner.spawns.length) // 0
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly make = (script: SpawnScript): ScriptedSpawner => {
 		const spawns: Array<SpawnRecord> = [];
 		const layer = Layer.succeed(
@@ -261,6 +346,18 @@ export class ScriptedSpawner {
 	 * `PlatformError` for an executable that is not on PATH — the shape the
 	 * platform backend maps ENOENT to, and the shape `ToolDiscovery` classifies
 	 * as "absent".
+	 *
+	 * **Example** (Script an absent executable)
+	 *
+	 * ```ts
+	 * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+	 *
+	 * const error = ScriptedSpawner.notFound("tool");
+	 * console.log(error.reason._tag) // NotFound
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly notFound = (command: string): PlatformError.PlatformError =>
 		spawnError("NotFound", command, "ENOENT");
@@ -268,6 +365,18 @@ export class ScriptedSpawner {
 	/**
 	 * `PlatformError` for a spawn that failed for a reason other than absence —
 	 * the tool exists but could not be run.
+	 *
+	 * **Example** (Script a permission failure)
+	 *
+	 * ```ts
+	 * import { ScriptedSpawner } from "@beep/scratchpad/effected/commands/ScriptedSpawner";
+	 *
+	 * const error = ScriptedSpawner.permissionDenied("tool");
+	 * console.log(error.reason._tag) // PermissionDenied
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly permissionDenied = (command: string): PlatformError.PlatformError =>
 		spawnError("PermissionDenied", command, "EACCES");

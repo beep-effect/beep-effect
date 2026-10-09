@@ -36,7 +36,18 @@ const DEFAULT_VERSION_PATTERN = /(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)/;
 /**
  * Where a tool was resolved from.
  *
+ * **Example** (Recognize a local resolution)
+ *
+ * ```ts
+ * import { ResolvedSource } from "@beep/scratchpad/effected/commands/ToolDiscovery";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ResolvedSource)("local")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ResolvedSource = LiteralKit(["global", "local"]).pipe($I.annoteSchema("ResolvedSource", { description: "Where a tool was resolved from." }));
 
@@ -44,13 +55,30 @@ export const ResolvedSource = LiteralKit(["global", "local"]).pipe($I.annoteSche
  * The decoded type of {@link (ResolvedSource:variable)}.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ResolvedSource = typeof ResolvedSource.Type;
 
 /**
  * A tool that was found, with everything discovery learned about it.
  *
+ * **Example** (Construct a global tool result)
+ *
+ * ```ts
+ * import { ResolvedTool } from "@beep/scratchpad/effected/commands/ToolDiscovery";
+ * import * as O from "effect/Option";
+ *
+ * const tool = ResolvedTool.make({
+ *   name: "biome", source: "global", version: O.none(),
+ *   globalVersion: O.none(), localVersion: O.none(), mismatch: false,
+ * });
+ * console.log(tool.name) // biome
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class ResolvedTool extends S.Class<ResolvedTool>($I`ResolvedTool`)({
 	/** The executable name. */
@@ -69,22 +97,34 @@ export class ResolvedTool extends S.Class<ResolvedTool>($I`ResolvedTool`)({
 	context: S.optionalKey(ExecContext).annotateKey({ description: "The project-local execution context, when ResolvedTool.source is `\"local\"`." }),
 }, $I.annote("ResolvedTool", { description: "A tool that was found, with everything discovery learned about it." })) {
 	/**
-  * A core `Command` that runs this tool — bare for a global resolution,
-  * launcher-prefixed and directory-scoped for a local one.
-  *
-  * **Details**
-  *
-  * Returns core's own `ChildProcess.Command`, not a wrapper: hand it to
-  * {@link Run} or to core's spawner directly, and compose it with core's
-  * combinators.
-  *
-  * **Example** (Run a Biome check with a resolved tool)
-  *
-  * ```ts
-  * const biome = yield* discovery.resolve(Tool.named("biome"));
-  * yield* Run.text(biome.command("check", "."));
-  * ```
-  */
+	 * A core `Command` that runs this tool — bare for a global resolution,
+	 * launcher-prefixed and directory-scoped for a local one.
+	 *
+	 * **Details**
+	 *
+	 * Returns core's own `ChildProcess.Command`, not a wrapper: hand it to
+	 * {@link Run} or to core's spawner directly, and compose it with core's
+	 * combinators.
+	 *
+	 * **Example** (Run a Biome check with a resolved tool)
+	 *
+	 * ```ts
+	 * import { ToolDiscovery } from "@beep/scratchpad/effected/commands/ToolDiscovery";
+	 * import { Tool } from "@beep/scratchpad/effected/commands/Tool";
+	 * import { Run } from "@beep/scratchpad/effected/commands/Run";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const discovery = yield* ToolDiscovery;
+	 *   const biome = yield* discovery.resolve(Tool.named("biome"));
+	 *   return yield* Run.text(biome.command("check", "."));
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category commands
+	 * @since 0.0.0
+	 */
 	command(...args: ReadonlyArray<string>): ChildProcess.Command {
 		const bare = ChildProcess.make(this.name, args);
 		return this.source === "local" && this.context !== undefined ? this.context.apply(bare) : bare;
@@ -94,7 +134,18 @@ export class ResolvedTool extends S.Class<ResolvedTool>($I`ResolvedTool`)({
 /**
  * A tool could not be found where it was required.
  *
+ * **Example** (Inspect ToolNotFoundError diagnostics)
+ *
+ * ```ts
+ * import { ToolNotFoundError } from "@beep/scratchpad/effected/commands/ToolDiscovery";
+ *
+ * const error = ToolNotFoundError.make({ tool: "biome", searched: ["global", "local"] });
+ * console.log(error.message) // Tool not found: biome (required global and local)
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class ToolNotFoundError extends S.TaggedError<ToolNotFoundError>($I`ToolNotFoundError`)("ToolNotFoundError", {
 	/** The tool that was looked for. */
@@ -102,6 +153,21 @@ export class ToolNotFoundError extends S.TaggedError<ToolNotFoundError>($I`ToolN
 	/** The locations its `source` requirement demanded. */
 	searched: S.Array(ResolvedSource).annotateKey({ description: "The locations its `source` requirement demanded." }),
 }, $I.annote("ToolNotFoundError", { description: "A tool could not be found where it was required." })) {
+	/**
+	 * Describes the required locations where the tool was absent.
+	 *
+	 * **Example** (Read the ToolNotFoundError message)
+	 *
+	 * ```ts
+	 * import { ToolNotFoundError } from "@beep/scratchpad/effected/commands/ToolDiscovery";
+	 *
+	 * const error = ToolNotFoundError.make({ tool: "biome", searched: ["global", "local"] });
+	 * console.log(error.message) // Tool not found: biome (required global and local)
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Tool not found: ${this.tool} (required ${this.searched.join(" and ")})`;
 	}
@@ -111,7 +177,18 @@ export class ToolNotFoundError extends S.TaggedError<ToolNotFoundError>($I`ToolN
  * The global and project-local copies disagree, and the tool's policy is
  * `"fail"`.
  *
+ * **Example** (Inspect ToolVersionMismatchError diagnostics)
+ *
+ * ```ts
+ * import { ToolVersionMismatchError } from "@beep/scratchpad/effected/commands/ToolDiscovery";
+ *
+ * const error = ToolVersionMismatchError.make({ tool: "biome", globalVersion: "1.0.0", localVersion: "2.0.0" });
+ * console.log(error.message) // Version mismatch for biome: global 1.0.0 vs local 2.0.0
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class ToolVersionMismatchError extends S.TaggedError<ToolVersionMismatchError>($I`ToolVersionMismatchError`)(
 	"ToolVersionMismatchError",
@@ -124,6 +201,21 @@ export class ToolVersionMismatchError extends S.TaggedError<ToolVersionMismatchE
 		localVersion: S.String.annotateKey({ description: "The project-local copy's version." }),
 	}, $I.annote("ToolVersionMismatchError", { description: "The global and project-local copies disagree, and the tool's policy is `\"fail\"`." }),
 ) {
+	/**
+	 * Describes the conflicting global and project-local versions.
+	 *
+	 * **Example** (Read the ToolVersionMismatchError message)
+	 *
+	 * ```ts
+	 * import { ToolVersionMismatchError } from "@beep/scratchpad/effected/commands/ToolDiscovery";
+	 *
+	 * const error = ToolVersionMismatchError.make({ tool: "biome", globalVersion: "1.0.0", localVersion: "2.0.0" });
+	 * console.log(error.message) // Version mismatch for biome: global 1.0.0 vs local 2.0.0
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Version mismatch for ${this.tool}: global ${this.globalVersion} vs local ${this.localVersion}`;
 	}
@@ -140,12 +232,38 @@ export class ToolVersionMismatchError extends S.TaggedError<ToolVersionMismatchE
  * which is the point: `Tool.named("-rf")` never reaches a shell, and this
  * package never builds a shell command line in the first place.
  *
+ * **Example** (Inspect ToolRefusedError diagnostics)
+ *
+ * ```ts
+ * import { ToolRefusedError } from "@beep/scratchpad/effected/commands/ToolDiscovery";
+ *
+ * const error = ToolRefusedError.make({ tool: "" });
+ * console.log(error.message) // Refused an empty tool name
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class ToolRefusedError extends S.TaggedError<ToolRefusedError>($I`ToolRefusedError`)("ToolRefusedError", {
 	/** The refused name. */
 	tool: S.String.annotateKey({ description: "The refused name." }),
 }, $I.annote("ToolRefusedError", { description: "A tool name that cannot safely be spawned was refused before any process started." })) {
+	/**
+	 * Describes why the tool name was refused before spawning.
+	 *
+	 * **Example** (Read the ToolRefusedError message)
+	 *
+	 * ```ts
+	 * import { ToolRefusedError } from "@beep/scratchpad/effected/commands/ToolDiscovery";
+	 *
+	 * const error = ToolRefusedError.make({ tool: "" });
+	 * console.log(error.message) // Refused an empty tool name
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return this.tool === ""
 			? "Refused an empty tool name"
@@ -156,11 +274,29 @@ export class ToolRefusedError extends S.TaggedError<ToolRefusedError>($I`ToolRef
 /**
  * Every way `ToolDiscovery.resolve` can fail.
  *
+ * **Example** (Recognize a refused-tool failure)
+ *
+ * ```ts
+ * import { ToolResolutionFailure, ToolRefusedError } from "@beep/scratchpad/effected/commands/ToolDiscovery";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ToolResolutionFailure)(ToolRefusedError.make({ tool: "" }))) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ToolResolutionFailure = S.Union([ToolNotFoundError, ToolVersionMismatchError, ToolRefusedError, LocalExecError]).pipe(
  $I.annoteSchema("ToolResolutionFailure", { description: "Every typed failure of tool resolution." }),
 );
+/**
+ * The decoded union of typed tool-resolution failures.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ToolResolutionFailure = typeof ToolResolutionFailure.Type;
 
 /** What one probe learned about one location; retains its plain-object representation. */
@@ -244,6 +380,8 @@ const probeLocation = (
  * The {@link ToolDiscovery} service shape.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ToolDiscoveryShape {
 	/** Resolve a tool against its source requirement and mismatch policy. */
@@ -419,7 +557,10 @@ const notStubbed = (method: string) => () =>
  * **Example** (Check Git availability and run its version command)
  *
  * ```ts
- * import { LocalExec, Run, Tool, ToolDiscovery } from "./index.ts";
+ * import { LocalExec } from "@beep/scratchpad/effected/commands/LocalExec";
+ * import { Run } from "@beep/scratchpad/effected/commands/Run";
+ * import { Tool } from "@beep/scratchpad/effected/commands/Tool";
+ * import { ToolDiscovery } from "@beep/scratchpad/effected/commands/ToolDiscovery";
  * import { NodeServices } from "@effect/platform-node";
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
@@ -438,28 +579,59 @@ const notStubbed = (method: string) => () =>
  *   Layer.provide(NodeServices.layer),
  * );
  *
- * Effect.runPromise(program.pipe(Effect.provide(AppLayer)));
+ * const runnable = program.pipe(Effect.provide(AppLayer));
+ * console.log(Effect.isEffect(runnable)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class ToolDiscovery extends Context.Service<ToolDiscovery, ToolDiscoveryShape>()(
 	$I`ToolDiscovery`,
 ) {
-	/** Resolves its dependencies once at construction, so every method's `R` is `never`. */
+	/**
+	 * Resolves its dependencies once at construction, so every method's `R` is `never`.
+	 *
+	 * **Example** (Inspect the live discovery layer)
+	 *
+	 * ```ts
+	 * import { ToolDiscovery } from "@beep/scratchpad/effected/commands/ToolDiscovery";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(ToolDiscovery.layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<ToolDiscovery, never, ChildProcessSpawner.ChildProcessSpawner | LocalExec> =
 		Layer.effect(this, make());
 
 	/**
-  * An in-memory test double: stub only what the test exercises; every other
-  * member dies with a defect naming itself.
-  *
-  * **Details**
-  *
-  * No member has an honest default — a fabricated `ResolvedTool` would leak
-  * into consumer logic as fact — so an unstubbed call fails loudly rather
-  * than lying.
-  */
+	 * An in-memory test double: stub only what the test exercises; every other
+	 * member dies with a defect naming itself.
+	 *
+	 * **Details**
+	 *
+	 * No member has an honest default — a fabricated `ResolvedTool` would leak
+	 * into consumer logic as fact — so an unstubbed call fails loudly rather
+	 * than lying.
+	 *
+	 * **Example** (Stub an availability check)
+	 *
+	 * ```ts
+	 * import { ToolDiscovery } from "@beep/scratchpad/effected/commands/ToolDiscovery";
+	 * import * as Effect from "effect/Effect";
+	 * import { Tool } from "@beep/scratchpad/effected/commands/Tool";
+	 *
+	 * const discovery = ToolDiscovery.makeTest({ isAvailable: () => Effect.succeed(true) });
+	 * console.log(Effect.runSync(discovery.isAvailable(Tool.named("biome")))) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<ToolDiscoveryShape> = {}): ToolDiscoveryShape => ({
 		resolve: notStubbed("resolve"),
 		isAvailable: notStubbed("isAvailable"),
@@ -473,14 +645,32 @@ export class ToolDiscovery extends Context.Service<ToolDiscovery, ToolDiscoveryS
 	});
 
 	/**
-  * {@link ToolDiscovery.makeTest} behind `Layer.succeed`.
-  *
-  * **Gotchas**
-  *
-  * A parameterized layer factory mints a fresh reference per call and layers
-  * memoize by reference — bind the result to a `const` rather than calling it
-  * at each composition site.
-  */
+	 * Provides {@link ToolDiscovery.makeTest} behind `Layer.succeed`.
+	 *
+	 * **Gotchas**
+	 *
+	 * A parameterized layer factory mints a fresh reference per call and layers
+	 * memoize by reference — bind the result to a `const` rather than calling it
+	 * at each composition site.
+	 *
+	 * **Example** (Provide a shared discovery test layer)
+	 *
+	 * ```ts
+	 * import { ToolDiscovery } from "@beep/scratchpad/effected/commands/ToolDiscovery";
+	 * import * as Effect from "effect/Effect";
+	 * import { Tool } from "@beep/scratchpad/effected/commands/Tool";
+	 *
+	 * const testLayer = ToolDiscovery.layerTest({ isAvailable: () => Effect.succeed(true) });
+	 * const program = Effect.gen(function* () {
+	 *   const discovery = yield* ToolDiscovery;
+	 *   return yield* discovery.isAvailable(Tool.named("biome"));
+	 * }).pipe(Effect.provide(testLayer));
+	 * console.log(Effect.runSync(program)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<ToolDiscoveryShape> = {}): Layer.Layer<ToolDiscovery> =>
 		Layer.succeed(ToolDiscovery, ToolDiscovery.makeTest(overrides));
 }
