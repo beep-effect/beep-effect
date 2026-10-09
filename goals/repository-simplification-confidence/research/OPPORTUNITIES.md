@@ -419,3 +419,26 @@
   its two-admission limit and changes no other unit, slot count or wrapper.
 - Prevention: ordered admission with observable queue position; restarting is a
   retry, not a proven remedy for lock-poll scheduling.
+
+## 2026-10-09 — H2 hands off an unstarted full package gate
+
+- Task: complete the required full package gate after repairing hosted fixture failures.
+- Evidence: canonical admission remained full after an hour-long wait and a retry;
+  the repaired-head package command produced neither a log nor an exit file.
+  Read-only lock observations showed turnover among other active jobs.
+- Recovery: commit completed parity and historical evidence, stop only the owned
+  unstarted command, cancel the owned readiness monitor, and mark the handoff
+  capacity-blocked. Resume the full gate through the same wrapper, then publish
+  delivery metadata and restart bounded readiness monitoring. No other job,
+  wrapper, slot count, baseline or suppression changed.
+- Prevention: ordered admission and visible queue position, with a bounded wait
+  disposition distinct from a completed gate. A stopped wrapper is not proof.
+
+## 2026-10-09 — H2 final GraphQL quota block
+
+- Task: update the PR description and re-read review-thread state for handoff.
+- Evidence: GitHub GraphQL returned `API rate limit already exceeded`.
+- Recovery: REST updated the PR body and confirmed its published head/draft state.
+  Keep current review-thread state unknown; the last successful snapshot had zero
+  threads. Re-read through GraphQL after quota recovers before merge.
+- Prevention: shared API-budget admission and observable reset times across lanes.

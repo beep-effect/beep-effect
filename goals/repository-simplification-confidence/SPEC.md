@@ -720,6 +720,8 @@ without claiming completion.
 | 2026-10-09 | H2 resolves clone evidence ownership only for an eligible completion read; markerless doctor reads preserve legacy fallback or unknown evidence. | Hosted empty/legacy ratchet fixtures exposed an unconditional root-discovery regression. Doctor remains read-only and never invents a repository binding. | Revert the H2 code; the explicit refresh writer keeps strict owning-root discovery. |
 | 2026-10-09 | H2 may retry its own verified-unstarted package admission after over an hour of lock polling. | No package command has started, and queue ownership can be checked without touching another lane. The same wrapper and two-own-admission limit remain. | Stop the replacement queued unit if needed; no application or proof state was changed by restarting. |
 
+| 2026-10-09 | H2 hands off capacity-blocked after its repaired-head full package command remains unstarted through canonical admission and a retry; only its own queued command and readiness monitor are cancelled. | All parity lanes and scoped tests pass, but they cannot replace the required full package gate. Stop without leaving an owned gate running or claiming a package pass. | Resume through `beep-heavy`, run the full package gate, publish the committed delivery evidence through Yeet, mark ready and restart bounded readiness monitoring before orchestrator merge. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

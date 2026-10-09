@@ -61,6 +61,56 @@ Required commands: `beep quality package-verify @beep/repo-cli`,
 `beep quality fallow audit`, `beep quality fallow health`, and scoped goal-test
 coverage compared with the existing touched-file baseline rows.
 
+## Qualification and scope
+
+Qualified implementation and fixture head: `9e05651ae0237b10ffed2da4d3574909715dd74d`.
+Later delivery commits contain packet evidence and main integration. The source
+review returned ZERO ACTIONABLE FINDINGS at this head; it is separate from the
+compiler and runtime results below.
+
+| Command | Result |
+| --- | --- |
+| `beep quality test-tsgo` | pass after the Arbitrary import and markerless-doctor repairs |
+| `beep docgen local --base origin/main` | pass, one package aggregated |
+| `beep ci lane jsdoc-ratchet` | pass; zero non-generated legacy findings |
+| `CI=true beep knowledge refs --check` | pass; zero live gated observations after D repaired the inherited SPEC literal |
+| `beep quality fallow audit` / `health` | pass; zero introduced findings, one inherited-adjacent audit finding |
+| Scoped goal and merge-gate coverage | 258 tests passed across 13 files; every existing touched baseline row met or improved |
+| `beep quality package-verify @beep/repo-cli` | fail (handoff gate incomplete: repaired-head full run never admitted; cancelled while queued, not a test failure) |
+
+All heavy commands ran through the canonical admission wrapper, with at most two
+H2 admissions. The scoped fixture run uses its own module-cache path to avoid
+colliding with package audit. No baseline or suppression was added. Percentages
+below are the scoped read, not a claim of repository-wide coverage. Existing
+baseline uncovered counts also met or improved.
+
+| File | Lines current / baseline | Statements current / baseline | Branches current / baseline | Functions current / baseline |
+| --- | --- | --- | --- | --- |
+| Bootstrap.schemas.ts | 100% / 100% | 100% / 100% | 100% / 100% | 100% / 100% |
+| Completion.ts | 80.15% / no row | 76.71% / no row | 54.54% / no row | 71.02% / no row |
+| Doctor.ts | 81.58% / 63.34% | 81.31% / 63.59% | 71.73% / 42.42% | 88.4% / 72.09% |
+| Goals.command.ts | 50% / 50% | 50% / 50% | 100% / 100% | 0% / 0% |
+| Goals.schemas.ts | 100% / 100% | 100% / 100% | 100% / 100% | 100% / 100% |
+| MergeGate.schemas.ts | 100% / no row | 100% / no row | 100% / no row | 100% / no row |
+| MergeGate.ts | 100% / no row | 100% / no row | 100% / no row | 100% / no row |
+
+The implementation adds completion schemas/service/readers and explicit refresh,
+changes doctor reporting and command registration, and extracts the existing
+MergeGate check schema to break the runtime/static cycle while preserving its
+identifier and re-export. Reconciliation changes only the three named manifests.
+No root/generated wiring or reference links are authored by H2. The initial patch
+note was retired once D policy #1566 merged because `@beep/repo-cli` is private.
+
+First hosted head `9737a4a77e` failed Property Laws and both repo-cli unit shards
+on the invalid Arbitrary module path; the second shard also exposed unconditional
+doctor root discovery in markerless fixtures. Completed job logs were read at once.
+Imports were repaired in `c433eba29e`; doctor eligibility and the root-probe
+regression assertion were repaired in `9e05651ae0`. Their inbox rows are acknowledged
+against the repair commits. The separate review missed the import error; the test
+compiler, rather than that assurance, establishes the corrected module boundary.
+Hosted proof is read on the latest PR head. Vercel's two deployment statuses report
+rate limits and are environment-only under the existing merge-gate exception.
+
 ## Doctor before and after
 
 Before, at `9914e98a86`: packets=211, blocking_new=0, blocking_inherited=0,
@@ -137,3 +187,17 @@ The five remaining substring-only legacy citations (`agent-pipeline-velocity`,
 `uspto-mcp`) require owner-confirmed typed declarations in a later migration; H2
 changes only the three specified manifests. Missing historical verdicts remain
 unknown until an authentic accepted-head verdict is recovered.
+
+## Capacity-blocked delivery
+
+The full repaired-head package command remained unstarted through canonical
+admission contention and a retry. The worker stopped only its queued command
+and cancelled its owned readiness monitor before handoff. No package result is
+inferred from stopping the wrapper. The qualified source is published at PR
+#1574; this delivery evidence is committed locally and awaits Yeet publication.
+The PR remains draft. The full package gate, content-final ready transition,
+readiness monitoring and orchestrator merge remain open.
+
+The final GraphQL lane reported API rate exhaustion. REST updated the PR body
+and confirmed its draft/head state. The last successful thread read had zero
+threads; a final thread read is unknown until GraphQL quota recovers.
