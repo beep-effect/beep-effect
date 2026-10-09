@@ -18,12 +18,25 @@ const $I = $ScratchpadId.create("effected/semver/Range");
 /**
  * Indicates that a string could not be parsed as a range expression.
  *
+ * **Details**
+ *
  * Raised by {@link Range.parse} and `VersionCache.resolveString` (which
  * parses through it). The decode direction of {@link Range.FromString}
  * reports the same failure through a generic `Schema` parse error instead of
  * this class, carrying the same message.
  *
+ * **Example** (Report a parse failure)
+ *
+ * ```ts
+ * import { InvalidRangeError } from "@beep/scratchpad/effected/semver/Range";
+ *
+ * const error = InvalidRangeError.make({ input: "bad", position: 0 });
+ * console.log(error.message); // Invalid range expression: "bad" at position 0
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class InvalidRangeError extends S.TaggedError<InvalidRangeError>($I`InvalidRangeError`)("InvalidRangeError", {
 	/** The raw input string that failed to parse. */
@@ -31,6 +44,25 @@ export class InvalidRangeError extends S.TaggedError<InvalidRangeError>($I`Inval
 	/** The character position where parsing failed, if available. */
 	position: S.optionalKey(S.Finite).annotateKey({ description: "The character position where parsing failed, if available." }),
 }, $I.annote("InvalidRangeError", { description: "Indicates that a string could not be parsed as a range expression." })) {
+	/**
+	 * Builds a readable failure message from the structured error fields.
+	 *
+	 * **Details**
+	 *
+	 * The optional position is included when provided.
+	 *
+	 * **Example** (Report a parse failure)
+	 *
+	 * ```ts
+	 * import { InvalidRangeError } from "@beep/scratchpad/effected/semver/Range";
+	 *
+	 * const error = InvalidRangeError.make({ input: "bad", position: 0 });
+	 * console.log(error.message); // Invalid range expression: "bad" at position 0
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		const base = `Invalid range expression: "${this.input}"`;
 		return this.position !== undefined ? `${base} at position ${this.position}` : base;
@@ -42,11 +74,16 @@ export class InvalidRangeError extends S.TaggedError<InvalidRangeError>($I`Inval
  * satisfy every comparator in the set to match.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ComparatorSet = ReadonlyArray<Comparator>;
 
 /**
  * A SemVer range expression: a union (OR) of {@link ComparatorSet}s.
+ *
+ * **Details**
+ *
  * Supports node-semver syntax — hyphen ranges (`1.0.0 - 2.0.0`), X-ranges
  * (`1.x`, `*`), tilde (`~1.2.3`), caret (`^1.2.3`) and `||` unions — which
  * parsing desugars into primitive comparators and normalizes.
@@ -54,7 +91,8 @@ export type ComparatorSet = ReadonlyArray<Comparator>;
  * **Example** (Test a version against a caret range)
  *
  * ```ts
- * import { Range, SemVer } from "./index.ts";
+ * import { Range } from "@beep/scratchpad/effected/semver/Range";
+ * import { SemVer } from "@beep/scratchpad/effected/semver/SemVer";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
@@ -63,11 +101,12 @@ export type ComparatorSet = ReadonlyArray<Comparator>;
  *   return range.test(version);
  * });
  *
- * console.log(Effect.runSync(program));
- * // => true
+ * console.log(Effect.runSync(program)); // true
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Range extends S.Class<Range>($I`Range`)({
 	/** Comparator sets combined with OR semantics; a version matches when it satisfies any set. */
@@ -79,6 +118,19 @@ export class Range extends S.Class<Range>($I`Range`)({
 	 * Schema transformation between the range expression string and
 	 * {@link Range}: decoding parses, desugars and normalizes; encoding
 	 * prints `a b || c d`.
+	 *
+	 * **Example** (Decode a constraint string)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const value = S.decodeUnknownSync(Range.FromString)("^1.0.0");
+	 * console.log(value.toString()); // >=1.0.0 <2.0.0-0
+	 * ```
+	 *
+	 * @category schemas
+	 * @since 0.0.0
 	 */
 	static readonly FromString: S.Codec<Range, string> = S.String.pipe(
 		S.decodeTo(
@@ -112,32 +164,32 @@ export class Range extends S.Class<Range>($I`Range`)({
 	// ── Construction ────────────────────────────────────────────────────
 
 	/**
-  * Parse a range expression and normalize its comparator sets,
-  * synchronously, returning a `Result` instead of an `Effect`.
-  *
-  * **Details**
-  *
-  * {@link Range.parse} is defined in terms of this function; the two never
-  * diverge. Reach for the `Effect` variant inside Effect code — it carries
-  * the `Range.parse` tracing span — and for this one at synchronous
-  * boundaries.
-  *
-  * **Example** (Normalize a caret range synchronously)
-  *
-  * ```ts
-  * import { Range } from "./index.ts";
-  * import * as Result from "effect/Result";
-  *
-  * const ok = Range.parseResult("^1.0.0");
-  * if (Result.isSuccess(ok)) {
-  *   console.log(ok.success.toString()); // => ">=1.0.0 <2.0.0-0"
-  * }
-  * ```
-  *
-  * @param input - the range expression to parse
-  * @returns a `Result` succeeding with the parsed {@link Range}, or failing
-  * with {@link InvalidRangeError}.
-  */
+	 * Parse a range expression and normalize its comparator sets,
+	 * synchronously, returning a `Result` instead of an `Effect`.
+	 *
+	 * **Details**
+	 *
+	 * {@link Range.parse} is defined in terms of this function; the two never
+	 * diverge. Reach for the `Effect` variant inside Effect code — it carries
+	 * the `Range.parse` tracing span — and for this one at synchronous
+	 * boundaries.
+	 *
+	 * **Example** (Normalize a caret range synchronously)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const ok = Result.getOrThrow(Range.parseResult("^1.0.0"));
+	 * console.log(ok.toString()); // >=1.0.0 <2.0.0-0
+	 * ```
+	 *
+	 * @param input - the range expression to parse
+	 * @returns a `Result` succeeding with the parsed {@link Range}, or failing
+	 * with {@link InvalidRangeError}.
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static parseResult(input: string): Result.Result<Range, InvalidRangeError> {
 		const result = parseRange(input);
 		if (!result.ok) {
@@ -153,61 +205,119 @@ export class Range extends S.Class<Range>($I`Range`)({
 	 * terms of {@link Range.parseResult} — synchronous callers can use that
 	 * variant directly.
 	 *
+	 * **Example** (Parse a constraint in Effect)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const value = Effect.runSync(Range.parse("^1.0.0"));
+	 * console.log(value.toString()); // >=1.0.0 <2.0.0-0
+	 * ```
+	 *
 	 * @param input - the range expression to parse
 	 * @returns the parsed {@link Range}. Fails with {@link InvalidRangeError}.
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	static readonly parse = Effect.fn("Range.parse")((input: string) => Effect.fromResult(Range.parseResult(input)));
 
 	// ── Matching statics (dual) ─────────────────────────────────────────
 
 	/**
-  * Test whether a version satisfies a range; see {@link Range.test} for the
-  * prerelease matching rule. Dual API.
-  *
-  * **Gotchas**
-  *
-  * **Data-first order is `(version, range)`** — the version being tested
-  * comes first, the range it is tested against second. The data-last form
-  * takes the range: `Range.satisfies(range)` applied to a version.
-  *
-  * The two parameters are distinct classes and the order is not recoverable
-  * from the call site. TypeScript rejects a flipped call outright, so this
-  * only bites callers without type checking (untyped scripts, REPL probes).
-  * There, `Range.satisfies(range, version)` dispatches data-first, binds the
-  * `Range` to `version`, and dies with
-  * `TypeError: range.test is not a function` — a message that reads as a
-  * defect inside this package rather than a caller error.
-  *
-  * The same order and the same hazard apply to `Range.filter`,
-  * {@link Range.maxSatisfying} and {@link Range.minSatisfying}: subject
-  * first, range second.
-  */
+	 * Test whether a version satisfies a range; see {@link Range.test} for the
+	 * prerelease matching rule. Dual API.
+	 *
+	 * **Gotchas**
+	 *
+	 * **Data-first order is `(version, range)`** — the version being tested
+	 * comes first, the range it is tested against second. The data-last form
+	 * takes the range: `Range.satisfies(range)` applied to a version.
+	 *
+	 * The two parameters are distinct classes and the order is not recoverable
+	 * from the call site. TypeScript rejects a flipped call outright, so this
+	 * only bites callers without type checking (untyped scripts, REPL probes).
+	 * There, `Range.satisfies(range, version)` dispatches data-first, binds the
+	 * `Range` to `version`, and dies with
+	 * `TypeError: range.test is not a function` — a message that reads as a
+	 * defect inside this package rather than a caller error.
+	 *
+	 * The same order and the same hazard apply to `Range.filter`,
+	 * {@link Range.maxSatisfying} and {@link Range.minSatisfying}: subject
+	 * first, range second.
+	 *
+	 * **Example** (Match a stable version)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import { SemVer } from "@beep/scratchpad/effected/semver/SemVer";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const range = Effect.runSync(Range.parse("^1.0.0"));
+	 * console.log(Range.satisfies(SemVer.of(1, 5, 0), range)); // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	static readonly satisfies: {
 		(range: Range): (version: SemVer) => boolean;
 		(version: SemVer, range: Range): boolean;
 	} = Fn.dual(2, (version: SemVer, range: Range): boolean => range.test(version));
 
 	/**
-  * Filter versions that satisfy a range, preserving order. Dual API.
-  *
-  * **Details**
-  *
-  * Data-first order is `(versions, range)` — see {@link Range.satisfies}
-  * for why the order is spelled out.
-  */
+	 * Filter versions that satisfy a range, preserving order. Dual API.
+	 *
+	 * **Details**
+	 *
+	 * Data-first order is `(versions, range)` — see {@link Range.satisfies}
+	 * for why the order is spelled out.
+	 *
+	 * **Example** (Select matching versions)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import { SemVer } from "@beep/scratchpad/effected/semver/SemVer";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const range = Effect.runSync(Range.parse("^1.0.0"));
+	 * const versions = [SemVer.of(1, 2, 0), SemVer.of(1, 6, 0), SemVer.of(2, 0, 0)];
+	 * console.log(Range.filter(versions, range).length); // 2
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly filter: {
 		(range: Range): (versions: ReadonlyArray<SemVer>) => ReadonlyArray<SemVer>;
 		(versions: ReadonlyArray<SemVer>, range: Range): ReadonlyArray<SemVer>;
 	} = Fn.dual(2, (versions: ReadonlyArray<SemVer>, range: Range): ReadonlyArray<SemVer> => range.filter(versions));
 
 	/**
-  * Highest satisfying version, or `Option.none()`. Dual API.
-  *
-  * **Details**
-  *
-  * Data-first order is `(versions, range)` — see {@link Range.satisfies}
-  * for why the order is spelled out.
-  */
+	 * Highest satisfying version, or `Option.none()`. Dual API.
+	 *
+	 * **Details**
+	 *
+	 * Data-first order is `(versions, range)` — see {@link Range.satisfies}
+	 * for why the order is spelled out.
+	 *
+	 * **Example** (Select matching versions)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import { SemVer } from "@beep/scratchpad/effected/semver/SemVer";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 *
+	 * const range = Effect.runSync(Range.parse("^1.0.0"));
+	 * const versions = [SemVer.of(1, 2, 0), SemVer.of(1, 6, 0), SemVer.of(2, 0, 0)];
+	 * const selected = Range.maxSatisfying(versions, range);
+	 * console.log(O.map(selected, (version) => version.toString()).pipe(O.getOrElse(() => "none"))); // 1.6.0
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly maxSatisfying: {
 		(range: Range): (versions: ReadonlyArray<SemVer>) => O.Option<SemVer>;
 		(versions: ReadonlyArray<SemVer>, range: Range): O.Option<SemVer>;
@@ -220,13 +330,30 @@ export class Range extends S.Class<Range>($I`Range`)({
 	});
 
 	/**
-  * Lowest satisfying version, or `Option.none()`. Dual API.
-  *
-  * **Details**
-  *
-  * Data-first order is `(versions, range)` — see {@link Range.satisfies}
-  * for why the order is spelled out.
-  */
+	 * Lowest satisfying version, or `Option.none()`. Dual API.
+	 *
+	 * **Details**
+	 *
+	 * Data-first order is `(versions, range)` — see {@link Range.satisfies}
+	 * for why the order is spelled out.
+	 *
+	 * **Example** (Select matching versions)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import { SemVer } from "@beep/scratchpad/effected/semver/SemVer";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
+	 *
+	 * const range = Effect.runSync(Range.parse("^1.0.0"));
+	 * const versions = [SemVer.of(1, 2, 0), SemVer.of(1, 6, 0), SemVer.of(2, 0, 0)];
+	 * const selected = Range.minSatisfying(versions, range);
+	 * console.log(O.map(selected, (version) => version.toString()).pipe(O.getOrElse(() => "none"))); // 1.2.0
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly minSatisfying: {
 		(range: Range): (versions: ReadonlyArray<SemVer>) => O.Option<SemVer>;
 		(versions: ReadonlyArray<SemVer>, range: Range): O.Option<SemVer>;
@@ -243,6 +370,21 @@ export class Range extends S.Class<Range>($I`Range`)({
 	/**
 	 * Combine two ranges with OR semantics: the union of their comparator
 	 * sets. Dual API.
+	 *
+	 * **Example** (Compare overlapping constraints)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import { SemVer } from "@beep/scratchpad/effected/semver/SemVer";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const a = Effect.runSync(Range.parse("^1.0.0"));
+	 * const b = Effect.runSync(Range.parse("^1.5.0"));
+	 * console.log(Range.union(a, b).test(SemVer.of(1, 2, 0))); // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
 	 */
 	static readonly union: {
 		(that: Range): (self: Range) => Range;
@@ -250,33 +392,34 @@ export class Range extends S.Class<Range>($I`Range`)({
 	} = Fn.dual(2, (self: Range, that: Range): Range => Range.make({ sets: [...self.sets, ...that.sets] }));
 
 	/**
-  * Intersect two ranges via a cross-product of their comparator sets,
-  * keeping only satisfiable combinations, synchronously, returning a
-  * `Result` instead of an `Effect`. Fails with
-  * {@link UnsatisfiableConstraintError} when no satisfiable set remains —
-  * an honest typed failure instead of an unsatisfiable range. Dual API.
-  *
-  * **Details**
-  *
-  * {@link Range.intersect} is defined in terms of this function; the two
-  * never diverge. Reach for the `Effect` variant inside Effect code — it
-  * carries the `Range.intersect` tracing span — and for this one at
-  * synchronous boundaries.
-  *
-  * **Example** (Intersect two ranges synchronously)
-  *
-  * ```ts
-  * import { Range } from "./index.ts";
-  * import * as Result from "effect/Result";
-  *
-  * const a = Result.getOrThrow(Range.parseResult("^1.0.0"));
-  * const b = Result.getOrThrow(Range.parseResult(">=1.5.0"));
-  * const merged = Range.intersectResult(a, b);
-  * if (Result.isSuccess(merged)) {
-  *   console.log(merged.success.toString()); // => ">=1.0.0 <2.0.0-0 >=1.5.0"
-  * }
-  * ```
-  */
+	 * Intersect two ranges via a cross-product of their comparator sets,
+	 * keeping only satisfiable combinations, synchronously, returning a
+	 * `Result` instead of an `Effect`. Fails with
+	 * {@link UnsatisfiableConstraintError} when no satisfiable set remains —
+	 * an honest typed failure instead of an unsatisfiable range. Dual API.
+	 *
+	 * **Details**
+	 *
+	 * {@link Range.intersect} is defined in terms of this function; the two
+	 * never diverge. Reach for the `Effect` variant inside Effect code — it
+	 * carries the `Range.intersect` tracing span — and for this one at
+	 * synchronous boundaries.
+	 *
+	 * **Example** (Intersect two ranges synchronously)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import * as Result from "effect/Result";
+	 *
+	 * const a = Result.getOrThrow(Range.parseResult("^1.0.0"));
+	 * const b = Result.getOrThrow(Range.parseResult(">=1.5.0"));
+	 * const merged = Result.getOrThrow(Range.intersectResult(a, b));
+	 * console.log(merged.toString()); // >=1.0.0 <2.0.0 >=1.5.0
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	static readonly intersectResult: {
 		(that: Range): (self: Range) => Result.Result<Range, UnsatisfiableConstraintError>;
 		(self: Range, that: Range): Result.Result<Range, UnsatisfiableConstraintError>;
@@ -304,8 +447,25 @@ export class Range extends S.Class<Range>($I`Range`)({
 	 * {@link UnsatisfiableConstraintError} when no satisfiable set remains —
 	 * an honest typed failure instead of an unsatisfiable range. Dual API.
 	 *
+	 * **Details**
+	 *
 	 * Defined in terms of {@link Range.intersectResult} — synchronous callers
 	 * can use that variant directly.
+	 *
+	 * **Example** (Compare overlapping constraints)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import { SemVer } from "@beep/scratchpad/effected/semver/SemVer";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const a = Effect.runSync(Range.parse("^1.0.0"));
+	 * const b = Effect.runSync(Range.parse("^1.5.0"));
+	 * console.log(Effect.runSync(Range.intersect(a, b)).test(SemVer.of(1, 6, 0))); // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
 	 */
 	static readonly intersect: {
 		(that: Range): (self: Range) => Effect.Effect<Range, UnsatisfiableConstraintError>;
@@ -316,19 +476,33 @@ export class Range extends S.Class<Range>($I`Range`)({
 	);
 
 	/**
-  * Check whether every version matched by `sub` is also matched by `sup`.
-  * Dual API.
-  *
-  * **Gotchas**
-  *
-  * This check is a conservative approximation: it may return `false` for
-  * ranges that are technically subsets when the sub-range straddles
-  * comparator-set boundaries in the sup-range. For example,
-  * `>=1.0.0 <3.0.0` is a subset of `>=1.0.0 <2.0.0 || >=2.0.0 <3.0.0`,
-  * but `isSubset` returns `false` because no single sup-set fully implies
-  * the sub-set. This is a known limitation; false negatives are safe
-  * (they prevent incorrect simplification).
-  */
+	 * Check whether every version matched by `sub` is also matched by `sup`.
+	 * Dual API.
+	 *
+	 * **Gotchas**
+	 *
+	 * This check is a conservative approximation: it may return `false` for
+	 * ranges that are technically subsets when the sub-range straddles
+	 * comparator-set boundaries in the sup-range. For example,
+	 * `>=1.0.0 <3.0.0` is a subset of `>=1.0.0 <2.0.0 || >=2.0.0 <3.0.0`,
+	 * but `isSubset` returns `false` because no single sup-set fully implies
+	 * the sub-set. This is a known limitation; false negatives are safe
+	 * (they prevent incorrect simplification).
+	 *
+	 * **Example** (Compare overlapping constraints)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const a = Effect.runSync(Range.parse("^1.0.0"));
+	 * const b = Effect.runSync(Range.parse("^1.5.0"));
+	 * console.log(Range.isSubset(b, a)); // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	static readonly isSubset: {
 		(sup: Range): (sub: Range) => boolean;
 		(sub: Range, sup: Range): boolean;
@@ -343,6 +517,20 @@ export class Range extends S.Class<Range>($I`Range`)({
 	/**
 	 * Test whether two ranges are semantically equivalent: each is a
 	 * {@link Range.isSubset | subset} of the other. Dual API.
+	 *
+	 * **Example** (Compare overlapping constraints)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const a = Effect.runSync(Range.parse("^1.0.0"));
+	 * const b = Effect.runSync(Range.parse("^1.5.0"));
+	 * console.log(Range.equivalent(a, b)); // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
 	 */
 	static readonly equivalent: {
 		(that: Range): (self: Range) => boolean;
@@ -353,6 +541,20 @@ export class Range extends S.Class<Range>($I`Range`)({
 	 * Remove redundant comparator sets: a set is redundant when it is a
 	 * subset of another set in the range (every version it matches already
 	 * matches that broader set, so the union gains nothing by keeping it).
+	 *
+	 * **Example** (Compare overlapping constraints)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const a = Effect.runSync(Range.parse("^1.0.0"));
+	 * const b = Effect.runSync(Range.parse("^1.5.0"));
+	 * console.log(Range.simplify(Range.union(a, b)).sets.length); // 1
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
 	 */
 	static simplify(range: Range): Range {
 		const sets = range.sets.filter((set, i) =>
@@ -366,30 +568,92 @@ export class Range extends S.Class<Range>($I`Range`)({
 	// ── Instance ────────────────────────────────────────────────────────
 
 	/**
-  * Test whether a version satisfies this range.
-  *
-  * **Details**
-  *
-  * Matches node-semver's prerelease restriction: a prerelease version only
-  * satisfies the range when at least one comparator in the matching set
-  * carries a prerelease on the same `major.minor.patch` tuple. This keeps
-  * `^1.2.3` from unexpectedly matching `1.2.4-alpha`.
-  */
+	 * Test whether a version satisfies this range.
+	 *
+	 * **Details**
+	 *
+	 * Matches node-semver's prerelease restriction: a prerelease version only
+	 * satisfies the range when at least one comparator in the matching set
+	 * carries a prerelease on the same `major.minor.patch` tuple. This keeps
+	 * `^1.2.3` from unexpectedly matching `1.2.4-alpha`.
+	 *
+	 * **Example** (Match a stable version)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import { SemVer } from "@beep/scratchpad/effected/semver/SemVer";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const range = Effect.runSync(Range.parse("^1.0.0"));
+	 * console.log(range.test(SemVer.of(1, 5, 0))); // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	test(version: SemVer): boolean {
 		return this.sets.some((set) => satisfiesSet(version, set));
 	}
 
-	/** Filter versions that satisfy this range, preserving order. */
+	/**
+	 * Filter versions that satisfy this range, preserving order.
+	 *
+	 * **Example** (Select matching versions)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import { SemVer } from "@beep/scratchpad/effected/semver/SemVer";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const range = Effect.runSync(Range.parse("^1.0.0"));
+	 * const versions = [SemVer.of(1, 2, 0), SemVer.of(1, 6, 0), SemVer.of(2, 0, 0)];
+	 * console.log(range.filter(versions).length); // 2
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	filter(versions: ReadonlyArray<SemVer>): ReadonlyArray<SemVer> {
 		return versions.filter((v) => this.test(v));
 	}
 
-	/** The range expression string, `a b || c d`. */
+	/**
+	 * The range expression string, `a b || c d`.
+	 *
+	 * **Example** (Format a constraint)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const value = Effect.runSync(Range.parse("^1.0.0"));
+	 * console.log(value.toString()); // >=1.0.0 <2.0.0-0
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override toString(): string {
 		return formatRange(this.sets);
 	}
 
-	/** @internal */
+	/**
+	 * Formats this constraint for Node.js custom inspection.
+	 *
+	 * **Example** (Format a constraint)
+	 *
+	 * ```ts
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const value = Effect.runSync(Range.parse("^1.0.0"));
+	 * console.log(value.toString()); // >=1.0.0 <2.0.0-0
+	 * ```
+	 *
+	 * @internal
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	[Symbol.for("nodejs.util.inspect.custom")](): string {
 		return this.toString();
 	}
@@ -398,10 +662,26 @@ export class Range extends S.Class<Range>($I`Range`)({
 /**
  * Indicates that intersecting ranges produced no satisfiable comparator set.
  *
+ * **Details**
+ *
  * Raised by {@link Range.intersect} when the constraints are mutually
  * exclusive. Carries the conflicting ranges.
  *
+ * **Example** (Report conflicting ranges)
+ *
+ * ```ts
+ * import { Range, UnsatisfiableConstraintError } from "@beep/scratchpad/effected/semver/Range";
+ * import * as Effect from "effect/Effect";
+ *
+ * const a = Effect.runSync(Range.parse("^1.0.0"));
+ * const b = Effect.runSync(Range.parse("^2.0.0"));
+ * const error = UnsatisfiableConstraintError.make({ constraints: [a, b] });
+ * console.log(error.message); // No version satisfies all 2 constraints
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class UnsatisfiableConstraintError extends S.TaggedError<UnsatisfiableConstraintError>($I`UnsatisfiableConstraintError`)(
 	"UnsatisfiableConstraintError",
@@ -410,6 +690,28 @@ export class UnsatisfiableConstraintError extends S.TaggedError<UnsatisfiableCon
 		constraints: S.Array(Range).annotateKey({ description: "The ranges whose intersection is empty." }),
 	}, $I.annote("UnsatisfiableConstraintError", { description: "Indicates that intersecting ranges produced no satisfiable comparator set." }),
 ) {
+	/**
+	 * Builds a readable failure message from the structured error fields.
+	 *
+	 * **Details**
+	 *
+	 * The constraint count selects the singular or plural wording.
+	 *
+	 * **Example** (Report conflicting ranges)
+	 *
+	 * ```ts
+	 * import { Range, UnsatisfiableConstraintError } from "@beep/scratchpad/effected/semver/Range";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const a = Effect.runSync(Range.parse("^1.0.0"));
+	 * const b = Effect.runSync(Range.parse("^2.0.0"));
+	 * const error = UnsatisfiableConstraintError.make({ constraints: [a, b] });
+	 * console.log(error.message); // No version satisfies all 2 constraints
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		const count = this.constraints.length;
 		return `No version satisfies all ${count} constraint${count === 1 ? "" : "s"}`;

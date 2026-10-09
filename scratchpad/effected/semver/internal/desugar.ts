@@ -10,6 +10,9 @@ import type { ComparatorOperator, ComparatorParts, VersionParts } from "./order.
  * `*`). `null` in `major`/`minor`/`patch` marks an unspecified (wildcard)
  * component; `prerelease`/`build` are only populated when the fully
  * specified suffix of a partial version carries them.
+ *
+ * @category models
+ * @since 0.0.0
  */
 export interface PartialParts {
 	readonly major: number | null;
@@ -33,6 +36,21 @@ const comp = (operator: ComparatorOperator, version: VersionParts): ComparatorPa
  * Desugar a tilde range (`~1.2.3`, `~1.2`, `~1`) into a `>=`/`<` comparator
  * pair that allows patch-level changes when a minor version is specified,
  * and minor-level changes when it is not.
+ *
+ * **Example** (Expand a patch-compatible tilde range)
+ *
+ * ```ts
+ * import { desugarTilde } from "@beep/scratchpad/effected/semver/internal/desugar";
+ *
+ * const comparators = desugarTilde({ major: 1, minor: 2, patch: 3, prerelease: [], build: [] });
+ * const bounds = comparators.map(({ operator, version }) =>
+ *   `${operator}${version.major}.${version.minor}.${version.patch}`
+ * ).join(" ");
+ * console.log(bounds); // >=1.2.3 <1.3.0
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const desugarTilde = (p: PartialParts): ReadonlyArray<ComparatorParts> => {
 	const major = p.major ?? 0;
@@ -54,6 +72,21 @@ export const desugarTilde = (p: PartialParts): ReadonlyArray<ComparatorParts> =>
  * compatibility rules: changes are allowed in the rightmost of
  * major/minor/patch that is non-zero (so `^0.2.3` allows patch bumps only,
  * `^0.0.3` allows none).
+ *
+ * **Example** (Expand a caret range below version one)
+ *
+ * ```ts
+ * import { desugarCaret } from "@beep/scratchpad/effected/semver/internal/desugar";
+ *
+ * const comparators = desugarCaret({ major: 0, minor: 2, patch: 3, prerelease: [], build: [] });
+ * const bounds = comparators.map(({ operator, version }) =>
+ *   `${operator}${version.major}.${version.minor}.${version.patch}`
+ * ).join(" ");
+ * console.log(bounds); // >=0.2.3 <0.3.0
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const desugarCaret = (p: PartialParts): ReadonlyArray<ComparatorParts> => {
 	const major = p.major ?? 0;
@@ -99,6 +132,21 @@ export const desugarCaret = (p: PartialParts): ReadonlyArray<ComparatorParts> =>
  * specified version with no operator (or `=`) desugars to a single `=`
  * comparator; wildcards expand to the bounding `>=`/`<` pair implied by the
  * given `operator`.
+ *
+ * **Example** (Expand a wildcard minor version)
+ *
+ * ```ts
+ * import { desugarXRange } from "@beep/scratchpad/effected/semver/internal/desugar";
+ *
+ * const comparators = desugarXRange(null, { major: 1, minor: null, patch: null, prerelease: [], build: [] });
+ * const bounds = comparators.map(({ operator, version }) =>
+ *   `${operator}${version.major}.${version.minor}.${version.patch}`
+ * ).join(" ");
+ * console.log(bounds); // >=1.0.0 <2.0.0
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const desugarXRange: {
 	(p: PartialParts): (operator: ComparatorOperator | null) => ReadonlyArray<ComparatorParts>;
@@ -169,6 +217,24 @@ export const desugarXRange: {
  * lower bound and, for the upper bound, `<=` when it is fully specified or
  * `<` the next unspecified component when it is partial (`1.2.3 - 2.3` →
  * `>=1.2.3 <2.4.0-0`).
+ *
+ * **Example** (Expand a hyphen range with a partial upper bound)
+ *
+ * ```ts
+ * import { desugarHyphen } from "@beep/scratchpad/effected/semver/internal/desugar";
+ *
+ * const comparators = desugarHyphen(
+ *   { major: 1, minor: 2, patch: 3, prerelease: [], build: [] },
+ *   { major: 2, minor: 3, patch: null, prerelease: [], build: [] }
+ * );
+ * const bounds = comparators.map(({ operator, version }) =>
+ *   `${operator}${version.major}.${version.minor}.${version.patch}`
+ * ).join(" ");
+ * console.log(bounds); // >=1.2.3 <2.4.0
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const desugarHyphen: {
 	(upper: PartialParts): (lower: PartialParts) => ReadonlyArray<ComparatorParts>;

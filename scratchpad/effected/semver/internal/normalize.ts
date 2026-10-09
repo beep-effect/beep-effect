@@ -43,7 +43,28 @@ const removeDuplicates = (set: ReadonlyArray<ComparatorParts>): ReadonlyArray<Co
 const normalizeComparatorSet = (set: ReadonlyArray<ComparatorParts>): ReadonlyArray<ComparatorParts> =>
 	sortComparators(removeDuplicates(set));
 
-/** Normalize every comparator set in a range: sort and deduplicate each independently. */
+/**
+ * Normalizes every comparator set in a range: sort and deduplicate each independently.
+ *
+ * **Details**
+ *
+ * Sorting is stable: operator weights order `>=`, `>`, `=`, `<`, then `<=`, with version precedence breaking ties. Comparators that differ only in build metadata are duplicate constraints (SemVer §10); the first occurrence survives. Sets are neither merged nor deduplicated against one another.
+ *
+ * **Example** (Deduplicate constraints across build metadata)
+ *
+ * ```ts
+ * import { normalizeSets } from "@beep/scratchpad/effected/semver/internal/normalize"
+ * import { formatRange, parseRange } from "@beep/scratchpad/effected/semver/internal/grammar"
+ *
+ * const parsed = parseRange("<2.0.0 >=1.2.3+first >=1.2.3+second")
+ * if (parsed.ok) {
+ *   console.log(formatRange(normalizeSets(parsed.value))) // >=1.2.3+first <2.0.0
+ * }
+ * ```
+ *
+ * @category normalization
+ * @since 0.0.0
+ */
 export const normalizeSets = (
 	sets: ReadonlyArray<ReadonlyArray<ComparatorParts>>,
 ): ReadonlyArray<ReadonlyArray<ComparatorParts>> => sets.map(normalizeComparatorSet);

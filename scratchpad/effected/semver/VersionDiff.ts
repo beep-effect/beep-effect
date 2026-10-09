@@ -30,21 +30,16 @@ const classifyDiff = (a: SemVer, b: SemVer): "major" | "minor" | "patch" | "prer
  * **Example** (Classify a major version change and its delta)
  *
  * ```ts
- * import { SemVer, VersionDiff } from "./index.ts";
- * import * as Effect from "effect/Effect";
+ * import { SemVer } from "@beep/scratchpad/effected/semver/SemVer";
+ * import { VersionDiff } from "@beep/scratchpad/effected/semver/VersionDiff";
  *
- * const program = Effect.gen(function* () {
- *   const a = yield* SemVer.parse("1.2.3");
- *   const b = yield* SemVer.parse("2.0.0");
- *   const diff = VersionDiff.between(a, b);
- *   return [diff.type, diff.major] as const;
- * });
- *
- * console.log(Effect.runSync(program));
- * // => ["major", 1]
+ * const diff = VersionDiff.between(SemVer.of(1, 2, 3), SemVer.of(2, 0, 0));
+ * console.log(`${diff.type}: ${diff.major}`); // major: 1
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class VersionDiff extends S.TaggedClass<VersionDiff>($I`VersionDiff`)("VersionDiff", {
 	/** The highest-precedence field that differs between `from` and `to`; see the class doc for the classification order. */
@@ -63,9 +58,21 @@ export class VersionDiff extends S.TaggedClass<VersionDiff>($I`VersionDiff`)("Ve
 	/**
 	 * Compute the diff from `a` to `b`.
 	 *
+	 * **Example** (Measure signed component deltas)
+	 *
+	 * ```ts
+	 * import { SemVer } from "@beep/scratchpad/effected/semver/SemVer";
+	 * import { VersionDiff } from "@beep/scratchpad/effected/semver/VersionDiff";
+	 *
+	 * const diff = VersionDiff.between(SemVer.of(1, 2, 3), SemVer.of(2, 0, 0));
+	 * console.log(`${diff.type}: ${diff.major}`); // major: 1
+	 * ```
+	 *
 	 * @param a - the earlier version
 	 * @param b - the later version
 	 * @returns the classified diff with signed numeric deltas
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static between(a: SemVer, b: SemVer): VersionDiff {
 		return VersionDiff.make({
@@ -78,7 +85,22 @@ export class VersionDiff extends S.TaggedClass<VersionDiff>($I`VersionDiff`)("Ve
 		});
 	}
 
-	/** Human-readable summary, e.g. `major (1.2.3 → 2.0.0)`. */
+	/**
+	 * Human-readable summary, e.g. `major (1.2.3 → 2.0.0)`.
+	 *
+	 * **Example** (Format a version difference)
+	 *
+	 * ```ts
+	 * import { SemVer } from "@beep/scratchpad/effected/semver/SemVer";
+	 * import { VersionDiff } from "@beep/scratchpad/effected/semver/VersionDiff";
+	 *
+	 * const diff = VersionDiff.between(SemVer.of(1, 2, 3), SemVer.of(2, 0, 0));
+	 * console.log(diff.toString()); // major (1.2.3 → 2.0.0)
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override toString(): string {
 		return `${this.type} (${this.from.toString()} → ${this.to.toString()})`;
 	}

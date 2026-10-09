@@ -14,7 +14,16 @@ import type { PartialParts } from "./desugar.ts";
 import { desugarCaret, desugarHyphen, desugarTilde, desugarXRange } from "./desugar.ts";
 import type { ComparatorOperator, ComparatorParts, VersionParts } from "./order.ts";
 
-/** Outcome of a grammar entry point: parsed value or input + failure position. */
+/**
+ * Outcome of a grammar entry point: parsed value or input + failure position.
+ *
+ * **Details**
+ *
+ * On failure, `position` is a zero-based offset into `input`; narrow on `ok` to access the parsed value or diagnostic.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ParseResult<A> =
 	| { readonly ok: true; readonly value: A }
 	| { readonly ok: false; readonly input: string; readonly position: number };
@@ -235,7 +244,32 @@ const parseVersionCore = (s: ParserState): VersionParts => {
 	return { major, minor, patch, prerelease, build };
 };
 
-/** Parse a strict SemVer 2.0.0 version string. */
+/**
+ * Parses a strict SemVer 2.0.0 version string into structural version parts.
+ *
+ * **Details**
+ *
+ * Surrounding whitespace is trimmed. A nonempty failing input reports its position in the trimmed string; an empty input reports the original string and position zero.
+ *
+ * **Gotchas**
+ *
+ * The entire trimmed input must be consumed. Version prefixes `v`, `V`, and `=` are rejected, as are leading zeros in numeric identifiers and integers outside the safe range. Build identifiers may contain leading zeros.
+ *
+ * **Example** (Accept a strict version and reject a prefix)
+ *
+ * ```ts
+ * import { parseVersion } from "@beep/scratchpad/effected/semver/internal/grammar"
+ *
+ * const parsed = parseVersion(" 1.2.3-alpha.1+build.01 ")
+ * if (parsed.ok) {
+ *   console.log(parsed.value.prerelease.join(".")) // alpha.1
+ * }
+ * console.log(parseVersion("v1.2.3").ok) // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const parseVersion = (raw: string): ParseResult<VersionParts> => {
 	const trimmed = raw.trim();
 
@@ -437,8 +471,34 @@ const parseRangeComparators = (s: ParserState): ReadonlyArray<ComparatorParts> =
 };
 
 /**
- * Parse a range expression into comparator sets (OR of ANDs). The empty
- * string parses as the match-all range.
+ * Parses a range expression into comparator sets (OR of ANDs).
+ *
+ * **Details**
+ *
+ * The empty string parses as the match-all range. Surrounding whitespace is trimmed; caret, tilde, wildcard, and hyphen sugar expand into primitive comparators. Each inner set is a conjunction, and the outer array is a disjunction.
+ *
+ * **Gotchas**
+ *
+ * The entire trimmed input must be consumed. Spaces separate comparators within a set; Ruby-style `~>` is rejected.
+ *
+ * **Example** (Expand caret sugar and an empty range)
+ *
+ * ```ts
+ * import { parseRange, formatRange } from "@beep/scratchpad/effected/semver/internal/grammar"
+ *
+ * const parsed = parseRange("^1.2.3")
+ * if (parsed.ok) {
+ *   console.log(formatRange(parsed.value)) // >=1.2.3 <2.0.0-0
+ * }
+ * const empty = parseRange("")
+ * if (empty.ok) {
+ *   console.log(empty.value.length) // 1
+ *   console.log(empty.value[0]?.length) // 1
+ * }
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseRange = (raw: string): ParseResult<ReadonlyArray<ReadonlyArray<ComparatorParts>>> => {
 	const trimmed = raw.trim();
@@ -532,8 +592,30 @@ const parseComparatorCore = (s: ParserState): ComparatorParts => {
 };
 
 /**
- * Parse a single comparator string (optional operator + complete version).
- * Wildcards and range sugar are not allowed; a missing operator means `=`.
+ * Parses a single comparator string (optional operator + complete version).
+ *
+ * **Details**
+ *
+ * A missing operator means `=`. Surrounding whitespace is trimmed.
+ *
+ * **Gotchas**
+ *
+ * Wildcards and range sugar are not allowed; all three numeric version components are required, and the entire trimmed input must be consumed.
+ *
+ * **Example** (Default to equality and reject wildcards)
+ *
+ * ```ts
+ * import { parseComparator } from "@beep/scratchpad/effected/semver/internal/grammar"
+ *
+ * const parsed = parseComparator("1.2.3")
+ * if (parsed.ok) {
+ *   console.log(parsed.value.operator) // =
+ * }
+ * console.log(parseComparator(">=1.2.x").ok) // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseComparator = (raw: string): ParseResult<ComparatorParts> => {
 	const trimmed = raw.trim();
@@ -557,7 +639,27 @@ export const parseComparator = (raw: string): ParseResult<ComparatorParts> => {
 // Printers (the encode direction of the FromString schemas)
 // ---------------------------------------------------------------------------
 
-/** Print a version as `major.minor.patch[-prerelease][+build]`. */
+/**
+ * Prints a version as `major.minor.patch[-prerelease][+build]`.
+ *
+ * **Details**
+ *
+ * Prerelease and build identifiers are dot-separated; their suffixes are omitted when the corresponding arrays are empty.
+ *
+ * **Example** (Print prerelease and build identifiers)
+ *
+ * ```ts
+ * import { formatVersion } from "@beep/scratchpad/effected/semver/internal/grammar"
+ *
+ * console.log(formatVersion({
+ *   major: 1, minor: 2, patch: 3,
+ *   prerelease: ["alpha", 1], build: ["build", "01"]
+ * })) // 1.2.3-alpha.1+build.01
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 export const formatVersion = (v: VersionParts): string => {
 	let s = `${v.major}.${v.minor}.${v.patch}`;
 	if (v.prerelease.length > 0) {
@@ -569,12 +671,48 @@ export const formatVersion = (v: VersionParts): string => {
 	return s;
 };
 
-/** Print a comparator; the `=` operator is implicit. */
+/**
+ * Prints a comparator with its version, leaving the `=` operator implicit.
+ *
+ * **Example** (Print equality without an operator)
+ *
+ * ```ts
+ * import { formatComparator } from "@beep/scratchpad/effected/semver/internal/grammar"
+ *
+ * console.log(formatComparator({
+ *   operator: "=",
+ *   version: { major: 1, minor: 2, patch: 3, prerelease: [], build: [] }
+ * })) // 1.2.3
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 export const formatComparator = (c: ComparatorParts): string => {
 	const op = c.operator === "=" ? "" : c.operator;
 	return `${op}${formatVersion(c.version)}`;
 };
 
-/** Print comparator sets as `a b || c d`. */
+/**
+ * Prints comparator sets as `a b || c d`.
+ *
+ * **Details**
+ *
+ * Comparators within a set are space-separated, and sets are separated by ` || `. An empty comparator set prints as an empty string.
+ *
+ * **Example** (Print a disjunction of comparator sets)
+ *
+ * ```ts
+ * import { formatRange, parseRange } from "@beep/scratchpad/effected/semver/internal/grammar"
+ *
+ * const parsed = parseRange(">=1.2.3 <2.0.0 || 3.0.0")
+ * if (parsed.ok) {
+ *   console.log(formatRange(parsed.value)) // >=1.2.3 <2.0.0 || 3.0.0
+ * }
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 export const formatRange = (sets: ReadonlyArray<ReadonlyArray<ComparatorParts>>): string =>
 	sets.map((set) => set.map(formatComparator).join(" ")).join(" || ");

@@ -12,7 +12,7 @@
  * **Example** (Bump a version and test range membership)
  *
  * ```ts
- * import { Range, SemVer } from "./index.ts";
+ * import { Range, SemVer } from "@beep/scratchpad/effected/semver/index";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {

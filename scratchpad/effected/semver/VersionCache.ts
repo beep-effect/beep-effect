@@ -17,9 +17,34 @@ const $I = $ScratchpadId.create("effected/semver/VersionCache");
  * Indicates that an extremum (`latest`/`oldest`) was requested from an empty
  * cache.
  *
+ *
+ * **Example** (Inspect an empty cache failure)
+ *
+ * ```ts
+ * import { EmptyCacheError } from "@beep/scratchpad/effected/semver/VersionCache";
+ *
+ * console.log(EmptyCacheError.make().message); // Version cache is empty
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class EmptyCacheError extends S.TaggedError<EmptyCacheError>($I`EmptyCacheError`)("EmptyCacheError", {}, $I.annote("EmptyCacheError", { description: "Indicates that an extremum (`latest`/`oldest`) was requested from an empty cache." })) {
+	/**
+	 * Returns the diagnostic message for this cache failure.
+	 *
+	 * **Example** (Inspect an empty cache failure)
+	 *
+	 * ```ts
+	 * import { EmptyCacheError } from "@beep/scratchpad/effected/semver/VersionCache";
+	 *
+	 * console.log(EmptyCacheError.make().message); // Version cache is empty
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return "Version cache is empty";
 	}
@@ -29,12 +54,41 @@ export class EmptyCacheError extends S.TaggedError<EmptyCacheError>($I`EmptyCach
  * Indicates that a navigation operation (`diff`/`next`/`prev`) referenced a
  * version that is not in the cache.
  *
+ *
+ * **Example** (Identify the missing version)
+ *
+ * ```ts
+ * import { VersionNotFoundError } from "@beep/scratchpad/effected/semver/VersionCache";
+ * import { SemVer } from "@beep/scratchpad/effected/semver/SemVer";
+ *
+ * const error = VersionNotFoundError.make({ version: SemVer.of(1, 2, 3) });
+ * console.log(error.message); // Version not found in cache: 1.2.3
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class VersionNotFoundError extends S.TaggedError<VersionNotFoundError>($I`VersionNotFoundError`)("VersionNotFoundError", {
 	/** The version that was not found. */
 	version: SemVer.annotateKey({ description: "The version that was not found." }),
 }, $I.annote("VersionNotFoundError", { description: "Indicates that a navigation operation (`diff`/`next`/`prev`) referenced a version that is not in the cache." })) {
+	/**
+	 * Returns the diagnostic message for this cache failure.
+	 *
+	 * **Example** (Identify the missing version)
+	 *
+	 * ```ts
+	 * import { VersionNotFoundError } from "@beep/scratchpad/effected/semver/VersionCache";
+	 * import { SemVer } from "@beep/scratchpad/effected/semver/SemVer";
+	 *
+	 * const error = VersionNotFoundError.make({ version: SemVer.of(1, 2, 3) });
+	 * console.log(error.message); // Version not found in cache: 1.2.3
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Version not found in cache: ${this.version.toString()}`;
 	}
@@ -45,7 +99,22 @@ export class VersionNotFoundError extends S.TaggedError<VersionNotFoundError>($I
  * requested range. Carries the range and the versions that were available,
  * and is fully serializable — both payload fields are schema classes.
  *
+ *
+ * **Example** (Inspect an unmatched range)
+ *
+ * ```ts
+ * import { UnsatisfiedRangeError } from "@beep/scratchpad/effected/semver/VersionCache";
+ * import { Range } from "@beep/scratchpad/effected/semver/Range";
+ * import * as Effect from "effect/Effect";
+ *
+ * const range = Effect.runSync(Range.parse("^1.0.0"));
+ * const error = UnsatisfiedRangeError.make({ range, available: [] });
+ * console.log(error.message); // No version satisfies range >=1.0.0 <2.0.0-0 (0 versions available)
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class UnsatisfiedRangeError extends S.TaggedError<UnsatisfiedRangeError>($I`UnsatisfiedRangeError`)("UnsatisfiedRangeError", {
 	/** The range that could not be satisfied. */
@@ -53,6 +122,24 @@ export class UnsatisfiedRangeError extends S.TaggedError<UnsatisfiedRangeError>(
 	/** The versions that were available for matching. */
 	available: S.Array(SemVer).annotateKey({ description: "The versions that were available for matching." }),
 }, $I.annote("UnsatisfiedRangeError", { description: "Indicates that the cache contains versions but none satisfies the requested range. Carries the range and the versions that were available, and is fully serializable — both payload fields are schema classes." })) {
+	/**
+	 * Returns the diagnostic message for this cache failure.
+	 *
+	 * **Example** (Inspect an unmatched range)
+	 *
+	 * ```ts
+	 * import { UnsatisfiedRangeError } from "@beep/scratchpad/effected/semver/VersionCache";
+	 * import { Range } from "@beep/scratchpad/effected/semver/Range";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const range = Effect.runSync(Range.parse("^1.0.0"));
+	 * const error = UnsatisfiedRangeError.make({ range, available: [] });
+	 * console.log(error.message); // No version satisfies range >=1.0.0 <2.0.0-0 (0 versions available)
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		const count = this.available.length;
 		return `No version satisfies range ${this.range.toString()} (${count} version${count === 1 ? "" : "s"} available)`;
@@ -62,6 +149,8 @@ export class UnsatisfiedRangeError extends S.TaggedError<UnsatisfiedRangeError>(
 /**
  * Operations of the {@link VersionCache} service.
  *
+ * **Details**
+ *
  * Queries read the current state on execution; whole-cache queries (`versions`,
  * `filter`) never fail and return `[]` when nothing matches, while
  * extremum and navigation operations fail typed. `next`/`prev` layer two
@@ -70,6 +159,8 @@ export class UnsatisfiedRangeError extends S.TaggedError<UnsatisfiedRangeError>(
  * boundary".
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export interface VersionCacheShape {
 	/** Replace all cached versions with the given array. */
@@ -136,7 +227,8 @@ const dedupeSorted = (versions: ReadonlyArray<SemVer>): ReadonlyArray<SemVer> =>
  * **Example** (Load cached versions and retrieve the latest)
  *
  * ```ts
- * import { SemVer, VersionCache } from "./index.ts";
+ * import { SemVer } from "@beep/scratchpad/effected/semver/SemVer";
+ * import { VersionCache } from "@beep/scratchpad/effected/semver/VersionCache";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
@@ -146,17 +238,35 @@ const dedupeSorted = (versions: ReadonlyArray<SemVer>): ReadonlyArray<SemVer> =>
  *   return latest.toString();
  * }).pipe(Effect.provide(VersionCache.layer));
  *
- * console.log(Effect.runSync(program));
- * // => "2.0.0"
+ * console.log(Effect.runSync(program)); // 2.0.0
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class VersionCache extends Context.Service<VersionCache, VersionCacheShape>()($I`VersionCache`) {
 	/**
 	 * Live implementation backed by a `Ref` of a sorted, deduplicated array.
 	 * Requires nothing: range strings are parsed with {@link Range.parse}
 	 * directly.
+	 *
+	 * **Example** (Start with an empty live cache)
+	 *
+	 * ```ts
+	 * import { VersionCache } from "@beep/scratchpad/effected/semver/VersionCache";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const cache = yield* VersionCache;
+	 *   return (yield* cache.versions).length;
+	 * }).pipe(Effect.provide(VersionCache.layer));
+	 *
+	 * console.log(Effect.runSync(program)); // 0
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
 	 */
 	static readonly layer: Layer.Layer<VersionCache> = Layer.effect(
 		VersionCache,
