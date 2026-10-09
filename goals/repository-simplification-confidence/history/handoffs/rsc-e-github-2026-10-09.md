@@ -1,6 +1,6 @@
-# rsc-e-github — implementation in progress
+# rsc-e-github — blocked handoff
 
-This is an interim coordination receipt, not a final-head claim.
+The implementation wave is committed locally. Publication and acceptance are blocked; this is not a final or merge-ready declaration.
 
 ## C and shared integration contract
 
@@ -33,3 +33,32 @@ Main Check 37944257965 at `d1e8350670` has failed Heavy / Lint Policy job 113897
 `yeet publish` created local implementation commit `8587a93592`, then its collected cheap gates failed; no branch push, PR, install preflight or hosted monitor started. Exact failures: inherited `lint:effect-imports` temporary-directory traversal, two introduced Effect-Vitest test findings, one introduced Fallow complexity finding, and aggregate Fallow health. Introduced callback/complexity repairs are prepared and must be re-proven; no baseline or suppression changed. Schema-first, Knip, dead-code and several other cheap gates passed at the initial commit, which does not establish final-head proof. The aggregate P0 inbox was acknowledged with an explicit ownership/handoff reason; it remains an acceptance blocker, not a waiver.
 
 The first publish invocation ran directly and its automatic cheap tier launched Turbo tasks. This was a mechanics deviation. Subsequent publish and proof attempts must use `beep-heavy`. No queued command may be bypassed to expedite this lane.
+
+## Final report
+
+`head` below identifies the implementation commit. A subsequent report-only commit records this handoff, PLAN and receipts; it changes no source or workflow behavior.
+
+- lane: rsc-e-github
+- head: eb967c3208da3737d39ece56ab8bb13ae9d6ede9 (implementation)
+- PR: none — Yeet refused publication at cheap gates; branch is not pushed.
+- package-verify: @beep/repo-cli fail; @beep/professional-desktop fail. These are unsatisfied handoff gates, not executed test failures: both commands waited for admission and were stopped before execution. No passing package result is claimed.
+- hosted-parity: test-tsgo blocked / docgen local blocked / jsdoc-ratchet blocked / knowledge refs blocked (inherited main red independently confirmed) / fallow blocked (initial cheap audit and health failed; introduced complexity repair not re-proven) / coverage blocked (existing scoped baseline read; no fresh measurement).
+- hosted writes: desktop environment and tag protection; disable data-sync; disable ghost repo-law; enable secret-scanning push protection; pin 16 required contexts to GitHub Actions and require resolved review threads. Each has a preceding snapshot and readback in [stage-3-github-settings.md](../receipts/stage-3-github-settings.md#before-desktop-environment), [tag policy](../receipts/stage-3-github-settings.md#before-desktop-tag-policy), [data-sync](../receipts/stage-3-github-settings.md#before-disable-data-sync), [repo-law](../receipts/stage-3-github-settings.md#before-disable-repo-law), [push protection](../receipts/stage-3-github-settings.md#before-push-protection), [ruleset](../receipts/stage-3-github-settings.md#before-ruleset-hardening).
+- handoff: goals/repository-simplification-confidence/history/handoffs/rsc-e-github-2026-10-09.md
+- open: proof admission and package/parity/fixture/scoped-coverage results; inherited effect-imports traversal and knowledge-reference main repairs; inherited Cache Warm docgen timeout repair; Yeet publication and independent review; S3 coordinated Knip window; R41 trusted-main-writer proof before repository token deletion; C environment port/fork classifier integration; A retired-tool removal; D allowlist decision; shared generated declarations/typos integration; runner-group reusable-workflow probe; Vercel/orphan recovery evidence; desktop signing secrets; hosted size-label/dependency-review/nightly/cache-hit probes with G; exact-merge-SHA seven-lane Heavy probe. All actionable E rows remain in scope.
+
+## Proof and resume evidence
+
+The last fetch/merge of `origin/main` was already up to date before the implementation commit. The live context snapshot was regenerated with its owner command, `beep ci ruleset --capture`. `ci ruleset --check`, `ci workflow-lint` and `ci settings --check` pass. The commit hooks passed Gitleaks, typos, Biome, JSDoc and commitlint. Those checks do not substitute for package or hosted acceptance.
+
+Main Check [37944257965](https://github.com/beep-effect/beep-effect/actions/runs/37944257965) at `d1e8350670f87c7fa2d744f87c8cdbf99ad1852f` is now **completed/failure**, with the inherited `knowledge:refs-check` red. The E-01 cancellation unblocked the successor, but did not produce a successful main run.
+
+The four owned `beep-heavy` proof commands remained at `all 3 slots busy, waiting`. Before yielding, each transient service's working directory and wrapper process were checked, and only this lane's four services were stopped. No other lane or slot holder was stopped. Re-submit through `beep-heavy`; there are no late proof processes intentionally left to mutate this checkout. Logs and exact initial Yeet verdict remain in the lane's ignored `.beep/rsc-e/` and `.beep/yeet/` directories.
+
+The initial Yeet verdict is `.beep/yeet/runs/chore_rsc-e-github-876a8871996c/verdict.json`, source commit `8587a93592`. Push, install preflight and PR creation were not run. Introduced Effect-Vitest and Fallow repairs are in `a95a4b982e`; exact-head re-proof remains required. Do not reuse the old partial passing checks as acceptance.
+
+Scoped coverage baseline read (percentages in lines/statements/branches/functions order): `CiLane.ts` 92.98/92.96/92.15/91.82; `Yeet/internal/MonitorLoop.ts` 67.25/64.75/78.26/59.18; `Status.ts` 66.4/66.42/61/61.16; `WatchMode.ts` 100/100/100/100; `WatchStream.ts` 100/99.07/100/97.77. This only identifies the existing regression obligations; it proves no current coverage result. No baseline was refreshed or relaxed.
+
+Resume in this lane: merge `origin/main`, integrate the single shared repairs, regenerate the ruleset capture through its command, run all proof through `beep-heavy`, then retry `beep-heavy bun run beep yeet publish`. Complete the hosted probes and review waves before sending `final <sha> #<pr>` to the orchestrator. The lane must not merge or retire itself before the orchestrator directs it.
+
+Scope: source changes are limited to GitHub workflows/action configuration, CI/admission/governance and their fixtures, the desktop updater endpoint, required packet/runbook/changeset evidence, and the generated ruleset capture. No secret values, unrelated refactors, baseline suppressions or broad formatting changes were introduced. Graft reported approximately 93,960 tokens saved across the two context queries.
