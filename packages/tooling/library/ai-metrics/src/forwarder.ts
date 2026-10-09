@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { SchemaUtils, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Clock from "effect/Clock";
@@ -33,6 +33,7 @@ import {
   AiMetricsParquetExportMode,
   writeAiMetricsDerivedStorage,
 } from "./derived-storage.ts";
+import { HarnessHash } from "./harness-ledger.ts";
 import { HookPulseV1 } from "./hook-pulse.ts";
 import { AiMetricsIdentityRegistryUpsertInput, upsertAiMetricsIdentityRegistry } from "./identity-registry.ts";
 import { summarizeTranscriptText } from "./ingest.ts";
@@ -41,7 +42,7 @@ import { fileSizeBytes, modifiedAtMillis } from "./internal/file-info.ts";
 import { collectJsonlFiles, statOption } from "./internal/jsonl-discovery.ts";
 import { normalizedRelativePath, resolveTranscriptSourceRoots } from "./internal/transcript-utils.ts";
 import { AiMetricsDeployTarget, AiMetricsTranscriptSource } from "./models.ts";
-import { AiMetricsEncodedSha256, hashPrivateIdentifier, makeAiMetricsPrivacyCheckResult } from "./privacy.ts";
+import { hashPrivateIdentifier, makeAiMetricsPrivacyCheckResult } from "./privacy.ts";
 import { shellQuote } from "./shell.ts";
 
 const $I = $RepoAiMetricsId.create("forwarder");
@@ -74,7 +75,7 @@ const AiMetricsForwarderTimerCommand = AiMetricsForwarderTimerCommandBase.pipe(
 
 class ProcessedForwarderSource extends S.Class<ProcessedForwarderSource>($I`ProcessedForwarderSource`)({
   record: AiMetricsDerivedTranscriptRecord,
-  sessionIdentityHash: S.OptionFromOptionalKey(AiMetricsEncodedSha256),
+  sessionIdentityHash: S.OptionFromOptionalKey(S.toEncoded(Sha256Hex)),
 }) {}
 
 const SessionIdentityRow = S.fromJsonString(
@@ -1239,7 +1240,10 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
           );
         }
       );
-      return AiMetricsDerivedTranscriptRecord.make({ ...record, sessionHarnessHash });
+      return AiMetricsDerivedTranscriptRecord.make({
+        ...record,
+        sessionHarnessHash: O.map(sessionHarnessHash, HarnessHash.make),
+      });
     });
     const ingestRunId = `forwarder-${startedAtEpochMillis}`;
     const derived = yield* writeAiMetricsDerivedStorage(
