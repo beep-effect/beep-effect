@@ -1,26 +1,33 @@
 import { renderResidueReportLinesForTesting } from "@beep/repo-cli/test/Quality";
 import {
+  ProcessTable,
+  ResidueReapAction,
   ResidueReapCandidate,
   ResidueReapReport,
+  ResidueRetentionRuling,
   runRepoCommandCapture,
   runResidueReap,
 } from "@beep/repo-cli/test/RepoRun";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as F from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 
 const decodeResidueReapReportJson = S.decodeEffect(S.fromJsonString(ResidueReapReport));
 const encodeResidueReapReportJson = S.encodeEffect(S.fromJsonString(ResidueReapReport));
@@ -62,7 +69,7 @@ const touchTreeDaysAgo = Effect.fn("ResidueReapTest.touchTreeDaysAgo")(function*
   target: string,
   daysAgo: number
 ) {
-  yield* runFixtureCommand(root, "find", [target, "-exec", "touch", "-d", fixtureTimestamp(daysAgo), "{}", "+"]);
+  yield* runFixtureCommand(root, "find", [target, "-exec", "touch", "-h", "-d", fixtureTimestamp(daysAgo), "{}", "+"]);
 });
 
 const makeEmbeddedRepo = Effect.fn("ResidueReapTest.makeEmbeddedRepo")(function* (worktreeRoot: string) {
@@ -194,6 +201,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("residue reap", (it) => 
             "turbo-runs",
             "shared-turbo-cache",
             "qualification-views",
+            "checkout-qa",
+            "checkout-qualification",
+            "checkout-generated",
+            "checkout-jobs",
+            "checkout-ledgers",
+            "checkout-pids",
+            "checkout-material",
           ]);
         }),
       removeTempDirectory
@@ -446,7 +460,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("residue reap", (it) => 
           expect(report.reapedCount).toBe(0);
           expect(yield* fs.readFileString(payload)).toBe("unrelated work\n");
           expect(yield* fs.readFileString(session)).toBe("unrelated session\n");
-          expect(A.every(report.candidates, (entry) => entry.action === "skip")).toBe(true);
+          expect(A.every(report.candidates, (entry) => ResidueReapAction.is.skip(entry.action))).toBe(true);
         }),
       removeTempDirectory
     )
@@ -667,9 +681,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("residue reap", (it) => 
 
   it.effect("fails closed when the configured home root is empty or relative", () =>
     Effect.gen(function* () {
-      yield* runResidueReap({ homeRoot: "" }).pipe(Effect.flip);
-
-      yield* runResidueReap({ homeRoot: "relative/home" }).pipe(Effect.flip);
+      const empty = yield* runResidueReap({ homeRoot: "" }).pipe(Effect.flip);
+      expect(S.isSchemaError(empty)).toBe(true);
+      const relative = yield* runResidueReap({ homeRoot: "relative/home" }).pipe(Effect.flip);
+      expect(S.isSchemaError(relative)).toBe(true);
     })
   );
 
@@ -734,7 +749,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("residue reap", (it) => 
     expect(dryRun).toContain("RESIDUE REAP DRY RUN");
   });
 
-  it.effect("round-trips the residue-reap/v2 report schema and honors class filtering", () =>
+  it.effect("round-trips the residue-reap/v3 report schema and honors class filtering", () =>
     Effect.acquireUseRelease(
       makeTempDirectory,
       (root) =>
@@ -749,12 +764,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("residue reap", (it) => 
           const encoded = yield* encodeResidueReapReportJson(report);
           const decoded = yield* decodeResidueReapReportJson(encoded);
           expect(decoded).toEqual(report);
-          expect(decoded.schemaVersion).toBe("residue-reap/v2");
+          expect(decoded.schemaVersion).toBe("residue-reap/v3");
           expect(decoded.classes).toEqual(["turbo-cache"]);
           expect(decoded.candidates).toHaveLength(1);
           expect(decoded.candidates[0]).toBeInstanceOf(ResidueReapCandidate);
-          // v2 widened every literal domain, so a v1-tagged payload must not decode as v2.
-          const v1Payload = Str.replace("residue-reap/v2", "residue-reap/v1")(encoded);
+          // Earlier report tags must not decode as v3 archive reports.
+          const v1Payload = Str.replace("residue-reap/v3", "residue-reap/v1")(encoded);
           expect(S.isSchemaError(yield* Effect.flip(decodeResidueReapReportJson(v1Payload)))).toBe(true);
 
           const filtered = yield* runResidueReap({
@@ -1364,4 +1379,964 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("residue reap", (it) => 
       "qualification-views: candidates=1 eligible=0 skipped=1 eligible-bytes=apparent-only skip-reasons: kept-newest=1"
     );
   });
+});
+
+const retentionFixture = Effect.fn("ResidueReapTest.retentionFixture")(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = yield* makeEmbeddedRepo(root);
+  const homeRoot = path.join(root, "home");
+  const target = path.join(repoRoot, ".beep", "ci", "obsolete");
+  yield* fs.makeDirectory(homeRoot, { recursive: true });
+  yield* fs.makeDirectory(target, { recursive: true });
+  yield* fs.makeDirectory(path.join(repoRoot, ".beep", "retention"), { recursive: true });
+  yield* fs.makeDirectory(path.join(repoRoot, "standards"), { recursive: true });
+  yield* fs.writeFileString(path.join(repoRoot, ".gitignore"), ".beep/\n");
+  yield* fs.writeFileString(
+    path.join(repoRoot, "standards", "receipt.md"),
+    "Completed scanner run; generated output can be reproduced.\n"
+  );
+  yield* fs.writeFileString(path.join(target, "payload.txt"), "preserve these bytes");
+  const ruling = ResidueRetentionRuling.make({
+    path: ".beep/ci/obsolete",
+    owner: "quality-fixture",
+    state: "completed",
+    disposition: "regenerable",
+    evidence: "standards/retention.json",
+    regeneration: "synthetic scanner",
+    reason: "redundant derivative",
+  });
+  yield* fs.writeFileString(
+    path.join(repoRoot, ".beep", "retention", "checkout-generated.json"),
+    yield* encodeRulingArrayJson([ruling])
+  );
+  yield* fs.writeFileString(path.join(repoRoot, "standards", "retention.json"), yield* encodeRulingJson(ruling));
+  yield* runFixtureCommand(repoRoot, "git", ["add", "."]);
+  yield* runFixtureCommand(repoRoot, "git", ["commit", "--quiet", "-m", "fixture"]);
+  yield* touchTreeDaysAgo(root, path.join(repoRoot, ".beep"), 45);
+  return {
+    repoRoot,
+    homeRoot,
+    target,
+    ruling,
+    classes: ["checkout-generated"] as const,
+    nowMillis: FIXTURE_NOW_MILLIS,
+    probeLiveCwd: noLiveCwd,
+    probePidAlive: noLivePid,
+  };
+});
+
+const rulingJson = S.fromJsonString(ResidueRetentionRuling);
+const rulingArrayJson = ResidueRetentionRuling.pipe(S.Array, S.fromJsonString);
+const encodeRulingArrayJson = S.encodeEffect(rulingArrayJson);
+const encodeRulingJson = S.encodeEffect(rulingJson);
+const decodeRulingJson = S.decodeEffect(rulingJson);
+const equivalentRuling = S.toEquivalence(ResidueRetentionRuling);
+
+it.effect.prop(
+  "preserves owner, terminal state and evidence binding through JSON for every schema-derived ruling",
+  [Arbitrary.schema(ResidueRetentionRuling)],
+  Effect.fnUntraced(function* ([ruling]) {
+    const decoded = yield* decodeRulingJson(yield* encodeRulingJson(ruling));
+    expect(equivalentRuling(ruling, decoded)).toBe(true);
+    expect(decoded.schemaVersion).toBe("residue-retention/v1");
+  }),
+  { arbitrary: { runs: 20, seed: 7 } }
+);
+
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("checkout retention archives", (it) => {
+  it.effect("persists dry-run ownership and moves without deleting, then restores", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const dry = yield* runResidueReap(fixture);
+              const row = candidateByPath(dry, fixture.target);
+              expect(row.action).toBe("archive-move");
+              expect(row.owner).toBe("quality-fixture");
+              expect(row.terminalState).toBe("completed");
+              expect(yield* fs.exists(O.getOrThrow(O.fromUndefinedOr(dry.reportPath)))).toBe(true);
+              const applied = yield* runResidueReap({ ...fixture, apply: true });
+              const moved = candidateByPath(applied, fixture.target);
+              expect(applied.reapedCount).toBe(1);
+              expect(applied.reclaimedBytes).toBe(0);
+              const runRoot = path.dirname(O.getOrThrow(O.fromUndefinedOr(applied.reportPath)));
+              const originalPlan = yield* fs.readFileString(path.join(runRoot, "plan.json"));
+              const originalReport = yield* fs.readFileString(path.join(runRoot, "report.json"));
+              expect(yield* fs.exists(fixture.target)).toBe(false);
+              expect(
+                yield* fs.readFileString(
+                  path.join(O.getOrThrow(O.fromUndefinedOr(moved.recoveryDestination)), "payload.txt")
+                )
+              ).toBe("preserve these bytes");
+              yield* runResidueReap({ ...fixture, restore: O.getOrThrow(O.fromUndefinedOr(applied.runId)) });
+              expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
+              const resumed = yield* runResidueReap({
+                ...fixture,
+                resume: O.getOrThrow(O.fromUndefinedOr(applied.runId)),
+              });
+              expect(resumed.reapedCount).toBe(0);
+              expect(resumed.mode).toBe("resume");
+              expect(yield* fs.exists(fixture.target)).toBe(true);
+              expect(yield* fs.readFileString(path.join(runRoot, "plan.json"))).toBe(originalPlan);
+              expect(yield* fs.readFileString(path.join(runRoot, "report.json"))).toBe(originalReport);
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("archives sibling candidates despite parent mtime changes and prunes archive census", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const second = path.join(fixture.repoRoot, ".beep", "ci", "second");
+              yield* fs.makeDirectory(second);
+              yield* fs.writeFileString(path.join(second, "payload.txt"), "second payload");
+              const ruling = ResidueRetentionRuling.make({
+                ...fixture.ruling,
+                path: ".beep/ci/second",
+                evidence: "standards/second.json",
+              });
+              yield* fs.writeFileString(
+                path.join(fixture.repoRoot, "standards", "second.json"),
+                yield* encodeRulingJson(ruling)
+              );
+              yield* fs.writeFileString(
+                path.join(fixture.repoRoot, ".beep", "retention", "checkout-generated.json"),
+                yield* encodeRulingArrayJson([fixture.ruling, ruling])
+              );
+              yield* fs.writeFileString(path.join(fixture.repoRoot, "standards", "café.md"), "ordinary evidence");
+              yield* runFixtureCommand(fixture.repoRoot, "git", ["add", "."]);
+              yield* runFixtureCommand(fixture.repoRoot, "git", ["commit", "--quiet", "-m", "second fixture"]);
+              const oldArchive = path.join(fixture.repoRoot, ".beep", "residue-reap", "old", "archive");
+              yield* fs.makeDirectory(oldArchive, { recursive: true });
+              yield* Effect.forEach(A.range(1, 30), (i) =>
+                fs.writeFileString(path.join(oldArchive, `${i}`), "preserved")
+              );
+              yield* runFixtureCommand(fixture.repoRoot, "find", [
+                path.join(fixture.repoRoot, ".beep"),
+                "-exec",
+                "touch",
+                "-d",
+                "45 days ago",
+                "{}",
+                "+",
+              ]);
+              const report = yield* runResidueReap({
+                ...fixture,
+                nowMillis: yield* Clock.currentTimeMillis,
+                apply: true,
+                censusEntryCap: 20,
+              });
+              expect(report.reapedCount).toBe(2);
+              expect(yield* fs.exists(fixture.target)).toBe(false);
+              expect(yield* fs.exists(second)).toBe(false);
+              expect(yield* fs.exists(path.join(oldArchive, "30"))).toBe(true);
+              yield* fs.makeDirectory(fixture.target);
+              const blocked = yield* runResidueReap({
+                ...fixture,
+                restore: O.getOrThrow(O.fromUndefinedOr(report.runId)),
+              }).pipe(Effect.flip);
+              expect(blocked.message).toContain("Restore refuses an occupied source");
+              expect(yield* fs.readFileString(path.join(second, "payload.txt"))).toBe("second payload");
+              yield* fs.remove(fixture.target, { recursive: true });
+              yield* runResidueReap({ ...fixture, restore: O.getOrThrow(O.fromUndefinedOr(report.runId)) });
+              expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
+            })
+          )
+        ),
+      removeTempDirectory
+    ).pipe(TestClock.withLive)
+  );
+
+  it.effect("observes other fleet owners and refuses nonexistent recovery without creating a run", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const invoking = yield* makeEmbeddedRepo(fixture.homeRoot);
+              const report = yield* runResidueReap({
+                ...fixture,
+                repoRoot: invoking,
+                checkoutRoots: [invoking, fixture.repoRoot],
+                apply: true,
+              });
+              const row = candidateByPath(report, fixture.target);
+              expect(row.action).toBe("skip");
+              expect(row.skipReason).toBe("foreign-owner");
+              expect(row.retentionReason).toBe("fleet observation only; archive from the owning checkout");
+              expect(yield* fs.exists(fixture.target)).toBe(true);
+              const unknown = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+              const failed = yield* runResidueReap({ ...fixture, resume: unknown }).pipe(Effect.flip);
+              expect(failed.message).toContain("plan.json does not exist");
+              expect(yield* fs.exists(path.join(fixture.repoRoot, ".beep", "residue-reap", unknown))).toBe(false);
+              yield* fs.remove(fixture.repoRoot, { recursive: true });
+              for (const mode of ["resume", "restore"] as const) {
+                const recovered = yield* runResidueReap({
+                  ...fixture,
+                  repoRoot: invoking,
+                  [mode]: O.getOrThrow(O.fromUndefinedOr(report.runId)),
+                });
+                expect(recovered.warnings).toEqual([]);
+                expect(candidateByPath(recovered, fixture.target).retentionReason).toBe(row.retentionReason);
+              }
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("archives and restores a clean unlinked repository directly inside a candidate", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const nested = yield* makeEmbeddedRepo(fixture.target);
+              yield* fs.writeFileString(path.join(nested, "tracked.txt"), "nested payload");
+              yield* runFixtureCommand(nested, "git", ["add", "."]);
+              yield* runFixtureCommand(nested, "git", ["commit", "--quiet", "-m", "clean nested"]);
+              yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
+              const applied = yield* runResidueReap({ ...fixture, apply: true });
+              expect(applied.reapedCount).toBe(1);
+              expect(candidateByPath(applied, fixture.target).action).toBe("archive-move");
+              expect(yield* fs.exists(fixture.target)).toBe(false);
+              yield* runResidueReap({ ...fixture, restore: O.getOrThrow(O.fromUndefinedOr(applied.runId)) });
+              expect(yield* fs.readFileString(path.join(nested, "tracked.txt"))).toBe("nested payload");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("keeps linked nested clones and dirty nested worktrees intact", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const nested = yield* makeEmbeddedRepo(fixture.target);
+              yield* fs.writeFileString(path.join(nested, "tracked.txt"), "original");
+              yield* runFixtureCommand(nested, "git", ["add", "."]);
+              yield* runFixtureCommand(nested, "git", ["commit", "--quiet", "-m", "nested"]);
+              yield* fs.writeFileString(path.join(nested, "tracked.txt"), "dirty");
+              yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
+              const dirty = yield* runResidueReap(fixture);
+              expect(candidateByPath(dirty, fixture.target).skipReason).toBe("dirty-tree");
+              yield* runFixtureCommand(nested, "git", ["checkout", "--", "tracked.txt"]);
+              const linked = path.join(fixture.homeRoot, "linked-nested");
+              yield* runFixtureCommand(nested, "git", ["worktree", "add", "--detach", linked, "HEAD"]);
+              yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
+              const retained = yield* runResidueReap({ ...fixture, apply: true });
+              expect(candidateByPath(retained, fixture.target).skipReason).toBe("protected-name");
+              expect(yield* fs.exists(path.join(linked, "tracked.txt"))).toBe(true);
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("prunes embedded dependency trees and counts dangling links without following them", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const preview = path.join(fixture.repoRoot, ".beep", "yeet", "merged-preview-old");
+              yield* makeEmbeddedRepo(preview);
+              const deps = path.join(fixture.repoRoot, ".beep", "node_modules");
+              yield* fs.makeDirectory(deps, { recursive: true });
+              yield* Effect.forEach(A.range(1, 40), (i) => fs.writeFileString(path.join(deps, `${i}.pid`), "vendored"));
+              yield* fs.symlink(
+                path.join(fixture.homeRoot, "absent"),
+                path.join(fixture.repoRoot, ".beep", "dangling")
+              );
+              yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
+              expect(yield* fs.exists(path.join(fixture.homeRoot, "absent"))).toBe(false);
+              const outside = path.join(fixture.homeRoot, "outside-protected");
+              yield* fs.makeDirectory(outside);
+              yield* fs.writeFileString(path.join(outside, "proof-ledger.ndjson"), "outside proof");
+              yield* fs.symlink(outside, path.join(fixture.repoRoot, ".beep", "outside-reference"));
+              const report = yield* runResidueReap({ ...fixture, censusEntryCap: 20, apply: true });
+              expect(yield* fs.readFileString(path.join(outside, "proof-ledger.ndjson"))).toBe("outside proof");
+              expect(candidateByPath(report, fixture.target).action).toBe("archive-move");
+              expect(yield* fs.exists(deps)).toBe(true);
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("preserves a fenced-live archive when a writer appears and rollback is occupied", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const holder = yield* Ref.make(O.none<string>());
+              const table = {
+                self: process.pid,
+                pids: Effect.succeedSome([987654]),
+                cwd: F.constant(Effect.succeedNone),
+                status: F.constant(Effect.succeedNone),
+                descriptors: Effect.fn("ResidueReapTest.descriptors")(function* () {
+                  const destination = yield* Ref.get(holder);
+                  if (O.isNone(destination)) return A.empty<string>();
+                  if (!(yield* fs.exists(fixture.target).pipe(Effect.orDie)))
+                    yield* fs.makeDirectory(fixture.target).pipe(Effect.orDie);
+                  return [destination.value];
+                }),
+              };
+              const applied = yield* runResidueReap({
+                ...fixture,
+                apply: true,
+                archiveCheckpoint: Effect.fn("ResidueReapTest.archiveCheckpoint")(function* (
+                  phase: "intent" | "moved"
+                ) {
+                  if (!Str.Equivalence(phase, "intent")) return;
+                  const runs = A.filter(
+                    yield* fs.readDirectory(path.join(fixture.repoRoot, ".beep", "residue-reap")).pipe(Effect.orDie),
+                    S.is(S.String.check(S.isPattern(/^[a-f0-9-]{36}$/u)))
+                  );
+                  yield* Ref.set(
+                    holder,
+                    O.some(
+                      path.join(fixture.repoRoot, ".beep", "residue-reap", O.getOrThrow(A.head(runs)), "archive", "0")
+                    )
+                  );
+                }),
+              }).pipe(Effect.provideService(ProcessTable, table));
+              expect(applied.reapedCount).toBe(0);
+              expect(candidateByPath(applied, fixture.target).skipReason).toBe("lock-held");
+              expect(A.join(applied.warnings, " ")).toContain("phase=fenced-live");
+              const runRoot = path.dirname(O.getOrThrow(O.fromUndefinedOr(applied.reportPath)));
+              expect(yield* fs.readFileString(path.join(runRoot, "archive", "0", "payload.txt"))).toBe(
+                "preserve these bytes"
+              );
+              yield* fs.remove(fixture.target, { recursive: true });
+              const resumed = yield* runResidueReap({
+                ...fixture,
+                resume: O.getOrThrow(O.fromUndefinedOr(applied.runId)),
+              });
+              expect(resumed.reapedCount).toBe(0);
+              expect(candidateByPath(resumed, fixture.target).retentionReason).toBe(
+                "fenced-live; restore or start a new run"
+              );
+              expect(yield* fs.readFileString(path.join(runRoot, "archive", "0.intent.json"))).toContain("fenced-live");
+              yield* runResidueReap({ ...fixture, restore: O.getOrThrow(O.fromUndefinedOr(applied.runId)) });
+              expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("recovers through a symlinked checkout ancestor", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const alias = path.join(fixture.homeRoot, "owner-alias");
+              yield* fs.symlink(fixture.repoRoot, alias);
+              const options = { ...fixture, repoRoot: alias };
+              const applied = yield* runResidueReap({ ...options, apply: true });
+              expect(applied.reapedCount).toBe(1);
+              yield* runResidueReap({ ...options, restore: O.getOrThrow(O.fromUndefinedOr(applied.runId)) });
+              expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("archives a file-shaped stale pid and restores the exact record", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const target = path.join(fixture.repoRoot, ".beep", "stale.pid");
+              const ruling = ResidueRetentionRuling.make({
+                ...fixture.ruling,
+                path: ".beep/stale.pid",
+                evidence: "standards/pid.json",
+              });
+              yield* fs.writeFileString(target, "987654");
+              yield* fs.writeFileString(
+                path.join(fixture.repoRoot, "standards", "pid.json"),
+                yield* encodeRulingJson(ruling)
+              );
+              yield* fs.writeFileString(
+                path.join(fixture.repoRoot, ".beep", "retention", "checkout-pids.json"),
+                yield* encodeRulingArrayJson([ruling])
+              );
+              yield* runFixtureCommand(fixture.repoRoot, "git", ["add", "."]);
+              yield* runFixtureCommand(fixture.repoRoot, "git", ["commit", "--quiet", "-m", "pid proof"]);
+              yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
+              const options = { ...fixture, classes: ["checkout-pids"] as const };
+              const applied = yield* runResidueReap({ ...options, apply: true });
+              expect(applied.reapedCount).toBe(1);
+              yield* runResidueReap({ ...options, restore: O.getOrThrow(O.fromUndefinedOr(applied.runId)) });
+              expect(yield* fs.readFileString(target)).toBe("987654");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  for (const failures of [1, 2]) {
+    it.effect(
+      failures === 1
+        ? "tolerates a moved-unsynced result and completes the move"
+        : "reconciles an archived inode whose intent remains unpublished as moved",
+      () =>
+        Effect.acquireUseRelease(
+          makeTempDirectory,
+          (root) =>
+            retentionFixture(root).pipe(
+              Effect.flatMap((fixture) =>
+                Effect.gen(function* () {
+                  const fs = yield* FileSystem.FileSystem;
+                  const path = yield* Path.Path;
+                  const nodeFs = process.getBuiltinModule("node:fs");
+                  const original = nodeFs.fsyncSync;
+                  let armed = false;
+                  let failed = 0;
+                  yield* Effect.acquireUseRelease(
+                    Effect.sync(() =>
+                      vi.spyOn(nodeFs, "fsyncSync").mockImplementation((fd) => {
+                        if (armed && failed < failures) {
+                          failed += 1;
+                          throw new Error("synthetic parent sync failure");
+                        }
+                        original(fd);
+                      })
+                    ),
+                    () =>
+                      Effect.gen(function* () {
+                        const report = yield* runResidueReap({
+                          ...fixture,
+                          apply: true,
+                          archiveCheckpoint: (phase) =>
+                            Effect.sync(() => {
+                              if (Str.Equivalence(phase, "intent")) armed = true;
+                            }),
+                        });
+                        expect(failed).toBe(failures);
+                        expect(report.reapedCount).toBe(failures === 1 ? 1 : 0);
+                        const row = candidateByPath(report, fixture.target);
+                        const beforeRecovery = O.getOrThrow(O.fromUndefinedOr(row.recoveryDestination));
+                        expect(yield* fs.exists(fixture.target)).toBe(false);
+                        expect(yield* fs.readFileString(`${beforeRecovery}.intent.json`)).toContain(
+                          failures === 1 ? '"phase":"moved"' : '"phase":"intent"'
+                        );
+                        const resumed = yield* runResidueReap({
+                          ...fixture,
+                          resume: O.getOrThrow(O.fromUndefinedOr(report.runId)),
+                        });
+                        expect(resumed.reapedCount).toBe(1);
+                        const destination = O.getOrThrow(
+                          O.fromUndefinedOr(candidateByPath(resumed, fixture.target).recoveryDestination)
+                        );
+                        expect(yield* fs.readFileString(path.join(destination, "payload.txt"))).toBe(
+                          "preserve these bytes"
+                        );
+                      }),
+                    (spy) => Effect.sync(() => spy.mockRestore())
+                  );
+                })
+              )
+            ),
+          removeTempDirectory
+        )
+    );
+  }
+
+  it.effect("protects proof inside a clean embedded candidate repository", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const nested = yield* makeEmbeddedRepo(fixture.target);
+              yield* fs.writeFileString(path.join(nested, "proof-ledger.ndjson"), "durable proof");
+              yield* runFixtureCommand(nested, "git", ["add", "."]);
+              yield* runFixtureCommand(nested, "git", ["commit", "--quiet", "-m", "nested proof"]);
+              yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
+              const report = yield* runResidueReap({ ...fixture, apply: true });
+              expect(candidateByPath(report, fixture.target).skipReason).toBe("protected-name");
+              expect(yield* fs.readFileString(path.join(nested, "proof-ledger.ndjson"))).toBe("durable proof");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("indexes regular citation blobs while retaining tracked symbolic links", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              yield* fs.symlink("absent-document", path.join(fixture.repoRoot, "standards", "dangling-link"));
+              yield* runFixtureCommand(fixture.repoRoot, "git", ["add", "."]);
+              yield* runFixtureCommand(fixture.repoRoot, "git", ["commit", "--quiet", "-m", "tracked link"]);
+              const report = yield* runResidueReap({ ...fixture, apply: true });
+              expect(report.reapedCount).toBe(1);
+              expect(yield* fs.readLink(path.join(fixture.repoRoot, "standards", "dangling-link"))).toBe(
+                "absent-document"
+              );
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("protects candidates inside an embedded checkout ancestor", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const ci = path.join(fixture.repoRoot, ".beep", "ci");
+              yield* runFixtureCommand(ci, "git", ["init", "--quiet", "-b", "main"]);
+              yield* fs.writeFileString(path.join(fixture.target, "proof-ledger.ndjson"), "ancestor proof");
+              yield* runFixtureCommand(ci, "git", ["add", "."]);
+              yield* runFixtureCommand(ci, "git", [
+                "-c",
+                "user.name=Fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "-c",
+                "commit.gpgsign=false",
+                "commit",
+                "--quiet",
+                "-m",
+                "ancestor",
+              ]);
+              yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
+              const report = yield* runResidueReap({ ...fixture, apply: true });
+              expect(candidateByPath(report, fixture.target).skipReason).toBe("protected-name");
+              expect(yield* fs.readFileString(path.join(fixture.target, "proof-ledger.ndjson"))).toBe("ancestor proof");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("retains active, paused, unknown and absent owner rulings", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const rulingPath = path.join(fixture.repoRoot, ".beep", "retention", "checkout-generated.json");
+              for (const state of ["active", "paused", "unknown"] as const) {
+                yield* fs.writeFileString(
+                  rulingPath,
+                  yield* encodeRulingArrayJson([ResidueRetentionRuling.make({ ...fixture.ruling, state })])
+                );
+                expect(
+                  candidateByPath(yield* runResidueReap({ ...fixture, apply: true }), fixture.target).skipReason
+                ).toBe("terminal-state-unverified");
+              }
+              yield* fs.remove(rulingPath);
+              expect(candidateByPath(yield* runResidueReap(fixture), fixture.target).skipReason).toBe(
+                "owner-ruling-required"
+              );
+              expect(yield* fs.exists(fixture.target)).toBe(true);
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("protects checkout-relative citations and dirty trees", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const receipt = path.join(fixture.repoRoot, "standards", "receipt.md");
+              yield* fs.writeFileString(receipt, "Keep proof: .beep/ci/obsolete.\n");
+              expect(candidateByPath(yield* runResidueReap(fixture), fixture.target).skipReason).toBe("dirty-tree");
+              yield* runFixtureCommand(fixture.repoRoot, "git", ["add", "."]);
+              yield* runFixtureCommand(fixture.repoRoot, "git", ["commit", "--quiet", "-m", "cite"]);
+              expect(candidateByPath(yield* runResidueReap(fixture), fixture.target).skipReason).toBe(
+                "evidence-referenced"
+              );
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("retains live cwd, recent writes, live pids and nested protected state", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              expect(
+                candidateByPath(
+                  yield* runResidueReap({ ...fixture, probeLiveCwd: () => Effect.succeedSome(true) }),
+                  fixture.target
+                ).skipReason
+              ).toBe("live-cwd-ref");
+              yield* touchDaysAgo(fixture.repoRoot, path.join(fixture.target, "payload.txt"), 1);
+              expect(candidateByPath(yield* runResidueReap(fixture), fixture.target).skipReason).toBe(
+                "checkout-recent-write"
+              );
+              yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
+              yield* fs.writeFileString(path.join(fixture.target, "worker.pid"), "12345");
+              expect(
+                candidateByPath(
+                  yield* runResidueReap({ ...fixture, probePidAlive: () => Effect.succeedSome(true) }),
+                  fixture.target
+                ).skipReason
+              ).toBe("pid-alive");
+              yield* fs.writeFileString(path.join(fixture.target, "proof-ledger.ndjson"), "durable");
+              expect(candidateByPath(yield* runResidueReap(fixture), fixture.target).skipReason).toBe("protected-name");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("refuses occupied restore sources and malicious run ids", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const applied = yield* runResidueReap({ ...fixture, apply: true });
+              yield* fs.makeDirectory(fixture.target);
+              const failure = yield* runResidueReap({
+                ...fixture,
+                restore: O.getOrThrow(O.fromUndefinedOr(applied.runId)),
+              }).pipe(Effect.flip);
+              expect(String(failure)).toContain("occupied source");
+              expect(
+                String(yield* runResidueReap({ ...fixture, restore: "../../outside" }).pipe(Effect.flip))
+              ).toContain("Invalid residue");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+});
+
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("archive interruption recovery", (it) => {
+  for (const phase of ["intent", "moved"] as const) {
+    it.effect(`recovers SIGKILL after ${phase} without losing payload`, () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          retentionFixture(root).pipe(
+            Effect.flatMap((fixture) =>
+              Effect.gen(function* () {
+                const fs = yield* FileSystem.FileSystem;
+                const path = yield* Path.Path;
+                const encoded = yield* S.encodeEffect(
+                  S.fromJsonString(
+                    S.Struct({
+                      repoRoot: S.String,
+                      homeRoot: S.String,
+                      nowMillis: S.Finite,
+                    })
+                  )
+                )(fixture);
+                const script = `
+            import { runResidueReap } from "@beep/repo-cli/test/RepoRun";
+            import { NodeServices } from "@effect/platform-node";
+            import * as Effect from "effect/Effect";
+            const options = ${encoded};
+            await Effect.runPromise(runResidueReap({ ...options, classes: ["checkout-generated"], apply: true,
+              probeLiveCwd: () => Effect.succeedSome(false), probePidAlive: () => Effect.succeedSome(false),
+              archiveCheckpoint: (at) => Effect.sync(() => { if (at === "${phase}") process.kill(process.pid, "SIGKILL"); }),
+            }).pipe(Effect.provide(NodeServices.layer)));
+          `;
+                const killed = yield* runRepoCommandCapture("bun", ["--eval", script], process.cwd()).pipe(
+                  Effect.match({ onFailure: () => true, onSuccess: (capture) => !N.Equivalence(capture.exitCode, 0) })
+                );
+                expect(killed).toBe(true);
+                const runsRoot = path.join(fixture.repoRoot, ".beep", "residue-reap");
+                const runs = A.filter(
+                  yield* fs.readDirectory(runsRoot),
+                  S.is(S.String.check(S.isPattern(/^[a-f0-9-]{36}$/u)))
+                );
+                expect(runs).toHaveLength(1);
+                const runId = O.getOrThrow(A.head(runs));
+                expect(yield* fs.exists(path.join(runsRoot, runId, "plan.json"))).toBe(true);
+                const intentText = yield* fs.readFileString(path.join(runsRoot, runId, "archive", "0.intent.json"));
+                expect(intentText).toContain(`"phase":"${phase}"`);
+                const resumed = yield* runResidueReap({ ...fixture, resume: runId });
+                expect(resumed.reapedCount).toBe(1);
+                expect(yield* fs.exists(fixture.target)).toBe(false);
+                yield* runResidueReap({ ...fixture, restore: runId });
+                expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
+              })
+            )
+          ),
+        removeTempDirectory
+      ).pipe(TestClock.withLive)
+    );
+  }
+});
+
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("retention fences", (it) => {
+  it.effect("retains a candidate with an open descriptor even without a lock suffix", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              yield* fs.open(path.join(fixture.target, "payload.txt"), { flag: "r" });
+              const report = yield* runResidueReap({ ...fixture, apply: true });
+              expect(candidateByPath(report, fixture.target).skipReason).toBe("lock-held");
+              expect(yield* fs.exists(fixture.target)).toBe(true);
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("uses real-clock liveness without treating archive and ruling writes as activity", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              yield* runFixtureCommand(fixture.repoRoot, "find", [
+                path.join(fixture.repoRoot, ".beep"),
+                "-exec",
+                "touch",
+                "-d",
+                "45 days ago",
+                "{}",
+                "+",
+              ]);
+              yield* fs.writeFileString(
+                path.join(fixture.repoRoot, ".beep", "retention", "checkout-generated.json"),
+                yield* encodeRulingArrayJson([fixture.ruling])
+              );
+              const report = yield* runResidueReap({
+                repoRoot: fixture.repoRoot,
+                homeRoot: fixture.homeRoot,
+                classes: fixture.classes,
+                nowMillis: yield* Clock.currentTimeMillis,
+                apply: true,
+              });
+              expect(report.reapedCount).toBe(1);
+              expect(yield* fs.exists(fixture.target)).toBe(false);
+            })
+          )
+        ),
+      removeTempDirectory
+    ).pipe(TestClock.withLive)
+  );
+
+  it.effect("requires tracked evidence to bind the same owner and terminal ruling", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              yield* fs.writeFileString(path.join(fixture.repoRoot, "standards", "retention.json"), "{}");
+              yield* runFixtureCommand(fixture.repoRoot, "git", ["add", "."]);
+              yield* runFixtureCommand(fixture.repoRoot, "git", ["commit", "--quiet", "-m", "unbound proof"]);
+              const report = yield* runResidueReap({ ...fixture, apply: true });
+              expect(candidateByPath(report, fixture.target).skipReason).toBe("terminal-state-unverified");
+              expect(yield* fs.exists(fixture.target)).toBe(true);
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("reports an existing wrong-shaped scoped container and an unreadable checkout census", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const beep = path.join(fixture.repoRoot, ".beep");
+              const qa = path.join(beep, "qa");
+              yield* fs.writeFileString(qa, "wrong shape; preserve me");
+              const scoped = yield* runResidueReap({ ...fixture, classes: ["checkout-qa"] });
+              expect(candidateByPath(scoped, qa).skipReason).toBe("census-failed");
+              const blocked = FileSystem.makeNoop({
+                ...fs,
+                readDirectory: (target) =>
+                  Str.Equivalence(target, beep)
+                    ? Effect.fail(
+                        PlatformError.badArgument({
+                          module: "FileSystem",
+                          method: "readDirectory",
+                          description: "synthetic listing refusal",
+                        })
+                      )
+                    : fs.readDirectory(target),
+              });
+              const unread = yield* runResidueReap(fixture).pipe(Effect.provideService(FileSystem.FileSystem, blocked));
+              expect(candidateByPath(unread, beep).skipReason).toBe("census-failed");
+              expect(yield* fs.readFileString(qa)).toBe("wrong shape; preserve me");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  for (const eligible of [false, true]) {
+    it.effect(
+      eligible
+        ? "retains unjournaled archive rows after their source parent disappears"
+        : "retains unjournaled skip rows after their source parent disappears",
+      () =>
+        Effect.acquireUseRelease(
+          makeTempDirectory,
+          (root) =>
+            retentionFixture(root).pipe(
+              Effect.flatMap((fixture) =>
+                Effect.gen(function* () {
+                  const fs = yield* FileSystem.FileSystem;
+                  const path = yield* Path.Path;
+                  if (!eligible)
+                    yield* fs.remove(path.join(fixture.repoRoot, ".beep", "retention", "checkout-generated.json"));
+                  const plan = yield* runResidueReap(fixture);
+                  expect(candidateByPath(plan, fixture.target).action).toBe(eligible ? "archive-move" : "skip");
+                  yield* fs.remove(path.dirname(fixture.target), { recursive: true });
+                  const restored = yield* runResidueReap({
+                    ...fixture,
+                    restore: O.getOrThrow(O.fromUndefinedOr(plan.runId)),
+                  });
+                  expect(restored.warnings).toEqual([]);
+                  const resumed = yield* runResidueReap({
+                    ...fixture,
+                    resume: O.getOrThrow(O.fromUndefinedOr(plan.runId)),
+                  });
+                  expect(resumed.warnings).toEqual(
+                    eligible ? [`Skipped ${fixture.target}: path changed before removal.`] : []
+                  );
+                  expect(candidateByPath(resumed, fixture.target).action).toBe("skip");
+                })
+              )
+            ),
+          removeTempDirectory
+        )
+    );
+  }
+
+  it.effect("preserves an archive and names an unavailable source parent until it is recreated", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const applied = yield* runResidueReap({ ...fixture, apply: true });
+              expect(applied.reapedCount).toBe(1);
+              const id = O.getOrThrow(O.fromUndefinedOr(applied.runId));
+              const destination = O.getOrThrow(
+                O.fromUndefinedOr(candidateByPath(applied, fixture.target).recoveryDestination)
+              );
+              yield* fs.remove(path.dirname(fixture.target), { recursive: true });
+              const refused = yield* runResidueReap({ ...fixture, restore: id }).pipe(Effect.flip);
+              expect(refused.message).toContain("Source parent");
+              expect(refused.message).toContain("is unavailable");
+              expect(yield* fs.readFileString(path.join(destination, "payload.txt"))).toBe("preserve these bytes");
+              yield* fs.makeDirectory(path.dirname(fixture.target));
+              yield* runResidueReap({ ...fixture, restore: id });
+              expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
 });

@@ -710,6 +710,15 @@ without claiming completion.
 | 2026-10-09 | **H1 tsgo ratchet deferral**: owner `rsc-h1-catalog` retains the separate seven-pin 0.47.2 -> 0.51.1 ratchet PR after the hold-exit merges; it is not part of OSV wave 1. | R73/R74/R76 require A Knip, catalog/register and compatibility waves first; those merges are pending at the OSV handoff. | Resume H1 after the prerequisite merges, remove this deferral, run the lockstep bump and `beep quality tsgo-rules`; revert the ratchet PR to undo the bump. |
 | 2026-10-09 | D archives the private repo-cli note added by main PR #1563 after the original reset, preserving its exact bytes outside `.changeset`. The original 939-note baseline remains immutable. | Final main merge introduced `accounts-live-board.md`; repo-cli remains private and the graph rejects private-named notes. Evidence: `history/receipts/d-post-baseline-accounts-note.md`; source parent `51740fd5e6`. | Restore `.changeset/accounts-live-board.md` from that parent when reversing the D private policy. |
 
+### G resumed implementation decisions — 2026-10-09
+
+| Decision | Reason | Reversal |
+| --- | --- | --- |
+| Use seven days as the recent `.beep` write liveness floor; retention and archive-journal writes do not renew operational activity. | Preserve recently active checkouts even when cwd and PID observations happen between operations. | Increase the floor or revert the policy constant by PR; no archival ran without the same apply-time reassessment. |
+| Require a `residue-retention/v1` owner ruling with schema-equal tracked JSON evidence, terminal state and regeneration description before archiving checkout derivatives. | Old files do not establish ownership or terminal state; missing and paused rulings fail closed. | Remove or change the owner ruling; restore any archived row using its persisted run id. |
+| Archive checkout residue by fsynced intent and same-filesystem inode-bound rename; count physical reclamation as zero while the archive remains. | Keep recovery possible after interruption and avoid presenting moved bytes as freed blocks. | Run `quality residue-reap --restore <run-id>`; occupied sources are refused. |
+| Retry the existing read-only Turbo reference once on the default service-account backend, then record unavailable remote evidence. | Resume ruling 1 authorizes this exact retry; the vault remains inaccessible. The write token is excluded. | Supply an agent-visible read-only reference through the orchestrator and rerun the HEAD and historical fixtures. |
+| Defer all home configuration writes and deliver an idempotent dry-run-first environment script in the handoff. | Resume ruling 1 supersedes the earlier home-write instruction. | Operator runs the script with backups, then restores its printed backup to reverse it. |
 | 2026-10-09 | Resume canon through completed-retained (R102), first integrating CLI-only unpublished work and regeneration, then separate RDF/Pacer ports (R105), then bounded remaining open-row waves. | Continuation's 16 later commits were not in #1506. Main already covers Box WIP and RDF property cohorts; stronger RDF failure assertions and Pacer logout teardown witness remain useful. Preserve all source state and exports, keep tooling/tool alone under D13, and qualify each new head. | Revert each PR independently; restore generated inventory by its owner command and replay the SHA256-qualified patches. Historical IDs and original proof receipts remain retained. |
 
 | 2026-10-09 | Preserve the legacy compiler guard with whole-script conservative handling of shell syntax and attached command-bearing option bodies; retain operand-aware simple launcher parsing. | Independent reviews reproduced valid compiler invocations hidden by substitutions, redirects, npm/env aliases and attached call options. Keep all existing assertion and inert-operand tables, add opposing regression witnesses, and do not claim complete shell evaluation. | Revert the guard repair and its new witnesses only with a replacement preserving every established compiler catch and inert-operand control; rerun the five guard tests on Node/Bun and the package gates. |
@@ -723,6 +732,45 @@ without claiming completion.
 | Review-loop cap override | Every PR of this program | Program orchestrator | Brief section 1 item 7: resolve every in-scope actionable finding, including lower severity; do not defer one merely to stop a review loop. Overrides AGENTS.md "Autonomy" round-2 rule for this program only. | Program closeout (packet reaches `completed-retained`). |
 | Three-model panel IDs | Workstream F final review | Program orchestrator | `gpt-6-astra`, `claude-fable-5-1`, and `grok-4.7` at xhigh are named by the brief; AGENTS.md otherwise forbids substituting non-default models silently. This is an explicit, recorded use. | Terminal zero-actionable-findings verdicts from all three reviewers are recorded in `history/receipts/stage-5-panel.md` on the final workstream F revision and configuration fingerprints, and no F configuration change follows them; any later change keeps the exception for the re-review. |
 
+### G launch decisions — 2026-10-09
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-09 | Confine mutations to `rsc-g-storage`; defer G's sibling fixture, second clone, and home configuration writes. | The worker request explicitly restricts work to this lane, overriding the brief's broader workstation scope. Census probes are read-only. The orchestrator receives the contradiction and dependent work remains blocked. | Relaunch with an explicit path allowlist covering the brief's required fixture and home paths. |
+| 2026-10-09 | Test only the existing read-only Turbo reference through Connect; stop after its vault-resolution failure. No resolvable replacement reference is available. | R59 requires Connect first; neither the write token nor Desktop sign-in is an allowed repair. Authenticated artifact evidence remains blocked. | The orchestrator supplies an agent-visible read-only reference; rerun the exact suppressed verification, then HEAD probes before any fixture. |
+| 2026-10-09 | Use a conservative seven-day recent-write liveness window in the pending retention design; no age-based eligibility is granted in this preparation report. | Recent `.beep` writes can represent active or paused ownership even with no cwd holder. Age alone never proves terminal state. | Change the window in the implementation and rerun the dry run; never reinterpret this blocked census as an apply plan. |
+| 2026-10-09 | Retain every surveyed entry and preserve raw census/config artifacts in the lane's ignored `.beep`. | Owner and terminal state are not verified; production v3 journaling and interruption proof are not implemented. Zero apply is recoverable without moving any source. | Resume the source work and publish a v3 dry run; receive orchestrator acknowledgement and owner notices before apply. |
+
+### G review refinements — 2026-10-09
+
+- Checkout archive classes observe foreign fleet owners but apply only from the
+  invoking owner checkout. This prevents lane retirement from taking another
+  checkout's archive. Reversal: revert the implementation PR; future fleet
+  apply requires durable per-owner reports and recovery entry points.
+- Only operational non-directory writes renew seven-day liveness; rename-induced
+  directory mtimes do not prevent later sibling archives. Archive and ruling
+  trees are pruned before the operational census cap. Existing run reports and
+  archives remain durable proof pending a separate owner retention ruling.
+- Citation listings use NUL separators, preserving Unicode filenames. Bounded
+  listings fail closed on truncation; apply rereads protection before each move.
+- The deferred environment writer passed synthetic dry-run, idempotence, backup,
+  unowned-field and symlink-refusal checks. No home configuration was applied.
+
+- G recovery preserves immutable `plan.json` and the initial `report.json`;
+  each recovery writes a new receipt and reconciles the original plan plus
+  durable intent phases. Reversal is the implementation PR; keep existing
+  archive data and original reports during any rollback.
+- G's operational scan treats embedded Git/dependency trees as opaque and
+  counts links without following them. A bounded mutable stack avoids
+  quadratic immutable-array copies; candidate-specific Git gates still
+  preserve dirty and linked nested worktrees.
+
+- G qualification remediation (`d881c6e2e0`, followed by the refactor at `bc0591bbb1`): use the installed/reference Effect comparison export, canonicalize archive directory parents before fsync, add schema-derived property coverage, and separate ordered safety probes and recovery stages. Reason: admitted runtime and cheap-gate findings contradicted source-only confidence. Reversal: revert the source commits while preserving every existing archive plan, intent and payload; receipts continue to distinguish source review from runtime proof. No allowlist or complexity-baseline exception was added.
+
+- G merged D's private-package release policy before final qualification. Removed the new `@beep/repo-cli` patch note because its manifest is private and the landed graph guard rejects private notes. The earlier real note remains recoverable from `6fe896fad6`; restoring it requires reverting D's policy first.
+- G round-twelve review corrected direct-parent containment in cwd checks, with a clean direct-child repository archive/restore regression. Reason: the former boundary over-retained eligible derivatives. Reversal: revert this source commit; immutable archives and restore remain intact.
+
+- G SIGKILL recovery fixtures use the live test clock for abandoned-journal-lock acquisition retries. Reason: the real child dies but the virtual clock does not advance the lock retry; bounded runtime exposed the mismatch. Reversal: revert only the fixture clock wrapper; production locking and stored archives are unchanged.
 | 2026-10-09 | V archives its pre-D private repo-cli changeset and removes the release note. | D policy landed on merged main; hosted Repo Sanity job 113997596244 rejects private-workspace notes. The brief's patch-note obligation explicitly ends when D lands. Exact bytes survive in `history/receipts/rsc-v-retired-private-changeset.md`. | Restore the archived note when reversing D private policy. |
 
 | 2026-10-09 | V completes its CLI integration publication under the 20:30Z direct-cgroup ruling; goal remains active for R105 and R102. | PR #1575 is ready, full repo-cli proof and local parity pass, inventory is regenerated after final main merge, and source hashes remain unchanged. Merge and retirement belong to the fleet orchestrator. | Revert #1575; preserve archived source patches and regenerate the inventory. |
@@ -760,3 +808,22 @@ After D's release-policy PR #1566 lands, remove the unused `changesets/action@*`
 ### 2026-10-09 — E hosted governance job-token proof
 
 Move live ruleset, desktop settings and held-main reads from the contents-only verification matrix to the existing Security job, adding only `actions: read` there. Keep pure workflow lint in Repo Sanity. Reason: human review found the push-only Actions API calls unproven under GITHUB_TOKEN, despite successful personal-token probes. Run the hosted reads on PRs too, after dependency review, to establish that exact job-token path before merge. A held-main failure is repository-state evidence and must be attributed accordingly. Reverse the workflow/test change together; no writer credential, environment attachment or other job permission is broadened.
+
+### 2026-10-09 — G final compiler and cache output qualification
+
+- Collect refusal warnings directly from the typed recovery rows in one
+  `A.flatMap`. Reason: the compiler rejected contextual inference through the
+  nested filter; warning selection and order remain the same. Reverse this
+  expression change with its source commit; persisted archives are unaffected.
+- A clean-output cache fixture clears its owned TypeScript incremental state
+  as well as `dist`, retains an incremental-state backup, and checks required
+  public outputs plus complete SHA-256 manifests. Reason: exit 0 and a task
+  MISS did not prove healthy output when stale incremental state skipped
+  declarations and the public index. Reverse by discarding the owned fixture
+  checkout/cache; the earlier incomplete artifact remains quarantined and no
+  foreign cache or generated build script was changed. Shared owns the broader
+  generated-script/output coupling follow-up.
+- Report scoped coverage percentages and absolute uncovered counts separately.
+  Reason: percentages improved while added implementation increased absolute
+  uncovered counts; the existing baseline must not be refreshed to hide that.
+  Reversal is the receipt commit; no coverage policy or floor changed.
