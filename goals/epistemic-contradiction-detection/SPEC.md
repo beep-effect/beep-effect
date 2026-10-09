@@ -369,3 +369,17 @@ preserves per-test clock ownership. Detection production semantics are unchanged
 | Conflict class carried untyped if option 1 is chosen | `matchBasis.detector` / `detectorVersion` prose | @beep-team | The typed seat (`ContradictionMatchBasisKind`) is triage's shipped schema and triage is closed with no active owner; unilateral extension is forbidden. | A future contract owner accepts a widened `ContradictionMatchBasisKind` as their own change. |
 
 | Undeclared predicates are multi-valued | Value-conflict rule only | @beep-team | Conservative cardinality default avoids inventing contradictions; caller declarations are typed input. | Representation owner supplies an authoritative cardinality schema. |
+
+## Run-4 test-policy admission decision (2026-10-09)
+
+Canonical `it.layer(ContradictionDetectionLive, { timeout: "10 seconds" })`
+provision replaces manual scoped Context construction. Enforcing Effect/Vitest
+lint removes all ten EV002 call-site findings and the EV003 wrapper finding.
+One EV015 judgment remains at the golden test's `TestClock.adjust`: the shared
+clock is advanced only in serial tests to falsify detector clock dependence;
+there are no forks or concurrent tests. This is **pending B admission** under
+the 2026-10-09T20:55Z resume ruling. No inventory, baseline or suppression is
+changed. Reversal: isolate test services with an equivalent canonical harness
+that retains the clock-independence assertion, or admit the reviewed judgment
+through the policy owner's workflow. Publication proceeds under S11 after
+recording the refused cheap gate; merge belongs to the orchestrator.

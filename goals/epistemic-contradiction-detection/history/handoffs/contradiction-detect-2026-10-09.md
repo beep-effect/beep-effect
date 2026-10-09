@@ -109,3 +109,28 @@ hosted-parity: test-tsgo PASS heavy-routed | docgen local PASS --full (metadata,
 handoff: goals/epistemic-contradiction-detection/history/handoffs/contradiction-detect-2026-10-09.md
 open items: Fresh ruling needed for canonical test Layer/clock syntax: current scoped helper passes package/compiler/runtime but plain Effect/Vitest reports ten EV002 detect call sites and one EV003 resource wrapper. Successful --rows exports were incorrectly called lint passes; those claims are withdrawn. Latest enforcing receipt is .beep/detection-proof/run3/publish-final.log. Publication, ready and readiness remain outstanding. Lifecycle active; P0/P1 complete, P2/P3 in-progress, P4 pending; reflection is attempted closeout. Option 1 retains class-specific detector identities plus SemVer 1.0.0; a future contract owner may migrate the seat and owns the tracked ContradictionMatchBasisKind follow-up. DetectedContradiction emits content plus key/digest; test fixtures add stamps, decode the full entity and assert hasValidSeals; stamping remains caller-owned. Each proposal fact contains the other side's whole assertion as {subject, predicate, value, polarity}; proposal ids/digests derive from content. Exact negation requires equal canonical values/opposite polarity on every predicate; value-conflict requires unequal canonical values/both asserted on caller-declared single-valued predicates; agreement, mixed unequal polarity and two negated values emit nothing. Undeclared predicates get no value-conflict (multi-valued default); absent modality is comparable. Version detector semantics to reverse these rules, fact shape or identity derivation; an authoritative representation owner can replace modality/cardinality defaults. Four concept files were hand-authored after architecture dry-run proposed unsafe placeholders/out-of-scope metadata; friction is recorded in research/OPPORTUNITIES.md. Withdraw additive API by removing the new concept/export/barrel and rerunning config-sync. Config-sync generated one ContradictionDetection alias in tsconfig.json and one in vitest.aliases.generated.json, with no inherited alias hunk. Private-package changeset removed under superseding #1566 policy; no lane policy reversal. Encoded non-empty tuple repaired via shipped field decoder/encoder, regression retains two proposals and rejects empty; replace only with an equivalent schema-derived non-empty codec. All six owned heavy units inactive/dead, MainPID 0; no active gate, no merge or retirement. Graft run-3: three discovery calls, approximately 107581 tokens saved.
 blocked: repeated Effect/Vitest publication gate rejects scoped test helper (ten EV002 and one EV003); brief requires stop, draft #1572 remains at its previous hosted head.
+
+## Run 4 — canonical harness repair
+
+The 20:55Z resume ruling supersedes the repeated publication stop. Canonical
+`it.layer` provision removes ten EV002 findings and the EV003 manual resource
+wrapper. Golden suite passes 20/20 twice with both class outputs, full-entity
+seals, permutation and advanced-clock assertions intact.
+
+### Reviewed-exception candidates
+
+| File:line | Rule | Reason | Disposition |
+| --- | --- | --- | --- |
+| packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts:126 | EV015 shared-test-clock-adjustment | Serial, fork-free clock advancement is the required falsifier for detector clock independence. | Pending B admission under the run-4 ruling; publish despite this judgment, without suppression or inventory edit. |
+
+### Release notes without changesets
+
+| Package | Change | Why it would have been major | Reversal |
+| --- | --- | --- | --- |
+| @beep/epistemic-domain | Additive detection values, snapshot and emitted-content schemas. | No breaking public schema or export; this is additive and private. | Remove the new concept/export/barrel and rerun config-sync. |
+| @beep/epistemic-use-cases | Additive pure detection service and Layer. | No breaking public contract; this is additive and private. | Remove the new service/Layer and server exports. |
+
+No changeset names either private package, per #1566 and the standing ruling.
+Heavy package/parity refreshes are queued via two beep-heavy units at 32G,
+concurrency 2; no cap increase. Initial launch lacked the user bus environment;
+retry supplied the standard runtime/bus paths and both units started.
