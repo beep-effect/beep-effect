@@ -426,3 +426,5 @@ and parity remain required before final handoff. No other lane unit was stopped.
   rather than keeping an ordered ticket queue, so closeout admission has
   unpredictable wait time. A fair queue with observable position would prevent
   this delay; this lane does not alter the workstation wrapper or other jobs.
+
+- 2026-10-09 G focused runtime diagnosed the coverage stall: 53 of 55 cases passed, while both SIGKILL recovery cases timed out at the journal retry. Acquisition uses a timed retry after reclaiming the dead writer generation; the fixture test clock never advanced. Use `TestClock.withLive` on these OS interruption fixtures. The earlier source-only zero did not detect this runtime behavior. Preventive improvement: run a bounded verbose interruption fixture before full coverage, with per-case progress.

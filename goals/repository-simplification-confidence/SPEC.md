@@ -764,3 +764,5 @@ without claiming completion.
 
 - G merged D's private-package release policy before final qualification. Removed the new `@beep/repo-cli` patch note because its manifest is private and the landed graph guard rejects private notes. The earlier real note remains recoverable from `6fe896fad6`; restoring it requires reverting D's policy first.
 - G round-twelve review corrected direct-parent containment in cwd checks, with a clean direct-child repository archive/restore regression. Reason: the former boundary over-retained eligible derivatives. Reversal: revert this source commit; immutable archives and restore remain intact.
+
+- G SIGKILL recovery fixtures use the live test clock for abandoned-journal-lock acquisition retries. Reason: the real child dies but the virtual clock does not advance the lock retry; bounded runtime exposed the mismatch. Reversal: revert only the fixture clock wrapper; production locking and stored archives are unchanged.

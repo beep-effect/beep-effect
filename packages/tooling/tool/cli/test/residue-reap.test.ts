@@ -2147,7 +2147,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("archive interruption re
             )
           ),
         removeTempDirectory
-      )
+      ).pipe(TestClock.withLive)
     );
   }
 });
