@@ -234,10 +234,22 @@ describe("changeset status wrapper", () => {
       dir: "packages/demo",
       name: "@beep/demo",
       version: O.some("0.0.0"),
+      publishEnabled: true,
     });
 
     it("fails a versioned product workspace without a pending changeset", () => {
       expect(uncoveredWorkspacePackageNames([demo], [], [])).toEqual(["@beep/demo"]);
+    });
+
+    it("exempts private workspaces and enforces only the public member of a mixed set", () => {
+      const internal = ChangesetStatusWorkspacePackage.make({
+        dir: "packages/internal",
+        name: "@beep/internal",
+        version: O.some("0.0.0"),
+        publishEnabled: false,
+      });
+      expect(uncoveredWorkspacePackageNames([internal], [], [])).toEqual([]);
+      expect(uncoveredWorkspacePackageNames([internal, demo], [], [])).toEqual(["@beep/demo"]);
     });
 
     it("passes a product workspace named by a pending changeset", () => {
@@ -254,6 +266,7 @@ describe("changeset status wrapper", () => {
         dir: "packages/tooling/tool/cli",
         name: "@beep/repo-cli",
         version: O.some("0.0.0"),
+        publishEnabled: true,
       });
 
       expect(uncoveredWorkspacePackageNames([cli], ["@beep/repo-cli"], [])).toEqual([]);
@@ -264,6 +277,7 @@ describe("changeset status wrapper", () => {
         dir: "packages/anon",
         name: "@beep/anon",
         version: O.none(),
+        publishEnabled: true,
       });
 
       expect(uncoveredWorkspacePackageNames([versionless], [], [])).toEqual([]);
@@ -377,9 +391,35 @@ Patch demo.
             A.some(
               logs,
               (line) =>
-                P.isString(line) && line.includes("every changed product workspace is named by a changeset added")
+                P.isString(line) &&
+                line.includes("every changed publish-enabled product workspace is named by a changeset added")
             )
           ).toBe(true);
+        })
+      );
+    });
+
+    it.layer(statusTestLayer(["packages/demo/src/index.ts"], [], []), { timeout: "30 seconds" })((it) => {
+      it.effect("reads private from the manifest and re-engages when private flips false", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const tmpDir = yield* fs.makeTempDirectoryScoped();
+          yield* writeStatusFixtureRepo(tmpDir);
+          yield* writePackageJson(tmpDir, "packages/demo/package.json", {
+            name: "@beep/demo",
+            version: "0.0.0",
+            private: true,
+          });
+          yield* runChangesetStatus(tmpDir, O.some("main"));
+          const logs = yield* TestConsole.logLines;
+          expect(A.some(logs, (line) => P.isString(line) && line.includes("private_skipped=1"))).toBe(true);
+          yield* writePackageJson(tmpDir, "packages/demo/package.json", {
+            name: "@beep/demo",
+            version: "0.0.0",
+            private: false,
+          });
+          const error = yield* Effect.flip(runChangesetStatus(tmpDir, O.some("main")));
+          expect(error._tag).toBe("CliReportedExit");
         })
       );
     });

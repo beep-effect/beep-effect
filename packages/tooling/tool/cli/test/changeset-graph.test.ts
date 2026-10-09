@@ -236,6 +236,23 @@ Patch demo.
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("rejects notes naming private workspaces even when the retired registry allows the name", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writeFixtureRepo(tmpDir, '---\n"@beep/demo": patch\n---\n\nPrivate note.\n', {
+          packages: [{ name: "@beep/demo", rationale: "Stale retirement record." }],
+        });
+        yield* writePackageJson(tmpDir, "packages/demo/package.json", {
+          name: "@beep/demo",
+          version: "0.0.0",
+          private: true,
+        });
+        const error = yield* runChangesetGraphCheck(tmpDir).pipe(Effect.flip);
+        expect(error.message).toContain("private workspaces must not accumulate release notes");
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("accepts retired package references declared in the repo retirement record", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
