@@ -82,7 +82,8 @@ Run 7 retains the successful install and four installed patch markers, clears
 S5 through the orchestrator's durable notification, and passes all three required
 Knip/Fallow policy reruns. Knip has zero introduced findings; dead-code has zero
 findings; audit retains one nonblocking inherited complexity observation.
-Authorized push-only publication is next. E's workflow co-sign, B/V judgment
+[PR #1583](https://github.com/beep-effect/beep-effect/pull/1583) is published
+and ready for review through the authorized push/create fallback. E's workflow co-sign, B/V judgment
 admission and hosted evidence remain open. C edits no inventory or allowlist
 and does not close program acceptance.
 

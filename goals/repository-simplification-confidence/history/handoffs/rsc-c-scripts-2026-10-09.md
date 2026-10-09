@@ -1,6 +1,7 @@
 # rsc-c-scripts handoff — 2026-10-09
 
-Status: wave 1 implemented; verification queued/running; no PR yet. Not final.
+Status: wave 1 content-final; PR #1583 ready for review; local qualification passes.
+Hosted readiness, E co-sign and orchestrator merge remain open.
 This file is the lane's coordination channel and is updated as evidence settles.
 
 ## Implemented wave
@@ -817,3 +818,57 @@ The admitted `env TURBO_CONCURRENCY=2 beep-heavy bun run beep yeet publish
 Resume ruling 4 item 3 explicitly authorizes direct push and draft creation
 after a refusal; C uses that fallback with the same qualification evidence.
 No full-proof reuse is fabricated. The wrapper is terminal before fallback.
+
+### Run 7 PR and live gate state
+
+Fallback pushes `286290daabaf9c7693fada51bf92340ecabb932c` and creates
+[PR #1583](https://github.com/beep-effect/beep-effect/pull/1583), wave 1, with
+`ready-for-heavy`. `yeet ready` flips it ready for review. The first live
+review read has zero unresolved threads; GitHub reports `MERGEABLE` with
+no base conflict. E's co-sign is routed by the orchestrator and is not claimed.
+
+The three Vercel deployment failures link explicitly to `build-rate-limit`.
+Their inbox ids `Vercel_oip-web-fb6577d1f645`,
+`Vercel_oip-web-staging-05c591f57ba2` and `Vercel_todox-452ea435c80d`
+are acknowledged `--environment-only` with that attribution. No spending.
+
+The old Run 4 failed-publish verdict remains on disk; it does not describe
+the successful authorized fallback. No reusable full-proof manifest is
+fabricated. Timestamp-based staleness suggestions after the lockfile edit
+do not authorize baseline refreshes owned by B/V; no such files change.
+The readiness monitor is job `6f96d792-ef03-4cb0-93c4-47836eeb1732`,
+submitted detached with a two-minute maximum runtime and waited by this
+worker. Hosted checks and review-window completion are separate evidence;
+S11 delegates the merge decision and attributed-red burn-down to the fleet.
+
+### Run 7 terminal handoff
+
+Monitor job ends `terminated / timeout` at 2026-10-09T20:32:29Z; `job wait`
+exits 3. This is the explicitly bounded observation, not readiness proof.
+The proof-job inbox row is acknowledged `--observed`. Latest live status
+read has zero unresolved threads, zero failing required checks and eight
+pending required checks; three Vercel rate-limit failures are attributed
+above. CodeRabbit's draft-skip notice is informational, not an actionable
+review finding. The PR is non-draft and conflict-free. No C-owned unit or
+command remains running. The orchestrator owns continuing observation,
+E co-sign, the review window, S11 gate and eventual lane retirement.
+
+### Run 7 report
+
+lane: rsc-c-scripts · head: 286290daabaf9c7693fada51bf92340ecabb932c
+(published qualified work head; final report-only commit follows)
+· PR: #1583 (wave 1, ready for review)
+· package-verify: @beep/repo-cli pass (retained Run 4 full audit 811.4s / docgen 28.8s)
+· hosted-parity: test-tsgo pass (retained 334-file local proof); docgen local pass
+(retained); jsdoc-ratchet pass (retained); knowledge refs --check pass
+(Run 6, zero live gated); fallow audit+health pass (retained qualification),
+Run 7 audit policy pass with one nonblocking inherited complexity finding;
+coverage read complete (existing floors, no changes). Hosted checks pending;
+no hosted green or merge-ready verdict claimed. Run 7 quality:knip and
+fallow:dead-code also pass with zero introduced findings.
+· handoff: history/handoffs/rsc-c-scripts-2026-10-09.md
+· open: E workflow co-sign; B admission after V for two wire-schema and
+12 test judgment rows; hosted proof, review-window completion and orchestrator
+merge/retirement. S5 and publication are resolved. All C-owned jobs are terminal.
+
+Content is final; the receipt-only push carries this report. The lane never merges.

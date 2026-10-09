@@ -210,3 +210,12 @@ root ONNX regression is gone without any inventory or baseline edit. Run 4's
 six qualification passes and Run 6's install/owner proofs are retained.
 Publication uses the orchestrator-authorized push-only route; E review,
 B/V occurrence-specific admission and hosted evidence remain separate gates.
+
+C wave 1 is published as [PR #1583](https://github.com/beep-effect/beep-effect/pull/1583)
+and ready for review through the authorized fallback. The initial live read
+has no unresolved review threads or base conflict. Three Vercel deployment
+rate-limit rows are acknowledged environment-only. The bounded monitor
+terminates at its configured two-minute limit without a readiness verdict;
+its terminal row is acknowledged observed. Hosted proof, E co-sign, B/V
+admission, review-window completion and orchestrator merge remain open.
+No C-owned command or unit remains running; no acceptance row is closed.

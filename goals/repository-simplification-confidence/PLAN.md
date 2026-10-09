@@ -96,7 +96,8 @@ The unused root ONNX dependency and lockfile row are removed; catalog, override,
 patch and consumer remain. Install and owner regeneration pass. The three
 required policy reruns now pass: Knip has zero introduced findings, Fallow
 dead-code has zero findings, and audit retains one nonblocking inherited
-complexity observation. Authorized push-only publication is next. B owns the
+complexity observation. PR #1583 is published and ready for review via the explicitly authorized
+push/create fallback after the push-only refusal. B owns the
 occurrence-specific judgments after V; E's workflow co-sign and hosted evidence
 remain open. No inventory is edited.
 Evidence:
