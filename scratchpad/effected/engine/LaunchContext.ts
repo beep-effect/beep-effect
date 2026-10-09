@@ -1,28 +1,52 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/engine/LaunchContext");
+
 /**
  * The process-derived facts a front end resolves once, passed in as values.
  *
- * @remarks
+ * **Details**
  * Nothing here reads `process`: `argv`, `env` and `cwd` come from the front
  * end's own `main.ts`. That keeps the resolution rule shared and testable
  * while the process read stays at the one place allowed to make it.
  *
+ * **Example** (Validate process-derived inputs)
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ProjectDirInput } from "./index.ts"
+ *
+ * S.is(ProjectDirInput)({ env: {}, keys: [], cwd: "/work/app" }) // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  * @public
  */
-export interface ProjectDirInput {
-	/**
-	 * Positional candidates, checked in order. Pass positional arguments only —
-	 * the parsed positionals of your command, never raw `process.argv.slice(2)`:
-	 * every non-empty value counts as a candidate, so a `--flag` would become the
-	 * project directory.
-	 */
-	readonly argv?: ReadonlyArray<string> | undefined;
-	/** The environment, usually `process.env`. */
-	readonly env: Readonly<Record<string, string | undefined>>;
-	/** Env keys to try in order, for example `["OKFIT_PROJECT_DIR", "CLAUDE_PROJECT_DIR"]`. */
-	readonly keys: ReadonlyArray<string>;
-	/** The fallback, usually `process.cwd()`. */
-	readonly cwd: string;
-}
+export const ProjectDirInput = S.Struct({
+	argv: S.Array(S.String).pipe(S.optional).annotateKey({
+		description:
+			"Positional candidates, checked in order. Pass positional arguments only — the parsed positionals of your command, never raw process.argv.slice(2): every non-empty value counts as a candidate, so a --flag would become the project directory.",
+	}),
+	env: S.Record(S.String, S.UndefinedOr(S.String)).annotateKey({ description: "The environment, usually process.env." }),
+	keys: S.Array(S.String).annotateKey({
+		description: 'Env keys to try in order, for example ["OKFIT_PROJECT_DIR", "CLAUDE_PROJECT_DIR"].',
+	}),
+	cwd: S.String.annotateKey({ description: "The fallback, usually process.cwd()." }),
+}).pipe(
+	$I.annoteSchema("ProjectDirInput", {
+		description: "The process-derived facts a front end resolves once, passed in as values.",
+	}),
+);
+
+/**
+ * Readonly process-derived inputs accepted by {@link LaunchContext.projectDir}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ * @public
+ */
+export type ProjectDirInput = typeof ProjectDirInput.Type;
 
 /**
  * Resolves where a tool launched by an agent host should treat as its project.

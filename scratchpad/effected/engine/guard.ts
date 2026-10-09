@@ -1,7 +1,7 @@
 /**
  * Transport-neutral crash guards for a server process: `ProcessGuard.run`
  * listens for stray exceptions and rejections before the server's module
- * graph loads. This entrypoint has no runtime import at all.
+ * graph loads. This entrypoint imports only effect/* packages.
  *
  * @packageDocumentation
  */
@@ -9,7 +9,7 @@ export {
 	ProcessGuard,
 	type ProcessGuardControl,
 	type ProcessGuardHost,
-	type ProcessGuardInjection,
+	ProcessGuardInjection,
 	type ProcessGuardOptions,
-	type ProcessGuardPolicy,
+	ProcessGuardPolicy,
 } from "./ProcessGuard.ts";

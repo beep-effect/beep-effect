@@ -1,5 +1,12 @@
-// No imports at all: this module is evaluated before anything a crash guard
-// protects, so it must not load `effect` or any other package at runtime.
+// Only effect/* imports are allowed before the guarded server graph loads.
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+
+const InjectAt = S.Literals(["load", "connected"]);
+const InjectKind = S.Literals(["uncaughtException", "unhandledRejection"]);
+const RejectionMode = S.Literals(["exit", "exitBeforeConnect", "log"]);
+const UncaughtMode = RejectionMode.pick(["exit", "exitBeforeConnect"]);
 
 /**
  * The slice of the host process {@link ProcessGuard.run} uses. Node's
@@ -38,12 +45,15 @@ export interface ProcessGuardHost {
  *
  * @public
  */
-export interface ProcessGuardPolicy {
-	/** For `uncaughtException`. */
-	readonly onUncaught: "exit" | "exitBeforeConnect";
-	/** For `unhandledRejection`. Defaults to `"exit"`. */
-	readonly onRejection?: "exit" | "exitBeforeConnect" | "log" | undefined;
-}
+export const ProcessGuardPolicy = S.Struct({
+	onUncaught: UncaughtMode.annotate({ description: "The uncaught-exception exit policy." }),
+	onRejection: S.optional(RejectionMode).annotate({ description: "The rejection policy; defaults to exit." }),
+}).annotate({
+	identifier: "@beep/scratchpad/effected/engine/ProcessGuard/ProcessGuardPolicy",
+	title: "ProcessGuardPolicy",
+	description: "When a stray exception or rejection ends the process.",
+});
+export type ProcessGuardPolicy = typeof ProcessGuardPolicy.Type;
 
 /**
  * One crash {@link ProcessGuardOptions.injectCrash} raises: which event, and
@@ -51,12 +61,15 @@ export interface ProcessGuardPolicy {
  *
  * @public
  */
-export interface ProcessGuardInjection {
-	/** `"load"`: before `load` is called. `"connected"`: after the first {@link ProcessGuardControl.markConnected}. */
-	readonly at: "load" | "connected";
-	/** Which event to raise. */
-	readonly kind: "uncaughtException" | "unhandledRejection";
-}
+export const ProcessGuardInjection = S.Struct({
+	at: InjectAt.annotate({ description: "Before load or after the first markConnected call." }),
+	kind: InjectKind.annotate({ description: "The host event to raise." }),
+}).annotate({
+	identifier: "@beep/scratchpad/effected/engine/ProcessGuard/ProcessGuardInjection",
+	title: "ProcessGuardInjection",
+	description: "Which crash event to inject and when to raise it.",
+});
+export type ProcessGuardInjection = typeof ProcessGuardInjection.Type;
 
 /**
  * What {@link ProcessGuardOptions.load} is handed: the two moments only the
@@ -131,13 +144,13 @@ export interface ProcessGuardOptions {
 	 *   there is dropped.
 	 *
 	 * **The `"connected"` report is asynchronous.** It is raised on a later
-	 * tick, a `setImmediate` after `markConnected`, so it can land after the
+	 * timer tick, an `Effect.sleep("1 millis")` after `markConnected`, so it can land after the
 	 * first responses the server sends: a test that reads stderr once, right
 	 * after its first response, can see nothing. Wait for the report (with
 	 * `McpProcess.stderrUntil` from `@effected/mcp/testing`, for an MCP
 	 * server) rather than reading it once.
 	 *
-	 * Either is raised only through `host.emit`, on a `setImmediate` tick,
+	 * Either is raised only through `host.emit`, after an Effect timer tick,
 	 * never as a real throw or rejection, so the guard's listeners handle it
 	 * the same way under the real `process` and under a test double. Under
 	 * `process`, every listener registered for the event sees it, not only
@@ -151,15 +164,20 @@ export interface ProcessGuardOptions {
 
 type InjectedKind = ProcessGuardInjection["kind"];
 
-const isInjectedKind = (kind: unknown): kind is InjectedKind =>
-	kind === "uncaughtException" || kind === "unhandledRejection";
+const isInjectedKind = S.is(InjectKind);
+const isInjection = S.is(ProcessGuardInjection);
 
-const INJECT_AT: ReadonlyArray<ProcessGuardInjection["at"]> = ["load", "connected"];
-const INJECT_KIND: ReadonlyArray<ProcessGuardInjection["kind"]> = ["uncaughtException", "unhandledRejection"];
+class InjectedCrash extends S.TaggedError<InjectedCrash>()("InjectedCrash", {
+	kind: InjectKind,
+	message: S.String,
+}, {
+	identifier: "@beep/scratchpad/effected/engine/ProcessGuard/InjectedCrash",
+	description: "A test-only crash delivered through the host event listeners.",
+}) {}
 
 /** Emit one injected crash through the host, to the listeners the guard installed there. */
 const emitInjected = (host: ProcessGuardHost, kind: InjectedKind): void => {
-	const error = new Error(`[injected] ${kind}`);
+	const error = InjectedCrash.make({ kind, message: `[injected] ${kind}` });
 	if (kind === "uncaughtException") {
 		host.emit("uncaughtException", error, "uncaughtException");
 		return;
@@ -184,8 +202,8 @@ const fallbackFormat = (error: unknown): string =>
  * calls `markConnected` once it is serving. `@effected/mcp/guard`'s
  * `McpGuard.run` is this guard with an MCP stdio launch in its `load`.
  *
- * - This entrypoint has no runtime import at all, so a throw while the
- *   server graph evaluates is still reported on stderr.
+ * - This entrypoint imports only effect/*, so a throw while the server
+ *   graph evaluates is still reported on stderr.
  * - A `load` that rejects is reported as `startup failed` and exits 1
  *   whatever the policy. Left to a log-only rejection listener, it would let
  *   the event loop drain and exit 0 with no server.
@@ -230,11 +248,10 @@ export class ProcessGuard {
 	 */
 	static readonly parseInjectCrash = (value: string | undefined): ProcessGuardInjection | undefined => {
 		if (value === undefined) return undefined;
-		const [at, kind, ...rest] = value.split(":");
+		const [at, kind, ...rest] = Str.split(value, ":");
 		if (rest.length > 0) return undefined;
-		const validAt = INJECT_AT.find((candidate) => candidate === at);
-		const validKind = INJECT_KIND.find((candidate) => candidate === kind);
-		return validAt === undefined || validKind === undefined ? undefined : { at: validAt, kind: validKind };
+		const injection = { at, kind };
+		return isInjection(injection) ? injection : undefined;
 	};
 
 	/** Install the guards, then run `load`. Resolves once `load` has resolved. */
@@ -258,7 +275,7 @@ export class ProcessGuard {
 					}
 				}
 			};
-			const exits = (mode: "exit" | "exitBeforeConnect" | "log"): boolean =>
+			const exits = (mode: typeof RejectionMode.Type): boolean =>
 				mode === "exit" || (mode === "exitBeforeConnect" && !connected);
 
 			host.on("uncaughtException", (error, origin) => {
@@ -278,7 +295,8 @@ export class ProcessGuard {
 					if (connected) return;
 					connected = true;
 					if (inject?.at === "connected" && injectKind !== undefined) {
-						setImmediate(() => {
+						// A positive sleep uses the timer phase; sleep(0) only yields to the Effect scheduler.
+						void Effect.runPromise(Effect.sleep("1 millis")).then(() => {
 							try {
 								emitInjected(host, injectKind);
 							} catch {
@@ -308,17 +326,10 @@ export class ProcessGuard {
 			};
 
 			if (inject?.at === "load" && injectKind !== undefined) {
-				// Settled either way, so a host whose exit throws can never leave `run` waiting.
-				const injected = Promise.withResolvers<void>();
-				setImmediate(() => {
-					try {
-						emitInjected(host, injectKind);
-						injected.resolve();
-					} catch (error) {
-						injected.reject(error);
-					}
-				});
-				return injected.promise.then(start);
+				// Keep host exceptions in the Promise boundary, so an exit double rejects with its original error.
+				return Effect.runPromise(Effect.sleep("1 millis"))
+					.then(() => emitInjected(host, injectKind))
+					.then(start);
 			}
 			return start();
 		} catch (error) {

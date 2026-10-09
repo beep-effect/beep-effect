@@ -1,8 +1,8 @@
 // @effect-diagnostics asyncFunction:skip-file globalTimers:skip-file newPromise:skip-file
-import { assert, describe, it } from "@effect/vitest";
+import { assert, describe, it, vi } from "@effect/vitest";
 import * as S from "effect/Schema";
 import type { ProcessGuardHost, ProcessGuardOptions } from "../../effected/engine/guard.ts";
-import { ProcessGuard } from "../../effected/engine/guard.ts";
+import { ProcessGuard, ProcessGuardPolicy } from "../../effected/engine/guard.ts";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 // Compile-time: Node's own `process` satisfies the guard's structural host.
@@ -93,7 +93,118 @@ describe("ProcessGuard.parseInjectCrash", () => {
 	});
 });
 
+describe("ProcessGuardPolicy", () => {
+	it("accepts omitted and explicitly undefined onRejection and every policy mode", () => {
+		for (const onUncaught of ["exit", "exitBeforeConnect"] as const) {
+			assert.isTrue(S.is(ProcessGuardPolicy)({ onUncaught }));
+			for (const onRejection of [undefined, "exit", "exitBeforeConnect", "log"] as const)
+				assert.isTrue(S.is(ProcessGuardPolicy)({ onUncaught, onRejection }));
+		}
+		assert.isFalse(S.is(ProcessGuardPolicy)({ onUncaught: "log" }));
+		assert.isFalse(S.is(ProcessGuardPolicy)({ onUncaught: "exit", onRejection: "bogus" }));
+	});
+});
+
 describe("ProcessGuard.run", () => {
+	it("connected injection preserves the next check callback before the timers-phase report", async () => {
+		vi.useFakeTimers({ toFake: ["setImmediate", "setTimeout"] });
+		try {
+			const { host, exits } = fakeHost();
+			const order: Array<string> = [];
+			host.stderr.write = () => order.push("injection");
+			setImmediate(() => {
+				ProcessGuard.run({
+					label: "srv",
+					host,
+					injectCrash: { at: "connected", kind: "uncaughtException" },
+					load: async (guard) => guard.markConnected(),
+				});
+				setImmediate(() => order.push("sibling setImmediate"));
+				setTimeout(() => order.push("sibling setTimeout0"), 0);
+			});
+			await vi.runAllTimersAsync();
+			assert.deepStrictEqual(order, ["sibling setImmediate", "injection", "sibling setTimeout0"]);
+			assert.deepStrictEqual(exits, [1]);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("load injection lets the caller's earlier timer run before exiting", async () => {
+		vi.useFakeTimers({ toFake: ["setImmediate", "setTimeout"] });
+		try {
+			const { host, exits } = fakeHost();
+			const order: Array<string> = [];
+			host.stderr.write = () => order.push("injection");
+			setImmediate(() => {
+				setImmediate(() => order.push("caller setImmediate"));
+				setTimeout(() => order.push("caller setTimeout0"), 0);
+				runGuard({
+					label: "srv",
+					host,
+					injectCrash: { at: "load", kind: "uncaughtException" },
+					load: async () => {
+						order.push("load");
+					},
+				});
+			});
+			await vi.runAllTimersAsync();
+			assert.deepStrictEqual(order, ["caller setImmediate", "caller setTimeout0", "injection"]);
+			assert.deepStrictEqual(exits, [1]);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("injected tagged errors retain their kind, message, host origin and handled rejection promise", async () => {
+		for (const kind of ["uncaughtException", "unhandledRejection"] as const) {
+			const { host } = fakeHost();
+			let error: unknown;
+			let origin: string | undefined;
+			let rejected: Promise<unknown> | undefined;
+			const observedHost: ProcessGuardHost = {
+				...host,
+				emit: (...[event, value, detail]:
+					| [event: "uncaughtException", error: Error, origin: "uncaughtException" | "unhandledRejection"]
+					| [event: "unhandledRejection", reason: unknown, promise: Promise<unknown>]) => {
+					error = value;
+					if (event === "uncaughtException") {
+						origin = detail;
+						return host.emit(event, value, detail);
+					}
+					rejected = detail;
+					return host.emit(event, value, detail);
+				},
+			};
+			await runGuard({
+				label: "srv",
+				host: observedHost,
+				policy: { onUncaught: "exit", onRejection: "log" },
+				injectCrash: { at: "load", kind },
+				load: async () => undefined,
+			});
+			assert.isTrue(S.is(S.TaggedStruct("InjectedCrash", {
+				kind: S.Literal(kind),
+				message: S.Literal(`[injected] ${kind}`),
+			}))(error));
+			assert.instanceOf(error, Error);
+			if (kind === "uncaughtException") assert.strictEqual(origin, "uncaughtException");
+			else {
+				assert.instanceOf(rejected, Promise);
+				assert.strictEqual(await rejected?.catch((reason: unknown) => reason), error);
+			}
+		}
+	});
+
+	it("omitted and explicitly undefined rejection policies both default to exit", async () => {
+		for (const policy of [{ onUncaught: "exit" }, { onUncaught: "exit", onRejection: undefined }] as const) {
+			const { host, exits, fire } = fakeHost();
+			await ProcessGuard.run({ label: "srv", host, policy, load: async () => undefined });
+			fire("unhandledRejection", "reason");
+			assert.deepStrictEqual(exits, [1]);
+		}
+	});
+
 	it("installs both listeners before load runs", async () => {
 		const { host, listeners } = fakeHost();
 		let seen: ReadonlyArray<string> = [];
@@ -284,7 +395,7 @@ describe("ProcessGuard.run", () => {
 			assert.deepStrictEqual(order, exitsAtLoad ? [] : ["load"]);
 			assert.strictEqual(stderr.length, 1);
 			assert.include(stderr[0] ?? "", `srv: ${kind}`);
-			assert.include(stderr[0] ?? "", `Error: [injected] ${kind}`);
+			assert.include(stderr[0] ?? "", `InjectedCrash: [injected] ${kind}`);
 		});
 
 		it(`injectCrash at connected, ${kind} under ${mode}: ${exitsConnected ? "exits 1" : "logs and keeps serving"}`, async () => {

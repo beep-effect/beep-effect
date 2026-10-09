@@ -4,9 +4,8 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../../effected/engine");
-const BUILT = resolve(ROOT, "dist", "dev", "pkg");
+const BUILT = resolve(SRC, "dist", "dev", "pkg");
 
 /**
  * Every static RUNTIME import specifier in a module: `import type` and
@@ -40,19 +39,21 @@ const runtimeGraphOf = (entry: string, extension: ".ts" | ".js") => {
 const relative = (root: string, modules: ReadonlySet<string>) =>
 	[...modules].map((file) => file.slice(root.length + 1)).sort();
 
-describe("./guard loads nothing before its guards listen", () => {
-	it("./guard statically reaches only ProcessGuard, and no package at all", () => {
+describe("./guard reaches only its local modules and effect/* before its guards listen", () => {
+	it("./guard statically reaches only ProcessGuard, and only effect/* packages", () => {
 		const { modules, packages } = runtimeGraphOf(resolve(SRC, "guard.ts"), ".ts");
 		assert.deepStrictEqual(relative(SRC, modules), ["ProcessGuard.ts", "guard.ts"]);
-		assert.deepStrictEqual([...packages], []);
+		assert.include([...packages], "effect/Schema");
+		for (const specifier of packages) assert.isTrue(specifier.startsWith("effect/"), specifier);
 	});
 
-	it("the built ./guard reaches only ProcessGuard.js, and no package at all", () => {
+	it("the built ./guard reaches only ProcessGuard.js, and only effect/* packages", () => {
 		const entry = resolve(BUILT, "guard.js");
 		assert.isTrue(existsSync(entry), "build:dev must have emitted dist/dev/pkg/guard.js");
 		const { modules, packages } = runtimeGraphOf(entry, ".js");
 		assert.deepStrictEqual(relative(BUILT, modules), ["ProcessGuard.js", "guard.js"]);
-		assert.deepStrictEqual([...packages], []);
+		assert.include([...packages], "effect/Schema");
+		for (const specifier of packages) assert.isTrue(specifier.startsWith("effect/"), specifier);
 	});
 
 	it("positive control: the walker sees the main entry's runtime import of effect", () => {

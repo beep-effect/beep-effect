@@ -32,9 +32,33 @@ export type Distribution = typeof Distribution.Type;
  * The `distribution` field of a machine-readable envelope: `null` when the
  * front end was installed directly rather than through a carrier.
  *
+ * **Example** (Validate a direct install)
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { DistributionField } from "./index.ts"
+ *
+ * S.is(DistributionField)(null) // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  * @public
  */
-export const DistributionField = S.NullOr(Distribution);
+export const DistributionField = S.NullOr(Distribution).pipe(
+	$I.annoteSchema("DistributionField", {
+		description:
+			"The distribution field of a machine-readable envelope: null when the front end was installed directly rather than through a carrier.",
+	}),
+);
+
+/**
+ * A decoded nullable carrier field from a machine-readable envelope.
+ *
+ * @category type-level
+ * @since 0.0.0
+ * @public
+ */
+export type DistributionField = typeof DistributionField.Type;
 
 /**
  * The carrier this run was installed through, read anywhere without

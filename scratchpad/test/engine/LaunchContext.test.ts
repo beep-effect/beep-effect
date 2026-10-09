@@ -1,7 +1,9 @@
 // biome-ignore-all lint/suspicious/noTemplateCurlyInString: the fixtures are unsubstituted ${...} launch placeholders, and a literal placeholder is what the tests assert on
+import { $ScratchpadId } from "@beep/identity/packages";
 import { assert, describe, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { LaunchContext } from "../../effected/engine/index.ts";
+import { LaunchContext, ProjectDirInput } from "../../effected/engine/index.ts";
 
 const keys = ["OKFIT_PROJECT_DIR", "CLAUDE_PROJECT_DIR"] as const;
 
@@ -18,6 +20,38 @@ const EdgeString = S.Union([
 const EnvArb = S.Struct({
 	OKFIT_PROJECT_DIR: S.optionalKey(EdgeString),
 	CLAUDE_PROJECT_DIR: S.optionalKey(EdgeString),
+});
+
+describe("ProjectDirInput", () => {
+	it("carries its own composed identity", () => {
+		const $I = $ScratchpadId.create("effected/engine/LaunchContext");
+		assert.deepStrictEqual(
+			ProjectDirInput.ast.annotations,
+			$I.annote("ProjectDirInput", {
+				description: "The process-derived facts a front end resolves once, passed in as values.",
+			}),
+		);
+	});
+
+	it.effect("accepts omitted, undefined and readonly argv with undefined environment values", () =>
+		Effect.gen(function* () {
+			const env = { OKFIT_PROJECT_DIR: undefined, CLAUDE_PROJECT_DIR: "  /from/env  " } as const;
+			const inputs: ReadonlyArray<ProjectDirInput> = [
+				{ env, keys, cwd: "/cwd" },
+				{ argv: undefined, env, keys, cwd: "/cwd" },
+				{ argv: [] as const, env, keys, cwd: "/cwd" },
+				{ argv: ["  /from/argv  "] as const, env, keys, cwd: "/cwd" },
+				{ env: { OKFIT_PROJECT_DIR: undefined }, keys, cwd: "  /cwd  " },
+			];
+			for (const input of inputs) {
+				const decoded = yield* S.decodeEffect(ProjectDirInput)(input);
+				const encoded = yield* S.encodeEffect(ProjectDirInput)(decoded);
+				assert.deepStrictEqual(decoded, input);
+				assert.deepStrictEqual(encoded, input);
+				assert.strictEqual(LaunchContext.projectDir(decoded), LaunchContext.projectDir(input));
+			}
+		}),
+	);
 });
 
 describe("LaunchContext.projectDir", () => {

@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -15,6 +16,25 @@ describe("Distribution", () => {
 	it("DistributionField encodes a direct install as null", () => {
 		assert.strictEqual(Result.getOrThrowWith(S.encodeResult(DistributionField)(null), (error) => error), null);
 		assert.isNull(Result.getOrThrowWith(S.decodeResult(DistributionField)(null), (error) => error));
+	});
+
+	it("DistributionField carries its own composed identity", () => {
+		const $I = $ScratchpadId.create("effected/engine/Distribution");
+		assert.deepStrictEqual(
+			DistributionField.ast.annotations,
+			$I.annote("DistributionField", {
+				description:
+					"The distribution field of a machine-readable envelope: null when the front end was installed directly rather than through a carrier.",
+			}),
+		);
+		assert.notStrictEqual(DistributionField.ast.annotations?.identifier, Distribution.ast.annotations?.identifier);
+	});
+
+	it("DistributionField round-trips a carrier without changing its wire shape", () => {
+		const value: DistributionField = { name: "@okfit/plugin", version: "0.5.1" };
+		const decoded = Result.getOrThrowWith(S.decodeResult(DistributionField)(value), (error) => error);
+		assert.deepStrictEqual(decoded, value);
+		assert.deepStrictEqual(Result.getOrThrowWith(S.encodeResult(DistributionField)(decoded), (error) => error), value);
 	});
 
 	it("rejects a distribution missing its version", () => {
