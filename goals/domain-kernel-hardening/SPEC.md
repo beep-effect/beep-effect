@@ -68,8 +68,8 @@ the first packet that actually consumes them (see the exploration MAP).
 - `apps/professional-desktop/src/runtime/Migrations.gen.ts`: owner-command resync.
 - `packages/tooling/tool/cli/src/commands/Architecture/internal/AcceptedProofManifest.ts`:
   accepted proof entry only if required by the migration proof.
-- `.changeset/<name>.md`: changed versioned packages; major if consumer edits break
-  compatibility, otherwise patch.
+- `.changeset/<name>.md`: published packages only under #1566; private workspace
+  changes are recorded with compatibility impact and reversal in the handoff.
 
 ## Constraints
 
@@ -135,3 +135,5 @@ the first packet that actually consumes them (see the exploration MAP).
 | 2026-10-09 | D7: SPEC explicitly requires auditColumns soft-delete fields, EntityRef.errors exports, additive nullable drizzle migration and generated Migrations.gen.ts. Amend the GOAL stop line to name them. | These exact surfaces satisfy the stop line's SPEC exception. Under AGENTS autonomy only money escalates; other calls are recorded here. Auth, infra, security, dependencies, lockfiles, other generated/public APIs and non-additive migrations still stop this lane. | Revert GOAL and SPEC contract edits. |
 | 2026-10-09 | D8: Author research/SOURCES.md and register researchReports in place (R3). | The adopt plan had one report row; after authoring it has none and conflicts is empty. Unknown manifest keys are preserved. | Remove SOURCES.md and researchReports; the report row returns and doctor still supports the packet. |
 | 2026-10-09 | D9: Hold P1 before implementation because brief step 5.5 and current private-package release policy materially contradict. | Main #1566 forbids changesets naming live private workspaces; every expected target is private. The brief requires such notes and major bumps for forced outside-kernel edits. The manifest stop condition applies; changing privacy or the guard exceeds this lane. | Resume on a reconciled brief; remove the hold receipt without changing release policy. |
+| 2026-10-09 | D10: Resume ruling lifts D9; #1566 manifest-aware release policy governs. Changesets name published packages only; forced private-workspace changes receive a handoff table instead. P1, P2 and P3 publish as separate bounded waves under the amended ruling. | Every measured target is private; preserving release policy avoids invalid notes. The latest orchestrator ruling supersedes the original two-wave plan. | Revert this amendment and implementation before publication; do not alter package privacy or release policy. |
+| 2026-10-09 | D11: Register both generated audit-soft-delete migration files in AcceptedProofManifest, using the existing persistence inventory pattern. | Architecture operation plans enumerate every db-admin proof file, including generated SQL and snapshots. | Remove the two entries together with the generated migration and regenerate the desktop bundle. |

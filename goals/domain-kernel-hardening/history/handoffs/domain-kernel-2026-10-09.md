@@ -154,3 +154,90 @@ hosted-parity: test-tsgo: not run (P1 blocked) | docgen local: not run (P1 block
 handoff: goals/domain-kernel-hardening/history/handoffs/domain-kernel-2026-10-09.md
 open items: reconcile brief step 5.5 with main #1566 private-package changeset prohibition; then implement the measured 36 mechanical sites in 12 files, generate the 52 nullable columns in 26 tables, verify and close P1-P3. D1-D8 and reversals are above; D9 hold reverses on a reconciled brief. Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet (~349), Parked packets row (~383), and cohort prose (~406). R1 completed-retained stream/superset checks are not applicable yet. PR 1 is not merged and no readiness success is claimed.
 blocked: brief step 5.5 requires private-package changesets that main #1566 now forbids
+
+## Run 2 resume — P1 work in progress
+
+- Read the full reconciled brief, including the 2026-10-09 resume ruling. D9 is
+  retained verbatim; D10 lifts the hold and adopts #1566's manifest-aware release
+  policy. Only published packages get changesets. Reversal: revert D10 and the
+  implementation before publication, without changing package privacy or policy.
+- Current lane remains `feat/domain-kernel-hardening-p1`; the local blocked receipt
+  `6001c4401b` is retained. Initial main merge changed only the unrelated GPU OCR
+  packet, preserving its owner's work. This worker did not merge any PR.
+- PR 1 #1577 remains open and ready. The existing orchestrator merge gate owns it.
+  P1, P2 and P3 now publish separately under the latest resume ruling, superseding
+  the older two-wave sequencing. No P1 publish push has occurred.
+- Adopt plan: conflicts empty, no report entries. Active status preview is an
+  owner-command no-op at revision 2. `.repos/alchemy` and effect-workspace absent.
+- P1 adds the measured GeneratedByApp nullable fields with constructor none and
+  decoding null defaults; no CHECK or enforcement. Error role extraction retains
+  tag/fields/equivalence and re-exports through EntityRef; no exports-map edit.
+- Four workspace insert projections now preserve encoded soft-delete metadata.
+  New shared-domain tests cover null/omission, user-principal epoch-millis rows,
+  none encoding, schema-derived property round-trips, and error-union equivalence.
+- One dependent check and one migration generate job are queued through
+  beep-heavy. Both report all four shared slots busy. No payload result is claimed.
+  Biome checked nine touched TypeScript files and fixed five; diff whitespace clean.
+
+### Forced changes without changesets (resume ruling and #1566)
+
+| Package | Change | Why it would have been major | Reversal |
+| --- | --- | --- | --- |
+| @beep/shared-domain | Audit select/encode shape gains two nullable columns; public EntityRef error module | Existing selected-row fixture/projection sites require explicit fields under the old brief's rule | Revert fields, tests, error extraction and docs; generate drop-columns migration only after preserving later data |
+| @beep/workspace-tables | Four explicit insert projections preserve deletion metadata | Existing consumer insert projections needed edits | Revert the two new projections in each converter together with kernel rollback |
+
+The table will be extended for exact fixture edits and generated outputs after
+qualification. No changed published package has been identified.
+
+Mechanical converter files:
+
+- packages/workspace/tables/src/entities/Workspace/Workspace.converters.ts
+- packages/workspace/tables/src/entities/Turn/Turn.converters.ts
+- packages/workspace/tables/src/entities/Thread/Thread.converters.ts
+- packages/workspace/tables/src/entities/Message/Message.converters.ts
+
+Orchestrator still owns stale ROADMAP platform re-entry bullet (~349), Parked
+packets row (~383), and cohort prose (~406). R1 superset and stream checks will
+be recorded at qualification; completed-retained is reserved for P3 closeout.
+
+### P1 implementation evidence
+
+- First dependent check: 135/137 tasks successful, 61 cached, 1m18.713s; exit 1.
+  The only compiler diagnostic was introduced test TS377050 at AuditSoftDelete
+  line 70; repaired with the pipeable guard form. The other red was expected
+  db-admin drift before migration generation. No fixture/model diagnostics remain.
+- Mechanical fixes: 32 fixture projections in eight files, plus four production
+  projections. The ProviderInstance exact-column assertion adds the two column
+  names (one additional mechanical assertion site), total 37 sites, below 40.
+- Generated `20261009202131_audit_soft_delete` through db-admin's owner command.
+  SQL validated as exactly 52 nullable ADD COLUMN statements across 26 tables;
+  no CHECK, backfill, drop, rename or recreate. Desktop codegen and codegen:check
+  pass. No live database used.
+- D11 adds migration.sql and snapshot.json to the accepted architecture proof
+  inventory, matching prior generated migration entries. Reversal: remove both
+  entries with the migration and regenerate the desktop bundle.
+- Full qualification submitted in two beep-heavy jobs; results pending.
+
+### Remaining forced private-workspace changes without changesets
+
+| Package | Change | Why it would have been major | Reversal |
+| --- | --- | --- | --- |
+| @beep/agents-tables | ProviderInstance nullable row fixtures and exact column assertion | Selected-row consumer fixtures require the new column pair | Revert fixture/assertion edits together with the kernel rollback |
+| @beep/architecture-lab-tables | Two Worker select-row projections | Insert-shaped fixtures require explicit nullable columns | Revert the two fixture projections with kernel rollback |
+| @beep/documents-tables | SyncConflict, SyncCursor, SyncItem and SyncOperation row fixtures | Selected-row consumer fixtures require the new column pair | Revert the four test-file edits with kernel rollback |
+| @beep/epistemic-tables | Eight row fixture/projection sites | Selected-row consumer fixtures require the new column pair | Revert the test-file changes with kernel rollback |
+| @beep/workspace-tables | Eight selected-row fixture projections, alongside four production converters | Selected-row consumer fixtures require the new column pair | Revert fixture and converter changes with kernel rollback |
+| @beep/db-admin | Generated additive nullable migration SQL and snapshot | Required persistence contract adds two columns to each audited table | Revert the migration before rollout; preserve later data before any drop-column rollback |
+| @beep/professional-desktop | Owner-generated migration bundle resync | Desktop migration consumers inherit the new persistence contract | Regenerate the bundle after reverting the migration |
+| @beep/repo-cli | Accepted proof manifest includes the new generated files | Required architecture inventory changes with the persistence proof surface | Remove the two entries with migration rollback |
+
+Mechanical fixture files:
+
+- packages/agents/tables/test/ProviderInstanceTable.test.ts
+- packages/architecture-lab/tables/test/WorkerTable.test.ts
+- packages/documents/tables/test/SyncConflictTable.test.ts
+- packages/documents/tables/test/SyncCursorTable.test.ts
+- packages/documents/tables/test/SyncItemTable.test.ts
+- packages/documents/tables/test/SyncOperationTable.test.ts
+- packages/epistemic/tables/test/EpistemicTables.test.ts
+- packages/workspace/tables/test/WorkspaceTables.test.ts

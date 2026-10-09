@@ -9,7 +9,7 @@ Status: `active`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Reconcile the retired entity stack to EntityKit and effect-drizzle; measure both nullable encodings. | Required facts + blockers recorded. |
-| P1 Implement | pending | Add `deletedAt`/`deletedByPrincipal` to auditColumns; evidence the existing DomainModel retirement; demonstrate the `.errors.ts` convention. | `SPEC.md` acceptance criteria met. |
+| P1 Implement | in-progress | Add `deletedAt`/`deletedByPrincipal` to auditColumns; evidence the existing DomainModel retirement; demonstrate the `.errors.ts` convention. | `SPEC.md` acceptance criteria met. |
 | P2 Verify | pending | Run kernel package checks + tests + docgen; capture evidence. | Green or blockers documented. |
 | P3 Close | pending | PR, review response, closeout reflection, readiness. | Status/evidence updated; reflection exists. |
 

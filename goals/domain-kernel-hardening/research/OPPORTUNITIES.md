@@ -62,3 +62,14 @@
 - Prevention: reconcile the lane's changeset requirement with the current
   manifest-aware policy before resuming P1. Do not change package privacy or
   weaken the guard from this lane.
+
+## 2026-10-09 — resumed qualification waits for shared capacity
+
+- Doing: resume P1 after the reconciled release-policy ruling, with one dependent
+  typecheck and one migration-generation job.
+- Evidence: both wrappers report `all 4 slots busy, waiting`; neither payload has
+  emitted a compiler or generator result.
+- Attribution: shared admission queue, not a code or migration failure.
+- Action: preserve caps, use at most two own jobs, and poll their logs while
+  preparing the exact measured fixture repairs. No other lane is interrupted.
+- Prevention: show queue position and payload start time in the wrapper receipt.

@@ -102,6 +102,8 @@ export const toThreadInsert = (thread: Thread): Result.Result<ThreadInsert, Thre
       (encoded): ThreadInsert => ({
         createdAt: encoded.createdAt,
         createdByPrincipal: encoded.createdByPrincipal,
+        deletedAt: encoded.deletedAt,
+        deletedByPrincipal: encoded.deletedByPrincipal,
         entityType: encoded.entityType,
         orgId: encoded.orgId,
         publicId: encoded.publicId,

@@ -802,6 +802,18 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20261009202131_audit_soft_delete/migration.sql",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20261009202131_audit_soft_delete/snapshot.json",
+    writer: "json",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
     path: "packages/_internal/db-admin/test/ArchitectureLabMigrationTarget.test.ts",
     writer: "template",
   }),

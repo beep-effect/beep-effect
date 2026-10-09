@@ -70,12 +70,12 @@ project entity models with `toPgTable`.
 ### Promotion record: ProductEntity and consolidated identity modules
 
 - **Date promoted:** 2026-08-13
-- **Shared product semantics:** Every persisted product row shares organization scope, actor provenance, source, schema version, row version, public identity, and one canonical entity-type identity.
+- **Shared product semantics:** Every persisted product row shares organization scope, actor provenance, Principal-typed nullable soft-delete, source, schema version, row version, public identity, and one canonical entity-type identity.
 - **Current consumers:** `@beep/epistemic-domain`, `@beep/law-practice-domain`, `@beep/workspace-domain`, `@beep/agents-domain`, `@beep/documents-domain`, and `@beep/shared-domain` define persisted entities with this contract.
 - **Rejected homes:**
   - Owning slice - the audit and identity meaning is deliberately identical across all product slices, so no one slice can own it.
   - Foundation - organization scope, principals, source facets, public ids, and entity-type identity are Beep product language rather than domain-agnostic schema substrate.
-- **Surface:** `ProductEntity.make`, `ProductEntity.fields`, and `ProductEntity.ProductEntityKit` from `@beep/shared-domain/entity/ProductEntity`; consolidated ids from `@beep/shared-domain/identity/*`. Every `EntityId.factory` id carries the entity metadata statics, with the factory's plain `equivalence` as the canonical equivalence static; decode ids through the `effect/Schema` free functions (`S.decodeUnknownEffect(OrganizationId)`).
+- **Surface:** `ProductEntity.Entity`, `ProductEntity.fields` (including `deletedAt` and `deletedByPrincipal`), and `ProductEntity.kit` from `@beep/shared-domain/entity/ProductEntity`; consolidated ids from `@beep/shared-domain/identity/*`. Every `EntityId.factory` id carries the entity metadata statics, with the factory's plain `equivalence` as the canonical equivalence static; decode ids through the `effect/Schema` free functions (`S.decodeUnknownEffect(OrganizationId)`).
 - **Runtime limits:** no live Layers; effect-drizzle use is limited to executable schema, column, index, and table metadata.
 - **Coupling acceptors:** Entity-stack migration accepted the shared contract across all current slice consumers; PR review sign-off pending.
 - **Removal trigger:** retire when persisted product entities no longer share a common audit/identity contract or a replacement promotion record moves that contract to a different shared owner.

@@ -23,6 +23,7 @@ import { ModelInvariantError, VariantField } from "@beep/effect-drizzle";
 import * as Pg from "@beep/effect-drizzle/pg";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -63,7 +64,7 @@ export const baseColumns = {
 };
 
 /**
- * Actor-provenance and schema-lineage columns added by the audit capability.
+ * Actor-provenance, nullable soft-delete, and schema-lineage columns added by the audit capability.
  *
  * **Example** (Inspect the audit column pack)
  *
@@ -79,6 +80,18 @@ export const baseColumns = {
  */
 export const auditColumns = {
   createdByPrincipal: M.GeneratedByApp(Principal).pipe(Pg.jsonb()),
+  deletedAt: M.GeneratedByApp(
+    S.OptionFromNullOr(S.DateTimeUtcFromMillis).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.withDecodingDefaultKey(Effect.succeed(null))
+    )
+  ).pipe(Pg.bigint("number")),
+  deletedByPrincipal: M.GeneratedByApp(
+    S.OptionFromNullOr(Principal).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.withDecodingDefaultKey(Effect.succeed(null))
+    )
+  ).pipe(Pg.jsonb()),
   schemaVersion: M.GeneratedByApp(SemanticVersion).pipe(Pg.text()),
   source: M.GeneratedByApp(SourceKind).pipe(Pg.text(), Pg.index()),
   updatedByPrincipal: M.GeneratedByApp(Principal).pipe(Pg.jsonb()),

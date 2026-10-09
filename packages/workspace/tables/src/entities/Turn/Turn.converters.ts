@@ -104,6 +104,8 @@ export const toTurnInsert = (turn: Turn): Result.Result<TurnInsert, TurnConverte
       (encoded): TurnInsert => ({
         createdAt: encoded.createdAt,
         createdByPrincipal: encoded.createdByPrincipal,
+        deletedAt: encoded.deletedAt,
+        deletedByPrincipal: encoded.deletedByPrincipal,
         entityType: encoded.entityType,
         items: encoded.items,
         orgId: encoded.orgId,
