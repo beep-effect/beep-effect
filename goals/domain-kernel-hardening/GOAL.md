@@ -2,8 +2,8 @@
 
 Repo: `beep-effect` (this checkout).
 
-Outcome: `BaseEntity` carries `Principal`-typed soft-delete and is the single
-canonical audit base, with the typed-error (`.errors.ts`) convention in place for
+Outcome: `EntityKit.auditColumns` carries `Principal`-typed soft-delete as the
+single canonical audit column pack, with the typed-error (`.errors.ts`) convention in place for
 the rest of the domain-layer hardening.
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
@@ -23,11 +23,11 @@ G1-G14) — read by reference, do not copy.
 
 Scope:
 
-- In: `packages/shared/domain/src/entity/ProductEntity.ts` (add `deletedAt` +
-  `deletedByPrincipal`, Principal-typed, nullable→`null`, with an
-  `EntitySchema.persist.*` descriptor); `packages/foundation/modeling/schema/src/index.ts`
-  (retire or deprecate-alias — `rowVersion` already covers `version`); the kernel
-  `.errors.ts` convention; tests + docgen.
+- In: `EntityKit.auditColumns` and `ProductEntity.fields` (add `deletedAt` +
+  `deletedByPrincipal`, Principal-typed, SQL absence `null`, effect-drizzle
+  metadata); `entity/EntityRef.errors.ts`; tests, docgen, the additive nullable
+  drizzle migration and the regenerated desktop migration bundle.
+  `DomainModel` is already retired by #720; record that evidence.
 - Out: NO new shared VOs (`TemporalValidity`/`DomainEvent` are deferred to their
   consuming packets — zero-consumer shared exports are not promotable). NO
   slice-entity edits — do not replace `*FixtureKey` strings, type any
@@ -36,8 +36,8 @@ Scope:
 
 Workflow:
 
-1. P0: inspect `BaseEntity`, `DomainModel`, `EntitySchema.persist.*`, `Principal`,
-   and the soft-delete persist value-strategy. Record facts/blockers.
+1. P0: map the retired entity stack to `EntityKit`, the tier modules, `Principal`,
+   and effect-drizzle metadata. Measure compatibility and record facts/blockers.
 2. P1: make the smallest schema-first changes satisfying `SPEC.md`.
 3. Preserve unrelated worktree changes; keep decisions tied to file/test evidence.
 4. P2: run the verification commands; capture evidence.
@@ -48,7 +48,7 @@ Workflow:
 Acceptance:
 
 - [ ] `SPEC.md` acceptance criteria are satisfied (soft-delete fields + tests;
-      `DomainModel` retired/deprecated; `.errors.ts` convention demonstrated).
+      `DomainModel` retirement evidenced; `.errors.ts` convention demonstrated).
 - [ ] Required verification commands pass, or unrelated failures are reproduced
       and recorded separately.
 - [ ] No unrelated refactors, formatting churn, or slice-entity edits.
@@ -64,7 +64,10 @@ bunx turbo run check test docgen lint --filter=@beep/shared-domain --filter=@bee
 
 Stop and report before changing public API, schema beyond the named kernel
 fields, data migration, auth, infra, security behavior, dependencies, lockfiles,
-or generated files unless `SPEC.md` explicitly requires it.
+or generated files unless `SPEC.md` explicitly requires it. `SPEC.md` Target
+Surfaces requires the `auditColumns` soft-delete fields, the
+`entity/EntityRef.errors.ts` exports, one additive nullable drizzle migration and
+the regenerated desktop `Migrations.gen.ts`; anything else here still stops.
 
 Done only when acceptance passes and verification is complete, or when a blocker
 is reported with file/command evidence.
