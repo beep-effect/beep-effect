@@ -202,6 +202,7 @@ const runWriter = Effect.fnUntraced(function* (
     readonly hashSalt?: string;
     readonly viaXdgFallback?: boolean;
     readonly writerPath?: string;
+    readonly writerCap?: string;
   } = {}
 ) {
   const fs = yield* FileSystem.FileSystem;
@@ -271,7 +272,7 @@ const runWriter = Effect.fnUntraced(function* (
       // The Cursor adapter caps the writer at 3 s. Measured 2026-09-16: at load average ~300
       // the cap killed the writer and this suite saw no row, so the conformance run lifts it.
       BEEP_CURSOR_HOOK_PULSE_WRITER_CAP: "60s",
-      BEEP_HOOK_PULSE_WRITER_CAP: "60s",
+      BEEP_HOOK_PULSE_WRITER_CAP: options.writerCap ?? "60s",
       // Both salt rungs are cleared unless a case sets one, so a developer who
       // exports a real ai-metrics salt cannot change what these digests are.
       // Cleared, they exercise the insecure-default fallback that keeps an
@@ -1014,6 +1015,17 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain(".ai/config.json");
       expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).toContain(".claude/a/b/c/d/e/f/g/config.json");
     }).pipe(Effect.scoped)
+  );
+
+  it.effect("records a timeout refusal before the harness deadline", () =>
+    Effect.gen(function* () {
+      const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { writerCap: "0.001s" });
+      expect(run.exitCode).toBe(0);
+      expect(run.stdout).toBe("");
+      expect(run.rows).toHaveLength(0);
+      const refusal = yield* HookPulseRefusal.decodeJsonEffect(O.getOrThrow(A.head(run.refusals)));
+      expect(refusal.reason).toBe("timeout");
+    })
   );
 
   it.effect("drops a malformed source field without dropping its event", () =>
