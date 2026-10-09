@@ -344,7 +344,9 @@ const classifyDeps = Effect.fn("Copy.classifyDeps")(function* (
     );
   const runtime = yield* collect("dependencies", entry.runtimeDeps, "runtime");
   const peers = yield* collect("peerDependencies", entry.runtimeDeps, "runtime");
-  const dev = yield* collect("devDependencies", entry.oracleDeps, "dev");
+  // A peer dependency is usually installed for development too; it is already
+  // registered as runtime above, and the dedupe below keeps that entry.
+  const dev = yield* collect("devDependencies", [...entry.oracleDeps, ...entry.runtimeDeps], "dev");
   return A.dedupeWith(A.getSomes([...runtime, ...peers, ...dev]), (a, b) => a.name === b.name);
 });
 
