@@ -1069,6 +1069,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "explore:atlas-check",
         "repo-sanity:tsconfig-sync",
         "lint:effect-imports",
+        "lint:effect-imports-markdown",
         "lint:schema-first",
         "lint:effect-vitest",
         "lint:allowlist",
@@ -1086,6 +1087,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       );
       expect(qualityLaneArgs(lanes, "lint:effect-imports")).toEqual(
         expectedTurboArgs("lint:effect-imports", ["--summarize"])
+      );
+      expect(qualityLaneArgs(lanes, "lint:effect-imports-markdown")).toEqual(
+        expectedTurboArgs("lint:effect-imports-markdown", ["--summarize"])
       );
       expect(qualityLaneArgs(lanes, "lint:effect-vitest")).toEqual(["run", "beep", "lint", "effect-vitest"]);
       expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:committed")).toEqual([
