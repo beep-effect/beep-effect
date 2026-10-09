@@ -276,8 +276,8 @@ const windowReport = (
         ...acc,
         minTs: Math.min(acc.minTs, other.minTs),
         maxTs: Math.max(acc.maxTs, other.maxTs),
-        userTurns: acc.userTurns + (other.child ? 0 : other.userTurns),
-        toolEvents: acc.toolEvents + (other.child ? 0 : other.toolEvents),
+        userTurns: acc.userTurns + (other.primary && !other.child ? other.userTurns : 0),
+        toolEvents: acc.toolEvents + (other.primary && !other.child ? other.toolEvents : 0),
       })
     );
   };
@@ -292,7 +292,7 @@ const windowReport = (
         (other.minTs < tally.minTs || (other.minTs === tally.minTs && other.key < tally.key))
     );
   const active = (tally: SessionTally) => {
-    const activity = A.filter(ranked, (other) => other.parent === tally.parent && !other.child);
+    const activity = A.filter(ranked, (other) => other.parent === tally.parent && other.primary && !other.child);
     return (
       tally.primary &&
       !tally.child &&
@@ -374,6 +374,7 @@ const windowReport = (
       A.filter(
         ranked,
         (tally) =>
+          (tally.primary || tally.child) &&
           parentRegime(tally) === "in-regime" &&
           !overlapsDisarm(parentSummary(tally)) &&
           A.some(rootsForTouches, (root) => root.parent === tally.parent)
@@ -510,7 +511,11 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
         continue;
       }
       const row = decoded.success;
-      if (row.agentKind !== agentKind || (row.hookEvent !== "PostToolUse" && row.hookEvent !== "PostToolUseFailure"))
+      if (
+        row.instrumentClass !== "production" ||
+        row.agentKind !== agentKind ||
+        (row.hookEvent !== "PostToolUse" && row.hookEvent !== "PostToolUseFailure")
+      )
         continue;
       MutableHashMap.set(
         sessionHooks,

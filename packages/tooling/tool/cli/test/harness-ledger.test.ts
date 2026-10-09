@@ -828,6 +828,31 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     }).pipe(Effect.scoped)
   );
 
+  it.effect("unknown-role companions cannot supply the root activity floor", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const stateDir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-unknown-role-" });
+      const unknown = yield* HookPulseV1.decodeJsonEffect(
+        yield* pulseRow(sessionA, "2026-10-09T10:01:00Z", "PostToolUse", O.none(), O.none(), O.none())
+      );
+      yield* writeShard(stateDir, "2026-10-09", sessionA, [
+        yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
+        yield* HookPulseV1.encodeJsonEffect(
+          HookPulseV1.make({ ...unknown, transcriptPath: O.some(Sha256Hex.make("e".repeat(64))) })
+        ),
+      ]);
+      const ledger = yield* HarnessLedgerService;
+      const report = yield* ledger.pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
+      );
+      expect(report.sessionsObserved).toBe(0);
+      expect(report.sessionsBelowActivityFloor).toBe(1);
+      expect(report.proposals).toHaveLength(0);
+    }).pipe(Effect.scoped)
+  );
+
   it.effect("unstamped children retain observed touches through a qualified parent", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
