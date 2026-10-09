@@ -1146,3 +1146,13 @@ prevented this extra qualification wave. No suppression or inventory edit.
   uncompleted steps plus publication. Source/proof inputs remain unchanged.
 - Prevention: centralize admission runner environment, and record the actual
   merge parent after fetch rather than an earlier remote-ref snapshot.
+
+### A run 5: changed Research provider gains a detector occurrence
+
+- Evidence: cheap gates fail schema-first on main's Accounts schema file and
+  effect-vitest on 13 main rows plus one changed Research provider candidate.
+- Recovery: move the changed card-output test into native it.layer; retain
+  capture/date/hash/body assertions. Do not refresh the global detector
+  baseline or copy C/epistemic repairs into A.
+- Prevention: run the full test-policy detector after test-body/name changes;
+  inherited call shapes can receive new occurrence identities.

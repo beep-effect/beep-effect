@@ -130,8 +130,8 @@ describe("research capture", () => {
     )
   );
 
-  it.effect("renders schema-backed card frontmatter and body", () =>
-    provideTestLayer(
+  it.layer(testLayer, { timeout: "30 seconds" })("card output", (it) => {
+    it.effect("renders schema-backed card frontmatter and body", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -158,6 +158,6 @@ describe("research capture", () => {
         expect(parsed["content-hash"]).toBe("0e8230f942f810dc1a85244c077d2a26e97c4f027f5922bcd0fda44c886d3a49");
         expect(Str.replace(/^---\n[\s\S]*?\n---\n\n/, "")(content)).toBe(`# ${FAKE_TITLE}\n\n${FAKE_MARKDOWN}\n`);
       })
-    )
-  );
+    );
+  });
 });

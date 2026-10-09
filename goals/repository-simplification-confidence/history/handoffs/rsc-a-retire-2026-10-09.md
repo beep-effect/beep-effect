@@ -722,3 +722,39 @@ audit/health all exit 0. Shared cache output is refreshed from C's incoming
 base under the existing Knip review; unrelated epistemic manifests are held
 unchanged. Full CLI/package docgen/JSDoc-ratchet/coverage still remain blocked
 on S3; this generation/parity subset does not waive them.
+
+### Run 5 cheap-gate attribution and native-layer repair
+
+Yeet creates local commit `78931d5b0f` but refuses the push: 13/15 cheap
+gates pass, schema-first fails four rows in main's AccountsSecretsLayout
+schema file, and effect-vitest finds 13 C/epistemic rows plus one A-changed
+Research provider occurrence. The Accounts file and all seven non-Research
+test files match main. Move only the changed card-output test to native
+it.layer, preserving every output assertion; rerun its focused test, compiler
+and detector. Once no A finding remains, the 22:01 inherited-publication
+ruling authorizes the direct by-name commit/push fallback. No inherited
+baseline is refreshed and no full acceptance waiver is claimed.
+
+### Run 5 final inherited-only publication fallback
+
+The native-layer repair receives terminal zero independent findings. Its
+four Research tests and test compiler pass; the explicit 30-second hook
+budget then passes all four tests again. The actual default test-policy
+ratchet exits 1 with exactly 13 findings in seven C/epistemic files, all
+byte-identical to main; Research is absent. Rows-export exit 0 was an export
+operation, not a ratchet pass; its missing-hook-budget candidate is repaired.
+The remaining four schema-policy rows are confined to main's unchanged
+AccountsSecretsLayout schema file. No A-introduced finding remains.
+
+Canonical publication previously refused after local commit `78931d5b0f`,
+with 13 of 15 cheap gates passing and no push. Under the brief's 22:01
+inherited-publication ruling, commit only this test and packet attribution
+by name, push the branch directly, confirm PR head, attempt canonical ready
+and submit a 40-minute until-ready monitor. No global inventory refresh or
+CI waiver is used. Clean-head install preflight passed on first publication;
+the follow-up preflight was not reached because the inherited cheap fence
+failed. Full post-E CLI audit and current 29-case workflow test remain
+failed solely on the live Knip job; current workflow cases pass 28/29.
+
+Graft savings: approximately 237,531 tokens across seven parent retrieval
+calls, excluding separate reviewer estimates.
