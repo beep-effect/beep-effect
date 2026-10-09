@@ -88,3 +88,17 @@ its callers and removed the duplicate root suite without editing that package.
 A remains the sole surviving-capabilities register writer. E must review the
 ONNX workflow hunk and co-sign the final Ci ordering decision. R24's cloud packet
 owner audit remains open; C preserves that packet's lifecycle.
+
+
+## C recovery verification update — Run 2
+
+The recovery handoff records the exact source and merge commits. New Accounts,
+Cache, Knowledge and retained-adapter fixtures pass 16 tests. The broader package
+run passed docgen (26.7 seconds) and 5,778 tests, with two introduced integration
+assertions failing; their subsequent 66-case focused rerun passes after the
+fixture repair. Test-tsgo passes all 334 selected test files. Fallow audit and
+health exit 0, with the root ONNX development declaration retained as a reported
+unused warning for shared dependency-owner reconciliation. Recovered JSDoc
+ratchet and the 17 relocated Graft cases have terminal passes. Scoped coverage
+floors remain unchanged. Full package audit and hosted proof are still pending;
+these partial passes do not close Script ports or Sensitive scripts acceptance.

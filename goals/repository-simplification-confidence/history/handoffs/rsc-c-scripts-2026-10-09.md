@@ -200,3 +200,29 @@ This is a recovery progress report, not final content or merge readiness.
 - Automatic docgen-local's full-required result is a planning refusal caused by
   the root command change. The explicit package-scoped edit loop is now running;
   it does not substitute for hosted full-repo docgen.
+
+
+### Run 2 regression closure
+
+Package verification settled: docgen passed in 26.7 seconds; audit failed only
+on two integration assertions (5,778 passing, 2 failing across 294 files).
+The failures were introduced by C's added Accounts subcommand and required
+merge-driver setup, not environmental. `9457ec5f23` updates the Accounts command
+inventory and the synthetic worktree's tracked adapter / Git-config capability.
+The new audit inbox row is acknowledged with that fix SHA. Regression rerun
+passes 66/66 tests across Accounts usage/layout and Worktree fleet. Test-tsgo now
+passes all 334 selected test files. Terminal statuses:
+`.beep/rsc-c-run2-audit-fixes-results.txt`.
+
+Main repairs #1564 and #1565 were merged through `29a38b8dee`; the packet stage-1
+merge remains preserved. Package-script owner regeneration again reports 152
+manifests, zero drift, zero writes. Cache profile owner regeneration produces
+no worktree diff; cache audit has zero blocking findings. No C-authored lockfile
+change was introduced; main's lockfile and CLI dependencies were integrated.
+
+The additional scoped docgen attempt has no terminal proof and must not be
+claimed passed from its typechecking progress alone. The default package docgen
+has a terminal pass. Full package audit needs its final post-fixture rerun;
+focused regression success is reported separately. Draft publication is queued
+through the heavy wrapper. This wave is still not content-final for the program:
+R24 owner audit and E's workflow review/Ci ordering remain open.
