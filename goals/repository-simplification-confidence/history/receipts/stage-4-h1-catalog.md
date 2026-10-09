@@ -170,3 +170,14 @@ manifest, lockfile or OSV configuration. Local results above remain attributed
 to their actual implementation head; latest hosted gates must prove the new
 published head. The lane is blocked on the inherited knowledge-reference
 repair and the post-OSV/A merge order, not reported as the full H1 completion.
+
+Hosted Heavy / Lint Policy also failed at `18fdc60e50`:
+[job 113904025701](https://github.com/beep-effect/beep-effect/actions/runs/37955020663/job/113904025701).
+Its exact log reports the known packet host-path gate plus three introduced
+semantic-delta findings against main: packet PLAN's docs/generated and
+untracked tools/skillopt/.venv, and SPEC's untracked tools/skillopt/.venv.
+Those references already exist in the imported packet base `3dbf109066`;
+this is packet-base debt rather than an H1 source regression. The packet
+orchestrator/lane C owns the single repair. Inbox acknowledgement
+`Heavy_Lint_Policy-56353dbb127a` records `--wontfix` in H1 with the owning
+repair and rerun required; it grants no waiver and the PR remains blocked.

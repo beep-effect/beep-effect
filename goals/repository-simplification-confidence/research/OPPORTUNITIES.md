@@ -143,3 +143,17 @@
 - Prevention: have the shared baseline/portability repair land once through
   its owning lane; H1 then merges main and reruns the failed check. Do not
   copy the repair into every lane or weaken the check.
+
+## 2026-10-09 — H1 hosted policy delta compares imported packet against main
+
+- Task: triage Heavy / Lint Policy on OSV PR #1562.
+- Evidence: job 113904025701 fails knowledge refs and reports three introduced
+  semantic-delta findings for PLAN's docs/generated/untracked SkillOpt venv
+  references and SPEC's untracked SkillOpt venv provenance.
+- Attribution: all those references are in packet base `3dbf109066`; the packet
+  has not landed on main. H1 imports the packet as Mechanics step 0 requires.
+- Routing: packet orchestrator/lane C repairs the shared knowledge baseline
+  once; H1 merges and reruns. Inbox row acknowledged with that owner and
+  evidence; the gate is retained, with no suppression or waiver.
+- Prevention: prove the packet itself against the hosted knowledge lanes
+  before it becomes the required starting point for every worker lane.

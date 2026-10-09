@@ -1,5 +1,5 @@
 lane: rsc-h1-catalog
-head: bc2529b3557f61b81d407da3c2afb81f3f50dbdc (main-sync/report base; local proof head 18fdc60e50a82ba49b22d290b3035a4702a774ed)
+head: 721f97beb960da757bcba13bfdd638c4d8bc3e27 (report base; source proof head 18fdc60e50a82ba49b22d290b3035a4702a774ed)
 PR: #1562 (wave 1 OSV: #1562; tsgo ratchet: SPEC Decision Log row "H1 tsgo ratchet deferral")
 package-verify: not applicable (no workspace package source or manifest edited)
 hosted-parity: test-tsgo: pass; docgen local: pass (noop); jsdoc-ratchet: pass; knowledge refs: fail (two inherited observations, owner lane C); fallow audit: pass; fallow health: pass; coverage read: pass (no measured source touched); Security (OSV): pass locally and hosted at 18fdc60e50, new exact-head hosted result pending after report push
@@ -67,3 +67,25 @@ Revert the OSV wave PR. The register and removals have not yet been shipped.
 Do not merge or retire this lane from the worker; the orchestrator owns both
 instructions under the brief. No notification is pending for the retained
 OSV wave because there is no shared dependency-file delta.
+
+## Hosted Heavy Lint Policy blocker
+
+At OSV head `18fdc60e50`, Heavy / Lint Policy failed:
+https://github.com/beep-effect/beep-effect/actions/runs/37955020663/job/113904025701
+The completed log was read immediately through the per-job API. It reports
+knowledge refs (packet SPEC.md:374) and three semantic-delta findings:
+PLAN's docs/generated and tools/skillopt/.venv references, and SPEC's
+untracked tools/skillopt/.venv provenance. All three semantic references are
+present in packet base `3dbf109066`, not introduced by H1's OSV edits. They
+are inherited into the lane while the packet has not yet landed on main.
+Repair belongs to the packet orchestrator and lane C, once in the shared
+baseline. H1 must merge that owning repair and rerun; it does not copy a
+repair or waive the gate. Inbox `Heavy_Lint_Policy-56353dbb127a` was
+acknowledged with `--wontfix` and that ownership/evidence reason. This only
+acknowledges routing; CI still blocks merging. Readiness and independent
+review remain pending, and no merge-ready claim is made.
+
+The report/evidence push was published at `3fba269ec7`; its cheap gates and
+head-install preflight passed. The final attribution/main-sync push is the
+latest PR head (resolve it with `gh pr view 1562 --json headRefOid`). All
+source/manifest/lockfile and OSV bytes are unchanged from the proved OSV wave.
