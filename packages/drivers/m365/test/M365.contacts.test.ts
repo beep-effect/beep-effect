@@ -63,6 +63,12 @@ const wire = {
   personalNotes: "Private synthetic backup field",
 };
 const base = "https://graph.microsoft.com/v1.0";
+const fixturePayload = (method: string, url: string) => {
+  if (method === "POST")
+    return url.endsWith("contactFolders") ? { id: "folder-fixture", displayName: "Fixture folder" } : wire;
+  const folders = url.includes("contactFolders") && !url.includes("/contacts");
+  return { value: folders ? [{ id: "folder-fixture", displayName: null }] : [wire] };
+};
 const layer = (appOnly: boolean, status = 200, transport = false, retries = 0) => {
   const http = Layer.effect(
     HttpClient.HttpClient,
@@ -83,21 +89,10 @@ const layer = (appOnly: boolean, status = 200, transport = false, retries = 0) =
             return yield* new HttpClientError.HttpClientError({
               reason: new HttpClientError.TransportError({ request }),
             });
-          const payload =
-            request.method === "POST"
-              ? url.endsWith("contactFolders")
-                ? { id: "folder-fixture", displayName: "Fixture folder" }
-                : wire
-              : {
-                  value:
-                    url.includes("contactFolders") && !url.includes("/contacts")
-                      ? [{ id: "folder-fixture", displayName: null }]
-                      : [wire],
-                };
           const response =
             request.method === "DELETE"
               ? new Response(null, { status: 204 })
-              : Response.json(payload, { status, headers: { "retry-after": "0" } });
+              : Response.json(fixturePayload(request.method, url), { status, headers: { "retry-after": "0" } });
           return HttpClientResponse.fromWeb(request, response);
         })
       );

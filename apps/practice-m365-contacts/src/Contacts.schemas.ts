@@ -183,16 +183,8 @@ export class RunJournal extends S.Class<RunJournal>($I`RunJournal`)(
   $I.annote("RunJournal", { description: "Durable run id, folder ownership and contact receipts." })
 ) {}
 
-/** Technical failure codes; no private contact value is a failure message.
- * **Example** (Inspect a failure reason)
- * ```ts
- * import { ContactsFailureReason } from "@/Contacts.schemas"
- * console.log(ContactsFailureReason.is["untracked-tagged"]("untracked-tagged")) // true
- * ```
- * @category schemas
- * @since 0.0.0
- */
-export const ContactsFailureReason = LiteralKit([
+/** Technical failure codes; no private contact value is a failure message. */
+const ContactsFailureReason = LiteralKit([
   "input",
   "state",
   "locked",
@@ -203,14 +195,6 @@ export const ContactsFailureReason = LiteralKit([
   "confirmation",
   "folder-ambiguous",
 ]).pipe($I.annoteSchema("ContactsFailureReason", { description: "Sanitized contact job failure reasons." }));
-/**
- * A technical job failure code safe to include in public diagnostics.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ContactsFailureReason = typeof ContactsFailureReason.Type;
-
 /** Sanitized job failure.
  * **Example** (Construct a stopped run)
  * ```ts

@@ -51,6 +51,16 @@ const draftFor = (contact: Contact, runId: string) =>
     singleValueExtendedProperties: [GraphContactProperty.make({ id: M365_CONTACT_SEED_PROPERTY_ID, value: runId })],
   });
 
+const validateUndo = Effect.fn("ContactSeeding.validateUndo")(function* (
+  run: O.Option<string>,
+  byCategory: boolean,
+  dryRun: boolean,
+  yes: boolean
+) {
+  if (byCategory === O.isSome(run)) return yield* ContactsError.make({ reason: "input" });
+  if (!dryRun && !yes) return yield* ContactsError.make({ reason: "confirmation" });
+});
+
 /** Seeding service; offline commands require no mailbox capability.
  * **Example** (Inspect the service key)
  * ```ts
@@ -119,6 +129,38 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
       });
       const failUntracked = (count: number) =>
         count === 0 ? Effect.void : Effect.fail(ContactsError.make({ reason: "untracked-tagged" }));
+
+      const removeEmptyOwnedFolders = Effect.fn("ContactSeeding.removeEmptyOwnedFolders")(function* (
+        journals: ReadonlyArray<RunJournal>,
+        selectedRuns: ReadonlyArray<RunJournal>
+      ) {
+        const port = yield* online();
+        const remaining = yield* port.inventory;
+        const ownedFolders = A.dedupe(
+          A.getSomes(
+            A.map(
+              A.filter(journals, (journal) => journal.folderCreated),
+              (journal) => journal.folderId
+            )
+          )
+        );
+        const relevantFolders = HashSet.fromIterable(A.getSomes(A.map(selectedRuns, (journal) => journal.folderId)));
+        yield* Effect.forEach(
+          A.filter(
+            ownedFolders,
+            (id) =>
+              HashSet.has(relevantFolders, id) &&
+              A.some(remaining.folders, (folder) => folder.id === id) &&
+              !A.some(
+                remaining.contacts,
+                (row) => O.contains(id)(row.folderId) || O.contains(id)(row.contact.parentFolderId)
+              ) &&
+              !A.some(remaining.folders, (folder) => O.contains(id)(folder.parentFolderId))
+          ),
+          port.deleteFolder,
+          { concurrency: 1 }
+        );
+      });
 
       return ContactSeeding.of({
         dryRun: Effect.fn("ContactSeeding.dryRun")(function* (inputs, offline, census) {
@@ -225,9 +267,7 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
         undo: Effect.fn("ContactSeeding.undo")((run, byCategory, dryRun, yes) =>
           Effect.scoped(
             Effect.gen(function* () {
-              if ((byCategory && O.isSome(run)) || (!byCategory && O.isNone(run)))
-                return yield* ContactsError.make({ reason: "input" });
-              if (!dryRun && !yes) return yield* ContactsError.make({ reason: "confirmation" });
+              yield* validateUndo(run, byCategory, dryRun, yes);
               if (!dryRun) yield* state.lock;
               const port = yield* online();
               const inventory = yield* port.inventory;
@@ -238,53 +278,35 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
               if (!byCategory && A.isReadonlyArrayEmpty(selectedRuns))
                 return yield* ContactsError.make({ reason: "state" });
               const receipts = A.flatMap(selectedRuns, (journal) => journal.contacts);
-              let edited = 0;
-              let unverifiable = 0;
-              const selected = A.filter(inventory.contacts, (row) => {
-                const receipt = A.findFirst(receipts, (entry) => entry.contactId === row.contact.id);
-                const changed = O.isNone(receipt) || !O.contains(receipt.value.changeKey)(row.contact.changeKey);
-                const owned = byCategory
-                  ? hasTag(row)
-                  : O.isSome(receipt) && O.exists(markerOf(row.contact), (value) => O.contains(value)(run));
-                if (owned) {
-                  if (O.isNone(receipt) || O.isNone(row.contact.changeKey)) unverifiable++;
-                  else if (changed) edited++;
-                }
-                return owned && (byCategory || !changed);
-              });
+              const receiptOf = (row: (typeof inventory.contacts)[number]) =>
+                A.findFirst(receipts, (entry) => entry.contactId === row.contact.id);
+              const unchanged = (row: (typeof inventory.contacts)[number]) =>
+                O.exists(receiptOf(row), (receipt) => O.contains(receipt.changeKey)(row.contact.changeKey));
+              const owned = byCategory
+                ? A.filter(inventory.contacts, hasTag)
+                : A.filter(
+                    inventory.contacts,
+                    (row) =>
+                      O.isSome(receiptOf(row)) && O.exists(markerOf(row.contact), (value) => O.contains(value)(run))
+                  );
+              const unverifiable = A.length(
+                A.filter(owned, (row) => O.isNone(receiptOf(row)) || O.isNone(row.contact.changeKey))
+              );
+              const edited = A.length(
+                A.filter(owned, (row) =>
+                  O.exists(receiptOf(row), (receipt) =>
+                    O.exists(row.contact.changeKey, (changeKey) => changeKey !== receipt.changeKey)
+                  )
+                )
+              );
+              const selected = byCategory ? owned : A.filter(owned, unchanged);
               if (!dryRun) {
                 yield* Effect.forEach(
                   selected,
                   (row) => port.delete(row, byCategory ? O.none() : row.contact.changeKey),
                   { concurrency: 1 }
                 );
-                const remaining = yield* port.inventory;
-                const ownedFolders = A.dedupe(
-                  A.getSomes(
-                    A.map(
-                      A.filter(journals, (journal) => journal.folderCreated),
-                      (journal) => journal.folderId
-                    )
-                  )
-                );
-                const relevantFolders = HashSet.fromIterable(
-                  A.getSomes(A.map(selectedRuns, (journal) => journal.folderId))
-                );
-                yield* Effect.forEach(
-                  A.filter(
-                    ownedFolders,
-                    (id) =>
-                      HashSet.has(relevantFolders, id) &&
-                      A.some(remaining.folders, (folder) => folder.id === id) &&
-                      !A.some(
-                        remaining.contacts,
-                        (row) => O.contains(id)(row.folderId) || O.contains(id)(row.contact.parentFolderId)
-                      ) &&
-                      !A.some(remaining.folders, (folder) => O.contains(id)(folder.parentFolderId))
-                  ),
-                  port.deleteFolder,
-                  { concurrency: 1 }
-                );
+                yield* removeEmptyOwnedFolders(journals, selectedRuns);
               }
               return ContactReport.make({
                 ...reportPlan(
