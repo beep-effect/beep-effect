@@ -34,7 +34,7 @@ Use this command for execution-capable sessions:
    paths, staged acceptance checklist.
 4. [`research/BRIEF-2026-10-09.md`](./research/BRIEF-2026-10-09.md) - the
    approved brief, verbatim.
-5. [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md) -
+5. [`history/receipts/stage-1-ownership.md`](./history/receipts/stage-1-ownership.md) (stage 1 close, 2026-10-09) and [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md) -
    stage 1 baseline receipts.
 6. [`research/knip-findings-2026-10-09.md`](./research/knip-findings-2026-10-09.md) -
    the 41 known Knip findings to disposition before Knip is removed.
@@ -50,12 +50,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — in progress: stage 1, ownership and recovery. Revisions, tool
-versions, located surfaces, the `effect-vitest-canon` lanes (the five unpublished lanes plus the
-continuation lane carrying the staged work; see
-`research/baseline-2026-10-09.md`), and fleet
-state are recorded; stage 1 closes when every lane owner and recovery path in
-`PLAN.md` is confirmed.
+P1 Implement — in progress: stages 2 to 4 run in parallel lanes (`PLAN.md`,
+Lane Plan). Stage 1 (ownership and recovery) closed on 2026-10-09 with
+`history/receipts/stage-1-ownership.md`: the fleet handoff snapshot, the six
+`effect-vitest-canon` lanes (heads, staged and unstaged state, digests) and
+the stage-1 copies of the three global configuration files are recorded, and
+nothing was adopted or discarded. P0 Research is complete.
 
 ## Latest Evidence
 

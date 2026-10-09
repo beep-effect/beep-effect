@@ -17,8 +17,8 @@ program stages map onto them.
 
 | Phase | Status | Program stages | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | in-progress | 1 Ownership and recovery | Stage 1 exit condition met and recorded. |
-| P1 Implement | pending | 2 Shared decisions and retirements; 3 Parallel implementation; 4 Existing test work and tooling | Stage 2-4 exit conditions met. |
+| P0 Research | complete | 1 Ownership and recovery | Stage 1 exit condition met and recorded (`history/receipts/stage-1-ownership.md`, 2026-10-09). |
+| P1 Implement | in-progress | 2 Shared decisions and retirements; 3 Parallel implementation; 4 Existing test work and tooling | Stage 2-4 exit conditions met. |
 | P2 Verify | pending | 5 Operational acceptance | SPEC acceptance table satisfied with current revision/fingerprint evidence. |
 | P3 Yeet: PR to mergeable | pending | 6 Review and closeout (publication half) | Every program PR mergeable and merged at the gate. |
 | P4 Close | pending | 6 Review and closeout (receipts, retirement, reflection) | Completion receipts resolved, lanes retired, reflection landed, packet `completed-retained`. |
