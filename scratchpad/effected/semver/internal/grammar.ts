@@ -27,7 +27,11 @@ interface ParserState {
 
 /** Private control-flow exception; never escapes the entry points. */
 class ParseFailure {
-	constructor(readonly position: number) {}
+	readonly position: number;
+
+	constructor(position: number) {
+		this.position = position;
+	}
 }
 
 const fail = (s: ParserState, position?: number): never => {

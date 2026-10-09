@@ -269,7 +269,7 @@ describe("SemVer", () => {
 		it("groupBy returns an immutable record keyed by strategy", () => {
 			const grouped = SemVer.groupBy([SemVer.of(1, 0, 0), SemVer.of(1, 5, 0), SemVer.of(2, 0, 0)], "major");
 			assert.deepStrictEqual(Object.keys(grouped), ["1", "2"]);
-			assert.deepStrictEqual(grouped["1"].map(String), ["1.0.0", "1.5.0"]);
+			assert.deepStrictEqual(grouped["1"]?.map(String), ["1.0.0", "1.5.0"]);
 		});
 
 		it("latestByMajor / latestByMinor keep the highest per group", () => {

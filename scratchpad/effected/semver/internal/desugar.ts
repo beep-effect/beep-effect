@@ -2,6 +2,7 @@
 // primitive comparator sets, matching node-semver semantics. Operates on
 // structural parts; the `Range` schema materializes classes from the result.
 
+import { dual } from "effect/Function";
 import type { ComparatorOperator, ComparatorParts, VersionParts } from "./order.ts";
 
 /**
@@ -99,7 +100,10 @@ export const desugarCaret = (p: PartialParts): ReadonlyArray<ComparatorParts> =>
  * comparator; wildcards expand to the bounding `>=`/`<` pair implied by the
  * given `operator`.
  */
-export const desugarXRange = (operator: string | null, p: PartialParts): ReadonlyArray<ComparatorParts> => {
+export const desugarXRange: {
+	(p: PartialParts): (operator: string | null) => ReadonlyArray<ComparatorParts>;
+	(operator: string | null, p: PartialParts): ReadonlyArray<ComparatorParts>;
+} = dual(2, (operator: string | null, p: PartialParts): ReadonlyArray<ComparatorParts> => {
 	const major = p.major;
 	const minor = p.minor;
 	const patch = p.patch;
@@ -158,7 +162,7 @@ export const desugarXRange = (operator: string | null, p: PartialParts): Readonl
 	}
 	// <=1.2.x -> <1.3.0-0
 	return [comp("<", sv(major, minor + 1, 0, [0]))];
-};
+});
 
 /**
  * Desugar a hyphen range (`1.2.3 - 2.3.4`) into a comparator pair: `>=` the
@@ -166,7 +170,10 @@ export const desugarXRange = (operator: string | null, p: PartialParts): Readonl
  * `<` the next unspecified component when it is partial (`1.2.3 - 2.3` →
  * `>=1.2.3 <2.4.0-0`).
  */
-export const desugarHyphen = (lower: PartialParts, upper: PartialParts): ReadonlyArray<ComparatorParts> => {
+export const desugarHyphen: {
+	(upper: PartialParts): (lower: PartialParts) => ReadonlyArray<ComparatorParts>;
+	(lower: PartialParts, upper: PartialParts): ReadonlyArray<ComparatorParts>;
+} = dual(2, (lower: PartialParts, upper: PartialParts): ReadonlyArray<ComparatorParts> => {
 	const lowerVersion = sv(lower.major ?? 0, lower.minor ?? 0, lower.patch ?? 0, lower.prerelease);
 
 	if (upper.major !== null && upper.minor !== null && upper.patch !== null) {
@@ -188,4 +195,4 @@ export const desugarHyphen = (lower: PartialParts, upper: PartialParts): Readonl
 
 	// upper is * -> >=lower
 	return [comp(">=", lowerVersion)];
-};
+});

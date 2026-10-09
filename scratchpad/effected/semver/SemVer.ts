@@ -1,4 +1,5 @@
 import {
+	Array as Arr,
 	Effect,
 	Equal,
 	Function as Fn,
@@ -476,7 +477,7 @@ export class SemVer extends Schema.Class<SemVer>("SemVer")({
 
 		const len = Math.min(aPre.length, bPre.length);
 		for (let i = 0; i < len; i++) {
-			const cmp = comparePrereleaseIdentifier(aPre[i], bPre[i]);
+			const cmp = comparePrereleaseIdentifier(Arr.getUnsafe(aPre, i), Arr.getUnsafe(bPre, i));
 			if (cmp !== 0) return cmp < 0 ? -1 : 1;
 		}
 
@@ -614,7 +615,11 @@ function overflow(component: "major" | "minor" | "patch" | "prerelease", cause: 
  * @public
  */
 export class SemVerBump {
-	constructor(private readonly v: SemVer) {}
+	private readonly v: SemVer;
+
+	constructor(v: SemVer) {
+		this.v = v;
+	}
 
 	/** Bump major (resets minor, patch, prerelease, build). */
 	major(): SemVer {

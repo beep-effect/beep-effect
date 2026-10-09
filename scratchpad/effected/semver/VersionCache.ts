@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Option, Ref, Schema } from "effect";
+import { Array as Arr, Context, Effect, Layer, Option, Ref, Schema } from "effect";
 import type { InvalidRangeError } from "./Range.ts";
 import { Range } from "./Range.ts";
 import { SemVer } from "./SemVer.ts";
@@ -101,7 +101,7 @@ const search = (arr: ReadonlyArray<SemVer>, target: SemVer): { readonly found: b
 	let hi = arr.length - 1;
 	while (lo <= hi) {
 		const mid = (lo + hi) >>> 1;
-		const cmp = arr[mid].compare(target);
+		const cmp = Arr.getUnsafe(arr, mid).compare(target);
 		if (cmp === 0) return { found: true, index: mid };
 		if (cmp < 0) lo = mid + 1;
 		else hi = mid - 1;
@@ -111,7 +111,7 @@ const search = (arr: ReadonlyArray<SemVer>, target: SemVer): { readonly found: b
 
 const dedupeSorted = (versions: ReadonlyArray<SemVer>): ReadonlyArray<SemVer> => {
 	const sorted = SemVer.sort(versions);
-	return sorted.filter((v, i) => i === 0 || v.neq(sorted[i - 1]));
+	return sorted.filter((v, i) => i === 0 || v.neq(Arr.getUnsafe(sorted, i - 1)));
 };
 
 /**
@@ -153,7 +153,7 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 
 			const requireNonEmpty = Effect.gen(function* () {
 				const arr = yield* Ref.get(ref);
-				if (arr.length === 0) {
+				if (!Arr.isReadonlyArrayNonEmpty(arr)) {
 					return yield* EmptyCacheError.make();
 				}
 				return arr;
@@ -162,8 +162,9 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 			const resolve = Effect.fn("VersionCache.resolve")(function* (range: Range) {
 				const arr = yield* Ref.get(ref);
 				for (let i = arr.length - 1; i >= 0; i--) {
-					if (range.test(arr[i])) {
-						return arr[i];
+					const version = Arr.getUnsafe(arr, i);
+					if (range.test(version)) {
+						return version;
 					}
 				}
 				return yield* UnsatisfiedRangeError.make({ range, available: arr });
@@ -195,7 +196,7 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 
 				latest: Effect.fn("VersionCache.latest")(function* () {
 					const arr = yield* requireNonEmpty;
-					return arr[arr.length - 1];
+					return Arr.lastNonEmpty(arr);
 				}),
 
 				oldest: Effect.fn("VersionCache.oldest")(function* () {
@@ -229,7 +230,7 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 					if (Option.isNone(index)) {
 						return yield* VersionNotFoundError.make({ version });
 					}
-					return index.value < arr.length - 1 ? Option.some(arr[index.value + 1]) : Option.none();
+					return Arr.get(arr, index.value + 1);
 				}),
 
 				prev: Effect.fn("VersionCache.prev")(function* (version: SemVer) {
@@ -238,7 +239,7 @@ export class VersionCache extends Context.Service<VersionCache, VersionCacheShap
 					if (Option.isNone(index)) {
 						return yield* VersionNotFoundError.make({ version });
 					}
-					return index.value > 0 ? Option.some(arr[index.value - 1]) : Option.none();
+					return Arr.get(arr, index.value - 1);
 				}),
 			} satisfies VersionCacheShape;
 		}),

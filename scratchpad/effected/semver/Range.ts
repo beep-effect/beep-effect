@@ -330,9 +330,9 @@ export class Range extends Schema.Class<Range>("Range")({
 	 * matches that broader set, so the union gains nothing by keeping it).
 	 */
 	static simplify(range: Range): Range {
-		const sets = range.sets.filter((set, i) => {
-			return !range.sets.some((other, j) => i !== j && isComparatorSetSubset(set, other));
-		});
+		const sets = range.sets.filter((set, i) =>
+			!range.sets.some((other, j) => i !== j && isComparatorSetSubset(set, other)),
+		);
 
 		if (sets.length === 0) return range;
 		return Range.make({ sets });

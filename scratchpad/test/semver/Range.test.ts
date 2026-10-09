@@ -29,7 +29,7 @@ describe("Range", () => {
 		it.effect("normalizes duplicate comparators differing only in build metadata", () =>
 			Effect.gen(function* () {
 				const range = yield* Range.parse(">=1.0.0+a >=1.0.0+b");
-				assert.strictEqual(range.sets[0].length, 1);
+				assert.strictEqual(range.sets[0]?.length, 1);
 			}),
 		);
 
@@ -60,7 +60,7 @@ describe("Range", () => {
 		it.effect("matches instance and static forms identically", () =>
 			Effect.gen(function* () {
 				const range = yield* Range.parse("^1.0.0");
-				const versions = yield* Effect.all(["0.9.0", "1.0.0", "1.9.9", "2.0.0"].map((s) => SemVer.parse(s)));
+				const versions = yield* Effect.forEach(["0.9.0", "1.0.0", "1.9.9", "2.0.0"], (s) => SemVer.parse(s));
 				assert.deepStrictEqual(range.filter(versions).map(String), ["1.0.0", "1.9.9"]);
 				assert.deepStrictEqual(Range.filter(versions, range), range.filter(versions));
 				assert.isTrue(Range.satisfies(yield* SemVer.parse("1.5.0"), range));
@@ -81,7 +81,7 @@ describe("Range", () => {
 	describe("maxSatisfying / minSatisfying", () => {
 		it.effect("finds the extremum satisfying version as an Option", () =>
 			Effect.gen(function* () {
-				const versions = yield* Effect.all(["0.9.0", "1.0.0", "1.5.0", "1.9.9", "2.0.0"].map((s) => SemVer.parse(s)));
+				const versions = yield* Effect.forEach(["0.9.0", "1.0.0", "1.5.0", "1.9.9", "2.0.0"], (s) => SemVer.parse(s));
 				const range = yield* Range.parse("^1.0.0");
 				assert.deepStrictEqual(Range.maxSatisfying(versions, range).pipe(Option.map(String)), Option.some("1.9.9"));
 				assert.deepStrictEqual(Range.minSatisfying(versions, range).pipe(Option.map(String)), Option.some("1.0.0"));
