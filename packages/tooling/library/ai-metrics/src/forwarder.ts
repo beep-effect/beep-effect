@@ -1077,8 +1077,12 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
     // Session-time stamps stay separate from the ingest-time snapshot. Unknown
     // or mixed stamps remain absent; backfill never receives today's regime.
     const fs = yield* FileSystem.FileSystem;
+    const stateHome = yield* Config.String("XDG_STATE_HOME").pipe(
+      Config.withDefault(pathApi.join(input.homeDir, ".local/state")),
+      Effect.mapError((cause) => forwarderFailure("Cannot resolve XDG state home.", cause))
+    );
     const evidenceRoot = yield* Config.String("BEEP_AGENT_EVIDENCE_ROOT").pipe(
-      Config.withDefault(pathApi.join(input.homeDir, ".local/state/beep/agent-evidence")),
+      Config.withDefault(pathApi.join(stateHome, "beep/agent-evidence")),
       Effect.mapError((cause) => forwarderFailure("Cannot resolve hook evidence root.", cause))
     );
     const hookDir = pathApi.join(evidenceRoot, "hook-events");
@@ -1093,7 +1097,6 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
           if (
             Result.isSuccess(row) &&
             row.success.hookEvent === "SessionStart" &&
-            O.isSome(row.success.harnessHash) &&
             O.isSome(row.success.transcriptPath)
           ) {
             const key = `${row.success.agentKind}:${row.success.transcriptPath.value}`;
@@ -1102,7 +1105,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
               key,
               HashSet.add(
                 O.getOrElse(MutableHashMap.get(stamps, key), HashSet.empty<string>),
-                row.success.harnessHash.value
+                O.getOrElse(row.success.harnessHash, () => "unknown")
               )
             );
           }
@@ -1115,7 +1118,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       const kind = sanitized.sourceKind === "claude" ? "claude-code" : "codex-cli";
       const sessionHarnessHash = pipe(
         MutableHashMap.get(stamps, `${kind}:${sanitized.sourcePathHash}`),
-        O.filter((values) => HashSet.size(values) === 1),
+        O.filter((values) => HashSet.size(values) === 1 && !HashSet.has(values, "unknown")),
         O.flatMap((values) => A.head(A.fromIterable(values)))
       );
       return AiMetricsDerivedTranscriptRecord.make({ ...record, sessionHarnessHash });

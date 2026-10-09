@@ -22,6 +22,7 @@ import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
+import { AiMetricsSourceRole } from "./models.ts";
 import { hashPrivateIdentifier, hashPublicTextSha256 } from "./privacy.ts";
 import { EvidenceTier, InstrumentClass, WaitReason } from "./telemetry-v2.ts";
 
@@ -853,11 +854,25 @@ class HookPulseRawEventInput extends S.Class<HookPulseRawEventInput>($I`HookPuls
     // codec has no repo root to walk, so decode passes the stamp through (owned by
     // SessionStart, dropped on every other event) and absence stays absence.
     harnessHash: S.OptionFromOptionalKey(Sha256Hex),
+    sessionRole: S.OptionFromOptionalKey(AiMetricsSourceRole).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("HookPulseRawEventInput", {
     description: "Raw hook payload paired with the ambient stamps supplied by its writer.",
   })
 ) {}
+
+const ChildTranscriptPath = S.String.check(S.isPattern(/(?:^|\/)(?:subagents|workflow)(?:\/|$)/));
+const PrimaryTranscriptPath = S.String.check(S.isPattern(/(?:^|\/)[0-9a-f-]{36}\.jsonl$/));
+const isChildTranscriptPath = S.is(ChildTranscriptPath);
+const isPrimaryTranscriptPath = S.is(PrimaryTranscriptPath);
+const deriveSessionRole = (transcriptPath: O.Option<string>): O.Option<AiMetricsSourceRole> =>
+  O.flatMap(transcriptPath, (file) =>
+    isChildTranscriptPath(file)
+      ? O.some(AiMetricsSourceRole.Enum.subagent)
+      : isPrimaryTranscriptPath(file)
+        ? O.some(AiMetricsSourceRole.Enum.primary)
+        : O.none()
+  );
 
 // Canonical context-surface keys are `${kind}:${name}` with no trailing newline,
 // hashed UNSALTED: surfaces are public repo names, and the digest must join
@@ -1320,6 +1335,7 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
     // `deriveHarnessHash`), stamped by the writer on SessionStart only. Rows
     // written before the stamp existed simply lack it.
     harnessHash: S.OptionFromOptionalKey(Sha256Hex),
+    sessionRole: S.OptionFromOptionalKey(AiMetricsSourceRole).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).check(
     S.makeFilterGroup(
       [
@@ -1642,6 +1658,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                 input.event.is_interrupt
               ),
               surface,
+              sessionRole: O.orElse(input.sessionRole, () => deriveSessionRole(O.some(input.event.transcript_path))),
               harnessHash: filterHookPulseEventOwnedField(
                 HookPulseEventOwnedField.Enum.harnessHash,
                 input.event.hook_event_name,
@@ -1713,6 +1730,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                       evidenceTier: clampDerivedEvidenceTier(input.evidenceTier),
                       ts: input.ts,
                       repoRoot: O.none(),
+                      sessionRole: O.fromUndefinedOr(input.sessionRole),
                       surface: filterHookPulseEventOwnedField(
                         HookPulseEventOwnedField.Enum.surface,
                         input.hookEvent,

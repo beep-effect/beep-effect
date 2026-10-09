@@ -20,7 +20,6 @@ import {
 } from "@beep/repo-ai-metrics";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe, Str } from "@beep/utils";
-import * as Bool from "effect/Boolean";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -104,9 +103,9 @@ export interface HarnessLedgerServiceShape {
 
   /**
    * Propose retiring every skill and MCP server with zero touches in the last
-   * N hook-pulse sessions under the current harness hash. With `write` and a
-   * full window (N sessions observed), the fresh proposals are appended under
-   * the ledger write fence; otherwise nothing is written. A surface is not
+   * N hook-pulse sessions under the current harness hash. Collection and surface
+   * coverage remain unqualified, so the candidates are advisory and `write`
+   * appends nothing. A surface is not
    * proposed again while an open `proposed` chain targets it, or while a
    * decision on it stands under the current harness hash.
    *
@@ -413,25 +412,6 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
   });
 });
 
-// Plans and appends inside one fence; an empty plan appends nothing and
-// reports `written: false`.
-const appendPruneProposals = Effect.fn("HarnessLedger.appendPruneProposals")(function* (
-  options: HarnessLedgerPruneOptions,
-  fingerprint: HarnessFingerprint,
-  candidates: ReadonlyArray<PruneSurfaceCandidate>,
-  observed: ObservedSessionWindow
-) {
-  const report = yield* planPruneProposals(options, fingerprint, candidates, observed);
-  return yield* A.match(report.proposals, {
-    onEmpty: () => Effect.succeed(report),
-    onNonEmpty: (proposals) =>
-      appendLedgerRows(
-        options.repoRoot,
-        A.map(proposals, (proposal) => proposal.row)
-      ).pipe(Effect.as(HarnessLedgerPruneReport.make({ ...report, written: true }))),
-  });
-});
-
 const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (options: HarnessLedgerPruneOptions) {
   const candidates = yield* enumeratePruneCandidates(options.repoRoot);
   const fingerprint = yield* captureHarnessFingerprint(options.repoRoot, options.modelId, options.reasoningEffort);
@@ -450,16 +430,9 @@ const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (
     options.agentKind,
     shared
   );
-  // A partial window is shown but never written: a stored row must carry a
-  // full window of evidence, so a written row's `windowSessions` (the observed
-  // count) always equals the requested window.
-  const allWindowsFull =
-    !shared || A.every(R.values(observed.sessionsByAgentKind), (count) => count >= options.windowSessions);
-  return yield* Bool.match(options.write && observed.sessionsObserved >= options.windowSessions && allWindowsFull, {
-    onFalse: () => planPruneProposals(options, fingerprint, candidates, observed),
-    onTrue: () =>
-      withLedgerWriteFence(options.repoRoot, appendPruneProposals(options, fingerprint, candidates, observed)),
-  });
+  // A zero-touch observation remains advisory until tool identities and surface
+  // coverage are reconciled. No incomplete collection can persist a non-use claim.
+  return yield* planPruneProposals(options, fingerprint, candidates, observed);
 });
 
 /**

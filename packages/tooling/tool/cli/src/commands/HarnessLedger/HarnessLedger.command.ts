@@ -422,6 +422,7 @@ const outcomeLine = (report: HarnessLedgerPruneReport, write: boolean): string =
     write,
     full: report.windowFull,
     sharedFull: report.sharedHarnessWindowFull,
+    qualified: report.nonUseQualified,
     empty: A.isReadonlyArrayEmpty(report.proposals),
   }).pipe(
     Match.when(
@@ -435,8 +436,16 @@ const outcomeLine = (report: HarnessLedgerPruneReport, write: boolean): string =
     ),
     Match.when({ empty: true }, () => "nothing written: no fresh proposals."),
     Match.when(
+      { write: true, full: true, qualified: false },
+      () => "nothing written: transcript and surface coverage are unqualified."
+    ),
+    Match.when(
       { full: false },
       () => `dry run: nothing written; partial window (${windowCount(report)}), so --write would append nothing.`
+    ),
+    Match.when(
+      { qualified: false },
+      () => "dry run: zero-touch candidates are advisory; transcript and surface coverage are unqualified."
     ),
     Match.orElse(() => "dry run: nothing written (pass --write to append these proposals).")
   );

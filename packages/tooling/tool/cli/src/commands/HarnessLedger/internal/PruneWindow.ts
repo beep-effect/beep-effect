@@ -18,6 +18,7 @@ import {
 } from "@beep/repo-ai-metrics";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe, Str } from "@beep/utils";
+import * as Config from "effect/Config";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -116,6 +117,9 @@ type SessionTally = {
   readonly userTurns: number;
   readonly toolEvents: number;
   readonly disarmed: boolean;
+  readonly primary: boolean;
+  readonly child: boolean;
+  readonly unknownStart: boolean;
   readonly surfaces: HashSet.HashSet<string>;
   readonly stamps: HashSet.HashSet<string>;
 };
@@ -154,6 +158,7 @@ type ShardScan = {
 // Split shard names into those indexed by session and date and those read
 // eagerly because their name does not follow the naming scheme.
 const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
+  if (pulse.instrumentClass !== "production") return;
   const ts = DateTime.toEpochMillis(pulse.ts);
   const parent = `${pulse.agentKind}:${pulse.sessionId}`;
   const key = `${parent}:${O.getOrElse(pulse.transcriptPath, () => "no-transcript")}`;
@@ -166,11 +171,17 @@ const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
     userTurns: 0,
     toolEvents: 0,
     disarmed: false,
+    primary: false,
+    child: false,
+    unknownStart: false,
     surfaces: HashSet.empty<string>(),
     stamps: HashSet.empty<string>(),
   }));
   MutableHashMap.set(tallies, key, {
     ...tally,
+    primary: tally.primary || O.contains(pulse.sessionRole, "primary"),
+    child: tally.child || O.contains(pulse.sessionRole, "subagent"),
+    unknownStart: tally.unknownStart || (pulse.hookEvent === "SessionStart" && O.isNone(pulse.harnessHash)),
     minTs: Math.min(tally.minTs, ts),
     userTurns: tally.userTurns + (pulse.hookEvent === "UserPromptSubmit" ? 1 : 0),
     toolEvents:
@@ -247,17 +258,39 @@ const windowReport = (
     );
   // A parent's first transcript is the root; nested transcripts contribute
   // touches to that root but never create extra qualifying sessions.
+  const parentStamps = (tally: SessionTally) =>
+    A.reduce(
+      A.filter(ranked, (other) => other.parent === tally.parent),
+      HashSet.empty<string>(),
+      (acc, other) => HashSet.union(acc, other.stamps)
+    );
+  const parentRegime = (tally: SessionTally) => regimeOf({ ...tally, stamps: parentStamps(tally) }, harnessHash);
   const isChild = (tally: SessionTally) =>
     A.some(
       ranked,
       (other) =>
         other.parent === tally.parent &&
+        other.primary &&
+        !other.child &&
         (other.minTs < tally.minTs || (other.minTs === tally.minTs && other.key < tally.key))
     );
-  const active = (tally: SessionTally) => tally.userTurns >= 1 && tally.toolEvents >= 1 && !isChild(tally);
+  const active = (tally: SessionTally) => {
+    const activity = A.filter(ranked, (other) => other.parent === tally.parent && !other.child);
+    return (
+      tally.primary &&
+      !tally.child &&
+      A.some(activity, (other) => other.userTurns >= 1) &&
+      A.some(activity, (other) => other.toolEvents >= 1) &&
+      !isChild(tally)
+    );
+  };
   const qualifying = A.filter(
     ranked,
-    (tally) => isInRegime(harnessHash)(tally) && active(tally) && !overlapsDisarm(tally)
+    (tally) =>
+      parentRegime(tally) === "in-regime" &&
+      !A.some(ranked, (other) => other.parent === tally.parent && other.unknownStart) &&
+      active(tally) &&
+      !overlapsDisarm(tally)
   );
   const countFor = (kind: HookPulseAgentKind) =>
     Math.min(window, A.length(A.filter(qualifying, (tally) => tally.agentKind === kind)));
@@ -292,10 +325,10 @@ const windowReport = (
     refusalsByAgentKind: scan.refusalsByAgentKind,
     clientCoverage: R.map(counts, (_, kind) =>
       scan.openDisarm
-        ? HookPulseClientCoverage.Enum.disabled
-        : A.some(ranked, (tally) => tally.agentKind === kind && !HashSet.isEmpty(tally.stamps))
-          ? HookPulseClientCoverage.Enum.stamped
-          : HookPulseClientCoverage.Enum["not-configured"]
+        ? O.some(HookPulseClientCoverage.Enum.disabled)
+        : counts[kind] > 0
+          ? O.some(HookPulseClientCoverage.Enum.stamped)
+          : O.none()
     ),
     sessionsSkippedDisarmed: A.length(A.filter(selectedRanked, overlapsDisarm)),
     sessionsBelowActivityFloor: A.length(A.filter(selectedRanked, (tally) => !active(tally))),
@@ -306,7 +339,13 @@ const windowReport = (
       O.map((tally) => DateTime.makeUnsafe(tally.maxTs))
     ),
     touched: A.reduce(
-      A.filter(ranked, (tally) => A.some(rootsForTouches, (root) => root.parent === tally.parent)),
+      A.filter(
+        ranked,
+        (tally) =>
+          isInRegime(harnessHash)(tally) &&
+          !overlapsDisarm(tally) &&
+          A.some(rootsForTouches, (root) => root.parent === tally.parent)
+      ),
       HashSet.empty<string>(),
       (acc, tally) => HashSet.union(acc, tally.surfaces)
     ),
@@ -351,9 +390,11 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
         .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot read disarm windows.")))
     : "";
   const windows = A.filterMap(Str.split(windowsText, "\n"), (line) => HookPulseDisarmWindow.decodeJsonResult(line));
-  const sentinelPresent = yield* fs
-    .exists(path.join(root, "hook-pulse.disarmed"))
-    .pipe(Effect.orElseSucceed(() => true));
+  const sentinel = yield* Config.String("BEEP_HOOK_PULSE_DISARM_SENTINEL").pipe(
+    Config.withDefault(path.join(root, "hook-pulse.disarmed")),
+    Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve disarm sentinel."))
+  );
+  const sentinelPresent = yield* fs.exists(sentinel).pipe(Effect.orElseSucceed(() => true));
   const openDisarm =
     sentinelPresent ||
     A.some(A.filter(Str.split(windowsText, "\n"), Str.isNonEmpty), (line) =>
@@ -537,16 +578,12 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
     sessionsWithoutHooks,
     undecodableLines,
     ratio,
-    qualifiedForNonUse:
-      agentKind === "claude-code" &&
-      undecodableLines === 0 &&
-      sessionsWithoutHooks === 0 &&
-      O.exists(ratio, (value) => value >= 0.98 && value <= 1.02),
+    qualifiedForNonUse: false,
     basis:
       agentKind === "codex-cli"
         ? "failed-or-interrupted: exec wrappers are not one-to-one with inner hook calls; non-use unqualified"
         : agentKind === "cursor-cli"
           ? "unsupported transcript format; non-use unqualified"
-          : "main plus all nested child transcripts; current-window qualification is also required",
+          : "aggregate ratio is advisory; per-tool identity, current window, and surface coverage remain unqualified",
   });
 });

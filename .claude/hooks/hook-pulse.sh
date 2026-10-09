@@ -541,7 +541,8 @@ END {
 
   # Keep indexed configuration plus settings.local.json. Non-git fixtures
   # use the same bounded fallback as the TypeScript snapshot.
-  if tracked="$(git ls-files 2>/dev/null)"; then
+  if tracked="$(git -c core.quotepath=false ls-files 2>/dev/null)"; then
+    case "${tracked}" in *'"'*) return 1 ;; esac
     collected="$(awk -F "${tab}" 'NR == FNR { tracked[$0] = 1; next }
       ($1 in tracked) || $1 == ".claude/settings.local.json" { print }' \
       <(printf '%s\n' "${tracked}") <(printf '%s\n' "${collected}"))" || exit 1
@@ -686,6 +687,11 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
      (if $notificationTypeRaw == "idle_prompt" then "idle-input" else "unknown" end)
    else "none"
    end) as $waitReason
+| (if (.transcript_path? | type) == "string" then
+     if (.transcript_path | test("(^|/)(subagents|workflow)(/|$)")) then "subagent"
+     elif (.transcript_path | test("(^|/)[0-9a-f-]{36}\\.jsonl$")) then "primary"
+     else null end
+   else null end) as $sessionRole
 | if $sessionId == null or $cwd == null or $hookEvent == null then
     empty
   else
@@ -705,6 +711,7 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
      | put("toolUseId"; $toolUseId)
      | put("promptId"; $promptId)
      | put("transcriptPath"; $transcriptPath)
+     | put("sessionRole"; $sessionRole)
      | put("permissionMode"; $permissionMode)
      | put("notificationType"; (if $hookEvent == "Notification" then $notificationType else null end))
      | put("durationMs"; $durationMs)

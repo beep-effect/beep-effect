@@ -159,6 +159,7 @@ const canonicalRowKeys = [
   "isInterrupt",
   "surface",
   "harnessHash",
+  "sessionRole",
 ];
 
 // Pulls a `def <name>: [ "a", "b" ];` allowlist back out of the writer. The

@@ -514,12 +514,12 @@ export class ObservedSessionWindow extends S.Class<ObservedSessionWindow>($I`Obs
     refusalsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
       S.withConstructorDefault(Effect.succeed({ "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 }))
     ),
-    clientCoverage: S.Record(HookPulseAgentKind, HookPulseClientCoverage).pipe(
+    clientCoverage: S.Record(HookPulseAgentKind, S.OptionFromNullOr(HookPulseClientCoverage)).pipe(
       S.withConstructorDefault(
         Effect.succeed({
-          "claude-code": "not-configured",
-          "codex-cli": "not-configured",
-          "cursor-cli": "not-configured",
+          "claude-code": O.none(),
+          "codex-cli": O.none(),
+          "cursor-cli": O.none(),
         })
       )
     ),
@@ -550,8 +550,8 @@ export class ObservedSessionWindow extends S.Class<ObservedSessionWindow>($I`Obs
  * another regime or carry no stamp. `undecodableLines` counts hook-pulse lines
  * that did not decode as `HookPulseV1`; they are skipped, not fatal.
  * `windowFull` is true when `sessionsObserved` reached `windowSessions`;
- * `--write` appends only then, and a partial window's proposals are shown but
- * never written. `alreadyProposed` counts zero-touch surfaces skipped because
+ * A full window alone does not qualify non-use. Proposals remain advisory
+ * and `--write` appends nothing until collection and surface coverage qualify. `alreadyProposed` counts zero-touch surfaces skipped because
  * an open `proposed` chain already targets them, under any harness.
  * `decidedUnderHarness` counts those skipped because a chain targeting them
  * ends in a human decision (`accepted`, `rejected`, `deferred`, `waived`)
@@ -584,12 +584,12 @@ export class HarnessLedgerPruneReport extends S.Class<HarnessLedgerPruneReport>(
     refusalsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
       S.withConstructorDefault(Effect.succeed({ "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 }))
     ),
-    clientCoverage: S.Record(HookPulseAgentKind, HookPulseClientCoverage).pipe(
+    clientCoverage: S.Record(HookPulseAgentKind, S.OptionFromNullOr(HookPulseClientCoverage)).pipe(
       S.withConstructorDefault(
         Effect.succeed({
-          "claude-code": "not-configured",
-          "codex-cli": "not-configured",
-          "cursor-cli": "not-configured",
+          "claude-code": O.none(),
+          "codex-cli": O.none(),
+          "cursor-cli": O.none(),
         })
       )
     ),
