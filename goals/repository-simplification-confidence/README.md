@@ -4,7 +4,7 @@
 
 Lifecycle: `active`
 
-Latest E evidence: [GitHub audit](./history/receipts/stage-4-github-audit.md), [settings snapshots](./history/receipts/stage-3-github-settings.md), and [lane handoff](./history/handoffs/rsc-e-github-2026-10-09.md). The workflow wave is published as ready PR #1568. Recovery fixtures, test compiler, local docgen, JSDoc Ratchet, Fallow audit/health and the desktop package gate pass. Earlier full package gates passed; the post-D integrated CLI gate is pending terminal proof. A review repair wave and final post-integration proof are in progress. Dependency review executed and the single size label is verified; inherited knowledge-reference/coverage repairs, remaining hosted behavior and cross-lane gates remain open.
+Latest E evidence: [GitHub audit](./history/receipts/stage-4-github-audit.md), [settings snapshots](./history/receipts/stage-3-github-settings.md), and [lane handoff](./history/handoffs/rsc-e-github-2026-10-09.md). E source repairs are final in ready PR #1568. Both integrated full package gates and all local hosted-parity lanes pass; focused fixtures pass 127 tests and scoped coverage passes 396 tests across all seven touched baseline files. The actual GITHUB_TOKEN hosted governance step passes. Cross-lane, trusted-main writer and post-merge acceptance remain open; inherited hosted coverage reds remain attributed for the consolidated repair.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

@@ -1,6 +1,6 @@
 # GitHub audit — workstream E
 
-Workflow wave published in [PR #1568](https://github.com/beep-effect/beep-effect/pull/1568), marked ready and labelled `ready-for-heavy`. Review repairs are local pending one complete publication wave; hosted/package acceptance remains open. Every actionable row stays in scope, including P2/P3.
+Workflow wave published in [PR #1568](https://github.com/beep-effect/beep-effect/pull/1568), marked ready and labelled `ready-for-heavy`. Source repairs are published at `47175d3847`; both integrated package gates and local hosted parity pass. Cross-lane and post-merge hosted acceptance remain open. Every actionable row stays in scope, including P2/P3.
 
 | Finding | Area | Disposition | Evidence |
 | --- | --- | --- | --- |
@@ -69,3 +69,7 @@ Trusted writer run [37471280558](https://github.com/beep-effect/beep-effect/acti
 ## Job-token authorization proof
 
 Human P1 review exposed a contents-only verification token calling Actions APIs only on push. Repair `47175d3847` keeps pure workflow lint in Repo Sanity and moves the live reads to Security, granting only Actions read there. The step runs after dependency review and executes on PRs too. [Security job 114005275657](https://github.com/beep-effect/beep-effect/actions/runs/37985175997/job/114005275657), at that repaired head, completed both Dependency review and Check hosted settings policy successfully. Its token-permission table lists Actions read and Metadata read; the log records ruleset match, desktop reviewer protection and held-group clean. This is the exact GITHUB_TOKEN execution proof; earlier personal-token probes alone were insufficient. No writer environment, writer credential or verification-matrix permission was broadened.
+
+## Final integrated local proof
+
+Both full package gates (`@beep/repo-cli`, `@beep/professional-desktop`) and test-tsgo, local docgen, JSDoc Ratchet, knowledge references, Fallow audit and health exit 0. Focused fixtures pass 127 tests; the scoped coverage run passes 396 tests and reads all seven baseline paths in the handoff. WatchMode is 100% in every metric. This does not establish full-suite regression acceptance. Main `78b77b1084` was integrated; the two documentation-only deltas changes no E source. The ruleset capture was regenerated, then local docgen and knowledge references were rerun on the integrated tree. The final report wave carries these receipts; no baseline was relaxed.

@@ -10,7 +10,7 @@ see the SPEC.md Decision Log). Packet lane: `rsc-packet`
 (branch recorded in the baseline receipts), cut from `e62411d63f`. Baseline receipts:
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md).
 
-E recovery state: workflow/source wave published in ready PR #1568; focused fixtures, test compiler, local docgen, JSDoc Ratchet, Fallow audit/health and desktop package gate pass. Earlier full package gates passed; the post-D integrated CLI gate is pending terminal proof; the addressed review wave is pending publication; inherited SPEC knowledge-reference and shared coverage failures plus hosted/cross-lane acceptance remain open. Current evidence: [E handoff](./history/handoffs/rsc-e-github-2026-10-09.md).
+E recovery state: E source repairs are final in ready PR #1568. Both integrated full package gates and all local hosted-parity lanes pass; focused fixtures pass 127 tests and scoped coverage passes 396 tests across all seven touched baseline files. The actual GITHUB_TOKEN hosted governance step passes. Cross-lane, trusted-main writer and post-merge acceptance remain open; inherited hosted coverage reds remain attributed for the consolidated repair. Current evidence: [E handoff](./history/handoffs/rsc-e-github-2026-10-09.md).
 
 ## Phases
 
