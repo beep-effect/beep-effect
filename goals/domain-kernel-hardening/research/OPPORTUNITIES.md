@@ -97,3 +97,38 @@
 - Attribution: shared-capacity queue, not compiler or package failure.
 - Action: keep caps and at most two own admissions; poll result files every minute.
 - Prevention: periodic admission receipts would distinguish queued from running.
+
+## 2026-10-09 — slot floor changed while a wrapper was queued
+
+- Doing: await the table-package proof, queued with a captured four-slot floor.
+- Evidence: live heavy locks acquired a fifth slot and the canonical overrides
+  now set a five-slot floor. The queued wrapper reads overrides only at startup.
+- Attribution: external workstation admission configuration drift; no payload
+  log or result existed for the queued table batch.
+- Action: stop only this queued unit and resubmit through unchanged beep-heavy
+  so it reads current settings. No cap or other lane unit was changed.
+- Prevention: refresh the slot census during waiting or report captured and
+  current floor values in periodic admission receipts.
+
+## 2026-10-09 — independent PGlite table fixture missed migration fields
+
+- Doing: run the six server test lanes after all nine package proofs pass.
+- Evidence: four ProviderInstance tests fail with ProviderProbeUnavailable;
+  prepareTable creates its own isolated table without either new column.
+- Attribution: introduced fixture drift; inherited Drizzle select/insert columns
+  now include the pair, but this test bypasses the db-admin migration folder.
+- Action: add two nullable columns to this one test fixture definition. Final
+  mechanical count is 71, within 90; no repository/model/behavior edits.
+- Prevention: include independent SQL table fixtures in the P0 compatibility census.
+
+## 2026-10-09 — default server tests exclude migration-replay suites
+
+- Doing: execute the brief's exact six-server test command as PGlite proof.
+- Evidence: five generated beep:test scripts exclude test/integration/**;
+  the actual migration-replay files are located under that directory.
+- Attribution: verification-plan gap, not a migration failure.
+- Action: run the owner beep:test:integration script for architecture-lab,
+  documents, epistemic and workspace, excluding **/*.pg.test.ts so only PGlite
+  runs. Agents' isolated ProviderInstance fixture runs in the default suite;
+  law-practice's default script includes its integration files.
+- Prevention: name the integration task and verify test counts/skips in the brief.

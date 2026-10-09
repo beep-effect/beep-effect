@@ -378,3 +378,63 @@ Additional mechanical files (31 subjects + two maps):
 D13 reversal: revert mechanical repairs together with the kernel migration.
 ROADMAP platform re-entry bullet (~349), Parked packets row (~383), and cohort
 prose (~406) remain orchestrator-owned. No package proof result yet claimed.
+
+### Run-3 current-base merge
+
+Merged origin/main PR #1568 at `c0ead27121e699738f2c87fa4a357ac184bbdd3a` before either queued payload started.
+Both PR-1 superset checks passed. No conflict, packet edit, migration-chain
+change or dependency change. The main merge rides the future P1 publish push;
+no push budget consumed yet. Owner-command local index regeneration passes.
+
+R1 active P1 stream, with no findings for this packet:
+
+```text
+- goals/domain-kernel-hardening: revision=2 tip=2@97ceca70c0e7 status=active furthest=P0 resume=P0
+```
+
+The resumed separate-wave ruling reserves completed-retained for P3. No such
+closeout proof is claimed at P1. Doctor, schema-first and topology scans pass;
+three unrelated completion-gate advisories remain recorded above.
+
+### Admission configuration refresh
+
+The table batch remained queued without a payload log. Live heavy locks later
+showed a fifth slot; the canonical override changed the floor from four to five.
+The waiting wrapper had captured four at startup. Stopped only the own queued
+unit, confirmed its tool session terminal, and resubmitted through unchanged
+beep-heavy. The new batch started and wrote shared-domain.log. No cap, setting
+or other lane unit was changed; at most two own units remained live. Friction
+receipt records the wrapper's stale slot census and reversal is cancellation
+of the own resubmission. Integration batch continues unchanged.
+
+### Repaired package verification
+
+Fresh default package-verify (audit + docgen) passes for shared-domain,
+agents-tables, architecture-lab-tables, documents-tables, epistemic-tables and
+workspace-tables. This clears all five introduced package reds from run 2;
+exact-column tests and all 31 repaired docgen subjects now follow the migration.
+The table batch is terminal. Db-admin and professional-desktop default verification
+also pass; repo-cli remains running in the integration batch. Hosted parity
+submitted through beep-heavy only after the table unit ended (two own units max).
+
+### Additional introduced PGlite fixture drift (D14)
+
+Repo-cli default package verification passes (audit 989.2s, docgen 28.3s);
+all nine originally edited package proofs are now green. The dependent check
+passes 137/137 tasks. The six-server test command fails four ProviderInstance
+tests: its isolated CREATE TABLE fixture omits both inherited nullable columns.
+Architecture-lab, epistemic, documents and workspace tests passed; law-practice
+was interrupted by Turbo fail-fast, so it has no result yet.
+
+One additional mechanical column-definition site:
+`packages/agents/server/test/ProviderInstance.integration.test.ts` prepareTable.
+Added deleted_at bigint and deleted_by_principal jsonb, both nullable. Final
+count 71; no source repository, slice model/behavior or live database change.
+D14 reversal removes the two fixture columns with the kernel rollback.
+
+| Package | Change | Why it would have been major | Reversal |
+| --- | --- | --- | --- |
+| @beep/agents-server (private) | One isolated SQL table-fixture column definition | The selected-row persistence contract gains two columns, forcing the fixture to follow | Remove the two nullable test columns with kernel rollback |
+
+The exact six-server command and default agents-server package-verify will
+re-run after repair. No repaired-fixture success is claimed yet.
