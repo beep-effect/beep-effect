@@ -44,10 +44,14 @@ unknown roles are excluded until a tested native signal exists.
 ## cursor
 
 Synthetic `sessionStart` produced one stamped row and `{}` protocol output.
-Measured stamp latency: Claude 0.844 s; Codex 0.522 s; Cursor 0.511 s. Cursor's
-3 s cap is retained; timeout refusals are recorded. Native Cursor emitted one SessionStart and one SessionEnd with a stamp. Its
+Final-source isolated adapter samples: Claude 0.201 s at 22:18:24.259Z; Codex
+0.263 s at 22:18:24.523Z; Cursor 0.298 s at 22:18:24.821Z, all on 2026-10-09.
+Each sample exited zero, wrote one row and one stamp, emitted the expected
+protocol output, and recorded no refusal. These are single synthetic samples,
+not native-tool latency or a general performance claim. Cursor's 3 s cap is
+retained; timeout refusals are recorded. Native Cursor emitted one SessionStart and one SessionEnd with a stamp. Its
 Opus tool workflow was rejected by the existing subscription limit. Native hook
-latency was not measured; the 0.511 s result is isolated adapter latency only.
+latency was not measured; the 0.298 s result is isolated adapter latency only.
 
 ## window
 
@@ -160,10 +164,10 @@ no timer and performed no remote mutation.
 
 Graft queries saved approximately 217,311 source tokens across this lane's work.
 
-Current-source qualification repair (source through `cdd6ca0574`): corrupt hook evidence excludes non-use windows without erasing positive touches; shared capability counts require 30 sessions per loading harness independent of display window; canonical aliases retain all observed path hooks and conflicting identities remain unmatched. Forwarder stamps require valid ordered transcript bounds and durable terminal hooks to bound event-loss refusals. Snapshot budgets reserve root guidance/MCP files and exclude nested checkout paths before stat. Independent review and final admitted package proof remain pending; these statements are implementation evidence, not proof of a complete live window.
+Current-source qualification repair (source and tests reviewed at `122f9cb540`): corrupt hook evidence excludes non-use windows without erasing positive touches; shared capability counts require 30 sessions per loading harness independent of display window; canonical aliases retain all observed path hooks and conflicting identities remain unmatched. Forwarder stamps require valid ordered transcript bounds and durable terminal hooks to bound event-loss refusals. Snapshot budgets reserve root guidance/MCP files and exclude nested checkout paths before stat. Independent review and final admitted package proof remain pending; these statements are implementation evidence, not proof of a complete live window.
 
 The admitted intermediate census counted Claude 574,951 rows, 1,858 sessions and 230 startup stamps; Codex 447,640 rows, 1,559 sessions and no stamps; Cursor 2,411 rows and 36 sessions without startup stamps in the shared ledger. JSON syntax was valid, but 74 older rows did not satisfy the current row schema. Current conservative scans therefore report zero qualifying sessions for each client, incomplete shared coverage, and no writes. These are intermediate counts; final-head scans follow the terminal proof. Malformed, future-dated and invalid-calendar sentinels were armed in disposable fixtures: all three produced valid windows with unknown starts. No shared ledger was rewritten.
 
 The full intermediate CLI package audit passed 290 test files and failed 18 cases in the forwarder command fixture because its helper supplied incomplete Git metadata. The fixture now initializes and indexes a real repository; no production boundary was relaxed. The final admitted batch will rerun both complete package audits and parity commands. Git boundary regressions additionally cover a broken nested metadata directory under a valid parent, a physical directory ending in a newline, and an external scan alias. Live future sentinel timestamps and invalid UTC calendar dates fail closed. Final-source native Claude primary/linked workflows again produced seven rows each, matching fresh stamps and no refusals, at the UTC times in the validation table.
 
-Independent final repair confirmations on `4cc8b40440125342f7c9a5528c65b858d3bb10c1` reported zero actionable findings from separate Claude Opus 5.5 medium and Codex GPT-6.1-Sol medium sessions. Earlier findings remain in the repair history. The preceding batch passed test-tsgo, Fallow audit/health (zero introduced findings), docgen local, jsdoc-ratchet and CI knowledge refs (zero live gated observations); its package failures were repaired and require the queued full rerun. The rerun uses an unprivileged private mount namespace with lane-owned backing for TMPDIR because unresolved ancestor Git metadata predates this lane outside its ownership. No host metadata or mounts were changed.
+Independent final repair confirmations on `122f9cb540015311dcaf9650762db1ec93e630db` reported zero actionable findings from separate Claude Opus 5.5 medium and Codex GPT-6.1-Sol medium sessions. Earlier findings remain in the repair history. The preceding batch passed test-tsgo, Fallow audit/health (zero introduced findings), docgen local, jsdoc-ratchet and CI knowledge refs (zero live gated observations); its package failures were repaired and require the queued full rerun. The rerun uses the original user identity in a capability-free private mount namespace with an explicit device bind and lane-owned backing for TMPDIR because unresolved ancestor Git metadata predates this lane outside its ownership. Startup probes verified Bun/Git execution, permission denial for unreadable files, and a clean non-Git temporary ancestry. No host metadata or mounts were changed. Current program main `cb64e0484f` was merged before the queued proof and publication; packet conflicts preserve both lanes' records.
