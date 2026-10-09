@@ -5,7 +5,7 @@ import { Cause, Effect, Exit, Layer, Option, Path, PlatformError } from "effect"
 import type { AppDirsOptions, XdgPlatform } from "../../effected/xdg/index.ts";
 import { AppDirs, AppDirsError, CurrentPlatform, Xdg, XdgPaths } from "../../effected/xdg/index.ts";
 
-const xdgPaths = (overrides: Partial<Omit<typeof XdgPaths.Type, "configDirs" | "dataDirs">> = {}) =>
+const xdgPaths = (overrides: Partial<Omit<XdgPaths, "configDirs" | "dataDirs">> = {}) =>
 	XdgPaths.make({
 		home: "/home/ada",
 		configDirs: ["/etc/xdg"],
@@ -319,9 +319,7 @@ describe("AppDirs", () => {
 
 	describe("the namespace guard", () => {
 		const build = (namespace: string) =>
-			Effect.gen(function* () {
-				return yield* AppDirs;
-			}).pipe(
+			AppDirs.pipe(
 				Effect.provide(
 					AppDirs.layer({ namespace }).pipe(Layer.provide(Xdg.layerFrom(xdgPaths())), Layer.provide(base)),
 				),

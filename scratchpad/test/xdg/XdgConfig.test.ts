@@ -6,6 +6,8 @@ import { Effect, Layer, Option, Path, PlatformError, Schema } from "effect";
 import type { XdgPlatform } from "../../effected/xdg/index.ts";
 import { AppDirs, CurrentPlatform, Xdg, XdgConfig, XdgPaths } from "../../effected/xdg/index.ts";
 
+const JsonValue = Schema.fromJsonString(Schema.Unknown);
+
 const paths = XdgPaths.make({
 	home: "/home/ada",
 	configHome: "/home/ada/.config",
@@ -35,7 +37,7 @@ const fsFixture = (options: {
 			faults: {
 				exists: (target) => {
 					options.probed?.push(target);
-					if (options.denied?.includes(target)) {
+					if (options.denied?.includes(target) === true) {
 						return Effect.fail(
 							PlatformError.systemError({
 								_tag: "PermissionDenied",
@@ -181,7 +183,7 @@ describe("XdgConfig.savePath", () => {
 			// The end-to-end proof that resolving at layer-construction time was the
 			// right call: `defaultPath` is typed `Effect<string, never, RR>`, so a
 			// fallible savePath simply would not fit here without an `orDie`.
-			const AppShape = Schema.Struct({ port: Schema.Number });
+			const AppShape = Schema.Struct({ port: Schema.Finite });
 			class AppConfig extends ConfigFile.Service<AppConfig, typeof AppShape.Type>()("test/AppConfig") {}
 
 			const configLayer = ConfigFile.layer(AppConfig, {
@@ -199,7 +201,10 @@ describe("XdgConfig.savePath", () => {
 				const target = yield* config.save({ port: 8080 });
 				// Same provide, same volume: the save really landed.
 				const volume = yield* MemoryFileSystem.Volume;
-				assert.deepStrictEqual(JSON.parse(volume.text(target) ?? "null"), { port: 8080 });
+				assert.deepStrictEqual(
+					yield* Schema.decodeEffect(JsonValue)(volume.text(target) ?? "null"),
+					{ port: 8080 },
+				);
 				return target;
 			}).pipe(
 				Effect.provide(

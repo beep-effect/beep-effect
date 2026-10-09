@@ -209,7 +209,7 @@ const searchPath = (own: string, systemDirs: ReadonlyArray<string>, namespace: s
 ];
 
 const resolveAll = (options: AppDirsOptions, paths: XdgPaths, platform: XdgPlatform, path: Path.Path) => {
-	const native = options.native
+	const native = options.native === true
 		? NativeDirs.resolve({ platform, namespace: options.namespace, paths, path })
 		: Option.none<NativeDirs>();
 
@@ -324,7 +324,7 @@ export class AppDirs extends Context.Service<AppDirs, AppDirsShape>()("@beep/scr
 				const ensureRuntime: Effect.Effect<Option.Option<string>, AppDirsError> = (
 					runtimeDir === undefined
 						? Effect.succeed(Option.none<string>())
-						: Effect.map(makeDir("runtime", runtimeDir), Option.some)
+						: Effect.asSome(makeDir("runtime", runtimeDir))
 				).pipe(Effect.withSpan("AppDirs.ensureRuntime"));
 
 				return {

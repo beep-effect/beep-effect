@@ -20,11 +20,10 @@ const paths = (overrides?: { readonly appData?: string; readonly localAppData?: 
  */
 describe("NativeDirs.resolve", () => {
 	layer(Path.layer)((it) => {
-		const resolve = (platform: XdgPlatform, xdg: XdgPaths = paths()) =>
-			Effect.gen(function* () {
-				const path = yield* Path.Path;
-				return NativeDirs.resolve({ platform, namespace: "myapp", paths: xdg, path });
-			});
+		const resolve = Effect.fn("resolve")(function* (platform: XdgPlatform, xdg: XdgPaths = paths()) {
+			const path = yield* Path.Path;
+			return NativeDirs.resolve({ platform, namespace: "myapp", paths: xdg, path });
+		});
 
 		it.effect("maps darwin onto Application Support and Caches", () =>
 			Effect.gen(function* () {
