@@ -569,3 +569,7 @@ stopped only its unadmitted request and requeued the same checks through the
 unchanged wrapper to observe the live budget. Dynamic configuration refresh
 while queued would prevent this stale-admission window. No running payload or
 peer service was stopped, and the worker changed no admission setting.
+
+- H3 final static review found legal carriage-return path truncation and lexical repository discovery across a symlink. Preserve exactly the Git output terminator and resolve physical ownership before searching for root guidance; stop at the nearest Git metadata even without guidance. The salt-precedence concern was adjudicated against the local Effect v4 ConfigProvider implementation: empty environment strings are missing by default, and the existing test covers empty-hook/nonempty-AI precedence. No salt or namespace was changed.
+
+- H3 independent review also tightened empty Git output handling, shell/TypeScript physical Git-root parity and stderr suppression, and UTC validation for refusal/transition timestamps. Invalid inherited attempt timestamps now fall back to the actual attempt time, and consumers reject calendar-rollover rows. This closes lower-severity findings without changing the evidence store or treating missing data as non-use.

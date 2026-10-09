@@ -62,7 +62,9 @@ fi
 refuse() {
   local reason="$1" day ts
   day="$(date -u +%Y-%m-%d)"; ts="${BEEP_HOOK_PULSE_ATTEMPT_UTC:-}"
-  [[ "${ts}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] || ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  if ! [[ "${ts}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] || [ "$(date -u -d "${ts}" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null)" != "${ts}" ]; then
+    ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  fi
   mkdir -p "${BEEP_AGENT_EVIDENCE_ROOT}" 2>/dev/null || return 0
   printf '{"ts":"%s","agentKind":"%s","reason":"%s"}\n' "${ts}" "${agent_kind}" "${reason}" \
     >>"${BEEP_AGENT_EVIDENCE_ROOT}/hook-pulse-refusals-${day}.ndjson" 2>/dev/null || true
@@ -307,20 +309,24 @@ transcript_path_hash="$(sha256_private_identifier "${raw_transcript_path}")" || 
 # The repo root is the nearest ancestor of `cwd` holding BOTH `AGENTS.md` and
 # `.git`: `AGENTS.md` alone would stop at a nested app's own guide
 # (`apps/*/AGENTS.md`) and misfile every root surface. Only an absolute `cwd`
-# enters the walk (a relative one yields no surface in the jq program and the
-# codec alike), and the loop stops once a strip makes no progress, so a segment
+# is resolved physically before the walk; nearest Git metadata stops discovery
+# even when that checkout has no guide (relative paths yield no surface), and the loop stops once a strip makes no progress, so a segment
 # without `/` can never spin forever. It sets `found_repo_root` (empty when
 # nothing matches) instead of printing, so callers pay no subshell for it.
 find_repo_root() {
   found_repo_root=""
   local probe next_probe
   case "$1" in
-    /*) probe="$1" ;;
+    /*)
+      probe="$(cd -- "$1" 2>/dev/null && pwd -P && printf '.')" || return 0
+      probe="${probe%.}"
+      probe="${probe%$'\n'}"
+      ;;
     *) probe="" ;;
   esac
   while [ -n "${probe}" ] && [ "${probe}" != "/" ]; do
-    if [ -e "${probe}/AGENTS.md" ] && [ -e "${probe}/.git" ]; then
-      found_repo_root="${probe}"
+    if [ -e "${probe}/.git" ] || [ -L "${probe}/.git" ]; then
+      [ ! -e "${probe}/AGENTS.md" ] || found_repo_root="${probe}"
       return 0
     fi
     next_probe="${probe%/*}"
@@ -515,7 +521,9 @@ END {
 
   indexed=0
   if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    git_top="$(git rev-parse --show-toplevel && printf '.')"
+    git_top="$(git rev-parse --show-toplevel 2>/dev/null && printf '.')"
+    git_top="${git_top%.}"; git_top="${git_top%$'\n'}"
+    git_top="$(cd -- "${git_top}" 2>/dev/null && pwd -P && printf '.')"
     git_top="${git_top%.}"; git_top="${git_top%$'\n'}"
     indexed_probe="$(pwd -P && printf '.')"
     indexed_probe="${indexed_probe%.}"; indexed_probe="${indexed_probe%$'\n'}"

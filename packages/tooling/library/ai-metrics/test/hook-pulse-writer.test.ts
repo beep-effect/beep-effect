@@ -1228,6 +1228,37 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
     })
   );
 
+  it.effect("preserves a checkout name ending in a carriage return", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeHarnessFixtureRoot();
+      const parent = yield* fs.makeTempDirectoryScoped();
+      const renamed = path.join(parent, "checkout\r");
+      yield* fs.rename(root, renamed);
+      const oracle = yield* typescriptHarnessHash(renamed);
+      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(renamed)));
+      assertSome((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash, oracle.harnessHash);
+    })
+  );
+
+  it.effect("discovers physical checkout ownership through a symlink in another checkout", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const outer = yield* makeHarnessFixtureRoot();
+      const inner = yield* makeHarnessFixtureRoot();
+      yield* fs.writeFileString(path.join(inner, ".claude/settings.local.json"), '{"model":"inner-fixture"}');
+      const subdirectory = path.join(inner, "nested\n");
+      yield* fs.makeDirectory(subdirectory);
+      const alias = path.join(outer, "alias");
+      yield* fs.symlink(subdirectory, alias);
+      const oracle = yield* typescriptHarnessHash(inner);
+      const run = yield* runWriter(yield* encodeJson(sessionStartPayload(alias)));
+      assertSome((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash, oracle.harnessHash);
+    })
+  );
+
   it.effect("carries an operator salt into every private digest", () =>
     Effect.gen(function* () {
       // The oracle above still passes for a writer that never reads the salt

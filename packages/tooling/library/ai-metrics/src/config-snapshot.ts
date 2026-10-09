@@ -660,8 +660,9 @@ const assertIndexedGitBoundary = Effect.fnUntraced(function* (repoRoot: string) 
   const top = yield* spawner
     .string(ChildProcess.make("git", ["rev-parse", "--show-toplevel"], { cwd: repoRoot, stderr: "ignore" }))
     .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot resolve indexed checkout root.", cause)));
+  if (Str.isEmpty(top)) return yield* configSnapshotFailure("Git returned no indexed checkout root.", undefined);
   const physicalTop = yield* fs
-    .realPath(Str.replace(/\r?\n$/u, "")(top))
+    .realPath(Str.replace(/\n$/u, "")(top))
     .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot resolve physical checkout root.", cause)));
   let directory = yield* fs
     .realPath(path.resolve(repoRoot))

@@ -324,6 +324,17 @@ export const HookPulseSwitchAction = LiteralKit(["arm", "disarm"]).pipe(
  */
 export type HookPulseSwitchAction = typeof HookPulseSwitchAction.Type;
 
+const HookPulseUtcTimestamp = S.String.check(
+  S.makeFilter((input) =>
+    O.exists(
+      S.decodeOption(S.DateTimeUtcFromString)(input),
+      (date) => Str.endsWith("Z")(input) && Str.slice(0, 19)(DateTime.formatIso(date)) === Str.slice(0, 19)(input)
+    )
+  )
+).pipe($I.annoteSchema("HookPulseUtcTimestamp", { description: "Canonical UTC timestamp without calendar rollover." }));
+
+const HookPulseUtcDateTime = HookPulseUtcTimestamp.pipe(S.decodeTo(S.DateTimeUtcFromString));
+
 /**
  * Payload-free writer refusal; unknown client names are normalized to unknown.
  *
@@ -339,7 +350,7 @@ export type HookPulseSwitchAction = typeof HookPulseSwitchAction.Type;
  */
 export class HookPulseRefusal extends S.Class<HookPulseRefusal>($I`HookPulseRefusal`)(
   {
-    ts: S.DateTimeUtcFromString,
+    ts: HookPulseUtcDateTime,
     agentKind: S.Literals([...HookPulseAgentKind.literals, "unknown"]),
     reason: HookPulseRefusalReason,
   },
@@ -364,7 +375,7 @@ export class HookPulseRefusal extends S.Class<HookPulseRefusal>($I`HookPulseRefu
  * @since 0.0.0
  */
 export class HookPulseSwitchTransition extends S.Class<HookPulseSwitchTransition>($I`HookPulseSwitchTransition`)(
-  { ts: S.DateTimeUtcFromString, action: HookPulseSwitchAction },
+  { ts: HookPulseUtcDateTime, action: HookPulseSwitchAction },
   $I.annote("HookPulseSwitchTransition", { description: "Payload-free durable arm or disarm transition." })
 ) {
   static readonly decodeJsonResult = S.decodeUnknownResult(S.fromJsonString(HookPulseSwitchTransition));
@@ -530,15 +541,6 @@ export const HookPulseEvidenceTier = LiteralKit([
  * @since 0.0.0
  */
 export type HookPulseEvidenceTier = typeof HookPulseEvidenceTier.Type;
-
-const HookPulseUtcTimestamp = S.String.check(
-  S.makeFilter((input) =>
-    O.exists(
-      S.decodeOption(S.DateTimeUtcFromString)(input),
-      (date) => Str.endsWith("Z")(input) && Str.slice(0, 19)(DateTime.formatIso(date)) === Str.slice(0, 19)(input)
-    )
-  )
-);
 
 /**
  * Current disarm state written by the hook-pulse operator switch.
