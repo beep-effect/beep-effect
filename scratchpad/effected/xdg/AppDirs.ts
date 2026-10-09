@@ -13,6 +13,31 @@ import { CurrentPlatform, Xdg } from "./Xdg.ts";
 const $I = $ScratchpadId.create("effected/xdg/AppDirs");
 
 /**
+ * Indicates that an application namespace is not a single non-empty path component.
+ *
+ * **Details**
+ *
+ * Invalid namespaces remain defects during layer construction.
+ *
+ * **Example** (Describe an invalid namespace)
+ *
+ * ```ts
+ * import { AppDirsNamespaceError } from "./AppDirs.ts";
+ *
+ * const error = AppDirsNamespaceError.make({ message: "AppDirs.layer: `namespace` must not be empty" });
+ * console.log(error.message);
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class AppDirsNamespaceError extends S.TaggedError<AppDirsNamespaceError>($I`AppDirsNamespaceError`)(
+	"AppDirsNamespaceError",
+	{ message: S.String },
+	$I.annote("AppDirsNamespaceError", { description: "An invalid application directory namespace." }),
+) {}
+
+/**
  * The four directory kinds XDG separates, plus the runtime directory.
  *
  * @public
@@ -261,14 +286,14 @@ const resolveAll = (options: AppDirsOptions, paths: XdgPaths, platform: XdgPlatf
  * is wiring, not input: only code supplies a namespace, so a bad one is a
  * programmer error and belongs on the defect channel, not in `E`.
  */
-const badNamespace = (namespace: string): Error | undefined => {
+const badNamespace = (namespace: string): AppDirsNamespaceError | undefined => {
 	if (namespace.length === 0) {
-		return new Error("AppDirs.layer: `namespace` must not be empty");
+		return AppDirsNamespaceError.make({ message: "AppDirs.layer: `namespace` must not be empty" });
 	}
 	if (/[/\\]/.test(namespace) || namespace === "." || namespace === "..") {
-		return new Error(
-			`AppDirs.layer: \`namespace\` must be a single path component, received ${JSON.stringify(namespace)}`,
-		);
+		return AppDirsNamespaceError.make({
+			message: `AppDirs.layer: \`namespace\` must be a single path component, received ${JSON.stringify(namespace)}`,
+		});
 	}
 	return undefined;
 };

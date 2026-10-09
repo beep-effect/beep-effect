@@ -46,12 +46,13 @@ const nativeResolver = (options: {
 });
 
 // Implementation of XdgConfig.savePath; the public contract lives on the static.
-const savePath = (filename: string): Effect.Effect<string, never, AppDirs | Path.Path> =>
-	Effect.gen(function* () {
-		const appDirs = yield* AppDirs;
-		const path = yield* Path.Path;
-		return path.join(appDirs.dirs.config, filename);
-	});
+const savePath = Effect.fn("savePath")(function* (
+	filename: string,
+): Effect.fn.Return<string, never, AppDirs | Path.Path> {
+	const appDirs = yield* AppDirs;
+	const path = yield* Path.Path;
+	return path.join(appDirs.dirs.config, filename);
+});
 
 /**
  * The bridge from XDG directories into `@effected/config-file`.

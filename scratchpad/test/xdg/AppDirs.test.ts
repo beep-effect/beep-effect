@@ -8,6 +8,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import { AppDirsNamespaceError } from "../../effected/xdg/AppDirs.ts";
 import type { AppDirsOptions, XdgPlatform } from "../../effected/xdg/index.ts";
 import { AppDirs, AppDirsError, CurrentPlatform, Xdg, XdgPaths } from "../../effected/xdg/index.ts";
 
@@ -343,7 +344,7 @@ describe("AppDirs", () => {
 					// still pass every other assertion here.
 					assert.isFalse(reasons.some(Cause.isFailReason));
 					const die = reasons.find(Cause.isDieReason);
-					assert.instanceOf(die?.defect, Error);
+					assert.instanceOf(die?.defect, AppDirsNamespaceError);
 				}),
 			);
 
