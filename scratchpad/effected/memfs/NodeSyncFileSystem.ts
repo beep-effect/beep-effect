@@ -1,5 +1,3 @@
-// This adapter preserves synchronous Node filesystem throws and errno metadata; Effect FileSystem is asynchronous.
-// @effect-diagnostics nodeBuiltinImport:skip-file
 /**
  * A read-only, synchronous `FileSystem` over `node:fs`'s sync API, for
  * programs that must run under `Effect.runSync` — a config loader called from
@@ -13,7 +11,6 @@
  * @packageDocumentation
  */
 
-import * as NFS from "node:fs";
 import type * as PlatformErrorNs from "effect/PlatformError";
 import * as BI from "effect/BigInt";
 import * as ByteSize from "effect/ByteSize";
@@ -22,8 +19,12 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
 import * as Stream from "effect/Stream";
 import { errnoTag } from "./internal/errno.ts";
+
+// Effect FileSystem cannot provide the synchronous operations required by Effect.runSync.
+const NFS = process.getBuiltinModule("node:fs");
 
 type PlatformErrorType = PlatformErrorNs.PlatformError;
 
@@ -31,33 +32,30 @@ type PlatformErrorType = PlatformErrorNs.PlatformError;
 // from the code through the shared `errnoTag` mapping (anything unmapped,
 // including node's `ERR_*` argument codes, is Unknown) and the node error rides
 // as `cause`.
-const errnoException = (method: string, path: string, err: unknown): PlatformErrorType => {
-	const error = err as NodeJS.ErrnoException | undefined;
-	return PlatformError.systemError({
-		_tag: errnoTag(error?.code),
+const errnoException = (method: string, path: string, err: unknown): PlatformErrorType =>
+	PlatformError.systemError({
+		_tag: errnoTag(P.hasProperty(err, "code") && P.isString(err.code) ? err.code : undefined),
 		module: "FileSystem",
 		method,
 		pathOrDescriptor: path,
-		syscall: error?.syscall,
-		cause: error,
+		syscall: P.hasProperty(err, "syscall") && P.isString(err.syscall) ? err.syscall : undefined,
+		cause: err,
 	});
-};
 
 // Mirrors the adapter's `effectify(…, handleErrnoException, handleBadArgument)`
 // split: a failure from the syscall itself (it carries a numeric `errno` or a
 // `syscall`) is a system error; anything node throws BEFORE the syscall — its
 // argument validation, whose errors also carry string codes such as
 // ERR_INVALID_ARG_VALUE (a NUL byte) or ERR_INVALID_ARG_TYPE — is BadArgument.
-const fail = (method: string, path: string, err: unknown): PlatformErrorType => {
-	const error = err as NodeJS.ErrnoException | undefined;
-	return typeof error?.errno === "number" || error?.syscall !== undefined
+const fail = (method: string, path: string, err: unknown): PlatformErrorType =>
+	(P.hasProperty(err, "errno") && P.isNumber(err.errno)) ||
+		(P.hasProperty(err, "syscall") && err.syscall !== undefined)
 		? errnoException(method, path, err)
 		: PlatformError.badArgument({
 				module: "FileSystem",
 				method,
-				description: error?.message ?? String(err),
+				description: P.hasProperty(err, "message") && P.isString(err.message) ? err.message : String(err),
 			});
-};
 
 const attempt = <A>(method: string, path: string, f: () => A): Effect.Effect<A, PlatformErrorType> =>
 	Effect.try({ try: f, catch: (err) => fail(method, path, err) });
@@ -74,7 +72,7 @@ const bigintToNumberOption = (value: bigint | undefined): O.Option<number> =>
 	O.flatMap(O.fromNullishOr(value), BI.toNumber);
 
 // The node adapter's `makeFileInfo`, field for field.
-const fileInfo = (stat: NFS.BigIntStats): FileSystem.File.Info => ({
+const fileInfo = (stat: import("node:fs").BigIntStats): FileSystem.File.Info => ({
 	type: stat.isFile()
 		? "File"
 		: stat.isDirectory()
@@ -127,7 +125,11 @@ const make: FileSystem.FileSystem = FileSystem.make({
 				Effect.try({
 					try: () => fileInfo(stat),
 					catch: (err) =>
-						PlatformError.badArgument({ module: "FileSystem", method: "stat", description: (err as Error).message }),
+						PlatformError.badArgument({
+							module: "FileSystem",
+							method: "stat",
+							description: err instanceof Error ? err.message : String(err),
+						}),
 				}),
 		),
 	// The adapter's own value: node's Buffer (a Uint8Array), not a copy. A

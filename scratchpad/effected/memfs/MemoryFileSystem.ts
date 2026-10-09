@@ -741,7 +741,7 @@ const buildHandle = (
 						const prefix = pieces.slice(0, index + 1).join("/");
 						const resolved = resolvePath(volume, prefix === "" ? "/" : prefix);
 						if ("code" in resolved) {
-							return resolved.code === "ENOENT" ? errnoError("makeDirectory", path, "ENOENT") : error;
+							return resolved.code === "ENOENT" ? errnoError("makeDirectory", path, "ENOENT", undefined) : error;
 						}
 					}
 					return error;
@@ -1280,9 +1280,7 @@ export class MemoryFileSystem {
 	): MemoryFileSystemSyncFileSystem =>
 		withFaults(
 			makeSyncFileSystem(volume),
-			options?.faults as
-				| Partial<Record<keyof MemoryFileSystemSyncFileSystem, (...args: ReadonlyArray<unknown>) => unknown>>
-				| undefined,
+			options?.faults,
 			"MemoryFileSystem.syncFileSystem faults",
 		);
 
@@ -1305,9 +1303,7 @@ export class MemoryFileSystem {
 	): MemoryFileSystemPromisesFileSystem =>
 		withFaults(
 			makePromisesFileSystem(volume),
-			options?.faults as
-				| Partial<Record<keyof MemoryFileSystemPromisesFileSystem, (...args: ReadonlyArray<unknown>) => unknown>>
-				| undefined,
+			options?.faults,
 			"MemoryFileSystem.promisesFileSystem faults",
 			true,
 		);

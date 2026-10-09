@@ -1,8 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
+import * as S from "effect/Schema";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
-import { thrown } from "./helpers.ts";
+import { ErrnoFields, thrown } from "./helpers.ts";
 
 const seeded = MemoryFileSystem.makeHandle({
 	"/d/f.txt": MemoryFileSystem.file("abc", { mtime: 1_000 }),
@@ -241,12 +242,24 @@ describe("promises port", () => {
 			const { volume } = yield* tree;
 			const fsp = MemoryFileSystem.promisesFileSystem(volume);
 			const error = yield* Effect.flip(
-				Effect.tryPromise({ try: () => fsp.stat("/r/nope"), catch: (e) => e as { code: string; syscall: string } }),
+				Effect.tryPromise({
+					try: () => fsp.stat("/r/nope"),
+					catch: (e) => {
+						assert(S.is(ErrnoFields)(e));
+						return e;
+					},
+				}),
 			);
 			assert.strictEqual(error.code, "ENOENT");
 			assert.strictEqual(error.syscall, "stat");
 			const notDir = yield* Effect.flip(
-				Effect.tryPromise({ try: () => fsp.readdir("/r/file.txt"), catch: (e) => e as { code: string } }),
+				Effect.tryPromise({
+					try: () => fsp.readdir("/r/file.txt"),
+					catch: (e) => {
+						assert(S.is(ErrnoFields)(e));
+						return e;
+					},
+				}),
 			);
 			assert.strictEqual(notDir.code, "ENOTDIR");
 		}),
@@ -272,7 +285,13 @@ describe("promises port", () => {
 				},
 			});
 			const error = yield* Effect.flip(
-				Effect.tryPromise({ try: () => fsp.stat("/r/dir"), catch: (e) => e as { code: string } }),
+				Effect.tryPromise({
+					try: () => fsp.stat("/r/dir"),
+					catch: (e) => {
+						assert(S.is(ErrnoFields)(e));
+						return e;
+					},
+				}),
 			);
 			assert.strictEqual(error.code, "EACCES");
 			assert.isTrue((yield* Effect.promise(() => fsp.stat("/r/file.txt"))).isFile());
@@ -512,9 +531,10 @@ describe("MemoryFileSystem.syncFileSystem", () => {
 					sync.readFile("/repo/absent");
 					assert.fail("readFile should have thrown on an unseeded path");
 				} catch (error) {
-					assert.strictEqual((error as { code?: string }).code, "ENOENT");
-					assert.strictEqual((error as { syscall?: string }).syscall, "open");
-					assert.strictEqual((error as { path?: string }).path, "/repo/absent");
+					assert(S.is(ErrnoFields)(error));
+					assert.strictEqual(error.code, "ENOENT");
+					assert.strictEqual(error.syscall, "open");
+					assert.strictEqual(error.path, "/repo/absent");
 				}
 			}),
 	);

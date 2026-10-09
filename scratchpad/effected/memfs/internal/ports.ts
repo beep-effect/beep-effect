@@ -10,6 +10,7 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import type {
 	MemoryFileSystemDirent,
 	MemoryFileSystemPortStats,
@@ -109,14 +110,12 @@ const statOf = (volume: MemoryFileSystemVolume, path: string, syscall: "stat" | 
 };
 
 const isEncoded = (options: unknown): boolean =>
-	typeof options === "string" ||
-	(typeof options === "object" &&
-		options !== null &&
-		typeof (options as { readonly encoding?: unknown }).encoding === "string");
+	P.isString(options) ||
+	(P.isObjectOrArray(options) && P.hasProperty(options, "encoding") && P.isString(options.encoding));
 
 const settle = <A>(f: () => A): Promise<Awaited<A>> => {
 	try {
-		return Promise.resolve(f()) as Promise<Awaited<A>>;
+		return Promise.resolve(f());
 	} catch (e) {
 		return Promise.reject(e);
 	}
@@ -130,27 +129,31 @@ const settle = <A>(f: () => A): Promise<Awaited<A>> => {
  * REJECTS — as a real `fs/promises` call does — instead of throwing.
  */
 export const withFaults: {
-	<Port extends object>(faults: Partial<Record<keyof Port, (...args: ReadonlyArray<unknown>) => unknown>> | undefined, subject: string, async?: boolean): (port: Port) => Port;
-	<Port extends object>(port: Port, faults: Partial<Record<keyof Port, (...args: ReadonlyArray<unknown>) => unknown>> | undefined, subject: string, async?: boolean): Port;
+	<Port extends object>(faults: Partial<Record<keyof Port, (...args: never) => unknown>> | undefined, subject: string, async?: boolean): (port: Port) => Port;
+	<Port extends object>(port: Port, faults: Partial<Record<keyof Port, (...args: never) => unknown>> | undefined, subject: string, async?: boolean): Port;
 } = dual((args) => typeof args[1] !== "string", <Port extends object>(
 	port: Port,
-	faults: Partial<Record<keyof Port, (...args: ReadonlyArray<unknown>) => unknown>> | undefined,
+	faults: Partial<Record<keyof Port, (...args: never) => unknown>> | undefined,
 	subject: string,
 	async = false,
 ): Port => {
 	if (faults === undefined) return port;
 	assertKnownFaultKeys(faults, port, subject);
-	const out = Object.assign({}, port) as unknown as Record<string, unknown>;
-	for (const [name, handler] of Object.entries(faults)) {
-		const original = (port as Record<string, (...args: ReadonlyArray<unknown>) => unknown>)[name];
-		if (handler === undefined || original === undefined) continue;
-		const intercept = (...args: ReadonlyArray<unknown>) => {
-			const replaced = (handler as (...a: ReadonlyArray<unknown>) => unknown)(...args);
+	const out = Object.assign({}, port);
+	const entries: ReadonlyArray<readonly [string, unknown]> = Object.entries(faults);
+	for (const [name, handler] of entries) {
+		if (!P.hasProperty(port, name)) continue;
+		const original = port[name];
+		if (!P.isFunction(handler) || !P.isFunction(original)) continue;
+		const intercept = (...args: ReadonlyArray<unknown>): unknown => {
+			const replaced: unknown = handler(...args);
 			return replaced === undefined ? original(...args) : replaced;
 		};
-		out[name] = async ? (...args: ReadonlyArray<unknown>) => settle(() => intercept(...args)) : intercept;
+		Object.defineProperty(out, name, {
+			value: async ? (...args: ReadonlyArray<unknown>) => settle(() => intercept(...args)) : intercept,
+		});
 	}
-	return out as Port;
+	return out;
 });
 
 const decoder = new TextDecoder();
@@ -273,7 +276,9 @@ export const runNode: {
 	const code =
 		reason._tag === "BadArgument"
 			? "EINVAL"
-			: ((reason.cause as { code?: string } | undefined)?.code ?? fallbackErrnoForTag(reason._tag));
+			: (P.hasProperty(reason.cause, "code") && P.isString(reason.cause.code)
+				? reason.cause.code
+				: fallbackErrnoForTag(reason._tag));
 	const { syscall, path } = describe(error.value);
 	throw nodeErrno(code, syscall, path);
 });

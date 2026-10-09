@@ -105,22 +105,21 @@ export class ErrnoException extends Data.TaggedError("ErrnoException")<{ readonl
 	}
 }
 
-// String paths overlap method strings, and the optional description makes the two call forms ambiguous.
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const errnoError = (
-	method: string,
-	pathOrDescriptor: string | number,
-	code: ErrnoCode,
-	description?: string,
-): PlatformError =>
-	systemError({
-		module: "FileSystem",
-		_tag: errnoTag(code),
-		method,
-		pathOrDescriptor,
-		description,
-		cause: new ErrnoException(code, pathOrDescriptor),
-	});
+export const errnoError: {
+	(method: string, pathOrDescriptor: string | number, code: ErrnoCode, description: string | undefined): PlatformError;
+	(pathOrDescriptor: string | number, code: ErrnoCode, description: string | undefined): (method: string) => PlatformError;
+} = dual(
+	4,
+	(method: string, pathOrDescriptor: string | number, code: ErrnoCode, description: string | undefined): PlatformError =>
+		systemError({
+			module: "FileSystem",
+			_tag: errnoTag(code),
+			method,
+			pathOrDescriptor,
+			description,
+			cause: new ErrnoException(code, pathOrDescriptor),
+		}),
+);
 
 /**
  * What a synchronous `node:fs` call throws: node's message format
@@ -132,7 +131,8 @@ export const nodeErrno: {
 	(syscall: string, path: string | undefined): (code: string) => MemoryFileSystemErrnoError;
 	(code: string, syscall: string, path: string | undefined): MemoryFileSystemErrnoError;
 } = dual(3, (code: string, syscall: string, path: string | undefined): MemoryFileSystemErrnoError => {
-	const description = (errnoMessages as Record<string, string | undefined>)[code] ?? "error";
+	const messages: Readonly<Record<string, string | undefined>> = errnoMessages;
+	const description = messages[code] ?? "error";
 	const message = `${code}: ${description}, ${syscall}${path === undefined ? "" : ` '${path}'`}`;
 	return Object.assign(new Error(message), { code, syscall }, path === undefined ? {} : { path });
 });

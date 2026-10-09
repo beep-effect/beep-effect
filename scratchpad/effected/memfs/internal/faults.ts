@@ -6,31 +6,12 @@ import { dual } from "effect/Function";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as PlatformError from "effect/PlatformError";
-import * as Scope from "effect/Scope";
+import * as P from "effect/Predicate";
 import type {
-	MemoryFileSystemFaultMethod,
 	MemoryFileSystemFaults,
 	MemoryFileSystemFaultsFactory,
+	MemoryFileSystemTransientFault,
 } from "../MemoryFileSystem.ts";
-
-// The armed form of a fault: per-method parameter and return typing is erased
-// for storage in the method → handler map (a handler may return an Effect, a
-// Stream, a Sink, or undefined); `wrapFaulty` restores it at each call site.
-type ArmedHandler = (...args: ReadonlyArray<unknown>) => unknown;
-
-const armFault = (fault: NonNullable<MemoryFileSystemFaults[MemoryFileSystemFaultMethod]>): ArmedHandler => {
-	if (typeof fault === "function") {
-		return fault as ArmedHandler;
-	}
-	let remaining = fault.times;
-	return () => {
-		if (remaining <= 0) {
-			return undefined;
-		}
-		remaining -= 1;
-		return Effect.fail(fault.error);
-	};
-};
 
 /**
  * Throws a `RangeError` naming any fault key that is not a function-valued
@@ -43,7 +24,7 @@ export const assertKnownFaultKeys: {
 	(faults: object, target: object, subject: string): void;
 } = dual(3, (faults: object, target: object, subject: string): void => {
 	const members = new Set(
-		Object.keys(target).filter((key) => typeof (target as Record<string, unknown>)[key] === "function"),
+		Object.keys(target).filter((key) => P.hasProperty(target, key) && P.isFunction(target[key])),
 	);
 	const unknown = Object.keys(faults).filter((key) => !members.has(key));
 	if (unknown.length > 0) {
@@ -60,46 +41,29 @@ export const wrapFaulty: {
 	base: FileSystem.FileSystem,
 	registration: MemoryFileSystemFaults | MemoryFileSystemFaultsFactory,
 ): FileSystem.FileSystem => {
-	const faults = typeof registration === "function" ? registration(base) : registration;
+	const faults = Object.assign({}, typeof registration === "function" ? registration(base) : registration);
 	assertKnownFaultKeys(faults, base, "MemoryFileSystem faults");
-	const armed = new Map<MemoryFileSystemFaultMethod, ArmedHandler>();
-	for (const method of Object.keys(faults) as Array<MemoryFileSystemFaultMethod>) {
-		const fault = faults[method];
-		if (fault !== undefined) {
-			armed.set(method, armFault(fault));
-		}
-	}
-	// Effect-returning methods defer through Effect.suspend so each EXECUTION
-	// re-consults its handler — a retried effect re-decides, which is what lets
-	// failTimes count Effect.retry attempts rather than method invocations.
-	const intercept = <Method extends MemoryFileSystemFaultMethod>(
-		method: Method,
-		target: FileSystem.FileSystem[Method],
-	): FileSystem.FileSystem[Method] => {
-		const handler = armed.get(method);
-		if (handler === undefined) {
-			return target;
-		}
-		const delegate = target as (...args: ReadonlyArray<unknown>) => Effect.Effect<unknown, PlatformError.PlatformError, Scope.Scope>;
-		const intercepted = (...args: ReadonlyArray<unknown>) =>
-			Effect.suspend(() => (handler(...args) ?? delegate(...args)) as Effect.Effect<unknown, PlatformError.PlatformError, Scope.Scope>);
-		return intercepted as FileSystem.FileSystem[Method];
+	// Each wrapper keeps its method's arguments, success and environment types.
+	// Transient state is armed once here, then consulted on every execution.
+	const intercept = <Args extends ReadonlyArray<unknown>, Value, Requirements>(
+		target: (...args: Args) => Effect.Effect<Value, PlatformError.PlatformError, Requirements>,
+		fault: ((...args: Args) => Effect.Effect<Value, PlatformError.PlatformError, Requirements> | undefined)
+			| MemoryFileSystemTransientFault | undefined,
+	): ((...args: Args) => Effect.Effect<Value, PlatformError.PlatformError, Requirements>) => {
+		if (fault === undefined) return target;
+		let remaining = P.isFunction(fault) ? 0 : fault.times;
+		return (...args) => Effect.suspend(() => {
+			if (P.isFunction(fault)) return fault(...args) ?? target(...args);
+			if (remaining <= 0) return target(...args);
+			remaining -= 1;
+			return Effect.fail(fault.error);
+		});
 	};
-	// `stream`, `sink` and `watch` return Streams/Sinks — lazy by construction
-	// — so their handlers are consulted when the method is called; the value
-	// the handler returns (or the delegate's) carries its own per-run laziness.
-	const interceptLazy = <Method extends "sink" | "stream" | "watch">(
-		method: Method,
-		target: FileSystem.FileSystem[Method],
-	): FileSystem.FileSystem[Method] => {
-		const handler = armed.get(method);
-		if (handler === undefined) {
-			return target;
-		}
-		const delegate = target as (...args: ReadonlyArray<unknown>) => unknown;
-		const intercepted = (...args: ReadonlyArray<unknown>) => handler(...args) ?? delegate(...args);
-		return intercepted as FileSystem.FileSystem[Method];
-	};
+	// Streams and sinks carry their own laziness; consult these handlers at call time.
+	const interceptLazy = <Args extends ReadonlyArray<unknown>, Value>(
+		target: (...args: Args) => Value,
+		fault: ((...args: Args) => Value | undefined) | undefined,
+	): ((...args: Args) => Value) => fault === undefined ? target : (...args) => fault(...args) ?? target(...args);
 	// Rebuilding through FileSystem.make re-derives `exists`, `readFileString`,
 	// `writeFileString`, `stream` and `sink` from the intercepted core methods,
 	// so a fault registered on e.g. `readFile` or `open` propagates coherently
@@ -116,38 +80,38 @@ export const wrapFaulty: {
 	} = base;
 	const core = FileSystem.make({
 		...primitives,
-		access: intercept("access", base.access),
-		chmod: intercept("chmod", base.chmod),
-		chown: intercept("chown", base.chown),
-		copy: intercept("copy", base.copy),
-		copyFile: intercept("copyFile", base.copyFile),
-		glob: intercept("glob", base.glob),
-		link: intercept("link", base.link),
-		makeDirectory: intercept("makeDirectory", base.makeDirectory),
-		makeTempDirectory: intercept("makeTempDirectory", base.makeTempDirectory),
-		makeTempDirectoryScoped: intercept("makeTempDirectoryScoped", base.makeTempDirectoryScoped),
-		makeTempFile: intercept("makeTempFile", base.makeTempFile),
-		makeTempFileScoped: intercept("makeTempFileScoped", base.makeTempFileScoped),
-		open: intercept("open", base.open),
-		readDirectory: intercept("readDirectory", base.readDirectory),
-		readFile: intercept("readFile", base.readFile),
-		readLink: intercept("readLink", base.readLink),
-		realPath: intercept("realPath", base.realPath),
-		remove: intercept("remove", base.remove),
-		rename: intercept("rename", base.rename),
-		stat: intercept("stat", base.stat),
-		symlink: intercept("symlink", base.symlink),
-		truncate: intercept("truncate", base.truncate),
-		utimes: intercept("utimes", base.utimes),
-		watch: interceptLazy("watch", base.watch),
-		writeFile: intercept("writeFile", base.writeFile),
+		access: intercept(base.access, faults.access),
+		chmod: intercept(base.chmod, faults.chmod),
+		chown: intercept(base.chown, faults.chown),
+		copy: intercept(base.copy, faults.copy),
+		copyFile: intercept(base.copyFile, faults.copyFile),
+		glob: intercept(base.glob, faults.glob),
+		link: intercept(base.link, faults.link),
+		makeDirectory: intercept(base.makeDirectory, faults.makeDirectory),
+		makeTempDirectory: intercept(base.makeTempDirectory, faults.makeTempDirectory),
+		makeTempDirectoryScoped: intercept(base.makeTempDirectoryScoped, faults.makeTempDirectoryScoped),
+		makeTempFile: intercept(base.makeTempFile, faults.makeTempFile),
+		makeTempFileScoped: intercept(base.makeTempFileScoped, faults.makeTempFileScoped),
+		open: intercept(base.open, faults.open),
+		readDirectory: intercept(base.readDirectory, faults.readDirectory),
+		readFile: intercept(base.readFile, faults.readFile),
+		readLink: intercept(base.readLink, faults.readLink),
+		realPath: intercept(base.realPath, faults.realPath),
+		remove: intercept(base.remove, faults.remove),
+		rename: intercept(base.rename, faults.rename),
+		stat: intercept(base.stat, faults.stat),
+		symlink: intercept(base.symlink, faults.symlink),
+		truncate: intercept(base.truncate, faults.truncate),
+		utimes: intercept(base.utimes, faults.utimes),
+		watch: interceptLazy(base.watch, faults.watch),
+		writeFile: intercept(base.writeFile, faults.writeFile),
 	});
 	return {
 		...core,
-		exists: intercept("exists", core.exists),
-		readFileString: intercept("readFileString", core.readFileString),
-		sink: interceptLazy("sink", core.sink),
-		stream: interceptLazy("stream", core.stream),
-		writeFileString: intercept("writeFileString", core.writeFileString),
+		exists: intercept(core.exists, faults.exists),
+		readFileString: intercept(core.readFileString, faults.readFileString),
+		sink: interceptLazy(core.sink, faults.sink),
+		stream: interceptLazy(core.stream, faults.stream),
+		writeFileString: intercept(core.writeFileString, faults.writeFileString),
 	};
 });

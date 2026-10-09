@@ -14,6 +14,8 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
+import * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
 import { NodeSyncFileSystem } from "../../../effected/memfs/NodeSyncFileSystem.ts";
 
 let d: string;
@@ -27,7 +29,7 @@ beforeAll(() => {
 });
 afterAll(() => rmSync(d, { recursive: true, force: true }));
 
-const both = <A, E>(op: (fs: FileSystem.FileSystem) => Effect.Effect<A, E>) => {
+const both = <A>(op: (fs: FileSystem.FileSystem) => Effect.Effect<A, PlatformError.PlatformError>) => {
 	const program = Effect.gen(function* () {
 		return yield* op(yield* FileSystem.FileSystem);
 	});
@@ -37,18 +39,17 @@ const both = <A, E>(op: (fs: FileSystem.FileSystem) => Effect.Effect<A, E>) => {
 	]);
 };
 
-const failureShape = (exit: Exit.Exit<unknown, unknown>) => {
+const failureShape = (exit: Exit.Exit<unknown, PlatformError.PlatformError>) => {
 	if (Exit.isSuccess(exit)) return "success";
 	const failure = exit.cause.reasons.find(Cause.isFailReason);
-	const error = failure?.error as
-		| { _tag: string; reason: { _tag: string; method: string; cause?: { code?: string; syscall?: string } } }
-		| undefined;
+	const error = failure?.error;
+	const cause = error?.reason.cause;
 	return {
 		kind: error?._tag,
 		reasonTag: error?.reason._tag,
 		method: error?.reason.method,
-		code: error?.reason.cause?.code,
-		syscall: error?.reason.cause?.syscall,
+		code: P.hasProperty(cause, "code") ? cause.code : undefined,
+		syscall: P.hasProperty(cause, "syscall") ? cause.syscall : undefined,
 	};
 };
 

@@ -132,7 +132,7 @@ describe("MemoryFileSystem.makeSync", () => {
 	it("a contradictory seed throws a node-shaped error synchronously", () => {
 		// Seeding "/a/b" needs "/a" as a directory; a recursive mkdir over the
 		// file "/a" is EEXIST, as `mkdirSync({ recursive: true })` reports it.
-		const e = thrown(() => MemoryFileSystem.makeSync({ "/a": "x", "/a/b": "y" })) as Record<string, unknown>;
+		const e = thrown(() => MemoryFileSystem.makeSync({ "/a": "x", "/a/b": "y" }));
 		assert.strictEqual(e.code, "EEXIST");
 		// node's syscall for the failing seed step, never the Effect method name.
 		assert.strictEqual(e.syscall, "mkdir");
@@ -142,16 +142,13 @@ describe("MemoryFileSystem.makeSync", () => {
 	});
 
 	it("each seed step reports node's syscall: an invalid directory mode fails in chmod", () => {
-		const e = thrown(() => MemoryFileSystem.makeSync({ "/d": MemoryFileSystem.directory({ mode: -1 }) })) as Record<
-			string,
-			unknown
-		>;
+		const e = thrown(() => MemoryFileSystem.makeSync({ "/d": MemoryFileSystem.directory({ mode: -1 }) }));
 		assert.strictEqual(e.code, "EINVAL");
 		assert.strictEqual(e.syscall, "chmod");
 	});
 
 	it("a bad root is EINVAL, node-shaped, naming the root", () => {
-		const e = thrown(() => MemoryFileSystem.makeSync({ a: "" }, { root: "ws" })) as Record<string, unknown>;
+		const e = thrown(() => MemoryFileSystem.makeSync({ a: "" }, { root: "ws" }));
 		assert.strictEqual(e.code, "EINVAL");
 		assert.strictEqual(e.syscall, "seed");
 		assert.strictEqual(e.path, "ws");
@@ -160,7 +157,7 @@ describe("MemoryFileSystem.makeSync", () => {
 	});
 
 	it("a bad seed key is EINVAL naming the key in the path slot and the message", () => {
-		const e = thrown(() => MemoryFileSystem.makeSync({ "/abs.txt": "" }, { root: "/ws" })) as Record<string, unknown>;
+		const e = thrown(() => MemoryFileSystem.makeSync({ "/abs.txt": "" }, { root: "/ws" }));
 		assert.strictEqual(e.code, "EINVAL");
 		assert.strictEqual(e.path, "/abs.txt");
 		assert.include(String(e.message), "'/abs.txt'");
@@ -288,7 +285,8 @@ describe("MemoryFileSystem.makeSync", () => {
 		} catch {
 			assert.fail("a sync-throwing promises fault must reject, not throw");
 		}
-		const rejected = await (pending as Promise<unknown>).then(
+		assert.isDefined(pending);
+		const rejected = await pending.then(
 			() => undefined,
 			(e: { code?: string }) => e.code,
 		);
@@ -343,7 +341,7 @@ describe("MemoryFileSystem.makeSync", () => {
 describe("runMutation", () => {
 	it("rethrows a defect unchanged rather than converting it to an errno", () => {
 		const defect = new Error("boom");
-		const e = thrown(() => runMutation(Effect.die(defect) as never, "writeFile", "/x"));
+		const e = thrown(() => runMutation(Effect.die(defect), "writeFile", "/x"));
 		assert.strictEqual(e, defect);
 	});
 

@@ -220,7 +220,7 @@ const invalidData = (method: string, path: string, description: string): Platfor
 
 // Errno fidelity: the errno → tag mapping lives in ./errno.js.
 
-const alreadyExists = (method: string, path: string): PlatformError => errnoError(method, path, "EEXIST");
+const alreadyExists = (method: string, path: string): PlatformError => errnoError(method, path, "EEXIST", undefined);
 
 const permissionDenied = (method: string, path: string, description: string): PlatformError =>
 	fileSystemError({ _tag: "PermissionDenied", method, pathOrDescriptor: path, description });
@@ -237,7 +237,7 @@ const badResource = (
 const volumeLimit = (method: string, pathOrDescriptor: string | number, description: string): PlatformError =>
 	fileSystemError({ _tag: "BadResource", method, pathOrDescriptor, description });
 
-const notFound = (method: string, path: string): PlatformError => errnoError(method, path, "ENOENT");
+const notFound = (method: string, path: string): PlatformError => errnoError(method, path, "ENOENT", undefined);
 
 const argumentError = (method: string, description: string): PlatformError =>
 	badArgument({ module: "FileSystem", method, description });
@@ -756,7 +756,7 @@ const resolveParent = Effect.fnUntraced(function* (
 		const existing = yield* Effect.result(resolve(state, trimmed, { method }));
 		if (existing._tag === "Failure") {
 			return yield* existing.failure.reason._tag === "NotFound"
-				? errnoError(method, errorPath, missingWithTrailingSlash)
+				? errnoError(method, errorPath, missingWithTrailingSlash, undefined)
 				: withSystemErrorPath(existing.failure, method, errorPath);
 		}
 		if (existing.success.entry._tag !== "Directory") {
@@ -931,7 +931,7 @@ const makeDirectory = (volume: Volume) =>
 								return yield* withSystemErrorPath(existing.failure, method, path);
 							}
 							const final = index === pieces.length - 1;
-							return yield* errnoError(method, path, !final && cause.code === "ENOENT" ? "ENOTDIR" : cause.code);
+							return yield* errnoError(method, path, !final && cause.code === "ENOENT" ? "ENOTDIR" : cause.code, undefined);
 						}
 						// END KIT EXTENSION (errno fidelity)
 						return yield* alreadyExists(method, path);

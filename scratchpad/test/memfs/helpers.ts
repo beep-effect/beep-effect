@@ -1,6 +1,8 @@
 // Kit-owned test helpers shared across suites. The upstream-ported
 // MemoryFileSystem.test.ts keeps its own watch collector.
 
+import { assert } from "@effect/vitest";
+import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 import type * as FileSystem from "effect/FileSystem";
 import * as Effect from "effect/Effect";
@@ -8,12 +10,23 @@ import * as Fiber from "effect/Fiber";
 import * as PlatformError from "effect/PlatformError";
 import * as Stream from "effect/Stream";
 
+// The optional errno metadata shared by host errors, injected errors and defects.
+export const ErrnoFields = S.Struct({
+	code: S.optional(S.String),
+	syscall: S.optional(S.String),
+	path: S.optional(S.String),
+	name: S.optional(S.String),
+	message: S.optional(S.String),
+	_tag: S.optional(S.Unknown),
+});
+
 /** Runs `f`, which must throw, and returns what it threw. */
-export const thrown = (f: () => unknown): { code?: string; syscall?: string; path?: string; name?: string } => {
+export const thrown = (f: () => unknown): typeof ErrnoFields.Type => {
 	try {
 		f();
 	} catch (e) {
-		return e as { code?: string; syscall?: string; path?: string; name?: string };
+		assert(S.is(ErrnoFields)(e));
+		return e;
 	}
 	throw new Error("expected a throw");
 };

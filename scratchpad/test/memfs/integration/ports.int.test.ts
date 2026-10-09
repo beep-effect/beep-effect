@@ -17,7 +17,10 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
+import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
+import { ErrnoFields } from "../helpers.ts";
 import { MemoryFileSystem } from "../../../effected/memfs/index.ts";
 
 let host: string;
@@ -44,11 +47,11 @@ interface StatLike {
 }
 
 // `size` is compared for files only: a directory's size is host-defined.
-const outcome = (f: () => unknown) => {
+const outcome = (f: () => StatLike | string | ReadonlyArray<string>) => {
 	try {
 		const value = f();
 		if (typeof value === "object" && value !== null && "isSymbolicLink" in value) {
-			const s = value as StatLike;
+			const s = value;
 			return {
 				kind: s.isSymbolicLink() ? "symlink" : s.isDirectory() ? "directory" : "file",
 				size: s.isFile() ? s.size : -1,
@@ -58,7 +61,9 @@ const outcome = (f: () => unknown) => {
 	} catch (e) {
 		// The message is compared too, with the host prefix mapped onto the
 		// memory tree's "/r": node's text is "<CODE>: <description>, <syscall> '<path>'".
-		const error = e as { code: string; syscall: string; message: string; path?: string };
+		assert(S.is(ErrnoFields)(e));
+		const error = e;
+		assert(P.isString(error.message));
 		return {
 			code: error.code,
 			syscall: error.syscall,
@@ -199,7 +204,8 @@ describe("handle mutators under a dangling or looping parent link, as the host r
 				f();
 				return "ok";
 			} catch (e) {
-				return (e as { code: string; syscall: string }).code;
+				assert(S.is(ErrnoFields)(e));
+				return e.code;
 			}
 		};
 		const hostCall = (f: () => void) => {
@@ -207,7 +213,8 @@ describe("handle mutators under a dangling or looping parent link, as the host r
 				f();
 				return "ok";
 			} catch (e) {
-				const { code, syscall } = e as { code: string; syscall: string };
+				assert(S.is(ErrnoFields)(e));
+				const { code, syscall } = e;
 				return `${code} ${syscall}`;
 			}
 		};
@@ -251,7 +258,8 @@ describe("handle mutators under a dangling or looping parent link, as the host r
 				f();
 				return "ok";
 			} catch (e) {
-				return (e as { code: string }).code;
+				assert(S.is(ErrnoFields)(e));
+				return e.code;
 			}
 		};
 		assert.strictEqual(
@@ -267,7 +275,8 @@ describe("handle mutators under a dangling or looping parent link, as the host r
 				f();
 				return "ok";
 			} catch (e) {
-				const { code, syscall } = e as { code: string; syscall: string };
+				assert(S.is(ErrnoFields)(e));
+				const { code, syscall } = e;
 				return `${code} ${syscall}`;
 			}
 		};
@@ -311,7 +320,8 @@ describe("handle mkdir through links, as mkdirSync(p, { recursive: true }) repor
 			f();
 			return "ok";
 		} catch (e) {
-			const { code, syscall } = e as { code: string; syscall: string };
+			assert(S.is(ErrnoFields)(e));
+			const { code, syscall } = e;
 			return `${code} ${syscall}`;
 		}
 	};

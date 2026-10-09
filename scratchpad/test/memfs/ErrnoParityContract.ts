@@ -23,6 +23,7 @@ import { assert, describe, layer } from "@effect/vitest";
 import type * as Layer from "effect/Layer";
 import type * as Scope from "effect/Scope";
 import * as Cause from "effect/Cause";
+import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Result from "effect/Result";
@@ -588,8 +589,9 @@ const assertOutcome = (exit: Exit.Exit<unknown, PlatformError.PlatformError>, ex
 	assert.strictEqual(error.reason._tag, expected.tag);
 	assert.strictEqual(error.reason.method, expected.method);
 	if (expected.code !== undefined) {
-		const cause = error.reason.cause as { readonly code?: unknown } | undefined;
-		assert.strictEqual(cause?.code, expected.code);
+		const cause = error.reason.cause;
+		assert(P.hasProperty(cause, "code"));
+		assert.strictEqual(cause.code, expected.code);
 	}
 };
 
