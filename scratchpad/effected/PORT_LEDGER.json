@@ -2145,13 +2145,194 @@
       "wave": 1,
       "position": 10,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "drivers",
       "upstreamPaths": {
         "src": "packages/commands/src",
         "test": "packages/commands/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "CommandFailedError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CommandOutput",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CommandOutputError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "DEFAULT_MAX_OUTPUT_BYTES",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "ExecContext",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Launcher",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LauncherPrefixes",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "LocalExec",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LocalExecError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LocalExecShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MismatchPolicy",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "REDACTED",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "Redaction",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ResolvedSource",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ResolvedTool",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Retry",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Run",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "RunOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SECRET_FLAGS",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "ScriptResult",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ScriptedSpawner",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SpawnRecord",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SpawnScript",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TRANSIENT_PATTERNS",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "Tool",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ToolDiscovery",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ToolDiscoveryShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ToolNotFoundError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ToolRefusedError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ToolResolutionFailure",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ToolSource",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ToolVersionMismatchError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "VersionFlag",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "VersionJson",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "VersionNone",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "VersionProbe",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
