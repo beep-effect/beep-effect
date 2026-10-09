@@ -6,7 +6,9 @@
  */
 
 import { A } from "@beep/utils";
-import { Console, Effect, Path } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Path from "effect/Path";
 import { TsconfigSyncPlan } from "./TsconfigSync.plan.ts";
 import { TsconfigSyncModeMatch } from "./TsconfigSync.schemas.ts";
 import type { TsconfigSyncChange, TsconfigSyncMode } from "./TsconfigSync.schemas.ts";

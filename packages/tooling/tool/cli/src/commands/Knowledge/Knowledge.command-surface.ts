@@ -9,9 +9,15 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { Effect, FileSystem, HashMap, HashSet, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import {
   InMemoryFileSystemHost,

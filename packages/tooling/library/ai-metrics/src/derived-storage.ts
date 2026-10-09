@@ -11,7 +11,11 @@ import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Clock, Effect, FileSystem, flow, Path, pipe } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { AiMetricsRawArchiveObject } from "./archive.ts";
 import { AiMetricsStorageLayout } from "./install.ts";
@@ -1006,7 +1010,7 @@ const ensureAiMetricsDerivedStorageRaw = Effect.fn("AiMetrics.derivedStorage.ens
  * ```ts
  * import { ensureAiMetricsDerivedStorage } from "@beep/repo-ai-metrics"
  * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const program = ensureAiMetricsDerivedStorage.pipe(
  *   Effect.provide(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({
  *     databasePath: ".beep/ai-metrics/derived/ai-metrics.duckdb"

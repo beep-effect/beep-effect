@@ -18,7 +18,9 @@ import {
   mailTaggingServiceConfigLayer,
 } from "@beep/law-practice-server/MailTagging";
 import { M365 } from "@beep/m365";
-import { Effect, Layer, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import {
   boxCredentialConfig,
@@ -33,8 +35,9 @@ import type { BoxError } from "@beep/box";
 import type { TaggingRunId } from "@beep/law-practice-domain/values/MailTagging";
 import type { BackfillCheckpointStore, FilingLedger, TagLedger } from "@beep/law-practice-use-cases/MailTagging";
 import type { M365Error } from "@beep/m365";
-import type { Config, FileSystem } from "effect";
+import type * as Config from "effect/Config";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
 import type { BoxCredential, PracticeMailTaggingConfig } from "../PracticeMailTagging.config.ts";
 
 const kgDatabaseFile = "practice.duckdb";

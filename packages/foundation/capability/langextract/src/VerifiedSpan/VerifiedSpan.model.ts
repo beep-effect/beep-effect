@@ -9,13 +9,15 @@ import { GroundedExtraction, MAX_EXTRACTION_CANDIDATES } from "@beep/langextract
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchorVerificationReceipt, VerifiedTextAnchorErrorReason } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit } from "@beep/schema";
-import { DateTime, Effect, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Tuple from "effect/Tuple";
 import { VERIFIED_SPAN_NORMALIZATION_VERSION } from "./VerifiedSpan.config.ts";
 import { VerifiedSpanErrorReason } from "./VerifiedSpan.errors.ts";
 import { normalizeTextLocator } from "./VerifiedSpan.normalization.ts";

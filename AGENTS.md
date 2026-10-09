@@ -142,7 +142,9 @@ Runbook: `docs/runbooks/agent-pools.md`.
 
 - Use schema-first domain models; prefer typed errors and tagged unions.
 - Prefer effect helper modules (`String`, `Equal`, ...) over native helpers;
-  keep root `effect` imports for core combinators.
+  import every Effect module from its `effect/<Module>` path. Import `pipe`,
+  `flow`, and `identity` from `effect/Function`. Do not import from the root
+  `effect` barrel in code, JSDoc examples, or Markdown code blocks.
 - Prefer match helpers over conditional chains; prefer service composition
   over global state; keep service boundaries explicit.
 - Prefer the tersest equivalent helper form when behavior is unchanged: direct

@@ -21,12 +21,18 @@ import {
 import { Uspto, UsptoConfigInput } from "@beep/uspto";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Context, Effect, FileSystem, Layer, Path, Redacted, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { HttpClient, HttpClientResponse } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as M from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 
@@ -353,7 +359,7 @@ describe("extraction batch pairing", () => {
           "",
         ],
       ]) {
-        const error = yield* Effect.scoped(Effect.flip(Layer.build(batches(extract!, critic!))));
+        const error = yield* batches(extract!, critic!).pipe(Layer.build, Effect.flip, Effect.scoped);
         expect(["invalid-input", "conflicting-records"]).toContain(error.reason);
         expect(String(error)).not.toContain("bad-private-line");
       }

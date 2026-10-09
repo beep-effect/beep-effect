@@ -7,8 +7,8 @@
  */
 
 import { findRepoRoot } from "@beep/repo-utils";
-import { Effect } from "effect";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
 import {
   effectSchemaInventoryRequestFromFlags,
   runEffectSchemaInventory,

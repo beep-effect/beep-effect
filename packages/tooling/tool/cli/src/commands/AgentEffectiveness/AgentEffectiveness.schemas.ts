@@ -9,7 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { A } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 
@@ -439,8 +439,7 @@ const taskManifestJsonCodec = JsonStringCodec(SkillOptTaskManifest);
  *
  * ```ts
  * import { decodeTaskManifestJson } from "@beep/repo-cli/commands/AgentEffectiveness"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const manifest = '{"id":"task","ruleIds":[],"derivedFrom":[],"prompt":"p","fixture":"fixture","entrypoint":"src/index.ts","completion":{}}'
  * console.log(Effect.isEffect(decodeTaskManifestJson(manifest)))
  * ```
@@ -460,8 +459,7 @@ const scoreReportJsonCodec = JsonStringCodec(AgentEffectivenessEvalScoreReport);
  *
  * ```ts
  * import { AgentEffectivenessEvalScoreBreakdown, AgentEffectivenessEvalScoreReport, encodeAgentEffectivenessEvalScoreReportJson } from "@beep/repo-cli/commands/AgentEffectiveness"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const report = AgentEffectivenessEvalScoreReport.make({
  *   taskId: "task",
  *   score: 1,

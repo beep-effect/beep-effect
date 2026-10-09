@@ -12,14 +12,17 @@ import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import { P, R } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-import { DateTime, flow, identity, Order, pipe, Result, SchemaTransformation } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as DateTime from "effect/DateTime";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, flow, identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import { PosInt } from "../../internal/PosInt.ts";
 import { Confidence } from "../EvidenceSpan/index.ts";
@@ -1336,7 +1339,7 @@ const encodeProposalContent = S.encodeResult(ContradictionProposalContent.mapFie
  * } from "@beep/epistemic-domain/values/Contradiction"
  * import { LogicalEdgeKey } from "@beep/epistemic-domain/values/LogicalEdgeIdentity"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  * import * as Result from "effect/Result"
  * import * as Str from "effect/String"
@@ -1462,7 +1465,7 @@ const encodeCandidateContent = S.encodeResult(ContradictionCandidateContent.mapF
  * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
  * import { LogicalEdgeKey } from "@beep/epistemic-domain/values/LogicalEdgeIdentity"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  * import * as Result from "effect/Result"
  * import * as Str from "effect/String"

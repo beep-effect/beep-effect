@@ -38,10 +38,15 @@ import {
   UsptoRecordLookup,
 } from "@beep/law-practice-use-cases/DocumentIdentification";
 import { Uspto } from "@beep/uspto";
-import { Context, Effect, FileSystem, Layer, Path, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { IdentificationStages, IdentificationStagesShape } from "../PracticeIdentify.config.ts";
 import type { ContactsInput, EvaluateInput, IndexInput, ResolveInput, UsptoInput } from "../PracticeIdentify.config.ts";
@@ -60,7 +65,7 @@ const encodeLedgerLine = S.encodeEffect(S.fromJsonString(QueryLedgerLine));
  * ```ts
  * import { makeIdentificationStages } from "@/runtime/Layer"
  * import { UsptoRecordLookup, UsptoRecordLookupShape } from "@beep/law-practice-use-cases/DocumentIdentification"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer"
  * const lookups = Layer.succeed(UsptoRecordLookup, UsptoRecordLookupShape.make({ byApplication: () => Effect.succeedNone, byPatent: () => Effect.succeedNone }))
  * console.log(Layer.isLayer(makeIdentificationStages(lookups))) // true

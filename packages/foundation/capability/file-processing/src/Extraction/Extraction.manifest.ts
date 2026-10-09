@@ -35,7 +35,7 @@ type JsonEncodeEffect<Input> = {
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { SucceededSourceProcessingRecord } from "@beep/file-processing/Extraction"
  * import { PosixPath } from "@beep/schema/PosixPath"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -92,7 +92,7 @@ export class SucceededSourceProcessingRecord extends S.Class<SucceededSourceProc
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { SkippedSourceProcessingRecord } from "@beep/file-processing/Extraction"
  * import { PosixPath } from "@beep/schema/PosixPath"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -148,7 +148,7 @@ export class SkippedSourceProcessingRecord extends S.Class<SkippedSourceProcessi
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { FailedSourceProcessingRecord } from "@beep/file-processing/Extraction"
  * import { PosixPath } from "@beep/schema/PosixPath"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -200,7 +200,7 @@ export class FailedSourceProcessingRecord extends S.Class<FailedSourceProcessing
  * ```ts
  * import { ArtifactId, ContentDigest, OperationId } from "@beep/file-processing/Artifact"
  * import { SourceProcessingRecord } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -243,7 +243,7 @@ export const SourceProcessingRecord = S.Union([
  *
  * ```ts import.meta.vitest name="Type source processing record"
  * import { SourceProcessingRecord } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -274,7 +274,7 @@ export type SourceProcessingRecord = typeof SourceProcessingRecord.Type;
  *
  * ```ts import.meta.vitest name="Decode failure reason value"
  * import { FileProcessingFailureReason } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(FileProcessingFailureReason)("format-out-of-scope")
@@ -298,7 +298,7 @@ export const FileProcessingFailureReason = S.Union([FileProcessingOperationError
  *
  * ```ts import.meta.vitest name="Type failure reason value"
  * import { FileProcessingFailureReason } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -323,7 +323,7 @@ export type FileProcessingFailureReason = typeof FileProcessingFailureReason.Typ
  *
  * ```ts
  * import { SkippedFileProcessingFailureRecord } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(SkippedFileProcessingFailureRecord)({
@@ -369,7 +369,7 @@ export class SkippedFileProcessingFailureRecord extends S.Class<SkippedFileProce
  * import { ArtifactId, OperationId } from "@beep/file-processing/Artifact"
  * import { FailedFileProcessingFailureRecord } from "@beep/file-processing/Extraction"
  * import { PosixPath } from "@beep/schema/PosixPath"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -419,7 +419,7 @@ export class FailedFileProcessingFailureRecord extends S.Class<FailedFileProcess
  *
  * ```ts
  * import { FileProcessingFailureRecord } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(FileProcessingFailureRecord)({
@@ -455,7 +455,7 @@ export const FileProcessingFailureRecord = S.Union([
  *
  * ```ts import.meta.vitest name="Type failure record"
  * import { FileProcessingFailureRecord } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
@@ -486,7 +486,7 @@ export type FileProcessingFailureRecord = typeof FileProcessingFailureRecord.Typ
  *
  * ```ts
  * import { ChildArtifactRecord } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(ChildArtifactRecord)({
@@ -526,7 +526,7 @@ export class ChildArtifactRecord extends S.Class<ChildArtifactRecord>($I`ChildAr
  *
  * ```ts
  * import { FileProcessingCoverageSummary } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(FileProcessingCoverageSummary)({
@@ -572,7 +572,7 @@ export class FileProcessingCoverageSummary extends S.Class<FileProcessingCoverag
  *
  * ```ts
  * import { ProcessRunManifest } from "@beep/file-processing/Extraction"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(ProcessRunManifest)({

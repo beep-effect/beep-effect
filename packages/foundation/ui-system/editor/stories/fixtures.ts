@@ -1,6 +1,6 @@
 import { documentToEditorState } from "@beep/lexical-schema";
 import * as MdModel from "@beep/md/Md.model";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 
 /**

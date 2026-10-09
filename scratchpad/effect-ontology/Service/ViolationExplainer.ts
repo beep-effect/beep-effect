@@ -14,7 +14,10 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { Dataset } from "@beep/rdf";
 import { ShaclSeverity, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import { Clock, Context, Effect, Layer } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -324,8 +327,8 @@ const ExplanationResponseSchema = S.Struct({
  * **Example** (Inspect the violation-explainer layer)
  *
  * ```ts
- * import { Layer } from "effect"
- * import { Effect } from "effect"
+ * import * as Layer from "effect/Layer";
+ * import * as Effect from "effect/Effect";
  * import { ViolationExplainer } from "@effect-ontology/Service/ViolationExplainer"
  *
  * const program = Effect.gen(function* () {

@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import type { Agent } from "../../Domain/Model/Agent.ts";
 import { AgentId, AgentMetadata } from "../../Domain/Model/Agent.ts";

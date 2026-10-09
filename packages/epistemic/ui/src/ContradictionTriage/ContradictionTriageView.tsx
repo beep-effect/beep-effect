@@ -39,11 +39,14 @@ import { FileMagnifyingGlassIcon as FileSearchIcon } from "@phosphor-icons/react
 import { ScalesIcon } from "@phosphor-icons/react/Scales";
 import { WarningCircleIcon } from "@phosphor-icons/react/WarningCircle";
 import { XCircleIcon } from "@phosphor-icons/react/XCircle";
-import { DateTime, Match, Number as N, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as DateTime from "effect/DateTime";
 import * as Eq from "effect/Equal";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

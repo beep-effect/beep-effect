@@ -10,11 +10,14 @@ import * as dns from "node:dns";
 import { $BoxId } from "@beep/identity";
 import { assertAllowedRemoteUrl, BlockedHostError, HttpsUrl } from "@beep/schema";
 import * as NodeStream from "@effect/platform-node-shared/NodeStream";
-import { Effect, Exit, Result, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as M from "./_generated/Box.models.gen.ts";
 import { BoxError } from "./Box.errors.ts";
 import { BOX_SDK_VERSION } from "./internal/Box.constants.ts";
@@ -72,7 +75,7 @@ const LastPartIndex = S.Int.check(
  * **Example** (Stream byte input example)
  *
  * ```ts
- * import { Stream } from "effect"
+ * import * as Stream from "effect/Stream";
  * import type { BoxByteInput } from "@beep/box"
  *
  * const bytes: BoxByteInput = Stream.make(new Uint8Array([1, 2, 3]))
@@ -90,7 +93,7 @@ export type BoxByteInput = typeof BoxByteInputValue.Type;
  * **Example** (Empty byte stream example)
  *
  * ```ts
- * import { Stream } from "effect"
+ * import * as Stream from "effect/Stream";
  * import type { BoxByteStream } from "@beep/box"
  *
  * const bytes: BoxByteStream = Stream.empty
@@ -816,10 +819,10 @@ const byteInputToReadable = (method: BoxMethodName, value: unknown): Effect.Effe
     );
   }
   if (value instanceof Uint8Array) {
-    return Effect.succeed(NodeStream.toReadableNever(Stream.make(value)));
+    return Stream.make(value).pipe(NodeStream.toReadableNever, Effect.succeed);
   }
   if (Stream.isStream(value)) {
-    return Effect.succeed(NodeStream.toReadableNever(value));
+    return value.pipe(NodeStream.toReadableNever, Effect.succeed);
   }
   return Effect.succeed(value);
 };
@@ -982,8 +985,7 @@ const runEventStreamSdkCall = <Payload>(
  *
  * ```ts
  * import { makeStreamingOperations } from "@beep/box"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const operations = makeStreamingOperations({
  *   uploads: {
  *     uploadFile: () => Promise.resolve({ entries: [], totalCount: 1 })

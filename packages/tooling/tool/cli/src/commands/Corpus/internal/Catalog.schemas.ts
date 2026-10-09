@@ -116,8 +116,7 @@ export class CorpusCatalogSourceFileRecord extends S.Class<CorpusCatalogSourceFi
  * import * as S from "effect/Schema"
  * import { CorpusCatalogSourceFileRecord, encodeCorpusCatalogSourceFileRecordJson } from "@beep/repo-cli/commands/Corpus"
  * import { Sha256Hex } from "@beep/schema"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const record = CorpusCatalogSourceFileRecord.make({
  *   copyMode: "provenance-only",
  *   dedupeOfPath: "/corpus/raw/source-a/a.txt",
@@ -189,8 +188,7 @@ export class CorpusDuplicateSetRecord extends S.Class<CorpusDuplicateSetRecord>(
  *
  * ```ts
  * import { encodeCorpusDuplicateSetReportJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const rows = [{
  *   copies: 2,
  *   duplicateScope: "intra-run",
@@ -327,8 +325,7 @@ export class CorpusCatalogSummary extends S.Class<CorpusCatalogSummary>($I`Corpu
  * ```ts
  * import * as S from "effect/Schema"
  * import { CorpusCatalogRunSummary, CorpusCatalogSummary, encodeCorpusCatalogSummaryJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const summary = CorpusCatalogSummary.make({
  *   distinctDigests: S.Natural.make(1),
  *   duplicateFiles: S.Natural.make(0),

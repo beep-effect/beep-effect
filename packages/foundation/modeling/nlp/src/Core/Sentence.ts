@@ -7,7 +7,9 @@
 
 import { $NlpId } from "@beep/identity";
 import { Str } from "@beep/utils";
-import { Brand, Chunk, Effect } from "effect";
+import * as Brand from "effect/Brand";
+import * as Chunk from "effect/Chunk";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -88,7 +90,7 @@ export const SentenceIndex = S.Natural.pipe(
  * **Example** (Construct empty sentence model)
  *
  * ```ts import.meta.vitest name="Construct empty sentence model"
- * import { Chunk } from "effect"
+ * import * as Chunk from "effect/Chunk";
  * import * as O from "effect/Option"
  * import { Sentence, SentenceIndex } from "@beep/nlp/Core/Sentence"
  * import { TokenIndex } from "@beep/nlp/Core/Token"

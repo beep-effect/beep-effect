@@ -27,8 +27,9 @@ import {
 } from "@beep/epistemic-client";
 import { ContradictionTriage } from "@beep/epistemic-use-cases/public";
 import { useAtom, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { DateTime, Number as N } from "effect";
+import * as DateTime from "effect/DateTime";
 import * as Eq from "effect/Equal";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import { Atom } from "effect/reactivity";
 import * as AsyncResult from "effect/reactivity/AsyncResult";

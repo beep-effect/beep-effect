@@ -11,9 +11,11 @@ import { BlockRepairFailed } from "@beep/agents-use-cases/AssistantTurn.repair-e
 import { generateAnthropicToolJson } from "@beep/anthropic";
 import { $AgentsServerId } from "@beep/identity/packages";
 import { redactString } from "@beep/observability";
-import { Effect, JsonPatch, Metric } from "effect";
 import * as A from "effect/Array";
 import { AnthropicStructuredOutput, Tool, Toolkit } from "effect/ai";
+import * as Effect from "effect/Effect";
+import * as JsonPatch from "effect/JsonPatch";
+import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { assistantBlockOutput } from "./AnthropicTurnCodec.ts";
@@ -191,7 +193,7 @@ class RepairInvalidBlocksResult extends S.Class<RepairInvalidBlocksResult>($I`Re
  * import { IssueReport } from "@beep/agents-server/BlockRepair"
  * import type { BlockRepairCall } from "@beep/agents-server/BlockRepair"
  * import { AnthropicToolJsonResponse } from "@beep/anthropic"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Response } from "effect/ai"
  *
  * const issue = IssueReport.make({
@@ -238,7 +240,7 @@ export type BlockRepairCall = (
  * import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/BlockRepair"
  * import { AnthropicToolJsonResponse } from "@beep/anthropic"
  * import type { RepairInvalidBlocks } from "@beep/agents-server/BlockRepair"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Response } from "effect/ai"
  *
  * const repair: RepairInvalidBlocks = makeRepairInvalidBlocks(() =>
@@ -662,7 +664,7 @@ const runRepairAttempts = Effect.fn("runRepairAttempts")(function* (
  * ```ts
  * import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/BlockRepair"
  * import { AnthropicToolJsonResponse } from "@beep/anthropic"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Response } from "effect/ai"
  *
  * const repair = makeRepairInvalidBlocks(() =>
@@ -723,8 +725,7 @@ export const makeRepairInvalidBlocks = (callRepair: BlockRepairCall = defaultRep
  *
  * ```ts
  * import { repairInvalidBlocks } from "@beep/agents-server/BlockRepair"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * Effect.runPromise(repairInvalidBlocks([])).then((result) => console.log(result.blocks.length)) // 0
  * ```
  *

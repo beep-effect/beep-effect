@@ -8,8 +8,11 @@
 import { $PandocAstId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { A, dual, flow, O, P, R, Struct } from "@beep/utils";
-import { Effect, Match, SchemaGetter, SchemaIssue } from "effect";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaIssue from "effect/SchemaIssue";
 import {
   isPandocKnownConstructorName,
   isPandocSupportedConstructorName,
@@ -241,7 +244,7 @@ const PandocJsonObjectFromString = S.fromJsonString(PandocJsonObject);
  * **Example** (Catch decode error tag)
  *
  * ```ts import.meta.vitest name="Catch decode error tag"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodePandocJsonStrict } from "@beep/pandoc-ast/Pandoc.codec"
  *
  * const handled = decodePandocJsonStrict(null).pipe(
@@ -350,7 +353,7 @@ export type PandocLosslessBlock = typeof PandocLosslessBlock.Type;
  * **Example** (Decode lossless empty document)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodePandocJsonLossless } from "@beep/pandoc-ast/Pandoc.codec"
  *
  * const program = decodePandocJsonLossless({
@@ -441,7 +444,7 @@ class PandocLosslessDocumentValue {
  *   decodePandocJsonLossless,
  *   PandocLosslessDocument,
  * } from "@beep/pandoc-ast/Pandoc.codec"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const document = Effect.runSync(
@@ -474,8 +477,7 @@ export const PandocLosslessDocument = S.declare(PandocLosslessDocumentValue.is).
  *   decodePandocJsonLossless,
  *   type PandocLosslessDocument,
  * } from "@beep/pandoc-ast/Pandoc.codec"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const document: PandocLosslessDocument = Effect.runSync(
  *   decodePandocJsonLossless({
  *     "pandoc-api-version": [1, 23, 1],
@@ -1292,7 +1294,7 @@ export const decodePandocJsonStrict = (input: unknown): Effect.Effect<PandocDocu
  * **Example** (Alias strict empty decode)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodePandocJson } from "@beep/pandoc-ast/Pandoc.codec"
  *
  * const program = decodePandocJson({
@@ -1337,7 +1339,7 @@ export const decodePandocJsonStringStrict = (input: unknown): Effect.Effect<Pand
  * **Example** (Alias string strict decode)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodePandocJsonString } from "@beep/pandoc-ast/Pandoc.codec"
  *
  * const program =
@@ -1834,7 +1836,7 @@ const decodePandocJsonLosslessInternal = (input: unknown): Effect.Effect<PandocL
  * **Example** (Lossless-decode empty document)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodePandocJsonLossless } from "@beep/pandoc-ast/Pandoc.codec"
  *
  * const program = decodePandocJsonLossless({
@@ -1859,7 +1861,7 @@ export const decodePandocJsonLossless = (input: unknown): Effect.Effect<PandocLo
  * **Example** (Lossless-decode JSON string)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodePandocJsonStringLossless } from "@beep/pandoc-ast/Pandoc.codec"
  *
  * const program =

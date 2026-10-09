@@ -5,7 +5,7 @@ import { ClaimTransition } from "@beep/epistemic-use-cases/ClaimLifecycle";
 import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const decodeCandidate = S.decodeUnknownEffect(CandidateClaim);

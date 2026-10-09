@@ -15,7 +15,10 @@ import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Context, Effect, Layer, SchemaTransformation } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/Examples");
@@ -400,8 +403,7 @@ interface ExamplesRepositoryShape {
  *
  * ```ts
  * import { ExamplesRepository } from "@effect-ontology/Repository/Examples"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const stats = Effect.gen(function* () {
  *   const examples = yield* ExamplesRepository
  *   return yield* examples.getStats("people")

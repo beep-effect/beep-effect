@@ -35,10 +35,13 @@ import {
   M365UpdateMessageCategoriesRequest,
 } from "@beep/m365";
 import * as O from "@beep/utils/Option";
-import { Context, Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { mailAddressOf } from "../internal/MailAddress.ts";

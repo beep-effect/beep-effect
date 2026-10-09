@@ -10,7 +10,7 @@
  * **Example** (Type only)
  *
  * ```typescript
- * import type { Effect } from "effect"
- * type Value = Effect<number>
+ * import type * as Effect from "effect/Effect"
+ * type Value = Effect.Effect<number>
  * ```
  */

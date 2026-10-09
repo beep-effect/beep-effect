@@ -8,9 +8,12 @@ import { provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, Layer, pipe, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import { desiredFixture, observedFixture } from "./fixtures.ts";
 import type { BoxApplyJournalEntry } from "@beep/box-provisioning/BoxProvisioningReceipt";
 

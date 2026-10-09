@@ -7,10 +7,13 @@
 
 import { $SchemaId } from "@beep/identity";
 import { A } from "@beep/utils";
-import { Effect, Match, pipe, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as internal from "../Http/Http.headers.shared.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { ForceHttpsRedirectError } from "../SecureHeaderError/index.ts";

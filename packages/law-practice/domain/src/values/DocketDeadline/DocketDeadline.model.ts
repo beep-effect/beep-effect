@@ -22,9 +22,8 @@ import {
   equals as isSameDate,
   LocalDateFromString,
 } from "@beep/schema/LocalDate";
-import { pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { LocalDate } from "@beep/schema/LocalDate";

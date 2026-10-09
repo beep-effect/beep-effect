@@ -14,8 +14,9 @@
  * @since 0.0.0
  */
 
-import { Config, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import { constant, dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -147,8 +148,7 @@ export const retireBlocker: {
  *
  * ```ts
  * import { planRetire } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.succeed(planRetire))) // true
  * ```
  *
@@ -237,8 +237,7 @@ const discardLaneFallowBaseCache = Effect.fn("Yeet.discardLaneFallowBaseCache")(
  *
  * ```ts
  * import { retireInvokingWorktree } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.succeed(retireInvokingWorktree))) // true
  * ```
  *
@@ -362,8 +361,7 @@ const branchPaths = Effect.fn("Yeet.branchPaths")(function* (plan: YeetRetirePla
  *
  * ```ts
  * import { activePacketsOnBranch } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(Effect.succeed(activePacketsOnBranch))) // true
  * ```
  *

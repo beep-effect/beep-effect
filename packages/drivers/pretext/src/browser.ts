@@ -18,7 +18,9 @@
 
 import { A, O, pipe, R, Str } from "@beep/utils";
 import { measureNaturalWidth, prepareWithSegments } from "@chenglou/pretext";
-import { DateTime, Effect, Layer } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import {
   PretextMeasurementError,

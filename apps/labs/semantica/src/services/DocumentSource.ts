@@ -1,9 +1,9 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import * as S from "effect/Schema";
 import { CorpusManifest, CorpusPaperId } from "@/corpus/Manifest";
 import { F1Index } from "@/fixtures/F1";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type { SourceDocument } from "@/schema/Document";
 import type { DocumentUnavailable } from "@/schema/Errors";
 
@@ -53,8 +53,7 @@ interface DocumentSourceShape {
  *
  * ```ts
  * import { DocumentSource } from "@/services/DocumentSource"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(DocumentSource)) // true
  * ```
  *

@@ -6,13 +6,16 @@
  */
 import { $DockId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect, flow, HashSet, Number as N, pipe, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { AnchoredBox } from "./AnchoredBox.ts";
 import { GroupId, PanelId, RendererKey, SplitId, SplitRatio } from "./Dock.ids.ts";
 import { DockSide } from "./Dock.placement.ts";

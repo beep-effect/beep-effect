@@ -5,9 +5,12 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { DateTime, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { decodeLibraryJson, saveLibraryText } from "./Library.adapter.ts";

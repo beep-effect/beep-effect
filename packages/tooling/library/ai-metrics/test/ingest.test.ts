@@ -98,11 +98,21 @@ import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect, Equal, Exit, Fiber, FileSystem, Layer, Order, Path, pipe, Redacted, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
 import * as Base64 from "effect/encoding/Base64";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import { TestClock } from "effect/testing";
@@ -126,7 +136,11 @@ const expectSchemaMakeToFail = (run: () => unknown, messagePart: string): void =
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+    layer.pipe(
+      Layer.build,
+      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+      Effect.scoped
+    );
 
 const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(

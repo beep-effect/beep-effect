@@ -9,12 +9,14 @@ import {
 import { ExtractFileOperation } from "@beep/file-processing/Operation";
 import { SourceTextExtractor } from "@beep/provenance";
 import { PosixPath } from "@beep/schema";
-import { Effect, Layer, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { getDocumentProxy } from "unpdf";
@@ -200,8 +202,7 @@ const makeParser = (pdf: (document: SourceDocument, bytes: Uint8Array) => Effect
  *
  * ```ts
  * import { ParserLive } from "@/layers/ParserLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ParserLive)) // true
  * ```
  *
@@ -217,8 +218,7 @@ export const ParserLive = Layer.succeed(Parser, makeParser(parsePdf));
  *
  * ```ts
  * import { ParserRetryLive } from "@/layers/ParserLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(ParserRetryLive)) // true
  * ```
  *

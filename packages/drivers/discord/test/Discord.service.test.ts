@@ -11,13 +11,19 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { Context, Effect, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeUnknownJsonEffect = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
@@ -244,8 +250,10 @@ describe("@beep/discord", () => {
       ErrorReasonArbitrary,
     ],
     ([config, channelRequest, createMessageRequest, channelProof, messageProof, errorReason]) => {
-      const normalizedConfig = Result.getOrThrow(
-        decodeDiscordConfigInputResult(Result.getOrThrow(encodeDiscordConfigInputResult(config)))
+      const normalizedConfig = encodeDiscordConfigInputResult(config).pipe(
+        Result.getOrThrow,
+        decodeDiscordConfigInputResult,
+        Result.getOrThrow
       );
 
       expectEncodedRoundTrip(DiscordConfigInput, normalizedConfig);

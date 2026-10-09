@@ -1,6 +1,7 @@
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { SystemError } from "effect/PlatformError";
 import { KeyValueStore } from "effect/persistence";
 import { IdempotencyKey } from "../../Domain/Identity.ts";

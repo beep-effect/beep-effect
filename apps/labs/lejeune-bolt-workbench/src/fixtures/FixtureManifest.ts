@@ -7,8 +7,8 @@
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { identity } from "effect";
 import * as A from "effect/Array";
+import { identity } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CanonicalNormalizedFixtures, ExtractedField } from "@/domain/Bundle";

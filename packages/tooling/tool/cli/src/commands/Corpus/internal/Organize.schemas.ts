@@ -128,8 +128,7 @@ export class CorpusOrganizeRecord extends S.Class<CorpusOrganizeRecord>($I`Corpu
  *
  * ```ts
  * import { CorpusOrganizeRecord, encodeCorpusOrganizeRecordJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const record = CorpusOrganizeRecord.make({
  *   category: "unsorted",
  *   digest: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -201,8 +200,7 @@ export class CorpusOrganizeSummary extends S.Class<CorpusOrganizeSummary>($I`Cor
  * ```ts
  * import * as S from "effect/Schema"
  * import { CorpusOrganizeSummary, encodeCorpusOrganizeSummaryJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const summary = CorpusOrganizeSummary.make({
  *   canonicalArtifacts: S.Natural.make(0),
  *   clientFiles: S.Natural.make(0),

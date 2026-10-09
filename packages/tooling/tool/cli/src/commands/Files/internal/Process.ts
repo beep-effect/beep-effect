@@ -55,8 +55,16 @@ import {
 } from "@beep/tika";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, Effect, FileSystem, flow, HashSet, Match, Order, Path, pipe, Ref } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
 import { FilesConcurrency } from "../Files.progress.ts";

@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
-import { Effect } from "effect";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import { SchemaFirstDetectors } from "./internal/SchemaFirstDetectors.ts";
 import { runSchemaFirstLint } from "./internal/SchemaFirstScan.ts";
@@ -133,8 +133,7 @@ export { isSchemaCrispeningPolicyExempt, schemaCrispeningFamilyForFile } from ".
  *
  * ```ts
  * import { makeSchemaFirstOwnerResolver } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * // Resolves package owners from a workspace root; provide FileSystem/Path to run it.
  * const program = makeSchemaFirstOwnerResolver("/repo")
  * console.log(Effect.isEffect(program)) // true
@@ -150,8 +149,7 @@ export { isSchemaCrispeningPolicyExempt, schemaCrispeningFamilyForFile } from ".
  *
  * ```ts
  * import { makeSchemaFirstProject } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeSchemaFirstProject()
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -167,8 +165,7 @@ export { makeSchemaFirstOwnerResolver, makeSchemaFirstProject } from "./internal
  *
  * ```ts
  * import { runSchemaFirstLint, SchemaFirstLintOptions } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = runSchemaFirstLint(SchemaFirstLintOptions.make({ write: false }))
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -448,8 +445,7 @@ export const schemaFirstParityEntriesFromSourceFile: {
  * ```ts
  * import { lintSchemaFirstCommand } from "@beep/repo-cli/commands/Lint"
  * import { Command } from "effect/cli"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const run = Command.run(lintSchemaFirstCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```

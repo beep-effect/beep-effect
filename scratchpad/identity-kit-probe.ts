@@ -32,7 +32,7 @@ import * as EffectDrizzle from "@beep/effect-drizzle";
 import * as Pg from "@beep/effect-drizzle/pg";
 import { $ScratchpadId } from "@beep/identity";
 import * as EntityId from "@beep/shared-domain/entity/EntityId";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Model as M } from "effect/schema";

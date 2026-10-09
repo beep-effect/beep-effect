@@ -6,7 +6,7 @@
  */
 
 import { A, flow, P, Str, Text } from "@beep/utils";
-import { Config } from "effect";
+import * as Config from "effect/Config";
 import { Flag } from "effect/cli";
 
 /**

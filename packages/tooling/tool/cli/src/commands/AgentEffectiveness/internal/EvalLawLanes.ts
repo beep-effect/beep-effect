@@ -8,8 +8,11 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A } from "@beep/utils";
-import { Effect, FileSystem, flow, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -23,9 +26,9 @@ import {
 import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
 import { AgentEffectivenessEvalLaneReport, AgentEffectivenessEvalViolation } from "../AgentEffectiveness.schemas.ts";
 import { LawEvaluation, sortViolations } from "./EvalScoring.ts";
-import type { Scope } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
+import type * as Scope from "effect/Scope";
 import type { SchemaFirstPolicyFinding } from "../../../internal/quality/SchemaFirstPolicyFinding.ts";
 import type { AgentEffectivenessEvalLawLane } from "../AgentEffectiveness.schemas.ts";
 

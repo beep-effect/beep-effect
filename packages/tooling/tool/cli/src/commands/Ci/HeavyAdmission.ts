@@ -28,8 +28,11 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, FileSystem, Match, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -482,8 +485,7 @@ const branchOfBase = (base: string): string => Str.replace(/^origin\//u, "")(bas
  *
  * ```ts
  * import { readHeavyAdmissionChangedPaths } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readHeavyAdmissionChangedPaths("main", "."))) // true
  * ```
  *
@@ -530,8 +532,7 @@ export const readHeavyAdmissionChangedPaths = Effect.fn("Ci.readHeavyAdmissionCh
  *
  * ```ts
  * import { HeavyAdmissionReadInput, readHeavyAdmissionEvent } from "@beep/repo-cli/commands/Ci"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const input = HeavyAdmissionReadInput.make({ eventName: "push", cwd: "." })
  * console.log(Effect.isEffect(readHeavyAdmissionEvent(input))) // true
  * ```

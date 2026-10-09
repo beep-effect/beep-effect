@@ -8,10 +8,10 @@
 
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import * as S from "effect/Schema";
 import type * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 
 const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.repository");
 
@@ -192,7 +192,7 @@ export type WorkerRepositoryError = typeof WorkerRepositoryError.Type;
  *   type WorkerRepositoryShape
  * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
  * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
@@ -245,8 +245,7 @@ export interface WorkerRepositoryShape {
  *   WorkerRepositoryNotFound,
  *   type WorkerRepositoryShape
  * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const repository: WorkerRepositoryShape = {
  *   create: (worker) => Effect.succeed(worker),
  *   get: (workerId) => Effect.fail(WorkerRepositoryNotFound.make({ workerId })),

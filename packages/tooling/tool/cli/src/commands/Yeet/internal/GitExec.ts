@@ -6,8 +6,9 @@
  */
 
 import { guardLiteralArg } from "@beep/repo-utils";
-import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import {
@@ -49,7 +50,7 @@ const gitErrorAdapter: GitCommandErrorAdapter<YeetCommandError> = {
  * **Example** (Map git status length)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { runGitOutput } from "@beep/repo-cli/test/Yeet"
  *
  * const statusLength = runGitOutput(".", ["status", "--short"]).pipe(
@@ -73,7 +74,7 @@ export const runGitOutput = Effect.fn("Yeet.runGitOutput")(function* (
  * **Example** (Count NUL-delimited paths)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { runGitPathList } from "@beep/repo-cli/test/Yeet"
  *
  * const changedPaths = runGitPathList(".", ["diff", "--name-only", "-z"]).pipe(
@@ -97,7 +98,7 @@ export const runGitPathList = Effect.fn("Yeet.runGitPathList")(function* (
  * **Example** (Count staged publish paths)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { collectStagedPublishPaths } from "@beep/repo-cli/test/Yeet"
  *
  * const stagedPathCount = collectStagedPublishPaths(".").pipe(
@@ -120,7 +121,7 @@ export const collectStagedPublishPaths = Effect.fn("Yeet.collectStagedPublishPat
  * **Example** (Count unstaged tracked paths)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { collectUnstagedTrackedPaths } from "@beep/repo-cli/test/Yeet"
  *
  * const unstagedPathCount = collectUnstagedTrackedPaths(".").pipe(
@@ -143,7 +144,7 @@ export const collectUnstagedTrackedPaths = Effect.fn("Yeet.collectUnstagedTracke
  * **Example** (Count untracked publish paths)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { collectUntrackedPaths } from "@beep/repo-cli/test/Yeet"
  *
  * const untrackedPathCount = collectUntrackedPaths(".").pipe(
@@ -208,7 +209,7 @@ export const safeOriginBranchFromBaseForTesting = safeOriginBranchFromBase;
  * **Example** (Refresh origin main ref)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { refreshBaseRef } from "@beep/repo-cli/test/Yeet"
  *
  * const refreshMain = refreshBaseRef(".", "origin/main").pipe(
@@ -256,7 +257,7 @@ export const refreshBaseRef = Effect.fn("Yeet.refreshBaseRef")(function* (
  * **Example** (Read trimmed branch name)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { currentYeetBranch } from "@beep/repo-cli/test/Yeet"
  *
  * const branchName = currentYeetBranch(".").pipe(
@@ -279,7 +280,7 @@ export const currentYeetBranch = Effect.fn("Yeet.currentYeetBranch")(function* (
  * **Example** (Map commit SHA length)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { currentCommitSha } from "@beep/repo-cli/test/Yeet"
  *
  * const shaLength = currentCommitSha({
@@ -309,7 +310,7 @@ export const currentCommitSha = (context: RepoRunContext) =>
  * **Example** (Detect bun.lock changes)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { lockfileChangedSinceBase } from "@beep/repo-cli/test/Yeet"
  *
  * const lockfileChanged = lockfileChangedSinceBase({

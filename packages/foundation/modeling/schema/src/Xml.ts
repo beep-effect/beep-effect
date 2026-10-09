@@ -6,9 +6,12 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Effect, flow, SchemaIssue, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { XMLParser } from "fast-xml-parser";
 import { SyntaxValidator } from "fast-xml-validator";
 
@@ -71,7 +74,7 @@ const decodeXmlUnknown = Effect.fn("Xml.decodeXmlUnknown")(function* (content: s
  * **Example** (Decode XML text document)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { XmlTextToUnknown } from "@beep/schema/Xml"
  *
@@ -111,7 +114,7 @@ const decodeUnknownXmlTextToUnknown = S.decodeUnknownEffect(XmlTextToUnknown);
  * **Example** (Decode XML into schema)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { decodeXmlTextAs } from "@beep/schema/Xml"
  *

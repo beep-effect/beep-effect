@@ -12,8 +12,8 @@ import {
   KeyChord,
   ProfileId,
 } from "@beep/editor/capability/schemas";
-import { Result } from "effect";
 import * as A from "effect/Array";
+import * as Result from "effect/Result";
 import { expect, within } from "storybook/test";
 import { capabilityProofInitialState } from "./fixtures.ts";
 import type { Meta, StoryObj } from "@storybook/react-vite";

@@ -7,8 +7,8 @@
  */
 
 import { $TechnicalDrawingId } from "@beep/identity/packages";
-import { Context } from "effect";
-import type { Effect } from "effect";
+import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type * as O from "effect/Option";
 import type { EmailConfirmation } from "./Approval.schemas.ts";
 import type { Camera, EdgeSet, ModelSpec, ModelSummary, ShadingPlan } from "./Geometry.schemas.ts";
@@ -25,8 +25,7 @@ const $I = $TechnicalDrawingId.create("TechnicalDrawing.ports");
  *
  * ```ts
  * import type { GeometryEngineShape } from "@beep/technical-drawing"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const engine: GeometryEngineShape = {
  *   info: Effect.die("not implemented"),
  *   summarize: () => Effect.die("not implemented"),
@@ -73,8 +72,7 @@ export class GeometryEngine extends Context.Service<GeometryEngine, GeometryEngi
  *
  * ```ts
  * import type { PdfBackendShape } from "@beep/technical-drawing"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const backend: PdfBackendShape = {
  *   svgToPdf: () => Effect.die("not implemented"),
  *   inspect: () => Effect.die("not implemented"),
@@ -124,8 +122,7 @@ export class PdfBackend extends Context.Service<PdfBackend, PdfBackendShape>()($
  *
  * ```ts
  * import type { MailReaderShape } from "@beep/technical-drawing"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const reader: MailReaderShape = { authoredText: () => Effect.die("not implemented") }
  * console.log(reader)
  * ```

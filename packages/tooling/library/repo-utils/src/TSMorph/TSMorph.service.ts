@@ -6,9 +6,16 @@
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Context, Effect, FileSystem, flow, Inspectable, Layer, MutableHashMap, Order, Path, pipe } from "effect";
-import { constant } from "effect/Function";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { constant, flow, pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, Project } from "ts-morph";
@@ -381,7 +388,7 @@ export type TSMorphServiceShape = {
  * **Example** (Yield service tag in Effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { TSMorphService } from "@beep/repo-utils"
  *
  * const program = Effect.gen(function* () {
@@ -705,7 +712,7 @@ const collectOutlineEntries = Effect.fn(function* (
  * **Example** (Create live service instance)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { createTSMorphService } from "@beep/repo-utils"
  *
  * const program = createTSMorphService().pipe(
@@ -1426,7 +1433,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
  * **Example** (Compose default live layer)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { TSMorphServiceLive } from "@beep/repo-utils"
  *
  * const liveLayer = TSMorphServiceLive.pipe(Layer.provideMerge(Layer.empty))

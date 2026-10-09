@@ -6,7 +6,7 @@
  */
 
 import { A, Str, Text, thunkFalse } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { changesetPackageReferencesFromText } from "../../Quality/ChangesetGraph.ts";
 
 /**
@@ -41,8 +41,7 @@ export const renderCanonicalDeletionChangeset = (packageName: string): string =>
  *
  * ```ts
  * import { isCanonicalDeletionChangeset } from "@beep/repo-cli/commands/DeletePackage/internal/DeletionChangeset"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const note = "---\n{}\n---\n\nNo release: remove `@beep/other` from the workspace.\n"
  * Effect.runPromise(isCanonicalDeletionChangeset(".changeset/delete-probe.md", note, "@beep/probe")).then(console.log)
  * ```

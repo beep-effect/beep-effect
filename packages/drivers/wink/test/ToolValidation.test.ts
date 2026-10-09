@@ -25,9 +25,15 @@ import {
 } from "@beep/wink";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Equal, Exit, pipe, Schema, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Schema from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 const decodeBowCosineSimilaritySuccess = Schema.decodeEffect(BowCosineSimilarity.successSchema);
 const decodeChunkBySentencesParameters = Schema.decodeEffect(ChunkBySentences.parametersSchema);

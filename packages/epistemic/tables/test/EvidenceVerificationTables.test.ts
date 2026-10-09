@@ -19,9 +19,11 @@ import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { DateTime, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as DateTime from "effect/DateTime";
+import { pipe } from "effect/Function";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeUnknownEvidenceResult = S.decodeUnknownResult(Evidence);

@@ -8,23 +8,20 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as O from "@beep/utils/Option";
-import {
-  Cause,
-  Clock,
-  Console,
-  Crypto,
-  DateTime,
-  Duration,
-  Effect,
-  Exit,
-  FileSystem,
-  flow,
-  Match,
-  Path,
-  pipe,
-  Ref,
-} from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
+import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { printCommandJson } from "../../../internal/cli/Json.ts";
@@ -261,8 +258,7 @@ const readOnlyRunContext = (repoRoot: string, branch: string, options: YeetConte
  *
  * ```ts
  * import { hydrateYeetReadOnlyContext } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed(hydrateYeetReadOnlyContext)
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -567,8 +563,7 @@ const runWithReviewFixAdmission = Effect.fn("Yeet.runWithReviewFixAdmission")(fu
  *
  * ```ts
  * import { runProofPhaseForTesting } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const helper = Effect.succeed(runProofPhaseForTesting)
  * console.log(Effect.isEffect(helper)) // true
  * ```
@@ -585,8 +580,7 @@ export const runProofPhaseForTesting = runProofPhase;
  *
  * ```ts
  * import { runWithFullProofCoordinatorForTesting } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const helper = Effect.succeed(runWithFullProofCoordinatorForTesting)
  * console.log(Effect.isEffect(helper)) // true
  * ```

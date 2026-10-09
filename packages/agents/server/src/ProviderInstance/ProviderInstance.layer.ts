@@ -14,7 +14,8 @@ import {
 } from "@beep/agents-use-cases/server";
 import { AiProviderCli, AiProviderCliHome } from "@beep/ai-provider-cli";
 import { CuidState } from "@beep/schema/Cuid";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { makeProviderProbe } from "./ProviderInstance.probe.ts";
 import { makeProviderInstanceRepository } from "./ProviderInstance.repo.ts";
 

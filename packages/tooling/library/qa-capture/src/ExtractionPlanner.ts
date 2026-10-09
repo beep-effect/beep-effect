@@ -14,8 +14,12 @@
 import { ExtractFramesAtRequest, RenderContactSheetRequest, RenderGifRequest } from "@beep/ffmpeg";
 import { $QaCaptureId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
-import { Effect, flow, Match, MutableHashMap, Number as N, Order, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as N from "effect/Number";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { ActionEvent } from "./ActionEvent.models.ts";
 import {

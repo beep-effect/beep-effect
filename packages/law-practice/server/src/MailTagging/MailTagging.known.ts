@@ -8,15 +8,18 @@
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { KnownDocuments, KnownDocumentsShape } from "@beep/law-practice-use-cases/MailTagging";
-import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { decodeLines, makeStateFileAt } from "../internal/MailTaggingStateFile.ts";
 import type { KnownDocumentRequest, MailTaggingStateError } from "@beep/law-practice-use-cases/MailTagging";
-import type { FileSystem, Path } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 
 const $I = $LawPracticeServerId.create("MailTagging/MailTagging.known");
 

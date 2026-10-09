@@ -23,12 +23,17 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, pipe, Str } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Effect, FileSystem, HashSet, MutableHashSet, Path, Stream } from "effect";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("internal/cli/FsGuards");
@@ -513,8 +518,7 @@ const makeContainedFileStringOperation = (
  *
  * ```ts
  * import { writeContainedFileString } from "@beep/repo-cli/test/Cli"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(writeContainedFileString("/repo", "/repo/report.txt", "ready\n")))
  * ```
  *
@@ -669,8 +673,7 @@ const appendPreparedFileString = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { appendContainedFileString } from "@beep/repo-cli/test/Cli"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(appendContainedFileString("/repo", "/repo/events.ndjson", "{}\n")))
  * ```
  *
@@ -699,8 +702,7 @@ export const appendContainedFileString = makeContainedFileStringOperation(
  *
  * ```ts
  * import { readContainedFileStringNoFollow } from "@beep/repo-cli/test/Cli"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readContainedFileStringNoFollow("/repo", "/repo/receipt.json")))
  * ```
  *
@@ -754,7 +756,7 @@ const decodeByteLimit = S.decodeEffect(S.Natural);
  *
  * ```ts
  * import { readContainedFileBytesNoFollow } from "@beep/repo-cli/test/Cli"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const read = readContainedFileBytesNoFollow("/repo", "receipt.json", 1048576)
  * console.assert(Effect.isEffect(read))
  * ```
@@ -958,7 +960,7 @@ export const dedupeBySha256 = <A extends { readonly sha256: string }>(
  * **Example** (Suffix on name collision)
  *
  * ```ts
- * import { HashSet } from "effect"
+ * import * as HashSet from "effect/HashSet";
  * import { allocateUniqueName } from "@beep/repo-cli/internal/cli/FsGuards"
  *
  * const first = allocateUniqueName("photo", ".webp", HashSet.make("photo.webp"))
@@ -1023,7 +1025,7 @@ export const hashFileChunkBytes = 1024 * 1024;
  * **Example** (Dual hashing call signatures)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { hashFileSha256 } from "@beep/repo-cli/internal/cli/FsGuards"
  *
  * const onError = (cause: unknown) => new Error(`hash failed: ${cause}`)
@@ -1070,7 +1072,7 @@ export const hashFileSha256: {
  * **Example** (Reject traversal segments)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { validatePathSegment } from "@beep/repo-cli/internal/cli/FsGuards"
  *
  * const options = { onInvalid: (label: string, value: string) => new Error(`${label}: ${value}`) }
@@ -1101,7 +1103,7 @@ export const validatePathSegment: {
  * **Example** (Dual directory validation)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { validateDirectory } from "@beep/repo-cli/internal/cli/FsGuards"
  *
  * const errors = {
@@ -1169,7 +1171,7 @@ export const validateDirectory: {
  * **Example** (Refuse overwrite without flag)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { preflightOverwritableFile } from "@beep/repo-cli/internal/cli/FsGuards"
  *
  * const options = {
@@ -1229,7 +1231,7 @@ export const preflightOverwritableFile: {
  * **Example** (Dual rename call signatures)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { renameOrFail } from "@beep/repo-cli/internal/cli/FsGuards"
  *
  * const options = { onError: (cause: unknown) => new Error(`rename: ${cause}`) }

@@ -50,18 +50,28 @@ import { NodeServices } from "@effect/platform-node";
 import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-import { Clock, Context, Effect, FileSystem, Layer, Match, Order, Path, pipe, Result, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import { ChildProcess } from "effect/process";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import * as TestClock from "effect/testing/TestClock";
 import { expect } from "vitest";
-import type { PlatformError } from "effect";
+import type * as PlatformError from "effect/PlatformError";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
@@ -241,23 +251,15 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus evidence schemas", (it) =
   });
 
   it("decodes inherited collector failures and secret exclusions without destination fields", () => {
-    assertTrue(
-      Result.isSuccess(
-        decodeUnknownCollectorManifestRecordResult({
-          reason: "source unreadable",
-          src: "C:\\source\\unreadable.bin",
-          status: "error",
-        })
-      )
-    );
-    assertTrue(
-      Result.isSuccess(
-        decodeUnknownCollectorManifestRecordResult({
-          src: "C:\\source\\excluded.bin",
-          status: "excluded-secret",
-        })
-      )
-    );
+    decodeUnknownCollectorManifestRecordResult({
+      reason: "source unreadable",
+      src: "C:\\source\\unreadable.bin",
+      status: "error",
+    }).pipe(Result.isSuccess, assertTrue);
+    decodeUnknownCollectorManifestRecordResult({
+      src: "C:\\source\\excluded.bin",
+      status: "excluded-secret",
+    }).pipe(Result.isSuccess, assertTrue);
   });
 });
 
@@ -3270,7 +3272,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
       const childProgram = `
           import { withRestorationWriterClaim } from "@beep/repo-cli/test/Corpus";
           import { NodeServices } from "@effect/platform-node";
-          import { Console, Effect } from "effect";
+          import * as Console from "effect/Console";
+          import * as Effect from "effect/Effect";
 
           await Effect.runPromise(
             withRestorationWriterClaim(

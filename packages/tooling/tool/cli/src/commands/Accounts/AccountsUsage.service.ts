@@ -13,12 +13,19 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Config, Context, Duration, Effect, FileSystem, Layer, Path, Redacted } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
@@ -43,7 +50,7 @@ import {
   museUsageWindows,
   ProxyAuthFileJson,
 } from "./Accounts.wire.schemas.ts";
-import type { PlatformError } from "effect";
+import type * as PlatformError from "effect/PlatformError";
 import type { AccountSnapshot } from "./Accounts.schemas.ts";
 import type { ProxyAuthFile } from "./Accounts.wire.schemas.ts";
 
@@ -474,7 +481,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
 
   const accounts = fs.readDirectory(directory).pipe(
     Effect.catchTag("PlatformError", (error) =>
-      error.reason._tag === "NotFound" ? Effect.succeed(A.empty<string>()) : Effect.fail(mapPlatformError(error))
+      error.reason._tag === "NotFound" ? Effect.succeed(A.empty<string>()) : error.pipe(mapPlatformError, Effect.fail)
     ),
     Effect.map(A.filter(Str.endsWith(".json"))),
     Effect.flatMap(Effect.forEach((name) => accountAt(path.join(directory, name)), { concurrency: POLL_CONCURRENCY })),
@@ -534,7 +541,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
 
   const snapshots = fs.readDirectory(snapshotDirectory).pipe(
     Effect.catchTag("PlatformError", (error) =>
-      error.reason._tag === "NotFound" ? Effect.succeed(A.empty<string>()) : Effect.fail(mapPlatformError(error))
+      error.reason._tag === "NotFound" ? Effect.succeed(A.empty<string>()) : error.pipe(mapPlatformError, Effect.fail)
     ),
     Effect.map(A.filter(Str.endsWith(".json"))),
     Effect.flatMap(

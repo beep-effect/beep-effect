@@ -4,9 +4,14 @@ import { it } from "@beep/test-runner";
 import { A, thunkEmptyStr } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Match, Path, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Stream from "effect/Stream";
 
 // Live lane: exercises the real ffmpeg binary on PATH. A missing binary is an
 // explicit skip; failed prerequisites and native execution remain failures.

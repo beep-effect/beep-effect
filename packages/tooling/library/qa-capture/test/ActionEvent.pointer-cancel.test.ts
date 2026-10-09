@@ -2,7 +2,8 @@ import { decodeActionEventJson, encodeActionEventJson, PointerCancelEvent } from
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
-import { Effect, Equal } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 
 describe("@beep/qa-capture pointer-cancel events", () => {
   it.effect(

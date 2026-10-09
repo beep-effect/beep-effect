@@ -11,7 +11,10 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { DateTime, Effect, Inspectable, Match } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Inspectable from "effect/Inspectable";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 import { ErrorMessage } from "../Domain/Error/Base.ts";
@@ -189,7 +192,7 @@ const processBackgroundJob = Effect.fn("processBackgroundJob")(function* (job: B
  * **Example** (Register the Pub/Sub push routes on an HTTP router)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { HttpRouter } from "effect/http"
  * import { JobPushRouter } from "@effect-ontology/Runtime/JobPushHandler"
  *

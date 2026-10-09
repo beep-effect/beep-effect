@@ -15,10 +15,13 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe } from "@beep/utils";
-import { Effect, FileSystem, Layer, Match } from "effect";
 import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { CatalogDiff } from "./Models.catalog.schemas.ts";
 import {
@@ -37,8 +40,9 @@ import { ModelsManifestStore, ModelsManifestStoreLive } from "./Models.manifest.
 import { ModelsTargetFile, ModelsTargetLocation, resolveTargetPath } from "./Models.paths.ts";
 import { expectedLocatorValue, renderGeneratedBlockBody } from "./Models.render.ts";
 import { DriftFinding, ModelsCheckReport } from "./Models.report.schemas.ts";
-import type { Crypto, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { HttpClient } from "effect/http";
+import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CatalogModel, CatalogSource, ModelId } from "./Models.catalog.schemas.ts";
 import type { ModelsCatalogSources } from "./Models.catalog.service.ts";

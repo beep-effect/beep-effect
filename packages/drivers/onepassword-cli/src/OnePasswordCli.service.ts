@@ -7,10 +7,14 @@
 
 import { $OnepasswordCliId } from "@beep/identity";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
-import { Context, Effect, Layer, Redacted, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { OnePasswordCliError } from "./OnePasswordCli.errors.ts";
 import {
   OnePasswordCliAccount,
@@ -30,8 +34,7 @@ const decodeOnePasswordReference = S.decodeUnknownEffect(OnePasswordReference);
  * ```ts
  * import type { OnePasswordCliRunner } from "@beep/onepassword-cli/OnePasswordCli.service"
  * import { OnePasswordCliProcessResult } from "@beep/onepassword-cli/OnePasswordCli.models"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const runner: OnePasswordCliRunner = (command, args) =>
  *   Effect.succeed(
  *     OnePasswordCliProcessResult.make({ exitCode: 0, stderr: "", stdout: `${command} ${args.join(" ")}` })

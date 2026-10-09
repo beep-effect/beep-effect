@@ -6,8 +6,9 @@
  */
 
 import { $DiscordId } from "@beep/identity";
-import { Effect, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 
 const $I = $DiscordId.create("Discord.models");

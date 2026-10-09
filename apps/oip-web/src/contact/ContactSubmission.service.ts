@@ -15,8 +15,11 @@ import {
 import { $OipWebId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, O } from "@beep/utils";
-import { Clock, Effect, Layer, pipe } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { makeRedactedConfigOptionReader, makeTextConfigOptionReader } from "../runtime/OipRuntimeConfig.ts";
 import { ContactSubmissionResponse, decodeContactSubmission } from "./ContactSubmission.model.ts";
@@ -219,36 +222,34 @@ const submitConfiguredContact = (
   },
   submission: ContactSubmission
 ) =>
-  Effect.scoped(
-    Layer.build(HubSpot.makeLayer(settings.config).pipe(Layer.provide(FetchHttpClient.layer))).pipe(
-      Effect.flatMap((context) =>
-        Effect.gen(function* () {
-          const hubspot = yield* HubSpot;
-          if (O.isSome(settings.formGuid)) {
-            return yield* hubspot.submitForm(
-              HubSpotSubmitFormRequest.make({
-                fields: submissionFields(submission),
-                formGuid: settings.formGuid.value,
-                submittedAt: submission.submittedAt,
-                context: {
-                  pageName: "OIP contact",
-                  pageUri: "https://oip.law/#contact",
-                },
-              })
-            );
-          }
-
-          return yield* hubspot.upsertContact(
-            HubSpotUpsertContactRequest.make({
-              email: submission.email,
-              objectWriteTraceId: "oip-contact-form",
-              properties: contactProperties(submission),
+  Layer.build(HubSpot.makeLayer(settings.config).pipe(Layer.provide(FetchHttpClient.layer))).pipe(
+    Effect.flatMap((context) =>
+      Effect.gen(function* () {
+        const hubspot = yield* HubSpot;
+        if (O.isSome(settings.formGuid)) {
+          return yield* hubspot.submitForm(
+            HubSpotSubmitFormRequest.make({
+              fields: submissionFields(submission),
+              formGuid: settings.formGuid.value,
+              submittedAt: submission.submittedAt,
+              context: {
+                pageName: "OIP contact",
+                pageUri: "https://oip.law/#contact",
+              },
             })
           );
-        }).pipe(Effect.provide(context))
-      )
-    )
-  ).pipe(
+        }
+
+        return yield* hubspot.upsertContact(
+          HubSpotUpsertContactRequest.make({
+            email: submission.email,
+            objectWriteTraceId: "oip-contact-form",
+            properties: contactProperties(submission),
+          })
+        );
+      }).pipe(Effect.provide(context))
+    ),
+    Effect.scoped,
     Effect.mapError((error: HubSpotError) =>
       ContactSubmissionError.fromReason("provider", {
         provider: "hubspot",
@@ -267,7 +268,7 @@ const contactResponseForError = (_error: ContactSubmissionError): ContactSubmiss
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { submitContact } from "@beep/oip-web/contact"
  *
  * const program = submitContact({

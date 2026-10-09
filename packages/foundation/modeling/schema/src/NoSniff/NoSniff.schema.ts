@@ -5,10 +5,12 @@
  * @packageDocumentation
  */
 import { $SchemaId } from "@beep/identity";
-import { Effect, Match, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as internal from "../Http/Http.headers.shared.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
@@ -139,7 +141,7 @@ type NoSniffResponseHeaderEncoded = typeof NoSniffResponseHeader.Encoded;
  * **Example** (Create default header)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { NoSniffHeader } from "@beep/schema/NoSniff"
  *
  * const program = NoSniffHeader.create()
@@ -241,7 +243,7 @@ export { NoSniffOption as Option, NoSniffResponseHeader as ResponseHeader, NoSni
  * **Example** (Create via Header alias)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Header } from "@beep/schema/NoSniff"
  *
  * const program = Header.create()

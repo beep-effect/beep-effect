@@ -457,7 +457,7 @@ export class WipoCitingApplication extends S.Class<WipoCitingApplication>($I`Wip
  *
  * ```ts
  * import { CitingApplicationIdentity } from "@beep/law-practice-domain"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(CitingApplicationIdentity)({

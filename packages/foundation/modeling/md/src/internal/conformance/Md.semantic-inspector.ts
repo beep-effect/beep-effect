@@ -8,9 +8,10 @@
 
 import { $MdId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { HashSet, Number as N } from "effect";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Block, Document, FootnoteIdentifier, Inline } from "../../Md.model.ts";

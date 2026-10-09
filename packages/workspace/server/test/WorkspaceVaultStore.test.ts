@@ -7,8 +7,13 @@ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeWorkspaceSetWorkspaceVaultInput = S.decodeEffect(Workspace.SetWorkspaceVaultInput);

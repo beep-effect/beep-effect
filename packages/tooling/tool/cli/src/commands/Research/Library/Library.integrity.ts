@@ -5,7 +5,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";

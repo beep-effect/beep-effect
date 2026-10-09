@@ -8,7 +8,11 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { Context, Effect, HashMap, HashSet, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -396,7 +400,7 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()($I`S
  * **Example** (Compose the live extraction layer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { SubgraphExtractor, SubgraphExtractorDefault } from "@effect-ontology/Service/SubgraphExtractor"
  *
  * const program = Effect.gen(function* () {

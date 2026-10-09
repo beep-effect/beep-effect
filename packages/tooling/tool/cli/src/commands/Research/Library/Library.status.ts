@@ -5,8 +5,9 @@
  * @since 0.0.0
  */
 
-import { Console, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import { libraryEffectiveCaptures, libraryEffectiveCategory } from "./Library.evidence.ts";
 import { loadCatalog } from "./Library.store.ts";

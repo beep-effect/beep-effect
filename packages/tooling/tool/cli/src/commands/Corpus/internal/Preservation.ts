@@ -9,10 +9,18 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { Sha256Hex } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { DateTime, Effect, FileSystem, Layer, MutableHashMap, MutableRef, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableRef from "effect/MutableRef";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { printLines } from "../../../internal/cli/Printer.ts";
 import { runCapturedStreams } from "../../../internal/process/StepExec.ts";
@@ -219,8 +227,7 @@ const hashStream = Effect.fn("Preservation.hashStream")(function* (
  *
  * ```ts
  * import { StreamingHasher, StreamingHasherLive } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const effect = StreamingHasher.use((hasher) => hasher.hashFile("/tmp/synthetic.bin")).pipe(
  *   Effect.provide(StreamingHasherLive)
  * )
@@ -322,7 +329,7 @@ const terminalManifestRows = (rows: ReadonlyArray<PreservationManifestRow>): Rea
   for (const row of rows) {
     MutableHashMap.set(terminal, occurrenceKey(row), row);
   }
-  return A.fromIterable(MutableHashMap.values(terminal));
+  return terminal.pipe(MutableHashMap.values, A.fromIterable);
 };
 
 /**

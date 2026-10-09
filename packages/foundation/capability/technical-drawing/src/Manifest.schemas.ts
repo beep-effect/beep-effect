@@ -7,7 +7,7 @@
 
 import { $TechnicalDrawingId } from "@beep/identity/packages";
 import { EmailString } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { ModelSummary } from "./Geometry.schemas.ts";
 import { ValidationReport } from "./Validation.schemas.ts";

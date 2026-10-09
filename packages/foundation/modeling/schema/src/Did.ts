@@ -47,7 +47,7 @@ const didSyntaxCheck = S.isPattern(didSyntaxPattern, {
  * **Example** (Decode a valid DID)
  *
  * ```ts import.meta.vitest name="Decode a valid DID"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Did } from "@beep/schema/Did"
  *
@@ -91,7 +91,7 @@ export const Did = S.String.check(didSyntaxCheck).pipe(
  * **Example** (Annotate decoded DID type)
  *
  * ```ts import.meta.vitest name="Annotate decoded DID type"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Did, type Did as DidValue } from "@beep/schema/Did"
  *
@@ -113,7 +113,7 @@ export type Did = typeof Did.Type;
  * **Example** (Encode DID with percent bytes)
  *
  * ```ts import.meta.vitest name="Encode DID with percent bytes"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Did, type Did as DidValue } from "@beep/schema/Did"
  *
@@ -135,7 +135,7 @@ export declare namespace Did {
    * **Example** (Round-trip encode Did.Encoded)
    *
    * ```ts import.meta.vitest name="Round-trip encode Did.Encoded"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * import * as S from "effect/Schema"
    * import { Did } from "@beep/schema/Did"
    *

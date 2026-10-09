@@ -25,8 +25,8 @@
  */
 
 import { A } from "@beep/utils";
-import { Effect, flow } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, flow } from "effect/Function";
 import type * as S from "effect/Schema";
 import type * as Monoid from "../Algebra/Monoid.ts";
 import type { OperationDefinition } from "./Definition.ts";
@@ -37,7 +37,7 @@ import type { OperationDefinition } from "./Definition.ts";
  * **Example** (Effectful string length)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { NLPOperation } from "@beep/nlp/Operations/Composable"
  *
  * const length: NLPOperation<string, number> = (input) => Effect.succeed(input.length)
@@ -59,7 +59,7 @@ export type NLPOperation<A, B, R = never, E = never> = (input: A) => Effect.Effe
  * **Example** (Uppercase with schemas)
  *
  * ```ts import.meta.vitest name="Uppercase with schemas"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { OperationBuilder } from "@beep/nlp/Operations/Composable"
  *
@@ -95,7 +95,7 @@ export class OperationBuilder<A, B, R = never, E = never> {
    * **Example** (Run pure trim)
    *
    * ```ts import.meta.vitest name="Run pure trim"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * import * as S from "effect/Schema"
    * import { makePureOperation } from "@beep/nlp/Operations/Composable"
    *
@@ -116,7 +116,7 @@ export class OperationBuilder<A, B, R = never, E = never> {
    * **Example** (Map tokens to count)
    *
    * ```ts import.meta.vitest name="Map tokens to count"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * import * as S from "effect/Schema"
    * import { makePureOperation } from "@beep/nlp/Operations/Composable"
    *
@@ -139,7 +139,7 @@ export class OperationBuilder<A, B, R = never, E = never> {
    * **Example** (FlatMap trim then length)
    *
    * ```ts import.meta.vitest name="FlatMap trim then length"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * import * as S from "effect/Schema"
    * import { makePureOperation } from "@beep/nlp/Operations/Composable"
    *
@@ -167,7 +167,7 @@ export class OperationBuilder<A, B, R = never, E = never> {
    * **Example** (Product length and upper)
    *
    * ```ts import.meta.vitest name="Product length and upper"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * import * as S from "effect/Schema"
    * import { makePureOperation } from "@beep/nlp/Operations/Composable"
    *
@@ -193,7 +193,7 @@ export class OperationBuilder<A, B, R = never, E = never> {
    * **Example** (ZipWith label size)
    *
    * ```ts import.meta.vitest name="ZipWith label size"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * import * as S from "effect/Schema"
    * import { makePureOperation } from "@beep/nlp/Operations/Composable"
    *
@@ -265,8 +265,8 @@ const zipWithOperationBuilder = <A, B, C, D, R1, E1, R2, E2>(
  * ```ts import.meta.vitest name="Make effectful length"
  * import { makeOperation } from "@beep/nlp/Operations/Composable"
  * import * as S from "effect/Schema"
- * import { Effect, pipe } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import { pipe } from "effect/Function";
  * const length = makeOperation("len", S.String, S.Finite, (s) => Effect.succeed(s.length))
  * const named = pipe("len", makeOperation(S.String, S.Finite, (s: string) => Effect.succeed(s.length)))
  *
@@ -306,7 +306,7 @@ export const makeOperation: {
  *
  * ```ts import.meta.vitest name="From identity definition"
  * import { fromDefinition } from "@beep/nlp/Operations/Composable"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const operation = fromDefinition({
@@ -338,8 +338,8 @@ export const fromDefinition = <A, B, R, E>(definition: OperationDefinition<A, B,
  * ```ts import.meta.vitest name="Make pure uppercase"
  * import { makePureOperation } from "@beep/nlp/Operations/Composable"
  * import * as S from "effect/Schema"
- * import { Effect, pipe } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import { pipe } from "effect/Function";
  * const upper = makePureOperation("upper", S.String, S.String, (s) => s.toUpperCase())
  * const named = pipe("upper", makePureOperation(S.String, S.String, (s: string) => s.toUpperCase()))
  *
@@ -374,7 +374,8 @@ export const makePureOperation: {
  * **Example** (Dual map data-first last)
  *
  * ```ts import.meta.vitest name="Dual map data-first last"
- * import { Effect, pipe } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import { pipe } from "effect/Function";
  * import * as S from "effect/Schema"
  * import { makePureOperation, map } from "@beep/nlp/Operations/Composable"
  *
@@ -414,7 +415,8 @@ export const map: {
  * **Example** (Dual product data-first last)
  *
  * ```ts import.meta.vitest name="Dual product data-first last"
- * import { Effect, pipe } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import { pipe } from "effect/Function";
  * import * as S from "effect/Schema"
  * import { makePureOperation, product } from "@beep/nlp/Operations/Composable"
  *
@@ -456,7 +458,8 @@ export const product: {
  * **Example** (Dual zipWith data-first last)
  *
  * ```ts import.meta.vitest name="Dual zipWith data-first last"
- * import { Effect, pipe } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import { pipe } from "effect/Function";
  * import * as S from "effect/Schema"
  * import { makePureOperation, zipWith } from "@beep/nlp/Operations/Composable"
  *
@@ -506,7 +509,7 @@ export const zipWith: {
  * **Example** (Compose trim then length)
  *
  * ```ts import.meta.vitest name="Compose trim then length"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { compose, makePureOperation } from "@beep/nlp/Operations/Composable"
  *
@@ -543,7 +546,7 @@ export const compose: {
  *
  * ```ts import.meta.vitest name="Identity string passthrough"
  * import { identity } from "@beep/nlp/Operations/Composable"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * Effect.runPromise(identity(S.String).run("same")).then(console.log) // "same"
@@ -561,7 +564,7 @@ export const identity = <A>(schema: S.Schema<A>): OperationBuilder<A, A> =>
  * **Example** (Traverse lengths over array)
  *
  * ```ts import.meta.vitest name="Traverse lengths over array"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { makePureOperation, traverse } from "@beep/nlp/Operations/Composable"
  *

@@ -8,7 +8,8 @@
 import { $DocumentsDomainId } from "@beep/identity/packages";
 import { ValidWindowsPlainPathSegment } from "@beep/schema/FilePath";
 import { A } from "@beep/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LegalDocumentConceptId, LegalDocumentTaxonomy, VaultFilingContext } from "./Taxonomy.model.ts";
@@ -216,8 +217,7 @@ const projectedFileName = (
  *   ProjectFiledDocumentPathInput,
  *   projectFiledDocumentPath
  * } from "@beep/documents-domain/values/Taxonomy"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const path = Effect.runSync(projectFiledDocumentPath(ProjectFiledDocumentPathInput.make({
  *   contentDigest: "abc123",
  *   context: DefaultVaultFilingContext,
@@ -295,8 +295,7 @@ export class ProjectInboxDocumentPathInput extends S.Class<ProjectInboxDocumentP
  *
  * ```ts
  * import { ProjectInboxDocumentPathInput, projectInboxDocumentPath } from "@beep/documents-domain/values/Taxonomy"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const path = Effect.runSync(projectInboxDocumentPath(ProjectInboxDocumentPathInput.make({
  *   contentDigest: "abc123",
  *   intakeBatchId: "batch-20260709",
@@ -330,8 +329,7 @@ export const projectInboxDocumentPath = Effect.fn("Documents.Taxonomy.projectInb
  *
  * ```ts
  * import { projectIntakeInboxPath } from "@beep/documents-domain/values/Taxonomy"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const inboxPath = Effect.runSync(projectIntakeInboxPath("batch-20260709"))
  * console.log(inboxPath)
  * ```

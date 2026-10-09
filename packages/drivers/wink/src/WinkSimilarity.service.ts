@@ -10,8 +10,11 @@ import { $WinkId } from "@beep/identity";
 import { SimilarityScore } from "@beep/nlp/Core/Similarity";
 import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Context, Effect, Inspectable, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -268,7 +271,7 @@ const makeWinkSimilarity = Effect.gen(function* () {
  * **Example** (Compute set Tversky score)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { DocumentId } from "@beep/nlp/Core/Document"
  * import { DocumentTermSet, TverskyParams } from "@beep/nlp/Core/Similarity"
@@ -302,7 +305,7 @@ export class WinkSimilarity extends Context.Service<WinkSimilarity, WinkSimilari
  * **Example** (Provide live layer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { DocumentId } from "@beep/nlp/Core/Document"
  * import { DocumentTermSet, TverskyParams } from "@beep/nlp/Core/Similarity"

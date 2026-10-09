@@ -1,6 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { Effect, identity } from "effect";
+import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { PosInt } from "./PosInt.ts";

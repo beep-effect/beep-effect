@@ -33,8 +33,8 @@ Request and result schemas, the `PracticeKgMatterMatchedOn` and
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
 import { PracticeKgBundle, PracticeKgMatterLookup, PracticeKgMatterLookupLive } from "@beep/law-practice-server"
 import { PracticeKgMatterLookupRequest, extractPracticeKgReferences } from "@beep/law-practice-use-cases/server"
-import { Effect, Layer } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 // bundleContext: decode <bundle>/bundle.manifest.json with PracticeKgBundleManifest
 const matters = PracticeKgMatterLookupLive.pipe(
   Layer.provide(

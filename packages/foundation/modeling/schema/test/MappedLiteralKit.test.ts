@@ -3,9 +3,9 @@ import { LiteralKitKeyCollisionError } from "@beep/schema/LiteralKit";
 import { MappedLiteralDuplicateError, MappedLiteralKit } from "@beep/schema/MappedLiteralKit";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const SqlState = MappedLiteralKit([

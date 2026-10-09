@@ -3,10 +3,12 @@ import { $RunpodId } from "@beep/identity";
 import { LiteralKit, MappedLiteralKit } from "@beep/schema";
 import { A, Str, Struct } from "@beep/utils";
 import * as OpenApiPatch from "@effect/openapi-generator/OpenApiPatch";
-import { Effect, flow, Match, Order, pipe } from "effect";
 import * as Bool from "effect/Boolean";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -535,7 +537,7 @@ const renderHeader = (): string => `/**
  * @since 0.1.0
  */
 
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 import { $RunpodId } from "@beep/identity";

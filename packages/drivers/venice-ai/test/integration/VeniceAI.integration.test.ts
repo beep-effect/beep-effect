@@ -4,9 +4,12 @@ import { Str } from "@beep/utils";
 import { VENICE_API_URL, VeniceAI, VeniceAIConfigInput } from "@beep/venice-ai";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
-import { Effect, Layer, pipe, Redacted } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
 
 // Skip when the key is absent, blank, or an unresolved `op://` reference (present
 // when secrets are not resolved, e.g. no local `op` session).

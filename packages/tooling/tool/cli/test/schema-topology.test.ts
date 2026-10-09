@@ -3,7 +3,9 @@ import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { Effect, flow, Result } from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 

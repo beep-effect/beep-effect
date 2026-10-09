@@ -27,8 +27,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -435,8 +435,7 @@ export const failedReplyOutcomes = (report: ReplyReport): ReadonlyArray<ReplyDra
  *
  * ```ts
  * import { ReplyDrafts, ReplyDraftsJson } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const drafts = ReplyDrafts.make({ schemaVersion: "yeet-reply-drafts/v1", prNumber: 558, drafts: [] })
  * console.log(Effect.runSync(ReplyDraftsJson.encode(drafts)))
  * ```
@@ -453,8 +452,7 @@ export const ReplyDraftsJson = JsonStringCodec(ReplyDrafts);
  *
  * ```ts
  * import { ReplyReport, ReplyReportJson } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const report = ReplyReport.make({
  *   schemaVersion: "yeet-reply-report/v1",
  *   prNumber: 558,

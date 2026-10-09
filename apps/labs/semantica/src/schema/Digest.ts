@@ -1,11 +1,13 @@
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { Effect, Result, Struct } from "effect";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { canonicalJson } from "@/corpus/Canonical";
-import type { Crypto } from "effect";
+import type * as Crypto from "effect/Crypto";
 
 const utf8Encoder = new TextEncoder();
 
@@ -48,7 +50,7 @@ type DigestResult<Type> = Type extends unknown ? (value: Type) => Result.Result<
  *
  * ```ts
  * import { contentDigest } from "@/schema/Digest"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const digest = contentDigest(S.Struct({ a: S.Number }))({ a: 1 })
@@ -75,7 +77,7 @@ export const contentDigest = <Type, Encoded>(schema: S.Codec<Type, Encoded, neve
  *
  * ```ts
  * import { digestOmitting } from "@/schema/Digest"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const Report = S.Struct({ value: S.Number, digest: S.String })
@@ -117,7 +119,7 @@ export const digestOmitting: {
  *
  * ```ts
  * import { contentDigestSync } from "@/schema/Digest"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const result = contentDigestSync(S.Struct({ a: S.Number }))({ a: 1 })
@@ -144,7 +146,7 @@ export const contentDigestSync =
  *
  * ```ts
  * import { digestOmittingSync } from "@/schema/Digest"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const Report = S.Struct({ value: S.Number, digest: S.String })

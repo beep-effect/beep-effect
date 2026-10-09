@@ -8,8 +8,9 @@
 import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
 import { $AgentsUseCasesId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, Tuple } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 
 const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.contracts");
 const BlockIndex = S.Int.check(

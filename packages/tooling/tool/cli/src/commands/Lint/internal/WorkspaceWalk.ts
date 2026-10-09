@@ -14,7 +14,10 @@
  */
 
 import { A, pipe } from "@beep/utils";
-import { Effect, FileSystem, HashSet, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
+import * as Path from "effect/Path";
 import { isDirectoryPath } from "../../../internal/quality/TestTypecheckCoverage.ts";
 
 /**

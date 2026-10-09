@@ -7,10 +7,11 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Effect, pipe, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
-import { flow } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";

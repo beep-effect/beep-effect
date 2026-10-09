@@ -3,7 +3,7 @@ import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
 import { PatentClaimCandidateInput, patentClaimCandidateFrom } from "@beep/law-practice-use-cases/PatentClaimCandidate";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

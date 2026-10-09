@@ -9,8 +9,10 @@
 
 import { TSConfigCompilerOptions } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
-import { Effect, flow, Layer, pipe } from "effect";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Configuration from "./Configuration.ts";
@@ -183,15 +185,13 @@ export const docgenCommand = Command.make(
       examplesCompilerOptions,
     });
 
-    return yield* Effect.scoped(
-      Layer.build(Configuration.Configuration.layer(config)).pipe(
-        Effect.flatMap(
-          Effect.fnUntraced(function* (context) {
-            return yield* Core.program.pipe(Effect.provide(context));
-          })
-        )
-      )
-    ).pipe(
+    return yield* Layer.build(Configuration.Configuration.layer(config)).pipe(
+      Effect.flatMap(
+        Effect.fnUntraced(function* (context) {
+          return yield* Core.program.pipe(Effect.provide(context));
+        })
+      ),
+      Effect.scoped,
       Effect.catchTag("DocgenError", (error) =>
         Effect.fail(
           Domain.DocgenError.make({
@@ -209,7 +209,7 @@ export const docgenCommand = Command.make(
  * **Example** (Invoke CLI with help)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { cli } from "@beep/repo-docgen/CLI"
  *
  * const helpProgram = cli("0.0.2")(["--help"]).pipe(Effect.result)

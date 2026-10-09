@@ -14,8 +14,8 @@ import {
 import { BuildYeetVerdictInput, buildYeetVerdictForTesting } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 
 const boxTs2589Line = "@beep/box:build: error TS2589: Type instantiation is excessively deep and possibly infinite.";

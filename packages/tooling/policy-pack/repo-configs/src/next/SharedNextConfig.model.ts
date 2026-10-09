@@ -10,10 +10,11 @@ import { A, O } from "@beep/utils";
 import bundleAnalyzer from "@next/bundle-analyzer";
 import createMDX from "@next/mdx";
 import withSerwistInit from "@serwist/next";
-import { Effect, flow, pipe, Result } from "effect";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { schemaIssueToError } from "./internal.ts";
 import { AllowedDevOrigin } from "./models/AllowedDevOrigin.schema.ts";
@@ -281,7 +282,7 @@ export type BeepNextPwaConfig = typeof BeepNextPwaConfig.Type;
  * **Example** (Decoding options with Effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { BeepNextConfigOptions } from "@beep/repo-configs/next"
  * const program = S.decodeUnknownEffect(BeepNextConfigOptions)({
@@ -514,7 +515,7 @@ const makeBaseConfig = (options: BeepNextConfigOptions): NextConfigFromNext => {
  * **Example** (Decoding ANALYZE env flag)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeBeepNextConfigEnv } from "@beep/repo-configs/next"
  * const program = decodeBeepNextConfigEnv({ ANALYZE: "1" })
  * console.log(Effect.runPromise(program))

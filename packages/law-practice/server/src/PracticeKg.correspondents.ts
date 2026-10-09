@@ -22,9 +22,15 @@ import {
   resolvePracticeKgCorrespondent,
 } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
-import { Effect, FileSystem, flow, HashSet, MutableHashMap, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -601,7 +607,7 @@ const readMessage = Effect.fn("PracticeKg.readEmailMessage")(function* (source: 
  * **Example** (Read email headers)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { PracticeKgEmailMessagesInput, readPracticeKgEmailMessages } from "@beep/law-practice-server"
  *
  * const messages = readPracticeKgEmailMessages(
@@ -812,31 +818,31 @@ export const buildPracticeKgCorrespondentTables = (
 ): PracticeKgCorrespondentTables => {
   const isPractice = isPracticeKgPracticeAddress(input.practiceDomains);
   const byAddress = contactsByAddress(input.contacts);
-  const correspondents = A.map(
-    A.fromIterable(MutableHashMap.values(tallyMessages(input))),
-    ({ address, familyKey, tally }) => {
-      const contact = pipe(MutableHashMap.get(byAddress, address), O.flatMap(soleContactOf));
-      return PracticeKgCorrespondentRow.make({
-        address,
-        ccCount: HashSet.size(tally.cc),
-        contactId: O.getOrNull(O.map(contact, ({ contact: owner }) => owner.contactId)),
-        displayName: pipe(
-          O.map(contact, ({ contact: owner }) => owner.displayName),
-          O.orElse(() => tally.headerName),
-          O.getOrNull
-        ),
-        epistemicStatus: "mention-derived",
-        familyKey,
-        firstAt: O.getOrNull(tally.firstAt),
-        fromCount: HashSet.size(tally.from),
-        isPracticeAddress: isPractice(address),
-        lastAt: O.getOrNull(tally.lastAt),
-        messageCount: HashSet.size(tally.messages),
-        roleAddress: O.exists(contact, ({ role }) => role),
-        toCount: HashSet.size(tally.to),
-      });
-    }
-  );
+  const talliedMessages = tallyMessages(input);
+  const values = MutableHashMap.values(talliedMessages);
+  const tallies = A.fromIterable(values);
+  const correspondents = A.map(tallies, ({ address, familyKey, tally }) => {
+    const contact = pipe(MutableHashMap.get(byAddress, address), O.flatMap(soleContactOf));
+    return PracticeKgCorrespondentRow.make({
+      address,
+      ccCount: HashSet.size(tally.cc),
+      contactId: O.getOrNull(O.map(contact, ({ contact: owner }) => owner.contactId)),
+      displayName: pipe(
+        O.map(contact, ({ contact: owner }) => owner.displayName),
+        O.orElse(() => tally.headerName),
+        O.getOrNull
+      ),
+      epistemicStatus: "mention-derived",
+      familyKey,
+      firstAt: O.getOrNull(tally.firstAt),
+      fromCount: HashSet.size(tally.from),
+      isPracticeAddress: isPractice(address),
+      lastAt: O.getOrNull(tally.lastAt),
+      messageCount: HashSet.size(tally.messages),
+      roleAddress: O.exists(contact, ({ role }) => role),
+      toCount: HashSet.size(tally.to),
+    });
+  });
   const links = A.flatMap(input.contacts, (contact) =>
     A.map(contact.links, (link) => PracticeKgContactClientLinkRow.make({ ...link, contactId: contact.contactId }))
   );
@@ -923,7 +929,7 @@ const insertAddress = "INSERT INTO contact_addresses VALUES ($1, $2, $3, $4, $5,
  * **Example** (Write empty tables)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { PracticeKgCorrespondentTables, writePracticeKgCorrespondentTables } from "@beep/law-practice-server"
  *
  * const write = writePracticeKgCorrespondentTables("/bundle/practice.duckdb")(
@@ -1037,7 +1043,7 @@ const decodePracticeAddress = S.decodeUnknownEffect(S.NonEmptyArray(S.Struct({ p
  * **Example** (Read a header entry)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { parsePracticeKgCorrespondentAddress } from "@beep/law-practice-server"
  *
  * Effect.runPromise(parsePracticeKgCorrespondentAddress("Pat Example <Pat@Example.com>")).then(console.log)
@@ -1084,7 +1090,7 @@ export const parsePracticeKgCorrespondentAddress = (
  *
  * ```ts
  * import { PracticeKgCorrespondentLookupRequest } from "@beep/law-practice-use-cases/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { lookupPracticeKgCorrespondents } from "@beep/law-practice-server"
  *
  * const lookup = lookupPracticeKgCorrespondents(PracticeKgCorrespondentLookupRequest.make({ address: "pat@example.com" }))

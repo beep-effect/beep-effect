@@ -73,9 +73,8 @@ The same revocation flow used in `09-errors-across-boundaries.md`, annotated wit
 
 ````ts
 // packages/iam/server/src/Membership/Membership.http-handlers.ts
+import * as Effect from "effect/Effect";
 import { $IamServerId } from "@beep/identity"
-import { Effect } from "effect"
-
 const $I = $IamServerId.create("Membership.http-handlers")
 void $I
 
@@ -113,9 +112,8 @@ The outer `Effect.fn("http.POST ...")` opens the protocol span. The inner `Effec
 
 ````ts
 // packages/iam/use-cases/src/Membership/Membership.service.ts
+import * as Effect from "effect/Effect";
 import { $IamUseCasesId } from "@beep/identity"
-import { Effect } from "effect"
-
 const $I = $IamUseCasesId.create("Membership.service")
 void $I
 
@@ -148,9 +146,8 @@ The use-case opens `iam.membership.find_by_id` around the port call. It records 
 
 ````ts
 // packages/iam/server/src/Membership/Membership.repo.ts
+import * as Effect from "effect/Effect";
 import { $IamServerId } from "@beep/identity"
-import { Effect } from "effect"
-
 const $I = $IamServerId.create("Membership.repo")
 void $I
 
@@ -183,9 +180,8 @@ The adapter never names `iam.membership.*` attributes. It owns the technical sur
 
 ````ts
 // packages/iam/server/src/Membership/Membership.repo.ts (continued)
+import * as Effect from "effect/Effect";
 import { $IamServerId } from "@beep/identity"
-import { Effect } from "effect"
-
 const $I = $IamServerId.create("Membership.repo")
 void $I
 

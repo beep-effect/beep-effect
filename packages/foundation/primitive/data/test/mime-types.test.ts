@@ -14,8 +14,8 @@ import {
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Struct } from "effect";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 
 describe("mimeTypes", () => {
   it("contains known MIME types", () => {

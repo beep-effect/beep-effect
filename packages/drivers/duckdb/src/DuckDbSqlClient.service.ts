@@ -25,15 +25,23 @@
 
 import { $DuckdbId } from "@beep/identity/packages";
 import { blobValue, DuckDBInstance, quotedIdentifier, quotedString, timestampMillisValue } from "@duckdb/node-api";
-import { Clock, Context, Effect, Exit, Layer, Scope, Semaphore, Stream, Tracer } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Reactivity from "effect/reactivity/Reactivity";
+import * as Scope from "effect/Scope";
+import * as Semaphore from "effect/Semaphore";
+import * as Stream from "effect/Stream";
 import * as SqlClient from "effect/sql/SqlClient";
 import { ConnectionError, SqlError, UnknownError } from "effect/sql/SqlError";
 import * as Statement from "effect/sql/Statement";
+import * as Tracer from "effect/Tracer";
 import { ignoreNativeClose, releaseNativeConnection } from "./DuckDbNative.ts";
 import type { DuckDBConnection, DuckDBValue, Json } from "@duckdb/node-api";
 import type * as SqlConnection from "effect/sql/SqlConnection";

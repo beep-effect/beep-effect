@@ -6,8 +6,11 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import type { Cause } from "effect";
-import { Duration, Effect, Number as Num, Schedule } from "effect";
+import type * as Cause from "effect/Cause";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Num from "effect/Number";
+import * as Schedule from "effect/Schedule";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -86,7 +89,7 @@ const retryPolicyMaxAttemptsDefault = PosInt.make(3);
  * **Example** (Create a retry policy)
  *
  * ```ts
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { RetryPolicy } from "@effect-ontology/Service/Retry"
  *
  * const policy = RetryPolicy.make({
@@ -145,7 +148,7 @@ const decodeRetryPolicy = S.decodeEffect(RetryPolicy);
  * **Example** (Type a partial retry policy)
  *
  * ```ts
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import type { RetryPolicyInput } from "@effect-ontology/Service/Retry"
  *
  * const input: RetryPolicyInput = { attemptTimeout: Duration.seconds(20) }
@@ -283,7 +286,7 @@ const retryEffectImpl = Effect.fn("Retry.retryEffect")(function* <A, E, R>(
  * **Example** (Apply a retry policy data-last)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { retryEffect } from "@effect-ontology/Service/Retry"
  *
  * const program = Effect.succeed("ok").pipe(retryEffect({ jitter: false }))

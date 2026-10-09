@@ -10,9 +10,11 @@
  */
 
 import { $PacerId } from "@beep/identity";
-import { Config, Effect, Redacted } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import { PacerConfigError } from "./Pacer.errors.ts";
 import { PacerEnvironment } from "./Pacer.tokens.ts";
@@ -89,7 +91,7 @@ export const PACER_ENV = {
  *
  * ```ts
  * import { PacerConfigBase } from "@beep/pacer"
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * import * as O from "effect/Option"
  *
  * const cfg = PacerConfigBase.make({ authBaseUrl: "https://qa-login.uscourts.gov", pclBaseUrl: "https://qa-pcl.uscourts.gov", loginId: Redacted.make("user"), password: Redacted.make("secret"), clientCode: O.none(), otpCode: O.none(), isFiler: O.none() })
@@ -121,7 +123,7 @@ export class PacerConfigBase extends S.Class<PacerConfigBase>($I`PacerConfigBase
  *
  * ```ts
  * import { PacerConfigQA, PACER_AUTH_BASE_URL, PACER_PCL_BASE_URL } from "@beep/pacer"
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * import * as O from "effect/Option"
  *
  * const cfg = PacerConfigQA.make({ environment: "qa", authBaseUrl: PACER_AUTH_BASE_URL.qa, pclBaseUrl: PACER_PCL_BASE_URL.qa, loginId: Redacted.make("user"), password: Redacted.make("secret"), clientCode: O.none(), otpCode: O.none(), isFiler: O.none() })
@@ -147,7 +149,7 @@ export class PacerConfigQA extends PacerConfigBase.extend<PacerConfigQA>($I`Pace
  *
  * ```ts
  * import { PacerConfigProd, PACER_AUTH_BASE_URL, PACER_PCL_BASE_URL } from "@beep/pacer"
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * import * as O from "effect/Option"
  *
  * const cfg = PacerConfigProd.make({ environment: "prod", authBaseUrl: PACER_AUTH_BASE_URL.prod, pclBaseUrl: PACER_PCL_BASE_URL.prod, loginId: Redacted.make("user"), password: Redacted.make("secret"), clientCode: O.none(), otpCode: O.none(), isFiler: O.none() })
@@ -262,8 +264,7 @@ export type PacerConfigLoadOptionsInput = typeof PacerConfigLoadOptions.Encoded;
  *
  * ```ts
  * import { loadPacerConfig } from "@beep/pacer"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = loadPacerConfig({ environment: "qa" })
  * console.log(Effect.isEffect(program))
  * ```

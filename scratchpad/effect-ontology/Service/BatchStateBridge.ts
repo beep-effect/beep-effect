@@ -24,7 +24,14 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Cause, Context, Effect, Exit, Layer, PubSub, Ref, Stream } from "effect";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as PubSub from "effect/PubSub";
+import * as Ref from "effect/Ref";
+import * as Stream from "effect/Stream";
 import { OntologyName } from "../Domain/Identity.ts";
 import { BatchStateHub } from "./BatchState.ts";
 import { EventBusService } from "./EventBus.ts";
@@ -62,7 +69,7 @@ export interface BatchStateBridgeShape {
  * **Example** (Inspect batch state bridge)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { BatchStateBridge, BatchStateBridgeDefault } from "@effect-ontology/Service/BatchStateBridge"
  *
  * const program = Effect.gen(function* () {
@@ -151,7 +158,7 @@ const makeBatchStateBridge = Effect.gen(function* () {
  * **Example** (Use BatchStateBridgeLive)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { BatchStateBridge, BatchStateBridgeLive } from "@effect-ontology/Service/BatchStateBridge"
  *
  * const program = Effect.gen(function* () {
@@ -173,7 +180,7 @@ export const BatchStateBridgeLive = Layer.effect(BatchStateBridge, makeBatchStat
  * **Example** (Inspect batch state bridge default)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { BatchStateBridge, BatchStateBridgeDefault } from "@effect-ontology/Service/BatchStateBridge"
  *
  * const program = Effect.gen(function* () {

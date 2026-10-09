@@ -7,9 +7,10 @@
 
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { locateGroundedExtractions } from "@beep/langextract/VerifiedSpan";
-import { Effect, identity, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Effect from "effect/Effect";
+import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { CanonicalRuleSourceContracts, RuleResult, RuleSource } from "@/domain/Bundle";

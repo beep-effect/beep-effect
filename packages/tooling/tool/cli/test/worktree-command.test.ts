@@ -49,11 +49,21 @@ import { A, O, P, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect } from "@effect/vitest";
-import { ConfigProvider, Console, Context, Effect, FileSystem, Layer, Path, Ref, Runtime, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { WorktreeUpstreamState, WorktreeUpstreamVerdict } from "@beep/repo-cli/commands/Worktree";
 
@@ -1628,9 +1638,12 @@ describe("worktree git operations", () => {
             // service so this invocation captures the stub probe instead.
             Effect.provideServiceEffect(
               WorktreeRemovalService,
-              Layer.build(
-                Layer.fresh(WorktreeRemovalServiceLayer).pipe(Layer.provide([NodeServices.layer, probe]))
-              ).pipe(Effect.map(Context.get(WorktreeRemovalService)))
+              WorktreeRemovalServiceLayer.pipe(
+                Layer.fresh,
+                Layer.provide([NodeServices.layer, probe]),
+                Layer.build,
+                Effect.map(Context.get(WorktreeRemovalService))
+              )
             ),
             Effect.scoped,
             Effect.provideService(ConfigProvider.ConfigProvider, residueConfigProvider(context.worktreesRoot))

@@ -9,12 +9,13 @@
  */
 
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import type * as DomainCandidateClaim from "@beep/epistemic-domain/entities/CandidateClaim";
 import type * as DomainEvidence from "@beep/epistemic-domain/entities/Evidence";
 import type { ClaimGateResult } from "@beep/epistemic-domain/values";
 import type { ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
-import type { Effect, Layer } from "effect";
+import type * as Effect from "effect/Effect";
+import type * as Layer from "effect/Layer";
 
 const $I = $EpistemicUseCasesId.create("ClaimGate/ClaimGate.ports");
 
@@ -27,7 +28,7 @@ const $I = $EpistemicUseCasesId.create("ClaimGate/ClaimGate.ports");
  *
  * ```ts
  * import { strictEqual } from "node:assert"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { ClaimGateShape } from "@beep/epistemic-use-cases/ClaimGate"
  *
  * const shape: ClaimGateShape = {
@@ -54,7 +55,7 @@ export interface ClaimGateShape {
  *
  * ```ts
  * import { strictEqual } from "node:assert"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ClaimGate } from "@beep/epistemic-use-cases/ClaimGate"
  *
  * const hasEvaluate = Effect.runSync(

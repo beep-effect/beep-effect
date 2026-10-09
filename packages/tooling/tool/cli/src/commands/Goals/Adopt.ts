@@ -14,11 +14,15 @@
  * @since 0.0.0
  */
 
-import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";

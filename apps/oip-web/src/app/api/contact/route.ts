@@ -6,7 +6,7 @@
  */
 
 import { Str } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import {
   ContactSubmissionPayload,
   ContactSubmissionResponse,

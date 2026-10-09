@@ -11,9 +11,10 @@
 
 import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
 import { A } from "@beep/utils";
-import { Layer, Stream } from "effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import {
   AssistantTurnBlockEvent,
   AssistantTurnFinalization,
@@ -146,8 +147,8 @@ export const fixtureEventsFor = (history: ReadonlyArray<TurnHistoryItem>): Reado
  * ```ts
  * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
  * import { FixtureTurnKernel } from "@beep/agents-use-cases/proof"
- * import { Effect, Stream } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * const program = Effect.gen(function* () {
  *   const kernel = yield* AgentTurnKernel
  *   const blocks = yield* Stream.runCollect(

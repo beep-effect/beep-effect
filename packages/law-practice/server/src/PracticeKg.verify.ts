@@ -7,8 +7,9 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { Effect, HashSet } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { SqlClient as SqlClientService } from "effect/sql/SqlClient";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
@@ -158,8 +159,7 @@ const missingFrom = (references: ReadonlyArray<RefRow>, known: ReadonlyArray<Ref
  *
  * ```ts
  * import { verifyPracticeKgBundle } from "@beep/law-practice-server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(verifyPracticeKgBundle)) // true
  * ```
  *

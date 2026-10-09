@@ -6,9 +6,10 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { HashMap, Order, pipe } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { diffMembership } from "../../../internal/ratchet/index.ts";

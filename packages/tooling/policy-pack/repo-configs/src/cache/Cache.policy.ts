@@ -6,8 +6,8 @@
  */
 import { $RepoConfigsId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

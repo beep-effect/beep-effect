@@ -7,8 +7,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../../internal/schema/JsonCodec.ts";
 import { QualityIssue } from "../../Yeet.schemas.ts";

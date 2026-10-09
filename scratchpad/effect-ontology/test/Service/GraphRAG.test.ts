@@ -1,7 +1,10 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { IRI } from "@beep/rdf";
 import { assert, describe, it } from "@effect/vitest";
-import { Duration, Effect, Layer, Stream } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Stream from "effect/Stream";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as LanguageModel from "effect/ai/LanguageModel";

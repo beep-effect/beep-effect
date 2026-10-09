@@ -42,7 +42,7 @@ migration rather than creating a deprecation alias. The family extension is:
 import { $RepoCliId } from "@beep/identity/packages"
 import { LiteralKit } from "@beep/schema"
 import { A, O, P, pipe } from "@beep/utils"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function"
 
 const $I = $RepoCliId.create("internal/cli/RunMode")

@@ -14,8 +14,8 @@ import {
   TurboPlanTask,
 } from "@beep/repo-cli/test/Yeet";
 import { CacheEvidenceReference } from "@beep/repo-configs/cache";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";

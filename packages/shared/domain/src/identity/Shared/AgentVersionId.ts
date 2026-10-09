@@ -36,7 +36,7 @@ export const AgentVersionId = make("agent_version", {
  * **Example** (Decode AgentVersionId with Schema)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { AgentVersionId } from "@beep/shared-domain/identity/Shared"
  * import * as S from "effect/Schema"
  *

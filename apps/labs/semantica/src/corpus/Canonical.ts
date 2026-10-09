@@ -1,7 +1,9 @@
-import { Order, pipe, Struct } from "effect";
 import * as A from "effect/Array";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as Struct from "effect/Struct";
 
 const canonicalPrimitive = (value: string | number | boolean | null): string => JSON.stringify(value);
 

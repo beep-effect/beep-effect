@@ -24,8 +24,13 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe } from "@beep/utils";
-import { Context, Effect, Equal, FileSystem, Layer, Path } from "effect";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { optionalProp } from "../../../internal/cli/OptionRecord.ts";
 import { PacketStreamError } from "./PacketCore.errors.ts";
@@ -356,8 +361,7 @@ export interface PacketTransitionWriterShape {
  *
  * ```ts
  * import { PacketTransitionWriter } from "@beep/repo-cli/test/Goals"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.map(PacketTransitionWriter, (writer) => typeof writer.plan)
  * console.log(program.pipe !== undefined) // true
  * ```

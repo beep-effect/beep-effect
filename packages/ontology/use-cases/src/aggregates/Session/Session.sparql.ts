@@ -17,7 +17,12 @@ import {
   SparqlSelectResult,
 } from "@beep/semantic-web/services/sparql-query";
 import { A, O, R, Str } from "@beep/utils";
-import { Context, Effect, Layer, Match, Order, pipe } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { inferredSessionGraphPartitions, OntologyInferenceResult } from "./Session.reasoner.ts";
 import type { GraphPartition } from "@beep/ontology-domain/aggregates/Session";
@@ -634,8 +639,7 @@ const runOntologySparql = Effect.fn("Ontology.Sparql.run")(function* (input: Run
  *
  * ```ts
  * import { OntologySparqlRunner } from "@beep/ontology-use-cases/aggregates/Session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const runner = yield* OntologySparqlRunner
  *   return runner

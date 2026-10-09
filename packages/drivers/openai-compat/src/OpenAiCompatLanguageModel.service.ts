@@ -10,17 +10,21 @@ import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, flow, Layer, Match, pipe, Stream, Tuple } from "effect";
 import * as AiError from "effect/ai/AiError";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as AiModel from "effect/ai/Model";
 import { toCodecOpenAI } from "effect/ai/OpenAiStructuredOutput";
 import * as Response from "effect/ai/Response";
 import * as Tool from "effect/ai/Tool";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
+import * as Tuple from "effect/Tuple";
 import { PosInt } from "./internal/PosInt.ts";
 import {
   OpenAiCompatAssistantChatMessage,
@@ -137,7 +141,8 @@ export class OpenAiCompatLanguageModelConfig extends S.Class<OpenAiCompatLanguag
  * **Example** (Implement a stub provider)
  *
  * ```ts
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * import { OpenAiCompatChatCompletionResponse, type OpenAiCompatProvider } from "@beep/openai-compat"
  *
  * const provider: OpenAiCompatProvider = {
@@ -159,7 +164,8 @@ export type OpenAiCompatProvider = OpenAiCompatClientShape;
  * **Example** (Assemble provider-backed factory options)
  *
  * ```ts
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * import { OpenAiCompatChatCompletionResponse, type OpenAiCompatLanguageModelOptions } from "@beep/openai-compat"
  *
  * const provider: OpenAiCompatLanguageModelOptions["provider"] = {
@@ -951,7 +957,8 @@ const makeStreamResponse = (
  * **Example** (Build a model from provider callbacks)
  *
  * ```ts
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * import { makeFromProvider, OpenAiCompatChatCompletionResponse } from "@beep/openai-compat"
  *
  * const model = makeFromProvider({
@@ -1003,7 +1010,8 @@ export const makeFromProvider: (
  * **Example** (Build a layer from provider callbacks)
  *
  * ```ts
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  * import { layerFromProvider, OpenAiCompatChatCompletionResponse } from "@beep/openai-compat"
  *
  * const layer = layerFromProvider({

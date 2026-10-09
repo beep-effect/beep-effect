@@ -6,7 +6,7 @@
  */
 
 import { CandorDisposition } from "@beep/law-practice-domain/entities/CandorDisposition";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { Table } from "./CandorDisposition.table.ts";
 
@@ -67,8 +67,7 @@ const encodeCandorDisposition = S.encodeResult(CandorDisposition);
  *   fromCandorDispositionRow,
  *   toCandorDispositionInsert
  * } from "@beep/law-practice-tables/entities/CandorDisposition"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const insert = Result.flatMap(fromCandorDispositionRow({}), toCandorDispositionInsert)
  * console.log(Result.isFailure(insert)) // true
  * ```
@@ -97,8 +96,7 @@ export const toCandorDispositionInsert = (
  *
  * ```ts
  * import { fromCandorDispositionRow } from "@beep/law-practice-tables/entities/CandorDisposition"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * console.log(Result.isFailure(fromCandorDispositionRow({}))) // true
  * ```
  *

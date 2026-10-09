@@ -10,9 +10,11 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Context, Effect, FileSystem, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as N from "effect/Number";
@@ -500,7 +502,8 @@ const isChainBoundary = (status: ProcessStatus): boolean => status.pid === INIT_
  *
  * ```ts
  * import { processLineage, ProcessTable, processTableFromEntries, ProcessTableEntry } from "@beep/repo-cli/test/RepoRun"
- * import { Effect, FileSystem } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
  * import * as A from "effect/Array"
  *
  * const table = processTableFromEntries({
@@ -566,8 +569,8 @@ export const processLineage = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { invokerSessionRoot, ProcessTable, processTableFromEntries, ProcessTableEntry } from "@beep/repo-cli/test/RepoRun"
- * import { Effect, FileSystem } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
  * const table = processTableFromEntries({
  *   self: 70,
  *   entries: [
@@ -616,8 +619,8 @@ export const invokerSessionRoot = Effect.fnUntraced(function* (): Effect.fn.Retu
  *
  * ```ts
  * import { descendsFromProcess, ProcessTable, processTableFromEntries, ProcessTableEntry } from "@beep/repo-cli/test/RepoRun"
- * import { Effect, FileSystem } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
  * const table = processTableFromEntries({
  *   self: 70,
  *   entries: [

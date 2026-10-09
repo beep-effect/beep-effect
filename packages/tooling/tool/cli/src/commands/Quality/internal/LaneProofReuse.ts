@@ -6,12 +6,16 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { DateTime, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
-import { dual } from "effect/Function";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { turboEnvExtendsAmbient } from "../../../internal/cli/EnvConfig.ts";

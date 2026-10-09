@@ -2,7 +2,7 @@ import { makeInternalServerError, makeNotFoundError, makeTooManyRequestsError } 
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { ErrorReporter } from "effect";
+import * as ErrorReporter from "effect/ErrorReporter";
 import * as O from "effect/Option";
 
 describe("HttpError", () => {

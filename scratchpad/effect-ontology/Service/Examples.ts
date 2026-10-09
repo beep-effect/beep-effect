@@ -15,7 +15,10 @@ import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Context, Effect, Layer, Match } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import type * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -186,7 +189,7 @@ export class ExampleStats extends S.Class<ExampleStats>($I`ExampleStats`)(
  * **Example** (Inspect examples service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExamplesService } from "@effect-ontology/Service/Examples"
  *
  * const program = Effect.gen(function* () {

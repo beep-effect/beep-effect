@@ -36,10 +36,16 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Console, DateTime, Duration, Effect, HashSet, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCapture, runRepoCommandCaptureRaw } from "../../../internal/repo-run/index.ts";
@@ -311,8 +317,7 @@ const baseBranchName = (base: string): string => Str.replace(/^[^/]+\//u, "")(ba
  *
  * ```ts
  * import { readYeetRulesetRequiredContexts, RepoRunContext } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = RepoRunContext.make({
  *   base: "origin/main",
  *   branch: "feature/settle",
@@ -389,8 +394,7 @@ export const readYeetRulesetRequiredContexts = Effect.fn("Yeet.readYeetRulesetRe
  * ```ts
  * import { runRepoCommandCapture } from "@beep/repo-cli/internal/repo-run"
  * import { captureRepoCommandStrict } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const read = captureRepoCommandStrict({
  *   repoRoot: ".",
  *   command: "git",
@@ -465,8 +469,7 @@ export const captureRepoCommandStrict = Effect.fn("Yeet.captureRepoCommandStrict
  *
  * ```ts
  * import { readYeetChangedPathsStrict, RepoRunContext } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = RepoRunContext.make({
  *   base: "origin/main",
  *   branch: "feature/settle",
@@ -527,8 +530,7 @@ export const readYeetChangedPathsStrict = Effect.fn("Yeet.readYeetChangedPathsSt
  *
  * ```ts
  * import { readYeetChangedPaths, RepoRunContext } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = RepoRunContext.make({
  *   base: "origin/main",
  *   branch: "feature/settle",
@@ -666,8 +668,7 @@ export const yeetBaseMergeableFor: {
  *
  * ```ts
  * import { YeetRegistrationRecall } from "@beep/repo-cli/test/Yeet"
- * import { HashSet } from "effect"
- *
+ * import * as HashSet from "effect/HashSet";
  * const recall = YeetRegistrationRecall.make({ registered: HashSet.make("Lint"), checks: [], recalled: [] })
  * console.log(HashSet.size(recall.registered)) // 1
  * ```
@@ -705,8 +706,7 @@ export class YeetRegistrationRecall extends S.Class<YeetRegistrationRecall>($I`Y
  *
  * ```ts
  * import { rememberRegistered, YeetSettleCheck } from "@beep/repo-cli/test/Yeet"
- * import { HashSet } from "effect"
- *
+ * import * as HashSet from "effect/HashSet";
  * const first = rememberRegistered(HashSet.empty(), [YeetSettleCheck.make({ name: "Lint", outcome: "pending" })])
  * const second = rememberRegistered(first.registered, [])
  * console.log(second.recalled) // [ "Lint" ]
@@ -1405,8 +1405,9 @@ const renderCensusTail = (verdict: YeetSettleVerdict): ReadonlyArray<string> => 
  * @since 0.0.0
  */
 export const renderYeetSettleDetail = (verdict: YeetSettleVerdict): string =>
-  pipe(
-    Match.value(O.getOrNull(verdict.reason)),
+  verdict.reason.pipe(
+    O.getOrNull,
+    Match.value,
     Match.when(null, () => [
       "settle: settled; closeout bound",
       ...renderNames("tolerated matrix parents", verdict.census.unmatched),

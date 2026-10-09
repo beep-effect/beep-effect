@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Headers from "effect/http/Headers";
 import * as HttpTraceContext from "effect/http/HttpTraceContext";
@@ -38,7 +38,7 @@ export const extractTraceContextHeaders = (headers?: Headers.Input): O.Option<Tr
  * **Example** (Inject current span headers)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { injectTraceContextHeaders } from "@beep/observability/server"
  *
  * const program = injectTraceContextHeaders().pipe(
@@ -66,7 +66,7 @@ export const injectTraceContextHeaders = Effect.fn("injectTraceContextHeaders")(
  * **Example** (Apply parent span to effect)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { withIncomingTraceContext } from "@beep/observability/server"
  *
  * const program = withIncomingTraceContext(
@@ -98,7 +98,7 @@ const withIncomingTraceContextImpl = Effect.fn("withIncomingTraceContextImpl")(f
  * **Example** (Run effect with headers)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { withIncomingTraceContext } from "@beep/observability/server"
  *
  * const program = withIncomingTraceContext(

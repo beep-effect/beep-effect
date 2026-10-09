@@ -8,10 +8,17 @@
 import { Sha256Hex } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-import { Console, DateTime, Effect, FileSystem, HashMap, HashSet, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -31,7 +38,7 @@ import {
   decodeCorpusProvenanceRecordJson,
   encodeCorpusProvenanceRecordJson,
 } from "./Salvage.schemas.ts";
-import type { Scope } from "effect";
+import type * as Scope from "effect/Scope";
 import type {
   CollectorManifestRecord,
   RestorationPreserveOptions,
@@ -755,7 +762,7 @@ const releaseArchiveWriterClaim = Effect.fn("CorpusRestoration.releaseWriterClai
  * **Example** (Serialize one restoration writer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { withRestorationWriterClaim } from "@beep/repo-cli/test/Corpus"
  *
  * const guarded = withRestorationWriterClaim("/canonical/run/writer-claims", "mail-scope.claim", Effect.void)

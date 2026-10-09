@@ -4,11 +4,16 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { DateTime, Effect, FileSystem, Match, Path } from "effect";
+
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

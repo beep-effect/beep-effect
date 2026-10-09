@@ -5,7 +5,10 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { expect } from "@effect/vitest";
 import * as PgDrizzle from "drizzle-orm/effect-postgres";
 import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as SqlClient from "effect/sql/SqlClient";
 
 const makePersistentLayer = (dataDir: string) => Pglite.makeLayer({ dataDir, relaxedDurability: true });

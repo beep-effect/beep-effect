@@ -8,8 +8,11 @@
 
 import { DomainError } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Effect, FileSystem, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import {
   ArchitecturePlanTarget,
   CanonicalSliceOperationPlan,
@@ -227,8 +230,7 @@ export const makeCanonicalSliceOperationPlan = (): CanonicalSliceOperationPlan =
  * ```ts
  * import { makeArchitectureOperationPlan } from "@beep/repo-cli/commands/Architecture"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeArchitectureOperationPlan("/workspace/beep-effect", {
  *   boundedContext: "research-lab",
  *   concept: "Experiment",
@@ -314,8 +316,7 @@ export const makeArchitectureOperationPlan = Effect.fn(function* (
  *
  * ```ts
  * import { makeArchitecturePackageOperationPlan } from "@beep/repo-cli/commands/Architecture/index"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.map(
  *   makeArchitecturePackageOperationPlan({ boundedContext: "research-lab", role: "domain" }),
  *   (plan) => plan.roles[0]?.packageName,

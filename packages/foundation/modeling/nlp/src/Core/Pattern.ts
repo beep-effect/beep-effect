@@ -8,9 +8,10 @@
 import { $NlpId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, Result } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const $I = $NlpId.create("Core/Pattern");
@@ -515,7 +516,7 @@ export type MarkRange = typeof MarkRange.Type;
  * **Example** (Building a literal Pattern value)
  *
  * ```ts import.meta.vitest name="Building a literal Pattern value"
- * import { Chunk } from "effect"
+ * import * as Chunk from "effect/Chunk";
  * import * as O from "effect/Option"
  * import { LiteralPatternElement, Pattern, PatternId } from "@beep/nlp/Core/Pattern"
  *

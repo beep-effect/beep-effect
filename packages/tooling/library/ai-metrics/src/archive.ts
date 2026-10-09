@@ -8,8 +8,13 @@
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { Clock, Effect, FileSystem, Path, Redacted, Result } from "effect";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { AiMetricsTranscriptSource } from "./models.ts";
 import { hashPrivateIdentifier, hashPublicTextSha256 } from "./privacy.ts";
@@ -314,7 +319,7 @@ export class AiMetricsRawArchiveObject extends S.Class<AiMetricsRawArchiveObject
  *
  * ```ts
  * import { AiMetricsRawArchiveKey } from "@beep/repo-ai-metrics"
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * const key: AiMetricsRawArchiveKey = Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=")
  * console.log(key)
  * ```
@@ -336,7 +341,7 @@ export const AiMetricsRawArchiveKey = Aes256KeyBase64.pipe(
  *
  * ```ts
  * import type { AiMetricsRawArchiveKey } from "@beep/repo-ai-metrics"
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * const key: AiMetricsRawArchiveKey = Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=")
  * console.log(key)
  * ```
@@ -449,7 +454,8 @@ const readExistingArchiveObject = Effect.fn("AiMetrics.readExistingArchiveObject
  *   writeEncryptedRawArchiveObject
  * } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect, Redacted } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
  * import * as O from "effect/Option"
  * const program = writeEncryptedRawArchiveObject({
  *   content: "{\"type\":\"event_msg\"}",
@@ -567,7 +573,7 @@ export const writeEncryptedRawArchiveObject = Effect.fn("AiMetrics.writeEncrypte
  *   AiMetricsEncryptedRawArchiveEnvelope,
  *   decryptEncryptedRawArchiveEnvelope
  * } from "@beep/repo-ai-metrics"
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * const program = decryptEncryptedRawArchiveEnvelope({
  *   envelope: AiMetricsEncryptedRawArchiveEnvelope.make({
  *     algorithm: AiMetricsArchiveAlgorithm.Enum["AES-256-GCM"],

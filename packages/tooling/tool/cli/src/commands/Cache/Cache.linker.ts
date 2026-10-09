@@ -4,9 +4,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Duration, Effect, FileSystem, Order } from "effect";
+
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

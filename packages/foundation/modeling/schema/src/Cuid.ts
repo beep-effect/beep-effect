@@ -8,8 +8,12 @@
 import { $SchemaId } from "@beep/identity/packages";
 import { Str } from "@beep/utils";
 import { DateTimes } from "@beep/utils/DateTime";
-import { Context, Crypto, Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type * as PlatformError from "effect/PlatformError";
@@ -23,7 +27,7 @@ const $I = $SchemaId.create("Cuid");
  *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { sha512 } from "@beep/schema/Cuid"
  *
  * const digest = await Effect.runPromise(
@@ -140,7 +144,7 @@ export class CuidSeed extends S.Class<CuidSeed>($I`CuidSeed`)(
  *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { CuidState } from "@beep/schema/Cuid"
  *
  * const seed = await Effect.runPromise(
@@ -195,7 +199,7 @@ export class CuidState extends Context.Service<CuidState>()("@beep/schema/Cuid/C
  *
  * ```ts
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { cuid, CuidState } from "@beep/schema/Cuid"
  *
  * const id = await Effect.runPromise(

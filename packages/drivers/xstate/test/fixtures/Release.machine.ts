@@ -1,5 +1,6 @@
 import { fromEffect, setupEffect } from "@xstate/effect";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 export class Deployments extends Context.Service<

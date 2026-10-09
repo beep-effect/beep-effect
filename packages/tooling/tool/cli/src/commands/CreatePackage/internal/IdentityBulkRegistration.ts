@@ -11,7 +11,10 @@
 
 import { DomainError } from "@beep/repo-utils";
 import { A } from "@beep/utils";
-import { Effect, FileSystem, Order, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
 import { CreatePackageIdentityRegistration } from "./IdentityRegistration.ts";
 import { LabIdentitySegment } from "./LabIdentitySegment.ts";
@@ -33,8 +36,7 @@ import { LabIdentitySegment } from "./LabIdentitySegment.ts";
  *
  * ```ts
  * import { registerMissingWorkspaceIdentityPackages } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityBulkRegistration"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = registerMissingWorkspaceIdentityPackages("/repo")
  * console.log(Effect.isEffect(program)) // true
  * ```

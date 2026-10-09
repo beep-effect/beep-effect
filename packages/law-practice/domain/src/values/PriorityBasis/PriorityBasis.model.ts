@@ -6,7 +6,7 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { HohfeldPosition } from "../HohfeldPosition/index.ts";
 import { LegalScopeValue } from "../LegalScopeContext/index.ts";

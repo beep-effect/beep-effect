@@ -18,8 +18,10 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeProofLedgerFactRowJson = S.decodeEffect(S.fromJsonString(ProofLedgerFactRow));
@@ -115,7 +117,11 @@ describe("ProofFact schemas", () => {
     ({ value }) =>
       expect(
         S.toEquivalence(ProofLedgerRow)(
-          Result.getOrThrow(decodeUnknownProofLedgerRowResult(Result.getOrThrow(encodeProofLedgerRowResult(value)))),
+          encodeProofLedgerRowResult(value).pipe(
+            Result.getOrThrow,
+            decodeUnknownProofLedgerRowResult,
+            Result.getOrThrow
+          ),
           value
         )
       ).toBe(true),

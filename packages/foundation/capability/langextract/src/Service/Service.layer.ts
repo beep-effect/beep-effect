@@ -14,9 +14,13 @@ import {
 } from "@beep/langextract/Extraction";
 import { toAnnotatedDocument } from "@beep/langextract/Handoff";
 import * as A from "@beep/utils/Array";
-import { Clock, Duration, Effect, Layer, Number as Num } from "effect";
 import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -122,7 +126,9 @@ export const make = Effect.fn("LangExtractService.make")(function* () {
  * import { ExtractionTarget } from "@beep/langextract/Target"
  * import { LangExtractRequest } from "@beep/langextract/Extraction"
  * import { DocumentId } from "@beep/nlp/Core"
- * import { Effect, Layer, Stream } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
+ * import * as Stream from "effect/Stream";
  * import { LanguageModel, Response } from "effect/ai"
  *
  * const usage = Response.Usage.make({

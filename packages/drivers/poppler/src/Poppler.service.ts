@@ -11,9 +11,14 @@ import { PageImage } from "@beep/file-processing/PageOcr";
 import { A, O, Str } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { Effect, FileSystem, MutableHashSet, Path, pipe, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as Num from "effect/Number";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Stream from "effect/Stream";
 import { PopplerError } from "./Poppler.schema.ts";
 import type { PopplerConfig } from "./Poppler.schema.ts";
 

@@ -9,8 +9,8 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { afterEach, describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { vi } from "vitest";
 

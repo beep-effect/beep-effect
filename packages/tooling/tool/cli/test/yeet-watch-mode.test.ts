@@ -31,16 +31,23 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import { assertDefined, assertTrue, strictEqual } from "@effect/vitest/utils";
-import { DateTime, Effect, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { YeetCheckFailedRow } from "@beep/repo-cli/test/Yeet";
-import type { Crypto, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
+import type * as Path from "effect/Path";
 
 const decodeUnknownYeetWatchEventJson = S.decodeUnknownEffect(S.fromJsonString(YeetWatchEvent));
 

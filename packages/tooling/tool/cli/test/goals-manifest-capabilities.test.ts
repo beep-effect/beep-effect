@@ -11,11 +11,18 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
@@ -208,7 +215,7 @@ layer(NodeServices.layer)("GoalManifest capability fields", (it) => {
       ];
 
       for (const input of invalidInputs) {
-        assertTrue(Exit.isFailure(yield* Effect.exit(decodeGoalManifest(input))));
+        (yield* Effect.exit(decodeGoalManifest(input))).pipe(Exit.isFailure, assertTrue);
       }
 
       const selfCycleError = yield* decodeGoalManifest({

@@ -20,15 +20,24 @@
  */
 
 import { assert, it as defaultIt, describe } from "@effect/vitest";
-import { Cause, Context, Deferred, Effect, Exit, Fiber, Layer, Queue, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as McpSchema from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import { HttpClient, HttpClientRequest, HttpClientResponse, HttpRouter } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Queue from "effect/Queue";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
+import * as Stream from "effect/Stream";
 import {
   CLIENT_CAPABILITIES_META_KEY,
   CLIENT_INFO_META_KEY,
@@ -344,8 +353,8 @@ const legacyInitialize = (id: number) =>
  * ```ts
  * import { conformance2026, type ConformanceHost } from "@beep/mcp-kit/test/Conformance"
  * import { it } from "@effect/vitest"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const registerScopedHost = (host: ConformanceHost<never>) => {
  *   const fixture = Layer.effectDiscard(
  *     Effect.addFinalizer(() => Effect.log("Conformance fixture closed")))

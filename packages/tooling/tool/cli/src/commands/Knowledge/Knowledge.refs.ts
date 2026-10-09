@@ -14,10 +14,15 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import { Effect, flow, HashMap, HashSet, Match, MutableHashMap, Order, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -1048,8 +1053,7 @@ export const isKnowledgeRefsReport = S.is(KnowledgeRefsReport);
  *   encodeKnowledgeRefsReportJson,
  *   KnowledgeRefsReport,
  * } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const json = Effect.runSync(
  *   encodeKnowledgeRefsReportJson(
  *     KnowledgeRefsReport.make({
@@ -1084,8 +1088,8 @@ export const encodeKnowledgeRefsReportJson: {
  *
  * ```ts
  * import { decodeKnowledgeRefsReportJson } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
- * import { Effect, Result } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Result from "effect/Result";
  * const outcome = Effect.runSync(Effect.result(decodeKnowledgeRefsReportJson("{}")))
  *
  * console.log(Result.isFailure(outcome)) // true
@@ -1144,8 +1148,7 @@ export const knowledgeLengthPrefix = (value: string): string => {
  *
  * ```ts
  * import { knowledgeSha256Hex } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const digest = knowledgeSha256Hex(new Uint8Array(), "Failed to digest census input.")
  *
  * console.log(Effect.isEffect(digest)) // true
@@ -1175,8 +1178,7 @@ export const knowledgeSha256Hex = Effect.fn("Knowledge.sha256Hex")(function* (by
  *
  * ```ts
  * import { makeKnowledgeRefId } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const refId = makeKnowledgeRefId("repo-path", "CLAUDE.md", "repo-path:goals/INDEX.md", 0)
  *
  * console.log(Effect.isEffect(refId)) // true
@@ -2246,8 +2248,7 @@ const skippedEntry = (entry: KnowledgeTrackedEntry): O.Option<KnowledgeSkippedBl
  *
  * ```ts
  * import { decodeKnowledgeUtf8 } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const text = decodeKnowledgeUtf8(new TextEncoder().encode("ok"), "Malformed UTF-8 in a fixture.")
  *
  * console.log(Effect.runSync(text)) // "ok"
@@ -2939,7 +2940,7 @@ const entryPathOrder = Order.mapInput(Order.String, (entry: KnowledgeTrackedEntr
  *
  * ```ts
  * import { scanKnowledgeRefsTree } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { KnowledgeTreeOracle } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
  *
  * const emptyTree: KnowledgeTreeOracle = {

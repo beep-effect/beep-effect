@@ -13,8 +13,9 @@
 
 import { $PretextId } from "@beep/identity/packages";
 import { A, O, pipe, R, Str } from "@beep/utils";
-import { Effect, Result } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { PretextSnapshotCodecError } from "./Pretext.errors.ts";
 
@@ -290,7 +291,7 @@ const wordWidths = (metrics: FontMetrics, text: string): O.Option<ReadonlyArray<
  *
  * ```ts
  * import { chromeLinuxArial16, naturalWidth } from "@beep/pretext"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const metrics = Effect.runSync(chromeLinuxArial16).metrics
@@ -324,7 +325,7 @@ export const naturalWidth: {
  *
  * ```ts
  * import { chromeLinuxArial16, lineRanges } from "@beep/pretext"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const metrics = Effect.runSync(chromeLinuxArial16).metrics
@@ -381,7 +382,7 @@ export const lineRanges: {
  *
  * ```ts
  * import { chromeLinuxArial16, lineStats } from "@beep/pretext"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const metrics = Effect.runSync(chromeLinuxArial16).metrics
@@ -417,7 +418,7 @@ export const lineStats: {
  *
  * ```ts
  * import { chromeLinuxArial16, lineCount } from "@beep/pretext"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const metrics = Effect.runSync(chromeLinuxArial16).metrics
@@ -460,7 +461,7 @@ export const lineCount: {
  *
  * ```ts
  * import { chromeLinuxArial16, textHeight } from "@beep/pretext"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const metrics = Effect.runSync(chromeLinuxArial16).metrics

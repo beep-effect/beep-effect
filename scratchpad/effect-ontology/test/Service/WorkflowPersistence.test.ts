@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { KeyValueStore } from "effect/persistence";
 import { StorageService, StorageServiceTest } from "../../Service/Storage.ts";
 import { StorageKeyValueStoreLive } from "../../Service/WorkflowPersistence.ts";

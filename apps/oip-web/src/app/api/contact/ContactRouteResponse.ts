@@ -7,7 +7,8 @@
 
 import { $OipWebId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, Exit } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -85,7 +86,7 @@ const readContactFormPayload = Effect.fn("OipContact.readContactFormPayload")(fu
  * **Example** (Running with injected submit)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ContactSubmissionResponse } from "@beep/oip-web/contact"
  * import {
  *   contactRequestResponseWithSubmit,
@@ -131,7 +132,7 @@ export const contactRequestResponseWithSubmit: {
  * **Example** (Running contact request program)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import {
  *   contactRequestResponse,
  * } from "@beep/oip-web/app/api/contact/ContactRouteResponse"

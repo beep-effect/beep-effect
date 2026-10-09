@@ -42,7 +42,7 @@ const FloatChecks = S.makeFilter(isProtobufFloatValue, {
  * **Example** (Decode protobuf float value)
  *
  * ```ts import.meta.vitest name="Decode protobuf float value"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Float } from "@beep/schema/Float"
  *

@@ -3,8 +3,10 @@ import { it } from "@beep/test-runner";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Layer, Path } from "effect";
+import * as Effect from "effect/Effect";
 import * as Fs from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 
 describe("Root", () => {
   describe("findRepoRoot", () => {

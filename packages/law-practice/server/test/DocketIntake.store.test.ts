@@ -24,13 +24,21 @@ import { fcRuns } from "@beep/test-utils";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Cause, Context, Effect, Exit, FileSystem, Layer, Path, Ref, Scope } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import type { DocketIntakeError } from "@beep/law-practice-use-cases/DocketIntake";
 
@@ -410,7 +418,7 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         yield* addProcess(fs, OTHER.pid, OTHER.startTime);
         yield* leaveLock(OTHER);
 
-        const failure = yield* failureOf(Layer.launch(makeDocketFileStoreLayer(storeOptions)));
+        const failure = yield* makeDocketFileStoreLayer(storeOptions).pipe(Layer.launch, failureOf);
 
         assertSome(
           O.map(failure, (error) => [error.stage, error.cause]),

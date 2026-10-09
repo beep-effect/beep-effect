@@ -13,8 +13,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, Str } from "@beep/utils";
-import { Effect, HashSet, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { jsonObjectTextFromMixedOutput } from "../../internal/cli/MixedOutputJson.ts";
 import {
@@ -34,7 +35,8 @@ import {
 } from "./JudgeContract.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import type { RoundLayout } from "@beep/qa-capture";
-import type { FileSystem, Path } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type { QaInventory } from "./Inventory.schemas.ts";
 import type { QaEventLog } from "./Qa.session.ts";
 
@@ -326,7 +328,7 @@ export const renderCrossCheckFailure: {
  * ```ts
  * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  * import { crossCheckAgainstRound } from "@beep/repo-cli/commands/Qa/JudgeCheck"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { QaEventLog } from "@beep/repo-cli/commands/Qa/Qa.session"
  * import { RoundLayout } from "@beep/qa-capture"
  *
@@ -382,8 +384,7 @@ export const crossCheckAgainstRound = Effect.fn("QaJudgeCheck.crossCheckAgainstR
  * **Example** (Usage)
  * ```ts
  * import { EvidenceCrossCheck, raiseCrossCheckFailure } from "@beep/repo-cli/commands/Qa/JudgeCheck"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const clean = EvidenceCrossCheck.make({ missingEventIds: [], missingPaths: [] })
  * console.log(Effect.isEffect(raiseCrossCheckFailure(1, clean))) // true
  * ```
@@ -433,8 +434,7 @@ const requireInventoryRoundImpl = Effect.fn("QaJudgeCheck.requireInventoryRound"
  * ```ts
  * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
  * import { requireInventoryRound } from "@beep/repo-cli/commands/Qa/JudgeCheck"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const inventory = QaInventory.make({
  *   findings: [],
  *   judge: QaJudgeRef.make({ effort: "inherited", model: "claude-opus-5-5" }),

@@ -14,9 +14,13 @@
 import { WorktreeRemovalServiceLive } from "@beep/repo-cli/commands/Worktree";
 import { retireInvokingWorktree, SweepGitState, YeetRetirePlan } from "@beep/repo-cli/test/Yeet";
 import { NodeServices } from "@effect/platform-node";
-import { Console, Effect, Layer, ManagedRuntime, Result } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as ManagedRuntime from "effect/ManagedRuntime";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const argument = (index: number): string => O.getOrThrow(A.get(process.argv, index + 2));

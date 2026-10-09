@@ -13,8 +13,15 @@
 
 import { $ObsId } from "@beep/identity/packages";
 import { A, O, P, R } from "@beep/utils";
-import { Clock, Context, Duration, Effect, Layer, PubSub, Result, Schedule } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as PubSub from "effect/PubSub";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import { ObsError } from "./Obs.errors.ts";
 import {
   EnsureQaSceneRequest,
@@ -35,8 +42,8 @@ import {
   ObsVersionInfo,
 } from "./ObsProtocol.models.ts";
 import { ObsProtocol } from "./ObsProtocol.service.ts";
-import type { Stream } from "effect";
 import type * as Scope from "effect/Scope";
+import type * as Stream from "effect/Stream";
 import type { Socket } from "effect/socket";
 import type { ObsConfig, ObsConfigInputOptions, StartRecordingRequest } from "./Obs.models.ts";
 import type { ObsEvent, ObsOutputState, ObsRequestType } from "./ObsProtocol.models.ts";
@@ -104,8 +111,7 @@ const awaitRecordState = Effect.fn("Obs.awaitRecordState")(
  *
  * ```ts
  * import type { ObsShape } from "@beep/obs"
- * import { Stream } from "effect"
- *
+ * import * as Stream from "effect/Stream";
  * const eventsOf = (obs: ObsShape) => Stream.take(obs.events, 1)
  * console.log(eventsOf)
  * ```
@@ -370,8 +376,7 @@ export class Obs extends Context.Service<Obs, ObsShape>()($I`Obs`) {
    *
    * ```ts
    * import { Obs } from "@beep/obs"
-   * import { Layer } from "effect"
-   *
+   * import * as Layer from "effect/Layer";
    * console.log(Layer.isLayer(Obs.layer))
    * ```
    *
@@ -398,8 +403,7 @@ export class Obs extends Context.Service<Obs, ObsShape>()($I`Obs`) {
    *
    * ```ts
    * import { Obs } from "@beep/obs"
-   * import { Layer } from "effect"
-   *
+   * import * as Layer from "effect/Layer";
    * console.log(Layer.isLayer(Obs.makeLayer()))
    * ```
    *

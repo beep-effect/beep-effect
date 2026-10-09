@@ -162,7 +162,7 @@ No accepted editorial residuals. Module headers, titled Examples, described `@se
 - Runtime `@effected/*` identity: `assertCap` TypeError message, `JsonlEventTypeId` (`~effected/jsonl/JsonlEvent`). Documented as runtime, not example imports.
 - `JsoncParseError` `@see {@link parseValue}`: described, and the purpose phrase already says the public API does not expose the recovery pair.
 - `JsoncFingerprint.hash` / `hashText` without a runnable Crypto-provided Example: class Details already state `R` includes `Crypto.Crypto` and keep canonicalize as the observable Example.
-- Named `Schema` from root `"effect"` in `Toml.bind` (`import { Effect, Schema } from "effect"`). Conventions allow named imports from root `effect`; sibling `fromString` / `schema` fences already use `import * as S from "effect/Schema"`. Not a caller-confusion defect on its own.
+- Named `Schema` from root `"effect"` in `Toml.bind` (`import { Effect, Schema } from "<legacy-effect-barrel>"`). Conventions allow named imports from root `effect`; sibling `fromString` / `schema` fences already use `import * as S from "effect/Schema"`. Not a caller-confusion defect on its own.
 - Thin “Not instantiable.” sentences that continue with a useful purpose (`Jsonc`, `JsoncFingerprint`, `JsoncModifier`, `JsoncVisitor`). Only `TomlFormat` is a lead that is *only* that restatement.
 - `$I` on `Data.taggedEnum` visitor events (`JsoncVisitorEvent`, `TomlVisitorEvent`) and on non-schema facades (`Jsonc`, `Toml`, `Journal`). Annotation-patterns cover Schema Class / TaggedError / Literals / Union, not Data enums.
 - Taste-only lead polish on `JournalReadError` / `AppendOptions` after the round-1 rewrite.

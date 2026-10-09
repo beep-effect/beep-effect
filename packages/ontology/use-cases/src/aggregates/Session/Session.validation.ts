@@ -43,7 +43,11 @@ import {
   ShaclValidationService,
 } from "@beep/semantic-web/services/shacl-validation";
 import { A, O } from "@beep/utils";
-import { Context, Effect, Layer, pipe, Result } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
   OntologyFilePath,
@@ -329,8 +333,7 @@ export class OntologyValidationError extends S.TaggedError<OntologyValidationErr
  *
  * ```ts
  * import type { OntologyValidationRunnerShape } from "@beep/ontology-use-cases/aggregates/Session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const runner: OntologyValidationRunnerShape = {
  *   run: () => Effect.die(new Error("example validation runner")),
  *   exportProvenance: () => Effect.die(new Error("example provenance exporter"))
@@ -862,8 +865,7 @@ const exportOntologyProvenance = Effect.fn("Ontology.Validation.exportProvenance
  *
  * ```ts
  * import { OntologyValidationRunner } from "@beep/ontology-use-cases/aggregates/Session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const runner = yield* OntologyValidationRunner
  *   return runner

@@ -4,10 +4,11 @@ import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeUnknownSyncConflict = S.decodeUnknownEffect(SyncConflict.SyncConflict);

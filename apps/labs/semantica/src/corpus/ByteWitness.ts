@@ -1,9 +1,15 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { Context, Crypto, Effect, Equal, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -103,8 +109,7 @@ export type ByteDrift = typeof ByteDrift.Type;
  *
  * ```ts
  * import { verifyByteExpectations } from "@/corpus/ByteWitness"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(verifyByteExpectations("fixtures", []))) // true
  * ```
  *

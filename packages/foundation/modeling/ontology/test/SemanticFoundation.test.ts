@@ -28,9 +28,13 @@ import { fcRuns } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Match, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

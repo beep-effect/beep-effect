@@ -45,7 +45,8 @@ import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPl
 import { $createHeadingNode, $createQuoteNode, HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { $setBlocksType } from "@lexical/selection";
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
-import { Data, Equal } from "effect";
+import * as Data from "effect/Data";
+import * as Equal from "effect/Equal";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import { Atom } from "effect/reactivity";

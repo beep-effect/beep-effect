@@ -7,8 +7,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -619,8 +619,7 @@ export type CollectorManifestRecord = typeof CollectorManifestRecord.Type;
  *
  * ```ts
  * import { decodeCollectorManifestRecordJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const decoded = decodeCollectorManifestRecordJson('{"reason":"unreadable","src":"C:\\\\source","status":"error"}')
  * console.log(Effect.isEffect(decoded)) // true
  * ```
@@ -942,8 +941,7 @@ export type ArchiveVerificationRecord = typeof ArchiveVerificationRecord.Type;
  *
  * ```ts
  * import { ArchiveVerificationRecord, encodeArchiveVerificationRecordJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const row = ArchiveVerificationRecord.cases["verification-failure"].make({
  *   failureKind: "manifest-unsealed",
  *   message: "The preservation ledger has no terminal seal.",
@@ -1072,8 +1070,7 @@ export class RestorationAcceptanceRecord extends S.Class<RestorationAcceptanceRe
  * import * as S from "effect/Schema"
  * import { RestorationAcceptanceRecord, encodeRestorationAcceptanceRecordJson } from "@beep/repo-cli/commands/Corpus"
  * import { Sha256Hex } from "@beep/schema"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const digest = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
  * const row = RestorationAcceptanceRecord.make({
  *   evidenceSha256: digest,
@@ -1110,8 +1107,7 @@ export const encodeRestorationAcceptanceRecordJson = JsonStringCodec(Restoration
  *
  * ```ts
  * import { decodeRestorationAcceptanceRecordJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const decoded = decodeRestorationAcceptanceRecordJson("{}")
  * console.log(Effect.isEffect(decoded)) // true
  * ```

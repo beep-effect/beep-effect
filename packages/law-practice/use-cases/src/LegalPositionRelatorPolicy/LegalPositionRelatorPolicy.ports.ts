@@ -10,7 +10,7 @@
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LegalPositionRelator } from "@beep/law-practice-domain";
 import { Fn } from "@beep/schema";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import * as S from "effect/Schema";
 import { EffectOutput } from "../internal/effectOutput.ts";
 import { LegalOppositionCandidateInput, LegalPositionRelatorView } from "./LegalPositionRelatorPolicy.values.ts";
@@ -130,7 +130,7 @@ export class LegalPositionRelatorPolicyShape extends S.Class<LegalPositionRelato
  *   LegalPositionRelatorPolicy,
  *   LegalPositionRelatorPolicyLive,
  * } from "@beep/law-practice-use-cases/LegalPositionRelatorPolicy"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as HashSet from "effect/HashSet"
  *
  * const program = Effect.gen(function* () {

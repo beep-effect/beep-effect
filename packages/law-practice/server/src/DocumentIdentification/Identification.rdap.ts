@@ -8,9 +8,10 @@ import {
   DomainRegistrantLookupShape,
   IdentificationError,
 } from "@beep/law-practice-use-cases/DocumentIdentification";
-import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import { HttpClient } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -56,7 +57,8 @@ const orgs = Effect.fn("Identification.rdapEntities")(function* (
  *
  * ```ts
  * import { registrantFromRdap } from "@beep/law-practice-server/DocumentIdentification"
- * import { Effect, Option } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Option from "effect/Option";
  * console.log(Option.isNone(Effect.runSync(registrantFromRdap({ entities: [] })))) // true
  * ```
  *

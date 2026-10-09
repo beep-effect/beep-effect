@@ -11,9 +11,18 @@ import { O, Str } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { Config, Context, Duration, Effect, FileSystem, Layer, Path, pipe, Redacted, Schedule } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Redacted from "effect/Redacted";
 import * as Reactivity from "effect/reactivity/Reactivity";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import type * as PgClient from "@effect/sql-pg/PgClient";
@@ -798,7 +807,7 @@ export const makeSqlTestLayer = <
 }): Layer.Layer<Services, SqlTestHarnessError> =>
   Layer.effectContext(
     Effect.gen(function* () {
-      const context = yield* Layer.build(Layer.fresh(options.driver.makeLayer(options.config)));
+      const context = yield* options.driver.makeLayer(options.config).pipe(Layer.fresh, Layer.build);
 
       yield* runHook(options.driver.name, "migrate", options.driver.sqlClient, options.hooks?.migrate, context);
       yield* runHook(options.driver.name, "seed", options.driver.sqlClient, options.hooks?.seed, context);
@@ -1034,7 +1043,7 @@ const waitForPgliteHostReadiness = Effect.fn("SqlTest.waitForPgliteHostReadiness
  *
  * ```ts
  * import { makePgliteTestcontainerResource } from "@beep/test-utils"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const program = Effect.scoped(makePgliteTestcontainerResource())
  * console.log(program)
  * ```
@@ -1286,12 +1295,12 @@ const buildBunSqliteLayer = Effect.gen(function* () {
   return Layer.mergeAll(
     BunFileSystem.layer,
     BunPath.layer,
-    Layer.effectContext(
-      Layer.build(BunSqliteClient.SqliteClient.layer({ filename: databasePath })).pipe(
-        Effect.mapError((cause) =>
-          toHarnessError("bun-sqlite", "provision", "Failed to open the Bun SQLite test database.", cause)
-        )
-      )
+    BunSqliteClient.SqliteClient.layer({ filename: databasePath }).pipe(
+      Layer.build,
+      Effect.mapError((cause) =>
+        toHarnessError("bun-sqlite", "provision", "Failed to open the Bun SQLite test database.", cause)
+      ),
+      Layer.effectContext
     ),
     Layer.succeed(TestDatabaseInfo, makeNoNetworkInfo("bun-sqlite", databasePath, tempDir))
   );
@@ -1352,26 +1361,24 @@ const buildNodeSqliteLayer = Effect.gen(function* () {
   );
   const databasePath = path.join(tempDir, "test.db");
 
-  return Layer.effectContext(
-    Layer.build(
-      Layer.mergeAll(
-        NodeFileSystem.layer,
-        NodePath.layer,
-        SqliteClient.layer({ filename: databasePath }),
-        Layer.succeed(TestDatabaseInfo, makeNoNetworkInfo("node-sqlite", databasePath, tempDir))
-      )
-    ).pipe(
-      Effect.catchCause((cause) =>
-        Effect.fail(
-          toHarnessError(
-            "node-sqlite",
-            "provision",
-            "Failed to provision the Node SQLite test driver. Ensure the current Node.js runtime includes node:sqlite support before selecting NodeSqliteTestDriver.",
-            cause
-          )
+  return Layer.mergeAll(
+    NodeFileSystem.layer,
+    NodePath.layer,
+    SqliteClient.layer({ filename: databasePath }),
+    Layer.succeed(TestDatabaseInfo, makeNoNetworkInfo("node-sqlite", databasePath, tempDir))
+  ).pipe(
+    Layer.build,
+    Effect.catchCause((cause) =>
+      Effect.fail(
+        toHarnessError(
+          "node-sqlite",
+          "provision",
+          "Failed to provision the Node SQLite test driver. Ensure the current Node.js runtime includes node:sqlite support before selecting NodeSqliteTestDriver.",
+          cause
         )
       )
-    )
+    ),
+    Layer.effectContext
   );
 }).pipe(
   Effect.mapError((cause) =>
@@ -1567,7 +1574,7 @@ const shouldUseExternalPgliteLayer = (mode: PgliteSqlTestLayerMode, config: PgEx
 const shouldUseTestcontainersPgliteLayer = (mode: PgliteSqlTestLayerMode): boolean =>
   PgliteSqlTestLayerMode.$match(mode, {
     auto: () =>
-      O.getOrUndefined(Effect.runSync(Config.option(Config.String("BEEP_TEST_DATABASE_DRIVER")))) ===
+      O.getOrUndefined(Effect.runSync(Config.String("BEEP_TEST_DATABASE_DRIVER").pipe(Config.option))) ===
       "pglite-testcontainers",
     external: () => false,
     "in-process": () => false,
@@ -1630,8 +1637,8 @@ export const makePgliteIntegrationGate = (env?: PgliteIntegrationGateEnv) => {
   // is exactly right). Tests pass `env` explicitly to exercise each branch
   // without mutating the process environment.
   const resolved = env ?? {
-    databaseDriver: O.getOrUndefined(Effect.runSync(Config.option(Config.String("BEEP_TEST_DATABASE_DRIVER")))),
-    databaseUrl: O.getOrUndefined(Effect.runSync(Config.option(Config.String("BEEP_TEST_DATABASE_URL")))),
+    databaseDriver: O.getOrUndefined(Effect.runSync(Config.String("BEEP_TEST_DATABASE_DRIVER").pipe(Config.option))),
+    databaseUrl: O.getOrUndefined(Effect.runSync(Config.String("BEEP_TEST_DATABASE_URL").pipe(Config.option))),
   };
   const sharedConnectionUri = pipe(resolved.databaseUrl, O.fromNullishOr, O.filter(Str.isNonEmpty));
   const shouldUseTestcontainers = resolved.databaseDriver === "pglite-testcontainers";

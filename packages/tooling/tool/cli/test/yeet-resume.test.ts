@@ -20,13 +20,21 @@ import { NodeServices } from "@effect/platform-node";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { ConfigProvider, Effect, FileSystem, Layer, Path, Ref, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
 import { makeRecord } from "./yeet-pr-fixtures.ts";
 
@@ -114,7 +122,7 @@ describe("yeet resume", () => {
   });
 
   it("rejects a pull-request URL whose host is not github.com", () => {
-    assertTrue(Result.isFailure(decodePrRefResult("https://gitlab.com/beep-effect/beep-effect/pull/42")));
+    decodePrRefResult("https://gitlab.com/beep-effect/beep-effect/pull/42").pipe(Result.isFailure, assertTrue);
   });
 
   it.layer(TestLayer, { timeout: "10 seconds" })((it) => {

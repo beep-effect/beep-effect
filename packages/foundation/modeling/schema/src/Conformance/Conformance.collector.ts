@@ -4,8 +4,11 @@
  * @since 0.0.0
  */
 
-import { pipe, Result, SchemaIssue, SchemaParser } from "effect";
+import { pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaParser from "effect/SchemaParser";
 import { collectAnnotationsAt } from "../SchemaUtils/collectAnnotationsAt.ts";
 import { Annotation } from "./Conformance.annotations.ts";
 
@@ -27,7 +30,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  *
  * ```ts import.meta.vitest name="Collect a validated Result"
  * import { collectAnnotationsResult } from "@beep/schema/Conformance"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const result = collectAnnotationsResult(S.Array(S.String))

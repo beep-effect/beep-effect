@@ -11,12 +11,17 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { Effect, FileSystem, Order, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import { ChildProcess } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import type * as PlatformError from "effect/PlatformError";
@@ -55,8 +60,8 @@ const runHook = Effect.fn("YeetInboxHookAdapterTest.runHook")(function* (
   });
   const [stdout, stderr, exitCode] = yield* Effect.all(
     [
-      Stream.mkString(Stream.decodeText(handle.stdout)),
-      Stream.mkString(Stream.decodeText(handle.stderr)),
+      handle.stdout.pipe(Stream.decodeText, Stream.mkString),
+      handle.stderr.pipe(Stream.decodeText, Stream.mkString),
       handle.exitCode,
     ],
     { concurrency: "unbounded" }

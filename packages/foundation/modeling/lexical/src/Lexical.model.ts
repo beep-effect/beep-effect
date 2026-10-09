@@ -20,9 +20,13 @@ import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Md from "@beep/md/Md.model";
 import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
-import { Effect, pipe, Result, SchemaGetter, SchemaTransformation, Struct } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Struct from "effect/Struct";
 import { hasStrictNodeChildren, isStrictLexicalNode } from "./internal/conformance/Lexical.strict-invariants.ts";
 import { PosInt } from "./internal/PosInt.ts";
 import { legacyYouTubeVideoId, sanitizeInlineStyle, sanitizeStyleValue, sanitizeUrl } from "./Lexical.normalize.ts";
@@ -87,7 +91,7 @@ const YouTubeVideoIdFromLegacyInput = S.String.pipe(
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { LexicalNodeVersion } from "@beep/lexical-schema/Lexical.model"
  *
@@ -224,7 +228,7 @@ const TextFormatMaskBase = S.Natural.check(
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { TextFormatMask } from "@beep/lexical-schema/Lexical.model"
  *
@@ -260,7 +264,7 @@ export type TextFormatMask = typeof TextFormatMask.Type;
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { hasTextFormat, TextFormatMask } from "@beep/lexical-schema/Lexical.model"
  *
@@ -282,7 +286,7 @@ export const hasTextFormat: {
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { withTextFormat, TextFormatMask } from "@beep/lexical-schema/Lexical.model"
  *
@@ -392,7 +396,7 @@ const TextDetailMaskBase = S.Natural.check(
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { TextDetailMask } from "@beep/lexical-schema/Lexical.model"
  *
@@ -428,7 +432,7 @@ export type TextDetailMask = typeof TextDetailMask.Type;
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { LexicalIndentDepth } from "@beep/lexical-schema/Lexical.model"
  *
@@ -506,7 +510,7 @@ export type TableCellHeaderState = typeof TableCellHeaderState.Type;
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { TableCellSpan } from "@beep/lexical-schema/Lexical.model"
  *
@@ -547,7 +551,7 @@ export type TableCellSpan = typeof TableCellSpan.Type;
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { TableDimension } from "@beep/lexical-schema/Lexical.model"
  *
@@ -868,7 +872,7 @@ const SafeInlineStyleType = S.String.check(
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { SafeInlineStyle } from "@beep/lexical-schema/Lexical.model"
  *
@@ -924,7 +928,7 @@ const SafeStyleValueType = S.String.check(
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { SafeStyleValue } from "@beep/lexical-schema/Lexical.model"
  *
@@ -979,7 +983,7 @@ const SafeUrlType = S.String.check(
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { SafeUrl } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1061,7 +1065,7 @@ export class BaseNode extends S.Class<BaseNode>($I`BaseNode`)(
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { BaseNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1175,7 +1179,7 @@ export class ElementNode extends BaseNode.extend<ElementNode>($I`ElementNode`)(
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { ElementNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1257,7 +1261,7 @@ export class TextBase extends BaseNode.extend<TextBase>($I`TextBase`)(
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { TextBase } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1306,7 +1310,7 @@ export declare namespace TextBase {
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { TextNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1335,7 +1339,7 @@ export class TextNode extends TextBase.extend<TextNode>($I`TextNode`)(
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { TextNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1376,7 +1380,7 @@ export declare namespace TextNode {
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { TabNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1410,7 +1414,7 @@ export class TabNode extends TextBase.extend<TabNode>($I`TabNode`)(
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { TabNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1457,7 +1461,7 @@ export declare namespace TabNode {
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { LineBreakNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1484,7 +1488,7 @@ export class LineBreakNode extends BaseNode.extend<LineBreakNode>($I`LineBreakNo
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { LineBreakNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1548,7 +1552,7 @@ export class RootNode extends ElementNode.extend<RootNode>($I`RootNode`)(
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { RootNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1612,7 +1616,7 @@ export class ParagraphNode extends ElementNode.extend<ParagraphNode>($I`Paragrap
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { ParagraphNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1677,7 +1681,7 @@ export class HeadingNode extends ElementNode.extend<HeadingNode>($I`HeadingNode`
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { HeadingNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1786,7 +1790,7 @@ export class QuoteNode extends ElementNode.extend<QuoteNode>($I`QuoteNode`)(
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { QuoteNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -1886,7 +1890,7 @@ export class ListNode extends ElementNode.extend<ListNode>($I`ListNode`)(
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { ListNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2033,7 +2037,7 @@ export class ListItemNode extends ElementNode.extend<ListItemNode>($I`ListItemNo
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { ListItemNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2115,7 +2119,7 @@ export class LinkNode extends ElementNode.extend<LinkNode>($I`LinkNode`)(
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { LinkNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2199,7 +2203,7 @@ export class CodeNode extends ElementNode.extend<CodeNode>($I`CodeNode`)(
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { CodeNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2245,7 +2249,7 @@ export declare namespace CodeNode {
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { ArtifactRefNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2281,7 +2285,7 @@ export class ArtifactRefNode extends BaseNode.extend<ArtifactRefNode>($I`Artifac
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { ArtifactRefNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2329,7 +2333,7 @@ export declare namespace ArtifactRefNode {
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { YouTubeNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2365,7 +2369,7 @@ export class YouTubeNode extends BaseNode.extend<YouTubeNode>($I`YouTubeNode`)(
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { YouTubeNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2474,7 +2478,7 @@ export class TableCellNode extends ElementNode.extend<TableCellNode>($I`TableCel
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { TableCellNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2564,7 +2568,7 @@ export class TableRowNode extends ElementNode.extend<TableRowNode>($I`TableRowNo
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { TableRowNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2650,7 +2654,7 @@ export class TableNode extends ElementNode.extend<TableNode>($I`TableNode`)(
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { TableNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2727,7 +2731,7 @@ const RawLexicalNode = S.Union([
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2779,7 +2783,7 @@ export type LexicalNode = typeof LexicalNode.Type;
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2861,7 +2865,7 @@ const StrictRootNode = RootNode.check(
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2933,7 +2937,7 @@ export class SerializedEditorState extends S.Class<SerializedEditorState>($I`Ser
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
  *
@@ -2990,7 +2994,7 @@ export declare namespace SerializedEditorState {
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { LexicalNodeWire } from "@beep/lexical-schema/Lexical.model"
  *
@@ -3079,7 +3083,7 @@ export declare namespace LexicalNodeWire {
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { SerializedEditorStateWire } from "@beep/lexical-schema/Lexical.model"
  *
@@ -3134,7 +3138,7 @@ export type SerializedEditorStateWire = typeof SerializedEditorStateWire.Type;
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { EditorStateWireFromJson } from "@beep/lexical-schema/Lexical.model"
  *
@@ -3159,7 +3163,7 @@ export const EditorStateWireFromJson = S.fromJsonString(SerializedEditorStateWir
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeEditorStateStrict } from "@beep/lexical-schema/Lexical.model"
  *
  * const handled = decodeEditorStateStrict({ root: null }).pipe(
@@ -3219,7 +3223,7 @@ export class LexicalCompatibilityIssue extends S.Class<LexicalCompatibilityIssue
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { analyzeEditorStateCompatibility } from "@beep/lexical-schema/Lexical.model"
  *
  * const program = analyzeEditorStateCompatibility({
@@ -3291,7 +3295,7 @@ const losslessEditorStateDecodeError = (cause: unknown): LexicalDecodeError =>
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import { decodeEditorStateStrictResult } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = decodeEditorStateStrictResult({
@@ -3326,7 +3330,7 @@ export const decodeEditorStateStrictResult = (
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeEditorStateStrict } from "@beep/lexical-schema/Lexical.model"
  *
  * const program = decodeEditorStateStrict({
@@ -3353,7 +3357,7 @@ export const decodeEditorStateStrict = (input: unknown): Effect.Effect<Serialize
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeEditorStateLossless } from "@beep/lexical-schema/Lexical.model"
  *
  * const program = decodeEditorStateLossless({
@@ -3380,7 +3384,7 @@ export const decodeEditorStateLossless = (
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import { analyzeEditorStateCompatibilityResult } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = analyzeEditorStateCompatibilityResult({
@@ -3416,7 +3420,7 @@ export const analyzeEditorStateCompatibilityResult = (
  * **Example** (Use the lexical model)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { analyzeEditorStateCompatibility } from "@beep/lexical-schema/Lexical.model"
  *
  * const program = analyzeEditorStateCompatibility({
@@ -3440,7 +3444,7 @@ export const analyzeEditorStateCompatibility = (
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { EditorStateFromJson } from "@beep/lexical-schema/Lexical.model"
  *

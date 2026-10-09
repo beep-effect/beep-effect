@@ -6,8 +6,8 @@
  */
 
 import { CacheClientPin, CacheQualificationKey } from "@beep/repo-configs/cache";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";

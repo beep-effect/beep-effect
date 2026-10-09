@@ -9,8 +9,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Duration, Effect } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
@@ -51,7 +51,7 @@ const buildETag = (hash: string): string => `"${hash}"`;
  * **Example** (Register the image routes on an HTTP router)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { HttpRouter } from "effect/http"
  * import { ImageRouter } from "@effect-ontology/Runtime/ImageRouter"
  *

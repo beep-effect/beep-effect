@@ -19,22 +19,20 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { PubSub as GCloudPubSub } from "@google-cloud/pubsub";
-import {
-  Cause,
-  Clock,
-  Config,
-  Context,
-  Deferred,
-  Duration,
-  Effect,
-  FiberMap,
-  Layer,
-  MutableHashMap,
-  PubSub,
-  Random,
-  Schedule,
-  Stream,
-} from "effect";
+import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FiberMap from "effect/FiberMap";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as PubSub from "effect/PubSub";
+import * as Random from "effect/Random";
+import * as Schedule from "effect/Schedule";
+import * as Stream from "effect/Stream";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -269,7 +267,7 @@ export interface EventBroadcastHubMethods {
  * **Example** (Read the local client count)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EventBroadcastHub, EventBroadcastHubMemory } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
  * const count = Effect.runSync(
@@ -315,7 +313,8 @@ class PubSubCreateError extends S.TaggedError<PubSubCreateError>($I`PubSubCreate
  * **Example** (Load default Pub/Sub identifiers)
  *
  * ```ts
- * import { ConfigProvider, Effect } from "effect"
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
  * import { EventBroadcastConfig } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
  * const config = Effect.runSync(
@@ -512,7 +511,7 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
  * **Example** (Provide the in-memory hub)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EventBroadcastHub, EventBroadcastHubMemory } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
  * const count = Effect.runSync(
@@ -596,7 +595,7 @@ export const EventBroadcastHubLive = Layer.unwrap(
  * **Example** (Register the event stream on an HTTP router)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { HttpRouter } from "effect/http"
  * import { EventBroadcastRouter } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
@@ -739,7 +738,7 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
  * **Example** (Yield the broadcast effect for a fixture entry)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { EventEntry } from "@effect-ontology/Service/EventBus"

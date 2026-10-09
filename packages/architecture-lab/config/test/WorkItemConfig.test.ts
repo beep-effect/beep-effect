@@ -29,8 +29,11 @@ import { ArchitectureLabConfigTest as TestBoundary } from "@beep/architecture-la
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { ConfigProvider, Effect, Equal, Layer } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 
 const decodeUnknownWorkItemConfigValue = S.decodeUnknownEffect(WorkItemConfigValue);

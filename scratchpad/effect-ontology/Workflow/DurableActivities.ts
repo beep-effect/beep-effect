@@ -29,19 +29,18 @@ import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import {
-  Cause,
-  Chunk,
-  DateTime,
-  Duration,
-  Effect,
-  HashMap,
-  Inspectable,
-  MutableHashMap,
-  MutableHashSet,
-  Order,
-  Schedule, Result,
-} from "effect";
+import * as Cause from "effect/Cause";
+import * as Chunk from "effect/Chunk";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Inspectable from "effect/Inspectable";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Order from "effect/Order";
+import * as Schedule from "effect/Schedule";
+import * as Result from "effect/Result";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -288,7 +287,7 @@ export type ClaimPersistenceOutput = typeof ClaimPersistenceOutput.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { CrossBatchResolutionOutput } from "@effect-ontology/Workflow/DurableActivities"
  *
  * const output = CrossBatchResolutionOutput.make({

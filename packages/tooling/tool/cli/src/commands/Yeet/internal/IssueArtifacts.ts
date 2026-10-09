@@ -5,9 +5,14 @@
  * @since 0.0.0
  */
 
-import { Console, Effect, FileSystem, Path, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import { encodeCommandJson } from "../../../internal/cli/Json.ts";
 import { executeRepoPlanStepStreaming } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -36,7 +41,7 @@ const commandFailure = (result: RepoStepRunResult, message: string): YeetCommand
  * **Example** (Encode payload as JSON)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { renderJson } from "@beep/repo-cli/test/Yeet"
  *
  * const encodedLength = renderJson({ schemaVersion: "yeet-quality-issue-index/v1" }).pipe(
@@ -64,7 +69,7 @@ export const renderJson = Effect.fn("Yeet.renderJson")(function* (
  * **Example** (Build step log path)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { rawOutputPathForStep, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -114,7 +119,7 @@ export const rawOutputPathForStep = Effect.fn("Yeet.rawOutputPathForStep")(funct
  * **Example** (Execute step with log)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { executeStepWithArtifacts, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -171,7 +176,7 @@ export const executeStepWithArtifacts = Effect.fn("Yeet.executeStepWithArtifacts
  * **Example** (Write artifact text file)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { writeTextFile } from "@beep/repo-cli/test/Yeet"
  *
  * const writePacket = writeTextFile(".beep/yeet/runs/example/summary.txt", "ok\n").pipe(
@@ -206,7 +211,7 @@ export const writeTextFile = Effect.fn("Yeet.writeTextFile")(function* (
  * **Example** (Persist issue index packets)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { QualityIssueIndex, RepoRunContext, writeIssueArtifacts } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -296,7 +301,7 @@ const issuesFromResults = (
  * **Example** (Build successful publish result)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { publishResult, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -339,7 +344,7 @@ export const publishResult = Effect.fn("Yeet.publishResult")(function* (
  * **Example** (Build commit message path)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { commitMessagePathForContext, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -376,7 +381,7 @@ export const commitMessagePathForContext = Effect.fn("Yeet.commitMessagePathForC
  * **Example** (Build empty plan result)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { emptyPlanResult, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -417,7 +422,7 @@ export const emptyPlanResult = Effect.fn("Yeet.emptyPlanResult")(function* (
  * **Example** (Fail with issue packets)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { failWithIssueArtifacts, RepoPlanStep, RepoRunContext, RepoStepRunResult } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({

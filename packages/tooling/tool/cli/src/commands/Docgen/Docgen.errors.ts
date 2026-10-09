@@ -4,8 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Console, Effect } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 
 /**

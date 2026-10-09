@@ -14,8 +14,12 @@ import { DomainError } from "@beep/repo-utils";
 import { buildCanonicalAliasTargets } from "@beep/repo-utils/schemas/TsconfigAliasTargets";
 import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, FileSystem, HashMap, Order, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -270,8 +274,7 @@ const modifyFileString: {
  *
  * ```ts
  * import { updateTsconfigPackages } from "@beep/repo-cli/commands/CreatePackage"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(updateTsconfigPackages("/repo", "packages/schema"))) // true
  * ```
  *
@@ -319,8 +322,7 @@ export const updateTsconfigPackages: {
  *
  * ```ts
  * import { updateTsconfigPaths, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
  * console.log(Effect.isEffect(updateTsconfigPaths("/repo", target))) // true
  * ```
@@ -440,8 +442,7 @@ const checkConfigNeedsUpdateForTarget: {
  *
  * ```ts
  * import { updateRootConfigsForTargets, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
  * console.log(Effect.isEffect(updateRootConfigsForTargets("/repo", [target]))) // true
  * ```
@@ -489,8 +490,7 @@ export const updateRootConfigsForTargets: {
  *
  * ```ts
  * import { checkConfigNeedsUpdateForTargets, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
  * console.log(Effect.isEffect(checkConfigNeedsUpdateForTargets("/repo", [target]))) // true
  * ```
@@ -540,8 +540,7 @@ export const checkConfigNeedsUpdateForTargets: {
  *
  * ```ts
  * import { updateRootConfigs, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
  * console.log(Effect.isEffect(updateRootConfigs("/repo", target))) // true
  * ```
@@ -578,8 +577,7 @@ export const updateRootConfigs: {
  *
  * ```ts
  * import { checkConfigNeedsUpdate, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
  * console.log(Effect.isEffect(checkConfigNeedsUpdate("/repo", target))) // true
  * ```

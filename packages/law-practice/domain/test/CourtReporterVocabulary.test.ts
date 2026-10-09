@@ -29,7 +29,7 @@ import {
 import { it } from "@beep/test-runner";
 import { A, O, Str } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";

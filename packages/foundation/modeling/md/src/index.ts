@@ -59,8 +59,7 @@ export * from "./Md.escape.ts";
  *
  * ```ts
  * import { Md, renderSafeHtml, safeHtmlValue } from "@beep/md"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const document = Result.getOrThrow(Md.refineSafeDocument(Md.make([Md.p("Hello")])))
  * console.log(safeHtmlValue(renderSafeHtml(document))) // "<p>Hello</p>"
  * ```
@@ -106,8 +105,7 @@ export * from "./Md.render.ts";
  *
  * ```ts import.meta.vitest name="Refine safe document success"
  * import { Md, refineSafeDocument } from "@beep/md"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * Result.isSuccess(refineSafeDocument(Md.make([Md.p("Hello")]))) // => true
  * ```
  *
@@ -122,8 +120,7 @@ export * from "./Md.safe.ts";
  *
  * ```ts import.meta.vitest name="Build and render heading"
  * import { Md } from "@beep/md"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const markdown = Md.render(Md.make([Md.h1`Hello`]))
  * Result.getOrThrow(markdown) // => "# Hello"
  * ```

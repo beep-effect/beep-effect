@@ -4,8 +4,7 @@
  * @since 0.0.0
  * @packageDocumentation
  */
-
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { WinkEngineLive as WinkEngineLiveService, WinkEngine as WinkEngineService } from "./Wink.service.ts";
 import { WinkCorpusManagerLive as WinkCorpusManagerLiveService } from "./WinkCorpus.service.ts";
 import { WinkEngineRefLive as WinkEngineRefLiveService } from "./WinkEngineRef.service.ts";
@@ -23,7 +22,7 @@ import { WinkVectorizerLive as WinkVectorizerLiveService } from "./WinkVectorize
  * **Example** (Token count via layer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Tokenization } from "@beep/nlp-processing/Core"
  * import { WinkLayerLive } from "@beep/wink"
  *
@@ -54,7 +53,7 @@ const WinkLayerSharedLive = WinkEngineRefLiveService.pipe(Layer.provideMerge(Win
  * **Example** (Create corpus with full layer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WinkCorpusManager } from "@beep/wink"
  * import { WinkLayerAllLive } from "@beep/wink"
  *
@@ -79,7 +78,7 @@ export const WinkLayerAllLive = WinkCorpusManagerLiveService.pipe(Layer.provideM
  * **Example** (Merge engine and similarity)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { WinkCorpusManagerLive, WinkEngineLive, WinkSimilarityLive } from "@beep/wink"
  *
  * const runnable = WinkCorpusManagerLive.pipe(
@@ -97,7 +96,7 @@ export const WinkCorpusManagerLive = WinkCorpusManagerLiveService;
  * **Example** (Direct engine token count)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WinkEngine, WinkEngineLive } from "@beep/wink"
  *
  * const count = Effect.gen(function* () {
@@ -118,7 +117,7 @@ export const WinkEngine = WinkEngineService;
  * **Example** (Read engine its helpers)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WinkEngine, WinkEngineLive } from "@beep/wink"
  *
  * const readHelpers = Effect.gen(function* () {
@@ -141,7 +140,8 @@ export const WinkEngineLive = WinkEngineLiveService;
  * **Example** (Access shared engine ref)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { WinkEngineRef } from "@beep/wink"
  * import { WinkEngineLive, WinkEngineRefLive } from "@beep/wink"
  *
@@ -163,7 +163,7 @@ export const WinkEngineRefLive = WinkEngineRefLiveService;
  * **Example** (Provide similarity service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WinkSimilarity } from "@beep/wink"
  * import { WinkSimilarityLive } from "@beep/wink"
  *
@@ -187,7 +187,7 @@ export const WinkSimilarityLive = WinkSimilarityLiveService;
  * **Example** (Wire engine into tokenization)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { WinkEngineLive, WinkTokenization } from "@beep/wink"
  *
  * const runnable = WinkTokenization.pipe(Layer.provide(WinkEngineLive))
@@ -203,7 +203,7 @@ export const WinkTokenization = WinkTokenizationService;
  * **Example** (Tokenize with live layer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Tokenization } from "@beep/nlp-processing/Core"
  * import { WinkTokenizationLive } from "@beep/wink"
  *
@@ -227,7 +227,7 @@ export const WinkTokenizationLive = WinkTokenizationLiveService;
  * **Example** (Remove extra spaces helper)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { WinkUtils } from "@beep/wink"
  * import { WinkUtilsLive } from "@beep/wink"
  *
@@ -249,7 +249,8 @@ export const WinkUtilsLive = WinkUtilsLiveService;
  * **Example** (Read vectorizer config)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { WinkVectorizer } from "@beep/wink"
  * import { WinkEngineLive, WinkVectorizerLive } from "@beep/wink"
  *

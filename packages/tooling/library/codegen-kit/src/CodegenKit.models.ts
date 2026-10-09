@@ -8,8 +8,8 @@
 import { $CodegenKitId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { JsonPatchDocument } from "@effect/openapi-generator/OpenApiPatch";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $CodegenKitId.create("CodegenKit.models");

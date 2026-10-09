@@ -10,8 +10,7 @@
  * @packageDocumentation \@beep/editor/nodes
  * @since 0.0.0
  */
-
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import { editorCapabilityCatalog } from "./capability/catalog.ts";
 import { compatibilityProfile } from "./capability/profiles.ts";
 import { resolveEditorProfile } from "./capability/resolver.ts";

@@ -7,8 +7,11 @@
 
 import * as B from "@beep/box";
 import { $BoxProvisioningId } from "@beep/identity";
-import { Context, Effect, Equal, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {

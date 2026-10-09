@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { A } from "@beep/utils";
 import { afterEach, describe, expect } from "@effect/vitest";
 import { act, cleanup, render, waitFor, within } from "@testing-library/react";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { vi } from "vitest";
 
 interface PendingRender {
@@ -52,7 +52,7 @@ vi.mock("mermaid", () => ({
 import { MermaidView } from "@beep/editor/mermaid-view";
 import { it } from "@beep/test-runner";
 import { assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 
 describe("Mermaid async ownership", { concurrent: false }, () => {
   afterEach(() => {

@@ -79,10 +79,13 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure, assertFailure, assertSuccess } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { micromark } from "micromark";
 import type { EffectRenderAdapter, PureRenderAdapter, RenderError } from "@beep/md/Md.render";
@@ -355,7 +358,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     const safe = refineSafeDocument(document);
 
     assertSuccess(safe, SafeDocument.make(document));
-    expect(() => renderSafeHtml(Result.getOrThrow(safe))).not.toThrow();
+    expect(() => safe.pipe(Result.getOrThrow, renderSafeHtml)).not.toThrow();
   });
 
   it("rejects duplicate footnote definitions recursively at their exact paths", () => {
@@ -394,7 +397,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     const uniqueDocument = Md.make([Md.footnoteDef("first", "One"), Md.footnoteDef("second", "Two")]);
     const unique = refineSafeDocument(uniqueDocument);
     assertSuccess(unique, SafeDocument.make(uniqueDocument));
-    expect(() => renderSafeHtml(Result.getOrThrow(unique))).not.toThrow();
+    expect(() => unique.pipe(Result.getOrThrow, renderSafeHtml)).not.toThrow();
   });
 
   it.prop(
@@ -435,13 +438,9 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       ),
       [{ _tag: "HtmlProjection", path: ["children.1"], rule: "headingOutline" }]
     );
-    assertFailure(
-      Result.mapError(
-        decodeSafeDocument(Result.getOrThrow(encodeUnknownDocumentResult(document))),
-        (error) => error._tag
-      ),
-      "SchemaError"
-    );
+    const encodedDocument = encodeUnknownDocumentResult(document).pipe(Result.getOrThrow);
+    const decodedDocument = decodeSafeDocument(encodedDocument);
+    assertFailure(decodedDocument.pipe(Result.mapError((error) => error._tag)), "SchemaError");
   });
 
   it.prop(
@@ -492,10 +491,12 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     "round-trips schema-derived Markdown AST nodes",
     [InlineArbitrary, BlockArbitrary, DocumentArbitrary],
     ([inline, block, document]) => {
-      const decodedInline = Result.getOrThrow(decodeInlineResult(Result.getOrThrow(encodeInlineResult(inline))));
-      const decodedBlock = Result.getOrThrow(decodeBlockResult(Result.getOrThrow(encodeBlockResult(block))));
-      const decodedDocument = Result.getOrThrow(
-        decodeDocumentResult(Result.getOrThrow(encodeDocumentResult(document)))
+      const decodedInline = encodeInlineResult(inline).pipe(Result.getOrThrow, decodeInlineResult, Result.getOrThrow);
+      const decodedBlock = encodeBlockResult(block).pipe(Result.getOrThrow, decodeBlockResult, Result.getOrThrow);
+      const decodedDocument = encodeDocumentResult(document).pipe(
+        Result.getOrThrow,
+        decodeDocumentResult,
+        Result.getOrThrow
       );
 
       expect(decodedInline).toEqual(inline);

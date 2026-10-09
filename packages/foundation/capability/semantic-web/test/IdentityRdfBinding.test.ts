@@ -21,13 +21,17 @@ import {
 import { it } from "@beep/test-runner";
 import { assert, describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, Layer, pipe, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import * as SchemaIssue from "effect/SchemaIssue";

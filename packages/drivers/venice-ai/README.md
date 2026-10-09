@@ -11,7 +11,7 @@ bun add @beep/venice-ai
 ## Usage
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import { VeniceAI, VeniceAIRequestOptions } from "@beep/venice-ai"
 
 const program = Effect.gen(function* () {

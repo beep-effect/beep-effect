@@ -1,6 +1,7 @@
 import { A, P, thunkFalse } from "@beep/utils";
-import { Cause, flow, pipe, Result } from "effect";
-
+import * as Cause from "effect/Cause";
+import { flow, pipe } from "effect/Function";
+import * as Result from "effect/Result";
 export const safeBoolean: (evaluate: () => boolean) => boolean = flow(
   (evaluate: () => boolean) => Result.try(evaluate),
   Result.getOrElse(thunkFalse)

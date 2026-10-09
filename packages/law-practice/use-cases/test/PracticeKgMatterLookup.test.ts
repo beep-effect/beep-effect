@@ -8,8 +8,8 @@ import {
 } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const decodeResult = S.decodeUnknownEffect(PracticeKgMatterLookupResult);

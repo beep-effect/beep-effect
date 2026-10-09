@@ -12,9 +12,11 @@
  */
 
 import { MailTaggingStateError } from "@beep/law-practice-use-cases/MailTagging";
-import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import type { MailTaggingStateStore } from "@beep/law-practice-use-cases/MailTagging";
 

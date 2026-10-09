@@ -14,9 +14,12 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
-import { Console, Effect, FileSystem, Order } from "effect";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual, flow } from "effect/Function";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
@@ -182,8 +185,7 @@ export const renderPortfolioIndex: {
  *
  * ```ts
  * import { buildPortfolioIndexContent } from "@beep/repo-cli/commands/Goals/PortfolioIndex"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(buildPortfolioIndexContent())) // true
  * ```
  *
@@ -235,8 +237,7 @@ export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexCo
  *
  * ```ts
  * import { writePortfolioIndex } from "@beep/repo-cli/commands/Goals/PortfolioIndex"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(writePortfolioIndex())) // true
  * ```
  *

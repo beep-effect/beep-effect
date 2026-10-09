@@ -8,10 +8,11 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Effect, Tuple } from "effect";
+import * as Effect from "effect/Effect";
 import * as F from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { RunMode, RunModeMatch } from "../../internal/cli/RunMode.ts";
 import type { RunMode as RunModeValue } from "../../internal/cli/RunMode.ts";
 

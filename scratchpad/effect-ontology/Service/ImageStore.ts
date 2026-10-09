@@ -11,7 +11,11 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, DateTime, Effect, Layer, Order } from "effect";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import type { PlatformError, SystemError } from "effect/PlatformError";
@@ -154,7 +158,7 @@ export interface ImageStoreService {
  * **Example** (Inspect image store)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ImageStore } from "@effect-ontology/Service/ImageStore"
  *
  * const program = Effect.gen(function* () {

@@ -7,10 +7,12 @@
 
 import { $ChalkId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { pipe, Result, Tuple } from "effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { ansiStyles, getModelAnsi, getStyleEntry } from "./AnsiStyles.ts";
 import { AnsiRenderLevel, ColorModelName, ColorSupportLevel, StyleName } from "./ChalkSchema.ts";
 import { ColorSupportLevelInput } from "./PublicSurface.ts";
@@ -130,8 +132,10 @@ class MissingBuilderMetadataError extends S.TaggedError<MissingBuilderMetadataEr
 ) {}
 
 const normalizeColorSupportLevel = (level: unknown): ColorSupportLevelType =>
-  Result.getOrThrow(
-    S.decodeUnknownResult(ColorSupportLevel)(Result.getOrThrow(S.decodeUnknownResult(ColorSupportLevelInput)(level)))
+  S.decodeUnknownResult(ColorSupportLevelInput)(level).pipe(
+    Result.getOrThrow,
+    S.decodeUnknownResult(ColorSupportLevel),
+    Result.getOrThrow
   );
 
 const setChalkStateLevel = (state: ChalkState, level: unknown): void => {

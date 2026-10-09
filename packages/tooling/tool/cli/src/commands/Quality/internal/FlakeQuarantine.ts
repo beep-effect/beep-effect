@@ -32,10 +32,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -224,7 +223,7 @@ export class FlakeQuarantineArtifact extends S.Class<FlakeQuarantineArtifact>($I
  * **Example** (Encode artifact to JSON)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { FlakeQuarantineArtifact, FlakeQuarantineArtifactJson } from "@beep/repo-cli/test/Quality"
  *
  * const artifact = FlakeQuarantineArtifact.make({ schemaVersion: "yeet-flake-quarantine/v1", incidents: [] })

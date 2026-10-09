@@ -12,7 +12,8 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { Effect, flow, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { EffectSchemaInventoryModule, EffectSchemaInventoryPin } from "../EffectSchemaInventory.schemas.ts";

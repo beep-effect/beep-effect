@@ -4,8 +4,10 @@
  * @since 0.0.0
  */
 
-import { flow, HashSet, MutableHashSet, pipe } from "effect";
 import * as A from "effect/Array";
+import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";

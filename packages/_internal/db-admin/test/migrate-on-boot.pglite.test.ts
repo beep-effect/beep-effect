@@ -4,7 +4,8 @@ import { it } from "@beep/test-runner";
 import { makePgliteSqlTestLayer } from "@beep/test-utils";
 import { expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as SqlClient from "effect/sql/SqlClient";
 
 it.layer(Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" })), {

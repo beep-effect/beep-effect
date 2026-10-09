@@ -23,11 +23,20 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Context, Duration, Effect, FileSystem, Layer, Path, Ref, Schedule, Sink, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
@@ -392,9 +401,11 @@ describe("yeet monitor comment cursor persistence", () => {
             // position — not since its own start — or a comment posted between the
             // two runs is invisible to both.
             const firstRunCommandCount = A.length(yield* Ref.get(commandsRef));
-            yield* Effect.raceFirst(
-              until(Effect.map(Ref.get(commandsRef), (commands) => A.length(commands) >= firstRunCommandCount + 2)),
-              runYeetPullRequestCommentMonitor(context, PR_NUMBER)
+            yield* commandsRef.pipe(
+              Ref.get,
+              Effect.map((commands) => A.length(commands) >= firstRunCommandCount + 2),
+              until,
+              Effect.raceFirst(runYeetPullRequestCommentMonitor(context, PR_NUMBER))
             );
 
             const secondRunCommands = A.drop(yield* Ref.get(commandsRef), firstRunCommandCount);

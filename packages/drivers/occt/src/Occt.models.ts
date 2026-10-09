@@ -11,7 +11,7 @@
 import { $OcctId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Camera, ModelSpec, ShadingPlan } from "@beep/technical-drawing";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 /**

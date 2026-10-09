@@ -23,8 +23,7 @@ import type { PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { partitionPropertiesByRangeType } from "../Domain/Model/Ontology.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { extractLocalNameFromIri, makeLocalNameSchema } from "../Utils/Iri.ts";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 /**
  * Coerce string array to IRI array.
  *

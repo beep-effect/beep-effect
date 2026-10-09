@@ -10,7 +10,8 @@ import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import {
   SyncConflictRepositoryNotFound,
@@ -334,7 +335,7 @@ export class MarkConflictReviewedInput extends S.Class<MarkConflictReviewedInput
  *   type VaultSyncEngineShape
  * } from "@beep/documents-use-cases/aggregates/Sync/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const idleStatus = S.decodeUnknownSync(VaultSyncStatus)({
@@ -389,7 +390,7 @@ export interface VaultSyncEngineShape {
  *   VaultSyncStatus,
  *   type VaultSyncEngineShape
  * } from "@beep/documents-use-cases/aggregates/Sync/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const idleStatus = S.decodeUnknownSync(VaultSyncStatus)({

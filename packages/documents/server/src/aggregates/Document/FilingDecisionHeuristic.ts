@@ -11,7 +11,9 @@ import * as DocumentUseCases from "@beep/documents-use-cases/server";
 import { $DocumentsServerId } from "@beep/identity/packages";
 import { ONE } from "@beep/schema/UnitInterval";
 import { A } from "@beep/utils";
-import { Effect, flow, Layer, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 

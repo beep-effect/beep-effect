@@ -21,11 +21,11 @@
  */
 import { userInfo } from "node:os";
 import * as O from "@beep/utils/Option";
-import { Context, Effect } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import { RuntimeRootChoice, RuntimeRootKind } from "./RuntimeRoot.schemas.ts";
-import type { Path } from "effect";
-
+import type * as Path from "effect/Path";
 /**
  * Resolve the invariant production base for an explicit platform and user home.
  *
@@ -64,8 +64,7 @@ class RuntimeRootTestOverride extends Context.Service<RuntimeRootTestOverride, R
  *
  * ```ts
  * import { provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.succeed("isolated").pipe(
  *   provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: "/tmp/test-runtime" }))
  * )
@@ -114,8 +113,7 @@ export const provideRuntimeRootForTesting: {
  *
  * ```ts
  * import { perUserRuntimeRoot } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * Effect.runPromise(perUserRuntimeRoot()).then((resolved) => console.log(resolved.kind)) // "canonical"
  * ```
  *
@@ -149,8 +147,8 @@ export const perUserRuntimeRoot = Effect.fn("RuntimeRoot.perUserRuntimeRoot")(fu
  * ```ts
  * import { admissionRootFor, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun"
  * import * as NodePath from "@effect/platform-node/NodePath"
- * import { Effect, Path } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Path from "effect/Path";
  * const root = Effect.map(Path.Path, (path) =>
  *   admissionRootFor(path, RuntimeRootChoice.make({ kind: "canonical", root: "/home/alice/.beep/runtime" }))
  * ).pipe(Effect.provide(NodePath.layer))

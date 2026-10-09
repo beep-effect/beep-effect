@@ -8,7 +8,11 @@
 import { DomainError, getWorkspaceDir, resolveWorkspaceDirs, TSMorphService } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, FileSystem, Order, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import { Project, SyntaxKind } from "ts-morph";
 import { toIdentityAccessorName, typedIdentityExportBlock } from "./IdentityExportBlock.ts";
 import type { CallExpression, SourceFile, VariableDeclaration } from "ts-morph";
@@ -71,8 +75,7 @@ const resolveIdentityPackagesFilePath = Effect.fn(function* (repoRoot: string) {
  *
  * ```ts
  * import { ensureIdentityPackageRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * // Provide FileSystem to run the effect.
  * const program = ensureIdentityPackageRegistration(
  *   "packages/common/identity/src/registered-packages.ts",
@@ -162,8 +165,7 @@ const removeAccessorExportStatements = (sourceFile: SourceFile, packageName: str
  *
  * ```ts
  * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = CreatePackageIdentityRegistration.removeIdentityPackageRegistration(
  *   "packages/foundation/modeling/identity/src/packages.ts",
  *   "example"
@@ -345,8 +347,7 @@ const registeredIdentityExportSlugs = (registryContent: string): ReadonlyArray<s
  *
  * ```ts
  * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = CreatePackageIdentityRegistration.collectWorkspaceIdentityEntries("/repo")
  * console.log(Effect.isEffect(program)) // true
  * ```

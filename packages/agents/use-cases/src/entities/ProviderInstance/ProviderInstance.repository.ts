@@ -9,10 +9,10 @@ import * as Domain from "@beep/agents-domain/entities/ProviderInstance";
 import { $AgentsUseCasesId } from "@beep/identity/packages";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as Shared from "@beep/shared-domain/identity/Shared";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import * as S from "effect/Schema";
 import type * as Agents from "@beep/shared-domain/identity/Agents";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type { AddProviderInstanceCommand } from "./ProviderInstance.commands.ts";
 import type { ProviderInstanceNotFound, ProviderProbeUnavailable } from "./ProviderInstance.errors.ts";
 
@@ -77,7 +77,7 @@ export class ProviderInstanceActorContext extends Context.Service<
  *
  * ```ts
  * import type { ProviderInstanceRepositoryShape } from "@beep/agents-use-cases/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const repository = { add: () => Effect.die("example"), get: () => Effect.die("example"), list: Effect.succeed([]), remove: () => Effect.void, save: (instance) => Effect.succeed(instance) } satisfies ProviderInstanceRepositoryShape
  * console.log(repository.list)
  * ```
@@ -106,7 +106,7 @@ export interface ProviderInstanceRepositoryShape {
  *
  * ```ts
  * import { ProviderInstanceRepository } from "@beep/agents-use-cases/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () { return (yield* ProviderInstanceRepository).list })
  * console.log(program)
  * ```
@@ -159,7 +159,7 @@ export class ProviderProbeInput extends S.Class<ProviderProbeInput>($I`ProviderP
  *
  * ```ts
  * import type { ProviderProbeShape } from "@beep/agents-use-cases/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const probe = { probe: () => Effect.die("example") } satisfies ProviderProbeShape
  * console.log(probe.probe)
  * ```
@@ -178,7 +178,7 @@ export interface ProviderProbeShape {
  *
  * ```ts
  * import { ProviderProbe } from "@beep/agents-use-cases/server"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () { return yield* ProviderProbe })
  * console.log(program)
  * ```

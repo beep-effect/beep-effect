@@ -21,10 +21,18 @@ import { fromThreadRow, toThreadInsert } from "@beep/workspace-tables/entities/T
 import { fromTurnRow, toTurnInsert } from "@beep/workspace-tables/entities/Turn";
 import * as ThreadStoreServer from "@beep/workspace-use-cases/server";
 import { and, asc, eq } from "drizzle-orm";
-import { Clock, DateTime, Effect, HashMap, Match, Order, pipe, Ref, Semaphore } from "effect";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import { PosInt } from "../../internal/PosInt.ts";
 import { InMemoryState } from "./ThreadStore.repo.internal.ts";
 import type { CuidState } from "@beep/schema/Cuid";
@@ -220,8 +228,7 @@ const projectTimeline = (
  * import { CuidState } from "@beep/schema/Cuid"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import { makeInMemoryThreadStore } from "@beep/workspace-server/aggregates/Thread"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const store = yield* makeInMemoryThreadStore()
  *   const thread = yield* store.createThread({
@@ -392,8 +399,7 @@ const messageTable = DbSchema.message;
  *
  * ```ts
  * import { makeDrizzleThreadStore } from "@beep/workspace-server/aggregates/Thread"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeDrizzleThreadStore().pipe(
  *   Effect.map((store) => typeof store.createThread === "function")
  * )
@@ -632,8 +638,7 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import { CuidState } from "@beep/schema/Cuid"
  * import { makeThreadStore } from "@beep/workspace-server/aggregates/Thread"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = makeThreadStore().pipe(
  *   Effect.map((store) => typeof store.timeline === "function"),
  *   Effect.provide(CuidState.Default),

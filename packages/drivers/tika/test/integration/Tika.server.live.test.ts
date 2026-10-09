@@ -6,8 +6,14 @@ import { it } from "@beep/test-runner";
 import { makeTikaServerFileProcessingEngine, TikaServerEngineConfig } from "@beep/tika";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { Config, Effect, FileSystem, Layer, Option as O, Path, Result } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {

@@ -12,7 +12,7 @@ import { WorkItemServer } from "@beep/architecture-lab-server/aggregates/WorkIte
 import { toWorkItemSummaryViewModel, WorkItemSummaryViewModel } from "@beep/architecture-lab-ui/aggregates/WorkItem";
 import { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public";
 import { $ArchitectureLabProofId } from "@beep/identity/packages";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabProofId.create("index");

@@ -36,10 +36,13 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { sortedUniquePaths } from "../../../internal/repo-run/index.ts";
@@ -652,7 +655,7 @@ export const collectYeetGateInputPaths = Effect.fn("Yeet.collectYeetGateInputPat
  * **Example** (Collect staleness through the test seam)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { collectYeetGateStaleness, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({

@@ -8,8 +8,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Console, Effect, MutableHashSet, Order } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Order from "effect/Order";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";

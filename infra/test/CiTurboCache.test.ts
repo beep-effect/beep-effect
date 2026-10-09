@@ -3,8 +3,11 @@ import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as pulumi from "@pulumi/pulumi";
-import { Effect, MutableHashMap, pipe, Result } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const validConfigValues = {

@@ -7,8 +7,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Err } from "@beep/utils";
-import { Runtime } from "effect";
 import { dual } from "effect/Function";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import { commandErrorFields } from "../../internal/cli/CommandErrorFields.ts";
 
@@ -71,8 +71,7 @@ export class RunnersCommandError extends S.TaggedError<RunnersCommandError>($I`R
    *
    * ```ts
    * import { RunnersCommandError } from "@beep/repo-cli/commands/Runners"
-   * import { Effect } from "effect"
-   *
+   * import * as Effect from "effect/Effect";
    * const program = Effect.fail("aws unavailable").pipe(
    *   RunnersCommandError.mapError("Unable to reach AWS."),
    * )

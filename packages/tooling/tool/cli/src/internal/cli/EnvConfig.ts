@@ -19,12 +19,18 @@
  */
 
 import * as O from "@beep/utils/Option";
-import { Config, ConfigProvider, Effect, FileSystem, flow, MutableHashMap, Path, pipe, Tuple } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { runToExit } from "../process/StepExec.ts";
 import {
   TurboCacheEnvironment,
@@ -101,7 +107,7 @@ export const configStringEqualsSync: {
  *
  * ```ts
  * import { configStringOption } from "@beep/repo-cli/internal/cli/EnvConfig"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * console.log(O.isOption(Effect.runSync(configStringOption("HOME"))))
@@ -129,8 +135,8 @@ export const configStringOption = (name: string): Effect.Effect<O.Option<string>
  *
  * ```ts
  * import { isCi } from "@beep/repo-cli/test/SharedInternals"
- * import { ConfigProvider, Effect } from "effect"
- *
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
  * const ci = Effect.runSync(
  *   isCi.pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ CI: "true" }))))
  * )
@@ -180,8 +186,7 @@ export const isCiSync = (): boolean => Bun.env.CI === "true" || configStringEqua
  *
  * ```ts
  * import { readOptionalConfigString } from "@beep/repo-cli/internal/cli/EnvConfig"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readOptionalConfigString("HOME")))
  * ```
  *
@@ -201,8 +206,7 @@ export const readOptionalConfigString = (key: string) =>
  *
  * ```ts
  * import { readOptionalRedactedConfigString } from "@beep/repo-cli/internal/cli/EnvConfig"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readOptionalRedactedConfigString("SECRET")))
  * ```
  *
@@ -488,8 +492,7 @@ const turboEnvironmentHealthVerdicts = MutableHashMap.empty<string, ReadonlyArra
  *
  * ```ts
  * import { turboEnvironmentHealthWarnings } from "@beep/repo-cli/test/SharedInternals"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const check = turboEnvironmentHealthWarnings("/repo", {
  *   TURBO_TOKEN: "op://fixture-vault/turbo/token",
  *   STALE_SERVICE_TOKEN: "op://fixture-vault/service/missing"
@@ -648,8 +651,7 @@ export const turboEnvExtendsAmbient: {
  *
  * ```ts
  * import { turboEnvOverrides } from "@beep/repo-cli/internal/cli/EnvConfig"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.runSync(turboEnvOverrides("bunx", ["turbo", "run", "check"], {})).TURBO_UI)
  * console.log(Effect.runSync(turboEnvOverrides("git", ["status"], {})))
  * ```
@@ -814,8 +816,7 @@ export const clearTurboCacheSecretSessionVerdictsForTesting = (): void => {
  *
  * ```ts
  * import { canUseTurboCacheSecretSession } from "@beep/repo-cli/internal/cli/EnvConfig"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(canUseTurboCacheSecretSession("/repo")))
  * ```
  *

@@ -10,9 +10,16 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Config, DateTime, Effect, Exit, FileSystem, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { strToU8 } from "fflate";
@@ -576,8 +583,7 @@ const publishStagingRoots = Effect.fn("LeJeuneBundle.publishStagingRoots")(funct
  *
  * ```ts
  * import { buildBundle, BundleBuildInput } from "../server/build-bundle"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const operation = buildBundle(BundleBuildInput.make({
  *   bundleRoot: ".beep/lejeune-demo-publication/bundle",
  *   mutableRoot: ".beep/lejeune-demo-publication/review",
@@ -667,8 +673,10 @@ const configuredBuild = Effect.gen(function* () {
 });
 
 const BaseLayer = Layer.mergeAll(BunServices.layer, BunCrypto.layer);
-const main = Effect.scoped(
-  Layer.build(BaseLayer).pipe(Effect.flatMap((context) => configuredBuild.pipe(Effect.provide(context))))
+const main = BaseLayer.pipe(
+  Layer.build,
+  Effect.flatMap((context) => configuredBuild.pipe(Effect.provide(context))),
+  Effect.scoped
 );
 
 if (import.meta.main) {

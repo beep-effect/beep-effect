@@ -1,6 +1,7 @@
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Crypto from "effect/Crypto";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";

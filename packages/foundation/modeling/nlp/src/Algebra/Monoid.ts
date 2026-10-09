@@ -6,8 +6,9 @@
  */
 
 import { A, O, Str, thunk0 } from "@beep/utils";
-import { HashMap, HashSet } from "effect";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 // =============================================================================
 // Core Monoid Type Class
 // =============================================================================
@@ -371,8 +372,7 @@ export const ArrayConcat = <A>(): Monoid<ReadonlyArray<A>> => ({
  *
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
- * import { HashMap } from "effect"
- *
+ * import * as HashMap from "effect/HashMap";
  * const first = HashMap.make(["effect", 2], ["schema", 1])
  * const second = HashMap.make(["effect", 3], ["nlp", 1])
  * const counts = Monoid.MultiSet<string>().combine(first, second)

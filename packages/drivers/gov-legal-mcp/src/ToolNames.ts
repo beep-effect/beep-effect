@@ -13,15 +13,21 @@
 
 import { $GovLegalMcpId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, flow, HashMap, HashSet, Match, Number as N, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 

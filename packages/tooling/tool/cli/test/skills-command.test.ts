@@ -3,9 +3,12 @@ import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as TestConsole from "effect/testing/TestConsole";
 
 const runSkillsCommand = Command.runWith(skillsCommand, { version: "0.0.0" });
@@ -14,7 +17,11 @@ const CommandTestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer, N
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+    layer.pipe(
+      Layer.build,
+      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+      Effect.scoped
+    );
 
 const remoteGrillMeSkill = `---
 name: grill-me

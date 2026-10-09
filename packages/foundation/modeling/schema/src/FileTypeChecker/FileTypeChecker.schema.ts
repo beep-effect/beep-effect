@@ -5,15 +5,19 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Effect, Number as Num, Order, Result, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as Num from "effect/Number";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import { FileExtension } from "../FileExtension.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import { MimeType } from "../MimeType.ts";
-import type { SchemaAST } from "effect";
+import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $SchemaId.create("FileTypeChecker/FileTypeChecker.schema");
 

@@ -8,8 +8,11 @@
 import { $FaceDetectionId } from "@beep/identity/packages";
 import { A, thunkUndefined } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Context, Effect, Layer, Order, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import sharp from "sharp";
@@ -174,7 +177,7 @@ type OrtTensor = import("onnxruntime-node").Tensor;
  * **Example** (Mock detector detect call)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { FaceDetectionImageRequest, FaceDetectionResult } from "@beep/face-detection"
  * import type { LoadedFaceDetector } from "@beep/face-detection"
  *
@@ -216,7 +219,7 @@ export interface LoadedFaceDetector {
  * **Example** (Service shape withDetector usage)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { FaceDetectionImageRequest, FaceDetectionModelConfig, FaceDetectionResult } from "@beep/face-detection"
  * import type { FaceDetectionServiceShape, LoadedFaceDetector } from "@beep/face-detection"
  *
@@ -267,7 +270,7 @@ export interface FaceDetectionServiceShape {
  * **Example** (Provide and inject service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import {
  *   FaceDetectionImageRequest,
  *   FaceDetectionModelConfig,
@@ -322,7 +325,7 @@ export class FaceDetectionService extends Context.Service<FaceDetectionService, 
    * **Example** (Create live service layer)
    *
    * ```ts
-   * import { Layer } from "effect"
+   * import * as Layer from "effect/Layer";
    * import { FaceDetectionService } from "@beep/face-detection"
    *
    * const layer = FaceDetectionService.makeLayer()
@@ -910,7 +913,7 @@ export const makeFaceDetectionService = (): FaceDetectionServiceShape =>
  * **Example** (withDetector effect helper)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import {
  *   FaceDetectionImageRequest,
  *   FaceDetectionModelConfig,

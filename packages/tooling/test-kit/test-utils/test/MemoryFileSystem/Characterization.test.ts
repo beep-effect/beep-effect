@@ -1,8 +1,8 @@
 import * as Subject from "@beep/test-utils/MemoryFileSystem";
 import { describe, it } from "@effect/vitest";
 import { assertFalse, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Fs from "effect/FileSystem";
 import * as O from "effect/Option";
@@ -447,7 +447,7 @@ it.layer(Subject.layer)("public core characterization", (it) => {
       const fs = yield* Fs.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped();
       const path = `${root}/missing`;
-      const error = yield* Effect.flip(Stream.runDrain(fs.watch(path)));
+      const error = yield* fs.watch(path).pipe(Stream.runDrain, Effect.flip);
       strictEqual(error._tag, "PlatformError");
       assertTrue(error.reason._tag === "NotFound");
       strictEqual(error.reason.module, "FileSystem");

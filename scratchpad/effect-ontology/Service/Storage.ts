@@ -16,19 +16,17 @@ import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { SqliteClient } from "@effect/sql-sqlite-bun";
 import { Storage } from "@google-cloud/storage";
-import {
-  Clock,
-  Context,
-  Duration,
-  Effect,
-  FileSystem,
-  Inspectable,
-  Layer,
-  Match,
-  MutableHashMap,
-  Path,
-  Schedule,
-} from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Path from "effect/Path";
+import * as Schedule from "effect/Schedule";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
@@ -258,7 +256,7 @@ export interface StorageServiceMethods extends KeyValueStore.KeyValueStore {
  * **Example** (Put and get a document)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { StorageService, StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
@@ -363,7 +361,8 @@ export class StorageConfigValue extends S.Class<StorageConfigValue>($I`StorageCo
  * **Example** (Provide storage config)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { StorageConfig, StorageConfigValue } from "@effect-ontology/Service/Storage"
  *
  * const type = Effect.runSync(
@@ -1048,7 +1047,7 @@ const makeLocalStorageServiceLayer = (config: StorageConfigValue) =>
  * **Example** (Compose get against the live layer)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ConfigServiceDefault } from "@effect-ontology/Service/Config"
  * import { StorageService, StorageServiceLive } from "@effect-ontology/Service/Storage"
  *
@@ -1091,7 +1090,7 @@ export const StorageServiceLive = Layer.unwrap(
  * **Example** (Round-trip a document in memory)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { StorageService, StorageServiceTest } from "@effect-ontology/Service/Storage"
  *

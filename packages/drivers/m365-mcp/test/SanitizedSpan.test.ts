@@ -13,9 +13,10 @@ import { M365Toolkit, M365ToolkitHandlersLive } from "@beep/m365-mcp";
 import { sanitizedToolkit } from "@beep/mcp-kit";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
-import { Effect, Layer } from "effect";
 import { McpServerClient } from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Tracer from "effect/Tracer";
 

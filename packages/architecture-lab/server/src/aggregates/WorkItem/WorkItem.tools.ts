@@ -43,7 +43,7 @@ export const WorkItemToolNames = {
  * import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem"
  * import { makeWorkItemToolHandlers } from "@beep/architecture-lab-server/aggregates/WorkItem"
  * import { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *

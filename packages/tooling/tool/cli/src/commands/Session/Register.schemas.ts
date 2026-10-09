@@ -125,7 +125,7 @@ export type RegisterUnitState = typeof RegisterUnitState.Type;
  *
  * ```ts
  * import { PrRepository, RegisterRow } from "@beep/repo-cli/test/Session"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  *
  * const row = RegisterRow.make({
@@ -177,8 +177,7 @@ export class RegisterRow extends S.Class<RegisterRow>($I`RegisterRow`)(
  *
  * ```ts
  * import { RegisterRowJson } from "@beep/repo-cli/test/Session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(RegisterRowJson.encode))
  * ```
  *
@@ -428,7 +427,7 @@ export class RegisterMergeInput extends S.Class<RegisterMergeInput>($I`RegisterM
  *
  * ```ts
  * import { mergeRegisterNote, RegisterMergeInput, RegisterNotePatch } from "@beep/repo-cli/test/Session"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  *
  * const patch = RegisterNotePatch.make({

@@ -15,8 +15,9 @@ import type * as Crypto from "effect/Crypto";
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Cause, Effect, Ref } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Ref from "effect/Ref";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

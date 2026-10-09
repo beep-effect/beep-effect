@@ -8,8 +8,9 @@
 import { $SharedDomainId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { Cuid, cuid } from "@beep/schema/Cuid";
-import { Effect, Result } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { SegmentValue } from "@beep/identity";
 import type * as BrandNS from "effect/Brand";

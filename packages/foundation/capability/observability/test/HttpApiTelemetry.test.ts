@@ -11,10 +11,13 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
-import { Cause, Effect, Equal, Metric } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/http-api";
+import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

@@ -6,10 +6,13 @@
  */
 import { $DockId } from "@beep/identity/packages";
 import { naturalWidth, PretextCapture, PretextCaptureRequest } from "@beep/pretext";
-import { Effect, Layer, Number as N, Order, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import { AsyncResult, Atom } from "effect/reactivity";
 import * as S from "effect/Schema";
@@ -171,7 +174,7 @@ export const titleMinima: Dual3<FontMetrics, DockWorkspace, TabChrome, GroupMini
  * ```ts
  * import { GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeTitleMinimaAtom } from "@beep/dock"
  * import { PretextCaptureFixture } from "@beep/pretext"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer"
  * import { Atom, AtomRegistry } from "effect/reactivity"
  *

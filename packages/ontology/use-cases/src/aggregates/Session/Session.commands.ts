@@ -7,7 +7,7 @@
 
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { Session, SessionId } from "@beep/ontology-domain/aggregates/Session";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { OntologyFilePath, TurtleDocumentText } from "./Session.ports.ts";
 

@@ -7,7 +7,7 @@ import { Button } from "@beep/ui/components/button";
 import { A, O } from "@beep/utils";
 import { useAtomValue } from "@effect/atom-react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { Match } from "effect";
+import * as Match from "effect/Match";
 import { toolbarSelectionAtom } from "../chat/toolbar.tsx";
 import { ariaKeyShortcuts, formatChord, projectCommands } from "./projection.ts";
 import { runCommand } from "./runtime.tsx";

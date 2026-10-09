@@ -9,8 +9,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import { ConfigService, ConfigServiceDefault } from "../Service/Config.ts";
 import { EmbeddingCache } from "../Service/EmbeddingCache.ts";
@@ -49,7 +49,7 @@ import { MetricsService } from "../Telemetry/Metrics.ts";
  * **Example** (Keep ConfigService as a remaining requirement)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { EmbeddingProviderFromConfig } from "@effect-ontology/Runtime/EmbeddingLayers"
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
@@ -95,7 +95,7 @@ export const EmbeddingProviderFromConfig: Layer.Layer<EmbeddingProvider, AnyEmbe
  * **Example** (Select rate-limit settings from ConfigService)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { EmbeddingRateLimiterFromConfig } from "@effect-ontology/Runtime/EmbeddingLayers"
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
@@ -193,7 +193,7 @@ export const VoyageEmbeddingInfrastructure: Layer.Layer<
  * **Example** (Select Nomic or Voyage from EMBEDDING_PROVIDER)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { EmbeddingInfrastructure, NomicEmbeddingInfrastructure } from "@effect-ontology/Runtime/EmbeddingLayers"
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *

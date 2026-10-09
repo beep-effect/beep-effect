@@ -14,23 +14,20 @@
 import { PathSafety } from "@beep/file-processing";
 import { $NlpMcpId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import {
-  Context,
-  Effect,
-  FileSystem,
-  Layer,
-  Number as Num,
-  Order,
-  PlatformError as PlatformErrorNs,
-  pipe,
-  Random,
-  Stream,
-} from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Num from "effect/Number";
+import * as Order from "effect/Order";
+import * as PlatformErrorNs from "effect/PlatformError";
+import * as Random from "effect/Random";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import type { Path } from "effect";
+import type * as Path from "effect/Path";
 import type { PlatformError } from "effect/PlatformError";
 
 const $I = $NlpMcpId.create("Streaming/TextStream");

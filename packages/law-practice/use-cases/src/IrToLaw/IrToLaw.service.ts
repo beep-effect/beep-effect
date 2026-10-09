@@ -21,9 +21,10 @@ import { AlignedStatus } from "@beep/langextract/Alignment";
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { Claim, Distinction, OfficeAction, PriorArtReference, Rejection } from "@beep/law-practice-domain";
 import { TextAnchor } from "@beep/provenance";
-import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { spikeEntityInput } from "../internal/spikeEntity.ts";
@@ -159,8 +160,8 @@ const buildLawEntities = Effect.fn("law_practice.ir_to_law.build_entities")(func
  *
  * ```ts
  * import { makeIrToLaw } from "@beep/law-practice-use-cases/IrToLaw"
- * import { Effect, Exit } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Exit from "effect/Exit";
  * const mapper = makeIrToLaw()
  * const program = Effect.exit(mapper.toLaw([]))
  *

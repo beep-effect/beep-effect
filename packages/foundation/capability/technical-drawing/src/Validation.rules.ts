@@ -15,7 +15,7 @@
  */
 
 import { A, O } from "@beep/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import { MARGINS_CM, pageSizePt } from "./Sheet.schemas.ts";
 import { SheetFinding } from "./Validation.schemas.ts";
 import type { SheetFormat } from "./Sheet.schemas.ts";

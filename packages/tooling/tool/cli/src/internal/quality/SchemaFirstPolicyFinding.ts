@@ -30,7 +30,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -141,8 +141,7 @@ const codec = JsonStringCodec(SchemaFirstPolicyFinding);
  *
  * ```ts
  * import { decodeSchemaFirstPolicyFinding } from "@beep/repo-cli/internal/quality/SchemaFirstPolicyFinding"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const json = '{"category":"schema-first-policy","ruleId":"SFV4-defaults","file":"a.ts","message":"m"}'
  * console.log(Effect.runSync(decodeSchemaFirstPolicyFinding(json)).ruleId)
  * ```
@@ -160,8 +159,7 @@ export const decodeSchemaFirstPolicyFinding: (text: string) => Effect.Effect<Sch
  *
  * ```ts
  * import { encodeSchemaFirstPolicyFinding, SchemaFirstPolicyFinding } from "@beep/repo-cli/internal/quality/SchemaFirstPolicyFinding"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const finding = SchemaFirstPolicyFinding.make({
  *   category: "schema-first-policy",
  *   ruleId: "SFV4-defaults",
@@ -190,8 +188,7 @@ export const encodeSchemaFirstPolicyFinding: (
  *
  * ```ts
  * import { renderSchemaFirstPolicyFindingLine, SchemaFirstPolicyFinding } from "@beep/repo-cli/internal/quality/SchemaFirstPolicyFinding"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const finding = SchemaFirstPolicyFinding.make({
  *   category: "schema-first-policy",
  *   ruleId: "SFV4-defaults",

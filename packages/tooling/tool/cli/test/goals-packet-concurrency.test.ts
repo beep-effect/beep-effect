@@ -22,12 +22,20 @@ import { QualitySchedulerError, withJournalFileLock } from "@beep/repo-cli/test/
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
-import { Context, Deferred, Effect, Fiber, FileSystem, Layer, Path, PlatformError, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import { ChildProcess } from "effect/process";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
 const testLayer = PacketForkRepairApplierLive.pipe(
@@ -205,7 +213,9 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
           }),
         });
         const applier = Context.get(
-          yield* Layer.build(Layer.fresh(PacketForkRepairApplierLive)).pipe(
+          yield* PacketForkRepairApplierLive.pipe(
+            Layer.fresh,
+            Layer.build,
             Effect.provideService(FileSystem.FileSystem, pausingFs)
           ),
           PacketForkRepairApplier
@@ -298,7 +308,9 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
           ),
         });
         const isolated = Context.get(
-          yield* Layer.build(Layer.fresh(PacketEventStoreLive)).pipe(
+          yield* PacketEventStoreLive.pipe(
+            Layer.fresh,
+            Layer.build,
             Effect.provideService(FileSystem.FileSystem, unreadableFs)
           ),
           PacketEventStore
@@ -336,7 +348,9 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
           ),
         });
         const isolated = Context.get(
-          yield* Layer.build(Layer.fresh(PacketEventStoreLive)).pipe(
+          yield* PacketEventStoreLive.pipe(
+            Layer.fresh,
+            Layer.build,
             Effect.provideService(FileSystem.FileSystem, unreadableFs)
           ),
           PacketEventStore

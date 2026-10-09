@@ -11,11 +11,15 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Path from "effect/Path";
 import { ChildProcess } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 const repoRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 const claudeBreakerPath = `${repoRoot}.claude/hooks/circuit-breaker.sh`;
@@ -81,8 +85,8 @@ const runBreaker = Effect.fnUntraced(function* (
 
   const [stdout, stderr, exitCode] = yield* Effect.all(
     [
-      Stream.mkString(Stream.decodeText(handle.stdout)),
-      Stream.mkString(Stream.decodeText(handle.stderr)),
+      handle.stdout.pipe(Stream.decodeText, Stream.mkString),
+      handle.stderr.pipe(Stream.decodeText, Stream.mkString),
       handle.exitCode,
     ],
     { concurrency: "unbounded" }

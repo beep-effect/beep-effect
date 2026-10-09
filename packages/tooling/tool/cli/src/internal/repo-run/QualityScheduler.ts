@@ -20,28 +20,25 @@
 import { freemem, totalmem } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as OptionUtils from "@beep/utils/Option";
-import {
-  Clock,
-  Console,
-  Context,
-  DateTime,
-  Duration,
-  Effect,
-  Fiber,
-  FileSystem,
-  Layer,
-  Order,
-  Path,
-  pipe,
-} from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
-import { constant, dual, flow } from "effect/Function";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import { constant, dual, flow, pipe } from "effect/Function";
 import * as HS from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as Schedule from "effect/Schedule";
@@ -134,8 +131,8 @@ export interface AdmissionAttemptTerminationJournalShape {
  *
  * ```ts
  * import { AdmissionAttemptTerminationJournal } from "@beep/repo-cli/test/RepoRun"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const layer = Layer.succeed(
  *   AdmissionAttemptTerminationJournal,
  *   AdmissionAttemptTerminationJournal.of({ appendOnce: () => Effect.void })
@@ -180,8 +177,8 @@ export interface AdmissionEvictionJournalShape {
  *
  * ```ts
  * import { AdmissionEvictionJournal } from "@beep/repo-cli/test/RepoRun"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const layer = Layer.succeed(
  *   AdmissionEvictionJournal,
  *   AdmissionEvictionJournal.of({ appendOnce: () => Effect.succeed(true) })
@@ -251,8 +248,8 @@ export interface MemoryStatsShape {
  *
  * ```ts
  * import { MemoryStats } from "@beep/repo-cli/test/RepoRun"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const fixed = Layer.succeed(
  *   MemoryStats,
  *   MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) })
@@ -302,8 +299,7 @@ const makeMemoryStats = Effect.fnUntraced(function* (): Effect.fn.Return<
  *
  * ```ts
  * import { MemoryStatsLive } from "@beep/repo-cli/test/RepoRun"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(MemoryStatsLive)) // true
  * ```
  *
@@ -494,8 +490,7 @@ const ensureAdmissionDirectories = Effect.fnUntraced(function* (): Effect.fn.Ret
  *
  * ```ts
  * import { admissionProtocolStatus } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(admissionProtocolStatus())) // true
  * ```
  *
@@ -661,8 +656,7 @@ const tryCreateExclusive = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { writeFileAtomicForTesting } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const publication = writeFileAtomicForTesting("/repo/state.json", "{}")
  * console.log(Effect.isEffect(publication)) // true
  * ```
@@ -682,8 +676,7 @@ export const writeFileAtomicForTesting = writeFileAtomic;
  *
  * ```ts
  * import { tryCreateExclusiveForTesting } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const publication = tryCreateExclusiveForTesting("/repo/existing", "replacement")
  * console.log(Effect.isEffect(publication)) // true
  * ```

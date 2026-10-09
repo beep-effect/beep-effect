@@ -1,6 +1,6 @@
 # Lane G1 — Effect community & upstream guidance: barrel vs per-module imports
 
-**Research question:** Is the premise `import { Effect } from "effect"` is less optimal than `import * as Effect from "effect/Effect"` actually true for Effect — especially Effect v4 (the effect-smol codebase) — and under what conditions?
+**Research question:** Is the premise `import { Effect } from "<legacy-effect-barrel>"` is less optimal than `import * as Effect from "effect/Effect"` actually true for Effect — especially Effect v4 (the effect-smol codebase) — and under what conditions?
 
 **Lane:** web / X research only. No repository exploration.
 **Report started:** 2026-08-23
@@ -23,14 +23,14 @@ Citations use URL + access/publish date. X posts include author + date.
 
 ## 1. Official Effect docs / website guidance (v3 and v4)
 
-**Headline:** Official docs teach `import { Effect } from "effect"` as the default for *users*, document `import * as Effect from "effect/Effect"` as an equivalent namespace form, and explicitly warn that **named barrel imports can fail to tree-shake on bundlers that lack “deep scope analysis.”** They name Rollup and Webpack 5+ as safe; they do **not** name esbuild, Vite, or Rspack. That warning is unchanged from v3 docs into v4 docs.
+**Headline:** Official docs teach `import { Effect } from "<legacy-effect-barrel>"` as the default for *users*, document `import * as Effect from "effect/Effect"` as an equivalent namespace form, and explicitly warn that **named barrel imports can fail to tree-shake on bundlers that lack “deep scope analysis.”** They name Rollup and Webpack 5+ as safe; they do **not** name esbuild, Vite, or Rspack. That warning is unchanged from v3 docs into v4 docs.
 
 ### 1.1 Default documented style is the named barrel
 
 Both the v3 and v4 “Importing Effect” pages open with the named import from the package root:
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 ```
 
 Then they show the per-module namespace form as an alternative:
@@ -42,11 +42,11 @@ import * as Effect from "effect/Effect"
 - v3: https://www.effect.website/docs/v3/getting-started/importing-effect (accessed 2026-08-23)
 - v4: https://www.effect.website/docs/v4/getting-started/importing-effect (accessed 2026-08-23)
 
-Schema docs do the same pairing: namespace from `effect/Schema` *and* named from `"effect"`, then the running examples use `import { Schema } from "effect"`.
+Schema docs do the same pairing: namespace from `effect/Schema` *and* named from `"effect"`, then the running examples use `import { Schema } from "<legacy-effect-barrel>"`.
 
 - https://www.effect.website/docs/v3/schema/getting-started (accessed 2026-08-23)
 
-Getting-started examples across Creating Effects, Fibers, Runtime, etc. overwhelmingly use `import { Effect } from "effect"` / `import { Effect, Fiber } from "effect"`. The docs-site default for **application authors** is the barrel.
+Getting-started examples across Creating Effects, Fibers, Runtime, etc. overwhelmingly use `import { Effect } from "<legacy-effect-barrel>"` / `import { Effect, Fiber } from "<legacy-effect-barrel>"`. The docs-site default for **application authors** is the barrel.
 
 ### 1.2 The tree-shaking caveat is official, not folklore
 
@@ -75,7 +75,7 @@ What v4 *does* claim, separately, is that **module implementations got smaller**
 
 That 70→20 kB number is about rewritten modules, not about changing import style. It also asserts Effect “has always been tree-shakable” — i.e. the *library* is marked for shaking; whether a given *import form* actually shakes still depends on the bundler (the Importing Effect page).
 
-v4’s other packaging story is consolidation: `@effect/platform`, `@effect/rpc`, `@effect/cluster`, etc. now live under `effect` / `effect/unstable/*`. That **increases** what a root barrel *could* pull in if a bundler or runtime follows every re-export. Unstable modules are on explicit subpaths (`effect/unstable/http`, …) and are not the same as `import { Effect } from "effect"`, but they do enlarge the package surface TypeScript and Vite pre-bundling see.
+v4’s other packaging story is consolidation: `@effect/platform`, `@effect/rpc`, `@effect/cluster`, etc. now live under `effect` / `effect/unstable/*`. That **increases** what a root barrel *could* pull in if a bundler or runtime follows every re-export. Unstable modules are on explicit subpaths (`effect/unstable/http`, …) and are not the same as `import { Effect } from "<legacy-effect-barrel>"`, but they do enlarge the package surface TypeScript and Vite pre-bundling see.
 
 ### 1.4 What official docs do *not* say
 
@@ -89,7 +89,7 @@ v4’s other packaging story is consolidation: `@effect/platform`, `@effect/rpc`
 
 ## 2. Packaging reality: barrels, `exports`, `sideEffects`, pure annotations
 
-**Headline:** Both v3 and v4 publish a giant root barrel of `export * as Module from "./Module.js"`, mark the package `sideEffects: []`, annotate calls with `#__PURE__`, and expose per-module subpaths (`effect/Effect`). That combination is *designed* so a capable bundler can drop unused *modules* from `import { Effect } from "effect"`. It does **not** make named barrel imports free for TypeScript, Node ESM, Vite's esbuild pre-bundle, or esbuild-class production bundlers. The barrel's real cost is graph size and analysis, not (usually) production bytes on Rollup/Webpack 5.
+**Headline:** Both v3 and v4 publish a giant root barrel of `export * as Module from "./Module.js"`, mark the package `sideEffects: []`, annotate calls with `#__PURE__`, and expose per-module subpaths (`effect/Effect`). That combination is *designed* so a capable bundler can drop unused *modules* from `import { Effect } from "<legacy-effect-barrel>"`. It does **not** make named barrel imports free for TypeScript, Node ESM, Vite's esbuild pre-bundle, or esbuild-class production bundlers. The barrel's real cost is graph size and analysis, not (usually) production bytes on Rollup/Webpack 5.
 
 ### 2.1 What the published package actually is
 
@@ -97,7 +97,7 @@ v4’s other packaging story is consolidation: `@effect/platform`, `@effect/rpc`
 
 - Dual publish: CJS (`dist/cjs`) + ESM (`dist/esm`) + DTS (`dist/dts`).
 - `"sideEffects": []` (webpack/Rspack/Rollup treat empty array as “no side-effectful modules”).
-- Explicit `exports` map with one entry per module (`"."`, `"./Effect"`, `"./Schema"`, …). `import { Effect } from "effect"` hits `dist/esm/index.js`; `import * as Effect from "effect/Effect"` hits `dist/esm/Effect.js`.
+- Explicit `exports` map with one entry per module (`"."`, `"./Effect"`, `"./Schema"`, …). `import { Effect } from "<legacy-effect-barrel>"` hits `dist/esm/index.js`; `import * as Effect from "effect/Effect"` hits `dist/esm/Effect.js`.
 - Unpacked size on npm: **~27 MB / 2715 files** (mostly `.d.ts` + maps). That is the TypeScript surface, not the runtime.
 
 **v4 RC (`effect@4.0.0-rc.111`, jsDelivr, accessed 2026-08-23):**
@@ -131,7 +131,7 @@ export * as Schema from "./Schema.js"
 // … ~140 stable modules
 ```
 
-That is **exactly** the pattern esbuild documents as hard: a *re-exported namespace*. Direct `import * as Effect from "effect/Effect"` is the pattern esbuild *can* shake; `import { Effect } from "effect"` goes through one extra re-export hop.
+That is **exactly** the pattern esbuild documents as hard: a *re-exported namespace*. Direct `import * as Effect from "effect/Effect"` is the pattern esbuild *can* shake; `import { Effect } from "<legacy-effect-barrel>"` goes through one extra re-export hop.
 
 v3 `packages/effect/src/index.ts` is the same `export * as X from "./X.js"` shape, with more modules (STM, Micro, test helpers, …).
 
@@ -141,13 +141,13 @@ v3 `packages/effect/src/index.ts` is the same `export * as X from "./X.js"` shap
 
 ### 2.3 What that means per tool
 
-| Tool | Named barrel `import { Effect } from "effect"` | Per-module `import * as Effect from "effect/Effect"` |
+| Tool | Named barrel `import { Effect } from "<legacy-effect-barrel>"` | Per-module `import * as Effect from "effect/Effect"` |
 | --- | --- | --- |
 | **Rollup / Vite production (historical Rollup; Rolldown with lazy-barrel)** | With `sideEffects: []`, unused *module* re-exports are droppable. Official Effect docs list Rollup as “deep scope analysis.” | Direct; smaller analysis graph. Final bytes similar if shaking works. |
 | **Webpack 5+** | Same: `sideEffects` + usedExports. Docs list Webpack 5+. | Direct. |
 | **Rspack** | Lazy barrel (stable, on by default) skips unused re-exports in side-effect-free barrels, including `export * as ns from './module'`. Effect's `sideEffects: []` is the required marker. | Direct; lazy-barrel is unnecessary. |
 | **esbuild / Bun bundler / Vite *dev* pre-bundle** | Known gap: re-exported namespaces become `__export({...})` objects; unused siblings of the used namespace, and unused members *inside* the namespace, often survive. Evan Wallace (esbuild): tree-shaking of `import *` works, but **not through a re-export hop** (webpack 4 also lacked this; webpack 5 added it). | Avoids the hop. This is why Arnaldi says “lib land” uses `effect/Effect` “primarily [for] esbuild users.” |
-| **Node / bun *runtime* (no bundler)** | **No tree-shaking exists.** `export * as X from "./X.js"` is a static dependency of the barrel. `import { Effect } from "effect"` instantiates **every** module the barrel re-exports (Schema, Stream, STM/Tx*, Match, …), then their dependency graphs. | Instantiates `Effect.js` and *its* imports only (still large — Effect is the runtime — but not Schema/Stream/etc.). |
+| **Node / bun *runtime* (no bundler)** | **No tree-shaking exists.** `export * as X from "./X.js"` is a static dependency of the barrel. `import { Effect } from "<legacy-effect-barrel>"` instantiates **every** module the barrel re-exports (Schema, Stream, STM/Tx*, Match, …), then their dependency graphs. | Instantiates `Effect.js` and *its* imports only (still large — Effect is the runtime — but not Schema/Stream/etc.). |
 | **TypeScript / tsserver** | `effect/index.d.ts` re-exports every public module. One named import from `"effect"` pulls the whole declaration graph into the program for that file. | Loads `effect/Effect.d.ts` + what Effect itself imports. |
 | **Next.js** | `effect` and `@effect/*` are on the **default** `optimizePackageImports` list (since 2024-05-16, PR #65465). The compiler rewrites named barrel imports to direct modules *before* webpack/turbopack pay the graph cost. Vite/plain Node do **not** get this rewrite. | Already direct; rewrite is a no-op. |
 
@@ -197,16 +197,16 @@ Ranked, for Effect specifically:
 
 ## 3. Core-team statements (X / GitHub / tooling)
 
-**Headline:** The core team runs a **split policy**. Library authors (and the Effect repo itself) must use `import * as Effect from "effect/Effect"`. Application authors “should use bundlers that can tree-shake `import { Effect } from "effect"`.” Docs teach the app style. Tooling exists to enforce the lib style.
+**Headline:** The core team runs a **split policy**. Library authors (and the Effect repo itself) must use `import * as Effect from "effect/Effect"`. Application authors “should use bundlers that can tree-shake `import { Effect } from "<legacy-effect-barrel>"`.” Docs teach the app style. Tooling exists to enforce the lib style.
 
 ### 3.1 Michael Arnaldi — the split, in his own words
 
 **User code vs lib code** — 2025-04-30, reply to Mattia Manzati:
 
-> that's really for lib code, user code should use bundlers that can tree-shake `import { Effect } from "effect"`
+> that's really for lib code, user code should use bundlers that can tree-shake `import { Effect } from "<legacy-effect-barrel>"`
 
 - https://x.com/MichaelArnaldi/status/1917588446522048748
-- Parent: Mattia describing the auto-fixable eslint rule that rewrites `import { Data } from "effect"` → `import * as Data from "effect/Data"` (https://github.com/Effect-TS/eslint-plugin/blob/main/test/no-import-from-barrel-package.test.ts). Tomas Zaluckij replied that he still consumes the lib with the named barrel in user code.
+- Parent: Mattia describing the auto-fixable eslint rule that rewrites `import { Data } from "<legacy-effect-barrel>"` → `import * as Data from "effect/Data"` (https://github.com/Effect-TS/eslint-plugin/blob/main/test/no-import-from-barrel-package.test.ts). Tomas Zaluckij replied that he still consumes the lib with the named barrel in user code.
 
 **esbuild + lib land** — 2025-07-11, thread with Sam Goodwin (itty-aws):
 
@@ -240,8 +240,8 @@ He closed Effect-TS/effect#2701 after Next.js merged the default optimize list (
 - 2025-04-30: the eslint rule exists *because* named barrels are the thing to rewrite in the Effect ecosystem. https://x.com/MattiaManzati/status/1917582137751982427
 - Effect language service diagnostic `importFromBarrel` (off by default, autofixable): “Suggests importing from specific module paths instead of barrel exports.” v3 and v4. https://github.com/Effect-TS/language-service (README, accessed 2026-08-23)
 - Plugin options (same README):
-  - `namespaceImportPackages: ["effect", "@effect/*"]` — completions prefer `import * as Effect from "effect"` / `"effect/Effect"` style.
-  - `topLevelNamedReexports: "follow"` rewrites `{ pipe } from "effect"` → `{ pipe } from "effect/Function"`.
+  - `namespaceImportPackages: ["effect", "@effect/*"]` — completions prefer `import * as Effect from "<legacy-effect-barrel>"` / `"effect/Effect"` style.
+  - `topLevelNamedReexports: "follow"` rewrites `{ pipe } from "<legacy-effect-barrel>"` → `{ pipe } from "effect/Function"`.
   - `barrelImportPackages` is the *opposite* knob (prefer the barrel) — default empty.
 
 ### 3.3 What the Effect *repo* configures (team dogfooding)
@@ -269,8 +269,8 @@ https://raw.githubusercontent.com/Effect-TS/effect-smol/main/packages/tools/oxc/
 
 `@effect/eslint-plugin` rule `no-import-from-barrel-package`:
 
-- Invalid: `import { Effect } from "effect"` → autofix `import * as Effect from "effect/Effect"`
-- Valid: `import * as T from "effect/Effect"`, and **type-only** `import type { Effect } from "effect"` (types don't execute the barrel at runtime)
+- Invalid: `import { Effect } from "<legacy-effect-barrel>"` → autofix `import * as Effect from "effect/Effect"`
+- Valid: `import * as T from "effect/Effect"`, and **type-only** `import type { Effect } from "<legacy-effect-barrel>"` (types don't execute the barrel at runtime)
 
 https://github.com/Effect-TS/eslint-plugin/blob/main/src/rules/no-import-from-barrel-package.ts
 https://github.com/Effect-TS/eslint-plugin/blob/main/test/no-import-from-barrel-package.test.ts
@@ -285,7 +285,7 @@ Older AnswerOverflow threads (2023) asked for a style guide and whether to impor
 
 ## 4. Community measurements (numbers)
 
-**Headline:** Almost nobody published a clean A/B of `import { Effect } from "effect"` vs `import * as Effect from "effect/Effect"` in **production gzip bytes**. The measurements that exist are about **module-graph time**, **dev boot**, **tests**, and **tsserver** — and they are large. Effect-specific production-byte claims are v3→v4 *implementation* shrinkage (70 kB → 20 kB), not import-style shrinkage.
+**Headline:** Almost nobody published a clean A/B of `import { Effect } from "<legacy-effect-barrel>"` vs `import * as Effect from "effect/Effect"` in **production gzip bytes**. The measurements that exist are about **module-graph time**, **dev boot**, **tests**, and **tsserver** — and they are large. Effect-specific production-byte claims are v3→v4 *implementation* shrinkage (70 kB → 20 kB), not import-style shrinkage.
 
 ### 4.1 Effect-specific
 
@@ -309,7 +309,7 @@ https://x.com/hichaelmart/status/1975328481669226946 (2025-10-06); Colin’s rep
 
 Colin (Zod) reply: Bun's bundler is an esbuild port; esbuild lacks “deep tracking” needed to shake `import { z }`. “any decent modern bundler would not have this problem.” He changed Zod docs to `import *` because of that class of bundler.
 
-This is the **closest numerical analogue** to Effect's `import { Effect } from "effect"` vs `import * as Effect from "effect/Effect"`: same namespace-re-export / named-import-from-barrel failure on esbuild. Effect's own docs named the same gap without giving bytes.
+This is the **closest numerical analogue** to Effect's `import { Effect } from "<legacy-effect-barrel>"` vs `import * as Effect from "effect/Effect"`: same namespace-re-export / named-import-from-barrel failure on esbuild. Effect's own docs named the same gap without giving bytes.
 
 ### 4.3 Barrel-file graph costs (not Effect, but the mechanism)
 
@@ -338,13 +338,13 @@ Those are the experiments a migration should run locally; the literature predict
 
 | Surface | Style | Why |
 | --- | --- | --- |
-| **effect.website docs (v3 and v4)** | `import { Effect } from "effect"` as the taught default; namespace form shown as the tree-shake-safe alternative | User/app onboarding |
-| **JSDoc examples in v4 source** | Mix: `import { BigInt } from "effect"`, `import type { Struct } from "effect"` | Matches docs; type-only from barrel is eslint-legal |
-| **v4 migration snippets** | `import { Effect, Option } from "effect"` | User-facing |
-| **`@effect/vitest` README** | `import { Effect } from "effect"` | User-facing |
-| **effect-smol / v4 LLMS.md agent guide** | `import { Effect, Schema } from "effect"` | Teaching agents the *user* style |
+| **effect.website docs (v3 and v4)** | `import { Effect } from "<legacy-effect-barrel>"` as the taught default; namespace form shown as the tree-shake-safe alternative | User/app onboarding |
+| **JSDoc examples in v4 source** | Mix: `import { BigInt } from "<legacy-effect-barrel>"`, `import type { Struct } from "<legacy-effect-barrel>"` | Matches docs; type-only from barrel is eslint-legal |
+| **v4 migration snippets** | `import { Effect, Option } from "<legacy-effect-barrel>"` | User-facing |
+| **`@effect/vitest` README** | `import { Effect } from "<legacy-effect-barrel>"` | User-facing |
+| **effect-smol / v4 LLMS.md agent guide** | `import { Effect, Schema } from "<legacy-effect-barrel>"` | Teaching agents the *user* style |
 | **Library implementation (`packages/effect/src/*.ts`)** | Relative namespace: `import * as Option from "./Option.ts"` — never the package barrel | Avoid cycles + match lib-land rule |
-| **Repo tsconfig + oxlint + eslint-plugin** | **Forbid** `import { Effect } from "effect"` in first-party code; rewrite to `effect/Effect` | Lib-land, dogfooded |
+| **Repo tsconfig + oxlint + eslint-plugin** | **Forbid** `import { Effect } from "<legacy-effect-barrel>"` in first-party code; rewrite to `effect/Effect` | Lib-land, dogfooded |
 | **Generated `index.ts`** | `export * as Effect from "./Effect.ts"` | The convenience barrel for users |
 
 So: **if you are writing Effect, you do not import from `"effect"`. If you are teaching Effect to app authors, you do.** A downstream app that copies the Effect *repo*'s lint is following lib policy. A downstream app that copies the *docs* is following user policy. Both are “what Effect does.”
@@ -357,7 +357,7 @@ So: **if you are writing Effect, you do not import from `"effect"`. If you are t
 
 ### Where the premise is STRONG
 
-1. **Unbundled Node / bun servers and tests.** There is no tree-shaker. `import { Effect } from "effect"` evaluates the entire stable stdlib barrel (v4: ~140 `export * as` targets, including Schema, Stream, Graph, Optic, all Tx*, …). `import * as Effect from "effect/Effect"` evaluates Effect + *its* internal graph only. TkDodo, Marvin, and Vercel all measure this as **module-graph time**, which is exactly what `bun test` / `vitest` / a long-running Node server pay on every process start. **This is the best reason for a repo that has unbundled servers and tests to migrate.**
+1. **Unbundled Node / bun servers and tests.** There is no tree-shaker. `import { Effect } from "<legacy-effect-barrel>"` evaluates the entire stable stdlib barrel (v4: ~140 `export * as` targets, including Schema, Stream, Graph, Optic, all Tx*, …). `import * as Effect from "effect/Effect"` evaluates Effect + *its* internal graph only. TkDodo, Marvin, and Vercel all measure this as **module-graph time**, which is exactly what `bun test` / `vitest` / a long-running Node server pay on every process start. **This is the best reason for a repo that has unbundled servers and tests to migrate.**
 
 2. **TypeScript language service and `tsc`.** One named import from `"effect"` means `index.d.ts` and every re-exported module's types. Effect built `importFromBarrel`, `namespaceImportPackages`, and `no-import-from-barrel-package` for this. Atlassian saw **>30%** highlighting and **minutes → usable** hover after de-barrelling a large app (their barrels were *internal*, but the mechanism is the same: TS must load every re-export).
 
@@ -375,7 +375,7 @@ So: **if you are writing Effect, you do not import from `"effect"`. If you are t
 
 3. **Per-function shaking inside `Effect.ts` / top-level `Schema.Struct` in *your* modules / static Layer fields on classes.** Import style does not fix these. #5967 (closed not planned) and tsgo#471 are the real leftover byte leaks.
 
-4. **Official onboarding.** Docs, playground, vitest README, and LLM guides still lead with `import { Effect } from "effect"`. A repo that forbids that will fight every copy-paste from effect.website.
+4. **Official onboarding.** Docs, playground, vitest README, and LLM guides still lead with `import { Effect } from "<legacy-effect-barrel>"`. A repo that forbids that will fight every copy-paste from effect.website.
 
 5. **Vite deep-import fragmentation.** Switching a Vite app to many `effect/Effect`, `effect/Schema`, … specifiers can create **more** `optimizeDeps` entries, not fewer. Worth measuring; not automatically a cold-start win.
 
@@ -389,12 +389,12 @@ Treat import style as a **runtime-graph and TS-graph** change, not a production-
 | **Internal `@beep/*` libraries** consumed by those servers *and* by frontends | **Migrate (lib-land).** Match Effect's own eslint rule. | Protects esbuild consumers; avoids re-exporting the barrel. |
 | **Bundled SPAs (Vite+Rollup/Rolldown, Rspack)** | **Optional.** Production bytes likely unchanged. Consider it for tsserver / Vite-dev if profiling shows `effect` in the pre-bundle. Don't expect a 3× gzip drop. | Docs + Arnaldi: this is the “use a real bundler” case. |
 | **Next.js app** | Already rewritten at compile time for `effect` / `@effect/*`. Import style is cosmetic for Next's compiler; still matters for `tsc` and for any route that externalizes `effect`. | Next.js default list since 2024-05. |
-| **Type-only** | `import type { Effect } from "effect"` is fine (eslint plugin explicitly allows it). | No runtime graph. |
+| **Type-only** | `import type { Effect } from "<legacy-effect-barrel>"` is fine (eslint plugin explicitly allows it). | No runtime graph. |
 
 Practical split that matches upstream, not a purity crusade:
 
 - **Law for packages and unbundled entrypoints:** `import * as Effect from "effect/Effect"` (and the same for Schema, Layer, …). Autofix exists.
-- **Allowed in app UI that is fully bundled by Rollup/Rspack, if you want docs-compatibility:** `import { Effect } from "effect"`, knowing you pay TS and (maybe) Vite-dev.
+- **Allowed in app UI that is fully bundled by Rollup/Rspack, if you want docs-compatibility:** `import { Effect } from "<legacy-effect-barrel>"`, knowing you pay TS and (maybe) Vite-dev.
 - **Never expect** the named-barrel rewrite to shrink a Rollup SPA the way it shrinks a Zod-on-esbuild Worker. Measure servers/tests/tsserver; treat frontend gzip as a sanity check, not the success metric.
 
 **Bottom line:** The premise is **true, but for the reasons people usually aren't looking at.** It is not “named imports bloat production bundles of well-configured Vite/Webpack apps.” It is “named imports from Effect's namespace-re-export barrel force the entire stdlib into the **module graph** that TypeScript, Node, bun, tests, and esbuild will actually walk.” For a mixed bundled-frontend + unbundled-server monorepo, that is a real migration, and the server/test/IDE side is where the receipts will show up.

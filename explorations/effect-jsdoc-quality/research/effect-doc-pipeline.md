@@ -50,7 +50,7 @@ The grammar it enforces (the portable asset — key constants in
    exactly one non-empty ` ```ts ` fence; titles are unique per block
    (case-insensitive); a ts fence outside an Example section is a diagnostic
    (`loose-ts-fence`). Examples must use **named imports**
-   (`import { Option } from "effect"`).
+   (`import { Option } from "<legacy-effect-barrel>"`).
 4. **Tags last**, separated by one blank line, whitelisted and ordered:
    `@deprecated` → `@default` → `@see` → `@category` → `@since` (`tagOrder`).
    Nothing else is permitted — `@example` produces `forbidden-tag`:

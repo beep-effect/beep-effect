@@ -12,10 +12,14 @@ import {
   ExtractionRecord,
   IdentificationError,
 } from "@beep/law-practice-use-cases/DocumentIdentification";
-import { Context, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as M from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 

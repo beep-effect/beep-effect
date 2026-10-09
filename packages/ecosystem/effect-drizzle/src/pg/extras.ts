@@ -16,11 +16,11 @@ import {
   uniqueIndex as drizzleUniqueIndex,
   PgDialect,
 } from "drizzle-orm/pg-core";
-import { Match } from "effect";
 import { isArray } from "effect/Array";
 import { taggedEnum } from "effect/Data";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import { fromUndefinedOr, match } from "effect/Option";
 import { hasProperty, isObject, isString, isUndefined } from "effect/Predicate";
 import { String as StringSchema, TaggedError } from "effect/Schema";

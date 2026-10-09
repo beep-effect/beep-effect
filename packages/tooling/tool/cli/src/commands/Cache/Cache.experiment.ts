@@ -5,10 +5,13 @@
  * @since 0.0.0
  */
 import { Sha256HexFromBytes } from "@beep/schema";
-import { Duration, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

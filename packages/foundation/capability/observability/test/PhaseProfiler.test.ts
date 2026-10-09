@@ -3,9 +3,17 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it as loggerSubjectIt } from "@effect/vitest";
 import { assertDefined, assertNone, assertTrue } from "@effect/vitest/utils";
-import { Cause, Context, Effect, Equal, Exit, Layer, Logger, Metric, References } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
+import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
+import * as References from "effect/References";
 import * as S from "effect/Schema";
 
 const decodePhaseProfileOption = S.decodeOption(PhaseProfile);
@@ -88,22 +96,17 @@ describe("PhaseProfiler", () => {
       const failed = Metric.counter("test_phase_failed_outcomes_total");
 
       const expectedError = TestPhaseError.make({ message: "boom" });
-      const exit = yield* Effect.exit(
-        profilePhase(
-          {
-            phase: "indexing",
-            attributes: { run_kind: "index" },
-            failed,
-          },
-          Effect.fail(expectedError)
-        )
+      const exit = yield* expectedError.pipe(
+        Effect.fail,
+        profilePhase({ phase: "indexing", attributes: { run_kind: "index" }, failed }),
+        Effect.exit
       );
 
       const failedState = yield* Metric.value(
         Metric.withAttributes(failed, { phase: "indexing", run_kind: "index", outcome: "failed" })
       );
 
-      assertTrue(Exit.isFailure(exit));
+      if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
       expect(exit.cause.reasons).toHaveLength(1);
       const reason = exit.cause.reasons[0];
       assertDefined(reason);
@@ -137,8 +140,8 @@ describe("PhaseProfiler", () => {
             Metric.withAttributes(interrupted, { phase: "stream", outcome: "interrupted" })
           );
 
-          assertTrue(Exit.isFailure(exit));
-          assertTrue(Cause.hasInterruptsOnly(exit.cause));
+          if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
+          assertTrue(exit.cause.pipe(Cause.hasInterruptsOnly));
           expect(interruptedState.count).toBe(1);
           expect(annotations).toHaveLength(1);
           expect(annotations[0]?.cause_classification).toBe("interrupted");

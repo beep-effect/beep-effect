@@ -19,11 +19,17 @@ import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as Struct from "effect/Struct";
 import * as TestConsole from "effect/testing/TestConsole";
 

@@ -15,8 +15,10 @@ import {
 } from "@beep/repo-cli/commands/Worktree";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Config, Effect, Stream } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import { ChildProcess } from "effect/process";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { fixture, ReferenceFixture, referenceFixtureLayer, testPlatform, writeExecutable } from "./refs-test-utils.ts";
 

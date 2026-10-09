@@ -12,8 +12,8 @@ import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
 import { assertFalse } from "@effect/vitest/utils";
-import { pipe } from "effect";
 import * as A from "effect/Array";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 
 const isBoxBlockedByAmbiguity = S.is(BoxBlockedByAmbiguity);

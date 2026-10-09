@@ -10,11 +10,15 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Effect, FileSystem, identity, Path, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { decodeYamlTextWith } from "../../../../internal/schema/TextCodec.ts";
 import {
   VersionCategoryReport,

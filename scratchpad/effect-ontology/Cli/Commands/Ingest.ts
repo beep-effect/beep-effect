@@ -9,9 +9,13 @@ import type * as Crypto from "effect/Crypto";
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import type { PlatformError } from "effect";
-import { Console, DateTime, Effect, FileSystem, Path, Random } from "effect";
+import type * as PlatformError from "effect/PlatformError";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
+import * as Random from "effect/Random";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";

@@ -10,7 +10,10 @@
  */
 
 import { IRI } from "@beep/rdf/Iri";
-import { Console, Effect, FileSystem, Result } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Result from "effect/Result";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";

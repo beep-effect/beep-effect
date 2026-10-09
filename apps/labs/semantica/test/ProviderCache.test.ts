@@ -7,27 +7,25 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertSome, assertTrue } from "@effect/vitest/utils";
-import {
-  ConfigProvider,
-  Deferred,
-  Duration,
-  Effect,
-  Fiber,
-  FileSystem,
-  Layer,
-  Path,
-  pipe,
-  Ref,
-  Result,
-  Stream,
-} from "effect";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Response from "effect/ai/Response";
 import * as Clock from "effect/Clock";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Deferred from "effect/Deferred";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Queue from "effect/Queue";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
 import {

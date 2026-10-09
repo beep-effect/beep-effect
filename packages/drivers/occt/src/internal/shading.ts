@@ -8,7 +8,8 @@
  */
 
 import { A, O } from "@beep/utils";
-import { Order, pipe } from "effect";
+import { pipe } from "effect/Function";
+import * as Order from "effect/Order";
 import * as replicad from "replicad";
 import { add, cross, dot, scale, unit } from "./vector.ts";
 import type { OpenCascadeInstance } from "replicad-opencascadejs";
@@ -148,7 +149,7 @@ const shadeFace =
           hatchFace({ oc, face, step: hatchStep(normal, direction, eye), eye, pitch })
         )
       ),
-      O.getOrElse(() => A.empty<replicad.Edge>())
+      O.getOrElse(A.empty<replicad.Edge>)
     );
   };
 

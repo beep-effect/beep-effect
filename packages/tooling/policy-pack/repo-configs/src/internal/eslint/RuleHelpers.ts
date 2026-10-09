@@ -1,5 +1,5 @@
 import { A } from "@beep/utils";
-import { flow } from "effect";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 
 /**

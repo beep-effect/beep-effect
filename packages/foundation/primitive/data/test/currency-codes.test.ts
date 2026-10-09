@@ -11,7 +11,7 @@ import {
 import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 
 describe("CurrencyCodes", () => {
   it("exports the generated ISO 4217 data through the public module", () => {

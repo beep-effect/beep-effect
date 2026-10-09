@@ -18,7 +18,7 @@ Every frontend feature follows this exact sequence.
 ## Step 1: Define the service
 
 ```ts
-import { Context } from "effect"
+import * as Context from "effect/Context";
 
 class TodoService extends Context.Service<TodoService, {
   readonly list: Effect.Effect<ReadonlyArray<Todo>>

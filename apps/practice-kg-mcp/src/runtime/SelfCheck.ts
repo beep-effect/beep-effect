@@ -10,10 +10,15 @@ import { DuckDb } from "@beep/duckdb";
 import { $PracticeKgMcpId } from "@beep/identity/packages";
 import { PracticeKgQueries, PracticeKgSchemaVersions, PracticeKgToolkit } from "@beep/law-practice-server";
 import * as OptionUtils from "@beep/utils/Option";
-import { Console, Effect, FileSystem, flow, Layer, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -287,8 +292,7 @@ const requireStore = Effect.fn("PracticeKgSelfCheck.requireStore")(function* (bu
  *
  * ```ts
  * import { runPracticeKgSelfCheck } from "../../src/runtime/SelfCheck.ts"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const check = runPracticeKgSelfCheck("/bundle")
  * console.log(Effect.isEffect(check)) // true
  * ```
@@ -335,8 +339,7 @@ export const runPracticeKgSelfCheck = Effect.fn("PracticeKgSelfCheck.run")(funct
  *
  * ```ts
  * import { printPracticeKgSelfCheck, runPracticeKgSelfCheck } from "../../src/runtime/SelfCheck.ts"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const printing = printPracticeKgSelfCheck(runPracticeKgSelfCheck("/bundle"))
  * console.log(Effect.isEffect(printing)) // true
  * ```

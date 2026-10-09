@@ -6,7 +6,10 @@
  */
 
 import { $DocumentsServerId } from "@beep/identity/packages";
-import { Config, Context, Effect, Layer } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({

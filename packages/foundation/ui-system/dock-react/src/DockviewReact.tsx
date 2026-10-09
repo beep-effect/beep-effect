@@ -221,7 +221,7 @@ const DockviewRoot = (
  * ```ts
  * import { GroupId, makeDockAtoms, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
  * import { DockviewReact } from "@beep/dock-react"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { createElement } from "react"
  *
  * const workspace = PopulatedWorkspace.make({

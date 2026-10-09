@@ -18,9 +18,13 @@ import {
 } from "@beep/repo-ai-metrics";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, pipe, Str } from "@beep/utils";
-import { Config, Console, DateTime, Effect, Match } from "effect";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { jsonFlag } from "../../internal/cli/Flags.ts";

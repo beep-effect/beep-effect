@@ -19,8 +19,9 @@ import { makeDrizzleThreadStore } from "@beep/workspace-server/aggregates/Thread
 import * as ThreadStoreServer from "@beep/workspace-use-cases/server";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";

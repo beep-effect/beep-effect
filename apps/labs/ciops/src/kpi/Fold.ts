@@ -13,13 +13,18 @@
 
 import { $CiopsId } from "@beep/identity/packages";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { DateTime, Effect, HashMap, Match, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Match from "effect/Match";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { PosInt } from "../projection/PosInt.ts";
 import {
@@ -79,7 +84,7 @@ const sensitivityBoundsMs: ReadonlyArray<PosInt> = [PosInt.make(900_000), PosInt
  * **Example** (Read the window start)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { kpiWindows } from "@/kpi/Fold"
  *
  * console.log(DateTime.formatIso(kpiWindows[0].start)) // "2026-09-03T06:29:33.572Z"
@@ -140,7 +145,7 @@ const hostedSeriesTiers: ReadonlyArray<KpiTier> = ["ci-merge-green"];
  *
  * ```ts
  * import { Sha256Hex } from "@beep/schema/Sha256"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { changeEventTable } from "@/kpi/ChangeEvents"
  * import { KpiFoldInput } from "@/kpi/Fold"
  * import { AdoptionTable, PinnedKpiInput } from "@/kpi/Schemas"
@@ -255,7 +260,7 @@ const percentileSet = (values: ReadonlyArray<number>): PercentileSet =>
  * **Example** (Classify a cheap-gates publish)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  * import { classifyAttempt } from "@/kpi/Fold"
  * import { FleetAttempt } from "@/kpi/Sources"
@@ -893,7 +898,7 @@ const probesOf =
  * **Example** (Probe an empty fleet)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { changeEventTable } from "@/kpi/ChangeEvents"
  * import { adoptionProbes } from "@/kpi/Fold"
  *

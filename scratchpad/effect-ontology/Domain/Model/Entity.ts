@@ -13,10 +13,13 @@ import { IRI } from "@beep/rdf";
 import type { ProvRecord } from "@beep/rdf/Prov";
 import { ObjectRef, Activity as ProvActivity, ProvBundle, Entity as ProvEntity } from "@beep/rdf/Prov";
 import { LiteralKit } from "@beep/schema";
-import { Hash, pipe, SchemaGetter, Tuple, Effect } from "effect";
+import * as Hash from "effect/Hash";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as Tuple from "effect/Tuple";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ChunkId, DocumentId, GcsUri } from "../Identity.ts";
@@ -579,27 +582,27 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
   }
 
   /**
-   * Structural equality over the RDF-like subject-predicate-object signature.
-   *
-   * **Example** (Use return)
-   *
-   * ```ts
-   * import { Equal } from "effect"
-   * import * as O from "effect/Option"
-   * import * as S from "effect/Schema"
-   * import { Relation } from "@effect-ontology/Model/Entity"
-   *
-   * const relation = S.decodeUnknownOption(Relation)({
-   *   subjectId: "alice",
-   *   predicate: "https://schema.org/knows",
-   *   object: { _tag: "EntityReference", value: "bob" }
-   * })
-   * console.log(O.map(relation, (value) => Equal.equals(value, value))) // Some(true)
-   * ```
-   *
-   * @param that - Relation to compare with this value.
-   * @returns `true` when subject, predicate, and object are structurally equal.
-   */
+     * Structural equality over the RDF-like subject-predicate-object signature.
+     *
+     * **Example** (Use return)
+     *
+     * ```ts
+     * import * as Equal from "effect/Equal";
+     * import * as O from "effect/Option"
+     * import * as S from "effect/Schema"
+     * import { Relation } from "@effect-ontology/Model/Entity"
+     *
+     * const relation = S.decodeUnknownOption(Relation)({
+     *   subjectId: "alice",
+     *   predicate: "https://schema.org/knows",
+     *   object: { _tag: "EntityReference", value: "bob" }
+     * })
+     * console.log(O.map(relation, (value) => Equal.equals(value, value))) // Some(true)
+     * ```
+     *
+     * @param that - Relation to compare with this value.
+     * @returns `true` when subject, predicate, and object are structurally equal.
+     */
   [Eq.symbol](that: Relation): boolean {
     return (
       Eq.equals(this.subjectId, that.subjectId) &&
@@ -609,27 +612,27 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
   }
 
   /**
-   * Structural hash over the RDF-like subject-predicate-object signature.
-   *
-   * **Example** (Inspect an empty graph)
-   *
-   * ```ts
-   * import { Hash } from "effect"
-   * import { N } from "@beep/utils"
-   * import * as O from "effect/Option"
-   * import * as S from "effect/Schema"
-   * import { Relation } from "@effect-ontology/Model/Entity"
-   *
-   * const relation = S.decodeUnknownOption(Relation)({
-   *   subjectId: "alice",
-   *   predicate: "https://schema.org/knows",
-   *   object: { _tag: "EntityReference", value: "bob" }
-   * })
-   * console.log(O.map(relation, (value) => N.isInteger(Hash.hash(value)))) // Some(true)
-   * ```
-   *
-   * @returns A deterministic hash consistent with relation equality.
-   */
+     * Structural hash over the RDF-like subject-predicate-object signature.
+     *
+     * **Example** (Inspect an empty graph)
+     *
+     * ```ts
+     * import * as Hash from "effect/Hash";
+     * import { N } from "@beep/utils"
+     * import * as O from "effect/Option"
+     * import * as S from "effect/Schema"
+     * import { Relation } from "@effect-ontology/Model/Entity"
+     *
+     * const relation = S.decodeUnknownOption(Relation)({
+     *   subjectId: "alice",
+     *   predicate: "https://schema.org/knows",
+     *   object: { _tag: "EntityReference", value: "bob" }
+     * })
+     * console.log(O.map(relation, (value) => N.isInteger(Hash.hash(value)))) // Some(true)
+     * ```
+     *
+     * @returns A deterministic hash consistent with relation equality.
+     */
   [Hash.symbol](): number {
     return pipe(
       Hash.hash(this.subjectId),

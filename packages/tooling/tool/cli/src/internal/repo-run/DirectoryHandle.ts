@@ -8,14 +8,15 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, Path } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
-import type { FileSystem } from "effect";
+import type * as FileSystem from "effect/FileSystem";
 import type * as Scope from "effect/Scope";
 
 const $I = $RepoCliId.create("internal/repo-run/DirectoryHandle");
@@ -168,7 +169,8 @@ export const sameDirectoryIdentity: {
  *
  * ```ts
  * import { directoryIdentity } from "@beep/repo-cli/test/RepoRun"
- * import { Effect, FileSystem } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
  * import * as O from "effect/Option"
  *
  * const program = Effect.gen(function* () {

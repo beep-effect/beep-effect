@@ -9,10 +9,10 @@ import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch";
 import { VaultFilingContext } from "@beep/documents-domain/values/Taxonomy";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import * as S from "effect/Schema";
 import type { Document } from "@beep/documents-domain/aggregates/Document";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type { DocumentIntakeError } from "./Document.errors.ts";
 
 const $I = $DocumentsUseCasesId.create("aggregates/Document/DocumentIntake");
@@ -124,8 +124,7 @@ export class IntakeDroppedFileInput extends S.Class<IntakeDroppedFileInput>($I`I
  *
  * ```ts
  * import type { DocumentIntakeShape } from "@beep/documents-use-cases/public"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const service: DocumentIntakeShape = {
  *   intakeDroppedFile: () => Effect.die("not implemented")
  * }
@@ -147,8 +146,7 @@ export interface DocumentIntakeShape {
  * ```ts
  * import { DocumentIntake } from "@beep/documents-use-cases/public"
  * import type { DocumentIntakeShape } from "@beep/documents-use-cases/public"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const service: DocumentIntakeShape = {
  *   intakeDroppedFile: () => Effect.die("not implemented")
  * }

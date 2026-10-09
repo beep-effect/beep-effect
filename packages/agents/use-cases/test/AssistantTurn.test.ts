@@ -18,11 +18,13 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, Result, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 const userItem = (text: string) => UserTurnHistoryItem.make({ text });
 const assistantItem = (text: string) => AssistantTurnHistoryItem.make({ text });

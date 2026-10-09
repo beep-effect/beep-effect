@@ -10,7 +10,9 @@ import {
 } from "@beep/tika";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Order, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { makeExtractOperationFixture } from "./fixtures.ts";
 import type { FileProcessingOperationErrorReason } from "@beep/file-processing/Operation";

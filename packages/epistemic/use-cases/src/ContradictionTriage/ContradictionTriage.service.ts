@@ -6,9 +6,9 @@
  */
 
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import type { ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type { GetContradictionCandidate, ReviewContradictionCandidate } from "./ContradictionTriage.commands.ts";
 import type { ContradictionCandidatePage } from "./ContradictionTriage.ports.ts";
 import type {

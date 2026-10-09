@@ -36,7 +36,7 @@ live runner and does not default any command to either PACER environment.
 ## Example
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import { FetchHttpClient } from "effect/http"
 import { PacerConfigLoadOptions, PclClient, loadPacerConfig, makePacerLayer } from "@beep/pacer"
 

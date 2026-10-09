@@ -12,8 +12,10 @@ import { makeLayer as makePgliteLayer } from "@beep/pglite";
 import * as Rdf from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
-import { Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -75,7 +77,7 @@ CROSS JOIN corpus c`,
  * **Example** (Assemble canonical projection input)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as A from "effect/Array"
  * import { CanonicalNormalizedFixtures } from "@/domain/Bundle"
  * import { buildReferenceData } from "@/domain/ReferenceData"
@@ -383,7 +385,7 @@ SELECT ?class WHERE { ?class rdf:type owl:Class } ORDER BY ?class`,
  * **Example** (Build the canonical in-memory snapshot)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { CanonicalNormalizedFixtures } from "@/domain/Bundle"
  * import { buildReferenceData } from "@/domain/ReferenceData"
  * import {
@@ -462,7 +464,7 @@ export const buildProjectionSnapshot = Effect.fn("lejeune.projection.build")(fun
  * **Example** (Verify a freshly built snapshot)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { CanonicalNormalizedFixtures } from "@/domain/Bundle"
  * import { buildReferenceData } from "@/domain/ReferenceData"
  * import {
@@ -541,7 +543,7 @@ export const verifyDurableProjectionSnapshot = Effect.fn("lejeune.projection.ver
  * **Example** (Construct an in-memory layer)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { makeProjectionLayer, ProjectionLayerOptions } from "@/runtime/Projections"
  *
  * const layer = makeProjectionLayer(ProjectionLayerOptions.make({ duckDbPath: ":memory:" }))

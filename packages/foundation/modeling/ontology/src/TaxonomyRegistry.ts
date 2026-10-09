@@ -7,8 +7,8 @@
 
 import { $OntologyId } from "@beep/identity/packages";
 import { IRIReference } from "@beep/rdf";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ConceptAlignment, DocumentClass, FilingRootKind, FilingSegment } from "./SemanticFoundation.models.ts";
@@ -144,7 +144,7 @@ const pathFor = (input: LibrarianInput, concept: TaxonomyConcept, rootSegment: s
  * **Example** (Run loop returning Effect)
  *
  * ```ts import.meta.vitest name="Run loop returning Effect"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { IRIReference } from "@beep/rdf"
  * import { SemanticFoundationSeed } from "@beep/ontology/SemanticFoundation.seed"
  * import { LibrarianInput, runLibrarianLoop } from "@beep/ontology/TaxonomyRegistry"

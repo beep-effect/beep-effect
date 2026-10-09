@@ -37,7 +37,7 @@ const DoubleChecks = S.makeFilter(isProtobufDoubleValue, {
  * **Example** (Decode double number value)
  *
  * ```ts import.meta.vitest name="Decode double number value"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Double } from "@beep/schema/Double"
  *

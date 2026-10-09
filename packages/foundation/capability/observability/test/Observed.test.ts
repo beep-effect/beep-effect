@@ -3,8 +3,10 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertDefined, assertExitSuccess, assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Exit } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
 
 const decodeToCodecJsonObservedCause = S.decodeUnknownEffect(S.toCodecJson(ObservedCause));
@@ -56,7 +58,7 @@ describe("Observed", () => {
   it.effect(
     "round-trips a failed Exit through the observed schema",
     Effect.fnUntraced(function* () {
-      const exit = Exit.failCause(Cause.fail(TestObservedError.make({ message: "kapow" })));
+      const exit = TestObservedError.make({ message: "kapow" }).pipe(Cause.fail, Exit.failCause);
       const encoded = yield* encodeToCodecJsonObservedExit(exit);
       const encodedTag = yield* decodeUnknownStructInlineSchema(encoded);
 

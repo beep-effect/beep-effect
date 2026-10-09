@@ -39,7 +39,6 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe } from "@effect/vitest";
 import { assertExitFailure, assertExitSuccess, assertTrue } from "@effect/vitest/utils";
-import { Match, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -49,11 +48,13 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
@@ -256,14 +257,16 @@ describe("M365 MCP server", () => {
     ([failure, config]) => {
       assert.isTrue(
         sameM365ToolError(
-          Result.getOrThrow(decodeM365ToolErrorResult(Result.getOrThrow(encodeM365ToolErrorResult(failure)))),
+          encodeM365ToolErrorResult(failure).pipe(Result.getOrThrow, decodeM365ToolErrorResult, Result.getOrThrow),
           failure
         )
       );
       assert.isTrue(
         sameM365McpServerConfig(
-          Result.getOrThrow(
-            decodeM365McpServerConfigResult(Result.getOrThrow(encodeM365McpServerConfigResult(config)))
+          encodeM365McpServerConfigResult(config).pipe(
+            Result.getOrThrow,
+            decodeM365McpServerConfigResult,
+            Result.getOrThrow
           ),
           config
         )

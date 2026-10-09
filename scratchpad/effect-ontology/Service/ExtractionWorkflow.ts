@@ -11,8 +11,8 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import type { Effect } from "effect";
-import { Context } from "effect";
+import type * as Effect from "effect/Effect";
+import * as Context from "effect/Context";
 import type { ExtractionError } from "../Domain/Error/Extraction.ts";
 import type { RunConfig } from "../Domain/Model/ExtractionRun.ts";
 import type { ExtractionOutcome } from "../Domain/Model/ExtractionTelemetry.ts";
@@ -37,7 +37,7 @@ export interface ExtractionWorkflowMethods {
  * **Example** (Inspect extraction workflow)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExtractionWorkflow } from "@effect-ontology/Service/ExtractionWorkflow"
  *
  * const program = Effect.gen(function* () {

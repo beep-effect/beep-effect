@@ -4,9 +4,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Clock, Context, DateTime, Effect, Layer } from "effect";
-
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 /**
  * Constructs a `DateTime.Utc` from any supported `DateTime` input.
  *

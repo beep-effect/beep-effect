@@ -32,11 +32,14 @@ import { assertSchemaArbitraryDecodesToSelf, provideScopedLayer } from "@beep/te
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertInstanceOf, assertNone } from "@effect/vitest/utils";
-import { Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

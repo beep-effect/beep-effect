@@ -1,7 +1,10 @@
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 
 const DEFAULT_OUTPUT_DIRECTORY = "fixtures/f1/documents";
 
@@ -44,8 +47,7 @@ const invalidDocument = Uint8Array.from(
  *
  * ```ts
  * import { generateF1TextFixtures } from "../scripts/generate-f1-text"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(generateF1TextFixtures("/tmp/f1"))) // true
  * ```
  *
@@ -61,11 +63,10 @@ export const generateF1TextFixtures = Effect.fn("generateF1TextFixtures")(functi
 });
 
 if (import.meta.main) {
-  BunRuntime.runMain(
-    Effect.scoped(
-      Layer.build(BunServices.layer).pipe(
-        Effect.flatMap((context) => generateF1TextFixtures(DEFAULT_OUTPUT_DIRECTORY).pipe(Effect.provide(context)))
-      )
-    )
+  BunServices.layer.pipe(
+    Layer.build,
+    Effect.flatMap((context) => generateF1TextFixtures(DEFAULT_OUTPUT_DIRECTORY).pipe(Effect.provide(context))),
+    Effect.scoped,
+    BunRuntime.runMain
   );
 }

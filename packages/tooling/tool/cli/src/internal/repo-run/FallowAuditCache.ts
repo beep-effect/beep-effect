@@ -16,7 +16,11 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
-import { Effect, FileSystem, Number as N, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as N from "effect/Number";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { configuredPath, resolveBeepCacheRoot } from "./BeepCacheRoot.ts";
 
@@ -136,8 +140,7 @@ const isCacheMaxAgeDays = S.is(FallowAuditCacheSettings.fields.maxAgeDays);
  *
  * ```ts
  * import { resolveFallowAuditCacheSettings } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(resolveFallowAuditCacheSettings())) // true
  * ```
  *
@@ -174,8 +177,7 @@ export const resolveFallowAuditCacheSettings = Effect.fn("FallowAuditCache.resol
  *
  * ```ts
  * import { ensureFallowAuditCacheRoot, FallowAuditCacheSettings } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const settings = FallowAuditCacheSettings.make({ root: "/home/dev/.cache/beep/fallow", maxAgeDays: 2 })
  * console.log(Effect.isEffect(ensureFallowAuditCacheRoot(settings))) // true
  * ```

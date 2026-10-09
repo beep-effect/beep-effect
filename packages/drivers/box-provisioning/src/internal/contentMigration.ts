@@ -1,7 +1,8 @@
 import { $BoxProvisioningId } from "@beep/identity";
-import { MutableHashMap, Order } from "effect";
 import * as A from "effect/Array";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { boxNameEquivalenceKey } from "../BoxProvisioningIntent.ts";
 import type { BoxContentMigrationFile, BoxContentMigrationMap } from "../BoxContentMigrationMap.ts";

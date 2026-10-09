@@ -8,7 +8,7 @@
 import { $AiSyncId } from "@beep/identity/packages";
 import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 

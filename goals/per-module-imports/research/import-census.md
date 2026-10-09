@@ -962,10 +962,10 @@ Counts in this section are syntactic occurrences in the same ripgrep-backed code
 
 | Form | Files | Statements | Named/star split | Examples |
 | --- | ---: | ---: | --- | --- |
-| `export … from "effect"` | 0 | 0 | named 0; star 0 | — |
+| `export … from "<legacy-effect-barrel>"` | 0 | 0 | named 0; star 0 | — |
 | Foundation-root re-export | 1 | 1 | named 1; star 0 | `packages/foundation/modeling/md/src/Md.html.ts:249` |
 
-The sole executable re-export is `export { safeHtmlValue } from "@beep/html"`; it maps as a named re-export from `@beep/html/Html.serialize` (`packages/foundation/modeling/html/src/Html.serialize.ts:740`). There are no executable `export * from "effect"` or named Effect-root re-exports.
+The sole executable re-export is `export { safeHtmlValue } from "@beep/html"`; it maps as a named re-export from `@beep/html/Html.serialize` (`packages/foundation/modeling/html/src/Html.serialize.ts:740`). There are no executable `export * from "<legacy-effect-barrel>"` or named Effect-root re-exports.
 
 ### Type syntax, mixed imports, and aliases
 
@@ -1093,10 +1093,10 @@ Apps, packages, and tests are in scope, so the 1,005 test statements are migrati
 
 | Form | Files | Occurrences | Handling | Examples |
 | --- | ---: | ---: | --- | --- |
-| `import("effect")` | 2 | 3 | split destructured/root-namespace use by target module | `packages/tooling/tool/cli/src/bin-main.ts:29`; `packages/tooling/tool/cli/src/bin-main.ts:93`; `packages/agents/server/test/AnthropicTurnKernel.test.ts:30-36` |
+| `import("<legacy-effect-barrel>")` | 2 | 3 | split destructured/root-namespace use by target module | `packages/tooling/tool/cli/src/bin-main.ts:29`; `packages/tooling/tool/cli/src/bin-main.ts:93`; `packages/agents/server/test/AnthropicTurnKernel.test.ts:30-36` |
 | `import("@beep/<foundation>")` | 1 | 1 | `{ A }` → dynamic `@beep/utils/Array` namespace | `packages/tooling/tool/cli/src/bin-main.ts:28` |
-| type-level `import("effect")` | 2 | 3 | rewrite each qualifier to its module | `packages/tooling/tool/cli/src/bin-main.ts:111`; `packages/tooling/tool/cli/src/bin-main.ts:168`; `scratchpad/effect-ontology/Service/Config.ts:438` |
-| `require("effect")` or foundation root | 0 | 0 | none | — |
+| type-level `import("<legacy-effect-barrel>")` | 2 | 3 | rewrite each qualifier to its module | `packages/tooling/tool/cli/src/bin-main.ts:111`; `packages/tooling/tool/cli/src/bin-main.ts:168`; `scratchpad/effect-ontology/Service/Config.ts:438` |
+| `require("<legacy-effect-barrel>")` or foundation root | 0 | 0 | none | — |
 | String/template containing import source code | 10 | 25 string literals | update generator templates/positive fixtures; keep deliberate forbidden-syntax fixtures | `packages/drivers/runpod/scripts/generate.ts:439`; `packages/tooling/policy-pack/lint-rules/test/oxlint-sources.ts:139-161` |
 | Other exact `"effect"` string | 29 | 54 | do not rewrite blindly; mostly dependency names, externals, and data | `packages/ecosystem/effect-drizzle/test/bundle-build.ts:12`; `packages/foundation/modeling/md/test/Md.test.ts:1037` |
 
@@ -1114,7 +1114,7 @@ The CLI dynamic import at `packages/tooling/tool/cli/src/bin-main.ts:93` destruc
 | Namespace conversion changes type syntax | 254 statement-level type imports, two mixed imports, 133 aliased bindings, 281 pre-existing Effect destination pairs, and 54 foundation destination pairs require more than textual replacement. | Use an AST codemod: preserve local aliases and `type`, emit `import type * as` where appropriate, group by target module, and merge with existing declarations. Format only touched files. |
 | Generated output is overwritten | 35 target imports occur in 21 generated files; at least one generator template embeds a root import (`packages/drivers/runpod/scripts/generate.ts:439`). | Patch the owning generator/template first, regenerate, and verify generated diffs. Classify lint-rule negative fixtures separately so intentionally forbidden examples remain test inputs. |
 | Documentation silently remains noncompliant | JSDoc and Markdown contribute 3,449 target import statements beyond executable code. Some are already invalid against current v4 (`TestClock` at the root, `TaggedErrorClass`, and two stale `VERSION` examples). | Give the codemod comment/fence modes, then run docgen. Route stale APIs to manual review rather than inventing a subpath. Include `.claude/skills/**` in enforcement or a companion docs audit. |
-| Dynamic imports cannot always be one-for-one | Four dynamic root imports and three `import("effect")` type references exist. One CLI statement destructures five modules and one mock treats the Effect root as a namespace. | Split dynamic loads by target module, preferably with `Promise.all` where laziness matters; rewrite import-type qualifiers individually. Keep these in a manual-review output bucket. |
+| Dynamic imports cannot always be one-for-one | Four dynamic root imports and three `import("<legacy-effect-barrel>")` type references exist. One CLI statement destructures five modules and one mock treats the Effect root as a namespace. | Split dynamic loads by target module, preferably with `Promise.all` where laziness matters; rewrite import-type qualifiers individually. Keep these in a manual-review output bucket. |
 | Bundler externalization may match only the root | The existing effect-drizzle bundle probe explicitly externalizes both `effect` and `effect/*` (`packages/ecosystem/effect-drizzle/test/bundle-build.ts:12`), demonstrating the required pattern. Other bundler/plugin configurations may use exact-root matching. | Audit `external`, `noExternal`, dependency scanners, and transform allowlists for prefix handling. Run the measured pilot bundle before mass migration. |
 | Lint/policy rules may encode the old source set | Existing policy rules sometimes list both root and leaf sources, for example schema checks accept `effect` and `effect/Schema` (`packages/tooling/policy-pack/lint-rules/src/rules/no-opaque-instance-fields.ts:24`, `packages/tooling/policy-pack/lint-rules/src/rules/no-inline-schema-compile.ts:56`). | Update source classifiers and their fixtures in the same warn-phase PR as enforcement; retain root recognition until the error ratchet reaches zero. |
 | Lockfile/dependency assumptions | Rewriting module specifiers within the same declared packages should not change dependency versions. An unexpected `bun.lock` change would indicate a package/dependency edit, not the import migration itself. | Treat lockfile stability as a batch invariant. Export-map additions change package metadata/artifacts but should not trigger dependency resolution changes. |

@@ -6,8 +6,9 @@
  */
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, Layer, Logger } from "effect";
-
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 /**
  * Runs a finished program as the process main: the platform runner.
  *

@@ -1,7 +1,8 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { makePracticeIdentifyCommand } from "@/PracticeIdentify.command";
 import { IdentificationStages, IdentificationStagesShape } from "@/PracticeIdentify.config";
 

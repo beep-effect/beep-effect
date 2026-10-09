@@ -45,13 +45,19 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Context, Effect, Exit, HashMap, Layer, pipe, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type {
@@ -504,7 +510,7 @@ const titled = (input: CritiqueInput, title: string): boolean =>
 
 const entriesOf = Effect.gen(function* () {
   const harness = yield* Harness;
-  return A.fromIterable(HashMap.values(yield* Ref.get(harness.entries)));
+  return (yield* Ref.get(harness.entries)).pipe(HashMap.values, A.fromIterable);
 });
 
 const kinds = (entries: ReadonlyArray<DocketCalendarEntry>, kind: DocketCalendarEntry["kind"]) =>
@@ -1734,7 +1740,7 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const resumed = yield* intake.pollOnce(TODAY);
         const settled = yield* ledgerRecord("m1");
 
-        assertTrue(Exit.isFailure(killed));
+        killed.pipe(Exit.isFailure, assertTrue);
         // The kill left round 1 in the ledger and no attempt counted against the message.
         assertSome(
           O.map(interrupted, (record) => [tagOf(record.outcome), record.attempts, O.isSome(record.review)]),

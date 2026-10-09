@@ -17,8 +17,7 @@ import { NamedNode } from "@beep/rdf";
 import * as S from "effect/Schema";
 import { OntologyName, UUID } from "../Identity.ts";
 import { ClaimId, RdfObject } from "./KnowledgeModel.ts";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/CurationAction");
 
 const WikidataQid = S.String.check(

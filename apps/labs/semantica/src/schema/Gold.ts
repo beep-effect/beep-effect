@@ -2,15 +2,23 @@ import { $SemanticaId } from "@beep/identity/packages";
 import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Context, Effect, Equal, HashSet, identity, Number as N, SchemaGetter, SchemaIssue, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import { identity } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as N from "effect/Number";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaIssue from "effect/SchemaIssue";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { CorpusPaperId } from "@/corpus/Manifest";
 import { sha256TextSync } from "@/schema/Digest";
 import { CoreferenceCluster, StructureRole } from "@/schema/Evidence";
 import { ModelIdentity } from "@/schema/Model";
-import type { SchemaAST } from "effect";
+import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $SemanticaId.create("schema/Gold");
 
@@ -236,8 +244,7 @@ export class GoldRelationLabel extends S.Class<GoldRelationLabel>($I`GoldRelatio
  *
  * ```ts
  * import { CurrentGoldDocumentText } from "@/schema/Gold"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const text = CurrentGoldDocumentText.pipe(
  *   Effect.provideService(CurrentGoldDocumentText, "Canonical paper text")
  * )

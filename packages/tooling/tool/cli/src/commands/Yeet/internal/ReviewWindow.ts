@@ -18,9 +18,12 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Config, DateTime, Duration, Effect, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Config from "effect/Config";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -41,8 +44,7 @@ const $I = $RepoCliId.create("commands/Yeet/internal/ReviewWindow");
  *
  * ```ts
  * import { YEET_REVIEW_WINDOW_DEFAULT } from "@beep/repo-cli/test/Yeet"
- * import { Duration } from "effect"
- *
+ * import * as Duration from "effect/Duration";
  * console.log(Duration.toMinutes(YEET_REVIEW_WINDOW_DEFAULT)) // 20
  * ```
  *
@@ -81,8 +83,9 @@ export const YEET_REVIEW_WINDOW_ENV = "BEEP_YEET_REVIEW_WINDOW" as const;
  *
  * ```ts
  * import { YeetReviewWindowDuration } from "@beep/repo-cli/test/Yeet"
- * import { ConfigProvider, Duration, Effect } from "effect"
- *
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Duration from "effect/Duration";
+ * import * as Effect from "effect/Effect";
  * const program = YeetReviewWindowDuration.pipe(
  *   Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
  *   Effect.map(Duration.toMinutes)
@@ -288,8 +291,8 @@ interface YeetReviewWindowInstants {
  *
  * ```ts
  * import { decideYeetReviewWindow } from "@beep/repo-cli/test/Yeet"
- * import { DateTime, Duration } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
+ * import * as Duration from "effect/Duration";
  * const window = decideYeetReviewWindow({
  *   now: DateTime.makeUnsafe("2026-10-06T10:07:00Z"),
  *   pushedAt: DateTime.makeUnsafe("2026-10-06T10:00:00Z"),

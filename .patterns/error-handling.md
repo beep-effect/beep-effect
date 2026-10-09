@@ -9,7 +9,7 @@ Comprehensive error handling patterns used throughout the Effect library, emphas
 ### ❌ NEVER: try-catch in Effect.gen
 
 ```typescript
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate"
 // ❌ WRONG - This breaks Effect semantics
 Effect.gen(function*() {
@@ -232,7 +232,8 @@ export type ValidationErrorReason = typeof ValidationErrorReason.Type;
 The codebase uses flat error structures with union types for composition, not abstract base classes:
 
 ```typescript
-import {Data, Effect} from "effect";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
 import {$SomePackageId} from "@beep/identity/packages";
 
 }
@@ -366,7 +367,8 @@ const parsePositiveNumber = (input: string) =>
 For Promise-based operations:
 
 ```typescript
-import {flow, Effect} from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 // Network request with structured errors
 const fetchUser = flow(
   (id: string) => Effect.tryPromise({
@@ -454,7 +456,7 @@ const handleSpecificErrors = (input: string) =>
 Selectively handle certain errors:
 
 ```typescript
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 const handleRecoverableErrors = (input: string) =>
@@ -475,7 +477,8 @@ const handleRecoverableErrors = (input: string) =>
 
 ```typescript
 import { assert, describe, it } from "@effect/vitest"
-import { Effect, Exit } from "effect"
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as P from "effect/Predicate";
 describe("error handling", () => {
   it.effect("should fail with specific error", 
@@ -533,7 +536,7 @@ it.effect("should transform errors correctly",
 ### Error Transformation Utilities
 
 ```typescript
-import {Match} from "effect";
+import * as Match from "effect/Match";
 // Convert platform errors to domain errors
 const mapFileSystemError = Match.type<SystemError>()
 .pipe(

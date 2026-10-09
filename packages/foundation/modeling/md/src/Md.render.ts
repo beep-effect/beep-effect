@@ -9,12 +9,17 @@ import { $MdId } from "@beep/identity";
 import { HtmlFragment, SchemaUtils } from "@beep/schema";
 import { A, Html, R, thunkEmptyStr } from "@beep/utils";
 import { replaceAllWith } from "@beep/utils/Str";
-import { Effect, flow, identity, Match, Number as N, Order, Result, Tuple } from "effect";
-import { cast, constant, dual, pipe } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { cast, constant, dual, flow, identity, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { segmentInlineRuns } from "./Md.behavior.ts";
 import {
   BrowserSafeUrlPolicySpec,
@@ -176,7 +181,7 @@ export interface PureRenderAdapter<Output> {
  * **Example** (Defining an effectful adapter)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { EffectRenderAdapter } from "@beep/md/Md.render"
  *
  * const adapter: EffectRenderAdapter<Uint8Array> = {
@@ -909,7 +914,7 @@ export const renderWithUnsafe: {
  * **Example** (Starting effectful render unsafely)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Md } from "@beep/md"
  * import { renderEffectWithUnsafe } from "@beep/md/Md.render"
  *
@@ -951,7 +956,7 @@ export const renderEffectWithUnsafe: {
  * **Example** (Starting effectful render safely)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Md } from "@beep/md"
  * import { renderEffectWith } from "@beep/md/Md.render"
  *
@@ -1479,7 +1484,7 @@ export const PlainTextAdapter: PureRenderAdapter<string> = {
  * **Example** (Rendering with Result capture)
  *
  * ```ts import.meta.vitest name="Rendering with Result capture"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import { Md } from "@beep/md"
  * import { MarkdownAdapter, renderWith } from "@beep/md/Md.render"
  *
@@ -1513,7 +1518,7 @@ export const renderWith: {
  * **Example** (Rendering Markdown with Result)
  *
  * ```ts import.meta.vitest name="Rendering Markdown with Result"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import { Md } from "@beep/md"
  * import { render } from "@beep/md/Md.render"
  *
@@ -1538,7 +1543,7 @@ export const render = (document: Document): Result.Result<Markdown, RenderError>
  * **Example** (Rendering HTML with Result)
  *
  * ```ts
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import { Md } from "@beep/md"
  * import { renderHtml } from "@beep/md/Md.render"
  *
@@ -1563,7 +1568,7 @@ export const renderHtml = (document: Document): Result.Result<HtmlFragment, Rend
  * **Example** (Rendering plain text with Result)
  *
  * ```ts import.meta.vitest name="Rendering plain text with Result"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import { Md } from "@beep/md"
  * import { renderPlainText } from "@beep/md/Md.render"
  *

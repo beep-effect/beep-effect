@@ -19,9 +19,8 @@ import {
   UnmatchedReason,
 } from "@beep/law-practice-domain/values/MailTagging";
 import { LiteralKit } from "@beep/schema";
-import { flow, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as N from "effect/Number";

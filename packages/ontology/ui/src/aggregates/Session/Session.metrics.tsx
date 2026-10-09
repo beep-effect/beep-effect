@@ -15,7 +15,7 @@ import {
 import { Badge } from "@beep/ui/components/badge";
 import { A, O } from "@beep/utils";
 import { useAtomValue } from "@effect/atom-react";
-import { flow, pipe } from "effect";
+import { flow, pipe } from "effect/Function";
 import type {
   OntologyInferenceResult,
   OntologySnapshot,

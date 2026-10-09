@@ -31,7 +31,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { DateTime, Effect, Match } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -41,7 +43,8 @@ import { UUID } from "../../../internal/schema/Uuid.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { yeetInboxAckPath } from "./Inbox.ts";
 import { ProofJobObservedVia } from "./ProofJob.ts";
-import type { FileSystem, Path } from "effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Ack");
 
@@ -508,8 +511,7 @@ export class YeetAckState extends S.Class<YeetAckState>($I`YeetAckState`)(
  *
  * ```ts
  * import { readYeetAckState } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readYeetAckState("/repo", "coverage-abc"))) // true
  * ```
  *
@@ -554,8 +556,7 @@ export const readYeetAckState = Effect.fn("Yeet.readYeetAckState")(function* (
  *
  * ```ts
  * import { writeYeetAckReceipt, YeetAckFixResolution, YeetAckReceipt } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const receipt = YeetAckReceipt.make({
  *   ackedAt: "2026-08-17T00:00:00Z",
  *   id: "coverage-abc",

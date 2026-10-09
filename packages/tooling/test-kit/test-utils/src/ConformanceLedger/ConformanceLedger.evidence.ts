@@ -6,8 +6,10 @@
  */
 
 import * as Conformance from "@beep/schema/Conformance";
-import { Effect, flow, Number as Num, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";

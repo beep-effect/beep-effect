@@ -15,8 +15,9 @@
  * @since 0.0.0
  */
 
-import { Effect, FileSystem } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as Str from "effect/String";
 
@@ -28,7 +29,7 @@ const lineBreakPattern = /\r?\n/u;
  * **Example** (Read lines as strings)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { readJsonlLines } from "./Jsonl.ts"
  *
  * const lines = readJsonlLines("/input.jsonl", (cause: unknown) => cause, (content: string) => Effect.succeed(content))

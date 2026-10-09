@@ -17,9 +17,13 @@
  * @since 0.0.0
  */
 
-import { Config, Console, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { runCaptured } from "../../../internal/process/StepExec.ts";
 import { readInstalledSystemdUnit, systemdUnitDirective, systemdUserUnitDir } from "../../../internal/systemd/index.ts";
 import { ResearchCommandError } from "../Research.errors.ts";

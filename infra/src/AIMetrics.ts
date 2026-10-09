@@ -15,7 +15,9 @@ import {
 import { A, O, Str } from "@beep/utils";
 import * as command from "@pulumi/command";
 import * as pulumi from "@pulumi/pulumi";
-import { Effect, pipe, Result } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { optionalPulumiConfigFields, pulumiConfigSchemaIssueError } from "./internal/PulumiConfigSchema.ts";
 import type { AiMetricsInstallSpec, AiMetricsOtlpEndpointSpec, AiMetricsServiceSpec } from "@beep/repo-ai-metrics";

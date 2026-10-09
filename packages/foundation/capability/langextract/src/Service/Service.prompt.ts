@@ -9,7 +9,7 @@ import { LangExtractError } from "@beep/langextract/Extraction";
 import { ExtractionExample } from "@beep/langextract/Target";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import type { LangExtractRequest } from "@beep/langextract/Extraction";
@@ -66,8 +66,7 @@ const renderExamples = (examples: LangExtractRequest["examples"]): Effect.Effect
  * import { buildPrompt } from "@beep/langextract/Service"
  * import { ExtractionTarget } from "@beep/langextract/Target"
  * import { DocumentId } from "@beep/nlp/Core"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const request = LangExtractRequest.make({
  *   documentId: DocumentId.make("doc-1"),
  *   targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],

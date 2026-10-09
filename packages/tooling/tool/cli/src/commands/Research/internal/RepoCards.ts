@@ -11,10 +11,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

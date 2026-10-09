@@ -6,7 +6,9 @@
  */
 
 import * as O from "@beep/utils/Option";
-import { Config, Effect, Path } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as Path from "effect/Path";
 import * as Str from "effect/String";
 
 /**
@@ -20,8 +22,7 @@ import * as Str from "effect/String";
  *
  * ```ts
  * import { resolveBeepCacheRoot } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(resolveBeepCacheRoot())) // true
  * ```
  *
@@ -56,8 +57,7 @@ export const resolveBeepCacheRoot = Effect.fn("BeepCacheRoot.resolveBeepCacheRoo
  *
  * ```ts
  * import { configuredPath } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(configuredPath("TMPDIR"))) // true
  * ```
  *
@@ -67,7 +67,4 @@ export const resolveBeepCacheRoot = Effect.fn("BeepCacheRoot.resolveBeepCacheRoo
  * @since 0.0.0
  */
 export const configuredPath = (name: string): Effect.Effect<O.Option<string>> =>
-  Config.option(Config.String(name)).pipe(
-    Effect.orElseSucceed(() => O.none<string>()),
-    Effect.map(O.filter(Str.isNonEmpty))
-  );
+  Config.option(Config.String(name)).pipe(Effect.orElseSucceed(O.none<string>), Effect.map(O.filter(Str.isNonEmpty)));

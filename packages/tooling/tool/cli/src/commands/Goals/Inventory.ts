@@ -12,8 +12,11 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
-import { Effect, FileSystem, Order, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -176,8 +179,7 @@ const scanGoalPackets = Effect.fn("Goals.scanGoalPackets")(function* (repoRoot: 
  *
  * ```ts
  * import { listGoalPackets } from "@beep/repo-cli/commands/Goals/Inventory"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(listGoalPackets())) // true
  * ```
  *
@@ -201,8 +203,7 @@ export const listGoalPackets = Effect.fn("Goals.listGoalPackets")(function* (rep
  *
  * ```ts
  * import { listGoalPacketsStrict } from "@beep/repo-cli/commands/Goals/Inventory"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(listGoalPacketsStrict())) // true
  * ```
  *

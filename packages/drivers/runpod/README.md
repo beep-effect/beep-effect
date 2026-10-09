@@ -11,7 +11,8 @@ bun add @beep/runpod
 ## Usage
 
 ```ts
-import { Effect, Redacted } from "effect"
+import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
 import { Runpod, RunpodConfigInput } from "@beep/runpod"
 
 const program = Effect.gen(function* () {

@@ -27,10 +27,16 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import type { SweepPlanStep } from "@beep/repo-cli/test/Yeet";
 
@@ -1013,7 +1019,7 @@ describe("sweep branch override", () => {
   it.effect("refuses an option-like branch name instead of passing it to git", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(overrideSweepBranch(contextAt("main"), "--upload-pack=touch /tmp/pwn"));
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 });

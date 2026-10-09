@@ -157,7 +157,7 @@ configuration.
 ````ts
 import { $IamDomainId } from "@beep/identity"
 import { LiteralKit } from "@beep/schema"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema"
 import { ActorId } from "@beep/iam-domain/entities/Actor"
 import { OrganizationId } from "@beep/iam-domain/entities/Organization"
@@ -280,7 +280,7 @@ export const canPromoteToOwner = (model: Membership): boolean =>
 `Membership.behavior.ts` can own pure transitions:
 
 ````ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import { MembershipRoleChangeRejected } from "./Membership.errors.ts"
 import { Membership, MembershipRole } from "./Membership.model.ts"
 import { canPromoteToOwner } from "./Membership.policy.ts"

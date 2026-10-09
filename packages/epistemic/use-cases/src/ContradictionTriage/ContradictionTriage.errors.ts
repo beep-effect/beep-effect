@@ -9,7 +9,7 @@ import { ContradictionCandidateKey } from "@beep/epistemic-domain/values/Contrad
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

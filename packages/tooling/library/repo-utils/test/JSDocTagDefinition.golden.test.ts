@@ -4,10 +4,11 @@ import { JSDocTagDefinition, make } from "@beep/repo-utils/JSDoc/models/JSDocTag
 import { TagValue } from "@beep/repo-utils/JSDoc/models/tag-values";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import golden from "./__golden__/jsdoc-tag-fingerprints.json" with { type: "json" };
 import type { TagName } from "@beep/repo-utils/JSDoc/models/tag-values";

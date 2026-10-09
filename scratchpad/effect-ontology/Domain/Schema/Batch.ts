@@ -23,7 +23,8 @@ import {
   PreprocessingOptions,
 } from "./DocumentMetadata.ts";
 import { ValidationPolicy } from "./Shacl.ts";
-import { Effect, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Batch");

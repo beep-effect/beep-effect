@@ -3,9 +3,14 @@ import { runCacheWarmForTesting, runCacheWarmLaneForTesting } from "@beep/repo-c
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { Effect, FileSystem, flow, Order, Path, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 

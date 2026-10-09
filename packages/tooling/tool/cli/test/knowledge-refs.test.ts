@@ -31,9 +31,13 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Crypto, Effect, Exit, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -659,7 +663,7 @@ describe("knowledge refs check gate", () => {
           "Run it from /home/example/checkouts/beep-effect and sync the mirror at ~/mirrors/firecrawl.\n",
       });
       const exit = yield* Effect.exit(applyKnowledgeRefsCheck(report, { json: false }));
-      assertTrue(Exit.isFailure(exit));
+      exit.pipe(Exit.isFailure, assertTrue);
       const logs = yield* TestConsole.logLines;
       expect(A.some(logs, (line) => Str.startsWith("check: 2 live gated observation(s)")(Str.trim(String(line))))).toBe(
         true

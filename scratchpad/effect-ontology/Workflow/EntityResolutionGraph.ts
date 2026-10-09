@@ -11,17 +11,15 @@
  */
 
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import {
-  DateTime,
-  Effect,
-  Graph,
-  HashMap,
-  HashSet,
-  Inspectable,
-  MutableHashMap,
-  MutableHashSet,
-  Number as N,
-} from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Graph from "effect/Graph";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Inspectable from "effect/Inspectable";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as N from "effect/Number";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -71,7 +69,9 @@ import * as S from "effect/Schema";
  *
  * ```ts
  * import { IRI } from "@beep/rdf"
- * import { Effect, HashMap, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as HashMap from "effect/HashMap";
+ * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
  * import { EmbeddingError } from "@effect-ontology/Error/Embedding"
  * import { Entity } from "@effect-ontology/Model/Entity"
@@ -408,7 +408,8 @@ const mergeClusterToResolved = (cluster: EntityCluster): ResolvedEntity => {
  *
  * ```ts
  * import { IRI } from "@beep/rdf"
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
  * import { EmbeddingError } from "@effect-ontology/Error/Embedding"
  * import { Entity, KnowledgeGraph } from "@effect-ontology/Model/Entity"

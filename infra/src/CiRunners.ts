@@ -56,7 +56,7 @@ import { $InfraId } from "@beep/identity/packages";
 import { A, Bool, O, Str } from "@beep/utils";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { optionalPulumiConfigFields } from "./internal/PulumiConfigSchema.ts";
 

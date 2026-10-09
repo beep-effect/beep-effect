@@ -8,10 +8,13 @@
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Match, pipe, Result, SchemaGetter } from "effect";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 
 // cspell:ignore dtos
 const $I = $RepoUtilsId.create("schemas/JSDocCategories");

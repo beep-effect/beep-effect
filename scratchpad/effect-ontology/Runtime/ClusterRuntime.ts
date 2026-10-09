@@ -13,7 +13,9 @@
  */
 
 import { SqliteClient } from "@effect/sql-sqlite-bun";
-import { Config, Effect, Layer } from "effect";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
@@ -107,7 +109,8 @@ export const ClusterShardingConfigFromEnv = (options?: Parameters<typeof Shardin
  * **Example** (Select sqlite cluster storage from env)
  *
  * ```ts
- * import { ConfigProvider, Layer } from "effect"
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Layer from "effect/Layer";
  * import { ClusterSqliteLive, ClusterSqliteLiveFromEnv } from "@effect-ontology/Runtime/ClusterRuntime"
  *
  * const fromEnv = ClusterSqliteLiveFromEnv.pipe(
@@ -149,7 +152,8 @@ export const ClusterSqliteLiveFromEnv = Layer.unwrap(
  * **Example** (Auto-select cluster storage from CLUSTER_DB_URL)
  *
  * ```ts
- * import { ConfigProvider, Layer } from "effect"
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Layer from "effect/Layer";
  * import { ClusterAutoLiveFromEnv, ClusterSqliteLiveFromEnv } from "@effect-ontology/Runtime/ClusterRuntime"
  *
  * const auto = ClusterAutoLiveFromEnv.pipe(

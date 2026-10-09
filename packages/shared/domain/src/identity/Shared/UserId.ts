@@ -36,7 +36,7 @@ export const UserId = make("user", {
  * **Example** (Decode UserId with Schema)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { UserId } from "@beep/shared-domain/identity/Shared"
  * import * as S from "effect/Schema"
  *

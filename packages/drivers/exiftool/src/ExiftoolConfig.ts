@@ -17,7 +17,9 @@
 import { $ExiftoolId } from "@beep/identity/packages";
 import { Fn, LiteralKit } from "@beep/schema";
 import { A, N, O, P, pipe, Str } from "@beep/utils";
-import { Effect, flow, Result } from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { BeepQaProvenance, EpochMilliseconds, TagAssignment } from "./Exiftool.models.ts";
 

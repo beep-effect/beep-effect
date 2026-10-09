@@ -7,7 +7,9 @@
 
 import { DomainError } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
-import { Effect, Order, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Order from "effect/Order";
 import { runCaptured } from "../process/StepExec.ts";
 
 const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);

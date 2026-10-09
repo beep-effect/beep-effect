@@ -40,9 +40,14 @@ import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
-import { Duration, Effect, Layer, pipe, Result, Schedule } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import { AtomRegistry, Reactivity } from "effect/reactivity";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { vi } from "vitest";
 import type {

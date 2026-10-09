@@ -9,10 +9,13 @@ import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit, PosixPath, Sha256Hex } from "@beep/schema";
 import { HttpsUrl } from "@beep/schema/URL";
-import { Effect, identity, Number as N, Order } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {

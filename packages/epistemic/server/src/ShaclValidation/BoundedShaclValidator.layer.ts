@@ -13,8 +13,10 @@ import {
   ShaclValidationViolation,
 } from "@beep/semantic-web/services/shacl-validation";
 import { A } from "@beep/utils";
-import { Effect, flow, Layer, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
 import * as I from "effect/Iterable";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import type { Quad, Subject, Term } from "@beep/rdf/Rdf";
 import type {
@@ -236,7 +238,7 @@ const validationResult = (
  *
  * ```ts
  * import { strictEqual } from "node:assert"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { BoundedShaclValidationServiceLive } from "@beep/epistemic-server/ShaclValidation"
  * import {

@@ -19,7 +19,15 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Duration, Effect, Inspectable, Layer, Match, Number as Num, Order, Redacted, Schedule } from "effect";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Num from "effect/Number";
+import * as Order from "effect/Order";
+import * as Redacted from "effect/Redacted";
+import * as Schedule from "effect/Schedule";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -310,7 +318,9 @@ const mapVoyageError = (error: unknown, timeout: Duration.Duration): AnyEmbeddin
  * **Example** (Configure a Voyage provider)
  *
  * ```ts
- * import { Duration, Effect, Redacted } from "effect"
+ * import * as Duration from "effect/Duration";
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
  * import { VoyageProviderConfig } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
  * const config = VoyageProviderConfig.make({
@@ -340,7 +350,9 @@ export class VoyageProviderConfig extends S.Class<VoyageProviderConfig>($I`Voyag
  * **Example** (Reference Voyage provider input)
  *
  * ```ts
- * import { Duration, Effect, Redacted } from "effect"
+ * import * as Duration from "effect/Duration";
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
  * import type { VoyageProviderConfigInput } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
  * const input: VoyageProviderConfigInput = {
@@ -361,7 +373,9 @@ export type VoyageProviderConfigInput = (typeof VoyageProviderConfig)["~type.mak
  * **Example** (Inspect make voyage provider)
  *
  * ```ts
- * import { Duration, Effect, Redacted } from "effect"
+ * import * as Duration from "effect/Duration";
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
  * import { makeVoyageProvider, VoyageProviderConfig } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
  * const provider = makeVoyageProvider(
@@ -558,7 +572,7 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
  * **Example** (Inspect voyage embedding provider live)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
  * import { VoyageEmbeddingProviderLive } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
@@ -613,7 +627,7 @@ export const VoyageEmbeddingProviderLive: Layer.Layer<
  * **Example** (Inspect voyage embedding provider default)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
  * import { VoyageEmbeddingProviderDefault } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *

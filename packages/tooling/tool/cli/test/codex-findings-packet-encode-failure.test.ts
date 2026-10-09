@@ -1,7 +1,7 @@
 import { CodexFindingRecord, CodexPacketPlan, renderPacketDocuments } from "@beep/repo-cli/test/Codex";
 import { A, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { vi } from "vitest";
 
 // The triage ledger is built from an already-validated plan, so its encode can

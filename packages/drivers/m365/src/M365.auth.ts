@@ -19,10 +19,14 @@
 
 import { $M365Id } from "@beep/identity";
 import { getSomesStruct } from "@beep/utils/Option";
-import { Context, Effect, Layer, pipe, Redacted } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import {
   M365AppOnlyCredential,
@@ -160,8 +164,7 @@ export class M365AuthorizationRequest extends S.Class<M365AuthorizationRequest>(
  * ```ts
  * import { M365AuthorizationRequest } from "@beep/m365"
  * import type { M365InteractiveAuthorizer } from "@beep/m365"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const authorizer: M365InteractiveAuthorizer = (request) => {
  *   console.log(new URL(request.authUrl).hostname)
  *   return Effect.succeed("authorization-code")
@@ -338,8 +341,8 @@ const acquireAppOnlyToken = Effect.fn("M365Auth.acquireAppOnlyToken")(function* 
  *
  * ```ts
  * import type { M365AuthShape } from "@beep/m365"
- * import { Effect, Redacted } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
  * const auth = { acquireToken: Effect.succeed(Redacted.make("token")) } satisfies M365AuthShape
  * console.log(auth)
  * ```
@@ -358,8 +361,7 @@ export type M365AuthShape = {
  *
  * ```ts
  * import { M365Auth } from "@beep/m365"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const layer = M365Auth.layerStatic(Redacted.make("graph-access-token"))
  * console.log(layer)
  * ```
@@ -376,8 +378,7 @@ export class M365Auth extends Context.Service<M365Auth, M365AuthShape>()($I`M365
    *
    * ```ts
    * import { M365Auth } from "@beep/m365"
-   * import { Redacted } from "effect"
-   *
+   * import * as Redacted from "effect/Redacted";
    * const layer = M365Auth.layerStatic(Redacted.make("graph-access-token"))
    * console.log(layer)
    * ```
@@ -453,8 +454,7 @@ export class M365Auth extends Context.Service<M365Auth, M365AuthShape>()($I`M365
    *
    * ```ts
    * import { M365AppOnlyConfigInput, M365Auth, M365CertificateCredential } from "@beep/m365"
-   * import { Redacted } from "effect"
-   *
+   * import * as Redacted from "effect/Redacted";
    * const layer = M365Auth.makeAppOnlyLayer(
    *   M365AppOnlyConfigInput.make({
    *     clientId: "client-id",

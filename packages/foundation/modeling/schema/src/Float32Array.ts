@@ -12,8 +12,8 @@
 
 import { $SchemaId } from "@beep/identity";
 import { A } from "@beep/utils";
-import { SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { Model } from "effect/schema";
 
 const $I = $SchemaId.create("Float32Array");

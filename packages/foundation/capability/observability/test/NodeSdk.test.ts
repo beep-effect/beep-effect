@@ -10,8 +10,10 @@ import { it } from "@beep/test-runner";
 import * as OtelTracer from "@effect/opentelemetry/OtelTracer";
 import { describe, expect } from "@effect/vitest";
 import { BatchSpanProcessor, InMemorySpanExporter, SimpleSpanProcessor } from "@opentelemetry/sdk-trace-base";
-import { Duration, Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 const serverConfig = ServerObservabilityConfig.make({
   serviceName: "beep-server",

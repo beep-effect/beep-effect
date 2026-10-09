@@ -1,15 +1,16 @@
 #!/usr/bin/env bun
 
+import * as Bool from "effect/Boolean";
 /**
  * Stdio entrypoint for the portable practice knowledge-graph MCP host.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Config, Effect, Layer } from "effect";
-import * as Bool from "effect/Boolean";
+import * as Config from "effect/Config";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { runEntrypoint } from "./entrypoint.ts";
 import { PracticeKgHostError } from "./runtime/Host.ts";

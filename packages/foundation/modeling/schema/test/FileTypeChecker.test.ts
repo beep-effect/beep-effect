@@ -17,10 +17,12 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
-import { Effect, Match, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";

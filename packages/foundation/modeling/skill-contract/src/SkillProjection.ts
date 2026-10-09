@@ -8,11 +8,14 @@
 import { $SkillContractId } from "@beep/identity/packages";
 import { Md } from "@beep/md";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { Duration, Effect, Result, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { GateApplicability } from "./Gate.ts";
 import { RecoveryPolicy } from "./Recovery.ts";
 import { SkillContract } from "./SkillContract.ts";
@@ -429,8 +432,7 @@ const frontmatterDenied = (
  *
  * ```ts import.meta.vitest name="Reject missing frontmatter"
  * import { decodeSkillFrontmatter } from "@beep/skill-contract"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * Result.isFailure(decodeSkillFrontmatter("# no frontmatter")) // => true
  * ```
  *

@@ -5,7 +5,8 @@
  */
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { DocketIntakeAppConfig } from "@/Config";
 import { main } from "@/Main";

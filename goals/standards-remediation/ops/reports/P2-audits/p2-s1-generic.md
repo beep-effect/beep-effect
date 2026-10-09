@@ -60,7 +60,7 @@ interface.
 
 ```diff
  import { A, thunkEmptyStr } from "@beep/utils";
- import { Match } from "effect";
+ import { Match } from "<legacy-effect-barrel>";
  import { dual, flow, pipe } from "effect/Function";
  import * as O from "effect/Option";
 +import * as S from "effect/Schema";

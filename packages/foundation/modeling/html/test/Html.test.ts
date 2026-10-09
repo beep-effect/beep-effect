@@ -24,12 +24,14 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertExitFailure, assertFailure, assertSuccess } from "@effect/vitest/utils";
-import { Effect, Exit, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeUnknownHtmlDocumentResult = S.decodeUnknownResult(HtmlDocument);

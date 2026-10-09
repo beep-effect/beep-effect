@@ -27,9 +27,12 @@ import {
 } from "@beep/law-practice-use-cases/DocketIntake";
 import { isUnitInterval } from "@beep/schema/UnitInterval";
 import { O } from "@beep/utils";
-import { Duration, Effect, Layer, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type {
@@ -60,8 +63,7 @@ const RETRY_FACTOR = 2;
  *
  * ```ts
  * import { DocketAgentsOptions } from "@beep/law-practice-server/DocketIntake";
- * import { Duration } from "effect";
- *
+ * import * as Duration from "effect/Duration";
  * console.log(Duration.toSeconds(DocketAgentsOptions.make({}).secretaryTimeout)); // 120
  * ```
  *
@@ -585,8 +587,7 @@ const annotateCall = (message: DocketMessage, attachmentCount: number): Effect.E
  *
  * ```ts
  * import { DocketAgentsOptions, makeDocketAgentsLayer } from "@beep/law-practice-server/DocketIntake";
- * import { Duration } from "effect";
- *
+ * import * as Duration from "effect/Duration";
  * const layer = makeDocketAgentsLayer(DocketAgentsOptions.make({ paralegalTimeout: Duration.seconds(30) }));
  * console.log(layer);
  * ```

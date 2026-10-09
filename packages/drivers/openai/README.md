@@ -19,7 +19,7 @@ import {
   OpenAiEmbeddingModelOptions,
   OpenAiLive
 } from "@beep/openai"
-import { Layer } from "effect"
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema"
 
 const PosInt = S.Int.check(S.isGreaterThan(0))

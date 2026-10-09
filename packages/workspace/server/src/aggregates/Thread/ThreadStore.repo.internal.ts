@@ -11,7 +11,8 @@ import { Document } from "@beep/md/Md.model";
 import { Message, MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Thread } from "@beep/workspace-domain/entities/Thread";
 import { Turn } from "@beep/workspace-domain/entities/Turn";
-import { Effect, HashMap } from "effect";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
 import { PosInt } from "../../internal/PosInt.ts";
 

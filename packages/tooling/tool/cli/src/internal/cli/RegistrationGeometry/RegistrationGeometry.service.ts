@@ -1,6 +1,9 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { FsUtils } from "@beep/repo-utils";
-import { Context, Effect, FileSystem, Path } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import { RegistrationGeometryError } from "./RegistrationGeometry.errors.ts";
 import { planForwardForTarget, planInverseForTarget, surfacesForTarget } from "./RegistrationGeometry.plan.ts";
 import { dependentsOfAtRoot, inspectTargetAtRoot } from "./RegistrationGeometry.probes.ts";

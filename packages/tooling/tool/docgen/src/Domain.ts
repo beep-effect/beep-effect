@@ -7,8 +7,11 @@
 
 import { $RepoDocgenId } from "@beep/identity/packages";
 import { A, HostProcessPlatform, Str } from "@beep/utils";
-import { Context, Effect, Layer, Order, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import type * as Ordering from "effect/Ordering";
 import type * as Parser from "./Parser.ts";
@@ -1150,8 +1153,7 @@ export class DocgenError extends S.TaggedError<DocgenError>($I`DocgenError`)(
  * **Example** (Mock process service shape)
  *
  * ```ts
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const fakeProcess = {
  *   argv: Effect.succeed(["bun", "docgen"]),
  *   cwd: Effect.succeed("/workspace/packages/tooling/tool/docgen"),
@@ -1182,7 +1184,7 @@ const defaultProcess: ProcessShape = {
  * **Example** (Reading process cwd)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Process } from "@beep/repo-docgen/Domain"
  *
  * const cwd = Effect.runSync(

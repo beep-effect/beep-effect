@@ -10,8 +10,8 @@ import * as Conformance from "@beep/schema/Conformance";
 import { it } from "@beep/test-runner";
 import { validateConformanceAnnotationAgainstLedgerArtifacts } from "@beep/test-utils/ConformanceLedger";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

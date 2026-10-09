@@ -9,11 +9,14 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { CacheEvidenceReference } from "@beep/repo-configs/cache";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { A, Str } from "@beep/utils";
-import { Context, Effect, Layer, Order, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as HM from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Tuple from "effect/Tuple";
 import {
   classifyGateOrderPointer,
@@ -1132,8 +1135,7 @@ export interface WaveOrderShape {
  *
  * ```ts
  * import { WaveOrder } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const order = yield* WaveOrder
  *   return order.order([])

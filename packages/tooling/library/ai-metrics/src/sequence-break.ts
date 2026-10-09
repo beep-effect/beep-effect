@@ -7,8 +7,11 @@
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { Effect, identity, Number as Num, Order } from "effect";
+import * as Effect from "effect/Effect";
 import * as F from "effect/Function";
+import { identity } from "effect/Function";
+import * as Num from "effect/Number";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { HookPulseAgentKind, HookPulseWaitReason } from "./hook-pulse.ts";

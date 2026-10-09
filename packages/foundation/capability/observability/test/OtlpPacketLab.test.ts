@@ -1,7 +1,7 @@
 import { layerJson, layerProtobuf, OtlpPacketLab } from "@beep/observability/experimental/server";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { OtlpSerialization } from "effect/observability/OtlpSerialization";
 
 describe("OtlpPacketLab", () => {

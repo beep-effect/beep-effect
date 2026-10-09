@@ -17,8 +17,7 @@
  *   HtmlFragment,
  *   serializeSafe
  * } from "@beep/html"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = conform(HtmlFragment.make({ children: [] })).pipe(
  *   Effect.flatMap(enforceSafeHtml),
  *   Effect.flatMap(serializeSafe)

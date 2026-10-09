@@ -17,7 +17,11 @@ import { IRI, makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { Str as BeepStr } from "@beep/utils";
-import { Effect, Equal, Hash, MutableHashMap, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Hash from "effect/Hash";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as Result from "effect/Result";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
@@ -406,8 +410,7 @@ export const detectIriCollisions = dual2((entities: Iterable<Entity>, baseNamesp
  *
  * ```ts
  * import { checkIriCollisions } from "@effect-ontology/Utils/ClaimFactory"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const entities = Effect.runSync(checkIriCollisions([], "https://example.com/entity/"))
  * console.log(entities.length) // 0
  * ```
@@ -1020,8 +1023,7 @@ export const claimsDataToQuads = dual3(
  * **Example** (Encode an empty artifact)
  * ```ts
  * import { ClaimExtractionArtifact, claimExtractionArtifactToQuads } from "@effect-ontology/Utils/ClaimFactory"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const quads = Effect.runSync(
  *   claimExtractionArtifactToQuads(
  *     ClaimExtractionArtifact.make({ claims: [], entityObservations: [], relationObservations: [] }),
@@ -1072,7 +1074,7 @@ export const claimExtractionArtifactToQuads = dual2(
  * **Example** (Decode a legacy graph without an embedded artifact)
  * ```ts
  * import { claimExtractionArtifactFromQuads } from "@effect-ontology/Utils/ClaimFactory"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const decoded = Effect.runSync(claimExtractionArtifactFromQuads([]))

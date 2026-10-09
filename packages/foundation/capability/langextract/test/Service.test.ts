@@ -13,11 +13,17 @@ import { DocumentId } from "@beep/nlp/Core";
 import { it } from "@beep/test-runner";
 import * as O from "@beep/utils/Option";
 import { describe, expect } from "@effect/vitest";
-import { Context, Duration, Effect, Fiber, Layer, Ref, Stream } from "effect";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Response from "effect/ai/Response";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
 

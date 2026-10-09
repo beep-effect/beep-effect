@@ -5,8 +5,8 @@ import {
 } from "@beep/repo-cli/commands/Quality/Quality.command";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { pipe } from "effect";
 import * as A from "effect/Array";
+import { pipe } from "effect/Function";
 
 describe("Effect diagnostics directive policy", () => {
   const directive = ["@effect", "diagnostics"].join("-");

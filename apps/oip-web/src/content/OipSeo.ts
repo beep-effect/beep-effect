@@ -6,7 +6,7 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import type { OipSiteContent } from "./OipContent.model.ts";
 

@@ -37,10 +37,17 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Console, DateTime, Duration, Effect, FileSystem, flow, HashSet, pipe, Ref, Result } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor } from "../../../internal/github/index.ts";
@@ -105,8 +112,8 @@ import {
   yeetWatchCommentEvent,
   yeetWatchEndReason,
 } from "./WatchStream.ts";
-import type { Path } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetMonitorCommentWatermark } from "./MonitorComments.ts";
@@ -365,8 +372,7 @@ const reviewThreadsRead = Effect.fn("Yeet.reviewThreadsRead")(function* (
  *
  * ```ts
  * import { collectYeetWatchSnapshot, RepoRunContext } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = RepoRunContext.make({
  *   base: "origin/main",
  *   branch: "feature/watch",
@@ -912,8 +918,7 @@ const reportWatchRegistrationWait = (snapshot: YeetWatchSnapshot, emptyPolls: nu
  *
  * ```ts
  * import { RepoRunContext, runYeetWatchStream } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const context = RepoRunContext.make({
  *   base: "origin/main",
  *   branch: "feature/watch",

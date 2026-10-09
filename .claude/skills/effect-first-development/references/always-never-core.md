@@ -18,7 +18,7 @@ Loaded on demand from `effect-first-development/SKILL.md`. Repository laws win o
 ### 1) Absence handling
 
 ```ts
-import { pipe } from "effect"
+import { pipe } from "effect/Function";
 import * as A from "effect/Array"
 import * as O from "effect/Option"
 
@@ -41,7 +41,7 @@ const name = pipe(
 ### 2) Typed error boundary
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema"
 import { $PackageNameId } from "@beep/identity/packages"
 
@@ -98,7 +98,8 @@ const isStringValue = P.isString(value)
 ```ts
 import { LiteralKit } from "@beep/schema"
 import { $PackageNameId } from "@beep/identity/packages"
-import { Match, pipe } from "effect"
+import * as Match from "effect/Match";
+import { pipe } from "effect/Function";
 import * as F from "effect/Function"
 import * as A from "effect/Array"
 import * as P from "effect/Predicate"
@@ -194,7 +195,7 @@ export const TopicName = S.NonEmptyString.check(
 ### 5) Match over switch
 
 ```ts
-import { Match } from "effect"
+import * as Match from "effect/Match";
 import * as A from "effect/Array"
 
 type Status = "queued" | "running" | "failed"
@@ -226,7 +227,7 @@ const summarize = (items: ReadonlyArray<string>) =>
 ```ts
 import { LiteralKit } from "@beep/schema"
 import { $PackageNameId } from "@beep/identity/packages"
-import { Tuple } from "effect"
+import * as Tuple from "effect/Tuple";
 import * as S from "effect/Schema"
 
 const $I = $PackageNameId.create("relative/path/to/file/from/package/src")
@@ -271,8 +272,7 @@ export const render = (state: JobState) =>
 
 ```ts
 import { $PackageNameId } from "@beep/identity/packages"
-import { Context } from "effect"
-
+import * as Context from "effect/Context";
 const $I = $PackageNameId.create("relative/path/to/file/from/package/src")
 
 export class MyService extends Context.Service<MyService, {
@@ -285,7 +285,7 @@ export class MyService extends Context.Service<MyService, {
 ```ts
 import { LiteralKit } from "@beep/schema"
 import { $PackageNameId } from "@beep/identity/packages"
-import { Tuple } from "effect"
+import * as Tuple from "effect/Tuple";
 import * as S from "effect/Schema"
 
 const $I = $PackageNameId.create("relative/path/to/file/from/package/src")
@@ -326,7 +326,7 @@ export const ExternalTaskEvent = ExternalTaskKind
 ### 9) Effect-returning functions
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema"
 
 // Public or reusable flow: traced.

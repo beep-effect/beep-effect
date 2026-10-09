@@ -11,13 +11,22 @@ import { Sha256Hex } from "@beep/schema";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node-shared/NodeFileSystem";
 import * as NodePath from "@effect/platform-node-shared/NodePath";
-import { Context, DateTime, Effect, Layer, Match, MutableHashMap, Order, pipe, Ref, Semaphore } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { decodeBoxContentMigrationMap } from "./BoxContentMigrationMap.ts";
@@ -837,7 +846,7 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
       Effect.map((listing): O.Option<BoxProviderId> => MutableHashMap.get(listing.folders, planned.folder.nameKey)),
       Effect.catchTags({
         BoxContentMigrationBudgetError: () => Effect.fail(localFailure("budget-exhausted")),
-        BoxError: (error) => Effect.fail(providerFailure(error)),
+        BoxError: (error) => error.pipe(providerFailure, Effect.fail),
       }),
       Effect.result
     );
@@ -1230,8 +1239,7 @@ export interface BoxContentMigrationShape {
  *
  * ```ts
  * import { BoxContentMigration } from "@beep/box-provisioning/BoxContentMigration"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const dryRun = (mapInput: unknown) =>
  *   Effect.gen(function* () {
  *     const migration = yield* BoxContentMigration

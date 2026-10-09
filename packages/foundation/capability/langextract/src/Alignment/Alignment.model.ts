@@ -12,9 +12,12 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
-import { Context, Effect, SchemaGetter, SchemaIssue } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaIssue from "effect/SchemaIssue";
 import { alignCandidate, alignCandidates, spanFromMatch } from "./Alignment.behavior.ts";
 import { DEFAULT_FUZZY_THRESHOLD, DEFAULT_MAX_EXTRACTIONS } from "./Alignment.config.ts";
 import type { LangExtractOptions, LangExtractRequest } from "@beep/langextract/Extraction";
@@ -280,8 +283,7 @@ export class AlignmentSource extends S.Class<AlignmentSource>($I`AlignmentSource
  *
  * ```ts
  * import { AlignmentSource, CurrentAlignmentSource } from "@beep/langextract/Alignment"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.map(CurrentAlignmentSource, (source) => source.sourceText).pipe(
  *   Effect.provideService(CurrentAlignmentSource, AlignmentSource.make({ sourceText: "Ada" }))
  * )
@@ -309,7 +311,7 @@ export class CurrentAlignmentSource extends Context.Service<CurrentAlignmentSour
  *
  * ```ts
  * import { SpanFromMatch } from "@beep/langextract/Alignment"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * Effect.runPromise(S.decodeEffect(SpanFromMatch)([4, "Lovelace"])).then(
@@ -356,7 +358,7 @@ export const SpanFromMatch = MatchedText.pipe(
  *
  * ```ts
  * import { MatchedTextFromScored } from "@beep/langextract/Alignment"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * Effect.runPromise(S.decodeEffect(MatchedTextFromScored)([0, "Acme.", 0.8])).then(
@@ -389,7 +391,7 @@ export const MatchedTextFromScored = ScoredMatch.pipe(
  *
  * ```ts
  * import { AlignedMatchFromMatchedText } from "@beep/langextract/Alignment"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const ExactMatch = AlignedMatchFromMatchedText("match_exact")
@@ -440,7 +442,7 @@ const candidateFromGrounded = (grounded: GroundedExtraction): ExtractionCandidat
  *
  * ```ts
  * import { AlignmentSource, CurrentAlignmentSource, GroundedExtractionFromCandidate } from "@beep/langextract/Alignment"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeEffect(GroundedExtractionFromCandidate)({ label: "person", text: "Ada Lovelace" }).pipe(
@@ -481,7 +483,7 @@ export const GroundedExtractionFromCandidate: S.Codec<
  *
  * ```ts
  * import { AlignmentSource, CurrentAlignmentSource, GroundedExtractionsFromCandidates } from "@beep/langextract/Alignment"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as A from "effect/Array"
  * import * as S from "effect/Schema"
  *

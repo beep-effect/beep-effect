@@ -8,8 +8,8 @@
 
 import { $AgentsClientId } from "@beep/identity";
 import { O, P, pipe, Str } from "@beep/utils";
-import { Result } from "effect";
 import { dual } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const $I = $AgentsClientId.create("internal/BrowserHttpUrl");

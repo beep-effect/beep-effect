@@ -15,13 +15,13 @@
  */
 
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import type {
   ExecutionDecisionRecord,
   ExecutionOutcomeRecord,
   ExecutionRunKey,
 } from "@beep/epistemic-domain/values/ExecutionRecord";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type { ExecutionLedgerError, ExecutionLedgerUnavailable } from "./ExecutionLedger.errors.ts";
 
 const $I = $EpistemicUseCasesId.create("ExecutionLedger/ExecutionLedger.ports");
@@ -44,7 +44,7 @@ const $I = $EpistemicUseCasesId.create("ExecutionLedger/ExecutionLedger.ports");
  *
  * ```ts
  * import { strictEqual } from "node:assert"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { ExecutionLedgerShape } from "@beep/epistemic-use-cases/ExecutionLedger"
  *
  * const shape: ExecutionLedgerShape = {
@@ -82,7 +82,7 @@ export interface ExecutionLedgerShape {
  *
  * ```ts
  * import { strictEqual } from "node:assert"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger"
  *
  * const hasAppend = Effect.runSync(

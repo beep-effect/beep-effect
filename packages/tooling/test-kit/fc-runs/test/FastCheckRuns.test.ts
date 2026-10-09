@@ -1,7 +1,8 @@
 import { DEFAULT_FC_NUM_RUNS, envFcSeed, fcRuns, parseFcNumRunsFloor } from "@beep/fc-runs";
 import { describe, expect, it, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { ConfigProvider, Context } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
 import * as O from "effect/Option";
 
 describe("fcRuns (one-round-loop P1 env-max helper)", () => {

@@ -11,7 +11,11 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Duration, Effect, Layer, Ref } from "effect";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { ErrorMessage } from "../Domain/Error/Base.ts";
 
@@ -24,7 +28,7 @@ const shutdownConfigDrainTimeoutDefault = Duration.seconds(30);
  * **Example** (Construct a 30-second drain config)
  *
  * ```ts
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { ShutdownConfig } from "@effect-ontology/Runtime/Shutdown"
  *
  * const config = ShutdownConfig.make({ drainTimeout: Duration.seconds(30) })
@@ -49,7 +53,7 @@ export class ShutdownConfig extends S.Class<ShutdownConfig>($I`ShutdownConfig`)(
  * **Example** (Read the default drain timeout)
  *
  * ```ts
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { DEFAULT_SHUTDOWN_CONFIG } from "@effect-ontology/Runtime/Shutdown"
  *
  * console.log(Duration.toMillis(DEFAULT_SHUTDOWN_CONFIG.drainTimeout)) // 30000
@@ -102,7 +106,7 @@ export class ShutdownError extends S.TaggedError<ShutdownError>($I`ShutdownError
  * **Example** (Reject a request after shutdown starts)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { ShutdownService } from "@effect-ontology/Runtime/Shutdown"
  *
  * const rejected = Effect.runSync(

@@ -7,9 +7,10 @@
 
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, Match } from "effect";
 import * as A from "effect/Array";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { FilesCommandError } from "./Files.errors.ts";
 import {
@@ -887,8 +888,7 @@ const filesStripMetadataCommand = Command.make(
  * ```ts
  * import { filesCommand } from "@beep/repo-cli/commands/Files"
  * import { Command } from "effect/cli"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const run = Command.run(filesCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```

@@ -10,8 +10,9 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
-import { Effect, Equal } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
 
 const decodeWorkItemSummaryViewModel = S.decodeEffect(WorkItemSummaryViewModel);

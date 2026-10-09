@@ -21,9 +21,16 @@ import * as R from "@beep/utils/Record";
 import * as Str from "@beep/utils/Str";
 import * as Struct from "@beep/utils/Struct";
 import { thunkFalse, thunkTrue } from "@beep/utils/thunk";
-import { Cause, Effect, Exit, Result, SchemaAST, SchemaGetter, SchemaIssue, SchemaTransformation } from "effect";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { dual, identity, pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Model from "effect/schema/Model";
 import { jsonStringifyPretty } from "../JsonUtils.ts";
 import type { DomainError } from "../errors/index.ts";
@@ -1688,7 +1695,7 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
    * **Example** (Decode strict Effect)
    *
    * ```ts
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * import { TSConfig } from "@beep/repo-utils/schemas/TSConfig"
    * const config = Effect.runSync(TSConfig.decodeStrictEffect({ compilerOptions: { strict: true } }))
    * console.log(config.compilerOptions)
@@ -1712,7 +1719,7 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
    * **Example** (Decode JSONC text Effect)
    *
    * ```ts
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * import { TSConfig } from "@beep/repo-utils/schemas/TSConfig"
    * const config = Effect.runSync(TSConfig.decodeJsoncTextEffect("{\"compilerOptions\":{\"strict\":true}}"))
    * console.log(config.compilerOptions)
@@ -1735,7 +1742,7 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
    * **Example** (Encode strict Effect)
    *
    * ```ts
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * import { TSConfig } from "@beep/repo-utils/schemas/TSConfig"
    * const encoded = Effect.runSync(TSConfig.encodeStrictEffect({ compilerOptions: { strict: true } }))
    * console.log(encoded.compilerOptions?.strict)
@@ -1757,7 +1764,7 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
    * **Example** (Encode compact JSON string)
    *
    * ```ts
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * import { TSConfig } from "@beep/repo-utils/schemas/TSConfig"
    * const json = Effect.runSync(TSConfig.encodeJsonStringEffect({ compilerOptions: { strict: true } }))
    * console.log(json.includes("\"strict\":true"))
@@ -1779,7 +1786,7 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
    * **Example** (Encode compact JSON string)
    *
    * ```ts
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * import { TSConfig } from "@beep/repo-utils/schemas/TSConfig"
    * const json = Effect.runSync(TSConfig.decodeUnknownEffect({ compilerOptions: { strict: true } }))
    * console.log(json.includes("\"strict\":true"))
@@ -1935,7 +1942,7 @@ export const decodeTSConfigExit: (input: unknown) => Exit.Exit<TSConfig.Type, S.
  * **Example** (Decode TSConfig Effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { decodeTSConfigEffect } from "@beep/repo-utils/schemas/TSConfig"
  * const config = Effect.runSync(
@@ -1970,7 +1977,7 @@ export const decodeTSConfigEffect: (input: unknown) => Effect.Effect<TSConfig.Ty
  * **Example** (Decode JSONC with comments)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { decodeTSConfigFromJsoncTextEffect } from "@beep/repo-utils/schemas/TSConfig"
  * const config = Effect.runSync(decodeTSConfigFromJsoncTextEffect(`{
@@ -2004,7 +2011,7 @@ export const decodeTSConfigFromJsoncTextEffect: (input: string) => Effect.Effect
  * **Example** (Encode validated TSConfig)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { encodeTSConfigEffect } from "@beep/repo-utils/schemas/TSConfig"
  * const encoded = Effect.runSync(
  *   encodeTSConfigEffect({ compilerOptions: { strict: true, moduleResolution: "bundler" } })
@@ -2028,7 +2035,7 @@ export const encodeTSConfigEffect: (input: unknown) => Effect.Effect<TSConfig.En
  * **Example** (Encode compact JSON Effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { encodeTSConfigToJsonEffect } from "@beep/repo-utils/schemas/TSConfig"
  * const json = Effect.runSync(
  *   encodeTSConfigToJsonEffect({ compilerOptions: { strict: true } })
@@ -2056,7 +2063,7 @@ export const encodeTSConfigToJsonEffect: (input: unknown) => Effect.Effect<strin
  * **Example** (Encode pretty-printed JSON)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { encodeTSConfigPrettyEffect } from "@beep/repo-utils/schemas/TSConfig"
  * const pretty = Effect.runSync(
  *   encodeTSConfigPrettyEffect({ compilerOptions: { strict: true } })

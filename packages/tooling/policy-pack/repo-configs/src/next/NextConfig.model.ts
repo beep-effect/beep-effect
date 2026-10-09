@@ -6,7 +6,7 @@
  */
 import { $RepoConfigsId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { isFunctionValue, schemaIssueToError } from "./internal.ts";
 import { AllowedDevOrigin } from "./models/AllowedDevOrigin.schema.ts";
@@ -15,7 +15,7 @@ import { I18NConfig, LoggingConfig, TypeScriptConfig } from "./models/ConfigPrim
 import { ExperimentalConfig } from "./models/ExperimentalConfig.schema.ts";
 import { ImageConfig } from "./models/ImageConfig.schema.ts";
 import { TurbopackOptions } from "./models/Turbopack.schema.ts";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type { NextConfig as NextConfigFromNext } from "next";
 
 const $I = $RepoConfigsId.create("next/NextConfig.model");
@@ -409,7 +409,7 @@ const encodeNextConfigResult = NextConfig.encodeResult;
  * **Example** (Decode config with Effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeNextConfig } from "@beep/repo-configs/next"
  * const program = decodeNextConfig({ reactStrictMode: true })
  * console.log(Effect.runPromise(program))

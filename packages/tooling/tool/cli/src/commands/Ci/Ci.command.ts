@@ -8,9 +8,15 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Config, Console, Effect, FileSystem, Order, Path, pipe } from "effect";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -254,7 +260,7 @@ const renderTurboSummary = (repoRoot: string, summaryPath: string, run: TurboSum
  * ```ts
  * import { appendTurboSummary } from "@beep/repo-cli/commands/Ci"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = appendTurboSummary(O.some(".turbo/runs/latest.json")).pipe(Effect.provide(NodeServices.layer))

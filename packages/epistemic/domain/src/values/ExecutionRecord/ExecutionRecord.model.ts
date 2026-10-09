@@ -24,7 +24,8 @@ import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-import { DateTime, Effect } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { PolicyRevision, SinkAudience, SinkClass } from "../ExecutionGrant/index.ts";
@@ -509,7 +510,7 @@ const encodeDecisionContent = (content: ExecutionDecisionContent): Record<string
  * import { sealExecutionDecision } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { DecisionRecordHash, ExecutionRunKey, GrantOperationDigest, GrantSetDigest, PolicyRevision, SinkDestinationDigest } from "@beep/epistemic-domain"
  *
  * const record = sealExecutionDecision({
@@ -549,7 +550,7 @@ export const sealExecutionDecision = (content: ExecutionDecisionContent): Execut
  * import { sealExecutionDecision, verifyExecutionDecisionHash } from "@beep/epistemic-domain"
  * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { ExecutionRunKey, GrantOperationDigest, GrantSetDigest, PolicyRevision, SinkDestinationDigest } from "@beep/epistemic-domain"
  *
  * const record = sealExecutionDecision({
@@ -762,8 +763,7 @@ export type ExecutionOutcomeContent = Omit<ExecutionOutcomeRecord, "hash">;
  *
  * ```ts
  * import { DecisionRecordHash, ExecutionRunKey, sealExecutionOutcome } from "@beep/epistemic-domain"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const outcome = sealExecutionOutcome({
  *   decisionHash: DecisionRecordHash.make("c".repeat(64)),
  *   recordedAt: DateTime.makeUnsafe(2),
@@ -791,8 +791,7 @@ export const sealExecutionOutcome = (content: ExecutionOutcomeContent): Executio
  *
  * ```ts
  * import { DecisionRecordHash, ExecutionRunKey, sealExecutionOutcome, verifyExecutionOutcomeHash } from "@beep/epistemic-domain"
- * import { DateTime } from "effect"
- *
+ * import * as DateTime from "effect/DateTime";
  * const outcome = sealExecutionOutcome({
  *   decisionHash: DecisionRecordHash.make("c".repeat(64)),
  *   recordedAt: DateTime.makeUnsafe(2),

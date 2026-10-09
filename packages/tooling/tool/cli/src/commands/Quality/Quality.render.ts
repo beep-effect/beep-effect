@@ -7,7 +7,8 @@
 
 import { jsonStringifyPretty } from "@beep/repo-utils";
 import { A } from "@beep/utils";
-import { Console, Effect } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
@@ -52,8 +53,7 @@ export const renderQualityProfileConfigLines = (config: QualityProfileConfig): R
  *
  * ```ts
  * import { printQualityProfileConfig } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = printQualityProfileConfig({
  *   docgenParallel: 3,
  *   fullProofSlots: 1,
@@ -89,8 +89,7 @@ export const printQualityProfileConfig: {
  *
  * ```ts
  * import { printQualityProfileDetection } from "@beep/repo-cli/test/Quality"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = printQualityProfileDetection({
  *   config: {
  *     docgenParallel: 3,

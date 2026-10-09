@@ -19,10 +19,12 @@
  * (FileSystem temp dirs, Path joins, `Bun.spawnSync` subprocess) and decodes the subprocess
  * JSON through `effect/Schema` rather than `JSON.parse`.
  */
-import { FileSystem, Path } from "effect";
+
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { encodeConfig, jsonReportParser, validateLinterProcess } from "./codec.ts";
 

@@ -18,7 +18,9 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Str from "effect/String";
 
 const AT = "2026-08-17T00:00:00Z";

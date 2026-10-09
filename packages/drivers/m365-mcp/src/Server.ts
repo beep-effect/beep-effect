@@ -7,8 +7,8 @@
 
 import { $M365McpId } from "@beep/identity/packages";
 import { sanitizedToolkit } from "@beep/mcp-kit";
-import { Layer } from "effect";
 import * as McpServer from "effect/ai/McpServer";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { m365McpProtocols } from "./internal/McpProtocols.ts";
 import { M365ToolkitHandlersLive } from "./M365Handlers.ts";
@@ -110,8 +110,7 @@ export const M365McpRegistrationsLive: Layer.Layer<never, never, M365> = sanitiz
  *
  * ```ts
  * import { M365McpServerConfig, makeServerLayer } from "@beep/m365-mcp"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * const layer = makeServerLayer(M365McpServerConfig.make({ name: "beep-m365", version: "0.1.0" }))
  * console.log(Layer.isLayer(layer))
  * // true

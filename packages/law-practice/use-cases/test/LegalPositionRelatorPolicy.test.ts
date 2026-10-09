@@ -36,8 +36,10 @@ import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { Effect, Equal, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as R from "effect/Record";
 

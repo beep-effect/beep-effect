@@ -19,7 +19,7 @@ Loaded on demand from `effect-first-development/SKILL.md`. Repository laws win o
 ### 10) Observability and metrics
 
 ```ts
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as Metric from "effect/Metric"
 
 const latency = Metric.histogram("operation_duration_ms", {
@@ -42,8 +42,8 @@ const runOperation = Effect.fn("Operation.run")(function* (id: string) {
 ### 10b) Boundary logging with Cause
 
 ```ts
-import { Cause, Effect } from "effect"
-
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
 const respond = <A>(effect: Effect.Effect<A, DomainError>) =>
   effect.pipe(
     Effect.catchCause((cause) => {
@@ -62,8 +62,9 @@ const respond = <A>(effect: Effect.Effect<A, DomainError>) =>
 
 ```ts
 import { BunRuntime } from "@effect/platform-bun"
-import { Cause, Exit, Runtime } from "effect"
-
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
+import * as Runtime from "effect/Runtime";
 // NEVER: recover the root failure just to set process.exitCode.
 // const main = program.pipe(Effect.catchCause((cause) => Effect.sync(() => {
 //   process.exitCode = 1
@@ -90,8 +91,8 @@ BunRuntime.runMain(program, {
 ### 11) Duration values
 
 ```ts
-import { Duration, Effect } from "effect"
-
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 const requestTimeout = Duration.seconds(30)
 const retryWindow = Duration.minutes(5)
 
@@ -121,9 +122,7 @@ For runtime `Option` object fields, prefer `O.getSomesStruct({...})` (`@beep/uti
 ### 13) Dual helper APIs
 
 ```ts
-import { dual } from "effect/Function"
-import { pipe } from "effect"
-
+import { dual, pipe } from "effect/Function"
 export const prefixTag: {
   (tag: string): (self: string) => string
   (self: string, tag: string): string
@@ -137,7 +136,7 @@ const dataLast = pipe("hello", prefixTag("info"))
 
 ```ts
 import { $PackageNameId } from "@beep/identity/packages"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema"
 
 const $I = $PackageNameId.create("relative/path/to/file/from/package/src")
@@ -172,8 +171,7 @@ const decodeUserJsonAtBoundary = (input: unknown) =>
 ### 15) Runtime boundary for running effects
 
 ```ts
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 // Library export: return Effect, do not run it here.
 export const generateReport = Effect.fn("Report.generate")(function* () {
   return "report"
@@ -186,8 +184,7 @@ export const generateReport = Effect.fn("Report.generate")(function* () {
 ### 16) Promise boundaries with `Effect.tryPromise`
 
 ```ts
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const fetchBody = (url: string) =>
   Effect.tryPromise({
     try: () => fetch(url).then((response) => response.text()),
@@ -206,8 +203,7 @@ generator call site bridges. Direct-value insert converters are already values a
 must not be passed to `Effect.fromResult`. Law: `EF-22b`.
 
 ```ts
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const insertDisposition = Effect.fnUntraced(function* (disposition: CandorDisposition) {
   const row = yield* Effect.fromResult(toCandorDispositionInsert(disposition))
   return yield* write(row)
@@ -217,8 +213,7 @@ const insertDisposition = Effect.fnUntraced(function* (disposition: CandorDispos
 ### 17) Scoped resource safety
 
 ```ts
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const withConnection = <A, E, R>(
   use: (conn: Connection) => Effect.Effect<A, E, R>
 ) =>

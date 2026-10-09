@@ -10,8 +10,13 @@ import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Clock, Effect, FileSystem, flow, Match, Order, Path, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import {
   AiMetricsRawArchiveKey,
@@ -656,8 +661,7 @@ const AiMetricsRetentionEnforcementResultFromJsonString = S.fromJsonString(AiMet
  *
  * ```ts
  * import { AiMetricsRetentionRestoreDrillInput, AiMetricsRetentionSelector } from "@beep/repo-ai-metrics"
- * import { Redacted } from "effect"
- *
+ * import * as Redacted from "effect/Redacted";
  * const input = AiMetricsRetentionRestoreDrillInput.make({
  *   rawArchiveKey: Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
  *   restoreRoot: "/tmp/ai-metrics-restore",
@@ -986,7 +990,7 @@ const planToInventory = (input: AiMetricsRetentionSelector, plan: RetentionPlan)
  * ```ts
  * import { AiMetricsRetentionSelector, listAiMetricsRetentionInventory } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = listAiMetricsRetentionInventory(
@@ -1157,7 +1161,7 @@ const listForwarderSnapshotExportDirs = Effect.fn("AiMetrics.retention.listForwa
  * ```ts
  * import { AiMetricsRetentionEnforcementPolicy, enforceAiMetricsRetentionPolicy } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = enforceAiMetricsRetentionPolicy(
@@ -1286,7 +1290,7 @@ const runRetentionMutation = Effect.fn("AiMetrics.retention.runMutation")(functi
  * ```ts
  * import { AiMetricsRetentionSelector, runAiMetricsRetentionDelete } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = runAiMetricsRetentionDelete(
@@ -1345,7 +1349,7 @@ export const runAiMetricsRetentionDelete: {
  * ```ts
  * import { AiMetricsRetentionSelector, runAiMetricsRetentionCompact } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = runAiMetricsRetentionCompact(
@@ -1413,8 +1417,8 @@ export const runAiMetricsRetentionCompact: {
  *   runAiMetricsRetentionRestoreDrill
  * } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
- * import { Effect, Redacted } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
  * const program = runAiMetricsRetentionRestoreDrill(
  *   AiMetricsRetentionRestoreDrillInput.make({
  *     rawArchiveKey: Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
@@ -1570,8 +1574,7 @@ export const runAiMetricsRetentionRestoreDrill = Effect.fn("AiMetrics.runAiMetri
  *
  * ```ts
  * import { AiMetricsRetentionInventory, aiMetricsRetentionInventoryToJson } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const inventory = AiMetricsRetentionInventory.make({
  *   derivedExports: [],
  *   explicitWindow: true,
@@ -1613,8 +1616,7 @@ export const aiMetricsRetentionInventoryToJson: (
  *
  * ```ts
  * import { AiMetricsRetentionEnforcementResult, aiMetricsRetentionEnforcementToJson } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const result = AiMetricsRetentionEnforcementResult.make({
  *   dataRoot: "/home/dev/.local/state/beep/ai-metrics",
  *   deletedDerivedExportCount: 1,
@@ -1654,8 +1656,7 @@ export const aiMetricsRetentionEnforcementToJson: (
  *
  * ```ts
  * import { AiMetricsRetentionMutationResult, aiMetricsRetentionMutationToJson } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const result = AiMetricsRetentionMutationResult.make({
  *   deletedDerivedExportCount: 2,
  *   deletedRawArchiveObjectCount: 0,
@@ -1697,8 +1698,7 @@ export const aiMetricsRetentionMutationToJson: (
  *
  * ```ts
  * import { AiMetricsRetentionRestoreDrillResult, aiMetricsRetentionRestoreDrillToJson } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const result = AiMetricsRetentionRestoreDrillResult.make({
  *   derivedDuckDbPath: "/tmp/ai-metrics-restore/derived/ai-metrics.duckdb",
  *   hashMatches: true,

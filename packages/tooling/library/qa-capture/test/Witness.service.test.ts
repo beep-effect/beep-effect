@@ -1,7 +1,7 @@
 import { Witness } from "@beep/qa-capture";
 import { it } from "@beep/test-runner";
 import { describe, expect, vi } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 
 describe("@beep/qa-capture witness bundling", { concurrent: false }, () => {
   it.layer(Witness.layer, { concurrent: false })(

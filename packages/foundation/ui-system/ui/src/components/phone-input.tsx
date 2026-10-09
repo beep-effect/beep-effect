@@ -23,9 +23,8 @@ import {
 } from "@beep/ui/components/country-select";
 import { InputGroup, InputGroupInput } from "@beep/ui/components/input-group";
 import { make as makeScopedAtom, useAtom } from "@effect/atom-react";
-import { pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { Atom } from "effect/reactivity";

@@ -2,8 +2,9 @@
 
 import { CodegenPostProcessError, GenerateConfig, runGenerateCli } from "@beep/codegen-kit";
 import { $AcpId } from "@beep/identity";
-import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import type { ExtraRenderer, SpecSource } from "@beep/codegen-kit";
 

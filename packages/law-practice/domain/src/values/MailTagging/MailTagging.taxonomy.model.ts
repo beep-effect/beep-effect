@@ -10,9 +10,9 @@
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { EmailString } from "@beep/schema/Email";
-import { Effect, flow, pipe } from "effect";
 import * as A from "effect/Array";
-import { constant } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { constant, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

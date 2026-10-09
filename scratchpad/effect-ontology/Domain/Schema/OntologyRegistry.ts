@@ -9,7 +9,7 @@ import { AbsoluteIRI, IRI } from "@beep/rdf";
 import { SemanticVersion } from "@beep/schema";
 import * as S from "effect/Schema";
 import { GcsObject, OntologyName } from "../Identity.ts";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/OntologyRegistry");

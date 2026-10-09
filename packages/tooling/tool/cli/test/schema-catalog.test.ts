@@ -5,8 +5,9 @@ import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, Layer } from "effect";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as TestConsole from "effect/testing/TestConsole";
 import {

@@ -3,7 +3,9 @@ import { aiMetricsDerivedDuckDbPath, withAiMetricsDuckDb } from "@beep/repo-ai-m
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 
 const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(

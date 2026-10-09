@@ -14,8 +14,11 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { proofCoordinatorLockPath } from "@beep/repo-cli/test/Yeet";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
-import { Data, Effect, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 
 class PackageVerificationProcessError extends Data.TaggedError("PackageVerificationProcessError")<{
   readonly reason: "exit" | "git" | "spawn";

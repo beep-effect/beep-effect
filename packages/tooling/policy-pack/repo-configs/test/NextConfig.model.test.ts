@@ -2,7 +2,8 @@ import { decodeNextConfig, defineNextConfig } from "@beep/repo-configs/next";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit } from "effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import type { NextConfig as NextConfigFromNext } from "next";
 
 describe("NextConfig", () => {
@@ -89,9 +90,9 @@ describe("NextConfig", () => {
         })
       );
 
-      assertTrue(Exit.isFailure(invalidCrossOrigin));
-      assertTrue(Exit.isFailure(invalidStaleTimes));
-      assertTrue(Exit.isFailure(invalidWebVitalsAttribution));
+      invalidCrossOrigin.pipe(Exit.isFailure, assertTrue);
+      invalidStaleTimes.pipe(Exit.isFailure, assertTrue);
+      invalidWebVitalsAttribution.pipe(Exit.isFailure, assertTrue);
     })
   );
 

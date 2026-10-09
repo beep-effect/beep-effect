@@ -9,7 +9,8 @@ import { $PandocAstId } from "@beep/identity";
 import * as Conformance from "@beep/schema/Conformance";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, O, P, R } from "@beep/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { PandocJsonConformanceAnnotation } from "./internal/conformance/Pandoc.conformance-registry.ts";
 import { isPandocKnownConstructorName } from "./internal/Pandoc.registry.ts";
@@ -215,7 +216,7 @@ class InvalidPandocDocument extends S.TaggedClass<InvalidPandocDocument>($I`Inva
  * **Example** (Match every conformance outcome)
  *
  * ```ts import.meta.vitest name="Match every conformance outcome"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { inspectPandocConformance, PandocConformanceResult } from "@beep/pandoc-ast/Pandoc.conformance"
  *
  * const result = Effect.runSync(inspectPandocConformance(null))
@@ -306,7 +307,7 @@ const invalidResult = (
  * **Example** (Recognize a future constructor)
  *
  * ```ts import.meta.vitest name="Recognize a future constructor"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { inspectPandocConformance } from "@beep/pandoc-ast/Pandoc.conformance"
  *
  * const result = Effect.runSync(inspectPandocConformance({

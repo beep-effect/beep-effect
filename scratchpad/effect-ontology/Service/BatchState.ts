@@ -6,7 +6,10 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Effect, Layer, PubSub } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as PubSub from "effect/PubSub";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -104,7 +107,9 @@ const BATCH_STATE_HUB_CAPACITY = 1000;
  * **Example** (Publish a pending batch)
  *
  * ```ts
- * import { DateTime, Effect, PubSub } from "effect"
+ * import * as DateTime from "effect/DateTime";
+ * import * as Effect from "effect/Effect";
+ * import * as PubSub from "effect/PubSub";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { BatchState } from "@effect-ontology/Model/BatchWorkflow"
@@ -147,7 +152,8 @@ export class BatchStateHub extends Context.Service<BatchStateHub>()($I`BatchStat
  * **Example** (Provide the hub layer)
  *
  * ```ts
- * import { Effect, PubSub } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as PubSub from "effect/PubSub";
  * import { BatchStateHub, BatchStateHubLayer } from "@effect-ontology/Service/BatchState"
  *
  * const capacity = Effect.runSync(
@@ -170,7 +176,7 @@ export const BatchStateHubLayer = BatchStateHub.Default;
  * **Example** (Provide persistence over test storage)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { BatchStatePersistenceLayer } from "@effect-ontology/Service/BatchState"
  * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
@@ -191,7 +197,8 @@ export const BatchStatePersistenceLayer = Persistence.layerKvs.pipe(
  * **Example** (Persist a pending batch)
  *
  * ```ts
- * import { DateTime, Effect } from "effect"
+ * import * as DateTime from "effect/DateTime";
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { BatchState } from "@effect-ontology/Model/BatchWorkflow"
@@ -250,7 +257,7 @@ export const persistState = Effect.fn("BatchState.persistState")(function* (stat
  * **Example** (Read a missing batch)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import { BatchId } from "@effect-ontology/Identity"
  * import { getBatchStateFromStore } from "@effect-ontology/Service/BatchState"
@@ -303,7 +310,9 @@ export const getBatchStateFromStore = Effect.fn("BatchState.getFromStore")(funct
  * **Example** (Publish after persist)
  *
  * ```ts
- * import { DateTime, Effect, Layer } from "effect"
+ * import * as DateTime from "effect/DateTime";
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { BatchState } from "@effect-ontology/Model/BatchWorkflow"

@@ -15,12 +15,14 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
-import { Effect, Order, Struct } from "effect";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { isJsonRecord } from "../Inventory.ts";
 import { PacketEvent, PacketEventType } from "./PacketCore.schemas.ts";
 import type * as PlatformError from "effect/PlatformError";

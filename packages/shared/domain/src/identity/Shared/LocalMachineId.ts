@@ -36,7 +36,7 @@ export const LocalMachineId = make("local_machine", {
  * **Example** (Decode LocalMachineId with Schema)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { LocalMachineId } from "@beep/shared-domain/identity/Shared"
  * import * as S from "effect/Schema"
  *

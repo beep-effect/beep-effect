@@ -31,9 +31,16 @@ import { LocalDate } from "@beep/schema/LocalDate";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Cause, Context, DateTime, Effect, Exit, FileSystem, Layer, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { DIRECTORY, StoreLayer } from "./DocketIntake.fixture.ts";
@@ -94,7 +101,7 @@ const InnerPortsLayer = Layer.effectContext(
         DocketCalendar,
         DocketCalendar.of({
           create: Effect.fnUntraced(function* () {
-            return yield* Effect.flatten(Ref.get(inner.create));
+            return yield* inner.create.pipe(Ref.get, Effect.flatten);
           }),
           findByKey: Effect.fnUntraced(function* () {
             return yield* Ref.get(inner.found);
@@ -105,7 +112,7 @@ const InnerPortsLayer = Layer.effectContext(
         DocketMailbox,
         DocketMailbox.of({
           markEntered: Effect.fnUntraced(function* () {
-            yield* Effect.flatten(Ref.get(inner.mark));
+            yield* inner.mark.pipe(Ref.get, Effect.flatten);
           }),
           receivedSince: Effect.fnUntraced(function* () {
             return yield* Effect.succeed([message]);
@@ -377,7 +384,7 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
         yield* calendar.findByKey(entry.key);
         const lines = yield* journalLines;
 
-        assertTrue(Exit.hasDies(crashed));
+        crashed.pipe(Exit.hasDies, assertTrue);
         assertSome(found, written);
         expect(
           A.map(lines, (line) => [line.kind, line.runId, O.getOrNull(line.eventId), O.getOrNull(line.idempotencyKey)])
@@ -412,7 +419,7 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
 
         const exit = yield* Effect.exit(calendar.create(entry));
 
-        assertTrue(Exit.hasDies(exit));
+        exit.pipe(Exit.hasDies, assertTrue);
       })
     );
   });

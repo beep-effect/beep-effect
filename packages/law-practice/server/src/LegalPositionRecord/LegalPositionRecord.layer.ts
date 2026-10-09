@@ -7,7 +7,7 @@
  */
 
 import { LegalPositionRecordRepository } from "@beep/law-practice-use-cases/LegalPositionRecord";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import {
   makeInMemoryLegalPositionRecordRepository,
   makeLegalPositionRecordRepository,
@@ -26,8 +26,7 @@ import type { PostgresDrizzle } from "@beep/postgres";
  *
  * ```ts
  * import { LegalPositionRecordRepositoryInMemory } from "@beep/law-practice-server/LegalPositionRecord"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(LegalPositionRecordRepositoryInMemory)) // true
  * ```
  *
@@ -59,8 +58,7 @@ export const LegalPositionRecordRepositoryInMemory: Layer.Layer<LegalPositionRec
  *
  * ```ts
  * import { LegalPositionRecordRepositoryLive } from "@beep/law-practice-server/LegalPositionRecord"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(LegalPositionRecordRepositoryLive)) // true
  * ```
  *

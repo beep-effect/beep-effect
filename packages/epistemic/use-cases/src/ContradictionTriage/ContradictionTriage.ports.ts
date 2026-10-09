@@ -19,12 +19,12 @@ import {
   ContradictionResolutionProposal,
 } from "@beep/epistemic-domain/values/Contradiction";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import * as S from "effect/Schema";
 import type { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import type { Principal } from "@beep/shared-domain/entity/Principal";
 import type * as Shared from "@beep/shared-domain/identity/Shared";
-import type { Effect } from "effect";
+import type * as Effect from "effect/Effect";
 import type * as O from "effect/Option";
 import type { EdgeAuthorityError } from "../EdgeAuthority/index.ts";
 import type {
@@ -49,8 +49,7 @@ const $I = $EpistemicUseCasesId.create("ContradictionTriage/ContradictionTriage.
  *
  * ```ts
  * import { ContradictionReviewer } from "@beep/epistemic-use-cases/server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const reviewerKind = ContradictionReviewer.pipe(
  *   Effect.map((reviewer) => reviewer.kind)
  * )
@@ -73,8 +72,7 @@ export class ContradictionReviewer extends Context.Service<ContradictionReviewer
  *
  * ```ts
  * import { ContradictionReviewScope } from "@beep/epistemic-use-cases/server"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const organization = ContradictionReviewScope.pipe(
  *   Effect.map((scope) => scope.orgId)
  * )

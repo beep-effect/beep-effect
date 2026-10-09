@@ -12,8 +12,7 @@ import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
 import { Attributes, EntityId } from "./shared.ts";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EntityResolution");
 
 /**

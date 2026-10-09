@@ -15,7 +15,9 @@ import { writeFileWithinCanonicalRootAtomically } from "@beep/file-processing/Pa
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Effect, FileSystem, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CodexFindingsRedactionError, CodexPacketWriteError } from "./Findings.errors.ts";
@@ -144,8 +146,7 @@ export class PacketDocument extends S.Class<PacketDocument>($I`PacketDocument`)(
  *
  * ```ts
  * import { PacketDocument, assertPacketDocumentsClean } from "@beep/repo-cli/commands/Codex/Findings.write"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = assertPacketDocumentsClean([
  *   PacketDocument.make({ path: "raw/payload.json", contents: "/home/dev/x", tracked: false }),
  * ]).pipe(

@@ -8,9 +8,9 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
-import { Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Eq from "effect/Equal";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
@@ -78,11 +78,15 @@ describe("@beep/openai", () => {
     "round-trips schema-derived OpenAI options through encoded form",
     [EmbeddingModelOptionsArbitrary, LanguageModelOptionsArbitrary],
     ([embeddingOptions, languageOptions]) => {
-      const decodedEmbeddingOptions = Result.getOrThrow(
-        decodeEmbeddingModelOptions(Result.getOrThrow(encodeEmbeddingModelOptions(embeddingOptions)))
+      const decodedEmbeddingOptions = encodeEmbeddingModelOptions(embeddingOptions).pipe(
+        Result.getOrThrow,
+        decodeEmbeddingModelOptions,
+        Result.getOrThrow
       );
-      const decodedLanguageOptions = Result.getOrThrow(
-        decodeLanguageModelOptions(Result.getOrThrow(encodeLanguageModelOptions(languageOptions)))
+      const decodedLanguageOptions = encodeLanguageModelOptions(languageOptions).pipe(
+        Result.getOrThrow,
+        decodeLanguageModelOptions,
+        Result.getOrThrow
       );
 
       expect(Eq.equals(decodedEmbeddingOptions, embeddingOptions)).toBe(true);

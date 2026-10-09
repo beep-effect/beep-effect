@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { Str } from "@beep/utils";
-import { flow, pipe } from "effect";
+import { flow, pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { SupportedWindowsNamespace, UsesPosixSeparator, UsesWindowsSeparator } from "./FilePath.guards.ts";

@@ -7,8 +7,8 @@
 import { $AgentsDomainId } from "@beep/identity/packages";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import { Tuple } from "effect";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { AgentFixtureKey, AgentName, SkillFixtureKey } from "../Fixture.values.ts";
 import { AgentMode } from "./Agent.values.ts";
 

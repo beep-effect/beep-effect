@@ -21,9 +21,11 @@ import {
   pendingFilingIntents,
   TagLedger,
 } from "@beep/law-practice-use-cases/MailTagging";
-import { Console, Effect, flow } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";

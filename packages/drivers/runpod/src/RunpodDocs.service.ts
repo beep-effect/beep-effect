@@ -8,11 +8,17 @@
 import { $RunpodId } from "@beep/identity";
 import { Fn, URLStr } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
-import { Config, Context, Effect, flow, Layer, pipe, Result, SchemaIssue } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import { RUNPOD_DOCS_INDEX_URL, RunpodConfigUrl, RunpodDocsConfigInput } from "./Runpod.config.ts";
 import { RunpodDocsError } from "./Runpod.errors.ts";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
@@ -274,7 +280,7 @@ const mapParserContractError = (cause: RunpodDocsError | SchemaIssue.Issue): Run
  * **Example** (Parse markdown index)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { parseRunpodDocsIndex } from "@beep/runpod"
  *
  * const markdown = "# Runpod Docs\n\n## Pods\n- [Create a pod](https://docs.runpod.io/pods)"

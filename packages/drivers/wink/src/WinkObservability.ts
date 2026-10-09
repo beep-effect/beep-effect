@@ -9,13 +9,15 @@ import { $WinkId } from "@beep/identity";
 import { AiToolError } from "@beep/nlp-processing/Tools";
 import { observeWorkflow, summarizeCause } from "@beep/observability";
 import { Str } from "@beep/utils";
-import { Effect, Inspectable, Metric } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import type { Cause } from "effect";
+import type * as Cause from "effect/Cause";
 
 const $I = $WinkId.create("Wink/WinkObservability");
 
@@ -63,7 +65,7 @@ const mergeAttributes = (left: Record<string, string>, right: Record<string, str
  * **Example** (Observe named workflow effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { observeWinkWorkflow } from "@beep/wink"
  *
  * const observed = Effect.succeed("ok").pipe(
@@ -193,7 +195,7 @@ export const withWinkAttributes: {
  * **Example** (Observe workflow with metrics)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { observeWinkWorkflow } from "@beep/wink"
  *
  * const program = Effect.succeed(1).pipe(
@@ -304,7 +306,7 @@ const logWinkToolFailure =
  * **Example** (Map effect error channel)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { mapWinkToolError } from "@beep/wink"
  *
  * const program = Effect.fail(new Error("bad corpus")).pipe(
@@ -346,7 +348,7 @@ export const mapWinkToolError: {
  * **Example** (Observe tool with structured errors)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { observeWinkTool } from "@beep/wink"
  *
  * const observed = Effect.succeed("ok").pipe(

@@ -7,10 +7,10 @@
 
 import { $SkillContractId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { Tuple } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { EvidenceSubject } from "./EvidenceReceipt.ts";
 import { EvidencePredicateType } from "./Gate.ts";
 

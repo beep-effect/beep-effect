@@ -8,8 +8,9 @@ import { $InfraId } from "@beep/identity/packages";
 import { EmailString } from "@beep/schema";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
-import { Effect, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const $I = $InfraId.create("AccountCostControls");

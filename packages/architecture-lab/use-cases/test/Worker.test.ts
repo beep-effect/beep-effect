@@ -5,8 +5,9 @@ import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/Architect
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect, HashMap } from "effect";
+import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

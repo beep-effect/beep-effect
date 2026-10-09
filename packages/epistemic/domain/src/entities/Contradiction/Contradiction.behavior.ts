@@ -13,9 +13,10 @@ import {
   contradictionEvidenceDigest,
   contradictionProposalDigest,
 } from "@beep/epistemic-domain/values/Contradiction";
-import { identity, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
+import { identity, pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type {
   CanonicalContradictionBeliefPair,

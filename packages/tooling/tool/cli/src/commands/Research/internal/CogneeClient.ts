@@ -17,13 +17,15 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Email, EmailString } from "@beep/schema";
-import { Config, Effect, Redacted } from "effect";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ResearchCommandError } from "../Research.errors.ts";
@@ -176,7 +178,7 @@ export class CogneeCardUpload extends S.Class<CogneeCardUpload>($I`CogneeCardUpl
  * ```ts
  * import { CogneeSettings } from "@beep/repo-cli/commands/Research/internal/CogneeClient"
  * import { Email } from "@beep/schema"
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * import * as S from "effect/Schema"
  *
  * const settings = CogneeSettings.make({
@@ -275,7 +277,8 @@ const secureCogneeSettings = (raw: CogneeRawSettings): Effect.Effect<CogneeSetti
  *
  * ```ts
  * import { readCogneeSettings } from "@beep/repo-cli/commands/Research/internal/CogneeClient"
- * import { ConfigProvider, Effect } from "effect"
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = readCogneeSettings.pipe(
@@ -345,7 +348,8 @@ const failStatus = Effect.fn("CogneeClient.failStatus")(function* (
  * ```ts
  * import { CogneeSettings, cogneeLogin } from "@beep/repo-cli/commands/Research/internal/CogneeClient"
  * import { Email } from "@beep/schema"
- * import { Effect, Redacted } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
  * import * as S from "effect/Schema"
  *
  * const program = cogneeLogin(

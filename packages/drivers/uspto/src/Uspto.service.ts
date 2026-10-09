@@ -9,11 +9,16 @@ import { $UsptoId } from "@beep/identity";
 import { assertAllowedRemoteUrl, URLStr } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Config, Context, Effect, Layer, Match, Redacted } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import { USPTO_API_URL, UsptoConfigInput } from "./Uspto.config.ts";
 import { UsptoError } from "./Uspto.errors.ts";
@@ -34,8 +39,7 @@ const $I = $UsptoId.create("Uspto.service");
  *
  * ```ts
  * import type { UsptoShape } from "@beep/uspto"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const service: UsptoShape = {
  *   downloadDocument: () => Effect.die("not implemented"),
  *   getApplication: () => Effect.die("not implemented"),

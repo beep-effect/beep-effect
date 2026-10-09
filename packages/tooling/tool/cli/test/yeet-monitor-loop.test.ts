@@ -26,10 +26,16 @@ import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
-import { Effect, HashMap, HashSet, Layer, pipe, Sink, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 

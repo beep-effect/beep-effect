@@ -2,8 +2,9 @@ import { CurrencyCode, CurrencyName, isCurrencyCode, USD } from "@beep/schema/Cu
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 
 const decodeCurrencyCodeEffect = S.decodeEffect(CurrencyCode);

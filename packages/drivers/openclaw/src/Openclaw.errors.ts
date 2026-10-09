@@ -12,7 +12,7 @@
 
 import { $OpenclawId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { OpenclawDiagnosticText, OpenclawExitCode } from "./Openclaw.models.ts";
 

@@ -8,9 +8,11 @@
 import { $XaiId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { Effect, identity, SchemaTransformation } from "effect";
+import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const $I = $XaiId.create("XAi.config");
 const normalizeXAiBaseUrl = Str.replace(/\/+$/, "");
@@ -155,7 +157,7 @@ const xAiConfigInputHeadersDefault = R.empty();
  * **Example** (Build config with API keys)
  *
  * ```ts
- * import { Redacted } from "effect"
+ * import * as Redacted from "effect/Redacted";
  * import * as O from "effect/Option"
  * import { XAiConfigInput } from "@beep/xai"
  *

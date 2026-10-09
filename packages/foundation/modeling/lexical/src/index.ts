@@ -12,7 +12,7 @@
  * **Example** (Project linebreak to text)
  *
  * ```ts import.meta.vitest name="Project linebreak to text"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { LexicalNode, nodeToPlainText } from "@beep/lexical-schema"
  *
@@ -59,7 +59,7 @@ export { inspectEditorStateConformance, LexicalConformanceResult } from "./Lexic
  * **Example** (Decode linebreak node)
  *
  * ```ts import.meta.vitest name="Decode linebreak node"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema"
  *

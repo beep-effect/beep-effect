@@ -6,9 +6,14 @@
  */
 
 import { DomainError } from "@beep/repo-utils";
-import { Console, DateTime, Duration, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { repoRunOutputBound, runCaptured } from "../process/StepExec.ts";
 import { commandTextForStep, RepoStepRunResult } from "./RepoRun.models.ts";
 import type * as Crypto from "effect/Crypto";

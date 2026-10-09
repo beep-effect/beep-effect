@@ -5,7 +5,7 @@
  * @category atoms
  * @since 0.0.0
  */
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { Reactivity } from "effect/reactivity";
 import { ProviderInstanceClient } from "./ProviderInstance.service.ts";
 import type {

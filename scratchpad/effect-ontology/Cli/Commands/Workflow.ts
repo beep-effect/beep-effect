@@ -8,8 +8,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Clock, Console, DateTime, Duration, Effect } from "effect";
+import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";

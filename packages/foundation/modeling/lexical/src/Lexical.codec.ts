@@ -17,8 +17,11 @@ import { segmentInlineRuns } from "@beep/md/Md.behavior";
 import * as Md from "@beep/md/Md.model";
 import { MappedLiteralKit } from "@beep/schema";
 import { A, dual, N, O, P, Str } from "@beep/utils";
-import { Effect, flow, Match, pipe, Result } from "effect";
 import * as Bool from "effect/Boolean";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { PosInt } from "./internal/PosInt.ts";
 import { nodeToPlainText } from "./Lexical.behavior.ts";
@@ -50,7 +53,7 @@ import {
   withTextFormat,
   YouTubeNode,
 } from "./Lexical.model.ts";
-import type { SchemaIssue } from "effect";
+import type * as SchemaIssue from "effect/SchemaIssue";
 import type { TableCellHeaderState, TextFormatBit } from "./Lexical.model.ts";
 
 const isMdText = S.is(Md.Text);
@@ -81,7 +84,7 @@ export const ARTIFACT_URI_PREFIX = "artifact://";
  * **Example** (Decode artifact URI)
  *
  * ```ts import.meta.vitest name="Decode artifact URI"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { ArtifactUri } from "@beep/lexical-schema/Lexical.codec"
  *
@@ -385,7 +388,7 @@ const paragraphArtifactRef = (block: Md.P): O.Option<ArtifactRef> =>
  * **Example** (Convert paragraph to Lexical)
  *
  * ```ts import.meta.vitest name="Convert paragraph to Lexical"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { P, Text } from "@beep/md/Md.model"
  * import { blockToLexical } from "@beep/lexical-schema/Lexical.codec"
  *
@@ -489,7 +492,7 @@ export const blockToLexical = Match.typeTags<Md.Block>()({
  * **Example** (Lift document to state)
  *
  * ```ts import.meta.vitest name="Lift document to state"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Document, P, Text } from "@beep/md/Md.model"
  * import { documentToEditorState } from "@beep/lexical-schema/Lexical.codec"
  *
@@ -650,7 +653,7 @@ const youtubeToBlocks = (node: YouTubeNode): ReadonlyArray<Md.Block> =>
  * **Example** (Project artifact-ref node)
  *
  * ```ts import.meta.vitest name="Project artifact-ref node"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  * import { nodeToBlocks } from "@beep/lexical-schema/Lexical.codec"
@@ -699,7 +702,7 @@ export const nodeToBlocks: (node: LexicalNode) => ReadonlyArray<Md.Block> = Lexi
  * **Example** (Round-trip editor state)
  *
  * ```ts import.meta.vitest name="Round-trip editor state"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Document, P, Text } from "@beep/md/Md.model"
  * import { documentToEditorState, editorStateToDocument } from "@beep/lexical-schema/Lexical.codec"
  *

@@ -7,9 +7,15 @@
 
 import { $CiopsId } from "@beep/identity/packages";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
-import { Context, Crypto, Effect, FileSystem, Layer, TxQueue, TxRef } from "effect";
+import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as TxQueue from "effect/TxQueue";
+import * as TxRef from "effect/TxRef";
 import { projectSchedule } from "./Engine.ts";
 import { decodeHandoffView, planHandoffView } from "./LanePlan.ts";
 import { HandoffDigestMismatchError, HandoffReadError } from "./Schemas.ts";
@@ -77,8 +83,7 @@ export interface CiOpsProjectionShape {
  *
  * ```ts
  * import { CiOpsProjection, CiOpsProjectionLive } from "@/projection/CiOpsProjection"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(CiOpsProjection.key.length > 0) // true
  * console.log(Layer.isLayer(CiOpsProjectionLive)) // true
  * ```
@@ -189,8 +194,8 @@ const makeCiOpsProjection = Effect.fnUntraced(function* (): Effect.fn.Return<
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import { CiOpsProjection, CiOpsProjectionLive } from "@/projection/CiOpsProjection"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const ProjectionLive = CiOpsProjectionLive.pipe(
  *   Layer.provide(Layer.merge(BunFileSystem.layer, BunCrypto.layer))
  * )

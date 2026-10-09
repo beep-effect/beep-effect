@@ -44,9 +44,10 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
-import { Duration, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Duration from "effect/Duration";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeOpenclawAgentTurnJsonResult = S.decodeResult(S.fromJsonString(OpenclawAgentTurn));
@@ -96,7 +97,7 @@ const sameGatewayHealth = S.toEquivalence(OpenclawGatewayHealth);
 const sameCompatibilitySet = S.toEquivalence(OpenclawCompatibilitySet);
 
 const roundTrip = <Sch extends S.Codec<unknown, unknown, never, never>>(schema: Sch, value: Sch["Type"]): Sch["Type"] =>
-  Result.getOrThrow(S.decodeUnknownResult(schema)(Result.getOrThrow(S.encodeResult(schema)(value as never))));
+  S.encodeResult(schema)(value as never).pipe(Result.getOrThrow, S.decodeUnknownResult(schema), Result.getOrThrow);
 
 describe("@beep/openclaw models", () => {
   it("parses the exact observed --version output", () => {
@@ -314,8 +315,9 @@ describe("@beep/openclaw models", () => {
       subcommand: "config validate",
     });
     const exit = OpenclawCommandExitError.make({
-      diagnostics: O.some(
-        Result.getOrThrow(S.decodeResult(OpenclawDiagnosticText)("Unknown top-level key: unexpected"))
+      diagnostics: S.decodeResult(OpenclawDiagnosticText)("Unknown top-level key: unexpected").pipe(
+        Result.getOrThrow,
+        O.some
       ),
       executable: "openclaw",
       exitCode: 1,
@@ -343,7 +345,7 @@ describe("@beep/openclaw models", () => {
     expect(isOpenclawCliError(timeout)).toBe(true);
     expect(isOpenclawCliError(parse)).toBe(true);
 
-    const encodedExit = Result.getOrThrow(encodeOpenclawCommandExitErrorResult(exit));
+    const encodedExit = exit.pipe(encodeOpenclawCommandExitErrorResult, Result.getOrThrow);
     expect(Object.keys(encodedExit).sort()).toEqual([
       "_tag",
       "diagnostics",

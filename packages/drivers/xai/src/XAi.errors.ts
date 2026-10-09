@@ -7,11 +7,12 @@
 
 import { $XaiId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { XAiHttpStatusCode } from "./XAi.models.ts";
 import { XAiEndpoint, XAiEndpointId, XAiEndpointMethodName, XAiHttpMethod } from "./XAiEndpoints.models.ts";

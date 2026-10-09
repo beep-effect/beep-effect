@@ -9,8 +9,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Effect, Layer, Match } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { EmbeddingError } from "../Domain/Error/Embedding.ts";
@@ -40,7 +41,7 @@ const mapTaskType = Match.type<string>().pipe(
  * **Example** (Inspect nomic embedding provider live)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
  * import { NomicEmbeddingProviderLive } from "@effect-ontology/Service/NomicEmbeddingProvider"
  *
@@ -106,7 +107,7 @@ export const NomicEmbeddingProviderLive: Layer.Layer<EmbeddingProvider, never, N
  * **Example** (Inspect nomic embedding provider default)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
  * import { NomicEmbeddingProviderDefault } from "@effect-ontology/Service/NomicEmbeddingProvider"
  *

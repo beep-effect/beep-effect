@@ -12,8 +12,7 @@ bun add @beep/tika
 
 ```ts
 import { makeTikaServerFileProcessingEngine, TikaServerEngineConfig } from "@beep/tika"
-import { Effect } from "effect"
-
+import * as Effect from "effect/Effect";
 const program = Effect.gen(function* () {
   const engine = yield* makeTikaServerFileProcessingEngine(TikaServerEngineConfig.make({}))
   return engine.descriptor.version

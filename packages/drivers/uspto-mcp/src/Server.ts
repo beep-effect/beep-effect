@@ -16,8 +16,8 @@
 import { $UsptoMcpId } from "@beep/identity/packages";
 import { composeGatedLayers, gatedLayer, handshakeMcpProtocols, sanitizedToolkit } from "@beep/mcp-kit";
 import { Uspto } from "@beep/uspto";
-import { Layer } from "effect";
 import * as McpServer from "effect/ai/McpServer";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { UsptoToolkitHandlersLive } from "./UsptoHandlers.ts";
 import { UsptoSourceAuthRegistration } from "./UsptoSourceAuth.ts";
@@ -122,7 +122,7 @@ export const UsptoMcpRegistrationsLive: Layer.Layer<never, Config.ConfigError, U
  * **Example** (Launch stdio MCP server)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { makeServerLayer, UsptoMcpServerConfig } from "@beep/uspto-mcp/Server"
  * import * as NodeStdio from "@effect/platform-node/NodeStdio"
  *

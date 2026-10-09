@@ -2,9 +2,12 @@ import { CodegenKit, GenerateConfig } from "@beep/codegen-kit";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
-import { Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 

@@ -8,8 +8,13 @@ import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, Exit, FileSystem, Layer, Path, pipe } from "effect";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -62,17 +67,15 @@ describe("roadmap-refs lint command", { concurrent: false }, () => {
   it(
     "accepts deterministic projections that are intentionally absent from Git",
     () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
-          Effect.gen(function* () {
-            yield* writeFixture(
-              "# Roadmap\n\n- [Exploration Atlas](../explorations/ATLAS.md)\n- [Goals index](../goals/INDEX.md)\n"
-            );
-            const exit = yield* Effect.exit(runLintCommand(["roadmap-refs"]));
-            assertTrue(Exit.isSuccess(exit));
-          })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeFixture(
+            "# Roadmap\n\n- [Exploration Atlas](../explorations/ATLAS.md)\n- [Goals index](../goals/INDEX.md)\n"
+          );
+          const exit = yield* Effect.exit(runLintCommand(["roadmap-refs"]));
+          if (!Exit.isSuccess(exit)) throw new Error("Expected a success exit");
+        })
+      ).pipe(provideScopedLayer(testLayer), Effect.runPromise),
     20_000
   );
 
@@ -91,7 +94,7 @@ describe("roadmap-refs lint command", { concurrent: false }, () => {
               yield* writeFixture(roadmap);
               const exit = yield* Effect.exit(runLintCommand(["roadmap-refs"]));
               expectReportedExit(exit);
-              assertTrue(Exit.isFailure(exit));
+              exit.pipe(Exit.isFailure, assertTrue);
 
               const issueLines = pipe(
                 yield* TestConsole.errorLines,

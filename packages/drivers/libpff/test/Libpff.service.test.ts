@@ -19,8 +19,8 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const SourceArtifactArbitrary = Arbitrary.schema(SourceArtifact);

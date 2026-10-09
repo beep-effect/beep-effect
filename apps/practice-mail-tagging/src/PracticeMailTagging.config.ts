@@ -9,7 +9,7 @@ import { BoxCcgConfig, BoxDeveloperTokenConfig } from "@beep/box";
 import { $PracticeMailTaggingId } from "@beep/identity/packages";
 import { MatterContactEvidence } from "@beep/law-practice-server/MailTagging";
 import { M365AppOnlyConfigInput, M365CertificateCredential } from "@beep/m365";
-import { Config } from "effect";
+import * as Config from "effect/Config";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as O from "effect/Option";

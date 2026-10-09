@@ -11,10 +11,15 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, Str } from "@beep/utils";
-import { Context, Effect, FileSystem, Match, Order, Path, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { formatJsonc, readArtifact, writeArtifact } from "../../internal/artifacts/index.ts";
@@ -1122,8 +1127,8 @@ const makeCheckCensusSampler = Effect.fnUntraced(function* (
  *
  * ```ts
  * import { CheckCensusSample, CheckCensusSampler } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const fixed = Layer.succeed(
  *   CheckCensusSampler,
  *   CheckCensusSampler.of({

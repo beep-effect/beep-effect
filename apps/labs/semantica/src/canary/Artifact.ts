@@ -1,7 +1,6 @@
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import type { FileSystem } from "effect";
-
+import type * as FileSystem from "effect/FileSystem";
 /**
  * Schema-encode a canary artifact and write its newline-terminated JSON form.
  *
@@ -15,7 +14,8 @@ import type { FileSystem } from "effect";
  *
  * ```ts
  * import { writeJsonArtifact } from "@/canary/Artifact"
- * import { Effect, FileSystem } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
  * import * as S from "effect/Schema"
  *
  * const ReportJson = S.fromJsonString(S.Struct({ count: S.Number }))

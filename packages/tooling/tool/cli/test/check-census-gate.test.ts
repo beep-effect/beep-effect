@@ -29,9 +29,13 @@ import {
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { describe, expect, it } from "@effect/vitest";
 import { assertInstanceOf, assertSome } from "@effect/vitest/utils";
-import { Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import type { CheckCensusTargets } from "@beep/repo-cli/test/Quality";
 
@@ -123,8 +127,9 @@ describe("check-census gate parser", () => {
 
   it.effect("refuses a sample whose output contains an error TS diagnostic", () =>
     Effect.gen(function* () {
-      const error = yield* Effect.flip(
-        Effect.fromResult(parseCheckCensusSample({ exitCode: 2, output: failingRun }, "typeperf"))
+      const error = yield* parseCheckCensusSample({ exitCode: 2, output: failingRun }, "typeperf").pipe(
+        Effect.fromResult,
+        Effect.flip
       );
 
       assertInstanceOf(error, CheckCensusSampleRefused);
@@ -137,8 +142,9 @@ describe("check-census gate parser", () => {
 
   it.effect("refuses a non-zero exit even when no diagnostic line was printed", () =>
     Effect.gen(function* () {
-      const error = yield* Effect.flip(
-        Effect.fromResult(parseCheckCensusSample({ exitCode: 1, output: cleanRun }, "@beep/schema"))
+      const error = yield* parseCheckCensusSample({ exitCode: 1, output: cleanRun }, "@beep/schema").pipe(
+        Effect.fromResult,
+        Effect.flip
       );
 
       assertInstanceOf(error, CheckCensusSampleRefused);
@@ -153,8 +159,9 @@ describe("check-census gate parser", () => {
         A.filter(Str.split(cleanRun, "\n"), (line) => !Str.startsWith("Check time")(line)),
         "\n"
       );
-      const error = yield* Effect.flip(
-        Effect.fromResult(parseCheckCensusSample({ exitCode: 0, output: truncated }, "@beep/schema"))
+      const error = yield* parseCheckCensusSample({ exitCode: 0, output: truncated }, "@beep/schema").pipe(
+        Effect.fromResult,
+        Effect.flip
       );
 
       assertInstanceOf(error, CheckCensusMetricMissing);

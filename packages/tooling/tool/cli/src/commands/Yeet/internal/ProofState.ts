@@ -8,11 +8,16 @@
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Console, Crypto, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
-import { dual } from "effect/Function";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { concatBytes } from "../../../internal/cli/Bytes.ts";
@@ -155,7 +160,7 @@ const decodeYeetRunState = S.decodeUnknownEffect(S.fromJsonString(YeetRunState))
  * **Example** (Build quality-lock path)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { proofLockPathForContext, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -203,7 +208,7 @@ const readFingerprintFileBytes = Effect.fn("Yeet.readFingerprintFileBytes")(func
  * **Example** (Capture staged binary diff)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { collectGitDiffBytes, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -266,7 +271,7 @@ export const collectGitDiffBytes = Effect.fn("Yeet.collectGitDiffBytes")(functio
  * **Example** (Hash worktree fingerprint)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { collectDiffFingerprint, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -314,7 +319,7 @@ export const collectDiffFingerprint = Effect.fn("Yeet.collectDiffFingerprint")(f
  * **Example** (Fingerprint for testing)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { collectDiffFingerprintForTesting, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -368,8 +373,7 @@ const validateProofCoordinatorDirectory = (directory: string, effectiveUserId: O
  *
  * ```ts
  * import { validateProofCoordinatorDirectoryForTesting } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(validateProofCoordinatorDirectoryForTesting("/tmp/example"))) // true
  * ```
  *
@@ -616,7 +620,7 @@ const tryRecoverObservedProofLockReapClaim = Effect.fn("Yeet.tryRecoverObservedP
  * **Example** (Build an explicit-observation recovery attempt)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { tryRecoverObservedProofLockReapClaimForTesting } from "@beep/repo-cli/test/Yeet"
  *
  * const attempted = tryRecoverObservedProofLockReapClaimForTesting(
@@ -730,7 +734,7 @@ const tryReclaimStaleProofLock = Effect.fn("Yeet.tryReclaimStaleProofLock")(func
  * **Example** (Reject a changed lock generation)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { tryReclaimStaleProofLockForTesting } from "@beep/repo-cli/test/Yeet"
  *
  * const attempted = tryReclaimStaleProofLockForTesting("/tmp/proof.lock", "stale", "replacement")
@@ -934,7 +938,7 @@ const contendForFullProofLock = Effect.fn("Yeet.contendForFullProofLock")(functi
  * **Example** (Acquire full-proof lock)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { acquireLegacyFullProofLockForTesting, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -1094,7 +1098,7 @@ const tryAcquirePreparedFullProofLock = Effect.fn("Yeet.tryAcquirePreparedFullPr
  *
  * ```ts
  * import { acquireLegacyFullProofLockOrObserveForTesting, RepoPlanStep, RepoRunContext } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const context = RepoRunContext.make({
@@ -1383,8 +1387,7 @@ export const acquireFullProofFallbackLockOrObserveAtPath = Effect.fn(
  *
  * ```ts
  * import { acquireFullProofFallbackLockOrObserveAtPathForTesting, RepoRunContext } from "@beep/repo-cli/test/Yeet"
- * import { Option } from "effect"
- *
+ * import * as Option from "effect/Option";
  * const context = RepoRunContext.make({
  *   base: "origin/main",
  *   branch: "feature/closeout",
@@ -1422,7 +1425,7 @@ export const acquireFullProofFallbackLockOrObserveAtPathForTesting =
  * **Example** (Release quality-lock path)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import {
  *   acquireLegacyFullProofLockForTesting,
  *   releaseProofLock,
@@ -1475,7 +1478,7 @@ export const releaseProofLock = Effect.fn("releaseProofLock")(function* (lease: 
  * **Example** (Write full verified state)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RepoPlanStep, RepoRunContext, writeVerifiedState } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -1546,7 +1549,7 @@ export const writeVerifiedState = Effect.fn("Yeet.writeVerifiedState")(function*
  * **Example** (Build legacy state path)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { legacyRunStatePathForContext, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -1587,7 +1590,7 @@ const verifiedStateArtifactForPath =
  * **Example** (Load proof tier state)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { loadVerifiedState, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -1643,7 +1646,7 @@ export const loadVerifiedState = Effect.fn("Yeet.loadVerifiedState")(function* (
  * **Example** (Load verifiedAt for tests)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { loadVerifiedStateForTesting, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({
@@ -1671,7 +1674,7 @@ export const loadVerifiedStateForTesting = loadVerifiedState;
  * **Example** (Assert matching proof state)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { assertReusableVerifiedState, RepoRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = RepoRunContext.make({

@@ -12,7 +12,9 @@ import {
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertNone, assertSome, strictEqual } from "@effect/vitest/utils";
-import { Effect, Layer, Option as O } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { readFixtureText } from "./helpers/models-fixtures.ts";
 import type { Locator, ModelId, ModelsTargetFile } from "@beep/repo-cli/commands/Models";

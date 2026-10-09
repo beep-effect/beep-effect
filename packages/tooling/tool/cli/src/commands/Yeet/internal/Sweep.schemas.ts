@@ -40,7 +40,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 
@@ -370,8 +370,7 @@ export class SweepReport extends S.Class<SweepReport>($I`SweepReport`)(
  *
  * ```ts
  * import { SweepPlan, SweepPlanJson } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const plan = SweepPlan.make({
  *   schemaVersion: "yeet-sweep-plan/v1",
  *   createdAt: "2026-08-04T00:00:00.000Z",
@@ -393,8 +392,7 @@ export const SweepPlanJson = JsonStringCodec(SweepPlan);
  *
  * ```ts
  * import { SweepPlan, SweepReport, SweepReportJson } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const report = SweepReport.make({
  *   schemaVersion: "yeet-sweep-report/v1",
  *   plan: SweepPlan.make({

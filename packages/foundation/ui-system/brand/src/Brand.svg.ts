@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { A, Str } from "@beep/utils";
-import { flow, pipe } from "effect";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import { fontStack } from "./Brand.css.ts";
 import type {

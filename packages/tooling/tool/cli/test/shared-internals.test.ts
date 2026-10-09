@@ -11,6 +11,20 @@ Bun.env.BEEP_SI_INT_POS = "42";
 Bun.env.BEEP_SI_INT_NEG = "-5";
 Bun.env.BEEP_SI_INT_BAD = "notnum";
 Bun.env.BEEP_SI_BOOL_NO = "no";
+
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
+
 Bun.env.BEEP_SI_BOOL_YES = "YES";
 Bun.env.BEEP_SI_BOOL_BAD = "maybe";
 
@@ -59,20 +73,6 @@ import {
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
-import {
-  ConfigProvider,
-  Console,
-  Data,
-  Effect,
-  FileSystem,
-  flow,
-  Layer,
-  Path,
-  Redacted,
-  Ref,
-  Sink,
-  Stream,
-} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";

@@ -11,8 +11,8 @@ import {
 import { CapabilityId, CommandId, KeyChord, ProfileId } from "@beep/editor/capability/schemas";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 
 const profileId = ProfileId.make("test.profile");
 const capabilityId = CapabilityId.make("format.bold");

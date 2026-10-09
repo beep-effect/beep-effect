@@ -16,7 +16,7 @@ const $I = $RepoConfigsId.create("next/models/Routes.schema");
  * **Example** (Decode header type value)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { RouteHasType } from "@beep/repo-configs/next/models/Routes.schema"
  * const program = S.decodeUnknownEffect(RouteHasType)("header")
@@ -73,7 +73,7 @@ const RouteHasDefinition = RouteHasType.toTaggedUnion("type")({
  * **Example** (Decode header match predicate)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { RouteHas } from "@beep/repo-configs/next/models/Routes.schema"
  * const program = S.decodeUnknownEffect(RouteHas)({
@@ -250,7 +250,7 @@ class MiddlewareRoute extends S.Class<MiddlewareRoute>($I`Middleware`)(
  * **Example** (Decode rewrite configuration)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Rewrite } from "@beep/repo-configs/next/models/Routes.schema"
  * const program = S.decodeUnknownEffect(Rewrite)({
@@ -287,7 +287,7 @@ export type Rewrite = typeof Rewrite.Type;
  * **Example** (Decode header route config)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Header } from "@beep/repo-configs/next/models/Routes.schema"
  * const program = S.decodeUnknownEffect(Header)({
@@ -327,7 +327,7 @@ export type Header = typeof Header.Type;
  * **Example** (Decode permanent redirect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Redirect } from "@beep/repo-configs/next/models/Routes.schema"
  * const program = S.decodeUnknownEffect(Redirect)({
@@ -374,7 +374,7 @@ export type Redirect = typeof Redirect.Type;
  * **Example** (Decode middleware matcher)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { Middleware } from "@beep/repo-configs/next/models/Routes.schema"
  * const program = S.decodeUnknownEffect(Middleware)({

@@ -21,7 +21,12 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { DomainError, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { A, Str, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, FileSystem, HashSet, Order, Path, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
 import { CreatePackageIdentityRegistration } from "./IdentityRegistration.ts";
@@ -376,8 +381,7 @@ const diffLabIdentitySegment = Effect.fn("LabIdentitySegment.diffLabIdentitySegm
  *
  * ```ts
  * import { LabIdentitySegment } from "@beep/repo-cli/commands/CreatePackage/internal/LabIdentitySegment"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = LabIdentitySegment.syncLabIdentitySegment("/repo")
  * console.log(Effect.isEffect(program)) // true
  * ```

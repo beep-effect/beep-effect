@@ -7,7 +7,8 @@
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
 import { PromotionBlockReason, PromotionSubjectRef } from "@beep/shared-use-cases/PromotionGate";
-import { Effect, flow } from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalRuntime.errors");

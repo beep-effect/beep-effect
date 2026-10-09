@@ -6,13 +6,14 @@
  */
 
 import { $UtilsId } from "@beep/identity/packages";
-import { Struct as EffectStruct, Match, pipe } from "effect";
-import { cast, dual } from "effect/Function";
+import { cast, dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as EffectStruct from "effect/Struct";
 import * as A from "./Array.ts";
 import { lookupAtPath, pathLookupToOption, unsafeDotGet } from "./internal/StructPath.ts";
 import type { LazyArg } from "effect/Function";
@@ -151,7 +152,7 @@ export type PathLookup = InternalPathLookup;
  * **Example** (Data-first and data-last)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Struct } from "@beep/utils"
  *
  * const user = { profile: { name: "Alice", age: 30 } }
@@ -196,7 +197,7 @@ export const dotGet: {
  * **Example** (Found and missing paths)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Struct } from "@beep/utils"
  *
  * const user = { profile: { name: "Alice" } }
@@ -268,7 +269,7 @@ export type MapPathResult<B> = B extends unknown ? B : never;
  * **Example** (Uppercase path value)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Struct } from "@beep/utils"
  *
  * const user = { profile: { name: "alice" } }
@@ -421,7 +422,7 @@ export const mapPathLazy: {
  * **Example** (Lazy key access dual API)
  *
  * ```ts
- * import { pipe } from "effect"
+ * import { pipe } from "effect/Function";
  * import { Struct } from "@beep/utils"
  *
  * const config = { host: "localhost", port: 3000 }

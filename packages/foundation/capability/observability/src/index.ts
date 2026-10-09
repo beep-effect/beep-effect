@@ -9,7 +9,8 @@
  * **Example** (Classify cause with logger)
  *
  * ```ts
- * import { Cause, Effect } from "effect"
+ * import * as Cause from "effect/Cause";
+ * import * as Effect from "effect/Effect";
  * import { classifyCause, layerConsoleLogger } from "@beep/observability"
  *
  * const classification = classifyCause(Cause.fail(new Error("boom")))

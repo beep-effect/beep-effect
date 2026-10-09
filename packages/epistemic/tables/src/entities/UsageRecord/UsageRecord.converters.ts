@@ -7,7 +7,7 @@
  */
 
 import { UsageRecord } from "@beep/epistemic-domain/entities/UsageRecord";
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { UsageRecordConverterError } from "./UsageRecord.errors.ts";
 import type { Table } from "./UsageRecord.table.ts";

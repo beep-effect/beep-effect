@@ -7,15 +7,19 @@
 
 import { findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
-import { Console, Effect, Layer, Number as Num } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Num from "effect/Number";
 import { ReportRendererService, ReportRendererServiceLive } from "../VersionSync.render.ts";
 import { VersionSyncDriftError, VersionSyncModeMatch } from "../VersionSync.schemas.ts";
 import { CategorySelectionServiceLive } from "./services/CategorySelectionService.ts";
 import { ResolverService, ResolverServiceLive } from "./services/ResolverService.ts";
 import { UpdateApplierService, UpdateApplierServiceLive } from "./services/UpdateApplierService.ts";
 import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
-import type { FileSystem, Path } from "effect";
+import type * as FileSystem from "effect/FileSystem";
 import type { HttpClient } from "effect/http";
+import type * as Path from "effect/Path";
 import type { VersionSyncError, VersionSyncOptions } from "../VersionSync.schemas.ts";
 
 const VersionSyncServicesLive = Layer.mergeAll(
@@ -69,12 +73,12 @@ export const handleVersionSync: (
   VersionSyncError | VersionSyncDriftError | NoSuchFileError,
   FileSystem.FileSystem | Path.Path | HttpClient.HttpClient | FsUtils
 > = (options) =>
-  Effect.scoped(
-    Layer.build(VersionSyncServicesLive).pipe(
-      Effect.flatMap(
-        Effect.fnUntraced(function* (context) {
-          return yield* handleVersionSyncProgram(options).pipe(Effect.provide(context));
-        })
-      )
-    )
+  VersionSyncServicesLive.pipe(
+    Layer.build,
+    Effect.flatMap(
+      Effect.fnUntraced(function* (context) {
+        return yield* handleVersionSyncProgram(options).pipe(Effect.provide(context));
+      })
+    ),
+    Effect.scoped
   );

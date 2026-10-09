@@ -1,5 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Cause, Duration, Effect, Fiber, Ref } from "effect";
+import * as Cause from "effect/Cause";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";

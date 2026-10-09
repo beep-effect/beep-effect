@@ -18,17 +18,20 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
-import { Deferred, Effect, Layer, Stream } from "effect";
 import * as A from "effect/Array";
 import * as McpSchema from "effect/ai/McpSchema";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import { HttpClient, HttpClientRequest } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { Rpc, RpcClient, RpcGroup } from "effect/rpc";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { MCP_PROTOCOL_VERSION, VERSION } from "./Version.ts";
 import type { HttpClientError } from "effect/http/HttpClientError";

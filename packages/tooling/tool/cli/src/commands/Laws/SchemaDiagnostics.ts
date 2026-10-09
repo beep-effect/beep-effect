@@ -6,9 +6,10 @@
  */
 
 import { A } from "@beep/utils";
-import { pipe, SchemaIssue } from "effect";
+import { pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 
 const standardSchemaFormatter = SchemaIssue.makeFormatterStandardSchemaV1();
 const redactedSchemaFormatter = SchemaIssue.makeFormatterStandardSchemaV1({
@@ -47,7 +48,7 @@ const formatStandardIssue = (diagnostic: StandardIssueDiagnostic): string =>
  *
  * ```ts
  * import { formatSchemaDiagnostics } from "@beep/repo-cli/commands/Laws/SchemaDiagnostics"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const result = S.decodeUnknownResult(S.Struct({ token: S.Literal("expected-token") }))({ token: "sk-test-secret" })
@@ -78,7 +79,7 @@ export const formatSchemaDiagnostics = (errorOrIssue: S.SchemaError | SchemaIssu
  *
  * ```ts
  * import { formatRedactedSchemaDiagnostics } from "@beep/repo-cli/commands/Laws/SchemaDiagnostics"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const result = S.decodeUnknownResult(S.Struct({ token: S.Literal("expected-token") }))({ token: "sk-test-secret" })

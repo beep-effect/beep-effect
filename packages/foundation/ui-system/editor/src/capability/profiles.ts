@@ -4,8 +4,7 @@
  * @packageDocumentation \@beep/editor/capability/profiles
  * @since 0.0.0
  */
-
-import { Result } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { EditorProfile } from "./schemas.ts";
 

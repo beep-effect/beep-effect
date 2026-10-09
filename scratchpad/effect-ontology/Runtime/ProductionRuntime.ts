@@ -20,7 +20,9 @@ import { $ScratchpadId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
 import { AnthropicClient, AnthropicLanguageModel } from "@effect/ai-anthropic";
 import { OpenAiClient, OpenAiLanguageModel } from "@effect/ai-openai";
-import { Effect, Layer, Match } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/http";
 import type { AppConfig } from "../Service/Config.ts";
@@ -128,7 +130,7 @@ const selectLanguageModelLayer = Match.type<AppConfig>().pipe(
  * **Example** (Select Anthropic or OpenAI from ConfigService)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { ExtractionLayersLive, makeLanguageModelLayer } from "@effect-ontology/Runtime/ProductionRuntime"
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
@@ -271,7 +273,7 @@ export const LlmControlLive = Layer.mergeAll(
  * **Example** (Launch HTTP on Bun beside production infrastructure)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { BunHttpServer } from "@effect/platform-bun"
  * import { HttpServerLive } from "@effect-ontology/Runtime/HttpServer"
  * import { ProductionInfrastructure } from "@effect-ontology/Runtime/ProductionRuntime"

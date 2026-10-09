@@ -4,9 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Duration } from "effect";
-
+import * as Duration from "effect/Duration";
 /**
  * Default HTTPS port configured by Tailscale Serve.
  *

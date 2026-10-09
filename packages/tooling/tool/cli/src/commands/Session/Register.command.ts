@@ -5,10 +5,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Console, Effect } from "effect";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -211,7 +212,7 @@ export const sessionRegisterListCommand = Command.make(
               [
                 `- ${row.kind} ${row.address}${O.match(row.name, { onNone: () => "", onSome: (name) => ` (${name})` })} [${row.state}] owns: ${A.join(row.owns, ", ")}`,
                 ...O.match(row.waitingOnOrchestrator, {
-                  onNone: () => A.empty<string>(),
+                  onNone: A.empty<string>,
                   onSome: (waiting) => [`  waiting on orchestrator: ${waiting}`],
                 }),
                 `  orphan plan: ${row.orphanPlan}`,

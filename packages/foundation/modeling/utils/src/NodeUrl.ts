@@ -8,7 +8,8 @@
  * @since 0.0.0
  */
 import { $UtilsId } from "@beep/identity/packages";
-import { Effect, PlatformError } from "effect";
+import * as Effect from "effect/Effect";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 
 const $I = $UtilsId.create("NodeUrl");
@@ -52,7 +53,7 @@ const NodeUrl = (): typeof import("node:url") => {
  * **Example** (Convert file URL to path)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { fromFileUrl } from "@beep/utils/NodeUrl"
  *
  * const program = Effect.gen(function* () {
@@ -66,7 +67,7 @@ const NodeUrl = (): typeof import("node:url") => {
  * **Example** (Recover from invalid URL)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { fromFileUrl } from "@beep/utils/NodeUrl"
  *
  * const invalid = fromFileUrl(new URL("https://example.com/file.txt"))
@@ -107,7 +108,7 @@ export const fromFileUrl = (url: URL): Effect.Effect<string, PlatformError.BadAr
  * **Example** (Convert path to file URL)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { toFileUrl } from "@beep/utils/NodeUrl"
  *
  * const program = Effect.gen(function* () {
@@ -121,7 +122,7 @@ export const fromFileUrl = (url: URL): Effect.Effect<string, PlatformError.BadAr
  * **Example** (Recover from empty path)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { toFileUrl } from "@beep/utils/NodeUrl"
  *
  * const recovered = Effect.catchTag(toFileUrl(""), "BadArgument", () =>

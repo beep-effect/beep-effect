@@ -11,7 +11,12 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Chunk, Context, Effect, Layer, MutableHashMap, MutableHashSet } from "effect";
+import * as Chunk from "effect/Chunk";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type { PropertyDefinition } from "../Domain/Model/Ontology.ts";
@@ -30,7 +35,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Inheritance");
  * **Example** (Look up inherited properties)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { InheritanceService } from "@effect-ontology/Service/Inheritance"
  *
  * const program = Effect.gen(function* () {

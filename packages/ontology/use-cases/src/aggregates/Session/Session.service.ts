@@ -14,7 +14,10 @@ import {
 } from "@beep/ontology-domain/aggregates/Session";
 import { makeDataset } from "@beep/rdf/Rdf";
 import { A } from "@beep/utils";
-import { Context, Effect, Layer, pipe } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import {
   OpenOntologyFileResult,
   SaveOntologyFileResult,
@@ -153,8 +156,7 @@ export const makeSessionUseCases = Effect.fn("Ontology.SessionUseCases.make")(fu
  *
  * ```ts
  * import { SessionUseCases } from "@beep/ontology-use-cases/aggregates/Session"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const useCases = yield* SessionUseCases
  *   return useCases

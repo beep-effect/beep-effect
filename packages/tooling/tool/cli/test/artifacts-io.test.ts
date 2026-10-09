@@ -9,7 +9,12 @@ import {
 } from "@beep/repo-cli/test/Artifacts";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { describe, expect, it } from "@effect/vitest";
-import { Data, Effect, FileSystem, Layer, Path, Ref } from "effect";
+import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 
 const testLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);

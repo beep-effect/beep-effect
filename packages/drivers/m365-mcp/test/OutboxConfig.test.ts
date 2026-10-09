@@ -1,7 +1,8 @@
 import { loadOutboxConfig, OUTBOX_DEFAULT_MAX_ATTACHMENT_BYTES } from "@beep/m365-mcp";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
-import { ConfigProvider, Effect } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
 import * as Str from "effect/String";
 
 const credentials = {

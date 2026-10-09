@@ -24,8 +24,8 @@ import { activeResizeObserverCount, resize } from "@beep/dock-react/internal/Res
 import { it } from "@beep/test-runner";
 import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";

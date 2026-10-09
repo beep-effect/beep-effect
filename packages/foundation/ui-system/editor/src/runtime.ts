@@ -10,8 +10,9 @@ import {
   LexicalDecodeError,
   SerializedEditorState,
 } from "@beep/lexical-schema/Lexical.model";
-import { Effect, Result } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const isSerializedEditorState = S.is(SerializedEditorState);
@@ -40,7 +41,7 @@ const revalidateSerializedEditorState = (
  * **Example** (Decode valid root state)
  *
  * ```ts import.meta.vitest name="Decode valid root state"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import { decodeEditorStateForRuntimeResult } from "@beep/editor/runtime"
  *
  * const result = decodeEditorStateForRuntimeResult({
@@ -77,7 +78,7 @@ export const decodeEditorStateForRuntimeResult = (
  * **Example** (Effect decode of root state)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeEditorStateForRuntime } from "@beep/editor/runtime"
  *
  * const program = decodeEditorStateForRuntime({

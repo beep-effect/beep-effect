@@ -1,7 +1,8 @@
 import { collectAnnotationsAt } from "@beep/schema/SchemaUtils/collectAnnotationsAt";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Effect, identity } from "effect";
+import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 

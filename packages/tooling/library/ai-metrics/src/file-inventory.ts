@@ -7,8 +7,10 @@
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 
 const $I = $RepoAiMetricsId.create("file-inventory");

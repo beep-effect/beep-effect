@@ -13,7 +13,12 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Context, Duration, Effect, HashMap, Layer, Ref } from "effect";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
+import * as Ref from "effect/Ref";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -191,7 +196,7 @@ export interface EmbeddingCircuitBreakerService {
  * **Example** (Inspect embedding circuit breaker)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EmbeddingCircuitBreaker, EmbeddingCircuitBreakerLive } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
  *
  * const program = Effect.gen(function* () {
@@ -351,7 +356,7 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
  * **Example** (Inspect embedding circuit breaker live)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EmbeddingCircuitBreaker, EmbeddingCircuitBreakerLive } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
  *
  * const program = Effect.gen(function* () {

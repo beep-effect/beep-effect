@@ -203,7 +203,7 @@ const AtUriChecks = S.makeFilterGroup(
  * **Example** (Decode DID AT URI)
  *
  * ```ts import.meta.vitest name="Decode DID AT URI"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { AtUri } from "@beep/schema/AtURI"
  *
@@ -252,7 +252,7 @@ export const AtUri = S.String.check(AtUriChecks).pipe(
  * **Example** (Type decoded AT URI)
  *
  * ```ts import.meta.vitest name="Type decoded AT URI"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { AtUri, type AtUri as AtUriValue } from "@beep/schema/AtURI"
  *
@@ -274,7 +274,7 @@ export type AtUri = typeof AtUri.Type;
  * **Example** (Encode decoded AT URI)
  *
  * ```ts import.meta.vitest name="Encode decoded AT URI"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { AtUri } from "@beep/schema/AtURI"
  *
@@ -296,7 +296,7 @@ export declare namespace AtUri {
    * **Example** (Round-trip encode AT URI)
    *
    * ```ts import.meta.vitest name="Round-trip encode AT URI"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect";
    * import * as S from "effect/Schema"
    * import { AtUri } from "@beep/schema/AtURI"
    *

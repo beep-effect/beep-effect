@@ -5,9 +5,10 @@
  * @since 0.0.0
  */
 import { fileURLToPath } from "node:url";
-import { Effect, Path } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import { isPlannedTurboCommand } from "../../internal/cli/EnvConfig.ts";
 import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";

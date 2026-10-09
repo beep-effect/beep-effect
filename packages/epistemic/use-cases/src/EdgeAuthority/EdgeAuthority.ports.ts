@@ -8,10 +8,11 @@
  */
 
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { Context } from "effect";
+import * as Context from "effect/Context";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import type { LogicalEdgeKey } from "@beep/epistemic-domain/values";
-import type { Effect, Option } from "effect";
+import type * as Effect from "effect/Effect";
+import type * as Option from "effect/Option";
 import type { EdgeAsOfQuery, RecordEdgeFact, SupersedeEdgeFact } from "./EdgeAuthority.commands.ts";
 import type { EdgeAuthorityError, EdgeRepositoryUnavailable } from "./EdgeAuthority.errors.ts";
 
@@ -44,7 +45,7 @@ const $I = $EpistemicUseCasesId.create("EdgeAuthority/EdgeAuthority.ports");
  * ```ts
  * import type { EdgeAuthorityRepositoryShape } from "@beep/epistemic-use-cases/EdgeAuthority"
  * import { EdgeRepositoryUnavailable } from "@beep/epistemic-use-cases/EdgeAuthority"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const offline: EdgeAuthorityRepositoryShape = {
@@ -77,7 +78,7 @@ export interface EdgeAuthorityRepositoryShape {
  * ```ts
  * import { EdgeAuthorityRepository } from "@beep/epistemic-use-cases/EdgeAuthority"
  * import { EdgeRepositoryUnavailable } from "@beep/epistemic-use-cases/EdgeAuthority"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = Effect.gen(function* () {

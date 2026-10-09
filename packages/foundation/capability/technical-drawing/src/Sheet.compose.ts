@@ -15,7 +15,7 @@
  */
 
 import { A, N } from "@beep/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import { MARGINS_CM, PT_PER_CM, PT_PER_MM, pageSizePt } from "./Sheet.schemas.ts";
 import type { Segment2 } from "./Geometry.schemas.ts";
 import type { SheetOptions } from "./Sheet.schemas.ts";

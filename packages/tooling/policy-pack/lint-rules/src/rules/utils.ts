@@ -6,8 +6,9 @@
  * @since 0.1.0
  */
 
-import { HashMap, HashSet } from "effect";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";

@@ -17,7 +17,7 @@
  */
 
 import { P, Str } from "@beep/utils";
-import { DateTime } from "effect";
+import * as DateTime from "effect/DateTime";
 import { dual } from "effect/Function";
 
 /**

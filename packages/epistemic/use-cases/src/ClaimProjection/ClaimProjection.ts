@@ -14,8 +14,9 @@ import * as DomainCandidateClaim from "@beep/epistemic-domain/entities/Candidate
 import { ClaimLifecycle, ClaimProjectionView, ClaimStateCounts } from "@beep/epistemic-domain/values";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { Fn } from "@beep/schema";
-import { Order, pipe } from "effect";
 import * as A from "effect/Array";
+import { pipe } from "effect/Function";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
 const $I = $EpistemicUseCasesId.create("ClaimProjection/ClaimProjection");

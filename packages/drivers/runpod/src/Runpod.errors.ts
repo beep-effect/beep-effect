@@ -8,10 +8,11 @@
 import { $RunpodId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
-import { Effect, flow, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, flow, pipe } from "effect/Function";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { RunpodHttpMethod, RunpodOperationDescriptor, RunpodOperationId } from "./_generated/Runpod.operations.gen.ts";
 

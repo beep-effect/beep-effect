@@ -7,8 +7,12 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoCliId } from "@beep/identity/packages";
-import { DateTime, Effect, FileSystem, MutableHashSet, Path } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { ResearchCommandError } from "../Research.errors.ts";
 import { KnowledgeCardFrontmatter } from "../Research.schemas.ts";
@@ -24,7 +28,7 @@ const $I = $RepoCliId.create("commands/Research/internal/CatalogOps");
  * **Example** (Resolve vault DuckDB path)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { catalogDbPath } from "@beep/repo-cli/commands/Research/internal/CatalogOps"
  *
  * // Resolve the catalog DuckDB path under a vault; provide FileSystem + Path to run it.
@@ -94,7 +98,7 @@ export class CardPersistRow extends S.Class<CardPersistRow>($I`CardPersistRow`)(
  * **Example** (Persist empty capture batch)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { persistCards } from "@beep/repo-cli/commands/Research/internal/CatalogOps"
  *
  * // Persist a (here empty) batch of capture cards into the catalog database.
@@ -165,7 +169,7 @@ const decodeSeenUrlRows = S.decodeUnknownEffect(S.Array(SeenUrlRow));
  * **Example** (Load seen catalog URLs)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { loadSeenUrls } from "@beep/repo-cli/commands/Research/internal/CatalogOps"
  *
  * const program = loadSeenUrls("/repo/.research/.state/catalog.duckdb")

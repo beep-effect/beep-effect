@@ -7,7 +7,13 @@
 import { $ObservabilityId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Clock, Context, Effect, Layer, Match, MutableRef, pipe } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableRef from "effect/MutableRef";
 import * as OtlpSerialization from "effect/observability/OtlpSerialization";
 import * as S from "effect/Schema";
 import { decodeNonNegativeInt } from "../../internal/decode.ts";
@@ -137,7 +143,7 @@ export class OtlpPacket extends S.Class<OtlpPacket>($I`OtlpPacket`)(
  * **Example** (Yield lab and snapshot)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { OtlpPacketLab } from "@beep/observability/experimental/server"
  *
  * const program = Effect.gen(function* () {
@@ -272,7 +278,7 @@ const makeLayer = (encoding: OtlpPacketEncoding, baseLayer: Layer.Layer<OtlpSeri
  * **Example** (Provide JSON lab layer)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { OtlpPacketLab, layerJson } from "@beep/observability/experimental/server"
  *
  * const snapshot = Effect.gen(function* () {
@@ -294,7 +300,7 @@ export const layerJson = makeLayer("json", OtlpSerialization.layerJson);
  * **Example** (Provide protobuf lab layer)
  *
  * ```typescript
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { OtlpPacketLab, layerProtobuf } from "@beep/observability/experimental/server"
  *
  * const snapshot = Effect.gen(function* () {

@@ -1,23 +1,20 @@
 import { aroundEach, TestRunner } from "@effect/vitest";
-import {
-  Array as Arr,
-  Cause,
-  Clock,
-  Config,
-  Effect,
-  Exit,
-  Inspectable,
-  Layer,
-  Logger,
-  Match,
-  MutableRef,
-  Number as Num,
-  Option as O,
-  pipe,
-  Scope,
-} from "effect";
-import { dual } from "effect/Function";
+import * as Arr from "effect/Array";
+import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import { dual, pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
+import * as Match from "effect/Match";
+import * as MutableRef from "effect/MutableRef";
+import * as Num from "effect/Number";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Scope from "effect/Scope";
 import { TestContextUnavailable, TestHang } from "../Vitest.errors.ts";
 import type { TestContext, Vitest } from "@effect/vitest";
 

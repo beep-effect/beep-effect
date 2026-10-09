@@ -21,7 +21,7 @@ import { Badge } from "@beep/ui/components/badge";
 import { Button } from "@beep/ui/components/button";
 import { A, O } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import type { OntologyValidationStatus } from "@beep/ontology-client/aggregates/Session";
 import type { OntologyRepairProposal, RunOntologyValidationResult } from "@beep/ontology-use-cases/aggregates/Session";
 import type { JSX } from "react";

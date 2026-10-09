@@ -7,8 +7,8 @@
 
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect } from "effect";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
 import { SchemaParityCodemodOptions, SchemaParityCodemodRuleId } from "./internal/SchemaParityCodemod.schemas.ts";
 import { SchemaParityCodemod, SchemaParityCodemodLive } from "./internal/SchemaParityCodemodEngine.ts";
 import { SchemaParityCodemodError } from "./Lint.errors.ts";

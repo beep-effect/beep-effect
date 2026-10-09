@@ -2,8 +2,9 @@
  * A synthetic service configuration for the app's proofs.
  */
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { DateTime, Redacted } from "effect";
+import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import { DocketIntakeAppConfig } from "@/Config";
 import { MAILBOX, STATE_DIRECTORY } from "./Pipeline.ts";
 

@@ -1,7 +1,8 @@
-import { flow, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { ts } from "ts-morph";

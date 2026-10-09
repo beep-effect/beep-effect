@@ -1,6 +1,6 @@
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, O } from "@beep/utils";
-import { Match } from "effect";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import type {
   LexicalNode,

@@ -17,7 +17,8 @@ import { chromeLinuxArial16, naturalWidth, PretextCaptureFixture } from "@beep/p
 import { it } from "@beep/test-runner";
 import { afterEach, describe, expect } from "@effect/vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as N from "effect/Number";
 import * as O from "effect/Option";

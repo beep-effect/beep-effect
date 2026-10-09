@@ -11,8 +11,9 @@ import * as DomainWorkPriority from "@beep/architecture-lab-domain/values/WorkPr
 import { $ArchitectureLabTablesId } from "@beep/identity/packages";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { pipe, Result } from "effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabTablesId.create("aggregates/WorkItem/WorkItem.table");

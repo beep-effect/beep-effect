@@ -1,7 +1,7 @@
 import { it } from "@beep/test-runner";
 import { Path } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 
 describe("Path helpers", () => {
   it("join concatenates segments with the platform separator", () => {

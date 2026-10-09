@@ -40,10 +40,11 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, Order, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { githubConclusion, githubJobHasFailedStep } from "../../internal/github/index.ts";

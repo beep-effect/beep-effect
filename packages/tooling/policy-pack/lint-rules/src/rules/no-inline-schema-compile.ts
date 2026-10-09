@@ -8,8 +8,10 @@
 
 import { thunkFalse } from "@beep/utils/thunk";
 import { defineRule } from "@oxlint/plugins";
-import { HashSet, Match, MutableHashSet } from "effect";
 import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";

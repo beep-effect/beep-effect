@@ -1,8 +1,12 @@
 /** Effect Vitest inventory, census, and JSONL persistence. @packageDocumentation @since 0.0.0 */
 
 import { A, Str } from "@beep/utils";
-import { Effect, FileSystem, Inspectable, Order, Path } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Inspectable from "effect/Inspectable";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import { formatJsonc, readArtifact, writeArtifact } from "../../../internal/artifacts/index.ts";
 import { repoRunSafeArtifactName } from "../../../internal/repo-run/RepoRunArtifacts.ts";
@@ -52,8 +56,7 @@ const isOwnedRowsFile = Effect.fn("EffectVitestStore.isOwnedRowsFile")(function*
  *
  * ```ts
  * import { readEffectVitestInventory } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(readEffectVitestInventory(process.cwd()))) // true
  * ```
  *
@@ -82,8 +85,7 @@ export const readEffectVitestInventory = Effect.fn("EffectVitestStore.readInvent
  * ```ts
  * import { EffectVitestInventoryDocument } from "@beep/repo-cli/commands/Lint"
  * import { writeEffectVitestInventory } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const document = EffectVitestInventoryDocument.make({
  *   schemaVersion: "effect-vitest-inventory/v1",
  *   effectVitestVersion: "4.0.0-rc.115",
@@ -122,8 +124,7 @@ export const writeEffectVitestInventory = Effect.fn("EffectVitestStore.writeInve
  *
  * ```ts
  * import { writeEffectVitestCensus } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(writeEffectVitestCensus(process.cwd(), []))) // true
  * ```
  *
@@ -158,8 +159,7 @@ export const writeEffectVitestCensus = Effect.fn("EffectVitestStore.writeCensus"
  *
  * ```ts
  * import { writeEffectVitestRows } from "@beep/repo-cli/commands/Lint"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * console.log(Effect.isEffect(writeEffectVitestRows(process.cwd(), "detector-rows", []))) // true
  * ```
  *

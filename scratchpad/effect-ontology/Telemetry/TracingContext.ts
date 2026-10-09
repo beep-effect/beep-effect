@@ -11,7 +11,8 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Layer from "effect/Layer";
 
 /**
  * Model identifier and provider name threaded into LLM span annotations.
@@ -39,8 +40,7 @@ const $I = $ScratchpadId.create("effect-ontology/Telemetry/TracingContext");
  *
  * ```ts
  * import { TracingContext } from "@effect-ontology/Telemetry/TracingContext"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const read = Effect.flatMap(TracingContext, (context) => Effect.succeed(context))
  * const unknown = Effect.runSync(Effect.provide(read, TracingContext.Default))
  * console.log(unknown.model) // "unknown"

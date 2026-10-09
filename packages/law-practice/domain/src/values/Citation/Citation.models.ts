@@ -15,7 +15,8 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 // Tier-C citation subtypes participating in the Citation union.
 import { AnnotationCitation } from "../AnnotationCitation/index.ts";

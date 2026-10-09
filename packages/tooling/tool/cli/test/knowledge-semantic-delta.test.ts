@@ -28,10 +28,17 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Crypto, Effect, Exit, FileSystem, HashSet, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
+import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -1004,7 +1011,7 @@ describe("knowledge semantic-delta probe policy", () => {
 
         expect(skipped.probePolicy).toBe("skipped-untrusted-context");
         expect(skipped.introduced).toEqual([]);
-        assertTrue(Exit.isFailure(probed));
+        probed.pipe(Exit.isFailure, assertTrue);
       })
     );
   });

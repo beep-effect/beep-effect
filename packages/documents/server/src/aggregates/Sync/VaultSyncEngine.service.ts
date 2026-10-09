@@ -73,14 +73,22 @@ import { $DocumentsServerId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { Effect, FileSystem, HashMap, identity, Order, Path, pipe, Ref, Result, Semaphore } from "effect";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
 import * as F from "effect/Function";
+import { identity, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
 import { VaultSyncConfig } from "./VaultSync.config.ts";
 import type {
@@ -388,8 +396,8 @@ const matchesPushedState = (
  * import { SyncOperationRepositoryInMemoryLayer } from "@beep/documents-server/entities/SyncOperation"
  * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import * as BunPath from "@effect/platform-bun/BunPath"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const program = makeVaultSyncEngine().pipe(
  *   Effect.provide(
  *     Layer.mergeAll(

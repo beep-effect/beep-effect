@@ -7,7 +7,7 @@
 
 import { DomainError } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import {
   DEFAULT_JSON_PRETTY_MAX_LENGTH,
@@ -33,8 +33,8 @@ const renderJson = Effect.fn("DocgenQuality.renderJson")(function* (value: unkno
  * import { generateQualityJson } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.render"
  * import { analyzeDocgenQuality } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.service"
  * import { BunServices } from "@effect/platform-bun"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const RuntimeLayer = Layer.mergeAll(FsUtilsLive).pipe(Layer.provideMerge(BunServices.layer))
  *
  * const program = Effect.gen(function* () {
@@ -89,8 +89,8 @@ const markdownSubject = (subject: DocgenQualitySubject, review: DocgenQualityRev
  * import { generateQualityReport } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.render"
  * import { analyzeDocgenQuality } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.service"
  * import { BunServices } from "@effect/platform-bun"
- * import { Effect, Layer } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const RuntimeLayer = Layer.mergeAll(FsUtilsLive).pipe(Layer.provideMerge(BunServices.layer))
  *
  * const program = Effect.gen(function* () {

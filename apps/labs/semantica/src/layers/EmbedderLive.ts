@@ -1,8 +1,14 @@
 import { Sha256Hex } from "@beep/schema";
-import { Crypto, Effect, Equal, Layer, Match, Order, Result } from "effect";
 import * as A from "effect/Array";
 import * as EmbeddingModel from "effect/ai/EmbeddingModel";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LabConfig, RuntimeMode } from "@/runtime/Config";

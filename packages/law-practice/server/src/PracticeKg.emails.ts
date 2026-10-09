@@ -9,9 +9,14 @@ import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety
 import { parseOutlookHeaders, rfc5322DateFromOutlookTimestamp } from "@beep/libpff";
 import { thunk0, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
@@ -161,7 +166,7 @@ const readEmailArchiveRows = Effect.fn("PracticeKg.readEmailArchiveRows")(functi
  * **Example** (Usage)
  * ```ts
  * import * as BunServices from "@effect/platform-bun/BunServices"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as A from "effect/Array"
  * import { readEmailRows } from "../../src/PracticeKg.emails.ts"
  *

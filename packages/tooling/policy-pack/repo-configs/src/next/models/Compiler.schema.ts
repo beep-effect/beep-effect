@@ -211,7 +211,7 @@ export class CompilerConfig extends S.Class<CompilerConfig>($I`CompilerConfig`)(
  * **Example** (Decode SassOptions with Schema)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  * import { SassOptions } from "@beep/repo-configs/next"
  * const program = S.decodeUnknownEffect(SassOptions)({ implementation: "sass" })

@@ -21,7 +21,11 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { provBundleToDataset } from "@beep/rdf/ProvRdf";
-import { Crypto, DateTime, Duration, Effect, pipe } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as Hex from "effect/encoding/Hex";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -197,7 +201,7 @@ const extractOntologyName = (uri: string): OntologyName => {
  *
  * ```ts
  * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
- * import { Duration } from "effect"
+ * import * as Duration from "effect/Duration";
  * import { BatchId, ContentHash, DocumentId, GcsUri, Namespace, OntologyName } from "@effect-ontology/Identity"
  * import { ExtractionActivityInput } from "@effect-ontology/Schema/Batch"
  * import { buildRunConfig } from "@effect-ontology/Workflow/StreamingExtractionActivity"
@@ -296,7 +300,7 @@ export const buildRunConfig = dual3(
  *
  * ```ts
  * import { IRI } from "@beep/rdf"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  * import { BatchId, DocumentId, GcsUri, Namespace, OntologyName } from "@effect-ontology/Identity"
  * import { Entity } from "@effect-ontology/Model/Entity"

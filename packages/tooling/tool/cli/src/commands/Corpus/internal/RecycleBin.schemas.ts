@@ -247,8 +247,7 @@ export type CorpusRestorationRecord = typeof CorpusRestorationRecord.Type;
  *
  * ```ts
  * import { encodeCorpusRestorationRecordJson, UnmatchedContentRestorationRecord } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const record = UnmatchedContentRestorationRecord.make({
  *   contentRelativePath: "$R123456.docx",
  *   matchStatus: "unmatched-content",

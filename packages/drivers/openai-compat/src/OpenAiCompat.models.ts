@@ -8,10 +8,10 @@
 import { $OpenaiCompatId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Tuple } from "effect";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { PosInt } from "./internal/PosInt.ts";
 import type * as SchemaAST from "effect/SchemaAST";
 
@@ -1195,7 +1195,7 @@ export class OpenAiCompatChatCompletionChunk extends S.Class<OpenAiCompatChatCom
  * **Example** (Decoding a completion response)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeChatCompletionResponse } from "@beep/openai-compat"
  *
  * const decoded = Effect.runSync(decodeChatCompletionResponse({ choices: [] }))
@@ -1219,7 +1219,7 @@ export const decodeChatCompletionResponse: {
  * **Example** (Decoding a stream chunk)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { decodeChatCompletionChunk } from "@beep/openai-compat"
  *
  * const decoded = Effect.runSync(decodeChatCompletionChunk({ choices: [] }))

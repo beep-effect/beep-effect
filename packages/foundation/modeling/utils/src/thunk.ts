@@ -4,9 +4,10 @@
  * @packageDocumentation
  */
 
-import { Effect, Result } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as R from "./Record.ts";
 
 type LazyArg<A> = () => A;
@@ -232,7 +233,7 @@ export const thunkEmptyReadonlyArray = <A = never>(): LazyArg<ReadonlyArray<A>> 
  * **Example** (Lift Effect into thunk)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { thunkEffect } from "@beep/utils/thunk"
  *
  * const getEffect = thunkEffect(Effect.succeed(42))
@@ -294,8 +295,7 @@ export const thunkEffectSucceed = <A>(a: A) => thunkEffect(Effect.succeed(a));
  *
  * ```ts
  * import { thunkEffectSucceedNull } from "@beep/utils/thunk"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const value = Effect.runSync(thunkEffectSucceedNull())
  *
  * console.log(value)

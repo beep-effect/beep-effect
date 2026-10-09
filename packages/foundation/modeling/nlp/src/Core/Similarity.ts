@@ -7,7 +7,7 @@
 
 import { $NlpId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { UnitInterval } from "../internal/numbers.ts";
 import { DocumentId } from "./Document.ts";

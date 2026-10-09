@@ -1,6 +1,6 @@
 import { Calendar } from "@beep/ui/components/calendar";
 import { A } from "@beep/utils";
-import { DateTime } from "effect";
+import * as DateTime from "effect/DateTime";
 import { expect, userEvent, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 

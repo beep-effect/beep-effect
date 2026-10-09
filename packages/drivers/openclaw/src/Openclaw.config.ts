@@ -4,8 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Duration } from "effect";
+import * as Duration from "effect/Duration";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import { OpenclawCompatibilitySet } from "./Openclaw.models.ts";

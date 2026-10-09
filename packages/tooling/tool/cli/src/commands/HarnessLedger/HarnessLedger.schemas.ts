@@ -22,8 +22,8 @@ import {
 } from "@beep/repo-ai-metrics";
 import { LiteralKit } from "@beep/schema";
 import { O, pipe, Str } from "@beep/utils";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { HarnessLedgerInputError } from "./HarnessLedger.errors.ts";
 

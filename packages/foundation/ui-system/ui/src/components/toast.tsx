@@ -11,7 +11,7 @@ import { $UiId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { XIcon } from "@phosphor-icons/react";
 import { cva } from "class-variance-authority";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as React from "react";
 import { cn } from "../lib/index.ts";

@@ -7,7 +7,7 @@
  */
 
 import { SyncConflictRepository } from "@beep/documents-use-cases/entities/SyncConflict/server";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { makeDrizzleSyncConflictRepository, makeInMemorySyncConflictRepository } from "./SyncConflict.repo.ts";
 
 /**

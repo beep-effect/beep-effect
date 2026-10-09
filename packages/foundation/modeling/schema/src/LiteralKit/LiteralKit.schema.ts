@@ -7,11 +7,14 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
-import { HashMap, Match } from "effect";
+import * as HashMap from "effect/HashMap";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import type { SchemaAST, Struct, Unify } from "effect";
+import type * as SchemaAST from "effect/SchemaAST";
+import type * as Struct from "effect/Struct";
+import type * as Unify from "effect/Unify";
 
 const $I = $SchemaId.create("LiteralKit");
 

@@ -7,8 +7,9 @@
 
 import { resourceVisibleInViewMode } from "@beep/ontology-use-cases/aggregates/Session";
 import { A, O } from "@beep/utils";
-import { MutableHashMap, MutableHashSet, pipe } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import type {
   OntologyResourceSummary,
   OntologySnapshot,

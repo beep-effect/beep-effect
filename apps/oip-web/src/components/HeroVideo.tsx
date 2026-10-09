@@ -8,7 +8,7 @@
 "use client";
 import { $OipWebId } from "@beep/identity";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import { Atom } from "effect/reactivity";
 import * as S from "effect/Schema";

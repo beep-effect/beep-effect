@@ -22,8 +22,11 @@ import { $EditorId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { ImageMimeType, MimeType } from "@beep/schema/MimeType";
 import { dual, P } from "@beep/utils";
-import { flow, identity, Number as N, Result, SchemaTransformation } from "effect";
+import { flow, identity } from "effect/Function";
+import * as N from "effect/Number";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const $I = $EditorId.create("chat/attachment-model");
 
@@ -435,8 +438,7 @@ export class ComposerAttachment extends S.Class<ComposerAttachment>($I`ComposerA
    *
    * ```ts
    * import { ComposerAttachment } from "@beep/editor/chat/attachment-model"
-   * import { Result } from "effect"
-   *
+   * import * as Result from "effect/Result";
    * const result = ComposerAttachment.fromFile(
    *   new File(["avatar"], "avatar.png", { type: "image/png" })
    * )
@@ -515,8 +517,7 @@ export const isImageAttachment = (attachment: ComposerAttachment): boolean =>
  *
  * ```ts
  * import { fileToAttachment } from "@beep/editor/chat/attachment-model"
- * import { Result } from "effect"
- *
+ * import * as Result from "effect/Result";
  * const result = fileToAttachment(new File(["hi"], "note.txt", { type: "text/plain" }))
  *
  * console.log(Result.isSuccess(result)) // true

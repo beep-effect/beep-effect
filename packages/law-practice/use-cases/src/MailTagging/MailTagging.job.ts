@@ -23,9 +23,9 @@ import {
   TaggingRunReport,
   TagLedgerEntry,
 } from "@beep/law-practice-domain/values/MailTagging";
-import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";

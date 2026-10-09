@@ -38,10 +38,14 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Platform } from "./MailTagging.adapters.fixture.ts";

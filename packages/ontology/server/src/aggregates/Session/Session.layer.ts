@@ -20,7 +20,8 @@ import {
 } from "@beep/ontology-use-cases/aggregates/Session";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { ShaclValidationServiceLive } from "@beep/shacl";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { makeFileSystemOntologyFileStore } from "./Session.file-store.ts";
 import type { N3TurtleCodecError } from "@beep/n3";
 
@@ -80,8 +81,9 @@ export const TurtleCodecLayer = Layer.effect(TurtleCodec, makeTurtleCodec()).pip
  * ```ts
  * import { OntologyFileStoreLayer } from "@beep/ontology-server/aggregates/Session"
  * import { NodeServices } from "@effect/platform-node"
- * import { ConfigProvider, Effect, Layer } from "effect"
- *
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const configuredLayer = OntologyFileStoreLayer.pipe(
  *   Layer.provide(
  *     ConfigProvider.layer(

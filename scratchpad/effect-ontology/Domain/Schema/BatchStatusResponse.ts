@@ -15,8 +15,7 @@ import type * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { BatchId } from "../Identity.ts";
 import { BatchState } from "../Model/BatchWorkflow.ts";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/BatchStatusResponse");
 
 const BatchStatusResponseDefinition = S.TaggedUnion({

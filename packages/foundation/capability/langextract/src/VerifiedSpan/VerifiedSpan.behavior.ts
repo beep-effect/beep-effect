@@ -17,10 +17,13 @@ import {
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
-import { Chunk, Effect, Iterable as I, Result } from "effect";
 import * as Bool from "effect/Boolean";
+import * as Chunk from "effect/Chunk";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import { dual, pipe } from "effect/Function";
+import * as I from "effect/Iterable";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
   MAX_LOCATOR_LENGTH,
@@ -296,7 +299,7 @@ const locatePreparedRawText: {
  * **Example** (Locate unique raw slice)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { locateRawText } from "@beep/langextract/VerifiedSpan"
  *
  * Effect.runPromise(locateRawText("The “ofﬁce” record.", "\"office\"")).then(
@@ -371,7 +374,7 @@ const convertCodePointRange = Effect.fnUntraced(function* (
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import {
  *   TextOffsetRange,
  *   convertTextOffsetRange,
@@ -423,7 +426,7 @@ export const convertTextOffsetRange: {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { RawTextChunk, reconstructSourceText } from "@beep/langextract/VerifiedSpan"
  *
  * const first = RawTextChunk.make({ startChar: S.Natural.make(0), text: "page one\f" })
@@ -474,7 +477,7 @@ export const reconstructSourceText = Effect.fn("VerifiedSpan.reconstructSourceTe
  * **Example** (Locate grounded extraction texts)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { GroundedExtraction } from "@beep/langextract/Extraction"
  * import { locateGroundedExtractions } from "@beep/langextract/VerifiedSpan"
  *

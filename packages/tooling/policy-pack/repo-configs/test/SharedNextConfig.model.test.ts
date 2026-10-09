@@ -16,9 +16,10 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { NextConfig } from "next";
 

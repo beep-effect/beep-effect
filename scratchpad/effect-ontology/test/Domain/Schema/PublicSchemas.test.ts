@@ -1,6 +1,6 @@
 import { HttpUrl as CanonicalHttpUrl } from "@beep/ontology/Ontology.models";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";

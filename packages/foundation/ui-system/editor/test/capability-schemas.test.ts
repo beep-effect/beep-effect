@@ -17,8 +17,11 @@ import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, Equal, Exit, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import type { NodeRegistrationKey } from "@beep/editor/capability/schemas";
 

@@ -6,8 +6,7 @@
  */
 
 import { makeVitestRuntime } from "../internal/VitestRuntime.ts";
-import type { Clock } from "effect";
-
+import type * as Clock from "effect/Clock";
 /**
  * Creates the package-local runner with an explicit watchdog clock.
  *

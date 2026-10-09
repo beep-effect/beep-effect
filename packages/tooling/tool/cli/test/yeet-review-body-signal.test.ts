@@ -6,7 +6,9 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 
 const readFixture = Effect.fnUntraced(function* (name: string) {
@@ -15,10 +17,11 @@ const readFixture = Effect.fnUntraced(function* (name: string) {
 });
 
 const fixture = (name: string): Promise<string> =>
-  Effect.runPromise(
-    Effect.scoped(
-      Layer.build(NodeServices.layer).pipe(Effect.flatMap((context) => readFixture(name).pipe(Effect.provide(context))))
-    )
+  NodeServices.layer.pipe(
+    Layer.build,
+    Effect.flatMap((context) => readFixture(name).pipe(Effect.provide(context))),
+    Effect.scoped,
+    Effect.runPromise
   );
 
 // Real bodies captured from PR #1184: a CodeRabbit review and two

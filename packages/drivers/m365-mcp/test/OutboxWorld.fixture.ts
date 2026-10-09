@@ -25,10 +25,16 @@ import {
 } from "@beep/m365-mcp";
 import { Sha256Hex } from "@beep/schema";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import { Context, Crypto, DateTime, Effect, Layer, pipe, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { OutboxAttachmentDigest, OutboxAuditRecord } from "@beep/m365-mcp";

@@ -15,8 +15,10 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe, expect } from "@effect/vitest";
 import { assertNone, assertSuccess, assertTrue } from "@effect/vitest/utils";
-import { Effect, Equal, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeLocalDateFromString = S.decodeEffect(LocalDateFromString);

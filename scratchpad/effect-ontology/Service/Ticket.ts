@@ -12,7 +12,16 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Clock, Context, Crypto, DateTime, Duration, Effect, HashSet, Layer, Number as N, Schedule } from "effect";
+import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
+import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
+import * as Schedule from "effect/Schedule";
 import * as Base64Url from "effect/encoding/Base64Url";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -233,7 +242,7 @@ const makeTicketService = Effect.gen(function* () {
  *
  * ```ts
  * import { BunCrypto } from "@effect/platform-bun"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { TicketService } from "@effect-ontology/Service/Ticket"
  * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  *
@@ -262,7 +271,7 @@ export class TicketService extends Context.Service<TicketService>()($I`TicketSer
  *
  * ```ts
  * import { BunCrypto } from "@effect/platform-bun"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
  * import { TicketService, TicketServiceLive } from "@effect-ontology/Service/Ticket"
  *

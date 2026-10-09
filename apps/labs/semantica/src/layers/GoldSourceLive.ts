@@ -1,8 +1,13 @@
 import { Sha256Hex } from "@beep/schema";
-import { Crypto, Effect, FileSystem, Layer, Path, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { GOLD_SUBSETS, GoldArtifactSemantics } from "@/canary/Gold";
 import { contentDigest } from "@/schema/Digest";
 import { Origin } from "@/schema/Document";
@@ -144,8 +149,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
  *
  * ```ts
  * import { GoldSourceLive } from "@/layers/GoldSourceLive"
- * import { Layer } from "effect"
- *
+ * import * as Layer from "effect/Layer";
  * console.log(Layer.isLayer(GoldSourceLive())) // true
  * ```
  *

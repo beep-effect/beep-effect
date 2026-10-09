@@ -6,9 +6,10 @@
  */
 
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
-import { DateTime, flow, Order, pipe } from "effect";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { parse } from "jsonc-parser";
@@ -130,7 +131,7 @@ const packageOverrideAuditId = (
  * **Example** (No package overrides)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { selectOsvPackageOverrideIdsForAudit } from "@beep/repo-cli/commands/Quality/Quality.osv-ignore"
  * const ids = selectOsvPackageOverrideIdsForAudit("", "{}", DateTime.makeUnsafe("2026-10-02T00:00:00Z"))
  * console.log(ids) // []
@@ -180,7 +181,7 @@ const osvIgnoreEntryIsActive = (now: DateTime.DateTime): ((entry: OsvIgnoreEntry
  * **Example** (Select from empty config)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { selectOsvIgnoreIdsForAudit } from "@beep/repo-cli/commands/Quality/Quality.osv-ignore"
  *
  * const selection = selectOsvIgnoreIdsForAudit("", DateTime.makeUnsafe("2026-06-17T00:00:00Z"))
@@ -226,7 +227,7 @@ export const selectOsvIgnoreIdsForAudit: {
  * **Example** (Future expiry stays active)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { activeOsvIgnoreIdsForTesting } from "@beep/repo-cli/test/Quality"
  *
  * const ids = activeOsvIgnoreIdsForTesting(

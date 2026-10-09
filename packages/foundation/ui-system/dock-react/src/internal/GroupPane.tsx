@@ -12,10 +12,12 @@ import {
   TopLeftAnchoredBox,
 } from "@beep/dock";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { MutableHashMap, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
+import { pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";

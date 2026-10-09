@@ -11,7 +11,7 @@
  * **Example** (Decode EvidenceSpan with Schema)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { EvidenceSpan } from "@beep/epistemic-domain/values/EvidenceSpan"
  * import * as S from "effect/Schema"
  *

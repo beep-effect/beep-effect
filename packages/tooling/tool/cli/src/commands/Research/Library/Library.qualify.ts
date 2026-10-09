@@ -5,8 +5,9 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { DateTime, Effect } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { acquireLibrarySource, libraryAdapterFor, requiredLibraryAdapters } from "./Library.acquire.ts";

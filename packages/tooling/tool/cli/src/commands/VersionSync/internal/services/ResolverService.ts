@@ -7,7 +7,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
@@ -24,8 +26,9 @@ import { buildNodeReport, resolveNodeVersions } from "../resolvers/NodeResolver.
 import { buildTurboReport, resolveTurboSchema, TurboSchemaState } from "../resolvers/TurboResolver.ts";
 import { CategorySelectionService } from "./CategorySelectionService.ts";
 import type { FsUtils } from "@beep/repo-utils";
-import type { FileSystem, Path } from "effect";
+import type * as FileSystem from "effect/FileSystem";
 import type { HttpClient } from "effect/http";
+import type * as Path from "effect/Path";
 import type { VersionCategoryReport, VersionSyncError, VersionSyncOptions } from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/services/ResolverService");

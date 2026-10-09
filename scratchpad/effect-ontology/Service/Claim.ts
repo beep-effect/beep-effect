@@ -17,8 +17,13 @@ import type { Quad } from "@beep/rdf";
 import { IRI, makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
-import type { Config } from "effect";
-import { Context, DateTime, Effect, Layer, Random, Result } from "effect";
+import type * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Random from "effect/Random";
+import * as Result from "effect/Result";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -181,7 +186,7 @@ interface ClaimServiceShape {
  * **Example** (Create a claim through the service)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
  * import { ClaimService, CreateClaimInput } from "@effect-ontology/Service/Claim"
  *

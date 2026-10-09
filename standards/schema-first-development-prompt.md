@@ -417,7 +417,7 @@ const makeImportOptions = (input: {
 
 ```ts
 import { $PackageNameId } from "@beep/identity/packages";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $PackageNameId.create("relative/path/from/package/src");
@@ -464,7 +464,7 @@ interface Job {
 ```ts
 import { LiteralKit } from "@beep/schema";
 import { $PackageNameId } from "@beep/identity/packages";
-import { Tuple } from "effect";
+import * as Tuple from "effect/Tuple";
 import * as S from "effect/Schema";
 
 const $I = $PackageNameId.create("relative/path/from/package/src");

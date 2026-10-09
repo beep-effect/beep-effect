@@ -7,7 +7,7 @@
  */
 
 import { ArchitectureLabConfigLive } from "@beep/architecture-lab-config/layer";
-import { Layer } from "effect";
+import * as Layer from "effect/Layer";
 import { WorkItemServerLayer } from "./aggregates/WorkItem/index.ts";
 import { WorkerServerLayer } from "./entities/Worker/index.ts";
 
@@ -20,8 +20,7 @@ import { WorkerServerLayer } from "./entities/Worker/index.ts";
  * import { WorkItemServer } from "@beep/architecture-lab-server/aggregates/WorkItem"
  * import { ArchitectureLabServerLive } from "@beep/architecture-lab-server/layer"
  * import { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const server = yield* WorkItemServer
  *   return yield* server.list(WorkItemUseCases.ListWorkItemsQuery.make({}))

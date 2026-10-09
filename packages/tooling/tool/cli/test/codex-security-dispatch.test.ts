@@ -10,27 +10,25 @@ import {
 } from "@beep/repo-cli/test/Codex";
 import { expect, it } from "@effect/vitest";
 import { assertFailure, assertSome, assertSuccess } from "@effect/vitest/utils";
-import {
-  Clock,
-  ConfigProvider,
-  Deferred,
-  Effect,
-  Fiber,
-  FileSystem,
-  Layer,
-  Match,
-  Path,
-  Ref,
-  Sink,
-  Stream,
-} from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as ConfigProvider from "effect/ConfigProvider";
 import { Command } from "effect/cli";
+import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";

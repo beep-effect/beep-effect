@@ -23,10 +23,18 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { A, O, Str } from "@beep/utils";
-import { Config, Context, DateTime, Effect, FileSystem, Layer, Match, Path, pipe, Result } from "effect";
 import * as Bool from "effect/Boolean";
-import { dual } from "effect/Function";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ghOutput } from "../../internal/github/index.ts";
 import {
@@ -129,7 +137,8 @@ export interface WorktreeMergedPullRequestProbeShape {
  * ```ts
  * import * as S from "effect/Schema"
  * import { WorktreeMergedPullRequestProbe } from "@beep/repo-cli/commands/Worktree"
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
  *
  * const PosInt = S.Int.check(S.isGreaterThan(0))
@@ -319,8 +328,8 @@ export const worktreeBranchDeleteArgs: {
  *
  * ```ts
  * import { WorktreeRepositoryHash, worktreeArchivePlan } from "@beep/repo-cli/commands/Worktree"
- * import { Effect, Path } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Path from "effect/Path";
  * const program = Effect.map(Path.Path, (path) =>
  *   worktreeArchivePlan(
  *     path,
@@ -460,7 +469,7 @@ export interface WorktreeRemovalServiceShape {
  *
  * ```ts
  * import { WorktreeRemovalService } from "@beep/repo-cli/commands/Worktree"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
  * const program = Effect.map(WorktreeRemovalService, (service) => service.hasUnpushedCommits("/repo", O.none()))
@@ -518,8 +527,7 @@ const preservationErrorAdapter = (
  *
  * ```ts
  * import { runWorktreeGitCapture } from "@beep/repo-cli/commands/Worktree"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const operation = runWorktreeGitCapture("/repo", ["status", "--short"], "Could not inspect the repo.")
  * console.log(Effect.isEffect(operation)) // true
  * ```
@@ -1491,7 +1499,8 @@ const makeWorktreeRemovalService = Effect.fn("WorktreeRemovalService.make")(func
  *
  * ```ts
  * import { WorktreeMergedPullRequestProbe, WorktreeRemovalServiceLayer } from "@beep/repo-cli/commands/Worktree"
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
  *
  * const probe = Layer.succeed(

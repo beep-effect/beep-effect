@@ -3,7 +3,7 @@ import { ExtractFileOperation } from "@beep/file-processing/Operation";
 import { decodeTestOperationIdentifiers } from "@beep/file-processing/test";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { O } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";

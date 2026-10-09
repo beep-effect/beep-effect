@@ -7,7 +7,9 @@
 
 import { $FileProcessingId } from "@beep/identity";
 import { A, O } from "@beep/utils";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { PageOcrError } from "./PageOcr.errors.ts";
 import type { PageOcrEngineIdentity, PageOcrRequest, PageOcrResult } from "./PageOcr.schema.ts";
 
@@ -25,7 +27,7 @@ const $I = $FileProcessingId.create("PageOcr");
  * **Example** (Implement an in-memory engine)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import {
  *   PageOcrEngineIdentity,
  *   type PageOcrEngineShape,
@@ -89,7 +91,7 @@ export type PageOcrServiceShape = {
  * **Example** (Require the service in a program)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { PageOcrService } from "@beep/file-processing/PageOcr"
  *
  * const program = Effect.gen(function* () {
@@ -110,7 +112,7 @@ export class PageOcrService extends Context.Service<PageOcrService, PageOcrServi
  * **Example** (Build a page read program)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { type PageOcrRequest, recognizePage } from "@beep/file-processing/PageOcr"
  *
  * const read = (request: PageOcrRequest) => recognizePage("tesseract/eng", request)
@@ -141,7 +143,7 @@ export const recognizePage = Effect.fn("PageOcr.recognizePage")(function* (
  * **Example** (Provide a service with no engines)
  *
  * ```ts
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer";
  * import { makePageOcrServiceLayer } from "@beep/file-processing/PageOcr"
  *
  * const layer = makePageOcrServiceLayer([])

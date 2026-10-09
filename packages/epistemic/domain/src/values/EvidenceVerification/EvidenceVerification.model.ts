@@ -10,9 +10,9 @@ import { Sha256Hex } from "@beep/schema";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-import { Result } from "effect";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { canonicalJson } from "../internal/CanonicalJson.ts";
 

@@ -10,25 +10,21 @@ import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import * as OptionUtils from "@beep/utils/Option";
-import {
-  Clock,
-  Console,
-  DateTime,
-  Effect,
-  Equal,
-  FileSystem,
-  flow,
-  Inspectable,
-  Layer,
-  Order,
-  Path,
-  pipe,
-} from "effect";
+import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
 import { Argument, Command, Flag } from "effect/cli";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
 import * as HM from "effect/HashMap";
 import { FetchHttpClient } from "effect/http";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -119,7 +115,7 @@ import {
   QualityHardwareProfile,
 } from "./Quality.schemas.ts";
 import { runQualityTaskGithubCheckLaneWaves, runQualityTaskStreamingStepGroup } from "./Tasks.ts";
-import type { Crypto } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
 import type { ParseError } from "jsonc-parser";
 import type { AdmissionSnapshot } from "../../internal/repo-run/index.ts";
@@ -1134,8 +1130,7 @@ type DevQualityStepOptions = { readonly base: string; readonly head: string; rea
  * ```ts
  * import { devQualityStepsForTesting } from "@beep/repo-cli/test/Quality"
  * import * as A from "effect/Array"
- * import { pipe } from "effect"
- *
+ * import { pipe } from "effect/Function";
  * const labels = pipe(
  *   "/repo",
  *   devQualityStepsForTesting({
@@ -3205,7 +3200,7 @@ export const runTsgoSmokeCheck = Effect.fn("QualityScriptCommands.runTsgoSmokeCh
       sourcePath,
       A.join(
         [
-          'import { Effect } from "effect";',
+          'import * as Effect from "effect/Effect";',
           "",
           "export const shouldHaveSuggestion = () => {",
           "  return Effect.gen(function* () {",

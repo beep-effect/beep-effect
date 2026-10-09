@@ -1,8 +1,8 @@
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { mergeConfig } from "vite";
 import type { StorybookConfig } from "@storybook/react-vite";

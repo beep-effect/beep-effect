@@ -32,13 +32,21 @@ import {
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { ConfigProvider, Console, DateTime, Effect, FileSystem, Layer, Order, Path, Ref } from "effect";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
 import { Command } from "effect/cli";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 const now = DateTime.makeUnsafe("2026-01-05T00:00:00.000Z");

@@ -7,12 +7,16 @@
 
 import { $DiscordId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
-import { Context, Effect, Layer, pipe, Redacted } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { DiscordError } from "./Discord.errors.ts";
@@ -220,7 +224,9 @@ const makeService = (client: HttpClient.HttpClient, baseUrl: URLStr): DiscordSha
  *   DiscordChannelRequest,
  *   DiscordConfigInput
  * } from "@beep/discord"
- * import { Effect, Layer, Redacted } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
+ * import * as Redacted from "effect/Redacted";
  * import * as O from "effect/Option"
  * import * as HttpClient from "effect/http/HttpClient"
  * import * as HttpClientResponse from "effect/http/HttpClientResponse"

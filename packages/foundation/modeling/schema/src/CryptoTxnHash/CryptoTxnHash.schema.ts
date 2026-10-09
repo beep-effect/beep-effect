@@ -8,8 +8,9 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { flow, Redacted } from "effect";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import { decodeCanonicalBase58 } from "../internal/crypto.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";

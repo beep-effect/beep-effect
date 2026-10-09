@@ -15,10 +15,16 @@ import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Match, Path, pipe, Stream } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 // Live lane: exercises the real ffmpeg/ffprobe binaries on PATH. Skips
 // explicitly when a binary is missing; other prerequisite failures stay failures.

@@ -21,11 +21,19 @@ import {
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Cause, Config, ConfigProvider, Context, Effect, Exit, Layer, pipe, Scope } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Cause from "effect/Cause";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Scope from "effect/Scope";
 import * as SqlClient from "effect/sql/SqlClient";
 import { vi } from "vitest";
 import type { SqlTestHooks } from "@beep/test-utils";
@@ -135,7 +143,10 @@ vi.mock("pg", (importOriginal) =>
 );
 
 const isBunRuntime = process.versions.bun !== undefined;
-const isCoverageRatchetRun = O.contains(Effect.runSync(Config.option(Config.String("VITEST_COVERAGE_RATCHET"))), "1");
+const isCoverageRatchetRun = O.contains(
+  Effect.runSync(Config.String("VITEST_COVERAGE_RATCHET").pipe(Config.option)),
+  "1"
+);
 const localSqliteIt = it.effect.skipIf(isCoverageRatchetRun && !isBunRuntime);
 const nodeRuntimeIt = it.skipIf(isBunRuntime);
 const nodeRuntimeEffectIt = it.effect.skipIf(isBunRuntime);
@@ -227,7 +238,7 @@ describe("SqlTest", () => {
 
       expect(resourceWithFailedRelease.container.getId()).toBe("container-fixture");
       sqlTransportMock.rejectStart = true;
-      const failedStart = yield* Effect.exit(Effect.scoped(makePgliteTestcontainerResource()));
+      const failedStart = yield* makePgliteTestcontainerResource().pipe(Effect.scoped, Effect.exit);
 
       expect(Exit.isFailure(failedStart)).toBe(true);
       if (Exit.isFailure(failedStart)) {
@@ -259,7 +270,7 @@ describe("SqlTest", () => {
       expect(Layer.isLayer(BunSqliteTestDriver.makeLayer(undefined))).toBe(true);
       expect(Layer.isLayer(NodeSqliteTestDriver.makeLayer(undefined))).toBe(true);
 
-      const exit = yield* Effect.exit(Effect.scoped(makePgliteTestcontainerResource({ internalPort: 0 })));
+      const exit = yield* makePgliteTestcontainerResource({ internalPort: 0 }).pipe(Effect.scoped, Effect.exit);
       expect(Exit.isFailure(exit)).toBe(true);
       if (Exit.isFailure(exit)) {
         const failure = Cause.squash(exit.cause);
@@ -280,8 +291,10 @@ describe("SqlTest", () => {
           )
         )
       );
-      const info = yield* Effect.scoped(
-        Layer.build(layer).pipe(Effect.map((services) => Context.get(services, TestDatabaseInfo)))
+      const info = yield* layer.pipe(
+        Layer.build,
+        Effect.map((services) => Context.get(services, TestDatabaseInfo)),
+        Effect.scoped
       );
 
       expect(info.driver).toBe("pglite-inprocess");
@@ -751,26 +764,14 @@ describe("SqlTest", () => {
   nodeRuntimeEffectIt(
     "validates selected PGLite layer configs before provisioning",
     Effect.fnUntraced(function* () {
-      const externalExit = yield* Effect.exit(
-        Effect.scoped(
-          Layer.build(
-            makePgliteSqlTestLayer({
-              external: { connectionUri: "not a postgres url" },
-              mode: "external",
-            })
-          )
-        )
-      );
-      const testcontainersExit = yield* Effect.exit(
-        Effect.scoped(
-          Layer.build(
-            makePgliteSqlTestLayer({
-              mode: "testcontainers",
-              testcontainers: { internalPort: 0 },
-            })
-          )
-        )
-      );
+      const externalExit = yield* makePgliteSqlTestLayer({
+        external: { connectionUri: "not a postgres url" },
+        mode: "external",
+      }).pipe(Layer.build, Effect.scoped, Effect.exit);
+      const testcontainersExit = yield* makePgliteSqlTestLayer({
+        mode: "testcontainers",
+        testcontainers: { internalPort: 0 },
+      }).pipe(Layer.build, Effect.scoped, Effect.exit);
 
       expect(Exit.isFailure(externalExit)).toBe(true);
       if (Exit.isFailure(externalExit)) {

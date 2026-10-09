@@ -1,7 +1,9 @@
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import { Console, Effect, Layer } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import {
   decodeEvidenceMode,
   EvidenceMode,
@@ -31,9 +33,10 @@ const generate = Effect.gen(function* () {
 // strictEffectProvide bans Layer-provide outside composed entry layers, so the
 // scoped context build below provides the file system as a Context instead.
 BunRuntime.runMain(
-  Effect.scoped(
-    Effect.flatMap(Layer.build(Layer.merge(BunFileSystem.layer, BunCrypto.layer)), (context) =>
-      Effect.provide(generate, context)
-    )
+  BunFileSystem.layer.pipe(
+    Layer.merge(BunCrypto.layer),
+    Layer.build,
+    Effect.flatMap((context) => Effect.provide(generate, context)),
+    Effect.scoped
   )
 );

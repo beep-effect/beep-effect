@@ -10,7 +10,11 @@ import { $ScratchpadId } from "@beep/identity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { IRI } from "@beep/rdf";
 import { LiteralKit, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
-import { DateTime, Effect, Order, SchemaGetter, Result } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Order from "effect/Order";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as Result from "effect/Result";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -548,7 +552,7 @@ const EventIntervalDefinition = EventIntervalFieldsModel.check(
  *
  * **Example** (Use EventInterval)
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { EventInterval } from "@effect-ontology/Model/CoreOntology"

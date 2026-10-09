@@ -1,7 +1,11 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as Bool from "effect/Boolean";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { GOLD_SUBSETS, proposeGold } from "@/canary/Gold";
 import { RelationPreviewOptions, runRelationPreview } from "@/canary/RelationPreview";
@@ -221,17 +225,18 @@ const runGoldProposal = Effect.fn("SemanticaCanary.runGoldProposal")(function* (
     Layer.provide(identity),
     Layer.provide(Layer.succeed(LabConfig, selectedConfig))
   );
-  return yield* Effect.scoped(
-    Layer.build(Layer.merge(model, identity)).pipe(
-      Effect.flatMap((modelContext) =>
-        proposeGold({
-          manifestPath: options.manifest,
-          outputDirectory: "fixtures/gold/v1",
-          paper: options.paper,
-          subset: options.subset,
-        }).pipe(Effect.provide(modelContext))
-      )
-    )
+  return yield* model.pipe(
+    Layer.merge(identity),
+    Layer.build,
+    Effect.flatMap((modelContext) =>
+      proposeGold({
+        manifestPath: options.manifest,
+        outputDirectory: "fixtures/gold/v1",
+        paper: options.paper,
+        subset: options.subset,
+      }).pipe(Effect.provide(modelContext))
+    ),
+    Effect.scoped
   );
 });
 

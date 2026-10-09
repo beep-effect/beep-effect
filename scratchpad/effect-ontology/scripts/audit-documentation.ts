@@ -20,7 +20,9 @@
  */
 import { isCanonicalJSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories";
 import { A, Str } from "@beep/utils";
-import { Effect, HashMap, HashSet } from "effect";
+import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as ts from "typescript";

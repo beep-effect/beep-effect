@@ -19,7 +19,9 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId, CoreVocab } from "@beep/identity";
 import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -195,7 +197,7 @@ type SparqlResponse = typeof SparqlResponseSchema.Type;
  * **Example** (Compose SPARQL generation)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { OntologyContext } from "@effect-ontology/Model/Ontology"
  * import { SparqlGenerator } from "@effect-ontology/Service/SparqlGenerator"
  *

@@ -46,10 +46,15 @@ import {
 } from "@beep/m365";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Context, Effect, FileSystem, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import {
   boxFiles,

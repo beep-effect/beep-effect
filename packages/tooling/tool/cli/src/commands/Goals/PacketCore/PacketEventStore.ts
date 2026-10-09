@@ -23,9 +23,15 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str, thunkFalse } from "@beep/utils";
-import { Context, Effect, FileSystem, Layer, Match, Order, Path } from "effect";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { assertJournalFileLockOwned, withJournalFileLock } from "../../../internal/repo-run/AdmissionJournal.ts";
 import { publishJournalTextAtomically } from "../../../internal/repo-run/JournalFile.ts";
@@ -131,8 +137,7 @@ const refuseInterruptedForkReplacement = Effect.fn("PacketEventStore.refuseInter
  *
  * ```ts
  * import { PacketStreamLocator, withPacketEventLock } from "@beep/repo-cli/test/Goals"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const locator = PacketStreamLocator.make({ packet: "demo", root: "goals", packetPath: "goals/demo" })
  * const program = withPacketEventLock(locator, (assertOwned) =>
  *   assertOwned.pipe(Effect.as("still owned"))
@@ -270,8 +275,7 @@ export interface PacketEventStoreShape {
  *
  * ```ts
  * import { PacketEventStore } from "@beep/repo-cli/test/Goals"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.map(PacketEventStore, (store) => typeof store.list)
  * console.log(program.pipe !== undefined) // true
  * ```
@@ -340,8 +344,7 @@ const storedEventIdentityIssue = (
  *
  * ```ts
  * import { foldUnambiguousStream, PacketStreamListing, PacketStreamLocator } from "@beep/repo-cli/test/Goals"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const locator = PacketStreamLocator.make({ packet: "demo", root: "goals", packetPath: "goals/demo" })
  * const listing = PacketStreamListing.make({ events: [], issues: [] })
  * console.log(Effect.isEffect(foldUnambiguousStream(locator, listing))) // true

@@ -2,7 +2,7 @@ import { SessionChangeRejected, SessionId } from "@beep/ontology-domain/aggregat
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 
 describe("ontology domain tagged-error declared equivalence", () => {

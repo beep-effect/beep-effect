@@ -17,8 +17,9 @@ import { OptionInjectionError } from "@beep/repo-utils/errors/OptionInjectionErr
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
-import { flow, Result } from "effect";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const expectDeclaredEquivalence = <A>(schema: S.Schema<A>, a: A, b: A, different: A): void => {

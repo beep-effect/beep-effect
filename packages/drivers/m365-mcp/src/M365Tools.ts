@@ -37,8 +37,8 @@ import {
   M365SiteCollection,
 } from "@beep/m365";
 import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
-import { Effect } from "effect";
 import { Tool, Toolkit } from "effect/ai";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $M365McpId.create("M365Tools");

@@ -48,9 +48,11 @@ import {
 } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
-import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";

@@ -535,7 +535,7 @@ const SkillSnapshotFileCountCheck = S.makeFilter(
  *
  * ```ts
  * import { SkillSnapshot } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
  * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -1150,8 +1150,7 @@ export const isSkillsLockV2 = S.is(SkillsLockV2);
  *
  * ```ts
  * import { decodeSkillUpstream } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const upstream = Effect.runSync(
  *   decodeSkillUpstream({
  *     repository: "shadcn-ui/ui",
@@ -1182,8 +1181,7 @@ export const decodeSkillUpstream: {
  *
  * ```ts
  * import { decodeSkillUpstream, encodeSkillUpstream } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const revision = "91f21dfe1328585670275781b4525fff2507f917"
  * const upstream = Effect.runSync(
  *   decodeSkillUpstream({
@@ -1215,8 +1213,7 @@ export const encodeSkillUpstream: {
  *
  * ```ts
  * import { decodeSkillSnapshotFile } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const file = Effect.runSync(
  *   decodeSkillSnapshotFile({
  *     path: "SKILL.md",
@@ -1242,8 +1239,7 @@ export const decodeSkillSnapshotFile: {
  *
  * ```ts
  * import { decodeSkillSnapshotFile, encodeSkillSnapshotFile } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const file = Effect.runSync(
  *   decodeSkillSnapshotFile({
  *     path: "SKILL.md",
@@ -1269,8 +1265,7 @@ export const encodeSkillSnapshotFile: {
  *
  * ```ts
  * import { decodeSkillSnapshot } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * const snapshot = Effect.runSync(
  *   decodeSkillSnapshot({
@@ -1299,8 +1294,7 @@ export const decodeSkillSnapshot: {
  *
  * ```ts
  * import { decodeSkillSnapshot, encodeSkillSnapshot } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * const snapshot = Effect.runSync(
  *   decodeSkillSnapshot({
@@ -1329,8 +1323,7 @@ export const encodeSkillSnapshot: {
  *
  * ```ts
  * import { decodeSkillLicense } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const license = Effect.runSync(
  *   decodeSkillLicense({
  *     spdxId: "MIT",
@@ -1356,8 +1349,7 @@ export const decodeSkillLicense: {
  *
  * ```ts
  * import { decodeSkillLicense, encodeSkillLicense } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const license = Effect.runSync(
  *   decodeSkillLicense({
  *     spdxId: "MIT",
@@ -1383,8 +1375,7 @@ export const encodeSkillLicense: {
  *
  * ```ts
  * import { decodeSkillProvenance } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const provenance = Effect.runSync(
  *   decodeSkillProvenance({
  *     status: "exact",
@@ -1412,8 +1403,7 @@ export const decodeSkillProvenance: {
  *
  * ```ts
  * import { decodeSkillProvenance, encodeSkillProvenance } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const provenance = Effect.runSync(
  *   decodeSkillProvenance({
  *     status: "exact",
@@ -1441,8 +1431,7 @@ export const encodeSkillProvenance: {
  *
  * ```ts
  * import { decodeSkillPatch } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const patch = Effect.runSync(
  *   decodeSkillPatch({
  *     path: "patches/0001-local-drift.patch",
@@ -1470,8 +1459,7 @@ export const decodeSkillPatch: {
  *
  * ```ts
  * import { decodeSkillPatch, encodeSkillPatch } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const patch = Effect.runSync(
  *   decodeSkillPatch({
  *     path: "patches/0001-local-drift.patch",
@@ -1499,8 +1487,7 @@ export const encodeSkillPatch: {
  *
  * ```ts
  * import { decodeSkillPatches } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const patches = Effect.runSync(
  *   decodeSkillPatches({
  *     required: false,
@@ -1526,8 +1513,7 @@ export const decodeSkillPatches: {
  *
  * ```ts
  * import { decodeSkillPatches, encodeSkillPatches } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const patches = Effect.runSync(
  *   decodeSkillPatches({
  *     required: false,
@@ -1553,8 +1539,7 @@ export const encodeSkillPatches: {
  *
  * ```ts
  * import { decodeSkillEffective } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * const effective = Effect.runSync(
  *   decodeSkillEffective({
@@ -1581,8 +1566,7 @@ export const decodeSkillEffective: {
  *
  * ```ts
  * import { decodeSkillEffective, encodeSkillEffective } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * const effective = Effect.runSync(
  *   decodeSkillEffective({
@@ -1609,8 +1593,8 @@ export const encodeSkillEffective: {
  *
  * ```ts
  * import { decodeSkillLockV2Entry } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect, Exit } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Exit from "effect/Exit";
  * const exit = Effect.runSyncExit(decodeSkillLockV2Entry({ sourceType: "github" }))
  *
  * console.log(Exit.isFailure(exit)) // true
@@ -1630,8 +1614,8 @@ export const decodeSkillLockV2Entry: {
  *
  * ```ts
  * import { encodeSkillLockV2Entry } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect, Exit } from "effect"
- *
+ * import * as Effect from "effect/Effect";
+ * import * as Exit from "effect/Exit";
  * const exit = Effect.runSyncExit(encodeSkillLockV2Entry({ sourceType: "github" }))
  *
  * console.log(Exit.isFailure(exit)) // true
@@ -1651,8 +1635,7 @@ export const encodeSkillLockV2Entry: {
  *
  * ```ts
  * import { decodeSkillsLockV2 } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const lock = Effect.runSync(decodeSkillsLockV2({ version: 2, skills: {} }))
  *
  * console.log(lock.version) // 2
@@ -1672,8 +1655,7 @@ export const decodeSkillsLockV2: {
  *
  * ```ts
  * import { decodeSkillsLockV2, encodeSkillsLockV2 } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const lock = Effect.runSync(decodeSkillsLockV2({ version: 2, skills: {} }))
  *
  * console.log(Effect.runSync(encodeSkillsLockV2(lock)).version) // 2
@@ -1702,8 +1684,7 @@ const SkillsLockV2Json = S.fromJsonString(SkillsLockV2);
  *
  * ```ts
  * import { decodeSkillsLockV2Json } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const lock = Effect.runSync(decodeSkillsLockV2Json('{"version":2,"skills":{}}'))
  *
  * console.log(lock.version) // 2
@@ -1728,8 +1709,7 @@ export const decodeSkillsLockV2Json: {
  *
  * ```ts
  * import { decodeSkillsLockV2Json, encodeSkillsLockV2Json } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const lock = Effect.runSync(decodeSkillsLockV2Json('{"version":2,"skills":{}}'))
  *
  * console.log(Effect.runSync(encodeSkillsLockV2Json(lock))) // '{"version":2,"skills":{}}'

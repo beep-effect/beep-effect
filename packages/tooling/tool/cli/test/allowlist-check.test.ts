@@ -10,7 +10,10 @@ import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Path, Result } from "effect";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeUnknownStructInlineSchemaResult = S.decodeUnknownResult(
@@ -37,7 +40,7 @@ it.layer(NodeServices.layer, { timeout: "5 seconds" })("allowlist-check", (it) =
   it("formats schema diagnostics with path labels and optional redaction", () => {
     const result = decodeUnknownStructInlineSchemaResult({ token: "sk-test-secret" });
 
-    assertTrue(Result.isFailure(result));
+    result.pipe(Result.isFailure, assertTrue);
 
     if (Result.isFailure(result)) {
       const diagnostics = formatSchemaDiagnostics(result.failure);

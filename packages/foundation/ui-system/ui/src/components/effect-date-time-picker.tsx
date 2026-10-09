@@ -17,10 +17,11 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
-import { DateTime, Result } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import type { DatePickerProps } from "@mui/x-date-pickers/DatePicker";
 import type { DateTimePickerProps } from "@mui/x-date-pickers/DateTimePicker";
@@ -335,7 +336,7 @@ const formatExactToken = (value: DateTime.DateTime, locale: string, formatString
  * **Example** (Verify month index boundary)
  *
  * ```ts
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { AdapterEffectDateTime } from "@beep/ui/components/effect-date-time-picker"
  *
  * const adapter = new AdapterEffectDateTime({ locale: "en-US" })
@@ -689,7 +690,7 @@ type EffectDateTimeLocalizationProviderProps = Omit<
  *
  * ```tsx
  * import * as React from "react"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { DatePicker } from "@mui/x-date-pickers/DatePicker"
  * import { EffectDateTimeLocalizationProvider } from "@beep/ui/components/effect-date-time-picker"
  *
@@ -726,7 +727,7 @@ type ControlledPickerProps<TProps> = Omit<TProps, "value" | "defaultValue" | "on
  *
  * ```tsx
  * import * as React from "react"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { EffectDatePicker } from "@beep/ui/components/effect-date-time-picker"
  *
  * export function BirthdayField() {
@@ -766,7 +767,7 @@ export function EffectDatePicker({
  *
  * ```tsx
  * import * as React from "react"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { EffectDateTimePicker } from "@beep/ui/components/effect-date-time-picker"
  *
  * export function AppointmentStartsAtField() {
@@ -813,7 +814,7 @@ export function EffectDateTimePicker({
  *
  * ```tsx
  * import * as React from "react"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime";
  * import { EffectTimePicker } from "@beep/ui/components/effect-date-time-picker"
  *
  * export function ReminderTimeField() {

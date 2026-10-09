@@ -7,10 +7,14 @@
 
 import { $BoxProvisioningId } from "@beep/identity";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
-import { Context, Effect, Equal, Layer, Match } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import { identity } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
@@ -188,8 +192,7 @@ export interface BoxProvisioningShape {
  *
  * ```ts
  * import { BoxProvisioning } from "@beep/box-provisioning/BoxProvisioning"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const provisioning = yield* BoxProvisioning
  *   return provisioning.reconcile

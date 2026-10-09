@@ -20,11 +20,14 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
-import { ConfigProvider, Effect, pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const encodeUnknownJsonEffect = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
@@ -1344,23 +1347,19 @@ describe("HookPulseV1", () => {
       );
       const withUnreadableSalt = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
         Effect.provideService(effect, ConfigProvider.ConfigProvider, unreadable);
-      const raw = yield* Effect.flip(withUnreadableSalt(decodeHookPulseFromRaw(stop)));
-      const legacy = yield* Effect.flip(
-        withUnreadableSalt(
-          decodeHookPulseFromLegacy({
-            schemaVersion: "hook-pulse/v1",
-            ts: "2026-08-01T09:06:00.000Z",
-            sessionId: "legacy-session-unreadable-salt",
-            agentKind: "claude-code",
-            hookEvent: "Stop",
-            cwd: "/workspace/legacy-checkout",
-            notifierRev: "spike-0",
-            instrumentClass: "spike",
-            evidenceTier: "observed",
-            waitReason: "none",
-          })
-        )
-      );
+      const raw = yield* decodeHookPulseFromRaw(stop).pipe(withUnreadableSalt, Effect.flip);
+      const legacy = yield* decodeHookPulseFromLegacy({
+        schemaVersion: "hook-pulse/v1",
+        ts: "2026-08-01T09:06:00.000Z",
+        sessionId: "legacy-session-unreadable-salt",
+        agentKind: "claude-code",
+        hookEvent: "Stop",
+        cwd: "/workspace/legacy-checkout",
+        notifierRev: "spike-0",
+        instrumentClass: "spike",
+        evidenceTier: "observed",
+        waitReason: "none",
+      }).pipe(withUnreadableSalt, Effect.flip);
 
       expect(raw.message).toContain("Failed to hash private hook-pulse identifiers");
       expect(legacy.message).toContain("Failed to migrate private identifiers from a legacy hook-pulse/v1 row");

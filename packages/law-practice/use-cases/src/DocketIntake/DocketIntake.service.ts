@@ -33,12 +33,18 @@ import {
   Order as LocalDateOrder,
   equals as sameDate,
 } from "@beep/schema/LocalDate";
-import { Context, DateTime, Effect, HashSet, Layer, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -470,7 +476,7 @@ const folderFlags: (folder: DocketSourceFolder) => ReadonlyArray<DocketEntryFlag
 const folderLines: (folder: DocketSourceFolder) => ReadonlyArray<string> = DocketSourceFolder.$match({
   deleted: () => ["Found in the Deleted Items folder."],
   junk: () => ["Found in the Junk Email folder."],
-  mailbox: () => A.empty<string>(),
+  mailbox: A.empty<string>,
 });
 
 const NOMINAL_NOTE = "Dates are nominal: not adjusted for weekends, holidays, closures or extensions.";

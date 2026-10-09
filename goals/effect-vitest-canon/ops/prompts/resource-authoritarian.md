@@ -64,8 +64,8 @@ Before: the outer platform layer is provided again for each test.
 import { NodeServices } from "@effect/platform-node"
 import { it } from "@effect/vitest"
 import { assertTrue } from "@effect/vitest/utils"
-import { Effect, FileSystem } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 it.effect("creates a directory", () =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem
@@ -81,8 +81,8 @@ After: the block owns the outer layer; each test still releases its own director
 import { NodeServices } from "@effect/platform-node"
 import { it } from "@effect/vitest"
 import { assertTrue } from "@effect/vitest/utils"
-import { Effect, FileSystem } from "effect"
-
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("directories", (it) => {
   it.effect("creates a directory", Effect.fnUntraced(function* () {
     const fs = yield* FileSystem.FileSystem

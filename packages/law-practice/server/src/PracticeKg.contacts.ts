@@ -9,12 +9,13 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { PracticeKgContactLinkSource } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { readJsonlLines } from "./internal/Jsonl.ts";
-import type { FileSystem } from "effect";
+import type * as FileSystem from "effect/FileSystem";
 
 const $I = $LawPracticeServerId.create("PracticeKg.contacts");
 
@@ -244,7 +245,7 @@ const lineFailure = (path: string, lineNumber: number, cause: unknown) => (unkno
  * **Example** (Read a contacts file)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { readPracticeKgContacts } from "@beep/law-practice-server"
  *
  * const contacts = readPracticeKgContacts("/corpus/incoming/contacts.jsonl")

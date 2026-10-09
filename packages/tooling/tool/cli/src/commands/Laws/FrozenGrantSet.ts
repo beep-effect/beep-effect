@@ -15,13 +15,15 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Effect, HashSet, Order } from "effect";
+import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind } from "ts-morph";
 import { lawScanSourcePaths, runLawScan } from "./internal/LawScan.ts";
 import type { TSMorphService, TSMorphServiceError } from "@beep/repo-utils/TSMorph/index";
-import type { Path } from "effect";
+import type * as Path from "effect/Path";
 import type { CallExpression, NewExpression, ObjectBindingPattern, SourceFile, VariableDeclaration } from "ts-morph";
 
 const $I = $RepoCliId.create("commands/Laws/FrozenGrantSet");
@@ -308,7 +310,7 @@ const collectFrozenGrantSetDiagnostics = (
  * **Example** (Run frozen grant set rules)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { runFrozenGrantSetRules, FrozenGrantSetRulesOptions } from "@beep/repo-cli/commands/Laws/FrozenGrantSet"
  *
  * const program = Effect.map(

@@ -9,7 +9,9 @@ import {
 import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { Effect, flow, Result } from "effect";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { CodexFindingsIngestError } from "@beep/repo-cli/test/Codex";
 

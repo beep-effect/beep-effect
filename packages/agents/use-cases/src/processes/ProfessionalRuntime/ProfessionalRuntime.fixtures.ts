@@ -9,7 +9,7 @@ import { $AgentsUseCasesId } from "@beep/identity/packages";
 import { EmailString } from "@beep/schema";
 import { PromotionSubjectRef } from "@beep/shared-use-cases/PromotionGate";
 import { A, Str } from "@beep/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
@@ -583,8 +583,7 @@ const fixtureRunnerForScenario: (
  *
  * ```ts
  * import { RuntimeFixtureInput, runRuntimeFixture } from "@beep/agents-use-cases/proof"
- * import { Effect } from "effect"
- *
+ * import * as Effect from "effect/Effect";
  * const fixture = RuntimeFixtureInput.make({
  *   body: [
  *     "[span:law-email-001-s2] We need help preparing a provisional patent application.",

@@ -6,9 +6,16 @@ import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Cause, Console, Effect, Exit, FileSystem, Order, Path, pipe } from "effect";
+import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
 import { Command } from "effect/cli";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -213,7 +220,7 @@ it.layer(testLayer, { timeout: "30 seconds", concurrent: false })("image command
         expect(yield* fs.readFileString(path.join(outDir, "clip_frame_00000.png"))).toBe("existing");
         expect(yield* TestConsole.errorLines).toEqual([]);
         expect(process.exitCode ?? 0).toBe(0);
-        assertTrue(Exit.isFailure(exit));
+        exit.pipe(Exit.isFailure, assertTrue);
         if (Exit.isFailure(exit)) {
           const failure = firstFailure(exit.cause);
           failure.pipe(O.isSome, assertTrue);
@@ -280,7 +287,7 @@ it.layer(testLayer, { timeout: "30 seconds", concurrent: false })("image command
         yield* fs.writeFileString(path.join(videoDir, "notes.txt"), "not video");
         const exit = yield* Effect.exit(runImageCommand(["extract-frames-dir", "--dir", videoDir, "--fps", "1"]));
 
-        assertTrue(Exit.isFailure(exit));
+        exit.pipe(Exit.isFailure, assertTrue);
         if (Exit.isFailure(exit)) {
           const failure = firstFailure(exit.cause);
           failure.pipe(O.isSome, assertTrue);
@@ -311,7 +318,7 @@ it.layer(testLayer, { timeout: "30 seconds", concurrent: false })("image command
           withPathPrefix(binDir, runImageCommand(["extract-frames-dir", "--dir", videoDir, "--fps", "1"]))
         );
 
-        assertTrue(Exit.isFailure(exit));
+        exit.pipe(Exit.isFailure, assertTrue);
         expect(yield* fs.exists(argsPath)).toBe(false);
         if (Exit.isFailure(exit)) {
           const failure = firstFailure(exit.cause);
@@ -358,7 +365,7 @@ it.layer(testLayer, { timeout: "30 seconds", concurrent: false })("image command
           `image extract-frames-dir: good.mp4: wrote 2 frame(s) to ${path.join(videoDir, "good")}. manifest: ${path.join(videoDir, "good", "extract-frames-manifest.json")}`,
           "image extract-frames-dir: processed 2 video(s); succeeded 1; failed 1.",
         ]);
-        assertTrue(Exit.isFailure(exit));
+        exit.pipe(Exit.isFailure, assertTrue);
         if (Exit.isFailure(exit)) {
           const failure = firstFailure(exit.cause);
           failure.pipe(O.isSome, assertTrue);

@@ -17,10 +17,13 @@ import {
 } from "@beep/law-practice-use-cases/DocketIntake";
 import { M365, M365DeleteEventRequest, M365GetEventRequest, M365GetMessageRequest } from "@beep/m365";
 import { LiteralKit } from "@beep/schema";
-import { DateTime, Effect, HashSet, Order, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

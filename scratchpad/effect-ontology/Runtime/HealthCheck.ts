@@ -11,7 +11,13 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Context, DateTime, Duration, Effect, Inspectable, Layer, Redacted } from "effect";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -134,7 +140,8 @@ export class HealthResult extends S.Class<HealthResult>($I`HealthResult`)(
  * **Example** (Run a liveness probe)
  *
  * ```ts
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import { HealthCheckService } from "@effect-ontology/Runtime/HealthCheck"
  *
  * const TestHealth = Layer.mock(HealthCheckService, {

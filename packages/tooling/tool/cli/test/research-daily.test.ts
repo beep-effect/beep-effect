@@ -19,11 +19,16 @@ import {
 } from "@beep/repo-cli/test/Research";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Layer, Path, Stream } from "effect";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { FetchHttpClient } from "effect/http";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
 // Nothing in this suite may reach a Cognee server: the one URL used points at

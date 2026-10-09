@@ -18,9 +18,13 @@ import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
-import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { constFalse, constTrue } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import type { ProofChangedPackageTripwire, ProofLedgerShape } from "@beep/repo-cli/test/Yeet";
 

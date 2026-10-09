@@ -17,9 +17,16 @@ import {
 import { makeDataset, serializeQuad } from "@beep/rdf/Rdf";
 import { CanonicalizationService, FingerprintDatasetRequest } from "@beep/semantic-web/services/canonicalization";
 import { A, O } from "@beep/utils";
-import { Config, Context, Effect, FileSystem, Layer, Path, pipe, Semaphore } from "effect";
+import * as Config from "effect/Config";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import {
   buildOntologySnapshot,
   ExportOntologyProvenanceCommand,
@@ -350,7 +357,7 @@ export interface OntologyToolServiceShape {
  *
  * ```ts
  * import { OntologyToolService } from "@beep/ontology-use-cases/tools"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () { return yield* OntologyToolService })
  * console.log(Effect.isEffect(program))
  * ```

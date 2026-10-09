@@ -3,8 +3,12 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it as loggerSubjectIt } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { Context, Effect, Equal, Layer, Logger } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

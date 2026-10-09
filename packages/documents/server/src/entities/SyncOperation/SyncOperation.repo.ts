@@ -23,9 +23,12 @@ import { extractPostgresDiagnostics, PostgresDrizzle, PostgresErrorCodeByName } 
 import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { A, N } from "@beep/utils";
 import { and, asc, eq } from "drizzle-orm";
-import { Effect, HashMap, pipe, Ref } from "effect";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
