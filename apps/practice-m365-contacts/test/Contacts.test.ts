@@ -61,94 +61,96 @@ const csv = "First Name,Last Name,Company,E-mail Address\nFixture,Person,Fixture
 
 const withFiles = <A, E, R>(program: (root: string) => Effect.Effect<A, E, R>) =>
   Effect.scoped(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const base = yield* path.fromFileUrl(new URL("../../../.beep/m365-contacts/tests", import.meta.url));
-      yield* fs.makeDirectory(base, { recursive: true, mode: 0o700 });
-      const root = yield* fs.makeTempDirectoryScoped({ directory: base, prefix: "contacts-" });
-      return yield* program(root);
-    })
-  ).pipe(Effect.provide(BunServices.layer));
+    Layer.build(BunServices.layer).pipe(
+      Effect.flatMap((context) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const base = yield* path.fromFileUrl(new URL("../../../.beep/m365-contacts/tests", import.meta.url));
+          yield* fs.makeDirectory(base, { recursive: true, mode: 0o700 });
+          const root = yield* fs.makeTempDirectoryScoped({ directory: base, prefix: "contacts-" });
+          return yield* program(root);
+        }).pipe(Effect.provideContext(context))
+      )
+    )
+  );
 
-const overJob = <A, E>(
+const overJob = Effect.fn("overJob")(function* <A, E>(
   root: string,
   initial: MailboxInventory,
   program: Effect.Effect<A, E, ContactSeeding>,
   ambiguous = false
-) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const state = yield* makeContactsState(path.join(root, "state"));
-    const inventory = yield* Ref.make(initial);
-    const deleted = yield* Ref.make<ReadonlyArray<string>>([]);
-    const createdCount = yield* Ref.make(0);
-    const fake = ContactsMailbox.of({
-      inventory: Ref.get(inventory),
-      createFolder: Effect.gen(function* () {
-        const folder = GraphContactFolder.make({ id: "seed-folder", displayName: O.some(seedFolderName) });
-        yield* Ref.update(inventory, (snapshot) =>
-          MailboxInventory.make({ ...snapshot, folders: A.append(snapshot.folders, folder) })
-        );
-        return folder;
-      }),
-      create: Effect.fnUntraced(function* (folderId, draft) {
-        const number = yield* Ref.updateAndGet(createdCount, (n) => n + 1);
-        const wire = {
-          ...(yield* S.encodeEffect(M365ContactDraft)(draft)),
-          id: `seed-${number}`,
-          changeKey: "version-1",
-          parentFolderId: folderId,
-        };
-        const contact = yield* S.decodeUnknownEffect(GraphContact)(wire).pipe(
-          Effect.map((value) => GraphContact.make({ ...value, rawJson: O.some(wire) })),
-          Effect.mapError(() => M365Error.fromReason("response decoding"))
-        );
-        yield* Ref.update(inventory, (snapshot) =>
-          MailboxInventory.make({
-            ...snapshot,
-            contacts: A.append(snapshot.contacts, MailboxContact.make({ contact, folderId: O.some(folderId) })),
-          })
-        );
-        if (ambiguous) return yield* Effect.fail(M365Error.fromReason("ambiguous write"));
-        return contact;
-      }),
-      delete: Effect.fnUntraced(function* (row, changeKey) {
-        if (O.isSome(changeKey) && !O.contains(changeKey.value)(row.contact.changeKey))
-          return yield* Effect.fail(M365Error.fromReason("response status", { status: 412 }));
-        yield* Ref.update(deleted, A.append(row.contact.id));
-        yield* Ref.update(inventory, (snapshot) =>
-          MailboxInventory.make({
-            ...snapshot,
-            contacts: A.filter(snapshot.contacts, (item) => item.contact.id !== row.contact.id),
-          })
-        );
-      }),
-      deleteFolder: Effect.fnUntraced(function* (id) {
-        yield* Ref.update(inventory, (snapshot) =>
-          MailboxInventory.make({ ...snapshot, folders: A.filter(snapshot.folders, (folder) => folder.id !== id) })
-        );
-      }),
-    });
-    const checkout = path.join(root, "checkout");
-    yield* fs.makeDirectory(checkout);
-    const result = yield* program.pipe(
-      Effect.provide(
-        contactSeedingLayer(checkout).pipe(
-          Layer.provide(Layer.succeed(ContactsMailbox, fake)),
-          Layer.provide(Layer.succeed(ContactsState, state))
-        )
-      )
-    );
-    return {
-      result,
-      inventory: yield* Ref.get(inventory),
-      deleted: yield* Ref.get(deleted),
-      created: yield* Ref.get(createdCount),
-      journals: yield* state.journals,
-    };
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const state = yield* makeContactsState(path.join(root, "state"));
+  const inventory = yield* Ref.make(initial);
+  const deleted = yield* Ref.make<ReadonlyArray<string>>([]);
+  const createdCount = yield* Ref.make(0);
+  const fake = ContactsMailbox.of({
+    inventory: Ref.get(inventory),
+    createFolder: Effect.gen(function* () {
+      const folder = GraphContactFolder.make({ id: "seed-folder", displayName: O.some(seedFolderName) });
+      yield* Ref.update(inventory, (snapshot) =>
+        MailboxInventory.make({ ...snapshot, folders: A.append(snapshot.folders, folder) })
+      );
+      return folder;
+    }),
+    create: Effect.fnUntraced(function* (folderId, draft) {
+      const number = yield* Ref.updateAndGet(createdCount, (n) => n + 1);
+      const wire = {
+        ...(yield* S.encodeEffect(M365ContactDraft)(draft).pipe(Effect.orDie)),
+        id: `seed-${number}`,
+        changeKey: "version-1",
+        parentFolderId: folderId,
+      };
+      const contact = yield* S.decodeEffect(GraphContact)(wire).pipe(
+        Effect.map((value) => GraphContact.make({ ...value, rawJson: O.some(wire) })),
+        Effect.mapError(() => M365Error.fromReason("response decoding"))
+      );
+      yield* Ref.update(inventory, (snapshot) =>
+        MailboxInventory.make({
+          ...snapshot,
+          contacts: A.append(snapshot.contacts, MailboxContact.make({ contact, folderId: O.some(folderId) })),
+        })
+      );
+      if (ambiguous) return yield* M365Error.fromReason("ambiguous write");
+      return contact;
+    }),
+    delete: Effect.fnUntraced(function* (row, changeKey) {
+      if (O.isSome(changeKey) && !O.contains(changeKey.value)(row.contact.changeKey))
+        return yield* M365Error.fromReason("response status", { status: 412 });
+      yield* Ref.update(deleted, A.append(row.contact.id));
+      yield* Ref.update(inventory, (snapshot) =>
+        MailboxInventory.make({
+          ...snapshot,
+          contacts: A.filter(snapshot.contacts, (item) => item.contact.id !== row.contact.id),
+        })
+      );
+    }),
+    deleteFolder: Effect.fnUntraced(function* (id) {
+      yield* Ref.update(inventory, (snapshot) =>
+        MailboxInventory.make({ ...snapshot, folders: A.filter(snapshot.folders, (folder) => folder.id !== id) })
+      );
+    }),
   });
+  const checkout = path.join(root, "checkout");
+  yield* fs.makeDirectory(checkout);
+  const context = yield* Layer.build(
+    contactSeedingLayer(checkout).pipe(
+      Layer.provide(Layer.succeed(ContactsMailbox, fake)),
+      Layer.provide(Layer.succeed(ContactsState, state))
+    )
+  );
+  const result = yield* program.pipe(Effect.provideContext(context));
+  return {
+    result,
+    inventory: yield* Ref.get(inventory),
+    deleted: yield* Ref.get(deleted),
+    created: yield* Ref.get(createdCount),
+    journals: yield* state.journals,
+  };
+}, Effect.scoped);
 
 describe("contact seeding", () => {
   it("plans each skip and preserves unrelated hand-edited contacts", () => {
@@ -364,7 +366,7 @@ describe("contact seeding", () => {
               const receipt = yield* job.export(out);
               expect(receipt.count).toBe(1);
               expect(receipt.sha256).toHaveLength(64);
-              const content = yield* S.decodeUnknownEffect(S.fromJsonString(S.Record(S.String, S.Unknown)))(
+              const content = yield* S.decodeEffect(S.fromJsonString(S.Record(S.String, S.Unknown)))(
                 yield* fs.readFileString(out)
               );
               expect(content).toMatchObject(wire);
@@ -405,7 +407,7 @@ describe("contact seeding", () => {
         yield* Effect.scoped(
           Effect.gen(function* () {
             yield* state.lock;
-            expect(yield* Effect.flip(Effect.scoped(state.lock))).toMatchObject({ reason: "locked" });
+            expect(yield* state.lock.pipe(Effect.scoped, Effect.flip)).toMatchObject({ reason: "locked" });
           })
         );
         yield* Effect.scoped(state.lock);

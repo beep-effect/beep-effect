@@ -13,3 +13,8 @@ and use `M365DelegatedReadScope` to validate delegated scope inputs.
 Register the private practice contact seeding application identity.
 
 Add the private CSV contact census and reversible mailbox seeding application.
+
+This receipt preserves the proposed version impact and migration instructions.
+Main's private-workspace release policy (PR #1566) rejects queued changesets for
+these three private packages, so it is retained with the goal rather than in
+the release queue. Publication remains dormant.

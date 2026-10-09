@@ -95,6 +95,18 @@ Higher sources outrank lower sources when they conflict.
 
 ## Decision Log
 
+### Private package release-policy alignment (2026-10-09)
+
+The pre-publication merge of PR #1566 introduces a changeset graph guard that
+rejects notes naming live private workspaces. All three edited packages are
+private. Preserve the proposed major driver migration, identity registration
+patch and private application addition in the goal's
+`history/2026-10-09-private-package-migration.md` receipt; remove the queued
+private-package changeset. This follows the release policy now on main while
+retaining the removed export's migration instructions. Reversal: restore the
+note to the release queue only after the publication policy admits the packages
+or the private-note guard is reverted.
+
 Binding decisions live in the source exploration —
 [`explorations/practice-office-provisioning/DECISIONS.md`](../../explorations/practice-office-provisioning/DECISIONS.md):
 auth lanes for egress, M365 document lane dropped, contacts import shape.

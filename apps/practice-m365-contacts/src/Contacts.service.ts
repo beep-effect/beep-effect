@@ -100,17 +100,17 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
       const crypto = yield* Crypto.Crypto;
       const runId = () => crypto.randomUUIDv4.pipe(Effect.map((uuid) => `seed-${uuid}`));
       const online = () =>
-        O.match(mailbox, {
-          onSome: Effect.succeed,
-          onNone: () => Effect.fail(ContactsError.make({ reason: "input" })),
-        });
+        Effect.fromOption(mailbox).pipe(Effect.mapError(() => ContactsError.make({ reason: "input" })));
       const plan = Effect.fn("ContactSeeding.plan")(function* (
         inputs: ContactInputs,
         offline: boolean,
         census: boolean
       ) {
-        if (census && !offline) return yield* Effect.fail(ContactsError.make({ reason: "input" }));
-        const source = yield* loadContacts(inputs, census);
+        if (census && !offline) return yield* ContactsError.make({ reason: "input" });
+        const source = yield* loadContacts(inputs, census).pipe(
+          Effect.provideService(FileSystem.FileSystem, fs),
+          Effect.provideService(Crypto.Crypto, crypto)
+        );
         const inventory = offline ? emptyInventory : yield* (yield* online()).inventory;
         const journals = offline ? [] : yield* state.journals;
         const result = planContacts(source.contacts, source.unidentifiable, inventory, journals);
@@ -132,7 +132,7 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
         apply: Effect.fn("ContactSeeding.apply")((inputs, yes) =>
           Effect.scoped(
             Effect.gen(function* () {
-              if (!yes) return yield* Effect.fail(ContactsError.make({ reason: "confirmation" }));
+              if (!yes) return yield* ContactsError.make({ reason: "confirmation" });
               yield* state.lock;
               const port = yield* online();
               const planned = yield* plan(inputs, false, false);
@@ -147,7 +147,7 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
                 O.exists(folder.displayName, (name) => name === seedFolderName)
               );
               const choices = A.isReadonlyArrayNonEmpty(recorded) ? recorded : named;
-              if (A.length(choices) > 1) return yield* Effect.fail(ContactsError.make({ reason: "folder-ambiguous" }));
+              if (A.length(choices) > 1) return yield* ContactsError.make({ reason: "folder-ambiguous" });
               const folder = O.isSome(A.head(choices)) ? O.getOrThrow(A.head(choices)) : yield* port.createFolder;
               journal = RunJournal.make({
                 ...journal,
@@ -194,12 +194,11 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
                           yield* Effect.logError("Contact seeding stopped after ambiguous create", {
                             reconciled: A.length(candidates),
                           });
-                          return yield* Effect.fail(ContactsError.make({ reason: "ambiguous-write" }));
+                          return yield* ContactsError.make({ reason: "ambiguous-write" });
                         })
                       )
                     );
-                    if (O.isNone(contact.changeKey))
-                      return yield* Effect.fail(ContactsError.make({ reason: "missing-version" }));
+                    if (O.isNone(contact.changeKey)) return yield* ContactsError.make({ reason: "missing-version" });
                     const next = RunJournal.make({
                       ...journal,
                       pendingSourceKey: O.none(),
@@ -227,8 +226,8 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
           Effect.scoped(
             Effect.gen(function* () {
               if ((byCategory && O.isSome(run)) || (!byCategory && O.isNone(run)))
-                return yield* Effect.fail(ContactsError.make({ reason: "input" }));
-              if (!dryRun && !yes) return yield* Effect.fail(ContactsError.make({ reason: "confirmation" }));
+                return yield* ContactsError.make({ reason: "input" });
+              if (!dryRun && !yes) return yield* ContactsError.make({ reason: "confirmation" });
               if (!dryRun) yield* state.lock;
               const port = yield* online();
               const inventory = yield* port.inventory;
@@ -237,7 +236,7 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
                 ? journals
                 : A.filter(journals, (journal) => O.contains(journal.runId)(run));
               if (!byCategory && A.isReadonlyArrayEmpty(selectedRuns))
-                return yield* Effect.fail(ContactsError.make({ reason: "state" }));
+                return yield* ContactsError.make({ reason: "state" });
               const receipts = A.flatMap(selectedRuns, (journal) => journal.contacts);
               let edited = 0;
               let unverifiable = 0;
@@ -311,11 +310,10 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
             );
           };
           if (inside(target) || (yield* fs.exists(target)))
-            return yield* Effect.fail(ContactsError.make({ reason: "unsafe-export" }));
+            return yield* ContactsError.make({ reason: "unsafe-export" });
           let ancestor = path.dirname(target);
           while (!(yield* fs.exists(ancestor))) ancestor = path.dirname(ancestor);
-          if (inside(yield* fs.realPath(ancestor)))
-            return yield* Effect.fail(ContactsError.make({ reason: "unsafe-export" }));
+          if (inside(yield* fs.realPath(ancestor))) return yield* ContactsError.make({ reason: "unsafe-export" });
           const contacts = (yield* (yield* online()).inventory).contacts;
           const lines = yield* Effect.forEach(
             contacts,
@@ -332,7 +330,10 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
           yield* fs.makeDirectory(path.dirname(target), { recursive: true, mode: 0o700 });
           yield* fs.chmod(path.dirname(target), 0o700);
           yield* fs.writeFileString(target, text, { flag: "wx", mode: 0o600 });
-          return { count: A.length(contacts), sha256: yield* checksum(yield* fs.readFile(target)) };
+          return {
+            count: A.length(contacts),
+            sha256: yield* checksum(yield* fs.readFile(target)).pipe(Effect.provideService(Crypto.Crypto, crypto)),
+          };
         }),
       });
     })

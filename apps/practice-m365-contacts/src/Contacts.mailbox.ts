@@ -132,7 +132,7 @@ export const contactsMailboxLayer = (mailbox: string) =>
           );
           nextLink = page["@odata.nextLink"];
           if (O.isSome(nextLink)) {
-            if (HashSet.has(seen, nextLink.value)) return yield* Effect.fail(ContactsError.make({ reason: "input" }));
+            if (HashSet.has(seen, nextLink.value)) return yield* ContactsError.make({ reason: "input" });
             seen = HashSet.add(seen, nextLink.value);
           }
         } while (O.isSome(nextLink));
@@ -152,7 +152,7 @@ export const contactsMailboxLayer = (mailbox: string) =>
           );
           nextLink = page["@odata.nextLink"];
           if (O.isSome(nextLink)) {
-            if (HashSet.has(seen, nextLink.value)) return yield* Effect.fail(ContactsError.make({ reason: "input" }));
+            if (HashSet.has(seen, nextLink.value)) return yield* ContactsError.make({ reason: "input" });
             seen = HashSet.add(seen, nextLink.value);
           }
         } while (O.isSome(nextLink));
@@ -182,13 +182,17 @@ export const contactsMailboxLayer = (mailbox: string) =>
         createFolder: m365.createContactFolder(
           M365CreateContactFolderRequest.make({ userId, displayName: seedFolderName })
         ),
-        create: (folderId, contact) =>
-          m365.createContact(M365CreateContactRequest.make({ userId, folderId: O.some(folderId), contact })),
-        delete: (row, changeKey) =>
+        create: Effect.fn("ContactsMailbox.create")((folderId, contact) =>
+          m365.createContact(M365CreateContactRequest.make({ userId, folderId: O.some(folderId), contact }))
+        ),
+        delete: Effect.fn("ContactsMailbox.delete")((row, changeKey) =>
           m365.deleteContact(
             M365DeleteContactRequest.make({ userId, folderId: row.folderId, contactId: row.contact.id, changeKey })
-          ),
-        deleteFolder: (folderId) => m365.deleteContactFolder(M365DeleteContactFolderRequest.make({ userId, folderId })),
+          )
+        ),
+        deleteFolder: Effect.fn("ContactsMailbox.deleteFolder")((folderId) =>
+          m365.deleteContactFolder(M365DeleteContactFolderRequest.make({ userId, folderId }))
+        ),
       });
     })
   );

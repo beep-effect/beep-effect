@@ -15,7 +15,7 @@ const program = Effect.gen(function* () {
   const path = yield* Path.Path;
   const checkoutRoot = yield* path.fromFileUrl(new URL("../../../", import.meta.url));
   return yield* Command.run(makeContactsCommand(checkoutRoot), { version: "0.0.0" });
-}).pipe(Effect.provide(BunServices.layer), Effect.provideService(Logger.LogToStderr, true));
+}).pipe(Effect.provideService(Logger.LogToStderr, true));
 /** Run the contact CLI through the Bun process boundary.
  * **Example** (Inspect the entrypoint)
  * ```ts
@@ -26,5 +26,5 @@ const program = Effect.gen(function* () {
  * @category processes
  * @since 0.0.0
  */
-export const runContacts = () => BunRuntime.runMain(program);
+export const runContacts = () => BunRuntime.runMain(program.pipe(Effect.provide(BunServices.layer)));
 if (import.meta.main) runContacts();

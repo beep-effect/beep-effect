@@ -73,7 +73,10 @@ export const makeContactsState = Effect.fn("ContactsState.make")(function* (dire
     save: Effect.fn("ContactsState.save")(function* (journal) {
       yield* secureDirectory;
       const text = yield* S.encodeEffect(codec)(journal).pipe(Effect.mapError(stateError));
-      const temporary = path.join(directory, `${journal.runId}.${yield* crypto.randomUUIDv4}.tmp`);
+      const temporary = path.join(
+        directory,
+        `${journal.runId}.${yield* crypto.randomUUIDv4.pipe(Effect.mapError(stateError))}.tmp`
+      );
       const target = path.join(directory, `${journal.runId}.json`);
       yield* fs.writeFileString(temporary, text, { flag: "wx", mode: 0o600 }).pipe(Effect.mapError(stateError));
       yield* fs.rename(temporary, target).pipe(Effect.mapError(stateError));

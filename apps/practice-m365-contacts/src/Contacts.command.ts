@@ -46,10 +46,11 @@ const print = (value: unknown) => S.encodeEffect(S.fromJsonString(S.Unknown))(va
 export const makeContactsCommand = (checkoutRoot: string) => {
   const baseLayer = contactSeedingLayer(checkoutRoot).pipe(Layer.provide(ContactsStateLive));
   const run = <A, E>(offline: boolean, program: Effect.Effect<A, E, ContactSeeding>) =>
-    program.pipe(
-      Effect.provide(offline ? baseLayer : baseLayer.pipe(Layer.provide(liveMailbox))),
-      Effect.mapError((error) => (S.is(ContactsError)(error) ? error : privateConfigFailure()))
-    );
+    Effect.scoped(
+      Layer.build(offline ? baseLayer : baseLayer.pipe(Layer.provide(liveMailbox))).pipe(
+        Effect.flatMap((context) => program.pipe(Effect.provideContext(context)))
+      )
+    ).pipe(Effect.mapError((error) => (S.is(ContactsError)(error) ? error : privateConfigFailure())));
   return Command.make("practice-m365-contacts").pipe(
     Command.withSubcommands([
       Command.make(

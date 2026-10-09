@@ -52,3 +52,16 @@
   waiters through the current wrapper; set no slot override and changed no
   configuration or cap. Old waiters are recorded as cancelled-before-gate,
   never as passing proofs. A running waiter should reread admission policy.
+
+## 2026-10-09 — application qualification exposes service-context leaks
+
+- Activity: full application package verification after upstream builds.
+- Evidence: 40 dependency build tasks passed; the application's own audit failed
+  on uncaptured FileSystem/Crypto dependencies and platform/schema error types,
+  plus Effect compiler rules for yieldable errors and entrypoint provisioning.
+- Attribution: introduced application and fixture defects. Capture platform
+  handles in the service layer, build scoped CLI/test contexts, preserve typed
+  decoding and expose pipeable planning helpers. These failures are repaired,
+  never attributed to other lanes.
+- Prevention: qualify the application service contract with the strict compiler
+  immediately after wiring it, before constructing the operational runbook.

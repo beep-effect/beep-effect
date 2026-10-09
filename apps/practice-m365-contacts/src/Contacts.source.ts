@@ -79,7 +79,7 @@ const personalEmails = (cards: ReturnType<typeof normaliseContacts>) =>
  */
 export const loadContacts = Effect.fn("Contacts.load")(function* (inputs: ContactInputs, census: boolean) {
   if (A.isReadonlyArrayEmpty(inputs.csv) || (!census && A.isReadonlyArrayNonEmpty(inputs.vcf)))
-    return yield* Effect.fail(failInput());
+    return yield* failInput();
   const files = yield* readSources(inputs.csv);
   const unique = A.dedupeWith(files, (a, b) => a.hash === b.hash);
   const parsed = yield* Effect.forEach(unique, (file) => parseOutlookCsv(file.text).pipe(Effect.mapError(failInput)), {
