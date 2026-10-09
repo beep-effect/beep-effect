@@ -351,3 +351,11 @@ integration cases cover storage and OTLP projection plus mixed, missing, reused,
 late, mismatched, corrupt and unreadable evidence. The earlier private-schema
 import error and sentinel Result-union error were repaired before the final
 package run; CLI inbox rows reference their concrete repair commits.
+
+### H3 admission pool refresh
+
+A queued publisher retained the former three-slot pool while the machine's
+configured floor moved to four slots. All current lock owners were live. The
+owned publisher was stopped before it created a PR and re-submitted through the
+unchanged wrapper, without changing caps or cancelling another lane. Queue
+waiters should observe the current pool configuration or expose a refresh path.
