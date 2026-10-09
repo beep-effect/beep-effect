@@ -329,6 +329,12 @@ The final CLI package check remains queued for more than fifteen minutes while o
 - Prevention: help should distinguish the publish job ceiling from the
   automatically submitted monitor's lifetime, or expose a monitor ceiling.
 
+- Final documentation verification remained queued across heavy-slot holder
+  turnovers (`beep-heavy: all 3 slots busy, waiting`). The wrapper polls locks
+  rather than keeping an ordered ticket queue, so closeout admission has
+  unpredictable wait time. A fair queue with observable position would prevent
+  this delay; this lane does not alter the workstation wrapper or other jobs.
+
 ### E package proof and resource-policy proof differ
 
 The full CLI package audit passed, but Yeet's Effect-Vitest scan still found a new platform import requiring provenance review and a resource layer without a timeout in the governance fixture. Reusing the existing bounded live-workflow security suite preserves the repository files as the subject and removes the duplicate resource boundary. No inventory or exception was refreshed. A focused resource-policy check alongside a new filesystem test would have exposed this before the full package rerun.
@@ -337,8 +343,7 @@ The full CLI package audit passed, but Yeet's Effect-Vitest scan still found a n
 
 PR #1568's Lint Policy log found four inline schema compilations and an unnamed workflow command generator. Hoisting the unchanged codecs and naming the Effect function repairs all five introduced errors; the landed packet path wording remains a shared inherited repair. The Coverage Regression log separately found the new fork admission branch uncovered (99.13% against its 100% branch floor). A real watch-stream fork approval transition test restores the missing branch without changing the floor. The local coverage read also omitted two touched CI files with baseline rows; the final read now includes all seven touched baseline files. Package audit and focused coverage success must not be reported as complete hosted-policy or full-suite floor acceptance.
 
-- Final documentation verification remained queued across heavy-slot holder
-  turnovers (`beep-heavy: all 3 slots busy, waiting`). The wrapper polls locks
-  rather than keeping an ordered ticket queue, so closeout admission has
-  unpredictable wait time. A fair queue with observable position would prevent
-  this delay; this lane does not alter the workstation wrapper or other jobs.
+
+### E main movement invalidates an active package handoff proof
+
+Main advanced with D release-policy PR #1566 while the full CLI package audit was active, creating a PR base-conflict inbox row. Stopped only E's owned unit after checking its working directory, preserved both lanes' policy/census and friction evidence, merged main, acknowledged the actual merge SHA, and re-submitted proof through admission. The interrupted audit has no terminal pass. Serialized source windows and a final main integration before long package admission would avoid this repeated proof cost; E does not bypass the queue or freeze another lane.

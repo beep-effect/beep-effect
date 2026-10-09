@@ -737,3 +737,11 @@ Use the wrapper's supported per-command 24 GiB cap for the E publication retry a
 ### 2026-10-09 — E publication follows S12 amendment
 
 The 24 GiB retry was also cap-killed. Use the orchestrator-owned wrapper floor and concurrency defaults in S12 for the next admitted publication attempt; E does not alter global limits. Reason: repeated unit OOM evidence requires a bounded resource/fan-out correction before publication can yield a verdict. Reversal remains terminating the transient job; the orchestrator owns any rollback of its shared wrapper configuration.
+
+### 2026-10-09 — E runner group called-workflow probe
+
+Program PR #1568 Heavy Admit run 37974783576 used the unlisted caller `heavy-admit.yml` and assigned all seven reusable Heavy jobs to runner group 4 (`beep-ec2-heavy`). Remove only the unused `check.yml@refs/heads/main` entry; retain `heavy.yml@main`, Cache Warm, fleet health and red-team probes. Reason: this concrete program-PR probe proves the called-workflow boundary before narrowing (E-20). The full immediately preceding settings export is `history/receipts/stage-3-github-settings.md#before-runner-group-narrowing`. Reverse with PATCH `orgs/beep-effect/actions/runner-groups/4`, restoring that snapshot's `restricted_to_workflows` and `selected_workflows`; no runner is removed.
+
+### 2026-10-09 — E publication allowlist after D policy
+
+After D's release-policy PR #1566 lands, remove the unused `changesets/action@*` Actions allowlist pattern (E-19). No current workflow references that action, and private publication machinery is dormant under D's recorded reactivation policy. Keep every other allowlist field and pattern. The immediately preceding full export is `history/receipts/stage-3-github-settings.md#before-changesets-action-allowlist`. Reverse with PUT `repos/beep-effect/beep-effect/actions/permissions/selected-actions` restoring the snapshot's `github_owned_allowed`, `verified_allowed` and `patterns_allowed`; publication activation must deliberately restore its action permission.

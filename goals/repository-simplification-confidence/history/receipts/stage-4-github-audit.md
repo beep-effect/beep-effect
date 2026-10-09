@@ -22,8 +22,8 @@ Workflow wave published in [PR #1568](https://github.com/beep-effect/beep-effect
 | E-16 | Setup cache-write/Bun cache | Default false; Bun restore/save paths removed locally. Stale cache purge deferred to G recoverable cleanup. | workflow-lint clean; cache-usage before/after pending G |
 | E-17 | Ghost repo-law | Disabled hosted registration. | stage-3 before-disable-repo-law; disabled_manually readback |
 | E-18 | Impeccable residue | A owns complete removal and consumers; E avoids a partial duplicate removal. | A integration pending |
-| E-19 | Actions allowlist | changesets/action removal waits for D publication decision. | Prior allowed-action patterns exported; no write yet |
-| E-20 | Runner group | Retain fleet health/red-team probes; narrowing check.yml awaits program-PR reusable-workflow probe. | Prior runner group exported; no narrowing claim |
+| E-19 | Actions allowlist | Removed `changesets/action@*` after D release-policy PR #1566 landed. | stage-3 before-changesets-action-allowlist; exact readback preserves other fields |
+| E-20 | Runner group | Retain fleet health/red-team probes; removed unused Check caller after all seven Heavy jobs were assigned under unlisted Heavy Admit. | stage-3 before-runner-group-narrowing; run 37974783576; four retained workflows read back |
 | E-21 | Permissions | Unused SAST security-events write removed; Security PR write retained for actual dependency review. | Local workflow diff; hosted pending |
 | E-22 | Timeouts | Lint/Test Unit aggregators bounded to 5 minutes; desktop-ready to 15. | Parsed workflow |
 | E-23 | Checkout credentials | Explicit persist-credentials false in nightly/data-sync/desktop; nightly issues write job-scoped. | Local workflow diff |
@@ -56,7 +56,7 @@ No repository writer secret was deleted before the successful-main-writer safety
 
 ## Hosted verification
 
-Read-only `ci settings --check`, `ci ruleset --check` and `ci held-group` passed; the six hosted writes have preceding snapshots and readbacks. PR #1568 Check run [37974771441](https://github.com/beep-effect/beep-effect/actions/runs/37974771441) completed successfully; the later Heavy run exercises the reusable workflow from main. Dependency review executed successfully and exactly one size label is present. Heavy Lint Policy exposed five E-owned source-policy errors, repaired without exceptions, plus the inherited SPEC path gate. Heavy Coverage Regression exposed the E-owned fork branch gap, now covered by a behavioral fixture, and four inherited Accounts/EffectImports metrics. Exact new-head hosted proof, main writer attachment/cache mode, nightly dispatch, runner-group probe, G remote hits and post-merge Heavy probe remain acceptance requirements.
+Read-only `ci settings --check`, `ci ruleset --check` and `ci held-group` passed; the six hosted writes have preceding snapshots and readbacks. PR #1568 Check run [37974771441](https://github.com/beep-effect/beep-effect/actions/runs/37974771441) completed successfully; the later Heavy run exercises the reusable workflow from main. Dependency review executed successfully and exactly one size label is present. Heavy Lint Policy exposed five E-owned source-policy errors, repaired without exceptions, plus the inherited SPEC path gate. Heavy Coverage Regression exposed the E-owned fork branch gap, now covered by a behavioral fixture, and four inherited Accounts/EffectImports metrics. Exact new-head hosted proof, main writer attachment/cache mode, nightly dispatch, G remote hits and post-merge Heavy probe remain acceptance requirements.
 
 ## Recovery
 
