@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/epistemic-contradiction-detection",
   "lifecycle": "active",
-  "statusNote": "P0 complete; implementation committed. Lane stopped under the repeated-blocker condition after a repeated domain audit diagnostic. The actual typed ref decode is corrected in 9edd003a48; verification must resume before publication or closure. Merge remains orchestrator-owned under S11.",
+  "statusNote": "Run-2 qualification authorized after typed ref repair. Domain package audit and docgen pass; use-cases proof and remaining parity are running or queued. Merge remains orchestrator-owned under S11.",
   "mission": "Produce ContradictionCandidate records for typed direct-conflict classes as a pure, model-free function of a belief-view snapshot, against the contract epistemic-contradiction-triage already ships.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -60,7 +60,7 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress",
+      "status": "complete",
       "exit": "Conflict-class LiteralKit, belief-view snapshot input schema, and per-class confidence constants land first, then the detection Context.Service contract, then its pure implementation; packages/epistemic/domain/src/{values,entities}/Contradiction/ is unmodified."
     },
     {
@@ -72,7 +72,7 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending",
+      "status": "in-progress",
       "exit": "PR published via bun run beep yeet publish --pr and driven to mergeable with hosted required checks green and zero unresolved review threads."
     },
     {

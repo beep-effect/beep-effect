@@ -95,3 +95,8 @@ same typed-ref diagnostic requires a stop without another repair.
 
 Local resume logs/results are retained under ignored `.beep/detection-proof/run2/`.
 Final qualification outcomes are appended below when those commands terminate.
+
+Fresh domain package-verify on `a799682c02`: pass (audit 7.2s, docgen 3.5s).
+The corrected typed-ref diagnostic did not recur. Integrated origin/main
+`2eefbb64af` before publication; that release-policy change touches no detector
+source or aliases. Remaining qualification runs on the integrated head.

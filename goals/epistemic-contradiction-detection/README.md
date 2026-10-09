@@ -41,9 +41,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 complete. P1/P2 stopped under the lane brief repeated-blocker condition.
-Implementation is committed; the repeated audit call is corrected at `9edd003a48`,
-with its package re-run outstanding. Both direct-conflict classes and golden vectors exist.
+P0 and P1 complete. P2 qualification is running under the authorized resume
+ruling; fresh domain audit and docgen pass. Both conflict classes and golden
+vectors are implemented; publication is in progress, with closure pending proof.
 
 ## Provenance
 

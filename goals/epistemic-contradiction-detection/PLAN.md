@@ -15,9 +15,9 @@ does not re-earn it.
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Confirm the shipped contract surface and settle the conflict-class seat. | The `SPEC.md` Open Contract Question is answered on the record; every `file:line` in `SPEC.md` re-verified against the live tree. |
-| P1 Implement | in-progress | Schema → `Context.Service` contract → implementation, in that order. | Conflict-class `LiteralKit` + snapshot input schema, then the detection service contract, then the pure implementation; the shipped `Contradiction` surfaces are unmodified. |
+| P1 Implement | complete | Schema → `Context.Service` contract → implementation, in that order. | Conflict-class `LiteralKit` + snapshot input schema, then the detection service contract, then the pure implementation; the shipped `Contradiction` surfaces are unmodified. |
 | P2 Verify | in-progress | Golden vectors and fixtures prove purity and contract conformance. | Golden-vector lane green, run twice with an advanced clock producing identical output; every emitted candidate decodes against `ContradictionCandidate`; `bun run beep yeet verify` SUCCESS. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P3 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## P0 Research — mostly already paid
@@ -108,10 +108,9 @@ Before marking the packet closed (and `status` → `completed-retained`):
 
 ## Current Blockers
 
-The lane stopped on a repeated domain audit diagnostic. The actual ref codec
-call is corrected in `9edd003a48`, but no package proof covers that correction.
-Resume both package proofs and remaining parity before publishing or closing.
-The packet remains active, P1/P2 in-progress, P3/P4 pending.
+Run-2 qualification is authorized. Domain package audit and docgen pass on
+`a799682c02`; use-cases proof, package suites, coverage and remaining parity
+are running or queued. No fresh typed-ref diagnostic recurred.
 
 Dependency status: Belief-view revision graduated on 2026-08-17 to `goals/belief-view-engine`,
 which is paused with P1 pending. Triage closed completed-retained in #1421
