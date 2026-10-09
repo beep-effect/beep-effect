@@ -769,13 +769,139 @@
       "wave": 1,
       "position": 1,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "tooling/test-kit",
       "upstreamPaths": {
         "src": "packages/memfs/src",
         "test": "packages/memfs/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "MemoryFileSystem",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemDirent",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemErrnoError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemFaultHandler",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemFaultMethod",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemFaults",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemFaultsFactory",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemHandle",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemPortOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemPortStats",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemPromisesFaults",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemPromisesFileSystem",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemReadFileEncoding",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemSeed",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemSeedDirectory",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemSeedEntry",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemSeedFile",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemSeedSymlink",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemSyncFaults",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemSyncFileSystem",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemTransientFault",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemVolume",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "MemoryFileSystemVolumeStat",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "NodeSyncFileSystem",
+          "kind": "both",
+          "entry": "./node-sync"
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
