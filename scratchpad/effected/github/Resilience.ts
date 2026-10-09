@@ -20,7 +20,19 @@ const $I = $ScratchpadId.create("effected/github/Resilience");
  * The cell lives inside the client layer that writes it, so there is nothing
  * extra to provide: reading it through the client is the only way.
  *
+ * **Example** (Inspect a spent rate-limit budget)
+ *
+ * ```ts
+ * import { RateLimitSnapshot } from "@beep/scratchpad/effected/github/Resilience";
+ *
+ * const snapshot = RateLimitSnapshot.make({ remaining: 0, limit: 5000, resetEpochSeconds: 60 });
+ *
+ * console.log(snapshot.isExhausted) // true
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class RateLimitSnapshot extends S.Class<RateLimitSnapshot>($I`RateLimitSnapshot`)({
 	/** Requests left in the current window. */
@@ -30,12 +42,42 @@ export class RateLimitSnapshot extends S.Class<RateLimitSnapshot>($I`RateLimitSn
 	/** When the window resets, as epoch **seconds** — GitHub's own unit. */
 	resetEpochSeconds: S.Int.annotateKey({ description: "When the window resets, as epoch **seconds** — GitHub's own unit." }),
 }, $I.annote("RateLimitSnapshot", { description: "What GitHub's rate-limit headers said on the most recent REST response." })) {
-	/** Milliseconds until the window resets, relative to `nowMillis`, floored at zero. */
+	/**
+	 * Milliseconds until the window resets, relative to `nowMillis`, floored at zero.
+	 *
+	 * **Example** (Measure time until the reset)
+	 *
+	 * ```ts
+	 * import { RateLimitSnapshot } from "@beep/scratchpad/effected/github/Resilience";
+	 *
+	 * const snapshot = RateLimitSnapshot.make({ remaining: 0, limit: 5000, resetEpochSeconds: 60 });
+	 *
+	 * console.log(snapshot.millisUntilReset(59000)) // 1000
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	millisUntilReset(nowMillis: number): number {
 		return Math.max(0, this.resetEpochSeconds * 1000 - nowMillis);
 	}
 
-	/** True when the budget is spent. */
+	/**
+	 * True when the budget is spent.
+	 *
+	 * **Example** (Detect an exhausted budget)
+	 *
+	 * ```ts
+	 * import { RateLimitSnapshot } from "@beep/scratchpad/effected/github/Resilience";
+	 *
+	 * const snapshot = RateLimitSnapshot.make({ remaining: 0, limit: 5000, resetEpochSeconds: 60 });
+	 *
+	 * console.log(snapshot.isExhausted) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	get isExhausted(): boolean {
 		return this.remaining <= 0;
 	}
@@ -52,6 +94,8 @@ export class RateLimitSnapshot extends S.Class<RateLimitSnapshot>($I`RateLimitSn
  * two-field literal instead of a constructed error.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface RetryableFailure {
 	/** Whether retrying could plausibly succeed. */
@@ -75,17 +119,22 @@ export interface RetryableFailure {
  * **Example** (Configure retry limits for a token-authenticated client)
  *
  * ```ts
- * import { GitHubClient, RetryPolicy } from "./index.ts";
+ * import { GitHubClient } from "@beep/scratchpad/effected/github/GitHubClient";
+ * import { RetryPolicy } from "@beep/scratchpad/effected/github/Resilience";
  * import * as Duration from "effect/Duration";
+ * import * as Layer from "effect/Layer";
  * import * as Redacted from "effect/Redacted";
  *
  * const layer = GitHubClient.layerFromToken({
  *   token: Redacted.make("ghp_example"),
  *   retry: RetryPolicy.make({ ...RetryPolicy.default, maxRetries: 2, maxDelay: Duration.seconds(10) }),
  * });
+ * console.log(Layer.isLayer(layer)) // true
  * ```
  *
  * @public
+ * @category policies
+ * @since 0.0.0
  */
 export class RetryPolicy extends S.Class<RetryPolicy>($I`RetryPolicy`)({
 	/** Retries after the first attempt. `0` disables retrying. */
@@ -107,7 +156,20 @@ export class RetryPolicy extends S.Class<RetryPolicy>($I`RetryPolicy`)({
   */
 	maxServerAdvisedDelay: S.DurationFromMillis.annotateKey({ description: "Refuse to wait longer than this for a server-advised delay." }),
 }, $I.annote("RetryPolicy", { description: "How the client retries a failed request." })) {
-	/** Four retries, 1s base, 30s cap, honoring server-advised delays up to a minute. */
+	/**
+	 * Four retries, 1s base, 30s cap, honoring server-advised delays up to a minute.
+	 *
+	 * **Example** (Inspect the default retry count)
+	 *
+	 * ```ts
+	 * import { RetryPolicy } from "@beep/scratchpad/effected/github/Resilience";
+	 *
+	 * console.log(RetryPolicy.default.maxRetries) // 4
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly default: RetryPolicy = RetryPolicy.make({
 		maxRetries: 4,
 		baseDelay: Duration.seconds(1),
@@ -116,7 +178,20 @@ export class RetryPolicy extends S.Class<RetryPolicy>($I`RetryPolicy`)({
 		maxServerAdvisedDelay: Duration.seconds(60),
 	});
 
-	/** Retries nothing; every failure surfaces on the first attempt. */
+	/**
+	 * Retries nothing; every failure surfaces on the first attempt.
+	 *
+	 * **Example** (Disable retries for transient failures)
+	 *
+	 * ```ts
+	 * import { RetryPolicy } from "@beep/scratchpad/effected/github/Resilience";
+	 *
+	 * console.log(RetryPolicy.none.retries({ retryable: true })) // false
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly none: RetryPolicy = RetryPolicy.make({
 		maxRetries: 0,
 		baseDelay: Duration.zero,
@@ -126,13 +201,24 @@ export class RetryPolicy extends S.Class<RetryPolicy>($I`RetryPolicy`)({
 	});
 
 	/**
-  * Whether this policy would retry `failure` at all, ignoring attempt counts.
-  *
-  * **Details**
-  *
-  * Pure and total, so the classification is testable without a clock, a
-  * runtime or a schedule.
-  */
+	 * Whether this policy would retry `failure` at all, ignoring attempt counts.
+	 *
+	 * **Details**
+	 *
+	 * Pure and total, so the classification is testable without a clock, a
+	 * runtime or a schedule.
+	 *
+	 * **Example** (Reject a server delay beyond the ceiling)
+	 *
+	 * ```ts
+	 * import { RetryPolicy } from "@beep/scratchpad/effected/github/Resilience";
+	 *
+	 * console.log(RetryPolicy.default.retries({ retryable: true, retryAfterMillis: 120000 })) // false
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	retries(failure: RetryableFailure): boolean {
 		if (this.maxRetries === 0 || !failure.retryable) return false;
 		const advised = this.advisedMillis(failure);
@@ -140,19 +226,32 @@ export class RetryPolicy extends S.Class<RetryPolicy>($I`RetryPolicy`)({
 	}
 
 	/**
-  * The delay before the given attempt, for a failure and a `[0, 1)` draw.
-  *
-  * **Details**
-  *
-  * A server-advised delay wins outright when `respectRetryAfter`
-  * is set: GitHub knows when its window reopens and a computed backoff can only
-  * guess. Otherwise this is **full jitter** — a uniform draw from
-  * `[0, min(baseDelay * 2^(attempt-1), maxDelay)]` — which spreads a fleet of
-  * retrying callers rather than synchronizing them into a second herd.
-  *
-  * `random` is a parameter so the arithmetic is checkable without stubbing a
-  * generator.
-  */
+	 * The delay before the given attempt, for a failure and a `[0, 1)` draw.
+	 *
+	 * **Details**
+	 *
+	 * A server-advised delay wins outright when `respectRetryAfter`
+	 * is set: GitHub knows when its window reopens and a computed backoff can only
+	 * guess. Otherwise this is **full jitter** — a uniform draw from
+	 * `[0, min(baseDelay * 2^(attempt-1), maxDelay)]` — which spreads a fleet of
+	 * retrying callers rather than synchronizing them into a second herd.
+	 *
+	 * `random` is a parameter so the arithmetic is checkable without stubbing a
+	 * generator.
+	 *
+	 * **Example** (Compute deterministic full jitter)
+	 *
+	 * ```ts
+	 * import { RetryPolicy } from "@beep/scratchpad/effected/github/Resilience";
+	 * import * as Duration from "effect/Duration";
+	 *
+	 * const delay = RetryPolicy.default.delayFor({ retryable: true }, 1, 0.5);
+	 * console.log(Duration.toMillis(delay)) // 500
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	delayFor(failure: RetryableFailure, attempt: number, random: number): Duration.Duration {
 		const advised = this.advisedMillis(failure);
 		if (advised !== undefined) return Duration.millis(advised);
@@ -161,21 +260,49 @@ export class RetryPolicy extends S.Class<RetryPolicy>($I`RetryPolicy`)({
 		return Duration.millis(Math.floor(capped * random));
 	}
 
-	/** The server-advised delay, when there is one and this policy honors it. */
+	/**
+	 * The server-advised delay, when there is one and this policy honors it.
+	 *
+	 * **Example** (Honor an advised delay)
+	 *
+	 * ```ts
+	 * import { RetryPolicy } from "@beep/scratchpad/effected/github/Resilience";
+	 * import * as Duration from "effect/Duration";
+	 *
+	 * const delay = RetryPolicy.default.delayFor({ retryable: true, retryAfterMillis: 2000 }, 1, 0.5);
+	 * console.log(Duration.toMillis(delay)) // 2000
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	private advisedMillis(failure: RetryableFailure): number | undefined {
 		return this.respectRetryAfter ? failure.retryAfterMillis : undefined;
 	}
 
 	/**
-  * The `Schedule` this policy compiles to, for `Effect.retry`.
-  *
-  * **Details**
-  *
-  * Built on `Schedule.modifyDelay`, whose callback receives the schedule's
-  * `Metadata` — including the **input that failed**. That is what makes a
-  * header-driven policy expressible as a `Schedule` at all: the delay is a
-  * function of the error, not only of the attempt number.
-  */
+	 * The `Schedule` this policy compiles to, for `Effect.retry`.
+	 *
+	 * **Details**
+	 *
+	 * Built on `Schedule.modifyDelay`, whose callback receives the schedule's
+	 * `Metadata` — including the **input that failed**. That is what makes a
+	 * header-driven policy expressible as a `Schedule` at all: the delay is a
+	 * function of the error, not only of the attempt number.
+	 *
+	 * **Example** (Attach the policy to a successful effect)
+	 *
+	 * ```ts
+	 * import { RetryPolicy } from "@beep/scratchpad/effected/github/Resilience";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.succeed("ok").pipe(Effect.retry(RetryPolicy.default.schedule()));
+	 * console.log(Effect.runSync(program)) // ok
+	 * ```
+	 *
+	 * @category schedulers
+	 * @since 0.0.0
+	 */
 	schedule<E extends RetryableFailure>(): Schedule.Schedule<number, E> {
 		return Schedule.forever.pipe(
 			Schedule.modifyDelay(({ input, attempt }: Schedule.Metadata<number, E>) =>

@@ -24,7 +24,19 @@ const MAX_TAG_PEEL = 5;
 /**
  * A tag and the commit it ultimately points at.
  *
+ * **Example** (Construct a resolved tag reference)
+ *
+ * ```ts
+ * import { TagRef } from "@beep/scratchpad/effected/github/GitTag";
+ *
+ * const tag = TagRef.make({ tag: "v1.2.3", sha: "abc123" });
+ * console.log(tag.sha) // abc123
+ * ```
+ *
+
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class TagRef extends S.Class<TagRef>($I`TagRef`)({
 	/** The tag name, without `refs/tags/`. */
@@ -36,7 +48,23 @@ export class TagRef extends S.Class<TagRef>($I`TagRef`)({
 /**
  * A tag whose name carries a version.
  *
+ * **Example** (Decode a tag with its parsed version)
+ *
+ * ```ts
+ * import { SemverTag } from "@beep/scratchpad/effected/github/GitTag";
+ * import * as S from "effect/Schema";
+ *
+ * const tag = S.decodeUnknownSync(SemverTag)({
+ *   tag: "v1.2.3", sha: "abc123",
+ *   version: { major: 1, minor: 2, patch: 3, prerelease: [], build: [] },
+ * });
+ * console.log(tag.version.toString()) // 1.2.3
+ * ```
+ *
+
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class SemverTag extends S.Class<SemverTag>($I`SemverTag`)({
 	/** The tag name as GitHub has it. */
@@ -58,10 +86,29 @@ export class SemverTag extends S.Class<SemverTag>($I`SemverTag`)({
  * the scoped form work, since the scope itself contains one.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type VersionFromTag = (tag: string) => O.Option<string>;
 
-/** The default {@link VersionFromTag}. @public */
+/**
+ * The default {@link VersionFromTag}.
+ *
+ * **Example** (Extract a scoped package version and detect absence)
+ *
+ * ```ts
+ * import { versionFromTag } from "@beep/scratchpad/effected/github/GitTag";
+ * import * as O from "effect/Option";
+ *
+ * console.log(O.getOrElse(versionFromTag("@scope/pkg@v1.2.3"), () => "missing")) // 1.2.3
+ * console.log(O.isNone(versionFromTag("v"))) // true
+ * ```
+ *
+
+ * @public
+ * @category parsing
+ * @since 0.0.0
+ */
 export const versionFromTag: VersionFromTag = (tag) => {
 	const at = tag.lastIndexOf("@");
 	const candidate = at > 0 ? tag.slice(at + 1) : tag;
@@ -73,6 +120,8 @@ export const versionFromTag: VersionFromTag = (tag) => {
  * How to pick the newest version-shaped tag.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface LatestSemverOptions {
 	/** Only consider tags starting with this. */
@@ -89,6 +138,8 @@ export interface LatestSemverOptions {
  * Tag refs in GitHub's Git Database API.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface GitTagShape {
 	/** Create a tag ref at `sha`. Fails `alreadyExists` when it is already there. */
@@ -144,7 +195,7 @@ export interface GitTagShape {
  * **Example** (Find the highest version tag with a v prefix)
  *
  * ```ts
- * import { GitTag } from "./index.ts";
+ * import { GitTag } from "@beep/scratchpad/effected/github/GitTag";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";
  *
@@ -153,18 +204,50 @@ export interface GitTagShape {
  *   const newest = yield* tags.latestSemver({ prefix: "v" });
  *   return O.map(newest, (tag) => tag.version.toString());
  * });
+ * console.log(Effect.isEffect(latest)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class GitTag extends Context.Service<GitTag, GitTagShape>()($I`GitTag`) {
-	/** The live service, built over a `GitHubClient`. */
+	/**
+	 * The live service, built over a `GitHubClient`.
+	 *
+	 * **Example** (Inspect the live service layer)
+	 *
+	 * ```ts
+	 * import { GitTag } from "@beep/scratchpad/effected/github/GitTag";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(GitTag.layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<GitTag, never, GitHubClient> = Layer.effect(
 		this,
 		Effect.map(GitHubClient, (client) => make(client)),
 	);
 
-	/** An in-memory double; unstubbed members die naming themselves. */
+	/**
+	 * An in-memory double; unstubbed members die naming themselves.
+	 *
+	 * **Example** (Override a test-double member)
+	 *
+	 * ```ts
+	 * import { GitTag } from "@beep/scratchpad/effected/github/GitTag";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const service = GitTag.makeTest({ resolve: () => Effect.succeed("abc123") });
+	 * console.log(Effect.isEffect(service.resolve("v1.2.3"))) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<GitTagShape> = {}): GitTagShape => ({
 		create: overrides.create ?? (() => unstubbed("create")),
 		upsert: overrides.upsert ?? (() => unstubbed("upsert")),
@@ -174,7 +257,21 @@ export class GitTag extends Context.Service<GitTag, GitTagShape>()($I`GitTag`) {
 		latestSemver: overrides.latestSemver ?? (() => unstubbed("latestSemver")),
 	});
 
-	/** {@link GitTag.makeTest} behind a `Layer`. */
+	/**
+	 * {@link GitTag.makeTest} behind a `Layer`.
+	 *
+	 * **Example** (Provide an in-memory service layer)
+	 *
+	 * ```ts
+	 * import { GitTag } from "@beep/scratchpad/effected/github/GitTag";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(GitTag.layerTest())) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<GitTagShape> = {}): Layer.Layer<GitTag> =>
 		Layer.succeed(GitTag, GitTag.makeTest(overrides));
 }

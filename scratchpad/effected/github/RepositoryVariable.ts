@@ -24,14 +24,31 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
  * not merely a deleted one. Discarding the value in a projection here would
  * throw that away silently.
  *
+ * **Example** (Decode a readable variable)
+ *
+ * ```ts
+ * import { VariableInfo } from "@beep/scratchpad/effected/github/RepositoryVariable";
+ * import * as S from "effect/Schema";
+ *
+ * const variable = S.decodeUnknownSync(VariableInfo)({ name: "DEPLOY_REGION", value: "eu-west-1" });
+ * console.log(variable.value) // eu-west-1
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const VariableInfo = S.Struct({
   name: S.String.annotateKey({ description: "The variable's name." }),
   value: S.String.annotateKey({ description: "The variable's current readable value." }),
 }).pipe($I.annoteSchema("VariableInfo", { description: "A variable name and value returned by repository or environment listings." }));
 
-/** The plain-object variable listing fields. */
+/**
+ * The plain-object variable listing fields.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type VariableInfo = typeof VariableInfo.Type;
 
 /**
@@ -39,6 +56,8 @@ export type VariableInfo = typeof VariableInfo.Type;
  * its environments.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface RepositoryVariableShape {
   /**
@@ -67,22 +86,44 @@ export interface RepositoryVariableShape {
    * `PATCH`es a variable that is not there, or fails with the error GitHub
    * actually sent. Read either as evidence about this assumption rather than
    * about the caller.
+   *
+   * @since 0.0.0
    */
   readonly set: (name: string, value: string) => Effect.Effect<void, GitHubError, Repo>;
-  /** The repository's variables, with their values. */
+  /**
+   * The repository's variables, with their values.
+   *
+   * @since 0.0.0
+   */
   readonly list: Effect.Effect<ReadonlyArray<VariableInfo>, GitHubError, Repo>;
-  /** Remove one repository variable. */
+  /**
+   * Remove one repository variable.
+   *
+   * @since 0.0.0
+   */
   readonly delete: (name: string) => Effect.Effect<void, GitHubError, Repo>;
 
-  /** Create or update one environment variable, branching the same way. */
+  /**
+   * Create or update one environment variable, branching the same way.
+   *
+   * @since 0.0.0
+   */
   readonly setForEnvironment: (
     environment: string,
     name: string,
     value: string,
   ) => Effect.Effect<void, GitHubError, Repo>;
-  /** One environment's variables, with their values. */
+  /**
+   * One environment's variables, with their values.
+   *
+   * @since 0.0.0
+   */
   readonly listForEnvironment: (environment: string) => Effect.Effect<ReadonlyArray<VariableInfo>, GitHubError, Repo>;
-  /** Remove one environment variable. */
+  /**
+   * Remove one environment variable.
+   *
+   * @since 0.0.0
+   */
   readonly deleteForEnvironment: (environment: string, name: string) => Effect.Effect<void, GitHubError, Repo>;
 }
 
@@ -103,7 +144,7 @@ export interface RepositoryVariableShape {
  * **Example** (Set an Actions variable and list repository variables)
  *
  * ```ts
- * import { RepositoryVariable } from "./index.ts";
+ * import { RepositoryVariable } from "@beep/scratchpad/effected/github/RepositoryVariable";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
@@ -111,9 +152,12 @@ export interface RepositoryVariableShape {
  *   yield* variables.set("DEPLOY_REGION", "eu-west-1"); // creates or updates
  *   return yield* variables.list;
  * });
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class RepositoryVariable extends Context.Service<RepositoryVariable, RepositoryVariableShape>()(
   $I`RepositoryVariable`,
@@ -126,13 +170,40 @@ export class RepositoryVariable extends Context.Service<RepositoryVariable, Repo
    * `(client) => make(client)` rather than `make`: a static initializer runs
    * while the module body is still evaluating, so naming a `const` declared
    * further down throws at import time with a clean typecheck.
+   *
+   * **Example** (Construct the live service layer)
+   *
+   * ```ts
+   * import { RepositoryVariable } from "@beep/scratchpad/effected/github/RepositoryVariable";
+   * import * as Layer from "effect/Layer";
+   *
+   * console.log(Layer.isLayer(RepositoryVariable.layer)) // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
    */
   static readonly layer: Layer.Layer<RepositoryVariable, never, GitHubClient> = Layer.effect(
     this,
     Effect.map(GitHubClient, (client) => make(client)),
   );
 
-  /** An in-memory double; unstubbed members die naming themselves. */
+  /**
+   * An in-memory double; unstubbed members die naming themselves.
+   *
+   * **Example** (Stub one service operation)
+   *
+   * ```ts
+   * import { RepositoryVariable } from "@beep/scratchpad/effected/github/RepositoryVariable";
+   * import * as Effect from "effect/Effect";
+   *
+   * const service = RepositoryVariable.makeTest({ set: () => Effect.void });
+   * console.log(Effect.isEffect(service.set("REGION", "eu-west-1"))) // true
+   * ```
+   *
+   * @category testing
+   * @since 0.0.0
+   */
   static readonly makeTest = (overrides: Partial<RepositoryVariableShape> = {}): RepositoryVariableShape => ({
     set: overrides.set ?? (() => unstubbed("set")),
     list: overrides.list ?? (Effect.suspend(() => unstubbed("list"))),
@@ -142,7 +213,21 @@ export class RepositoryVariable extends Context.Service<RepositoryVariable, Repo
     deleteForEnvironment: overrides.deleteForEnvironment ?? (() => unstubbed("deleteForEnvironment")),
   });
 
-  /** {@link RepositoryVariable.makeTest} behind a `Layer`. */
+  /**
+   * {@link RepositoryVariable.makeTest} behind a `Layer`.
+   *
+   * **Example** (Construct a test service layer)
+   *
+   * ```ts
+   * import { RepositoryVariable } from "@beep/scratchpad/effected/github/RepositoryVariable";
+   * import * as Layer from "effect/Layer";
+   *
+   * console.log(Layer.isLayer(RepositoryVariable.layerTest())) // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
   static readonly layerTest = (overrides: Partial<RepositoryVariableShape> = {}): Layer.Layer<RepositoryVariable> =>
     Layer.succeed(RepositoryVariable, RepositoryVariable.makeTest(overrides));
 }

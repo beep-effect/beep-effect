@@ -11,7 +11,18 @@ const $I = $ScratchpadId.create("effected/github/GraphQL");
 /**
  * One entry from a GraphQL response's `errors` array.
  *
+ * **Example** (Retain a GitHub error classification)
+ *
+ * ```ts
+ * import { GraphQLErrorEntry } from "@beep/scratchpad/effected/github/GraphQL";
+ *
+ * const entry = GraphQLErrorEntry.make({ message: "Missing repository", type: "NOT_FOUND" });
+ * console.log(entry.type) // NOT_FOUND
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class GraphQLErrorEntry extends S.Class<GraphQLErrorEntry>($I`GraphQLErrorEntry`)({
   /** GitHub's prose. */
@@ -30,7 +41,20 @@ export class GraphQLErrorEntry extends S.Class<GraphQLErrorEntry>($I`GraphQLErro
  * a 200 response can still carry failures, and it carries a **list** of them.
  * `errors` carries every entry GitHub reported, in order.
  *
+ * **Example** (Classify a missing GraphQL resource)
+ *
+ * ```ts
+ * import { GitHubGraphQLError } from "@beep/scratchpad/effected/github/GraphQL";
+ *
+ * const error = GitHubGraphQLError.fromThrowable("ownerLogin", {
+ *   errors: [{ message: "Missing owner", type: "NOT_FOUND" }],
+ * }, 0);
+ * console.log(error.kind) // notFound
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>($I`GitHubGraphQLError`)("GitHubGraphQLError", {
   /**
@@ -62,16 +86,59 @@ export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>($I`Git
   /** The underlying throwable, when one exists. */
   cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying throwable, when one exists." }),
 }, $I.annote("GitHubGraphQLError", { description: "A GraphQL call failed." })) {
+  /**
+   * Formats the operation and human-readable cause for logs.
+   *
+   * **Example** (Read a decode failure message)
+   *
+   * ```ts
+   * import { GitHubGraphQLError } from "@beep/scratchpad/effected/github/GraphQL";
+   *
+   * const error = GitHubGraphQLError.decode("ownerLogin", "Invalid response");
+   * console.log(error.message) // ownerLogin failed: Invalid response
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
   override get message(): string {
     return `${this.operation} failed: ${this.reason}`;
   }
 
-  /** Whether retrying could plausibly succeed. Derived, like the REST error's. */
+  /**
+   * Whether retrying could plausibly succeed. Derived, like the REST error's.
+   *
+   * **Example** (Check a transport failure for retry)
+   *
+   * ```ts
+   * import { GitHubGraphQLError } from "@beep/scratchpad/effected/github/GraphQL";
+   *
+   * const error = GitHubGraphQLError.fromThrowable("ownerLogin", new Error("Offline"), 0);
+   * console.log(error.retryable) // true
+   * ```
+   *
+   * @category predicates
+   * @since 0.0.0
+   */
   get retryable(): boolean {
     return this.kind === "transport" || this.kind === "rateLimited";
   }
 
-  /** A response arrived but did not match the document's declared schema. */
+  /**
+   * A response arrived but did not match the document's declared schema.
+   *
+   * **Example** (Build a response decoding failure)
+   *
+   * ```ts
+   * import { GitHubGraphQLError } from "@beep/scratchpad/effected/github/GraphQL";
+   *
+   * const error = GitHubGraphQLError.decode("ownerLogin", "Invalid response");
+   * console.log(error.kind) // decode
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
   static decode(operation: string, reason: string, cause?: unknown): GitHubGraphQLError {
     return GitHubGraphQLError.make({
       kind: "decode",
@@ -92,6 +159,18 @@ export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>($I`Git
    * failure with a `status`. Both arrive as throwables and both are read
    * structurally, for the same reason the REST classifier does it — the error
    * classes live in packages this one does not declare.
+   *
+   * **Example** (Classify an unauthorized HTTP response)
+   *
+   * ```ts
+   * import { GitHubGraphQLError } from "@beep/scratchpad/effected/github/GraphQL";
+   *
+   * const error = GitHubGraphQLError.fromThrowable("ownerLogin", { status: 401, message: "Bad credentials" }, 0);
+   * console.log(error.kind) // unauthorized
+   * ```
+   *
+   * @category parsing
+   * @since 0.0.0
    */
   static fromThrowable(operation: string, error: unknown, nowMillis: number): GitHubGraphQLError {
     const record = asRecord(error);
@@ -175,7 +254,8 @@ const classify = (
  * **Example** (Query an owner login with a typed GraphQL document)
  *
  * ```ts
- * import { GitHubClient, GraphQLDocument } from "./index.ts";
+ * import { GitHubClient } from "@beep/scratchpad/effected/github/GitHubClient";
+ * import { GraphQLDocument } from "@beep/scratchpad/effected/github/GraphQL";
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema";
  *
@@ -190,16 +270,78 @@ const classify = (
  *   const data = yield* client.graphql(OwnerLogin, { owner: "effect-ts" });
  *   return data.repositoryOwner?.login;
  * });
+ * console.log(Effect.isEffect(login)) // true
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class GraphQLDocument<A, V extends Record<string, unknown>> {
-  /** Names the span and the error's `operation`. */
+  /**
+   * Names the span and the error's `operation`.
+   *
+   * **Example** (Read the operation name)
+   *
+   * ```ts
+   * import { GraphQLDocument } from "@beep/scratchpad/effected/github/GraphQL";
+   * import * as S from "effect/Schema";
+   *
+   * const document = GraphQLDocument.make({
+   *   name: "ownerLogin",
+   *   document: "query { viewer { login } }",
+   *   response: S.Struct({ viewer: S.Struct({ login: S.String }) }),
+   * })<{ readonly owner: string }>();
+   * console.log(document.name) // ownerLogin
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
   readonly name: string;
-  /** The document text sent to GitHub. */
+  /**
+   * The document text sent to GitHub.
+   *
+   * **Example** (Read the query text)
+   *
+   * ```ts
+   * import { GraphQLDocument } from "@beep/scratchpad/effected/github/GraphQL";
+   * import * as S from "effect/Schema";
+   *
+   * const document = GraphQLDocument.make({
+   *   name: "ownerLogin",
+   *   document: "query { viewer { login } }",
+   *   response: S.Struct({ viewer: S.Struct({ login: S.String }) }),
+   * })<{ readonly owner: string }>();
+   * console.log(document.document) // query { viewer { login } }
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
   readonly document: string;
-  /** Decodes the raw `data` payload into the domain value. */
+  /**
+   * Decodes the raw `data` payload into the domain value.
+   *
+   * **Example** (Decode a viewer login)
+   *
+   * ```ts
+   * import { GraphQLDocument } from "@beep/scratchpad/effected/github/GraphQL";
+   * import * as S from "effect/Schema";
+   * import * as Effect from "effect/Effect";
+   *
+   * const document = GraphQLDocument.make({
+   *   name: "ownerLogin",
+   *   document: "query { viewer { login } }",
+   *   response: S.Struct({ viewer: S.Struct({ login: S.String }) }),
+   * })<{ readonly owner: string }>();
+   * const value = Effect.runSync(document.decode({ viewer: { login: "octocat" } }));
+   * console.log(value.viewer.login) // octocat
+   * ```
+   *
+   * @category decoding
+   * @since 0.0.0
+   */
   readonly decode: (raw: unknown) => Effect.Effect<A, S.SchemaError>;
   /**
    * Turns the caller's variables into the wire object.
@@ -210,6 +352,23 @@ export class GraphQLDocument<A, V extends Record<string, unknown>> {
    * a member mentioning it, TypeScript's structural typing would make
    * documents with different variable shapes interchangeable and the
    * call-site checking would be decorative.
+   *
+   * **Example** (Encode owner variables)
+   *
+   * ```ts
+   * import { GraphQLDocument } from "@beep/scratchpad/effected/github/GraphQL";
+   * import * as S from "effect/Schema";
+   *
+   * const document = GraphQLDocument.make({
+   *   name: "ownerLogin",
+   *   document: "query { viewer { login } }",
+   *   response: S.Struct({ viewer: S.Struct({ login: S.String }) }),
+   * })<{ readonly owner: string }>();
+   * console.log(document.encodeVariables({ owner: "effect-ts" }).owner) // effect-ts
+   * ```
+   *
+   * @category encoding
+   * @since 0.0.0
    */
   readonly encodeVariables: (variables: V) => Record<string, unknown>;
 
@@ -246,6 +405,23 @@ export class GraphQLDocument<A, V extends Record<string, unknown>> {
    * Curried, because `A` is inferred from `response` while `V` is stated:
    * TypeScript takes explicit type arguments all-or-nothing, so a single call
    * would force the caller to spell out the decoded type as well.
+   *
+   * **Example** (Build a document with inferred response typing)
+   *
+   * ```ts
+   * import { GraphQLDocument } from "@beep/scratchpad/effected/github/GraphQL";
+   * import * as S from "effect/Schema";
+   *
+   * const document = GraphQLDocument.make({
+   *   name: "ownerLogin",
+   *   document: "query { viewer { login } }",
+   *   response: S.Struct({ viewer: S.Struct({ login: S.String }) }),
+   * })<{ readonly owner: string }>();
+   * console.log(document.name) // ownerLogin
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
    */
   static make<A, I>(options: {
     readonly name: string;

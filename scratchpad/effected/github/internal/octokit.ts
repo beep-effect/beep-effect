@@ -39,7 +39,12 @@ const RequestMethod = LiteralKit(["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT
  * @internal
  */
 
-/** How a transport is built. */
+/**
+ * Configures transport authentication, retry behavior and HTTP overrides.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
 export interface TransportOptions {
 	/**
 	 * The bearer credential. Absent means **unauthenticated**, which GitHub
@@ -53,7 +58,12 @@ export interface TransportOptions {
 	readonly fetch?: typeof globalThis.fetch | undefined;
 }
 
-/** What a client layer holds. */
+/**
+ * Holds the request operations and shared rate-limit state of a client layer.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface Transport {
 	/** One request: retried, classified, with its rate-limit headers recorded. */
 	readonly request: <A>(
@@ -116,6 +126,24 @@ const makeOctokit = (options: TransportOptions): Octokit =>
  *
  * The rate-limit cell lives here, in the closure of the layer that writes it,
  * so the writer and the reader can never see different cells.
+ *
+ * **Example** (Read the initial rate-limit state without a request)
+ *
+ * ```ts
+ * import { makeTransport } from "@beep/scratchpad/effected/github/internal/octokit";
+ * import { RetryPolicy } from "@beep/scratchpad/effected/github/Resilience";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
+ *
+ * const program = Effect.gen(function* () {
+ *   const transport = yield* makeTransport({ retry: RetryPolicy.default });
+ *   return O.isNone(yield* transport.rateLimit);
+ * });
+ * console.log(Effect.runSync(program)) // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeTransport = Effect.fn("makeTransport")(function* (options: TransportOptions): Effect.fn.Return<Transport> {
 		const octokit = makeOctokit(options);

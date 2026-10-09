@@ -19,6 +19,8 @@ import type { GitHubError } from "../GitHubError.ts";
  * rather than resuming an exhausted one.
  *
  * @internal
+ * @category type-level
+ * @since 0.0.0
  */
 export interface PageSource<A> {
 	readonly next: Effect.Effect<O.Option<ReadonlyArray<A>>, GitHubError>;
@@ -37,7 +39,20 @@ export interface PageSource<A> {
  * `maxPages` bounds **requests, not items**: the walk stops issuing them rather
  * than fetching everything and slicing.
  *
+ * **Example** (Stop after the first page)
+ *
+ * ```ts
+ * import { fromArray, paginate } from "@beep/scratchpad/effected/github/internal/paginate";
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
+ *
+ * const items = paginate(() => fromArray([1, 2, 3], 2), 1);
+ * console.log(Effect.runSync(Stream.runCollect(items)).join(",")) // 1,2
+ * ```
+ *
  * @internal
+ * @category streams
+ * @since 0.0.0
  */
 export const paginate: {
 	<A>(openSource: () => PageSource<A>, maxPages: number | undefined): Stream.Stream<A, GitHubError>;
@@ -70,7 +85,22 @@ export const paginate: {
  * `perPage: 100` pages exactly as GitHub would, so a test can assert a caller's
  * `maxPages` truncation against real page boundaries.
  *
+ * **Example** (Read a short final page and completion)
+ *
+ * ```ts
+ * import { fromArray } from "@beep/scratchpad/effected/github/internal/paginate";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
+ *
+ * const source = fromArray([1, 2, 3], 2);
+ * console.log(O.getOrElse(Effect.runSync(source.next), () => []).join(",")) // 1,2
+ * console.log(O.getOrElse(Effect.runSync(source.next), () => []).join(",")) // 3
+ * console.log(O.isNone(Effect.runSync(source.next))) // true
+ * ```
+ *
  * @internal
+ * @category constructors
+ * @since 0.0.0
  */
 export const fromArray: {
 	<A>(items: ReadonlyArray<A>, perPage: number): PageSource<A>;

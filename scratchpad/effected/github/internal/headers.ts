@@ -7,7 +7,26 @@ import * as P from "effect/Predicate";
 // `number` or absent depending on the fetch implementation, so every read here
 // is defensive about both. Header names are already lowercased by octokit.
 
-/** A header's value as a string, when it is present and non-empty. */
+/**
+ * Reads a present, non-empty header value as a string.
+ *
+ * **Details**
+ *
+ * Numeric values are converted to strings; missing headers, empty strings and
+ * values of other types yield `undefined`.
+ *
+ * **Example** (Read numeric and empty headers)
+ *
+ * ```ts
+ * import { headerString } from "@beep/scratchpad/effected/github/internal/headers";
+ *
+ * console.log(headerString({ "x-ratelimit-remaining": 5 }, "x-ratelimit-remaining")) // 5
+ * console.log(headerString({ "retry-after": "" }, "retry-after")) // undefined
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const headerString: {
 	(headers: Readonly<Record<string, unknown>> | undefined, name: string): string | undefined;
 	(name: string): (headers: Readonly<Record<string, unknown>> | undefined) => string | undefined;
@@ -21,7 +40,26 @@ export const headerString: {
 	return undefined;
 });
 
-/** A header's value as a finite integer, when it parses as one. */
+/**
+ * Parses a header value as a finite integer.
+ *
+ * **Details**
+ *
+ * Finite numeric input is truncated toward zero. Missing or non-finite values
+ * yield `undefined`.
+ *
+ * **Example** (Truncate a delay and reject a non-finite value)
+ *
+ * ```ts
+ * import { headerNumber } from "@beep/scratchpad/effected/github/internal/headers";
+ *
+ * console.log(headerNumber({ "retry-after": "2.9" }, "retry-after")) // 2
+ * console.log(headerNumber({ "retry-after": "Infinity" }, "retry-after")) // undefined
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const headerNumber: {
 	(headers: Readonly<Record<string, unknown>> | undefined, name: string): number | undefined;
 	(name: string): (headers: Readonly<Record<string, unknown>> | undefined) => number | undefined;
@@ -53,6 +91,23 @@ export const headerNumber: {
  *
  * `nowMillis` is a parameter rather than a `Date.now()` read so this stays pure
  * and so a test can pin it.
+ *
+ * **Example** (Prefer retry-after over the primary reset)
+ *
+ * ```ts
+ * import { retryAfterMillisFrom } from "@beep/scratchpad/effected/github/internal/headers";
+ *
+ * const headers = {
+ *   "retry-after": "2",
+ *   "x-ratelimit-remaining": "0",
+ *   "x-ratelimit-reset": "60",
+ * };
+ * console.log(retryAfterMillisFrom(headers, 59000)) // 2000
+ * console.log(retryAfterMillisFrom({ "x-ratelimit-remaining": "1", "x-ratelimit-reset": "60" }, 59000)) // undefined
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const retryAfterMillisFrom: {
 	(headers: Readonly<Record<string, unknown>> | undefined, nowMillis: number): number | undefined;

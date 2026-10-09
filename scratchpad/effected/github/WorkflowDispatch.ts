@@ -23,7 +23,21 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 /**
  * Where a workflow run has got to.
  *
+ * **Example** (Inspect a completed workflow run)
+ *
+ * ```ts
+ * import { WorkflowRunStatus } from "@beep/scratchpad/effected/github/WorkflowDispatch";
+ *
+ * const run = WorkflowRunStatus.make({
+ *   id: 42, status: "completed", conclusion: "success",
+ *   url: "https://github.com/acme/project/actions/runs/42",
+ * });
+ * console.log(run.conclusion); // success
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class WorkflowRunStatus extends S.Class<WorkflowRunStatus>($I`WorkflowRunStatus`)({
   /** The run's numeric id. */
@@ -35,7 +49,24 @@ export class WorkflowRunStatus extends S.Class<WorkflowRunStatus>($I`WorkflowRun
   /** The run's web URL. */
   url: S.String.annotateKey({ description: "The run's web URL." }),
 }, $I.annote("WorkflowRunStatus", { description: "Where a workflow run has got to." })) {
-  /** Has the run finished, whatever the outcome? */
+  /**
+   * Has the run finished, whatever the outcome?
+   *
+   * **Example** (Recognize a finished run with a failing conclusion)
+   *
+   * ```ts
+   * import { WorkflowRunStatus } from "@beep/scratchpad/effected/github/WorkflowDispatch";
+   *
+   * const run = WorkflowRunStatus.make({
+   *   id: 42, status: "completed", conclusion: "failure",
+   *   url: "https://github.com/acme/project/actions/runs/42",
+   * });
+   * console.log(run.isDone); // true
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
   get isDone(): boolean {
     return this.status === "completed";
   }
@@ -52,7 +83,21 @@ export class WorkflowRunStatus extends S.Class<WorkflowRunStatus>($I`WorkflowRun
  * feature's rule, not this package's. Callers that care filter on it
  * themselves.
  *
+ * **Example** (Decode a workflow definition)
+ *
+ * ```ts
+ * import { WorkflowInfo } from "@beep/scratchpad/effected/github/WorkflowDispatch";
+ * import * as S from "effect/Schema";
+ *
+ * const workflow = S.decodeUnknownSync(WorkflowInfo)({
+ *   id: 1, name: "CI", path: ".github/workflows/ci.yml", state: "active",
+ * });
+ * console.log(workflow.state); // active
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const WorkflowInfo = S.Struct({
   /** The workflow's numeric id, usable as `workflow_id` on other routes. */
@@ -61,17 +106,25 @@ export const WorkflowInfo = S.Struct({
   name: S.String.annotateKey({ description: "The workflow's display name." }),
   /** Repository-relative path, e.g. `.github/workflows/ci.yml`. */
   path: S.String.annotateKey({ description: "Repository-relative workflow path." }),
-  /** GitHub's state string; see the remarks above before branching on it. */
+  /** GitHub's state string; see the Details above before branching on it. */
   state: S.String.annotateKey({ description: "GitHub's uninterpreted workflow state string." }),
 }).annotate($I.annote("WorkflowInfo", { description: "One workflow defined in the repository." }));
 
-/** The plain-object result described by {@link WorkflowInfo}. @public */
+/**
+ * The plain-object result described by {@link WorkflowInfo}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
 export type WorkflowInfo = typeof WorkflowInfo.Type;
 
 /**
  * How often to poll for a dispatched run, and how long to keep polling.
  *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export interface PollOptions {
   /** How often to check. Defaults to ten seconds. */
@@ -88,6 +141,8 @@ const DEFAULT_TIMEOUT = Duration.minutes(5);
  * workflows.
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export interface WorkflowDispatchShape {
   /** Fire a `workflow_dispatch` event. GitHub answers 204 with no run id. */
@@ -151,7 +206,7 @@ export interface WorkflowDispatchShape {
  * **Example** (Dispatch a release workflow and await its conclusion)
  *
  * ```ts
- * import { WorkflowDispatch } from "./index.ts";
+ * import { WorkflowDispatch } from "@beep/scratchpad/effected/github/WorkflowDispatch";
  * import * as Duration from "effect/Duration";
  * import * as Effect from "effect/Effect";
  *
@@ -163,20 +218,54 @@ export interface WorkflowDispatchShape {
  *   });
  *   return run.conclusion;
  * });
+ *
+ * console.log(Effect.isEffect(release)); // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class WorkflowDispatch extends Context.Service<WorkflowDispatch, WorkflowDispatchShape>()(
   $I`WorkflowDispatch`,
 ) {
-  /** The live service, built over a `GitHubClient`. */
+  /**
+   * The live service, built over a `GitHubClient`.
+   *
+   * **Example** (Construct the live service layer)
+   *
+   * ```ts
+   * import { WorkflowDispatch } from "@beep/scratchpad/effected/github/WorkflowDispatch";
+   * import * as Layer from "effect/Layer";
+   *
+   * console.log(Layer.isLayer(WorkflowDispatch.layer)); // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
   static readonly layer: Layer.Layer<WorkflowDispatch, never, GitHubClient> = Layer.effect(
     this,
     Effect.map(GitHubClient, (client) => make(client)),
   );
 
-  /** An in-memory double; unstubbed members die naming themselves. */
+  /**
+   * An in-memory double; unstubbed members die naming themselves.
+   *
+   * **Example** (Stub the workflow list)
+   *
+   * ```ts
+   * import { WorkflowDispatch } from "@beep/scratchpad/effected/github/WorkflowDispatch";
+   * import * as Effect from "effect/Effect";
+   *
+   * const workflows = WorkflowDispatch.makeTest({ list: Effect.succeed([]) });
+   * const count = workflows.list.pipe(Effect.map((items) => items.length));
+   * console.log(Effect.runSync(count)); // 0
+   * ```
+   *
+   * @category testing
+   * @since 0.0.0
+   */
   static readonly makeTest = (overrides: Partial<WorkflowDispatchShape> = {}): WorkflowDispatchShape => ({
     dispatch: overrides.dispatch ?? (() => unstubbed("dispatch")),
     runStatus: overrides.runStatus ?? (() => unstubbed("runStatus")),
@@ -187,7 +276,25 @@ export class WorkflowDispatch extends Context.Service<WorkflowDispatch, Workflow
     dispatchAndWait: overrides.dispatchAndWait ?? (() => unstubbed("dispatchAndWait")),
   });
 
-  /** {@link WorkflowDispatch.makeTest} behind a `Layer`. */
+  /**
+   * {@link WorkflowDispatch.makeTest} behind a `Layer`.
+   *
+   * **Example** (Provide a workflow list through a test layer)
+   *
+   * ```ts
+   * import { WorkflowDispatch } from "@beep/scratchpad/effected/github/WorkflowDispatch";
+   * import * as Effect from "effect/Effect";
+   *
+   * const count = Effect.gen(function* () {
+   *   const workflows = yield* WorkflowDispatch;
+   *   return (yield* workflows.list).length;
+   * }).pipe(Effect.provide(WorkflowDispatch.layerTest({ list: Effect.succeed([]) })));
+   * console.log(Effect.runSync(count)); // 0
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
   static readonly layerTest = (overrides: Partial<WorkflowDispatchShape> = {}): Layer.Layer<WorkflowDispatch> =>
     Layer.succeed(WorkflowDispatch, WorkflowDispatch.makeTest(overrides));
 }

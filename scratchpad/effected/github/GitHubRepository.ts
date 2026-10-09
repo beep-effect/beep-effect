@@ -30,6 +30,8 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
  * its documented type.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type RepositorySettings = Rest.Data<"GET /repos/{owner}/{repo}">;
 
@@ -37,6 +39,8 @@ export type RepositorySettings = Rest.Data<"GET /repos/{owner}/{repo}">;
  * The fields `PATCH /repos/{owner}/{repo}` accepts, minus the coordinate.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type RepositoryPatch = Omit<Rest.Params<"PATCH /repos/{owner}/{repo}">, "owner" | "repo">;
 
@@ -54,6 +58,8 @@ export type RepositoryPatch = Omit<Rest.Params<"PATCH /repos/{owner}/{repo}">, "
  * {@link repositoryPatch} turns it into one.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type RepositoryPatchDraft = {
 	readonly [K in keyof RepositoryPatch]?: RepositoryPatch[K] | undefined;
@@ -79,7 +85,10 @@ export type RepositoryPatchDraft = {
  * **Example** (Build a repository patch from configured fields)
  *
  * ```ts
- * import { repositoryPatch } from "./index.ts";
+ * import { repositoryPatch } from "@beep/scratchpad/effected/github/GitHubRepository";
+ *
+ * const config: { has_issues: boolean | undefined; has_wiki: boolean | undefined;
+ *   description: string | undefined } = { has_issues: true, has_wiki: undefined, description: "App" };
  *
  * // `config.has_issues` is `boolean | undefined`; absent fields drop out.
  * const patch = repositoryPatch({
@@ -87,11 +96,15 @@ export type RepositoryPatchDraft = {
  *   has_wiki: config.has_wiki,
  *   description: config.description,
  * });
+ * console.log(patch.has_issues) // true
+ * console.log(Object.hasOwn(patch, "has_wiki")) // false
  * ```
  *
- * @param draft - The fields to apply, any of which may be `undefined`.
+ * @param draft - The fields to apply, each of which may be `undefined`.
  * @returns A patch carrying only the fields that were actually set.
  * @public
+ * @category constructors
+ * @since 0.0.0
  */
 export const repositoryPatch = (draft: RepositoryPatchDraft): RepositoryPatch => {
 	const out: Record<string, unknown> = {};
@@ -105,6 +118,8 @@ export const repositoryPatch = (draft: RepositoryPatchDraft): RepositoryPatch =>
  * Whether an account is a user or an organization.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type OwnerType = "User" | "Organization";
 
@@ -116,7 +131,19 @@ export type OwnerType = "User" | "Organization";
  *
  * A caller supplies the bare string; it is wrapped before sending.
  *
+ * **Example** (Recognize a security status field)
+ *
+ * ```ts
+ * import { SECURITY_ANALYSIS_STATUS_FIELDS } from "@beep/scratchpad/effected/github/GitHubRepository";
+ * import * as HashSet from "effect/HashSet";
+ *
+ * console.log(HashSet.has(SECURITY_ANALYSIS_STATUS_FIELDS, "secret_scanning")) // true
+ * ```
+ *
+
  * @public
+ * @category constants
+ * @since 0.0.0
  */
 export const SECURITY_ANALYSIS_STATUS_FIELDS: HashSet.HashSet<string> = HashSet.make(
 	"advanced_security",
@@ -144,7 +171,18 @@ export const SECURITY_ANALYSIS_STATUS_FIELDS: HashSet.HashSet<string> = HashSet.
  * while the repository never changed. Setting any of these forces a second
  * round trip to learn the repository's node id.
  *
+ * **Example** (Find the GraphQL field for discussions)
+ *
+ * ```ts
+ * import { GRAPHQL_ONLY_SETTINGS } from "@beep/scratchpad/effected/github/GitHubRepository";
+ *
+ * console.log(GRAPHQL_ONLY_SETTINGS.has_discussions) // hasDiscussionsEnabled
+ * ```
+ *
+
  * @public
+ * @category constants
+ * @since 0.0.0
  */
 export const GRAPHQL_ONLY_SETTINGS: Readonly<Record<string, string>> = {
 	has_sponsorships: "hasSponsorshipsEnabled",
@@ -179,7 +217,20 @@ const isStatusObject = S.is(StatusObject);
  * delegated bypass is enabled, so forwarding it would turn an omission into a
  * failure.
  *
+ * **Example** (Wrap security status and omit empty reviewer changes)
+ *
+ * ```ts
+ * import { transformSecurityAndAnalysis } from "@beep/scratchpad/effected/github/GitHubRepository";
+ *
+ * const wrapped = transformSecurityAndAnalysis({ secret_scanning: "enabled" });
+ * console.log(JSON.stringify(wrapped)) // {"secret_scanning":{"status":"enabled"}}
+ * console.log(transformSecurityAndAnalysis({ delegated_bypass_reviewers: [] })) // undefined
+ * ```
+ *
+
  * @public
+ * @category normalization
+ * @since 0.0.0
  */
 export const transformSecurityAndAnalysis = (value: unknown): Record<string, unknown> | undefined => {
 	if (!P.isObjectOrArray(value)) return undefined;
@@ -289,12 +340,34 @@ const preparePatch = (patch: Record<string, unknown>): Record<string, unknown> =
  * Both lists use the **caller's** key names, not the wire names, because the
  * audience for them is a person reading a plan against the config they wrote.
  *
+ * **Example** (Decode the keys actually sent)
+ *
+ * ```ts
+ * import { AppliedSettings } from "@beep/scratchpad/effected/github/GitHubRepository";
+ * import * as S from "effect/Schema";
+ *
+ * const applied = S.decodeUnknownSync(AppliedSettings)({
+ *   rest: ["has_wiki"], graphql: ["has_discussions"],
+ * });
+ * console.log(applied.graphql[0]) // has_discussions
+ * ```
+ *
+
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const AppliedSettings = S.Struct({
 	rest: S.Array(S.String).pipe(S.annotateKey({ description: "Keys sent on the REST patch after preparation dropped anything GitHub would refuse." })),
 	graphql: S.Array(S.String).pipe(S.annotateKey({ description: "Keys sent through the GraphQL mutation, named as the caller supplied them." })),
 }).pipe($I.annoteSchema("AppliedSettings", { description: "The fields actually sent through REST and GraphQL when applying repository settings." }));
+/**
+ * Decoded report of the caller-named fields sent through REST and GraphQL.
+ *
+ * @see {@link AppliedSettings} for the runtime report schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type AppliedSettings = typeof AppliedSettings.Type;
 
 /**
@@ -302,6 +375,8 @@ export type AppliedSettings = typeof AppliedSettings.Type;
  * id and owner type.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface GitHubRepositoryShape {
 	/** The full, faithfully typed repository payload. */
@@ -382,7 +457,7 @@ export interface GitHubRepositoryShape {
  * **Example** (Read the default branch and apply REST and GraphQL settings)
  *
  * ```ts
- * import { GitHubRepository } from "./index.ts";
+ * import { GitHubRepository } from "@beep/scratchpad/effected/github/GitHubRepository";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
@@ -391,20 +466,52 @@ export interface GitHubRepositoryShape {
  *   const applied = yield* repository.applySettings({ has_wiki: false, has_discussions: true });
  *   return { branch, applied }; // applied.rest, applied.graphql
  * });
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class GitHubRepository extends Context.Service<GitHubRepository, GitHubRepositoryShape>()(
 	$I`GitHubRepository`,
 ) {
-	/** The live service, built over a `GitHubClient`. */
+	/**
+	 * The live service, built over a `GitHubClient`.
+	 *
+	 * **Example** (Inspect the live service layer)
+	 *
+	 * ```ts
+	 * import { GitHubRepository } from "@beep/scratchpad/effected/github/GitHubRepository";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(GitHubRepository.layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<GitHubRepository, never, GitHubClient> = Layer.effect(
 		this,
 		Effect.map(GitHubClient, (client) => make(client)),
 	);
 
-	/** An in-memory double; unstubbed members die naming themselves. */
+	/**
+	 * An in-memory double; unstubbed members die naming themselves.
+	 *
+	 * **Example** (Override a test-double member)
+	 *
+	 * ```ts
+	 * import { GitHubRepository } from "@beep/scratchpad/effected/github/GitHubRepository";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const repository = GitHubRepository.makeTest({ defaultBranch: Effect.succeed("main") });
+	 * console.log(Effect.isEffect(repository.defaultBranch)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<GitHubRepositoryShape> = {}): GitHubRepositoryShape => ({
 		settings: overrides.settings ?? Effect.sync(() => unstubbed("settings")),
 		updateSettings: overrides.updateSettings ?? (() => unstubbed("updateSettings")),
@@ -414,7 +521,21 @@ export class GitHubRepository extends Context.Service<GitHubRepository, GitHubRe
 		applySettings: overrides.applySettings ?? (() => unstubbed("applySettings")),
 	});
 
-	/** {@link GitHubRepository.makeTest} behind a `Layer`. */
+	/**
+	 * {@link GitHubRepository.makeTest} behind a `Layer`.
+	 *
+	 * **Example** (Provide an in-memory service layer)
+	 *
+	 * ```ts
+	 * import { GitHubRepository } from "@beep/scratchpad/effected/github/GitHubRepository";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(GitHubRepository.layerTest())) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<GitHubRepositoryShape> = {}): Layer.Layer<GitHubRepository> =>
 		Layer.succeed(GitHubRepository, GitHubRepository.makeTest(overrides));
 }

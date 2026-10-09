@@ -25,6 +25,8 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
  * key** — which is why a key fetch cannot be cached across scopes.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type SecretScope = "actions" | "dependabot" | "codespaces";
 
@@ -38,13 +40,30 @@ export type SecretScope = "actions" | "dependabot" | "codespaces";
  * a consumer comparing desired against live can detect a **deleted** secret but
  * never an **edited** one.
  *
+ * **Example** (Decode a secret listing entry)
+ *
+ * ```ts
+ * import { SecretInfo } from "@beep/scratchpad/effected/github/RepositorySecret";
+ * import * as S from "effect/Schema";
+ *
+ * const secret = S.decodeUnknownSync(SecretInfo)({ name: "NPM_TOKEN" });
+ * console.log(secret.name) // NPM_TOKEN
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const SecretInfo = S.Struct({
   name: S.String.annotateKey({ description: "The secret's name; its value is never returned by GitHub." }),
 }).pipe($I.annoteSchema("SecretInfo", { description: "A secret name returned by repository or environment listings." }));
 
-/** The plain-object secret listing fields. */
+/**
+ * The plain-object secret listing fields.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SecretInfo = typeof SecretInfo.Type;
 
 /**
@@ -52,28 +71,54 @@ export type SecretInfo = typeof SecretInfo.Type;
  * repository, and Actions secrets on its environments.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface RepositorySecretShape {
-  /** Encrypt and write one repository secret in the given store. */
+  /**
+   * Encrypt and write one repository secret in the given store.
+   *
+   * @since 0.0.0
+   */
   readonly set: (
     name: string,
     value: Redacted.Redacted<string>,
     scope?: SecretScope,
   ) => Effect.Effect<void, GitHubError, Repo>;
-  /** The names of the repository's secrets in the given store. */
+  /**
+   * The names of the repository's secrets in the given store.
+   *
+   * @since 0.0.0
+   */
   readonly list: (scope?: SecretScope) => Effect.Effect<ReadonlyArray<SecretInfo>, GitHubError, Repo>;
-  /** Remove one repository secret from the given store. */
+  /**
+   * Remove one repository secret from the given store.
+   *
+   * @since 0.0.0
+   */
   readonly delete: (name: string, scope?: SecretScope) => Effect.Effect<void, GitHubError, Repo>;
 
-  /** Encrypt and write one environment secret. */
+  /**
+   * Encrypt and write one environment secret.
+   *
+   * @since 0.0.0
+   */
   readonly setForEnvironment: (
     environment: string,
     name: string,
     value: Redacted.Redacted<string>,
   ) => Effect.Effect<void, GitHubError, Repo>;
-  /** The names of one environment's secrets. */
+  /**
+   * The names of one environment's secrets.
+   *
+   * @since 0.0.0
+   */
   readonly listForEnvironment: (environment: string) => Effect.Effect<ReadonlyArray<SecretInfo>, GitHubError, Repo>;
-  /** Remove one environment secret. */
+  /**
+   * Remove one environment secret.
+   *
+   * @since 0.0.0
+   */
   readonly deleteForEnvironment: (environment: string, name: string) => Effect.Effect<void, GitHubError, Repo>;
 }
 
@@ -123,7 +168,7 @@ const ROUTES = {
  * **Example** (Set an encrypted Actions secret and list secret names)
  *
  * ```ts
- * import { RepositorySecret } from "./index.ts";
+ * import { RepositorySecret } from "@beep/scratchpad/effected/github/RepositorySecret";
  * import * as Effect from "effect/Effect";
  * import * as Redacted from "effect/Redacted";
  *
@@ -132,9 +177,12 @@ const ROUTES = {
  *   yield* secrets.set("NPM_TOKEN", Redacted.make("npm_example"), "actions");
  *   return yield* secrets.list("actions"); // names only; values are never returned
  * });
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class RepositorySecret extends Context.Service<RepositorySecret, RepositorySecretShape>()(
   $I`RepositorySecret`,
@@ -147,13 +195,40 @@ export class RepositorySecret extends Context.Service<RepositorySecret, Reposito
    * `(client) => make(client)` rather than `make`: a static initializer runs
    * while the module body is still evaluating, so naming a `const` declared
    * further down throws at import time with a clean typecheck.
+   *
+   * **Example** (Construct the live service layer)
+   *
+   * ```ts
+   * import { RepositorySecret } from "@beep/scratchpad/effected/github/RepositorySecret";
+   * import * as Layer from "effect/Layer";
+   *
+   * console.log(Layer.isLayer(RepositorySecret.layer)) // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
    */
   static readonly layer: Layer.Layer<RepositorySecret, never, GitHubClient> = Layer.effect(
     this,
     Effect.map(GitHubClient, (client) => make(client)),
   );
 
-  /** An in-memory double; unstubbed members die naming themselves. */
+  /**
+   * An in-memory double; unstubbed members die naming themselves.
+   *
+   * **Example** (Stub one service operation)
+   *
+   * ```ts
+   * import { RepositorySecret } from "@beep/scratchpad/effected/github/RepositorySecret";
+   * import * as Effect from "effect/Effect";
+   *
+   * const service = RepositorySecret.makeTest({ delete: () => Effect.void });
+   * console.log(Effect.isEffect(service.delete("NPM_TOKEN"))) // true
+   * ```
+   *
+   * @category testing
+   * @since 0.0.0
+   */
   static readonly makeTest = (overrides: Partial<RepositorySecretShape> = {}): RepositorySecretShape => ({
     set: overrides.set ?? (() => unstubbed("set")),
     list: overrides.list ?? (() => unstubbed("list")),
@@ -163,7 +238,21 @@ export class RepositorySecret extends Context.Service<RepositorySecret, Reposito
     deleteForEnvironment: overrides.deleteForEnvironment ?? (() => unstubbed("deleteForEnvironment")),
   });
 
-  /** {@link RepositorySecret.makeTest} behind a `Layer`. */
+  /**
+   * {@link RepositorySecret.makeTest} behind a `Layer`.
+   *
+   * **Example** (Construct a test service layer)
+   *
+   * ```ts
+   * import { RepositorySecret } from "@beep/scratchpad/effected/github/RepositorySecret";
+   * import * as Layer from "effect/Layer";
+   *
+   * console.log(Layer.isLayer(RepositorySecret.layerTest())) // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
   static readonly layerTest = (overrides: Partial<RepositorySecretShape> = {}): Layer.Layer<RepositorySecret> =>
     Layer.succeed(RepositorySecret, RepositorySecret.makeTest(overrides));
 }

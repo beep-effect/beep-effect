@@ -20,6 +20,8 @@ const $I = $ScratchpadId.create("effected/github/Rest");
  * all — so leaning on it costs zero runtime bytes.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type Route = keyof Endpoints;
 
@@ -38,6 +40,8 @@ export type Route = keyof Endpoints;
  * caller might reach for is a real endpoint parameter and is already typed.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface RequestExtras {
 	/** Extra request headers. Keys must be lowercase. */
@@ -53,6 +57,8 @@ export interface RequestExtras {
  * GitHub's OpenAPI description, plus the extras below.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type Params<R extends Route> = Endpoints[R]["parameters"] & RequestExtras;
 
@@ -60,6 +66,8 @@ export type Params<R extends Route> = Endpoints[R]["parameters"] & RequestExtras
  * The full response `Route` returns, including `status`, `headers` and `data`.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type Response<R extends Route> = Endpoints[R]["response"];
 
@@ -68,6 +76,8 @@ export type Response<R extends Route> = Endpoints[R]["response"];
  * bodyless responses; OpenAPI describes their absent content as `never`.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type Data<R extends Route> = R extends Route
 	? ([Endpoints[R]["response"]["data"]] extends [never] ? "" : Endpoints[R]["response"]["data"])
@@ -86,6 +96,8 @@ export type Data<R extends Route> = R extends Route
  * `Endpoints` no longer indexes.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type PaginatingRoute = keyof PaginatingEndpoints & Route;
 
@@ -101,6 +113,8 @@ export type PaginatingRoute = keyof PaginatingEndpoints & Route;
  * to the inner array at runtime, and this mirrors that at the type level.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type Item<R extends PaginatingRoute> =
 	PaginatingEndpoints[R]["response"]["data"] extends ReadonlyArray<infer T>
@@ -122,7 +136,18 @@ export type Item<R extends PaginatingRoute> =
  * arithmetic is already wrong. Failing at the boundary is cheaper than
  * discovering it in production.
  *
+ * **Example** (Bound a paginated read)
+ *
+ * ```ts
+ * import { PageOptions } from "@beep/scratchpad/effected/github/Rest";
+ *
+ * const options = PageOptions.make({ perPage: 25, maxPages: 2 });
+ * console.log(options.maxPages) // 2
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PageOptions extends S.Class<PageOptions>($I`PageOptions`)({
 	/** Items requested per page. GitHub's ceiling is 100. */
@@ -130,17 +155,41 @@ export class PageOptions extends S.Class<PageOptions>($I`PageOptions`)({
 	/** Stop after this many pages. Absent means "until GitHub stops". */
 	maxPages: S.optionalKey(S.Int.check(S.isGreaterThan(0))).annotateKey({ description: "Stop after this many pages. Absent means \"until GitHub stops\"." }),
 }, $I.annote("PageOptions", { description: "How far a paginated read should go." })) {
-	/** Reads every page, 100 at a time — GitHub's maximum page size. */
+	/**
+	 * Reads every page, 100 at a time — GitHub's maximum page size.
+	 *
+	 * **Example** (Request maximum-size pages)
+	 *
+	 * ```ts
+	 * import { PageOptions } from "@beep/scratchpad/effected/github/Rest";
+	 *
+	 * console.log(PageOptions.all.perPage) // 100
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly all: PageOptions = PageOptions.make({ perPage: 100 });
 
 	/**
-  * Reads at most one page of `perPage` items.
-  *
-  * **Details**
-  *
-  * The shape a "is there any?" or "give me the newest few" read wants, where
-  * walking every page is waste.
-  */
+	 * Reads at most one page of `perPage` items.
+	 *
+	 * **Details**
+	 *
+	 * The shape a "is there any?" or "give me the newest few" read wants, where
+	 * walking every page is waste.
+	 *
+	 * **Example** (Read only the newest few items)
+	 *
+	 * ```ts
+	 * import { PageOptions } from "@beep/scratchpad/effected/github/Rest";
+	 *
+	 * console.log(PageOptions.first(5).maxPages) // 1
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static first(perPage: number): PageOptions {
 		return PageOptions.make({ perPage, maxPages: 1 });
 	}

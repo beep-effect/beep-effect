@@ -21,6 +21,8 @@ const JsonValue = S.fromJsonString(S.String);
  * Read a text file out of a repository at a ref.
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export interface GitHubContentShape {
 	/**
@@ -56,7 +58,7 @@ export interface GitHubContentShape {
  * **Example** (Read a README with an empty fallback)
  *
  * ```ts
- * import { GitHubContent } from "./index.ts";
+ * import { GitHubContent } from "@beep/scratchpad/effected/github/GitHubContent";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";
  *
@@ -65,26 +67,81 @@ export interface GitHubContentShape {
  *   const file = yield* content.getFileOption("README.md", { ref: "main" });
  *   return O.getOrElse(file, () => "");
  * });
+ * console.log(Effect.isEffect(readme)); // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class GitHubContent extends Context.Service<GitHubContent, GitHubContentShape>()(
 	$I`GitHubContent`,
 ) {
-	/** The live service, built over a `GitHubClient`. */
+	/**
+ * The live service, built over a `GitHubClient`.
+ *
+
+ * **Example** (Construct a file read with the live layer)
+ *
+ * ```ts
+ * import { GitHubContent } from "@beep/scratchpad/effected/github/GitHubContent";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = Effect.flatMap(GitHubContent, (content) => content.getFile("README.md")).pipe(
+ *   Effect.provide(GitHubContent.layer),
+ * );
+ * console.log(Effect.isEffect(program)); // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layer: Layer.Layer<GitHubContent, never, GitHubClient> = Layer.effect(
 		this,
 		Effect.map(GitHubClient, (client) => make(client)),
 	);
 
-	/** An in-memory double; unstubbed members die naming themselves. */
+	/**
+ * An in-memory double; unstubbed members die naming themselves.
+ *
+
+ * **Example** (Override a repository file read)
+ *
+ * ```ts
+ * import { GitHubContent } from "@beep/scratchpad/effected/github/GitHubContent";
+ * import * as Effect from "effect/Effect";
+ *
+ * const content = GitHubContent.makeTest({ getFile: () => Effect.succeed("# Project") });
+ * console.log(Effect.isEffect(content.getFile("README.md"))); // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 	static readonly makeTest = (overrides: Partial<GitHubContentShape> = {}): GitHubContentShape => ({
 		getFile: overrides.getFile ?? (() => unstubbed("getFile")),
 		getFileOption: overrides.getFileOption ?? (() => unstubbed("getFileOption")),
 	});
 
-	/** {@link GitHubContent.makeTest} behind a `Layer`. */
+	/**
+ * {@link GitHubContent.makeTest} behind a `Layer`.
+ *
+
+ * **Example** (Provide a content test layer)
+ *
+ * ```ts
+ * import { GitHubContent } from "@beep/scratchpad/effected/github/GitHubContent";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = Effect.map(GitHubContent, () => "ready").pipe(
+ *   Effect.provide(GitHubContent.layerTest()),
+ * );
+ * console.log(Effect.runSync(program)); // ready
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layerTest = (overrides: Partial<GitHubContentShape> = {}): Layer.Layer<GitHubContent> =>
 		Layer.succeed(GitHubContent, GitHubContent.makeTest(overrides));
 }

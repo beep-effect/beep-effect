@@ -16,26 +16,66 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 }, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
 /**
- * What to record about a published artifact.
+ * Describes where a published artifact is stored for GitHub's storage-record endpoint.
  *
  * **Details**
  *
  * These are the fields the storage-record endpoint accepts.
  *
+ * **Example** (Construct an artifact storage record)
+ *
+ * ```ts
+ * import { StorageRecordInput } from "@beep/scratchpad/effected/github/ArtifactMetadata";
+ *
+ * const input = StorageRecordInput.make({
+ *   name: "pkg:npm/example@1.0.0",
+ *   digest: "sha256:abc123",
+ *   registryUrl: "https://registry.npmjs.org",
+ *   repository: "example",
+ * });
+ * console.log(input.digest) // sha256:abc123
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class StorageRecordInput extends S.Class<StorageRecordInput>($I`StorageRecordInput`)({
-	/** The artifact's package URL (purl). */
+	/**
+	 * The artifact's package URL (purl).
+	 *
+	 * @since 0.0.0
+	 */
 	name: S.NonEmptyString.annotateKey({ description: "The artifact's package URL (purl)." }),
-	/** Its content digest, as `algorithm:hex`. */
+	/**
+	 * Its content digest, as `algorithm:hex`.
+	 *
+	 * @since 0.0.0
+	 */
 	digest: S.NonEmptyString.annotateKey({ description: "Its content digest, as `algorithm:hex`." }),
-	/** The registry's base URL. */
+	/**
+	 * The registry's base URL.
+	 *
+	 * @since 0.0.0
+	 */
 	registryUrl: S.NonEmptyString.annotateKey({ description: "The registry's base URL." }),
-	/** The repository name **within the registry**. */
+	/**
+	 * The repository name **within the registry**.
+	 *
+	 * @since 0.0.0
+	 */
 	repository: S.NonEmptyString.annotateKey({ description: "The repository name **within the registry**." }),
-	/** Where the artifact is stored, when there is a direct URL. */
+	/**
+	 * Where the artifact is stored, when there is a direct URL.
+	 *
+	 * @since 0.0.0
+	 */
 	artifactUrl: S.optionalKey(S.String).annotateKey({ description: "Where the artifact is stored, when there is a direct URL." }),
-	/** The artifact's path within the registry, when there is one. */
+	/**
+	 * The artifact's path within the registry, when there is one.
+	 *
+	 * @since 0.0.0
+	 */
 	path: S.optionalKey(S.String).annotateKey({ description: "The artifact's path within the registry, when there is one." }),
 }, $I.annote("StorageRecordInput", { description: "What to record about a published artifact." })) {}
 
@@ -50,9 +90,15 @@ export class StorageRecordInput extends S.Class<StorageRecordInput>($I`StorageRe
  * covers the cross-repository one.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ArtifactMetadataShape {
-	/** Record where a published artifact lives; returns the ids GitHub stored. */
+	/**
+	 * Record where a published artifact lives; returns the ids GitHub stored.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly createStorageRecord: (input: StorageRecordInput) => Effect.Effect<ReadonlyArray<number>, GitHubError, Repo>;
 }
 
@@ -64,23 +110,84 @@ export interface ArtifactMetadataShape {
  * Provide it with {@link ArtifactMetadata.layer}, which needs a `GitHubClient`;
  * `createStorageRecord` also needs a `Repo` in `R`.
  *
+ * **Example** (Compose the ArtifactMetadata service)
+ *
+ * ```ts
+ * import { ArtifactMetadata, StorageRecordInput } from "@beep/scratchpad/effected/github/ArtifactMetadata";
+ * import * as Effect from "effect/Effect";
+ *
+ * const input = StorageRecordInput.make({
+ *   name: "pkg:npm/example@1.0.0", digest: "sha256:abc123",
+ *   registryUrl: "https://registry.npmjs.org", repository: "example",
+ * });
+ * const program = Effect.flatMap(ArtifactMetadata, (service) => service.createStorageRecord(input));
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class ArtifactMetadata extends Context.Service<ArtifactMetadata, ArtifactMetadataShape>()(
 	$I`ArtifactMetadata`,
 ) {
-	/** The live service, built over a `GitHubClient`. */
+	/**
+	 * The live service, built over a `GitHubClient`.
+	 *
+	 * **Example** (Build the live ArtifactMetadata layer)
+	 *
+	 * ```ts
+	 * import { ArtifactMetadata } from "@beep/scratchpad/effected/github/ArtifactMetadata";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(ArtifactMetadata.layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<ArtifactMetadata, never, GitHubClient> = Layer.effect(
 		this,
 		Effect.map(GitHubClient, (client) => make(client)),
 	);
 
-	/** An in-memory double; unstubbed members die naming themselves. */
+	/**
+	 * An in-memory double; unstubbed members die naming themselves.
+	 *
+	 * **Example** (Stub ArtifactMetadata operations)
+	 *
+	 * ```ts
+	 * import { ArtifactMetadata } from "@beep/scratchpad/effected/github/ArtifactMetadata";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const service = ArtifactMetadata.makeTest({
+	 *   createStorageRecord: () => Effect.succeed([]),
+	 * });
+	 * console.log(typeof service.createStorageRecord) // function
+	 * ```
+	 *
+	 * @category testing
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<ArtifactMetadataShape> = {}): ArtifactMetadataShape => ({
 		createStorageRecord: overrides.createStorageRecord ?? (() => unstubbed("createStorageRecord")),
 	});
 
-	/** {@link ArtifactMetadata.makeTest} behind a `Layer`. */
+	/**
+	 * {@link ArtifactMetadata.makeTest} behind a `Layer`.
+	 *
+	 * **Example** (Provide a ArtifactMetadata test layer)
+	 *
+	 * ```ts
+	 * import { ArtifactMetadata } from "@beep/scratchpad/effected/github/ArtifactMetadata";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(ArtifactMetadata.layerTest())) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<ArtifactMetadataShape> = {}): Layer.Layer<ArtifactMetadata> =>
 		Layer.succeed(ArtifactMetadata, ArtifactMetadata.makeTest(overrides));
 }

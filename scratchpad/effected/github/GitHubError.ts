@@ -18,7 +18,18 @@ const $I = $ScratchpadId.create("effected/github/GitHubError");
  * `alreadyExists` tells "someone else created it" apart from "that failed", so
  * an upsert needs no follow-up existence check.
  *
+ * **Example** (Validate a structural error kind)
+ *
+ * ```ts
+ * import { GitHubErrorKind } from "@beep/scratchpad/effected/github/GitHubError";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(GitHubErrorKind)("notFound")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const GitHubErrorKind = LiteralKit([
 	/** The resource is not there (404). Often not an error at all — see the `*Option` reads. */
@@ -37,7 +48,13 @@ export const GitHubErrorKind = LiteralKit([
 	"decode",
 ]).pipe($I.annoteSchema("GitHubErrorKind", { description: "Why a GitHub call failed, as a value you can branch on." }));
 
-/** The values accepted by {@link GitHubErrorKind}. @public */
+/**
+ * The values accepted by {@link GitHubErrorKind}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
 export type GitHubErrorKind = typeof GitHubErrorKind.Type;
 
 /**
@@ -55,7 +72,18 @@ export type GitHubErrorKind = typeof GitHubErrorKind.Type;
  * it acted on. Routing it to `notFound` would let every
  * `catchIf(GitHubError.hasKind("notFound"), …)` recovery swallow a bad argument.
  *
+ * **Example** (Recognize a documented validation code)
+ *
+ * ```ts
+ * import { GitHubValidationCode } from "@beep/scratchpad/effected/github/GitHubError";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(GitHubValidationCode)("missing_field")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const GitHubValidationCode = LiteralKit([
 	/** A resource the request referred to does not exist. */
@@ -72,7 +100,13 @@ export const GitHubValidationCode = LiteralKit([
 	"custom",
 ]).pipe($I.annoteSchema("GitHubValidationCode", { description: "The validation codes GitHub documents for a 422's `errors[].code`." }));
 
-/** The values accepted by {@link GitHubValidationCode}. @public */
+/**
+ * The values accepted by {@link GitHubValidationCode}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
 export type GitHubValidationCode = typeof GitHubValidationCode.Type;
 
 /**
@@ -87,7 +121,18 @@ export type GitHubValidationCode = typeof GitHubValidationCode.Type;
  * the error itself fail to construct: a refused request must still surface as
  * a `GitHubError`, never as a defect.
  *
+ * **Example** (Preserve an unfamiliar validation code)
+ *
+ * ```ts
+ * import { GitHubValidationEntry } from "@beep/scratchpad/effected/github/GitHubError";
+ *
+ * const entry = GitHubValidationEntry.make({ field: "tag_name", code: "future_code" });
+ * console.log(entry.code) // future_code
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class GitHubValidationEntry extends S.Class<GitHubValidationEntry>($I`GitHubValidationEntry`)({
 	/** The resource type GitHub validated, e.g. `"Release"`. */
@@ -109,7 +154,18 @@ export class GitHubValidationEntry extends S.Class<GitHubValidationEntry>($I`Git
  * `operation` identifies what was attempted. This mirrors `@effected/git`,
  * where classification happens once so no consumer string-matches stderr.
  *
+ * **Example** (Route a missing resource)
+ *
+ * ```ts
+ * import { GitHubError } from "@beep/scratchpad/effected/github/GitHubError";
+ *
+ * const error = GitHubError.notFound("GitBranch.get", "main");
+ * console.log(error.kind) // notFound
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("GitHubError", {
 	/** Structural routing. Branch on this, never on the rendered message. */
@@ -144,7 +200,25 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
 	/** The underlying throwable, when one exists. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying throwable, when one exists." }),
 }, $I.annote("GitHubError", { description: "Every REST failure this package produces, from every resource." })) {
-	/** `"GitBranch.upsert failed (422): Reference already exists"`. */
+	/**
+ * Renders the operation, optional HTTP status and reason for logs and messages.
+ *
+ * **Details**
+ *
+ * For example, `"GitBranch.upsert failed (422): Reference already exists"`.
+ *
+ * **Example** (Render a failed branch upsert)
+ *
+ * ```ts
+ * import { GitHubError } from "@beep/scratchpad/effected/github/GitHubError";
+ *
+ * const error = GitHubError.alreadyExists("GitBranch.upsert", "Reference");
+ * console.log(error.message) // GitBranch.upsert failed (422): Reference already exists
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 	override get message(): string {
 		return this.status === undefined
 			? `${this.operation} failed: ${this.reason}`
@@ -152,24 +226,63 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
 	}
 
 	/**
-  * Whether retrying could plausibly succeed.
-  *
-  * **Details**
-  *
-  * Derived from `kind` rather than stored. A 404 or a
-  * validation rejection will fail identically on every attempt; only a
-  * transport failure or a rate limit can change its mind.
-  */
+ * Whether retrying could plausibly succeed.
+ *
+ * **Details**
+ *
+ * Derived from `kind` rather than stored. A 404 or a
+ * validation rejection will fail identically on every attempt; only a
+ * transport failure or a rate limit can change its mind.
+ *
+ * **Example** (Distinguish transient and permanent failures)
+ *
+ * ```ts
+ * import { GitHubError } from "@beep/scratchpad/effected/github/GitHubError";
+ *
+ * const transient = GitHubError.fromOctokit("GitBranch.get", new Error("Network unavailable"), 0);
+ * console.log(transient.retryable) // true
+ * console.log(GitHubError.notFound("GitBranch.get", "main").retryable) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 	get retryable(): boolean {
 		return this.kind === "transport" || this.kind === "rateLimited";
 	}
 
-	/** The requested thing is not there. */
+	/**
+ * The requested thing is not there.
+ *
+ * **Example** (Describe an absent branch)
+ *
+ * ```ts
+ * import { GitHubError } from "@beep/scratchpad/effected/github/GitHubError";
+ *
+ * console.log(GitHubError.notFound("GitBranch.get", "main").message) // GitBranch.get failed (404): main not found
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 	static notFound(operation: string, subject: string): GitHubError {
 		return GitHubError.make({ kind: "notFound", operation, reason: `${subject} not found`, status: 404 });
 	}
 
-	/** The thing you asked to create is already there. */
+	/**
+ * The thing you asked to create is already there.
+ *
+ * **Example** (Describe a duplicate branch)
+ *
+ * ```ts
+ * import { GitHubError } from "@beep/scratchpad/effected/github/GitHubError";
+ *
+ * console.log(GitHubError.alreadyExists("GitBranch.create", "main").kind) // alreadyExists
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 	static alreadyExists(operation: string, subject: string): GitHubError {
 		return GitHubError.make({
     kind: "alreadyExists",
@@ -179,12 +292,38 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
 });
 	}
 
-	/** GitHub understood the request and refused it. */
+	/**
+ * GitHub understood the request and refused it.
+ *
+ * **Example** (Describe a refused update)
+ *
+ * ```ts
+ * import { GitHubError } from "@beep/scratchpad/effected/github/GitHubError";
+ *
+ * console.log(GitHubError.rejected("GitBranch.update", 422, "Not a fast forward").retryable) // false
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 	static rejected(operation: string, status: number, reason: string): GitHubError {
 		return GitHubError.make({ kind: "rejected", operation, reason, status });
 	}
 
-	/** A response did not match the schema it was decoded against. */
+	/**
+ * A response did not match the schema it was decoded against.
+ *
+ * **Example** (Describe an invalid response)
+ *
+ * ```ts
+ * import { GitHubError } from "@beep/scratchpad/effected/github/GitHubError";
+ *
+ * console.log(GitHubError.decode("GitBranch.get", "Expected a ref").kind) // decode
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 	static decode(operation: string, reason: string, cause?: unknown): GitHubError {
 		return GitHubError.make({
 			kind: "decode",
@@ -195,20 +334,36 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
 	}
 
 	/**
-  * Classify anything octokit threw.
-  *
-  * **Details**
-  *
-  * The single classification step for the whole package — every resource
-  * method's failures come through here, so the taxonomy cannot drift between
-  * resources.
-  *
-  * `nowMillis` is passed in rather than read from the wall clock so the
-  * function stays pure and total: the rate-limit reset header is an absolute
-  * epoch second, and turning it into a delay needs a "now" the caller controls.
-  * The client supplies `Clock.currentTimeMillis`, which is the `TestClock`
-  * under test.
-  */
+ * Classify anything octokit threw.
+ *
+ * **Details**
+ *
+ * The single classification step for the whole package — every resource
+ * method's failures come through here, so the taxonomy cannot drift between
+ * resources.
+ *
+ * `nowMillis` is passed in rather than read from the wall clock so the
+ * function stays pure and total: the rate-limit reset header is an absolute
+ * epoch second, and turning it into a delay needs a "now" the caller controls.
+ * The client supplies `Clock.currentTimeMillis`, which is the `TestClock`
+ * under test.
+ *
+ * **Example** (Classify a server retry delay)
+ *
+ * ```ts
+ * import { GitHubError } from "@beep/scratchpad/effected/github/GitHubError";
+ *
+ * const error = GitHubError.fromOctokit("GitBranch.get", {
+ *   status: 429,
+ *   message: "Too many requests",
+ *   response: { headers: { "retry-after": "2" } },
+ * }, 0);
+ * console.log(error.retryAfterMillis) // 2000
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 	static fromOctokit(operation: string, error: unknown, nowMillis: number): GitHubError {
 		const facts = readThrowable(error);
 		const retryAfterMillis = retryAfterMillisFrom(facts.headers, nowMillis);
@@ -225,48 +380,58 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
 	}
 
 	/**
-  * A predicate over one or more kinds, for `Effect.catchIf`.
-  *
-  * **Example** (Recover from a missing resource with an empty string)
-  *
-  * ```ts
-  * import { GitHubError } from "./index.ts";
-  * import * as Effect from "effect/Effect";
-  *
-  * declare const read: Effect.Effect<string, GitHubError>;
-  *
-  * const orDefault = read.pipe(
-  *   Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeed("")),
-  * );
-  * ```
-  */
+ * A predicate over one or more kinds, for `Effect.catchIf`.
+ *
+ * **Example** (Recover from a missing resource with an empty string)
+ *
+ * ```ts
+ * import { GitHubError } from "@beep/scratchpad/effected/github/GitHubError";
+ * import * as Effect from "effect/Effect";
+ *
+ * const read = Effect.fail(GitHubError.notFound("GitBranch.get", "main"));
+ * const orDefault = read.pipe(
+ *   Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeed("")),
+ * );
+ * console.log(Effect.runSync(orDefault) === "") // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 	static hasKind(...kinds: ReadonlyArray<(typeof GitHubErrorKind.literals)[number]>): (error: GitHubError) => boolean {
 		const set = HashSet.fromIterable<string>(kinds);
 		return (error) => HashSet.has(set, error.kind);
 	}
 
 	/**
-  * A predicate over GitHub's validation codes, for `Effect.catchIf`.
-  *
-  * **Details**
-  *
-  * Matches when any entry in {@link GitHubError}'s `validation` carries one of
-  * the codes. Use it for the distinctions {@link GitHubErrorKind} deliberately
-  * does not draw, such as a `missing_field` against an `invalid`.
-  *
-  * **Example** (Ignore a missing resource validation error)
-  *
-  * ```ts
-  * import { GitHubError } from "./index.ts";
-  * import * as Effect from "effect/Effect";
-  *
-  * declare const create: Effect.Effect<void, GitHubError>;
-  *
-  * const tolerant = create.pipe(
-  *   Effect.catchIf(GitHubError.hasValidationCode("missing"), () => Effect.void),
-  * );
-  * ```
-  */
+ * A predicate over GitHub's validation codes, for `Effect.catchIf`.
+ *
+ * **Details**
+ *
+ * Matches when any entry in {@link GitHubError}'s `validation` carries one of
+ * the codes. Use it for the distinctions {@link GitHubErrorKind} deliberately
+ * does not draw, such as a `missing_field` against an `invalid`.
+ *
+ * **Example** (Ignore a missing resource validation error)
+ *
+ * ```ts
+ * import { GitHubError } from "@beep/scratchpad/effected/github/GitHubError";
+ * import { GitHubValidationEntry } from "@beep/scratchpad/effected/github/GitHubError";
+ * import * as Effect from "effect/Effect";
+ *
+ * const create = Effect.fail(GitHubError.make({
+ *   kind: "rejected", operation: "GitBranch.create", reason: "Commit is missing",
+ *   validation: [GitHubValidationEntry.make({ code: "missing", field: "sha" })],
+ * }));
+ * const tolerant = create.pipe(
+ *   Effect.catchIf(GitHubError.hasValidationCode("missing"), () => Effect.void),
+ * );
+ * console.log(Effect.runSync(tolerant)) // undefined
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 	static hasValidationCode(
 		...codes: ReadonlyArray<(typeof GitHubValidationCode.literals)[number]>
 	): (error: GitHubError) => boolean {
@@ -392,11 +557,16 @@ const classify = (
 };
 
 /**
+ * Recognizes duplicate-resource failures from structured validation codes or prose.
+ *
  * **Details**
  *
  * The structured code is the authority — the releases endpoint sends it with
  * no message at all. The prose checks cover endpoints that say so only in
  * words, such as `/git/refs` answering "Reference already exists".
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 const saysAlreadyExists = (facts: Throwable): boolean => {
 	if (facts.validation.some((entry) => entry.code === ALREADY_EXISTS_CODE)) return true;
@@ -409,7 +579,20 @@ const saysAlreadyExists = (facts: Throwable): boolean => {
  * Re-exported for the client, which reads the same headers on the **success**
  * path to keep its rate-limit snapshot current.
  *
+ * **Example** (Read a complete rate-limit snapshot)
+ *
+ * ```ts
+ * import { readRateLimitHeaders } from "@beep/scratchpad/effected/github/GitHubError";
+ *
+ * const snapshot = readRateLimitHeaders({
+ *   "x-ratelimit-remaining": "42", "x-ratelimit-limit": "5000", "x-ratelimit-reset": "100",
+ * });
+ * console.log(snapshot?.remaining) // 42
+ * ```
+ *
  * @internal
+ * @category parsing
+ * @since 0.0.0
  */
 export const readRateLimitHeaders = (
 	headers: Readonly<Record<string, unknown>> | undefined,
@@ -421,5 +604,23 @@ export const readRateLimitHeaders = (
 	return { remaining, limit, resetEpochSeconds: reset };
 };
 
-/** @internal */
+/**
+ * Reads a non-empty string response header, converting numeric values to strings.
+ *
+ * **Details**
+ *
+ * Absent headers, empty strings and values of other types return undefined.
+ *
+ * **Example** (Read a string response header)
+ *
+ * ```ts
+ * import { readHeaderString } from "@beep/scratchpad/effected/github/GitHubError";
+ *
+ * console.log(readHeaderString({ "retry-after": "2" }, "retry-after")) // 2
+ * ```
+ *
+ * @internal
+ * @category parsing
+ * @since 0.0.0
+ */
 export const readHeaderString = headerString;

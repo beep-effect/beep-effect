@@ -25,7 +25,21 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 /**
  * An issue, projected to what callers read.
  *
+ * **Example** (Construct a readable issue projection)
+ *
+ * ```ts
+ * import { IssueInfo } from "@beep/scratchpad/effected/github/GitHubIssue";
+ *
+ * const issue = IssueInfo.make({
+ *   number: 42, title: "Fix startup", state: "open", labels: ["bug"],
+ *   url: "https://github.com/acme/app/issues/42", nodeId: "I_42",
+ * });
+ * console.log(issue.state) // open
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class IssueInfo extends S.Class<IssueInfo>($I`IssueInfo`)({
 	number: S.Int.annotateKey({ description: "The issue's repository-local number, used to read, close and comment on it" }),
@@ -41,7 +55,21 @@ export class IssueInfo extends S.Class<IssueInfo>($I`IssueInfo`)({
 /**
  * An issue a pull request closes.
  *
+ * **Example** (Identify a manually linked issue)
+ *
+ * ```ts
+ * import { LinkedIssue } from "@beep/scratchpad/effected/github/GitHubIssue";
+ *
+ * const issue = LinkedIssue.make({
+ *   number: 42, title: "Fix startup", state: "OPEN", userLinked: true,
+ *   url: "https://github.com/acme/app/issues/42", nodeId: "I_42",
+ * });
+ * console.log(issue.userLinked) // true
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class LinkedIssue extends S.Class<LinkedIssue>($I`LinkedIssue`)({
 	number: S.Int.annotateKey({ description: "The repository-local number of an issue the pull request closes" }),
@@ -70,7 +98,22 @@ export class LinkedIssue extends S.Class<LinkedIssue>($I`LinkedIssue`)({
  * the comment, `false` means the marker was already on the issue and nothing
  * was posted. Either way `comment` is the marked comment itself.
  *
+ * **Example** (Inspect a skipped marked comment)
+ *
+ * ```ts
+ * import { CommentOnceResult } from "@beep/scratchpad/effected/github/GitHubIssue";
+ * import { CommentRecord } from "@beep/scratchpad/effected/github/PullRequestComment";
+ *
+ * const result = CommentOnceResult.make({
+ *   wrote: false,
+ *   comment: CommentRecord.make({ id: 7, body: "Already posted", url: "https://github.com/acme/app/issues/42#issuecomment-7" }),
+ * });
+ * console.log(result.wrote) // false
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class CommentOnceResult extends S.Class<CommentOnceResult>($I`CommentOnceResult`)({
 	/** Did this call post the comment (`true`), or find it already there (`false`)? */
@@ -150,6 +193,8 @@ const CrossReferencedDocument = GraphQLDocument.make({
  * request closes.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface GitHubIssueShape {
 	/** Read one issue. Fails `notFound` when it does not exist. */
@@ -238,7 +283,7 @@ export interface GitHubIssueShape {
  * **Example** (Comment on an issue and close it as not planned)
  *
  * ```ts
- * import { GitHubIssue } from "./index.ts";
+ * import { GitHubIssue } from "@beep/scratchpad/effected/github/GitHubIssue";
  * import * as Effect from "effect/Effect";
  *
  * const closeWontFix = (number: number) =>
@@ -247,18 +292,50 @@ export interface GitHubIssueShape {
  *     yield* issues.comment(number, "Closing as not planned.");
  *     yield* issues.close(number, "not_planned");
  *   });
+ * console.log(Effect.isEffect(closeWontFix(42))) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class GitHubIssue extends Context.Service<GitHubIssue, GitHubIssueShape>()($I`GitHubIssue`) {
-	/** The live service, built over a `GitHubClient`. */
+	/**
+ * The live service, built over a `GitHubClient`.
+ *
+ * **Example** (Inspect the live issue layer)
+ *
+ * ```ts
+ * import { GitHubIssue } from "@beep/scratchpad/effected/github/GitHubIssue";
+ * import * as Layer from "effect/Layer";
+ *
+ * console.log(Layer.isLayer(GitHubIssue.layer)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layer: Layer.Layer<GitHubIssue, never, GitHubClient> = Layer.effect(
 		this,
 		Effect.map(GitHubClient, (client) => make(client)),
 	);
 
-	/** An in-memory double; unstubbed members die naming themselves. */
+	/**
+ * An in-memory double; unstubbed members die naming themselves.
+ *
+ * **Example** (Stub issue closing without running it)
+ *
+ * ```ts
+ * import { GitHubIssue } from "@beep/scratchpad/effected/github/GitHubIssue";
+ * import * as Effect from "effect/Effect";
+ *
+ * const issues = GitHubIssue.makeTest({ close: () => Effect.void });
+ * console.log(Effect.isEffect(issues.close(42))) // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 	static readonly makeTest = (overrides: Partial<GitHubIssueShape> = {}): GitHubIssueShape => ({
 		get: overrides.get ?? (() => unstubbed("get")),
 		list: overrides.list ?? (() => unstubbed("list")),
@@ -269,7 +346,25 @@ export class GitHubIssue extends Context.Service<GitHubIssue, GitHubIssueShape>(
 		isCrossReferencedBy: overrides.isCrossReferencedBy ?? (() => unstubbed("isCrossReferencedBy")),
 	});
 
-	/** {@link GitHubIssue.makeTest} behind a `Layer`. */
+	/**
+ * {@link GitHubIssue.makeTest} behind a `Layer`.
+ *
+ * **Example** (Provide a test service to an issue program)
+ *
+ * ```ts
+ * import { GitHubIssue } from "@beep/scratchpad/effected/github/GitHubIssue";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = Effect.gen(function* () {
+ *   const issues = yield* GitHubIssue;
+ *   return Effect.isEffect(issues.close(42));
+ * }).pipe(Effect.provide(GitHubIssue.layerTest({ close: () => Effect.void })));
+ * console.log(Effect.runSync(program)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layerTest = (overrides: Partial<GitHubIssueShape> = {}): Layer.Layer<GitHubIssue> =>
 		Layer.succeed(GitHubIssue, GitHubIssue.makeTest(overrides));
 }

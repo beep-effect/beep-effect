@@ -25,7 +25,19 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
  * the organization**, and they are indistinguishable from the repository's own
  * without it.
  *
+ * **Example** (Preserve inherited ruleset ownership)
+ *
+ * ```ts
+ * import { RulesetInfo } from "@beep/scratchpad/effected/github/Ruleset";
+ * import * as S from "effect/Schema";
+ *
+ * const ruleset = S.decodeUnknownSync(RulesetInfo)({ id: 1, name: "main", source_type: "Organization" });
+ * console.log(ruleset.source_type) // Organization
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const RulesetInfo = S.Struct({
   id: S.Finite.annotateKey({ description: "The ruleset's numeric id." }),
@@ -33,7 +45,12 @@ export const RulesetInfo = S.Struct({
   source_type: S.optional(S.String).annotateKey({ description: "Repository for an owned ruleset, Organization for an inherited ruleset; absent when GitHub omits it." }),
 }).pipe($I.annoteSchema("RulesetInfo", { description: "A plain-object ruleset listing, including its ownership source." }));
 
-/** The plain-object ruleset listing fields. */
+/**
+ * The plain-object ruleset listing fields.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RulesetInfo = typeof RulesetInfo.Type;
 
 /**
@@ -46,12 +63,13 @@ export type RulesetInfo = typeof RulesetInfo.Type;
  *
  * **Example** (Protect matching branches)
  * ```ts
- * import { RulesetPayload } from "./Ruleset.ts";
+ * import { RulesetPayload } from "@beep/scratchpad/effected/github/Ruleset";
  *
  * const payload = RulesetPayload.make({
  *   name: "main", target: "branch", enforcement: "active",
  *   rules: [{ type: "deletion" }],
  * });
+ * console.log(payload.name) // main
  * ```
  *
  * @category schemas
@@ -66,7 +84,12 @@ export const RulesetPayload = S.Struct({
   bypass_actors: S.optionalKey(S.Unknown).annotateKey({ description: "Actors allowed to bypass the ruleset, passed to GitHub as given." }),
 }).pipe($I.annoteSchema("RulesetPayload", { description: "An open repository ruleset body accepted by both create and update routes." }));
 
-/** The open repository ruleset write fields. @category type-level @since 0.0.0 */
+/**
+ * The open repository ruleset write fields.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RulesetPayload = typeof RulesetPayload.Type;
 
 /**
@@ -74,6 +97,8 @@ export type RulesetPayload = typeof RulesetPayload.Type;
  * and role ids their bypass actors need.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface RulesetShape {
   /**
@@ -129,7 +154,7 @@ export interface RulesetShape {
  * **Example** (Protect the default branch against deletion)
  *
  * ```ts
- * import { Ruleset } from "./index.ts";
+ * import { Ruleset } from "@beep/scratchpad/effected/github/Ruleset";
  * import * as Effect from "effect/Effect";
  *
  * const protectMain = Effect.gen(function* () {
@@ -142,9 +167,12 @@ export interface RulesetShape {
  *     rules: [{ type: "deletion" }],
  *   });
  * });
+ * console.log(Effect.isEffect(protectMain)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class Ruleset extends Context.Service<Ruleset, RulesetShape>()($I`Ruleset`) {
   /**
@@ -155,13 +183,40 @@ export class Ruleset extends Context.Service<Ruleset, RulesetShape>()($I`Ruleset
    * `(client) => make(client)` rather than `make`: a static initializer runs
    * while the module body is still evaluating, so naming a `const` declared
    * further down throws at import time with a clean typecheck.
+   *
+   * **Example** (Construct the live ruleset layer)
+   *
+   * ```ts
+   * import { Ruleset } from "@beep/scratchpad/effected/github/Ruleset";
+   * import * as Layer from "effect/Layer";
+   *
+   * console.log(Layer.isLayer(Ruleset.layer)) // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
    */
   static readonly layer: Layer.Layer<Ruleset, never, GitHubClient> = Layer.effect(
     this,
     Effect.map(GitHubClient, (client) => make(client)),
   );
 
-  /** An in-memory double; unstubbed members die naming themselves. */
+  /**
+   * An in-memory double; unstubbed members die naming themselves.
+   *
+   * **Example** (Stub a team lookup)
+   *
+   * ```ts
+   * import { Ruleset } from "@beep/scratchpad/effected/github/Ruleset";
+   * import * as Effect from "effect/Effect";
+   *
+   * const rulesets = Ruleset.makeTest({ teamId: () => Effect.succeed(42) });
+   * console.log(Effect.isEffect(rulesets.teamId("maintainers"))) // true
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
   static readonly makeTest = (overrides: Partial<RulesetShape> = {}): RulesetShape => ({
     upsert: overrides.upsert ?? (() => unstubbed("upsert")),
     list: overrides.list ?? (Effect.suspend(() => unstubbed("list"))),
@@ -170,7 +225,24 @@ export class Ruleset extends Context.Service<Ruleset, RulesetShape>()($I`Ruleset
     roleId: overrides.roleId ?? (() => unstubbed("roleId")),
   });
 
-  /** {@link Ruleset.makeTest} behind a `Layer`. */
+  /**
+   * {@link Ruleset.makeTest} behind a `Layer`.
+   *
+   * **Example** (Provide a ruleset double)
+   *
+   * ```ts
+   * import { Ruleset } from "@beep/scratchpad/effected/github/Ruleset";
+   * import * as Effect from "effect/Effect";
+   *
+   * const program = Effect.flatMap(Ruleset, (rulesets) => rulesets.roleId("admin")).pipe(
+   *   Effect.provide(Ruleset.layerTest({ roleId: () => Effect.succeed(7) })),
+   * );
+   * console.log(Effect.isEffect(program)) // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
   static readonly layerTest = (overrides: Partial<RulesetShape> = {}): Layer.Layer<Ruleset> =>
     Layer.succeed(Ruleset, Ruleset.makeTest(overrides));
 }

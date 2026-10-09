@@ -22,7 +22,25 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 /**
  * A commit, projected to what callers read.
  *
+
+ * **Example** (Read a commit subject)
+ *
+ * ```ts
+ * import { CommitSummary } from "@beep/scratchpad/effected/github/GitHubCommit";
+ *
+ * const commit = CommitSummary.make({
+ *   sha: "abc123",
+ *   message: "Fix parser\n\nPreserve empty input.",
+ *   author: "Ada",
+ *   url: "https://github.com/acme/project/commit/abc123",
+ *   parents: ["def456"],
+ * });
+ * console.log(commit.subject); // Fix parser
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class CommitSummary extends S.Class<CommitSummary>($I`CommitSummary`)({
 	/** The commit sha. */
@@ -46,7 +64,28 @@ export class CommitSummary extends S.Class<CommitSummary>($I`CommitSummary`)({
   */
 	parents: S.Array(S.String).annotateKey({ description: "The parent commit shas, in the order GitHub lists them." }),
 }, $I.annote("CommitSummary", { description: "A commit, projected to what callers read." })) {
-	/** The message's first line. */
+	/**
+ * The message's first line.
+ *
+
+ * **Example** (Extract the first message line)
+ *
+ * ```ts
+ * import { CommitSummary } from "@beep/scratchpad/effected/github/GitHubCommit";
+ *
+ * const commit = CommitSummary.make({
+ *   sha: "abc123",
+ *   message: "Fix parser\n\nPreserve empty input.",
+ *   author: "Ada",
+ *   url: "https://github.com/acme/project/commit/abc123",
+ *   parents: ["def456"],
+ * });
+ * console.log(commit.subject); // Fix parser
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
 	get subject(): string {
 		return this.message.split("\n", 1)[0] ?? "";
 	}
@@ -55,7 +94,19 @@ export class CommitSummary extends S.Class<CommitSummary>($I`CommitSummary`)({
 /**
  * How a file changed in a commit or a comparison.
  *
+
+ * **Example** (Validate a renamed file status)
+ *
+ * ```ts
+ * import { FileStatus } from "@beep/scratchpad/effected/github/GitHubCommit";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(FileStatus)("renamed")); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const FileStatus = LiteralKit([
 	"added",
@@ -67,13 +118,37 @@ export const FileStatus = LiteralKit([
 	"unchanged",
 ]).pipe($I.annoteSchema("FileStatus", { description: "How a file changed in a commit or a comparison." }));
 
-/** The values accepted by {@link FileStatus}. @public */
+/**
+ * The values accepted by {@link FileStatus}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
 export type FileStatus = typeof FileStatus.Type;
 
 /**
  * One changed file.
  *
+
+ * **Example** (Inspect the path before a rename)
+ *
+ * ```ts
+ * import { CommitFile } from "@beep/scratchpad/effected/github/GitHubCommit";
+ *
+ * const file = CommitFile.make({
+ *   path: "src/new.ts",
+ *   status: "renamed",
+ *   additions: 2,
+ *   deletions: 1,
+ *   previousPath: "src/old.ts",
+ * });
+ * console.log(file.previousPath); // src/old.ts
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class CommitFile extends S.Class<CommitFile>($I`CommitFile`)({
 	/** Repository-relative path, after any rename. */
@@ -91,7 +166,25 @@ export class CommitFile extends S.Class<CommitFile>($I`CommitFile`)({
 /**
  * The result of comparing two refs.
  *
+
+ * **Example** (Inspect commits ahead of base)
+ *
+ * ```ts
+ * import { CommitComparison } from "@beep/scratchpad/effected/github/GitHubCommit";
+ *
+ * const comparison = CommitComparison.make({
+ *   status: "ahead",
+ *   aheadBy: 1,
+ *   behindBy: 0,
+ *   commits: [],
+ *   files: [],
+ * });
+ * console.log(comparison.aheadBy); // 1
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class CommitComparison extends S.Class<CommitComparison>($I`CommitComparison`)({
 	/** How head relates to base. */
@@ -110,6 +203,8 @@ export class CommitComparison extends S.Class<CommitComparison>($I`CommitCompari
  * Read commits, list them, compare two refs and list the files a commit touched.
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export interface GitHubCommitShape {
 	/** Read one commit by sha or ref. */
@@ -152,26 +247,64 @@ export interface GitHubCommitShape {
  * **Example** (List changed file paths between main and feature)
  *
  * ```ts
- * import { GitHubCommit } from "./index.ts";
+ * import { GitHubCommit } from "@beep/scratchpad/effected/github/GitHubCommit";
  * import * as Effect from "effect/Effect";
+ * import * as A from "effect/Array";
  *
  * const changedSinceMain = Effect.gen(function* () {
  *   const commits = yield* GitHubCommit;
  *   const comparison = yield* commits.compare("main", "feature");
- *   return comparison.files.map((file) => file.path);
+ *   return A.map(comparison.files, (file) => file.path);
  * });
+ * console.log(Effect.isEffect(changedSinceMain)); // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class GitHubCommit extends Context.Service<GitHubCommit, GitHubCommitShape>()($I`GitHubCommit`) {
-	/** The live service, built over a `GitHubClient`. */
+	/**
+ * The live service, built over a `GitHubClient`.
+ *
+
+ * **Example** (Construct a commit read with the live layer)
+ *
+ * ```ts
+ * import { GitHubCommit } from "@beep/scratchpad/effected/github/GitHubCommit";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = Effect.flatMap(GitHubCommit, (commits) => commits.get("main")).pipe(
+ *   Effect.provide(GitHubCommit.layer),
+ * );
+ * console.log(Effect.isEffect(program)); // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layer: Layer.Layer<GitHubCommit, never, GitHubClient> = Layer.effect(
 		this,
 		Effect.map(GitHubClient, (client) => make(client)),
 	);
 
-	/** An in-memory double; unstubbed members die naming themselves. */
+	/**
+ * An in-memory double; unstubbed members die naming themselves.
+ *
+
+ * **Example** (Override the commit listing)
+ *
+ * ```ts
+ * import { GitHubCommit } from "@beep/scratchpad/effected/github/GitHubCommit";
+ * import * as Effect from "effect/Effect";
+ *
+ * const commits = GitHubCommit.makeTest({ list: () => Effect.succeed([]) });
+ * console.log(Effect.isEffect(commits.list())); // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 	static readonly makeTest = (overrides: Partial<GitHubCommitShape> = {}): GitHubCommitShape => ({
 		get: overrides.get ?? (() => unstubbed("get")),
 		list: overrides.list ?? (() => unstubbed("list")),
@@ -179,7 +312,25 @@ export class GitHubCommit extends Context.Service<GitHubCommit, GitHubCommitShap
 		changedFiles: overrides.changedFiles ?? (() => unstubbed("changedFiles")),
 	});
 
-	/** {@link GitHubCommit.makeTest} behind a `Layer`. */
+	/**
+ * {@link GitHubCommit.makeTest} behind a `Layer`.
+ *
+
+ * **Example** (Provide a commit test layer)
+ *
+ * ```ts
+ * import { GitHubCommit } from "@beep/scratchpad/effected/github/GitHubCommit";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = Effect.map(GitHubCommit, () => "ready").pipe(
+ *   Effect.provide(GitHubCommit.layerTest()),
+ * );
+ * console.log(Effect.runSync(program)); // ready
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 	static readonly layerTest = (overrides: Partial<GitHubCommitShape> = {}): Layer.Layer<GitHubCommit> =>
 		Layer.succeed(GitHubCommit, GitHubCommit.makeTest(overrides));
 }
@@ -220,6 +371,9 @@ const summarize = (raw: RawCommit): CommitSummary =>
  * projection reads. Exported for `PullRequest.listFiles`, whose files endpoint
  * answers with the same wire shape; not re-exported from the package
  * entrypoint.
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface RawFile {
 	readonly filename: string;
@@ -232,6 +386,25 @@ export interface RawFile {
 /**
  * Project a `diff-entry` to a {@link CommitFile}. Shared with
  * `PullRequest.listFiles`; not re-exported from the package entrypoint.
+ *
+
+ * **Example** (Project a GitHub diff entry)
+ *
+ * ```ts
+ * import { fileOf } from "@beep/scratchpad/effected/github/GitHubCommit";
+ * import * as Effect from "effect/Effect";
+ *
+ * const file = Effect.runSync(fileOf({
+ *   filename: "src/parser.ts",
+ *   status: "modified",
+ *   additions: 3,
+ *   deletions: 1,
+ * }, "example"));
+ * console.log(file.path); // src/parser.ts
+ * ```
+ *
+ * @category mapping
+ * @since 0.0.0
  */
 export const fileOf = Effect.fn("GitHubCommit.fileOf")(function* (raw: RawFile, operation: string) {
 	return yield* S.decodeUnknownEffect(CommitFile)({

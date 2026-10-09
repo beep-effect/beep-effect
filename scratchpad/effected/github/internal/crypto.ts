@@ -43,7 +43,7 @@ const utf8 = new TextEncoder();
  * decrypt, which is a silent failure that surfaces as a workflow reading a
  * corrupt secret rather than as an error here.
  *
- * ## Nothing here is Node-specific
+ * Nothing here is Node-specific.
  *
  * Base64 goes through core's `Base64` and text through `TextEncoder`, so this
  * module imports **no builtin**. That is deliberate: an earlier draft used
@@ -55,11 +55,36 @@ const utf8 = new TextEncoder();
  * A malformed `publicKey` fails as a typed `Result` rather than throwing:
  * garbage from the API is input, and input failures are typed.
  *
+ * **Example** (Reject a public key of the wrong length)
+ *
+ * ```ts
+ * import { encryptSecret } from "@beep/scratchpad/effected/github/internal/crypto";
+ * import * as Result from "effect/Result";
+ *
+ * console.log(Result.isFailure(encryptSecret("AA==", "secret"))); // true
+ * ```
+ *
+ * **Example** (Seal a secret for a recipient key)
+ *
+ * ```ts
+ * import { encryptSecret } from "@beep/scratchpad/effected/github/internal/crypto";
+ * import * as Base64 from "effect/encoding/Base64";
+ * import * as Result from "effect/Result";
+ * import nacl from "tweetnacl";
+ *
+ * const recipient = nacl.box.keyPair();
+ * const sealed = Result.getOrThrow(encryptSecret(Base64.encode(recipient.publicKey), "secret"));
+ * const bytes = Result.getOrThrow(Base64.decode(sealed));
+ * console.log(bytes.length); // 54
+ * ```
+ *
  * @param publicKey - The repository, environment or organization public key,
  * base64, as returned by GitHub's `.../secrets/public-key` endpoints.
  * @param secretValue - The plaintext to seal.
  * @returns The sealed box, base64, ready to send as `encrypted_value`.
  * @internal
+ * @category encoding
+ * @since 0.0.0
  */
 export const encryptSecret: {
 	(publicKey: string, secretValue: string): Result.Result<string, EncodingError.EncodingError>;

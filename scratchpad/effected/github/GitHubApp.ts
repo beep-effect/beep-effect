@@ -38,7 +38,18 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
  * misconfigured app, a wrong private key or a missing installation; the second
  * is the request that used the credentials.
  *
+ * **Example** (Describe a credential failure)
+ *
+ * ```ts
+ * import { GitHubAppError } from "@beep/scratchpad/effected/github/GitHubApp";
+ *
+ * const error = GitHubAppError.make({ kind: "jwt", reason: "invalid key" });
+ * console.log(error.message) // GitHub App jwt failed: invalid key
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class GitHubAppError extends S.TaggedError<GitHubAppError>($I`GitHubAppError`)("GitHubAppError", {
 	/** Which step failed. */
@@ -48,11 +59,39 @@ export class GitHubAppError extends S.TaggedError<GitHubAppError>($I`GitHubAppEr
 	/** The underlying failure, when there is one. */
 	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, when there is one." }),
 }, $I.annote("GitHubAppError", { description: "A GitHub App call failed." })) {
+	/**
+	 * Formats the failed authentication step and its human-readable cause.
+	 *
+	 * **Example** (Read the formatted app failure)
+	 *
+	 * ```ts
+	 * import { GitHubAppError } from "@beep/scratchpad/effected/github/GitHubApp";
+	 *
+	 * console.log(GitHubAppError.make({ kind: "jwt", reason: "invalid key" }).message) // GitHub App jwt failed: invalid key
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `GitHub App ${this.kind} failed: ${this.reason}`;
 	}
 
-	/** @internal */
+	/**
+	 * Constructs a failure for a specific GitHub App authentication step.
+	 *
+	 * **Example** (Construct an app failure)
+	 *
+	 * ```ts
+	 * import { GitHubAppError } from "@beep/scratchpad/effected/github/GitHubApp";
+	 *
+	 * console.log(GitHubAppError.of("token", "missing installation").kind) // token
+	 * ```
+	 *
+	 * @internal
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static of(kind: GitHubAppError["kind"], reason: string, cause?: unknown): GitHubAppError {
 		return GitHubAppError.make({ kind, reason, ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }) });
 	}
@@ -67,6 +106,8 @@ export class GitHubAppError extends S.TaggedError<GitHubAppError>($I`GitHubAppEr
  * accepts both as the JWT issuer, and this package does not care which you use.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface AppCredentials {
 	/** The app id or client id. */
@@ -90,6 +131,8 @@ export interface AppCredentials {
  * What to mint an installation token for.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface TokenRequest extends AppCredentials {
 	/** The installation. Discovered from `owner` when omitted. */
@@ -119,7 +162,22 @@ export interface TokenRequest extends AppCredentials {
  * by design, so masking the encoded value is the caller's job — Actions calls
  * `::add-mask::`.
  *
+ * **Example** (Decode installation metadata)
+ *
+ * ```ts
+ * import { InstallationToken } from "@beep/scratchpad/effected/github/GitHubApp";
+ * import * as S from "effect/Schema";
+ *
+ * const token = S.decodeUnknownSync(InstallationToken)({
+ *   token: "example-token", expiresAt: "2030-01-01T00:00:00.000Z",
+ *   installationId: 42, permissions: {}, appSlug: "my-app",
+ * });
+ * console.log(token.installationId) // 42
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export class InstallationToken extends S.Class<InstallationToken>($I`InstallationToken`)({
 	/** The token. Decodes to `Redacted`, encodes back to the raw string. */
@@ -138,18 +196,52 @@ export class InstallationToken extends S.Class<InstallationToken>($I`Installatio
 	appName: S.optionalKey(S.String).annotateKey({ description: "The app's display name, when identity was resolved." }),
 }, $I.annote("InstallationToken", { description: "An installation access token and what GitHub said about it." })) {
 	/**
-  * Whether this token is spent, `skew` before its stated expiry.
-  *
-  * **Details**
-  *
-  * `skew` defaults to one minute, so a token is treated as spent slightly early
-  * rather than answering 401 mid-request.
-  */
+	 * Whether this token is spent, `skew` before its stated expiry.
+	 *
+	 * **Details**
+	 *
+	 * `skew` defaults to one minute, so a token is treated as spent slightly early
+	 * rather than answering 401 mid-request.
+	 *
+	 * **Example** (Check the default expiry margin)
+	 *
+	 * ```ts
+	 * import { InstallationToken } from "@beep/scratchpad/effected/github/GitHubApp";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const token = S.decodeUnknownSync(InstallationToken)({
+	 *   token: "example-token", expiresAt: "2030-01-01T00:00:00.000Z",
+	 *   installationId: 42, permissions: {}, appSlug: "my-app",
+	 * });
+	 * console.log(token.isExpired(Date.parse("2029-12-31T23:59:00.000Z"))) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
 	isExpired(nowMillis: number, skew: Duration.Duration = DEFAULT_SKEW): boolean {
 		return DateTime.toEpochMillis(this.expiresAt) - Duration.toMillis(skew) <= nowMillis;
 	}
 
-	/** The committer identity a commit made with this token should carry. */
+	/**
+	 * The committer identity a commit made with this token should carry.
+	 *
+	 * **Example** (Derive the token committer)
+	 *
+	 * ```ts
+	 * import { InstallationToken } from "@beep/scratchpad/effected/github/GitHubApp";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const token = S.decodeUnknownSync(InstallationToken)({
+	 *   token: "example-token", expiresAt: "2030-01-01T00:00:00.000Z",
+	 *   installationId: 42, permissions: {}, appSlug: "my-app",
+	 * });
+	 * console.log(token.botIdentity().name) // my-app[bot]
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	botIdentity(): BotIdentity {
 		return this.appSlug === undefined
 			? BotIdentity.githubActions
@@ -173,7 +265,17 @@ const DEFAULT_SKEW = Duration.seconds(60);
  * degrade every partial double to a full implementation. Get one from
  * `InstallationToken.botIdentity` or `AppIdentity.botIdentity`.
  *
+ * **Example** (Identify the Actions bot)
+ *
+ * ```ts
+ * import { BotIdentity } from "@beep/scratchpad/effected/github/GitHubApp";
+ *
+ * console.log(BotIdentity.githubActions.name) // github-actions[bot]
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export class BotIdentity extends S.Class<BotIdentity>($I`BotIdentity`)({
 	/** The git author/committer name, e.g. `"my-app[bot]"`. */
@@ -181,7 +283,20 @@ export class BotIdentity extends S.Class<BotIdentity>($I`BotIdentity`)({
 	/** The no-reply address GitHub attributes to that account. */
 	email: S.String.annotateKey({ description: "The no-reply address GitHub attributes to that account." }),
 }, $I.annote("BotIdentity", { description: "Who a bot commits as." })) {
-	/** The identity for an app, given whatever of its identity is known. */
+	/**
+	 * The identity for an app, given whatever of its identity is known.
+	 *
+	 * **Example** (Build an app bot address)
+	 *
+	 * ```ts
+	 * import { BotIdentity } from "@beep/scratchpad/effected/github/GitHubApp";
+	 *
+	 * console.log(BotIdentity.forApp({ appSlug: "my-app", appUserId: 123 }).email) // 123+my-app[bot]@users.noreply.github.com
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static forApp(source: { readonly appSlug: string; readonly appUserId?: number | undefined }): BotIdentity {
 		const name = `${source.appSlug}[bot]`;
 		return BotIdentity.make({
@@ -193,26 +308,50 @@ export class BotIdentity extends S.Class<BotIdentity>($I`BotIdentity`)({
 		});
 	}
 
-	/** The well-known identity of the `github-actions` bot. */
+	/**
+	 * The well-known identity of the `github-actions` bot.
+	 *
+	 * **Example** (Read the Actions bot email)
+	 *
+	 * ```ts
+	 * import { BotIdentity } from "@beep/scratchpad/effected/github/GitHubApp";
+	 *
+	 * console.log(BotIdentity.githubActions.email) // 41898282+github-actions[bot]@users.noreply.github.com
+	 * ```
+	 *
+	 * @category constants
+	 * @since 0.0.0
+	 */
 	static readonly githubActions: BotIdentity = BotIdentity.make({
 		name: "github-actions[bot]",
 		email: "41898282+github-actions[bot]@users.noreply.github.com",
 	});
 
 	/**
-  * The DCO sign-off trailer for this identity.
-  *
-  * **Details**
-  *
-  * `Signed-off-by: name <email>` — DCO 1.1's fixed casing and spacing, with
-  * only the email in angle brackets, rendered by the type that owns the
-  * data. Commits created
-  * through the Git Data API bypass `git commit -s`, so no porcelain adds
-  * the trailer, and a hand-built one that is subtly wrong fails late as a
-  * red DCO check on someone else's pull request. Whether a missing
-  * identity falls back to {@link BotIdentity.githubActions} stays the
-  * caller's policy.
-  */
+	 * The DCO sign-off trailer for this identity.
+	 *
+	 * **Details**
+	 *
+	 * `Signed-off-by: name <email>` — DCO 1.1's fixed casing and spacing, with
+	 * only the email in angle brackets, rendered by the type that owns the
+	 * data. Commits created
+	 * through the Git Data API bypass `git commit -s`, so no porcelain adds
+	 * the trailer, and a hand-built one that is subtly wrong fails late as a
+	 * red DCO check on someone else's pull request. Whether a missing
+	 * identity falls back to {@link BotIdentity.githubActions} stays the
+	 * caller's policy.
+	 *
+	 * **Example** (Render a DCO trailer)
+	 *
+	 * ```ts
+	 * import { BotIdentity } from "@beep/scratchpad/effected/github/GitHubApp";
+	 *
+	 * console.log(BotIdentity.forApp({ appSlug: "my-app" }).signoff) // Signed-off-by: my-app[bot] <my-app[bot]@users.noreply.github.com>
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	get signoff(): string {
 		return `Signed-off-by: ${this.name} <${this.email}>`;
 	}
@@ -221,7 +360,18 @@ export class BotIdentity extends S.Class<BotIdentity>($I`BotIdentity`)({
 /**
  * What GitHub knows about the app itself.
  *
+ * **Example** (Construct app identity metadata)
+ *
+ * ```ts
+ * import { AppIdentity } from "@beep/scratchpad/effected/github/GitHubApp";
+ *
+ * const app = AppIdentity.make({ slug: "my-app", name: "My App" });
+ * console.log(app.slug) // my-app
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export class AppIdentity extends S.Class<AppIdentity>($I`AppIdentity`)({
 	/** The URL slug, e.g. `"my-app"`. */
@@ -231,7 +381,21 @@ export class AppIdentity extends S.Class<AppIdentity>($I`AppIdentity`)({
 	/** The bot user's numeric id, when it could be resolved. */
 	userId: S.optionalKey(S.Int).annotateKey({ description: "The bot user's numeric id, when it could be resolved." }),
 }, $I.annote("AppIdentity", { description: "What GitHub knows about the app itself." })) {
-	/** The committer identity for this app. */
+	/**
+	 * The committer identity for this app.
+	 *
+	 * **Example** (Derive the app committer name)
+	 *
+	 * ```ts
+	 * import { AppIdentity } from "@beep/scratchpad/effected/github/GitHubApp";
+	 *
+	 * const app = AppIdentity.make({ slug: "my-app", name: "My App" });
+	 * console.log(app.botIdentity().name) // my-app[bot]
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	botIdentity(): BotIdentity {
 		return BotIdentity.forApp({
 			appSlug: this.slug,
@@ -243,7 +407,17 @@ export class AppIdentity extends S.Class<AppIdentity>($I`AppIdentity`)({
 /**
  * One installation of the app.
  *
+ * **Example** (Identify an installation)
+ *
+ * ```ts
+ * import { Installation } from "@beep/scratchpad/effected/github/GitHubApp";
+ *
+ * console.log(Installation.make({ id: 42, account: "my-org" }).account) // my-org
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export class Installation extends S.Class<Installation>($I`Installation`)({
 	/** The installation id, which is what a token is minted against. */
@@ -256,6 +430,8 @@ export class Installation extends S.Class<Installation>($I`Installation`)({
  * Transport settings for the app's own API calls.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface GitHubAppOptions {
 	/** A GitHub Enterprise API root. */
@@ -291,7 +467,8 @@ export interface GitHubAppOptions {
  * **Example** (Count repositories accessible to an app installation)
  *
  * ```ts
- * import { GitHubApp, GitHubClient } from "./index.ts";
+ * import { GitHubApp } from "@beep/scratchpad/effected/github/GitHubApp";
+ * import { GitHubClient } from "@beep/scratchpad/effected/github/GitHubClient";
  * import * as Effect from "effect/Effect";
  * import * as Redacted from "effect/Redacted";
  *
@@ -308,46 +485,94 @@ export interface GitHubAppOptions {
  *   owner: "my-org",
  * });
  *
- * Effect.runPromise(Effect.provide(program, layer));
+ * console.log(Effect.isEffect(Effect.provide(program, layer))) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class GitHubApp extends Context.Service<GitHubApp, GitHubAppShape>()($I`GitHubApp`) {
-	/** The default transport. Bind it once; layers are memoized by reference. */
+	/**
+	 * The default transport. Bind it once; layers are memoized by reference.
+	 *
+	 * **Example** (Reuse the default app transport)
+	 *
+	 * ```ts
+	 * import { GitHubApp } from "@beep/scratchpad/effected/github/GitHubApp";
+	 *
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(GitHubApp.layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<GitHubApp> = Layer.effect(this, makeApp({}));
 
 	/**
-  * A transport with custom settings.
-  *
-  * **Gotchas**
-  *
-  * Parameterized, so **bind the result to a `const`** and reuse it. Calling
-  * this at two provide sites builds two instances, because layers are
-  * memoized by reference.
-  */
+	 * A transport with custom settings.
+	 *
+	 * **Gotchas**
+	 *
+	 * Parameterized, so **bind the result to a `const`** and reuse it. Calling
+	 * this at two provide sites builds two instances, because layers are
+	 * memoized by reference.
+	 *
+	 * **Example** (Bind a custom app transport)
+	 *
+	 * ```ts
+	 * import { GitHubApp } from "@beep/scratchpad/effected/github/GitHubApp";
+	 *
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * const layer = GitHubApp.layerWith({ retry: "off" });
+	 * console.log(Layer.isLayer(layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerWith = (options: GitHubAppOptions): Layer.Layer<GitHubApp> =>
 		Layer.effect(GitHubApp, makeApp(options));
 
 	/**
-  * A {@link GitHubClient} authenticated as an app installation.
-  *
-  * **Details**
-  *
-  * The token's lifetime is the layer's scope: it is minted on build and
-  * **revoked on release**, best-effort, so a workflow does not leave live
-  * credentials behind. It is also **re-minted automatically** a minute before
-  * it expires, so a long-running program does not start answering 401 when
-  * the hour ends.
-  *
-  * Building the layer mints the first token, so a misconfigured app fails
-  * construction with `GitHubAppError`. After that, a failure to obtain
-  * credentials surfaces to the caller as a
-  * `GitHubError { kind: "unauthorized" }` carrying the `GitHubAppError` as its
-  * cause: from a request's point of view, "could not authenticate" is an
-  * authorization failure, and widening every method's error channel to say so
-  * would tax every caller for a case only this layer can produce.
-  */
+	 * A {@link GitHubClient} authenticated as an app installation.
+	 *
+	 * **Details**
+	 *
+	 * The token's lifetime is the layer's scope: it is minted on build and
+	 * **revoked on release**, best-effort, so a workflow does not leave live
+	 * credentials behind. It is also **re-minted automatically** a minute before
+	 * it expires, so a long-running program does not start answering 401 when
+	 * the hour ends.
+	 *
+	 * Building the layer mints the first token, so a misconfigured app fails
+	 * construction with `GitHubAppError`. After that, a failure to obtain
+	 * credentials surfaces to the caller as a
+	 * `GitHubError { kind: "unauthorized" }` carrying the `GitHubAppError` as its
+	 * cause: from a request's point of view, "could not authenticate" is an
+	 * authorization failure, and widening every method's error channel to say so
+	 * would tax every caller for a case only this layer can produce.
+	 *
+	 * **Example** (Construct an installation client layer)
+	 *
+	 * ```ts
+	 * import { GitHubApp } from "@beep/scratchpad/effected/github/GitHubApp";
+	 *
+	 * import * as Layer from "effect/Layer";
+	 * import * as Redacted from "effect/Redacted";
+	 *
+	 * const layer = GitHubApp.clientLayer({
+	 *   appId: "12345", privateKey: Redacted.make("example PEM"), installationId: 42,
+	 * });
+	 * console.log(Layer.isLayer(layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly clientLayer = (
 		request: TokenRequest,
 		options: GitHubAppOptions = {},
@@ -357,7 +582,25 @@ export class GitHubApp extends Context.Service<GitHubApp, GitHubAppShape>()($I`G
 			Effect.flatMap(GitHubApp, (app) => makeRotatingClient(app, request, options)),
 		).pipe(Layer.provide(GitHubApp.layerWith(options)));
 
-	/** An in-memory double; unstubbed members die naming themselves. */
+	/**
+	 * An in-memory double; unstubbed members die naming themselves.
+	 *
+	 * **Example** (Stub installation discovery)
+	 *
+	 * ```ts
+	 * import { GitHubApp } from "@beep/scratchpad/effected/github/GitHubApp";
+	 *
+	 * import * as Effect from "effect/Effect";
+	 * import * as Redacted from "effect/Redacted";
+	 *
+	 * const app = GitHubApp.makeTest({ installations: () => Effect.succeed([]) });
+	 * const program = app.installations({ appId: "12345", privateKey: Redacted.make("test-key") });
+	 * console.log(Effect.runSync(program).length) // 0
+	 * ```
+	 *
+	 * @category testing
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<GitHubAppShape> = {}): GitHubAppShape => ({
 		token: overrides.token ?? (() => unstubbed("token")),
 		scopedToken: overrides.scopedToken ?? (() => unstubbed("scopedToken")),
@@ -366,7 +609,22 @@ export class GitHubApp extends Context.Service<GitHubApp, GitHubAppShape>()($I`G
 		installations: overrides.installations ?? (() => unstubbed("installations")),
 	});
 
-	/** {@link GitHubApp.makeTest} behind a `Layer`. */
+	/**
+	 * {@link GitHubApp.makeTest} behind a `Layer`.
+	 *
+	 * **Example** (Provide an app test double)
+	 *
+	 * ```ts
+	 * import { GitHubApp } from "@beep/scratchpad/effected/github/GitHubApp";
+	 *
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(GitHubApp.layerTest())) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<GitHubAppShape> = {}): Layer.Layer<GitHubApp> =>
 		Layer.succeed(GitHubApp, GitHubApp.makeTest(overrides));
 }
@@ -381,6 +639,8 @@ export class GitHubApp extends Context.Service<GitHubApp, GitHubAppShape>()($I`G
  * `Effect`-valued property because the credentials are per-call, not per-layer.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export interface GitHubAppShape {
 	/**

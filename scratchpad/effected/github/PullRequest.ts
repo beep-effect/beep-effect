@@ -21,10 +21,31 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 	message: S.String.annotateKey({ description: "The test-double member that needs an override." }),
 }, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
-/** How a pull request is merged. @public */
+/**
+ * How a pull request is merged.
+ *
+ * **Example** (Validate a squash merge method)
+ *
+ * ```ts
+ * import { MergeMethod } from "@beep/scratchpad/effected/github/PullRequest";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(MergeMethod)("squash")) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
 export const MergeMethod = LiteralKit(["merge", "squash", "rebase"]).pipe($I.annoteSchema("MergeMethod", { description: "How a pull request is merged." }));
 
-/** The values accepted by {@link MergeMethod}. @public */
+/**
+ * The values accepted by {@link MergeMethod}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
 export type MergeMethod = typeof MergeMethod.Type;
 
 /**
@@ -37,7 +58,23 @@ export type MergeMethod = typeof MergeMethod.Type;
  * `head`/`headSha` and `base`/`baseSha`, and spells the link `url`. If you are
  * writing a test double or a fixture, this is the type you build.
  *
+ * **Example** (Build an unmerged pull request fixture)
+ *
+ * ```ts
+ * import { PullRequestInfo } from "@beep/scratchpad/effected/github/PullRequest";
+ * import * as O from "effect/Option";
+ *
+ * const pullRequest = PullRequestInfo.make({
+ *   number: 123, nodeId: "PR_123", url: "https://github.com/effect-ts/effect/pull/123",
+ *   title: "Fix a bug", state: "open", head: "fix", headSha: "abc",
+ *   base: "main", baseSha: "def", draft: false, merged: false, mergedAt: O.none(),
+ * });
+ * console.log(O.isNone(pullRequest.mergedAt)) // true
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PullRequestInfo extends S.Class<PullRequestInfo>($I`PullRequestInfo`)({
 	/** The number in `#123`. */
@@ -59,14 +96,14 @@ export class PullRequestInfo extends S.Class<PullRequestInfo>($I`PullRequestInfo
 	draft: S.Boolean.annotateKey({ description: "Whether GitHub marks the pull request as a draft, defaulting to false when omitted" }),
 	merged: S.Boolean.annotateKey({ description: "Whether the pull request merged, using GitHub's explicit flag or, when absent, the presence of a merge timestamp" }),
 	/**
-  * When it merged, if it did.
-  *
-  * **Details**
-  *
-  * An `Option`, not an optional field. Whether a pull request has merged is a
-  * fact GitHub always reports, so modelling it as "maybe absent" would be
-  * modelling a gap in our fixtures rather than a gap in the domain.
-  */
+	 * When it merged, if it did.
+	 *
+	 * **Details**
+	 *
+	 * An `Option`, not an optional field. Whether a pull request has merged is a
+	 * fact GitHub always reports, so modelling it as "maybe absent" would be
+	 * modelling a gap in our fixtures rather than a gap in the domain.
+	 */
 	mergedAt: S.Option(S.DateTimeUtcFromString).annotateKey({ description: "When it merged, if it did." }),
 	/** The description, when GitHub sent one. */
 	body: S.optionalKey(S.String).annotateKey({ description: "The description, when GitHub sent one." }),
@@ -77,7 +114,25 @@ export class PullRequestInfo extends S.Class<PullRequestInfo>($I`PullRequestInfo
 /**
  * What {@link PullRequestShape.upsert} did.
  *
+ * **Example** (Validate the upsert result)
+ *
+ * ```ts
+ * import { PullRequestInfo, UpsertedPullRequest } from "@beep/scratchpad/effected/github/PullRequest";
+ * import * as O from "effect/Option";
+ * import * as S from "effect/Schema";
+ *
+ * const pullRequest = PullRequestInfo.make({
+ *   number: 123, nodeId: "PR_123", url: "https://github.com/effect-ts/effect/pull/123",
+ *   title: "Fix a bug", state: "open", head: "fix", headSha: "abc",
+ *   base: "main", baseSha: "def", draft: false, merged: false, mergedAt: O.none(),
+ * });
+ * const result = { pullRequest, created: true };
+ * console.log(S.is(UpsertedPullRequest)(result)) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const UpsertedPullRequest = S.Struct({
 	/** The pull request, as created or as updated. */
@@ -86,7 +141,13 @@ export const UpsertedPullRequest = S.Struct({
 	created: S.Boolean.annotateKey({ description: "Whether this operation opened a new pull request rather than updating one." }),
 }).pipe($I.annoteSchema("UpsertedPullRequest", { description: "What PullRequest.upsert did, retaining its plain-object return boundary." }));
 
-/** What {@link PullRequestShape.upsert} did. @public */
+/**
+ * What {@link PullRequestShape.upsert} did.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
 export type UpsertedPullRequest = typeof UpsertedPullRequest.Type;
 
 const AutoMergeResponse = S.Struct({});
@@ -117,28 +178,64 @@ const GRAPHQL_MERGE_METHOD = { merge: "MERGE", squash: "SQUASH", rebase: "REBASE
  * auto-merge.
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export interface PullRequestShape {
-	/** Read one pull request. Fails `notFound` when it does not exist. */
+	/**
+	 * Read one pull request. Fails `notFound` when it does not exist.
+	 *
+	 * **Example** (Construct a get operation)
+	 *
+	 * ```ts
+	 * import { PullRequest } from "@beep/scratchpad/effected/github/PullRequest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const pulls = yield* PullRequest;
+	 *   return yield* pulls.get(123);
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category queries
+	 * @since 0.0.0
+	 */
 	readonly get: (number: number) => Effect.Effect<PullRequestInfo, GitHubError, Repo>;
 	/**
-  * Open, closed or all pull requests, optionally filtered.
-  *
-  * **Gotchas**
-  *
-  * `head` accepts **either** the qualified `owner:ref` GitHub's filter wants
-  * or a bare `ref`, which is qualified with the current repo's owner on the
-  * way out. So for a pull request opened **from the current repository**,
-  * feeding this method `PullRequestInfo.head` (the bare branch name)
-  * round-trips correctly; GitHub's own route ignores an unqualified ref.
-  *
-  * **The round trip does not hold for a fork-originated pull request.**
-  * `PullRequestInfo` projects only the ref and drops the source owner, so
-  * qualifying it here prefixes the *current* repo's owner and names a branch
-  * in the wrong account — the filter then matches nothing, silently. When the
-  * head may live in a fork, pass a qualified `owner:ref` built from the source
-  * owner rather than from anything this projection carries.
-  */
+	 * Open, closed or all pull requests, optionally filtered.
+	 *
+	 * **Gotchas**
+	 *
+	 * `head` accepts **either** the qualified `owner:ref` GitHub's filter wants
+	 * or a bare `ref`, which is qualified with the current repo's owner on the
+	 * way out. So for a pull request opened **from the current repository**,
+	 * feeding this method `PullRequestInfo.head` (the bare branch name)
+	 * round-trips correctly; GitHub's own route ignores an unqualified ref.
+	 *
+	 * **The round trip does not hold for a fork-originated pull request.**
+	 * `PullRequestInfo` projects only the ref and drops the source owner, so
+	 * qualifying it here prefixes the *current* repo's owner and names a branch
+	 * in the wrong account — the filter then matches nothing, silently. When the
+	 * head may live in a fork, pass a qualified `owner:ref` built from the source
+	 * owner rather than from anything this projection carries.
+	 *
+	 * **Example** (Construct a list operation)
+	 *
+	 * ```ts
+	 * import { PullRequest } from "@beep/scratchpad/effected/github/PullRequest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const pulls = yield* PullRequest;
+	 *   return yield* pulls.list({ head: "effect-ts:fix", state: "open" });
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category queries
+	 * @since 0.0.0
+	 */
 	readonly list: (options?: {
 		readonly head?: string | undefined;
 		readonly base?: string | undefined;
@@ -146,31 +243,81 @@ export interface PullRequestShape {
 		readonly page?: PageOptions | undefined;
 	}) => Effect.Effect<ReadonlyArray<PullRequestInfo>, GitHubError, Repo>;
 	/**
-  * The files a pull request changes.
-  *
-  * **Details**
-  *
-  * Each entry is a full {@link CommitFile} — path **and** status, plus the
-  * line counts and any pre-rename path — the same projection
-  * `GitHubCommit.changedFiles` returns, because GitHub answers both
-  * endpoints with the same `diff-entry` shape.
-  */
+	 * The files a pull request changes.
+	 *
+	 * **Details**
+	 *
+	 * Each entry is a full {@link CommitFile} — path **and** status, plus the
+	 * line counts and any pre-rename path — the same projection
+	 * `GitHubCommit.changedFiles` returns, because GitHub answers both
+	 * endpoints with the same `diff-entry` shape.
+	 *
+	 * **Example** (Construct a listFiles operation)
+	 *
+	 * ```ts
+	 * import { PullRequest } from "@beep/scratchpad/effected/github/PullRequest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const pulls = yield* PullRequest;
+	 *   return yield* pulls.listFiles(123);
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category queries
+	 * @since 0.0.0
+	 */
 	readonly listFiles: (
 		number: number,
 		options?: { readonly page?: PageOptions | undefined },
 	) => Effect.Effect<ReadonlyArray<CommitFile>, GitHubError, Repo>;
 	/**
-  * The pull requests associated with a commit.
-  *
-  * **Details**
-  *
-  * Paginated: pass `page` to bound the walk.
-  */
+	 * The pull requests associated with a commit.
+	 *
+	 * **Details**
+	 *
+	 * Paginated: pass `page` to bound the walk.
+	 *
+	 * **Example** (Construct a listAssociatedWithCommit operation)
+	 *
+	 * ```ts
+	 * import { PullRequest } from "@beep/scratchpad/effected/github/PullRequest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const pulls = yield* PullRequest;
+	 *   return yield* pulls.listAssociatedWithCommit("abc123");
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category queries
+	 * @since 0.0.0
+	 */
 	readonly listAssociatedWithCommit: (
 		sha: string,
 		options?: { readonly page?: PageOptions | undefined },
 	) => Effect.Effect<ReadonlyArray<PullRequestInfo>, GitHubError, Repo>;
-	/** Open a pull request from `head` into `base`. */
+	/**
+	 * Open a pull request from `head` into `base`.
+	 *
+	 * **Example** (Construct a create operation)
+	 *
+	 * ```ts
+	 * import { PullRequest } from "@beep/scratchpad/effected/github/PullRequest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const pulls = yield* PullRequest;
+	 *   return yield* pulls.create({ title: "Fix a bug", head: "fix", base: "main" });
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category commands
+	 * @since 0.0.0
+	 */
 	readonly create: (input: {
 		readonly title: string;
 		readonly head: string;
@@ -178,7 +325,25 @@ export interface PullRequestShape {
 		readonly body?: string | undefined;
 		readonly draft?: boolean | undefined;
 	}) => Effect.Effect<PullRequestInfo, GitHubError, Repo>;
-	/** Patch a pull request; only the fields given are sent. */
+	/**
+	 * Patch a pull request; only the fields given are sent.
+	 *
+	 * **Example** (Construct a update operation)
+	 *
+	 * ```ts
+	 * import { PullRequest } from "@beep/scratchpad/effected/github/PullRequest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const pulls = yield* PullRequest;
+	 *   return yield* pulls.update(123, { title: "Fix a bug" });
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category commands
+	 * @since 0.0.0
+	 */
 	readonly update: (
 		number: number,
 		patch: {
@@ -189,13 +354,29 @@ export interface PullRequestShape {
 		},
 	) => Effect.Effect<PullRequestInfo, GitHubError, Repo>;
 	/**
-  * Update the open pull request for `head`→`base`, or open one.
-  *
-  * **Gotchas**
-  *
-  * When a pull request is already open, only `title` and `body` are updated;
-  * `draft` applies only when a new pull request is opened.
-  */
+	 * Update the open pull request for `head`→`base`, or open one.
+	 *
+	 * **Gotchas**
+	 *
+	 * When a pull request is already open, only `title` and `body` are updated;
+	 * `draft` applies only when a new pull request is opened.
+	 *
+	 * **Example** (Construct a upsert operation)
+	 *
+	 * ```ts
+	 * import { PullRequest } from "@beep/scratchpad/effected/github/PullRequest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const pulls = yield* PullRequest;
+	 *   return yield* pulls.upsert({ title: "Fix a bug", head: "fix", base: "main" });
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category commands
+	 * @since 0.0.0
+	 */
 	readonly upsert: (input: {
 		readonly title: string;
 		readonly head: string;
@@ -203,7 +384,25 @@ export interface PullRequestShape {
 		readonly body?: string | undefined;
 		readonly draft?: boolean | undefined;
 	}) => Effect.Effect<UpsertedPullRequest, GitHubError, Repo>;
-	/** Merge a pull request and return the merge commit sha. `method` defaults to GitHub's choice. */
+	/**
+	 * Merge a pull request and return the merge commit sha. `method` defaults to GitHub's choice.
+	 *
+	 * **Example** (Construct a merge operation)
+	 *
+	 * ```ts
+	 * import { PullRequest } from "@beep/scratchpad/effected/github/PullRequest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const pulls = yield* PullRequest;
+	 *   return yield* pulls.merge(123, { method: "squash" });
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category commands
+	 * @since 0.0.0
+	 */
 	readonly merge: (
 		number: number,
 		options?: {
@@ -212,9 +411,45 @@ export interface PullRequestShape {
 			readonly commitMessage?: string | undefined;
 		},
 	) => Effect.Effect<string, GitHubError, Repo>;
-	/** Add labels to a pull request (as an issue), keeping the ones already there. */
+	/**
+	 * Add labels to a pull request (as an issue), keeping the ones already there.
+	 *
+	 * **Example** (Construct a addLabels operation)
+	 *
+	 * ```ts
+	 * import { PullRequest } from "@beep/scratchpad/effected/github/PullRequest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const pulls = yield* PullRequest;
+	 *   return yield* pulls.addLabels(123, ["bug"]);
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category commands
+	 * @since 0.0.0
+	 */
 	readonly addLabels: (number: number, labels: ReadonlyArray<string>) => Effect.Effect<void, GitHubError, Repo>;
-	/** Request reviews from users and/or teams (team slugs). */
+	/**
+	 * Request reviews from users and/or teams (team slugs).
+	 *
+	 * **Example** (Construct a requestReviewers operation)
+	 *
+	 * ```ts
+	 * import { PullRequest } from "@beep/scratchpad/effected/github/PullRequest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const pulls = yield* PullRequest;
+	 *   return yield* pulls.requestReviewers(123, { users: ["octocat"] });
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category commands
+	 * @since 0.0.0
+	 */
 	readonly requestReviewers: (
 		number: number,
 		reviewers: {
@@ -223,14 +458,38 @@ export interface PullRequestShape {
 		},
 	) => Effect.Effect<void, GitHubError, Repo>;
 	/**
-  * Turn auto-merge on or off.
-  *
-  * **Details**
-  *
-  * An explicit call, not an option on `create`/`update`, so a create that
-  * worked is never reported as failed because auto-merge was refused. Pass
-  * `"off"` to disable it.
-  */
+	 * Turn auto-merge on or off.
+	 *
+	 * **Details**
+	 *
+	 * An explicit call, not an option on `create`/`update`, so a create that
+	 * worked is never reported as failed because auto-merge was refused. Pass
+	 * `"off"` to disable it.
+	 *
+	 * **Example** (Construct a setAutoMerge operation)
+	 *
+	 * ```ts
+	 * import { PullRequest } from "@beep/scratchpad/effected/github/PullRequest";
+	 * import * as Effect from "effect/Effect";
+	 * import { PullRequestInfo } from "@beep/scratchpad/effected/github/PullRequest";
+	 * import * as O from "effect/Option";
+	 *
+	 * const pullRequest = PullRequestInfo.make({
+	 *   number: 123, nodeId: "PR_123", url: "https://github.com/effect-ts/effect/pull/123",
+	 *   title: "Fix a bug", state: "open", head: "fix", headSha: "abc",
+	 *   base: "main", baseSha: "def", draft: false, merged: false, mergedAt: O.none(),
+	 * });
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const pulls = yield* PullRequest;
+	 *   return yield* pulls.setAutoMerge(pullRequest, "off");
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category commands
+	 * @since 0.0.0
+	 */
 	readonly setAutoMerge: (
 		pullRequest: PullRequestInfo,
 		method: MergeMethod | "off",
@@ -249,7 +508,7 @@ export interface PullRequestShape {
  * **Example** (Upsert a release pull request and enable squash auto-merge)
  *
  * ```ts
- * import { PullRequest } from "./index.ts";
+ * import { PullRequest } from "@beep/scratchpad/effected/github/PullRequest";
  * import * as Effect from "effect/Effect";
  *
  * const openOrUpdate = Effect.gen(function* () {
@@ -262,18 +521,51 @@ export interface PullRequestShape {
  *   yield* pulls.setAutoMerge(pullRequest, "squash");
  *   return created;
  * });
+ * console.log(Effect.isEffect(openOrUpdate)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class PullRequest extends Context.Service<PullRequest, PullRequestShape>()($I`PullRequest`) {
-	/** The live service, built over a `GitHubClient`. */
+	/**
+	 * The live service, built over a `GitHubClient`.
+	 *
+	 * **Example** (Compose the live service layer)
+	 *
+	 * ```ts
+	 * import { PullRequest } from "@beep/scratchpad/effected/github/PullRequest";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(PullRequest.layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<PullRequest, never, GitHubClient> = Layer.effect(
 		this,
 		Effect.map(GitHubClient, (client) => make(client)),
 	);
 
-	/** An in-memory double; unstubbed members die naming themselves. */
+	/**
+	 * An in-memory double; unstubbed members die naming themselves.
+	 *
+	 * **Example** (Stub a merge operation)
+	 *
+	 * ```ts
+	 * import { PullRequest } from "@beep/scratchpad/effected/github/PullRequest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const pulls = PullRequest.makeTest({ merge: () => Effect.succeed("abc123") });
+	 * const program = pulls.merge(123);
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<PullRequestShape> = {}): PullRequestShape => ({
 		get: overrides.get ?? (() => unstubbed("get")),
 		list: overrides.list ?? (() => unstubbed("list")),
@@ -288,7 +580,27 @@ export class PullRequest extends Context.Service<PullRequest, PullRequestShape>(
 		setAutoMerge: overrides.setAutoMerge ?? (() => unstubbed("setAutoMerge")),
 	});
 
-	/** {@link PullRequest.makeTest} behind a `Layer`. */
+	/**
+	 * {@link PullRequest.makeTest} behind a `Layer`.
+	 *
+	 * **Example** (Run a label operation with a test layer)
+	 *
+	 * ```ts
+	 * import { PullRequest } from "@beep/scratchpad/effected/github/PullRequest";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const pulls = yield* PullRequest;
+	 *   yield* pulls.addLabels(123, ["bug"]);
+	 *   return "labels added";
+	 * });
+	 * const layer = PullRequest.layerTest({ addLabels: () => Effect.void });
+	 * console.log(Effect.runSync(Effect.provide(program, layer))) // labels added
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<PullRequestShape> = {}): Layer.Layer<PullRequest> =>
 		Layer.succeed(PullRequest, PullRequest.makeTest(overrides));
 }

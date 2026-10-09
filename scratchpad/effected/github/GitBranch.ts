@@ -35,6 +35,8 @@ const CreateLinkedBranch = GraphQLDocument.make({
  * What {@link GitBranchShape.upsert} did.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type BranchOutcome = "created" | "reset";
 
@@ -48,9 +50,29 @@ export type BranchOutcome = "created" | "reset";
  * package that runs git.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface GitBranchShape {
-  /** Create a branch at `sha`. Fails `alreadyExists` when it is already there. */
+  /**
+   * Create a branch at `sha`. Fails `alreadyExists` when it is already there.
+   *
+   * **Example** (Construct the create operation)
+   *
+   * ```ts
+   * import { GitBranch } from "@beep/scratchpad/effected/github/GitBranch";
+   * import * as Effect from "effect/Effect";
+   *
+   * const program = Effect.gen(function* () {
+   *   const service = yield* GitBranch;
+   *   return yield* service.create("release", "commit-sha");
+   * });
+   * console.log(Effect.isEffect(program)) // true
+   * ```
+   *
+   * @category utilities
+   * @since 0.0.0
+   */
   readonly create: (name: string, sha: string) => Effect.Effect<void, GitHubError, Repo>;
   /**
    * Point `name` at `sha`, creating it if needed.
@@ -74,17 +96,123 @@ export interface GitBranchShape {
    * `treeSha`, `createTree` on it, `createCommit` with the target as parent —
    * and upsert **once**, straight to the finished sha, so the ref never rests
    * on the bare target head.
+   *
+   * **Example** (Construct the upsert operation)
+   *
+   * ```ts
+   * import { GitBranch } from "@beep/scratchpad/effected/github/GitBranch";
+   * import * as Effect from "effect/Effect";
+   *
+   * const program = Effect.gen(function* () {
+   *   const service = yield* GitBranch;
+   *   return yield* service.upsert("release", "commit-sha");
+   * });
+   * console.log(Effect.isEffect(program)) // true
+   * ```
+   *
+   * @category utilities
+   * @since 0.0.0
    */
   readonly upsert: (name: string, sha: string) => Effect.Effect<BranchOutcome, GitHubError, Repo>;
-  /** Is the branch there? A 404 is `false`, not an error. */
+  /**
+   * Is the branch there? A 404 is `false`, not an error.
+   *
+   * **Example** (Construct the exists operation)
+   *
+   * ```ts
+   * import { GitBranch } from "@beep/scratchpad/effected/github/GitBranch";
+   * import * as Effect from "effect/Effect";
+   *
+   * const program = Effect.gen(function* () {
+   *   const service = yield* GitBranch;
+   *   return yield* service.exists("release");
+   * });
+   * console.log(Effect.isEffect(program)) // true
+   * ```
+   *
+   * @category utilities
+   * @since 0.0.0
+   */
   readonly exists: (name: string) => Effect.Effect<boolean, GitHubError, Repo>;
-  /** The commit the branch points at. Fails `notFound` when it does not exist. */
+  /**
+   * The commit the branch points at. Fails `notFound` when it does not exist.
+   *
+   * **Example** (Construct the sha operation)
+   *
+   * ```ts
+   * import { GitBranch } from "@beep/scratchpad/effected/github/GitBranch";
+   * import * as Effect from "effect/Effect";
+   *
+   * const program = Effect.gen(function* () {
+   *   const service = yield* GitBranch;
+   *   return yield* service.sha("main");
+   * });
+   * console.log(Effect.isEffect(program)) // true
+   * ```
+   *
+   * @category utilities
+   * @since 0.0.0
+   */
   readonly sha: (name: string) => Effect.Effect<string, GitHubError, Repo>;
-  /** As {@link GitBranchShape.sha}, with absence as `Option.none`. */
+  /**
+   * As {@link GitBranchShape.sha}, with absence as `Option.none`.
+   *
+   * **Example** (Construct the shaOption operation)
+   *
+   * ```ts
+   * import { GitBranch } from "@beep/scratchpad/effected/github/GitBranch";
+   * import * as Effect from "effect/Effect";
+   *
+   * const program = Effect.gen(function* () {
+   *   const service = yield* GitBranch;
+   *   return yield* service.shaOption("preview");
+   * });
+   * console.log(Effect.isEffect(program)) // true
+   * ```
+   *
+   * @category utilities
+   * @since 0.0.0
+   */
   readonly shaOption: (name: string) => Effect.Effect<O.Option<string>, GitHubError, Repo>;
-  /** Force the branch to `sha`. Fails `notFound` when it does not exist. */
+  /**
+   * Force the branch to `sha`. Fails `notFound` when it does not exist.
+   *
+   * **Example** (Construct the reset operation)
+   *
+   * ```ts
+   * import { GitBranch } from "@beep/scratchpad/effected/github/GitBranch";
+   * import * as Effect from "effect/Effect";
+   *
+   * const program = Effect.gen(function* () {
+   *   const service = yield* GitBranch;
+   *   return yield* service.reset("release", "commit-sha");
+   * });
+   * console.log(Effect.isEffect(program)) // true
+   * ```
+   *
+   * @category utilities
+   * @since 0.0.0
+   */
   readonly reset: (name: string, sha: string) => Effect.Effect<void, GitHubError, Repo>;
-  /** Delete the branch. */
+  /**
+   * Delete the branch.
+   *
+   * **Example** (Construct the delete operation)
+   *
+   * ```ts
+   * import { GitBranch } from "@beep/scratchpad/effected/github/GitBranch";
+   * import * as Effect from "effect/Effect";
+   *
+   * const program = Effect.gen(function* () {
+   *   const service = yield* GitBranch;
+   *   return yield* service.delete("preview");
+   * });
+   * console.log(Effect.isEffect(program)) // true
+   * ```
+   *
+   * @category utilities
+   * @since 0.0.0
+   */
   readonly delete: (name: string) => Effect.Effect<void, GitHubError, Repo>;
   /**
    * Create a branch **linked to an issue**, as the GitHub UI's "create a branch"
@@ -97,6 +225,22 @@ export interface GitBranchShape {
    * is owned here rather than left in a consumer. A linked branch shows up on the
    * issue and closes it when the branch's pull request merges; a branch created
    * with {@link GitBranchShape.create} does neither.
+   *
+   * **Example** (Construct the createLinked operation)
+   *
+   * ```ts
+   * import { GitBranch } from "@beep/scratchpad/effected/github/GitBranch";
+   * import * as Effect from "effect/Effect";
+   *
+   * const program = Effect.gen(function* () {
+   *   const service = yield* GitBranch;
+   *   return yield* service.createLinked({ issueNodeId: "issue-id", repositoryNodeId: "repository-id", name: "fix-issue", sha: "commit-sha" });
+   * });
+   * console.log(Effect.isEffect(program)) // true
+   * ```
+   *
+   * @category utilities
+   * @since 0.0.0
    */
   readonly createLinked: (input: {
     readonly issueNodeId: string;
@@ -119,7 +263,7 @@ export interface GitBranchShape {
  * **Example** (Create or reset a branch to a commit)
  *
  * ```ts
- * import { GitBranch } from "./index.ts";
+ * import { GitBranch } from "@beep/scratchpad/effected/github/GitBranch";
  * import * as Effect from "effect/Effect";
  *
  * const ensureBranch = (name: string, sha: string) =>
@@ -127,9 +271,12 @@ export interface GitBranchShape {
  *     const branches = yield* GitBranch;
  *     return yield* branches.upsert(name, sha); // "created" | "reset"
  *   });
+ * console.log(Effect.isEffect(ensureBranch("release", "commit-sha"))) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class GitBranch extends Context.Service<GitBranch, GitBranchShape>()($I`GitBranch`) {
   /**
@@ -143,13 +290,40 @@ export class GitBranch extends Context.Service<GitBranch, GitBranchShape>()($I`G
    * down throws `Cannot access 'make' before initialization` **at import time**,
    * with a clean typecheck. Wrapping it in an arrow defers the read to when the
    * layer is built.
+   *
+   * **Example** (Inspect the live service layer)
+   *
+   * ```ts
+   * import { GitBranch } from "@beep/scratchpad/effected/github/GitBranch";
+   * import * as Layer from "effect/Layer";
+   *
+   * console.log(Layer.isLayer(GitBranch.layer)) // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
    */
   static readonly layer: Layer.Layer<GitBranch, never, GitHubClient> = Layer.effect(
     this,
     Effect.map(GitHubClient, (client) => make(client)),
   );
 
-  /** An in-memory double; unstubbed members die naming themselves. */
+  /**
+   * An in-memory double; unstubbed members die naming themselves.
+   *
+   * **Example** (Stub a test service member)
+   *
+   * ```ts
+   * import { GitBranch } from "@beep/scratchpad/effected/github/GitBranch";
+   * import * as Effect from "effect/Effect";
+   *
+   * const service = GitBranch.makeTest({ exists: () => Effect.succeed(true) });
+   * console.log(Effect.isEffect(service.exists("main"))) // true
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
   static readonly makeTest = (overrides: Partial<GitBranchShape> = {}): GitBranchShape => ({
     create: overrides.create ?? (() => unstubbed("create")),
     upsert: overrides.upsert ?? (() => unstubbed("upsert")),
@@ -161,7 +335,22 @@ export class GitBranch extends Context.Service<GitBranch, GitBranchShape>()($I`G
     createLinked: overrides.createLinked ?? (() => unstubbed("createLinked")),
   });
 
-  /** {@link GitBranch.makeTest} behind a `Layer`. */
+  /**
+   * {@link GitBranch.makeTest} behind a `Layer`.
+   *
+   * **Example** (Construct a test service layer)
+   *
+   * ```ts
+   * import { GitBranch } from "@beep/scratchpad/effected/github/GitBranch";
+   * import * as Layer from "effect/Layer";
+   *
+   * const layer = GitBranch.layerTest();
+   * console.log(Layer.isLayer(layer)) // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
   static readonly layerTest = (overrides: Partial<GitBranchShape> = {}): Layer.Layer<GitBranch> =>
     Layer.succeed(GitBranch, GitBranch.makeTest(overrides));
 }

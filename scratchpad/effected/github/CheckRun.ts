@@ -20,7 +20,22 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
   message: S.String.annotateKey({ description: "The test-double member that needs an override." }),
 }, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
-/** How a check run finished. @public */
+/**
+ * How a check run finished.
+ *
+ * **Example** (Decode a neutral literal)
+ *
+ * ```ts
+ * import { CheckConclusion } from "@beep/scratchpad/effected/github/CheckRun";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.decodeSync(CheckConclusion)("neutral")) // neutral
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
 export const CheckConclusion = LiteralKit([
   "success",
   "failure",
@@ -31,26 +46,79 @@ export const CheckConclusion = LiteralKit([
   "skipped",
 ]).pipe($I.annoteSchema("CheckConclusion", { description: "How a check run finished." }));
 
-/** The values accepted by {@link CheckConclusion}. @public */
+/**
+ * The values accepted by {@link CheckConclusion}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CheckConclusion = typeof CheckConclusion.Type;
 
-/** How serious an annotation is. @public */
+/**
+ * How serious an annotation is.
+ *
+ * **Example** (Decode a warning literal)
+ *
+ * ```ts
+ * import { AnnotationLevel } from "@beep/scratchpad/effected/github/CheckRun";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.decodeSync(AnnotationLevel)("warning")) // warning
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
 export const AnnotationLevel = LiteralKit(["notice", "warning", "failure"]).pipe($I.annoteSchema("AnnotationLevel", { description: "How serious an annotation is." }));
 
-/** The values accepted by {@link AnnotationLevel}. @public */
+/**
+ * The values accepted by {@link AnnotationLevel}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
 export type AnnotationLevel = typeof AnnotationLevel.Type;
 
 /**
- * One annotation on a check run.
+ * Associates a check-run finding with a repository-relative line range.
+ *
+ * **Example** (Annotate a repository line)
+ *
+ * ```ts
+ * import { Annotation } from "@beep/scratchpad/effected/github/CheckRun";
+ *
+ * const annotation = Annotation.make({
+ *   path: "src/main.ts", startLine: 1, endLine: 1,
+ *   level: "warning", message: "Review this line.",
+ * });
+ * console.log(annotation.level) // warning
+ * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class Annotation extends S.Class<Annotation>($I`Annotation`)({
-  /** Repository-relative path. */
+  /**
+   * Repository-relative path.
+   *
+   * @since 0.0.0
+   */
   path: S.String.annotateKey({ description: "Repository-relative path." }),
-  /** First line of the range, 1-based. */
+  /**
+   * First line of the range, 1-based.
+   *
+   * @since 0.0.0
+   */
   startLine: S.Int.annotateKey({ description: "First line of the range, 1-based." }),
-  /** Last line of the range, 1-based. */
+  /**
+   * Last line of the range, 1-based.
+   *
+   * @since 0.0.0
+   */
   endLine: S.Int.annotateKey({ description: "Last line of the range, 1-based." }),
   level: AnnotationLevel.annotateKey({ description: "How serious the annotated finding is: `notice`, `warning` or `failure`" }),
   message: S.String.annotateKey({ description: "The explanation GitHub displays for the annotated line range" }),
@@ -59,7 +127,7 @@ export class Annotation extends S.Class<Annotation>($I`Annotation`)({
 }
 
 /**
- * A check run's rendered output.
+ * Carries the Markdown summary, extended text and annotations rendered for a check run.
  *
  * **Gotchas**
  *
@@ -69,22 +137,84 @@ export class Annotation extends S.Class<Annotation>($I`Annotation`)({
  * 422 saying *"summary exceeds a maximum bytesize of 65535"*. Use
  * {@link CheckRunOutput.truncated} to cut an output to fit.
  *
+ * **Example** (Construct rendered check output)
+ *
+ * ```ts
+ * import { CheckRunOutput } from "@beep/scratchpad/effected/github/CheckRun";
+ *
+ * const output = CheckRunOutput.make({ title: "lint", summary: "No findings." });
+ * console.log(output.truncated().summary) // No findings.
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class CheckRunOutput extends S.Class<CheckRunOutput>($I`CheckRunOutput`)({
   title: S.String.annotateKey({ description: "The heading GitHub displays above the check run's summary" }),
-  /** Markdown shown under the title. Capped at 65535 **bytes**. */
+  /**
+   * Markdown shown under the title. Capped at 65535 **bytes**.
+   *
+   * @since 0.0.0
+   */
   summary: S.String.annotateKey({ description: "Markdown shown under the title. Capped at 65535 **bytes**." }),
-  /** Longer markdown. Capped at 65535 **bytes**. */
+  /**
+   * Longer markdown. Capped at 65535 **bytes**.
+   *
+   * @since 0.0.0
+   */
   text: S.optionalKey(S.String).annotateKey({ description: "Longer markdown. Capped at 65535 **bytes**." }),
-  /** At most 50 per request; the rest are dropped by {@link CheckRunOutput.truncated}. */
+  /**
+   * At most 50 per request; the rest are dropped by {@link CheckRunOutput.truncated}.
+   *
+   * @since 0.0.0
+   */
   annotations: Annotation.pipe(S.Array, S.optionalKey).annotateKey({ description: "At most 50 per request; the rest are dropped by CheckRunOutput.truncated." }),
 }, $I.annote("CheckRunOutput", { description: "A check run's rendered output." })) {
-  /** GitHub's cap on `summary` and `text`, in UTF-8 bytes. */
+  /**
+   * GitHub's cap on `summary` and `text`, in UTF-8 bytes.
+   *
+   * **Example** (Inspect the UTF-8 byte limit)
+   *
+   * ```ts
+   * import { CheckRunOutput } from "@beep/scratchpad/effected/github/CheckRun";
+   *
+   * console.log(CheckRunOutput.LIMIT_BYTES) // 65535
+   * ```
+   *
+   * @category constants
+   * @since 0.0.0
+   */
   static readonly LIMIT_BYTES = 65_535;
-  /** GitHub's cap on annotations per request. */
+  /**
+   * GitHub's cap on annotations per request.
+   *
+   * **Example** (Inspect the annotation limit)
+   *
+   * ```ts
+   * import { CheckRunOutput } from "@beep/scratchpad/effected/github/CheckRun";
+   *
+   * console.log(CheckRunOutput.MAX_ANNOTATIONS) // 50
+   * ```
+   *
+   * @category constants
+   * @since 0.0.0
+   */
   static readonly MAX_ANNOTATIONS = 50;
-  /** Appended when a field had to be cut. */
+  /**
+   * Appended when a field had to be cut.
+   *
+   * **Example** (Inspect the truncation notice prefix)
+   *
+   * ```ts
+   * import { CheckRunOutput } from "@beep/scratchpad/effected/github/CheckRun";
+   *
+   * console.log(CheckRunOutput.NOTICE.startsWith("\n\n")) // true
+   * ```
+   *
+   * @category constants
+   * @since 0.0.0
+   */
   static readonly NOTICE = "\n\n_…truncated (exceeded GitHub's 65535-byte check limit)._";
 
   /**
@@ -95,6 +225,18 @@ export class CheckRunOutput extends S.Class<CheckRunOutput>($I`CheckRunOutput`)(
    * Pure, so the byte arithmetic is testable with no client, no layer and no
    * network — which is what lets a property test hammer it with arbitrary
    * multi-byte input.
+   *
+   * **Example** (Truncate oversized check output)
+   *
+   * ```ts
+   * import { CheckRunOutput } from "@beep/scratchpad/effected/github/CheckRun";
+   *
+   * const output = CheckRunOutput.make({ title: "lint", summary: "x".repeat(70_000) });
+   * console.log(output.truncated().summary.endsWith(CheckRunOutput.NOTICE)) // true
+   * ```
+   *
+   * @category formatting
+   * @since 0.0.0
    */
   truncated(): CheckRunOutput {
     const annotations = this.annotations;
@@ -114,6 +256,8 @@ export class CheckRunOutput extends S.Class<CheckRunOutput>($I`CheckRunOutput`)(
  *
  * A cut inside a UTF-8 sequence moves back to its leading byte before
  * decoding. Complete characters, including an existing U+FFFD, survive.
+ *
+ * @since 0.0.0
  */
 const capBytes = (value: string): string => {
   if (Buffer.byteLength(value, "utf8") <= CheckRunOutput.LIMIT_BYTES) return value;
@@ -126,14 +270,29 @@ const capBytes = (value: string): string => {
 };
 
 /**
- * A check run as GitHub reports it.
+ * Captures the identity, web URL and execution status GitHub reports for a check run.
+ *
+ * **Example** (Read a check run identifier)
+ *
+ * ```ts
+ * import { CheckRunRef } from "@beep/scratchpad/effected/github/CheckRun";
+ *
+ * const run = CheckRunRef.make({ id: 42, name: "lint", url: "https://example.com/check/42", status: "in_progress" });
+ * console.log(run.id) // 42
+ * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class CheckRunRef extends S.Class<CheckRunRef>($I`CheckRunRef`)({
   id: S.Int.annotateKey({ description: "GitHub's identifier for reading, updating and concluding this check run" }),
   name: S.String.annotateKey({ description: "The label supplied when the check run was created, as reported by GitHub" }),
-  /** The web URL. */
+  /**
+   * The web URL.
+   *
+   * @since 0.0.0
+   */
   url: S.String.annotateKey({ description: "The web URL." }),
   status: S.String.annotateKey({ description: "The check run's execution status as reported by GitHub" }),
 }, $I.annote("CheckRunRef", { description: "A check run as GitHub reports it." })) {
@@ -158,6 +317,8 @@ export class CheckRunRef extends S.Class<CheckRunRef>($I`CheckRunRef`)({
  * whatever the last {@link CheckRunShape.update} wrote stays.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ConcludeCheckRun = (
   conclusion: (typeof CheckConclusion.literals)[number],
@@ -173,14 +334,28 @@ export type ConcludeCheckRun = (
  * Every member resolves the target repository from the `Repo` service in `R`.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CheckRunShape {
-  /** Start an in-progress check run against a commit. */
+  /**
+   * Start an in-progress check run against a commit.
+   *
+   * @since 0.0.0
+   */
   readonly create: (name: string, headSha: string) => Effect.Effect<CheckRunRef, GitHubError, Repo>;
   readonly get: (id: number) => Effect.Effect<CheckRunRef, GitHubError, Repo>;
-  /** Update an in-flight run's output. */
+  /**
+   * Update an in-flight run's output.
+   *
+   * @since 0.0.0
+   */
   readonly update: (id: number, output: CheckRunOutput) => Effect.Effect<void, GitHubError, Repo>;
-  /** Finish a run. */
+  /**
+   * Finish a run.
+   *
+   * @since 0.0.0
+   */
   readonly complete: (
     id: number,
     conclusion: (typeof CheckConclusion.literals)[number],
@@ -215,7 +390,7 @@ export interface CheckRunShape {
    * **Example** (Conclude a lint check with a neutral verdict)
    *
    * ```ts
-   * import { CheckRun, CheckRunOutput } from "./index.ts";
+   * import { CheckRun, CheckRunOutput } from "@beep/scratchpad/effected/github/CheckRun";
    * import * as Effect from "effect/Effect";
    *
    * const lintWithCheck = (sha: string) =>
@@ -233,7 +408,11 @@ export interface CheckRunShape {
    *       }),
    *     );
    *   });
+   *
+   * console.log(Effect.isEffect(lintWithCheck("abc123"))) // true
    * ```
+   *
+   * @since 0.0.0
    */
   readonly withCheckRun: <A, E, R>(
     name: string,
@@ -251,16 +430,59 @@ export interface CheckRunShape {
  * Provide it with {@link CheckRun.layer}, which needs a `GitHubClient`; each
  * method also needs a `Repo` in `R`.
  *
+ * **Example** (Compose the CheckRun service)
+ *
+ * ```ts
+ * import { CheckRun } from "@beep/scratchpad/effected/github/CheckRun";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = Effect.flatMap(CheckRun, (service) => service.create("lint", "abc123"));
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class CheckRun extends Context.Service<CheckRun, CheckRunShape>()($I`CheckRun`) {
-  /** The live service, built over a `GitHubClient`. */
+  /**
+   * The live service, built over a `GitHubClient`.
+   *
+   * **Example** (Build the live CheckRun layer)
+   *
+   * ```ts
+   * import { CheckRun } from "@beep/scratchpad/effected/github/CheckRun";
+   * import * as Layer from "effect/Layer";
+   *
+   * console.log(Layer.isLayer(CheckRun.layer)) // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
   static readonly layer: Layer.Layer<CheckRun, never, GitHubClient> = Layer.effect(
     this,
     Effect.map(GitHubClient, (client) => make(client)),
   );
 
-  /** An in-memory double; unstubbed members die naming themselves. */
+  /**
+   * An in-memory double; unstubbed members die naming themselves.
+   *
+   * **Example** (Stub CheckRun operations)
+   *
+   * ```ts
+   * import { CheckRun } from "@beep/scratchpad/effected/github/CheckRun";
+   * import * as Effect from "effect/Effect";
+   *
+   * const service = CheckRun.makeTest({
+   *   update: () => Effect.succeed(undefined),
+   * });
+   * console.log(typeof service.update) // function
+   * ```
+   *
+   * @category testing
+   * @since 0.0.0
+   */
   static readonly makeTest = (overrides: Partial<CheckRunShape> = {}): CheckRunShape => ({
     create: overrides.create ?? (() => unstubbed("create")),
     get: overrides.get ?? (() => unstubbed("get")),
@@ -269,7 +491,21 @@ export class CheckRun extends Context.Service<CheckRun, CheckRunShape>()($I`Chec
     withCheckRun: overrides.withCheckRun ?? (() => unstubbed("withCheckRun")),
   });
 
-  /** {@link CheckRun.makeTest} behind a `Layer`. */
+  /**
+   * {@link CheckRun.makeTest} behind a `Layer`.
+   *
+   * **Example** (Provide a CheckRun test layer)
+   *
+   * ```ts
+   * import { CheckRun } from "@beep/scratchpad/effected/github/CheckRun";
+   * import * as Layer from "effect/Layer";
+   *
+   * console.log(Layer.isLayer(CheckRun.layerTest())) // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
   static readonly layerTest = (overrides: Partial<CheckRunShape> = {}): Layer.Layer<CheckRun> =>
     Layer.succeed(CheckRun, CheckRun.makeTest(overrides));
 }
@@ -297,7 +533,11 @@ const wireOutput = (output: CheckRunOutput) => {
   };
 };
 
-/** A verdict `use` recorded through {@link ConcludeCheckRun}. */
+/**
+ * A verdict `use` recorded through {@link ConcludeCheckRun}.
+ *
+ * @since 0.0.0
+ */
 interface RecordedConclusion {
   readonly conclusion: (typeof CheckConclusion.literals)[number];
   readonly output: CheckRunOutput | undefined;
@@ -313,6 +553,8 @@ interface RecordedConclusion {
  * workflow, a job timeout, a losing branch of a race — and a defect hit
  * neither, and the run stayed `in_progress` forever. GitHub never reaps such a
  * run, so it blocks branch protection until a human deletes it by hand.
+ *
+ * @since 0.0.0
  */
 const defaultConclusion = <A, E>(name: string, exit: Exit.Exit<A, E>): RecordedConclusion => {
   if (Exit.isSuccess(exit)) {
@@ -353,6 +595,8 @@ const defaultConclusion = <A, E>(name: string, exit: Exit.Exit<A, E>): RecordedC
  * ignored, because neither an interrupt nor an existing failure should be
  * replaced by whatever went wrong while reporting it — and that choice is the
  * **exit's**, independent of whose verdict is being written.
+ *
+ * @since 0.0.0
  */
 const concludeFor = <A, E>(
   name: string,

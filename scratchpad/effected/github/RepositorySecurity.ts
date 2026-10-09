@@ -19,21 +19,47 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
  * vulnerability reporting.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface RepositorySecurityShape {
-  /** Whether Dependabot vulnerability alerts are on. */
+  /**
+   * Whether Dependabot vulnerability alerts are on.
+   *
+   * @since 0.0.0
+   */
   readonly vulnerabilityAlerts: Effect.Effect<boolean, GitHubError, Repo>;
-  /** Turn Dependabot vulnerability alerts on or off. */
+  /**
+   * Turn Dependabot vulnerability alerts on or off.
+   *
+   * @since 0.0.0
+   */
   readonly setVulnerabilityAlerts: (enabled: boolean) => Effect.Effect<void, GitHubError, Repo>;
 
-  /** Whether Dependabot security pull requests are on. */
+  /**
+   * Whether Dependabot security pull requests are on.
+   *
+   * @since 0.0.0
+   */
   readonly automatedSecurityFixes: Effect.Effect<boolean, GitHubError, Repo>;
-  /** Turn Dependabot security pull requests on or off. */
+  /**
+   * Turn Dependabot security pull requests on or off.
+   *
+   * @since 0.0.0
+   */
   readonly setAutomatedSecurityFixes: (enabled: boolean) => Effect.Effect<void, GitHubError, Repo>;
 
-  /** Whether the private vulnerability reporting inbox is on. */
+  /**
+   * Whether the private vulnerability reporting inbox is on.
+   *
+   * @since 0.0.0
+   */
   readonly privateVulnerabilityReporting: Effect.Effect<boolean, GitHubError, Repo>;
-  /** Turn the private vulnerability reporting inbox on or off. */
+  /**
+   * Turn the private vulnerability reporting inbox on or off.
+   *
+   * @since 0.0.0
+   */
   readonly setPrivateVulnerabilityReporting: (enabled: boolean) => Effect.Effect<void, GitHubError, Repo>;
 }
 
@@ -69,7 +95,7 @@ export interface RepositorySecurityShape {
  * **Example** (Enable vulnerability alerts and private vulnerability reporting)
  *
  * ```ts
- * import { RepositorySecurity } from "./index.ts";
+ * import { RepositorySecurity } from "@beep/scratchpad/effected/github/RepositorySecurity";
  * import * as Effect from "effect/Effect";
  *
  * const harden = Effect.gen(function* () {
@@ -78,9 +104,12 @@ export interface RepositorySecurityShape {
  *   yield* security.setPrivateVulnerabilityReporting(true);
  *   return yield* security.vulnerabilityAlerts; // true
  * });
+ * console.log(Effect.isEffect(harden)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class RepositorySecurity extends Context.Service<RepositorySecurity, RepositorySecurityShape>()(
   $I`RepositorySecurity`,
@@ -93,13 +122,40 @@ export class RepositorySecurity extends Context.Service<RepositorySecurity, Repo
    * `(client) => make(client)` rather than `make`: a static initializer runs
    * while the module body is still evaluating, so naming a `const` declared
    * further down throws at import time with a clean typecheck.
+   *
+   * **Example** (Construct the live service layer)
+   *
+   * ```ts
+   * import { RepositorySecurity } from "@beep/scratchpad/effected/github/RepositorySecurity";
+   * import * as Layer from "effect/Layer";
+   *
+   * console.log(Layer.isLayer(RepositorySecurity.layer)) // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
    */
   static readonly layer: Layer.Layer<RepositorySecurity, never, GitHubClient> = Layer.effect(
     this,
     Effect.map(GitHubClient, (client) => make(client)),
   );
 
-  /** An in-memory double; unstubbed members die naming themselves. */
+  /**
+   * An in-memory double; unstubbed members die naming themselves.
+   *
+   * **Example** (Stub one service operation)
+   *
+   * ```ts
+   * import { RepositorySecurity } from "@beep/scratchpad/effected/github/RepositorySecurity";
+   * import * as Effect from "effect/Effect";
+   *
+   * const service = RepositorySecurity.makeTest({ setVulnerabilityAlerts: () => Effect.void });
+   * console.log(Effect.isEffect(service.setVulnerabilityAlerts(true))) // true
+   * ```
+   *
+   * @category testing
+   * @since 0.0.0
+   */
   static readonly makeTest = (overrides: Partial<RepositorySecurityShape> = {}): RepositorySecurityShape => ({
     vulnerabilityAlerts: overrides.vulnerabilityAlerts ?? (Effect.suspend(() => unstubbed("vulnerabilityAlerts"))),
     setVulnerabilityAlerts: overrides.setVulnerabilityAlerts ?? (() => unstubbed("setVulnerabilityAlerts")),
@@ -111,7 +167,21 @@ export class RepositorySecurity extends Context.Service<RepositorySecurity, Repo
       overrides.setPrivateVulnerabilityReporting ?? (() => unstubbed("setPrivateVulnerabilityReporting")),
   });
 
-  /** {@link RepositorySecurity.makeTest} behind a `Layer`. */
+  /**
+   * {@link RepositorySecurity.makeTest} behind a `Layer`.
+   *
+   * **Example** (Construct a test service layer)
+   *
+   * ```ts
+   * import { RepositorySecurity } from "@beep/scratchpad/effected/github/RepositorySecurity";
+   * import * as Layer from "effect/Layer";
+   *
+   * console.log(Layer.isLayer(RepositorySecurity.layerTest())) // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
   static readonly layerTest = (overrides: Partial<RepositorySecurityShape> = {}): Layer.Layer<RepositorySecurity> =>
     Layer.succeed(RepositorySecurity, RepositorySecurity.makeTest(overrides));
 }

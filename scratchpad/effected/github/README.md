@@ -1,23 +1,7 @@
 # github (lab port of @effected/github)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fgithub?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/github)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
 
 Typed GitHub REST and GraphQL for [Effect](https://effect.website) v4. `client.request("GET /repos/{owner}/{repo}", { owner, repo })` types both the parameters and the returned `data` from the route literal alone — no `operation: string`, no callback, no cast. One `GitHubError` covers every REST failure with a `kind` you branch on instead of grepping a message, one pagination engine backs every paginating route and `client.request`'s `Stream` form, and a set of resource services (`GitBranch`, `GitTag`, `CheckRun`, `PullRequest`, `PullRequestComment`, `GitHubRelease`, `Attestation`) turn multi-call dances — "does this branch already exist?", "conclude this check run no matter how the program exits" — into one call. A second tier writes the configuration half: secrets, variables, rulesets, deployment environments, the security toggles and CodeQL default setup. `GitHubApp` mints and revokes installation tokens for App auth.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/github
 
@@ -27,25 +11,13 @@ The error model gets the same treatment. `GitHubError.kind` is a literal union (
 
 This package also owns the octokit runtime so nothing downstream has to. `@octokit/rest` and `@octokit/auth-app` are deliberately absent — the rest wrapper is a request-logging plugin plus 1.4 MB of duplicate endpoint types, and `auth-app` drags in `createOAuthUserAuth`, roughly 492 KB of OAuth machinery this package never calls. GitHub App JWTs are signed by `universal-github-app-jwt` instead, the same zero-dependency signer `@octokit/auth-app` itself uses. A consumer that only authenticates with a token it already holds never links the JWT signer at all: the App-authenticated layer lives in its own module (`GitHubApp`), and nothing here is gathered into a namespace object that would defeat that split.
 
-## Install
-
-```bash
-npm install @effected/github effect
-```
-
-```bash
-pnpm add @effected/github effect
-```
-
-Requires Node.js >=24.11.0. `effect` v4 is a peer dependency.
-
 All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
 
 ## Quick start
 
 ```ts
-import { GitHubClient, Repo, RepoRef } from "@effected/github";
-import { Effect } from "effect";
+import { GitHubClient, Repo, RepoRef } from "@beep/scratchpad/effected/github/index";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const client = yield* GitHubClient;
@@ -67,8 +39,8 @@ Effect.runPromise(program.pipe(Effect.provide(ClientLayer), Effect.provide(RepoL
 Each resource is a service over `GitHubClient`, with its own `layer`, `makeTest` and `layerTest`. `GitBranch.upsert` is the case that motivated the whole set:
 
 ```ts
-import { GitBranch, GitHubClient, Repo } from "@effected/github";
-import { Effect } from "effect";
+import { GitBranch, GitHubClient, Repo } from "@beep/scratchpad/effected/github/index";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const branches = yield* GitBranch;
@@ -81,8 +53,8 @@ const program = Effect.gen(function* () {
 `CheckRun.withCheckRun` runs a program inside a check run and concludes it on every exit path — success, typed failure, defect or interrupt — so a run never gets stuck `in_progress`:
 
 ```ts
-import { CheckRun } from "@effected/github";
-import { Effect } from "effect";
+import { CheckRun } from "@beep/scratchpad/effected/github/index";
+import * as Effect from "effect/Effect";
 
 declare const lint: () => Effect.Effect<ReadonlyArray<string>>;
 declare const deriveConclusion: (findings: ReadonlyArray<string>) => "success" | "neutral" | "failure";
@@ -106,8 +78,8 @@ const program = Effect.gen(function* () {
 `GitHubIssue` covers issues: read, list, create, close, comment, and the GraphQL side that answers which issues a pull request closes. `commentOnce` is the create-or-skip counterpart to `PullRequestComment.upsert` — it posts a marked comment and never edits one, which is what you want for an announcement that would read as a rewrite of history if it changed after the fact:
 
 ```ts
-import { CommentMarker, GitHubIssue } from "@effected/github";
-import { Effect } from "effect";
+import { CommentMarker, GitHubIssue } from "@beep/scratchpad/effected/github/index";
+import * as Effect from "effect/Effect";
 
 const marker = CommentMarker.make({ namespace: "release-bot", key: "shipped" });
 
@@ -125,7 +97,7 @@ The existence check pages the issue's comments to the end and matches the marker
 Whether a run should comment at all usually turns on which issues a pull request closes, and that is a grammar rather than an API call. That grammar now lives in [`@effected/github-references`](https://www.npmjs.com/package/@effected/github-references), a pure package with no octokit behind it; this package re-exports the two dialects it used to own so existing code keeps compiling:
 
 ```ts
-import { harvestIssueReferences, parseBareLineReference } from "@effected/github";
+import { harvestIssueReferences, parseBareLineReference } from "@beep/scratchpad/effected/github/index";
 
 console.log(harvestIssueReferences("Fixes #12 and closes #13."));
 // [ { issueNumber: 12, keyword: "fixes", start: 0, end: 9 },
@@ -149,8 +121,9 @@ Six services cover the half of a repository that is policy rather than content: 
 Secrets carry the libsodium sealed box GitHub's API requires, which is why the value is a `Redacted<string>` rather than a plain one:
 
 ```ts
-import { RepositorySecret } from "@effected/github";
-import { Effect, Redacted } from "effect";
+import { RepositorySecret } from "@beep/scratchpad/effected/github/index";
+import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
 
 declare const token: string;
 
@@ -173,8 +146,8 @@ The rest follow their endpoints' own grain. `DeploymentEnvironment.upsert` is a 
 `GitHubRepository` owns the repository's own settings. `updateSettings` is the faithfully typed `PATCH`; `applySettings` is the applicator above it, taking an open map, routing each key to whichever API can actually set it, and reporting what went out:
 
 ```ts
-import { GitHubRepository } from "@effected/github";
-import { Effect } from "effect";
+import { GitHubRepository } from "@beep/scratchpad/effected/github/index";
+import * as Effect from "effect/Effect";
 
 const program = Effect.gen(function* () {
   const repository = yield* GitHubRepository;
@@ -192,7 +165,7 @@ const program = Effect.gen(function* () {
 `updateSettings` takes octokit's own generated params, and those spell an optional field as `has_issues?: boolean` rather than `has_issues?: boolean | undefined` — so under `exactOptionalPropertyTypes` a `Partial<T>` built from your own settings schema does not assign to it at all. `repositoryPatch` is the supported way out, and it exists so the answer is never a cast:
 
 ```ts
-import { repositoryPatch } from "@effected/github";
+import { repositoryPatch } from "@beep/scratchpad/effected/github/index";
 
 declare const config: { has_issues?: boolean | undefined; description?: string | undefined };
 
@@ -209,8 +182,8 @@ Dropping the key is what the wire needs: `PATCH` reads an absent field as "leave
 `GitHubApp.clientLayer` builds a `GitHubClient` authenticated as an app installation. The token is minted on build, re-minted a minute before it expires, and revoked on release — best effort — so a workflow does not leave live credentials behind:
 
 ```ts
-import { GitHubApp } from "@effected/github";
-import { Redacted } from "effect";
+import { GitHubApp } from "@beep/scratchpad/effected/github/index";
+import * as Redacted from "effect/Redacted";
 
 // bind once — layers memoize by reference
 const AppClient = GitHubApp.clientLayer({
@@ -228,8 +201,8 @@ Only `GitHubApp` and its statics import the JWT signer — a consumer authentica
 `GitHubError` covers REST, `GitHubGraphQLError` covers GraphQL, `GitHubAppError` covers app authentication, and `TokenPermissions` produces its own `TokenPermissionError` — four kinds, not one per resource:
 
 ```ts
-import { GitHubError } from "@effected/github";
-import { Effect } from "effect";
+import { GitHubError } from "@beep/scratchpad/effected/github/index";
+import * as Effect from "effect/Effect";
 
 declare const upsertBranch: Effect.Effect<"created" | "reset", GitHubError>;
 
@@ -241,8 +214,8 @@ const program = upsertBranch.pipe(
 A 422 also carries GitHub's validation entries as `validation`, each a `GitHubValidationEntry` with the `resource`, `field`, `code` and `message` GitHub sent. Only `already_exists` gets a `kind` of its own; for the other documented codes (`GitHubValidationCode`), branch with `hasValidationCode` rather than reading `reason`:
 
 ```ts
-import { GitHubError } from "@effected/github";
-import { Effect } from "effect";
+import { GitHubError } from "@beep/scratchpad/effected/github/index";
+import * as Effect from "effect/Effect";
 
 declare const createRelease: Effect.Effect<void, GitHubError>;
 
@@ -260,8 +233,8 @@ Retrying is handled once, in the client: `RetryPolicy.default` retries a `transp
 Every resource ships `makeTest(overrides?)` and `layerTest(overrides?)`: stub the members a test exercises, and every other member dies naming itself, so a test proves it touches nothing it did not stub:
 
 ```ts
-import { GitBranch } from "@effected/github";
-import { Effect } from "effect";
+import { GitBranch } from "@beep/scratchpad/effected/github/index";
+import * as Effect from "effect/Effect";
 
 const TestBranches = GitBranch.layerTest({
   upsert: () => Effect.succeed("created"),
@@ -271,7 +244,7 @@ const TestBranches = GitBranch.layerTest({
 `GitHubClient.layerFixture(fixtures)` is the one recorded-response double that pages for real: it builds a `PageSource` over the recorded array and hands it to the same pagination engine the live client uses, so a truncation path behaves identically under test and in production. Three things about its contract are worth knowing before you write against it:
 
 ```ts
-import { GitHubClient, GitHubError, type GitHubFixtures } from "@effected/github";
+import { GitHubClient, GitHubError, type GitHubFixtures } from "@beep/scratchpad/effected/github/index";
 import * as Result from "effect/Result";
 
 const fixtures: GitHubFixtures = {

@@ -24,7 +24,19 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
  * `undefined` for a key the caller never mentioned would clear a setting they
  * did not ask to change.
  *
+ * **Example** (Decode a partial CodeQL configuration)
+ *
+ * ```ts
+ * import { CodeScanningSetup } from "@beep/scratchpad/effected/github/CodeScanning";
+ * import * as S from "effect/Schema";
+ *
+ * const setup = S.decodeUnknownSync(CodeScanningSetup)({ state: "configured" });
+ * console.log(setup.state) // configured
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const CodeScanningSetup = S.Struct({
 	/** Whether default setup is `configured` or `not-configured`. */
@@ -41,44 +53,83 @@ export const CodeScanningSetup = S.Struct({
 	runner_label: S.optional(S.String).annotateKey({ description: "The runner label, when runner_type is labeled." }),
 }).annotate($I.annote("CodeScanningSetup", { description: "A partial CodeQL default-setup configuration preserving omitted fields." }));
 
-/** The structural configuration owned by {@link CodeScanningSetup}. */
+/**
+ * The structural configuration owned by {@link CodeScanningSetup}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CodeScanningSetup = typeof CodeScanningSetup.Type;
 
 /**
  * CodeQL default setup, and the language detection that gates it.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CodeScanningShape {
 	/**
-  * Apply a default-setup configuration.
-  *
-  * **Gotchas**
-  *
-  * The endpoint answers **202 Accepted** and configures asynchronously.
-  * Nothing here polls: a successful call means GitHub accepted the request,
-  * not that scanning is running.
-  *
-  * **Turning it back off does not undo everything it did.** Setting `state`
-  * to `not-configured` stops default setup, but the synthetic CodeQL workflow
-  * GitHub created when it was enabled **survives** — it remains listed among
-  * the repository's workflows afterwards. A caller that treats "default setup
-  * is off" as "no CodeQL workflow exists" will be wrong, and one that counts
-  * workflows to decide whether a repository has any CI will count that one.
-  * Observed against a real organization, not inferred from the API
-  * description.
-  */
+	 * Apply a default-setup configuration.
+	 *
+	 * **Gotchas**
+	 *
+	 * The endpoint answers **202 Accepted** and configures asynchronously.
+	 * Nothing here polls: a successful call means GitHub accepted the request,
+	 * not that scanning is running.
+	 *
+	 * **Turning it back off does not undo everything it did.** Setting `state`
+	 * to `not-configured` stops default setup, but the synthetic CodeQL workflow
+	 * GitHub created when it was enabled **survives** — it remains listed among
+	 * the repository's workflows afterwards. A caller that treats "default setup
+	 * is off" as "no CodeQL workflow exists" will be wrong, and one that counts
+	 * workflows to decide whether a repository has any CI will count that one.
+	 * Observed against a real organization, not inferred from the API
+	 * description.
+	 *
+	 * **Example** (Construct the configure operation)
+	 *
+	 * ```ts
+	 * import { CodeScanning } from "@beep/scratchpad/effected/github/CodeScanning";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const service = yield* CodeScanning;
+	 *   return yield* service.configure({ state: "configured" });
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	readonly configure: (setup: CodeScanningSetup) => Effect.Effect<void, GitHubError, Repo>;
 	/**
-  * The languages GitHub detects in the repository.
-  *
-  * **Details**
-  *
-  * The response maps language name to bytes; only the names are returned, in
-  * GitHub's own order (most bytes first). Use it to filter a configured
-  * language list down to what the repository actually contains — GitHub
-  * rejects a default-setup call naming a language it does not detect.
-  */
+	 * The languages GitHub detects in the repository.
+	 *
+	 * **Details**
+	 *
+	 * The response maps language name to bytes; only the names are returned, in
+	 * GitHub's own order (most bytes first). Use it to filter a configured
+	 * language list down to what the repository actually contains — GitHub
+	 * rejects a default-setup call naming a language it does not detect.
+	 *
+	 * **Example** (Construct the languages operation)
+	 *
+	 * ```ts
+	 * import { CodeScanning } from "@beep/scratchpad/effected/github/CodeScanning";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const service = yield* CodeScanning;
+	 *   return yield* service.languages;
+	 * });
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category utilities
+	 * @since 0.0.0
+	 */
 	readonly languages: Effect.Effect<ReadonlyArray<string>, GitHubError, Repo>;
 }
 
@@ -91,32 +142,89 @@ export interface CodeScanningShape {
  * Provide it with {@link CodeScanning.layer}, which needs a `GitHubClient`; each
  * method also needs a `Repo` in `R`.
  *
+ * **Example** (Construct a CodeQL configuration program)
+ *
+ * ```ts
+ * import { CodeScanning } from "@beep/scratchpad/effected/github/CodeScanning";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = Effect.gen(function* () {
+ *   const service = yield* CodeScanning;
+ *   yield* service.configure({ state: "configured" });
+ * });
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class CodeScanning extends Context.Service<CodeScanning, CodeScanningShape>()($I`CodeScanning`) {
 	/**
-  * The live service, built over a `GitHubClient`.
-  *
-  * **Gotchas**
-  *
-  * The callback is written `(client) => make(client)` rather than passed as
-  * `make` directly, and that is load-bearing: a static initializer runs while
-  * the module body is still evaluating, so naming a `const` declared further
-  * down throws `Cannot access 'make' before initialization` **at import time**,
-  * with a clean typecheck.
-  */
+	 * The live service, built over a `GitHubClient`.
+	 *
+	 * **Gotchas**
+	 *
+	 * The callback is written `(client) => make(client)` rather than passed as
+	 * `make` directly, and that is load-bearing: a static initializer runs while
+	 * the module body is still evaluating, so naming a `const` declared further
+	 * down throws `Cannot access 'make' before initialization` **at import time**,
+	 * with a clean typecheck.
+	 *
+	 * **Example** (Inspect the live service layer)
+	 *
+	 * ```ts
+	 * import { CodeScanning } from "@beep/scratchpad/effected/github/CodeScanning";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(CodeScanning.layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<CodeScanning, never, GitHubClient> = Layer.effect(
 		this,
 		Effect.map(GitHubClient, (client) => make(client)),
 	);
 
-	/** An in-memory double; unstubbed members die naming themselves. */
+	/**
+	 * An in-memory double; unstubbed members die naming themselves.
+	 *
+	 * **Example** (Stub a test service member)
+	 *
+	 * ```ts
+	 * import { CodeScanning } from "@beep/scratchpad/effected/github/CodeScanning";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const service = CodeScanning.makeTest({ languages: Effect.succeed(["TypeScript"]) });
+	 * console.log(Effect.isEffect(service.languages)) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<CodeScanningShape> = {}): CodeScanningShape => ({
 		configure: overrides.configure ?? (() => unstubbed("configure")),
 		languages: overrides.languages ?? (Effect.suspend(() => unstubbed("languages"))),
 	});
 
-	/** {@link CodeScanning.makeTest} behind a `Layer`. */
+	/**
+	 * {@link CodeScanning.makeTest} behind a `Layer`.
+	 *
+	 * **Example** (Construct a test service layer)
+	 *
+	 * ```ts
+	 * import { CodeScanning } from "@beep/scratchpad/effected/github/CodeScanning";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * const layer = CodeScanning.layerTest();
+	 * console.log(Layer.isLayer(layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<CodeScanningShape> = {}): Layer.Layer<CodeScanning> =>
 		Layer.succeed(CodeScanning, CodeScanning.makeTest(overrides));
 }

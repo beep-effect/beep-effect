@@ -18,7 +18,23 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 /**
  * A release, projected to the fields callers read.
  *
+ * **Example** (Construct release metadata)
+ *
+ * ```ts
+ * import { ReleaseInfo } from "@beep/scratchpad/effected/github/GitHubRelease";
+ *
+ * const release = ReleaseInfo.make({
+ *   id: 1, tag: "v1.2.3", name: "Version 1.2.3", body: "Release notes",
+ *   draft: false, prerelease: false, url: "https://github.com/acme/app/releases/tag/v1.2.3",
+ *   uploadUrl: "https://uploads.github.com/repos/acme/app/releases/1/assets{?name,label}",
+ * });
+ * console.log(release.tag) // v1.2.3
+ * ```
+ *
+
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class ReleaseInfo extends S.Class<ReleaseInfo>($I`ReleaseInfo`)({
 	id: S.Int.annotateKey({ description: "GitHub's identifier for updating the release and uploading or listing its assets" }),
@@ -36,7 +52,21 @@ export class ReleaseInfo extends S.Class<ReleaseInfo>($I`ReleaseInfo`)({
 /**
  * A file attached to a release.
  *
+ * **Example** (Construct a release asset)
+ *
+ * ```ts
+ * import { ReleaseAsset } from "@beep/scratchpad/effected/github/GitHubRelease";
+ *
+ * const asset = ReleaseAsset.make({
+ *   id: 2, name: "app.zip", url: "https://example.com/app.zip", size: 1024,
+ * });
+ * console.log(asset.size) // 1024
+ * ```
+ *
+
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class ReleaseAsset extends S.Class<ReleaseAsset>($I`ReleaseAsset`)({
 	id: S.Int.annotateKey({ description: "GitHub's identifier for the file attached to the release" }),
@@ -51,6 +81,8 @@ export class ReleaseAsset extends S.Class<ReleaseAsset>($I`ReleaseAsset`)({
  * Create, read, list and update releases, and upload and list their assets.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface GitHubReleaseShape {
 	/** Create a release for `tag`. Unset fields are left to GitHub's defaults. */
@@ -125,7 +157,7 @@ export interface GitHubReleaseShape {
  * **Example** (Create a release with generated notes)
  *
  * ```ts
- * import { GitHubRelease } from "./index.ts";
+ * import { GitHubRelease } from "@beep/scratchpad/effected/github/GitHubRelease";
  * import * as Effect from "effect/Effect";
  *
  * const publish = Effect.gen(function* () {
@@ -133,20 +165,53 @@ export interface GitHubReleaseShape {
  *   const release = yield* releases.create({ tag: "v1.2.3", generateReleaseNotes: true });
  *   return release.url;
  * });
+ * console.log(Effect.isEffect(publish)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class GitHubRelease extends Context.Service<GitHubRelease, GitHubReleaseShape>()(
 	$I`GitHubRelease`,
 ) {
-	/** The live service, built over a `GitHubClient`. */
+	/**
+	 * The live service, built over a `GitHubClient`.
+	 *
+	 * **Example** (Inspect the live service layer)
+	 *
+	 * ```ts
+	 * import { GitHubRelease } from "@beep/scratchpad/effected/github/GitHubRelease";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(GitHubRelease.layer)) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layer: Layer.Layer<GitHubRelease, never, GitHubClient> = Layer.effect(
 		this,
 		Effect.map(GitHubClient, (client) => make(client)),
 	);
 
-	/** An in-memory double; unstubbed members die naming themselves. */
+	/**
+	 * An in-memory double; unstubbed members die naming themselves.
+	 *
+	 * **Example** (Override a test-double member)
+	 *
+	 * ```ts
+	 * import { GitHubRelease } from "@beep/scratchpad/effected/github/GitHubRelease";
+	 * import * as O from "effect/Option";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const service = GitHubRelease.makeTest({ getByTagOption: () => Effect.succeed(O.none()) });
+	 * console.log(Effect.isEffect(service.getByTagOption("v1.2.3"))) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
+	 */
 	static readonly makeTest = (overrides: Partial<GitHubReleaseShape> = {}): GitHubReleaseShape => ({
 		create: overrides.create ?? (() => unstubbed("create")),
 		getByTag: overrides.getByTag ?? (() => unstubbed("getByTag")),
@@ -157,7 +222,21 @@ export class GitHubRelease extends Context.Service<GitHubRelease, GitHubReleaseS
 		listAssets: overrides.listAssets ?? (() => unstubbed("listAssets")),
 	});
 
-	/** {@link GitHubRelease.makeTest} behind a `Layer`. */
+	/**
+	 * {@link GitHubRelease.makeTest} behind a `Layer`.
+	 *
+	 * **Example** (Provide an in-memory service layer)
+	 *
+	 * ```ts
+	 * import { GitHubRelease } from "@beep/scratchpad/effected/github/GitHubRelease";
+	 * import * as Layer from "effect/Layer";
+	 *
+	 * console.log(Layer.isLayer(GitHubRelease.layerTest())) // true
+	 * ```
+	 *
+	 * @category layers
+	 * @since 0.0.0
+	 */
 	static readonly layerTest = (overrides: Partial<GitHubReleaseShape> = {}): Layer.Layer<GitHubRelease> =>
 		Layer.succeed(GitHubRelease, GitHubRelease.makeTest(overrides));
 }

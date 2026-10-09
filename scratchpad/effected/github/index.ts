@@ -15,7 +15,7 @@
  * **Example** (Read the default branch with a configured GitHub client)
  *
  * ```ts
- * import { GitHubClient } from "./index.ts";
+ * import { GitHubClient } from "@beep/scratchpad/effected/github/index";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
