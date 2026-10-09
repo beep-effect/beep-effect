@@ -59,7 +59,8 @@ state are recorded; stage 1 closes when every lane owner and recovery path in
 
 ## Latest Evidence
 
-H1 OSV wave in progress: [catalog receipt](./history/receipts/stage-4-h1-catalog.md#osv-exceptions)
+H1 OSV wave [PR #1562](https://github.com/beep-effect/beep-effect/pull/1562) published;
+local parity has an inherited knowledge-reference blocker: [catalog receipt](./history/receipts/stage-4-h1-catalog.md#osv-exceptions)
 and [lane handoff](./history/handoffs/rsc-h1-catalog-2026-10-09.md).
 
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md)

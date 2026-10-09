@@ -120,3 +120,26 @@
   the wrapper; retain machine-wide admission. No fallback bypass.
 - Prevention: have the wrapper resolve the current user's existing runtime bus
   when launched from an agent environment that omits those variables.
+
+## 2026-10-09 — H1 publication succeeds before monitor submission fails
+
+- Task: publish the OSV exception renewal wave through Yeet.
+- Evidence: PR #1562 was created at `18fdc60e50`, but publication exited 1:
+  `Detached proof jobs require an active systemd user manager`.
+- Resolution: re-submit the monitor with the existing user-session bus
+  environment, without republishing the already-pushed commit.
+- Prevention: apply the same runtime-bus discovery to Yeet monitor submission
+  as to the heavy admission wrapper.
+
+## 2026-10-09 — H1 knowledge-reference parity inherits two host-path gates
+
+- Task: run `CI=true bun run beep knowledge refs --check` in the admitted OSV wave.
+- Evidence: exit 1, `check: 2 live gated observation(s)`:
+  `explorations/build-pipeline-simplification/RESEARCH.md:194` (home-relative
+  heavy-wrapper reference) and `SPEC.md:374` (home-absolute path fragment).
+- Attribution: first line is present in `origin/main` at `d1e8350670`; second
+  is present in the packet branch at `3dbf109066`. Neither line is edited by
+  H1. The brief assigns knowledge-reference drift repair to lane C.
+- Prevention: have the shared baseline/portability repair land once through
+  its owning lane; H1 then merges main and reruns the failed check. Do not
+  copy the repair into every lane or weaken the check.
