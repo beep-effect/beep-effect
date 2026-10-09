@@ -1171,7 +1171,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
       // shell refuses even though TypeScript can hash it.
       yield* fs.makeDirectory(path.join(root, ".claude", "skills", "caf\u00e9"), { recursive: true });
       yield* fs.writeFileString(path.join(root, ".claude", "skills", "caf\u00e9", "SKILL.md"), "# cafe\n");
-      yield* Effect.scoped(ChildProcess.make("git", ["add", "--all"], { cwd: root }).pipe(ChildProcess.exitCode));
+      const indexed1 = yield* ChildProcess.make("git", ["add", "--all"], {
+        cwd: root,
+        stdout: "ignore",
+        stderr: "ignore",
+      });
+      expect(yield* indexed1.exitCode).toBe(0);
       yield* typescriptHarnessHash(root);
       assertNone(yield* stampOf(sessionStartPayload(root)));
       yield* fs.remove(path.join(root, ".claude", "skills", "caf\u00e9"), { recursive: true });
@@ -1184,7 +1189,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
         (index) => fs.writeFileString(path.join(root, ".claude", "bulk", `f${index}.md`), "x\n"),
         { concurrency: 32, discard: true }
       );
-      yield* Effect.scoped(ChildProcess.make("git", ["add", "--all"], { cwd: root }).pipe(ChildProcess.exitCode));
+      const indexed2 = yield* ChildProcess.make("git", ["add", "--all"], {
+        cwd: root,
+        stdout: "ignore",
+        stderr: "ignore",
+      });
+      expect(yield* indexed2.exitCode).toBe(0);
       pipe((yield* typescriptHarnessHash(root)).snapshot.bounds.truncationReason, O.isSome, assertTrue);
       assertNone(yield* stampOf(sessionStartPayload(root)));
     })

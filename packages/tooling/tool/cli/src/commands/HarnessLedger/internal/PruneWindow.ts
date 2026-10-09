@@ -206,7 +206,14 @@ const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
       : tally.freshStarts,
     minTs: Math.min(tally.minTs, ts),
     endedAt: O.filter(
-      pulse.hookEvent === "SessionEnd" && O.contains(pulse.sessionRole, "primary") ? O.some(ts) : tally.endedAt,
+      pulse.hookEvent === "SessionEnd" && O.contains(pulse.sessionRole, "primary")
+        ? O.some(
+            Math.max(
+              ts,
+              O.getOrElse(tally.endedAt, () => ts)
+            )
+          )
+        : tally.endedAt,
       (end) => end >= Math.max(tally.maxTs, ts)
     ),
     userTurns: tally.userTurns + countPrimaryEvent(pulse, HookPulseEvent.is.UserPromptSubmit),
@@ -570,8 +577,8 @@ const foldReconciliationHook = (
   bindings: MutableHashMap.MutableHashMap<string, ReconciliationHookBinding>,
   hooks: MutableHashMap.MutableHashMap<string, number>
 ): void => {
-  if (row.instrumentClass !== "production" || row.agentKind !== agentKind || !isTerminalToolEvent(row.hookEvent))
-    return;
+  if (row.instrumentClass !== "production" || row.agentKind !== agentKind) return;
+  const toolIncrement = isTerminalToolEvent(row.hookEvent) ? 1 : 0;
   O.match(row.transcriptPath, {
     onNone: F.constVoid,
     onSome: (key) => {
@@ -591,10 +598,10 @@ const foldReconciliationHook = (
             O.getOrElse(
               O.map(prior, (value) => value.count),
               () => 0
-            ) + 1,
+            ) + toolIncrement,
         })
       );
-      MutableHashMap.set(hooks, key, O.getOrElse(MutableHashMap.get(hooks, key), () => 0) + 1);
+      MutableHashMap.set(hooks, key, O.getOrElse(MutableHashMap.get(hooks, key), () => 0) + toolIncrement);
     },
   });
 };

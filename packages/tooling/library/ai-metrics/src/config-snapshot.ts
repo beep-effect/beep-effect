@@ -828,7 +828,27 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
   // session/baseline split and corrupts `sessionHash` rather than merely shrinking the snapshot.
   yield* Effect.forEach(
     SessionScopePath.literals,
-    (relative) => walk(pathApi.join(repoRoot, relative), 0, () => true),
+    Effect.fnUntraced(function* (relative) {
+      const parts = Str.split(relative, "/");
+      const configRoot = A.findFirst(CONFIG_ROOTS, (root) => Str.startsWith(`${root}/`)(relative));
+      if (A.length(parts) > budget.maxDepth + (O.isSome(configRoot) ? 1 : 0))
+        return yield* markTruncated(AiMetricsConfigSnapshotTruncationReason.Enum["max-depth"]);
+      if (O.isSome(configRoot)) {
+        const dirPath = pathApi.join(repoRoot, configRoot.value);
+        if (yield* isNestedGitRoot({ dirPath, scanRoot: repoRoot }))
+          return yield* Ref.update(excludedRef, (paths) => A.append(paths, configRoot.value));
+      }
+      const file = pathApi.join(repoRoot, relative);
+      const info = yield* fs.stat(file).pipe(
+        Effect.asSome,
+        Effect.catchIf(
+          (cause) => cause.reason._tag === "NotFound",
+          () => Effect.succeedNone
+        ),
+        Effect.mapError((cause) => configSnapshotFailure("Cannot inspect prioritized snapshot file.", cause))
+      );
+      if (O.exists(info, (value) => value.type === "File")) yield* walk(file, A.length(parts), () => true);
+    }),
     { discard: true }
   );
   yield* walk(repoRoot, 0, isAgentDocName);
