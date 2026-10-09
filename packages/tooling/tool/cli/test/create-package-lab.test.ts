@@ -12,16 +12,18 @@ import {
   LABS_WORKSPACE_ROOT,
   LabManifest,
   LabManifestFromJsonString,
+  LabPostgresSchemaName,
   RETIRED_REGISTRY_PATH,
 } from "@beep/repo-cli/test/Labs";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
-import { today } from "@beep/schema/LocalDate";
+import { daysInMonth, today } from "@beep/schema/LocalDate";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertFailure } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Console from "effect/Console";
 import { Command } from "effect/cli";
@@ -31,11 +33,13 @@ import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as jsonc from "jsonc-parser";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
+const formatSchemaIssues = SchemaIssue.makeFormatterStandardSchemaV1();
 
 const decodeUnknownLabManifestFromJsonStringEffect = S.decodeUnknownEffect(LabManifestFromJsonString);
 const encodeLabManifestFromJsonStringEffect = S.encodeEffect(LabManifestFromJsonString);
@@ -372,21 +376,24 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
 
     {
       const manifestEquivalence = S.toEquivalence(LabManifest);
-      const isoDate = Arbitrary.map(
+      const isoDate = Arbitrary.flatMap(
         Arbitrary.all([
-          Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1970), S.isLessThanOrEqualTo(2100))),
+          Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(9999))),
           Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(12))),
-          Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(28))),
         ]),
-        ([year, month, day]) =>
-          `${Str.padStart(4, "0")(String(year))}-${Str.padStart(2, "0")(String(month))}-${Str.padStart(2, "0")(String(day))}`
+        ([year, month]) =>
+          Arbitrary.map(
+            Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(daysInMonth(year, month)))),
+            (day) =>
+              `${Str.padStart(4, "0")(String(year))}-${Str.padStart(2, "0")(String(month))}-${Str.padStart(2, "0")(String(day))}`
+          )
       );
       const encodedManifest = Arbitrary.all({
         schemaVersion: Arbitrary.Constant("lab-manifest/v1" as const),
         purpose: Arbitrary.schema(S.String.check(S.isMinLength(1))),
         created: isoDate,
         disposition: Arbitrary.schema(S.Union([S.Literal("active"), S.Literal("promote"), S.Literal("expired")])),
-        postgresSchema: S.Literal("lab_a").pipe(S.UndefinedOr, Arbitrary.schema),
+        postgresSchema: LabPostgresSchemaName.pipe(S.UndefinedOr, Arbitrary.schema),
       });
       it.effect.prop(
         "property: lab manifests round-trip the lab.manifest.json codec from valid encoded dates",
@@ -403,12 +410,68 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
                 decoded
               )
             ).toBe(true);
+            expect(yield* decodeUnknownJson(yield* encodeLabManifestFromJsonStringEffect(decoded))).toEqual(encoded);
           }),
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
         { arbitrary: fcRuns(16) }
       );
     }
+
+    it.effect(
+      "retains calendar endpoints, leap days, month ends and postgres schema slugs on the wire",
+      Effect.fnUntraced(function* () {
+        yield* Effect.forEach(
+          [
+            "0001-01-01",
+            "0001-12-31",
+            "0099-02-28",
+            "0400-02-29",
+            "1900-02-28",
+            "2000-02-29",
+            "2024-04-30",
+            "2024-01-31",
+            "9999-12-31",
+          ],
+          Effect.fnUntraced(function* (created) {
+            const encoded = {
+              schemaVersion: "lab-manifest/v1",
+              purpose: "calendar boundary",
+              created,
+              disposition: "active",
+              postgresSchema: "lab_a0_end_",
+            };
+            const decoded = yield* decodeUnknownLabManifestFromJsonStringEffect(yield* encodePrettyJson(encoded));
+            expect(yield* decodeUnknownJson(yield* encodeLabManifestFromJsonStringEffect(decoded))).toEqual(encoded);
+          }),
+          { discard: true }
+        );
+        yield* Effect.forEach(
+          [
+            { created: "0000-01-01", message: "Expected string" },
+            { created: "10000-01-01", message: "Expected a valid value" },
+            { created: "1900-02-29", message: "Expected string" },
+            { created: "2024-02-30", message: "Expected string" },
+            { created: "2024-04-31", message: "Expected string" },
+          ],
+          Effect.fnUntraced(function* ({ created, message }) {
+            const result = yield* decodeUnknownLabManifestFromJsonStringEffect(
+              yield* encodePrettyJson({
+                schemaVersion: "lab-manifest/v1",
+                purpose: "invalid calendar boundary",
+                created,
+                disposition: "active",
+              })
+            ).pipe(
+              Effect.mapError((error) => formatSchemaIssues(error.issue)),
+              Effect.result
+            );
+            assertFailure(result, { issues: [{ path: ["created"], message }] });
+          }),
+          { discard: true }
+        );
+      })
+    );
 
     it.effect(
       "scaffolds a nextjs lab with manifest, labs portless label, @beep/ui wiring, and the labs identity segment",

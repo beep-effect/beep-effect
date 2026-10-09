@@ -1,0 +1,5 @@
+{
+  "goals": "^(goals/(INDEX|README)\\.md|goals/[^/]+/(GOAL|PLAN|README|SPEC|DECISIONS)\\.md|goals/[^/]+/ops/manifest\\.json)$",
+  "desktop": "^(apps/professional-desktop/src-tauri/|\\.github/workflows/check\\.yml$|scripts/ci-change-profile\\.sh$|packages/tooling/tool/cli/src/commands/Ci/CiOperational)",
+  "docs": "^docs/|^explorations/|^research/|^\\.changeset/[^/]+\\.md$|\\.md$"
+}

@@ -779,6 +779,20 @@ it.layer(NodeServices.layer)("round 2 contextual graph routing", (it) => {
         ),
         ["utils.assertNone", "utils.assertTrue", "utils.deepStrictEqual"]
       );
+      deepStrictEqual(
+        A.map(
+          A.filter(hydrated, (row) => row.ruleId === "EV012"),
+          (row) => [row.id, row.class, row.symbol, row.evidence]
+        ),
+        [
+          [
+            "EV012:routing.test.ts:7:vi.mock@6#1",
+            "unproven-module-mock-review",
+            O.some("vi.mock"),
+            'vi.mock("@beep/codec", () => ({ decode: fake }))',
+          ],
+        ]
+      );
       assertTrue(
         A.every(
           A.filter(hydrated, (row) => row.ruleId === "EV012"),

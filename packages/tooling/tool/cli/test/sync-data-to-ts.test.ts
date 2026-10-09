@@ -754,6 +754,44 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
           });
           const reporterVocabulary = yield* projectReporterVocabulary(reporterData.reporters, []);
 
+          expect(courtVocabulary).toHaveLength(2);
+          expect(reporterVocabulary).toHaveLength(2);
+          expect(
+            A.map(courtVocabulary, ({ id, semanticKey, contextualAliases }) => ({ id, semanticKey, contextualAliases }))
+          ).toEqual(
+            expect.arrayContaining([
+              {
+                id: "first",
+                semanticKey: "court:first",
+                contextualAliases: [{ alias: "Shared", context: "One: First Court" }],
+              },
+              {
+                id: "second",
+                semanticKey: "court:second",
+                contextualAliases: [{ alias: "Shared", context: "Two: Second Court" }],
+              },
+            ])
+          );
+          expect(
+            A.map(reporterVocabulary, ({ id, semanticKey, contextualAliases }) => ({
+              id,
+              semanticKey,
+              contextualAliases,
+            }))
+          ).toEqual(
+            expect.arrayContaining([
+              {
+                id: "reporter:1bde066d21114aebbc288a9c",
+                semanticKey: "Shared\u001fstate\u001fFirst Reporter",
+                contextualAliases: [{ alias: "Shared", context: "First Reporter; cite-type=state; editions=" }],
+              },
+              {
+                id: "reporter:c5c83b9042036ff662faa572",
+                semanticKey: "Shared\u001ffederal\u001fSecond Reporter",
+                contextualAliases: [{ alias: "Shared", context: "Second Reporter; cite-type=federal; editions=" }],
+              },
+            ])
+          );
           expect(courtVocabulary.every(({ contextualAliases }) => contextualAliases.length === 1)).toBe(true);
           expect(reporterVocabulary.every(({ contextualAliases }) => contextualAliases.length === 1)).toBe(true);
         },
@@ -1007,4 +1045,25 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
       )
     );
   });
+});
+
+it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned SPAR acquisition", (it) => {
+  it.effect("rejects byte drift before emitting generated files", () =>
+    Effect.gen(function* () {
+      const target = O.getOrThrow(A.findFirst(syncDataTargets, (entry) => entry.id === "spar-terms"));
+      expect(target.sourceUrls).toHaveLength(4);
+      for (const url of target.sourceUrls) {
+        expect(url).toMatch(/raw\.githubusercontent\.com\/SPAROntologies\/[^/]+\/[a-f0-9]{40}\/docs\/2026-/u);
+      }
+      const error = yield* target.acquire.pipe(
+        Effect.provideService(
+          HttpClient.HttpClient,
+          makeWebHandlerClient(() => new Response("altered pinned content"))
+        ),
+        Effect.flip
+      );
+      expect(error._tag).toBe("SyncDataToTsError");
+      expect(error.message).toContain("SHA-256 does not match");
+    })
+  );
 });

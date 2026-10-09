@@ -227,6 +227,7 @@ export {
   CacheLinkedFile,
   CacheLinkerResolution,
   CacheLiveIdentity,
+  CacheRemoteReadsRequest,
   CacheRunMode,
   CacheRuntimeExecutable,
   CacheRuntimeLinkerSnapshot,

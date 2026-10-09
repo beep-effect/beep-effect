@@ -37,7 +37,6 @@
         "lefthook": "catalog:",
         "micromark": "catalog:",
         "micromark-extension-gfm": "catalog:",
-        "onnxruntime-node": "catalog:",
         "oxlint": "catalog:",
         "picomatch": "catalog:",
         "statelyai": "catalog:",
@@ -2443,6 +2442,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@beep/identity": "workspace:^",
+        "@beep/md": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "effect": "catalog:",

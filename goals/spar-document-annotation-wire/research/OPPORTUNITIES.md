@@ -1,0 +1,102 @@
+# Friction receipts
+
+## 2026-10-09 — Heavy wrapper requires the user-session bus
+
+During dependency build preflight, `beep-heavy zsh -ic 'bunx turbo run build …'`
+exited 1 before starting a gate: `Failed to connect to user scope bus` because
+`DBUS_SESSION_BUS_ADDRESS` and `XDG_RUNTIME_DIR` were undefined.
+Recovery: supply the existing user runtime directory and session bus address to
+the wrapper, retaining admission and memory limits. A launcher preflight that
+exports the existing session bus would prevent this failure.
+
+## 2026-10-09 — Unary dual and template-number checks need installed API validation
+
+While authoring the source-id/fold API, inspection of installed
+`effect/dist/Function.js` showed `dual(1, …)` throws `Invalid arity 1`.
+The unary fold is already usable as a direct data-last function, so it uses
+that form. Installed `Schema.js` documents that `TemplateLiteralParser`
+applies checks on number parts; a plain `TemplateLiteral` matches the number
+syntax. The source-id schema therefore adds a named canonical-index pattern
+check. Neither issue was deferred to a failing package run. A skill note on
+unary utilities and checked numeric template parts would prevent the detour.
+
+## 2026-10-09 — Hosted-parity knowledge check inherited a host-path red
+
+`CI=true bun run beep knowledge refs --check` exited 1 with one live gated
+observation: `external-mirror-reference` in the repository-simplification-
+confidence SPEC, line 374 (`home-absolute`). The affected file is byte-identical
+to `origin/main` and was not edited in this lane. Attribution: inherited,
+owned by the shared-main repair; this lane preserves the packet boundary.
+A preflight that identifies changed-path versus base findings would prevent
+feature lanes from rediscovering the same inherited red.
+
+## 2026-10-09 — Focused Vitest commands must use package working directories
+
+The initial focused fixture launches passed a package config from the repository
+root, where the inherited `test/**/*.test.{ts,tsx}` include found no test files.
+Attribution: the lane's command setup, not a fixture failure. Corrected launches
+enter the package directory and pass package-relative test paths. Coverage
+includes and output paths use the same package working-directory contract.
+A canonical focused-test launcher in the brief would prevent this detour.
+
+## 2026-10-09 — RDF audit test diagnostics
+
+The first RDF package audit compiled production source, then rejected four test
+lines: optional encoded context access, two unknown decoders on already typed
+encoded values, and a nested schema/arbitrary call with a pipeable form.
+The lane repaired all four in the content commit and acknowledged the audit
+inbox row with its fix SHA. Runtime source/codec probes were already green;
+package audit remains the authoritative proof of the repair.
+
+- Hosted-parity attribution: `quality test-tsgo` caught `strictEffectProvide` in the new pinned-acquisition test. The package audit had passed, but its check configuration does not cover this additional Effect test diagnostic. Moved the test layer to the outer test entry point; retain both proof lanes.
+- `docgen:local` reported `full-required` because `bun.lock` changed with the RDF-to-Md edge. Package docgen is green; the full docgen proof is now scheduled through the heavy wrapper.
+- Fallow audit reported one introduced cognitive-complexity finding in `MdSections.ts` (`nest`, score 18). Replaced the nested boundary loop with `Array.findFirstIndex`; no suppression or baseline regeneration. Health's blocking complexity finding is the same new fold hotspot, so both lanes are rerun together.
+
+- A callback's outer `Effect.provide` still triggers test TSGo's application-entry rule. Use the existing `it.layer` test runner boundary for service layers, rather than guessing that an outer callback is an application entry point. Final parity rerun uses that pattern.
+
+- Full docgen failed in unchanged `@beep/infra` dependency `node_modules/@pulumi/gharunners`: TS1205 type re-exports, TS1294 parameter-property syntax and TS4114 missing overrides. `git diff origin/main...HEAD -- infra` is empty; the only lockfile hunk is RDF's workspace Md edge. This is an inherited upstream SDK/docgen compatibility red for S11 consolidation, not a SPAR package failure. Avoid a whole-repo snapshot regeneration or edits outside this lane.
+
+- Wave 1 publication preflight rejected the unstaged P2 packet updates before any push: `requires reviewed staged changes or a clean local commit ahead`. Commit the reviewed packet updates first, then retry the same wave. The heavy-slot queue delayed this precondition feedback by about 23 minutes; push budget remains unused.
+
+- Wave 1 cheap gates terminated with exactly two failures. `quality:cache-policy` reports six configuration-drift rows for RDF build/check/doctest/deprecated-api/test/property tasks. `repo-sanity:tsconfig-sync` reports RDF reference reorder plus regeneration of `standards/fallow.boundaries.generated.jsonc` from the new workspace edge. The lane's explicit stop condition prohibits making a gate green through whole-repository generated standards regeneration. Stop before push, preserve the code and evidence, and hand the dependency snapshot decision to the program owner. P0 inbox acknowledged with the scope reason; no gate waived.
+
+## 2026-10-09 — Run 2 docgen attribution corrects the inherited-red claim
+
+Main hosted Docgen job `113987345990` passes and runs
+`infra:prepare-gha-runners` during install. The lane used `bun install
+--ignore-scripts`; its Pulumi SDK still exposes unbuilt TypeScript sources.
+The prior local TS1205/TS1294/TS4114 failure needs environment remediation
+proof, not an inherited classification based only on unchanged infra files.
+Run the existing SDK preparation script before repeating full docgen. A lane
+bootstrap that preserves mandatory local SDK preparation would prevent this.
+
+## 2026-10-09 — Resume repair waits behind shared heavy work
+
+The run-2 `beep-heavy` Yeet repair wrapper remains queued for about 18 minutes
+with `all 4 slots busy, waiting`; no repair step has started. A second owned
+wrapper acquired capacity, prepared the SDK and completed full docgen while
+repair continued waiting. Both remain within the at-most-two wrapper limit.
+Capacity is preserved; no other lane is stopped and no cap is raised. An
+observable admission queue with wait age would make this delay easier to
+diagnose than the wrapper's one-time waiting line.
+
+## 2026-10-09 — Private changesets escape cheap status but fail hosted graph
+
+Hosted Repo Sanity job 114036229903 rejects the two lane-authored changesets:
+`private workspace changesets are forbidden`. Both named manifests declare
+private: true. Local path-aware status passed while reporting private_skipped=3,
+so that proof did not validate existing notes. D17 archives and removes them;
+the graph gate is rerun. Brief generation should check live publication flags,
+and cheap status should include graph validity before opening a PR.
+
+## Final-wave inherited gate friction
+
+Task: publish the same-PR closeout after the required merge of main.
+Evidence: final-wave Yeet preflight passed 15 of 16 gates and failed only
+`lint:effect-vitest`: one new finding in
+`packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts`.
+The file is identical to main `7336224f34` and remains unchanged through
+`2d4a81216f`; it arrived from #1572. Publication exited 1 before any push.
+Prevention: the program's consolidated main repair must clear inherited local
+preflight reds before dependent lanes publish. S11 hosted-red tolerance does
+not make the local publication gate pass. No other packet or baseline is edited.

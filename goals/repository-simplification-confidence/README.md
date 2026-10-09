@@ -61,17 +61,57 @@ nothing was adopted or discarded. P0 Research is complete.
 
 ## Latest Evidence
 
+Lane V [PR #1575](https://github.com/beep-effect/beep-effect/pull/1575) is published and ready. [Stage 4 reconciliation](./history/receipts/stage-4-vitest-reconciliation.md) preserves all 46 source worktrees, records every disposition, and ties the generated 1,853 / 716 open / 1,137 exceptions inventory to final code. Full repo-cli verification and every local parity stage pass; independent source review is terminal zero and both actionable hosted threads are resolved. The R105 repair preview, 716-row R102 frontier, hosted merge gate and retirement remain separate open work.
+
 H1 OSV wave [PR #1562](https://github.com/beep-effect/beep-effect/pull/1562) ready for review;
 Run 4 integrates main repairs #1564/#1565, corrects the stored-response cache proof
 and repairs the census table; saved terminal parity remains attributed to its proof heads;
 local parity has an inherited knowledge-reference blocker: [catalog receipt](./history/receipts/stage-4-h1-catalog.md#osv-exceptions)
 and [lane handoff](./history/handoffs/rsc-h1-catalog-2026-10-09.md).
 
+[G storage census and deferred retention](./history/receipts/stage-5-storage-cleanup.md)
+and [G cache evidence](./history/receipts/stage-5-cache.md), 2026-10-09:
+2,765 v3 rows across 259 checkout roots, with a sanitized per-row CSV;
+zero real cleanup. [PR #1580](https://github.com/beep-effect/beep-effect/pull/1580)
+delivers owner/terminal/citation/liveness fences and recoverable archive moves.
+All 55 focused tests, the full package audit and named local parity checks pass.
+Independent source review round 16 is terminal zero at `59e5cf879f`.
+Fresh cold/warm/linked cache fixtures have identical healthy 28-file manifests;
+changed input misses and builds all 28 outputs. Scoped coverage percentages
+exceed baseline; increased absolute uncovered counts are recorded explicitly.
+Remote auth, home changes, other harness routes and real apply remain deferred.
+The orchestrator owns the S11 merge gate: [handoff](./history/handoffs/rsc-g-storage-2026-10-09.md).
+
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md)
 (implementation head `e62411d63f`, 2026-10-09);
 [`research/sweeps/2026-10-09/README.md`](./research/sweeps/2026-10-09/README.md)
 (14 sweeps and 19 gap follow-ups); Knip reconciliation at `e62411d63f`
 (41 of 41 rows reproduced, `research/knip-findings-2026-10-09.md`).
+
+C implementation evidence (partial, 2026-10-09):
+[`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md)
+and [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
+C includes the coordinated Ci group and pre-runtime adapters. Full
+`@beep/repo-cli` package verification and Run 4 local parity pass; those terminal
+receipts are retained. Resume ruling 4 authorizes removing the unused root ONNX
+devDependency and publishing with the push-only bypass for B-owned judgment rows.
+Run 7 retains the successful install and four installed patch markers, clears
+S5 through the orchestrator's durable notification, and passes all three required
+Knip/Fallow policy reruns. Knip has zero introduced findings; dead-code has zero
+findings; audit retains one nonblocking inherited complexity observation.
+[PR #1583](https://github.com/beep-effect/beep-effect/pull/1583) is published
+and ready for review through the authorized push/create fallback. E's workflow co-sign
+is received; Run 8 integrates its main policy and repairs the resource-adapter P2.
+All five scoped integration checks and 29 runner-security fixtures pass after the
+Config fixture repair. B/V judgment admission and updated-head hosted evidence remain open. C edits no inventory or allowlist
+and does not close program acceptance.
+
+Run 9 integrates V main `4e82f6d942`, preserving both packet contributions
+and the canonical scoped test harness. After repairing the introduced process
+API/formatting errors, merge-driver fixtures pass 5/5 on Node and Bun,
+test-tsgo passes 335 files, CI security passes 29/29, and repo-cli quick
+package verification passes. Unaffected terminal proof remains retained;
+updated-head hosted evidence and the orchestrator gate remain open.
 
 ## Notes
 

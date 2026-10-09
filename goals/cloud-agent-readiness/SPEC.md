@@ -1,5 +1,9 @@
 # Cloud Agent Readiness Spec
 
+> Bootstrap history: references to `scripts/cloud-session-setup.sh` below record
+> the original 2026-10-01 acceptance. That script is retired by workstream C;
+> current bootstrap is `scripts/cloud/bootstrap.sh`. Packet lifecycle is unchanged.
+
 ## Objective
 
 A fresh hosted agent container that holds only this repository's checkout and
