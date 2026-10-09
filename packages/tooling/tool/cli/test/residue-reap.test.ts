@@ -682,9 +682,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("residue reap", (it) => 
 
   it.effect("fails closed when the configured home root is empty or relative", () =>
     Effect.gen(function* () {
-      yield* runResidueReap({ homeRoot: "" }).pipe(Effect.flip);
-
-      yield* runResidueReap({ homeRoot: "relative/home" }).pipe(Effect.flip);
+      const empty = yield* runResidueReap({ homeRoot: "" }).pipe(Effect.flip);
+      expect(S.isSchemaError(empty)).toBe(true);
+      const relative = yield* runResidueReap({ homeRoot: "relative/home" }).pipe(Effect.flip);
+      expect(S.isSchemaError(relative)).toBe(true);
     })
   );
 
@@ -1788,61 +1789,73 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("checkout retention arch
     )
   );
 
-  it.effect("reconciles a successful rename whose first parent sync fails", () =>
-    Effect.acquireUseRelease(
-      makeTempDirectory,
-      (root) =>
-        retentionFixture(root).pipe(
-          Effect.flatMap((fixture) =>
-            Effect.gen(function* () {
-              const fs = yield* FileSystem.FileSystem;
-              const path = yield* Path.Path;
-              const nodeFs = process.getBuiltinModule("node:fs");
-              const original = nodeFs.fsyncSync;
-              let armed = false;
-              let failed = false;
-              yield* Effect.acquireUseRelease(
-                Effect.sync(() =>
-                  vi.spyOn(nodeFs, "fsyncSync").mockImplementation((fd) => {
-                    if (armed && !failed) {
-                      failed = true;
-                      throw new Error("synthetic parent sync failure");
-                    }
-                    original(fd);
-                  })
-                ),
-                () =>
-                  Effect.gen(function* () {
-                    const report = yield* runResidueReap({
-                      ...fixture,
-                      apply: true,
-                      archiveCheckpoint: (phase) =>
-                        Effect.sync(() => {
-                          if (Str.Equivalence(phase, "intent")) armed = true;
-                        }),
-                    });
-                    expect(failed).toBe(true);
-                    expect(report.reapedCount).toBe(1);
-                    const resumed = yield* runResidueReap({
-                      ...fixture,
-                      resume: O.getOrThrow(O.fromUndefinedOr(report.runId)),
-                    });
-                    expect(resumed.reapedCount).toBe(1);
-                    const destination = O.getOrThrow(
-                      O.fromUndefinedOr(candidateByPath(resumed, fixture.target).recoveryDestination)
-                    );
-                    expect(yield* fs.readFileString(path.join(destination, "payload.txt"))).toBe(
-                      "preserve these bytes"
-                    );
-                  }),
-                (spy) => Effect.sync(() => spy.mockRestore())
-              );
-            })
-          )
-        ),
-      removeTempDirectory
-    )
-  );
+  for (const failures of [1, 2]) {
+    it.effect(
+      failures === 1
+        ? "tolerates a moved-unsynced result and completes the move"
+        : "reconciles an archived inode whose intent remains unpublished as moved",
+      () =>
+        Effect.acquireUseRelease(
+          makeTempDirectory,
+          (root) =>
+            retentionFixture(root).pipe(
+              Effect.flatMap((fixture) =>
+                Effect.gen(function* () {
+                  const fs = yield* FileSystem.FileSystem;
+                  const path = yield* Path.Path;
+                  const nodeFs = process.getBuiltinModule("node:fs");
+                  const original = nodeFs.fsyncSync;
+                  let armed = false;
+                  let failed = 0;
+                  yield* Effect.acquireUseRelease(
+                    Effect.sync(() =>
+                      vi.spyOn(nodeFs, "fsyncSync").mockImplementation((fd) => {
+                        if (armed && failed < failures) {
+                          failed += 1;
+                          throw new Error("synthetic parent sync failure");
+                        }
+                        original(fd);
+                      })
+                    ),
+                    () =>
+                      Effect.gen(function* () {
+                        const report = yield* runResidueReap({
+                          ...fixture,
+                          apply: true,
+                          archiveCheckpoint: (phase) =>
+                            Effect.sync(() => {
+                              if (Str.Equivalence(phase, "intent")) armed = true;
+                            }),
+                        });
+                        expect(failed).toBe(failures);
+                        expect(report.reapedCount).toBe(failures === 1 ? 1 : 0);
+                        const row = candidateByPath(report, fixture.target);
+                        const beforeRecovery = O.getOrThrow(O.fromUndefinedOr(row.recoveryDestination));
+                        expect(yield* fs.exists(fixture.target)).toBe(false);
+                        expect(yield* fs.readFileString(`${beforeRecovery}.intent.json`)).toContain(
+                          failures === 1 ? '"phase":"moved"' : '"phase":"intent"'
+                        );
+                        const resumed = yield* runResidueReap({
+                          ...fixture,
+                          resume: O.getOrThrow(O.fromUndefinedOr(report.runId)),
+                        });
+                        expect(resumed.reapedCount).toBe(1);
+                        const destination = O.getOrThrow(
+                          O.fromUndefinedOr(candidateByPath(resumed, fixture.target).recoveryDestination)
+                        );
+                        expect(yield* fs.readFileString(path.join(destination, "payload.txt"))).toBe(
+                          "preserve these bytes"
+                        );
+                      }),
+                    (spy) => Effect.sync(() => spy.mockRestore())
+                  );
+                })
+              )
+            ),
+          removeTempDirectory
+        )
+    );
+  }
 
   it.effect("protects proof inside a clean embedded candidate repository", () =>
     Effect.acquireUseRelease(
@@ -2047,7 +2060,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("checkout retention arch
   );
 });
 
-describe("archive interruption recovery", () => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("archive interruption recovery", (it) => {
   for (const phase of ["intent", "moved"] as const) {
     it.effect(`recovers SIGKILL after ${phase} without losing payload`, () =>
       Effect.acquireUseRelease(
@@ -2106,7 +2119,7 @@ describe("archive interruption recovery", () => {
 });
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("retention fences", (it) => {
-  it.scoped("retains a candidate with an open descriptor even without a lock suffix", () =>
+  it.effect("retains a candidate with an open descriptor even without a lock suffix", () =>
     Effect.acquireUseRelease(
       makeTempDirectory,
       (root) =>

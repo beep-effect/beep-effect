@@ -1487,7 +1487,7 @@ const archiveCandidate = Effect.fnUntraced(function* (
     const phase = O.match(journal, { onNone: () => "unpublished", onSome: (row) => row.phase });
     return skipped(
       isResidueArchiveError(result.failure) ? optionOr(result.failure.skipReason, "removal-failed") : "removal-failed",
-      `${result.failure.message}; phase=${phase}; intent=${journalPath}; resume or restore this run.`
+      `${assessed.path}: ${result.failure.message}; phase=${phase}; intent=${journalPath}; resume or restore this run.`
     );
   }
   // Archive movement frees no filesystem blocks. Attribute moved bytes separately
@@ -1525,9 +1525,7 @@ const applyCandidate = Effect.fnUntraced(function* (
       candidate: reported(rechecked),
       reaped: false,
       reclaimedBytes: 0,
-      warnings: Str.Equivalence(assessed.action, "skip")
-        ? A.empty()
-        : [`Skipped ${assessed.path}: eligibility changed before removal.`],
+      warnings: [`Skipped ${assessed.path}: eligibility changed before removal.`],
     };
   }
   const skipped = skippedAppliedCandidate(assessed, rechecked);
@@ -2084,6 +2082,51 @@ const assessCheckoutResidue = Effect.fnUntraced(function* (entry: ResidueReapCan
   });
 });
 
+const unreadCheckoutContainer = Effect.fnUntraced(function* (
+  checkout: string,
+  root: string,
+  target: string,
+  reapClass: ResidueReapClass
+) {
+  const fs = yield* FileSystem.FileSystem;
+  if (!(yield* fs.exists(target).pipe(Effect.orElseSucceed(() => true)))) return A.empty<ResidueReapCandidate>();
+  return [candidate(root, target, reapClass, "skip", { skipReason: "census-failed", checkoutRoot: checkout })];
+});
+const checkoutContainerCandidates = Effect.fnUntraced(function* (
+  checkout: string,
+  root: string,
+  name: string,
+  policy: ReapPolicy
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const reapClass = classifyCheckoutName(name);
+  const top = path.join(root, name);
+  const scoped = isCheckoutContainer(name)
+    ? O.some(top)
+    : Str.Equivalence(name, "yeet")
+      ? O.some(path.join(top, "jobs"))
+      : O.none<string>();
+  const nested = O.isSome(scoped)
+    ? yield* fs.readDirectory(scoped.value).pipe(Effect.option)
+    : O.none<ReadonlyArray<string>>();
+  if (O.isSome(scoped) && O.isNone(nested))
+    return yield* unreadCheckoutContainer(checkout, root, scoped.value, reapClass);
+  const targets = O.isSome(nested)
+    ? A.map(nested.value, (child) =>
+        path.join(
+          O.getOrElse(scoped, () => top),
+          child
+        )
+      )
+    : [top];
+  return yield* Effect.forEach(
+    targets,
+    (target) => assessCheckoutResidue(candidate(root, target, reapClass, "skip", { checkoutRoot: checkout }), policy),
+    { concurrency: 1 }
+  );
+});
+
 const checkoutResidueCandidates = Effect.fnUntraced(function* (
   checkout: string,
   includes: (reapClass: ResidueReapClass) => boolean,
@@ -2093,36 +2136,14 @@ const checkoutResidueCandidates = Effect.fnUntraced(function* (
   const path = yield* Path.Path;
   const root = path.join(checkout, ".beep");
   if (!(yield* fs.exists(root).pipe(Effect.orElseSucceed(() => false)))) return A.empty<ResidueReapCandidate>();
-  const listing = yield* fs.readDirectory(root).pipe(Effect.orElseSucceed(() => A.empty<string>()));
+  const listing = yield* fs.readDirectory(root).pipe(Effect.option);
+  if (O.isNone(listing)) {
+    const reapClass = A.findFirst(CheckoutResidueClass.literals, includes);
+    return O.isSome(reapClass) ? yield* unreadCheckoutContainer(checkout, root, root, reapClass.value) : A.empty();
+  }
   const groups = yield* Effect.forEach(
-    A.filter(listing, (name) => !isProtectedResidueName(name) && includes(classifyCheckoutName(name))),
-    Effect.fnUntraced(function* (name) {
-      const reapClass = classifyCheckoutName(name);
-      const top = path.join(root, name);
-      const scoped = isCheckoutContainer(name)
-        ? O.some(top)
-        : Str.Equivalence(name, "yeet")
-          ? O.some(path.join(top, "jobs"))
-          : O.none<string>();
-      const nested = O.isSome(scoped)
-        ? yield* fs.readDirectory(scoped.value).pipe(Effect.option)
-        : O.none<ReadonlyArray<string>>();
-      if (O.isSome(scoped) && O.isNone(nested)) return A.empty<ResidueReapCandidate>();
-      const targets = O.isSome(nested)
-        ? A.map(nested.value, (child) =>
-            path.join(
-              O.getOrElse(scoped, () => top),
-              child
-            )
-          )
-        : [top];
-      return yield* Effect.forEach(
-        targets,
-        (target) =>
-          assessCheckoutResidue(candidate(root, target, reapClass, "skip", { checkoutRoot: checkout }), policy),
-        { concurrency: 1 }
-      );
-    }),
+    A.filter(listing.value, (name) => !isProtectedResidueName(name) && includes(classifyCheckoutName(name))),
+    (name) => checkoutContainerCandidates(checkout, root, name, policy),
     { concurrency: 1 }
   );
   return A.flatten(groups);
@@ -2510,12 +2531,44 @@ const recoverWithoutIntent = Effect.fnUntraced(function* (
     });
   return (yield* applyCandidate(entry, O.some(realOwner), context.settings.policy, () => Effect.void)).candidate;
 });
+const resolveRecoveryAddresses = Effect.fnUntraced(function* (
+  entry: ResidueReapCandidate,
+  owner: string,
+  destination: string,
+  context: RecoveryRun
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const report = context.report;
+  const refuse = recoveryRefusal;
+  const boundary = yield* fs.realPath(path.join(owner, ".beep"));
+  const sourceParent = path.dirname(entry.path);
+  const resolvedParent = yield* fs
+    .realPath(sourceParent)
+    .pipe(
+      Effect.mapError(() =>
+        refuse(
+          `Source parent ${sourceParent} is unavailable; ensure it exists and is accessible before recovery`,
+          "path-changed"
+        )
+      )
+    );
+  const resolvedSource = path.join(resolvedParent, path.basename(entry.path));
+  const resolvedDestination = path.join(yield* fs.realPath(path.dirname(destination)), path.basename(destination));
+  if (
+    !A.contains(report.checkoutRoots, owner) ||
+    !pathIsStrictlyWithin(path, boundary, resolvedSource) ||
+    cwdWithin(path, path.join(boundary, "residue-reap"), resolvedSource)
+  )
+    return yield* refuse("Archive source boundary mismatch", "path-changed");
+  return { resolvedSource, resolvedDestination };
+});
 const recoverArchiveEntry = Effect.fnUntraced(function* (
   entry: ResidueReapCandidate,
   index: number,
   context: RecoveryRun
 ) {
-  const { settings, root, report, restore } = context;
+  const { settings, root } = context;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const refuse = recoveryRefusal;
@@ -2536,16 +2589,11 @@ const recoverArchiveEntry = Effect.fnUntraced(function* (
       skipReason: "foreign-owner",
       retentionReason: "fleet observation only; recover from the owning checkout",
     });
-  const boundary = yield* fs.realPath(path.join(owner, ".beep"));
-  const resolvedSource = path.join(yield* fs.realPath(path.dirname(entry.path)), path.basename(entry.path));
-  const resolvedDestination = path.join(yield* fs.realPath(path.dirname(destination)), path.basename(destination));
-  if (
-    !A.contains(report.checkoutRoots, owner) ||
-    !pathIsStrictlyWithin(path, boundary, resolvedSource) ||
-    cwdWithin(path, path.join(boundary, "residue-reap"), resolvedSource)
-  )
-    return yield* refuse("Archive source boundary mismatch", "path-changed");
-  if (!(yield* fs.exists(journalPath))) return yield* recoverWithoutIntent(entry, realOwner, context);
+  const hasIntent = yield* fs.exists(journalPath);
+  if (!hasIntent && !ResidueReapAction.is["archive-move"](entry.action))
+    return yield* recoverWithoutIntent(entry, realOwner, context);
+  const { resolvedSource, resolvedDestination } = yield* resolveRecoveryAddresses(entry, owner, destination, context);
+  if (!hasIntent) return yield* recoverWithoutIntent(entry, realOwner, context);
   const intent = yield* decodeIntent(yield* fs.readFileString(journalPath));
   if (
     !Str.Equivalence(intent.lexicalSource, entry.path) ||
