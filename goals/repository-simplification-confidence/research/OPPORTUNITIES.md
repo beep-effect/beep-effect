@@ -110,3 +110,13 @@
 - Would have prevented it: a review-lens contract that separates material
   defects from wording findings up front, and a mechanical verbatim-section
   checker against the brief so copy drift is caught by a validator.
+
+## 2026-10-09 — H1 admission wrapper requires the user-session bus
+
+- Task: run the OSV wave parity commands through `beep-heavy`.
+- Evidence: `beep-heavy bash .beep/rsc-h1/parity.sh` exited 1 before admission:
+  `DBUS_SESSION_BUS_ADDRESS and XDG_RUNTIME_DIR not defined`.
+- Resolution: supply the existing user's runtime directory and bus address to
+  the wrapper; retain machine-wide admission. No fallback bypass.
+- Prevention: have the wrapper resolve the current user's existing runtime bus
+  when launched from an agent environment that omits those variables.

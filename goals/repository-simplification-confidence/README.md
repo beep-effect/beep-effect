@@ -59,6 +59,9 @@ state are recorded; stage 1 closes when every lane owner and recovery path in
 
 ## Latest Evidence
 
+H1 OSV wave in progress: [catalog receipt](./history/receipts/stage-4-h1-catalog.md#osv-exceptions)
+and [lane handoff](./history/handoffs/rsc-h1-catalog-2026-10-09.md).
+
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md)
 (implementation head `e62411d63f`, 2026-10-09);
 [`research/sweeps/2026-10-09/README.md`](./research/sweeps/2026-10-09/README.md)
