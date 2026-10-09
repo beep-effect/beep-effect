@@ -151,16 +151,18 @@ describe("Run.detach lifecycle", () => {
 				// A child that would outlive the test if we leaked it — always reaped
 				// below, whichever way the assertions go.
 				const pid = yield* live(Run.detach(node("setTimeout(() => {}, 60_000)")));
-				try {
-					yield* realDelay(250);
-					assert.isTrue(isAlive(Number(pid)), "detach must leave the child running after its scope closed");
-				} finally {
-					try {
-						process.kill(Number(pid), "SIGKILL");
-					} catch {
-						// already gone
-					}
-				}
+				yield* realDelay(250).pipe(
+					Effect.tap(() => Effect.sync(() =>
+						assert.isTrue(isAlive(Number(pid)), "detach must leave the child running after its scope closed"),
+					)),
+					Effect.ensuring(Effect.sync(() => {
+						try {
+							process.kill(Number(pid), "SIGKILL");
+						} catch {
+							// already gone
+						}
+					})),
+				);
 			}),
 		15_000,
 	);

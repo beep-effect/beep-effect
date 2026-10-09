@@ -1,5 +1,6 @@
 import type { PlatformError } from "effect";
 import { Data, Effect, Ref, Stream } from "effect";
+import { dual } from "effect/Function";
 
 /**
  * Raised when a captured stream exceeds its byte budget.
@@ -24,7 +25,10 @@ export class OutputTooLarge extends Data.TaggedError("OutputTooLarge")<{
  * on raw bytes, before decoding, because bytes are what the process actually
  * produced.
  */
-export const collectBounded = (
+export const collectBounded: {
+	(limit: number): (stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>) => Effect.Effect<string, PlatformError.PlatformError | OutputTooLarge>;
+	(stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>, limit: number): Effect.Effect<string, PlatformError.PlatformError | OutputTooLarge>;
+} = dual(2, (
 	stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>,
 	limit: number,
 ): Effect.Effect<string, PlatformError.PlatformError | OutputTooLarge> =>
@@ -37,4 +41,4 @@ export const collectBounded = (
 			),
 		);
 		return yield* Stream.mkString(Stream.decodeText(bounded));
-	});
+	}));

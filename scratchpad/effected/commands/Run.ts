@@ -19,6 +19,8 @@ export const DEFAULT_MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
 /** Characters shown from the tail of captured output in an error message. */
 const MAX_MESSAGE_CHARS = 2000;
 
+const JsonOutput = Schema.fromJsonString(Schema.Unknown);
+
 /**
  * Policy for one run.
  *
@@ -202,7 +204,10 @@ export class CommandFailedError extends Schema.TaggedError<CommandFailedError>()
 		if (this.exitCode !== undefined) parts.push(`(exit ${this.exitCode})`);
 		// Prefer stderr; fall back to stdout, because npm and friends route real
 		// errors there often enough that dropping it hides causes.
-		const stream = this.stderr?.trim() ? this.stderr : this.stdout?.trim() ? this.stdout : undefined;
+		const stderr = this.stderr?.trim();
+		const stream = stderr !== undefined && stderr !== ""
+			? this.stderr
+			: (this.stdout?.trim() ?? "") !== "" ? this.stdout : undefined;
 		if (stream !== undefined) parts.push(`:\n${tail(stream)}`);
 		return parts.join(" ");
 	}
@@ -297,12 +302,10 @@ const collectClassified = (
 ): Effect.Effect<CommandOutput, CommandFailedError | CommandOutputError, ChildProcessSpawner.ChildProcessSpawner> => {
 	const described = describeCommand(command);
 	const classified = collectRaw(command, options, tee).pipe(
-		Effect.catch((error) =>
-			Effect.fail(
-				error instanceof OutputTooLarge
-					? CommandOutputError.make({ kind: "tooLarge", command: described.command, cause: error })
-					: CommandFailedError.spawn(command, error, options?.redact),
-			),
+		Effect.mapError((error) =>
+			error instanceof OutputTooLarge
+				? CommandOutputError.make({ kind: "tooLarge", command: described.command, cause: error })
+				: CommandFailedError.spawn(command, error, options?.redact),
 		),
 	);
 	return options?.timeout === undefined
@@ -369,12 +372,11 @@ const json = Effect.fn("Run.json")(function* <A, I>(
 	const described = describeCommand(command);
 	const output = yield* collectClassified(command, options, undefined);
 	const checked = yield* requireZero(command, output, options);
-	const parsed = yield* Effect.try({
-		try: () => JSON.parse(checked.stdout) as unknown,
-		catch: (cause) => CommandOutputError.make({ kind: "notJson", command: described.command, cause }),
-	});
+	const parsed = yield* Schema.decodeEffect(JsonOutput)(checked.stdout).pipe(
+		Effect.mapError((cause) => CommandOutputError.make({ kind: "notJson", command: described.command, cause })),
+	);
 	return yield* Schema.decodeUnknownEffect(schema)(parsed).pipe(
-		Effect.catch((cause) => Effect.fail(CommandOutputError.make({ kind: "schema", command: described.command, cause }))),
+		Effect.mapError((cause) => CommandOutputError.make({ kind: "schema", command: described.command, cause })),
 	);
 });
 
@@ -410,14 +412,12 @@ const jsonLine = Effect.fn("Run.jsonLine")(function* <A, I>(
 	for (let index = candidates.length - 1; index >= 0; index--) {
 		const candidate = candidates[index];
 		if (candidate === undefined) continue;
-		let parsed: unknown;
-		try {
-			parsed = JSON.parse(candidate) as unknown;
-		} catch (cause) {
-			notJsonCause ??= cause;
+		const parsed = yield* Effect.result(Schema.decodeEffect(JsonOutput)(candidate));
+		if (Result.isFailure(parsed)) {
+			notJsonCause ??= parsed.failure;
 			continue;
 		}
-		const decoded = yield* Effect.result(Schema.decodeUnknownEffect(schema)(parsed));
+		const decoded = yield* Effect.result(Schema.decodeUnknownEffect(schema)(parsed.success));
 		if (Result.isSuccess(decoded)) return decoded.success;
 		schemaCause ??= decoded.failure;
 	}
@@ -441,7 +441,7 @@ const succeeds = Effect.fn("Run.succeeds")(function* (command: ChildProcess.Comm
 	yield* annotate(command);
 	return yield* collectClassified(command, options, undefined).pipe(
 		Effect.map((output) => output.succeeded),
-		Effect.catch(() => Effect.succeed(false)),
+		Effect.orElseSucceed(() => false),
 	);
 });
 
@@ -456,10 +456,10 @@ const detach = Effect.fn("Run.detach")(function* (command: ChildProcess.Command)
 			// checks an `isReferenced` flag and does NOT kill an unref'd child, so
 			// unref must run BEFORE this scope closes. Reversed, the child dies
 			// with the scope and nothing outlives the process.
-			yield* handle.unref;
+				yield* Effect.asVoid(handle.unref);
 			return handle.pid;
 		}),
-	).pipe(Effect.catch((error) => Effect.fail(CommandFailedError.spawn(command, error))));
+	).pipe(Effect.mapError((error) => CommandFailedError.spawn(command, error)));
 });
 
 // Implementation of Run.stream; the public contract lives on the static.

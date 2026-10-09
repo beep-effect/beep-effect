@@ -29,14 +29,13 @@ const pnpmLocal = LocalExec.layerContext(
  * Scripts a world where the global tool and the pnpm-local tool answer
  * independently. `undefined` means "absent" (the spawn fails).
  */
-const world = (options: { readonly global?: string | undefined; readonly local?: string | undefined }) => {
-	return (command: string, _args: ReadonlyArray<string>): ScriptResult => {
+const world = (options: { readonly global?: string | undefined; readonly local?: string | undefined }) =>
+	(command: string, _args: ReadonlyArray<string>): ScriptResult => {
 		if (command === "pnpm") {
 			return options.local === undefined ? ScriptedSpawner.notFound("pnpm") : { stdout: options.local, exit: 0 };
 		}
 		return options.global === undefined ? ScriptedSpawner.notFound(command) : { stdout: options.global, exit: 0 };
 	};
-};
 
 /** Runs `program` against a scripted world plus a LocalExec layer. */
 const run = <A, E>(
@@ -49,11 +48,10 @@ const run = <A, E>(
 	return { effect: Effect.provide(program, layer), spawner };
 };
 
-const resolve = (tool: Tool) =>
-	Effect.gen(function* () {
-		const discovery = yield* ToolDiscovery;
-		return yield* discovery.resolve(tool);
-	});
+const resolve = Effect.fn("resolve")(function* (tool: Tool) {
+	const discovery = yield* ToolDiscovery;
+	return yield* discovery.resolve(tool);
+});
 
 describe("ToolDiscovery.resolve — source requirements", () => {
 	it.effect("prefers the local tool when both exist", () =>

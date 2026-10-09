@@ -205,7 +205,7 @@ const probeLocation = (
 ): Effect.Effect<Probe, never, ChildProcessSpawner.ChildProcessSpawner> =>
 	Run.collect(command).pipe(
 		Effect.map((output) => ({ found: true, version: extractVersion(probe, output.stdout) })),
-		Effect.catch(() => Effect.succeed({ found: false, version: Option.none<string>() })),
+		Effect.orElseSucceed(() => ({ found: false, version: Option.none<string>() })),
 	);
 
 /**
@@ -347,7 +347,7 @@ const make = Effect.fnUntraced(function* () {
 	const isAvailable = Effect.fn("ToolDiscovery.isAvailable")(function* (tool: Tool) {
 		return yield* resolve(tool).pipe(
 			Effect.map(() => true),
-			Effect.catch(() => Effect.succeed(false)),
+			Effect.orElseSucceed(() => false),
 		);
 	});
 
