@@ -202,6 +202,9 @@ export const parity = Effect.fn("Gates.parity")(function* (config: RunnerConfig,
   yield* Console.log(
     `[effected] ${module} parity: ${expected.length} expected, ${actual.length} actual, ${added.length} added, ${unsafeLines.length} unsafe assertion(s)${strict ? "" : " (advisory before S1)"}`
   );
+  if (A.isReadonlyArrayNonEmpty(added)) {
+    yield* Console.log(`[effected] ${module} parity added: ${A.join(A.map(added, describe), ", ")}`);
+  }
   if (A.isReadonlyArrayNonEmpty(problems)) {
     yield* verdict(module, { gate: "parity", exitCode: 1 });
     return yield* GateFailed.make({ target: module, gate: "parity", exitCode: 1, problems });
