@@ -1,5 +1,5 @@
 lane: rsc-d-release
-head: 106bd48a2d74a78d1537fc6730002a5ead4b1dc3 (implementation head; later receipt-only commits follow)   PR: pending
+head: 38bba76b73 (review snapshot; later report commits may follow)   PR: pending
 retired: 939 notes; parent da1a85157d7c8cc6b72fe43f12d01389db811ce9; tree d839776128c29c6c4cc7c2937329942d873b973c
 package-verify: @beep/repo-cli pending admission
 hosted-parity: test-tsgo / docgen local / jsdoc-ratchet / knowledge refs / fallow / coverage -> pending

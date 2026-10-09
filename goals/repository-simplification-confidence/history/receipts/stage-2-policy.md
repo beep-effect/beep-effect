@@ -43,8 +43,7 @@ The orchestrator records the post-merge SHA here (R34).
 
 ## Validation
 
-Implementation committed at `ec2080bb68`, with review repairs through
-`106bd48a2d`. Focused/heavy tests, package verification, hosted parity and
+Implementation committed at `ec2080bb68`, with review repairs on this branch. Focused/heavy tests, package verification, hosted parity and
 coverage are pending admission (see lane handoff). The package-version diff
 from the reset parent is empty. Hosted evidence remains pending.
 
