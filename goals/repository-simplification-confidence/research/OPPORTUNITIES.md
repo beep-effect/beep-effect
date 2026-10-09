@@ -110,3 +110,14 @@
 - Would have prevented it: a review-lens contract that separates material
   defects from wording findings up front, and a mechanical verbatim-section
   checker against the brief so copy drift is caught by a validator.
+
+## 2026-10-09 — D release census and admission
+
+- Census consumer scan encountered a non-object `package.json` in the broader
+  corpus (`AttributeError: list has no attribute get`); corrected the scan to
+  validate the manifest object shape. A maintained read-only census command
+  with shape validation would prevent this one-off script failure.
+- First `beep-heavy` test launch failed before admission because user-session
+  bus variables were absent. Supplying `XDG_RUNTIME_DIR=/run/user/1000` and the
+  standard user bus address reached the queue; all three slots were busy.
+  An environment-aware admission wrapper would prevent this startup friction.
