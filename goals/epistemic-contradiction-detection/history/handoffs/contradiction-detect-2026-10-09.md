@@ -17,3 +17,36 @@ Corrected in 9edd003a48, no re-run after the stop. Inbox ack receipts bind the
 first repair c833513460 and actual ref repair 9edd003a48. Source/packet is retained
 in local commits; the only subsequent commit is handoff/stop metadata.
 Graft source discovery: one call, approximately 55,724 tokens saved.
+
+## Run 2 — authorized qualification and new stop
+
+lane: contradiction-detect
+head: a7271fb15ebf3c0b2bbf19d483979552b42eab00 (published implementation; stop metadata commit follows)
+PR(s): #1572 open draft, ready-for-heavy; not content-final or ready
+package-verify: @beep/epistemic-domain: pass on a799682c02 (audit 7.2s, docgen 3.5s), pending after a7271fb15e test-only repair; @beep/epistemic-use-cases: pending (cancelled while queued; hosted build exposes TS2322)
+hosted-parity: test-tsgo: pass before test-law repair, fresh repair proof pending | docgen local: fail (requires --full after additive aliases); full retry not run (cancelled while queued at stop) | jsdoc-ratchet: pass, zero findings on repaired publish | knowledge refs: inherited fail at RSC SPEC:374, nonblocking under run-2 ruling | fallow audit+health: pass in repaired cheap-gate bodies; separate ci lane wrapper not run (queued/cancelled) | config-sync check: pass, one new alias per file, no inherited hunk | scoped coverage: pass, existing touched rows retained, new executable files 100% across all four metrics, barrels have no counters
+handoff: goals/epistemic-contradiction-detection/history/handoffs/contradiction-detect-2026-10-09.md
+open items: Reconcile the brief's mandatory private-package patch notes with #1566's prohibition, then repair introduced TS2322 at ContradictionDetection.layer.ts:135 and complete both final package proofs, full docgen/parity, closure and ready transition. Option 1 uses class-specific detector identities plus SemVer; reversal is a future contract-owner migration, with ContradictionMatchBasisKind widening tracked as a follow-up. DetectedContradiction emits content plus key/digest; fixtures lift every emission to the full entity and assert hasValidSeals; a future stamping adapter stays caller-owned. Proposal facts are the other assertion's subject/predicate/value/polarity with content-derived ids and shipped digests; changing shape/id rules requires a detector version. Exact negation is equal values/opposite polarity on any predicate; value-conflict is unequal values/both asserted on declared single-valued predicates; all other combinations emit nothing. Undeclared predicates default multi-valued and absent modality comparable; reversal requires an explicit representation contract and versioned semantics. Four concept files were hand-authored after the architecture dry-run planned unsafe placeholders/out-of-scope metadata; research/OPPORTUNITIES.md retains the friction receipt; reversal removes the new concept/export/barrel and reruns config-sync. Config-sync adds one ContradictionDetection alias in tsconfig.json and one in vitest.aliases.generated.json, with no inherited hunk. The required changeset remains because removing it contradicts the current brief; reversal is to reconcile the brief with shipped private-release policy before removal. Reflection lint passes but lifecycle remains active, P2/P3 in-progress and P4 pending. No PR merge, ready transition, final gate file or retirement; all owned units and monitor inactive/dead.
+blocked: required private-package changeset conflicts with merged #1566 release policy; introduced non-empty proposal array TS2322 and final qualification remain outstanding.
+
+Evidence: history/p2/2026-10-09-verification.md; reflection
+history/reflections/2026-10-09-codex.md; research/OPPORTUNITIES.md.
+Main #1566 (`2eefbb64af`) integrated before publish. Repaired seven test-law
+findings and the unused client-safe index at a7271fb15e; current cheap gates pass.
+Whole suites: domain 99/99, use-cases 69/69. Repaired golden suite: 19/19 twice.
+Coverage has 100% for every new executable detector file; no baseline edit.
+Repo Sanity: job 113991105046 / run 37980979576; private notes forbidden.
+Storybook: job 113991101860 / run 37980979066; source line 135 TS2322, array
+encoding does not satisfy the shipped non-empty proposal tuple. Unrepaired.
+The old typed-ref diagnostic did not recur; this is a different stop condition.
+The required execution-ledger changeset precedent was removed on main.
+
+Remaining queued use-cases audit and full-parity units were checked for this
+lane's working directory before cancellation. Readiness monitor returned wave
+exit 2, was cancelled, and now reads inactive/dead. No owned gate remains active.
+Inbox: repaired local cheap-gate row acked with a7271fb15e; Repo Sanity and
+Storybook acked as tracked wontfix-at-stop, not as passing checks; cancelled
+monitor receipt acknowledged as observed. Hosted jobs are GitHub-owned and may
+continue; no claim is made about checks that have not settled.
+
+Graft: two discovery calls, approximately 24,329 tokens saved in run 2.

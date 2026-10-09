@@ -265,6 +265,25 @@ on-demand and does not gate publication. Record final-head hosted results in
 P2 evidence. Reversal: retain that evidence if the repository later restores a
 mandatory local proof, and run the then-current owner command.
 
+### 2026-10-09 — Run-2 publication and contradictory release policy
+
+Draft PR #1572 is published at `a7271fb15e`. Main integration includes #1566
+(`2eefbb64af`), which forbids changesets for private workspaces and removes the
+brief's execution-ledger changeset precedent. The lane brief explicitly requires
+patch notes for both private epistemic packages, so its required note now fails
+Repo Sanity. Apply the materially contradictory source stop: retain the note and
+draft PR, do not flip lifecycle or claim readiness, and record the blocker in the
+handoff. Reversal: reconcile the brief with the shipped release policy, remove
+the lane note if authorized by the reconciled instructions, and resume package
+qualification before a final wave. No release policy or package privacy change
+belongs to this lane.
+
+The introduced test-law and unused-index findings were repaired at `a7271fb15e`
+without widening scope or changing runtime detection rules. Reversal: a future
+versioned entrypoint change may relocate the schemas, preserving client safety.
+Hosted Storybook separately exposed a non-empty proposals typing error at
+ContradictionDetection.layer.ts:135; it remains outstanding at the stop.
+
 ## Acceptance Criteria
 
 - [ ] The conflict-class seat question above is answered on the record in

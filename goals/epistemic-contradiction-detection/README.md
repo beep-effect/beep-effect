@@ -41,9 +41,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 and P1 complete. P2 qualification is running under the authorized resume
-ruling; fresh domain audit and docgen pass. Both conflict classes and golden
-vectors are implemented; publication is in progress, with closure pending proof.
+P0 and P1 complete; P2/P3 stopped on contradictory private-package changeset
+requirements after publication of draft PR #1572. Fresh domain audit/docgen,
+whole-package suites, coverage and repaired golden tests have passing evidence;
+use-cases audit and full parity remain outstanding. An introduced proposal-array
+build error is retained for repair. The packet remains active.
 
 ## Provenance
 
@@ -69,7 +71,9 @@ Back-links, not copies:
 
 P0: [`contract evidence`](./history/p0/2026-10-09-contract.md).
 P1: [`implementation and alias diff`](./history/p1/2026-10-09-implementation.md).
-P2: [`verification`](./history/p2/2026-10-09-verification.md), in progress.
+P2: [`verification and run-2 stop`](./history/p2/2026-10-09-verification.md).
+Attempted closeout: [`reflection`](./history/reflections/2026-10-09-codex.md), lint pass.
+Handoff: [`contradiction-detect`](./history/handoffs/contradiction-detect-2026-10-09.md).
 
 ## Notes
 

@@ -100,3 +100,71 @@ Fresh domain package-verify on `a799682c02`: pass (audit 7.2s, docgen 3.5s).
 The corrected typed-ref diagnostic did not recur. Integrated origin/main
 `2eefbb64af` before publication; that release-policy change touches no detector
 source or aliases. Remaining qualification runs on the integrated head.
+
+
+## Run-2 results and stop
+
+Published implementation head: `a7271fb15ebf3c0b2bbf19d483979552b42eab00`.
+Main integration: `2eefbb64af` (#1566). Draft PR: #1572; ready-for-heavy applied.
+The typed-ref domain diagnostic did not recur; this stop is a new contradiction
+between the brief and the release policy, not a third typed-decoder occurrence.
+
+- Domain package-verify: audit 7.2s and docgen 3.5s pass on a799682c02.
+  Fresh audit after the test-only assertion repair remains outstanding.
+- Whole-package tests: domain 9 files / 99 tests, use-cases 9 files / 69 tests,
+  both pass before a7271fb15e's test-law repair.
+- `bun run beep quality test-tsgo`: pass, 330 CLI files checked; 148 packages
+  covered by their own check scripts. Post-repair package proof remains pending.
+- Repaired golden single-file suite: 19/19 pass twice on a7271fb15e, preserving
+  full-entity decoding, seal checks, proposal facts, clock and permutation proof.
+- Both package coverage commands: pass. Scoped read against
+  standards/coverage.regression-baseline.jsonc: existing touched barrels retain
+  100%; new executable behavior/model/error/layer/service files are 100% across
+  statements, branches, functions and lines. New barrels have no executable
+  counters. New files have no prior baseline row; no baseline was edited.
+- `bun run beep ci lane jsdoc-ratchet`: pass; current repaired publish also
+  reports zero findings. Reflection lint: pass.
+- Config-sync baseline and repaired publish check: pass, one alias per file,
+  no inherited hunk. Shipped contradiction contract diff remains empty.
+- Repaired publish cheap gates: all pass; Knip introduced=0, Effect/Vitest
+  introduced=0. Fallow audit, health and dead-code bodies all pass with zero
+  findings. The separately requested ci lane fallow wrapper was queued and
+  cancelled at the stop; those body results are distinct evidence.
+- `docgen:local`: refused because root tsconfig changes require full proof.
+  The `--full` retry and use-cases package-verify were still queued when stopped;
+  neither is a completed pass. Post-repair domain audit was in the cancelled
+  parity pipeline and never started.
+- Knowledge refs: inherited failure at the RSC SPEC:374 path-policy example,
+  explicitly nonblocking under the run-2 ruling.
+
+Hosted Repo Sanity job 113991105046, run 37980979576:
+
+```text
+[changeset-graph] private workspace changesets are forbidden:
+- .changeset/epistemic-contradiction-detection.md :: @beep/epistemic-domain
+- .changeset/epistemic-contradiction-detection.md :: @beep/epistemic-use-cases
+Changeset package graph validation failed: private workspaces must not accumulate release notes.
+```
+
+This conflicts directly with the brief's mandatory per-PR private-package patch
+note. The required precedent .changeset/epistemic-execution-ledger.md is also
+removed by #1566. The note is retained pending reconciliation; neither package
+privacy nor release policy is modified to evade the gate.
+
+Hosted Storybook job 113991101860, run 37980979066, exposes an introduced build red:
+`ContradictionDetection.layer.ts:135:5 TS2322`: encoded readonly proposals array
+is not assignable to the shipped readonly non-empty proposals tuple. Runtime
+vectors do not prove this build contract. Preserve the two-proposal invariant in
+the encoded type, then rerun use-cases qualification in the resumed lane.
+
+Read both completed job logs immediately through the per-job API. Inbox rows
+for the repaired local cheap gate are acked by a7271fb15e; Repo Sanity and
+Storybook are acked as tracked wontfix-at-stop, not as green checks. Monitor
+adba7343-fdc6-4d09-90e0-a10fb02861e8 returned wave exit 2 and was cancelled.
+Both remaining owned heavy units were checked for this lane's working directory
+and stopped while queued. All three units read inactive/dead with MainPID 0.
+No proof unit, readiness monitor or gate started by this run remains active.
+
+Packet stays active, P0/P1 complete, P2/P3 in-progress, P4 pending. Reflection
+passes but is retained as attempted closeout. No completed-retained flip, ready
+transition, final gate file, PR merge or lane retirement is claimed.

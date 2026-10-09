@@ -108,9 +108,19 @@ Before marking the packet closed (and `status` → `completed-retained`):
 
 ## Current Blockers
 
-Run-2 qualification is authorized. Domain package audit and docgen pass on
-`a799682c02`; use-cases proof, package suites, coverage and remaining parity
-are running or queued. No fresh typed-ref diagnostic recurred.
+Run-2 stopped because the brief requires private-package patch changesets,
+while merged #1566 (`2eefbb64af`) forbids them. Repo Sanity rejects the required
+note on draft PR #1572 at `a7271fb15e`. Reconcile the brief with current release
+policy before another qualification/publication wave.
+
+Storybook also exposed introduced TS2322 at detection layer line 135: proposal
+encoding must preserve the shipped non-empty array type. This is not repaired.
+Domain audit/docgen pass before test-law repair; both whole-package suites and
+coverage pass; golden suite passes twice after repair. Fresh use-cases audit,
+post-repair domain audit and full docgen parity remain outstanding. All owned
+proof units and the readiness monitor were stopped. Packet remains active;
+P2/P3 in-progress and P4 pending. Reflection is retained as an attempted-closeout
+artifact and does not imply completion.
 
 Dependency status: Belief-view revision graduated on 2026-08-17 to `goals/belief-view-engine`,
 which is paused with P1 pending. Triage closed completed-retained in #1421

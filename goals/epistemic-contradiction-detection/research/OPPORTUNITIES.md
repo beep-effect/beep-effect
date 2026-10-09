@@ -43,3 +43,44 @@ reports only "all 3 slots busy, waiting", with no queue position or wait estimat
 No caps were raised and no other lane's work was interrupted.
 Prevention: expose ordered admission position and elapsed wait in the wrapper so
 queued lanes can distinguish progress from starvation without bypassing admission.
+
+## 2026-10-09 — Additive aliases force global docgen qualification
+
+Action: `bun run docgen:local` after the owned config-sync alias addition.
+Result: "full docgen proof required" because tsconfig.json changed, although
+both generated files add exactly one detection alias. Retrying with `--full`
+through heavy admission; package-level docgen remains separate evidence.
+Prevention: let the docgen planner recognize owner-generated additive alias
+changes and verify the corresponding package exports without expanding scope.
+
+## 2026-10-09 — Cheap gates caught test and entrypoint gaps
+
+Action: Yeet publish's collected cheap gates after successful focused/package tests.
+Result: seven introduced Effect/Vitest findings in the two new tests and one
+Knip unused-file finding for the new client-safe detection index.
+Repair: canonical Boolean assertion helpers, registered Effect property tests,
+Exit capture with the existing typed-error-tag assertion, and server-barrel
+reachability for the client-safe schemas. Committed as `a7271fb15e`; the P0
+cheap-gate row is acknowledged against that repair. Golden suite passes twice.
+Prevention: run test-law/entrypoint discovery before package qualification so
+syntax-only violations do not consume a second publication attempt.
+
+## 2026-10-09 — Brief and newly merged private-release policy conflict
+
+Action: merge current main and publish the required private-package patch note.
+Result: Repo Sanity job 113991105046 rejects both private package entries with
+"private workspaces must not accumulate release notes". Main #1566 also removes
+the brief's named execution-ledger note precedent. The lane is stopped under
+the materially contradictory source condition; its required note is retained.
+Prevention: update active lane briefs when a program-wide release-policy change
+lands so required artifacts match the current authoritative gate.
+
+## 2026-10-09 — Runtime conformance missed proposal array type
+
+Action: inspect the completed Storybook job 113991101860 immediately.
+Result: introduced TS2322 at ContradictionDetection.layer.ts:135; encoding
+proposals through S.Array loses the shipped non-empty tuple contract. The
+runtime golden vectors pass, while the full use-cases audit remains queued and
+is cancelled at the stop. The source error remains outstanding.
+Prevention: retain the two-proposal tuple through sorting/encoding and run the
+full use-cases package proof before claiming the build contract is qualified.

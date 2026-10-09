@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/epistemic-contradiction-detection",
   "lifecycle": "active",
-  "statusNote": "Run-2 qualification authorized after typed ref repair. Domain package audit and docgen pass; use-cases proof and remaining parity are running or queued. Merge remains orchestrator-owned under S11.",
+  "statusNote": "Run-2 stopped on materially contradictory release requirements: lane brief mandates private-package patch notes; merged #1566 forbids them and Repo Sanity rejects the required note. Draft PR #1572 at a7271fb15e retained. Domain package audit/docgen pass before test-law repair; use-cases audit and full parity cancelled while queued. Introduced non-empty proposal array TS2322 at layer line 135 remains. Packet stays active; merge belongs to the orchestrator under S11.",
   "mission": "Produce ContradictionCandidate records for typed direct-conflict classes as a pure, model-free function of a belief-view snapshot, against the contract epistemic-contradiction-triage already ships.",
   "executionCapable": true,
   "reflectionRequired": true,
