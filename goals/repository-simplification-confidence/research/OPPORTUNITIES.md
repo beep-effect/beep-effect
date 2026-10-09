@@ -150,3 +150,30 @@
   deleted dependency closure from shared-hoisting relocation, allowing the
   orchestrator to approve the exact generated graph under S5 before push.
   Publication is held as resume ruling 2 requires.
+
+## 2026-10-09: cache-baseline review request rejected its subject selection
+
+- Doing: re-recording cache posture after Knip retirement and FreshBooks transfer.
+- Evidence: `beep cache baseline --request` returned `Unreviewed: @beep/freshbooks. Unknown: .` for the request naming `//`.
+- Resolution: use the owner's documented changed-subject mode and include FreshBooks in the review basis; inspect the stamped subjects and resulting diff before publication.
+- Prevention: validate review subject selection against the current census when constructing the request, and keep its basis content-addressed.
+
+## 2026-10-09: retirement cheap gates exposed dependent artifacts
+
+- Doing: wave-1 Yeet draft publication.
+- Evidence: `config-sync:check` found two FreshBooks project-reference changes and Fallow boundary drift; `lint:effect-vitest` found three callback occurrences after fixture edits; Fallow audit/dead-code found only the Knip-only `smol-toml` override. Nothing was pushed.
+- Resolution: owner `tsconfig-sync`; shared `it.layer` for touched gate-order tests and removal of a redundant per-test layer in the already layered publish-gate test; retire the orphan override under the cleared Knip lock notice. Preserve the Effect Vitest inventory for V.
+- Prevention: include project-reference regeneration, override-consumer review and callback-fingerprint ratchets in dependency-removal preparation.
+
+## 2026-10-09: focused retirement repair waits behind shared heavy work
+
+- Doing: FreshBooks generated-reference check and current gate-order snapshot owner regeneration after the full CLI audit exposed stale retirement assertions.
+- Evidence: lane logs repeatedly contain `beep-heavy: all 3 slots busy, waiting`; FreshBooks has waited more than ten minutes without executing. The completed full audit ran 711.31 seconds and reported five precise fixture/assertion failures.
+- Prevention: an admission receipt with queue age and FIFO position would make focused repair scheduling observable. Keep the three-slot limit and other owners' proofs intact. This lane records the delay and waits; it does not bypass admission.
+
+## 2026-10-09: reference check missed before a String helper call
+
+- Doing: preserving the historical status byte fixture while projecting out its retired Knip gate.
+- Evidence: the focused assertion received a function as its expected value. `effect/String.replace` in the Effect v4 reference is curried-only: `replace(search, replacement)(self)`.
+- Resolution: corrected the call against `.repos/effect/packages/effect/src/String.ts` and reran the failed fixture group. The normalized historical placeholders are comparison text and are not decoded as a live DTO.
+- Prevention: inspect the current reference signature before writing each newly used Effect helper call; the data-first form cannot be assumed.

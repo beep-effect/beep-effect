@@ -287,3 +287,113 @@ Impeccable/Serena/agent settings and the optional Stately OAuth workflow.
 Other retirements, retained tools, all five patch regressions, Semgrep fixtures
 and visual Stately proof remain open in waves 2/3. Post-merge foreign-clone
 residue stays deferred to orchestrator routing under the lane-only scope.
+
+### Run 3 catch-up integration
+
+Main advanced to the inherited knowledge-path repair, PR #1565. Git initially
+refused the merge over the staged retirement changes. Saved all lane dirty,
+staged and untracked work in recovery stash
+`f5cdc5e7249148db32b33cffaa2ba744db869018`; merged main, resolving packet
+add/add conflicts with a structural three-way comparison using the stage-1
+packet commit `c8f04622f7` as the content base. Main's sanitized sweeps and
+current ownership wording are preserved together with A's evidence/decisions.
+Merge commit: `28de0e5b78`. Restored the stash with `--index`, preserving staged
+and unstaged boundaries; no conflict remains. The stash stays as a safety net.
+Shared/generated regeneration must run again after this integration before
+calling a PR content-final. No such final-head proof is claimed in this report.
+The narrative handoff/transfer evidence is committed in `6477a88033`; this
+terminal addendum remains a worktree update for the resumed wave's commit.
+
+### Run 3 report
+
+lane: rsc-a-retire
+head: 28de0e5b786d6bd6ee1ea66b9025c873b2043b4b   PR: none (blocked before publication)
+package-verify: @beep/box-provisioning: pass; @beep/box: pass; @beep/freshbooks: pass; @beep/occt: pass; @beep/pdf-tools: pass; @beep/wink: pass; @beep/colors: pass; @beep/data: pass; @beep/repo-ai-metrics: pass(after introduced import-order repair); @beep/codegen-kit: pass; @beep/repo-cli: pass(transfer at 8f29e3528e only), retirement gate not run. All passes are recorded transfer proof, not proof of the staged retirement after the latest main merge.
+hosted-parity: test-tsgo -> not run | docgen local -> not run | jsdoc-ratchet -> not run | knowledge refs -> not run | fallow audit+health -> not run | scoped coverage -> not run. The admitted JSDoc inventory writer passed; it is distinct from these parity lanes.
+handoff: goals/repository-simplification-confidence/history/handoffs/rsc-a-retire-2026-10-09.md
+open items: publication blocked by resume ruling 2/S5: Knip lock regeneration changes surviving resolver/runtime hoisting beyond the cleared removals; every extra package key is reported in the handoff and needs orchestrator review/effected-port notification confirmation before push. Knip transfer is complete: 40 fixed rows, one documented Govinfo oracle, no pending row. Retirement implementation and generated snapshots are staged/uncommitted; cache/schema/JSDoc/fingerprint/Box regeneration, retirement package verification, parity and coverage remain before publication. Main merged at 28de0e5b78; all dirty/staged/untracked work restored, no merge conflict remains, recovery stash f5cdc5e7249148db32b33cffaa2ba744db869018 retained. No lane-owned gate remains running; cancelled-before-admission compiler wrapper exit 0 is explicitly not a pass. E/orchestrator: S3 workflow/descriptor/ruleset window; shared: root/generated serialization and S5 lock review; C: ONNX move/dispatch and compiler-pruning port; H1: exact ONNX hold; H3/F: Codex hook serialization/re-trust; F/H4: home agent cleanup and Stately OAuth coordination. Waves 2/3, five patched/unpatched regressions, Semgrep/Stately proof, independent review and post-merge residue remain. Foreign-clone residue deferred to orchestrator routing under lane-only scope. No push, PR, ready flip, hosted proof, merge of an A PR or lane retirement.
+
+## Run 4 (after crash)
+
+Read the complete brief and resume ruling 3; S5 is now satisfied for the
+regenerated Knip lock graph, including the listed transitive re-resolution.
+Fetched and merged `origin/main`: already current at `28de0e5b78` (includes
+#1564 and #1565). Read all saved results; no completed transfer-package gate
+or Knip cross-check is rerun. No finding row is pending: 40 fixed and one
+documented Govinfo oracle. The prior run-3 units are stopped.
+
+Started `rsc-a-run4-gates.service`, a 12 GB coordinator with finite children
+through `beep-heavy` and only one A heavy command at a time. Results are
+`.beep/rsc-a/run4-gates-results.tsv`; each has a corresponding run4 log.
+Owner regeneration precedes the retirement repo-cli gate, parity lanes, ciops
+fixture verification and scoped coverage. No publication or final-head pass
+is claimed before their terminal results. E's workflow/descriptor PR merges
+before A; its gate order does not block A publication (resume ruling 3/S3).
+
+### Run 4 owner regeneration
+
+JSDoc inventory: pass (146 packages; inherited open counts 79 packages,
+1,317 exports, 360 modules). Policy fingerprint: pass. Cache baseline first
+rejected an incomplete subject selection; after the review basis included
+FreshBooks and used documented changed-subject mode, pass: exactly `//` and
+`@beep/freshbooks` stamped, 150 reviews carried, none dropped. Scope, profile,
+epoch and qualification state stay preserved. Schema catalog: pass, 7,044
+entries. Box generator: pass; its regenerated formatting is owner-produced.
+Retirement repo-cli package verification is running through admission.
+
+Wave 1 is now prepared for draft publication per resume ruling 3, while the
+retirement package/parity/coverage gates complete before calling content-final.
+No previously passed transfer package or Knip scan is rerun.
+
+### Run 4 first publication and repair
+
+Yeet created local commit `2acea0cc37` and collected cheap gates; nothing
+was pushed. Introduced reds: FreshBooks project references/Fallow boundaries
+(owner `tsconfig-sync`, pass), three Effect Vitest callback fingerprints
+(source repaired with `it.layer`, inventory untouched), and the Knip-only
+`smol-toml` override (removed from the manifest, lock owner queued). The
+source repair amended the unpublished commit to `1e89115634`; the cheap-gate
+P0 row is acknowledged with that repair SHA, not claimed as a rerun pass.
+Yeet residue restoration produced a formatting-only ci-lane conflict; kept
+the committed formatting and resolved it. The staged-only recovery stash
+is retained, and wave-3 groundwork remains outside the wave-1 commit.
+
+The retirement repo-cli audit finished: 286 test files passed, four failed;
+5,763 tests passed, five failed, 711.31 seconds. All five failures are
+introduced retired-context/fixture expectations. Source repairs cover the
+15 required contexts, Fallow dispatcher flags, gate-order count deltas, and
+the old status snapshot's removed Knip gate. The historical TTC handoff and
+ciops v1 fixture remain frozen; current generated bytes use a dedicated CLI
+test snapshot. Owner snapshot generation and focused proof are queued.
+The package P0 row awaits the completed repair commit/snapshot.
+
+### Run 4 S5 notice: final override installer lock diff
+
+The Knip-only `smol-toml` override is removed under resume ruling 2's
+pre-clearance for Knip-only overrides. The admitted `bun install` passed.
+Against the accepted Knip lock graph, the generated diff also moves
+`practice-kg-mcp: ./src/bin.ts` after `practice-kg-verify: ./src/verify.ts`
+in the existing `apps/practice-kg-mcp` bin map. Neither entry, target,
+declaration nor package version changes. This is an extra generated ordering
+hunk beyond the exact graph accepted in resume ruling 3.
+
+**Orchestrator/shared:** review that generated ordering hunk and confirm the
+effected-port notice before A pushes it under S5. No lock hand-edit, extra
+pin or push has been made. The existing install receipt remains proof;
+source, package and parity repairs continue independently.
+
+Current focused gate-order/publication fixtures: 66 tests pass. The Effect
+Vitest ratchet has two remaining exposed occurrences (one gate-order, one
+merge-gate); these are being repaired in source, with the inventory preserved
+for V. FreshBooks quick lint/check and the current snapshot owner both pass.
+
+### Run 4 repaired focused proofs
+
+The corrected retirement fixture group passes: five files, 182 tests. This
+covers gate ordering, publication wiring, required-context cardinality, CI
+Fallow dispatch and the historical status snapshot projection. The last
+Effect Vitest ratchet passes: 1,348 files, 1,870 findings, zero introduced,
+nine resolved; its baseline inventory is unchanged. FreshBooks regenerated
+references pass quick lint/check. The default retirement repo-cli package
+gate and hosted-parity sequence remain pending; earlier failures above are
+preserved as repair evidence, not substituted for this final proof.

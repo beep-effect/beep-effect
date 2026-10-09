@@ -17,6 +17,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -410,7 +411,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
           expect(result.headSha).toBe(headSha);
           expect(result.draft).toBe(false);
           expect(result.checkRuns).toHaveLength(checkRunsFixture.check_runs.length);
-          expect(O.map(result.requiredContexts, A.length)).toEqual(O.some(16));
+          assertSome(O.map(result.requiredContexts, A.length), 15);
           expect(result.window._tag).toBe("elapsed");
           if (result.window._tag === "elapsed") expect(result.window.anchoredAt).toBe(DateTime.formatIso(anchoredAt));
           expect(result.unresolvedThreads).toEqual(O.some(0));

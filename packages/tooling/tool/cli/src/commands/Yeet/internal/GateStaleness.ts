@@ -331,13 +331,6 @@ export const YEET_GATE_ARTIFACT_DESCRIPTORS: ReadonlyArray<GateArtifactDescripto
     scope: "repo-code",
   }),
   GateArtifactDescriptor.make({
-    artifactPath: "standards/knip.regression-baseline.jsonc",
-    gateId: "knip-ratchet",
-    kind: "baseline",
-    regenerateCommand: "bun run beep quality knip --write-baseline",
-    scope: "repo-code",
-  }),
-  GateArtifactDescriptor.make({
     artifactPath: "standards/test-typecheck.blindspot-baseline.jsonc",
     gateId: "test-typecheck-blindspot",
     kind: "baseline",

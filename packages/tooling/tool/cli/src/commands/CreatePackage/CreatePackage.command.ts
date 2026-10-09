@@ -499,7 +499,7 @@ const packageTemplateSpecsFor = (withStoriesTsconfig: boolean): ReadonlyArray<Te
     : PACKAGE_TEMPLATE_SPECS;
 
 // A library ships one real test so the declared `effect` and `@effect/vitest`
-// dependencies are used from the first commit (Knip) and the alias path is
+// dependencies are used from the first commit and the alias path is
 // exercised. The runtime-proof app reuses the package shape without a root
 // `@beep/*` alias, so it keeps the empty `test/` placeholder instead.
 const PACKAGE_TEST_TEMPLATE_SPEC = TemplateSpec.make({
@@ -1740,7 +1740,7 @@ const generateEcosystemPackageJson = Effect.fn("CreatePackage.generateEcosystemP
     devDependencies: {
       "@types/node": "catalog:",
       "@effect/vitest": "catalog:",
-      // tsconfig.test.json lists `bun-types`; Knip reports it unresolved
+      // tsconfig.test.json lists `bun-types`; the type resolver needs its declaration
       // unless the package declares it.
       "bun-types": "catalog:",
       effect: "catalog:",
@@ -1799,7 +1799,7 @@ const appBaseScripts = (dev: string, build: string, lab: boolean) => ({
 // Lab-only workspace dependencies layered onto Next.js lab app manifests.
 // Only what the emitted templates actually consume: `@beep/repo-configs` in
 // next.config.ts, `@beep/ui` via postcss.config.mjs and the globals.css import.
-// Declaring more would fail the required Knip context on the first lab — labs
+// Declare only dependencies used by the generated lab — labs
 // are ceremony-exempt, never code-law exempt (D2). Lab authors add what they
 // import, like any other workspace.
 const NEXTJS_LAB_DEPENDENCIES: Readonly<Record<string, string>> = {
@@ -1823,7 +1823,7 @@ const labDependenciesFor = (
 // Dev-dependency table shared by React-flavored app manifests.
 // No `@effect/vitest`: the React app test templates use plain `vitest` plus
 // @testing-library. Only the `service` kind's test imports it, and that kind
-// declares it in its own devDependencies. Declaring it here fails Knip on the
+// declares it in its own devDependencies. Declaring it here adds an unused dependency to the
 // generated app.
 const REACT_APP_DEV_DEPENDENCIES = {
   "@testing-library/dom": "catalog:",
@@ -1891,14 +1891,14 @@ const serviceAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLab
     // src/Api.ts imports the identity accessor; main.ts imports platform-bun
     // and effect. `@beep/schema`/`@beep/utils` are not imported by any emitted
     // file (the `S` in the templates is `effect/Schema`), so declaring them
-    // would fail the required Knip context on the first service app.
+    // would add unused dependencies to the first service app.
     "@beep/identity": "workspace:^",
     "@effect/platform-bun": "catalog:",
     effect: "catalog:",
   },
   devDependencies: {
     // test/health.test.ts provides its server and client through `it.layer`,
-    // so no test-utils layer helper is imported (declaring one fails Knip).
+    // so no test-utils layer helper is imported (no extra dependency is needed).
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     typescript: "catalog:",
@@ -2082,7 +2082,7 @@ const generatePackageJson: (
       devDependencies: {
         "@types/node": "catalog:",
         "@effect/vitest": "catalog:",
-        // tsconfig.test.json lists `bun-types`; Knip reports it unresolved
+        // tsconfig.test.json lists `bun-types`; the type resolver needs its declaration
         // unless the package declares it.
         "bun-types": "catalog:",
       },

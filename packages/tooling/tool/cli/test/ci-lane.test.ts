@@ -340,7 +340,7 @@ describe("CI lane descriptors", () => {
   it("enumerates every check.yml lane exactly once", () => {
     const ids = A.map(CI_LANE_DESCRIPTORS, (descriptor) => descriptor.id);
     expect(A.length(A.dedupe(ids))).toBe(A.length(ids));
-    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(27);
+    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(26);
   });
 
   it("covers every runnable lane id", () => {
@@ -349,7 +349,7 @@ describe("CI lane descriptors", () => {
     expect(missing).toEqual([]);
   });
 
-  it.effect("matches the exact captured required-check context set", () =>
+  it.effect("matches the captured required-check set after the coordinated Knip retirement", () =>
     Effect.gen(function* () {
       const snapshot = yield* Effect.tryPromise(() => Bun.file(branchProtectionContextSnapshotUrl).text()).pipe(
         Effect.flatMap(decodeBranchProtectionContextSnapshot)
@@ -361,7 +361,15 @@ describe("CI lane descriptors", () => {
         A.dedupe,
         A.sort(Order.String)
       );
-      expect(requiredContexts).toEqual(A.sort(snapshot.requiredStatusChecks, Order.String));
+      // The capture is immutable pre-retirement history. S3 removes only Knip
+      // at the hosted gate; every surviving context still matches exactly.
+      expect(requiredContexts).toEqual(
+        pipe(
+          snapshot.requiredStatusChecks,
+          A.filter((context) => context !== "Knip"),
+          A.sort(Order.String)
+        )
+      );
     })
   );
 
@@ -1447,16 +1455,7 @@ describe("ciLaneStepsForTesting", () => {
     expect(lastLabel).toBe("ci:fallow:envelope-check:health");
   });
 
-  it("routes Knip and Fallow tasks unfiltered with explicit proof base", () => {
-    const knip = firstOf(ciLaneStepsForTesting(REPO_ROOT, "knip", prShapeOptions));
-    expect(knip.args).toEqual([
-      "turbo",
-      "run",
-      "knip:check",
-      ...expectedTurboCacheArgs(["--summarize"]),
-      "--summarize",
-    ]);
-    expect(knip.env).toBeUndefined();
+  it("routes Fallow tasks unfiltered with explicit proof base", () => {
     const steps = ciLaneStepsForTesting(
       REPO_ROOT,
       "fallow",
@@ -1832,17 +1831,26 @@ describe("ciLocalStepsForTesting", () => {
   const branchPlan = CiLocalStepPlan.make({ affected: false, base: "origin/main", onMainBranch: false });
 
   it("dispatches each lane through beep ci lane", () => {
-    const step = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["knip"], branchPlan));
-    expect([...step.args]).toEqual(["run", "beep", "ci", "lane", "knip"]);
+    const step = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["fallow"], branchPlan));
+    expect([...step.args]).toEqual([
+      "run",
+      "beep",
+      "ci",
+      "lane",
+      "fallow",
+      "--base",
+      "origin/main",
+      "--validate-envelopes",
+    ]);
   });
 
   it("pairs inner-lane ids with steps and honest absent executor digests", () => {
-    const selection = ["knip"] as const;
+    const selection = ["fallow"] as const;
     const steps = ciLocalStepsForTesting(REPO_ROOT, selection, branchPlan);
     const inputs = ciLocalLaneInputsForTesting(selection, steps);
 
     expect(inputs).toHaveLength(1);
-    expect(inputs[0]?.[0]).toBe("knip");
+    expect(inputs[0]?.[0]).toBe("fallow");
     expect(inputs[0]?.[1]).toBe(steps[0]);
     {
       const optionUnderTest = inputs[0]?.[2];

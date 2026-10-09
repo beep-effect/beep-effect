@@ -143,8 +143,8 @@ export class YeetStatusWorktree extends S.Class<YeetStatusWorktree>($I`YeetStatu
  * ```ts
  * import { YeetStatusLaneDigest } from "@beep/repo-cli/test/Yeet"
  *
- * const lane = YeetStatusLaneDigest.make({ id: "quality:knip", inputDigest: "0d5970886d36b416" })
- * console.log(lane.id) // "quality:knip"
+ * const lane = YeetStatusLaneDigest.make({ id: "quality:fallow", inputDigest: "0d5970886d36b416" })
+ * console.log(lane.id) // "quality:fallow"
  * ```
  *
  * @category models
@@ -725,7 +725,7 @@ const verdictLaneDigests = (verdict: YeetVerdict): ReadonlyArray<YeetStatusLaneD
  *   detail: "verify success",
  *   path: "verdict.json",
  *   state: "present",
- *   laneDigests: [{ id: "quality:knip", inputDigest: "abc" }],
+ *   laneDigests: [{ id: "quality:fallow", inputDigest: "abc" }],
  * })
  * console.log(renderYeetLaneDigestBlock(verdict).split("\n").length) // 2
  * ```
@@ -2094,7 +2094,7 @@ export const yeetStatusPathForTesting = statusPathForContext;
  * import { yeetStatusArtifactFromVerdictForTesting, YeetVerdict, YeetVerdictLane } from "@beep/repo-cli/test/Yeet"
  * import * as O from "effect/Option"
  *
- * const lane = YeetVerdictLane.make({ id: "quality:knip", label: "quality:knip", phase: "full", status: "passed", inputDigest: O.some("abc") })
+ * const lane = YeetVerdictLane.make({ id: "quality:fallow", label: "quality:fallow", phase: "full", status: "passed", inputDigest: O.some("abc") })
  * const verdict = YeetVerdict.make({
  *   schemaVersion: "yeet-verdict/v2",
  *   base: "origin/main",

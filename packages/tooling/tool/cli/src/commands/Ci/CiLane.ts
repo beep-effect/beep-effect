@@ -211,7 +211,6 @@ export const CI_LANE_ID_VALUES = [
   "ecosystem",
   "fallow",
   "jsdoc-ratchet",
-  "knip",
   "labs",
   "lint",
   "lint-policy",
@@ -504,14 +503,6 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     flags: ["--base", "--validate-envelopes"],
     notes:
       "Envelope validation and artifact upload stay in the workflow; --validate-envelopes replays validation locally.",
-  }),
-  CiLaneDescriptor.make({
-    id: "knip",
-    contextName: "Knip",
-    required: true,
-    laneClass: "cli-runnable",
-    replay: "exact",
-    flags: [],
   }),
   // The design-system lint context lands non-required; promotion is a later
   // branch-ruleset action after it establishes a stable green history.
@@ -1596,7 +1587,6 @@ export const ciLaneStepsForTesting: {
             onSome: (inventoryPath) => [jsdocRatchetStep(repoRoot, inventoryPath)],
           })
         ),
-      knip: () => [rootTaskStep(repoRoot, "ci:knip", "knip:check")],
       // lab-apps-lifecycle P2 (ratified row 10): one bundled turbo invocation
       // over the labs glob. Deliberately no --affected — turbo unions filter
       // selectors, so --affected plus the positive labs filter would WIDEN the
@@ -2181,7 +2171,7 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
  * import { CiLaneRunOptions, runCiLane } from "@beep/repo-cli/commands/Ci"
  * import * as Effect from "effect/Effect"
  *
- * const program = runCiLane("knip", CiLaneRunOptions.make({
+ * const program = runCiLane("fallow", CiLaneRunOptions.make({
  *   affected: false,
  *   base: "origin/main",
  *   head: "HEAD",
@@ -2405,7 +2395,6 @@ const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = [
   "lint",
   "check",
   "codegen",
-  "knip",
   "shadcn-lint",
   "jsdoc-ratchet",
   "secrets",
@@ -2524,7 +2513,6 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     ecosystem: A.empty<string>,
     fallow: () => ["--base", plan.base, "--validate-envelopes"],
     "jsdoc-ratchet": A.empty<string>,
-    knip: A.empty<string>,
     // check.yml runs `ci lane labs --summarize` with no affected shape (a
     // positive filter plus --affected would widen the selection). The summary
     // is what folds the lab check/lint/test task hashes into the lane digest
@@ -2600,7 +2588,7 @@ export const ciLaneDispatchStep: {
  *
  * const steps = ciLocalStepsForTesting(
  *   "/repo",
- *   ["knip"],
+ *   ["fallow"],
  *   CiLocalStepPlan.make({ affected: false, base: "origin/main", onMainBranch: false })
  * )
  * console.log(A.map(steps, (step) => step.label))

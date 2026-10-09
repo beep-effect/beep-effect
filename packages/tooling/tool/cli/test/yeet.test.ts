@@ -827,7 +827,6 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         "quality:security",
         "quality:secrets",
         "quality:commitlint",
-        "quality:knip",
         "quality:sast",
         "quality:changeset-status",
         "quality:nix",

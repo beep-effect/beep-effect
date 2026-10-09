@@ -448,7 +448,7 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("push-first publish gate",
           mutability: "readonly",
           resume: "never",
         });
-      const gate = step("full:00-cheap-gates", "full", 'console.log("knip: 1 unused export"); process.exitCode = 23');
+      const gate = step("full:00-cheap-gates", "full", 'console.log("fallow: 1 unused export"); process.exitCode = 23');
       const push = step("publish:01-git-push", "publish", 'console.log("must not push")');
       const create = step("publish:02-pr-create", "publish", 'console.log("must not open a PR")');
       const submit = step(MONITOR_READY_SUBMIT_STEP_ID, "monitor", 'console.log("must not submit")');
@@ -474,7 +474,7 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("push-first publish gate",
       expect(error.message).toContain("cheap-gates failed");
       expect(error.message).toContain("nothing was pushed");
       expect(A.map(yield* Ref.get(recorder), (entry) => entry.step.id)).toEqual(["full:00-cheap-gates"]);
-    }, provideScopedLayer(commandTestLayer))
+    })
   );
 });
 

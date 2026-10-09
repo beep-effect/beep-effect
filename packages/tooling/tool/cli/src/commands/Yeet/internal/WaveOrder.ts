@@ -283,8 +283,6 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       "precise",
       "Terminal reds occur after the established environment-only TS2589 quarantine."
     ),
-    // taskIds: //#knip:check (+ //#lint:policy-fingerprint).
-    policyHostedRow("quality:knip", 80, 9, 11 / 832, O.some(20)),
     // The Shadcn Lint context landed 2026-10-01 with no hosted history, so A1 has no
     // row for it. 20 s is a conservative hosted P50: the oxlint walk over apps and
     // packages takes about 4 s wall on the 64-core workstation, and the 4-vCPU hosted
@@ -487,7 +485,6 @@ export const DEFAULT_GATE_ORDER_COST_SOURCES: ReadonlyArray<GateOrderCostSource>
   laneRowCost("quality:lint", "Lint"),
   laneRowCost("quality:lint-policy", "Heavy / Lint Policy"),
   laneRowCost("quality:check", "Heavy / Check"),
-  laneRowCost("quality:knip", "Knip"),
   costSource("quality:shadcn-lint", "external-run", O.none()),
   proxyRowCost("quality:jsdoc-ratchet", "Heavy / Doctest"),
   laneRowCost("quality:docgen", "Heavy / Docgen"),

@@ -59,7 +59,7 @@ nothing was adopted or discarded. P0 Research is complete.
 
 ## Latest Evidence
 
-[A lane handoff](./history/handoffs/rsc-a-retire-2026-10-09.md): run 2 clears the FreshBooks S5 notice and merges stage-1 evidence. Knip transfer proof remains queued under a durable admission runner; publication is pending (2026-10-09).
+[A lane handoff](./history/handoffs/rsc-a-retire-2026-10-09.md): run 4 reuses all eleven passed transfer-package gates and the single-Govinfo Knip cross-check. All 41 rows have dispositions. The generated Knip lock graph is cleared under S5; retirement owner regeneration and final gates are running before wave-1 publication (2026-10-09).
 
 
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md)

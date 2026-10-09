@@ -440,7 +440,7 @@ authoritative proof, and `bun run beep yeet verify` (full tier) is an
 on-demand tool for iterating on a red hosted lane locally, never an automatic
 publish step. The full tier's first step still runs the cheap-gates tier. This tier runs 12 deterministic gates in
 one collected wave, including config sync, tsgo rule parity, Effect imports,
-schema-first, goals checks, Knip, Fallow, changeset status, and the JSDoc
+schema-first, goals checks, Fallow, changeset status, and the JSDoc
 ratchet against the committed inventory. It reports every failure before any
 build, lint, check, test, or docgen lane starts. `yeet repair` applies its
 deterministic fixers, runs the same collected tier, and stops before heavy

@@ -126,7 +126,7 @@ describe("gate staleness assessment", () => {
 describe("gate staleness reporting", () => {
   it("keeps only the verdicts that name a real problem", () => {
     const verdicts = [
-      GateFresh.make({ gateId: "knip-ratchet" }),
+      GateFresh.make({ gateId: "jsdoc-totals-ratchet" }),
       GateStale.make({
         artifactPath: descriptor.artifactPath,
         gateId: descriptor.gateId,
@@ -203,7 +203,6 @@ describe("gate staleness reporting", () => {
       // has to run as written: no placeholder package names here.
       "bun run coverage:baseline:write",
       "bun run beep quality jsdoc-inventory && bun run beep quality jsdoc-ratchet --write-baseline",
-      "bun run beep quality knip --write-baseline",
       "bun run beep lint package-test-typecheck --write-baseline",
       "bun run beep goals doctor --write-baseline",
       "bun run beep quality jsdoc-inventory",

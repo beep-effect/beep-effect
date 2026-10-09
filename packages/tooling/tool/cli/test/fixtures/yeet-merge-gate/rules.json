@@ -26,9 +26,6 @@
           "context": "Repo Sanity"
         },
         {
-          "context": "Knip"
-        },
-        {
           "context": "Commitlint"
         },
         {

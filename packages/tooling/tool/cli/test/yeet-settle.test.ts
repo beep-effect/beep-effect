@@ -262,7 +262,7 @@ describe("B7 settle contracts", () => {
         "Commitlint",
         "Heavy / Docgen",
         "Heavy / Doctest",
-        "Knip",
+        "Fallow Advisory",
         "Lint",
         "Heavy / Lint Policy",
         "Nix Shell",

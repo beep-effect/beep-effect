@@ -1075,13 +1075,13 @@ describe("yeet status snapshot rendering and encoding", () => {
         ...snapshot,
         verdict: YeetStatusArtifact.make({
           ...snapshot.verdict,
-          laneDigests: [{ id: "quality:knip", inputDigest: "0d5970886d36b416" }],
+          laneDigests: [{ id: "fallow:audit", inputDigest: "0d5970886d36b416" }],
         }),
       })
     );
 
     expect(summary).toContain("- lane digests: 1 lane(s)");
-    expect(summary).toContain("  quality:knip: 0d5970886d36b416");
+    expect(summary).toContain("  fallow:audit: 0d5970886d36b416");
     expect(renderYeetStatusSummary(snapshot)).toContain("- lane digests: none recorded");
   });
 
@@ -1211,7 +1211,7 @@ describe("yeet status snapshot rendering and encoding", () => {
       committed: true,
       createdAt: "2026-09-12T00:00:00.000Z",
       head: "HEAD",
-      lanes: [lane("quality:knip", O.some("abc"), "passed"), lane("quality:check", O.none(), "failed")],
+      lanes: [lane("fallow:audit", O.some("abc"), "passed"), lane("quality:check", O.none(), "failed")],
       message: "one lane failed",
       mode: "publish",
       outcome: "failure",
@@ -1220,8 +1220,8 @@ describe("yeet status snapshot rendering and encoding", () => {
       runId: "feat_x",
     });
     const artifact = yeetStatusArtifactFromVerdictForTesting("verdict.json", verdict);
-    expect(artifact.laneDigests).toEqual([{ id: "quality:knip", inputDigest: "abc" }]);
+    expect(artifact.laneDigests).toEqual([{ id: "fallow:audit", inputDigest: "abc" }]);
     expect(artifact.repairCommand).toBe("bun run beep quality:check");
-    expect(renderYeetLaneDigestBlock(artifact)).toBe("lane digests: 1 lane(s)\n  quality:knip: abc");
+    expect(renderYeetLaneDigestBlock(artifact)).toBe("lane digests: 1 lane(s)\n  fallow:audit: abc");
   });
 });

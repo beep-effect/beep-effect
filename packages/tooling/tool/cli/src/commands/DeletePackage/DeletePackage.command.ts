@@ -452,7 +452,6 @@ const BASELINE_WRITER_STEPS: ReadonlyArray<BaselineWriterStep> = [
     label: "package scripts",
     args: ["run", "beep", "lint", "package-scripts", "--write"],
   }),
-  BaselineWriterStep.make({ label: "Knip baseline", args: ["run", "beep", "quality", "knip", "--write-baseline"] }),
 ];
 
 const baselineOutputWritten = (before: O.Option<BaselineOutputStamp>, after: O.Option<BaselineOutputStamp>): boolean =>

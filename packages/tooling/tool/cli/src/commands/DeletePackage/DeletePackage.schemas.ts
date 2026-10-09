@@ -304,7 +304,7 @@ export class BaselineOutputStamp extends S.Class<BaselineOutputStamp>($I`Baselin
  * ```ts
  * import { BaselineWriterStep } from "@beep/repo-cli/commands/DeletePackage"
  *
- * const step = BaselineWriterStep.make({ label: "Knip baseline", args: ["run", "beep", "quality", "knip"] })
+ * const step = BaselineWriterStep.make({ label: "JSDoc baseline", args: ["run", "beep", "quality", "jsdoc-ratchet"] })
  * console.log(step.exitPolicy) // "zero-only"
  * ```
  *
