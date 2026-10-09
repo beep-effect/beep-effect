@@ -122,3 +122,29 @@ comparison base; main's stage-1 and reviewer-routing updates and all H1
 evidence are retained. This removes the packet-base semantic-delta condition
 after fresh proof; the separate inherited host-path repair remains pending.
 The merge commit is the repair for inbox `base-conflict-356cda027626`.
+
+### Run 2 publication and review follow-up
+
+Recovery evidence published at `8fe6d27057`; Yeet cheap gates and the
+head-install preflight passed. The admitted knowledge-reference rerun after
+main merge exited 1 with the same two inherited observations. Local gates
+are not claimed to pass at a different head.
+
+Readiness job `4a28a1d0-79d2-42c4-80a5-d5c2a0f691da` ended by its four-minute
+ceiling. Publication then submitted `e2e6e429-0290-4df4-97eb-54e3e3632dd4`;
+its wave exposed review thread `PRRT_kwDOPbO_N86q3zPQ`. Read the wave,
+cancelled the unbounded monitor for this blocked handoff, read its terminal
+`cancelled` record, and acknowledged both proof-job inbox rows with
+`--observed`. No readiness success is claimed. Resubmit after the owning
+main repair, retaining the review window and all hosted gates.
+
+Review comment 4232565113 correctly identifies blank lines breaking the
+three H1 Decision Log rows out of their Markdown table. Remove those
+separators; verify the three decisions remain in the same contiguous table
+as its header. No decision content changes. Reply and resolve through
+`yeet reply`; acknowledge the inbox row with the fixing commit. This
+review correction is one addressed wave, with no package/dependency change.
+
+The tracked handoff uses a report-base SHA because publication commits the
+handoff itself. The orchestrator must read #1562's current head before its
+gate; a report-base SHA is never an exact-head hosted proof.
