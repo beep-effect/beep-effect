@@ -109,6 +109,13 @@ Evidence:
 [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
 This status does not mark Script ports or Sensitive scripts accepted.
 
+Run 9 integrates V main `4e82f6d942`, preserving both packet contributions
+and the canonical scoped test harness. After repairing the introduced process
+API/formatting errors, merge-driver fixtures pass 5/5 on Node and Bun,
+test-tsgo passes 335 files, CI security passes 29/29, and repo-cli quick
+package verification passes. Unaffected terminal proof remains retained;
+updated-head hosted evidence and the orchestrator gate remain open.
+
 ### Lane inputs
 
 Each lane reads its sweep files and brief sections before editing. Paths

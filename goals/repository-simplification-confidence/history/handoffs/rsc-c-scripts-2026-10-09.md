@@ -992,3 +992,51 @@ The serial repair batch reruns both merge-driver runtimes, test-tsgo and
 package-verify --quick. Its terminal results remain required; the initial
 passes do not qualify the repaired process boundary. The lint inbox row
 will be acknowledged with the merge repair SHA.
+
+### Run 9 terminal integration evidence
+
+Qualified integration merge: `d48b1ca7404ea209288005832b419dc6fed55106`,
+with parents `100213da1d` and V main `4e82f6d942`. All required merge-affected
+checks now pass. `.beep/rsc-c-run9-repair-result.txt` records four zero rows;
+`.beep/rsc-c-run9-result.txt` retains the original introduced-red attribution
+and the unaffected CI fixture pass.
+
+| Required check | Terminal result | Evidence |
+| --- | --- | --- |
+| Merge-driver Node runner | pass, all 5 cases | `.beep/rsc-c-run9-repair-driver-node.log` |
+| Merge-driver Bun runner | pass, all 5 cases | `.beep/rsc-c-run9-repair-driver-bun.log` |
+| `beep quality test-tsgo` | pass, 335 files | `.beep/rsc-c-run9-repair-tsgo.log` |
+| CI runner-security Bun fixtures | pass, all 29 cases | `.beep/rsc-c-run9-ci.log` |
+| `beep quality package-verify @beep/repo-cli --quick` | pass, lint 7.5s / check 14.1s | `.beep/rsc-c-run9-repair-package.log` |
+
+Both admitted wrappers are terminal; no C-owned command/unit remains running.
+The lint P0 `local-shard-17edbde764d4` is acknowledged with repair SHA
+`d48b1ca740`. No policy baseline or reviewed exception was authored by C.
+Run 4 full package/docgen/parity, Run 7 dependency-policy and Run 8 Fallow/Knip
+receipts remain the verification of record for unaffected surfaces. Existing
+coverage-floor read is retained; no floor changed or new coverage result claimed.
+
+Publication is one `git push` wave after this receipt-only successor commit,
+explicitly authorized by resume ruling 7. The existing PR stays ready. A fresh
+GitHub mergeability and complete review-thread read follows the push; the
+last pre-push complete read contains one resolved thread and no unanswered
+later reviewer comment. Hosted green and elapsed review window are separate
+from these local parity passes. The orchestrator alone merges and retires C.
+
+### Run 9 report
+
+lane: rsc-c-scripts · head: d48b1ca7404ea209288005832b419dc6fed55106
+(qualified integration source; receipt-only successor is included in this push)
+· PR: #1583 (wave 1, ready for review)
+· package-verify: @beep/repo-cli pass (Run 9 --quick; retained Run 4 full audit/docgen)
+· hosted-parity: test-tsgo pass (335 files); docgen local pass (retained);
+jsdoc-ratchet pass (retained); knowledge refs --check pass (retained);
+fallow audit+health pass (retained Run 8 audit / earlier health); coverage read
+complete, no floors changed. Merge-driver Node 5/5, Bun 5/5; CI security 29/29.
+Updated-head hosted proof is not claimed.
+· handoff: history/handoffs/rsc-c-scripts-2026-10-09.md
+· open: B occurrence-specific admission after V; updated-head hosted evidence,
+review-window completion, orchestrator merge gate and retirement. All C-owned
+units are terminal. E co-sign and the resource P2 remain resolved.
+
+Graft saved approximately 35,133 tokens across two retrievals this run.

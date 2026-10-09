@@ -272,3 +272,18 @@ policy and Bun-cache retirement survive; install precedes typed export, then Tur
 restore. Full receipts and root-input accounting remain in the C handoff. Updated
 hosted proof and B/V's named judgments remain open; this does not close program
 Script ports or Sensitive scripts acceptance.
+
+## C Run 9 V integration proof
+
+Merge `d48b1ca740` integrates V main `4e82f6d942`, retaining both lanes'
+decisions, friction rows and acceptance contributions. The merge-driver fixture
+uses V's bounded scoped Effect harness and all four cleanup witnesses with C's
+typed idempotent installation and fail-closed assertions. Its canonical Effect
+process boundary passes five tests under both Node and Bun. Test-tsgo passes
+335 files, CI runner-security passes all 29 cases, and repo-cli package-verify
+--quick passes lint/check. Initial native-process and intermediate formatting
+reds are repaired and their affected checks rerun; the lint inbox is acknowledged
+with the repair SHA. No inventory, allowlist or coverage floor is edited by C.
+Earlier full package/docgen and unaffected parity remain retained. Updated-head
+hosted proof, B admission and the orchestrator gate remain open; program
+acceptance is not closed by these local receipts.
