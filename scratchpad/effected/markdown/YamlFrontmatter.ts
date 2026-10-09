@@ -25,7 +25,19 @@ import { FrontmatterDecodeError, FrontmatterEncodeError, FrontmatterFormatMismat
  * requires it; a consumer who never touches yaml frontmatter never loads the
  * yaml engine.
  *
+ * **Example** (Encode an empty frontmatter object)
+ *
+ * ```ts
+ * import { YamlFrontmatter } from "@beep/scratchpad/effected/markdown/YamlFrontmatter"
+ * import * as Effect from "effect/Effect"
+ *
+ * const encoded = Effect.runSync(YamlFrontmatter.encode({}))
+ * console.log(JSON.stringify(encoded)) // "{}\n"
+ * ```
+ *
  * @public
+ * @category codecs
+ * @since 0.0.0
  */
 export const YamlFrontmatter: FrontmatterCodec = {
 	format: "yaml",

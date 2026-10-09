@@ -40,6 +40,8 @@ const reWhitespaceChar = /^[ \t\n\v\f\r]/;
  * Run one of `references.ts`'s grammar functions over the subject at the
  * scanner's cursor, keeping the two cursors in step.
  *
+ * **Details**
+ *
  * The destination, title and label grammars are identical wherever they
  * appear, so a link reuses exactly what a definition parsed with.
  */
@@ -53,6 +55,8 @@ const withReferenceScanner = <A>(scanner: InlineScanner, run: (reference: Refere
 
 /**
  * The plain-text flattening of a node list — an image's `alt`.
+ *
+ * **Details**
  *
  * ITERATIVE ON PURPOSE. This runs while the brackets close, before
  * materialization's depth guard has seen anything, and the content it walks
@@ -94,7 +98,20 @@ const plainTextOf = (nodes: ReadonlyArray<InlineNode>): string => {
 	return text;
 };
 
-/** `[` — a potential link opener. */
+/**
+ * Recognizes `[` as a potential link opener.
+ *
+ * **Example** (Inspect the link-opening trigger)
+ *
+ * ```ts
+ * import { linkOpenConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/link"
+ *
+ * console.log(linkOpenConstruct.triggers[0]) // 91
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const linkOpenConstruct: InlineConstruct = {
 	name: "linkOpen",
 	triggers: [C_OPEN_BRACKET],
@@ -113,12 +130,12 @@ export const linkOpenConstruct: InlineConstruct = {
  * Build the `!` construct — an image opener when a `[` follows, otherwise
  * literal.
  *
+ * **Details**
+ *
  * `caretOpensImage` is the second GFM footnote seam, and the surprising one.
  * cmark-gfm's bang handler reads
  *
- * ```c
- * if (peek_char(subj) == '[' && peek_char_n(subj, 1) != '^') {
- * ```
+ * `if (peek_char(subj) == '[' && peek_char_n(subj, 1) != '^') {`
  *
  * so under GFM `![^` NEVER opens an image: the `!` stays literal text and the
  * `[` becomes an ordinary bracket, which is what lets `text![^1]` render as a
@@ -126,6 +143,17 @@ export const linkOpenConstruct: InlineConstruct = {
  * pins exactly that). It also means the footnote branch in the close-bracket
  * handler can never see an image opener, which is why that branch does not
  * test for one. CommonMark passes `true` and is untouched.
+ *
+ * **Example** (Construct the GFM image opener)
+ *
+ * ```ts
+ * import { makeImageOpenConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/link"
+ *
+ * console.log(makeImageOpenConstruct(false).name) // imageOpen
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const makeImageOpenConstruct = (caretOpensImage: boolean): InlineConstruct => ({
 	name: "imageOpen",
@@ -147,11 +175,26 @@ export const makeImageOpenConstruct = (caretOpensImage: boolean): InlineConstruc
 	},
 });
 
-/** `!` — an image opener when a `[` follows, otherwise literal. */
+/**
+ * Recognizes `!` as an image opener when a `[` follows, otherwise literal.
+ *
+ * **Example** (Inspect the CommonMark image trigger)
+ *
+ * ```ts
+ * import { imageOpenConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/link"
+ *
+ * console.log(imageOpenConstruct.triggers[0]) // 33
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const imageOpenConstruct: InlineConstruct = makeImageOpenConstruct(true);
 
 /**
  * A dialect's last chance at a `]` that closed nothing.
+ *
+ * **Details**
  *
  * cmark-gfm's footnote reference is not a construct of its own: it is a branch
  * under `handle_close_bracket`'s `noMatch` label, reached only once an inline
@@ -162,6 +205,9 @@ export const imageOpenConstruct: InlineConstruct = makeImageOpenConstruct(true);
  *
  * Returning `true` means the fallback handled everything — including popping
  * the bracket — and the close-bracket construct stops.
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export type LinkCloseFallback = (
 	scanner: InlineScanner,
@@ -175,8 +221,21 @@ export type LinkCloseFallback = (
 /**
  * Build the `]` construct — closes a link or image, or stays literal.
  *
+ * **Details**
+ *
  * `onNoMatch` is the dialect seam described on {@link LinkCloseFallback}. With
  * none, this is CommonMark's close-bracket handler exactly.
+ *
+ * **Example** (Construct the CommonMark link closer)
+ *
+ * ```ts
+ * import { makeLinkCloseConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/link"
+ *
+ * console.log(makeLinkCloseConstruct().triggers[0]) // 93
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const makeLinkCloseConstruct = (onNoMatch?: LinkCloseFallback): InlineConstruct => ({
 	name: "linkClose",
@@ -332,5 +391,22 @@ export const makeLinkCloseConstruct = (onNoMatch?: LinkCloseFallback): InlineCon
 	},
 });
 
-/** `]` — closes a link or image, or stays literal. The CommonMark spelling. */
+/**
+ * Closes a link or image at `]`, or leaves the bracket literal.
+ *
+ * **Details**
+ *
+ * The CommonMark spelling.
+ *
+ * **Example** (Inspect the CommonMark closing construct)
+ *
+ * ```ts
+ * import { linkCloseConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/link"
+ *
+ * console.log(linkCloseConstruct.name) // linkClose
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const linkCloseConstruct: InlineConstruct = makeLinkCloseConstruct();

@@ -30,8 +30,25 @@ const reCmarkSpace = /[ \t\n\r]/;
 /**
  * Trim `text` the way commonmark.js does before inline parsing, carrying the
  * segment table along so the surviving characters keep their source offsets.
+ *
+ * **Details**
+ *
  * Exported for the phrasing-level parse entry point (`phrasing.ts`), which
  * prepares content the same way a paragraph does.
+ *
+ * **Example** (Trim content while retaining its source range)
+ *
+ * ```ts
+ * import { trimWithSegments } from "@beep/scratchpad/effected/markdown/internal/rawInline";
+ *
+ * const trimmed = trimWithSegments("  hi  ", [
+ *   { textOffset: 0, sourceOffset: 10, length: 6 },
+ * ], /\s/);
+ * console.log(JSON.stringify(trimmed)) // {"text":"hi","segments":[{"textOffset":0,"sourceOffset":12,"length":2}]}
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const trimWithSegments: {
 	(text: string, segments: ReadonlyArray<RawInlineSegment>, whitespace: RegExp): { readonly text: string; readonly segments: ReadonlyArray<RawInlineSegment> };
@@ -73,6 +90,32 @@ export const trimWithSegments: {
 /**
  * Prepare a leaf block's accumulated content and run the inline pass over it:
  * trim it, keep its source provenance, and parse it into phrasing content.
+ *
+ * **Example** (Prepare paragraph text with absolute inline positions)
+ *
+ * ```ts
+ * import * as HashMap from "effect/HashMap";
+ * import { Point, Position } from "@beep/scratchpad/effected/markdown/MarkdownNode";
+ * import type { Definition } from "@beep/scratchpad/effected/markdown/MarkdownNode";
+ * import type { BlockNode } from "@beep/scratchpad/effected/markdown/internal/blockTypes";
+ * import { prepareInline } from "@beep/scratchpad/effected/markdown/internal/rawInline";
+ *
+ * const block: BlockNode = {
+ *   type: "paragraph", parent: undefined, children: [], open: false,
+ *   stringContent: "  hi  ",
+ *   segments: [{ textOffset: 0, sourceOffset: 0, length: 6 }],
+ *   startOffset: 0, endOffset: 6, startLine: 1, endLine: 1, depth: 1, data: {},
+ * };
+ * const position = (start: number, end: number) => Position.make({
+ *   start: Point.make({ line: 1, column: start + 1, offset: start }),
+ *   end: Point.make({ line: 1, column: end + 1, offset: end }),
+ * });
+ * const prepared = prepareInline(block, position, HashMap.empty<string, Definition>());
+ * console.log(prepared.text, prepared.startOffset, prepared.endOffset, prepared.children.length) // hi 2 4 1
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const prepareInline: {
 	(block: BlockNode, position: PositionOf, refmap: HashMap.HashMap<string, Definition>, dialect?: InlineDialectName, footnoteLabels?: HashSet.HashSet<string>): PreparedInline;

@@ -31,12 +31,27 @@ import { appendChild, insertAfter, makeInlineNode, unlink } from "../inlineNode.
 import type { Delimiter, InlineConstruct, InlineScanner } from "../inlineTypes.ts";
 import { scanDelims } from "./emphasis.ts";
 
-/** The `~` character code — the construct's only trigger. */
+/**
+ * The `~` character code — the construct's only trigger.
+ *
+ * **Example** (Inspect the tilde character code)
+ *
+ * ```ts
+ * import { C_TILDE } from "@beep/scratchpad/effected/markdown/internal/inlines/strikethrough"
+ *
+ * console.log(C_TILDE) // 126
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const C_TILDE = 0x7e;
 
 /**
  * Consume a `~` run as literal text and, when it is a viable one- or
  * two-tilde run, push it onto the shared delimiter stack.
+ *
+ * **Details**
  *
  * The run becomes a text node either way: a `~` that never pairs has to
  * survive as the character it is.
@@ -75,9 +90,46 @@ const handleTilde = (scanner: InlineScanner): boolean => {
 /**
  * Pair `opener` with `closer` into a `delete` node — upstream's `insert`.
  *
+ * **Details**
+ *
  * Returns the delimiter the caller's loop continues from, which upstream
  * captures as `closer->next` BEFORE it starts unlinking, so both the matched
  * and the mismatched path resume at the same place.
+ *
+ * **Gotchas**
+ *
+ * Only equal-length runs form a `delete` node. Both matched and mismatched
+ * pairs remove the delimiters from the closer back through the opener.
+ *
+ * **Example** (Prepare a curried strikethrough insertion)
+ *
+ * ```ts
+ * import { insertStrikethrough, C_TILDE } from "@beep/scratchpad/effected/markdown/internal/inlines/strikethrough"
+ * import { makeInlineNode } from "@beep/scratchpad/effected/markdown/internal/inlineNode"
+ * import type { Delimiter } from "@beep/scratchpad/effected/markdown/internal/inlineTypes"
+ *
+ * const opener: Delimiter = {
+ *   cc: C_TILDE,
+ *   numdelims: 2,
+ *   origdelims: 2,
+ *   node: makeInlineNode("text", 0, 2, "~~"),
+ *   previous: undefined,
+ *   next: undefined,
+ *   canOpen: true,
+ *   canClose: false
+ * }
+ * const closer: Delimiter = {
+ *   ...opener,
+ *   node: makeInlineNode("text", 6, 8, "~~"),
+ *   canOpen: false,
+ *   canClose: true
+ * }
+ * const insert = insertStrikethrough(opener, closer)
+ * console.log(typeof insert) // function
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const insertStrikethrough: {
 	(scanner: InlineScanner, opener: Delimiter, closer: Delimiter): Delimiter | undefined;
@@ -127,7 +179,20 @@ export const insertStrikethrough: {
 	return resume;
 });
 
-/** GFM strikethrough: `~foo~` and `~~foo~~`. */
+/**
+ * Recognizes GFM strikethrough: `~foo~` and `~~foo~~`.
+ *
+ * **Example** (Inspect the GFM strikethrough trigger)
+ *
+ * ```ts
+ * import { strikethroughConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/strikethrough"
+ *
+ * console.log(strikethroughConstruct.triggers[0]) // 126
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const strikethroughConstruct: InlineConstruct = {
 	name: "strikethrough",
 	triggers: [C_TILDE],

@@ -43,9 +43,9 @@ import { normalizeLabelText } from "../references.ts";
 /**
  * `_scan_footnote_definition` from `src/scanners.re`:
  *
- * ```re2c
- * '[^' ([^\] \r\n\x00\t]+) ']:' [ \t]*
- * ```
+ * **Details**
+ *
+ * The scanner expression is `'[^' ([^\] \r\n\x00\t]+) ']:' [ \t]*`.
  *
  * The label class is the whole grammar and the whole surprise: a footnote
  * label may hold no whitespace at all, which is where it parts company with a
@@ -59,8 +59,19 @@ const reFootnoteDefinition = /\[\^([^\]\0\t\n\r ]+)\]:[ \t]*/;
 const CONTINUATION_INDENT = 4;
 
 /**
- * FootnoteDefinition: a container whose children are flow blocks, continued by
- * four columns of indentation.
+ * Contains footnote definition flow blocks, continued by four columns of indentation.
+ *
+ * **Example** (Inspect footnote child eligibility)
+ *
+ * ```ts
+ * import { footnoteDefinitionConstruct } from "@beep/scratchpad/effected/markdown/internal/blocks/footnoteDefinition";
+ *
+ * console.log(footnoteDefinitionConstruct.canContain("paragraph")); // true
+ * console.log(footnoteDefinitionConstruct.canContain("listItem")); // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const footnoteDefinitionConstruct: BlockConstruct = {
 	type: "footnoteDefinition",
@@ -97,13 +108,26 @@ export const footnoteDefinitionConstruct: BlockConstruct = {
 };
 
 /**
- * The footnote-definition block start: an unindented `[^label]:`.
+ * Opens a footnote definition at an unindented `[^label]:` marker.
+ *
+ * **Details**
  *
  * Registered at the CORE position cmark-gfm runs it from — after the thematic
  * break, before the list marker — rather than with the GFM extensions at the
  * end of the table, because that is literally where the branch sits in
  * `open_new_blocks`. It carries no `cont_type == PARAGRAPH` guard, so unlike
  * the thematic break above it, a footnote definition interrupts a paragraph.
+ *
+ * **Example** (Identify the footnote definition start)
+ *
+ * ```ts
+ * import { footnoteDefinitionStart } from "@beep/scratchpad/effected/markdown/internal/blocks/footnoteDefinition";
+ *
+ * console.log(footnoteDefinitionStart.name); // footnoteDefinition
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const footnoteDefinitionStart: BlockStart = {
 	name: "footnoteDefinition",

@@ -13,7 +13,27 @@ import { Paragraph } from "../../MarkdownNode.ts";
 import type { BlockConstruct } from "../blockTypes.ts";
 import { extractDefinitions } from "./linkReferenceDefinition.ts";
 
-/** Paragraph: absorbs lines until a blank one, and contains nothing. */
+/**
+ * Absorbs paragraph lines until a blank line and contains no child blocks.
+ *
+ * **Details**
+ *
+ * Finalization extracts leading link reference definitions. Materialization
+ * omits a paragraph whose trimmed inline content is empty, including one
+ * that held only definitions.
+ *
+ * **Example** (Inspect paragraph line absorption)
+ *
+ * ```ts
+ * import { paragraphConstruct } from "@beep/scratchpad/effected/markdown/internal/blocks/paragraph";
+ *
+ * console.log(paragraphConstruct.acceptsLines); // true
+ * console.log(paragraphConstruct.canContain("list")); // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const paragraphConstruct: BlockConstruct = {
 	type: "paragraph",
 	acceptsLines: true,

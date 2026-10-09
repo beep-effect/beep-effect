@@ -8,7 +8,25 @@
 import type { BlockStart } from "../blockTypes.ts";
 import { CODE_INDENT } from "../preprocess.ts";
 
-/** The indented-code block start: four columns of indentation. */
+/**
+ * Opens an indented-code block at four columns of indentation.
+ *
+ * **Details**
+ *
+ * Blank lines and lines inside an open paragraph do not open indented code.
+ * The source extent includes the indentation; the code value excludes it.
+ *
+ * **Example** (Identify the indented code start)
+ *
+ * ```ts
+ * import { indentedCodeStart } from "@beep/scratchpad/effected/markdown/internal/blocks/indentedCode";
+ *
+ * console.log(indentedCodeStart.name); // indentedCode
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const indentedCodeStart: BlockStart = {
 	name: "indentedCode",
 	trigger: (scanner) => {

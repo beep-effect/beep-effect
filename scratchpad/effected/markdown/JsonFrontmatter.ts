@@ -26,7 +26,22 @@ import { FrontmatterDecodeError, FrontmatterEncodeError, FrontmatterFormatMismat
  * requires it; a consumer who never touches json frontmatter never loads the
  * jsonc engine.
  *
+ * **Example** (Decode a JSON capture and encode an empty object)
+ *
+ * ```ts
+ * import { JsonFrontmatter } from "@beep/scratchpad/effected/markdown/JsonFrontmatter";
+ * import { Frontmatter } from "@beep/scratchpad/effected/markdown/MarkdownNode";
+ * import * as Effect from "effect/Effect";
+ *
+ * const node = Frontmatter.make({ format: "json", value: "{\"title\":\"Hi\"}" });
+ * const data = Effect.runSync(JsonFrontmatter.decode(node));
+ * console.log(JSON.stringify(data)); // {"title":"Hi"}
+ * console.log(Effect.runSync(JsonFrontmatter.encode({}))); // {}
+ * ```
+ *
  * @public
+ * @category codecs
+ * @since 0.0.0
  */
 export const JsonFrontmatter: FrontmatterCodec = {
 	format: "json",

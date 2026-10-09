@@ -16,8 +16,27 @@ import type { RawInlineSegment } from "./blockTypes.ts";
 /**
  * The absolute source offset of `textIndex` within a segmented content run.
  *
+ * **Details**
+ *
  * An index that falls between segments resolves to the end of the segment
  * before it, which is the closest real source position there is.
+ *
+ * **Example** (Resolve real and injected positions)
+ *
+ * ```ts
+ * import { sourceOffsetAt } from "@beep/scratchpad/effected/markdown/internal/segments";
+ *
+ * const segments = [
+ *   { textOffset: 0, sourceOffset: 10, length: 3 },
+ *   { textOffset: 4, sourceOffset: 20, length: 2 }
+ * ];
+ * console.log(sourceOffsetAt(segments, 2, 0)) // 12
+ * console.log(sourceOffsetAt(3, 0)(segments)) // 13
+ * console.log(sourceOffsetAt([], 2, 99)) // 99
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const sourceOffsetAt: {
 	(segments: ReadonlyArray<RawInlineSegment>, textIndex: number, fallback: number): number;
@@ -50,6 +69,19 @@ export const sourceOffsetAt: {
 /**
  * Cut `[from, to)` out of a segmented content run, keeping the provenance of
  * every character that survives.
+ *
+ * **Example** (Retain provenance across a slice)
+ *
+ * ```ts
+ * import { sliceWithSegments } from "@beep/scratchpad/effected/markdown/internal/segments";
+ *
+ * const segments = [{ textOffset: 0, sourceOffset: 10, length: 4 }];
+ * const sliced = sliceWithSegments(1, 3)(segments);
+ * console.log(JSON.stringify(sliced)) // [{"textOffset":0,"sourceOffset":11,"length":2}]
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const sliceWithSegments: {
 	(segments: ReadonlyArray<RawInlineSegment>, from: number, to: number): ReadonlyArray<RawInlineSegment>;

@@ -34,7 +34,18 @@ const $I = $ScratchpadId.create("effected/markdown/Frontmatter");
  * node's `format` marker and the codec's declared `format` simply disagree.
  * Route on the `"FrontmatterFormatMismatchError"` tag with `Effect.catchTag`.
  *
+ * **Example** (Inspect FrontmatterFormatMismatchError diagnostics)
+ *
+ * ```ts
+ * import { FrontmatterFormatMismatchError } from "@beep/scratchpad/effected/markdown/Frontmatter";
+ *
+ * const error = FrontmatterFormatMismatchError.make({ expected: "yaml", actual: "toml" });
+ * console.log(error.message) // frontmatter format mismatch: the yaml codec cannot decode a toml capture
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class FrontmatterFormatMismatchError extends S.TaggedError<FrontmatterFormatMismatchError>($I`FrontmatterFormatMismatchError`)(
 	"FrontmatterFormatMismatchError",
@@ -45,6 +56,21 @@ export class FrontmatterFormatMismatchError extends S.TaggedError<FrontmatterFor
 		actual: FrontmatterFormat.annotateKey({ description: "The format the capture node actually carries." }),
 	}, $I.annote("FrontmatterFormatMismatchError", { description: "Indicates that a frontmatter codec was handed a capture of a different format — a yaml codec applied to a `+++` toml capture, for example." }),
 ) {
+	/**
+	 * Describes the incompatible codec and capture formats.
+	 *
+	 * **Example** (Read the FrontmatterFormatMismatchError message)
+	 *
+	 * ```ts
+	 * import { FrontmatterFormatMismatchError } from "@beep/scratchpad/effected/markdown/Frontmatter";
+	 *
+	 * const error = FrontmatterFormatMismatchError.make({ expected: "yaml", actual: "toml" });
+	 * console.log(error.message) // frontmatter format mismatch: the yaml codec cannot decode a toml capture
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `frontmatter format mismatch: the ${this.expected} codec cannot decode a ${this.actual} capture`;
 	}
@@ -61,7 +87,18 @@ export class FrontmatterFormatMismatchError extends S.TaggedError<FrontmatterFor
  * diagnostics the format engines carry. Route on the
  * `"FrontmatterDecodeError"` tag with `Effect.catchTag`.
  *
+ * **Example** (Inspect FrontmatterDecodeError diagnostics)
+ *
+ * ```ts
+ * import { FrontmatterDecodeError } from "@beep/scratchpad/effected/markdown/Frontmatter";
+ *
+ * const error = FrontmatterDecodeError.make({ format: "yaml", cause: new Error("invalid YAML") });
+ * console.log(error.message) // frontmatter yaml content failed to parse
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class FrontmatterDecodeError extends S.TaggedError<FrontmatterDecodeError>($I`FrontmatterDecodeError`)("FrontmatterDecodeError", {
 	/** The format that failed to parse. */
@@ -69,6 +106,21 @@ export class FrontmatterDecodeError extends S.TaggedError<FrontmatterDecodeError
 	/** The underlying format-package failure, preserved structurally. */
 	cause: S.Defect().annotateKey({ description: "The underlying format-package failure, preserved structurally." }),
 }, $I.annote("FrontmatterDecodeError", { description: "Indicates that a frontmatter capture's content failed to parse in its declared format." })) {
+	/**
+	 * Describes which frontmatter format failed to parse.
+	 *
+	 * **Example** (Read the FrontmatterDecodeError message)
+	 *
+	 * ```ts
+	 * import { FrontmatterDecodeError } from "@beep/scratchpad/effected/markdown/Frontmatter";
+	 *
+	 * const error = FrontmatterDecodeError.make({ format: "yaml", cause: new Error("invalid YAML") });
+	 * console.log(error.message) // frontmatter yaml content failed to parse
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `frontmatter ${this.format} content failed to parse`;
 	}
@@ -85,7 +137,18 @@ export class FrontmatterDecodeError extends S.TaggedError<FrontmatterDecodeError
  * format engines carry (a `JsoncStringifyError`'s `code`, for example). Route
  * on the `"FrontmatterEncodeError"` tag with `Effect.catchTag`.
  *
+ * **Example** (Inspect FrontmatterEncodeError diagnostics)
+ *
+ * ```ts
+ * import { FrontmatterEncodeError } from "@beep/scratchpad/effected/markdown/Frontmatter";
+ *
+ * const error = FrontmatterEncodeError.make({ format: "json", cause: new Error("circular reference") });
+ * console.log(error.message) // frontmatter json content failed to serialize
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class FrontmatterEncodeError extends S.TaggedError<FrontmatterEncodeError>($I`FrontmatterEncodeError`)("FrontmatterEncodeError", {
 	/** The format that failed to serialize. */
@@ -93,6 +156,21 @@ export class FrontmatterEncodeError extends S.TaggedError<FrontmatterEncodeError
 	/** The underlying format-package failure, preserved structurally. */
 	cause: S.Defect().annotateKey({ description: "The underlying format-package failure, preserved structurally." }),
 }, $I.annote("FrontmatterEncodeError", { description: "Indicates that frontmatter data failed to serialize in a codec's format." })) {
+	/**
+	 * Describes which frontmatter format failed to serialize.
+	 *
+	 * **Example** (Read the FrontmatterEncodeError message)
+	 *
+	 * ```ts
+	 * import { FrontmatterEncodeError } from "@beep/scratchpad/effected/markdown/Frontmatter";
+	 *
+	 * const error = FrontmatterEncodeError.make({ format: "json", cause: new Error("circular reference") });
+	 * console.log(error.message) // frontmatter json content failed to serialize
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `frontmatter ${this.format} content failed to serialize`;
 	}
@@ -126,6 +204,8 @@ export class FrontmatterEncodeError extends S.TaggedError<FrontmatterEncodeError
  * package's failure structurally.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface FrontmatterCodec {
 	/** The format this codec decodes and encodes. */
@@ -149,7 +229,18 @@ export interface FrontmatterCodec {
  * `frontmatter: true` (the toggle defaults off), so spec-correct CommonMark
  * read the fences as ordinary content.
  *
+ * **Example** (Recognize disabled frontmatter capture)
+ *
+ * ```ts
+ * import { FrontmatterMissingReason } from "@beep/scratchpad/effected/markdown/Frontmatter";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(FrontmatterMissingReason)("captureDisabled")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const FrontmatterMissingReason = LiteralKit(["absent", "captureDisabled"]).annotate($I.annote("FrontmatterMissingReason", { description: "Why a frontmatter decoder found no capture on a document." }));
 
@@ -157,6 +248,8 @@ export const FrontmatterMissingReason = LiteralKit(["absent", "captureDisabled"]
  * Why a frontmatter decoder found no capture on a document.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type FrontmatterMissingReason = typeof FrontmatterMissingReason.Type;
 
@@ -179,12 +272,38 @@ export type FrontmatterMissingReason = typeof FrontmatterMissingReason.Type;
  * Consumers wanting optional semantics can
  * `Effect.catchTag("FrontmatterMissingError", ...)` to a default.
  *
+ * **Example** (Inspect FrontmatterMissingError diagnostics)
+ *
+ * ```ts
+ * import { FrontmatterMissingError } from "@beep/scratchpad/effected/markdown/Frontmatter";
+ *
+ * const error = FrontmatterMissingError.make({ reason: "absent" });
+ * console.log(error.message) // the document has no frontmatter block
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class FrontmatterMissingError extends S.TaggedError<FrontmatterMissingError>($I`FrontmatterMissingError`)("FrontmatterMissingError", {
 	/** Why there is no capture: no block at all, or capture left off. */
 	reason: FrontmatterMissingReason.annotateKey({ description: "Why there is no capture: no block at all, or capture left off." }),
 }, $I.annote("FrontmatterMissingError", { description: "Indicates that a document handed to a frontmatter decoder carries no frontmatter capture." })) {
+	/**
+	 * Describes whether frontmatter is absent or capture must be enabled.
+	 *
+	 * **Example** (Read the FrontmatterMissingError message)
+	 *
+	 * ```ts
+	 * import { FrontmatterMissingError } from "@beep/scratchpad/effected/markdown/Frontmatter";
+	 *
+	 * const error = FrontmatterMissingError.make({ reason: "absent" });
+	 * console.log(error.message) // the document has no frontmatter block
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return this.reason === "captureDisabled"
 			? "the source opens with a frontmatter block, but it was not captured; parse with `frontmatter: true`"
@@ -203,7 +322,24 @@ export class FrontmatterMissingError extends S.TaggedError<FrontmatterMissingErr
  * never a stringified rendering. It is typed `unknown` because core exposes
  * no `Schema` for `Issue`; narrow it with the `SchemaIssue` module.
  *
+ * **Example** (Inspect FrontmatterValidationError diagnostics)
+ *
+ * ```ts
+ * import { FrontmatterValidationError } from "@beep/scratchpad/effected/markdown/Frontmatter";
+ *
+ * import * as Result from "effect/Result";
+ * import * as S from "effect/Schema";
+ *
+ * const decoded = S.decodeUnknownResult(S.String)(42);
+ * if (Result.isFailure(decoded)) {
+ *   const error = FrontmatterValidationError.make({ issue: decoded.failure.issue });
+ *   console.log(error.message) // frontmatter data failed schema validation
+ * }
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class FrontmatterValidationError extends S.TaggedError<FrontmatterValidationError>($I`FrontmatterValidationError`)(
 	"FrontmatterValidationError",
@@ -212,6 +348,27 @@ export class FrontmatterValidationError extends S.TaggedError<FrontmatterValidat
 		issue: S.Defect().annotateKey({ description: "The structured schema issue. Never a string." }),
 	}, $I.annote("FrontmatterValidationError", { description: "Indicates that decoded frontmatter data did not satisfy the consumer's schema." }),
 ) {
+	/**
+	 * Describes the failure to validate decoded frontmatter data.
+	 *
+	 * **Example** (Read the FrontmatterValidationError message)
+	 *
+	 * ```ts
+	 * import { FrontmatterValidationError } from "@beep/scratchpad/effected/markdown/Frontmatter";
+	 *
+	 * import * as Result from "effect/Result";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const decoded = S.decodeUnknownResult(S.String)(42);
+	 * if (Result.isFailure(decoded)) {
+	 *   const error = FrontmatterValidationError.make({ issue: decoded.failure.issue });
+	 *   console.log(error.message) // frontmatter data failed schema validation
+	 * }
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return "frontmatter data failed schema validation";
 	}
@@ -221,6 +378,8 @@ export class FrontmatterValidationError extends S.TaggedError<FrontmatterValidat
  * The union of everything a composed frontmatter decoder can fail with.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type FrontmatterSchemaError =
 	| FrontmatterMissingError
@@ -238,6 +397,8 @@ export type FrontmatterSchemaError =
  * not an error.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type FrontmatterWriteError =
 	| FrontmatterFormatMismatchError
@@ -280,51 +441,80 @@ const renderBlock = (format: FrontmatterFormat, body: string): string => {
  * **Example** (Decode YAML frontmatter with a schema)
  *
  * ```ts
- * import { MarkdownDocument, MarkdownFrontmatter, MarkdownParseOptions, YamlFrontmatter } from "./index.ts";
+ * import { MarkdownDocument } from "@beep/scratchpad/effected/markdown/MarkdownDocument";
+ * import { MarkdownFrontmatter } from "@beep/scratchpad/effected/markdown/Frontmatter";
+ * import { MarkdownParseOptions } from "@beep/scratchpad/effected/markdown/Markdown";
+ * import { YamlFrontmatter } from "@beep/scratchpad/effected/markdown/YamlFrontmatter";
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema";
  *
  * const Meta = S.Struct({ title: S.String });
- *
  * const program = Effect.gen(function* () {
  *   // Frontmatter capture is opt-in at parse time.
  *   const source = "---\ntitle: Hello\n---\n\n# Body\n";
  *   const doc = yield* MarkdownDocument.parse(source, MarkdownParseOptions.make({ frontmatter: true }));
- *   return yield* MarkdownFrontmatter.schema(Meta, YamlFrontmatter)(doc); // { title: "Hello" }
+ *   return yield* MarkdownFrontmatter.schema(Meta, YamlFrontmatter)(doc);
  * });
+ *
+ * console.log(Effect.runSync(program).title) // Hello
  * ```
  *
  * @public
+ * @category utilities
+ * @since 0.0.0
  */
 export class MarkdownFrontmatter {
 	/**
-  * Compose a consumer schema with a {@link FrontmatterCodec} into a typed
-  * decoder over a parsed `MarkdownDocument`.
-  *
-  * **Details**
-  *
-  * The decoder reads the document's frontmatter capture (parse with
-  * `frontmatter: true` — the toggle defaults off), decodes its raw value
-  * through the codec, then validates the data against `schema`. Each stage
-  * fails typed: no capture is {@link FrontmatterMissingError} (its `reason`
-  * says whether the block is genuinely absent or capture was left off), a
-  * wrong-format codec is {@link FrontmatterFormatMismatchError}, unparseable
-  * content is {@link FrontmatterDecodeError}, and schema-invalid data is
-  * {@link FrontmatterValidationError} carrying the structured issue.
-  *
-  * The seam takes the parsed document, not raw source: parse options
-  * (dialect, the frontmatter toggle) stay at the consumer's parse call and
-  * are never guessed here. Node-level composition remains available through
-  * `MarkdownDocument.frontmatter` plus the codec's own `decode`.
-  *
-  * Schema-producing in spirit: bind the returned decoder to a `const` when
-  * decoding many documents.
-  *
-  * @param schema - The schema the decoded frontmatter data must satisfy.
-  * @param codec - The format codec to decode the raw capture with.
-  * @returns A function from a parsed document to an `Effect` of the typed
-  *   frontmatter data.
-  */
+	 * Compose a consumer schema with a {@link FrontmatterCodec} into a typed
+	 * decoder over a parsed `MarkdownDocument`.
+	 *
+	 * **Details**
+	 *
+	 * The decoder reads the document's frontmatter capture (parse with
+	 * `frontmatter: true` — the toggle defaults off), decodes its raw value
+	 * through the codec, then validates the data against `schema`. Each stage
+	 * fails typed: no capture is {@link FrontmatterMissingError} (its `reason`
+	 * says whether the block is genuinely absent or capture was left off), a
+	 * wrong-format codec is {@link FrontmatterFormatMismatchError}, unparseable
+	 * content is {@link FrontmatterDecodeError}, and schema-invalid data is
+	 * {@link FrontmatterValidationError} carrying the structured issue.
+	 *
+	 * The seam takes the parsed document, not raw source: parse options
+	 * (dialect, the frontmatter toggle) stay at the consumer's parse call and
+	 * are never guessed here. Node-level composition remains available through
+	 * `MarkdownDocument.frontmatter` plus the codec's own `decode`.
+	 *
+	 * Schema-producing in spirit: bind the returned decoder to a `const` when
+	 * decoding many documents.
+	 *
+	 * **Example** (Bind a typed YAML decoder)
+	 *
+	 * ```ts
+	 * import { MarkdownDocument } from "@beep/scratchpad/effected/markdown/MarkdownDocument";
+	 * import { MarkdownFrontmatter } from "@beep/scratchpad/effected/markdown/Frontmatter";
+	 * import { MarkdownParseOptions } from "@beep/scratchpad/effected/markdown/Markdown";
+	 * import { YamlFrontmatter } from "@beep/scratchpad/effected/markdown/YamlFrontmatter";
+	 * import * as Effect from "effect/Effect";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const Meta = S.Struct({ title: S.String });
+	 * const program = Effect.gen(function* () {
+	 *   // Frontmatter capture is opt-in at parse time.
+	 *   const source = "---\ntitle: Hello\n---\n\n# Body\n";
+	 *   const doc = yield* MarkdownDocument.parse(source, MarkdownParseOptions.make({ frontmatter: true }));
+	 *   return yield* MarkdownFrontmatter.schema(Meta, YamlFrontmatter)(doc);
+	 * });
+	 *
+	 * console.log(Effect.runSync(program).title) // Hello
+	 * ```
+	 *
+	 * @param schema - The schema the decoded frontmatter data must satisfy.
+	 * @param codec - The format codec to decode the raw capture with.
+	 * @returns A function from a parsed document to an `Effect` of the typed
+	 *   frontmatter data.
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static schema<T, E, RD = never, RE = never>(
 		schema: S.Codec<T, E, RD, RE>,
 		codec: FrontmatterCodec,
@@ -355,46 +545,67 @@ export class MarkdownFrontmatter {
 	}
 
 	/**
-  * Compose a consumer schema with a {@link FrontmatterCodec} into a typed
-  * frontmatter **writer** over a parsed `MarkdownDocument` — the write
-  * mirror of {@link MarkdownFrontmatter.schema}.
-  *
-  * **Details**
-  *
-  * The writer schema-**encodes** the typed data, serializes it through the
-  * codec and returns the offset-splice edits that put the block in place —
-  * always exactly one:
-  *
-  * - A document **with** a frontmatter capture of the codec's format gets a
-  *   replacement of the entire block, both fence lines included; everything
-  *   outside the block survives byte-identical. A capture of a *different*
-  *   format fails with {@link FrontmatterFormatMismatchError} — the fences
-  *   are never switched.
-  * - A document with **no** capture gets one insert at offset 0: the fenced
-  *   block plus a blank line separating it from the existing content. Parse
-  *   with `frontmatter: true` (the toggle defaults off) — the same
-  *   precondition `schema` has — so absence means genuinely-no-frontmatter
-  *   and the insert cannot double a block the parse ignored.
-  *
-  * Each stage fails typed: schema-invalid data is
-  * {@link FrontmatterValidationError} carrying the structured issue, and a
-  * value the format cannot serialize is {@link FrontmatterEncodeError}
-  * carrying the format package's failure structurally.
-  *
-  * The block is re-serialized **whole** from the encoded data — gray-matter
-  * parity, not surgical editing — so anything the format's data model does
-  * not carry is not preserved: comments inside a yaml frontmatter block do
-  * **not** survive `set`. A per-key surgical mode over the format packages'
-  * edit layers is not offered.
-  *
-  * Schema-producing in spirit: bind the returned writer to a `const` when
-  * writing many documents.
-  *
-  * @param schema - The schema the frontmatter data is encoded through.
-  * @param codec - The format codec to serialize the encoded data with.
-  * @returns A function from a parsed document and the typed data to an
-  *   `Effect` of the edits that install the block.
-  */
+	 * Compose a consumer schema with a {@link FrontmatterCodec} into a typed
+	 * frontmatter **writer** over a parsed `MarkdownDocument` — the write
+	 * mirror of {@link MarkdownFrontmatter.schema}.
+	 *
+	 * **Details**
+	 *
+	 * The writer schema-**encodes** the typed data, serializes it through the
+	 * codec and returns the offset-splice edits that put the block in place —
+	 * always exactly one:
+	 *
+	 * - A document **with** a frontmatter capture of the codec's format gets a
+	 *   replacement of the entire block, both fence lines included; everything
+	 *   outside the block survives byte-identical. A capture of a *different*
+	 *   format fails with {@link FrontmatterFormatMismatchError} — the fences
+	 *   are never switched.
+	 * - A document with **no** capture gets one insert at offset 0: the fenced
+	 *   block plus a blank line separating it from the existing content. Parse
+	 *   with `frontmatter: true` (the toggle defaults off) — the same
+	 *   precondition `schema` has — so absence means genuinely-no-frontmatter
+	 *   and the insert cannot double a block the parse ignored.
+	 *
+	 * Each stage fails typed: schema-invalid data is
+	 * {@link FrontmatterValidationError} carrying the structured issue, and a
+	 * value the format cannot serialize is {@link FrontmatterEncodeError}
+	 * carrying the format package's failure structurally.
+	 *
+	 * The block is re-serialized **whole** from the encoded data — gray-matter
+	 * parity, not surgical editing — so anything the format's data model does
+	 * not carry is not preserved: comments inside a yaml frontmatter block do
+	 * **not** survive `set`. A per-key surgical mode over the format packages'
+	 * edit layers is not offered.
+	 *
+	 * Schema-producing in spirit: bind the returned writer to a `const` when
+	 * writing many documents.
+	 *
+	 * **Example** (Insert YAML frontmatter with one edit)
+	 *
+	 * ```ts
+	 * import { MarkdownDocument } from "@beep/scratchpad/effected/markdown/MarkdownDocument";
+	 * import { MarkdownFrontmatter } from "@beep/scratchpad/effected/markdown/Frontmatter";
+	 * import { MarkdownParseOptions } from "@beep/scratchpad/effected/markdown/Markdown";
+	 * import { YamlFrontmatter } from "@beep/scratchpad/effected/markdown/YamlFrontmatter";
+	 * import * as Effect from "effect/Effect";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const Meta = S.Struct({ title: S.String });
+	 * const program = Effect.gen(function* () {
+	 *   const doc = yield* MarkdownDocument.parse("# Body\n", MarkdownParseOptions.make({ frontmatter: true }));
+	 *   return yield* MarkdownFrontmatter.set(Meta, YamlFrontmatter)(doc, { title: "Hello" });
+	 * });
+	 *
+	 * console.log(Effect.runSync(program).length) // 1
+	 * ```
+	 *
+	 * @param schema - The schema the frontmatter data is encoded through.
+	 * @param codec - The format codec to serialize the encoded data with.
+	 * @returns A function from a parsed document and the typed data to an
+	 *   `Effect` of the edits that install the block.
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	static set<T, E, RD = never, RE = never>(
 		schema: S.Codec<T, E, RD, RE>,
 		codec: FrontmatterCodec,
@@ -429,21 +640,42 @@ export class MarkdownFrontmatter {
 	}
 
 	/**
-  * Like {@link MarkdownFrontmatter.set}, but applies the edits to the
-  * document's source and returns the updated markdown text — the
-  * `modifyToString` parallel.
-  *
-  * **Details**
-  *
-  * Everything `set` documents holds verbatim: the whole-block
-  * re-serialization, the format-mismatch posture, the `frontmatter: true`
-  * precondition and the typed failures.
-  *
-  * @param schema - The schema the frontmatter data is encoded through.
-  * @param codec - The format codec to serialize the encoded data with.
-  * @returns A function from a parsed document and the typed data to an
-  *   `Effect` of the updated source text.
-  */
+	 * Like {@link MarkdownFrontmatter.set}, but applies the edits to the
+	 * document's source and returns the updated markdown text — the
+	 * `modifyToString` parallel.
+	 *
+	 * **Details**
+	 *
+	 * Everything `set` documents holds verbatim: the whole-block
+	 * re-serialization, the format-mismatch posture, the `frontmatter: true`
+	 * precondition and the typed failures.
+	 *
+	 * **Example** (Insert YAML frontmatter and return the source)
+	 *
+	 * ```ts
+	 * import { MarkdownDocument } from "@beep/scratchpad/effected/markdown/MarkdownDocument";
+	 * import { MarkdownFrontmatter } from "@beep/scratchpad/effected/markdown/Frontmatter";
+	 * import { MarkdownParseOptions } from "@beep/scratchpad/effected/markdown/Markdown";
+	 * import { YamlFrontmatter } from "@beep/scratchpad/effected/markdown/YamlFrontmatter";
+	 * import * as Effect from "effect/Effect";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const Meta = S.Struct({ title: S.String });
+	 * const program = Effect.gen(function* () {
+	 *   const doc = yield* MarkdownDocument.parse("# Body\n", MarkdownParseOptions.make({ frontmatter: true }));
+	 *   return yield* MarkdownFrontmatter.setToString(Meta, YamlFrontmatter)(doc, { title: "Hello" });
+	 * });
+	 *
+	 * console.log(JSON.stringify(Effect.runSync(program))) // "---\ntitle: Hello\n---\n\n# Body\n"
+	 * ```
+	 *
+	 * @param schema - The schema the frontmatter data is encoded through.
+	 * @param codec - The format codec to serialize the encoded data with.
+	 * @returns A function from a parsed document and the typed data to an
+	 *   `Effect` of the updated source text.
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	static setToString<T, E, RD = never, RE = never>(
 		schema: S.Codec<T, E, RD, RE>,
 		codec: FrontmatterCodec,

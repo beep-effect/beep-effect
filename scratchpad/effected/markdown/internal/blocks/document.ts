@@ -10,7 +10,21 @@
 import { Root } from "../../MarkdownNode.ts";
 import type { BlockConstruct } from "../blockTypes.ts";
 
-/** The document root: contains everything except a bare list item. */
+/**
+ * Materializes the document root, containing everything except a bare list item.
+ *
+ * **Example** (Inspect root containment)
+ *
+ * ```ts
+ * import { documentConstruct } from "@beep/scratchpad/effected/markdown/internal/blocks/document";
+ *
+ * console.log(documentConstruct.canContain("blockquote")); // true
+ * console.log(documentConstruct.canContain("listItem")); // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const documentConstruct: BlockConstruct = {
 	type: "document",
 	acceptsLines: false,

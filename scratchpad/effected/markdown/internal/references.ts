@@ -47,6 +47,8 @@ const reLinkLabel = /^\[(?:[^\\[\]]|\\.){0,1000}\]/s;
 /**
  * The whitespace set a link destination may not contain, as codes.
  *
+ * **Details**
+ *
  * The destination walk below tests every character it passes. Upstream spells
  * that test `reWhitespaceChar.exec(fromCodePoint(c))`, which allocates a
  * string and runs a regex per character — in a scan that is already O(n) per
@@ -58,6 +60,8 @@ const isWhitespaceCode = (code: number): boolean =>
 
 /**
  * The most `(` a bare link destination may hold open at once.
+ *
+ * **Details**
  *
  * cmark's `MAX_LINK_DEST_PARENS` bound in `manual_scan_link_url`, and the
  * limit the spec explicitly sanctions ("Implementations may impose limits on
@@ -82,16 +86,75 @@ const C_CLOSE_PAREN = 0x29;
 /**
  * A cursor over a subject string, with the handful of primitives upstream's
  * inline parser is built from.
+ *
+ * **Example** (Inspect a fresh cursor)
+ *
+ * ```ts
+ * import { ReferenceScanner } from "@beep/scratchpad/effected/markdown/internal/references";
+ *
+ * const scanner = new ReferenceScanner("[label]");
+ * console.log(scanner.pos, scanner.peek()) // 0 91
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export class ReferenceScanner {
+	/**
+	 * Tracks the next character to scan, starting at the beginning of the subject.
+	 *
+	 * **Example** (Inspect the cursor after consuming a label)
+	 *
+	 * ```ts
+	 * import { ReferenceScanner } from "@beep/scratchpad/effected/markdown/internal/references";
+	 *
+	 * const scanner = new ReferenceScanner("[x]");
+	 * scanner.parseLinkLabel();
+	 * console.log(scanner.pos) // 3
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	pos = 0;
 
+	/**
+	 * Retains the complete input while the cursor advances through it.
+	 *
+	 * **Example** (Read the unchanged subject)
+	 *
+	 * ```ts
+	 * import { ReferenceScanner } from "@beep/scratchpad/effected/markdown/internal/references";
+	 *
+	 * const scanner = new ReferenceScanner("[x]");
+	 * scanner.parseLinkLabel();
+	 * console.log(scanner.subject) // [x]
+	 * ```
+	 *
+	 * @category models
+	 * @since 0.0.0
+	 */
 	readonly subject: string;
 	constructor(subject: string) {
 		this.subject = subject;
 	}
 
-	/** The char code at the cursor, or `-1` at the end of the subject. */
+	/**
+	 * The char code at the cursor, or `-1` at the end of the subject.
+	 *
+	 * **Example** (Read past the subject)
+	 *
+	 * ```ts
+	 * import { ReferenceScanner } from "@beep/scratchpad/effected/markdown/internal/references";
+	 *
+	 * const scanner = new ReferenceScanner("a");
+	 * scanner.pos = 1;
+	 * console.log(scanner.peek()) // -1
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	peek(): number {
 		return this.pos < this.subject.length ? this.subject.charCodeAt(this.pos) : -1;
 	}
@@ -99,9 +162,23 @@ export class ReferenceScanner {
 	/**
 	 * Match `pattern` at the cursor, advancing past it on success.
 	 *
+	 * **Details**
+	 *
 	 * Sticky rather than upstream's slice-then-match: every pattern here is
 	 * anchored, and slicing the subject per attempt is quadratic on a large
 	 * one (`patterns.ts`).
+	 *
+	 * **Example** (Advance after a successful match)
+	 *
+	 * ```ts
+	 * import { ReferenceScanner } from "@beep/scratchpad/effected/markdown/internal/references";
+	 *
+	 * const scanner = new ReferenceScanner("abc:");
+	 * console.log(scanner.match(/^[a-z]+/), scanner.pos) // abc 3
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	match(pattern: RegExp): string | undefined {
 		const sticky = stickyOf(pattern);
@@ -114,12 +191,41 @@ export class ReferenceScanner {
 		return found[0];
 	}
 
-	/** Consume optional spaces and up to one line ending. */
+	/**
+	 * Consume optional spaces and up to one line ending.
+	 *
+	 * **Example** (Consume spaces and one line ending)
+	 *
+	 * ```ts
+	 * import { ReferenceScanner } from "@beep/scratchpad/effected/markdown/internal/references";
+	 *
+	 * const scanner = new ReferenceScanner("  \n label");
+	 * scanner.spnl();
+	 * console.log(scanner.pos) // 4
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	spnl(): void {
 		this.match(reSpnl);
 	}
 
-	/** The length of the link label at the cursor, or `0` if there is none. */
+	/**
+	 * The length of the link label at the cursor, or `0` if there is none.
+	 *
+	 * **Example** (Measure a bracketed label)
+	 *
+	 * ```ts
+	 * import { ReferenceScanner } from "@beep/scratchpad/effected/markdown/internal/references";
+	 *
+	 * const scanner = new ReferenceScanner("[label]: /guide");
+	 * console.log(scanner.parseLinkLabel(), scanner.pos) // 7 7
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	parseLinkLabel(): number {
 		const found = this.match(reLinkLabel);
 		return found === undefined || found.length > 1001 ? 0 : found.length;
@@ -128,6 +234,18 @@ export class ReferenceScanner {
 	/**
 	 * The link destination at the cursor, unescaped, or `undefined` if there
 	 * is none. Never percent-encoded (see the port notes).
+	 *
+	 * **Example** (Read a braced destination)
+	 *
+	 * ```ts
+	 * import { ReferenceScanner } from "@beep/scratchpad/effected/markdown/internal/references";
+	 *
+	 * const scanner = new ReferenceScanner("<guide page>");
+	 * console.log(scanner.parseLinkDestination()) // guide page
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	parseLinkDestination(): string | undefined {
 		const braced = this.match(reLinkDestinationBraces);
@@ -179,7 +297,21 @@ export class ReferenceScanner {
 		return unescapeString(this.subject.slice(start, this.pos));
 	}
 
-	/** The link title at the cursor, quotes stripped and unescaped. */
+	/**
+	 * The link title at the cursor, quotes stripped and unescaped.
+	 *
+	 * **Example** (Strip title quotes)
+	 *
+	 * ```ts
+	 * import { ReferenceScanner } from "@beep/scratchpad/effected/markdown/internal/references";
+	 *
+	 * const scanner = new ReferenceScanner('"Guide title"');
+	 * console.log(scanner.parseLinkTitle()) // Guide title
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	parseLinkTitle(): string | undefined {
 		const title = this.match(reLinkTitle);
 		return title === undefined ? undefined : unescapeString(title.slice(1, -1));
@@ -189,6 +321,8 @@ export class ReferenceScanner {
 /**
  * Case-fold a bare label: trim, collapse internal whitespace, fold case.
  *
+ * **Details**
+ *
  * The `toLowerCase().toUpperCase()` pair is upstream's Unicode case-folding
  * trick, not redundancy — it is what makes `ẞ` and `ß` the same label.
  *
@@ -196,6 +330,17 @@ export class ReferenceScanner {
  * same fold applied to a label that never carried brackets to strip: this is
  * cmark-gfm's `normalize_map_label`, which its footnote map and its link
  * refmap both call.
+ *
+ * **Example** (Fold a bare Unicode label)
+ *
+ * ```ts
+ * import { normalizeLabelText } from "@beep/scratchpad/effected/markdown/internal/references";
+ *
+ * console.log(normalizeLabelText("  Straße \t guide  ")) // STRASSE GUIDE
+ * ```
+ *
+ * @category normalization
+ * @since 0.0.0
  */
 export const normalizeLabelText = (label: string): string =>
 	label
@@ -207,31 +352,73 @@ export const normalizeLabelText = (label: string): string =>
 /**
  * commonmark.js `normalizeReference`: strip the brackets, then case-fold what
  * is left.
+ *
+ * **Example** (Normalize a bracketed reference)
+ *
+ * ```ts
+ * import { normalizeReference } from "@beep/scratchpad/effected/markdown/internal/references";
+ *
+ * console.log(normalizeReference("[  Guide  Page  ]")) // GUIDE PAGE
+ * ```
+ *
+ * @category normalization
+ * @since 0.0.0
  */
 export const normalizeReference = (rawLabel: string): string =>
 	normalizeLabelText(rawLabel.slice(1, rawLabel.length - 1));
 
-/** A link reference definition, parsed but not yet placed in the tree. */
+/**
+ * A link reference definition, parsed but not yet placed in the tree.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface ParsedReference {
-	/** The case-folded lookup key (`normalizeReference` of the raw label). */
+	/**
+	 * The case-folded lookup key (`normalizeReference` of the raw label).
+	 */
 	readonly key: string;
-	/** mdast's `identifier`: the normalized label, lowercased. */
+	/**
+	 * mdast's `identifier`: the normalized label, lowercased.
+	 */
 	readonly identifier: string;
-	/** mdast's `label`: the raw label text, brackets stripped. */
+	/**
+	 * mdast's `label`: the raw label text, brackets stripped.
+	 */
 	readonly label: string;
-	/** The decoded destination. */
+	/**
+	 * The decoded destination.
+	 */
 	readonly url: string;
-	/** The decoded title, absent when the definition carries none. */
+	/**
+	 * The decoded title, absent when the definition carries none.
+	 */
 	readonly title?: string;
-	/** How many characters of `text` the definition consumed. */
+	/**
+	 * How many characters of `text` the definition consumed.
+	 */
 	readonly length: number;
 }
 
 /**
  * Parse a link reference definition at the start of `text`.
  *
+ * **Details**
+ *
  * Returns `undefined` when `text` does not begin with one — which is not an
  * error: the text is simply paragraph content.
+ *
+ * **Example** (Distinguish a definition from paragraph content)
+ *
+ * ```ts
+ * import { parseReference } from "@beep/scratchpad/effected/markdown/internal/references";
+ *
+ * console.log(parseReference('[Guide]: /guide "Read me"')?.title) // Read me
+ * console.log(parseReference("paragraph text")) // undefined
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseReference = (text: string): ParsedReference | undefined => {
 	const scanner = new ReferenceScanner(text);

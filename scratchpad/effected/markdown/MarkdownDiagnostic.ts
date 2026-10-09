@@ -16,10 +16,25 @@ const $I = $ScratchpadId.create("effected/markdown/MarkdownDiagnostic");
 
 /**
  * Error codes `Markdown.parse`/`MarkdownDocument.parse` can fail with.
+ *
+ * **Details**
+ *
  * Currently exactly one, `"NestingDepthExceeded"`, the hardening-guard trip;
  * the union may widen as new fatal conditions are identified.
  *
+ * **Example** (Decode a nesting guard error code)
+ *
+ * ```ts
+ * import { MarkdownParseErrorCode } from "@beep/scratchpad/effected/markdown/MarkdownDiagnostic"
+ * import * as S from "effect/Schema"
+ *
+ * const code = S.decodeUnknownSync(MarkdownParseErrorCode)("NestingDepthExceeded")
+ * console.log(code) // NestingDepthExceeded
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const MarkdownParseErrorCode = LiteralKit(MARKDOWN_PARSE_ERROR_CODES).pipe($I.annoteSchema("MarkdownParseErrorCode", { description: "Error codes `Markdown.parse`/`MarkdownDocument.parse` can fail with. Currently exactly one, `\"NestingDepthExceeded\"`, the hardening-guard trip; the union may widen as new fatal conditions are identified." }));
 
@@ -27,6 +42,8 @@ export const MarkdownParseErrorCode = LiteralKit(MARKDOWN_PARSE_ERROR_CODES).pip
  * The union of all markdown parse-error code string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type MarkdownParseErrorCode = typeof MarkdownParseErrorCode.Type;
 
@@ -46,7 +63,26 @@ export type MarkdownParseErrorCode = typeof MarkdownParseErrorCode.Type;
  * unist `Point`s carried on `MarkdownNode` positions, which is a deliberate,
  * unrelated convention for the AST rather than a mismatch to reconcile.
  *
+ * **Example** (Construct a diagnostic with zero-based coordinates)
+ *
+ * ```ts
+ * import { MarkdownDiagnostic } from "@beep/scratchpad/effected/markdown/MarkdownDiagnostic"
+ *
+ * const diagnostic = MarkdownDiagnostic.make({
+ *   code: "NestingDepthExceeded",
+ *   message: "Maximum nesting depth exceeded",
+ *   offset: 4,
+ *   length: 0,
+ *   line: 1,
+ *   character: 1,
+ * })
+ * console.log(diagnostic.line) // 1
+ * console.log(diagnostic.character) // 1
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class MarkdownDiagnostic extends S.Class<MarkdownDiagnostic>($I`MarkdownDiagnostic`)({
 	code: MarkdownParseErrorCode.annotateKey({ description: "Fatal condition identifier, currently `NestingDepthExceeded` for a nesting guard violation" }),
@@ -58,12 +94,32 @@ export class MarkdownDiagnostic extends S.Class<MarkdownDiagnostic>($I`MarkdownD
 }, $I.annote("MarkdownDiagnostic", { description: "One structured diagnostic: its (MarkdownParseErrorCode:type), a human-readable `message`, and its exact position (`offset`/`length`, plus zero-based `line`/`character`)." })) {
 	/**
 	 * Materialize an engine record, deriving zero-based `line`/`character`
-	 * from `offset` against the source text. Advanced — the parse entry
-	 * points call this for you.
+	 * from `offset` against the source text.
+	 *
+	 * **Details**
+	 *
+	 * Advanced — the parse entry points call this for you.
+	 *
+	 * **Example** (Locate an engine diagnostic after a CRLF line break)
+	 *
+	 * ```ts
+	 * import { MarkdownDiagnostic } from "@beep/scratchpad/effected/markdown/MarkdownDiagnostic"
+	 *
+	 * const diagnostic = MarkdownDiagnostic.fromRaw("a\r\nbc", {
+	 *   code: "NestingDepthExceeded",
+	 *   message: "Maximum nesting depth exceeded",
+	 *   offset: 4,
+	 *   length: 0,
+	 * })
+	 * console.log(diagnostic.line) // 1
+	 * console.log(diagnostic.character) // 1
+	 * ```
 	 *
 	 * @param source - The source text the record's `offset` indexes into.
 	 * @param raw - The engine record: `code`, `message`, `offset` and `length`.
 	 * @returns The diagnostic with `line` and `character` filled in.
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static fromRaw(
 		source: string,

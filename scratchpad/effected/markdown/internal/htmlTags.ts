@@ -18,10 +18,40 @@ const ATTRIBUTEVALUE = `(?:${UNQUOTEDVALUE}|${SINGLEQUOTEDVALUE}|${DOUBLEQUOTEDV
 const ATTRIBUTEVALUESPEC = `(?:\\s*=\\s*${ATTRIBUTEVALUE})`;
 const ATTRIBUTE = `(?:\\s+${ATTRIBUTENAME}${ATTRIBUTEVALUESPEC}?)`;
 
-/** An opening tag, with any attributes and an optional self-closing slash. */
+/**
+ * Matches an opening tag, with attributes and an optional self-closing slash.
+ *
+ * **Example** (Match an attributed opening tag)
+ *
+ * ```ts
+ * import { OPENTAG } from "@beep/scratchpad/effected/markdown/internal/htmlTags"
+ *
+ * const openingTag = new RegExp(`^${OPENTAG}$`)
+ * console.log(openingTag.test('<img src="photo.png" />')) // true
+ * console.log(openingTag.test("</img>")) // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const OPENTAG = `<${TAGNAME}${ATTRIBUTE}*\\s*/?>`;
 
-/** A closing tag. */
+/**
+ * Matches a closing tag in the CommonMark HTML grammar.
+ *
+ * **Example** (Match a closing tag)
+ *
+ * ```ts
+ * import { CLOSETAG } from "@beep/scratchpad/effected/markdown/internal/htmlTags"
+ *
+ * const closingTag = new RegExp(`^${CLOSETAG}$`)
+ * console.log(closingTag.test("</section >")) // true
+ * console.log(closingTag.test("<section>")) // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const CLOSETAG = `</${TAGNAME}\\s*[>]`;
 
 const HTMLCOMMENT = "<!-->|<!--->|<!--[\\s\\S]*?-->";
@@ -29,8 +59,48 @@ const PROCESSINGINSTRUCTION = "[<][?][\\s\\S]*?[?][>]";
 const DECLARATION = "<![A-Za-z]+[^>]*>";
 const CDATA = "<!\\[CDATA\\[[\\s\\S]*?\\]\\]>";
 
-/** Everything CommonMark counts as raw HTML. */
+/**
+ * Matches everything CommonMark counts as raw HTML.
+ *
+ * **Details**
+ *
+ * The union includes opening and closing tags, comments, processing instructions,
+ * declarations and CDATA.
+ *
+ * **Example** (Recognize raw HTML forms)
+ *
+ * ```ts
+ * import { HTMLTAG } from "@beep/scratchpad/effected/markdown/internal/htmlTags"
+ *
+ * const rawHtml = new RegExp(`^${HTMLTAG}$`)
+ * console.log(rawHtml.test("<!-- comment -->")) // true
+ * console.log(rawHtml.test("<![CDATA[text]]>")) // true
+ * console.log(rawHtml.test("plain text")) // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const HTMLTAG = `(?:${OPENTAG}|${CLOSETAG}|${HTMLCOMMENT}|${PROCESSINGINSTRUCTION}|${DECLARATION}|${CDATA})`;
 
-/** {@link HTMLTAG}, anchored for matching at a cursor. */
+/**
+ * Matches {@link HTMLTAG} at the beginning of the text supplied at a cursor.
+ *
+ * **Details**
+ *
+ * The expression is anchored for matching at a cursor; it can consume an HTML
+ * prefix without requiring the remaining text to be HTML.
+ *
+ * **Example** (Match raw HTML at the current cursor)
+ *
+ * ```ts
+ * import { reHtmlTag } from "@beep/scratchpad/effected/markdown/internal/htmlTags"
+ *
+ * console.log(reHtmlTag.exec("<em>text")?.[0]) // <em>
+ * console.log(reHtmlTag.test("text<em>")) // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const reHtmlTag = new RegExp(`^${HTMLTAG}`);

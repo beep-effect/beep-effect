@@ -34,6 +34,31 @@ const EMPTY_REFMAP = HashMap.empty<string, Definition>();
 
 /**
  * Parse a text fragment as a single paragraph's inline content.
+ *
+ * **Details**
+ *
+ * Lines are preprocessed and trimmed as paragraph content before inline parsing,
+ * while node positions retain provenance relative to the original input string.
+ * Blank lines remain literal newlines rather than opening new blocks. The
+ * reference map is empty, so references without inline destinations remain text.
+ * Whitespace-only input produces an empty array.
+ *
+ * **Gotchas**
+ *
+ * A hardening trip throws the raw `GuardExceeded` carrier; the facade is
+ * responsible for materializing the typed error.
+ *
+ * **Example** (Parse plain inline text in both call styles)
+ *
+ * ```ts
+ * import { parsePhrasingText } from "@beep/scratchpad/effected/markdown/internal/phrasing"
+ *
+ * console.log(parsePhrasingText("hello", "commonmark").length) // 1
+ * console.log(parsePhrasingText("commonmark")("   ").length) // 0
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const parsePhrasingText: {
 	(text: string, dialect: InlineDialectName): ReadonlyArray<PhrasingContent>;

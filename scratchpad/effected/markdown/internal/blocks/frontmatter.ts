@@ -52,7 +52,12 @@ const FENCES = HashMap.fromIterable<string, FenceRule>([
 	["---json", { format: "json", close: "---" }],
 ]);
 
-/** A successful capture: everything the parser needs to skip and materialize. */
+/**
+ * A successful capture: everything the parser needs to skip and materialize.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface FrontmatterCapture {
 	readonly format: FrontmatterFormat;
 	/** Raw text between the fences — original terminators, no fence lines. */
@@ -66,6 +71,8 @@ export interface FrontmatterCapture {
 /**
  * Scan the head of a preprocessed document for a frontmatter block.
  *
+ * **Details**
+ *
  * `lines` is the preprocessor's line table (U+0000 already replaced,
  * terminators stripped, absolute `start` offsets); `text` is the original
  * source, consulted only for the terminators between value lines — a
@@ -75,6 +82,22 @@ export interface FrontmatterCapture {
  *
  * Returns `null` when the document has no frontmatter — which is the common
  * case and never an error.
+ *
+ * **Example** (Capture preprocessed YAML frontmatter)
+ *
+ * ```ts
+ * import { scanFrontmatter } from "@beep/scratchpad/effected/markdown/internal/blocks/frontmatter";
+ * import { preprocessLines } from "@beep/scratchpad/effected/markdown/internal/preprocess";
+ *
+ * const text = "---\nname: Ada\n---\nbody";
+ * const capture = scanFrontmatter(preprocessLines(text), text);
+ * console.log(capture?.format); // yaml
+ * console.log(capture?.value); // name: Ada
+ * console.log(scanFrontmatter(preprocessLines("body"), "body")); // null
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const scanFrontmatter: {
 	(lines: ReadonlyArray<SourceLine>, text: string): FrontmatterCapture | null;
@@ -125,9 +148,10 @@ export const scanFrontmatter: {
  * **Example** (Read the accepted terminators)
  *
  * ```ts
- * import { RawNewline } from "./frontmatter.ts";
+ * import { RawNewline } from "@beep/scratchpad/effected/markdown/internal/blocks/frontmatter";
  *
- * console.log(RawNewline.literals); // => ["\n", "\r\n", "\r"]
+ * console.log(RawNewline.literals.length); // 3
+ * console.log(RawNewline.literals.includes("\r\n")); // true
  * ```
  *
  * @category schemas
@@ -151,6 +175,9 @@ export type RawNewline = typeof RawNewline.Type;
  * is verbatim bytes; a fence line containing U+0000 simply is not a fence,
  * matching the preprocessed scan where the replacement character breaks the
  * exact match the same way).
+ *
+ * @category models
+ * @since 0.0.0
  */
 export interface RawFrontmatterCapture {
 	readonly format: FrontmatterFormat;
@@ -184,9 +211,14 @@ const terminatorAt = (source: string, offset: number): RawNewline | null => {
 };
 
 /**
- * Scan raw source for a frontmatter block — the same closed fence grammar as
- * {@link scanFrontmatter}, over unpreprocessed bytes, returning exact
- * offsets. The two scans agree on every input about WHETHER a block exists
+ * Captures frontmatter from raw source with exact offsets for string-level
+ * splitting and joining.
+ *
+ * **Details**
+ *
+ * Uses the same closed fence grammar as {@link scanFrontmatter}, over
+ * unpreprocessed bytes, returning exact offsets. The two scans agree on every
+ * input about WHETHER a block exists
  * (the preprocessor's substitutions are length-preserving and can only break
  * a fence match both scans require); this one exists for the string-level
  * split/join surface, whose contract is byte exactness.
@@ -194,6 +226,22 @@ const terminatorAt = (source: string, offset: number): RawNewline | null => {
  * Returns `null` when the document has no frontmatter — no fence at offset
  * 0, or an opening fence with no closing fence, which per the grammar is not
  * frontmatter at all.
+ *
+ * **Example** (Preserve raw terminators and locate the body)
+ *
+ * ```ts
+ * import { scanRawFrontmatter } from "@beep/scratchpad/effected/markdown/internal/blocks/frontmatter";
+ *
+ * const source = "---\r\nname: Ada\r\n---\r\nbody";
+ * const capture = scanRawFrontmatter(source);
+ * console.log(capture?.format); // yaml
+ * console.log(capture?.value === "name: Ada\r\n"); // true
+ * console.log(source.slice(capture?.bodyOffset)); // body
+ * console.log(scanRawFrontmatter("---\nno closing fence")); // null
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const scanRawFrontmatter = (source: string): RawFrontmatterCapture | null => {
 	// The opening fence line: source up to the first terminator. It must be

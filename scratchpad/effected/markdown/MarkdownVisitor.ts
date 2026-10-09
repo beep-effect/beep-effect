@@ -35,6 +35,8 @@ import type { MarkdownNode, Root } from "./MarkdownNode.ts";
  * `MAX_NESTING_DEPTH` and nothing follows it.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type MarkdownVisitorEvent = Data.TaggedEnum<{
 	Enter: { readonly node: MarkdownNode; readonly path: MarkdownPath; readonly depth: number };
@@ -47,7 +49,21 @@ export type MarkdownVisitorEvent = Data.TaggedEnum<{
  * `MarkdownVisitorEvent.Enter({ node, path, depth })`,
  * `MarkdownVisitorEvent.$is("Exit")`).
  *
+ * **Example** (Match a visitor exit event)
+ *
+ * ```ts
+ * import { MarkdownVisitorEvent } from "@beep/scratchpad/effected/markdown/MarkdownVisitor"
+ * import { Mdast } from "@beep/scratchpad/effected/markdown/Mdast"
+ * import * as Effect from "effect/Effect"
+ *
+ * const node = Effect.runSync(Mdast.fromMdast({ type: "root", children: [] }))
+ * const event = MarkdownVisitorEvent.Exit({ node, path: [], depth: 0 })
+ * console.log(MarkdownVisitorEvent.$is("Exit")(event)) // true
+ * ```
+ *
  * @public
+ * @category constructors
+ * @since 0.0.0
  */
 export const MarkdownVisitorEvent = Data.taggedEnum<MarkdownVisitorEvent>();
 
@@ -58,46 +74,68 @@ export const MarkdownVisitorEvent = Data.taggedEnum<MarkdownVisitorEvent>();
  * **Example** (Collect node types from visitor enter events)
  *
  * ```ts
- * import { Markdown, MarkdownVisitor, MarkdownVisitorEvent } from "./index.ts";
- * import * as Effect from "effect/Effect";
- * import * as Stream from "effect/Stream";
+ * import { Markdown } from "@beep/scratchpad/effected/markdown/Markdown"
+ * import { MarkdownVisitor, MarkdownVisitorEvent } from "@beep/scratchpad/effected/markdown/MarkdownVisitor"
+ * import * as Effect from "effect/Effect"
+ * import * as Stream from "effect/Stream"
  *
  * const program = Effect.gen(function* () {
- *   const root = yield* Markdown.parse("# Hi\n\ntext\n");
+ *   const root = yield* Markdown.parse("# Hi\n\ntext\n")
  *   return yield* MarkdownVisitor.visit(root).pipe(
  *     Stream.filter(MarkdownVisitorEvent.$is("Enter")),
  *     Stream.map((event) => event.node.type),
  *     Stream.runCollect,
- *   );
- *   // => ["root", "heading", "text", "paragraph", "text"]
- * });
+ *   )
+ * })
+ * console.log(await Effect.runPromise(program)) // ["root", "heading", "text", "paragraph", "text"]
  * ```
  *
  * @public
+ * @category streams
+ * @since 0.0.0
  */
 export class MarkdownVisitor {
 	private constructor() {}
 
 	/**
-  * Create a lazy `Stream` of `MarkdownVisitorEvent` walking `root` in
-  * document pre-order: `Enter` and `Exit` for every node including the
-  * root and every leaf. Events are produced on demand, so combining with
-  * `Stream.take` allows efficient partial scans without walking the rest
-  * of the tree.
-  *
-  * **Details**
-  *
-  * Infallible at the type level. A tree produced by `Markdown.parse` can
-  * never trip the walk's depth guard — the parser refuses deeper input —
-  * but a decoded foreign tree (`Mdast.fromMdast`) can; the trip surfaces
-  * as a terminal `MarkdownVisitorEvent` `Error` event carrying a
-  * `NestingDepthExceeded` {@link MarkdownDiagnostic}, mirroring the typed
-  * failure `Markdown.stringify` produces for the same tree.
-  *
-  * @param root - The tree to walk.
-  * @returns A lazy `Stream` of `MarkdownVisitorEvent`, infallible at the type
-  *   level.
-  */
+	 * Create a lazy `Stream` of `MarkdownVisitorEvent` walking `root` in
+	 * document pre-order: `Enter` and `Exit` for every node including the
+	 * root and every leaf. Events are produced on demand, so combining with
+	 * `Stream.take` allows efficient partial scans without walking the rest
+	 * of the tree.
+	 *
+	 * **Details**
+	 *
+	 * Infallible at the type level. A tree produced by `Markdown.parse` can
+	 * never trip the walk's depth guard — the parser refuses deeper input —
+	 * but a decoded foreign tree (`Mdast.fromMdast`) can; the trip surfaces
+	 * as a terminal `MarkdownVisitorEvent` `Error` event carrying a
+	 * `NestingDepthExceeded` {@link MarkdownDiagnostic}, mirroring the typed
+	 * failure `Markdown.stringify` produces for the same tree.
+	 *
+	 * **Example** (Visit an empty document)
+	 *
+	 * ```ts
+	 * import { MarkdownVisitor, MarkdownVisitorEvent } from "@beep/scratchpad/effected/markdown/MarkdownVisitor"
+	 * import { Mdast } from "@beep/scratchpad/effected/markdown/Mdast"
+	 * import * as Effect from "effect/Effect"
+	 * import * as Stream from "effect/Stream"
+	 *
+	 * const root = Effect.runSync(Mdast.fromMdast({ type: "root", children: [] }))
+	 * const program = MarkdownVisitor.visit(root).pipe(
+	 *   Stream.filter(MarkdownVisitorEvent.$is("Enter")),
+	 *   Stream.map((event) => event.node.type),
+	 *   Stream.runCollect,
+	 * )
+	 * console.log(await Effect.runPromise(program)) // ["root"]
+	 * ```
+	 *
+	 * @param root - The tree to walk.
+	 * @returns A lazy `Stream` of `MarkdownVisitorEvent`, infallible at the type
+	 *   level.
+	 * @category streams
+	 * @since 0.0.0
+	 */
 	static visit(root: Root): Stream.Stream<MarkdownVisitorEvent> {
 		return Stream.fromIterable(walkIterable(root));
 	}

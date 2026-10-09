@@ -26,7 +26,21 @@ const reClosingHashes = /[ \t]+#+[ \t]*$/;
 const headingDepth = (hashes: number): HeadingDepth =>
 	hashes < 1 ? 1 : hashes > 6 ? 6 : S.is(HeadingDepth)(hashes) ? hashes : 1;
 
-/** Heading: never spans more than one line, and contains no blocks. */
+/**
+ * Materializes a heading that never spans more than one line and contains no blocks.
+ *
+ * **Example** (Inspect heading containment)
+ *
+ * ```ts
+ * import { headingConstruct } from "@beep/scratchpad/effected/markdown/internal/blocks/atxHeading";
+ *
+ * console.log(headingConstruct.acceptsLines); // false
+ * console.log(headingConstruct.canContain("paragraph")); // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const headingConstruct: BlockConstruct = {
 	type: "heading",
 	acceptsLines: false,
@@ -47,7 +61,20 @@ export const headingConstruct: BlockConstruct = {
 	},
 };
 
-/** The ATX heading block start: `#` through `######`, optionally closed. */
+/**
+ * Opens an ATX heading marked by `#` through `######`, optionally closed.
+ *
+ * **Example** (Identify the ATX start)
+ *
+ * ```ts
+ * import { atxHeadingStart } from "@beep/scratchpad/effected/markdown/internal/blocks/atxHeading";
+ *
+ * console.log(atxHeadingStart.name); // atxHeading
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const atxHeadingStart: BlockStart = {
 	name: "atxHeading",
 	trigger: (scanner) => {

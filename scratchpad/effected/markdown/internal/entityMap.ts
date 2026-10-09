@@ -25,7 +25,22 @@ const decodeEntities = S.Tuple([S.String, S.String]).pipe(S.Array, S.fromJsonStr
 const entries = Result.getOrThrow(decodeEntities(DATA));
 const entities = HashMap.fromIterable(entries);
 
-/** The HTML5 named character references, keyed without `&` or `;`. */
+/**
+ * The HTML5 named character references, keyed without `&` or `;`.
+ *
+ * **Example** (Look up a named character reference)
+ *
+ * ```ts
+ * import { ENTITY_MAP } from "@beep/scratchpad/effected/markdown/internal/entityMap"
+ *
+ * console.log(ENTITY_MAP.get("amp")) // &
+ * console.log(ENTITY_MAP.has("&amp;")) // false
+ * console.log(ENTITY_MAP.get("unknown")) // undefined
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const ENTITY_MAP: ReadonlyMap<string, string> = {
 	size: HashMap.size(entities),
 	get: (key) => O.getOrUndefined(HashMap.get(entities, key)),

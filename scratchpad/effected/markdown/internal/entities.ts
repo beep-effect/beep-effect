@@ -14,11 +14,34 @@ import { ENTITY_MAP } from "./entityMap.ts";
 const MAX_CODE_POINT = 0x10ffff;
 
 /**
- * Decode one character reference, brackets included (`&#35;`, `&amp;`).
+ * Decodes one character reference, brackets included (`&#35;`, `&amp;`).
+ *
+ * **Details**
+ *
+ * Named references require a known name and a terminating semicolon. Numeric
+ * references accept decimal or hexadecimal digits; zero, surrogate code points
+ * and values above the Unicode range decode to the replacement character.
+ *
+ * **Gotchas**
  *
  * Returns `undefined` when the reference is not one this engine can decode,
  * which the caller must render as the literal source text — never as an
  * empty string.
+ *
+ * **Example** (Decode named and numeric references)
+ *
+ * ```ts
+ * import { decodeEntity } from "@beep/scratchpad/effected/markdown/internal/entities"
+ *
+ * console.log(decodeEntity("&amp;")) // &
+ * console.log(decodeEntity("&#35;")) // #
+ * console.log(decodeEntity("&#x41;")) // A
+ * console.log(decodeEntity("&#0;")) // �
+ * console.log(decodeEntity("&unknown;")) // undefined
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
  */
 export const decodeEntity = (entity: string): string | undefined => {
 	if (!entity.startsWith("&") || !entity.endsWith(";")) {

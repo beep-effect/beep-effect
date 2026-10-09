@@ -81,8 +81,11 @@ const C_BACKTICK = 0x60;
 /**
  * Every backtick run in `subject`, as start offsets grouped by run length.
  *
+ * **Details**
+ *
  * One forward scan, so a code span's search for its closing run is a binary
  * search rather than a walk over every run in between.
+ * @since 0.0.0
  */
 const indexBacktickRuns = (subject: string): MutableHashMap.MutableHashMap<number, number[]> => {
 	const runs = MutableHashMap.empty<number, number[]>();
@@ -111,6 +114,7 @@ const indexBacktickRuns = (subject: string): MutableHashMap.MutableHashMap<numbe
  * Builds a {@link Position} from an absolute source range. The block pass owns
  * the line index, so it supplies this rather than the inline pass building a
  * second one.
+ * @since 0.0.0
  */
 type PositionOf = (startOffset: number, endOffset: number) => Position;
 
@@ -202,17 +206,29 @@ class InlineParser implements InlineScanner {
 	delimiters: Delimiter | undefined;
 	brackets: Bracket | undefined;
 
-	/** How many link openers on the stack are still active (see `deactivateLinkOpeners`). */
+	/**
+	 * How many link openers on the stack are still active (see `deactivateLinkOpeners`).
+	 * @since 0.0.0
+	 */
 	private activeLinkOpeners = 0;
-	/** Per-needle memo of the offset from which it no longer occurs. */
+	/**
+	 * Per-needle memo of the offset from which it no longer occurs.
+	 * @since 0.0.0
+	 */
 	private readonly absentAfter = MutableHashMap.empty<string, number>();
-	/** Backtick run starts, by run length; built on first use. */
+	/**
+	 * Backtick run starts, by run length; built on first use.
+	 * @since 0.0.0
+	 */
 	private backtickRuns: MutableHashMap.MutableHashMap<number, number[]> | undefined;
 
 	private readonly source: InlineSource;
 	private readonly dialect: InlineDialect;
 	private readonly positionOf: PositionOf;
-	/** The output list's root; only ever a container for the children. */
+	/**
+	 * The output list's root; only ever a container for the children.
+	 * @since 0.0.0
+	 */
 	private readonly root: InlineNode;
 
 	constructor(
@@ -240,10 +256,29 @@ class InlineParser implements InlineScanner {
 	/**
 	 * Match `pattern` AT the cursor, advancing past it on success.
 	 *
+	 * **Details**
+	 *
 	 * A match that starts later is not a match: every construct here asks
 	 * "does this begin at the cursor". Upstream adds `m.index` to its position
 	 * instead, which is safe only because its dispatch guarantees index zero —
 	 * a guarantee the trigger table does not make (see `inlines/text.ts`).
+	 *
+	 * **Example** (Match an inline code opener)
+	 *
+	 * ```ts
+	 * import * as HashMap from "effect/HashMap";
+	 * import { Position } from "@beep/scratchpad/effected/markdown/MarkdownNode";
+	 * import { parseInlines } from "@beep/scratchpad/effected/markdown/internal/inlineParser";
+	 *
+	 * const position = (start: number, end: number) => Position.make({
+	 *   start: { line: 1, column: start + 1, offset: start },
+	 *   end: { line: 1, column: end + 1, offset: end },
+	 * });
+	 * const text = "`code`";
+	 * const nodes = parseInlines({ text, startOffset: 0, segments: [{ textOffset: 0, sourceOffset: 0, length: text.length }] }, HashMap.empty(), position);
+	 * console.log(nodes[0]?.type) // inlineCode
+	 * ```
+	 * @since 0.0.0
 	 */
 	match(pattern: RegExp): string | undefined {
 		const sticky = stickyOf(pattern);
@@ -444,6 +479,23 @@ class InlineParser implements InlineScanner {
 	 * the algorithm terminate in linear time: `openers_bottom`, which records
 	 * how far back a failed search already looked, and the multiple-of-three
 	 * rule for runs that can both open and close.
+	 *
+	 * **Example** (Pair emphasis delimiters)
+	 *
+	 * ```ts
+	 * import * as HashMap from "effect/HashMap";
+	 * import { Position } from "@beep/scratchpad/effected/markdown/MarkdownNode";
+	 * import { parseInlines } from "@beep/scratchpad/effected/markdown/internal/inlineParser";
+	 *
+	 * const position = (start: number, end: number) => Position.make({
+	 *   start: { line: 1, column: start + 1, offset: start },
+	 *   end: { line: 1, column: end + 1, offset: end },
+	 * });
+	 * const text = "*word*";
+	 * const nodes = parseInlines({ text, startOffset: 0, segments: [{ textOffset: 0, sourceOffset: 0, length: text.length }] }, HashMap.empty(), position);
+	 * console.log(nodes[0]?.type) // emphasis
+	 * ```
+	 * @since 0.0.0
 	 */
 	processEmphasis(stackBottom: Delimiter | undefined): void {
 		// One lower bound per (character, can-open, length mod 3) combination.
@@ -573,8 +625,27 @@ class InlineParser implements InlineScanner {
 	/**
 	 * Turn the mutable list into mdast nodes, coalescing adjacent text runs.
 	 *
+	 * **Details**
+	 *
 	 * Depth is emphasis nesting, which the input controls, so the same cap the
 	 * block pass applies to containers applies here.
+	 *
+	 * **Example** (Coalesce adjacent text runs)
+	 *
+	 * ```ts
+	 * import * as HashMap from "effect/HashMap";
+	 * import { Position } from "@beep/scratchpad/effected/markdown/MarkdownNode";
+	 * import { parseInlines } from "@beep/scratchpad/effected/markdown/internal/inlineParser";
+	 *
+	 * const position = (start: number, end: number) => Position.make({
+	 *   start: { line: 1, column: start + 1, offset: start },
+	 *   end: { line: 1, column: end + 1, offset: end },
+	 * });
+	 * const text = "hello &amp; world";
+	 * const nodes = parseInlines({ text, startOffset: 0, segments: [{ textOffset: 0, sourceOffset: 0, length: text.length }] }, HashMap.empty(), position);
+	 * console.log(nodes.length) // 1
+	 * ```
+	 * @since 0.0.0
 	 */
 	private materialize(parent: InlineNode, depth: number): ReadonlyArray<PhrasingContent> {
 		if (depth > MAX_NESTING_DEPTH) {
@@ -630,6 +701,23 @@ class InlineParser implements InlineScanner {
 	 * One construct at the cursor. Upstream's `parseInline`: try the
 	 * constructs this character triggers, then ordinary text, and failing both
 	 * take the character literally.
+	 *
+	 * **Example** (Preserve an unclaimed bracket)
+	 *
+	 * ```ts
+	 * import * as HashMap from "effect/HashMap";
+	 * import { Position } from "@beep/scratchpad/effected/markdown/MarkdownNode";
+	 * import { parseInlines } from "@beep/scratchpad/effected/markdown/internal/inlineParser";
+	 *
+	 * const position = (start: number, end: number) => Position.make({
+	 *   start: { line: 1, column: start + 1, offset: start },
+	 *   end: { line: 1, column: end + 1, offset: end },
+	 * });
+	 * const text = "]";
+	 * const nodes = parseInlines({ text, startOffset: 0, segments: [{ textOffset: 0, sourceOffset: 0, length: text.length }] }, HashMap.empty(), position);
+	 * console.log(nodes[0]?.type) // text
+	 * ```
+	 * @since 0.0.0
 	 */
 	private parseOne(): boolean {
 		const code = this.peek();
@@ -673,11 +761,32 @@ class InlineParser implements InlineScanner {
 /**
  * Parse a leaf block's raw text into phrasing content.
  *
+ * **Details**
+ *
  * A reference only forms when `refmap` holds its normalized label — a
  * dangling `[foo]` is literal text, per the spec — and when one does form it
  * is emitted as a `linkReference` carrying the identifier rather than an
  * eagerly resolved link. `position` comes from the block pass, which owns the
  * line index.
+ *
+ * **Example** (Keep an unresolved reference literal)
+ *
+ * ```ts
+ * import * as HashMap from "effect/HashMap";
+ * import { Position } from "@beep/scratchpad/effected/markdown/MarkdownNode";
+ * import { parseInlines } from "@beep/scratchpad/effected/markdown/internal/inlineParser";
+ *
+ * const position = (start: number, end: number) => Position.make({
+ *   start: { line: 1, column: start + 1, offset: start },
+ *   end: { line: 1, column: end + 1, offset: end },
+ * });
+ * const text = "[foo]";
+ * const nodes = parseInlines({ text, startOffset: 0, segments: [{ textOffset: 0, sourceOffset: 0, length: text.length }] }, HashMap.empty(), position);
+ * console.log(nodes[0]?.type) // text
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseInlines: {
 	(source: InlineSource, refmap: HashMap.HashMap<string, Definition>, position: PositionOf, dialect?: InlineDialectName, footnoteLabels?: HashSet.HashSet<string>): ReadonlyArray<PhrasingContent>;

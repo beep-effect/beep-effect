@@ -43,6 +43,8 @@ const finalizeIndented = (block: BlockNode): void => {
  * Split a fenced block's first line off as the info string, and the rest as
  * the literal content.
  *
+ * **Details**
+ *
  * mdast splits the info string into `lang` (the first word) and `meta` (the
  * rest); upstream keeps it whole as `info`. Each half is unescaped
  * separately, so a backslash-escaped space inside the language word does not
@@ -71,7 +73,21 @@ const finalizeFenced = (block: BlockNode): void => {
 	}
 };
 
-/** Code: absorbs lines verbatim, contains nothing. */
+/**
+ * Collects code block lines verbatim without accepting child blocks.
+ *
+ * **Example** (Inspect code block containment)
+ *
+ * ```ts
+ * import { codeConstruct } from "@beep/scratchpad/effected/markdown/internal/blocks/code";
+ *
+ * console.log(codeConstruct.acceptsLines); // true
+ * console.log(codeConstruct.canContain("paragraph")); // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const codeConstruct: BlockConstruct = {
 	type: "code",
 	acceptsLines: true,

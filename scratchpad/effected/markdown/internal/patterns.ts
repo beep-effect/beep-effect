@@ -19,8 +19,50 @@ const clone = (pattern: RegExp, flag: "y" | "g", dropCaret: boolean): RegExp => 
 	return new RegExp(source, `${pattern.flags.replace(/[gy]/g, "")}${flag}`);
 };
 
-/** The sticky twin of `pattern`, anchored at `lastIndex`. */
+/**
+ * The sticky twin of `pattern`, anchored at `lastIndex`.
+ *
+ * **Details**
+ *
+ * A fresh clone replaces global or sticky flags with the sticky flag and drops
+ * a leading caret so anchoring applies at the cursor rather than the start of
+ * the subject. Its mutable `lastIndex` is independent of the source pattern.
+ *
+ * **Example** (Match at a cursor after dropping the leading caret)
+ *
+ * ```ts
+ * import { stickyOf } from "@beep/scratchpad/effected/markdown/internal/patterns"
+ *
+ * const pattern = stickyOf(/^word/)
+ * pattern.lastIndex = 2
+ * console.log(pattern.exec("a word")?.[0]) // word
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const stickyOf = (pattern: RegExp): RegExp => clone(pattern, "y", true);
 
-/** The global twin of `pattern`, searching forward from `lastIndex`. */
+/**
+ * The global twin of `pattern`, searching forward from `lastIndex`.
+ *
+ * **Details**
+ *
+ * A fresh clone replaces global or sticky flags with the global flag, keeping
+ * the source pattern's leading caret and other flags. Its mutable `lastIndex`
+ * is independent of the source pattern.
+ *
+ * **Example** (Search beyond the current cursor)
+ *
+ * ```ts
+ * import { globalOf } from "@beep/scratchpad/effected/markdown/internal/patterns"
+ *
+ * const pattern = globalOf(/word/)
+ * pattern.lastIndex = 1
+ * console.log(pattern.exec("a word")?.index) // 2
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const globalOf = (pattern: RegExp): RegExp => clone(pattern, "g", false);

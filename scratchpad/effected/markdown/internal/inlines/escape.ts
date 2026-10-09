@@ -14,7 +14,22 @@ const C_NEWLINE = 0x0a;
 
 const reEscapable = new RegExp(`^${ESCAPABLE}`);
 
-/** A backslash escape, or a backslash hard line break. */
+/**
+ * Parses a backslash escape, or a backslash hard line break.
+ *
+ * **Details**
+ *
+ * **Example** (Register the backslash trigger)
+ *
+ * ```ts
+ * import { escapeConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/escape"
+ *
+ * console.log(escapeConstruct.triggers.includes(92)) // true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const escapeConstruct: InlineConstruct = {
 	name: "escape",
 	triggers: [C_BACKSLASH],

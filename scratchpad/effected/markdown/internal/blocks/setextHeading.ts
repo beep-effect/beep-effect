@@ -13,7 +13,26 @@ import { extractDefinitions } from "./linkReferenceDefinition.ts";
 
 const reSetextHeadingLine = /^(?:=+|-+)[ \t]*$/;
 
-/** The setext heading block start: a run of `=` or `-` under a paragraph. */
+/**
+ * Promotes a paragraph to a setext heading when followed by a run of `=` or `-`.
+ *
+ * **Details**
+ *
+ * An equals underline produces level 1; a hyphen underline produces level 2.
+ * Leading definitions are extracted before promotion. If they exhaust the
+ * paragraph, the underline does not become a heading.
+ *
+ * **Example** (Identify the setext heading start)
+ *
+ * ```ts
+ * import { setextHeadingStart } from "@beep/scratchpad/effected/markdown/internal/blocks/setextHeading";
+ *
+ * console.log(setextHeadingStart.name); // setextHeading
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const setextHeadingStart: BlockStart = {
 	name: "setextHeading",
 	trigger: (scanner, container) => {

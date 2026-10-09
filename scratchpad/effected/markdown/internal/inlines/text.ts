@@ -49,8 +49,39 @@ const runConstruct = (name: string, pattern: RegExp): InlineConstruct => ({
 	},
 });
 
-/** Ordinary text: the fallback construct, with no trigger of its own. */
+/**
+ * Consumes ordinary text as the fallback construct, with no trigger of its own.
+ *
+ * **Example** (Inspect the ordinary-text fallback)
+ *
+ * ```ts
+ * import { textConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/text"
+ *
+ * console.log(textConstruct.triggers.length) // 0
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const textConstruct: InlineConstruct = runConstruct("text", reMain);
 
-/** Ordinary text under `gfm`, which has three more characters to yield to. */
+/**
+ * Consumes ordinary text under `gfm`, which has three more characters to yield to.
+ *
+ * **Details**
+ *
+ * Text runs yield at `~`, `w` and `:` so strikethrough and autolink-literal
+ * constructs can dispatch. Adjacent text nodes are coalesced during materialization.
+ *
+ * **Example** (Inspect the GFM text fallback)
+ *
+ * ```ts
+ * import { gfmTextConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/text"
+ *
+ * console.log(gfmTextConstruct.triggers.length) // 0
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const gfmTextConstruct: InlineConstruct = runConstruct("text", reMainGfm);

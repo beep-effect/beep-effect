@@ -32,9 +32,23 @@ const reUnicodeWhitespaceChar = /^\s/;
 /**
  * What a run of delimiters at the cursor can do.
  *
+ * **Details**
+ *
  * Exported because GFM strikethrough reuses this measurement verbatim:
  * cmark-gfm's `strikethrough.c` calls the same `scan_delimiters` the emphasis
  * algorithm does and reads the same two flanking flags out of it.
+ *
+ * **Example** (Build an opening delimiter run)
+ *
+ * ```ts
+ * import { DelimiterRun } from "@beep/scratchpad/effected/markdown/internal/inlines/emphasis"
+ *
+ * const run = DelimiterRun.make({ numdelims: 2, canOpen: true, canClose: false })
+ * console.log(run.numdelims, run.canOpen, run.canClose) // 2 true false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const DelimiterRun = S.Struct({
 	numdelims: S.Finite.annotateKey({ description: "Length of the delimiter run in UTF-16 code units." }),
@@ -44,7 +58,14 @@ export const DelimiterRun = S.Struct({
 	description: "The length and flanking capabilities shared by emphasis and strikethrough.",
 }));
 
-/** The payload measured by {@link DelimiterRun}. */
+/**
+ * The payload measured by {@link DelimiterRun}.
+ *
+ * **Details**
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type DelimiterRun = typeof DelimiterRun.Type;
 
 /**
@@ -52,8 +73,22 @@ export type DelimiterRun = typeof DelimiterRun.Type;
  * close emphasis, per the spec's left- and right-flanking rules. Leaves the
  * cursor where it found it.
  *
+ * **Details**
+ *
  * The `_` arm is the only character-specific rule here, so `~` (which follows
  * `*`'s rules) reuses this as it stands.
+ *
+ * **Example** (Prepare an asterisk run scanner)
+ *
+ * ```ts
+ * import { scanDelims } from "@beep/scratchpad/effected/markdown/internal/inlines/emphasis"
+ *
+ * const scanAsterisks = scanDelims(42)
+ * console.log(typeof scanAsterisks) // function
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const scanDelims: {
 	(scanner: InlineScanner, cc: number): O.Option<DelimiterRun>;
@@ -139,7 +174,22 @@ const handleDelim = (scanner: InlineScanner, cc: number): boolean => {
 	return true;
 };
 
-/** Emphasis and strong emphasis: `*` and `_` runs. */
+/**
+ * Consumes `*` and `_` runs for emphasis and strong emphasis pairing.
+ *
+ * **Details**
+ *
+ * **Example** (Register both emphasis markers)
+ *
+ * ```ts
+ * import { emphasisConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/emphasis"
+ *
+ * console.log(emphasisConstruct.triggers.map((code) => String.fromCharCode(code)).join("")) // *_
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const emphasisConstruct: InlineConstruct = {
 	name: "emphasis",
 	triggers: [C_ASTERISK, C_UNDERSCORE],

@@ -46,8 +46,12 @@ class UnknownBlockDialectError extends S.TaggedError<UnknownBlockDialectError>($
 /**
  * The dialects the block pass can be keyed by.
  *
+ * **Details**
+ *
  * The name doubles as the inline pass's dialect key (`InlineDialectName`), so
  * one string selects both registries.
+ * @category type-level
+ * @since 0.0.0
  */
 export type MarkdownDialect = "commonmark" | "gfm";
 
@@ -158,8 +162,20 @@ const dialects = HashMap.fromIterable<MarkdownDialect, BlockDialect>([
 /**
  * The block tables for `dialect`.
  *
+ * **Gotchas**
+ *
  * An unknown dialect cannot arrive through the schema-typed public surface,
  * so it is programmer error and dies as a defect.
+ * **Example** (Inspect the CommonMark start order)
+ *
+ * ```ts
+ * import { blockDialect } from "@beep/scratchpad/effected/markdown/internal/blockRegistry"
+ *
+ * console.log(blockDialect("commonmark").starts.length) // 8
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const blockDialect = (dialect: MarkdownDialect): BlockDialect => {
 	const found = O.getOrUndefined(HashMap.get(dialects, dialect));

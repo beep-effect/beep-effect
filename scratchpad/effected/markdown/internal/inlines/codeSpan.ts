@@ -16,7 +16,22 @@ const reTicksHere = /^`+/;
 const reNewline = /\n/gm;
 const reNonSpace = /[^ ]/;
 
-/** A code span. */
+/**
+ * Parses a code span enclosed by backtick runs of equal length.
+ *
+ * **Details**
+ *
+ * **Example** (Register the backtick trigger)
+ *
+ * ```ts
+ * import { codeSpanConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/codeSpan"
+ *
+ * console.log(codeSpanConstruct.triggers.map((code) => String.fromCharCode(code)).join("")) // `
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const codeSpanConstruct: InlineConstruct = {
 	name: "codeSpan",
 	triggers: [C_BACKTICK],

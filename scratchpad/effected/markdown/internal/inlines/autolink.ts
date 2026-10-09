@@ -22,7 +22,20 @@ const reEmailAutolink =
 // same range written the way the linter accepts.
 const reAutolink = /^<[A-Za-z][A-Za-z0-9.+-]{1,31}:[^<>\0- ]*>/i;
 
-/** An absolute-URI or email autolink. */
+/**
+ * Recognizes an absolute-URI or email autolink enclosed in angle brackets.
+ *
+ * **Example** (Inspect the angle-bracket trigger)
+ *
+ * ```ts
+ * import { autolinkConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/autolink";
+ *
+ * console.log(autolinkConstruct.name, autolinkConstruct.triggers[0]) // autolink 60
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const autolinkConstruct: InlineConstruct = {
 	name: "autolink",
 	triggers: [C_LESSTHAN],

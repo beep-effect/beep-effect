@@ -13,7 +13,21 @@ import { isSpaceOrTab, peekCode } from "../preprocess.ts";
 
 const C_GREATERTHAN = 0x3e;
 
-/** Blockquote: continues while each line carries its `>` marker. */
+/**
+ * Materializes a blockquote that continues while each line carries its `>` marker.
+ *
+ * **Example** (Inspect blockquote containment)
+ *
+ * ```ts
+ * import { blockquoteConstruct } from "@beep/scratchpad/effected/markdown/internal/blocks/blockquote";
+ *
+ * console.log(blockquoteConstruct.canContain("paragraph")); // true
+ * console.log(blockquoteConstruct.canContain("listItem")); // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const blockquoteConstruct: BlockConstruct = {
 	type: "blockquote",
 	acceptsLines: false,
@@ -37,7 +51,20 @@ export const blockquoteConstruct: BlockConstruct = {
 		}),
 };
 
-/** The blockquote block start: an unindented `>`. */
+/**
+ * Opens a blockquote at an unindented `>` marker.
+ *
+ * **Example** (Identify the blockquote start)
+ *
+ * ```ts
+ * import { blockquoteStart } from "@beep/scratchpad/effected/markdown/internal/blocks/blockquote";
+ *
+ * console.log(blockquoteStart.name); // blockquote
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const blockquoteStart: BlockStart = {
 	name: "blockquote",
 	trigger: (scanner) => {

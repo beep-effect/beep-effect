@@ -34,6 +34,8 @@ class OverlappingMarkdownEditsError extends S.TaggedError<OverlappingMarkdownEdi
  * `string` for named addressing (reserved, e.g. for definition identifiers).
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type MarkdownSegment = string | number;
 
@@ -42,6 +44,8 @@ export type MarkdownSegment = string | number;
  * within a markdown document tree.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type MarkdownPath = ReadonlyArray<MarkdownSegment>;
 
@@ -50,7 +54,18 @@ export type MarkdownPath = ReadonlyArray<MarkdownSegment>;
  * `offset` and a `length` in UTF-16 code units. Pass to `MarkdownFormat.format`
  * to restrict formatting to a region.
  *
+ * **Example** (Select a source region)
+ *
+ * ```ts
+ * import { MarkdownRange } from "@beep/scratchpad/effected/markdown/MarkdownEdit";
+ *
+ * const range = MarkdownRange.make({ offset: 3, length: 5 });
+ * console.log(range.offset + range.length) // 8
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class MarkdownRange extends S.Class<MarkdownRange>($I`MarkdownRange`)({
 	offset: S.Finite.annotateKey({ description: "Zero-based start of the formatting region in the source string, measured in UTF-16 code units" }),
@@ -68,7 +83,19 @@ export class MarkdownRange extends S.Class<MarkdownRange>($I`MarkdownRange`)({
  * the cross-package parity convention, so consumer code can be written once
  * over "a document codec's Edit/Range/Path".
  *
+ * **Example** (Insert and delete source text)
+ *
+ * ```ts
+ * import { MarkdownEdit } from "@beep/scratchpad/effected/markdown/MarkdownEdit";
+ *
+ * const insertion = MarkdownEdit.make({ offset: 5, length: 0, content: " world" });
+ * const deletion = MarkdownEdit.make({ offset: 0, length: 1, content: "" });
+ * console.log(MarkdownEdit.applyAll("Hello", [insertion, deletion])) // ello world
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class MarkdownEdit extends S.Class<MarkdownEdit>($I`MarkdownEdit`)({
 	offset: S.Finite.annotateKey({ description: "Zero-based start of the span to replace in the original source, measured in UTF-16 code units" }),
@@ -78,12 +105,30 @@ export class MarkdownEdit extends S.Class<MarkdownEdit>($I`MarkdownEdit`)({
 	/**
 	 * Apply `edits` to `text`, producing a new string. Edits are applied in
 	 * reverse-offset order so earlier offsets stay valid; the input `edits`
-	 * array is not mutated. Overlapping edits are a programmer error and throw
+	 * array is not mutated.
+	 *
+	 * **Gotchas**
+	 *
+	 * Overlapping edits are a programmer error and throw
 	 * as a defect — `MarkdownFormat` never produces them.
 	 *
+	 * **Example** (Apply edits in arbitrary offset order)
+	 *
+	 * ```ts
+	 * import { MarkdownEdit } from "@beep/scratchpad/effected/markdown/MarkdownEdit";
+	 *
+	 * const edits = [
+	 *   MarkdownEdit.make({ offset: 0, length: 1, content: "h" }),
+	 *   MarkdownEdit.make({ offset: 5, length: 0, content: " world" }),
+	 * ];
+	 * console.log(MarkdownEdit.applyAll("Hello", edits)) // hello world
+	 * ```
+	 *
 	 * @param text - The source text to edit.
-	 * @param edits - The edits to apply, in any order.
+	 * @param edits - The edits to apply, in arbitrary order.
 	 * @returns The edited text.
+	 * @category utilities
+	 * @since 0.0.0
 	 */
 	static applyAll(text: string, edits: ReadonlyArray<MarkdownEdit>): string {
 		const sorted = A.sort(edits, Order.mapInput(Order.flip(Order.Number), (edit: MarkdownEdit) => edit.offset));

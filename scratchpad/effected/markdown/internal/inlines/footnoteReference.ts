@@ -45,6 +45,8 @@ const C_CARET = 0x5e;
  * Whether the bracket that just closed looks like `[^...]` with something
  * between the caret and the `]`.
  *
+ * **Details**
+ *
  * Upstream tests the node list — the node after the opener must be TEXT whose
  * literal starts with `^`, and there must be more content than that caret
  * alone (`literal->len > 1 || opener->inl_text->next->next`). Read off the
@@ -58,6 +60,29 @@ const looksLikeFootnote = (subject: string, openerIndex: number, bracketPos: num
 /**
  * cmark-gfm's footnote branch: form a reference, or leave the whole span as
  * the literal text upstream's post-pass would have rewritten it to.
+ *
+ * **Details**
+ *
+ * **Example** (Prepare a footnote close fallback)
+ *
+ * ```ts
+ * import { footnoteReferenceFallback } from "@beep/scratchpad/effected/markdown/internal/inlines/footnoteReference"
+ * import { makeInlineNode } from "@beep/scratchpad/effected/markdown/internal/inlineNode"
+ *
+ * const opener = {
+ *   node: makeInlineNode("text", 0, 1, "["),
+ *   previous: undefined,
+ *   previousDelimiter: undefined,
+ *   index: 0,
+ *   image: false,
+ *   active: true,
+ * }
+ * const closeFootnote = footnoteReferenceFallback(opener, 3, 4)
+ * console.log(typeof closeFootnote) // function
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const footnoteReferenceFallback: {
 	(scanner: Parameters<LinkCloseFallback>[0], opener: Parameters<LinkCloseFallback>[1], bracketPos: number, afterBracket: number): boolean;
@@ -112,6 +137,19 @@ export const footnoteReferenceFallback: {
 /**
  * The `]` construct for the `gfm` dialect: CommonMark's, with the footnote
  * branch wired into its no-match seam.
+ *
+ * **Details**
+ *
+ * **Example** (Register GFM closing brackets)
+ *
+ * ```ts
+ * import { gfmLinkCloseConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/footnoteReference"
+ *
+ * console.log(gfmLinkCloseConstruct.triggers.map((code) => String.fromCharCode(code)).join("")) // ]
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const gfmLinkCloseConstruct = makeLinkCloseConstruct(footnoteReferenceFallback);
 
@@ -119,8 +157,21 @@ export const gfmLinkCloseConstruct = makeLinkCloseConstruct(footnoteReferenceFal
  * The `!` construct for the `gfm` dialect: CommonMark's, refusing to open an
  * image on `![^` so the caret can reach the footnote branch.
  *
+ * **Details**
+ *
  * `makeImageOpenConstruct` carries the reason; it is a footnote rule living on
  * the bang, which is why it is re-exported from here rather than left to look
  * like a link concern.
+ *
+ * **Example** (Register GFM image openers)
+ *
+ * ```ts
+ * import { gfmImageOpenConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/footnoteReference"
+ *
+ * console.log(gfmImageOpenConstruct.triggers.map((code) => String.fromCharCode(code)).join("")) // !
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const gfmImageOpenConstruct = makeImageOpenConstruct(false);

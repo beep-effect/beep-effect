@@ -8,7 +8,21 @@ import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/markdown/internal/lineIndex");
 
-/** A malformed line table supplied to the source-position index. */
+/**
+ * A malformed line table supplied to the source-position index.
+ *
+ * **Example** (Describe a malformed line table)
+ *
+ * ```ts
+ * import { InvalidLineTableError } from "@beep/scratchpad/effected/markdown/internal/lineIndex"
+ *
+ * const error = InvalidLineTableError.make({ message: "Missing initial offset zero" })
+ * console.log(error.message) // Missing initial offset zero
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
 export class InvalidLineTableError extends S.TaggedError<InvalidLineTableError>($I`InvalidLineTableError`)(
 	"InvalidLineTableError",
 	{
@@ -23,7 +37,12 @@ export class InvalidLineTableError extends S.TaggedError<InvalidLineTableError>(
 	}),
 ) {}
 
-/** A 1-based line/column pair, unist's `Point` shape minus the `offset` field. */
+/**
+ * A 1-based line/column pair, unist's `Point` shape minus the `offset` field.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface LineColumn {
 	readonly line: number;
 	readonly column: number;
@@ -42,6 +61,18 @@ export interface LineColumn {
  * counter, not the `\r`. A bare `\r` (old Mac line endings) is not
  * recognized as a break; CommonMark's preprocessing pass normalizes those
  * before this index is ever built.
+ *
+ * **Example** (Locate the second line)
+ *
+ * ```ts
+ * import { LineIndex } from "@beep/scratchpad/effected/markdown/internal/lineIndex"
+ *
+ * const point = LineIndex.make("one\ntwo").positionAt(4)
+ * console.log(point.line, point.column) // 2 1
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export class LineIndex {
 	private readonly text: string;
@@ -58,6 +89,18 @@ export class LineIndex {
   *
   * Recognizes only `\n`, which is why the block pass hands over its own
   * line table instead — see {@link LineIndex.fromLineStarts}.
+  *
+  * **Example** (Index a newline with a forward scan)
+  *
+  * ```ts
+  * import { LineIndex } from "@beep/scratchpad/effected/markdown/internal/lineIndex"
+  *
+  * const point = LineIndex.make("a\nb").positionAt(2)
+  * console.log(point.line, point.column) // 2 1
+  * ```
+  *
+  * @category constructors
+  * @since 0.0.0
   */
 	static make(text: string): LineIndex {
 		const lineStarts: number[] = [0];
@@ -84,6 +127,21 @@ export class LineIndex {
   *
   * `starts` must be ascending and begin at 0; a table that is neither is a
   * wiring bug and dies as a defect.
+  * The constructor checks that the table is non-empty and begins at zero;
+  * the caller is responsible for ensuring ascending order.
+  *
+  * **Example** (Reuse the parser's bare carriage-return boundary)
+  *
+  * ```ts
+  * import { LineIndex } from "@beep/scratchpad/effected/markdown/internal/lineIndex"
+  *
+  * const point = LineIndex.fromLineStarts("a\rb", [0, 2]).positionAt(2)
+  * console.log(point.line, point.column) // 2 1
+  * ```
+  *
+  * @throws InvalidLineTableError when the table is empty or its first offset is not zero.
+  * @category constructors
+  * @since 0.0.0
   */
 	static fromLineStarts(text: string, starts: ReadonlyArray<number>): LineIndex {
 		if (starts.length === 0 || starts[0] !== 0) {
@@ -94,8 +152,24 @@ export class LineIndex {
 
 	/**
 	 * The 1-based `{ line, column }` of `offset` within this index's text.
+	 *
+	 * **Details**
+	 *
 	 * Out-of-range offsets clamp to the nearest valid position (`0` or
 	 * `text.length`) rather than throwing.
+	 *
+	 * **Example** (Clamp offsets to the source boundaries)
+	 *
+	 * ```ts
+	 * import { LineIndex } from "@beep/scratchpad/effected/markdown/internal/lineIndex"
+	 *
+	 * const index = LineIndex.make("abc")
+	 * console.log(index.positionAt(-1).column) // 1
+	 * console.log(index.positionAt(99).column) // 4
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
 	 */
 	positionAt(offset: number): LineColumn {
 		const clamped = Math.min(Math.max(offset, 0), this.text.length);

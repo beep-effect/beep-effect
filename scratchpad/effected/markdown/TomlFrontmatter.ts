@@ -24,7 +24,19 @@ import { FrontmatterDecodeError, FrontmatterEncodeError, FrontmatterFormatMismat
  * requires it; a consumer who never touches toml frontmatter never loads the
  * toml engine.
  *
+ * **Example** (Encode an empty frontmatter object)
+ *
+ * ```ts
+ * import { TomlFrontmatter } from "@beep/scratchpad/effected/markdown/TomlFrontmatter"
+ * import * as Effect from "effect/Effect"
+ *
+ * const encoded = Effect.runSync(TomlFrontmatter.encode({}))
+ * console.log(JSON.stringify(encoded)) // ""
+ * ```
+ *
  * @public
+ * @category codecs
+ * @since 0.0.0
  */
 export const TomlFrontmatter: FrontmatterCodec = {
 	format: "toml",

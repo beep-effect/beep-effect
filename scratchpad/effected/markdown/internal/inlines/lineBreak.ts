@@ -18,7 +18,22 @@ const C_NEWLINE = 0x0a;
 
 const reInitialSpace = /^ */;
 
-/** A soft or hard line break. */
+/**
+ * Parses a soft or hard line break.
+ *
+ * **Details**
+ *
+ * **Example** (Register the newline trigger)
+ *
+ * ```ts
+ * import { lineBreakConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/lineBreak"
+ *
+ * console.log(lineBreakConstruct.triggers.includes(10)) // true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const lineBreakConstruct: InlineConstruct = {
 	name: "lineBreak",
 	triggers: [C_NEWLINE],

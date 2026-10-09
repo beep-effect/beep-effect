@@ -79,6 +79,8 @@ const isValidHostChar = (subject: string, index: number): boolean => {
 /**
  * `autolink_delim`: pull the link's end back off trailing punctuation.
  *
+ * **Details**
+ *
  * Two rules beyond "drop the trailing mark". Parens are BALANCED rather than
  * simply stripped, so `www.a.com/q_(bar)` keeps its group while `(www.a.com/q)`
  * gives its closer back to the surrounding text. And a trailing `;` is
@@ -144,6 +146,8 @@ const autolinkDelim = (subject: string, base: number, end: number): number => {
 
 /**
  * `check_domain`: how much of `subject` from `base` is a plausible domain.
+ *
+ * **Details**
  *
  * The underscore rule is the interesting one and it is a HOST-name rule, not
  * a domain-name rule: an `_` in either of the last two dot-separated segments
@@ -219,8 +223,21 @@ const appendLiteralLink = (scanner: InlineScanner, start: number, end: number, u
 /**
  * `www_match`: a `www.` host with no scheme, which links to `http://` + itself.
  *
+ * **Details**
+ *
  * The preceding character is the gate — start of line, whitespace, or one of
  * `*`, `_`, `~`, `(` — which is what keeps `xwww.a.com` from linking.
+ *
+ * **Example** (Register bare www hosts)
+ *
+ * ```ts
+ * import { wwwAutolinkConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/autolinkLiteral"
+ *
+ * console.log(wwwAutolinkConstruct.triggers.map((code) => String.fromCharCode(code)).join("")) // w
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const wwwAutolinkConstruct: InlineConstruct = {
 	name: "wwwAutolink",
@@ -261,12 +278,25 @@ export const wwwAutolinkConstruct: InlineConstruct = {
 /**
  * `url_match`: a bare `http://`, `https://` or `ftp://` URL.
  *
+ * **Details**
+ *
  * The trigger is the `:`, so the scheme itself is already behind the cursor
  * and already emitted as text. Upstream calls `cmark_node_unput` to take it
  * back; `scanner.unputText` is that, and its refusal is a real bail-out —
  * when the scheme's characters did not come from plain text nodes (a decoded
  * entity, say) the run is not the source text it appears to be and no link
  * forms.
+ *
+ * **Example** (Register the URL colon trigger)
+ *
+ * ```ts
+ * import { urlAutolinkConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/autolinkLiteral"
+ *
+ * console.log(urlAutolinkConstruct.triggers.map((code) => String.fromCharCode(code)).join("")) // :
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const urlAutolinkConstruct: InlineConstruct = {
 	name: "urlAutolink",
@@ -326,6 +356,8 @@ interface EmailMatch {
  * `validate_protocol`: is `protocol` the run immediately left of the address,
  * and is it itself preceded by a non-alphanumeric?
  *
+ * **Details**
+ *
  * The second half is why `mmmmailto:foo@bar.baz` links only `foo@bar.baz`.
  */
 const validateProtocol = (protocol: string, data: string, at: number, rewind: number, maxRewind: number): boolean => {
@@ -344,6 +376,8 @@ const validateProtocol = (protocol: string, data: string, at: number, rewind: nu
 
 /**
  * `postprocess_text`: every email address in one merged run of text.
+ *
+ * **Details**
  *
  * The shape is upstream's, `goto found_at` included — when the forward scan
  * runs into a SECOND `@` the candidate is re-anchored on it rather than
@@ -475,6 +509,8 @@ const linkifyRun = (pieces: ReadonlyArray<RunPiece>): void => {
 	/**
 	 * The local content index a merged-run index came from.
 	 *
+	 * **Details**
+	 *
 	 * Exact whenever the contributing node's value is its source characters,
 	 * which is every node the text fallback produced. A node whose value was
 	 * DECODED — an entity, a backslash escape — is shorter than the source it
@@ -545,9 +581,26 @@ const linkifyRun = (pieces: ReadonlyArray<RunPiece>): void => {
 /**
  * Turn every bare email address in the finished list into a link.
  *
+ * **Details**
+ *
  * Iterative on purpose: this walks the tree emphasis and strikethrough just
  * built, whose depth the input controls, and the parser's depth cap does not
  * apply until materialization. A tree walk has no reason to recurse.
+ *
+ * **Example** (Linkify an email text node)
+ *
+ * ```ts
+ * import { linkifyEmails } from "@beep/scratchpad/effected/markdown/internal/inlines/autolinkLiteral"
+ * import { appendChild, makeInlineNode } from "@beep/scratchpad/effected/markdown/internal/inlineNode"
+ *
+ * const root = makeInlineNode("text", 0, 15)
+ * appendChild(root, makeInlineNode("text", 0, 15, "ada@example.org"))
+ * linkifyEmails(root)
+ * console.log(root.firstChild?.type, root.firstChild?.data.url) // link mailto:ada@example.org
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const linkifyEmails = (root: InlineNode): void => {
 	const pending: InlineNode[] = [root];

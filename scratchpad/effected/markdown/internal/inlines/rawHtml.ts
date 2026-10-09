@@ -22,7 +22,29 @@ const UNTERMINATED_FORMS: ReadonlyArray<readonly [opener: string, closer: string
 	["<!", ">"],
 ];
 
-/** A raw HTML tag, comment, processing instruction, declaration or CDATA. */
+/**
+ * Recognizes a raw HTML tag, comment, processing instruction, declaration or CDATA.
+ *
+ * **Details**
+ *
+ * Matched HTML is kept verbatim in an `html` node.
+ *
+ * **Gotchas**
+ *
+ * A comment, processing instruction, declaration or CDATA opener without its
+ * closing sequence does not match.
+ *
+ * **Example** (Inspect the raw HTML trigger)
+ *
+ * ```ts
+ * import { rawHtmlConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/rawHtml"
+ *
+ * console.log(rawHtmlConstruct.triggers[0]) // 60
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const rawHtmlConstruct: InlineConstruct = {
 	name: "rawHtml",
 	triggers: [C_LESSTHAN],

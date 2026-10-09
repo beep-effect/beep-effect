@@ -70,6 +70,8 @@ const isSpaceChar = (char: string): boolean => char === " " || char === "\t" || 
  * The text a row is scanned out of, with the source provenance of every
  * character in it.
  *
+ * **Details**
+ *
  * For a delimiter or body row that is one source line; for a header row it is
  * a paragraph's whole accumulated content, which may be several.
  */
@@ -83,7 +85,7 @@ interface RowSource {
 interface RawCell {
 	/** Where the cell's content begins — just past the pipe that opened it. */
 	readonly start: number;
-	/** Where the scanner found content (`start` plus any leading whitespace). */
+	/** Where the scanner found content (`start` plus its leading whitespace). */
 	readonly contentStart: number;
 	/** One past the cell's last character. */
 	readonly end: number;
@@ -115,6 +117,8 @@ const scanCellEnd = (text: string, from: number): number => {
 
 /**
  * `_scan_table_cell`: `(escaped_char|[^|\r\n])+`.
+ *
+ * **Details**
  *
  * A backslash before ASCII punctuation takes the punctuation with it, which is
  * the whole mechanism behind escaped pipes: `\|` is one cell character, a bare
@@ -154,6 +158,8 @@ const scanRowEnd = (text: string, from: number): number => {
 /**
  * `_scan_table_start`: `[|]? marker ([|] marker)* [|]? spacechar* newline`,
  * where a marker is `spacechar* [:]? [-]+ [:]? spacechar*`.
+ *
+ * **Details**
  *
  * Hand-rolled rather than a regular expression: the grammar nests two
  * unbounded whitespace runs inside a repetition, which is exactly the shape a
@@ -209,6 +215,8 @@ const scanDelimiterRowLine = (line: string, from: number): boolean => {
 
 /**
  * Scan `source` as one table row, upstream's `row_from_string`.
+ *
+ * **Details**
  *
  * Returns `undefined` unless the WHOLE text is consumed and at least one cell
  * came out of it — which is what makes a line either a row or not a row, with
@@ -278,6 +286,8 @@ interface CellContent {
  * Cut `[from, to)` out of `source`, dropping the backslash of every `\|` in
  * it — upstream's `unescape_pipes`.
  *
+ * **Details**
+ *
  * Upstream scans left to right and steps over the pipe it just unescaped, so
  * in `\\|` the SECOND backslash is the one that escapes: this is a byte loop,
  * not an understanding of which backslashes are themselves escaped. The
@@ -341,6 +351,8 @@ const offsetAt = (source: RowSource, index: number, fallback: number): number =>
  * The alignment each delimiter cell declares: a leading colon means left, a
  * trailing colon right, both center, neither nothing.
  *
+ * **Details**
+ *
  * Upstream reads the first and last byte of the TRIMMED cell buffer, so the
  * whitespace the scanner allows around a marker never reaches this decision.
  */
@@ -383,6 +395,8 @@ const paragraphSource = (block: BlockNode): RowSource => ({
 
 /**
  * Close `block` at `endOffset`.
+ *
+ * **Details**
  *
  * `finalizeBlock` is what moves the tip back up to the parent, but it dates
  * the block to the end of the last line the loop finished — which for a row
@@ -443,7 +457,20 @@ const addRow = (
  * The header start: a delimiter row under a paragraph promotes that paragraph
  * into a table.
  *
+ * **Details**
+ *
  * Upstream's `try_opening_table_header`.
+ *
+ * **Example** (Identify the table header start)
+ *
+ * ```ts
+ * import { tableHeaderStart } from "@beep/scratchpad/effected/markdown/internal/blocks/table"
+ *
+ * console.log(tableHeaderStart.name) // tableHeader
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const tableHeaderStart: BlockStart = {
 	name: "tableHeader",
@@ -511,11 +538,24 @@ export const tableHeaderStart: BlockStart = {
 };
 
 /**
- * The row start: any non-blank line under an open table is a row.
+ * The row start: each non-blank line under an open table is a row.
+ *
+ * **Details**
  *
  * Upstream's `try_opening_table_row`. It sits after every core block start, so
  * a line that opens a blockquote, a list or a fence closes the table instead
  * of becoming a row.
+ *
+ * **Example** (Identify the table body row start)
+ *
+ * ```ts
+ * import { tableRowStart } from "@beep/scratchpad/effected/markdown/internal/blocks/table"
+ *
+ * console.log(tableRowStart.name) // tableRow
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const tableRowStart: BlockStart = {
 	name: "tableRow",
@@ -547,7 +587,21 @@ export const tableRowStart: BlockStart = {
 
 // --- constructs -----------------------------------------------------------
 
-/** Table: contains rows, and continues for as long as lines scan as rows. */
+/**
+ * Contains table rows and continues for as long as lines scan as rows.
+ *
+ * **Example** (Check table child acceptance)
+ *
+ * ```ts
+ * import { tableConstruct } from "@beep/scratchpad/effected/markdown/internal/blocks/table"
+ *
+ * console.log(tableConstruct.canContain("tableRow")) // true
+ * console.log(tableConstruct.canContain("paragraph")) // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const tableConstruct: BlockConstruct = {
 	type: "table",
 	acceptsLines: false,
@@ -573,7 +627,21 @@ export const tableConstruct: BlockConstruct = {
 	},
 };
 
-/** Table row: contains cells, and is built and closed on the line it opens. */
+/**
+ * Contains table cells and is built and closed on the line it opens.
+ *
+ * **Example** (Check row child acceptance)
+ *
+ * ```ts
+ * import { tableRowConstruct } from "@beep/scratchpad/effected/markdown/internal/blocks/table"
+ *
+ * console.log(tableRowConstruct.canContain("tableCell")) // true
+ * console.log(tableRowConstruct.canContain("tableRow")) // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const tableRowConstruct: BlockConstruct = {
 	type: "tableRow",
 	acceptsLines: false,
@@ -587,12 +655,25 @@ export const tableRowConstruct: BlockConstruct = {
 };
 
 /**
- * Table cell: the block pass's one non-leaf inline host.
+ * Hosts inline content inside the block pass's one non-leaf inline host, a table cell.
+ *
+ * **Details**
  *
  * Its content is the split, unescaped cell text with the source provenance of
  * every surviving character, so it goes through the same `inlineSlice` seam a
  * paragraph does — and inherits the trim, which is what makes the node's
  * position span the cell's content rather than its padding.
+ *
+ * **Example** (Check cell block child rejection)
+ *
+ * ```ts
+ * import { tableCellConstruct } from "@beep/scratchpad/effected/markdown/internal/blocks/table"
+ *
+ * console.log(tableCellConstruct.canContain("paragraph")) // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const tableCellConstruct: BlockConstruct = {
 	type: "tableCell",

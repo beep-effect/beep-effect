@@ -12,7 +12,20 @@ const reCodeFence = /^`{3,}(?!.*`)|^~{3,}/;
 
 const fenceCharOf = (char: string): FenceChar | undefined => (char === "`" || char === "~" ? char : undefined);
 
-/** The fenced-code block start: three or more backticks or tildes. */
+/**
+ * Opens a fenced code block with three or more backticks or tildes.
+ *
+ * **Example** (Identify the fenced code start)
+ *
+ * ```ts
+ * import { fencedCodeStart } from "@beep/scratchpad/effected/markdown/internal/blocks/fencedCode";
+ *
+ * console.log(fencedCodeStart.name); // fencedCode
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const fencedCodeStart: BlockStart = {
 	name: "fencedCode",
 	trigger: (scanner) => {

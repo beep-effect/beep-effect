@@ -3,10 +3,10 @@
   "effectedCommit": "af7566a9da2eff169cb74955efcc5ede1e5de9f8",
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
-    "module": "npm",
+    "module": "markdown",
     "stage": 2,
     "commit": null,
-    "at": "2026-10-09T16:19:18.226Z"
+    "at": "2026-10-09T16:19:24.289Z"
   },
   "rows": [
     {
@@ -6006,7 +6006,7 @@
       "module": "markdown",
       "wave": 2,
       "position": 3,
-      "stage": 1,
+      "stage": 2,
       "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
@@ -6885,12 +6885,17 @@
       "commits": [
         {
           "stage": 0,
+          "sha": "6e6195a36c787afe58eb79c72e49f9be37eb1fac"
+        },
+        {
+          "stage": 1,
           "sha": null
         }
       ],
       "blocked": null,
       "notes": [
-        "2026-10-09T11:20:05.969Z S1: green under tsgo, oxlint and the four beep laws; upstream tests pass; audit green (parity strict)"
+        "2026-10-09T11:20:05.969Z S1: green under tsgo, oxlint and the four beep laws; upstream tests pass; audit green (parity strict)",
+        "2026-10-09T16:19:24.289Z S2: S2 green: docgen with all enforcement flags and the JSDoc law; carriers converted; README adapted (section 10.3)"
       ],
       "closedAt": null
     },

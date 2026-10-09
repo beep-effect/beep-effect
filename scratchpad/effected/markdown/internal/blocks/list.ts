@@ -129,7 +129,26 @@ const endsWithBlankLine = (block: BlockNode, next: BlockNode | undefined): boole
 const hasBlankLineBetweenChildren = (block: BlockNode): boolean =>
 	block.children.some((child, index) => endsWithBlankLine(child, block.children[index + 1]));
 
-/** List: a container of list items and nothing else. */
+/**
+ * Contains list items and nothing else.
+ *
+ * **Details**
+ *
+ * Finalization records spread on each item and on the list. A blank line
+ * between items, or between an item's children, makes the list loose.
+ *
+ * **Example** (Check list child eligibility)
+ *
+ * ```ts
+ * import { listConstruct } from "@beep/scratchpad/effected/markdown/internal/blocks/list";
+ *
+ * console.log(listConstruct.canContain("listItem")); // true
+ * console.log(listConstruct.canContain("paragraph")); // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const listConstruct: BlockConstruct = {
 	type: "list",
 	acceptsLines: false,
@@ -176,7 +195,28 @@ export const listConstruct: BlockConstruct = {
 	},
 };
 
-/** List item: a container of anything but a bare list item. */
+/**
+ * Contains block content other than a bare list item.
+ *
+ * **Details**
+ *
+ * An empty item closes on the next blank line and ends at its marker plus
+ * padding. Materialization keeps the checked key absent when no task-list
+ * checkbox was parsed.
+ *
+ * **Example** (Check list item child eligibility)
+ *
+ * ```ts
+ * import { listItemConstruct } from "@beep/scratchpad/effected/markdown/internal/blocks/list";
+ *
+ * console.log(listItemConstruct.canContain("paragraph")); // true
+ * console.log(listItemConstruct.canContain("list")); // true
+ * console.log(listItemConstruct.canContain("listItem")); // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const listItemConstruct: BlockConstruct = {
 	type: "listItem",
 	acceptsLines: false,
@@ -223,7 +263,26 @@ export const listItemConstruct: BlockConstruct = {
 		}),
 };
 
-/** The list-item block start: a bullet or ordered marker. */
+/**
+ * Opens a list item from a bullet or ordered marker.
+ *
+ * **Details**
+ *
+ * A new list opens when the marker differs in type, delimiter or bullet from
+ * the current list. Only an ordered marker starting at 1 may interrupt a
+ * paragraph, and an interrupting marker must have nonempty item content.
+ *
+ * **Example** (Identify the list item start)
+ *
+ * ```ts
+ * import { listItemStart } from "@beep/scratchpad/effected/markdown/internal/blocks/list";
+ *
+ * console.log(listItemStart.name); // listItem
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const listItemStart: BlockStart = {
 	name: "listItem",
 	trigger: (scanner, container) => {

@@ -85,13 +85,21 @@ import { MAX_NESTING_DEPTH } from "./limits.ts";
 import { ENTITY } from "./unescape.ts";
 import * as P from "effect/Predicate";
 
-/** How inline content is being assembled. */
+/**
+ * How inline content is being assembled.
+ */
 interface InlineContext {
-	/** No newlines representable (heading, table cell): breaks become spaces. */
+	/**
+	 * No newlines representable (heading, table cell): breaks become spaces.
+	 */
 	readonly singleLine: boolean;
-	/** Inside a table cell: `|` must not survive unescaped. */
+	/**
+	 * Inside a table cell: `|` must not survive unescaped.
+	 */
 	readonly inTable: boolean;
-	/** Inside a heading: a `#` could read as the closing sequence. */
+	/**
+	 * Inside a heading: a `#` could read as the closing sequence.
+	 */
 	readonly inHeading: boolean;
 }
 
@@ -99,22 +107,30 @@ const FLOW_CONTEXT: InlineContext = { singleLine: false, inTable: false, inHeadi
 const HEADING_CONTEXT: InlineContext = { singleLine: true, inTable: false, inHeading: true };
 const CELL_CONTEXT: InlineContext = { singleLine: true, inTable: true, inHeading: false };
 
-/** Characters escaped wherever they appear in inline text. */
+/**
+ * Characters escaped wherever they appear in inline text.
+ */
 const ALWAYS_ESCAPE = HashSet.fromIterable<string>(["\\", "`", "*", "[", "]", "<", "~", "|"]);
 
-/** A character reference at the head of the string: the engine's own grammar. */
+/**
+ * A character reference at the head of the string: the engine's own grammar.
+ */
 const reEntityAhead = new RegExp(`^${ENTITY}`, "i");
 
 const reAlphanumeric = /[\p{L}\p{N}]/u;
 
-/** Line-start characters that could open a block construct. */
+/**
+ * Line-start characters that could open a block construct.
+ */
 const LINE_START_ESCAPE = HashSet.fromIterable<string>(["#", ">", "+", "-", "=", "~", "`"]);
 
 const SCHEME_WORDS = HashSet.fromIterable<string>(["http", "https", "ftp", "mailto", "xmpp"]);
 
 const ORDERED_MARKER = /^\d{1,9}[.)]/;
 
-/** The serializer's mutable state. */
+/**
+ * The serializer's mutable state.
+ */
 interface StringifyState {
 	depth: number;
 	/**
@@ -146,7 +162,9 @@ const unguard = (state: StringifyState): void => {
 
 // --- inline text escaping ---------------------------------------------------
 
-/** Whether `value[index]` ends a `www` run preceded by a word boundary. */
+/**
+ * Whether `value[index]` ends a `www` run preceded by a word boundary.
+ */
 const isWwwDot = (value: string, index: number): boolean => {
 	if (value.slice(Math.max(0, index - 3), index).toLowerCase() !== "www") return false;
 	if (index - 3 <= 0) return true;
@@ -154,14 +172,18 @@ const isWwwDot = (value: string, index: number): boolean => {
 	return before === undefined || !/[\p{L}\p{N}]/u.test(before);
 };
 
-/** Whether the run of letters ending at `value[index]` is a scheme word. */
+/**
+ * Whether the run of letters ending at `value[index]` is a scheme word.
+ */
 const isSchemeColon = (value: string, index: number): boolean => {
 	let start = index;
 	while (start > 0 && /[a-zA-Z]/.test(value.charAt(start - 1))) start -= 1;
 	return HashSet.has(SCHEME_WORDS, value.slice(start, index).toLowerCase());
 };
 
-/** Whether `value[index]` is a Unicode letter or number (`undefined` is not). */
+/**
+ * Whether `value[index]` is a Unicode letter or number (`undefined` is not).
+ */
 const isAlphanumericAt = (value: string, index: number): boolean => {
 	const char = value[index];
 	return char !== undefined && reAlphanumeric.test(char);
@@ -183,7 +205,9 @@ const isClosingHashRun = (value: string, index: number, followingText: string, n
 	return nonTextFollows || /^[ \t\n]*$/.test(rest.slice(end));
 };
 
-/** A run that a later sibling could still complete into a character reference. */
+/**
+ * A run that a later sibling could still complete into a character reference.
+ */
 const reEntityPrefix = /^&[#a-z0-9]*$/i;
 
 /**
@@ -325,14 +349,20 @@ const escapeText = (
 // Kept apart from `escapeText` so the canonical path is untouched byte for
 // byte.
 
-/** Space or tab — the whitespace a list marker or ATX run must be followed by. */
+/**
+ * Space or tab — the whitespace a list marker or ATX run must be followed by.
+ */
 const isSpaceOrTab = (char: string | undefined): boolean => char === " " || char === "\t";
 
-/** Every character of `line` is `marker` or space/tab — a thematic-break or setext-shaped run. */
+/**
+ * Every character of `line` is `marker` or space/tab — a thematic-break or setext-shaped run.
+ */
 const isRunOf = (line: string, marker: string): boolean =>
 	line.length > 0 && [...line].every((char) => char === marker || char === " " || char === "\t");
 
-/** Only the characters a GFM delimiter row is made of (re2c's `spacechar` included). */
+/**
+ * Only the characters a GFM delimiter row is made of (re2c's `spacechar` included).
+ */
 const reDelimiterRowShaped = /^[-:| \t\v\f]+$/;
 
 /**
@@ -374,7 +404,9 @@ const literalLineOpensBlock = (line: string, open: boolean): boolean => {
 	}
 };
 
-/** ASCII punctuation: what a backslash escapes, so `\x` is one cell character. */
+/**
+ * ASCII punctuation: what a backslash escapes, so `\x` is one cell character.
+ */
 const reAsciiPunctuation = /[!-/:-@[-`{-~]/;
 
 const literalText = (
@@ -473,7 +505,9 @@ const literalText = (
 
 // --- inline serialization ---------------------------------------------------
 
-/** Pick the effective emphasis marker, flipping away from a forbidden char. */
+/**
+ * Pick the effective emphasis marker, flipping away from a forbidden char.
+ */
 const emphasisMarker = (fidelity: "*" | "_" | undefined, forbidden: string | undefined): "*" | "_" => {
 	const chosen = fidelity ?? "*";
 	return chosen === forbidden ? (chosen === "*" ? "_" : "*") : chosen;
@@ -491,7 +525,9 @@ const emphasisMarker = (fidelity: "*" | "_" | undefined, forbidden: string | und
  */
 const escapeLabel = (label: string): string => label.replace(/(?<!\\)([[\]])/g, "\\$1");
 
-/** Whether a destination character forces the pointy-bracket form. */
+/**
+ * Whether a destination character forces the pointy-bracket form.
+ */
 const forcesPointy = (char: string): boolean => {
 	const codePoint = char.codePointAt(0);
 	// Controls and space (a bare destination allows neither), plus the
@@ -506,7 +542,9 @@ const forcesPointy = (char: string): boolean => {
 	);
 };
 
-/** Wrap a link/image destination, pointy-bracketed when it needs it. */
+/**
+ * Wrap a link/image destination, pointy-bracketed when it needs it.
+ */
 const destination = (url: string): string => {
 	if (url === "" || A.some([...url], forcesPointy) || !balancedParens(url)) {
 		return `<${url.replace(/[<>\\]/g, (char) => `\\${char}`)}>`;
@@ -529,7 +567,9 @@ const balancedParens = (url: string): boolean => {
 const titleSuffix = (title: string | undefined): string =>
 	title === undefined ? "" : ` "${title.replace(/[\\"]/g, (char) => `\\${char}`)}"`;
 
-/** Serialize an inline-code span with a fence run longer than any interior run. */
+/**
+ * Serialize an inline-code span with a fence run longer than any interior run.
+ */
 const inlineCode = (value: string): string => {
 	let longest = 0;
 	for (const run of value.match(/`+/g) ?? []) longest = Math.max(longest, run.length);
@@ -549,6 +589,8 @@ const inlineCode = (value: string): string => {
  * The emphasis-family parent whose markers sit at this run's edges. An
  * edge child's marker choice follows the nesting algebra, fidelity second:
  *
+ * **Details**
+ *
  *   em{strong}     uniform marker  — `***x***` re-parses em{strong}
  *   em{em}         flip            — `**x**` would read as strong
  *   strong{em}     flip            — `***x***` would swap the nesting order
@@ -565,7 +607,9 @@ interface JunctionGuard {
 
 const flipMarker = (marker: "*" | "_"): "*" | "_" => (marker === "*" ? "_" : "*");
 
-/** The edge-marker choice for a nested emphasis-family child. */
+/**
+ * The edge-marker choice for a nested emphasis-family child.
+ */
 const nestedMarker = (
 	child: "emphasis" | "strong",
 	fidelity: "*" | "_" | undefined,
@@ -743,7 +787,9 @@ const serializeInlines = (
 // to-markdown defaults — the MDX structure is oracle-shaped, the markdown
 // inside it is canonical.
 
-/** The tag string of every MDX node type. */
+/**
+ * The tag string of every MDX node type.
+ */
 const MDX_NODE_TYPES = HashSet.fromIterable<string>([
 	"mdxJsxFlowElement",
 	"mdxJsxTextElement",
@@ -752,13 +798,17 @@ const MDX_NODE_TYPES = HashSet.fromIterable<string>([
 	"mdxjsEsm",
 ]);
 
-/** The minimal structural shape the MDX presence scan needs. */
+/**
+ * The minimal structural shape the MDX presence scan needs.
+ */
 interface WalkableNode {
 	readonly type: string;
 	readonly children?: ReadonlyArray<WalkableNode>;
 }
 
-/** Whether the tree carries any MDX node — iterative, deliberately unguarded. */
+/**
+ * Whether the tree carries any MDX node — iterative, deliberately unguarded.
+ */
 const treeContainsMdx = (root: WalkableNode): boolean => {
 	const stack: WalkableNode[] = [root];
 	while (stack.length > 0) {
@@ -826,7 +876,9 @@ const serializeMdxAttribute = (attribute: MdxJsxAttributeContent): string => {
 	return `${attribute.name}={${value.value}}`;
 };
 
-/** Serialize a text (phrasing) JSX element. */
+/**
+ * Serialize a text (phrasing) JSX element.
+ */
 const serializeMdxJsxText = (node: MdxJsxTextElement, context: InlineContext, state: StringifyState): string => {
 	const attributes = node.attributes.map(serializeMdxAttribute);
 	const selfClosing = node.name !== null && node.children.length === 0;
@@ -843,7 +895,9 @@ const serializeMdxJsxText = (node: MdxJsxTextElement, context: InlineContext, st
 	return out;
 };
 
-/** Prefix every line of a rendered child block; blank lines stay bare. */
+/**
+ * Prefix every line of a rendered child block; blank lines stay bare.
+ */
 const indentBlockLines = (content: string, indent: string): string =>
 	mapMdxLines(content, (line, _index, blank) => (blank ? line : `${indent}${line}`));
 
@@ -896,14 +950,18 @@ const serializeMdxJsxFlow = (node: MdxJsxFlowElement, state: StringifyState): st
 
 // --- block serialization ----------------------------------------------------
 
-/** Prefix every line of `content`; blank lines take the trimmed prefix. */
+/**
+ * Prefix every line of `content`; blank lines take the trimmed prefix.
+ */
 const prefixLines = (content: string, prefix: string, blankPrefix: string): string =>
 	content
 		.split("\n")
 		.map((line) => (line === "" ? blankPrefix : `${prefix}${line}`))
 		.join("\n");
 
-/** First line gets `marker`, continuation lines get spaces of its width. */
+/**
+ * First line gets `marker`, continuation lines get spaces of its width.
+ */
 const hangingIndent = (content: string, marker: string): string => {
 	const lines = content.split("\n");
 	const indent = " ".repeat(marker.length);
@@ -1035,7 +1093,9 @@ const serializeTable = (table: Table, state: StringifyState): string => {
 	return [header ?? `| ${A.makeBy(columnCount, () => "").join(" | ")} |`, alignRow, ...body].join("\n");
 };
 
-/** The marker actually used by a list, for adjacency comparison. */
+/**
+ * The marker actually used by a list, for adjacency comparison.
+ */
 const effectiveListMarker = (list: List, flipped: boolean): string => {
 	if (list.ordered === true) {
 		const delimiter = list.delimiter ?? ".";
@@ -1078,7 +1138,9 @@ const serializeList = (list: List, state: StringifyState, flipped: boolean): str
 
 type Block = FlowContent | Frontmatter | MdxjsEsm | Paragraph;
 
-/** Whether `next` interrupts a paragraph without a blank line before it. */
+/**
+ * Whether `next` interrupts a paragraph without a blank line before it.
+ */
 const interruptsParagraph = (next: Block): boolean =>
 	Match.value(next).pipe(
 		Match.discriminator("type")("list", (next) => next.ordered !== true || (next.start ?? 1) === 1),
@@ -1218,9 +1280,29 @@ const serializeBlocks = (children: ReadonlyArray<Block>, state: StringifyState, 
 /**
  * Serialize a document tree to canonical markdown source.
  *
+ * **Details**
+ *
  * Throws the raw `GuardExceeded` carrier when the tree nests past
  * `MAX_NESTING_DEPTH`; the facade materializes the typed error. Output is
  * empty for an empty root and ends with exactly one newline otherwise.
+ *
+ * **Example** (Serialize an empty document)
+ *
+ * ```ts
+ * import { stringifyTree } from "@beep/scratchpad/effected/markdown/internal/stringify";
+ * import type { Root } from "@beep/scratchpad/effected/markdown/MarkdownNode";
+ *
+ * const point = { line: 1, column: 1, offset: 0 };
+ * const root: Root = {
+ *   type: "root",
+ *   children: [],
+ *   position: { start: point, end: point }
+ * };
+ * console.log(JSON.stringify(stringifyTree(root))) // ""
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
  */
 export const stringifyTree = (root: Root): string => {
 	const state: StringifyState = { depth: 0, jsxDepth: 0, mdx: treeContainsMdx(root) };

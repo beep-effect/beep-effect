@@ -71,6 +71,8 @@ const $I = $ScratchpadId.create("effected/markdown/MarkdownFormat");
  * two are structurally interchangeable — only `offset`/`length` are read).
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type MarkdownRangeLike = MarkdownRange | { readonly offset: number; readonly length: number };
 
@@ -85,7 +87,18 @@ export type MarkdownRangeLike = MarkdownRange | { readonly offset: number; reado
  * the presence or absence of `fenceChar`/`fenceLength`, and a language-less
  * node with neither serializes as an **indented** block by default.
  *
+ * **Example** (Validate a code block spelling)
+ *
+ * ```ts
+ * import { CodeBlockStyle } from "@beep/scratchpad/effected/markdown/MarkdownFormat";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(CodeBlockStyle)("fenced")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const CodeBlockStyle = LiteralKit(["fenced", "indented"]).annotate($I.annote("CodeBlockStyle", { description: "The two ways CommonMark spells a code block: `fenced` (a backtick or tilde fence) and `indented` (four-space indentation)." }));
 
@@ -93,6 +106,8 @@ export const CodeBlockStyle = LiteralKit(["fenced", "indented"]).annotate($I.ann
  * The union of all code-block-style string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type CodeBlockStyle = typeof CodeBlockStyle.Type;
 
@@ -127,7 +142,18 @@ export type CodeBlockStyle = typeof CodeBlockStyle.Type;
  * list or footnote definition, merge with an adjacent code block, or fail
  * representability (empty, or blank first/last lines).
  *
+ * **Example** (Request bullet marker normalization)
+ *
+ * ```ts
+ * import { MarkdownFormat, MarkdownFormattingOptions } from "@beep/scratchpad/effected/markdown/MarkdownFormat";
+ *
+ * const options = MarkdownFormattingOptions.make({ bulletChar: "-" });
+ * console.log(JSON.stringify(MarkdownFormat.formatToString("* one\n", undefined, options))) // "- one\n"
+ * ```
+ *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export class MarkdownFormattingOptions extends S.Class<MarkdownFormattingOptions>($I`MarkdownFormattingOptions`)({
 	dialect: S.optionalKey(MarkdownDialect).annotateKey({ description: "Markdown syntax used to parse the source before formatting; defaults to `gfm`" }),
@@ -143,7 +169,18 @@ export class MarkdownFormattingOptions extends S.Class<MarkdownFormattingOptions
 /**
  * Error codes `MarkdownFormat.modify` can fail with.
  *
+ * **Example** (Validate a replacement failure code)
+ *
+ * ```ts
+ * import { MarkdownModificationErrorCode } from "@beep/scratchpad/effected/markdown/MarkdownFormat";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(MarkdownModificationErrorCode)("UnsupportedTarget")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const MarkdownModificationErrorCode = LiteralKit([
 	"NodeNotInDocument",
@@ -156,6 +193,8 @@ export const MarkdownModificationErrorCode = LiteralKit([
  * The union of all modification-error code string literals.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type MarkdownModificationErrorCode = typeof MarkdownModificationErrorCode.Type;
 
@@ -169,7 +208,20 @@ export type MarkdownModificationErrorCode = typeof MarkdownModificationErrorCode
  * `code` plus the target's `offset`/`length` where known — never a collapsed
  * reason string alone.
  *
+ * **Example** (Inspect a typed replacement failure)
+ *
+ * ```ts
+ * import { MarkdownModificationError } from "@beep/scratchpad/effected/markdown/MarkdownFormat";
+ *
+ * const error = MarkdownModificationError.make({
+ *   code: "UnsupportedTarget", detail: "root cannot be replaced", offset: 0, length: 6,
+ * });
+ * console.log(error.code) // UnsupportedTarget
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class MarkdownModificationError extends S.TaggedError<MarkdownModificationError>($I`MarkdownModificationError`)(
 	"MarkdownModificationError",
@@ -180,6 +232,23 @@ export class MarkdownModificationError extends S.TaggedError<MarkdownModificatio
 		length: S.Finite.annotateKey({ description: "Extent of the target node's reported source span, measured in UTF-16 code units" }),
 	}, $I.annote("MarkdownModificationError", { description: "Raised when `MarkdownFormat.modify` cannot perform the requested replacement: the target node is not in the document (`NodeNotInDocument`), the target kind or splice context is outside the supported scope (`UnsupportedTarget`), the fragment's content category does not fit the target's slot (`FragmentCategoryMismatch`), or the fragment trips the stringifier's hardening guard (`FragmentUnrenderable`). Carries the typed `code` plus the target's `offset`/`length` where known — never a collapsed reason string alone." }),
 ) {
+	/**
+	 * Explains the modification failure using its typed code and detail.
+	 *
+	 * **Example** (Read a replacement failure message)
+	 *
+	 * ```ts
+	 * import { MarkdownModificationError } from "@beep/scratchpad/effected/markdown/MarkdownFormat";
+	 *
+	 * const error = MarkdownModificationError.make({
+	 *   code: "UnsupportedTarget", detail: "root cannot be replaced", offset: 0, length: 6,
+	 * });
+	 * console.log(error.message) // Markdown modification failed: UnsupportedTarget root cannot be replaced
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `Markdown modification failed: ${this.code} ${this.detail}`;
 	}
@@ -488,6 +557,8 @@ const isLanguagelessCode = (node: MarkdownNode): boolean =>
  * whether a whole-block conversion edit was emitted, so the caller can keep
  * `formatFence` off a span this conversion already rewrote.
  *
+ * **Gotchas**
+ *
  * Both directions are whole-block rewrites, so both are restricted to
  * root-level, flush-left blocks — a container's continuation-line prefix
  * (`> `, list indentation) is not reproducible by a single splice. The
@@ -672,23 +743,26 @@ const findAncestry = (root: Root, target: MarkdownNode): ReadonlyArray<MarkdownN
  * **Example** (Normalize markdown markers and replace a paragraph)
  *
  * ```ts
- * import { MarkdownDocument, MarkdownFormat, MarkdownFormattingOptions } from "./index.ts";
+ * import { MarkdownDocument } from "@beep/scratchpad/effected/markdown/MarkdownDocument";
+ * import { MarkdownFormat, MarkdownFormattingOptions } from "@beep/scratchpad/effected/markdown/MarkdownFormat";
  * import * as Effect from "effect/Effect";
  *
  * const options = MarkdownFormattingOptions.make({ bulletChar: "-", headingStyle: "atx" });
  * const normalized = MarkdownFormat.formatToString("* a\n* b\n\nSetext\n======\n", undefined, options);
- * // => "- a\n- b\n\n# Setext\n"
+ * console.log(JSON.stringify(normalized)) // "- a\n- b\n\n# Setext\n"
  *
  * const program = Effect.gen(function* () {
  *   const doc = yield* MarkdownDocument.parse("# Title\n\nHello world\n");
  *   const paragraph = doc.root.children[1];
  *   if (paragraph === undefined) return doc.source;
  *   return yield* MarkdownFormat.modifyToString(doc, paragraph, "Goodbye");
- *   // => "# Title\n\nGoodbye\n"
  * });
+ * console.log(JSON.stringify(Effect.runSync(program))) // "# Title\n\nGoodbye\n"
  * ```
  *
  * @public
+ * @category formatting
+ * @since 0.0.0
  */
 export class MarkdownFormat {
 	private constructor() {}
@@ -704,10 +778,22 @@ export class MarkdownFormat {
 	 * with `MarkdownEdit.applyAll` (or use
 	 * {@link MarkdownFormat.formatToString}).
 	 *
+	 * **Gotchas**
+	 *
 	 * Note the code-block default: absent `codeBlockStyle`, a language-less
 	 * code block keeps whichever spelling it has — `fenceChar` alone
 	 * normalizes existing fences and deliberately leaves indented blocks
 	 * indented.
+	 *
+	 * **Example** (Compute bullet marker edits)
+	 *
+	 * ```ts
+	 * import { MarkdownFormat, MarkdownFormattingOptions } from "@beep/scratchpad/effected/markdown/MarkdownFormat";
+	 *
+	 * const options = MarkdownFormattingOptions.make({ bulletChar: "-" });
+	 * const edits = MarkdownFormat.format("* one\n", undefined, options);
+	 * console.log(edits.length) // 1
+	 * ```
 	 *
 	 * @param text - The markdown source to format.
 	 * @param range - Optional sub-range; only edits whose node intersects it are
@@ -717,6 +803,8 @@ export class MarkdownFormat {
 	 * @returns The edits that normalize the requested markers; apply them with
 	 *   `MarkdownEdit.applyAll`. Empty when the input trips a parse hardening
 	 *   guard.
+	 * @category formatting
+	 * @since 0.0.0
 	 */
 	static format(
 		text: string,
@@ -778,11 +866,22 @@ export class MarkdownFormat {
 	 * Format `text` and apply the resulting edits in one step
 	 * (`MarkdownEdit.applyAll ∘ format`). Pure and total.
 	 *
+	 * **Example** (Normalize a list in one step)
+	 *
+	 * ```ts
+	 * import { MarkdownFormat, MarkdownFormattingOptions } from "@beep/scratchpad/effected/markdown/MarkdownFormat";
+	 *
+	 * const options = MarkdownFormattingOptions.make({ bulletChar: "-" });
+	 * console.log(JSON.stringify(MarkdownFormat.formatToString("* one\n", undefined, options))) // "- one\n"
+	 * ```
+	 *
 	 * @param text - The markdown source to format.
 	 * @param range - Optional sub-range; only edits whose node intersects it are
 	 *   applied.
 	 * @param options - Optional {@link MarkdownFormattingOptions}.
 	 * @returns The formatted text.
+	 * @category formatting
+	 * @since 0.0.0
 	 */
 	static formatToString(text: string, range?: MarkdownRangeLike, options?: MarkdownFormattingOptions): string {
 		return MarkdownEdit.applyAll(text, MarkdownFormat.format(text, range, options));
@@ -801,6 +900,23 @@ export class MarkdownFormat {
 	 * inside a container (a blockquote, list, table or heading) whose
 	 * continuation lines the splice cannot prefix.
 	 *
+	 * **Example** (Compute a paragraph replacement edit)
+	 *
+	 * ```ts
+	 * import { MarkdownDocument } from "@beep/scratchpad/effected/markdown/MarkdownDocument";
+	 * import { MarkdownFormat } from "@beep/scratchpad/effected/markdown/MarkdownFormat";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const document = yield* MarkdownDocument.parse("Hello\n");
+	 *   const target = document.root.children[0];
+	 *   if (target === undefined) return 0;
+	 *   const edits = yield* MarkdownFormat.modify(document, target, "Goodbye");
+	 *   return edits.length;
+	 * });
+	 * console.log(Effect.runSync(program)) // 1
+	 * ```
+	 *
 	 * @param document - The parsed {@link MarkdownDocument} the target belongs to.
 	 * @param target - The node to replace; it must be a node of
 	 *   `document.root`, matched by identity.
@@ -808,6 +924,8 @@ export class MarkdownFormat {
 	 *   the target's content category.
 	 * @returns An `Effect` that succeeds with the edit to apply (via
 	 *   `MarkdownEdit.applyAll`), or fails with {@link MarkdownModificationError}.
+	 * @category formatting
+	 * @since 0.0.0
 	 */
 	static readonly modify = Effect.fn("MarkdownFormat.modify")(function* (
 		document: MarkdownDocument,
@@ -881,6 +999,22 @@ export class MarkdownFormat {
 	 * Modify `document` and apply the resulting edit in one step
 	 * (`MarkdownEdit.applyAll ∘ modify`).
 	 *
+	 * **Example** (Replace a paragraph and apply its edit)
+	 *
+	 * ```ts
+	 * import { MarkdownDocument } from "@beep/scratchpad/effected/markdown/MarkdownDocument";
+	 * import { MarkdownFormat } from "@beep/scratchpad/effected/markdown/MarkdownFormat";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = Effect.gen(function* () {
+	 *   const document = yield* MarkdownDocument.parse("Hello\n");
+	 *   const target = document.root.children[0];
+	 *   if (target === undefined) return document.source;
+	 *   return yield* MarkdownFormat.modifyToString(document, target, "Goodbye");
+	 * });
+	 * console.log(JSON.stringify(Effect.runSync(program))) // "Goodbye\n"
+	 * ```
+	 *
 	 * @param document - The parsed {@link MarkdownDocument} the target belongs to.
 	 * @param target - The node to replace; it must be a node of
 	 *   `document.root`, matched by identity.
@@ -888,6 +1022,8 @@ export class MarkdownFormat {
 	 *   the target's content category.
 	 * @returns An `Effect` that succeeds with the modified source, or fails with
 	 *   {@link MarkdownModificationError}.
+	 * @category formatting
+	 * @since 0.0.0
 	 */
 	static readonly modifyToString = Effect.fn("MarkdownFormat.modifyToString")(function* (
 		document: MarkdownDocument,

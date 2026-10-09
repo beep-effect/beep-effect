@@ -41,7 +41,12 @@ class UnknownInlineDialectError extends S.TaggedError<UnknownInlineDialectError>
 	description: "An inline dialect lookup failed because its key is outside the supported markdown dialect domain.",
 })) {}
 
-/** The dialects the inline pass can be keyed by. */
+/**
+ * The dialects the inline pass can be keyed by.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type InlineDialectName = MarkdownDialect;
 
 const triggerTable = (
@@ -119,10 +124,24 @@ const dialects = HashMap.fromIterable<InlineDialectName, InlineDialect>([
 ]);
 
 /**
- * The inline tables for `dialect`.
+ * Selects the inline trigger table, text fallback and postprocess passes for `dialect`.
+ *
+ * **Gotchas**
  *
  * An unknown dialect cannot arrive through the schema-typed public surface,
  * so it is programmer error and dies as a defect.
+ *
+ * **Example** (Compare dialect postprocess passes)
+ *
+ * ```ts
+ * import { inlineDialect } from "@beep/scratchpad/effected/markdown/internal/inlineRegistry";
+ *
+ * console.log(inlineDialect("commonmark").postprocess.length) // 0
+ * console.log(inlineDialect("gfm").postprocess.length) // 1
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const inlineDialect = (dialect: InlineDialectName): InlineDialect => {
 	const found = O.getOrUndefined(HashMap.get(dialects, dialect));

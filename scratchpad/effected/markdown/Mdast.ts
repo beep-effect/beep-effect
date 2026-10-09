@@ -38,6 +38,8 @@ const $I = $ScratchpadId.create("effected/markdown/Mdast");
  * {@link Mdast.fromMdast} is the checked way back into typed nodes.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface MdastNode {
 	readonly type: string;
@@ -55,12 +57,38 @@ export interface MdastNode {
  * never a stringified rendering. It is typed `unknown` because core exposes
  * no `Schema` for `Issue`; narrow it with the `SchemaIssue` module.
  *
+ * **Example** (Inspect a decode error message)
+ *
+ * ```ts
+ * import { MdastDecodeError } from "@beep/scratchpad/effected/markdown/Mdast"
+ *
+ * const error = MdastDecodeError.make({ issue: { _tag: "InvalidType" } })
+ * console.log(error.message) // mdast input failed to decode into markdown nodes
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class MdastDecodeError extends S.TaggedError<MdastDecodeError>($I`MdastDecodeError`)("MdastDecodeError", {
 	/** The structured schema issue. Never a string. */
 	issue: S.Defect().annotateKey({ description: "The structured schema issue. Never a string." }),
 }, $I.annote("MdastDecodeError", { description: "Indicates that foreign mdast input failed to decode into the package's node classes." })) {
+	/**
+	 * Provides a stable summary while the structured failure remains available in `issue`.
+	 *
+	 * **Example** (Read the stable failure summary)
+	 *
+	 * ```ts
+	 * import { MdastDecodeError } from "@beep/scratchpad/effected/markdown/Mdast"
+	 *
+	 * const error = MdastDecodeError.make({ issue: { _tag: "InvalidType" } })
+	 * console.log(error.message) // mdast input failed to decode into markdown nodes
+	 * ```
+	 *
+	 * @category errors
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return "mdast input failed to decode into markdown nodes";
 	}
@@ -475,7 +503,8 @@ const decodeRoot = S.decodeUnknownResult(Root);
  * **Example** (Round-trip a markdown tree through plain mdast)
  *
  * ```ts
- * import { Markdown, Mdast } from "./index.ts";
+ * import { Markdown } from "@beep/scratchpad/effected/markdown/Markdown";
+ * import { Mdast } from "@beep/scratchpad/effected/markdown/Mdast";
  * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
@@ -483,67 +512,94 @@ const decodeRoot = S.decodeUnknownResult(Root);
  *   const plain = Mdast.toMdast(root); // plain mdast JSON
  *   return yield* Mdast.fromMdast(plain); // back to node classes
  * });
+ * console.log(Effect.runSync(program).type) // root
  * ```
  *
  * @public
+ * @category interop
+ * @since 0.0.0
  */
 export class Mdast {
 	/**
-  * Project a parsed {@link Root} to plain mdast JSON.
-  *
-  * **Details**
-  *
-  * Total and pure: every tree the parser or {@link Mdast.fromMdast}
-  * produces projects without failure. Fidelity extras are stripped;
-  * optional mdast fields are spelled the way `mdast-util-from-markdown`
-  * spells them, so the output deep-equals the reference utility's trees
-  * (the vendored interop corpus pins this). The frontmatter capture
-  * projects to a `yaml`/`toml`/`json` literal node.
-  *
-  * @param root - The parsed document tree.
-  * @returns A plain mdast `root` object with unist positions.
-  */
+	 * Project a parsed {@link Root} to plain mdast JSON.
+	 *
+	 * **Details**
+	 *
+	 * Total and pure: every tree the parser or {@link Mdast.fromMdast}
+	 * produces projects without failure. Fidelity extras are stripped;
+	 * optional mdast fields are spelled the way `mdast-util-from-markdown`
+	 * spells them, so the output deep-equals the reference utility's trees
+	 * (the vendored interop corpus pins this). The frontmatter capture
+	 * projects to a `yaml`/`toml`/`json` literal node.
+	 *
+	 * **Example** (Project a positionless foreign root)
+	 *
+	 * ```ts
+	 * import { Mdast } from "@beep/scratchpad/effected/markdown/Mdast"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const root = Effect.runSync(Mdast.fromMdast({ type: "root", children: [] }))
+	 * console.log(Mdast.toMdast(root).type) // root
+	 * ```
+	 *
+	 * @param root - The parsed document tree.
+	 * @returns A plain mdast `root` object with unist positions.
+	 * @category interop
+	 * @since 0.0.0
+	 */
 	static toMdast(root: Root): MdastNode {
 		return projectNode(root);
 	}
 
 	/**
-  * Decode foreign plain mdast into the package's node classes,
-  * synchronously, as a `Result`. The pure primitive twin of
-  * {@link Mdast.fromMdast}.
-  *
-  * **Gotchas**
-  *
-  * unist makes positions optional and this package's classes require
-  * them, so missing or incomplete positions are synthesized as the
-  * zero-width sentinel (line 1, column 1, offset 0) — clearly synthetic
-  * and inert for rendering. Trees carrying sentinel positions serve
-  * tree-level workflows (stringify, the visitor, projection back out),
-  * not offset-splice editing, whose offsets must come from a real parse.
-  * `null` values on optional fields normalize to absence per unist's
-  * null-equals-absent convention; foreign `data` and other unrecognized
-  * fields are dropped at the boundary; `yaml`/`toml`/`json` literal nodes
-  * decode into the {@link Frontmatter} capture. Unknown node types fail
-  * typed.
-  *
-  * **This package's fidelity fields are among the fields dropped**, because
-  * they are not spec mdast. A `fenceChar`, `headingStyle`, `markerChar` or
-  * `delimiter` set on the tree BEFORE admission is silently discarded, and
-  * the node then serializes with the canonical default — set them on the
-  * decoded nodes this returns instead. The drop is correct (the boundary
-  * admits spec mdast and nothing else) but it is silent, which is why it is
-  * called out here.
-  *
-  * **One exception: `escapeStyle` on a `text` node is admitted.** It
-  * records no source spelling; it is the caller's instruction to the
-  * emitter (`"literal"` writes the value verbatim, see {@link Text}), so a
-  * plain tree built for `Markdown.stringify` can carry it straight in. A
-  * value outside `"canonical" | "literal"` fails the decode typed.
-  *
-  * @param input - A plain mdast tree, typically a `root`.
-  * @returns A `Result` succeeding with the decoded {@link Root}, or
-  *   failing with {@link MdastDecodeError} carrying the structured issue.
-  */
+	 * Decode foreign plain mdast into the package's node classes,
+	 * synchronously, as a `Result`. The pure primitive twin of
+	 * {@link Mdast.fromMdast}.
+	 *
+	 * **Gotchas**
+	 *
+	 * unist makes positions optional and this package's classes require
+	 * them, so missing or incomplete positions are synthesized as the
+	 * zero-width sentinel (line 1, column 1, offset 0) — clearly synthetic
+	 * and inert for rendering. Trees carrying sentinel positions serve
+	 * tree-level workflows (stringify, the visitor, projection back out),
+	 * not offset-splice editing, whose offsets must come from a real parse.
+	 * `null` values on optional fields normalize to absence per unist's
+	 * null-equals-absent convention; foreign `data` and other unrecognized
+	 * fields are dropped at the boundary; `yaml`/`toml`/`json` literal nodes
+	 * decode into the {@link Frontmatter} capture. Unknown node types fail
+	 * typed.
+	 *
+	 * **This package's fidelity fields are among the fields dropped**, because
+	 * they are not spec mdast. A `fenceChar`, `headingStyle`, `markerChar` or
+	 * `delimiter` set on the tree BEFORE admission is silently discarded, and
+	 * the node then serializes with the canonical default — set them on the
+	 * decoded nodes this returns instead. The drop is correct (the boundary
+	 * admits spec mdast and nothing else) but it is silent, which is why it is
+	 * called out here.
+	 *
+	 * **One exception: `escapeStyle` on a `text` node is admitted.** It
+	 * records no source spelling; it is the caller's instruction to the
+	 * emitter (`"literal"` writes the value verbatim, see {@link Text}), so a
+	 * plain tree built for `Markdown.stringify` can carry it straight in. A
+	 * value outside `"canonical" | "literal"` fails the decode typed.
+	 *
+	 * **Example** (Reject an unknown node type)
+	 *
+	 * ```ts
+	 * import { Mdast } from "@beep/scratchpad/effected/markdown/Mdast"
+	 * import * as Result from "effect/Result"
+	 *
+	 * const decoded = Mdast.fromMdastResult({ type: "unknown" })
+	 * console.log(Result.isFailure(decoded)) // true
+	 * ```
+	 *
+	 * @param input - A plain mdast tree, typically a `root`.
+	 * @returns A `Result` succeeding with the decoded {@link Root}, or
+	 *   failing with {@link MdastDecodeError} carrying the structured issue.
+	 * @category decoding
+	 * @since 0.0.0
+	 */
 	static fromMdastResult(input: unknown): Result.Result<Root, MdastDecodeError> {
 		return Result.mapError(decodeRoot(normalizeNode(input)), (error) => MdastDecodeError.make({ issue: error.issue }));
 	}
@@ -553,9 +609,21 @@ export class Mdast {
 	 * terms of {@link Mdast.fromMdastResult} — synchronous callers can use
 	 * that variant directly.
 	 *
+	 * **Example** (Admit a root with synthetic positions)
+	 *
+	 * ```ts
+	 * import { Mdast } from "@beep/scratchpad/effected/markdown/Mdast"
+	 * import * as Effect from "effect/Effect"
+	 *
+	 * const root = Effect.runSync(Mdast.fromMdast({ type: "root", children: [] }))
+	 * console.log(root.position.start.offset) // 0
+	 * ```
+	 *
 	 * @param input - A plain mdast tree, typically a `root`.
 	 * @returns An `Effect` that succeeds with the decoded {@link Root}, or
 	 *   fails with {@link MdastDecodeError}.
+	 * @category decoding
+	 * @since 0.0.0
 	 */
 	static readonly fromMdast = Effect.fn("Mdast.fromMdast")((input: unknown) =>
 		Effect.fromResult(Mdast.fromMdastResult(input)),

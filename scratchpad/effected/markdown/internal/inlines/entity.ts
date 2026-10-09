@@ -15,7 +15,22 @@ const C_AMPERSAND = 0x26;
 
 const reEntityHere = new RegExp(`^${ENTITY}`, "i");
 
-/** A named, decimal or hexadecimal character reference. */
+/**
+ * Decodes a named, decimal or hexadecimal character reference.
+ *
+ * **Details**
+ *
+ * **Example** (Register the character reference trigger)
+ *
+ * ```ts
+ * import { entityConstruct } from "@beep/scratchpad/effected/markdown/internal/inlines/entity"
+ *
+ * console.log(entityConstruct.triggers.map((code) => String.fromCharCode(code)).join("")) // &
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const entityConstruct: InlineConstruct = {
 	name: "entity",
 	triggers: [C_AMPERSAND],

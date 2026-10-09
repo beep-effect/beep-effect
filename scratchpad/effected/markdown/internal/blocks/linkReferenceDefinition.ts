@@ -29,12 +29,37 @@ import * as O from "@beep/utils/Option";
 const C_OPEN_BRACKET = 0x5b;
 
 /**
- * Split every leading link reference definition out of `block`, inserting one
+ * Splits every leading link reference definition out of `block`, inserting one
  * `definition` node per definition into `block`'s parent, immediately before
  * `block` itself.
  *
+ * **Details**
+ *
  * Definitions can only ever start a paragraph — they cannot interrupt one —
- * so a single leading pass is exhaustive.
+ * so a single leading pass is exhaustive. A block without a parent is unchanged.
+ *
+ * **Example** (Extract a definition ahead of paragraph text)
+ *
+ * ```ts
+ * import { extractDefinitions } from "@beep/scratchpad/effected/markdown/internal/blocks/linkReferenceDefinition";
+ * import { makeBlockNode } from "@beep/scratchpad/effected/markdown/internal/blockTypes";
+ *
+ * const parent = makeBlockNode("document", 0, 1);
+ * const paragraph = makeBlockNode("paragraph", 0, 1, 1);
+ * paragraph.parent = parent;
+ * paragraph.stringContent = "[guide]: /guide\nRead on";
+ * paragraph.segments.push({ textOffset: 0, sourceOffset: 0, length: paragraph.stringContent.length });
+ * parent.children.push(paragraph);
+ *
+ * extractDefinitions(paragraph);
+ *
+ * console.log(parent.children[0]?.type); // definition
+ * console.log(parent.children[0]?.data.definition?.url); // /guide
+ * console.log(paragraph.stringContent); // Read on
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const extractDefinitions = (block: BlockNode): void => {
 	const parent = block.parent;
@@ -86,8 +111,24 @@ export const extractDefinitions = (block: BlockNode): void => {
 };
 
 /**
- * Definition: a node with no block start of its own — {@link extractDefinitions}
- * is the only thing that ever creates one, already closed.
+ * Materializes a definition node with no block start of its own.
+ *
+ * **Details**
+ *
+ * {@link extractDefinitions} is the only thing that ever creates one, already
+ * closed. A block without definition data produces no materialized node.
+ *
+ * **Example** (Inspect definition containment)
+ *
+ * ```ts
+ * import { definitionConstruct } from "@beep/scratchpad/effected/markdown/internal/blocks/linkReferenceDefinition";
+ *
+ * console.log(definitionConstruct.acceptsLines); // false
+ * console.log(definitionConstruct.canContain("paragraph")); // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const definitionConstruct: BlockConstruct = {
 	type: "definition",

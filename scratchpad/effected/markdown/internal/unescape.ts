@@ -8,10 +8,52 @@
 
 import { decodeEntity } from "./entities.ts";
 
-/** The punctuation set a backslash may escape, per the spec. */
+/**
+ * Defines the punctuation set a backslash may escape, per the spec.
+ *
+ * **Details**
+ *
+ * This is a regular-expression character class, ready to embed in a pattern.
+ *
+ * **Example** (Match escapable punctuation)
+ *
+ * ```ts
+ * import { ESCAPABLE } from "@beep/scratchpad/effected/markdown/internal/unescape"
+ *
+ * const punctuation = new RegExp(`^${ESCAPABLE}$`)
+ * console.log(punctuation.test("*")) // true
+ * console.log(punctuation.test("a")) // false
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const ESCAPABLE = "[!\"#$%&'()*+,./:;<=>?@[\\\\\\]^_`{|}~-]";
 
-/** One entity, in any of the three spec forms. */
+/**
+ * Matches one entity, in each of the three spec forms.
+ *
+ * **Details**
+ *
+ * This regular-expression source recognizes hexadecimal, decimal and named
+ * character references with a terminating semicolon. Use case-insensitive
+ * matching to recognize uppercase letters in hexadecimal and named references.
+ *
+ * **Example** (Recognize the three character-reference forms)
+ *
+ * ```ts
+ * import { ENTITY } from "@beep/scratchpad/effected/markdown/internal/unescape"
+ *
+ * const entity = new RegExp(`^${ENTITY}$`, "i")
+ * console.log(entity.test("&#x41;")) // true
+ * console.log(entity.test("&#65;")) // true
+ * console.log(entity.test("&amp;")) // true
+ * console.log(entity.test("&amp")) // false
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const ENTITY = "&(?:#x[a-f0-9]{1,6}|#[0-9]{1,7}|[a-z][a-z0-9]{1,31});";
 
 const reBackslashOrAmp = /[\\&]/;
@@ -25,6 +67,29 @@ const unescapeChar = (source: string): string => {
 	return decodeEntity(source) ?? source;
 };
 
-/** Replace every backslash escape and character reference with its literal. */
+/**
+ * Replaces every backslash escape and character reference with its literal.
+ *
+ * **When to use**
+ *
+ * Use to resolve escapes in link destinations, link titles and fenced-code info strings.
+ *
+ * **Gotchas**
+ *
+ * Only punctuation in {@link ESCAPABLE} can be backslash-escaped. A character
+ * reference this engine cannot decode stays literal.
+ *
+ * **Example** (Resolve escapes and preserve unknown references)
+ *
+ * ```ts
+ * import { unescapeString } from "@beep/scratchpad/effected/markdown/internal/unescape"
+ *
+ * console.log(unescapeString("\\* &amp; &#65; &#x42;")) // * & A B
+ * console.log(unescapeString("\\q &unknown;")) // \q &unknown;
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
 export const unescapeString = (source: string): string =>
 	reBackslashOrAmp.test(source) ? source.replace(reEntityOrEscapedChar, unescapeChar) : source;

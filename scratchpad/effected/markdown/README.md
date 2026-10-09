@@ -1,23 +1,6 @@
 # markdown (lab port of @effected/markdown)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Fmarkdown?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/markdown)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
-
 Zero-dependency CommonMark 0.31.2 and GFM parsing, editing and transformation expressed as Effect schemas and pure functions. Parse markdown into mdast-shaped nodes carrying byte offsets, navigate headings, sections and links, compute surgical offset-splice edits, normalize markers, decode frontmatter into a validated domain schema, project to and from plain mdast for the remark ecosystem, and walk a document as a `Stream`.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/markdown
 
@@ -31,33 +14,13 @@ Nodes are shaped to mdast's exact type names and field shapes, so the tree is al
 
 Markdown to HTML is deliberately out of scope. This package parses, edits and transforms markdown; rendering belongs to whatever renderer you already have, reached through the mdast projection.
 
-## Install
-
-```bash
-npm install @effected/markdown effect
-```
-
-```bash
-pnpm add @effected/markdown effect
-```
-
-Requires Node.js >=24.11.0. `effect` v4 is a peer dependency; the package itself adds no runtime dependencies.
-
-`@effected/yaml`, `@effected/toml` and `@effected/jsonc` are **optional** peers, required only by the frontmatter codec module you import. A consumer decoding yaml frontmatter installs `@effected/yaml` and nothing else; a consumer who never touches frontmatter installs none of them.
-
-```bash
-npm install @effected/yaml
-```
-
-All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
-
 ## Quick start
 
 `MarkdownDocument.parse` gives you the source, the tree, the definition index and the navigation accessors in one value:
 
 ```ts
-import { MarkdownDocument } from "@effected/markdown";
-import { Effect } from "effect";
+import { MarkdownDocument } from "@beep/scratchpad/effected/markdown/MarkdownDocument";
+import * as Effect from "effect/Effect";
 
 const source = `# Release notes
 
@@ -84,8 +47,9 @@ Every parse has a synchronous twin — `MarkdownDocument.parseResult` and `Markd
 `MarkdownFormat.modify` computes a `MarkdownEdit` array against the parsed document; `modifyToString` applies it in one step. The target is a node from the document's own tree, matched by identity, and everything the edit does not cover survives byte-for-byte:
 
 ```ts
-import { MarkdownDocument, MarkdownFormat } from "@effected/markdown";
-import { Effect } from "effect";
+import { MarkdownDocument } from "@beep/scratchpad/effected/markdown/MarkdownDocument";
+import { MarkdownFormat } from "@beep/scratchpad/effected/markdown/MarkdownFormat";
+import * as Effect from "effect/Effect";
 
 const source = `# Release notes
 
@@ -94,7 +58,10 @@ See the [changelog](./CHANGELOG.md).
 
 const program = Effect.gen(function* () {
   const doc = yield* MarkdownDocument.parse(source);
-  const label = doc.find("text")!;
+  const label = doc.find("text");
+  if (label === undefined) {
+    return doc.source;
+  }
   return yield* MarkdownFormat.modifyToString(doc, label, "Release notes (2026)");
 });
 
@@ -109,7 +76,8 @@ Effect.runPromise(program).then(console.log);
 `MarkdownFormat.format` handles the other half: conservative marker normalization, never content rewriting. It converts heading style, bullet character, emphasis marker, fence character, thematic-break character and code-block style, and skips any conversion that would not be safe rather than attempting it cleverly:
 
 ```ts
-import { MarkdownFormat, MarkdownFormattingOptions } from "@effected/markdown";
+import { MarkdownFormat } from "@beep/scratchpad/effected/markdown/MarkdownFormat";
+import { MarkdownFormattingOptions } from "@beep/scratchpad/effected/markdown/MarkdownFormat";
 
 const source = `Setext heading
 ==============
@@ -126,12 +94,8 @@ console.log(MarkdownFormat.formatToString(source, undefined, options));
 // - one
 // - two
 
-console.log(MarkdownFormat.format(source, undefined, options));
-// [
-//   { offset: 0, length: 29, content: "# Setext heading" },
-//   { offset: 31, length: 1, content: "-" },
-//   { offset: 37, length: 1, content: "-" }
-// ]
+console.log(JSON.stringify(MarkdownFormat.format(source, undefined, options)));
+// [{"offset":0,"length":29,"content":"# Setext heading"},{"offset":31,"length":1,"content":"-"},{"offset":37,"length":1,"content":"-"}]
 ```
 
 `format` is pure and total, and the edits are non-mutating data — hand them to `MarkdownEdit.applyAll`, or send them to an editor as a text-edit payload.
@@ -143,8 +107,12 @@ console.log(MarkdownFormat.format(source, undefined, options));
 Frontmatter capture is opt-in, because enabling it changes how a document opening with `---` parses: CommonMark reads `---\ntitle: x\n---` as a thematic break and a setext heading, and that spec-conformant reading holds unless you ask for something else. Turn it on and compose your schema with a codec for typed gray-matter parity:
 
 ```ts
-import { MarkdownDocument, MarkdownFrontmatter, MarkdownParseOptions, YamlFrontmatter } from "@effected/markdown";
-import { Effect, Schema } from "effect";
+import { MarkdownDocument } from "@beep/scratchpad/effected/markdown/MarkdownDocument";
+import { MarkdownFrontmatter } from "@beep/scratchpad/effected/markdown/Frontmatter";
+import { MarkdownParseOptions } from "@beep/scratchpad/effected/markdown/Markdown";
+import { YamlFrontmatter } from "@beep/scratchpad/effected/markdown/YamlFrontmatter";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 
 const source = `---
 title: Release notes
@@ -154,7 +122,7 @@ draft: false
 # Release notes
 `;
 
-const Post = Schema.Struct({ title: Schema.String, draft: Schema.Boolean });
+const Post = S.Struct({ title: S.String, draft: S.Boolean });
 const decodePost = MarkdownFrontmatter.schema(Post, YamlFrontmatter);
 
 const program = Effect.gen(function* () {
@@ -181,8 +149,8 @@ When the body should not go through the CommonMark engine at all — an MDX page
 `MarkdownDocument` derives its navigation accessors from the tree, so they can never disagree with it. `links` collects every URL-bearing node and passes `url` through exactly as written — bundle-relative hrefs are never normalized:
 
 ```ts
-import { MarkdownDocument } from "@effected/markdown";
-import { Effect } from "effect";
+import { MarkdownDocument } from "@beep/scratchpad/effected/markdown/MarkdownDocument";
+import * as Effect from "effect/Effect";
 
 const source = `# Release notes
 
@@ -201,8 +169,8 @@ Effect.runPromise(program).then(console.log);
 `headings` lists every heading wherever it sits, including inside blockquotes and list items. `sections` are delimited by root-level headings only, and each section's range spans its subsections, so the edit layer can splice a whole section out in one edit. `firstSection` and `sectionByHeading` find one `DocumentSection` without scanning `sections` yourself — the second matches on an exact trimmed heading string, a `RegExp`, or a predicate, and both accept `{ depth }` to restrict to one heading level:
 
 ```ts
-import { MarkdownDocument } from "@effected/markdown";
-import { Effect } from "effect";
+import { MarkdownDocument } from "@beep/scratchpad/effected/markdown/MarkdownDocument";
+import * as Effect from "effect/Effect";
 
 const source = `# Changelog
 
@@ -231,8 +199,10 @@ For anything the accessors do not cover, `find` and `findAll` walk the whole tre
 `MarkdownVisitor.visit` streams the same walk as `Enter`/`Exit` events carrying the node, its child-index path and its depth:
 
 ```ts
-import { MarkdownDocument, MarkdownVisitor } from "@effected/markdown";
-import { Effect, Stream } from "effect";
+import { MarkdownDocument } from "@beep/scratchpad/effected/markdown/MarkdownDocument";
+import { MarkdownVisitor } from "@beep/scratchpad/effected/markdown/MarkdownVisitor";
+import * as Effect from "effect/Effect";
+import * as Stream from "effect/Stream";
 
 const program = Effect.gen(function* () {
   const doc = yield* MarkdownDocument.parse("# Title\n\nA *b* c\n");
@@ -251,8 +221,9 @@ Effect.runPromise(program).then(console.log);
 The node classes already use mdast's type names and field shapes; `Mdast.toMdast` strips the fidelity fields this package adds — bullet characters, fence style, ATX-versus-setext spelling — (keeping only a `Text` node's `escapeStyle` when set, see [Literal text](#literal-text)) and emits plain spec-valid mdast JSON that the remark ecosystem consumes directly, including `mdast-util-to-hast` if you want hast:
 
 ```ts
-import { Markdown, Mdast } from "@effected/markdown";
-import { Result } from "effect";
+import { Markdown } from "@beep/scratchpad/effected/markdown/Markdown";
+import { Mdast } from "@beep/scratchpad/effected/markdown/Mdast";
+import * as Result from "effect/Result";
 
 const parsed = Markdown.parseResult("A *b* c\n");
 if (Result.isSuccess(parsed)) {
@@ -268,8 +239,12 @@ if (Result.isSuccess(parsed)) {
 The MDX node vocabulary — `MdxJsxFlowElement` and `MdxJsxTextElement` (with `MdxJsxAttribute`, `MdxJsxExpressionAttribute` and `MdxJsxAttributeValueExpression` as their attribute carriers), `MdxFlowExpression`, `MdxTextExpression` and `MdxjsEsm` — is shaped exactly to the `mdast-util-mdx` contracts and constructs like every other node class. The parser does not read MDX syntax; these nodes exist so a **synthesized** tree can carry JSX and serialize to valid MDX instead of joining strings:
 
 ```ts
-import { Markdown, MdxJsxAttribute, MdxJsxAttributeValueExpression, MdxJsxFlowElement, Root } from "@effected/markdown";
-import { Result } from "effect";
+import { Markdown } from "@beep/scratchpad/effected/markdown/Markdown";
+import { MdxJsxAttribute } from "@beep/scratchpad/effected/markdown/MarkdownNode";
+import { MdxJsxAttributeValueExpression } from "@beep/scratchpad/effected/markdown/MarkdownNode";
+import { MdxJsxFlowElement } from "@beep/scratchpad/effected/markdown/MarkdownNode";
+import { Root } from "@beep/scratchpad/effected/markdown/MarkdownNode";
+import * as Result from "effect/Result";
 
 const page = Root.make({
   children: [
@@ -326,8 +301,9 @@ A node that carries a fidelity field overrides the matching row — `headingStyl
 Text escaping is canonical by default: `~0.2.1` in a table cell emits as `\~0.2.1`. A `Text` node carrying `escapeStyle: "literal"` opts out — the caller vouches that the value is already safe markdown, and the emitter writes it verbatim with none of the escaping aimed at inline syntax. That suits generated content such as a dependency table, where `~0.2.1`, `^1.0.0` and `@scope/pkg` should read as written:
 
 ```ts
-import { Markdown, Mdast } from "@effected/markdown";
-import { Result } from "effect";
+import { Markdown } from "@beep/scratchpad/effected/markdown/Markdown";
+import { Mdast } from "@beep/scratchpad/effected/markdown/Mdast";
+import * as Result from "effect/Result";
 
 const cell = (value: string) => ({ type: "tableCell", children: [{ type: "text", value, escapeStyle: "literal" }] });
 const tree = Mdast.fromMdastResult({

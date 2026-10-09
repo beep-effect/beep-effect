@@ -34,8 +34,28 @@ const reHtmlBlockOpen: ReadonlyArray<RegExp> = [
 const reHtmlBlockClose: ReadonlyArray<RegExp> = [/./, /<\/(?:script|pre|textarea|style)>/i, /-->/, /\?>/, />/, /\]\]>/];
 
 /**
- * Whether `rest` closes `block` — only types 1 through 5 have a closing
- * pattern, and the line loop calls this after the line has been appended.
+ * Tests whether a line closes an HTML block.
+ *
+ * **Details**
+ *
+ * Only types 1 through 5 have a closing pattern, and the line loop calls this
+ * after the line has been appended. Types 6 and 7 end at a blank line instead.
+ *
+ * **Example** (Recognize a script closing line)
+ *
+ * ```ts
+ * import { isHtmlBlockEnd } from "@beep/scratchpad/effected/markdown/internal/blocks/htmlBlock";
+ * import { makeBlockNode } from "@beep/scratchpad/effected/markdown/internal/blockTypes";
+ *
+ * const block = makeBlockNode("html", 0, 1);
+ * block.data.htmlBlockType = 1;
+ *
+ * console.log(isHtmlBlockEnd(block, "</script>")); // true
+ * console.log(isHtmlBlockEnd("still inside")(block)); // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const isHtmlBlockEnd: {
 	(block: BlockNode, rest: string): boolean;
@@ -48,7 +68,25 @@ export const isHtmlBlockEnd: {
 	return reHtmlBlockClose[type]?.test(rest) ?? false;
 });
 
-/** HTML block: absorbs lines verbatim, contains nothing. */
+/**
+ * Absorbs HTML block lines verbatim and contains no child blocks.
+ *
+ * **Details**
+ *
+ * Finalization removes the final newline before materializing the HTML value.
+ *
+ * **Example** (Inspect HTML line absorption)
+ *
+ * ```ts
+ * import { htmlBlockConstruct } from "@beep/scratchpad/effected/markdown/internal/blocks/htmlBlock";
+ *
+ * console.log(htmlBlockConstruct.acceptsLines); // true
+ * console.log(htmlBlockConstruct.canContain("paragraph")); // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const htmlBlockConstruct: BlockConstruct = {
 	type: "html",
 	acceptsLines: true,
@@ -68,7 +106,26 @@ export const htmlBlockConstruct: BlockConstruct = {
 		}),
 };
 
-/** The HTML block start: one of seven open conditions after an unindented `<`. */
+/**
+ * Opens an HTML block using one of seven open conditions after an unindented `<`.
+ *
+ * **Details**
+ *
+ * Type 7 cannot interrupt a paragraph or begin on its lazy continuation.
+ * Leading spaces remain part of the HTML content because opening the block
+ * does not advance the scan position.
+ *
+ * **Example** (Identify the HTML block start)
+ *
+ * ```ts
+ * import { htmlBlockStart } from "@beep/scratchpad/effected/markdown/internal/blocks/htmlBlock";
+ *
+ * console.log(htmlBlockStart.name); // htmlBlock
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const htmlBlockStart: BlockStart = {
 	name: "htmlBlock",
 	trigger: (scanner, container) => {

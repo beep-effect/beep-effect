@@ -15,7 +15,20 @@ const reThematicBreak = /^(?:\*[ \t]*){3,}$|^(?:_[ \t]*){3,}$|^(?:-[ \t]*){3,}$/
 const markerCharOf = (char: string): ThematicBreakChar | undefined =>
 	char === "-" || char === "_" || char === "*" ? char : undefined;
 
-/** Thematic break: one line, no children. */
+/**
+ * Represents a thematic break occupying one line with no children.
+ *
+ * **Example** (Check thematic break child rejection)
+ *
+ * ```ts
+ * import { thematicBreakConstruct } from "@beep/scratchpad/effected/markdown/internal/blocks/thematicBreak"
+ *
+ * console.log(thematicBreakConstruct.canContain("paragraph")) // false
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const thematicBreakConstruct: BlockConstruct = {
 	type: "thematicBreak",
 	acceptsLines: false,
@@ -34,7 +47,20 @@ export const thematicBreakConstruct: BlockConstruct = {
 	},
 };
 
-/** The thematic-break block start: three or more `-`, `_` or `*`. */
+/**
+ * Recognizes a thematic-break block start made of three or more `-`, `_` or `*`.
+ *
+ * **Example** (Identify the thematic break start)
+ *
+ * ```ts
+ * import { thematicBreakStart } from "@beep/scratchpad/effected/markdown/internal/blocks/thematicBreak"
+ *
+ * console.log(thematicBreakStart.name) // thematicBreak
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const thematicBreakStart: BlockStart = {
 	name: "thematicBreak",
 	trigger: (scanner) => {

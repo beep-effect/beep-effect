@@ -78,7 +78,12 @@ class BlockParserError extends S.TaggedError<BlockParserError>($I`BlockParserErr
 /** Upstream's cheap pre-filter: a line that cannot start any block. */
 const reMaybeSpecial = /^[#`~*+_=<>0-9-]/;
 
-/** What the block pass hands to the inline pass and the facade. */
+/**
+ * Carries the block-pass document and indexes to the inline pass and facade.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface BlockPassResult {
 	/** The document, with every node positioned. */
 	readonly root: Root;
@@ -90,6 +95,8 @@ export interface BlockPassResult {
 	 * Every {@link Definition} in the tree, keyed by its case-folded label,
 	 * first definition winning.
 	 *
+	 * **Details**
+	 *
 	 * The definitions stay in `root` as well — this map is a lookup index
 	 * over them, not a place they were moved to. References are emitted
 	 * unresolved, so whoever resolves them (the inline pass, a renderer, a
@@ -100,6 +107,8 @@ export interface BlockPassResult {
 	readonly definitionOrder: ReadonlyArray<readonly [string, Definition]>;
 	/**
 	 * The case-folded label of every GFM footnote definition in the tree.
+	 *
+	 * **Details**
 	 *
 	 * The GFM counterpart of `refmap`, and a SET rather than a map for a
 	 * structural reason: a footnote definition's own children are inline-parsed
@@ -569,6 +578,8 @@ class BlockParser implements BlockScanner {
 	 * Index every reference target in the tree — link reference definitions and
 	 * GFM footnote definition labels — before anything else is built.
 	 *
+	 * **Details**
+	 *
 	 * The inline pass resolves references against these, and a definition can
 	 * appear anywhere, including after the paragraph that references it, so
 	 * both maps have to exist before the first leaf is parsed. Walking twice is
@@ -679,27 +690,59 @@ class BlockParser implements BlockScanner {
 	}
 }
 
-/** Configuration for an engine block pass; defaults to CommonMark with capture disabled. */
+/**
+ * Configures an engine block pass; defaults to CommonMark with capture disabled.
+ *
+ * **Example** (Validate GFM block options)
+ *
+ * ```ts
+ * import { BlockParseOptions } from "@beep/scratchpad/effected/markdown/internal/blockParser"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(BlockParseOptions)({ dialect: "gfm", frontmatter: true })) // true
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
 export const BlockParseOptions = S.Struct({
 	dialect: S.optionalKey(S.Literals(["commonmark", "gfm"])).annotateKey({ description: "Registry dialect to apply; defaults to commonmark" }),
 	frontmatter: S.optionalKey(S.Boolean).annotateKey({ description: "Whether to capture an opening frontmatter block; defaults to false" }),
 }).annotate($I.annote("BlockParseOptions", { description: "Engine parse options that distinguish curried configuration from document text." }));
 
-/** Schema-derived engine block-pass options. */
+/**
+ * Describes schema-derived engine block-pass options.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type BlockParseOptions = typeof BlockParseOptions.Type;
 
-/**
- * Run the block pass over `text`.
- *
- * Every node carries a complete {@link Position}, leaf blocks have their
- * inline content parsed, and `rawInlines` reports the raw text each leaf was
- * built from.
- */
+
 // The engine's default is the BASE dialect the registries compose on top of —
 // not the public default, which is `"gfm"` and lives in the facade's
 // `dialectOf`. The facade always passes its resolved dialect explicitly, so
 // this default only ever serves engine-level callers (tests, mostly) that
 // mean "the substrate".
+/**
+ * Run the block pass over `text`.
+ *
+ * **Details**
+ *
+ * Every node carries a complete {@link Position}, leaf blocks have their
+ * inline content parsed, and `rawInlines` reports the raw text each leaf was
+ * built from.
+ * **Example** (Parse a heading with the block engine)
+ *
+ * ```ts
+ * import { parseBlocks } from "@beep/scratchpad/effected/markdown/internal/blockParser"
+ *
+ * const parsed = parseBlocks("# Hello\n", { dialect: "commonmark" })
+ * console.log(parsed.root.children[0]?.type) // heading
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const parseBlocks: {
 	(text: string, options?: BlockParseOptions): BlockPassResult;
 	(options?: BlockParseOptions): (text: string) => BlockPassResult;

@@ -39,6 +39,8 @@ import type { BlockNode, BlockStart } from "../blockTypes.ts";
 /**
  * `_scan_tasklist`, as the generated scanner accepts it.
  *
+ * **Details**
+ *
  * Two deliberate differences from the `ext_scanners.re` SOURCE rule, which is
  * stale next to the C it generated: the bracket admits `X` as well as `x`, and
  * `spacechar` is `[ \t\v\f]` — a line terminator does not end the marker, so
@@ -56,8 +58,21 @@ const isChecked = (line: string): boolean => line.includes("[x]") || line.includ
  * The GFM task-list block start: a `[ ]`, `[x]` or `[X]` checkbox opening a
  * list item's content.
  *
+ * **Details**
+ *
  * Registered in the `gfm` dialect only, immediately after the CommonMark
  * starts, which is where cmark-gfm runs its extensions.
+ *
+ * **Example** (Identify the task list decoration start)
+ *
+ * ```ts
+ * import { taskListItemStart } from "@beep/scratchpad/effected/markdown/internal/blocks/taskListItem"
+ *
+ * console.log(taskListItemStart.name) // taskListItem
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const taskListItemStart: BlockStart = {
 	name: "taskListItem",
