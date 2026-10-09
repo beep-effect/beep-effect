@@ -371,3 +371,58 @@ therefore does not establish a semantic-delta pass.
 Publication was stopped while still waiting for admission (over 20 minutes),
 before a publish command, push or PR existed, to keep the wave fully addressed.
 The policy proof is still running its final phase; no terminal pass is claimed.
+
+### Run 3 blocked closeout
+
+Implementation head `aa278b7be26d83be8b98ca357018f27ba7853fc1` includes
+source-policy repairs at `cff2e5826d` and the missed live Graft skill provisioning
+reference repair at `aa278b7be2`. The pinned independent reviewer reports zero
+actionable source defects through `cff2e5826d`, incorporating the previous
+implementation and relative-Cache-path reviews. Commit hooks pass Biome,
+JSDoc, typos, secret scanning and commitlint for those repairs.
+
+The full package audit/docgen pass precedes these latest codec/test edits. It
+remains valid historical proof, not exact-head qualification. The post-repair
+fixture/test-tsgo/package-quick batch was submitted through admission and
+cancelled before it started because this lane is blocked on B/V's reviewed
+exception admission mechanism. Its result receipt explicitly records that
+cancellation. No runtime/type/package pass is claimed for the final repair head.
+The diagnostic row-emission job was likewise cancelled before admission. The
+pre-repair full policy run recorded failing light/medium/state phases and was
+stopped during the silent deprecated-API phase; it has no complete verdict.
+All own heavy units are stopped or terminal before handoff.
+
+Remaining work, in order:
+
+1. B/V supplies the owner-command path or an explicit authorable-exception
+   metadata ruling for AccountsSecretField/AccountsSecretsItem lossless wire
+   schemas and genuine platform fixtures. Emit exact test-policy rows, repair
+   any remaining avoidable fixture-layer/lifetime findings, and admit only
+   individually reviewed exceptions. No broad census acceptance is authorized.
+2. Finish introduced semantic-delta attribution: the pre-repair scan found 40
+   new broken paths. The live Graft remedy is fixed; locked routing tables and
+   historical packet facts need an explicit history-contract disposition.
+   Knowledge refs check's zero live gated observations does not prove this gate.
+3. Run the saved post-repair batch, then remaining exact-head hosted-parity
+   gates. Existing full package proof and scoped coverage reads are retained;
+   no floors were lowered and no new coverage pass is claimed.
+4. Publish the addressed wave through Yeet for E's workflow review. No push,
+   draft PR, readiness job or hosted checks were created in this run. E owns
+   the coordinated Ci wave and ordering co-sign; merge E's main once when the
+   orchestrator directs it, regenerate owners, and never merge from C.
+
+The PLAN, README and Decision Log now record this blocked qualification
+boundary. No acceptance row is closed. Graft root-query savings in this run:
+approximately 58,600 tokens across two meaningful queries.
+
+lane: rsc-c-scripts · head: aa278b7be26d83be8b98ca357018f27ba7853fc1
+(implementation head; report-only commit follows) · PR: none (wave 1 unpublished;
+wave 2 Ci pending E) · package-verify: @beep/repo-cli pass before latest repairs;
+exact-head requalification pending(owner-admission blocker) · hosted-parity:
+test-tsgo pass before latest repairs; docgen local pass; jsdoc-ratchet pass;
+knowledge refs --check pass(0 live gated); fallow audit+health pass from retained
+Run 2 receipts; coverage read complete, no floors changed; complete lint policy
+not passed · handoff: history/handoffs/rsc-c-scripts-2026-10-09.md · open: B/V
+exception admission, exact occurrence classification, semantic-delta history
+contract, post-repair verification, E workflow co-sign/Ci wave, publication and
+hosted proof.

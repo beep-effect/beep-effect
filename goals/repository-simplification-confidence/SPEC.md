@@ -710,6 +710,8 @@ without claiming completion.
 
 | 2026-10-09 | C retires the superseded cloud-session setup and marks cloud-agent-readiness verification commands as history; its owner is "program orchestrator (fleet role), owner of record; no live owner at 2026-10-09T17:24:18Z". | R24 audit supplied by the orchestrator in resume ruling 2; no live session owns that packet or script. Preserve lifecycle and retain the current pre-toolchain cloud bootstrap. | Revert the C wave to restore the historical script and verification commands. |
 
+| 2026-10-09 | C preserves Accounts lossless StructWithRest wire schemas and requests occurrence-specific platform-test exceptions through the B/V inventory owners; no generated ratchet is hand-edited or broadly recaptured. | Closed Class schemas would drop future item/field metadata; real subprocess, symlink and installed-tool fixtures exercise the script-port boundaries. Independent review accepts the codec hoists and schema-derived synthetic property coverage; current owner commands cannot admit new reviewed exception reasons. | Revert the C repair commits; owner-admitted exceptions must name these occurrences and be removed when the boundary no longer needs them. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

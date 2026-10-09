@@ -94,7 +94,11 @@ authorized for E's ONNX/merge-driver workflow review and Ci ordering co-sign.
 Focused fixtures, test-tsgo, package docgen and knowledge census have local passes.
 Run 3 passes full package verification (audit 777.6s, docgen 25.2s), scoped
 docgen, repaired Cache fixtures and independent zero-findings review. Draft
-publication and local policy check are queued through the heavy wrapper. The Ci group stays intact for its
+publication was cancelled before admission. The broader policy proof exposed
+introduced test/schema findings and historical-path delta findings. Direct
+repairs are independently reviewed; post-repair proof was cancelled before
+admission at the blocked handoff and remains pending. B/V owns the
+reviewed-exception admission mechanism. The Ci group stays intact for its
 coordinated follow-up wave. Evidence:
 [`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md),
 [`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
