@@ -350,6 +350,12 @@
           "upstreamBehaviour": "silent: JournalResync is only published to the hub, and the watcher supervisor stops re-arming without a signal",
           "labBehaviour": "Effect.logWarning 'Journal watcher stopped after immediate completions' {path, rearms} and 'Journal source requires resynchronization' {path, reason, expected, actual}",
           "reason": "law:EF-15 (effects observable through logs and annotations on key workflows)"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Envelope.test.ts:44; scratchpad/test/jsonl/merge.test.ts:93, :156; scratchpad/test/jsonl/Journal.test.ts:278; scratchpad/test/jsonl/EnvelopeTypes.test.ts:162",
+          "upstreamBehaviour": "Before the allowlist fix, Envelope.ts identity-cached a tag index in WeakMap and froze the caller event array; Journal.Service augmented its Context.Service key with Object.assign and read caller-array membership; internal/merge.ts classified records with Object.prototype.toString and copied safe fields onto the base prototype using Object.create/defineProperty.",
+          "labBehaviour": "Envelope.registry owns an A.copy array and compiled HashMap index; Journal.Service snapshots it, retains the public events reference, and subclasses the service key with static events/layer. internal/merge.ts uses predicates and boxed/tag checks: arguments and some foreign-realm builtins are admitted, builtin/function Object-tag spoofing rejected. R.fromEntries/spread creates a plain transient patch; Envelope.encodePatchResult encodes class fields before decoding creates the instance. Tests pin mutation isolation and decoded identity.",
+          "reason": "native-runtime: remove native WeakMap and Object.* runtime operations; the 2026-10-09 grilling ruling requires owner-held caches, readonly representations instead of runtime freezing, and removal of all four jsonl allowlist entries. Envelope.registry, Journal.Service, isRecordLike, canMerge and shallowMerge follow that ruling; freeze/prototype assertions are retargeted under D9."
         }
       ],
       "backlog": [

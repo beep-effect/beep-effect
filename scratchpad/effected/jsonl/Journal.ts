@@ -566,26 +566,29 @@ const textEncoder = new TextEncoder();
  * adds is the one thing the pure core cannot know: the window's text begins at
  * `window.start`, so every offset inside it is relative to that.
  */
-const decodeWindow = <R extends JsonlEvent.Registry>(events: R, window: TailWindow): O.Option<EnvelopeUnion<R>> =>
+const decodeWindow = <R extends JsonlEvent.Registry>(
+  events: ReturnType<typeof Envelope.registry<R>>,
+  window: TailWindow
+): O.Option<EnvelopeUnion<R>> =>
   O.map(Envelope.lastValidResult(window.text, events), (envelope) => ({
     ...envelope,
     line: LineSlice.rebase(envelope.line, window.start),
   }));
 
 const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEvent.Registry>(
-  events: R,
+  events: ReturnType<typeof Envelope.registry<R>>,
   config: typeof JournalSettings.Type,
   fs: FileSystem.FileSystem
 ): Effect.fn.Return<JournalShape<R>, PlatformError.PlatformError | InvalidUtf8, Scope.Scope> {
   const terminalTags = HashSet.fromIterable(
     A.map(
-      A.filter(events, (event) => event.terminal),
+      A.filter(events.events, (event) => event.terminal),
       (event) => event.tag
     )
   );
   const reopenTags = HashSet.fromIterable(
     A.map(
-      A.filter(events, (event) => event.reopen),
+      A.filter(events.events, (event) => event.reopen),
       (event) => event.tag
     )
   );
@@ -794,7 +797,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
   /** Reconcile the actual tail before deriving or validating a local write. */
   const appendWith = Effect.fn("Journal.appendWith")(function* (
     event: string,
-    build: (current: O.Option<EnvelopeUnion<R>>) => unknown,
+    build: (current: O.Option<EnvelopeUnion<R>>) => { readonly data: unknown; readonly patch: boolean },
     scope: string | undefined
   ): Effect.fn.Return<EnvelopeUnion<R>, JournalWriteError> {
     if (closed) return yield* JournalClosed.make({ event });
@@ -821,8 +824,10 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
                     }
                     if (O.isSome(state.torn)) return yield* state.torn.value;
                     const at = yield* DateTime.now;
-                    const encoded = Envelope.encodeResult<JsonlEvent.Registry>(
-                      { event, data: build(current), at, ...O.getSomesStruct({ scope: O.fromUndefinedOr(scope) }) },
+                    const { data, patch } = build(current);
+                    const encode = patch ? Envelope.encodePatchResult : Envelope.encodeResult;
+                    const encoded = encode<JsonlEvent.Registry>(
+                      { event, data, at, ...O.getSomesStruct({ scope: O.fromUndefinedOr(scope) }) },
                       events
                     );
                     if (Result.isFailure(encoded)) return yield* encoded.failure;
@@ -1100,7 +1105,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
     data: unknown,
     options?: AppendOptions
   ): Effect.Effect<EnvelopeUnion<R>, JournalWriteError> {
-    return appendWith(event, () => data, options?.scope);
+    return appendWith(event, () => ({ data, patch: false }), options?.scope);
   }
 
   function appendPatch<T extends JsonlEvent.Tag<R>>(
@@ -1117,9 +1122,10 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
       event,
       (current) => {
         const base = O.isSome(current) ? current.value.data : undefined;
-        // The record guards establish the merge inputs; canMerge checks the
-        // prototype compatibility of the patch. Encoding validates the result.
-        return isRecordLike(base) && isRecordLike(patch) && canMerge(base, patch) ? shallowMerge(base, patch) : patch;
+        // Merge decoded fields into a plain record. The patch encoder uses
+        // structural class fields; envelope decoding creates the instance.
+        const merge = isRecordLike(base) && isRecordLike(patch) && canMerge(base, patch);
+        return { data: merge ? shallowMerge(base, patch) : patch, patch: merge };
       },
       options?.scope
     );
@@ -1509,13 +1515,11 @@ export const Journal = {
       id: Id,
       options: { readonly events: R }
     ): JournalClass<Self, Id, R> => {
+      const events = Envelope.registry(options.events);
       const key = Context.Service<Self, JournalShape<R>>()(id);
-      // Augment the constructor itself: a spread would lose Context's
-      // inherited service protocol, while an intermediate subclass would
-      // introduce a different Self from the caller's class.
-      return Object.assign(key, {
-        events: options.events,
-        layer: (
+      return class extends key {
+        static readonly events = options.events;
+        static readonly layer = (
           config: JournalConfig
         ): Layer.Layer<Self, PlatformError.PlatformError | InvalidJournalConfig | InvalidUtf8, FileSystem.FileSystem> =>
           Layer.effect(
@@ -1525,9 +1529,9 @@ export const Journal = {
                 Effect.mapError((error) => InvalidJournalConfig.make({ error }))
               );
               const fs = yield* FileSystem.FileSystem;
-              return yield* makeEngine(options.events, settings, fs);
+              return yield* makeEngine(events, settings, fs);
             })
-          ),
-      });
+          );
+      };
     },
 };

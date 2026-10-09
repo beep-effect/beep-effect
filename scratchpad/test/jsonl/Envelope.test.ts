@@ -41,9 +41,17 @@ describe("Envelope boundaries", () => {
     assert.isFalse(Mail.reopen);
     assert.isTrue(End.terminal);
     const mutable = [Mail];
-    Envelope.decodeResult(line(text(1)), mutable);
-    assert.isTrue(Object.isFrozen(mutable));
-    assert.throws(() => mutable.pop(), TypeError);
+    const registry = Envelope.registry(mutable);
+    assertSuccess(
+      Result.map(Envelope.decodeResult(line(text(1)), registry), (row) => row.data),
+      { round: 1, from: "silk" }
+    );
+    mutable.pop();
+    assert.deepStrictEqual(registry.events, [Mail]);
+    assertSuccess(
+      Result.map(Envelope.decodeResult(line(text(2)), registry), (row) => row.data),
+      { round: 2, from: "silk" }
+    );
   });
   it("validates only the frame before selection", () => {
     const source = line('{"at":"2026-08-03T17:04:11.912Z","event":"mail","data":{"round":"bad"}}');

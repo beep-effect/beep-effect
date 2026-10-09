@@ -11,10 +11,12 @@
  * @since 0.0.0
  */
 
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Tuple from "effect/Tuple";
 
 /**
  * Keys that must never be copied from either side.
@@ -31,21 +33,6 @@ import * as R from "effect/Record";
 const FORBIDDEN = HashSet.make("__proto__", "constructor", "prototype");
 
 /**
- * Create an own data property, never invoking a setter inherited from the
- * prototype chain.
- *
- * @internal
- */
-const define = (target: Record<string, unknown>, key: string, value: unknown): void => {
-  Object.defineProperty(target, key, {
-    value,
-    writable: true,
-    enumerable: true,
-    configurable: true,
-  });
-};
-
-/**
  * Whether a value can take part in a merge at all.
  *
  * **Details**
@@ -53,8 +40,8 @@ const define = (target: Record<string, unknown>, key: string, value: unknown): v
  * Record-**like**, deliberately: a decoded `Schema.Class` payload is a class
  * instance, and excluding those would make the kit's dominant payload idiom
  * silently unpatchable. Arrays, `Date`s, scalars and `null` are excluded —
- * `Object.prototype.toString` distinguishes them where a `typeof` check does
- * not.
+ * Effect predicates exclude arrays and built-in containers while retaining
+ * ordinary records and decoded class instances.
  *
  * **Example** (Distinguish records from arrays)
  *
@@ -69,7 +56,20 @@ const define = (target: Record<string, unknown>, key: string, value: unknown): v
  * @since 0.0.0
  */
 export const isRecordLike = (value: unknown): value is Record<string, unknown> =>
-  P.and(P.isObjectKeyword, P.isNotNull)(value) && Object.prototype.toString.call(value) === "[object Object]";
+  P.isObject(value) &&
+  !P.isDate(value) &&
+  !P.isRegExp(value) &&
+  !P.isError(value) &&
+  !P.isMap(value) &&
+  !P.isSet(value) &&
+  !P.isUint8Array(value) &&
+  !P.isPromise(value) &&
+  !(value instanceof Number) &&
+  !(value instanceof String) &&
+  !(value instanceof Boolean) &&
+  (!P.hasProperty(value, Symbol.toStringTag) ||
+    !P.isString(value[Symbol.toStringTag]) ||
+    value[Symbol.toStringTag] === "Object");
 
 /**
  * Whether `patch` may be merged into `base`.
@@ -106,33 +106,31 @@ export const canMerge: {
   if (!isRecordLike(base) || !isRecordLike(patch)) {
     return false;
   }
-  const patchProto = Object.getPrototypeOf(patch);
-  return patchProto === Object.prototype || P.isNull(patchProto) || patchProto === Object.getPrototypeOf(base);
+  const patchProto = Reflect.getPrototypeOf(patch);
+  return (
+    patchProto === Reflect.getPrototypeOf({}) || P.isNull(patchProto) || patchProto === Reflect.getPrototypeOf(base)
+  );
 });
+
+// Filter keys before reading values: forbidden getters never run and each
+// retained own field is read once, just as in the upstream copy loop.
+const safeFields = (value: Record<string, unknown>): Record<string, unknown> =>
+  R.fromEntries(
+    A.map(
+      A.filter(R.keys(value), (key) => !HashSet.has(FORBIDDEN, key)),
+      (key) => Tuple.make(key, value[key])
+    )
+  );
 
 /**
  * Shallow-merge `patch` over `base`, with `patch` winning.
  *
  * **Details**
  *
- * **Assignment is the hazard, not the keys.** `result[key] = value` and
- * `Object.assign` both use `[[Set]]`, which for a key named `__proto__` reaches
- * `Object.prototype`'s inherited accessor and reassigns the result's prototype
- * to attacker-controlled data — defeating the key filter that appears to be
- * guarding it. `Object.defineProperty` defines an own data property and never
- * consults the prototype chain, so it is the only safe copy primitive here.
- *
- * The result is built on `base`'s prototype so a decoded payload survives as
- * whatever it was, rather than being flattened into a bare object literal.
- *
- * **The merged value is TRANSIENT, and that is what makes this safe.** Building
- * on `base`'s prototype means a class-based payload passes `instanceof`
- * **without its constructor having run** — the object was assembled by
- * `Object.create` plus `defineProperty`, not by `new`. That is acceptable here
- * only because the value's sole use is to be encoded: the caller receives a
- * genuine instance produced by the subsequent decode, never this one. If a
- * future refactor ever returns the merged value to a caller directly, any
- * invariant a constructor establishes is silently bypassed.
+ * Copies only safe own enumerable fields into a plain record. Record filtering
+ * and spread semantics ensure inherited setters never run. Schema construction
+ * and encoding in the journal validate the patch and create its class instance.
+ * The transient record does not retain the base's prototype.
  *
  * **Example** (Retain untouched fields)
  *
@@ -148,15 +146,7 @@ export const canMerge: {
 export const shallowMerge: {
   (base: Record<string, unknown>, patch: Record<string, unknown>): Record<string, unknown>;
   (patch: Record<string, unknown>): (base: Record<string, unknown>) => Record<string, unknown>;
-} = dual(2, (base: Record<string, unknown>, patch: Record<string, unknown>): Record<string, unknown> => {
-  const result: Record<string, unknown> = Object.create(Object.getPrototypeOf(base));
-  for (const key of R.keys(base)) {
-    if (HashSet.has(FORBIDDEN, key)) continue;
-    define(result, key, base[key]);
-  }
-  for (const key of R.keys(patch)) {
-    if (HashSet.has(FORBIDDEN, key)) continue;
-    define(result, key, patch[key]);
-  }
-  return result;
-});
+} = dual(2, (base: Record<string, unknown>, patch: Record<string, unknown>): Record<string, unknown> => ({
+  ...safeFields(base),
+  ...safeFields(patch),
+}));

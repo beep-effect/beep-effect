@@ -734,6 +734,8 @@ allowed cause and were reverted; each test now pins upstream's behaviour):
 - **Error constructor defaults.** `UnknownEvent.known` and `InvalidData.event`
   are required again (`ErrorDeviations.test.ts:46`, `:55`, `:64`, `:72`).
 
+- **native-runtime** — Envelope.registry and Journal.Service replace the prior port's frozen WeakMap-cached caller registry and Object.assign augmentation with an owned array/index snapshot and static service subclass, while internal/merge.ts replaces Object.* classification and prototype-preserving copying with Effect predicates and plain field records encoded by Envelope.encodePatchResult before schema decoding restores class identity, changing arguments/foreign-realm builtin admission and rejecting builtin/function Object-tag spoofing (scratchpad/test/jsonl/Envelope.test.ts:44; scratchpad/test/jsonl/merge.test.ts:93, :156; scratchpad/test/jsonl/Journal.test.ts:278; scratchpad/test/jsonl/EnvelopeTypes.test.ts:162).
+
 ### Dependency backlog
 
 None. Upstream has zero runtime dependencies (`effect` is its only peer). At

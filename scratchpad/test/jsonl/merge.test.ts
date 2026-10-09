@@ -1,5 +1,6 @@
 // Adapted from effected/packages/jsonl/__test__/merge.test.ts (MIT).
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { canMerge, isRecordLike, shallowMerge } from "../../effected/jsonl/internal/merge.ts";
 import { assert, describe, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
@@ -7,6 +8,8 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("tests/jsonl/merge");
 
 /**
  * `shallowMerge` is tested directly, at its own level, and that is the point.
@@ -87,17 +90,16 @@ describe("shallowMerge", () => {
   });
 
   it("preserves the base's prototype for non-plain bases", () => {
-    class Payload {
-      readonly round: number;
-      constructor(round: number) {
-        this.round = round;
-      }
-    }
-    const base = new Payload(1);
+    class Payload extends S.Class<Payload>($I`Payload`)({ round: S.Finite }) {}
+    const base = Payload.make({ round: 1 });
     assert.isTrue(isRecordLike(base));
     if (!isRecordLike(base)) return assert.fail("class payload must be record-like");
     const merged = shallowMerge(base, { round: 2 });
-    assert.strictEqual(Object.getPrototypeOf(merged), Payload.prototype, "a decoded class survives the merge");
+    assert.strictEqual(Object.getPrototypeOf(merged), Object.prototype, "the transient patch is a plain record");
+    assert.deepStrictEqual(merged, { round: 2 }, "the patched fields survive the representation change");
+    const decoded = Result.getOrThrow(S.decodeUnknownResult(Payload)(merged));
+    assert.instanceOf(decoded, Payload, "schema decoding creates the returned class instance");
+    assert.strictEqual(decoded.round, 2);
   });
 });
 
@@ -149,5 +151,11 @@ describe("isRecordLike", () => {
   it("rejects arrays and Dates, which a bare typeof check would admit", () => {
     assert.isFalse(isRecordLike([]));
     assert.isFalse(isRecordLike(DateTime.makeUnsafe(0).pipe(DateTime.toDateUtc)));
+  });
+
+  it("reads Symbol.toStringTag as the object's tag only when it is a string", () => {
+    assert.isTrue(isRecordLike({ [Symbol.toStringTag]: 1 }), "a non-string tag leaves a plain object");
+    assert.isTrue(isRecordLike({ [Symbol.toStringTag]: "Object" }), "the Object tag is a plain object");
+    assert.isFalse(isRecordLike({ [Symbol.toStringTag]: "Custom" }), "any other tag is a built-in-like container");
   });
 });

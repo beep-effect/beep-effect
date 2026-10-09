@@ -10,8 +10,10 @@ import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import { constant, dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as Tuple from "effect/Tuple";
 import { InvalidData, type MalformedLine, UnknownEvent, UnserializableData } from "./JsonlError.ts";
 import type { DataSchema, JsonlEvent } from "./JsonlEvent.ts";
@@ -110,20 +112,24 @@ type InputOf<E extends JsonlEvent.Any> = E extends JsonlEvent.Any
   : never;
 type Encoding<R extends JsonlEvent.Registry> = InputOf<R[number]>;
 
-// A weak-key cache releases an index when its registry is no longer used.
-// The index itself is an immutable HashMap; positions retain R[number]'s type.
-const registryIndex = new WeakMap<JsonlEvent.Registry, HashMap.HashMap<string, number>>();
-const indexRegistry = (events: JsonlEvent.Registry): HashMap.HashMap<string, number> => {
-  const cached = O.fromUndefinedOr(registryIndex.get(events));
-  if (O.isSome(cached)) return cached.value;
-  Object.freeze(events);
-  const index = HashMap.fromIterable(A.map(events, (event, position) => Tuple.make(event.tag, position)));
-  registryIndex.set(events, index);
-  return index;
-};
+// Each owned registry carries its compiled tag index for its entire lifetime.
+class Registry<R extends JsonlEvent.Registry> {
+  readonly events: ReadonlyArray<R[number]>;
+  readonly index: HashMap.HashMap<string, number>;
 
-const definition = <R extends JsonlEvent.Registry>(events: R, tag: string): O.Option<R[number]> =>
-  HashMap.get(indexRegistry(events), tag).pipe(O.flatMap((position) => A.get(events, position)));
+  constructor(events: R) {
+    this.events = A.copy(events);
+    this.index = HashMap.fromIterable(A.map(this.events, (event, position) => Tuple.make(event.tag, position)));
+  }
+}
+
+const registry = <const R extends JsonlEvent.Registry>(events: R | Registry<R>): Registry<R> =>
+  events instanceof Registry ? events : new Registry(events);
+
+const definition = <R extends JsonlEvent.Registry>(events: R | Registry<R>, tag: string): O.Option<R[number]> => {
+  const owned = registry(events);
+  return HashMap.get(owned.index, tag).pipe(O.flatMap((position) => A.get(owned.events, position)));
+};
 const decodeFrame = S.decodeUnknownResult(EnvelopeFrame);
 const encodeAt = S.encodeUnknownResult(S.DateTimeUtcFromString);
 const encodeScope = S.encodeUnknownResult(
@@ -141,13 +147,16 @@ const payloadError = (data: DataSchema, value: unknown, error: S.SchemaError): S
   pipe(S.decodeUnknownResult(data)(value), Result.flip, Result.getOrElse(constant(error)));
 
 const completeResult = <R extends JsonlEvent.Registry>(
-  events: R,
+  events: R | Registry<R>,
   line: LineSlice,
   frame: EnvelopeFrame
 ): Result.Result<EnvelopeUnion<R>, DecodeError> => {
-  const found = definition(events, frame.event);
+  const owned = registry(events);
+  const found = definition(owned, frame.event);
   if (O.isNone(found)) {
-    return Result.fail(UnknownEvent.make({ line, event: frame.event, known: A.map(events, (event) => event.tag) }));
+    return Result.fail(
+      UnknownEvent.make({ line, event: frame.event, known: A.map(owned.events, (event) => event.tag) })
+    );
   }
   const codec: R[number]["envelope"] = found.value.envelope;
   return S.decodeResult(codec)({ ...frame, line }).pipe(
@@ -168,29 +177,34 @@ const frameResult = (
   );
 
 const decodeResult: {
-  <const R extends JsonlEvent.Registry>(line: LineSlice, events: R): Result.Result<EnvelopeUnion<R>, DecodeError>;
-  <const R extends JsonlEvent.Registry>(events: R): (line: LineSlice) => Result.Result<EnvelopeUnion<R>, DecodeError>;
+  <const R extends JsonlEvent.Registry>(
+    line: LineSlice,
+    events: R | Registry<R>
+  ): Result.Result<EnvelopeUnion<R>, DecodeError>;
+  <const R extends JsonlEvent.Registry>(
+    events: R | Registry<R>
+  ): (line: LineSlice) => Result.Result<EnvelopeUnion<R>, DecodeError>;
 } = dual(
   2,
-  <R extends JsonlEvent.Registry>(line: LineSlice, events: R): Result.Result<EnvelopeUnion<R>, DecodeError> =>
+  <R extends JsonlEvent.Registry>(line: LineSlice, events: R | Registry<R>): Result.Result<EnvelopeUnion<R>, DecodeError> =>
     frameResult(line).pipe(Result.flatMap((frame) => completeResult(events, line, frame)))
 );
 
 const decodeSelectedResult: {
   <const R extends JsonlEvent.Registry>(
     line: LineSlice,
-    events: R,
+    events: R | Registry<R>,
     select: (frame: EnvelopeFrame) => boolean
   ): O.Option<Result.Result<EnvelopeUnion<R>, DecodeError>>;
   <const R extends JsonlEvent.Registry>(
-    events: R,
+    events: R | Registry<R>,
     select: (frame: EnvelopeFrame) => boolean
   ): (line: LineSlice) => O.Option<Result.Result<EnvelopeUnion<R>, DecodeError>>;
 } = dual(
   3,
   <R extends JsonlEvent.Registry>(
     line: LineSlice,
-    events: R,
+    events: R | Registry<R>,
     select: (frame: EnvelopeFrame) => boolean
   ): O.Option<Result.Result<EnvelopeUnion<R>, DecodeError>> => {
     const frame = frameResult(line);
@@ -202,85 +216,127 @@ const decodeSelectedResult: {
 const decodeAllResult: {
   <const R extends JsonlEvent.Registry>(
     text: string,
-    events: R
+    events: R | Registry<R>
   ): ReadonlyArray<Result.Result<EnvelopeUnion<R>, DecodeError>>;
   <const R extends JsonlEvent.Registry>(
-    events: R
+    events: R | Registry<R>
   ): (text: string) => ReadonlyArray<Result.Result<EnvelopeUnion<R>, DecodeError>>;
 } = dual(
   2,
   <R extends JsonlEvent.Registry>(
     text: string,
-    events: R
+    events: R | Registry<R>
   ): ReadonlyArray<Result.Result<EnvelopeUnion<R>, DecodeError>> =>
     pipe(
       Line.split(text),
       A.filter((line) => !Line.isBlank(line)),
-      A.map(decodeResult(events))
+      A.map(decodeResult(registry(events)))
     )
 );
 
 const lastValidResult: {
-  <const R extends JsonlEvent.Registry>(text: string, events: R): O.Option<EnvelopeUnion<R>>;
-  <const R extends JsonlEvent.Registry>(events: R): (text: string) => O.Option<EnvelopeUnion<R>>;
+  <const R extends JsonlEvent.Registry>(text: string, events: R | Registry<R>): O.Option<EnvelopeUnion<R>>;
+  <const R extends JsonlEvent.Registry>(events: R | Registry<R>): (text: string) => O.Option<EnvelopeUnion<R>>;
 } = dual(
   2,
-  <R extends JsonlEvent.Registry>(text: string, events: R): O.Option<EnvelopeUnion<R>> =>
-    pipe(
+  <R extends JsonlEvent.Registry>(text: string, events: R | Registry<R>): O.Option<EnvelopeUnion<R>> => {
+    const owned = registry(events);
+    return pipe(
       Line.split(text),
-      A.findLast((line) => (Line.isBlank(line) ? O.none() : Result.getSuccess(decodeResult(line, events))))
-    )
-);
-
-const encodeResult: {
-  <const R extends JsonlEvent.Registry>(envelope: Encoding<NoInfer<R>>, events: R): Result.Result<string, EncodeError>;
-  <const R extends JsonlEvent.Registry>(
-    events: R
-  ): (envelope: Encoding<NoInfer<R>>) => Result.Result<string, EncodeError>;
-} = dual(
-  2,
-  <R extends JsonlEvent.Registry>(envelope: Encoding<NoInfer<R>>, events: R): Result.Result<string, EncodeError> => {
-    const found = definition(events, envelope.event);
-    if (O.isNone(found)) {
-      return Result.fail(
-        UnknownEvent.make({ line: emptyLine, event: envelope.event, known: A.map(events, (event) => event.tag) })
-      );
-    }
-    // Upstream's order and roots: the payload codec, then the timestamp codec,
-    // each on its own value, then the scope check that keeps the frame readable.
-    const encoded = Result.all({
-      data: S.encodeUnknownResult(found.value.data)(envelope.data),
-      at: encodeAt(envelope.at),
-      scope: encodeScope(O.getSomesStruct({ scope: O.fromUndefinedOr(envelope.scope) })),
-    });
-    if (Result.isFailure(encoded))
-      return Result.fail(InvalidData.make({ line: emptyLine, event: O.some(envelope.event), error: encoded.failure }));
-    const { at, scope, data } = encoded.success;
-    return encodeJson({ at, event: envelope.event, ...scope, data: data === undefined ? null : data }).pipe(
-      Result.map((text) => `${text}\n`),
-      Result.mapError((cause) => UnserializableData.make({ event: envelope.event, cause }))
+      A.findLast((line) => (Line.isBlank(line) ? O.none() : Result.getSuccess(decodeResult(line, owned))))
     );
   }
 );
 
+// A Schema.Class declaration's first type parameter is its structural field
+// codec. The registered codec has no services, so neither do those fields.
+// Encode a plain decoded patch through that codec; the envelope decoder then
+// creates the class instance once, before any bytes are written.
+const patchCodec = (data: DataSchema): DataSchema => {
+  const ast = data.ast;
+  if (!P.isFunction(data) || !SchemaAST.isDeclaration(ast)) return data;
+  return A.head(ast.typeParameters).pipe(
+    O.map((fields) => S.make<DataSchema>(fields)),
+    O.getOrElse(constant(data))
+  );
+};
+
+const encodeResultWith = <R extends JsonlEvent.Registry>(
+  envelope: Encoding<NoInfer<R>>,
+  events: R | Registry<R>,
+  patch: boolean
+): Result.Result<string, EncodeError> => {
+  const owned = registry(events);
+  const found = definition(owned, envelope.event);
+  if (O.isNone(found)) {
+    return Result.fail(
+      UnknownEvent.make({ line: emptyLine, event: envelope.event, known: A.map(owned.events, (event) => event.tag) })
+    );
+  }
+  // Upstream's order and roots: the payload codec, then the timestamp codec,
+  // each on its own value, then the scope check that keeps the frame readable.
+  const encoded = Result.all({
+    data: S.encodeUnknownResult(patch ? patchCodec(found.value.data) : found.value.data)(envelope.data),
+    at: encodeAt(envelope.at),
+    scope: encodeScope(O.getSomesStruct({ scope: O.fromUndefinedOr(envelope.scope) })),
+  });
+  if (Result.isFailure(encoded))
+    return Result.fail(InvalidData.make({ line: emptyLine, event: O.some(envelope.event), error: encoded.failure }));
+  const { at, scope, data } = encoded.success;
+  return encodeJson({ at, event: envelope.event, ...scope, data: data === undefined ? null : data }).pipe(
+    Result.map((text) => `${text}\n`),
+    Result.mapError((cause) => UnserializableData.make({ event: envelope.event, cause }))
+  );
+};
+
+type Encoder = {
+  <const R extends JsonlEvent.Registry>(
+    envelope: Encoding<NoInfer<R>>,
+    events: R | Registry<R>
+  ): Result.Result<string, EncodeError>;
+  <const R extends JsonlEvent.Registry>(
+    events: R | Registry<R>
+  ): (envelope: Encoding<NoInfer<R>>) => Result.Result<string, EncodeError>;
+};
+
+const encodeResult: Encoder = dual(
+  2,
+  <R extends JsonlEvent.Registry>(envelope: Encoding<NoInfer<R>>, events: R | Registry<R>) =>
+    encodeResultWith(envelope, events, false)
+);
+
+const encodePatchResult: Encoder = dual(
+  2,
+  <R extends JsonlEvent.Registry>(envelope: Encoding<NoInfer<R>>, events: R | Registry<R>) =>
+    encodeResultWith(envelope, events, true)
+);
+
 const decode: {
-  <const R extends JsonlEvent.Registry>(line: LineSlice, events: R): Effect.Effect<EnvelopeUnion<R>, DecodeError>;
-  <const R extends JsonlEvent.Registry>(events: R): (line: LineSlice) => Effect.Effect<EnvelopeUnion<R>, DecodeError>;
+  <const R extends JsonlEvent.Registry>(
+    line: LineSlice,
+    events: R | Registry<R>
+  ): Effect.Effect<EnvelopeUnion<R>, DecodeError>;
+  <const R extends JsonlEvent.Registry>(
+    events: R | Registry<R>
+  ): (line: LineSlice) => Effect.Effect<EnvelopeUnion<R>, DecodeError>;
 } = dual(
   2,
-  Effect.fn("Envelope.decode")(function* <R extends JsonlEvent.Registry>(line: LineSlice, events: R) {
+  Effect.fn("Envelope.decode")(function* <R extends JsonlEvent.Registry>(line: LineSlice, events: R | Registry<R>) {
     return yield* Effect.fromResult(decodeResult(line, events));
   })
 );
 
 const encode: {
-  <const R extends JsonlEvent.Registry>(envelope: Encoding<NoInfer<R>>, events: R): Effect.Effect<string, EncodeError>;
   <const R extends JsonlEvent.Registry>(
-    events: R
+    envelope: Encoding<NoInfer<R>>,
+    events: R | Registry<R>
+  ): Effect.Effect<string, EncodeError>;
+  <const R extends JsonlEvent.Registry>(
+    events: R | Registry<R>
   ): (envelope: Encoding<NoInfer<R>>) => Effect.Effect<string, EncodeError>;
 } = dual(
   2,
-  Effect.fn("Envelope.encode")(function* <R extends JsonlEvent.Registry>(envelope: Encoding<NoInfer<R>>, events: R) {
+  Effect.fn("Envelope.encode")(function* <R extends JsonlEvent.Registry>(envelope: Encoding<NoInfer<R>>, events: R | Registry<R>) {
     return yield* Effect.fromResult(encodeResult(envelope, events));
   })
 );
@@ -305,6 +361,21 @@ const encode: {
  * @since 0.0.0
  */
 export const Envelope = {
+  /**
+   * Copies event membership and order into an owned readonly registry and compiles its tag index once.
+   *
+   * **Example** (Keep caller mutation outside the registry)
+   * ```ts
+   * import { Envelope, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
+   * import * as S from "effect/Schema";
+   * const events = [JsonlEvent.make("started", { data: S.String })];
+   * const owned = Envelope.registry(events);
+   * owned.events[0].tag // => "started"
+   * ```
+   * @category constructors
+   * @since 0.0.0
+   */
+  registry,
   /**
    * Builds the registered event's input codec, validating its tag, scope and payload while encoding its timestamp.
    *
@@ -362,7 +433,7 @@ export const Envelope = {
    */
   frameResult,
   /**
-   * Validates one line with its registered payload codec; a payload failure's issue path is relative to data. Supply the registry last, or curry the registry and pipe the line into the result. The registry is frozen on its first lookup.
+   * Validates one line with its registered payload codec; a payload failure's issue path is relative to data. Supply the registry last, or curry the registry and pipe the line into the result. An owned registry reuses its compiled index without changing the caller's array.
    *
    * **Example** (Pipe a line through its registry)
    *
@@ -460,6 +531,25 @@ export const Envelope = {
    * @since 0.0.0
    */
   encodeResult,
+  /**
+   * Encodes a transient plain patch through a class payload's structural fields.
+   * Decode the resulting envelope to construct its payload instance.
+   *
+   * **Example** (Encode patched class fields before decoding)
+   * ```ts
+   * import { Envelope, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
+   * import * as DateTime from "effect/DateTime";
+   * import * as S from "effect/Schema";
+   * import { $ScratchpadId } from "@beep/identity/packages";
+   * const $I = $ScratchpadId.create("examples/jsonl/patch");
+   * class Payload extends S.Class<Payload>($I`Payload`)({ count: S.Number }) {}
+   * const events = Envelope.registry([JsonlEvent.make("updated", { data: Payload })]);
+   * Envelope.encodePatchResult({ at: DateTime.makeUnsafe(0), event: "updated", data: { count: 2 } }, events);
+   * ```
+   * @category encoding
+   * @since 0.0.0
+   */
+  encodePatchResult,
   /**
    * Lazily decodes a line in Effect, preserving the synchronous decoder's typed errors. Supply the registry to the curried form when piping a line.
    *
