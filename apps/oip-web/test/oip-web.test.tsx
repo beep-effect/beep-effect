@@ -25,7 +25,7 @@ import { contactRequestResponseWithSubmit } from "@/app/api/contact/ContactRoute
 import { POST } from "@/app/api/contact/route";
 import { GET as llmsTextRoute } from "@/app/llms.txt/route";
 import oipManifest from "@/app/manifest";
-import Home from "@/app/page";
+import Home, { generateMetadata } from "@/app/page";
 import oipRobots from "@/app/robots";
 import oipSitemap from "@/app/sitemap";
 import { BackToTop } from "@/components/BackToTop";
@@ -214,6 +214,16 @@ describe("@beep/oip-web", { concurrent: false }, () => {
         return value;
       });
   });
+
+  it("generates home metadata from the published site content", () =>
+    generateMetadata().then((metadata) => {
+      expect(metadata).toMatchObject({
+        title: oipSiteContent.metadata.title,
+        description: oipSiteContent.metadata.description,
+        alternates: { canonical: "/" },
+        openGraph: { url: oipSiteContent.metadata.siteUrl },
+      });
+    }));
 
   it("publishes install and indexing metadata for the canonical OIP URL", () => {
     expect(oipManifest()).toMatchObject({ name: "OIP - Oppold IP Law", start_url: "/" });

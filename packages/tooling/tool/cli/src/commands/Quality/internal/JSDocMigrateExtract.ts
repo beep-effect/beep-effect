@@ -295,15 +295,16 @@ const extractRecordsForFile = (filePath: string, sourceText: string) =>
  * import { jsdocMigrateExtractRecordsForFile } from "@beep/repo-cli/test/Quality"
  * import { NodeCrypto } from "@effect/platform-node"
  * import * as Effect from "effect/Effect";
+ *
+ * const ticks = String.fromCharCode(96, 96, 96)
  * const source = [
  *   "/**",
  *   " * Lead.",
  *   " *",
  *   " * @example",
- *   " *
- * ```ts",
+ *   " * " + ticks + "ts",
  *   " * const a = 1",
- *   " * ```",
+ *   " * " + ticks,
  *   " *" + "/",
  *   "export const a = 1",
  *   ""
