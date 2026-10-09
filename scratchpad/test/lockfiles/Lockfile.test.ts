@@ -8,8 +8,10 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
+import { assertDefined, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Lockfile } from "../../effected/lockfiles/Lockfile.ts";
 import type { LockfileFormat } from "../../effected/lockfiles/LockfileFormat.ts";
@@ -624,7 +626,9 @@ describe("instance identity and resolved edges", () => {
 	const instance = (lockfile: Lockfile, name: string, version: string) => {
 		const found = lockfile.packagesNamed(name).filter((p) => p.version === version);
 		assert.strictEqual(found.length, 1, `expected exactly one ${name}@${version}`);
-		return found[0] as ResolvedPackage;
+		const pkg = found[0];
+		assertDefined(pkg);
+		return pkg;
 	};
 
 	describe("pnpm", () => {
@@ -645,8 +649,10 @@ describe("instance identity and resolved edges", () => {
 				assert.isTrue(variants.every((p) => p.peerDependencies.react === "^18.3.1"));
 
 				// Each variant resolved a *different* react, which is the entire point.
-				const old = variants.find((p) => p.instanceId.includes("(react@17.0.2)")) as ResolvedPackage;
-				const fresh = variants.find((p) => p.instanceId.includes("(react@18.3.1)")) as ResolvedPackage;
+				const old = variants.find((p) => p.instanceId.includes("(react@17.0.2)"));
+				assertDefined(old);
+				const fresh = variants.find((p) => p.instanceId.includes("(react@18.3.1)"));
+				assertDefined(fresh);
 				assert.strictEqual(old.resolved.react, "react@17.0.2");
 				assert.strictEqual(fresh.resolved.react, "react@18.3.1");
 				assert.strictEqual(instance(lockfile, "react", "17.0.2").instanceId, "react@17.0.2");
@@ -656,7 +662,8 @@ describe("instance identity and resolved edges", () => {
 		it.effect("v9: an importer resolves registry and link: edges to instance ids", () =>
 			Effect.gen(function* () {
 				const lockfile = yield* parseFixture("pnpm/peers/pnpm-lock.yaml", "pnpm");
-				const app = lockfile.packagesNamed("packages/app")[0] as ResolvedPackage;
+				const app = lockfile.packagesNamed("packages/app")[0];
+				assertDefined(app);
 
 				assert.strictEqual(app.instanceId, "packages/app");
 				assert.strictEqual(app.resolved["react-dom"], "react-dom@18.3.1(react@17.0.2)");
@@ -682,7 +689,8 @@ describe("instance identity and resolved edges", () => {
 				const lockfile = yield* parseFixture("pnpm/linkedpeer/pnpm-lock.yaml", "pnpm");
 				const byId = new Map(lockfile.packages.map((p) => [p.instanceId, p]));
 
-				const redux = byId.get("react-redux@9.2.0(react@packages+fakereact)") as ResolvedPackage;
+				const redux = byId.get("react-redux@9.2.0(react@packages+fakereact)");
+				assertDefined(redux);
 				assert.strictEqual(redux.peerDependencies.react, "^18.0 || ^19");
 				// The snapshot's `link:` target is recorded relative to the workspace
 				// ROOT, and a workspace importer's instance id is its path.
@@ -690,7 +698,8 @@ describe("instance identity and resolved edges", () => {
 				assert.isTrue(byId.get("packages/fakereact")?.isWorkspace);
 
 				// Transitively too — the same edge appears on the nested consumer.
-				const nested = byId.get("use-sync-external-store@1.6.0(react@packages+fakereact)") as ResolvedPackage;
+				const nested = byId.get("use-sync-external-store@1.6.0(react@packages+fakereact)");
+				assertDefined(nested);
 				assert.strictEqual(nested.resolved.react, "packages/fakereact");
 			}),
 		);
@@ -709,7 +718,8 @@ describe("instance identity and resolved edges", () => {
 				//   genuinely absent       `redux` — a declared peer the snapshot
 				//                          records no edge for at all
 				const lockfile = yield* parseFixture("pnpm/unnameablelink/pnpm-lock.yaml", "pnpm");
-				const redux = lockfile.packagesNamed("react-redux")[0] as ResolvedPackage;
+				const redux = lockfile.packagesNamed("react-redux")[0];
+				assertDefined(redux);
 
 				// 1. Resolved edges are unaffected.
 				assert.strictEqual(redux.resolved["@types/use-sync-external-store"], "@types/use-sync-external-store@0.0.6");
@@ -867,7 +877,8 @@ describe("instance identity and resolved edges", () => {
 				// the alias reading, every one of those landed in unresolvedEdges —
 				// on a lockfile pnpm reports as clean.
 				const lockfile = yield* parseFixture("pnpm/alias/pnpm-lock.yaml", "pnpm");
-				const cliui = lockfile.packagesNamed("@isaacs/cliui")[0] as ResolvedPackage;
+				const cliui = lockfile.packagesNamed("@isaacs/cliui")[0];
+				assertDefined(cliui);
 
 				assert.strictEqual(cliui.resolved["string-width-cjs"], "string-width@4.2.3");
 				assert.strictEqual(cliui.resolved["strip-ansi-cjs"], "strip-ansi@6.0.1");
@@ -887,7 +898,8 @@ describe("instance identity and resolved edges", () => {
 				const lockfile = yield* parseFixture("pnpm/publishdir/pnpm-lock.yaml", "pnpm");
 				const byId = new Map(lockfile.packages.map((p) => [p.instanceId, p]));
 
-				const reactDom = byId.get("react-dom@18.2.0(react@packages+react+dist+pkg)") as ResolvedPackage;
+				const reactDom = byId.get("react-dom@18.2.0(react@packages+react+dist+pkg)");
+				assertDefined(reactDom);
 				assert.strictEqual(reactDom.resolved.react, "packages/react");
 				// The importer path resolves the same target — the map answers before
 				// the `workspace:`-gated ancestor walk has to.
@@ -1100,7 +1112,8 @@ describe("instance identity and resolved edges", () => {
 				assert.strictEqual(chalk.instanceId, "chalk@5.3.0");
 				assert.isTrue(chalk.integrity?.startsWith("sha512-"));
 
-				const app = lockfile.packagesNamed("packages/app")[0] as ResolvedPackage;
+				const app = lockfile.packagesNamed("packages/app")[0];
+				assertDefined(app);
 				assert.strictEqual(app.resolved.chalk, "chalk@5.3.0");
 			}),
 		);
@@ -1113,8 +1126,10 @@ describe("instance identity and resolved edges", () => {
 				const lockfile = yield* parseFixture("pnpm/peers/pnpm-lock.yaml", "pnpm");
 				const byId = new Map(lockfile.packages.map((p) => [p.instanceId, p]));
 
-				const app = lockfile.packagesNamed("packages/app")[0] as ResolvedPackage;
-				const reactDom = byId.get(app.resolved["react-dom"] ?? "") as ResolvedPackage;
+				const app = lockfile.packagesNamed("packages/app")[0];
+				assertDefined(app);
+				const reactDom = byId.get(app.resolved["react-dom"] ?? "");
+				assertDefined(reactDom);
 				const wanted = reactDom.peerDependencies.react;
 				const found = byId.get(reactDom.resolved.react ?? "")?.version ?? null;
 
@@ -1144,7 +1159,8 @@ describe("instance identity and resolved edges", () => {
 
 				// And the workspace resolves the react actually installed for it —
 				// which is also what satisfies its own declared peer.
-				const lib = lockfile.packagesNamed("@nested/lib")[0] as ResolvedPackage;
+				const lib = lockfile.packagesNamed("@nested/lib")[0];
+				assertDefined(lib);
 				assert.deepStrictEqual(lib.peerDependencies, { react: "^18.0.0" });
 				assert.strictEqual(lib.resolved.react, "packages/lib/node_modules/react");
 			}),
@@ -1171,14 +1187,16 @@ describe("instance identity and resolved edges", () => {
 
 				// ms@2.1.3 is hoisted at node_modules/ms; debug pins ms@2.0.0 beside
 				// itself. An outermost-first walk would report 2.1.3 here.
-				const debug = byId.get("node_modules/debug") as ResolvedPackage;
+				const debug = byId.get("node_modules/debug");
+				assertDefined(debug);
 				assert.strictEqual(debug.resolved.ms, "node_modules/debug/node_modules/ms");
 				assert.strictEqual(byId.get(debug.resolved.ms ?? "")?.version, "2.0.0");
 				assert.strictEqual(byId.get("node_modules/ms")?.version, "2.1.3");
 
 				// The second, independent shadow: react@17.0.2 is hoisted, and the
 				// workspace's own react@18.3.1 sits under its directory.
-				const lib = byId.get("node_modules/@nested/lib") as ResolvedPackage;
+				const lib = byId.get("node_modules/@nested/lib");
+				assertDefined(lib);
 				assert.strictEqual(byId.get(lib.resolved.react ?? "")?.version, "18.3.1");
 				assert.strictEqual(byId.get("node_modules/react")?.version, "17.0.2");
 			}),
@@ -1199,7 +1217,8 @@ describe("instance identity and resolved edges", () => {
 				const lockfile = yield* parseFixture("npm/ancestor-walk/package-lock.json", "npm");
 				const byId = new Map(lockfile.packages.map((p) => [p.instanceId, p]));
 
-				const b = byId.get("node_modules/a/node_modules/b") as ResolvedPackage;
+				const b = byId.get("node_modules/a/node_modules/b");
+				assertDefined(b);
 				assert.strictEqual(b.resolved.c, "node_modules/a/node_modules/c");
 				assert.strictEqual(byId.get(b.resolved.c ?? "")?.version, "2.0.0");
 				// Both candidates genuinely exist, at different versions — without
@@ -1211,7 +1230,8 @@ describe("instance identity and resolved edges", () => {
 		it.effect("resolves a workspace link's edges from the workspace directory", () =>
 			Effect.gen(function* () {
 				const lockfile = yield* parseFixture("npm/peers/package-lock.json", "npm");
-				const lib = lockfile.packagesNamed("@peers/lib")[0] as ResolvedPackage;
+				const lib = lockfile.packagesNamed("@peers/lib")[0];
+				assertDefined(lib);
 				assert.strictEqual(lib.instanceId, "node_modules/@peers/lib");
 				assert.strictEqual(lib.resolved.chalk, "node_modules/chalk");
 				// A peer nothing installed resolves to nothing — omitted, not invented.
@@ -1233,7 +1253,7 @@ describe("instance identity and resolved edges", () => {
 					["npm/v2/package-lock.json", "npm"],
 					["bun/peers/bun.lock", "bun"],
 					["bun/v2/bun.lock", "bun"],
-				] as ReadonlyArray<[string, LockfileFormat]>) {
+				] satisfies ReadonlyArray<[string, LockfileFormat]>) {
 					const lockfile = yield* parseFixture(relative, format);
 					for (const row of lockfile.packages) {
 						assert.deepStrictEqual(row.unresolvedEdges, [], `${relative}: ${row.instanceId}`);
@@ -1276,7 +1296,8 @@ describe("instance identity and resolved edges", () => {
 				// Name and version come off tuple[0]; identity comes off the key.
 				assert.strictEqual(instance(lockfile, "react", "18.3.1").name, "react");
 
-				const lib = lockfile.packagesNamed("@nested/lib")[0] as ResolvedPackage;
+				const lib = lockfile.packagesNamed("@nested/lib")[0];
+				assertDefined(lib);
 				// A workspace's instance id is its `packages` key — the bare name —
 				// because that is what nested keys prefix themselves with.
 				assert.strictEqual(lib.instanceId, "@nested/lib");
@@ -1292,7 +1313,8 @@ describe("instance identity and resolved edges", () => {
 
 				// ms@2.1.3 is hoisted at "ms"; debug's own ms@2.0.0 is keyed "debug/ms".
 				// An outermost-first walk would report the hoisted one.
-				const debug = byId.get("debug") as ResolvedPackage;
+				const debug = byId.get("debug");
+				assertDefined(debug);
 				assert.strictEqual(debug.resolved.ms, "debug/ms");
 				assert.strictEqual(byId.get("debug/ms")?.version, "2.0.0");
 				assert.strictEqual(byId.get("ms")?.version, "2.1.3");
@@ -1308,7 +1330,8 @@ describe("instance identity and resolved edges", () => {
 				assert.strictEqual(reactDom.instanceId, "react-dom@npm:18.3.1");
 				assert.strictEqual(reactDom.resolved.scheduler, "scheduler@npm:0.23.2");
 
-				const app = lockfile.packagesNamed("@peers/app")[0] as ResolvedPackage;
+				const app = lockfile.packagesNamed("@peers/app")[0];
+				assertDefined(app);
 				assert.strictEqual(app.instanceId, "@peers/app@workspace:packages/app");
 				// A workspace dependency resolves to the workspace locator, not the npm one.
 				assert.strictEqual(app.resolved["@peers/lib"], "@peers/lib@workspace:packages/lib");
@@ -1331,10 +1354,12 @@ describe("instance identity and resolved edges", () => {
 				// declared section would show one of these two edges and not the
 				// other.
 				const lockfile = yield* parseFixture("yarn/devdeps/yarn.lock", "yarn");
-				const root = lockfile.packagesNamed("@devdeps/root")[0] as ResolvedPackage;
+				const root = lockfile.packagesNamed("@devdeps/root")[0];
+				assertDefined(root);
 				assert.strictEqual(root.resolved.chalk, "chalk@npm:5.3.0");
 				assert.strictEqual(root.resolved.typescript, "typescript@npm:5.3.3");
-				const lib = lockfile.packagesNamed("@devdeps/lib")[0] as ResolvedPackage;
+				const lib = lockfile.packagesNamed("@devdeps/lib")[0];
+				assertDefined(lib);
 				assert.strictEqual(lib.resolved.chalk, "chalk@npm:5.3.0");
 				assert.strictEqual(lib.resolved.typescript, "typescript@npm:5.3.3");
 				assert.deepStrictEqual(root.unresolvedEdges, []);
@@ -1360,7 +1385,8 @@ describe("peer suffixes on protocol versions", () => {
 			// ONE instance: the `packages:` entry is covered by its snapshot rather
 			// than re-emitted as an orphan under a second identity.
 			assert.strictEqual(libs.length, 1);
-			const lib = libs[0] as ResolvedPackage;
+			const lib = libs[0];
+			assertDefined(lib);
 			assert.strictEqual(lib.instanceId, "lib@file:vendor/lib(react-dom@18.3.1(react@18.3.1))(react@18.3.1)");
 			assert.strictEqual(lib.version, "file:vendor/lib");
 			// Peer declarations join from the `packages:` entry keyed by the plain part.
@@ -1421,7 +1447,8 @@ describe("peer suffixes on protocol versions", () => {
 
 	it.effect("still resolves the host's edges to the suffixed instances", () =>
 		Effect.gen(function* () {
-			const host = (yield* load()).packagesNamed("packages/host")[0] as ResolvedPackage;
+			const host = (yield* load()).packagesNamed("packages/host")[0];
+			assertDefined(host);
 			assert.strictEqual(host.resolved.lib, "lib@file:vendor/lib(react-dom@18.3.1(react@18.3.1))(react@18.3.1)");
 			assert.strictEqual(host.resolved.tarlib, "tarlib@file:vendor/tarlib-1.0.0.tgz(react@18.3.1)");
 		}),
@@ -1599,7 +1626,8 @@ describe("supported lockfile versions", () => {
 			// Validation, not framing: the document was located perfectly well.
 			assert.strictEqual(error.stage, "validation");
 			// Legible enough to tell "too old" from "malformed" without parsing prose.
-			const cause = error.cause as { _tag?: string; lockfileVersion?: unknown; minimumSupported?: unknown };
+			const cause = error.cause;
+			assertTrue(isUnsupportedLockfileVersion(cause));
 			assert.strictEqual(cause._tag, "UnsupportedLockfileVersion");
 			assert.strictEqual(cause.lockfileVersion, "6.0");
 			assert.strictEqual(cause.minimumSupported, 9);
@@ -1613,7 +1641,8 @@ describe("supported lockfile versions", () => {
 			if (error._tag !== "LockfileParseError") return;
 			assert.strictEqual(error.format, "npm");
 			assert.strictEqual(error.stage, "validation");
-			const cause = error.cause as { _tag?: string; lockfileVersion?: unknown; minimumSupported?: unknown };
+			const cause = error.cause;
+			assertTrue(isUnsupportedLockfileVersion(cause));
 			assert.strictEqual(cause._tag, "UnsupportedLockfileVersion");
 			assert.strictEqual(cause.lockfileVersion, 2);
 			assert.strictEqual(cause.minimumSupported, 3);
@@ -1703,7 +1732,7 @@ describe("supported lockfile versions", () => {
 			const checked: Array<string> = [];
 			const checkedConfigOnly: Array<string> = [];
 
-			for (const [format, minimum] of Object.entries(gated) as ReadonlyArray<[keyof typeof gated, number]>) {
+			for (const [format, minimum] of R.toEntries(gated)) {
 				const filename = filenameFor(format);
 				const formatDir = join(import.meta.dirname, "fixtures", format);
 				for (const entry of readdirSync(formatDir, { withFileTypes: true })) {

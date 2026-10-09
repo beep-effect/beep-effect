@@ -23,7 +23,8 @@ const parseError = Effect.fn("parseError")(function*(content: string, format: Lo
 
 /** Prove Object.prototype picked up nothing from a hostile parse. */
 const assertPrototypeUnpolluted = (): void => {
-	assert.strictEqual(({} as Record<string, unknown>).polluted, undefined);
+	const empty: Record<string, unknown> = {};
+	assert.strictEqual(empty.polluted, undefined);
 	assert.isFalse(Object.hasOwn(Object.prototype, "polluted"));
 };
 
@@ -511,7 +512,7 @@ describe("hostile input", () => {
 		it.effect("the underlying cause is preserved structurally, not stringified", () =>
 			Effect.gen(function* () {
 				const error = yield* parseError("{ nope", "npm");
-				assert.instanceOf(error.cause, SyntaxError);
+				assert.instanceOf(error.cause, S.SchemaError);
 			}),
 		);
 	});

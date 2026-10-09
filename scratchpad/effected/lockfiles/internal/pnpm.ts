@@ -217,13 +217,14 @@ const resolveEdges = (
 			// ids, where a workspace importer's id is its path.
 			if (version.startsWith(LINK_PREFIX)) {
 				const target = resolveLinkTarget("", version.slice(LINK_PREFIX.length));
+				const publishDirTarget = target === undefined ? undefined : publishDirTargets.get(target);
 				if (target !== undefined && instanceIds.has(target)) edges.set(name, target);
 				// A target that is no importer may still be one's DECLARED publish
 				// directory — `link:packages/lib/dist/dev/pkg` where `packages/lib`
 				// declares `publishDirectory: dist/dev/pkg`. The declaration is exact
 				// evidence, so the map is consulted unconditionally.
-				else if (target !== undefined && publishDirTargets.has(target)) {
-					edges.set(name, publishDirTargets.get(target) as string);
+				else if (publishDirTarget !== undefined) {
+					edges.set(name, publishDirTarget);
 				}
 				// A `link:` into a directory that is no importer and no declared
 				// publish directory — a build output, a vendored stub — names no

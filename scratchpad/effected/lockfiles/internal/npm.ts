@@ -64,6 +64,7 @@ type NpmPackageEntryType = typeof NpmPackageEntry.Type;
 
 const NODE_MODULES_PREFIX = "node_modules/";
 const NESTED_NODE_MODULES = "/node_modules/";
+const decodeJson = S.decodeEffect(S.fromJsonString(S.Unknown));
 
 /**
  * Where a `packages` key's package name starts: after the **last**
@@ -138,20 +139,14 @@ const entrySections = (entry: NpmPackageEntryType | undefined) =>
 /**
  * Parse npm `package-lock.json` content into the unified field bundle —
  * `lockfileVersion` 3 and newer; v2 and older fail typed at validation.
- * Native `JSON.parse` inside `Effect.try` — its throw on hostile input
- * (including V8's `RangeError` on pathological depth) lands typed as
- * `stage: "syntax"`.
+ * JSON is decoded with `Schema.fromJsonString`; malformed input fails typed
+ * as `stage: "syntax"`, carrying the `SchemaError` as its cause.
  *
  * @internal
  */
 export const parseNpm = (content: string): Effect.Effect<LockfileFields, ParseFailure> =>
 	Effect.gen(function* () {
-		const raw = yield* Effect.try({
-			// Syntax failures retain the original native throwable; Schema JSON decoding discards its identity and details.
-			// @effect-diagnostics-next-line preferSchemaOverJson:off
-			try: () => JSON.parse(content) as unknown,
-			catch: syntaxFailure,
-		});
+		const raw = yield* decodeJson(content).pipe(Effect.mapError(syntaxFailure));
 		// Format-version gate: npm lockfileVersion 3 and newer. v1/v2 trees record
 		// resolution in a different shape this parser does not model.
 		//

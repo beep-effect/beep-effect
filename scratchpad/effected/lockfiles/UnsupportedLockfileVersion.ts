@@ -77,6 +77,9 @@ export const isUnsupportedLockfileVersion = (cause: unknown): cause is Unsupport
 	// what is actually a malformed file. The remaining checks are value checks
 	// — identity is already settled by this line.
 	Object.hasOwn(cause, "_tag") &&
-	(cause as { _tag: unknown })._tag === "UnsupportedLockfileVersion" &&
-	typeof (cause as { format: unknown }).format === "string" &&
-	typeof (cause as { minimumSupported: unknown }).minimumSupported === "number";
+	"_tag" in cause &&
+	cause._tag === "UnsupportedLockfileVersion" &&
+	"format" in cause &&
+	typeof cause.format === "string" &&
+	"minimumSupported" in cause &&
+	typeof cause.minimumSupported === "number";

@@ -29,10 +29,11 @@
 // the "some keys present" shapes a lockfile actually carries.
 
 import { assert, describe, it } from "@effect/vitest";
-import type { IntegrityHashBrand } from "../../effected/npm/index.ts";
-import { DependencySpecifier } from "../../effected/npm/index.ts";
+import { assertTrue } from "@effect/vitest/utils";
+import { DependencySpecifier, IntegrityHash } from "../../effected/npm/index.ts";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import { ImporterDependency } from "../../effected/lockfiles/ImporterDependency.ts";
@@ -58,8 +59,11 @@ const dictionary = <V extends Schema.Top>(
 	keys: ReadonlyArray<string>,
 	value: V,
 ): Arbitrary.Arbitrary<Record<string, V["Type"]>> =>
-	Arbitrary.schema(Schema.Struct(Object.fromEntries(keys.map((key) => [key, Schema.optionalKey(value)])))).pipe(
-		Arbitrary.map((entries) => ({ ...entries }) as Record<string, V["Type"]>),
+	Arbitrary.schema(Schema.Struct(R.fromEntries(keys.map((key) => [key, Schema.optionalKey(value)] as const)))).pipe(
+		Arbitrary.map((entries) => {
+			assertTrue(Schema.is(Schema.Record(Schema.String, Schema.toType(value)))(entries));
+			return { ...entries };
+		}),
 	);
 
 /** Present or absent with equal odds — an optional key read back as a value. */
@@ -134,7 +138,13 @@ const lockfileImporterArb: Arbitrary.Arbitrary<LockfileImporter> = Arbitrary.all
 const resolvedPackageArb: Arbitrary.Arbitrary<ResolvedPackage> = Arbitrary.all({
 	name: Arbitrary.schema(Schema.Literals(["lodash", "chalk", "packages/core", "@scope/x"])),
 	version: Arbitrary.schema(Schema.Literals(["1.0.0", "0.0.0", "5.6.2"])),
-	integrity: optional(Integrity).pipe(Arbitrary.map((s) => s as IntegrityHashBrand | undefined)),
+	integrity: optional(Integrity).pipe(
+		Arbitrary.map((s) =>
+			s === undefined
+				? undefined
+				: Result.getOrThrowWith(Schema.decodeResult(IntegrityHash)(s), (error) => error),
+		),
+	),
 	isWorkspace: Arbitrary.schema(Schema.Boolean),
 	relativePath: optional(Schema.Literals(["packages/core", "packages/utils"])),
 	dependencies: dictionary(["a", "b"], Schema.Literals(["^1.0.0", "2.x"])),
@@ -210,7 +220,7 @@ describe("codec round-trips", () => {
 						name: "chalk",
 						version: "5.6.2",
 						instanceId: "chalk@5.6.2",
-						integrity: "sha512-abc" as IntegrityHashBrand,
+						integrity: yield* IntegrityHash.decode("sha512-abc"),
 						isWorkspace: false,
 						dependencies: { "supports-color": "^9.0.0" },
 						peerDependencies: { "supports-color": "^9.0.0" },

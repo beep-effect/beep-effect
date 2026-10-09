@@ -298,7 +298,8 @@ describe("PnpmEnvLockfile.packageManager", () => {
 				);
 				assert.isTrue(Object.hasOwn(lock.nativeIntegrity, "__proto__"));
 				assert.strictEqual(Object.keys(lock.nativeIntegrity).length, 1);
-				assert.strictEqual(({} as Record<string, unknown>).integrity, undefined);
+				const empty: Record<string, unknown> = {};
+				assert.strictEqual(empty.integrity, undefined);
 			}),
 		);
 	});
