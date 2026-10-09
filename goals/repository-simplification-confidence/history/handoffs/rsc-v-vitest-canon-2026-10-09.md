@@ -165,7 +165,7 @@ retained. No PR was created and the program/canon goal is not completed.
 
 R105 review found one P2 duplication/function-size risk and no semantic defect
 in the original patch. The nine-file repair preview is
-`history/receipts/rsc-v-noncli-repair-preview.patch`, SHA256
+`history/receipts/rsc-v-noncli-repair-preview.patch.gz`, SHA256
 `4ef6960fecf46fc898dc34ec347fb8a594a07220dca4fd508c7615fb162b1d10`.
 It extracts fourteen Cause blocks using Cause.map and adds two schema-derived
 pure properties at 25 runs each. A standalone success/mixed-cause check passed;

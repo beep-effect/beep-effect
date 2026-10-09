@@ -710,4 +710,3 @@ without claiming completion.
 | --- | --- | --- | --- | --- |
 | Review-loop cap override | Every PR of this program | Program orchestrator | Brief section 1 item 7: resolve every in-scope actionable finding, including lower severity; do not defer one merely to stop a review loop. Overrides AGENTS.md "Autonomy" round-2 rule for this program only. | Program closeout (packet reaches `completed-retained`). |
 | Three-model panel IDs | Workstream F final review | Program orchestrator | `gpt-6-astra`, `claude-fable-5-1`, and `grok-4.7` at xhigh are named by the brief; AGENTS.md otherwise forbids substituting non-default models silently. This is an explicit, recorded use. | Terminal zero-actionable-findings verdicts from all three reviewers are recorded in `history/receipts/stage-5-panel.md` on the final workstream F revision and configuration fingerprints, and no F configuration change follows them; any later change keeps the exception for the re-review. |
-

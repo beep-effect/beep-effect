@@ -204,5 +204,17 @@
     "typecheck": "not-admitted",
     "packageVerify": "not-run on repaired preview",
     "runtime": "standalone success and mixed-cause helper checks passed; package runtime cohorts not run on this preview"
+  },
+  "patchArchives": {
+    "original": {
+      "file": "rsc-v-noncli-followup.patch.gz",
+      "archiveSha256": "97646334bebe9f76d3a729d46bffa883d2ac6a69afb9eb2a0f3c784be73c1e84",
+      "decompressedSha256": "b0f087e9b4addbd08cebc4c8cb4750e879a6367d8f344c6a55b278f5f77a4a92"
+    },
+    "repairPreview": {
+      "file": "rsc-v-noncli-repair-preview.patch.gz",
+      "archiveSha256": "2abc43eacba023fba6fcbc595b7dff5d1fdb4f3fe5d5b7d098590d96c8a0e968",
+      "decompressedSha256": "4ef6960fecf46fc898dc34ec347fb8a594a07220dca4fd508c7615fb162b1d10"
+    }
   }
 }

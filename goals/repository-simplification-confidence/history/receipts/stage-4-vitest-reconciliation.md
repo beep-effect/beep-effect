@@ -171,7 +171,7 @@ branch were changed. The CLI has no checkout-selector flag, so the service was
 called from the integration lane to preserve the source ownership boundary.
 
 The prepared non-CLI follow-up is preserved in
-[rsc-v-noncli-followup.patch](./rsc-v-noncli-followup.patch), SHA256
+[rsc-v-noncli-followup.patch.gz](./rsc-v-noncli-followup.patch.gz), SHA256
 `b0f087e9b4addbd08cebc4c8cb4750e879a6367d8f344c6a55b278f5f77a4a92`.
 Six RDF tests and the Pacer logout witness are excluded from this CLI source
 commit. Full package checks passed for the prepared patch: RDF 12.064 s,
@@ -238,7 +238,7 @@ claim is made.
 Separate read-only Opus review of the original prepared patch found one P2
 duplication/function-size risk and no semantic defect. It is retained in
 [rsc-v-noncli-source-review.md](./rsc-v-noncli-source-review.md). The repair
-preview is [rsc-v-noncli-repair-preview.patch](./rsc-v-noncli-repair-preview.patch),
+preview is [rsc-v-noncli-repair-preview.patch.gz](./rsc-v-noncli-repair-preview.patch.gz),
 SHA256 `4ef6960fecf46fc898dc34ec347fb8a594a07220dca4fd508c7615fb162b1d10`.
 It extracts the fourteen repeated blocks into one private RDF test helper,
 using Cause.map to preserve every reason and annotation. Exit.mapError in the
@@ -252,3 +252,9 @@ Its type check could not obtain admission. No repaired-preview package proof,
 full runtime cohort, Fallow proof or terminal-zero re-review is claimed. The
 original patch and its earlier package/runtime results remain preserved as
 separate evidence. Actual RDF/Pacer package files remain unchanged in V.
+
+Patch artifacts are stored as deterministic gzip archives so unified-diff
+context blank lines do not become whitespace violations in authored files.
+The two quoted patch SHA256 values identify decompressed bytes, which are
+unchanged. Replay with gzip -dc into git apply; the original source exports
+and their digests remain untouched.

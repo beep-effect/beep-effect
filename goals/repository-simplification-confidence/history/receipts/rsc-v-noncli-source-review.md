@@ -1,6 +1,6 @@
 ## Verdict: not terminal zero. One P2 finding (likely fallow gate failure), no semantic defects
 
-This covers patch `rsc-v-noncli-followup.patch` (SHA256 `b0f087e9…4a92`, taken as given; I didn't recompute it with Read alone). I read the whole patch and checked it against the current seven test files and the relevant `@beep/pacer`, `@beep/rdf` and Effect 4.0.2 (`.repos/effect`) sources. Nothing was run.
+This covers patch `rsc-v-noncli-followup.patch.gz` (SHA256 `b0f087e9…4a92`, taken as given; I didn't recompute it with Read alone). I read the whole patch and checked it against the current seven test files and the relevant `@beep/pacer`, `@beep/rdf` and Effect 4.0.2 (`.repos/effect`) sources. Nothing was run.
 
 ### Semantics check (all pass)
 
