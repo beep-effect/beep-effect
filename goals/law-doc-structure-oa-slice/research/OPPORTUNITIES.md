@@ -66,3 +66,13 @@
   strings, and the curried String helper. Platform test dependency and lockfile
   regenerated through bun install.
 - Prevention: check the Effect v4 declarations before adapting native helpers.
+
+## 2026-10-09 — Fixture input lifetime
+
+- Evidence: effect-vitest rejected platform-filesystem import and per-test
+  resource provision introduced by the fixture audit repair.
+- Attribution: introduced test only; the detector baseline stays unchanged.
+- Repair: import immutable fixture payloads as raw test data, decode JSON strings
+  with Schema, and remove the unnecessary platform test dependency.
+- Prevention: distinguish fixture data from a filesystem subject before choosing
+  the canonical test layer and resource lifetime.

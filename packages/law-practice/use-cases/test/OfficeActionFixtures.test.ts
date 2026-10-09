@@ -1,9 +1,9 @@
-import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { fixtureTexts } from "./fixtures/office-action-structure/texts.ts";
 
 const Outcome = S.Union([
   S.Struct({
@@ -28,10 +28,7 @@ const Fixture = S.Struct({
   relationships: S.Array(S.Literals(["same-paragraph", "sibling", "continuation", "reading-order"])),
   outcome: Outcome,
 });
-const read = (name: string) =>
-  Effect.flatMap(FileSystem.FileSystem, (fs) =>
-    fs.readFileString(new URL(`./fixtures/office-action-structure/${name}`, import.meta.url).pathname)
-  );
+const read = (name: string) => Effect.fromOption(HashMap.get(fixtureTexts, name), () => `Missing fixture: ${name}`);
 
 describe("office-action fixture truth", () => {
   it.effect("decodes the reconciled inventory and retains exact source quotes", () =>
@@ -47,6 +44,6 @@ describe("office-action fixture truth", () => {
           expect(Str.includes(fixture.outcome.periodQuote)(text)).toBe(true);
         }
       }
-    }).pipe(Effect.provide(BunFileSystem.layer))
+    })
   );
 });
