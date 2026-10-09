@@ -1077,6 +1077,15 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       );
       expect(afterRearm.sessionsObserved).toBe(1);
       expect(afterRearm.sessionsSkippedDisarmed).toBe(0);
+      yield* fs.writeFileString(
+        path.join(evidenceRoot, "hook-pulse-disarm-windows.ndjson"),
+        '{"schemaVersion":"hook-pulse-disarm-window/v1","disarmedAt":"2026-10-09T10:02:00Z","rearmedAt":"2026-10-09T10:00:00Z","reason":null,"evidenceTier":"unknown"}'
+      );
+      const malformed = yield* ledger.pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
+      );
+      expect(malformed.sessionsObserved).toBe(0);
+      expect(malformed.sessionsSkippedDisarmed).toBe(1);
     }).pipe(Effect.scoped)
   );
 
@@ -1102,6 +1111,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       ]);
       const ledger = yield* HarnessLedgerService;
       yield* fs.symlink(transcriptDir, path.join(nested, "loop"));
+      yield* fs.symlink(nested, path.join(transcriptDir, "a-alias"));
       yield* fs.symlink(path.join(transcriptDir, `${parent}.jsonl`), path.join(nested, "alias.jsonl"));
       yield* fs.symlink(path.join(root, "missing"), path.join(nested, "dangling.jsonl"));
       const report = yield* ledger.reconcile(stateDir, path.relative(".", transcriptDir), "claude-code");

@@ -12,6 +12,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Config from "effect/Config";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as F from "effect/Function";
@@ -590,13 +591,23 @@ export class HookPulseDisarmSentinel extends S.Class<HookPulseDisarmSentinel>($I
  * @since 0.0.0
  */
 export class HookPulseDisarmWindow extends S.Class<HookPulseDisarmWindow>($I`HookPulseDisarmWindow`)(
-  {
+  S.Struct({
     disarmedAt: S.OptionFromNullOr(HookPulseUtcTimestamp),
     evidenceTier: S.Literal(HookPulseEvidenceTier.Enum.unknown),
     reason: S.OptionFromNullOr(S.String),
     rearmedAt: HookPulseUtcTimestamp,
     schemaVersion: HookPulseDisarmWindowSchemaVersion,
-  },
+  }).check(
+    S.makeFilter(
+      ({ disarmedAt, rearmedAt }) =>
+        O.every(
+          disarmedAt,
+          (start) =>
+            DateTime.toEpochMillis(DateTime.makeUnsafe(start)) <= DateTime.toEpochMillis(DateTime.makeUnsafe(rearmedAt))
+        ),
+      { identifier: $I`HookPulseDisarmWindowOrder`, message: "Disarm start must not follow re-arm time." }
+    )
+  ),
   $I.annote("HookPulseDisarmWindow", {
     description: "One closed interval during which hook-pulse collection was disarmed.",
   })
@@ -1119,7 +1130,8 @@ const isSha256Hex = S.is(Sha256Hex);
  * ```ts
  * import { hookPulseHashSalt } from "@beep/repo-ai-metrics"
  * import * as ConfigProvider from "effect/ConfigProvider";
- * import * as Effect from "effect/Effect";
+ * import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
  * const pinned = Effect.provideService(
  *   hookPulseHashSalt,
  *   ConfigProvider.ConfigProvider,

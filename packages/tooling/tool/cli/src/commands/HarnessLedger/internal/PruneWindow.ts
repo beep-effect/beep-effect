@@ -29,7 +29,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as F from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
@@ -574,15 +573,15 @@ const readReconciliationHooks = Effect.fn("HarnessLedger.readReconciliationHooks
 const reconciliationTranscriptFiles = Effect.fn("HarnessLedger.reconciliationTranscriptFiles")(function* (
   dir: string,
   failures: Ref.Ref<number>,
-  visited = MutableHashSet.empty<string>()
+  ancestors = HashSet.empty<string>()
 ): Effect.fn.Return<ReadonlyArray<string>, HarnessLedgerIoError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const canonical = yield* fs
     .realPath(dir)
     .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve transcript directory.")));
-  if (MutableHashSet.has(visited, canonical)) return A.empty<string>();
-  MutableHashSet.add(visited, canonical);
+  if (HashSet.has(ancestors, canonical)) return A.empty<string>();
+  const nestedAncestors = HashSet.add(ancestors, canonical);
   const entries = yield* listDirectorySorted(dir).pipe(
     Effect.matchEffect({
       onFailure: () => Ref.update(failures, (count) => count + 1).pipe(Effect.as(A.empty<string>())),
@@ -601,7 +600,8 @@ const reconciliationTranscriptFiles = Effect.fn("HarnessLedger.reconciliationTra
           })
         );
         if (O.isNone(info)) return A.empty<string>();
-        if (info.value.type === "Directory") return yield* reconciliationTranscriptFiles(file, failures, visited);
+        if (info.value.type === "Directory")
+          return yield* reconciliationTranscriptFiles(file, failures, nestedAncestors);
         if (info.value.type !== "File" || !Str.endsWith(".jsonl")(entry)) return A.empty<string>();
         const canonicalFile = yield* fs.realPath(file).pipe(
           Effect.matchEffect({
