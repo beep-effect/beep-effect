@@ -67,7 +67,7 @@ case "${1:-status}" in
     jq -n -c --arg disarmedAt "$(now)" --arg reason "${2:-unspecified}" \
       '{ disarmedAt: $disarmedAt, reason: $reason, evidenceTier: "unknown" }' >"${staged}"
     if ln "${staged}" "${sentinel}" 2>/dev/null; then
-      transition disarm
+      transition disarm || true
       rm -f "${staged}"
       echo "hook-pulse disarmed: ${sentinel}"
       exit 0
@@ -151,9 +151,9 @@ case "${1:-status}" in
            reason: null,
            evidenceTier: "unknown"
          }' >>"${windows}"
-    transition arm
     # The window is durable; the claim can now be dropped rather than restored.
     trap - EXIT
+    transition arm || true
     rm -f "${claimed}"
     # A `disarm` can win the freed path between the rename above and here. The
     # appended window is still correct — the instrument really was off across it,

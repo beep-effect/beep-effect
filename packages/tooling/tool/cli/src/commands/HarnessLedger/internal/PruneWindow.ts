@@ -27,6 +27,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as F from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
@@ -259,9 +260,11 @@ const windowReport = (
     A.some(
       scan.disarmWindows,
       (gap) =>
-        O.isNone(gap.disarmedAt) ||
-        (tally.maxTs >= DateTime.toEpochMillis(DateTime.makeUnsafe(gap.disarmedAt.value)) &&
-          tally.minTs <= DateTime.toEpochMillis(DateTime.makeUnsafe(gap.rearmedAt)))
+        tally.minTs <= DateTime.toEpochMillis(DateTime.makeUnsafe(gap.rearmedAt)) &&
+        O.match(gap.disarmedAt, {
+          onNone: () => true,
+          onSome: (start) => tally.maxTs >= DateTime.toEpochMillis(DateTime.makeUnsafe(start)),
+        })
     );
   // A parent's first transcript is the root; nested transcripts contribute
   // touches to that root but never create extra qualifying sessions.
@@ -590,20 +593,26 @@ const readReconciliationHooks = Effect.fn("HarnessLedger.readReconciliationHooks
 });
 
 const reconciliationTranscriptFiles = Effect.fn("HarnessLedger.reconciliationTranscriptFiles")(function* (
-  dir: string
+  dir: string,
+  visited = MutableHashSet.empty<string>()
 ): Effect.fn.Return<ReadonlyArray<string>, HarnessLedgerIoError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const entries = yield* listDirectorySorted(dir);
+  const canonical = yield* fs
+    .realPath(dir)
+    .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve transcript directory.")));
+  if (MutableHashSet.has(visited, canonical)) return A.empty<string>();
+  MutableHashSet.add(visited, canonical);
+  const entries = yield* listDirectorySorted(canonical);
   return A.flatten(
     yield* Effect.forEach(
       entries,
       Effect.fnUntraced(function* (entry) {
-        const file = path.join(dir, entry);
+        const file = path.join(canonical, entry);
         const info = yield* fs
           .stat(file)
           .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot inspect transcript file.")));
-        if (info.type === "Directory") return yield* reconciliationTranscriptFiles(file);
+        if (info.type === "Directory") return yield* reconciliationTranscriptFiles(file, visited);
         return Str.endsWith(".jsonl")(entry) ? A.of(file) : A.empty<string>();
       }),
       { concurrency: 1 }
@@ -679,11 +688,15 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
   const hooks = MutableHashMap.empty<string, number>();
   const sessionHooks = MutableHashMap.empty<string, number>();
   let undecodableLines = yield* readReconciliationHooks(stateDir, agentKind, sessionHooks, hooks);
-  const files = yield* reconciliationTranscriptFiles(transcriptDir);
+  const fs = yield* FileSystem.FileSystem;
+  const canonical = yield* fs
+    .realPath(transcriptDir)
+    .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve transcript root.")));
+  const files = yield* reconciliationTranscriptFiles(canonical);
   const sessions = MutableHashMap.empty<string, number>();
   const transcriptPaths = MutableHashMap.empty<string, number>();
   for (const file of files) {
-    const counts = yield* readTranscriptCounts(file, transcriptDir, agentKind, hashSalt);
+    const counts = yield* readTranscriptCounts(file, canonical, agentKind, hashSalt);
     undecodableLines += counts.undecodableLines;
     if (counts.calls === 0) continue;
     MutableHashMap.set(
