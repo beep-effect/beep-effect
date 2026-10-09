@@ -315,6 +315,32 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("gates root config files in code mode", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeProjectFile(
+            "vitest.config.ts",
+            'import { Effect } from "effect";\nexport default Effect.void;\n'
+          );
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              strictCheck: true,
+              effectOnly: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["packages"],
+            })
+          );
+
+          expect(summary.scannedFiles).toBe(1);
+          expect(summary.rootImportsRewritten).toBe(1);
+          expect(summary.strictFailure).toBe(true);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("rewrites promoted roots to per-module imports and never reverses stable submodules", () =>
       Effect.andThen(
         temporaryWorkingDirectory,
@@ -990,6 +1016,37 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(yield* readProjectFile("explorations/demo/research.md")).toContain(
             'import { flow } from "effect/Function";'
           );
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("parses JSX fences with their full language and skips JSON fences", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeProjectFile(
+            "goals/demo/PLAN.md",
+            '# Plan\n\n```tsx\nimport { Effect } from "effect";\nconst view = <div />;\nconsole.log(Effect.void, view);\n```\n\n```jsx\nimport { flow } from "effect";\nconst view = <div />;\nconsole.log(flow, view);\n```\n\n```json\n{"sample":"import { Effect } from \\"effect\\""}\n```\n'
+          );
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              mode: "markdown",
+              effectOnly: true,
+              enforceDocumentation: true,
+              excludePaths: [],
+            })
+          );
+
+          expect(summary.scannedFences).toBe(2);
+          expect(summary.rootImportsRewritten).toBe(2);
+          const content = yield* readProjectFile("goals/demo/PLAN.md");
+          expect(content).toContain('import * as Effect from "effect/Effect";');
+          expect(content).toContain('import { flow } from "effect/Function";');
+          expect(content).toContain('```json\n{"sample":"import { Effect } from \\"effect\\""}\n```');
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

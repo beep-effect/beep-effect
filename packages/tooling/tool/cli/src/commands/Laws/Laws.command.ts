@@ -315,7 +315,6 @@ const lawsEffectImportsCommand = Command.make(
           "research",
           ".claude",
           ".github",
-          "vitest.shared.ts",
         ],
         ...includePathsOption(options.include),
       })

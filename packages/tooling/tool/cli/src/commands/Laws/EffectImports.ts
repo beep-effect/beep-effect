@@ -1525,7 +1525,7 @@ class EffectImportFenceTransformSummary extends S.Class<EffectImportFenceTransfo
 ) {}
 
 const markdownImportFencePattern =
-  /^ {0,3}(`{3,}|~{3,})(ts|tsx|typescript|js|jsx|javascript|mts|cts|mjs|cjs)[^\r\n]*\r?\n([\s\S]*?)^ {0,3}\1[ \t]*$/gim;
+  /^ {0,3}(`{3,}|~{3,})(typescript|javascript|tsx|jsx|mts|cts|mjs|cjs|ts|js)(?![\w-])[^\r\n]*\r?\n([\s\S]*?)^ {0,3}\1[ \t]*$/gim;
 
 const markdownImportFences = (content: string) =>
   pipe(
@@ -1639,6 +1639,7 @@ const isPathInActiveScope = (
       A.some(options.includePrefixes, (prefix) => hasPathPrefix(prefix, relativePath))) &&
   (options.candidate ||
     options.mode !== "code" ||
+    !Str.includes("/")(relativePath) ||
     A.some(options.promotedFamilyPrefixes, (prefix) => hasPathPrefix(prefix, relativePath)));
 
 const codeGlobsFor = (options: EffectImportRulesOptions): ReadonlyArray<string> => {
