@@ -246,6 +246,18 @@ checked with hasValidSeals. Content decode and caller-stamped
 SubmitContradictionCandidate decode are additional checks. Reversal: a separate
 caller-owned stamping adapter can be added without weakening full-entity proof.
 
+### 2026-10-09 — Concept generator scope
+
+Architecture dry-run plans placeholder WorkPriority files and package-level
+AGENTS.md, LICENSE and test/.gitkeep, plus a differing values barrel. Apply is
+unsafe for an existing package. Hand-author the four planned concept files in
+ContradictionDetection, add the export and barrel only, then run config-sync.
+Reversal: remove the new concept/export/barrel and regenerate aliases.
+The receipt is research/OPPORTUNITIES.md. Snapshot refs must be unique by
+edgeVersionId: one immutable version cannot carry two assertions in one view.
+Reject duplicate refs at decoding instead of order-dependent pair deduplication.
+Reversal: define an explicit merge rule and version the snapshot if needed.
+
 ## Acceptance Criteria
 
 - [ ] The conflict-class seat question above is answered on the record in

@@ -89,6 +89,13 @@ export * from "./ClaimProjection/index.ts";
  */
 export * from "./Contradiction/index.ts";
 /**
+ * Caller-populated contradiction detection inputs and sealed output content.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./ContradictionDetection/index.ts";
+/**
  * Edge endpoint value exports.
  *
  * **Example** (Decode claim edge endpoint)
