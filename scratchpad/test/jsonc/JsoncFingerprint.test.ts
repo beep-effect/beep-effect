@@ -452,4 +452,41 @@ describe("JsoncFingerprint", () => {
       assert.match(expected, SHA256_HEX);
     });
   });
+
+  // Review round 2 pins. Upstream parity: an array is walked by numeric index,
+  // re-reading `length`, so no method the input owns or inherits is ever read.
+  describe("array walk never observes an input-owned method", () => {
+    const methods: ReadonlyArray<PropertyKey> = ["keys", "values", "entries", "map", "forEach", "join", "toJSON", Symbol.iterator];
+
+    it("ignores a keys method that names other indices", () => {
+      const elsewhere = Object.assign([1, 2], { keys: () => [99].values() });
+      assertSuccess(JsoncFingerprint.canonicalizeResult(elsewhere), "[1,2]");
+      const none = Object.assign([1, 2], { keys: () => [].values() });
+      assertSuccess(JsoncFingerprint.canonicalizeResult({ nested: none }), '{"nested":[1,2]}');
+      class Reordered extends Array<number> {
+        override keys(): ArrayIterator<number> {
+          return [1, 0].values();
+        }
+      }
+      assertSuccess(JsoncFingerprint.canonicalizeResult(Reordered.of(1, 2)), "[1,2]");
+    });
+
+    it("never reads an iteration method, so a throwing getter or method is not run", () => {
+      for (const name of methods) {
+        const getter = Object.defineProperty([1, 2], name, {
+          get: (): never => {
+            throw new Error(`${String(name)} getter executed`);
+          },
+        });
+        assertSuccess(JsoncFingerprint.canonicalizeResult(getter), "[1,2]");
+        const method = Object.defineProperty([1, 2], name, {
+          value: (): never => {
+            throw new Error(`${String(name)} executed`);
+          },
+        });
+        assertSuccess(JsoncFingerprint.canonicalizeResult([method]), "[[1,2]]");
+        assertSuccess(JsoncFingerprint.hashResult(getter, nodeDigest), Result.getOrThrow(JsoncFingerprint.hashResult([1, 2], nodeDigest)));
+      }
+    });
+  });
 });

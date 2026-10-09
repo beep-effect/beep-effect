@@ -5,19 +5,15 @@
 // so the format surface stays symmetric with sibling document codecs. Both
 // statics are pure and total: computing edits never fails.
 
+import { thunk0 } from "@beep/utils/thunk";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { createScanner, SyntaxKind } from "./internal/scanner.ts";
 import type { JsoncRange } from "./JsoncEdit.ts";
-import {
-  JsoncEdit,
-  JsoncFormattingOptions,
-  type JsoncFormattingOptionsLike,
-} from "./JsoncEdit.ts";
-import { thunk0 } from "@beep/utils/thunk";
+import { JsoncEdit, JsoncFormattingOptions, type JsoncFormattingOptionsLike } from "./JsoncEdit.ts";
 
 const isSkipped = S.is(SyntaxKind.pick(["Trivia", "LineBreak"]));
 const isCloser = S.is(SyntaxKind.pick(["CloseBrace", "CloseBracket"]));
@@ -97,7 +93,11 @@ interface Gap {
   readonly depth: number;
 }
 
-const formatImpl = (text: string, range: O.Option<JsoncRange>, options: JsoncFormattingOptions): ReadonlyArray<JsoncEdit> => {
+const formatImpl = (
+  text: string,
+  range: O.Option<JsoncRange>,
+  options: JsoncFormattingOptions
+): ReadonlyArray<JsoncEdit> => {
   const indentUnit = options.insertSpaces ? Str.repeat(options.tabSize)(" ") : "\t";
   // A surplus closer drives `depth` below zero. `Str.repeat` clamps that to no
   // indent, so formatting stays total where upstream's `String.prototype.repeat`
@@ -106,18 +106,16 @@ const formatImpl = (text: string, range: O.Option<JsoncRange>, options: JsoncFor
   const breakOrSpace = (gap: string, depth: number): string => (Str.includes("\n")(gap) ? newline(depth) : " ");
 
   // The canonical gap before a token, given what came before it.
-  const applyGapDepthFromNewLine = <T extends {
-    depth: number
-  }>({ depth }: T) => newline(depth);
+  const gapAtDepth = (g: Gap): string => newline(g.depth);
   const expectedGap: (gap: Gap) => string = Match.type<Gap>().pipe(
-    Match.when({ kind: isCloser }, applyGapDepthFromNewLine),
-    Match.when({ prevToken: isOpener }, applyGapDepthFromNewLine),
-    Match.when({ prevToken: SyntaxKind.Enum.Comma }, applyGapDepthFromNewLine),
+    Match.when({ kind: isCloser }, gapAtDepth),
+    Match.when({ prevToken: isOpener }, gapAtDepth),
+    Match.when({ prevToken: SyntaxKind.Enum.Comma }, gapAtDepth),
     Match.when({ prevToken: SyntaxKind.Enum.Colon }, () => " "),
     Match.when({ kind: isComment }, (g) => breakOrSpace(g.gap, g.depth)),
-    Match.when({ prevToken: SyntaxKind.Enum.LineComment }, applyGapDepthFromNewLine),
+    Match.when({ prevToken: SyntaxKind.Enum.LineComment }, gapAtDepth),
     Match.when({ prevToken: SyntaxKind.Enum.BlockComment }, (g) => breakOrSpace(g.gap, g.depth)),
-    Match.orElse((g) => g.gap),
+    Match.orElse((g) => g.gap)
   );
 
   const rangeStart = O.match(range, {

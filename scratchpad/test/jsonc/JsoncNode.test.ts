@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -65,7 +65,7 @@ describe("JsoncNode", () => {
       const encoded = Result.getOrThrow(S.encodeResult(JsoncNode)(node));
       const decoded = Result.getOrThrow(S.decodeResult(JsoncNode)(encoded));
       assert.isTrue(Equal.equals(node, decoded));
-      S.decodeResult(JsoncNode)({ type: "array", offset: -1, length: 0 }).pipe(Result.isFailure, assertTrue);
+      assertFailure(Result.mapError(S.decodeResult(JsoncNode)({ type: "array", offset: -1, length: 0 }), (error) => error._tag), "SchemaError");
     });
   });
 

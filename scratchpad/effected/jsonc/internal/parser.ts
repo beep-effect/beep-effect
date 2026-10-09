@@ -18,6 +18,7 @@ import { dual } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import type { JsoncNodeType } from "../JsoncNode.ts";
 import { JsoncNode, makeNodeUnsafe } from "../JsoncNode.ts";
 import { MAX_NESTING_DEPTH } from "./limits.ts";
 import type { ScanError } from "./scanner.ts";
@@ -250,6 +251,10 @@ export const scanErrorToCode: (error: ScanError) => O.Option<ParseCode> = Match.
 const isStructuralTrivia = S.is(SyntaxKind.pick(["LineComment", "BlockComment", "Trivia", "LineBreak"]));
 const isComment = S.is(SyntaxKind.pick(["LineComment", "BlockComment"]));
 
+// The node types one token produces: every `JsoncNodeType` but the two
+// containers and the key-value pair, read off the kit so they never drift.
+type LeafNodeType = Exclude<JsoncNodeType, "object" | "array" | "property">;
+
 interface Internal {
   readonly value: unknown;
   readonly root: O.Option<JsoncNode>;
@@ -462,7 +467,7 @@ const run = (text: string, flags: ParseFlags, buildTree: boolean): Internal => {
 
   // ── Tree mode ───────────────────────────────────────────────────────────
 
-  const leafTree = (type: "string" | "number" | "boolean" | "null", value: unknown): JsoncNode => {
+  const leafTree = (type: LeafNodeType, value: unknown): JsoncNode => {
     const offset = scanner.getTokenOffset();
     const end = tokenEnd();
     scanNext();

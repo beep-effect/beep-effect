@@ -213,7 +213,8 @@ export class JsoncParseOptions extends S.Class<JsoncParseOptions>($I`JsoncParseO
  * **Details**
  *
  * - `CircularReference`: the value contains a reference cycle.
- * - `BigIntValue`: the value contains a `bigint` anywhere.
+ * - `BigIntValue`: the value contains a `bigint` anywhere, primitive or boxed
+ *   (`Object(1n)`).
  * - `TopLevelUnrepresentable`: the top-level value (`undefined`, a function
  *   or a symbol) serializes to no output at all.
  * - `SerializationFailed`: serialization threw for another reason, typically
@@ -256,7 +257,9 @@ export type JsoncStringifyErrorCode = typeof JsoncStringifyErrorCode.Type;
  * **Details**
  *
  * - `tabSize`: indent width in spaces when `insertSpaces` is `true`. Defaults
- *   to `2`; `0` produces compact single-line output.
+ *   to `2`; `0` produces compact single-line output. Any finite number is
+ *   accepted and handed to `JSON.stringify` as its `space` argument, which
+ *   truncates it and caps it at `10`; a negative width is compact too.
  * - `insertSpaces`: indent with spaces when `true`, one tab when `false`.
  *   Defaults to `true`.
  *
@@ -276,7 +279,7 @@ export type JsoncStringifyErrorCode = typeof JsoncStringifyErrorCode.Type;
  */
 export class JsoncStringifyOptions extends S.Class<JsoncStringifyOptions>($I`JsoncStringifyOptions`)(
   {
-    tabSize: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(2)), S.withDecodingDefaultKey(Effect.succeed(2))),
+    tabSize: S.Finite.pipe(S.withConstructorDefault(Effect.succeed(2)), S.withDecodingDefaultKey(Effect.succeed(2))),
     insertSpaces: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
       S.withDecodingDefaultKey(Effect.succeed(true))
@@ -294,7 +297,10 @@ export class JsoncStringifyOptions extends S.Class<JsoncStringifyOptions>($I`Jso
  * **Details**
  *
  * Raised by {@link Jsonc.stringify}, {@link Jsonc.stringifyResult} and the
- * encode direction of the schema factories.
+ * encode direction of the schema factories. The `code` carries the reason.
+ * For `TopLevelUnrepresentable` the `detail` names the absent output; for the
+ * other codes it is the sentence of the schema JSON codec that refused the
+ * value, the same for each, not the JavaScript engine's own message.
  *
  * **Example** (Classify a bigint failure)
  *
@@ -324,7 +330,7 @@ export class JsoncStringifyError extends S.TaggedError<JsoncStringifyError>($I.m
   })
 ) {
   /**
-   * Render the failure code and the engine's detail as one line.
+   * Render the failure code and its detail as one line.
    *
    * **Example** (Read the rendered message)
    *
@@ -402,6 +408,21 @@ const isComment = S.is(SyntaxKind.pick(["LineComment", "BlockComment"]));
 const isUnrepresentable = (value: unknown): boolean => P.isUndefined(value) || P.isFunction(value) || P.isSymbol(value);
 
 const topLevelUnrepresentableDetail = "the top-level value (undefined, a function or a symbol) has no JSON representation";
+
+// `thisBigIntValue`, the test the engine applies once the replacer has run: it
+// answers for a primitive bigint and for a boxed one (`Object(1n)`), whatever
+// the box's prototype, and throws for every other value. It reads an internal
+// slot, so no code the value owns runs.
+const isBigIntValue = (value: unknown): boolean => Result.isSuccess(Result.try(() => BigInt.prototype.valueOf.call(value)));
+
+// Upstream writes `replaceCh` once per comment code unit and keeps the line
+// breaks. The units are mapped one by one, never through a replacement
+// pattern, so a `$` in `replaceCh` stays a `$`.
+const blankComment = (comment: string, replaceCh: string): string =>
+  A.join(
+    A.map(Str.split(comment, Str.empty), (unit) => (unit === "\n" || unit === "\r" ? unit : replaceCh)),
+    Str.empty
+  );
 
 // ── Bound codec ─────────────────────────────────────────────────────────────
 
@@ -615,6 +636,11 @@ export abstract class Jsonc {
     // alone decides whether the output is absent (upstream classifies the
     // same post-`toJSON` value).
     let root = true;
+    // The value the replacer handed back last. The engine refuses a bigint,
+    // primitive or boxed, the moment it gets one back, so after a failure this
+    // is the value to test; testing every visited value would cost a caught
+    // throw per object.
+    let last: unknown;
     // The open containers from the root down to the current holder, popped in
     // place: each visit costs the cycle scan the engine also makes, not a copy
     // of the whole stack.
@@ -628,9 +654,8 @@ export abstract class Jsonc {
             code = JsoncStringifyErrorCode.Enum.TopLevelUnrepresentable;
           }
         }
-        if (P.isBigInt(current)) {
-          code = JsoncStringifyErrorCode.Enum.BigIntValue;
-        } else if (P.isObjectKeyword(current)) {
+        last = current;
+        if (P.isObjectKeyword(current)) {
           while (A.isArrayNonEmpty(ancestors) && A.lastNonEmpty(ancestors) !== this) {
             ancestors.pop();
           }
@@ -645,7 +670,7 @@ export abstract class Jsonc {
     return S.encodeResult(codec)(value).pipe(
       Result.mapError((error) =>
         JsoncStringifyError.make({
-          code,
+          code: isBigIntValue(last) ? JsoncStringifyErrorCode.Enum.BigIntValue : code,
           detail: JsoncStringifyErrorCode.is.TopLevelUnrepresentable(code) ? topLevelUnrepresentableDetail : error.message,
           value,
         })
@@ -714,8 +739,7 @@ export abstract class Jsonc {
         const length = scanner.getTokenLength();
         parts.push(text.substring(lastOffset, offset));
         if (P.isString(replaceCh)) {
-          const comment = text.substring(offset, offset + length);
-          parts.push(Str.replace(/[^\n\r]/g, replaceCh)(comment));
+          parts.push(blankComment(text.substring(offset, offset + length), replaceCh));
         }
         lastOffset = offset + length;
       }

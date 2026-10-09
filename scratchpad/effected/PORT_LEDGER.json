@@ -544,7 +544,7 @@
         {
           "test": "scratchpad/test/jsonc/Jsonc.test.ts:362 (adjusts upstream __test__/Jsonc.test.ts:389)",
           "upstreamBehaviour": "a throwing toJSON escapes Jsonc.stringifyResult as the thrown RangeError and Jsonc.stringify as a Cause.Die defect",
-          "labBehaviour": "Jsonc.stringifyResult fails with JsoncStringifyError code SerializationFailed; Jsonc.stringify fails typed with it",
+          "labBehaviour": "Jsonc.stringifyResult fails with JsoncStringifyError code SerializationFailed (its detail is the codec's sentence, not the thrown message; see the detail deviation); Jsonc.stringify fails typed with it",
           "reason": "law:7 (typed errors via S.TaggedError) + law:13 (schema transformation over ad-hoc serialization); upstream CLAUDE.md hardening invariant requires hostile input to fail through the typed channel"
         },
         {
@@ -588,6 +588,30 @@
           "upstreamBehaviour": "JsoncModificationError.offset is Schema.optionalKey(Schema.Number), so Infinity or NaN decode and render",
           "labBehaviour": "offset is S.optionalKey(S.Finite), so a non-finite offset fails decoding; modify never sets offset",
           "reason": "law:tsgo-schemaNumber (effect(schemaNumber) is an error in tsconfig.base.json: S.Number admits NaN and Infinity) and schema-first precision"
+        },
+        {
+          "test": "scratchpad/test/jsonc/Jsonc.test.ts:650 (\"carries the schema codec's sentence as detail for every thrown failure\"); upstream __test__/Jsonc.test.ts:330 and :342 assert only code, so no upstream assertion changes",
+          "upstreamBehaviour": "Jsonc.stringifyResult catches the engine's TypeError and stores its message as detail (JavaScriptCore: \"JSON.stringify cannot serialize BigInt.\" and \"JSON.stringify cannot serialize cyclic structures.\"; upstream's JSDoc says the V8 cycle message also names the property path)",
+          "labBehaviour": "for BigIntValue, CircularReference and SerializationFailed detail is \"Expected a JSON-serializable value\", the message of the schema issue the S.fromJsonString codec reports; code still names the cause and equals upstream's for bigints (primitive or boxed) and cycles; TopLevelUnrepresentable keeps upstream's sentence",
+          "reason": "law:13 (schema transformations over ad-hoc serialization) plus the JSON-codec rule of standards/effect-first-development.md:104 / effect-first skill law 22 (never JSON.parse or JSON.stringify; use schema JSON codecs): only a direct JSON.stringify inside a try can observe the thrown message, and the codec's getter discards it"
+        },
+        {
+          "test": "scratchpad/test/jsonc/Jsonc.test.ts:669 (\"classifies a caller-thrown TypeError as SerializationFailed whatever its message says\")",
+          "upstreamBehaviour": "every caught TypeError is classified by matching its message against /circular|cyclic/i and /bigint/i, so a toJSON or getter that throws TypeError(\"my bigint thing\") returns a typed BigIntValue failure with the caller's message as detail, and TypeError(\"circular dependency\") returns CircularReference",
+          "labBehaviour": "the code comes from the value the engine refused (bigint by internal slot, cycle by ancestor identity); any throw from caller code is SerializationFailed",
+          "reason": "upstream-bug: upstream's own JSDoc for stringifyResult says a throwing toJSON method or getter \"is caller code failing and rethrows as a defect, never a typed error\"; the message heuristic contradicts it for a TypeError mentioning one of the three words (probe: stringifyResult({ toJSON() { throw new TypeError(\"my bigint thing\") } }) returns BigIntValue), and upstream __test__/Jsonc.test.ts:389 throws a RangeError, which the heuristic never reaches"
+        },
+        {
+          "test": "scratchpad/test/jsonc/Jsonc.test.ts:710, scratchpad/test/jsonc/JsoncFormatter.test.ts:152 and scratchpad/test/jsonc/JsoncModifier.test.ts:360 (each \"rejects a non-finite width\"); no upstream test passes a non-finite width",
+          "upstreamBehaviour": "tabSize is Schema.optionalKey(Schema.Number) on JsoncStringifyOptions and JsoncFormattingOptions, so NaN and the infinities are accepted: stringifyResult reads NaN and -Infinity as compact and Infinity as ten spaces; with insertSpaces true, format and modify read NaN as no indent and fail with a RangeError for either infinity",
+          "labBehaviour": "both fields are S.Finite with the default 2; every finite width is accepted, and a non-finite one is rejected when the options are constructed or decoded (make throws, so format and formatToString throw and modify dies on a literal that carries one)",
+          "reason": "law:tsgo-schemaNumber (effect(schemaNumber) is an error in tsconfig.base.json: S.Number admits NaN and Infinity); same cause as the JsoncModificationError.offset deviation"
+        },
+        {
+          "test": "scratchpad/test/jsonc/JsoncFormatter.test.ts:138 (\"formats a width of -1 or below with no indent instead of throwing\") and scratchpad/test/jsonc/JsoncModifier.test.ts:344 (\"stays total for a width of -1 or below, with no indent\"); no upstream test passes a negative width",
+          "upstreamBehaviour": "with insertSpaces true, JsoncFormatter.format, formatToString and JsoncModifier.modify build the indent unit with \" \".repeat(tabSize), which throws a RangeError for a width of -1 or below; modify builds it before navigating, so every call dies, deletions and no-ops included",
+          "labBehaviour": "Str.repeat clamps the unit to the empty string: the formatter breaks lines without indenting and modify inserts unindented entries around a compact value; widths between -1 and 0, fractional widths and insertSpaces false behave exactly as upstream",
+          "reason": "upstream-bug: a RangeError defect escapes format and formatToString, which upstream documents as pure and total, and modify, on an option value upstream's own schema accepts; same family as the surplus-closer formatter deviation"
         }
       ],
       "backlog": [
@@ -626,6 +650,18 @@
           "round": 1,
           "finding": "fable-1-16 Bool.match for deleting/isFirst in JsoncModifier",
           "reason": "law 12 targets domain orchestration; ternaries inside one expression are backlog"
+        },
+        {
+          "seat": "fable",
+          "round": 2,
+          "finding": "fable-2-4 six facade statics take two data arguments and have no pipeable form (Jsonc.equals, Jsonc.equalsValue, JsoncEdit.applyAll, JsoncEdit.applyAllResult, JsoncFingerprint.hashResult, JsoncFingerprint.hashTextResult); the tsgo rule does not inspect class statics",
+          "reason": "upstream facade shape kept under D2 and D9; decide module-level dual twins or an inventory exemption at promotion"
+        },
+        {
+          "seat": "grok",
+          "round": 2,
+          "finding": "grok-2-2 / fable-2-2 JsoncStringifyError.detail carries the codec's sentence instead of the engine's message",
+          "reason": "recorded as a deviation (law: JSON codec rule forbids the direct JSON.stringify that alone can observe the thrown message); revisit if Effect's stringifyJson getter starts carrying the cause"
         }
       ],
       "reviewRounds": [
@@ -644,6 +680,24 @@
             "fable": {
               "required": 9,
               "backlog": 7
+            }
+          }
+        },
+        {
+          "round": 2,
+          "commit": "1dc437fe3325d2b89bef4748a686827890174abd",
+          "seats": {
+            "grok": {
+              "required": 3,
+              "backlog": 0
+            },
+            "sol": {
+              "required": 3,
+              "backlog": 0
+            },
+            "fable": {
+              "required": 3,
+              "backlog": 6
             }
           }
         }

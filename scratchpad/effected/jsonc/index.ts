@@ -2,6 +2,8 @@
  * JSONC parsing, editing, formatting and fingerprinting as Effect schemas and
  * pure functions.
  *
+ * **Details**
+ *
  * Parse JSONC into values or an offset-preserving AST, strip comments, compute
  * byte-minimal edits, format, modify by path, walk a document as a `Stream`,
  * canonicalize and fingerprint, with one aggregate parse error and

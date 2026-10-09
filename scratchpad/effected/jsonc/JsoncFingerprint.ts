@@ -238,11 +238,16 @@ const emitMember = (container: object, key: string | number, memberPath: string,
 const emitMembers = <K>(keys: Iterable<K>, member: (key: K) => Emit): Result.Result<Array<string>, JsoncCanonicalizeError> =>
   Result.all(I.map(keys, member));
 
+// The indices of an array, counted here and compared against `length` before
+// every step, as upstream's indexed loop does. The array's own `keys`,
+// `values`, `entries` and iterator are never read: they are the input's to
+// override, and one that names other indices or throws must change nothing.
+const indices = (value: ReadonlyArray<unknown>): Iterable<number> => I.takeWhile(I.range(0), (index) => index < value.length);
+
 const emitArray = (value: ReadonlyArray<unknown>, path: string, depth: number): Emit =>
   // Indexed reads, never `map`: `map` skips holes, which must instead read as
-  // `undefined` and fail typed at the hole's index. The index iterator
-  // re-reads `length` before every step, as upstream's indexed loop does.
-  emitMembers(value.keys(), (index) => emitMember(value, index, `${path}/${index}`, depth)).pipe(
+  // `undefined` and fail typed at the hole's index.
+  emitMembers(indices(value), (index) => emitMember(value, index, `${path}/${index}`, depth)).pipe(
     Result.map((items) => `[${A.join(items, ",")}]`)
   );
 

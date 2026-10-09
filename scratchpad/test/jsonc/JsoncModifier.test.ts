@@ -21,7 +21,7 @@ describe("JsoncModifier", () => {
     it("JsoncModifyOptions accepts a literal formatting bag", () => {
       assert.isTrue(S.is(JsoncModifyOptions)({ formattingOptions: { insertSpaces: false } }));
       assert.isTrue(S.is(JsoncModifyOptions)({}));
-      assert.isFalse(S.is(JsoncModifyOptions)({ formattingOptions: { tabSize: -1 } }));
+      assert.isTrue(S.is(JsoncModifyOptions)({ formattingOptions: { tabSize: -1 } }));
     });
 
     it("JsoncModificationError renders its path, kind and depth", () => {
@@ -304,5 +304,64 @@ describe("JsoncModifier", () => {
         assert.strictEqual(out, '{"k":5}');
       })
     );
+  });
+
+  // Review round 2 pins. They sit at the end of the file so every test above
+  // keeps the line number the README and the ledger cite.
+  describe("tabSize", () => {
+    const width = (tabSize: number, insertSpaces = true) => ({ formattingOptions: { tabSize, insertSpaces } });
+    const contents = (edits: ReadonlyArray<JsoncEdit>): ReadonlyArray<string> => edits.map((edit) => edit.content);
+    const isModifyOptions = S.is(JsoncModifyOptions);
+
+    // Upstream parity: `tabSize` is any number. The indent unit truncates it
+    // toward zero, and JSON.stringify truncates it and clamps it to 0..10.
+    it.effect("accepts a fractional width, truncated toward zero", () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(contents(yield* JsoncModifier.modify("{}", ["a"], 1, width(1.5))), ['\n "a": 1\n']);
+        assert.deepStrictEqual(contents(yield* JsoncModifier.modify("{}", ["a"], 1, width(2.9))), ['\n  "a": 1\n']);
+        assert.deepStrictEqual(contents(yield* JsoncModifier.modify('{"a":0}', ["a"], { b: [1] }, width(1.5))), ['{\n "b": [\n  1\n ]\n}']);
+        for (const tabSize of [0.5, -0.5]) {
+          assert.isTrue(isModifyOptions(width(tabSize)));
+          assert.deepStrictEqual(contents(yield* JsoncModifier.modify("{}", ["a"], 1, width(tabSize))), ['\n"a": 1\n']);
+        }
+        assert.deepStrictEqual(contents(yield* JsoncModifier.modify('{"a":0}', ["a"], { b: [1] }, width(-0.5))), ['{"b":[1]}']);
+      })
+    );
+
+    it.effect("ignores the width when indenting with tabs", () =>
+      Effect.gen(function* () {
+        for (const tabSize of [-2, -1, 1.5]) {
+          assert.deepStrictEqual(contents(yield* JsoncModifier.modify("{}", ["a"], 1, width(tabSize, false))), ['\n\t"a": 1\n']);
+        }
+      })
+    );
+
+    // Port deviation (upstream-bug): upstream builds the indent unit with
+    // `" ".repeat(tabSize)`, which throws a RangeError for a width of -1 or
+    // below, so every call dies whatever the path; the lab clamps the unit to
+    // no indent and the value serializes compactly, as JSON.stringify reads a
+    // negative width.
+    it.effect("stays total for a width of -1 or below, with no indent", () =>
+      Effect.gen(function* () {
+        for (const tabSize of [-1, -1.5, -100]) {
+          assert.deepStrictEqual(contents(yield* JsoncModifier.modify("{}", ["a"], { b: [1] }, width(tabSize))), ['\n"a": {"b":[1]}\n']);
+          assert.deepStrictEqual(contents(yield* JsoncModifier.modify("[1]", [1], 2, width(tabSize))), [",\n2"]);
+          assert.deepStrictEqual(yield* JsoncModifier.modify('{"a":0}', ["a"], undefined, width(tabSize)), [
+            JsoncEdit.make({ offset: 1, length: 5, content: "" }),
+          ]);
+        }
+      })
+    );
+
+    // Port deviation (law: the schemaNumber Effect rule): upstream types
+    // `tabSize` as Schema.Number and reads its options without validating them,
+    // so NaN formats with no indent; the lab's S.Finite rejects NaN and the
+    // infinities when the options are constructed or decoded.
+    it("rejects a non-finite width", () => {
+      for (const tabSize of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+        assert.isFalse(isModifyOptions(width(tabSize)));
+        assert.throws(() => JsoncFormattingOptions.make({ tabSize }));
+      }
+    });
   });
 });

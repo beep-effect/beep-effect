@@ -55,7 +55,8 @@ export class JsoncRange extends S.Class<JsoncRange>($I`JsoncRange`)(
  * **Details**
  *
  * - `tabSize`: indent width in columns when `insertSpaces` is `true`. Defaults
- *   to `2`.
+ *   to `2`. Any finite number is accepted: a fractional width is truncated
+ *   toward zero, and a negative one indents by nothing.
  * - `insertSpaces`: indent with spaces when `true`, one tab when `false`.
  *   Defaults to `true`.
  * - `eol`: the line ending inserted between formatted tokens. Defaults to
@@ -81,7 +82,7 @@ export class JsoncRange extends S.Class<JsoncRange>($I`JsoncRange`)(
  */
 export class JsoncFormattingOptions extends S.Class<JsoncFormattingOptions>($I`JsoncFormattingOptions`)(
   {
-    tabSize: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(2)), S.withDecodingDefaultKey(Effect.succeed(2))),
+    tabSize: S.Finite.pipe(S.withConstructorDefault(Effect.succeed(2)), S.withDecodingDefaultKey(Effect.succeed(2))),
     insertSpaces: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
       S.withDecodingDefaultKey(Effect.succeed(true))

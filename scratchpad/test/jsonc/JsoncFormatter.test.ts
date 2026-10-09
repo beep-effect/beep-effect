@@ -1,7 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { JsoncEdit, JsoncFormatter, JsoncFormattingOptions, JsoncRange } from "../../effected/jsonc/index.ts";
+import { JsoncEdit, JsoncFormatter, JsoncFormattingOptions, JsoncFormattingOptionsLike, JsoncRange } from "../../effected/jsonc/index.ts";
 
 describe("JsoncFormatter", () => {
   describe("format / formatToString", () => {
@@ -104,5 +104,57 @@ describe("JsoncFormatter", () => {
         assert.deepStrictEqual(JsoncFormatter.format(once), []);
       })
     );
+  });
+
+  // Review round 2 pins. They sit at the end of the file so every test above
+  // keeps the line number the README and the ledger cite.
+  describe("tabSize", () => {
+    const format = (text: string, tabSize: number, insertSpaces = true): string =>
+      JsoncFormatter.formatToString(text, undefined, { tabSize, insertSpaces });
+    const isOptionsLike = S.is(JsoncFormattingOptionsLike);
+
+    // Upstream parity: `tabSize` is any number and the indent unit truncates it
+    // toward zero.
+    it("accepts a fractional width, truncated toward zero", () => {
+      assert.strictEqual(format('{"a":[1]}', 1.5), '{\n "a": [\n  1\n ]\n}');
+      assert.strictEqual(format('{"a":[1]}', 2.9), '{\n  "a": [\n    1\n  ]\n}');
+      assert.strictEqual(format("[1,[2]] // c", 1.5), "[\n 1,\n [\n  2\n ]\n] // c");
+      for (const tabSize of [0.5, -0.5, -0.999]) {
+        assert.isTrue(isOptionsLike({ tabSize }));
+        assert.strictEqual(format('{"a":[1]}', tabSize), '{\n"a": [\n1\n]\n}');
+      }
+    });
+
+    it("ignores the width when indenting with tabs", () => {
+      for (const tabSize of [-2, -1, 1.5]) {
+        assert.strictEqual(format('{"a":[1]}', tabSize, false), '{\n\t"a": [\n\t\t1\n\t]\n}');
+      }
+    });
+
+    // Port deviation (upstream-bug): upstream builds the indent unit with
+    // `" ".repeat(tabSize)`, which throws a RangeError for a width of -1 or
+    // below, a defect from a total function; the lab clamps the unit to no
+    // indent.
+    it("formats a width of -1 or below with no indent instead of throwing", () => {
+      for (const tabSize of [-1, -1.5, -100]) {
+        assert.strictEqual(format('{"a":[1]}', tabSize), '{\n"a": [\n1\n]\n}');
+        assert.deepStrictEqual(
+          JsoncFormatter.format('{"a":[1]}', undefined, JsoncFormattingOptions.make({ tabSize })).map((edit) => [edit.offset, edit.length, edit.content]),
+          [[1, 0, "\n"], [5, 0, " "], [6, 0, "\n"], [7, 0, "\n"], [8, 0, "\n"]]
+        );
+      }
+    });
+
+    // Port deviation (law: the schemaNumber Effect rule): upstream types
+    // `tabSize` as Schema.Number and reads its options without validating them,
+    // so NaN formats with no indent; the lab's S.Finite rejects NaN and the
+    // infinities when the options are constructed.
+    it("rejects a non-finite width", () => {
+      for (const tabSize of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+        assert.isFalse(isOptionsLike({ tabSize }));
+        assert.throws(() => JsoncFormattingOptions.make({ tabSize }));
+        assert.throws(() => JsoncFormatter.format("{}", undefined, { tabSize }));
+      }
+    });
   });
 });

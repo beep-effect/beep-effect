@@ -242,7 +242,7 @@ Each entry gives the lab test that pins it, upstream behaviour, lab behaviour an
 1. **A throwing `toJSON` fails typed instead of escaping as a defect.**
    - Test: `scratchpad/test/jsonc/Jsonc.test.ts:362` ("a throwing toJSON fails typed with SerializationFailed"), adjusting upstream `__test__/Jsonc.test.ts:389` ("a throwing toJSON rethrows as a defect, never a typed error").
    - Upstream: `Jsonc.stringifyResult` rethrows the `RangeError` thrown by `toJSON`; inside `Jsonc.stringify` it surfaces as a `Cause.Die` defect.
-   - Lab: `Jsonc.stringifyResult` returns a `JsoncStringifyError` with code `SerializationFailed`, and `Jsonc.stringify` fails with it. Serialization runs through the `S.fromJsonString` codec, which reports any throw as a schema error; `SerializationFailed` is the code left when the replacer has classified neither a `bigint` nor a cycle.
+   - Lab: `Jsonc.stringifyResult` returns a `JsoncStringifyError` with code `SerializationFailed`, and `Jsonc.stringify` fails with it. Serialization runs through the `S.fromJsonString` codec, which reports any throw as a schema error; `SerializationFailed` is the code left when the value the engine refused is neither a `bigint` (primitive or boxed) nor one of its own open containers (a cycle), and the top-level output is not absent. Its `detail` is the codec's sentence, not the thrown message (deviation 11).
    - Reason: `law:7` (typed errors via `S.TaggedError`, not escaping native exceptions) and `law:13` (schema transformations over ad-hoc serialization). It also matches upstream's own hardening invariant in `CLAUDE.md` ("Malformed or hostile input must fail through the typed `E` channel"), which upstream's test contradicts.
 
 2. **`JsoncModifier.modify` re-indents multi-line inserted values to the insertion depth.**
@@ -299,6 +299,30 @@ Each entry gives the lab test that pins it, upstream behaviour, lab behaviour an
    - Upstream: `Jsonc.parseResult("{ bad }")` reports `InvalidSymbol` then `PropertyNameExpected`, both at offset 2, length 3, line 0, character 2; `parseTreeResult` and `JsoncVisitor.visit` report the same order.
    - Lab: identical.
    - Reason: none required. The lab tests pin upstream's existing order where upstream's assertions were looser; the entry stays so a reviewer does not reopen it.
+
+11. **A stringify failure's `detail` is the schema codec's sentence, not the engine's message.**
+   - Test: `scratchpad/test/jsonc/Jsonc.test.ts:650` ("carries the schema codec's sentence as detail for every thrown failure"). Upstream `__test__/Jsonc.test.ts:330` and `:342` assert only `code`, so no upstream assertion changes.
+   - Upstream: `Jsonc.stringifyResult` catches the engine's `TypeError` and stores its message as `detail`. On JavaScriptCore that is `JSON.stringify cannot serialize BigInt.` or `JSON.stringify cannot serialize cyclic structures.`; upstream's JSDoc notes that on V8 the cycle message also names the offending property path.
+   - Lab: for `BigIntValue`, `CircularReference` and `SerializationFailed` the `detail` is `Expected a JSON-serializable value`, the message of the schema issue the `S.fromJsonString` codec reports. The codec catches the throw and keeps nothing of it. `code` still names the cause, and for a `bigint` (primitive or boxed) or a cycle it is the code upstream reports; `TopLevelUnrepresentable` carries upstream's sentence unchanged.
+   - Reason: `law:13` (schema transformations over ad-hoc serialization) and the JSON-codec rule of `standards/effect-first-development.md` ("Never use `JSON.parse` / `JSON.stringify`; use schema JSON codecs"). Only a direct `JSON.stringify` call inside a `try` can observe the engine's message, and that is the call the rule forbids.
+
+12. **A caller's thrown `TypeError` is never classified by its message.**
+   - Test: `scratchpad/test/jsonc/Jsonc.test.ts:669` ("classifies a caller-thrown TypeError as SerializationFailed whatever its message says").
+   - Upstream: `Jsonc.stringifyResult` classifies every caught `TypeError` by matching its message against `/circular|cyclic/i` and `/bigint/i`. A `toJSON` method or getter that throws `new TypeError("my bigint thing")` therefore returns a typed `BigIntValue` failure whose `detail` is the caller's message, and `new TypeError("circular dependency")` returns `CircularReference`. Any other throw is rethrown (deviation 1).
+   - Lab: the code comes from the value the engine refused: `BigIntValue` when it is a `bigint`, primitive or boxed, and `CircularReference` when it is one of its own open containers. A throw from caller code is `SerializationFailed`, whatever its message says.
+   - Reason: `upstream-bug:` upstream's JSDoc for `stringifyResult` says a throwing `toJSON` method or getter "is caller code failing and rethrows as a defect, never a typed error". The message heuristic contradicts that for a `TypeError` that mentions one of the three words, and upstream `__test__/Jsonc.test.ts:389` throws a `RangeError`, which the heuristic never reaches.
+
+13. **`tabSize` must be finite.**
+   - Test: `scratchpad/test/jsonc/Jsonc.test.ts:710`, `scratchpad/test/jsonc/JsoncFormatter.test.ts:152` and `scratchpad/test/jsonc/JsoncModifier.test.ts:360` (each "rejects a non-finite width"). No upstream test passes a non-finite width.
+   - Upstream: `tabSize` is `Schema.optionalKey(Schema.Number)` on `JsoncStringifyOptions` and `JsoncFormattingOptions`, so `NaN` and the infinities are accepted. `stringifyResult` reads `NaN` and `-Infinity` as compact output and `Infinity` as ten spaces; with `insertSpaces` left `true`, `JsoncFormatter.format` and `JsoncModifier.modify` read `NaN` as no indent and fail with a `RangeError` for either infinity.
+   - Lab: both fields are `S.Finite` with the same default of `2`. Every finite width is accepted, negative and fractional widths included, and read as upstream reads it apart from deviation 14 (`scratchpad/test/jsonc/Jsonc.test.ts:693`, `JsoncFormatter.test.ts:118` and `JsoncModifier.test.ts:318`). A non-finite width is rejected when the options are constructed or decoded: `make` throws, so `format` and `formatToString` throw and `modify` dies on a literal that carries one.
+   - Reason: `law:` the `schemaNumber` Effect rule is an error in `tsconfig.base.json` (`S.Number` admits non-finite values), the same cause as deviation 9.
+
+14. **A `tabSize` of `-1` or below formats with no indent instead of throwing.**
+   - Test: `scratchpad/test/jsonc/JsoncFormatter.test.ts:138` ("formats a width of -1 or below with no indent instead of throwing") and `scratchpad/test/jsonc/JsoncModifier.test.ts:344` ("stays total for a width of -1 or below, with no indent"). No upstream test passes a negative width.
+   - Upstream: with `insertSpaces` left `true`, `JsoncFormatter.format`, `formatToString` and `JsoncModifier.modify` build the indent unit with `" ".repeat(tabSize)`, which throws a `RangeError` for a width of `-1` or below. `modify` builds it before navigating, so every call dies, deletions and no-ops included. `Jsonc.stringify` is unaffected: `JSON.stringify` reads a negative width as compact.
+   - Lab: `Str.repeat` clamps the unit to the empty string, so the formatter breaks lines without indenting and `modify` inserts unindented entries around a compact value. Widths between `-1` and `0`, fractional widths and `insertSpaces: false` behave exactly as upstream.
+   - Reason: `upstream-bug:` a `RangeError` defect escapes `format` and `formatToString`, which upstream documents as pure and total, and `modify`, on an option value upstream's own schema accepts. The same family as deviation 6.
 
 ### Dependency backlog
 

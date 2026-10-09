@@ -70,7 +70,7 @@ export const JsoncVisitorEvent = S.TaggedUnion({
 }).pipe(
   $I.annoteSchema("JsoncVisitorEvent", {
     description: "One event of a JSONC document walk: structure, values, separators, comments or recovered errors.",
-  }),
+  })
 );
 
 /**
@@ -156,10 +156,13 @@ const literalValue = (kind: SyntaxKind, tokenValue: string): unknown =>
     Match.when(SyntaxKind.Enum.Number, (): unknown => Number.parseFloat(tokenValue)),
     Match.when(SyntaxKind.Enum.True, (): unknown => true),
     Match.when(SyntaxKind.Enum.False, (): unknown => false),
-    Match.orElse((): unknown => null),
+    Match.orElse((): unknown => null)
   );
 
 type Events = Generator<JsoncVisitorEvent, void>;
+
+// The separator characters, read off the event schema so the two never drift.
+type SeparatorCharacter = Extract<JsoncVisitorEvent, { readonly _tag: "Separator" }>["character"];
 
 function* visitGen(text: string, disallowComments: boolean): Events {
   const scanner = createScanner(text, false);
@@ -174,11 +177,12 @@ function* visitGen(text: string, disallowComments: boolean): Events {
     offset: scanner.getTokenOffset(),
     length: scanner.getTokenLength(),
   });
-  const error = (code: JsoncParseErrorCode): JsoncVisitorEvent => JsoncVisitorEvent.cases.Error.make({
-    ...span(),
-    code,
-  });
-  const separator = (character: "," | ":"): JsoncVisitorEvent =>
+  const error = (code: JsoncParseErrorCode): JsoncVisitorEvent =>
+    JsoncVisitorEvent.cases.Error.make({
+      ...span(),
+      code,
+    });
+  const separator = (character: SeparatorCharacter): JsoncVisitorEvent =>
     JsoncVisitorEvent.cases.Separator.make({ ...span(), character });
 
   // Cursor adapter for the shared iterative bracket-balance skip. `advance` is
@@ -194,7 +198,7 @@ function* visitGen(text: string, disallowComments: boolean): Events {
   };
 
   function* scanNext(): Events {
-    for (; ;) {
+    for (;;) {
       const kind = scanner.scan();
       const code = scanErrorToCode(scanner.getTokenError());
       if (O.isSome(code)) {

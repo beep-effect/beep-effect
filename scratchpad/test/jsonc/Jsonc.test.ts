@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { assertDefined, assertExitFailure, assertNone, assertSuccess, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertExitFailure, assertFailure, assertNone, assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
@@ -139,7 +139,7 @@ describe("Jsonc", () => {
         assert.deepStrictEqual(crlf.errors.map((e) => [e.line, e.character]), [[2, 2]]);
         const cr = yield* failureOf(Jsonc.parse('{\r  "a": 1\r  "b": 2\r}'));
         assert.deepStrictEqual(cr.errors.map((e) => [e.line, e.character]), [[2, 2]]);
-        const separators = yield* failureOf(Jsonc.parse("{ bad }"));
+        const separators = yield* failureOf(Jsonc.parse("{\u2028bad\u2029}"));
         assert.deepStrictEqual(separators.errors.map((e) => [e.code, e.line, e.character]), [["InvalidSymbol", 1, 0], ["PropertyNameExpected", 1, 0]]);
       })
     );
@@ -506,7 +506,7 @@ describe("Jsonc", () => {
         const config = yield* S.decodeEffect(Jsonc.schema(Config))('{ "name": "app", "version": 1 /* v1 */ }');
         assert.deepStrictEqual(config, { name: "app", version: 1 });
         const strict = Jsonc.schema(Config, JsoncParseOptions.make({ allowTrailingComma: false }));
-        S.decodeResult(strict)('{ "name": "app", "version": 1, }').pipe(Result.isFailure, assertTrue);
+        assertFailure(Result.mapError(S.decodeResult(strict)('{ "name": "app", "version": 1, }'), (error) => error._tag), "SchemaError");
       })
     );
 
@@ -583,5 +583,135 @@ describe("Jsonc", () => {
         assert.deepStrictEqual(yield* S.decodeEffect(Jsonc.JsoncFromString)(encoded), value);
       })
     );
+  });
+
+  // Review round 2 pins. They sit at the end of the file so every test above
+  // keeps the line number the README and the ledger cite.
+
+  describe("stripComments replacement text", () => {
+    // Upstream parity: `replaceCh` lands verbatim once per comment code unit, so
+    // the `$` sequences String.prototype.replace would expand stay literal.
+    it("inserts replaceCh verbatim, replacement-pattern tokens included", () => {
+      assert.strictEqual(Jsonc.stripComments("1/*x*/", "$&"), "1$&$&$&$&$&");
+      assert.strictEqual(Jsonc.stripComments("1/*x*/", "$$"), "1$$$$$$$$$$");
+      assert.strictEqual(Jsonc.stripComments("/* ab */1", "$'"), "$'$'$'$'$'$'$'$'1");
+      assert.strictEqual(Jsonc.stripComments("/* ab */1", "$`"), "$`$`$`$`$`$`$`$`1");
+      assert.strictEqual(Jsonc.stripComments("/* ab */1", "$1"), "$1$1$1$1$1$1$1$11");
+      assert.strictEqual(Jsonc.stripComments("/* a\r\nb */1 // t\n2", "$&"), "$&$&$&$&\r\n$&$&$&$&1 $&$&$&$&\n2");
+      assert.strictEqual(Jsonc.stripComments('"// kept" // c', "$'"), "\"// kept\" $'$'$'$'");
+    });
+
+    it("counts UTF-16 code units and takes an empty or multi-character replacement", () => {
+      assert.strictEqual(Jsonc.stripComments("/* \u{1F600} */1", "x"), "xxxxxxxx1");
+      assert.strictEqual(Jsonc.stripComments("// only", "ab"), "ababababababab");
+      assert.strictEqual(Jsonc.stripComments("/* a\r\nb */1 // t\n2", ""), "\r\n1 \n2");
+    });
+  });
+
+  describe("stringifyResult failure classification", () => {
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+    const throwing = (error: unknown) => ({
+      toJSON: (): never => {
+        throw error;
+      },
+    });
+
+    // Upstream parity: the engine unboxes a boxed bigint after the replacer has
+    // run and then refuses it exactly as it refuses a primitive, whatever the
+    // box's prototype is.
+    it("classifies a boxed bigint as BigIntValue, top level and nested", () => {
+      const boxed: unknown = Object(1n);
+      const bare: unknown = Object.setPrototypeOf(Object(2n), null);
+      // The classification reads the engine's internal slot, never a method
+      // the box owns: this `valueOf` must not run.
+      const guarded: unknown = Object.assign(Object(3n), {
+        valueOf: (): never => {
+          throw new Error("valueOf executed");
+        },
+      });
+      for (const value of [boxed, { n: boxed }, [boxed], { a: { b: [boxed] } }, { toJSON: () => boxed }, bare, [bare], [guarded]]) {
+        assert.strictEqual(failure(Jsonc.stringifyResult(value)).code, "BigIntValue");
+      }
+    });
+
+    it("treats an object that only inherits from BigInt.prototype as a plain object", () => {
+      const inherits: unknown = Object.create(BigInt.prototype);
+      assertSuccess(Jsonc.stringifyResult(inherits), "{}");
+      assert.strictEqual(failure(Jsonc.stringifyResult([inherits, throwing(new RangeError("late"))])).code, "SerializationFailed");
+      // A boxed bigint whose own toJSON answers never reaches the engine as a bigint.
+      assertSuccess(Jsonc.stringifyResult(Object.assign(Object(1n), { toJSON: () => 1 })), "1");
+    });
+
+    // Port deviation (law:13 and the effect-first JSON-codec law): serialization
+    // runs through the S.fromJsonString codec, which reports every throw as one
+    // schema issue, so `detail` is that issue's sentence where upstream carries
+    // the engine's message (or, for caller code, rethrows it).
+    it("carries the schema codec's sentence as detail for every thrown failure", () => {
+      const cases: ReadonlyArray<readonly [unknown, JsoncStringifyErrorCode]> = [
+        [1n, "BigIntValue"],
+        [{ a: [Object(1n)] }, "BigIntValue"],
+        [circular, "CircularReference"],
+        [throwing(new RangeError("boom")), "SerializationFailed"],
+      ];
+      for (const [value, code] of cases) {
+        const error = failure(Jsonc.stringifyResult(value));
+        assert.strictEqual(error.code, code);
+        assert.strictEqual(error.detail, "Expected a JSON-serializable value");
+        assert.strictEqual(error.message, `JSONC stringify failed: ${code} — Expected a JSON-serializable value`);
+      }
+    });
+
+    // Port deviation (upstream-bug): upstream classifies every thrown TypeError
+    // by its message, so caller code that throws TypeError("... bigint ...")
+    // comes back as BigIntValue; the lab classifies by the value the engine
+    // refused, so a caller's throw is always SerializationFailed.
+    it("classifies a caller-thrown TypeError as SerializationFailed whatever its message says", () => {
+      for (const message of ["my bigint thing", "circular dependency", "cyclic import"]) {
+        assert.strictEqual(failure(Jsonc.stringifyResult(throwing(new TypeError(message)))).code, "SerializationFailed");
+        const getter = {
+          a: {
+            get b(): never {
+              throw new TypeError(message);
+            },
+          },
+        };
+        assert.strictEqual(failure(Jsonc.stringifyResult(getter)).code, "SerializationFailed");
+      }
+    });
+  });
+
+  describe("stringify tabSize", () => {
+    const value = { a: [1] };
+    const text = (tabSize: number) => Jsonc.stringifyResult(value, JsoncStringifyOptions.make({ tabSize }));
+    const decodeOptions = S.decodeUnknownResult(JsoncStringifyOptions);
+
+    // Upstream parity: `tabSize` is any number, and JSON.stringify truncates it
+    // and caps it at 10. A width strictly between 0 and 1 is left out: the
+    // engines disagree on it (V8 breaks lines without indenting, JavaScriptCore
+    // stays compact), and lab and upstream both hand the number to the engine.
+    it("accepts any finite width, truncated and clamped as JSON.stringify does", () => {
+      for (const width of [-100, -2, -1.5, -1, -0.5]) {
+        assertSuccess(text(width), '{"a":[1]}');
+      }
+      assertSuccess(text(1.5), '{\n "a": [\n  1\n ]\n}');
+      assertSuccess(text(2.9), '{\n  "a": [\n    1\n  ]\n}');
+      const ten = `{\n${" ".repeat(10)}"a": [\n${" ".repeat(20)}1\n${" ".repeat(10)}]\n}`;
+      for (const width of [10, 11, 100]) {
+        assertSuccess(text(width), ten);
+      }
+      assertSuccess(Jsonc.stringifyResult(value, JsoncStringifyOptions.make({ tabSize: -1, insertSpaces: false })), '{\n\t"a": [\n\t\t1\n\t]\n}');
+      assertSuccess(Result.map(decodeOptions({ tabSize: -1.5 }), (options) => options.tabSize), -1.5);
+    });
+
+    // Port deviation (law: the schemaNumber Effect rule): upstream types
+    // `tabSize` as Schema.Number, so NaN and the infinities decode and
+    // JSON.stringify reads them as 0, 10 and 0; the lab's S.Finite rejects them.
+    it("rejects a non-finite width", () => {
+      for (const tabSize of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+        assertFailure(Result.mapError(decodeOptions({ tabSize }), (error) => error._tag), "SchemaError");
+        assert.throws(() => JsoncStringifyOptions.make({ tabSize }));
+      }
+    });
   });
 });

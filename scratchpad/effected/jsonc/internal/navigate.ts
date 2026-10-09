@@ -151,7 +151,11 @@ export const navigate: {
 
   const skipValue = (): number => skipBalancedValue(skipCursor);
 
-  const located = (container: "object" | "array", keyStart: number, commaBefore: O.Option<number>): NavigateResult => {
+  const located = (
+    container: typeof NavigateContainer.Type,
+    keyStart: number,
+    commaBefore: O.Option<number>
+  ): NavigateResult => {
     const valueStart = scanner.getTokenOffset();
     const valueEnd = skipValue();
     return NavigateResult.cases.Located.make({
