@@ -93,6 +93,8 @@ const fixtureGrant = ExecutionGrant.make({
   }),
 });
 
+const draftGrantSet = addGrant(emptyDraftGrantSet(defaultPolicyRevision), fixtureGrant).pipe(Result.getOrThrow);
+
 /**
  * Deterministic frozen grant set: one grant, for one operation, against one
  * external destination, under the default policy revision.
@@ -109,7 +111,6 @@ const fixtureGrant = ExecutionGrant.make({
  * @category fixtures
  * @since 0.0.0
  */
-const draftGrantSet = addGrant(emptyDraftGrantSet(defaultPolicyRevision), fixtureGrant).pipe(Result.getOrThrow);
 export const fixtureFrozenGrantSet: FrozenGrantSet = freezeGrantSet(draftGrantSet, fixtureFrozenAt).pipe(
   Result.getOrThrow
 );
