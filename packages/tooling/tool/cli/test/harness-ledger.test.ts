@@ -952,6 +952,37 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     }).pipe(Effect.scoped)
   );
 
+  it.effect("unknown restarts and corrupt refusal rows have explicit diagnostics", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeRepo();
+      const current = yield* repoHarnessHash(root);
+      const evidenceRoot = yield* fs.makeTempDirectoryScoped({ prefix: "harness-unknown-restart-" });
+      const stateDir = path.join(evidenceRoot, "hook-events");
+      yield* fs.makeDirectory(stateDir);
+      yield* writeShard(stateDir, "2026-10-09", sessionA, [
+        yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
+        yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
+        yield* pulseRow(sessionA, "2026-10-09T10:02:00Z", "SessionStart", O.none(), O.none()),
+      ]);
+      yield* fs.writeFileString(
+        path.join(evidenceRoot, "hook-pulse-refusals-2026-10-09.ndjson"),
+        '{not-json\n{"ts":"2026-10-09T10:00:00Z","agentKind":"claude-code","reason":"disabled"}\n'
+      );
+      const ledger = yield* HarnessLedgerService;
+      const report = yield* ledger.pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 })
+      );
+      expect(report.sessionsObserved).toBe(0);
+      expect(report.sessionsSkippedUnknownRestart).toBe(1);
+      expect(report.undecodableLines).toBe(1);
+      expect(report.writerRefusalsTotal).toBe(1);
+      expect(report.refusalsByAgentKind["claude-code"]).toBe(1);
+      expect(report.clientCoverage["claude-code"]).toStrictEqual(O.none());
+    }).pipe(Effect.scoped)
+  );
+
   it.effect("a session overlapping a disarm window cannot qualify", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
