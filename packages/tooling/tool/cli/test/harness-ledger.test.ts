@@ -145,9 +145,12 @@ const seedProposalRows = Effect.fn("test.seedProposalRows")(function* (
   const dir = path.join(repoRoot, "harness-ledger", "rows");
   yield* fs.makeDirectory(dir, { recursive: true });
   if (A.isReadonlyArrayEmpty(report.proposals)) return;
-  const fixtureId = pipe(A.head(report.proposals), O.getOrThrow).row.rowId;
+  const first = pipe(A.head(report.proposals), O.getOrThrow).row;
+  const month = pipe(DateTime.formatIso(first.createdAt), Str.slice(0, 7));
+  const file = path.join(dir, `${month}.jsonl`);
+  const existing = (yield* fs.exists(file)) ? yield* fs.readFileString(file) : "";
   const lines = yield* Effect.forEach(report.proposals, (proposal) => HarnessLedgerRow.encodeJsonEffect(proposal.row));
-  yield* fs.writeFileString(path.join(dir, `fixture-${fixtureId}.jsonl`), `${A.join(lines, "\n")}\n`);
+  yield* fs.writeFileString(file, `${existing}${A.join(lines, "\n")}\n`);
 });
 
 const proposePending = (repoRoot: string) =>
@@ -916,9 +919,9 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(report.sessionsObserved).toBe(0);
       expect(report.refusalsByAgentKind["claude-code"]).toBe(1);
       expect(report.clientCoverage).toStrictEqual({
-        "claude-code": "stamped",
-        "codex-cli": "not-configured",
-        "cursor-cli": "not-configured",
+        "claude-code": O.none(),
+        "codex-cli": O.none(),
+        "cursor-cli": O.none(),
       });
       expect(report.nonUseQualified).toBe(false);
     }).pipe(Effect.scoped)
