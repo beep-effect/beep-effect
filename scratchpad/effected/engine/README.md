@@ -114,7 +114,20 @@ None.
 
 ### Deviations
 
-None.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence; the full test, upstream behaviour, lab behaviour and reason are on the module's ledger row.
+
+- **native-runtime** — The lab replaces upstream native injected errors and the exit sentinel with schema-tagged errors, retaining their covered payload and policy contracts. (scratchpad/test/engine/ProcessGuard.test.ts:159,381,401 (injected payloads and exit policies))
+- **identity-keys** — The lab composes CurrentDistribution's key through IdentityComposer instead of upstream's @effected literal, retaining the default and provision behavior. (scratchpad/test/engine/Distribution.test.ts:48,55 (CurrentDistribution default and provision))
+- **tagged-errors** — The lab adds tagged crash and exit-error schemas where upstream used plain Error classes, with the injected stderr name retargeted to InjectedCrash. (scratchpad/test/engine/ProcessGuard.test.ts:159,381,401 (tagged payload and load/connected policies))
+- **schema-first** — The lab replaces upstream type-only input and policy models plus manual injection validation with runtime schemas, derived types and schema guards. (scratchpad/test/engine/LaunchContext.test.ts:36; scratchpad/test/engine/ProcessGuard.test.ts:74,80,97,199; scratchpad/test/engine/Distribution.test.ts:16,33)
+- **numeric-domains** — The lab declares the test exit sentinel's code with S.Finite instead of upstream's unrefined number field. (scratchpad/test/engine/ProcessGuard.test.ts:16,235,381,401 (ExitCalled schema and exit-code assertions))
+- **type-safety** — The lab removes upstream host and policy casts and routes intentionally invalid injection inputs through the one authorized test helper. (scratchpad/test/engine/ProcessGuard.test.ts:25,346,381,401; scratchpad/test/engine/deliberatelyInvalid.ts:13)
+- **tsgo-diagnostics** — The lab replaces upstream async/manual-timer guard code and synchronous schema test calls with diagnostic-compliant Promise chains, Effect sleeps and Result codecs. (scratchpad/test/engine/ProcessGuard.test.ts:109,133,208,297; scratchpad/test/engine/Distribution.test.ts:10,16,40; scratchpad/test/engine/Remediation.test.ts:7,23,29)
+- **effect-first** — The lab uses effect/String splitting for the injection grammar where upstream called the native string method. (scratchpad/test/engine/ProcessGuard.test.ts:74,80 (all injection pairs and invalid grammar))
+- **effect-imports** — The lab uses dedicated effect/* imports instead of upstream's root Effect barrel, and the formerly package-free guard imports only Effect modules. (module suite scratchpad/test/engine/**; scratchpad/test/engine/entrypoints.test.ts:59)
+- **identity-annotations** — The lab gives Distribution, DistributionField, Remediation and ProjectDirInput composed schema identities and field descriptions where upstream had none. (scratchpad/test/engine/Distribution.test.ts:21; scratchpad/test/engine/LaunchContext.test.ts:26; scratchpad/test/engine/Remediation.test.ts:7,13,18)
+- **test-environment** — The lab retargets upstream package-local source/build paths to engine's scratchpad directory and supplies compiler emission through Vitest global setup. (scratchpad/test/engine/entrypoints.test.ts:50; scratchpad/test/engine/purity.test.ts:17; scratchpad/test/engine/build.setup.ts:49)
+- **reachability** — The lab retargets upstream's package-free guard graph assertions to allow only effect/* while retaining the exact local-module lists and isolated subpath. (scratchpad/test/engine/entrypoints.test.ts:43,50,59,65)
 
 ### Dependency backlog
 

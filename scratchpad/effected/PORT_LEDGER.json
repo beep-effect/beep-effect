@@ -4622,9 +4622,138 @@
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
-      "deviations": [],
-      "backlog": [],
-      "reviewRounds": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/engine/ProcessGuard.test.ts:159,381,401 (injected payloads and exit policies)",
+          "upstreamBehaviour": "ProcessGuard.emitInjected constructs new Error; ProcessGuard.test.ts defines ExitCalled by extending native Error.",
+          "labBehaviour": "ProcessGuard.ts uses InjectedCrash.make; ProcessGuard.test.ts uses a schema-tagged ExitCalled sentinel. The injected error name becomes InjectedCrash while its message, Error compatibility, origin and rejection payload remain covered.",
+          "reason": "native-runtime: no native Error construction in the port source; the 2026-10-09 grilling ruling removes EFFECTED-ENGINE-DEPENDENCY-FREE-GUARD and permits only effect/* guard imports. Both the injected payload and test exit sentinel move to effect/Schema."
+        },
+        {
+          "test": "scratchpad/test/engine/Distribution.test.ts:48,55 (CurrentDistribution default and provision)",
+          "upstreamBehaviour": "Distribution.ts keys CurrentDistribution with the literal @effected/engine/CurrentDistribution.",
+          "labBehaviour": "Distribution.ts keys CurrentDistribution with $I`CurrentDistribution`, composing @beep/scratchpad/effected/engine/Distribution/CurrentDistribution; default none and provisioned carrier values are unchanged.",
+          "reason": "identity-keys: operator step 4 and D5 require IdentityComposer keys; the later grilling ruling requires one per-module identity-keys record. This Context.Reference is the module's changed keyed structure."
+        },
+        {
+          "test": "scratchpad/test/engine/ProcessGuard.test.ts:159,381,401 (tagged payload and load/connected policies)",
+          "upstreamBehaviour": "Injected crashes are plain Error instances named Error; the test exit sentinel extends Error with a custom constructor.",
+          "labBehaviour": "ProcessGuard.ts defines InjectedCrash with S.TaggedError, kind and message, constructed with make; injected stderr identifies InjectedCrash. The test ExitCalled is S.TaggedError with code, keeps name Error and exit(code), and is recognized by S.is.",
+          "reason": "tagged-errors: schema-first typed errors and native-runtime require schema-tagged errors; the 2026-10-09 grilling ruling explicitly mandates S.TaggedError for ProcessGuard injection. Exact injected-message assertions are retained and the error-name assertion is retargeted."
+        },
+        {
+          "test": "scratchpad/test/engine/LaunchContext.test.ts:36; scratchpad/test/engine/ProcessGuard.test.ts:74,80,97,199; scratchpad/test/engine/Distribution.test.ts:16,33",
+          "upstreamBehaviour": "ProjectDirInput, ProcessGuardPolicy and ProcessGuardInjection are type-only interfaces; injection validation uses a manual kind predicate and INJECT_AT/INJECT_KIND arrays. DistributionField has no same-name type.",
+          "labBehaviour": "LaunchContext.ts exports ProjectDirInput as S.Struct plus derived type; ProcessGuard.ts exports policy/injection Struct schemas, S.Literals domains and S.is guards. index.ts and guard.ts expose the runtime models; DistributionField gains its derived type. Existing accepted optional/undefined inputs and wire shapes are pinned.",
+          "reason": "schema-first: schema-first pure-data models and schema-derived guards are required by architecture section 5, EF-33/EF-35 and laws 17/19; the guard ruling permits effect/Schema domains without importing LiteralKit or @beep/identity."
+        },
+        {
+          "test": "scratchpad/test/engine/ProcessGuard.test.ts:16,235,381,401 (ExitCalled schema and exit-code assertions)",
+          "upstreamBehaviour": "The ExitCalled test sentinel stores code as number | undefined with no numeric refinement.",
+          "labBehaviour": "ProcessGuard.test.ts declares ExitCalled.code as S.UndefinedOr(S.Finite) and constructs it with ExitCalled.make; the suite continues to assert exit code 1.",
+          "reason": "numeric-domains: schemaNumber requires finite numeric domains when exceptional numbers are not part of the contract; round-1 INVENTORY.md fable-1-6 explicitly requests the S.Finite deviation record for this test sentinel."
+        },
+        {
+          "test": "scratchpad/test/engine/ProcessGuard.test.ts:25,346,381,401; scratchpad/test/engine/deliberatelyInvalid.ts:13",
+          "upstreamBehaviour": "The fake host is cast to ProcessGuardHost; invalid injectCrash arrays use as unknown as; policy selection casts to ProcessGuardPolicy.",
+          "labBehaviour": "ProcessGuard.test.ts models listeners and on/emit/fire arguments with discriminated tuples, checks policy membership directly, and routes ill-typed injection input through the single deliberatelyInvalid helper. That helper contains the one operator-authorized cast.",
+          "reason": "type-safety: D15 forbids unsafe assertions; the 2026-10-09 operator ruling permits exactly one deliberatelyInvalid<T> cast per module for intentional wrong-input tests. Host, policy and invalid-input casts are consolidated or removed without dropping the runtime tests."
+        },
+        {
+          "test": "scratchpad/test/engine/ProcessGuard.test.ts:109,133,208,297; scratchpad/test/engine/Distribution.test.ts:10,16,40; scratchpad/test/engine/Remediation.test.ts:7,23,29",
+          "upstreamBehaviour": "ProcessGuard.run is async and uses new Promise plus setTimeout(callback, 0) for load injection and setTimeout for connected injection; schema tests use decodeUnknownSync/encodeSync.",
+          "labBehaviour": "ProcessGuard.ts uses explicit Promise chains and rejection boundaries; both injections wait on Effect.runPromise(Effect.sleep(\"1 millis\")). Distribution.test.ts and Remediation.test.ts use typed decodeResult/encodeResult or decodeUnknownResult and Result throwing helpers, retaining valid-value and rejection assertions.",
+          "reason": "tsgo-diagnostics: @effect/tsgo asyncFunction, newPromise and globalTimers force the guard shapes; step-2 schema diagnostics force Result-based test codecs. repair-engine.md:13,15 records both final timer replacements; ordering tests pin the retained timer-phase sequence."
+        },
+        {
+          "test": "scratchpad/test/engine/ProcessGuard.test.ts:74,80 (all injection pairs and invalid grammar)",
+          "upstreamBehaviour": "ProcessGuard.parseInjectCrash splits its input with the native string split method.",
+          "labBehaviour": "ProcessGuard.ts parses the same colon-delimited grammar with Str.split from effect/String before applying schema validation, preserving the extra-segment rejection.",
+          "reason": "effect-first: Effect-native helpers are preferred by the code laws and terse-effect; ProcessGuard.ts parseInjectCrash uses effect/String for the string operation. fix-engine-g1.md:2,22 establishes the schema and effect/* guard boundary around the parser."
+        },
+        {
+          "test": "module suite scratchpad/test/engine/**; scratchpad/test/engine/entrypoints.test.ts:59",
+          "upstreamBehaviour": "Distribution.ts and Remediation.ts and their tests, LaunchContext.test.ts and purity.test.ts import modules from the root effect barrel; ProcessGuard.ts imports no runtime package.",
+          "labBehaviour": "Those imports use effect/Context, effect/Effect, effect/Option, effect/Result and effect/Schema. LaunchContext.ts and ProcessGuard.ts add effect/* schema/helper imports; the isolated guard reaches effect/Effect, effect/Schema and effect/String only.",
+          "reason": "effect-imports: law 2 and operator step 3 require per-module effect/* imports instead of the root barrel. The later guard ruling permits effect/* only; entrypoints.test.ts retains its positive control using effect/Schema."
+        },
+        {
+          "test": "scratchpad/test/engine/Distribution.test.ts:21; scratchpad/test/engine/LaunchContext.test.ts:26; scratchpad/test/engine/Remediation.test.ts:7,13,18",
+          "upstreamBehaviour": "Distribution and Remediation have unannotated Struct schemas and fields; DistributionField is an anonymous NullOr wrapper; ProjectDirInput is type-only.",
+          "labBehaviour": "Distribution.ts, Remediation.ts and LaunchContext.ts use $ScratchpadId-created $I composers for Distribution, DistributionField, Remediation and ProjectDirInput identities; Struct fields receive descriptions. DistributionField has its own wrapper identity distinct from Distribution.",
+          "reason": "identity-annotations: operator step 4 and D5 require @beep/identity schema/field annotations; fix-engine-g2.md:1-9 repairs the missing wrapper identity and input schema. ProcessGuard's effect/*-only exception uses direct Schema annotations and stays outside the @beep import graph."
+        },
+        {
+          "test": "scratchpad/test/engine/entrypoints.test.ts:50; scratchpad/test/engine/purity.test.ts:17; scratchpad/test/engine/build.setup.ts:49",
+          "upstreamBehaviour": "The package-local entrypoint and purity tests read src and dist/dev/pkg; upstream runs build:dev before testing.",
+          "labBehaviour": "entrypoints.test.ts and purity.test.ts point at scratchpad/effected/engine; BUILT resolves from that source directory. The untracked build.setup.ts provides Vitest global setup that emits the six engine modules to dist/dev/pkg with the repo tsgo compiler before tests.",
+          "reason": "test-environment: D9 and the 2026-10-09 environment/build-tools rulings require the lab equivalent of upstream build:dev and active built-guard assertions. fix-engine-g1.md:16,24 and central-notes.md:2 record the path correction and global setup; no test is skipped."
+        },
+        {
+          "test": "scratchpad/test/engine/entrypoints.test.ts:43,50,59,65",
+          "upstreamBehaviour": "The source and built guard must reach exactly ProcessGuard plus guard and no bare packages; the main-entry positive control expects the root effect package.",
+          "labBehaviour": "Source and built graph walks still require exactly ProcessGuard.ts/guard.ts or ProcessGuard.js/guard.js, but now require effect/Schema and allow only effect/* bare imports. The main positive control expects effect/Schema and the main entry remains separate from the guard subpath.",
+          "reason": "reachability: the 2026-10-09 grilling ruling expressly permits only effect/* in the guard and its two entrypoint tests; step 3 requires the import-graph positive control to follow per-module imports. fix-engine-g1.md:17-19,23 records these retargets."
+        }
+      ],
+      "backlog": [
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-4 — Deferred JSDoc carriers and metadata (scratchpad/effected/engine/Distribution.ts:11)",
+          "reason": "jsdoc: At S2 preserve prose, convert carriers to Details and titled Examples, add categories and since 0.0.0, supply compilable runtime examples and run docgen."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-5 — README publication boilerplate and root Effect imports (scratchpad/effected/engine/README.md:3-32,43-44,58-59,83-84)",
+          "reason": "docs: At S2 remove carried badges, Install/stability blocks and the pnpm-plugin reference; use lab module imports and dedicated effect/Schema, effect/Option and effect/Effect imports, retaining outputs."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-6 — Canonical property settings and schema codec laws (scratchpad/test/engine/LaunchContext.test.ts:74)",
+          "reason": "test: At S3 use fcRuns and canonical run-floor/seed settings; add Arbitrary.schema-derived encode/decode round trips for every exported schema, including newly introduced models."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-7 — Placeholder assertion rejects valid cwd fallback (scratchpad/test/engine/LaunchContext.test.ts:72)",
+          "reason": "test: At S3 retain the non-empty-result assertion, reject placeholders only for selected argv/env candidates, allow unchanged cwd fallback and add the demonstrated fixed case without changing production."
+        },
+        {
+          "seat": "sol",
+          "round": 1,
+          "finding": "sol-1-8 — Canonical Option assertions (scratchpad/test/engine/Distribution.test.ts:31,38)",
+          "reason": "test: At S3 replace O.isNone and full-Option comparisons with assertNone(current) and assertSome(current, the provided carrier)."
+        },
+        {
+          "seat": "fable",
+          "round": 1,
+          "finding": "fable-1-7 — Relocated documentation examples cannot resolve imports (scratchpad/effected/engine/LaunchContext.ts:32)",
+          "reason": "jsdoc: At S2 use @beep/scratchpad/effected/engine/index and /guard aliases; replace the nonexistent server import with an inline startServer stub and verify docgen."
+        }
+      ],
+      "reviewRounds": [
+        {
+          "round": 1,
+          "commit": "3fa5876691901fccf3d1cd29e9324564df134b56",
+          "seats": {
+            "grok": {
+              "required": 3,
+              "backlog": 0
+            },
+            "sol": {
+              "required": 3,
+              "backlog": 5
+            },
+            "fable": {
+              "required": 4,
+              "backlog": 3
+            }
+          }
+        }
+      ],
       "commits": [
         {
           "stage": 0,
