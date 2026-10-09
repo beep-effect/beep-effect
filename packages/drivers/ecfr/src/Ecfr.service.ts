@@ -278,7 +278,7 @@ export type SearchResult = G.SearchResultsResponse["results"][number];
  * **Example** (Stub listTitles on EcfrShape)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import type { EcfrShape } from "@beep/ecfr"
  *
  * const shape: Pick<EcfrShape, "listTitles"> = {
@@ -532,7 +532,7 @@ const makeFromEnvironment = Effect.fnUntraced(function* () {
  * **Example** (Access Ecfr via Effect.gen)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  * import { Ecfr } from "@beep/ecfr"
  *
  * const program = Effect.gen(function* () {

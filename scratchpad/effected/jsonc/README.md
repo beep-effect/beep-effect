@@ -18,7 +18,7 @@ Compose your schema with `Jsonc.schema` to decode JSONC straight into a validate
 
 ```ts
 import { Jsonc } from "@beep/scratchpad/effected/jsonc/index";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const Config = S.Struct({ port: S.Finite });
@@ -39,8 +39,7 @@ Malformed input fails through the typed channel, never as a throw:
 
 ```ts
 import { Jsonc } from "@beep/scratchpad/effected/jsonc/index";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 Effect.runPromise(Effect.result(Jsonc.parse('{ "a": }'))).then(console.log);
 // Failure with JsoncParseError:
 // "JSONC parse failed with 1 error: ValueExpected at 1:8"
@@ -67,8 +66,7 @@ console.log(Result.isSuccess(result) ? result.success : result.failure);
 
 ```ts
 import { JsoncEdit, JsoncModifier } from "@beep/scratchpad/effected/jsonc/index";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 const source = `{
   // dev server
   "port": 3000
@@ -162,8 +160,7 @@ console.log(Result.isFailure(bad) ? `${bad.failure.code} at "${bad.failure.path}
 ```ts
 import { JsoncFingerprint } from "@beep/scratchpad/effected/jsonc/index";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import { Effect } from "effect";
-
+import * as Effect from "effect/Effect";
 const program = Effect.gen(function* () {
   const a = yield* JsoncFingerprint.hash({ b: 2, a: 1 });
   const b = yield* JsoncFingerprint.hash({ a: 1, b: 2 });
