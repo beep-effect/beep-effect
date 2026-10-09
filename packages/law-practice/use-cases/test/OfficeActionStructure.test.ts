@@ -20,12 +20,55 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { fixtureInventory, fixtureOcrPage, fixtureSource, readFixture, TestCrypto } from "./officeActionFixtures.ts";
+import type { Fixture } from "./fixtures/office-action-structure/Fixture.schema.ts";
 
 const structure = makeOfficeActionStructure();
 const document = DocStructureDocument.make({
   documentId: "fixture",
   sourceVersion: "1",
   modality: "public-form-language",
+});
+
+const verifyOracle = (fixture: Fixture, text: string) => {
+  if (fixture.evaluationLane === "oracle-upstream") {
+    const oracle = recognizeOfficeActionPair(text, fixture.modality);
+    expect(oracle.status).toBe(fixture.outcome.status);
+    if (oracle.status === "recognized" && fixture.outcome.status === "recognized") {
+      expect(oracle.finalityAnchor.quote).toBe(fixture.outcome.finalityQuote);
+      expect(oracle.periodAnchor.quote).toBe(fixture.outcome.periodQuote);
+    } else if (oracle.status === "abstained" && fixture.outcome.status === "abstained")
+      expect(oracle.code).toBe(fixture.outcome.code);
+  }
+};
+
+const verifyRecognized = Effect.fn("OfficeActionStructureTest.verifyRecognized")(function* (
+  fixture: Fixture,
+  text: string,
+  input: OfficeActionStructureInput,
+  outcome: OfficeActionRecognizedPair
+) {
+  if (fixture.outcome.status !== "recognized") return yield* Effect.die("Expected recognized fixture label");
+  const verifiedSource = input.verifiedSource;
+  expect(outcome.candidates).toHaveLength(2);
+  expect(outcome.candidates[0].finality).toBe(fixture.outcome.finality);
+  expect(outcome.candidates[0].anchor.anchor.quote).toBe(fixture.outcome.finalityQuote);
+  expect(outcome.candidates[1].anchor.anchor.quote).toBe(fixture.outcome.periodQuote);
+  for (const candidate of outcome.candidates) {
+    const anchor = candidate.anchor.anchor;
+    expect(Str.slice(anchor.startChar, anchor.endChar)(text)).toBe(anchor.quote);
+    expect(candidate.source).toEqual(verifiedSource.source);
+    expect(candidate.confidence).toBe(0.95);
+  }
+  const extractions = A.map(outcome.candidates, (candidate) =>
+    GroundedExtraction.cases.match_exact.make({
+      label: candidate._tag === "OfficeActionFinalityCandidate" ? "action-finality" : "shortened-statutory-period",
+      text: candidate.anchor.anchor.quote,
+      matchedText: candidate.anchor.anchor.quote,
+      span: { start: candidate.anchor.anchor.startChar, end: candidate.anchor.anchor.endChar },
+    })
+  );
+  const adapted = yield* structure.fromExtractions(input, extractions);
+  expect(adapted.status).toBe("recognized");
 });
 
 it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extraction", (it) => {
@@ -41,15 +84,7 @@ it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extr
           document: DocStructureDocument.make({ ...document, modality: fixture.modality }),
           verifiedSource,
         });
-        if (fixture.evaluationLane === "oracle-upstream") {
-          const oracle = recognizeOfficeActionPair(text, fixture.modality);
-          expect(oracle.status).toBe(fixture.outcome.status);
-          if (oracle.status === "recognized" && fixture.outcome.status === "recognized") {
-            expect(oracle.finalityAnchor.quote).toBe(fixture.outcome.finalityQuote);
-            expect(oracle.periodAnchor.quote).toBe(fixture.outcome.periodQuote);
-          } else if (oracle.status === "abstained" && fixture.outcome.status === "abstained")
-            expect(oracle.code).toBe(fixture.outcome.code);
-        }
+        verifyOracle(fixture, text);
         const outcome = yield* structure.extract(input);
         expect(outcome.status).toBe(fixture.outcome.status);
         if (outcome.status === "abstained" && fixture.outcome.status === "abstained") {
@@ -57,27 +92,7 @@ it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extr
           expect("candidates" in outcome).toBe(false);
           closed++;
         } else if (outcome.status === "recognized" && fixture.outcome.status === "recognized") {
-          expect(outcome.candidates).toHaveLength(2);
-          expect(outcome.candidates[0].finality).toBe(fixture.outcome.finality);
-          expect(outcome.candidates[0].anchor.anchor.quote).toBe(fixture.outcome.finalityQuote);
-          expect(outcome.candidates[1].anchor.anchor.quote).toBe(fixture.outcome.periodQuote);
-          for (const candidate of outcome.candidates) {
-            const anchor = candidate.anchor.anchor;
-            expect(Str.slice(anchor.startChar, anchor.endChar)(text)).toBe(anchor.quote);
-            expect(candidate.source).toEqual(verifiedSource.source);
-            expect(candidate.confidence).toBe(0.95);
-          }
-          const extractions = A.map(outcome.candidates, (candidate) =>
-            GroundedExtraction.cases.match_exact.make({
-              label:
-                candidate._tag === "OfficeActionFinalityCandidate" ? "action-finality" : "shortened-statutory-period",
-              text: candidate.anchor.anchor.quote,
-              matchedText: candidate.anchor.anchor.quote,
-              span: { start: candidate.anchor.anchor.startChar, end: candidate.anchor.anchor.endChar },
-            })
-          );
-          const adapted = yield* structure.fromExtractions(input, extractions);
-          expect(adapted.status).toBe("recognized");
+          yield* verifyRecognized(fixture, text, input, outcome);
           recognized++;
         }
       }

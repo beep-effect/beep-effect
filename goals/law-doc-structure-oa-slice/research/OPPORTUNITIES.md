@@ -197,3 +197,16 @@
   `it.scoped` member is incompatible. Package test typecheck caught the runtime
   callable mismatch. Validate runner members against installed declarations
   before changing test scope, and use `Effect.fn` for reusable generators.
+
+- `docgen:local` selected the three edited packages but refused execution because
+  `bun.lock` and `tsconfig.json` changed relative to main: “full docgen proof
+  required”. Package docgen passes individually. Run the owner command with
+  `--full` through heavy admission, and distinguish this global-input preflight
+  refusal from a documentation compilation failure. A scoped dependency-aware
+  global-input proof would avoid unnecessary full-repository generation.
+
+- Hosted-parity Fallow identified two introduced complexity findings: the raw
+  recognizer and combined fixture verification callback. Use the array predicate
+  for duplicate span counts and give oracle and candidate verification separate
+  named test responsibilities. Preserve every assertion and measured denominator;
+  do not alter Fallow budgets or its estimated-coverage model.

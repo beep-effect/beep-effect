@@ -100,7 +100,7 @@ export const recognizeOfficeActionPair: {
     if (isMissingCheckbox(text)) return abstain("ambiguous");
     const finalities = A.fromIterable(Str.matchAll(FinalityPattern)(text));
     const periods = A.fromIterable(Str.matchAll(PeriodPattern)(text));
-    if (A.length(finalities) > 1 || A.length(periods) > 1) return abstain("ambiguous");
+    if (A.some([finalities, periods], (matches) => A.length(matches) > 1)) return abstain("ambiguous");
     if (isUncovered(text)) return abstain("rule-not-covered");
     const pair = O.all({ finality: A.head(finalities), period: A.head(periods) }).pipe(
       O.flatMap(({ finality, period }) =>

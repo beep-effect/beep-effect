@@ -59,7 +59,7 @@ from the focused proof and from exact-head hosted CI.
 | --- | --- | --- |
 | `@beep/law-practice-domain` | pass | Audit 14.7 s; docgen 9.4 s; opaque-proof declaration emission passes. |
 | `@beep/law-practice-use-cases` | pass | Audit 12.9 s; docgen 8.5 s; opaque declaration and test typecheck pass. |
-| `@beep/law-practice-server` | pending | Dependency field-type repair; package rerun queued. |
+| `@beep/law-practice-server` | pass | Audit 42.2 s; docgen 11.3 s at `4ade6f1aca`; four storage/replay tests and package test typecheck pass. |
 
 Hosted-parity commands remain pending heavy admission at this checkpoint.
 
@@ -67,8 +67,10 @@ Hosted-parity commands remain pending heavy admission at this checkpoint.
 
 Wave 1 PR #1573 passes publication cheap gates. Hosted Repo Sanity rejects its
 private use-cases changeset, while publication requires that same private product
-workspace note. This shared changeset policy conflict is routed to the
-orchestrator under S11; no gate or package privacy is changed by this slice.
+workspace note. The orchestrator standing ruling resolves release notes without changesets for
+private packages. This lane removed its four notes, retained handoff release
+notes, and merged the shared release-policy and CI repair from main at
+`c830ab88f1`. No gate or package privacy was changed by this slice.
 
 The obsolete P0 Heavy Admit workflow was cancelled after confirming its immutable
 fixture-only head. Wave 2 requires implementation-head verification; cancelled

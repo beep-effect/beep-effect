@@ -143,6 +143,7 @@ seed implementation without replacing that doctrine.
 
 | 2026-10-09 (j) | Keep deterministic test builders inside each package’s compiler boundary and share raw fixture data only. Reason: importing TypeScript test helpers across rootDir fails the canonical compiler; no reusable crypto/identity fixture service exists in the test-utils surface. Reversal: consolidate through an owner-added test-utils API and migrate local builders, without widening package compiler roots. | Server TS6059 and deterministicKeys diagnostics; P2 package proof |
 | 2026-10-09 (k) | Record release notes without changesets for all three private packages, under main #1566 and the orchestrator standing ruling. Additive APIs would warrant minor releases if published; no existing public API breaks require a major release. Reversal: remove these handoff notes and add owner-generated changesets if the packages become published. | Handoff release-note table; removed only four lane-authored changesets. |
+| 2026-10-09 (l) | Run `docgen:local --full` after the scoped command requires full proof for owner-generated root paths and the regenerated lockfile. Reason: honor the owner command’s global-input gate without bypassing it. Reversal: rerun the original scoped command after those inputs no longer differ, retaining both results as evidence. | P2 docgen preflight log; package docgen proofs. |
 
 ## Acceptance Criteria
 
