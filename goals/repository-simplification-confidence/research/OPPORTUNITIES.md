@@ -153,3 +153,16 @@
   commit resolved every file cleanly and retained both sides' updates.
 - Would have prevented it: document the original packet-base SHA in each launch
   brief so lanes can resolve squash-induced conflicts without re-deriving it.
+
+
+## 2026-10-09: shared heavy queue delays C's final qualification
+
+- Doing: queueing the final package audit rerun and draft publication after
+  repairing and checking all reported C regressions.
+- Evidence: both runner logs report all three slots busy; lock inventory confirms
+  other admitted jobs hold the slots. C keeps its 12 GB cap and at most two units.
+  The wrapper's slot files are empty because waiters open/truncate them before
+  acquiring a lock, so those files cannot establish owner identity.
+- Would have prevented it: FIFO admission and non-truncating owner metadata,
+  plus terminal status files that distinguish queue wait from active proof.
+- Boundary: no other owner's job, live lock, or workstation wrapper was changed.
