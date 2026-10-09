@@ -3,14 +3,14 @@
   "initiative": {
     "id": "ingestion-secret-scrub",
     "title": "Ingestion Secret Scrub",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-14",
     "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ingestion-secret-scrub",
-  "lifecycle": "active",
-  "statusNote": "P0-P2 complete; P3 blocked at publication by inherited lint:effect-vitest in the contradiction-detection test from main #1572. All six package/parity proofs, reflection and final support scan pass. PR #1570 remains draft at the P2 head; closing content is retained locally, and the owned monitor is terminal.",
+  "lifecycle": "completed-retained",
+  "statusNote": "P0-P3 content complete; completed-retained restored per run-3 ruling. Six package/parity proofs, reflection and support scans pass. Publish final content to #1570 through the authorized direct push after the inherited Effect Vitest refusal; orchestrator owns consolidated-red repair and merge under S11. Standard hosted readiness remains separately unproved.",
   "mission": "Deliver a pre-LLM file-processing secret scrub with one canonical pattern bank, no-secret proof, honest coverage/residue, and enforced prompt gating.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -66,7 +66,7 @@
     {
       "id": "P3",
       "name": "Close: Yeet PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

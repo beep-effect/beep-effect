@@ -285,3 +285,15 @@ than a new subpath export. Reason: the subpath requires two generated root alias
 updates outside the lane's owned surfaces; the existing barrel needs no new edge
 or alias. Runtime rules, version and output remain unchanged. Reversal: restore
 the subpath and synchronize its generated aliases in a packet owning those files.
+
+### Run 3 inherited-fence publication
+
+Publish the closing packet by direct branch push after the already-attributed
+`lint:effect-vitest` refusal in the unowned contradiction-detection test from main
+#1572. Restore completed-retained in that same wave. Reason: orchestrator resume
+ruling 2026-10-09 22:00Z explicitly authorizes this fallback and assigns the
+inherited repair and merge to the consolidated lane under S11. Reversal: restore
+active/P3 in-progress with a follow-up packet change if content completion is
+revoked; keep the confidentiality implementation and its qualified proofs. No
+shared gate, detector baseline or unowned test is edited. AC8 remains unticked
+until standard hosted readiness is proved.

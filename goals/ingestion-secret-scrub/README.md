@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -34,11 +34,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0-P2 complete; P3 is blocked at publication. PR #1570 remains draft at the
-P2 head `ef87b84675`. The closing reflection and support scan are retained locally.
-The required main sync brought an out-of-scope Effect Vitest finding from #1572;
-no P3 content was pushed. The packet remains active until that inherited gate is
-repaired by its owner and the closing wave can publish.
+P0-P3 content complete; lifecycle completed-retained restored under the run-3
+ruling. PR #1570 receives the final closing wave via the authorized direct push
+after the inherited Effect Vitest refusal from main #1572. The orchestrator owns
+that consolidated repair and merge under S11; standard hosted readiness remains
+unproved until the exact-head checks and review window settle.
 
 ## Latest Evidence
 
@@ -82,13 +82,14 @@ repaired by its owner and the closing wave can publish.
   ticked from these counts. No review replies exist at the fresh thread read.
 - Reflection lint passes with zero blocking and zero advisory findings. The final
   main sync is conflict-free and changes none of the six scrub packages, so the
-  qualified source receipts remain applicable. Publication reran root cheap gates; fifteen pass and one inherited gate blocks push.
+  qualified source receipts remain applicable. Publication reran root cheap gates; fifteen pass and one inherited gate refused the standard push.
 - Closing publication blocker: `lint:effect-vitest` reports one new finding in
   `packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts`. That
   file exactly matches origin/main and arrived via #1572; no scrub test is flagged.
   The local inbox row is attributed outside lane ownership. Owned monitor stopped
-  and terminal receipt acknowledged. Completion flip is reversed to active/P3 in
-  progress; the reflection is retained. No ready or merge-ready claim is made.
+  and terminal receipt acknowledged. Run-3 ruling supersedes the earlier active/P3 rollback: restore
+  completed-retained and directly push the final wave, then mark ready and monitor.
+  Standard merge-ready is not inferred from this authorized publication.
 - R4 maps on-demand Yeet verify to exact-head hosted CI plus this hosted-parity
   set. Final reflection and readiness evidence are recorded at P3. This proof
   covers one confidentiality prompt boundary, not injection, tool-policy or egress.

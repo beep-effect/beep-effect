@@ -389,3 +389,44 @@ reflection, packet flip, support scan and ready/content-final push remain.
 - Open items: owning-lane repair on main, final publication/ready/monitor, and
   exact-final-head hosted results. Prior-head scanner acquisition failures and
   Vercel rate limits are attributed; zero review threads at the latest read.
+
+## Run 2 final worker report — 2026-10-09
+
+lane: secret-scrub
+head: 0575dcf3595a5250215ed30c0e2f876f7abbd1ad (exact local head; closing blocker commit is unpushed)
+PR(s): #1570 OPEN, draft; published head ef87b84675fc87b18e5df3a623e699aa31055190; P0-P2 published, P3 blocked
+package-verify: @beep/schema: pass; @beep/file-processing: pass; @beep/observability: pass; @beep/repo-ai-metrics: pass; @beep/documents-server: pass; @beep/documents-domain: pass
+hosted-parity: test-tsgo: pass for all six packages | docgen local: pass | jsdoc-ratchet: pass, regenerated inventory | knowledge refs: pass, refreshed after final main merge | fallow audit+health: pass | scoped coverage: pass for all six packages
+handoff: goals/ingestion-secret-scrub/history/handoffs/secret-scrub-2026-10-09.md
+open items: Closing publication passed fifteen cheap gates but is blocked by inherited lint:effect-vitest in packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts from main #1572; the file exactly matches origin/main and is outside this lane's ownership. No P3 content was pushed. Repair once on main, merge the repair into this lane, recheck final support bytes, restore completed-retained, publish, mark ready and run the bounded readiness monitor. Packet remains active/P3 in progress; reflection and passing source qualification receipts are retained. Exact current PR read returns zero review threads. Hosted Secret Scanning and SAST failed before analysis on Docker acquisition timeout/rate limit; Vercel deployments are build rate limited, all attributed and acknowledged. Standard hosted merge readiness is unproved; AC8 remains unticked. Final support scans have zero canary counts, including the 195-surface P3 receipt and subsequent evidence rechecks. All owned units are inactive and the cancelled monitor's terminal receipt is acknowledged. Decisions/reversals are recorded in SPEC and handoff: use the schema namespace barrel to avoid unowned alias projections (reverse through a separately owned export migration); retain six private-package release notes under #1566 (reverse with an applicable release-policy change); restore active packet state because closing publication failed (reverse after successful closeout). Standalone FilingDecisionLlmLayer requires SecretScrubService; composed wiring supplies the default, and the major compatibility note is in the PR body. Graft saved approximately 29,807 tokens this turn.
+blocked: P3 publication cannot pass the inherited, out-of-scope Effect Vitest finding from main #1572; PR #1570 remains draft.
+
+## Run 3 authorized closing publication — 2026-10-09
+
+Phase reached: P0-P3 content complete; completed-retained restored in the closing
+wave under the 22:00Z resume ruling. Main sync is already up to date; the inherited
+repair is not yet on main. The prior exact refusal is `lint:effect-vitest EV015`
+in `packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts` from
+main #1572; fifteen other cheap gates passed. The file remains outside ownership.
+
+Decision, reason and reversal: use the expressly authorized direct branch push
+for this closing wave, then Yeet ready and a bounded 40-minute detached monitor.
+S11 assigns consolidated-red repair and merge to the orchestrator. Reverse the
+packet flip through an active/P3 follow-up if completion is revoked; no baseline
+waiver or unowned source change is made. Never merge from this worker.
+
+Verification retained: six default package-verify, six test-tsgo and six scoped
+coverage receipts pass; local docgen, regenerated JSDoc ratchet, knowledge refs
+and Fallow audit/health pass. Reflection passes. This wave edits only packet
+evidence/state; no source delta invalidates those qualified receipts. Fresh
+thread read: zero outstanding of zero. PR #1570 is draft at the P2 head before
+this push. Final support-byte and PR-text scans run before the signed commit.
+Open items: ready flip, bounded monitor, exact-head hosted attribution, and
+orchestrator consolidated-red repair/merge. AC8 stays unticked until standard
+readiness is proved; content-final and hosted-green remain separate claims.
+
+Run-3 pre-push verification: launcher size, manifest JSON, packet references and
+packet whitespace pass. Reflection lint: blocking 0, advisory 0. Runtime-fragment
+exact-canary scanner: eight final packet files, PR title/body stdin and branch
+commit-message stdin each count 0 (ten surfaces), pass. No fixtures or examples
+are added by this closing wave. Qualified source/parity receipts remain unchanged.
