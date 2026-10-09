@@ -1088,6 +1088,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
     const hookDir = pathApi.join(evidenceRoot, "hook-events");
     const shards = yield* fs.readDirectory(hookDir).pipe(Effect.orElseSucceed(A.empty<string>));
     const stamps = MutableHashMap.empty<string, HashSet.HashSet<string>>();
+    const sessions = MutableHashMap.empty<string, HashSet.HashSet<string>>();
     yield* Effect.forEach(
       A.filter(shards, Str.endsWith(".ndjson")),
       Effect.fnUntraced(function* (name) {
@@ -1096,11 +1097,16 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
           const row = HookPulseV1.decodeJsonResult(line);
           if (
             Result.isSuccess(row) &&
-            row.success.hookEvent === "SessionStart" &&
             row.success.instrumentClass === "production" &&
             O.isSome(row.success.transcriptPath)
           ) {
             const key = `${row.success.agentKind}:${row.success.transcriptPath.value}`;
+            MutableHashMap.set(
+              sessions,
+              key,
+              HashSet.add(O.getOrElse(MutableHashMap.get(sessions, key), HashSet.empty<string>), row.success.sessionId)
+            );
+            if (row.success.hookEvent !== "SessionStart") continue;
             MutableHashMap.set(
               stamps,
               key,
@@ -1116,12 +1122,21 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
     );
     const stampedRecords = A.map(records, (record) => {
       const sanitized = record.privacy.sanitized;
-      const kind = sanitized.sourceKind === "claude" ? "claude-code" : "codex-cli";
-      const sessionHarnessHash = pipe(
-        MutableHashMap.get(stamps, `${kind}:${sanitized.sourcePathHash}`),
-        O.filter((values) => HashSet.size(values) === 1 && !HashSet.has(values, "unknown")),
-        O.flatMap((values) => A.head(A.fromIterable(values)))
-      );
+      const kind = AiMetricsTranscriptSource.$match(sanitized.sourceKind, {
+        claude: () => O.some("claude-code"),
+        codex: () => O.some("codex-cli"),
+        openclaw: () => O.none<string>(),
+      });
+      const sessionHarnessHash = O.flatMap(kind, (agentKind) => {
+        const key = `${agentKind}:${sanitized.sourcePathHash}`;
+        return pipe(
+          MutableHashMap.get(sessions, key),
+          O.filter((values) => HashSet.size(values) === 1),
+          O.flatMap(() => MutableHashMap.get(stamps, key)),
+          O.filter((values) => HashSet.size(values) === 1 && !HashSet.has(values, "unknown")),
+          O.flatMap((values) => A.head(A.fromIterable(values)))
+        );
+      });
       return AiMetricsDerivedTranscriptRecord.make({ ...record, sessionHarnessHash });
     });
     const ingestRunId = `forwarder-${startedAtEpochMillis}`;
