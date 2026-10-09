@@ -10,7 +10,7 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -28,7 +28,6 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import { vi } from "vitest";
 
 const decodeResidueReapReportJson = S.decodeEffect(S.fromJsonString(ResidueReapReport));
 const encodeResidueReapReportJson = S.encodeEffect(S.fromJsonString(ResidueReapReport));
@@ -1409,12 +1408,9 @@ const retentionFixture = Effect.fn("ResidueReapTest.retentionFixture")(function*
   });
   yield* fs.writeFileString(
     path.join(repoRoot, ".beep", "retention", "checkout-generated.json"),
-    yield* S.encodeEffect(S.fromJsonString(S.Array(ResidueRetentionRuling)))([ruling])
+    yield* encodeRulingArrayJson([ruling])
   );
-  yield* fs.writeFileString(
-    path.join(repoRoot, "standards", "retention.json"),
-    yield* S.encodeEffect(S.fromJsonString(ResidueRetentionRuling))(ruling)
-  );
+  yield* fs.writeFileString(path.join(repoRoot, "standards", "retention.json"), yield* encodeRulingJson(ruling));
   yield* runFixtureCommand(repoRoot, "git", ["add", "."]);
   yield* runFixtureCommand(repoRoot, "git", ["commit", "--quiet", "-m", "fixture"]);
   yield* touchTreeDaysAgo(root, path.join(repoRoot, ".beep"), 45);
@@ -1431,6 +1427,8 @@ const retentionFixture = Effect.fn("ResidueReapTest.retentionFixture")(function*
 });
 
 const rulingJson = S.fromJsonString(ResidueRetentionRuling);
+const rulingArrayJson = ResidueRetentionRuling.pipe(S.Array, S.fromJsonString);
+const encodeRulingArrayJson = S.encodeEffect(rulingArrayJson);
 const encodeRulingJson = S.encodeEffect(rulingJson);
 const decodeRulingJson = S.decodeEffect(rulingJson);
 const equivalentRuling = S.toEquivalence(ResidueRetentionRuling);
@@ -1512,11 +1510,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("checkout retention arch
               });
               yield* fs.writeFileString(
                 path.join(fixture.repoRoot, "standards", "second.json"),
-                yield* S.encodeEffect(S.fromJsonString(ResidueRetentionRuling))(ruling)
+                yield* encodeRulingJson(ruling)
               );
               yield* fs.writeFileString(
                 path.join(fixture.repoRoot, ".beep", "retention", "checkout-generated.json"),
-                yield* S.encodeEffect(S.fromJsonString(S.Array(ResidueRetentionRuling)))([fixture.ruling, ruling])
+                yield* encodeRulingArrayJson([fixture.ruling, ruling])
               );
               yield* fs.writeFileString(path.join(fixture.repoRoot, "standards", "café.md"), "ordinary evidence");
               yield* runFixtureCommand(fixture.repoRoot, "git", ["add", "."]);
@@ -1587,6 +1585,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("checkout retention arch
               const failed = yield* runResidueReap({ ...fixture, resume: unknown }).pipe(Effect.flip);
               expect(failed.message).toContain("plan.json does not exist");
               expect(yield* fs.exists(path.join(fixture.repoRoot, ".beep", "residue-reap", unknown))).toBe(false);
+              yield* fs.remove(fixture.repoRoot, { recursive: true });
+              for (const mode of ["resume", "restore"] as const) {
+                const recovered = yield* runResidueReap({
+                  ...fixture,
+                  repoRoot: invoking,
+                  [mode]: O.getOrThrow(O.fromUndefinedOr(report.runId)),
+                });
+                expect(recovered.warnings).toEqual([]);
+                expect(candidateByPath(recovered, fixture.target).retentionReason).toBe(row.retentionReason);
+              }
             })
           )
         ),
@@ -1673,33 +1681,34 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("checkout retention arch
               const table = {
                 self: process.pid,
                 pids: Effect.succeedSome([987654]),
-                cwd: () => Effect.succeedNone<string>(),
-                status: () => Effect.succeedNone(),
-                descriptors: () =>
-                  Effect.gen(function* () {
-                    const destination = yield* Ref.get(holder);
-                    if (O.isNone(destination)) return A.empty<string>();
-                    if (!(yield* fs.exists(fixture.target))) yield* fs.makeDirectory(fixture.target);
-                    return [destination.value];
-                  }),
+                cwd: F.constant(Effect.succeedNone),
+                status: F.constant(Effect.succeedNone),
+                descriptors: Effect.fn("ResidueReapTest.descriptors")(function* () {
+                  const destination = yield* Ref.get(holder);
+                  if (O.isNone(destination)) return A.empty<string>();
+                  if (!(yield* fs.exists(fixture.target).pipe(Effect.orDie)))
+                    yield* fs.makeDirectory(fixture.target).pipe(Effect.orDie);
+                  return [destination.value];
+                }),
               };
               const applied = yield* runResidueReap({
                 ...fixture,
                 apply: true,
-                archiveCheckpoint: (phase) =>
-                  Effect.gen(function* () {
-                    if (!Str.Equivalence(phase, "intent")) return;
-                    const runs = A.filter(
-                      yield* fs.readDirectory(path.join(fixture.repoRoot, ".beep", "residue-reap")),
-                      S.is(S.String.check(S.isPattern(/^[a-f0-9-]{36}$/u)))
-                    );
-                    yield* Ref.set(
-                      holder,
-                      O.some(
-                        path.join(fixture.repoRoot, ".beep", "residue-reap", O.getOrThrow(A.head(runs)), "archive", "0")
-                      )
-                    );
-                  }),
+                archiveCheckpoint: Effect.fn("ResidueReapTest.archiveCheckpoint")(function* (
+                  phase: "intent" | "moved"
+                ) {
+                  if (!Str.Equivalence(phase, "intent")) return;
+                  const runs = A.filter(
+                    yield* fs.readDirectory(path.join(fixture.repoRoot, ".beep", "residue-reap")).pipe(Effect.orDie),
+                    S.is(S.String.check(S.isPattern(/^[a-f0-9-]{36}$/u)))
+                  );
+                  yield* Ref.set(
+                    holder,
+                    O.some(
+                      path.join(fixture.repoRoot, ".beep", "residue-reap", O.getOrThrow(A.head(runs)), "archive", "0")
+                    )
+                  );
+                }),
               }).pipe(Effect.provideService(ProcessTable, table));
               expect(applied.reapedCount).toBe(0);
               expect(candidateByPath(applied, fixture.target).skipReason).toBe("lock-held");
@@ -1768,11 +1777,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("checkout retention arch
               yield* fs.writeFileString(target, "987654");
               yield* fs.writeFileString(
                 path.join(fixture.repoRoot, "standards", "pid.json"),
-                yield* S.encodeEffect(S.fromJsonString(ResidueRetentionRuling))(ruling)
+                yield* encodeRulingJson(ruling)
               );
               yield* fs.writeFileString(
                 path.join(fixture.repoRoot, ".beep", "retention", "checkout-pids.json"),
-                yield* S.encodeEffect(S.fromJsonString(S.Array(ResidueRetentionRuling)))([ruling])
+                yield* encodeRulingArrayJson([ruling])
               );
               yield* runFixtureCommand(fixture.repoRoot, "git", ["add", "."]);
               yield* runFixtureCommand(fixture.repoRoot, "git", ["commit", "--quiet", "-m", "pid proof"]);
@@ -1954,9 +1963,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("checkout retention arch
               for (const state of ["active", "paused", "unknown"] as const) {
                 yield* fs.writeFileString(
                   rulingPath,
-                  yield* S.encodeEffect(S.fromJsonString(S.Array(ResidueRetentionRuling)))([
-                    ResidueRetentionRuling.make({ ...fixture.ruling, state }),
-                  ])
+                  yield* encodeRulingArrayJson([ResidueRetentionRuling.make({ ...fixture.ruling, state })])
                 );
                 expect(
                   candidateByPath(yield* runResidueReap({ ...fixture, apply: true }), fixture.target).skipReason
@@ -2159,7 +2166,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retention fences", (it)
               ]);
               yield* fs.writeFileString(
                 path.join(fixture.repoRoot, ".beep", "retention", "checkout-generated.json"),
-                yield* S.encodeEffect(S.fromJsonString(S.Array(ResidueRetentionRuling)))([fixture.ruling])
+                yield* encodeRulingArrayJson([fixture.ruling])
               );
               const report = yield* runResidueReap({
                 repoRoot: fixture.repoRoot,
@@ -2264,7 +2271,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retention fences", (it)
                     ...fixture,
                     resume: O.getOrThrow(O.fromUndefinedOr(plan.runId)),
                   });
-                  expect(resumed.warnings).toEqual([]);
+                  expect(resumed.warnings).toEqual(
+                    eligible ? [`Skipped ${fixture.target}: path changed before removal.`] : []
+                  );
                   expect(candidateByPath(resumed, fixture.target).action).toBe("skip");
                 })
               )

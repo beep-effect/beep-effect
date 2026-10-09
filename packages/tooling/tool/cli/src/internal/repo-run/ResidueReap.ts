@@ -1637,13 +1637,12 @@ const ensureArchiveDirectories = Effect.fnUntraced(function* (checkout: string, 
       if (O.isSome(yield* fs.readLink(dir).pipe(Effect.option)))
         return yield* ResidueArchiveError.make({ message: "Archive directory is a symlink" });
       if (!(yield* fs.exists(dir)))
-        yield* fs
-          .makeDirectory(dir)
-          .pipe(
-            Effect.catch((error) =>
-              Str.Equivalence(error.reason._tag, "AlreadyExists") ? Effect.void : Effect.fail(error)
-            )
-          );
+        yield* fs.makeDirectory(dir).pipe(
+          Effect.catchIf(
+            (error) => Str.Equivalence(error.reason._tag, "AlreadyExists"),
+            () => Effect.void
+          )
+        );
       if (O.isSome(yield* fs.readLink(dir).pipe(Effect.option)))
         return yield* ResidueArchiveError.make({ message: "Archive directory became a symlink" });
       if (O.isNone(yield* canonicalDirectory(realCheckout, dir)))
@@ -1677,14 +1676,16 @@ const makeResidueArchive = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const crypto = yield* Crypto.Crypto;
   return ResidueArchive.of({
-    publish: (target, content, label) =>
+    publish: Effect.fn("ResidueArchive.publish")((target: string, content: string, label: string) =>
       publishArchiveText(target, content, label).pipe(
         Effect.provideService(Path.Path, path),
         Effect.provideService(FileSystem.FileSystem, fs),
         Effect.provideService(Crypto.Crypto, crypto)
-      ),
-    move: (source, destination, expected) =>
-      renameBoundEntry(source, destination, expected).pipe(Effect.provideService(Path.Path, path)),
+      )
+    ),
+    move: Effect.fn("ResidueArchive.move")((source: string, destination: string, expected: DirectoryIdentity) =>
+      renameBoundEntry(source, destination, expected).pipe(Effect.provideService(Path.Path, path))
+    ),
   });
 });
 
@@ -2447,7 +2448,7 @@ const restoreArchivedIntent = Effect.fnUntraced(function* (context: RecoveryInte
     yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase: "restored" })),
     "residue archive restore"
   );
-  return ResidueReapCandidate.make({ ...entry, action: "skip", retentionReason: "restored from archive" });
+  return unapplied(ResidueReapCandidate.make({ ...entry, action: "skip", retentionReason: "restored from archive" }));
 });
 const reconcileArchivedIntent = Effect.fnUntraced(function* (context: RecoveryIntent) {
   const { entry, intent, destination, journalPath } = context;
@@ -2473,7 +2474,7 @@ const reconcileArchivedIntent = Effect.fnUntraced(function* (context: RecoveryIn
     yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase: "moved" })),
     "reconciled residue archive move"
   );
-  return ResidueReapCandidate.make({ ...entry, action: "archive-move", recoveryDestination: destination });
+  return unapplied(ResidueReapCandidate.make({ ...entry, action: "archive-move", recoveryDestination: destination }));
 });
 const reconcileSourceIntent = Effect.fnUntraced(function* (context: RecoveryIntent) {
   const { entry, intent, journalPath, realOwner, settings, restore } = context;
@@ -2484,27 +2485,31 @@ const reconcileSourceIntent = Effect.fnUntraced(function* (context: RecoveryInte
       yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase: "restored" })),
       "reconciled residue restore"
     );
-    return ResidueReapCandidate.make({ ...entry, action: "skip", retentionReason: "source retained" });
+    return unapplied(ResidueReapCandidate.make({ ...entry, action: "skip", retentionReason: "source retained" }));
   }
-  return (yield* applyCandidate(entry, O.some(realOwner), settings.policy, () => Effect.void)).candidate;
+  return yield* applyCandidate(entry, O.some(realOwner), settings.policy, () => Effect.void);
 });
 const recoverArchiveIntent = Effect.fnUntraced(function* (context: RecoveryIntent) {
   const { entry, intent, restore } = context;
   const fs = yield* FileSystem.FileSystem;
   const refuse = recoveryRefusal;
   if (Str.Equivalence(intent.phase, "restored"))
-    return ResidueReapCandidate.make({
-      ...entry,
-      action: "skip",
-      retentionReason: "already restored; resume never rearchives",
-    });
+    return unapplied(
+      ResidueReapCandidate.make({
+        ...entry,
+        action: "skip",
+        retentionReason: "already restored; resume never rearchives",
+      })
+    );
   if (!restore && Str.Equivalence(intent.phase, "fenced-live"))
-    return ResidueReapCandidate.make({
-      ...entry,
-      action: "skip",
-      skipReason: "lock-held",
-      retentionReason: "fenced-live; restore or start a new run",
-    });
+    return unapplied(
+      ResidueReapCandidate.make({
+        ...entry,
+        action: "skip",
+        skipReason: "lock-held",
+        retentionReason: "fenced-live; restore or start a new run",
+      })
+    );
   const identityAt = Effect.fnUntraced(function* (target: string) {
     if (O.isSome(yield* fs.readLink(target).pipe(Effect.option))) return false;
     return O.exists(O.flatMap(yield* fs.stat(target).pipe(Effect.option), directoryIdentity), (identity) =>
@@ -2517,19 +2522,6 @@ const recoverArchiveIntent = Effect.fnUntraced(function* (context: RecoveryInten
   if (archived && !(yield* fs.exists(intent.source))) return yield* reconcileArchivedIntent(context);
   if (sourceMatches && !(yield* fs.exists(intent.destination))) return yield* reconcileSourceIntent(context);
   return yield* refuse("Archive source or destination identity changed; manual recovery required", "path-changed");
-});
-const recoverWithoutIntent = Effect.fnUntraced(function* (
-  entry: ResidueReapCandidate,
-  realOwner: string,
-  context: RecoveryRun
-) {
-  if (context.restore || !ResidueReapAction.is["archive-move"](entry.action))
-    return ResidueReapCandidate.make({
-      ...entry,
-      action: "skip",
-      retentionReason: "no archive intent; source retained",
-    });
-  return (yield* applyCandidate(entry, O.some(realOwner), context.settings.policy, () => Effect.void)).candidate;
 });
 const resolveRecoveryAddresses = Effect.fnUntraced(function* (
   entry: ResidueReapCandidate,
@@ -2573,24 +2565,30 @@ const recoverArchiveEntry = Effect.fnUntraced(function* (
   const path = yield* Path.Path;
   const refuse = recoveryRefusal;
   if (!isCheckoutResidueClass(entry.reapClass))
-    return ResidueReapCandidate.make({
-      ...entry,
-      action: "skip",
-      retentionReason: "class does not use archive recovery",
-    });
+    return unapplied(
+      ResidueReapCandidate.make({
+        ...entry,
+        action: "skip",
+        retentionReason: "class does not use archive recovery",
+      })
+    );
   const destination = path.join(root, "archive", `${index}`);
   const journalPath = `${destination}.intent.json`;
+  const hasIntent = yield* fs.exists(journalPath);
+  if (!hasIntent && (context.restore || !ResidueReapAction.is["archive-move"](entry.action)))
+    return unapplied(ResidueReapCandidate.make({ ...entry, action: "skip" }));
   const owner = optionOr(entry.checkoutRoot, settings.repoRoot);
   const realOwner = yield* fs.realPath(owner);
   if (!Str.Equivalence(realOwner, yield* fs.realPath(settings.repoRoot)))
-    return ResidueReapCandidate.make({
-      ...entry,
-      action: "skip",
-      skipReason: "foreign-owner",
-      retentionReason: "fleet observation only; recover from the owning checkout",
-    });
-  const hasIntent = yield* fs.exists(journalPath);
-  if (!hasIntent) return yield* recoverWithoutIntent(entry, realOwner, context);
+    return unapplied(
+      ResidueReapCandidate.make({
+        ...entry,
+        action: "skip",
+        skipReason: "foreign-owner",
+        retentionReason: "fleet observation only; recover from the owning checkout",
+      })
+    );
+  if (!hasIntent) return yield* applyCandidate(entry, O.some(realOwner), settings.policy, () => Effect.void);
   const { resolvedSource, resolvedDestination } = yield* resolveRecoveryAddresses(entry, owner, destination, context);
   const intent = yield* decodeIntent(yield* fs.readFileString(journalPath));
   if (
@@ -2621,7 +2619,7 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
       const operation = recoverArchiveEntry(entry, index, { settings, root, report, restore });
       const result = yield* Effect.result(operation);
       return Result.isSuccess(result)
-        ? { candidate: result.success, warnings: A.empty<string>() }
+        ? { ...result.success, refused: false }
         : {
             candidate: ResidueReapCandidate.make({
               ...entry,
@@ -2631,11 +2629,16 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
                 : "removal-failed",
             }),
             warnings: [`${entry.path}: ${result.failure.message}`],
+            refused: true,
           };
     }),
     { concurrency: 1 }
   );
   const warnings = A.flatMap(rows, (row) => row.warnings);
+  const refusalWarnings = A.flatMap(
+    A.filter(rows, (row) => row.refused),
+    (row) => row.warnings
+  );
   const crypto = yield* Crypto.Crypto;
   const recoveryPath = path.join(root, `recovery-${yield* crypto.randomUUIDv4}.json`);
   const result = ResidueReapReport.make({
@@ -2649,7 +2652,7 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
     warnings: A.appendAll(report.warnings, warnings),
   });
   yield* archive.publish(recoveryPath, yield* encodeReport(result), "residue recovery report");
-  if (A.isReadonlyArrayNonEmpty(warnings)) return yield* refuse(A.join(warnings, "\n"));
+  if (A.isReadonlyArrayNonEmpty(refusalWarnings)) return yield* refuse(A.join(refusalWarnings, "\n"));
   return result;
 });
 
