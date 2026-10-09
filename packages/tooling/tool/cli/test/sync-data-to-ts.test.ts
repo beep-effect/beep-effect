@@ -1046,3 +1046,24 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
     );
   });
 });
+
+it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned SPAR acquisition", (it) => {
+  it.effect("rejects byte drift before emitting generated files", () =>
+    Effect.gen(function* () {
+      const target = O.getOrThrow(A.findFirst(syncDataTargets, (entry) => entry.id === "spar-terms"));
+      expect(target.sourceUrls).toHaveLength(4);
+      for (const url of target.sourceUrls) {
+        expect(url).toMatch(/raw\.githubusercontent\.com\/SPAROntologies\/[^/]+\/[a-f0-9]{40}\/docs\/2026-/u);
+      }
+      const error = yield* target.acquire.pipe(
+        Effect.provideService(
+          HttpClient.HttpClient,
+          makeWebHandlerClient(() => new Response("altered pinned content"))
+        ),
+        Effect.flip
+      );
+      expect(error._tag).toBe("SyncDataToTsError");
+      expect(error.message).toContain("SHA-256 does not match");
+    })
+  );
+});

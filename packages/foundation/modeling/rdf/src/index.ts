@@ -6,6 +6,18 @@
  */
 
 /**
+ * SPAR document annotation codec profile.
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Adapters/DocumentAnnotation.ts";
+/**
+ * Md source identities and DOCO section folding.
+ * @category folding
+ * @since 0.0.0
+ */
+export * from "./Adapters/MdSections.ts";
+/**
  * Web Annotation value models.
  *
  * @category models
@@ -82,3 +94,27 @@ export * from "./Uri.ts";
  * @since 0.0.0
  */
 export { VERSION } from "./Version.ts";
+/**
+ * Cito pinned vocabulary constants.
+ * @category constants
+ * @since 0.0.0
+ */
+export * as Cito from "./Vocab/Cito.ts";
+/**
+ * Deo pinned vocabulary constants.
+ * @category constants
+ * @since 0.0.0
+ */
+export * as Deo from "./Vocab/Deo.ts";
+/**
+ * Doco pinned vocabulary constants.
+ * @category constants
+ * @since 0.0.0
+ */
+export * as Doco from "./Vocab/Doco.ts";
+/**
+ * Fabio pinned vocabulary constants.
+ * @category constants
+ * @since 0.0.0
+ */
+export * as Fabio from "./Vocab/Fabio.ts";

@@ -13,7 +13,7 @@ the exploration ledger remains the primary copy.
 | DOCO spec (HTML) | https://sparontologies.github.io/doco/current/doco.html | clone: `~/Downloads/ontologies/doco/docs/current/` | CC-BY 4.0 (stated in spec header) | permissive ⇒ port/vendor with attribution |
 | PO spec (HTML) | https://sparontologies.github.io/po/current/po.html | scraped 2026-08-11 (session) | not verified | reference only until license verified |
 | DOCO repo | https://github.com/SPAROntologies/doco | `~/Downloads/ontologies/doco` (out-of-repo clone) | CC-BY 4.0 per ontology header; repo license not checked | verify repo LICENSE before vendoring ttl/jsonld |
-| DEO (imported by DOCO) | https://sparontologies.github.io/deo/current/deo.html | not on disk | CC-BY 3.0 (official ontology page) | may generate pinned terms with attribution; record the 3.0 notice |
+| DEO (imported by DOCO) | https://sparontologies.github.io/deo/current/deo.html | not on disk | CC-BY 3.0 (official ontology page) | may generate pinned terms with attribution; historical 3.0 observation, superseded by D9; see Pinned acquisition (P0) |
 | FOLIO explorer | https://folio.openlegalstandard.org/explore | scrape failed (JS SPA renders empty); use API docs https://folio.openlegalstandard.org/docs | FOLIO license — verify | pending verification |
 | FOLIO MCP overview | https://openlegalstandard.org/resources/folio-mcp/ | original notes: `research/folio/folio-mcp.md` | page redistribution terms not verified | link/reference only; do not retain page capture |
 | FOLIO MCP tools (12 tools, 18k+ concepts) | https://openlegalstandard.org/resources/folio-mcp-tools/ | original notes: `research/folio/folio-mcp-tools.md` | page redistribution terms not verified | link/reference only; do not retain page capture |
@@ -81,3 +81,58 @@ remain next to the claims they support.
   ontologies already assessed there; do not re-mine, cite.
 - `explorations/full-document-editor/` — D1–D27 architecture decisions bind
   this packet's layering.
+
+## Pinned acquisition (P0)
+
+D9 selects dated releases; D13 records CC BY 4.0 for all four artifacts.
+The historical DEO CC-BY 3.0 row is preserved as an observation of an older
+page/release, not the license of these pins. Acquisition used upstream URLs
+only; no local SPAR clone supplied bytes.
+
+### Doco
+
+- Commit: `4c4109a64148c207f80d48a611a79a2d996a44b4`; artifact: `docs/2026-06-25/doco.ttl`.
+- Immutable source: https://raw.githubusercontent.com/SPAROntologies/doco/4c4109a64148c207f80d48a611a79a2d996a44b4/docs/2026-06-25/doco.ttl
+- SHA-256: `616c0f7611168d4ff8325ce361ab79625f9664aead7bfe6bf8e0c66982f7c4ae`.
+- Ontology IRI: `http://purl.org/spar/doco`; version IRI: `http://purl.org/spar/doco/2026-06-25`; version: `1.4.0`.
+- Artifact license: CC BY 4.0 (`dcterms:license`); repository license: CC BY 4.0.
+- Repository license: https://raw.githubusercontent.com/SPAROntologies/doco/4c4109a64148c207f80d48a611a79a2d996a44b4/LICENSE.md
+- LICENSE.md SHA-256: `9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94`.
+- Attribution: Doco by David Shotton and Silvio Peroni. Contributors: Sebastian Barzaghi. Licensed under CC BY 4.0. Term names selected and projected to TypeScript; ontology axioms are not redistributed.
+- Semantic SHA-256 (sorted selected names joined with newline): `d01a7e4eaa8ede7c08c76c324ac0dc0ff8f24576df48d5d65e45d9cddf39a79d`.
+
+### Deo
+
+- Commit: `dfaa0904b1b7905cd8293dc2f1b9992c2871d0d4`; artifact: `docs/2026-08-14/deo.ttl`.
+- Immutable source: https://raw.githubusercontent.com/SPAROntologies/deo/dfaa0904b1b7905cd8293dc2f1b9992c2871d0d4/docs/2026-08-14/deo.ttl
+- SHA-256: `c66ac7523cef1d57b88fbb8d8e5bb3fe81e8ce2932e24167700f0aafd89126cc`.
+- Ontology IRI: `http://purl.org/spar/deo`; version IRI: `http://purl.org/spar/deo/2026-08-14`; version: `1.2.0`.
+- Artifact license: CC BY 4.0 (`dcterms:license`); repository license: CC BY 4.0.
+- Repository license: https://raw.githubusercontent.com/SPAROntologies/deo/dfaa0904b1b7905cd8293dc2f1b9992c2871d0d4/LICENSE.md
+- LICENSE.md SHA-256: `9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94`.
+- Attribution: Deo by David Shotton and Silvio Peroni. Contributors: Sebastian Barzaghi. Licensed under CC BY 4.0. Term names selected and projected to TypeScript; ontology axioms are not redistributed.
+- Semantic SHA-256 (sorted selected names joined with newline): `bae13b8cd5aa68e5273b6a94053dbe4859ec7ddecd25ebd2fab19199e2842283`.
+
+### Fabio
+
+- Commit: `ea5b2cd49a7a8f4dc695d633c76bb05608c085db`; artifact: `docs/2026-09-03/fabio.ttl`.
+- Immutable source: https://raw.githubusercontent.com/SPAROntologies/fabio/ea5b2cd49a7a8f4dc695d633c76bb05608c085db/docs/2026-09-03/fabio.ttl
+- SHA-256: `86523bded037828b13c3d2083c6eccdb0daa223009d4ed8ddd70ff1a4d1789ea`.
+- Ontology IRI: `http://purl.org/spar/fabio`; version IRI: `http://purl.org/spar/fabio/2026-09-03`; version: `2.3.1`.
+- Artifact license: CC BY 4.0 (`dcterms:license`); repository license: CC BY 4.0.
+- Repository license: https://raw.githubusercontent.com/SPAROntologies/fabio/ea5b2cd49a7a8f4dc695d633c76bb05608c085db/LICENSE.md
+- LICENSE.md SHA-256: `9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94`.
+- Attribution: Fabio by David Shotton and Silvio Peroni. Contributors: Paolo Ciccarese, Sebastian Barzaghi and Tim Clark. Licensed under CC BY 4.0. Term names selected and projected to TypeScript; ontology axioms are not redistributed.
+- Semantic SHA-256 (sorted selected names joined with newline): `b6ce788d9786917c9d19adaa0d904213365607c7f683d7277f508dcf142b4cc2`.
+
+### Cito
+
+- Commit: `d34b42e8d4d1c9d45bc530599328897805116994`; artifact: `docs/2026-09-03/cito.ttl`.
+- Immutable source: https://raw.githubusercontent.com/SPAROntologies/cito/d34b42e8d4d1c9d45bc530599328897805116994/docs/2026-09-03/cito.ttl
+- SHA-256: `1b0570e2126525365d325771d1c8cf3ba399f6dfd829cb69fd2851f42802d7b0`.
+- Ontology IRI: `http://purl.org/spar/cito`; version IRI: `http://purl.org/spar/cito/2026-09-03`; version: `2.9.0`.
+- Artifact license: CC BY 4.0 (`dcterms:license`); repository license: CC BY 4.0.
+- Repository license: https://raw.githubusercontent.com/SPAROntologies/cito/d34b42e8d4d1c9d45bc530599328897805116994/LICENSE.md
+- LICENSE.md SHA-256: `9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94`.
+- Attribution: Cito by David Shotton and Silvio Peroni. Contributors: Paolo Ciccarese, Sebastian Barzaghi and Tim Clark. Licensed under CC BY 4.0. Term names selected and projected to TypeScript; ontology axioms are not redistributed.
+- Semantic SHA-256 (sorted selected names joined with newline): `7b748150bdc75159bc015a93e17523e93158d7421422bce8a36547e4f1b81669`.
