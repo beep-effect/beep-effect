@@ -28,6 +28,8 @@ class TomlEditInvariantError extends S.TaggedError<TomlEditInvariantError>($I`To
  * and array-of-tables indices.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type TomlSegment = string | number;
 
@@ -36,6 +38,8 @@ export type TomlSegment = string | number;
  * within a TOML document's semantic tree.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type TomlPath = ReadonlyArray<TomlSegment>;
 
@@ -44,7 +48,18 @@ export type TomlPath = ReadonlyArray<TomlSegment>;
  * `offset` and a `length` in UTF-16 code units. Pass to `TomlFormat.format`
  * to restrict formatting to the expressions intersecting a region.
  *
+ * **Example** (Select a formatting region)
+ *
+ * ```ts
+ * import { TomlRange } from "@beep/scratchpad/effected/toml/TomlEdit";
+ *
+ * const range = TomlRange.make({ offset: 4, length: 8 });
+ * console.log(range.length) // 8
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class TomlRange extends S.Class<TomlRange>($I`TomlRange`)({
 	offset: S.Finite.annotateKey({ description: "Zero-based starting position in UTF-16 code units for selecting expressions to format" }),
@@ -62,7 +77,18 @@ export class TomlRange extends S.Class<TomlRange>($I`TomlRange`)({
  * semantics), so consumer code can be written once over "a document codec's
  * Edit/Range/Path".
  *
+ * **Example** (Insert text without replacing source)
+ *
+ * ```ts
+ * import { TomlEdit } from "@beep/scratchpad/effected/toml/TomlEdit";
+ *
+ * const edit = TomlEdit.make({ offset: 0, length: 0, content: "# note\n" });
+ * console.log(TomlEdit.applyAll("count = 2", [edit]) === "# note\ncount = 2") // true
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class TomlEdit extends S.Class<TomlEdit>($I`TomlEdit`)({
 	offset: S.Finite.annotateKey({ description: "Zero-based starting position of the text splice in UTF-16 code units" }),
@@ -75,9 +101,23 @@ export class TomlEdit extends S.Class<TomlEdit>($I`TomlEdit`)({
 	 * array is not mutated. Overlapping edits are a programmer error and throw
 	 * as a defect — `TomlFormat` never produces them.
 	 *
+	 * **Example** (Apply edits against their original offsets)
+	 *
+	 * ```ts
+	 * import { TomlEdit } from "@beep/scratchpad/effected/toml/TomlEdit";
+	 *
+	 * const edits = [
+	 *   TomlEdit.make({ offset: 4, length: 1, content: "3" }),
+	 *   TomlEdit.make({ offset: 10, length: 1, content: "4" }),
+	 * ];
+	 * console.log(TomlEdit.applyAll("a = 1;b = 2", edits)) // a = 3;b = 4
+	 * ```
+	 *
 	 * @param text - The source text to edit.
 	 * @param edits - The edits to apply, in any order.
 	 * @returns The edited text.
+	 * @category utilities
+	 * @since 0.0.0
 	 */
 	static applyAll(text: string, edits: ReadonlyArray<TomlEdit>): string {
 		const sorted = A.sort(edits, Order.mapInput(Order.flip(Order.Number), (edit: TomlEdit) => edit.offset));

@@ -55,6 +55,8 @@ class TomlFormatInvariantError extends S.TaggedError<TomlFormatInvariantError>($
  * are structurally interchangeable — only `offset`/`length` are read).
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type TomlRangeLike = TomlRange | { readonly offset: number; readonly length: number };
 
@@ -64,7 +66,18 @@ export type TomlRangeLike = TomlRange | { readonly offset: number; readonly leng
  * strings; for `modify` it overrides the dominant newline inherited by
  * inserted lines.
  *
+ * **Example** (Select CRLF formatting)
+ *
+ * ```ts
+ * import { TomlFormattingOptions } from "@beep/scratchpad/effected/toml/TomlFormat";
+ *
+ * const options = TomlFormattingOptions.make({ newline: "\r\n" });
+ * console.log(JSON.stringify(options.newline)) // "\r\n"
+ * ```
+ *
  * @public
+ * @category configuration
+ * @since 0.0.0
  */
 export class TomlFormattingOptions extends S.Class<TomlFormattingOptions>($I`TomlFormattingOptions`)({
 	newline: S.optionalKey(S.Literals(["\n", "\r\n"])).annotateKey({ description: "LF or CRLF used to normalize line endings outside multiline strings during formatting and terminate inserted lines during modification" }),
@@ -77,11 +90,45 @@ export class TomlFormattingOptions extends S.Class<TomlFormattingOptions>($I`Tom
  * cannot render as TOML. Carries one structured {@link TomlDiagnostic} —
  * never a collapsed `reason` string.
  *
+ * **Example** (Construct a structured modification failure)
+ *
+ * ```ts
+ * import { TomlDiagnostic } from "@beep/scratchpad/effected/toml/TomlDiagnostic";
+ * import { TomlModificationError } from "@beep/scratchpad/effected/toml/TomlFormat";
+ *
+ * const diagnostic = TomlDiagnostic.fromRaw("x = 1\n", {
+ *   code: "DottedKeyConflict", message: "missing key", offset: 0, length: 1,
+ * });
+ * const error = TomlModificationError.make({ diagnostic });
+ * console.log(error.diagnostic.code) // DottedKeyConflict
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class TomlModificationError extends S.TaggedError<TomlModificationError>($I`TomlModificationError`)("TomlModificationError", {
 	diagnostic: TomlDiagnostic.annotateKey({ description: "Structured failure detail carrying the code, message and source position explaining why modification failed" }),
 }, $I.annote("TomlModificationError", { description: "Raised when `TomlFormat.modify` cannot resolve the requested path against the document's semantic view, when the insertion target refuses (an inline table or an implicitly created table), or when the replacement value cannot render as TOML. Carries one structured TomlDiagnostic — never a collapsed `reason` string." })) {
+	/**
+	 * Explains a modification failure with its diagnostic code and message.
+	 *
+	 * **Example** (Read the modification failure message)
+	 *
+	 * ```ts
+	 * import { TomlDiagnostic } from "@beep/scratchpad/effected/toml/TomlDiagnostic";
+	 * import { TomlModificationError } from "@beep/scratchpad/effected/toml/TomlFormat";
+	 *
+	 * const diagnostic = TomlDiagnostic.fromRaw("x = 1\n", {
+	 *   code: "DottedKeyConflict", message: "missing key", offset: 0, length: 1,
+	 * });
+	 * const error = TomlModificationError.make({ diagnostic });
+	 * console.log(error.message) // TOML modification failed: DottedKeyConflict missing key
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return `TOML modification failed: ${this.diagnostic.code} ${this.diagnostic.message}`;
 	}
@@ -860,33 +907,50 @@ const terminal = (cur: Cursor, segment: TomlSegment, value: unknown, ctx: Modify
  * **Example** (Format TOML and modify a value while preserving comments)
  *
  * ```ts
- * import { TomlFormat } from "./index.ts";
+ * import { TomlFormat } from "@beep/scratchpad/effected/toml/TomlFormat";
  * import * as Effect from "effect/Effect";
  *
  * const formatted = TomlFormat.formatToString('  title="x"   #note\n[server]\nport=1');
- * // => 'title = "x" # note\n[server]\nport = 1\n'
+ * console.log(JSON.stringify(formatted)) // "title = \"x\" # note\n[server]\nport = 1\n"
  *
  * const program = Effect.gen(function* () {
  *   return yield* TomlFormat.modifyToString("[server]\nport = 1 # dev\n", ["server", "port"], 2);
- *   // => "[server]\nport = 2 # dev\n"
  * });
+ * console.log(JSON.stringify(Effect.runSync(program))) // "[server]\nport = 2 # dev\n"
  * ```
  *
  * @public
+ * @category formatting
+ * @since 0.0.0
  */
 export class TomlFormat {
 	private constructor() {}
 
 	/**
-	 * Compute conservative formatting edits: one space around `=`, leading
+	 * Computes conservative whitespace edits while preserving TOML values and layout.
+	 *
+	 * **Details**
+	 *
+	 * The edits produce one space around `=`, leading
 	 * indentation stripped, trailing whitespace stripped with one space before
 	 * a trailing `#`, one space after a non-empty `#` (unless it starts with
-	 * space, tab or `!`), a single final newline, and — when
+	 * space, tab or an exclamation mark), a single final newline, and — when
 	 * `options.newline` is set — every newline normalized outside multi-line
 	 * strings. Nothing else: no reordering, no blank-line collapsing, no value
 	 * rewriting. `range` restricts edits to the expressions intersecting it.
 	 * Non-mutating — apply with `TomlEdit.applyAll` (or use
 	 * {@link TomlFormat.formatToString}). Pure and total.
+	 *
+	 * **Example** (Apply conservative whitespace edits)
+	 *
+	 * ```ts
+	 * import { TomlEdit } from "@beep/scratchpad/effected/toml/TomlEdit";
+	 * import { TomlFormat } from "@beep/scratchpad/effected/toml/TomlFormat";
+	 *
+	 * const source = "x=1";
+	 * const edits = TomlFormat.format(source);
+	 * console.log(JSON.stringify(TomlEdit.applyAll(source, edits))) // "x = 1\n"
+	 * ```
 	 *
 	 * @param text - The TOML source to format.
 	 * @param range - Optional sub-range; only edits whose expression intersects
@@ -894,6 +958,8 @@ export class TomlFormat {
 	 * @param options - Optional {@link TomlFormattingOptions}.
 	 * @returns The edits that bring `text` (or `range`) to canonical shape;
 	 *   apply them with `TomlEdit.applyAll`.
+	 * @category formatting
+	 * @since 0.0.0
 	 */
 	static format(text: string, range?: TomlRangeLike, options?: TomlFormattingOptions): ReadonlyArray<TomlEdit> {
 		const tagged = computeFormatEdits(text, options);
@@ -910,19 +976,33 @@ export class TomlFormat {
 	 * Format `text` and apply the resulting edits in one step
 	 * (`TomlEdit.applyAll ∘ format`). Pure and total.
 	 *
+	 * **Example** (Format a document in one step)
+	 *
+	 * ```ts
+	 * import { TomlFormat } from "@beep/scratchpad/effected/toml/TomlFormat";
+	 *
+	 * console.log(JSON.stringify(TomlFormat.formatToString("x=1"))) // "x = 1\n"
+	 * ```
+	 *
 	 * @param text - The TOML source to format.
 	 * @param range - Optional sub-range; only edits whose expression intersects
 	 *   it are applied.
 	 * @param options - Optional {@link TomlFormattingOptions}.
 	 * @returns The formatted text.
+	 * @category formatting
+	 * @since 0.0.0
 	 */
 	static formatToString(text: string, range?: TomlRangeLike, options?: TomlFormattingOptions): string {
 		return TomlEdit.applyAll(text, TomlFormat.format(text, range, options));
 	}
 
 	/**
-	 * Compute the edits that replace, delete, or insert a value at `path`,
-	 * resolved through the document's semantic view. Every segment but the
+	 * Computes edits that replace, delete, or insert a value at a path resolved
+	 * through the document's semantic view.
+	 *
+	 * **Details**
+	 *
+	 * Every segment but the
 	 * last must resolve — intermediate tables are never auto-created. A
 	 * `value` of `undefined` deletes: a key-value's whole line, an inline
 	 * entry, or an array item, splicing separators. A new key inserts per the
@@ -932,6 +1012,18 @@ export class TomlFormat {
 	 * section; inline and implicitly created tables refuse. Inserted lines
 	 * inherit the document's dominant newline unless `options.newline`
 	 * overrides it. Every modified document reparses cleanly.
+	 *
+	 * **Example** (Apply a value replacement without changing its comment)
+	 *
+	 * ```ts
+	 * import { TomlEdit } from "@beep/scratchpad/effected/toml/TomlEdit";
+	 * import { TomlFormat } from "@beep/scratchpad/effected/toml/TomlFormat";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const source = "x = 1 # keep\n";
+	 * const edits = Effect.runSync(TomlFormat.modify(source, ["x"], 2));
+	 * console.log(JSON.stringify(TomlEdit.applyAll(source, edits))) // "x = 2 # keep\n"
+	 * ```
 	 *
 	 * @param text - The TOML source to modify.
 	 * @param path - The location to set, replace or delete.
@@ -943,6 +1035,8 @@ export class TomlFormat {
 	 *   `TomlEdit.applyAll`), or fails with {@link TomlParseError} when the
 	 *   source does not parse, or {@link TomlModificationError} when `path`
 	 *   cannot be resolved or the insertion target is not allowed.
+	 * @category formatting
+	 * @since 0.0.0
 	 */
 	static readonly modify = Effect.fn("TomlFormat.modify")(function* (
 		text: string,
@@ -1003,6 +1097,16 @@ export class TomlFormat {
 	 * Modify `text` and apply the resulting edits in one step
 	 * (`TomlEdit.applyAll ∘ modify`).
 	 *
+	 * **Example** (Delete a key-value line)
+	 *
+	 * ```ts
+	 * import { TomlFormat } from "@beep/scratchpad/effected/toml/TomlFormat";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = TomlFormat.modifyToString("x = 1\ny = 2\n", ["x"], undefined);
+	 * console.log(JSON.stringify(Effect.runSync(program))) // "y = 2\n"
+	 * ```
+	 *
 	 * @param text - The TOML source to modify.
 	 * @param path - The location to set, replace or delete.
 	 * @param value - The plain JavaScript value to write; `undefined` deletes the
@@ -1011,6 +1115,8 @@ export class TomlFormat {
 	 * @returns An `Effect` that succeeds with the modified text, or fails with
 	 *   {@link TomlParseError} or {@link TomlModificationError}, as
 	 *   {@link TomlFormat.modify} does.
+	 * @category formatting
+	 * @since 0.0.0
 	 */
 	static readonly modifyToString = Effect.fn("TomlFormat.modifyToString")(function* (
 		text: string,

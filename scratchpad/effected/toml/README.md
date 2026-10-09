@@ -1,23 +1,6 @@
 # toml (lab port of @effected/toml)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Ftoml?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/toml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
-
 Zero-dependency TOML 1.1.0 parsing, editing and formatting expressed as Effect schemas and pure functions. Parse TOML into plain values or a byte-exact linear CST, compute comment-preserving edits, format, modify by path, walk a document as a `Stream`, and decode straight into a validated domain schema.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/toml
 
@@ -27,49 +10,35 @@ The engine here is written from scratch against the TOML 1.1.0 spec, and it is t
 
 The value model is honest about TOML's types rather than flattening them into JavaScript's. Integers past ±(2^53 − 1) decode to `bigint` instead of silently losing precision, and TOML's four date-time types decode to four calendar-validated value classes instead of a `Date` that cannot represent a local time. TOML has no null, so `Toml.stringify` on a value containing `null` fails with a structured `UnsupportedValue` diagnostic naming the offending path rather than dropping the key. Every fallible entry point carries a typed error built from `TomlDiagnostic`, and nesting-depth guards on both the parse and the stringify side mean hostile input fails through that channel rather than as a stack overflow.
 
-## Install
-
-```bash
-npm install @effected/toml effect
-```
-
-```bash
-pnpm add @effected/toml effect
-```
-
-Requires Node.js >=24.11.0. `effect` v4 is a peer dependency; the package itself adds no other runtime dependencies.
-
-All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
-
 ## Quick start
 
 Compose your schema with `Toml.schema` to decode TOML straight into a validated domain value, or reach for the pre-bound `Toml.TomlFromString` codec when you just want the plain value:
 
 ```ts
-import { Toml } from "@effected/toml";
-import { Effect, Schema } from "effect";
+import { Toml } from "@beep/scratchpad/effected/toml/Toml";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 
-const Config = Schema.Struct({ name: Schema.String, port: Schema.Number });
+const Config = S.Struct({ name: S.String, port: S.Number });
 const ConfigFromToml = Toml.schema(Config);
 
 const program = Effect.gen(function* () {
-  return yield* Schema.decodeUnknownEffect(ConfigFromToml)(`
+  return yield* S.decodeUnknownEffect(ConfigFromToml)(`
     name = "api"
     port = 3000
   `);
 });
 
-Effect.runPromise(program).then(console.log);
-// { name: "api", port: 3000 }
+console.log(JSON.stringify(Effect.runSync(program))); // {"name":"api","port":3000}
 ```
 
 `Toml.stringify` goes the other way, emitting canonical TOML:
 
 ```ts
-import { Toml } from "@effected/toml";
-import { Effect } from "effect";
+import { Toml } from "@beep/scratchpad/effected/toml/Toml";
+import * as Effect from "effect/Effect";
 
-Effect.runPromise(Toml.stringify({ title: "app", server: { port: 8080 } })).then(console.log);
+console.log(Effect.runSync(Toml.stringify({ title: "app", server: { port: 8080 } })));
 // title = "app"
 //
 // [server]
@@ -81,15 +50,15 @@ Effect.runPromise(Toml.stringify({ title: "app", server: { port: 8080 } })).then
 `TomlFormat.modify` computes a `TomlEdit` array against the parsed CST; `modifyToString` applies it in one step. Comments, blank lines and layout that an edit does not cover come through byte-identical:
 
 ```ts
-import { TomlFormat } from "@effected/toml";
-import { Effect } from "effect";
+import { TomlFormat } from "@beep/scratchpad/effected/toml/TomlFormat";
+import * as Effect from "effect/Effect";
 
 const source = `# server config
 name = "api"
 port = 3000 # dev default
 `;
 
-Effect.runPromise(TomlFormat.modifyToString(source, ["port"], 8080)).then(console.log);
+console.log(Effect.runSync(TomlFormat.modifyToString(source, ["port"], 8080)));
 // # server config
 // name = "api"
 // port = 8080 # dev default
@@ -114,12 +83,13 @@ The four date-time classes are `Schema.Class` value objects with real Gregorian-
 TOML cannot represent `null` at all. Rather than dropping the key or writing an empty string, `Toml.stringify` fails:
 
 ```ts
-import { Toml } from "@effected/toml";
-import { Effect } from "effect";
+import { Toml } from "@beep/scratchpad/effected/toml/Toml";
+import * as Result from "effect/Result";
 
-Effect.runPromise(Effect.result(Toml.stringify({ a: null }))).then(console.log);
-// Failure with TomlStringifyError, whose `diagnostic` carries:
-// { code: "UnsupportedValue", message: "unsupported null value at a", ... }
+const result = Toml.stringifyResult({ a: null });
+if (Result.isFailure(result)) {
+  console.log(result.failure.message); // TOML stringify failed: UnsupportedValue unsupported null value at a
+}
 ```
 
 ## Features
@@ -140,7 +110,6 @@ The engine runs the [toml-test](https://github.com/toml-lang/toml-test) complian
 ## License
 
 [MIT](LICENSE)
-
 
 ## Port notes
 

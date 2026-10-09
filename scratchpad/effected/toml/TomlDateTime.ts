@@ -98,11 +98,37 @@ function formatOffset(offsetMinutes: number): string {
  * A TOML local date: `year`-`month`-`day` with no time-of-day or offset,
  * validated against the real Gregorian calendar.
  *
+ * **Example** (Format a leap-day date)
+ *
+ * ```ts
+ * import { TomlLocalDate } from "@beep/scratchpad/effected/toml/TomlDateTime";
+ *
+ * const value = TomlLocalDate.make({ year: 2024, month: 2, day: 29 });
+ * console.log(value.toString()); // 2024-02-29
+ * ```
+ *
  * @public
+ * @category value-objects
+ * @since 0.0.0
  */
 export class TomlLocalDate extends S.Class<TomlLocalDate>($I`TomlLocalDate`)(
 	S.Struct(dateFields).check(isRealCalendarDate), $I.annote("TomlLocalDate", { description: "A TOML local date: `year`-`month`-`day` with no time-of-day or offset, validated against the real Gregorian calendar." }),
 ) {
+	/**
+	 * Formats this calendar date as `YYYY-MM-DD`.
+	 *
+	 * **Example** (Format a leap-day date)
+	 *
+	 * ```ts
+	 * import { TomlLocalDate } from "@beep/scratchpad/effected/toml/TomlDateTime";
+	 *
+	 * const value = TomlLocalDate.make({ year: 2024, month: 2, day: 29 });
+	 * console.log(value.toString()); // 2024-02-29
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override toString(): string {
 		return formatDate(this);
 	}
@@ -112,9 +138,35 @@ export class TomlLocalDate extends S.Class<TomlLocalDate>($I`TomlLocalDate`)(
  * A TOML local time: `hour`:`minute`:`second`[.`nanosecond`] with no date or
  * offset. `second` tolerates the RFC 3339 leap second (0-60).
  *
+ * **Example** (Format fractional local seconds)
+ *
+ * ```ts
+ * import { TomlLocalTime } from "@beep/scratchpad/effected/toml/TomlDateTime";
+ *
+ * const value = TomlLocalTime.make({ hour: 7, minute: 32, second: 0, nanosecond: 120_000_000 });
+ * console.log(value.toString()); // 07:32:00.12
+ * ```
+ *
  * @public
+ * @category value-objects
+ * @since 0.0.0
  */
 export class TomlLocalTime extends S.Class<TomlLocalTime>($I`TomlLocalTime`)(timeFields, $I.annote("TomlLocalTime", { description: "A TOML local time: `hour`:`minute`:`second`[.`nanosecond`] with no date or offset. `second` tolerates the RFC 3339 leap second (0-60)." })) {
+	/**
+	 * Formats this time with seconds and an optional fraction trimmed to the shortest exact representation.
+	 *
+	 * **Example** (Format fractional local seconds)
+	 *
+	 * ```ts
+	 * import { TomlLocalTime } from "@beep/scratchpad/effected/toml/TomlDateTime";
+	 *
+	 * const value = TomlLocalTime.make({ hour: 7, minute: 32, second: 0, nanosecond: 120_000_000 });
+	 * console.log(value.toString()); // 07:32:00.12
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override toString(): string {
 		return formatTime(this);
 	}
@@ -124,11 +176,37 @@ export class TomlLocalTime extends S.Class<TomlLocalTime>($I`TomlLocalTime`)(tim
  * A TOML local date-time: a {@link TomlLocalDate} and a {@link TomlLocalTime}
  * combined, with no offset.
  *
+ * **Example** (Format a date-time without an offset)
+ *
+ * ```ts
+ * import { TomlLocalDateTime } from "@beep/scratchpad/effected/toml/TomlDateTime";
+ *
+ * const value = TomlLocalDateTime.make({ year: 1979, month: 5, day: 27, hour: 7, minute: 32, second: 0, nanosecond: 0 });
+ * console.log(value.toString()); // 1979-05-27T07:32:00
+ * ```
+ *
  * @public
+ * @category value-objects
+ * @since 0.0.0
  */
 export class TomlLocalDateTime extends S.Class<TomlLocalDateTime>($I`TomlLocalDateTime`)(
 	S.Struct({ ...dateFields, ...timeFields }).check(isRealCalendarDate), $I.annote("TomlLocalDateTime", { description: "A TOML local date-time: a TomlLocalDate and a TomlLocalTime combined, with no offset." }),
 ) {
+	/**
+	 * Formats this local date-time with a `T` separator and no offset.
+	 *
+	 * **Example** (Format a date-time without an offset)
+	 *
+	 * ```ts
+	 * import { TomlLocalDateTime } from "@beep/scratchpad/effected/toml/TomlDateTime";
+	 *
+	 * const value = TomlLocalDateTime.make({ year: 1979, month: 5, day: 27, hour: 7, minute: 32, second: 0, nanosecond: 0 });
+	 * console.log(value.toString()); // 1979-05-27T07:32:00
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override toString(): string {
 		return `${formatDate(this)}T${formatTime(this)}`;
 	}
@@ -139,7 +217,18 @@ export class TomlLocalDateTime extends S.Class<TomlLocalDateTime>($I`TomlLocalDa
  * (-1439-1439). Parsing enforces `hh <= 23` / `mm <= 59` before construction;
  * this class only bounds the combined minute count.
  *
+ * **Example** (Format a negative UTC offset)
+ *
+ * ```ts
+ * import { TomlOffsetDateTime } from "@beep/scratchpad/effected/toml/TomlDateTime";
+ *
+ * const value = TomlOffsetDateTime.make({ year: 1979, month: 5, day: 27, hour: 7, minute: 32, second: 0, nanosecond: 0, offsetMinutes: -420 });
+ * console.log(value.toString()); // 1979-05-27T07:32:00-07:00
+ * ```
+ *
  * @public
+ * @category value-objects
+ * @since 0.0.0
  */
 export class TomlOffsetDateTime extends S.Class<TomlOffsetDateTime>($I`TomlOffsetDateTime`)(
 	S.Struct({
@@ -148,6 +237,21 @@ export class TomlOffsetDateTime extends S.Class<TomlOffsetDateTime>($I`TomlOffse
 		offsetMinutes: S.Int.check(S.isBetween({ minimum: -1439, maximum: 1439 })),
 	}).check(isRealCalendarDate), $I.annote("TomlOffsetDateTime", { description: "A TOML offset date-time: a TomlLocalDateTime plus `offsetMinutes` (-1439-1439). Parsing enforces `hh <= 23` / `mm <= 59` before construction; this class only bounds the combined minute count." }),
 ) {
+	/**
+	 * Formats this date-time with `Z` for a zero offset or a signed `hh:mm` offset.
+	 *
+	 * **Example** (Format a negative UTC offset)
+	 *
+	 * ```ts
+	 * import { TomlOffsetDateTime } from "@beep/scratchpad/effected/toml/TomlDateTime";
+	 *
+	 * const value = TomlOffsetDateTime.make({ year: 1979, month: 5, day: 27, hour: 7, minute: 32, second: 0, nanosecond: 0, offsetMinutes: -420 });
+	 * console.log(value.toString()); // 1979-05-27T07:32:00-07:00
+	 * ```
+	 *
+	 * @category formatting
+	 * @since 0.0.0
+	 */
 	override toString(): string {
 		return `${formatDate(this)}T${formatTime(this)}${formatOffset(this.offsetMinutes)}`;
 	}

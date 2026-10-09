@@ -37,13 +37,30 @@ class TomlSemanticInvariantError extends S.TaggedError<TomlSemanticInvariantErro
 	$I.annote("TomlSemanticInvariantError", { description: "An impossible state in the TOML semantic engine." }),
 ) {}
 
-/** Semantic-pass callbacks, fired in document order after each expression validates. */
+/**
+ * Semantic-pass callbacks, fired in document order after each expression validates.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface SemanticVisitor {
-	/** A table becomes current: the root (header `undefined`, once, first) or a `[t]` header. */
+	/**
+	 * A table becomes current: the root (header `undefined`, once, first) or a `[t]` header.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly onTableStart?: (path: ReadonlyArray<string>, header: TomlTableHeader | undefined) => void;
-	/** A `[[t]]` header appends element `index` (0-based) and makes it current. */
+	/**
+	 * A `[[t]]` header appends element `index` (0-based) and makes it current.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly onArrayTableStart?: (path: ReadonlyArray<string>, index: number, header: TomlArrayTableHeader) => void;
-	/** A key-value assigns; `path` is the full path from the root, final key included. */
+	/**
+	 * A key-value assigns; `path` is the full path from the root, final key included.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly onKeyValue?: (path: ReadonlyArray<string>, expr: TomlKeyValue) => void;
 }
 
@@ -253,7 +270,27 @@ const inlineNode = (node: TomlInlineTable, context: Context): SemNode => {
 
 /**
  * Walk the expressions through the provenance state machine, firing the visitor after
- * each expression validates; throws `RawTomlError` at the first violation.
+ * each expression validates.
+ *
+ * **Gotchas**
+ *
+ * Throws `RawTomlError` at the first violation.
+ *
+ * **Example** (Observe validated key paths)
+ *
+ * ```ts
+ * import { parseExpressions } from "@beep/scratchpad/effected/toml/internal/parser"
+ * import { analyze } from "@beep/scratchpad/effected/toml/internal/semantic"
+ *
+ * const paths: Array<string> = []
+ * analyze(parseExpressions("[server]\nport = 8080\n"), {
+ *   onKeyValue: (path) => { paths.push(path.join(".")) }
+ * })
+ * console.log(paths.join(", ")) // server.port
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
  */
 export const analyze: {
 	(expressions: ReadonlyArray<TomlExpression>, visitor?: SemanticVisitor): void;
@@ -353,10 +390,27 @@ const materialize = (value: TomlValueNode): unknown => {
 
 /**
  * `analyze` + plain-value construction in a single pass: the value builder is
- * the default visitor riding the same walk. Scalars materialize to their
+ * the default visitor riding the same walk.
+ *
+ * **Details**
+ *
+ * Scalars materialize to their
  * decoded values (`TomlInteger` → number | bigint, `TomlDateTimeLiteral` →
  * its date-time class instance), arrays to plain arrays, tables and inline
  * tables to plain objects with `__proto__` as an own data property.
+ *
+ * **Example** (Build nested plain values)
+ *
+ * ```ts
+ * import { parseExpressions } from "@beep/scratchpad/effected/toml/internal/parser"
+ * import { buildValue } from "@beep/scratchpad/effected/toml/internal/semantic"
+ *
+ * const value = buildValue(parseExpressions("[server]\nport = 8080\n"))
+ * console.log(JSON.stringify(value)) // {"server":{"port":8080}}
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const buildValue = (expressions: ReadonlyArray<TomlExpression>): unknown => {
 	const result: Record<string, unknown> = {};

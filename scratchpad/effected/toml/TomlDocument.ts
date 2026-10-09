@@ -71,17 +71,21 @@ const materializeError = (text: string, defect: unknown): TomlParseError => {
  * **Example** (Preserve TOML source and decode its value)
  *
  * ```ts
- * import { TomlDocument } from "./index.ts";
+ * import { TomlDocument } from "@beep/scratchpad/effected/toml/TomlDocument";
  * import * as Effect from "effect/Effect";
  *
+ * const source = 'name = "Alice"\n';
  * const program = Effect.gen(function* () {
- *   const doc = yield* TomlDocument.parse('name = "Alice"\n');
- *   doc.stringify(); // 'name = "Alice"\n' — byte-exact
- *   return yield* doc.toValue(); // { name: "Alice" }
+ *   const doc = yield* TomlDocument.parse(source);
+ *   console.log(doc.stringify() === source) // true
+ *   return yield* doc.toValue();
  * });
+ * console.log(JSON.stringify(Effect.runSync(program))) // {"name":"Alice"}
  * ```
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class TomlDocument extends S.Class<TomlDocument>($I`TomlDocument`)({
 	source: S.String.annotateKey({ description: "Original TOML text preserved exactly, including comments, whitespace and line endings" }),
@@ -96,9 +100,21 @@ export class TomlDocument extends S.Class<TomlDocument>($I`TomlDocument`)({
 	 * they land in `diagnostics` as data (first violation wins, so there is at
 	 * most one today; the array shape is the contract).
 	 *
+	 * **Example** (Keep a duplicate key inspectable)
+	 *
+	 * ```ts
+	 * import { TomlDocument } from "@beep/scratchpad/effected/toml/TomlDocument";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const doc = Effect.runSync(TomlDocument.parse("name = 1\nname = 2\n"));
+	 * console.log(doc.diagnostics.length) // 1
+	 * ```
+	 *
 	 * @param text - The TOML source to parse.
 	 * @returns An `Effect` that succeeds with the {@link TomlDocument}, or fails
 	 *   with {@link TomlParseError}.
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	static readonly parse = Effect.fn("TomlDocument.parse")(function* (text: string) {
 		const expressions = yield* Effect.try({
@@ -125,9 +141,27 @@ export class TomlDocument extends S.Class<TomlDocument>($I`TomlDocument`)({
 	 * (source, expressions, diagnostics) and encoding a document back to its
 	 * byte-exact text.
 	 *
+	 * **Details**
+	 *
 	 * Schema-producing: each call returns a fresh schema whose derivation
 	 * caches are not shared across calls; bind the result to a `const` on hot
 	 * paths.
+	 *
+	 * **Example** (Decode and encode a lossless document)
+	 *
+	 * ```ts
+	 * import { TomlDocument } from "@beep/scratchpad/effected/toml/TomlDocument";
+	 * import * as Effect from "effect/Effect";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const codec = TomlDocument.schema();
+	 * const source = "name = 1\n";
+	 * const doc = Effect.runSync(S.decodeUnknownEffect(codec)(source));
+	 * console.log(Effect.runSync(S.encodeEffect(codec)(doc)) === source) // true
+	 * ```
+	 *
+	 * @category schemas
+	 * @since 0.0.0
 	 */
 	static schema(): S.Codec<TomlDocument, string> {
 		return S.String.pipe(
@@ -150,6 +184,19 @@ export class TomlDocument extends S.Class<TomlDocument>($I`TomlDocument`)({
 	 * recorded semantic violations; otherwise builds the value from the
 	 * expression list (already validated, so the defensive materialization
 	 * wrapper is belt-and-suspenders).
+	 *
+	 * **Example** (Build the semantic value)
+	 *
+	 * ```ts
+	 * import { TomlDocument } from "@beep/scratchpad/effected/toml/TomlDocument";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const doc = Effect.runSync(TomlDocument.parse("count = 2\n"));
+	 * console.log(JSON.stringify(Effect.runSync(doc.toValue()))) // {"count":2}
+	 * ```
+	 *
+	 * @category decoding
+	 * @since 0.0.0
 	 */
 	toValue(): Effect.Effect<unknown, TomlParseError> {
 		if (this.diagnostics.length > 0) {
@@ -166,6 +213,20 @@ export class TomlDocument extends S.Class<TomlDocument>($I`TomlDocument`)({
 	 * span in order. The expression spans tile the source exactly, so the
 	 * result equals `source` byte-for-byte — the round-trip contract this
 	 * class exists to prove. Pure and total.
+	 *
+	 * **Example** (Retain comments and spacing)
+	 *
+	 * ```ts
+	 * import { TomlDocument } from "@beep/scratchpad/effected/toml/TomlDocument";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const source = "# comment\ncount = 2\n";
+	 * const doc = Effect.runSync(TomlDocument.parse(source));
+	 * console.log(doc.stringify() === source) // true
+	 * ```
+	 *
+	 * @category serialization
+	 * @since 0.0.0
 	 */
 	stringify(): string {
 		let out = "";

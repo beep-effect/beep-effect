@@ -106,7 +106,20 @@ const renderString = (value: string): string => {
 	return `${out}"`;
 };
 
-/** A key: bare when it matches the bare-key grammar, else basic-quoted. */
+/**
+ * Render a key bare when it matches the bare-key grammar, else basic-quoted.
+ *
+ * **Example** (Quote a key containing spaces)
+ *
+ * ```ts
+ * import { renderKey } from "@beep/scratchpad/effected/toml/internal/stringifyValue"
+ *
+ * console.log(renderKey("server port")) // "server port"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 export const renderKey = (key: string): string => (BARE_KEY.test(key) ? key : renderString(key));
 
 /** A dotted header path, quoting per-segment by the key rule. */
@@ -205,8 +218,22 @@ const renderInline = (value: unknown, path: Path, depth: number, ancestors: Read
 
 /**
  * Render a single value as an inline TOML fragment (scalars, arrays and
- * objects all inline). The single-value seam the document modify entry point
- * rides on.
+ * objects all inline).
+ *
+ * **Details**
+ *
+ * The single-value seam the document modify entry point rides on.
+ *
+ * **Example** (Render an inline table with an array)
+ *
+ * ```ts
+ * import { renderInlineValue } from "@beep/scratchpad/effected/toml/internal/stringifyValue"
+ *
+ * console.log(renderInlineValue({ ports: [8080, 8081] })) // { ports = [8080, 8081] }
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export const renderInlineValue = (value: unknown): string => renderInline(value, [], 0, []);
 
@@ -296,9 +323,26 @@ const emitTable = (
 };
 
 /**
- * Stringify a plain value as a canonical TOML document. The root must be a
- * plain object (a TOML document is a table); an empty root emits the empty
- * string, anything else ends with `newline`.
+ * Stringify a plain value as a canonical TOML document.
+ *
+ * **Details**
+ *
+ * An empty root emits the empty string; anything else ends with `newline`.
+ *
+ * **Gotchas**
+ *
+ * The root must be a plain object (a TOML document is a table).
+ *
+ * **Example** (Emit a document with a trailing newline)
+ *
+ * ```ts
+ * import { stringifyValue } from "@beep/scratchpad/effected/toml/internal/stringifyValue"
+ *
+ * console.log(JSON.stringify(stringifyValue({ port: 8080 }, "\n"))) // "port = 8080\n"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export const stringifyValue: {
 	(value: unknown, newline: string): string;

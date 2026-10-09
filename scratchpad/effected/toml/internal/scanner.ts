@@ -15,13 +15,23 @@ import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } f
 import type { TomlErrorCodeRaw } from "./diagnostics.ts";
 import { RawTomlError } from "./diagnostics.ts";
 
-/** The result of a scan: the decoded value and the position after the token. */
+/**
+ * The result of a scan: the decoded value and the position after the token.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface ScanResult<T> {
 	readonly value: T;
 	readonly end: number;
 }
 
-/** A classified TOML scalar. */
+/**
+ * A classified TOML scalar represented by a primitive or a TOML datetime value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ScalarValue =
 	| string
 	| number
@@ -62,22 +72,65 @@ const isControlChar = (code: number): boolean => code <= 0x08 || (code >= 0x0a &
 
 const isDigit = (code: number): boolean => code >= 0x30 && code <= 0x39;
 
-/** Whether `code` is a bare-key character: `[A-Za-z0-9_-]`. */
+/**
+ * Whether `code` is a bare-key character: `[A-Za-z0-9_-]`.
+ *
+ * **Example** (Recognize bare-key characters)
+ *
+ * ```ts
+ * import { isBareKeyChar } from "@beep/scratchpad/effected/toml/internal/scanner"
+ *
+ * console.log(isBareKeyChar(0x61)) // true
+ * console.log(isBareKeyChar(0x20)) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const isBareKeyChar = (code: number): boolean =>
 	(code >= 0x61 && code <= 0x7a) || (code >= 0x41 && code <= 0x5a) || isDigit(code) || code === 0x5f || code === HYPHEN;
 
-/** The number of code units to skip for a single leading U+FEFF BOM. */
+/**
+ * The number of code units to skip for a single leading U+FEFF BOM.
+ *
+ * **Example** (Skip a leading byte order mark)
+ *
+ * ```ts
+ * import { skipBom } from "@beep/scratchpad/effected/toml/internal/scanner"
+ *
+ * console.log(skipBom("\uFEFFtitle = 1")) // 1
+ * console.log(skipBom("title = 1")) // 0
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const skipBom = (source: string): number => (source.charCodeAt(0) === BOM ? 1 : 0);
 
 /**
- * Reject a document carrying U+FFFD REPLACEMENT CHARACTER. TOML requires
- * a valid UTF-8 document, but this engine receives an already-decoded JS
+ * Reject a document carrying U+FFFD REPLACEMENT CHARACTER.
+ *
+ * **Details**
+ *
+ * TOML requires a valid UTF-8 document, but this engine receives an already-decoded JS
  * string — after Node's lossy utf8 decode, U+FFFD is the only surviving
  * evidence of a malformed byte sequence. The grammar technically admits
  * U+FFFD inside strings and comments, so this trades away a pathological
  * legal character to honor the encoding rule the toml-test corpus pins
  * (invalid/encoding/bad-utf8-in-string.toml, bad-utf8-in-comment.toml,
  * bad-codepoint.toml and friends).
+ *
+ * **Example** (Validate decoded Unicode input)
+ *
+ * ```ts
+ * import { assertValidUnicode } from "@beep/scratchpad/effected/toml/internal/scanner"
+ *
+ * assertValidUnicode("title = 'café'")
+ * console.log("valid Unicode") // valid Unicode
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
  */
 export const assertValidUnicode = (source: string): void => {
 	const index = source.indexOf("�");
@@ -91,7 +144,20 @@ export const assertValidUnicode = (source: string): void => {
 	}
 };
 
-/** Skip spaces and tabs; returns the position of the first other character. */
+/**
+ * Skip spaces and tabs; returns the position of the first other character.
+ *
+ * **Example** (Find the first non-whitespace character)
+ *
+ * ```ts
+ * import { scanWhitespace } from "@beep/scratchpad/effected/toml/internal/scanner"
+ *
+ * console.log(scanWhitespace(" \tkey", 0)) // 2
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const scanWhitespace: {
 	(source: string, pos: number): number;
 	(pos: number): (source: string) => number;
@@ -108,8 +174,24 @@ export const scanWhitespace: {
 });
 
 /**
- * Consume one `\n` or `\r\n` newline. A lone `\r` throws BareCarriageReturn;
+ * Consume one `\n` or `\r\n` newline.
+ *
+ * **Gotchas**
+ *
+ * A lone `\r` throws BareCarriageReturn;
  * no newline at `pos` returns `pos` unchanged.
+ *
+ * **Example** (Consume a Windows newline)
+ *
+ * ```ts
+ * import { scanNewline } from "@beep/scratchpad/effected/toml/internal/scanner"
+ *
+ * console.log(scanNewline("\r\nkey", 0)) // 2
+ * console.log(scanNewline("key", 0)) // 0
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const scanNewline: {
 	(source: string, pos: number): number;
@@ -131,6 +213,19 @@ export const scanNewline: {
 /**
  * Scan a comment starting at `#` through end of line or EOF. The value
  * excludes the `#`; control characters other than tab are rejected.
+ *
+ * **Example** (Read comment text without its marker)
+ *
+ * ```ts
+ * import { scanComment } from "@beep/scratchpad/effected/toml/internal/scanner"
+ *
+ * const result = scanComment("# note\nkey", 0)
+ * console.log(result.value) //  note
+ * console.log(result.end) // 6
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const scanComment: {
 	(source: string, pos: number): ScanResult<string>;
@@ -150,7 +245,22 @@ export const scanComment: {
 	return { value: source.slice(pos + 1, i), end: i };
 });
 
-/** Scan a run of bare-key characters; the value may be empty. */
+/**
+ * Scan a run of bare-key characters; the value may be empty.
+ *
+ * **Example** (Read a bare key before its separator)
+ *
+ * ```ts
+ * import { scanBareKey } from "@beep/scratchpad/effected/toml/internal/scanner"
+ *
+ * const result = scanBareKey("server_name = 1", 0)
+ * console.log(result.value) // server_name
+ * console.log(result.end) // 11
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const scanBareKey: {
 	(source: string, pos: number): ScanResult<string>;
 	(pos: number): (source: string) => ScanResult<string>;
@@ -212,7 +322,22 @@ const decodeUnicodeEscape = (
 const unicodeEscapeWidth = (code: number): 2 | 4 | 8 | undefined =>
 	code === LOWER_X ? 2 : code === LOWER_U ? 4 : code === UPPER_U ? 8 : undefined;
 
-/** Scan a single-line basic string starting at the opening `"`. */
+/**
+ * Scan a single-line basic string starting at the opening `"`.
+ *
+ * **Example** (Decode a basic string escape)
+ *
+ * ```ts
+ * import { scanBasicString } from "@beep/scratchpad/effected/toml/internal/scanner"
+ *
+ * const result = scanBasicString('"hello\\tworld"', 0)
+ * console.log(JSON.stringify(result.value)) // "hello\tworld"
+ * console.log(result.end) // 14
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const scanBasicString: {
 	(source: string, pos: number): ScanResult<string>;
 	(pos: number): (source: string) => ScanResult<string>;
@@ -260,7 +385,22 @@ export const scanBasicString: {
 	return raise("UnterminatedString", "unterminated basic string", pos, source.length - pos);
 });
 
-/** Scan a single-line literal string starting at the opening `'`. */
+/**
+ * Scan a single-line literal string starting at the opening `'`.
+ *
+ * **Example** (Preserve literal string backslashes)
+ *
+ * ```ts
+ * import { scanLiteralString } from "@beep/scratchpad/effected/toml/internal/scanner"
+ *
+ * const result = scanLiteralString("'C:\\tmp'", 0)
+ * console.log(result.value) // C:\tmp
+ * console.log(result.end) // 8
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const scanLiteralString: {
 	(source: string, pos: number): ScanResult<string>;
 	(pos: number): (source: string) => ScanResult<string>;
@@ -317,7 +457,22 @@ const skipLineEndingTrim = (source: string, pos: number): number => {
 	return i;
 };
 
-/** Scan a multiline basic string starting at the opening `"""`. */
+/**
+ * Scan a multiline basic string starting at the opening `"""`.
+ *
+ * **Example** (Trim the opening multiline newline)
+ *
+ * ```ts
+ * import { scanMultilineBasicString } from "@beep/scratchpad/effected/toml/internal/scanner"
+ *
+ * const result = scanMultilineBasicString('"""\nhello"""', 0)
+ * console.log(result.value) // hello
+ * console.log(result.end) // 12
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const scanMultilineBasicString: {
 	(source: string, pos: number): ScanResult<string>;
 	(pos: number): (source: string) => ScanResult<string>;
@@ -399,7 +554,22 @@ export const scanMultilineBasicString: {
 	return raise("UnterminatedString", "unterminated multiline basic string", pos, source.length - pos);
 });
 
-/** Scan a multiline literal string starting at the opening `'''`. */
+/**
+ * Scan a multiline literal string starting at the opening `'''`.
+ *
+ * **Example** (Read a multiline literal string)
+ *
+ * ```ts
+ * import { scanMultilineLiteralString } from "@beep/scratchpad/effected/toml/internal/scanner"
+ *
+ * const result = scanMultilineLiteralString("'''\nhello'''", 0)
+ * console.log(result.value) // hello
+ * console.log(result.end) // 12
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const scanMultilineLiteralString: {
 	(source: string, pos: number): ScanResult<string>;
 	(pos: number): (source: string) => ScanResult<string>;
@@ -482,10 +652,27 @@ const LOCAL_DATE = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/;
 const LOCAL_TIME = /^([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:\.([0-9]+))?)?$/;
 
 /**
- * Scan a non-string scalar value token. Stops at whitespace, newlines, `,`,
+ * Scan a non-string scalar value token.
+ *
+ * **Details**
+ *
+ * Stops at whitespace, newlines, `,`,
  * `]`, `}` and `#` — with one extension: a token that scanned as a full
  * date followed by a single space and a digit continues through the time
  * part, so `1979-05-27 07:32:00Z` is one token.
+ *
+ * **Example** (Keep a space-separated datetime together)
+ *
+ * ```ts
+ * import { scanValueToken } from "@beep/scratchpad/effected/toml/internal/scanner"
+ *
+ * const result = scanValueToken("1979-05-27 07:32:00Z # note", 0)
+ * console.log(result.value) // 1979-05-27 07:32:00Z
+ * console.log(result.end) // 20
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const scanValueToken: {
 	(source: string, pos: number): ScanResult<string>;
@@ -592,6 +779,19 @@ const decodeOffsetMinutes = (text: string, offset: number, length: number): numb
  * shapes (validated against the Gregorian calendar and clock ranges before
  * construction), integers across four radixes with int64 range checking and
  * number/bigint narrowing, and floats including the special spellings.
+ *
+ * **Example** (Classify booleans and integer widths)
+ *
+ * ```ts
+ * import { classifyValueToken } from "@beep/scratchpad/effected/toml/internal/scanner"
+ *
+ * console.log(classifyValueToken("true", 0)) // true
+ * console.log(classifyValueToken("0x2a", 0)) // 42
+ * console.log(typeof classifyValueToken("9223372036854775807", 0)) // bigint
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const classifyValueToken: {
 	(token: string, offset: number): ScalarValue;

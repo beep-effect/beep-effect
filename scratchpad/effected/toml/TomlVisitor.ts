@@ -66,6 +66,9 @@ const visitorVariants = S.TaggedUnion({
 
 /**
  * The discriminated union of TOML visitor events, in document order.
+ *
+ * **Details**
+ *
  * `TableStart` fires once for the root with `path: []` before any other
  * event, then again for every `[table]` header. `ArrayTableStart` fires for
  * every `[[array]]` header with the 0-based element `index`. `KeyValue.path`
@@ -75,6 +78,8 @@ const visitorVariants = S.TaggedUnion({
  * removed.
  *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export type TomlVisitorEvent = typeof visitorVariants.Type;
 
@@ -95,7 +100,18 @@ class TomlVisitorEventStatics extends visitorBase {
  * Constructors and matchers for the `TomlVisitorEvent` union (e.g.
  * `TomlVisitorEvent.KeyValue({ path, node })`, `TomlVisitorEvent.$is("Comment")`).
  *
+ * **Example** (Construct and recognize a comment event)
+ *
+ * ```ts
+ * import { TomlVisitorEvent } from "@beep/scratchpad/effected/toml/TomlVisitor";
+ *
+ * const event = TomlVisitorEvent.Comment({ text: "note", offset: 0 });
+ * console.log(TomlVisitorEvent.$is("Comment")(event)) // true
+ * ```
+ *
  * @public
+ * @category constructors
+ * @since 0.0.0
  */
 export const TomlVisitorEvent = TomlVisitorEventStatics;
 
@@ -223,7 +239,7 @@ const collectEventsOrFail = (text: string): Effect.Effect<Array<TomlVisitorEvent
  * **Example** (Collect dotted key paths from TOML visitor events)
  *
  * ```ts
- * import { TomlVisitor, TomlVisitorEvent } from "./index.ts";
+ * import { TomlVisitor, TomlVisitorEvent } from "@beep/scratchpad/effected/toml/TomlVisitor";
  * import * as Effect from "effect/Effect";
  * import * as Stream from "effect/Stream";
  *
@@ -232,27 +248,46 @@ const collectEventsOrFail = (text: string): Effect.Effect<Array<TomlVisitorEvent
  *   Stream.map((event) => event.path.join(".")),
  *   Stream.runCollect,
  * );
- * // Effect.runSync(keys) // => ["server.port"]
+ * console.log(Effect.runSync(keys).join(",")) // server.port
  * ```
  *
  * @public
+ * @category parsing
+ * @since 0.0.0
  */
 export class TomlVisitor {
 	private constructor() {}
 
 	/**
-  * Create a `Stream` of `TomlVisitorEvent` from TOML text, in document
-  * order. Fails the stream with {@link TomlParseError} on the first
-  * lex/parse or semantic violation — never as an unhandled defect.
-  *
-  * **Gotchas**
-  *
-  * Construction is eager, not on-demand: the full text is parsed, walked by
-  * `analyze` and sorted into document order up front, inside the `Effect`
-  * `Stream.unwrap` runs to build the stream. Only enumeration of the
-  * already-built event array is streamed — `Stream.take` still short-circuits
-  * consumption, but it does not avoid the initial parse/analyze/sort pass.
-  */
+	 * Creates a stream of TOML visitor events in document order.
+	 *
+	 * **Details**
+	 *
+	 * Fails the stream with {@link TomlParseError} on the first
+	 * lex/parse or semantic violation — never as an unhandled defect.
+	 *
+	 * **Gotchas**
+	 *
+	 * Construction is eager, not on-demand: the full text is parsed, walked by
+	 * `analyze` and sorted into document order up front, inside the `Effect`
+	 * `Stream.unwrap` runs to build the stream. Only enumeration of the
+	 * already-built event array is streamed — `Stream.take` still short-circuits
+	 * consumption, but it does not avoid the initial parse/analyze/sort pass.
+	 *
+	 * **Example** (Count root and key-value events)
+	 *
+	 * ```ts
+	 * import { TomlVisitor } from "@beep/scratchpad/effected/toml/TomlVisitor";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Stream from "effect/Stream";
+	 *
+	 * const events = Stream.runCollect(TomlVisitor.visit("port = 1\n"));
+	 * console.log(Effect.runSync(events).length) // 2
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
 	static visit(text: string): Stream.Stream<TomlVisitorEvent, TomlParseError> {
 		return Stream.unwrap(collectEventsOrFail(text).pipe(Effect.map(Stream.fromIterable)));
 	}

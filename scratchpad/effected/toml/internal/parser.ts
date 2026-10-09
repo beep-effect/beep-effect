@@ -398,10 +398,36 @@ const parseHeaderExpression = (
 };
 
 /**
- * Parse a TOML document into its linear CST: the flat, source-tiling list of
- * expressions. Throws RawTomlError on malformed input and GuardExceeded when
- * value nesting exceeds MAX_NESTING_DEPTH; the facade materializes
- * both into typed errors.
+ * Parses a TOML document into its linear CST: the flat, source-tiling list of expressions.
+ *
+ * **Details**
+ *
+ * Each expression includes its leading whitespace and terminating newline
+ * (or ends at EOF); the first expression also includes a leading BOM.
+ * Consecutive blank or comment-only lines coalesce into one trivia expression.
+ * Concatenating the expressions' source slices reproduces the source exactly.
+ *
+ * **Gotchas**
+ *
+ * Throws RawTomlError on malformed input and GuardExceeded when value nesting
+ * exceeds MAX_NESTING_DEPTH; the facade materializes both into typed errors.
+ *
+ * **Example** (Reconstruct source from expression spans)
+ *
+ * ```ts
+ * import { parseExpressions } from "@beep/scratchpad/effected/toml/internal/parser"
+ * import * as A from "effect/Array"
+ *
+ * const source = "# settings\n\n  enabled = true\n"
+ * const expressions = parseExpressions(source)
+ * const reconstructed = A.map(expressions, (expression) =>
+ *   source.slice(expression.offset, expression.offset + expression.length)
+ * ).join("")
+ * console.log(reconstructed === source) // true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseExpressions = (source: string): ReadonlyArray<TomlExpression> => {
 	assertValidUnicode(source);
