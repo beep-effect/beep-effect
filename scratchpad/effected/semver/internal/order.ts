@@ -8,6 +8,7 @@
 
 import * as Arr from "effect/Array";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 
 /** Structural fields of a parsed version, shared by the parser pipeline. */
 export interface VersionParts {
@@ -36,9 +37,9 @@ export const comparePrereleaseIdentifier: {
 	(b: string | number): (a: string | number) => number;
 	(a: string | number, b: string | number): number;
 } = dual(2, (a: string | number, b: string | number): number => {
-	if (typeof a === "number" && typeof b === "number") return a - b;
-	if (typeof a === "string" && typeof b === "string") return a < b ? -1 : a > b ? 1 : 0;
-	if (typeof a === "number") return -1;
+	if (P.isNumber(a) && P.isNumber(b)) return a - b;
+	if (P.isString(a) && P.isString(b)) return a < b ? -1 : a > b ? 1 : 0;
+	if (P.isNumber(a)) return -1;
 	return 1;
 });
 

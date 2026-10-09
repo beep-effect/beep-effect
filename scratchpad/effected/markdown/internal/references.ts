@@ -24,6 +24,7 @@
 
 import { stickyOf } from "./patterns.ts";
 import { unescapeString } from "./unescape.ts";
+import * as O from "@beep/utils/Option";
 
 const ESCAPABLE = "[!\"#$%&'()*+,./:;<=>?@[\\\\\\]^_`{|}~-]";
 const ESCAPED_CHAR = `\\\\${ESCAPABLE}`;
@@ -286,7 +287,7 @@ export const parseReference = (text: string): ParsedReference | undefined => {
 		identifier: key.toLowerCase(),
 		label: rawLabel.slice(1, -1),
 		url,
-		...(title === undefined ? {} : { title }),
+		...O.getSomesStruct({ title: O.fromUndefinedOr(title) }),
 		length: scanner.pos,
 	};
 };

@@ -8,6 +8,9 @@ import { totalOf, visibleCountersOf } from "./internal/counts.ts";
 import { Render } from "./Render.ts";
 import type { Status, StatusDef } from "./Status.ts";
 import type { Style, TokenName } from "./Token.ts";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
+import * as O from "@beep/utils/Option";
 
 /**
  * A status as a document stores it: its name and its resolved definition.
@@ -377,16 +380,16 @@ export interface CountsOptions {
 	readonly suffix?: InlineInput;
 }
 
-const isList = (input: InlineInput): input is ReadonlyArray<string | Inline> => Array.isArray(input);
+const isList = (input: InlineInput): input is ReadonlyArray<string | Inline> => A.isArray(input);
 
 const freeze = <A extends object>(value: A): Readonly<A> => Object.freeze(value);
 
 const frozenArray = <A>(items: ReadonlyArray<A>): ReadonlyArray<A> => Object.freeze([...items]);
 
 const text = (value: string, token?: TokenName | Style): InlineOf<"Text"> =>
-	freeze({ _tag: "Text", value, ...(token === undefined ? {} : { token }) });
+	freeze({ _tag: "Text", value, ...O.getSomesStruct({ token: O.fromUndefinedOr(token) }) });
 
-const inlineOne = (part: string | Inline): Inline => (typeof part === "string" ? text(part) : part);
+const inlineOne = (part: string | Inline): Inline => (P.isString(part) ? text(part) : part);
 
 const inlines = (input: InlineInput): ReadonlyArray<Inline> =>
 	frozenArray(isList(input) ? input.map(inlineOne) : [inlineOne(input)]);
@@ -408,7 +411,7 @@ const counterOf = (counter: Counter): Counter =>
 	freeze({
 		...counter,
 		label:
-			typeof counter.label === "string"
+			P.isString(counter.label)
 				? counter.label
 				: freeze({ one: counter.label.one, other: counter.label.other }),
 		status: freeze({ name: counter.status.name, def: freeze({ ...counter.status.def }) }),
@@ -501,7 +504,7 @@ export class Doc {
 	 */
 	static link(target: LinkTarget | undefined, label: string | Inline, options?: LinkOptions): Inline;
 	static link(target: LinkTarget | undefined, label?: InlineInput, options?: LinkOptions): InlineInput | undefined {
-		if (target === undefined) return typeof label === "string" ? text(label) : label;
+		if (target === undefined) return P.isString(label) ? text(label) : label;
 		const fallback = "url" in target ? target.url : target.file;
 		return freeze<InlineOf<"Link">>({
 			_tag: "Link",
@@ -611,7 +614,7 @@ export class Doc {
 			_tag: "Table",
 			columns: frozenArray(
 				columns.map((column) =>
-					freeze({ header: inlines(column.header), ...(column.align === undefined ? {} : { align: column.align }) }),
+					freeze({ header: inlines(column.header), ...O.getSomesStruct({ align: O.fromUndefinedOr(column.align) }) }),
 				),
 			),
 			rows: frozenArray(rows.map((row) => frozenArray(row.map(inlines)))),
@@ -669,7 +672,7 @@ export class Doc {
 	 * @param lang - its language, for a renderer that fences it
 	 */
 	static codeBlock(text: string, lang?: string): BlockOf<"CodeBlock"> {
-		return freeze({ _tag: "CodeBlock", ...(lang === undefined ? {} : { lang }), text });
+		return freeze({ _tag: "CodeBlock", ...O.getSomesStruct({ lang: O.fromUndefinedOr(lang) }), text });
 	}
 
 	/**
@@ -738,7 +741,7 @@ export class Doc {
 			label: options.label,
 			n: options.n,
 			status: { name, def: vocab.resolve(name) },
-			...(options.showZero === undefined ? {} : { showZero: options.showZero }),
+			...O.getSomesStruct({ showZero: O.fromUndefinedOr(options.showZero) }),
 		});
 	}
 
@@ -752,12 +755,12 @@ export class Doc {
 			_tag: "Counts",
 			...(options.label === undefined ? {} : { label: inlines(options.label) }),
 			counters: frozenArray(options.counters.map(counterOf)),
-			...(options.total === undefined ? {} : { total: options.total }),
+			...O.getSomesStruct({ total: O.fromUndefinedOr(options.total) }),
 			...(options.qualifier === undefined ? {} : { qualifier: inlines(options.qualifier) }),
-			...(options.durationMs === undefined ? {} : { durationMs: options.durationMs }),
+			...O.getSomesStruct({ durationMs: O.fromUndefinedOr(options.durationMs) }),
 			layout: options.layout,
-			...(options.share === undefined ? {} : { share: options.share }),
-			...(options.paint === undefined ? {} : { paint: options.paint }),
+			...O.getSomesStruct({ share: O.fromUndefinedOr(options.share) }),
+			...O.getSomesStruct({ paint: O.fromUndefinedOr(options.paint) }),
 			...(options.suffix === undefined ? {} : { suffix: inlines(options.suffix) }),
 		});
 	}
@@ -796,11 +799,11 @@ export class Doc {
 					freeze({
 						label: inlines(row.label),
 						counters: frozenArray(row.counters.map(counterOf)),
-						...(row.durationMs === undefined ? {} : { durationMs: row.durationMs }),
+						...O.getSomesStruct({ durationMs: O.fromUndefinedOr(row.durationMs) }),
 					}),
 				),
 			),
-			...(totalRow === undefined ? {} : { totalRow: typeof totalRow === "boolean" ? totalRow : inlines(totalRow) }),
+			...(totalRow === undefined ? {} : { totalRow: P.isBoolean(totalRow) ? totalRow : inlines(totalRow) }),
 			...(options?.labelHeader === undefined ? {} : { labelHeader: inlines(options.labelHeader) }),
 			...(options?.durationHeader === undefined ? {} : { durationHeader: inlines(options.durationHeader) }),
 		});
@@ -900,12 +903,12 @@ export class Doc {
 		return freeze({
 			_tag: "Annotation",
 			level: options.level,
-			...(options.file === undefined ? {} : { file: options.file }),
-			...(options.line === undefined ? {} : { line: options.line }),
-			...(options.col === undefined ? {} : { col: options.col }),
-			...(options.endLine === undefined ? {} : { endLine: options.endLine }),
-			...(options.endColumn === undefined ? {} : { endColumn: options.endColumn }),
-			...(options.title === undefined ? {} : { title: options.title }),
+			...O.getSomesStruct({ file: O.fromUndefinedOr(options.file) }),
+			...O.getSomesStruct({ line: O.fromUndefinedOr(options.line) }),
+			...O.getSomesStruct({ col: O.fromUndefinedOr(options.col) }),
+			...O.getSomesStruct({ endLine: O.fromUndefinedOr(options.endLine) }),
+			...O.getSomesStruct({ endColumn: O.fromUndefinedOr(options.endColumn) }),
+			...O.getSomesStruct({ title: O.fromUndefinedOr(options.title) }),
 			message,
 		});
 	}

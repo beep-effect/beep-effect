@@ -25,6 +25,9 @@ import type { RawDirective, RawYamlDocument } from "./raw-document.ts";
 import * as Schema from "effect/Schema";
 import * as Data from "effect/Data";
 import { dual } from "effect/Function";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
+import * as O from "@beep/utils/Option";
 
 /**
  * Thrown by the stringifier on its failure paths (circular references). The
@@ -288,7 +291,7 @@ export function renderDoubleQuoted(...args: [s: string, canonical?: boolean | un
 	return dual<
 		(...args: [s: string, canonical?: boolean | undefined] | [canonical?: boolean | undefined]) => string | ((s: string) => string),
 		(s: string, canonical?: boolean) => string
-	>((args) => typeof args[0] === "string", function renderDoubleQuoted(s: string, canonical: boolean = false): string {
+	>((args) => P.isString(args[0]), function renderDoubleQuoted(s: string, canonical: boolean = false): string {
 	let escaped = s
 		.replace(/\\/g, "\\\\")
 		.replace(/"/g, '\\"')
@@ -590,16 +593,16 @@ function stringifyLines(value: unknown, ctx: StringifyContext, depth: number, al
 	if (value === null || value === undefined) return ["null"];
 
 	// boolean
-	if (typeof value === "boolean") return [value ? "true" : "false"];
+	if (P.isBoolean(value)) return [value ? "true" : "false"];
 
 	// number
-	if (typeof value === "number") return [renderNumber(value)];
+	if (P.isNumber(value)) return [renderNumber(value)];
 
 	// bigint — produced by the composer's safeParseInt for values exceeding MAX_SAFE_INTEGER
-	if (typeof value === "bigint") return [value.toString()];
+	if (P.isBigInt(value)) return [value.toString()];
 
 	// string
-	if (typeof value === "string") {
+	if (P.isString(value)) {
 		// For block scalars the header line and body lines are already split
 		const indentStr = " ".repeat(ctx.indent);
 		const rendered = renderString(
@@ -624,7 +627,7 @@ function stringifyLines(value: unknown, ctx: StringifyContext, depth: number, al
 	}
 
 	// array
-	if (Array.isArray(value)) {
+	if (A.isArray(value)) {
 		detectCircular(value, ctx.seen);
 		ctx.seen.add(value);
 		try {
@@ -678,7 +681,7 @@ function stringifyArrayLines(arr: unknown[], ctx: StringifyContext, depth: numbe
 			// Block scalars (`|`/`>`) and folded/multi-line string scalars (plain or
 			// double-quoted, whose continuation lines already carry their indent)
 			// put the first line inline after `-` and emit continuations as-is.
-			if (first.startsWith("|") || first.startsWith(">") || typeof item === "string") {
+			if (first.startsWith("|") || first.startsWith(">") || P.isString(item)) {
 				lines.push(`- ${first}`);
 				for (let i = 1; i < itemLines.length; i++) {
 					const entry1 = itemLines[i];
@@ -704,8 +707,8 @@ function stringifyArrayLines(arr: unknown[], ctx: StringifyContext, depth: numbe
  */
 function isBlockCollection(value: unknown, ctx: StringifyContext): boolean {
 	if (ctx.defaultCollectionStyle === "flow") return false;
-	if (Array.isArray(value) && value.length > 0) return true;
-	if (value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length > 0)
+	if (A.isArray(value) && value.length > 0) return true;
+	if (value !== null && typeof value === "object" && !A.isArray(value) && R.keys(value).length > 0)
 		return true;
 	return false;
 }
@@ -714,7 +717,7 @@ function isBlockCollection(value: unknown, ctx: StringifyContext): boolean {
  * Stringifies a JavaScript object into YAML mapping lines (no leading indent).
  */
 function stringifyObjectLines(obj: Record<string, unknown>, ctx: StringifyContext, depth: number): string[] {
-	const keys = Object.keys(obj);
+	const keys = R.keys(obj);
 	if (keys.length === 0) {
 		return ["{}"];
 	}
@@ -776,7 +779,7 @@ function stringifyObjectLines(obj: Record<string, unknown>, ctx: StringifyContex
 			if (entry2 === undefined) throw new TypeError("Missing array entry");
 			if (valLines.length === 1) {
 				lines.push(`: ${valLines[0]}`);
-			} else if (entry2.startsWith("|") || entry2.startsWith(">") || typeof val === "string") {
+			} else if (entry2.startsWith("|") || entry2.startsWith(">") || P.isString(val)) {
 				// Block scalar header or folded/multi-line string scalar:
 				// continuation lines already carry their own indent.
 				lines.push(`: ${valLines[0]}`);
@@ -805,7 +808,7 @@ function stringifyObjectLines(obj: Record<string, unknown>, ctx: StringifyContex
 		} else {
 			const first = valLines[0];
 			if (first === undefined) throw new TypeError("Missing first");
-			if (first.startsWith("|") || first.startsWith(">") || typeof val === "string") {
+			if (first.startsWith("|") || first.startsWith(">") || P.isString(val)) {
 				// Block scalar header, or a folded/multi-line string scalar (plain or
 				// double-quoted, continuation lines already indented): first line on
 				// the key line, continuation lines emitted as-is.
@@ -815,7 +818,7 @@ function stringifyObjectLines(obj: Record<string, unknown>, ctx: StringifyContex
 					if (entry5 === undefined) throw new TypeError("Missing array entry");
 					lines.push(entry5);
 				}
-			} else if (Array.isArray(val) && val.length > 0) {
+			} else if (A.isArray(val) && val.length > 0) {
 				// Block sequence as mapping value: compact notation (no extra indent)
 				// by default; one indent level when `indentSequences` is set (the
 				// `yaml` npm package's default presentation). Empty lines (block
@@ -941,14 +944,14 @@ function normalizeNodeTags(node: YamlNode, tagMap: Map<string, string>): YamlNod
 			value: node.value,
 			style: node.style,
 			...((node.tag !== undefined && node.tag !== "") ? { tag: normalizeTag(node.tag, tagMap) } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
-			...(node.commentBefore !== undefined ? { commentBefore: node.commentBefore } : {}),
-			...(node.comment !== undefined ? { comment: node.comment } : {}),
-			...(node.spaceBefore !== undefined ? { spaceBefore: node.spaceBefore } : {}),
-			...(node.chomp !== undefined ? { chomp: node.chomp } : {}),
-			...(node.blockIndent !== undefined ? { blockIndent: node.blockIndent } : {}),
-			...(node.raw !== undefined ? { raw: node.raw } : {}),
-			...(node.sourceMultiline !== undefined ? { sourceMultiline: node.sourceMultiline } : {}),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
+			...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(node.commentBefore) }),
+			...O.getSomesStruct({ comment: O.fromUndefinedOr(node.comment) }),
+			...O.getSomesStruct({ spaceBefore: O.fromUndefinedOr(node.spaceBefore) }),
+			...O.getSomesStruct({ chomp: O.fromUndefinedOr(node.chomp) }),
+			...O.getSomesStruct({ blockIndent: O.fromUndefinedOr(node.blockIndent) }),
+			...O.getSomesStruct({ raw: O.fromUndefinedOr(node.raw) }),
+			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(node.sourceMultiline) }),
 			offset: node.offset,
 			length: node.length,
 		});
@@ -964,11 +967,11 @@ function normalizeNodeTags(node: YamlNode, tagMap: Map<string, string>): YamlNod
 			),
 			style: node.style,
 			...((node.tag !== undefined && node.tag !== "") ? { tag: normalizeTag(node.tag, tagMap) } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
-			...(node.commentBefore !== undefined ? { commentBefore: node.commentBefore } : {}),
-			...(node.comment !== undefined ? { comment: node.comment } : {}),
-			...(node.spaceBefore !== undefined ? { spaceBefore: node.spaceBefore } : {}),
-			...(node.sourceMultiline !== undefined ? { sourceMultiline: node.sourceMultiline } : {}),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
+			...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(node.commentBefore) }),
+			...O.getSomesStruct({ comment: O.fromUndefinedOr(node.comment) }),
+			...O.getSomesStruct({ spaceBefore: O.fromUndefinedOr(node.spaceBefore) }),
+			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(node.sourceMultiline) }),
 			offset: node.offset,
 			length: node.length,
 		});
@@ -978,11 +981,11 @@ function normalizeNodeTags(node: YamlNode, tagMap: Map<string, string>): YamlNod
 			items: node.items.map((item) => normalizeNodeTags(item, tagMap)),
 			style: node.style,
 			...((node.tag !== undefined && node.tag !== "") ? { tag: normalizeTag(node.tag, tagMap) } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
-			...(node.commentBefore !== undefined ? { commentBefore: node.commentBefore } : {}),
-			...(node.comment !== undefined ? { comment: node.comment } : {}),
-			...(node.spaceBefore !== undefined ? { spaceBefore: node.spaceBefore } : {}),
-			...(node.sourceMultiline !== undefined ? { sourceMultiline: node.sourceMultiline } : {}),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
+			...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(node.commentBefore) }),
+			...O.getSomesStruct({ comment: O.fromUndefinedOr(node.comment) }),
+			...O.getSomesStruct({ spaceBefore: O.fromUndefinedOr(node.spaceBefore) }),
+			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(node.sourceMultiline) }),
 			offset: node.offset,
 			length: node.length,
 		});
@@ -1003,12 +1006,12 @@ export function stripNodeComments(node: YamlNode): YamlNode {
 		return YamlScalar.make({
 			value: node.value,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
-			...(node.chomp !== undefined ? { chomp: node.chomp } : {}),
-			...(node.blockIndent !== undefined ? { blockIndent: node.blockIndent } : {}),
-			...(node.raw !== undefined ? { raw: node.raw } : {}),
-			...(node.sourceMultiline !== undefined ? { sourceMultiline: node.sourceMultiline } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
+			...O.getSomesStruct({ chomp: O.fromUndefinedOr(node.chomp) }),
+			...O.getSomesStruct({ blockIndent: O.fromUndefinedOr(node.blockIndent) }),
+			...O.getSomesStruct({ raw: O.fromUndefinedOr(node.raw) }),
+			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(node.sourceMultiline) }),
 			offset: node.offset,
 			length: node.length,
 		});
@@ -1023,9 +1026,9 @@ export function stripNodeComments(node: YamlNode): YamlNode {
 					}),
 			),
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
-			...(node.sourceMultiline !== undefined ? { sourceMultiline: node.sourceMultiline } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
+			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(node.sourceMultiline) }),
 			offset: node.offset,
 			length: node.length,
 		});
@@ -1034,9 +1037,9 @@ export function stripNodeComments(node: YamlNode): YamlNode {
 		return YamlSeq.make({
 			items: node.items.map(stripNodeComments),
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
-			...(node.sourceMultiline !== undefined ? { sourceMultiline: node.sourceMultiline } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
+			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(node.sourceMultiline) }),
 			offset: node.offset,
 			length: node.length,
 		});
@@ -1105,14 +1108,14 @@ function stringifyScalarNodeLines(node: YamlScalar, ctx: StringifyContext): stri
 		} else {
 			lines = ["null"];
 		}
-	} else if (typeof val === "boolean") {
+	} else if (P.isBoolean(val)) {
 		lines = [val ? "true" : "false"];
-	} else if (typeof val === "number") {
+	} else if (P.isNumber(val)) {
 		// Prefer the source representation when available so non-canonical
 		// numeric formats (hex `0xFFEEBB`, trailing zeros `450.00`) survive
 		// the round-trip.
 		lines = [node.raw !== undefined ? node.raw : renderNumber(val)];
-	} else if (typeof val === "string") {
+	} else if (P.isString(val)) {
 		// When a tag is present, type-conflict quoting is unnecessary
 		const rendered = renderString(
 			val,
@@ -1489,7 +1492,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 		//   header introduces a multi-line scalar
 		const keyIsScalarWithNewline =
 			Schema.is(YamlScalar)(pair.key) &&
-			((typeof pair.key.value === "string" && pair.key.value.includes("\n")) ||
+			((P.isString(pair.key.value) && pair.key.value.includes("\n")) ||
 				pair.key.style === "block-literal" ||
 				pair.key.style === "block-folded");
 		// A non-empty collection (YamlMap or YamlSeq) used as a key forces
@@ -1550,7 +1553,7 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 			node.sourceMultiline !== true &&
 			Schema.is(YamlScalar)(pair.key) &&
 			(pair.key.style === "single-quoted" || pair.key.style === "double-quoted") &&
-			typeof pair.key.value === "string" &&
+			P.isString(pair.key.value) &&
 			/^[A-Za-z_][A-Za-z0-9_]*$/.test(pair.key.value)
 		) {
 			resolvedKeyStr = pair.key.value;
@@ -2043,7 +2046,7 @@ export function stringifyDocument(...args: [doc: RawYamlDocument, options?: Stri
 	// roots (3MYT, EX5H, EXG3) without a `%` continuation render
 	// without `...`.
 	const looksLikeDirectiveContinuation =
-		Schema.is(YamlScalar)(contents) && typeof contents.value === "string" && / %[A-Z]/.test(contents.value);
+		Schema.is(YamlScalar)(contents) && P.isString(contents.value) && / %[A-Z]/.test(contents.value);
 	const needsTerminatorForMultilinePlainScalar =
 		ctx.forceDefaultStyles &&
 		doc.hasDocumentStart &&

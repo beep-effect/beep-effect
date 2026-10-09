@@ -16,9 +16,10 @@ import { formatIssue } from "./internal/format.ts";
  * @example
  * ```ts
  * import { SchemaIssueRenderer } from "./index.ts"
- * import { Effect, Schema } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as S from "effect/Schema";
  *
- * const result = Schema.decodeUnknownEffect(MySchema)(input, {
+ * const result = S.decodeUnknownEffect(MySchema)(input, {
  *   onExcessProperty: "error",
  *   errors: "all",
  * })

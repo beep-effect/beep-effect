@@ -4,6 +4,8 @@ import { ResolvedPackage } from "../ResolvedPackage.ts";
 import { selectSoleDocument } from "./documents.ts";
 import type { LockfileFields, ParseFailure, WorkspaceEntry } from "./shared.ts";
 import { extractWorkspaceDeps, peerDeclarations, toIntegrityHash, validationFailure } from "./shared.ts";
+import * as R from "effect/Record";
+import * as O from "@beep/utils/Option";
 
 // ── Raw schemas (permissive validation scaffolding, not API) ───────────────
 
@@ -61,7 +63,7 @@ export const parseYarn = (content: string): Effect.Effect<LockfileFields, ParseF
 
 		// Decode each entry once and cache in a Map.
 		const decoded = new Map<string, YarnEntryType>();
-		for (const [key, value] of Object.entries(raw)) {
+		for (const [key, value] of R.toEntries(raw)) {
 			if (key === "__metadata") continue;
 			const entry = yield* S.decodeUnknownEffect(YarnEntry)(value).pipe(Effect.mapError(validationFailure));
 			decoded.set(key, entry);
@@ -120,9 +122,9 @@ const toFields = (
 					name,
 					version: entry.version ?? "0.0.0",
 					instanceId,
-					...(integrity !== undefined ? { integrity } : {}),
+					...O.getSomesStruct({ integrity: O.fromUndefinedOr(integrity) }),
 					isWorkspace,
-					...(relativePath !== undefined ? { relativePath } : {}),
+					...O.getSomesStruct({ relativePath: O.fromUndefinedOr(relativePath) }),
 					// Peer ranges are recorded plainly (no `npm:` protocol prefix),
 					// so unlike the dependency sections they need no cleaning.
 					...peerDeclarations(entry.peerDependencies, entry.peerDependenciesMeta),
@@ -136,10 +138,10 @@ const toFields = (
 				const peerDeps = cleanYarnDeps(entry.peerDependencies);
 				const optDeps = cleanYarnDeps(entry.optionalDependencies);
 				workspaceEntries.set(name, {
-					...(deps !== undefined ? { dependencies: deps } : {}),
-					...(devDeps !== undefined ? { devDependencies: devDeps } : {}),
-					...(peerDeps !== undefined ? { peerDependencies: peerDeps } : {}),
-					...(optDeps !== undefined ? { optionalDependencies: optDeps } : {}),
+					...O.getSomesStruct({ dependencies: O.fromUndefinedOr(deps) }),
+					...O.getSomesStruct({ devDependencies: O.fromUndefinedOr(devDeps) }),
+					...O.getSomesStruct({ peerDependencies: O.fromUndefinedOr(peerDeps) }),
+					...O.getSomesStruct({ optionalDependencies: O.fromUndefinedOr(optDeps) }),
 				});
 			}
 		}
@@ -181,7 +183,7 @@ const resolveYarnEdges = (
 	const unnameable = new Set<string>();
 	for (const section of [entry.dependencies, entry.optionalDependencies]) {
 		if (section === undefined) continue;
-		for (const [name, range] of Object.entries(section)) {
+		for (const [name, range] of R.toEntries(section)) {
 			if (name === "") continue;
 			const locator = locators.get(`${name}@${range}`);
 			if (locator !== undefined) edges.set(name, locator);
@@ -192,7 +194,7 @@ const resolveYarnEdges = (
 	}
 	// Map-backed until the last step: `Object.fromEntries` defines own data
 	// properties, so a "__proto__" dependency name neither pollutes nor drops.
-	return { resolved: Object.fromEntries(edges), unresolvedEdges: [...unnameable].sort() };
+	return { resolved: R.fromEntries(edges), unresolvedEdges: [...unnameable].sort() };
 };
 
 /**
@@ -242,7 +244,7 @@ const cleanYarnDeps = (
 	deps: Readonly<Record<string, string>> | undefined,
 ): Readonly<Record<string, string>> | undefined => {
 	if (deps === undefined) return undefined;
-	return Object.fromEntries(
-		Object.entries(deps).map(([name, value]) => [name, value.startsWith("npm:") ? value.slice(4) : value]),
+	return R.fromEntries(
+		R.toEntries(deps).map(([name, value]) => [name, value.startsWith("npm:") ? value.slice(4) : value]),
 	);
 };

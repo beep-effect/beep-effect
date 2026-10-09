@@ -2,7 +2,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import type { SectionParseError } from "../templates/index.ts";
 import { CommentStyle, SectionDialect, SectionDocument, SectionId } from "../templates/index.ts";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -99,7 +99,7 @@ const structural = (failure: SectionParseError): ManagedDocumentError =>
 	ManagedDocumentError.make({
 		kind: STRUCTURAL_KIND[failure.reason],
 		line: failure.line,
-		...(failure.key === undefined ? {} : { key: failure.key }),
+		...O.getSomesStruct({ key: O.fromUndefinedOr(failure.key) }),
 	});
 
 /**
@@ -149,7 +149,7 @@ export interface ManagedDocumentSource {
  * @example
  * ```ts
  * import { ManagedDocument } from "./index.ts";
- * import { Result } from "effect";
+ * import * as Result from "effect/Result";
  *
  * const doc = ManagedDocument.parseResult({ namespace: "my-action", key: "release", text: fetched });
  * if (Result.isSuccess(doc)) {
@@ -289,7 +289,7 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 				ManagedDocumentError.make({
 					kind: failure.reason,
 					key: this.regionKeyOf(failure.key),
-					...(failure.attribute === undefined ? {} : { attribute: failure.attribute }),
+					...O.getSomesStruct({ attribute: O.fromUndefinedOr(failure.attribute) }),
 				}),
 			);
 		}

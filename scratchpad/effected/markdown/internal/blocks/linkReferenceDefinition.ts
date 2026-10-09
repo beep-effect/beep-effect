@@ -24,6 +24,7 @@ import type { BlockConstruct, BlockNode } from "../blockTypes.ts";
 import { makeBlockNode } from "../blockTypes.ts";
 import { parseReference } from "../references.ts";
 import { sliceWithSegments, sourceOffsetAt } from "../segments.ts";
+import * as O from "@beep/utils/Option";
 
 const C_OPEN_BRACKET = 0x5b;
 
@@ -69,7 +70,7 @@ export const extractDefinitions = (block: BlockNode): void => {
 			identifier: reference.identifier,
 			label: reference.label,
 			url: reference.url,
-			...(reference.title === undefined ? {} : { title: reference.title }),
+			...O.getSomesStruct({ title: O.fromUndefinedOr(reference.title) }),
 		};
 
 		const at = parent.children.indexOf(block);
@@ -103,7 +104,7 @@ export const definitionConstruct: BlockConstruct = {
 			label: definition.label,
 			url: definition.url,
 			position: context.position(block.startOffset, block.endOffset),
-			...(definition.title === undefined ? {} : { title: definition.title }),
+			...O.getSomesStruct({ title: O.fromUndefinedOr(definition.title) }),
 		});
 	},
 };

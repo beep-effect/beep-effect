@@ -17,6 +17,8 @@ import type { TomlStringifyErrorCodeRaw } from "./diagnostics.ts";
 import { RawTomlError } from "./diagnostics.ts";
 import { GuardExceeded, MAX_NESTING_DEPTH } from "./limits.ts";
 import * as Schema from "effect/Schema";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 
 const INT64_MIN = -(2n ** 63n);
 const INT64_MAX = 2n ** 63n - 1n;
@@ -45,7 +47,7 @@ const renderPath = (path: Path): string => {
 	}
 	let out = "";
 	for (const segment of path) {
-		if (typeof segment === "number") {
+		if (P.isNumber(segment)) {
 			out += `[${segment}]`;
 		} else {
 			out += out === "" ? renderKey(segment) : `.${renderKey(segment)}`;
@@ -63,7 +65,7 @@ const jsTypeName = (value: unknown): string => {
 		return typeof value;
 	}
 	const name = Object.getPrototypeOf(value)?.constructor?.name;
-	return typeof name === "string" && name.length > 0 ? name : "object";
+	return P.isString(name) && name.length > 0 ? name : "object";
 };
 
 /** A basic single-line string: `"` `\` and control characters escaped. */
@@ -138,7 +140,7 @@ const isTomlDateTime = (
 
 /** Plain objects only (null-prototype included) — never arrays or class instances. */
 const isPlainObject = (value: unknown): value is Record<string, unknown> => {
-	if (typeof value !== "object" || value === null || Array.isArray(value)) {
+	if (typeof value !== "object" || value === null || A.isArray(value)) {
 		return false;
 	}
 	const proto = Object.getPrototypeOf(value);
@@ -187,7 +189,7 @@ const renderInline = (value: unknown, path: Path, depth: number, ancestors: Set<
 	if (scalar !== undefined) {
 		return scalar;
 	}
-	if (Array.isArray(value)) {
+	if (A.isArray(value)) {
 		guardDepth(depth);
 		checkCircular(value, ancestors, path);
 		ancestors.add(value);
@@ -199,7 +201,7 @@ const renderInline = (value: unknown, path: Path, depth: number, ancestors: Set<
 		guardDepth(depth);
 		checkCircular(value, ancestors, path);
 		ancestors.add(value);
-		const parts = Object.keys(value).map(
+		const parts = R.keys(value).map(
 			(key) => `${renderKey(key)} = ${renderInline(value[key], [...path, key], depth + 1, ancestors)}`,
 		);
 		ancestors.delete(value);
@@ -226,11 +228,11 @@ const classify = (table: Record<string, unknown>): Classified => {
 	const pairs: Array<string> = [];
 	const tables: Array<string> = [];
 	const arrayTables: Array<string> = [];
-	for (const key of Object.keys(table)) {
+	for (const key of R.keys(table)) {
 		const value = table[key];
 		if (isPlainObject(value)) {
 			tables.push(key);
-		} else if (Array.isArray(value) && value.length > 0 && value.every(isPlainObject)) {
+		} else if (A.isArray(value) && value.length > 0 && value.every(isPlainObject)) {
 			arrayTables.push(key);
 		} else {
 			pairs.push(key);

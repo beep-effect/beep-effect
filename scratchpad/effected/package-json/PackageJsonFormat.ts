@@ -23,6 +23,7 @@ import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { detectIndent, renderJson, resolveIndent, sortKeys } from "./internal/format.ts";
+import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effected/package-json/PackageJsonFormat");
 
@@ -84,7 +85,7 @@ export interface PackageFormatTextOptions {
 }
 
 const isJsonObject = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && !Array.isArray(value);
+	typeof value === "object" && value !== null && !A.isArray(value);
 
 /**
  * Indicates that a surgical modification could not be applied: the value on
@@ -192,7 +193,8 @@ export class PackageJsonFormat {
 	 * @example
 	 * ```ts
 	 * import { PackageJsonFormat } from "./index.ts";
-	 * import { Effect, Result } from "effect";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Result from "effect/Result";
 	 *
 	 * const formatted = PackageJsonFormat.formatToString('{"private": true}');
 	 * if (Result.isSuccess(formatted)) console.log(formatted.success);
@@ -292,7 +294,7 @@ export class PackageJsonFormat {
 	 * @example
 	 * ```ts
 	 * import { PackageJsonFormat } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const program = PackageJsonFormat.modifyToString(
 	 *   '{\n  "private": true,\n  "packageManager": "pnpm@11.2.0"\n}\n',

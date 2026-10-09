@@ -30,6 +30,8 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/package-json/Funding");
 
@@ -63,7 +65,7 @@ const decodeFundingFields = S.decodeUnknownEffect(FundingFields);
 
 const restOf = (raw: { readonly [k: string]: unknown }): Record<string, unknown> => {
 	const rest: Record<string, unknown> = {};
-	for (const [key, value] of Object.entries(raw)) {
+	for (const [key, value] of R.toEntries(raw)) {
 		if (!KNOWN_FUNDING_KEYS.has(key)) rest[key] = value;
 	}
 	return rest;
@@ -78,9 +80,9 @@ const restOf = (raw: { readonly [k: string]: unknown }): Record<string, unknown>
  */
 const isFaithfulObject = (wire: { readonly [k: string]: unknown }, funding: Funding): boolean => {
 	if (wire.url !== funding.url) return false;
-	if ((typeof wire.type === "string" ? wire.type : undefined) !== funding.type) return false;
+	if ((P.isString(wire.type) ? wire.type : undefined) !== funding.type) return false;
 	// Keys added to `rest` after the decode are not in the remembered object.
-	for (const [key, value] of Object.entries(funding.rest ?? {})) {
+	for (const [key, value] of R.toEntries(funding.rest ?? {})) {
 		if (wire[key] !== value) return false;
 	}
 	return true;
@@ -88,7 +90,7 @@ const isFaithfulObject = (wire: { readonly [k: string]: unknown }, funding: Fund
 
 /** Whether the bare string form can still carry everything this entry holds. */
 const isStringExpressible = (funding: Funding): boolean =>
-	funding.type === undefined && Object.keys(funding.rest ?? {}).length === 0;
+	funding.type === undefined && R.keys(funding.rest ?? {}).length === 0;
 
 const encodeEntry = (funding: Funding): EntryWire => {
 	const wire = entryWires.get(funding);
@@ -98,8 +100,8 @@ const encodeEntry = (funding: Funding): EntryWire => {
 	// edited. The object form is the fallback only when the string genuinely
 	// cannot carry the value, which is exactly when the entry gained a `type`
 	// or an unknown key, since a string has no syntax for either.
-	if (typeof wire === "string" && isStringExpressible(funding)) return funding.url;
-	if (wire !== undefined && typeof wire !== "string" && isFaithfulObject(wire, funding)) return wire;
+	if (P.isString(wire) && isStringExpressible(funding)) return funding.url;
+	if (wire !== undefined && !P.isString(wire) && isFaithfulObject(wire, funding)) return wire;
 	return {
 		...(funding.type !== undefined && { type: funding.type }),
 		url: funding.url,
@@ -108,7 +110,7 @@ const encodeEntry = (funding: Funding): EntryWire => {
 };
 
 const decodeEntry = (input: EntryWire): Effect.Effect<Funding, SchemaIssue.Issue> => {
-	if (typeof input === "string") {
+	if (P.isString(input)) {
 		const funding = Funding.make({ url: input });
 		entryWires.set(funding, input);
 		return Effect.succeed(funding);
@@ -117,7 +119,7 @@ const decodeEntry = (input: EntryWire): Effect.Effect<Funding, SchemaIssue.Issue
 		Effect.mapError((error) => error.issue),
 		Effect.map((fields) => {
 			const rest = restOf(input);
-			const funding = Funding.make({ ...fields, ...(Object.keys(rest).length > 0 ? { rest } : {}) });
+			const funding = Funding.make({ ...fields, ...(R.keys(rest).length > 0 ? { rest } : {}) });
 			entryWires.set(funding, input);
 			return funding;
 		}),
@@ -140,11 +142,12 @@ const FieldValue = S.Union([EntryValue, S.Array(EntryValue)]);
  * @example
  * ```ts
  * import { Funding } from "./index.ts";
- * import { Effect, Schema } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as S from "effect/Schema";
  *
  * const program = Effect.gen(function* () {
  *   // Always an array, whichever encoding the manifest used.
- *   const entries = yield* Schema.decodeUnknownEffect(Funding.FromField)("https://example.com/sponsor");
+ *   const entries = yield* S.decodeUnknownEffect(Funding.FromField)("https://example.com/sponsor");
  *   console.log(entries[0]?.url); // "https://example.com/sponsor"
  * });
  * ```

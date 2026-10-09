@@ -9,7 +9,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as PubSub from "effect/PubSub";
 import * as Pull from "effect/Pull";
 import * as Queue from "effect/Queue";
@@ -492,8 +492,8 @@ export const live = <E, S>(
 								patchConsole: false,
 								// Never Ink's debug mode, even under a harness that renders screens so: a live view writes lines above
 								// its frame, which only the production path lays out as a terminal would.
-								...(overrides.onRender === undefined ? {} : { onRender: overrides.onRender }),
-								...(overrides.maxFps === undefined ? {} : { maxFps: overrides.maxFps }),
+								...O.getSomesStruct({ onRender: O.fromUndefinedOr(overrides.onRender) }),
+								...O.getSomesStruct({ maxFps: O.fromUndefinedOr(overrides.maxFps) }),
 							});
 							drainPerformance(drain);
 							return instance;

@@ -12,6 +12,8 @@ import type { CommentMarker } from "./PullRequestComment.ts";
 import { CommentRecord } from "./PullRequestComment.ts";
 import { Repo } from "./Repo.ts";
 import type { PageOptions } from "./Rest.ts";
+import * as P from "effect/Predicate";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github/GitHubIssue");
 
@@ -225,7 +227,7 @@ export interface GitHubIssueShape {
  * @example
  * ```ts
  * import { GitHubIssue } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const closeWontFix = (number: number) =>
  *   Effect.gen(function* () {
@@ -290,7 +292,7 @@ const API_VERSION_HEADERS = { "x-github-api-version": "2026-03-10" } as const;
 
 /** GitHub sends a label as either a string or an object; callers want the name. */
 const labelNames = (labels: ReadonlyArray<string | { name?: string | undefined }>): ReadonlyArray<string> =>
-	labels.flatMap((label) => (typeof label === "string" ? [label] : label.name !== undefined ? [label.name] : []));
+	labels.flatMap((label) => (P.isString(label) ? [label] : label.name !== undefined ? [label.name] : []));
 
 interface RawIssue {
 	readonly number: number;
@@ -353,7 +355,7 @@ const make = (client: GitHubClient["Service"]): GitHubIssueShape => ({
 			repo,
 			issue_number: number,
 			state: "closed",
-			...(reason !== undefined ? { state_reason: reason } : {}),
+			...O.getSomesStruct({ state_reason: O.fromUndefinedOr(reason) }),
 			headers: API_VERSION_HEADERS,
 		});
 	}),

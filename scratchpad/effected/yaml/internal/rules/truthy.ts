@@ -15,6 +15,8 @@ import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import { positionAt, walkScalars } from "./util.ts";
+import * as P from "effect/Predicate";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/truthy");
 
@@ -67,7 +69,7 @@ export const truthy: YamlRule = {
 			const raw = ctx.text.slice(scalar.offset, scalar.offset + scalar.length);
 			if (!TRUTHY.has(raw) || allowed.has(raw)) return;
 			const pos = positionAt(ctx.lines, scalar.offset);
-			const isBool = typeof scalar.value === "boolean";
+			const isBool = P.isBoolean(scalar.value);
 			const truth = TRUE_SET.has(raw.toLowerCase());
 			const respell = truth ? "true" : "false";
 			// A real boolean respells when the canonical spelling is allowed; a
@@ -86,7 +88,7 @@ export const truthy: YamlRule = {
 					length: scalar.length,
 					line: pos.line,
 					character: pos.character,
-					...(fix !== undefined ? { fix } : {}),
+					...O.getSomesStruct({ fix: O.fromUndefinedOr(fix) }),
 				}),
 			);
 		});

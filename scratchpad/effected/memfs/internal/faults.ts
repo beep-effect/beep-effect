@@ -12,6 +12,7 @@ import type {
 	MemoryFileSystemFaultsFactory,
 	MemoryFileSystemTransientFault,
 } from "../MemoryFileSystem.ts";
+import * as R from "effect/Record";
 
 /**
  * Throws a `RangeError` naming any fault key that is not a function-valued
@@ -24,9 +25,9 @@ export const assertKnownFaultKeys: {
 	(faults: object, target: object, subject: string): void;
 } = dual(3, (faults: object, target: object, subject: string): void => {
 	const members = new Set(
-		Object.keys(target).filter((key) => P.hasProperty(target, key) && P.isFunction(target[key])),
+		R.keys(target).filter((key) => P.hasProperty(target, key) && P.isFunction(target[key])),
 	);
-	const unknown = Object.keys(faults).filter((key) => !members.has(key));
+	const unknown = R.keys(faults).filter((key) => !members.has(key));
 	if (unknown.length > 0) {
 		throw new RangeError(
 			`${subject}: unknown fault key(s) ${unknown.map((key) => `"${key}"`).join(", ")}; expected one of ${[...members].sort().join(", ")}`,
@@ -41,7 +42,7 @@ export const wrapFaulty: {
 	base: FileSystem.FileSystem,
 	registration: MemoryFileSystemFaults | MemoryFileSystemFaultsFactory,
 ): FileSystem.FileSystem => {
-	const faults = Object.assign({}, typeof registration === "function" ? registration(base) : registration);
+	const faults = Object.assign({}, P.isFunction(registration) ? registration(base) : registration);
 	assertKnownFaultKeys(faults, base, "MemoryFileSystem faults");
 	// Each wrapper keeps its method's arguments, success and environment types.
 	// Transient state is armed once here, then consulted on every execution.

@@ -223,15 +223,16 @@ const make = Effect.fnUntraced(function* () {
  * @example
  * ```ts
  * import { NpmRegistry, PackageTarball } from "./index.ts";
- * import { Effect, Option } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
  *
  * const read = Effect.gen(function* () {
  *   const registry = yield* NpmRegistry;
  *   const tarball = yield* PackageTarball;
  *   const found = yield* registry.version("some-config", "1.2.3");
- *   if (Option.isNone(found)) return Option.none();
+ *   if (O.isNone(found)) return O.none();
  *   const directory = yield* tarball.extract(found.value);
- *   return Option.some(directory);
+ *   return O.some(directory);
  * }).pipe(Effect.scoped);
  * ```
  *

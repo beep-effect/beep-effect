@@ -5,6 +5,7 @@ import * as S from "effect/Schema";
 import { CommentStyle } from "./CommentStyle.ts";
 import { ATTRIBUTE_NAME_PATTERN, isValidAttributeValue, parseAttributeRun } from "./internal/attributes.ts";
 import type { Section, SectionId } from "./Section.ts";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/templates/SectionDialect");
 
@@ -145,7 +146,7 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 		if (!this.recognizes(section.commentStyle)) {
 			return Result.fail(SectionRenderError.make({ reason: "unknownCommentStyle", key: section.key }));
 		}
-		for (const [name, value] of Object.entries(section.attributes)) {
+		for (const [name, value] of R.toEntries(section.attributes)) {
 			// Attribute names and values are runtime data, so a violation is a
 			// typed failure here rather than a defect at construction. Either kind
 			// of violation would emit a marker the scanner reads differently — or
@@ -250,7 +251,7 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 		const run =
 			attributes === undefined
 				? ""
-				: Object.entries(attributes)
+				: R.toEntries(attributes)
 						.map(([name, value]) => ` ${name}="${value}"`)
 						.join("");
 		return `${id.commentStyle.prefix} --- ${kind} ${id.key} ${this.phrase}${run} ---${tail}`;

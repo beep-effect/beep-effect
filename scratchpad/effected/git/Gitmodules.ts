@@ -7,6 +7,7 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 import type { GitConfigEditError, GitConfigParseError } from "./GitConfig.ts";
 import { GitConfig } from "./GitConfig.ts";
 import { serializeHeader, serializeValue } from "./internal/config.ts";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/git/Gitmodules");
 
@@ -217,11 +218,11 @@ export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
 					name,
 					path,
 					url,
-					...(branch !== undefined ? { branch } : {}),
-					...(shallow !== undefined ? { shallow } : {}),
-					...(update !== undefined ? { update } : {}),
-					...(ignore !== undefined ? { ignore } : {}),
-					...(fetchRecurse !== undefined ? { fetchRecurseSubmodules: fetchRecurse } : {}),
+					...O.getSomesStruct({ branch: O.fromUndefinedOr(branch) }),
+					...O.getSomesStruct({ shallow: O.fromUndefinedOr(shallow) }),
+					...O.getSomesStruct({ update: O.fromUndefinedOr(update) }),
+					...O.getSomesStruct({ ignore: O.fromUndefinedOr(ignore) }),
+					...O.getSomesStruct({ fetchRecurseSubmodules: O.fromUndefinedOr(fetchRecurse) }),
 				}),
 			);
 		}

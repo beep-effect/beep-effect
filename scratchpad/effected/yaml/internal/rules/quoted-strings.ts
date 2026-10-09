@@ -16,6 +16,8 @@ import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintR
 import type { YamlScalar } from "../../YamlNode.ts";
 import { requoteScalarText } from "../requote.ts";
 import { positionAt, walkScalars } from "./util.ts";
+import * as P from "effect/Predicate";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/quoted-strings");
 
@@ -54,7 +56,7 @@ export const quotedStrings: YamlRule = {
 		const out: Array<YamlLintDiagnostic> = [];
 		walkScalars(ctx.document.contents, "root", (scalar, role) => {
 			if (role === "key") return;
-			if (typeof scalar.value !== "string") return;
+			if (!P.isString(scalar.value)) return;
 			if (scalar.style === wrongStyle) {
 				const fix = safeQuoteFix(ctx, scalar, quote);
 				const pos = positionAt(ctx.lines, scalar.offset);
@@ -67,7 +69,7 @@ export const quotedStrings: YamlRule = {
 						length: scalar.length,
 						line: pos.line,
 						character: pos.character,
-						...(fix !== undefined ? { fix } : {}),
+						...O.getSomesStruct({ fix: O.fromUndefinedOr(fix) }),
 					}),
 				);
 				return;
@@ -84,7 +86,7 @@ export const quotedStrings: YamlRule = {
 						length: scalar.length,
 						line: pos.line,
 						character: pos.character,
-						...(fix !== undefined ? { fix } : {}),
+						...O.getSomesStruct({ fix: O.fromUndefinedOr(fix) }),
 					}),
 				);
 			}
@@ -98,7 +100,7 @@ export const quotedStrings: YamlRule = {
 		const out: Array<StyleVote> = [];
 		walkScalars(ctx.document.contents, "root", (scalar, role) => {
 			if (role === "key") return;
-			if (typeof scalar.value !== "string") return;
+			if (!P.isString(scalar.value)) return;
 			if (scalar.style !== "single-quoted" && scalar.style !== "double-quoted") return;
 			const pos = positionAt(ctx.lines, scalar.offset);
 			out.push(

@@ -3,6 +3,8 @@
 
 import * as P from "effect/Predicate";
 import { dual } from "effect/Function";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
 
 /**
  * Deep-compare two plain JS values for structural equality.
@@ -25,31 +27,31 @@ export function deepEqual(...args: [a: unknown, b: unknown] | [b: unknown]): boo
 	if (a === b) return true;
 
 	// Handle NaN (NaN !== NaN but should be considered equal)
-	if (typeof a === "number" && typeof b === "number" && Number.isNaN(a) && Number.isNaN(b)) {
+	if (P.isNumber(a) && P.isNumber(b) && Number.isNaN(a) && Number.isNaN(b)) {
 		return true;
 	}
 
 	if (a === null || b === null) return false;
 	if (typeof a !== typeof b) return false;
 
-	if (Array.isArray(a)) {
-		if (!Array.isArray(b)) return false;
+	if (A.isArray(a)) {
+		if (!A.isArray(b)) return false;
 		if (a.length !== b.length) return false;
 		for (let i = 0; i < a.length; i++) {
 			if (!deepEqual(a[i], b[i])) return false;
 		}
 		return true;
 	}
-	if (Array.isArray(b)) return false;
+	if (A.isArray(b)) return false;
 
 	if (P.isObject(a) && P.isObject(b)) {
 		const aObj = a;
 		const bObj = b;
-		const aKeys = Object.keys(aObj);
-		const bKeys = Object.keys(bObj);
+		const aKeys = R.keys(aObj);
+		const bKeys = R.keys(bObj);
 		if (aKeys.length !== bKeys.length) return false;
 		for (const key of aKeys) {
-			if (!Object.hasOwn(bObj, key)) return false;
+			if (!R.has(bObj, key)) return false;
 			if (!deepEqual(aObj[key], bObj[key])) return false;
 		}
 		return true;

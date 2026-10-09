@@ -8,6 +8,8 @@ import * as Result from "effect/Result";
 import type { PlatformError } from "effect/PlatformError";
 import { badArgument } from "effect/PlatformError";
 import type { MemoryFileSystemOptions, MemoryFileSystemSeed, MemoryFileSystemSeedEntry } from "../MemoryFileSystem.ts";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 
 const encoder = new TextEncoder();
 
@@ -16,19 +18,19 @@ export const seedVolume: {
 	(fs: FileSystem.FileSystem, seed: MemoryFileSystemSeed): Effect.Effect<void, PlatformError>;
 } = dual(2, (fs: FileSystem.FileSystem, seed: MemoryFileSystemSeed): Effect.Effect<void, PlatformError> =>
 	Effect.gen(function* () {
-		for (const [path, entry] of Object.entries(seed)) {
+		for (const [path, entry] of R.toEntries(seed)) {
 			const separator = path.lastIndexOf("/");
 			const parent = separator <= 0 ? "/" : path.slice(0, separator);
 			if (parent !== "/") {
 				yield* fs.makeDirectory(parent, { recursive: true });
 			}
-			if (typeof entry === "string" || entry instanceof Uint8Array) {
-				yield* fs.writeFile(path, typeof entry === "string" ? encoder.encode(entry) : entry);
+			if (P.isString(entry) || entry instanceof Uint8Array) {
+				yield* fs.writeFile(path, P.isString(entry) ? encoder.encode(entry) : entry);
 				continue;
 			}
 			switch (entry._tag) {
 				case "MemoryFileSystemSeedFile": {
-					const data = typeof entry.content === "string" ? encoder.encode(entry.content) : entry.content;
+					const data = P.isString(entry.content) ? encoder.encode(entry.content) : entry.content;
 					yield* fs.writeFile(path, data, entry.mode !== undefined ? { mode: entry.mode } : undefined);
 					// Applied after the write, which stamps the volume's clock. Both
 					// times are set together because `utimes` takes the pair; a seed
@@ -105,7 +107,7 @@ export const applyRoot: {
 	if (!root.startsWith("/")) return Result.fail({ description: `root must be absolute, got "${root}"`, subject: root });
 	const base = normalizeAbsolute(root);
 	const rooted: Record<string, MemoryFileSystemSeedEntry> = {};
-	for (const [key, entry] of Object.entries(seed)) {
+	for (const [key, entry] of R.toEntries(seed)) {
 		if (key.startsWith("/")) {
 			return Result.fail({
 				description: `seed key "${key}" is absolute but a root "${root}" was given`,

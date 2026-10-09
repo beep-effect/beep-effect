@@ -5,6 +5,7 @@ import * as Layer from "effect/Layer";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/github/CodeScanning");
 
@@ -163,7 +164,7 @@ const make = (client: GitHubClient["Service"]): CodeScanningShape => {
 		yield* Effect.annotateCurrentSpan({ owner, repo });
 
 		const detected = yield* client.request("GET /repos/{owner}/{repo}/languages", { owner, repo });
-		return Object.keys(detected);
+		return R.keys(detected);
 	}));
 
 	return { configure, languages };

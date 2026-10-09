@@ -34,6 +34,7 @@ import { expand } from "./braceExpansion.ts";
 import { MAX_GLOBSTAR_RECURSION, assertCap } from "./limits.ts";
 import type { EngineOptions, MMRegExp, ParseReturn, ParseReturnFiltered, Platform } from "./types.ts";
 import { GLOBSTAR } from "./types.ts";
+import * as A from "effect/Array";
 
 export { escape } from "./escape.ts";
 export type { EngineOptions, MMRegExp, ParseReturn, ParseReturnFiltered, Platform } from "./types.ts";
@@ -119,7 +120,7 @@ const twoStarNoDot = "(?:(?!(?:\\/|^)\\.).)*?";
 export const braceExpand: {
 	(options?: EngineOptions): (pattern: string) => Array<string>;
 	(pattern: string, options?: EngineOptions): Array<string>;
-} = dual((args) => args.length >= 2 || typeof args[0] === "string", (pattern: string, options: EngineOptions = {}): Array<string> => {
+} = dual((args) => args.length >= 2 || P.isString(args[0]), (pattern: string, options: EngineOptions = {}): Array<string> => {
 	assertValidPattern(pattern);
 
 	// Thanks to Yeting Li <https://github.com/yetingli> for
@@ -199,7 +200,7 @@ export class Minimatch {
 		}
 		for (const pattern of this.set) {
 			for (const part of pattern) {
-				if (typeof part !== "string") return true;
+				if (!P.isString(part)) return true;
 			}
 		}
 		return false;
@@ -282,7 +283,7 @@ export class Minimatch {
 					p[0] === "" &&
 					p[1] === "" &&
 					this.globParts[i]?.[2] === "?" &&
-					typeof p[3] === "string" &&
+					P.isString(p[3]) &&
 					/^[a-z]:$/i.test(p[3])
 				) {
 					p[2] = "?";
@@ -368,7 +369,7 @@ export class Minimatch {
 	}
 
 	levelTwoFileOptimize(partsInput: string | Array<string>) {
-		const parts = Array.isArray(partsInput) ? partsInput : this.slashSplit(partsInput);
+		const parts = A.isArray(partsInput) ? partsInput : this.slashSplit(partsInput);
 		let didSomething = false;
 
 		do {
@@ -597,28 +598,28 @@ export class Minimatch {
 		// case-insensitively.
 		if (this.isWindows) {
 			const f0 = file[0];
-			const fileDrive = typeof f0 === "string" && /^[a-z]:$/i.test(f0);
+			const fileDrive = P.isString(f0) && /^[a-z]:$/i.test(f0);
 			const fileUNC =
 				!fileDrive &&
 				file[0] === "" &&
 				file[1] === "" &&
 				file[2] === "?" &&
-				typeof file[3] === "string" &&
+				P.isString(file[3]) &&
 				/^[a-z]:$/i.test(file[3]);
 
 			const p0 = pattern[0];
-			const patternDrive = typeof p0 === "string" && /^[a-z]:$/i.test(p0);
+			const patternDrive = P.isString(p0) && /^[a-z]:$/i.test(p0);
 			const patternUNC =
 				!patternDrive &&
 				pattern[0] === "" &&
 				pattern[1] === "" &&
 				pattern[2] === "?" &&
-				typeof pattern[3] === "string" &&
+				P.isString(pattern[3]) &&
 				/^[a-z]:$/i.test(pattern[3]);
 
 			const fdi = fileUNC ? 3 : fileDrive ? 0 : undefined;
 			const pdi = patternUNC ? 3 : patternDrive ? 0 : undefined;
-			if (typeof fdi === "number" && typeof pdi === "number") {
+			if (P.isNumber(fdi) && P.isNumber(pdi)) {
 				const fd = file[fdi];
 				const pd = pattern[pdi];
 				// start matching at the drive letter index of each
@@ -851,7 +852,7 @@ export class Minimatch {
 			// non-magic patterns just have to match exactly
 			// patterns with magic have been turned into regexps.
 			let hit: boolean;
-			if (typeof p === "string") {
+			if (P.isString(p)) {
 				hit = f === p;
 				this.debug("string match", p, f, hit);
 			} else {
@@ -986,7 +987,7 @@ export class Minimatch {
 					if (p instanceof RegExp) {
 						for (const f of p.flags.split("")) flags.add(f);
 					}
-					return typeof p === "string" ? regExpEscape(p) : p === GLOBSTAR ? GLOBSTAR : p._src;
+					return P.isString(p) ? regExpEscape(p) : p === GLOBSTAR ? GLOBSTAR : p._src;
 				});
 				pp.forEach((p, i) => {
 					const next = pp[i + 1];

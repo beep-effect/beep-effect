@@ -83,7 +83,7 @@ export class SigningError extends S.TaggedError<SigningError>($I`SigningError`)(
 // to.
 const kindOf = (cause: unknown): SigningErrorKind => {
 	const code = P.hasProperty(cause, "code") ? cause.code : undefined;
-	if (typeof code !== "string") return "bundle";
+	if (!P.isString(code)) return "bundle";
 	if (code.startsWith("IDENTITY_TOKEN_")) return "identity";
 	if (code.startsWith("CA_")) return "certificate";
 	// A timestamp authority is not a transparency log, but both are witnesses
@@ -191,7 +191,9 @@ const unstubbed = (): never => {
  * ```ts
  * import type { InTotoStatement } from "./index.ts";
  * import { IdentityToken, SigstoreSigner } from "./index.ts";
- * import { Effect, Layer, Redacted } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
+ * import * as Redacted from "effect/Redacted";
  *
  * const sign = (statement: InTotoStatement) =>
  *   Effect.gen(function* () {

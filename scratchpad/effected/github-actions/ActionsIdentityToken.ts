@@ -31,7 +31,7 @@ import { OidcTokenIssuer } from "./OidcTokenIssuer.ts";
  * ```ts
  * import { ActionsIdentityToken, OidcTokenIssuer } from "./index.ts";
  * import { SigstoreSigner } from "../sbom/index.ts";
- * import { Layer } from "effect";
+ * import * as Layer from "effect/Layer";
  *
  * const signing = SigstoreSigner.layer.pipe(
  *   Layer.provide(ActionsIdentityToken.layer),

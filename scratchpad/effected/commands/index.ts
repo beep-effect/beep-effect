@@ -14,7 +14,8 @@
  * ```ts
  * import { LocalExec, Run, Tool, ToolDiscovery } from "./index.ts";
  * import { NodeServices } from "@effect/platform-node";
- * import { Effect, Layer } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  *
  * const program = Effect.gen(function* () {
  *   const discovery = yield* ToolDiscovery;

@@ -27,6 +27,7 @@
 import * as P from "effect/Predicate";
 import type { CompilerOptions } from "./CompilerOptions.ts";
 import type { ResolvedTsconfig } from "./ResolvedTsconfig.ts";
+import * as A from "effect/Array";
 
 const TSCONFIG_SCHEMA_URL = "https://json.schemastore.org/tsconfig";
 
@@ -179,7 +180,7 @@ const OPT_IN_TYPES_OPTION = "types";
  */
 const isResolvedTsconfig = (input: ResolvedTsconfig | CompilerOptions.Type): input is ResolvedTsconfig =>
 	P.isString(input.configPath) &&
-	Array.isArray(input.extendedPaths) &&
+	A.isArray(input.extendedPaths) &&
 	P.isObjectOrArray(input.compilerOptions);
 
 // ── The filter ────────────────────────────────────────────────────────────

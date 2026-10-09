@@ -13,6 +13,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import { MAX_ENUMERATION_DEPTH } from "./limits.ts";
 import { Traversal, badMaxDepthMessage, isPruned, isValidMaxDepth, joinRelative } from "./traverse.ts";
+import * as P from "effect/Predicate";
 
 /** A directory the enumerator accepted: its root-relative POSIX path and its absolute path. */
 export interface EnumeratedDirectory {
@@ -49,7 +50,7 @@ const baseOf = (pattern: GlobPattern): string => pattern.enumerationPrefix.repla
 export const enumerate: {
 	(globs: GlobSet, options?: EnumerateOptions): (root: string) => Effect.Effect<ReadonlyArray<EnumeratedDirectory>, EnumerationFailure, FileSystem.FileSystem | Path.Path>;
 	(root: string, globs: GlobSet, options?: EnumerateOptions): Effect.Effect<ReadonlyArray<EnumeratedDirectory>, EnumerationFailure, FileSystem.FileSystem | Path.Path>;
-} = dual((args) => typeof args[0] === "string" && args.length >= 2, (
+} = dual((args) => P.isString(args[0]) && args.length >= 2, (
 	root: string,
 	globs: GlobSet,
 	options?: EnumerateOptions,

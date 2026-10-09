@@ -10,6 +10,7 @@ import { Toggle } from "./Toggle.ts";
 import { Styled, useGlyphs, useTerminalSize } from "./UiTheme.ts";
 import type { ViewportRow } from "./Viewport.ts";
 import { Viewport } from "./Viewport.ts";
+import * as O from "@beep/utils/Option";
 
 /**
  * An extra on/off row a {@link Confirm} hosts beneath its yes/no answer.
@@ -184,7 +185,7 @@ const RESERVED = 3;
  *
  * ```ts
  * import { CliUi, Confirm } from "../ui.ts"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  *
  * const publish = (drafts: number) =>
  *   Effect.gen(function* () {
@@ -245,8 +246,8 @@ export class Confirm {
 		const cancel = useScreenCancel();
 		const [state, setState] = react.useState(() =>
 			init<K>({
-				...(props.initial === undefined ? {} : { initial: props.initial }),
-				...(props.toggles === undefined ? {} : { toggles: props.toggles }),
+				...O.getSomesStruct({ initial: O.fromUndefinedOr(props.initial) }),
+				...O.getSomesStruct({ toggles: O.fromUndefinedOr(props.toggles) }),
 			}),
 		);
 		const { onSubmit } = props;

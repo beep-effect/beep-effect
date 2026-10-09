@@ -58,7 +58,8 @@ export const MarkdownVisitorEvent = Data.taggedEnum<MarkdownVisitorEvent>();
  * @example
  * ```ts
  * import { Markdown, MarkdownVisitor, MarkdownVisitorEvent } from "./index.ts";
- * import { Effect, Stream } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  *
  * const program = Effect.gen(function* () {
  *   const root = yield* Markdown.parse("# Hi\n\ntext\n");

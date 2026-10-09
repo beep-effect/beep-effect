@@ -37,6 +37,8 @@ import {
 	ScalarStyle,
 	nodeToJsValue,
 } from "./YamlNode.ts";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/yaml/Yaml");
 
@@ -458,7 +460,7 @@ export interface YamlBoundCodec<T, RD = never, RE = never> {
  * @example
  * ```ts
  * import { Yaml } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const value = yield* Yaml.parse("name: Alice\nage: 30");
@@ -564,7 +566,7 @@ export class Yaml {
 	 * @example
 	 * ```ts
 	 * import { Yaml } from "./index.ts";
-	 * import { Result } from "effect";
+	 * import * as Result from "effect/Result";
 	 *
 	 * const result = Yaml.parseResult("name: Alice\nage: 30");
 	 * if (Result.isSuccess(result)) {
@@ -606,7 +608,7 @@ export class Yaml {
 	 * @example
 	 * ```ts
 	 * import { Yaml } from "./index.ts";
-	 * import { Result } from "effect";
+	 * import * as Result from "effect/Result";
 	 *
 	 * // Whole-stream validity check: fails if ANY document is invalid.
 	 * const result = Yaml.parseAllResult("a: 1\n---\nb: 2\n");
@@ -639,7 +641,7 @@ export class Yaml {
 	 * @example
 	 * ```ts
 	 * import { Yaml } from "./index.ts";
-	 * import { Result } from "effect";
+	 * import * as Result from "effect/Result";
 	 *
 	 * const result = Yaml.stringifyResult({ name: "Alice" });
 	 * if (Result.isFailure(result)) {
@@ -869,9 +871,10 @@ export class Yaml {
 	 * @example
 	 * ```ts
 	 * import { Yaml } from "./index.ts";
-	 * import { Effect, Schema } from "effect";
+	 * import * as Effect from "effect/Effect";
+	 * import * as S from "effect/Schema";
 	 *
-	 * const Config = Schema.Struct({ port: Schema.Finite });
+	 * const Config = S.Struct({ port: S.Finite });
 	 * const config = Yaml.bind(Config);
 	 *
 	 * const program = Effect.gen(function* () {
@@ -926,29 +929,29 @@ function parseForEquality(text: string): { readonly malformed: boolean; readonly
  */
 function deepEqualValues(a: unknown, b: unknown): boolean {
 	if (a === b) return true;
-	if (typeof a === "number" && typeof b === "number" && Number.isNaN(a) && Number.isNaN(b)) {
+	if (P.isNumber(a) && P.isNumber(b) && Number.isNaN(a) && Number.isNaN(b)) {
 		return true;
 	}
 	if (a === null || b === null) return false;
 	if (typeof a !== typeof b) return false;
 
-	if (Array.isArray(a)) {
-		if (!Array.isArray(b) || a.length !== b.length) return false;
+	if (A.isArray(a)) {
+		if (!A.isArray(b) || a.length !== b.length) return false;
 		for (let i = 0; i < a.length; i++) {
 			if (!deepEqualValues(a[i], b[i])) return false;
 		}
 		return true;
 	}
-	if (Array.isArray(b)) return false;
+	if (A.isArray(b)) return false;
 
 	if (P.isObject(a) && P.isObject(b)) {
 		const aObj = a;
 		const bObj = b;
-		const aKeys = Object.keys(aObj);
-		const bKeys = Object.keys(bObj);
+		const aKeys = R.keys(aObj);
+		const bKeys = R.keys(bObj);
 		if (aKeys.length !== bKeys.length) return false;
 		for (const key of aKeys) {
-			if (!Object.hasOwn(bObj, key) || !deepEqualValues(aObj[key], bObj[key])) return false;
+			if (!R.has(bObj, key) || !deepEqualValues(aObj[key], bObj[key])) return false;
 		}
 		return true;
 	}

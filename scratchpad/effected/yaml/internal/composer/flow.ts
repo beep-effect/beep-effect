@@ -29,6 +29,7 @@ import {
 import type { ComposerState, NodeMeta } from "./state.ts";
 import { enterNesting, exitNesting, hasMeta } from "./state.ts";
 import { dual } from "effect/Function";
+import * as O from "@beep/utils/Option";
 
 /**
  * Validate that flow collection entries are separated by commas.
@@ -238,7 +239,7 @@ function composeFlowMapInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 		length: cst.length,
 		...(meta?.tag !== undefined ? { tag: meta.tag } : {}),
 		...(meta?.anchor !== undefined ? { anchor: meta.anchor } : {}),
-		...(mapComment !== undefined ? { comment: mapComment } : {}),
+		...O.getSomesStruct({ comment: O.fromUndefinedOr(mapComment) }),
 	});
 
 	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(map, meta.anchor, state, cst.offset);
@@ -272,8 +273,8 @@ export function flattenFlowChildren(...args: [children: readonly CstNode[], stat
 						style: "plain",
 						offset: child.offset,
 						length: 0,
-						...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
-						...(pendingMeta.anchor !== undefined ? { anchor: pendingMeta.anchor } : {}),
+						...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
+						...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 					});
 					if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
 					pendingMeta = {};
@@ -290,8 +291,8 @@ export function flattenFlowChildren(...args: [children: readonly CstNode[], stat
 						style: "plain",
 						offset: child.offset,
 						length: 0,
-						...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
-						...(pendingMeta.anchor !== undefined ? { anchor: pendingMeta.anchor } : {}),
+						...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
+						...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 					});
 					if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
 					pendingMeta = {};
@@ -380,8 +381,8 @@ export function flattenFlowChildren(...args: [children: readonly CstNode[], stat
 						style: "plain",
 						offset: child.offset,
 						length: child.length,
-						...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
-						...(pendingMeta.anchor !== undefined ? { anchor: pendingMeta.anchor } : {}),
+						...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
+						...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 					});
 					if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
 					pendingMeta = {};
@@ -405,8 +406,8 @@ export function flattenFlowChildren(...args: [children: readonly CstNode[], stat
 					// so findAtOffset covers continuation lines and the
 					// sourceMultiline decoration pass sees the real extent.
 					length: partsCount > 1 ? endOffset - child.offset : child.length,
-					...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
-					...(pendingMeta.anchor !== undefined ? { anchor: pendingMeta.anchor } : {}),
+					...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
+					...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 				});
 				if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
 				pendingMeta = {};
@@ -446,8 +447,8 @@ export function flattenFlowChildren(...args: [children: readonly CstNode[], stat
 			style: "plain",
 			offset: 0,
 			length: 0,
-			...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
-			...(pendingMeta.anchor !== undefined ? { anchor: pendingMeta.anchor } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 		});
 		if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, 0);
 		items.push({ kind: "node", node: scalar });
@@ -598,7 +599,7 @@ function composeFlowSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 			}
 		}
 		const fields: CommentFields = {
-			...(commentBefore !== undefined ? { commentBefore } : {}),
+			...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(commentBefore) }),
 			...(pendingSpace ? { spaceBefore: true } : {}),
 		};
 		pending = [];
@@ -640,7 +641,7 @@ function composeFlowSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 					offset: firstPair.key.offset,
 					length: 0,
 					...fields,
-					...(segTrailing !== undefined ? { comment: segTrailing } : {}),
+					...O.getSomesStruct({ comment: O.fromUndefinedOr(segTrailing) }),
 				});
 				items.push(map);
 				pushedIdx = items.length - 1;
@@ -712,7 +713,7 @@ function composeFlowSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMeta
 		length: cst.length,
 		...(meta?.tag !== undefined ? { tag: meta.tag } : {}),
 		...(meta?.anchor !== undefined ? { anchor: meta.anchor } : {}),
-		...(seqComment !== undefined ? { comment: seqComment } : {}),
+		...O.getSomesStruct({ comment: O.fromUndefinedOr(seqComment) }),
 	});
 
 	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(seq, meta.anchor, state, cst.offset);

@@ -134,7 +134,7 @@ const dedupeSorted = (versions: ReadonlyArray<SemVer>): ReadonlyArray<SemVer> =>
  * @example
  * ```ts
  * import { SemVer, VersionCache } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const cache = yield* VersionCache;

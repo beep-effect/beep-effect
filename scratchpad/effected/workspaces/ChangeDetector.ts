@@ -138,7 +138,7 @@ export interface ChangeDetectorShape {
  * @example
  * ```ts
  * import { ChangeDetectionOptions, ChangeDetector } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const detector = yield* ChangeDetector;

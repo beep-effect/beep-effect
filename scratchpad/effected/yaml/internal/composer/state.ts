@@ -8,6 +8,8 @@ import type { RawDiagnostic } from "../diagnostics.ts";
 import type { ParseOptionsInput } from "../options.ts";
 import type { EscapedComment } from "./comments.ts";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
+import * as O from "@beep/utils/Option";
 
 // ---------------------------------------------------------------------------
 // Line/column computation
@@ -152,9 +154,9 @@ export function commentProps(n: { commentBefore?: string; comment?: string; spac
 	spaceBefore?: boolean;
 } {
 	return {
-		...(n.commentBefore !== undefined ? { commentBefore: n.commentBefore } : {}),
-		...(n.comment !== undefined ? { comment: n.comment } : {}),
-		...(n.spaceBefore !== undefined ? { spaceBefore: n.spaceBefore } : {}),
+		...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(n.commentBefore) }),
+		...O.getSomesStruct({ comment: O.fromUndefinedOr(n.comment) }),
+		...O.getSomesStruct({ spaceBefore: O.fromUndefinedOr(n.spaceBefore) }),
 	};
 }
 
@@ -207,7 +209,7 @@ export function createState(...args: [text: string, flow: FlowComposers, options
 	return dual<
 		(...args: [text: string, flow: FlowComposers, options?: ParseOptionsInput | undefined] | [flow: FlowComposers, options?: ParseOptionsInput | undefined]) => ComposerState | ((text: string) => ComposerState),
 		(text: string, flow: FlowComposers, options?: ParseOptionsInput) => ComposerState
-	>((args) => typeof args[0] === "string", function createState(text: string, flow: FlowComposers, options?: ParseOptionsInput): ComposerState {
+	>((args) => P.isString(args[0]), function createState(text: string, flow: FlowComposers, options?: ParseOptionsInput): ComposerState {
 	return {
 		text,
 		anchors: new Map(),

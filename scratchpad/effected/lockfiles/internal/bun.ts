@@ -15,6 +15,9 @@ import {
 	toIntegrityHash,
 	validationFailure,
 } from "./shared.ts";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as O from "@beep/utils/Option";
 
 // ── Raw schema (permissive validation scaffolding, not API) ────────────────
 
@@ -111,7 +114,7 @@ const resolveBunEdges = (
 	const names = new Set<string>();
 	for (const section of sections) {
 		if (section === undefined) continue;
-		for (const name of Object.keys(section)) if (name !== "") names.add(name);
+		for (const name of R.keys(section)) if (name !== "") names.add(name);
 	}
 	if (names.size === 0) return {};
 
@@ -136,7 +139,7 @@ const resolveBunEdges = (
 	}
 	// Map-backed until the last step: `Object.fromEntries` defines own data
 	// properties, so a "__proto__" dependency name neither pollutes nor drops.
-	return Object.fromEntries(edges);
+	return R.fromEntries(edges);
 };
 
 const infoSections = (info: typeof BunPackageInfo.Type | undefined) =>
@@ -149,7 +152,7 @@ const toFields = (raw: BunLockfileRawType): Effect.Effect<LockfileFields, ParseF
 	Effect.gen(function* () {
 		const packages: Array<ResolvedPackage> = [];
 		// bun's own instance identities: the `packages` keys.
-		const keys = new Set(raw.packages !== undefined ? Object.keys(raw.packages) : []);
+		const keys = new Set(raw.packages !== undefined ? R.keys(raw.packages) : []);
 		const workspaceNames = new Set<string>();
 		const workspaceEntries = new Map<string, WorkspaceEntry>();
 		const importers: Array<LockfileImporter> = [];
@@ -158,7 +161,7 @@ const toFields = (raw: BunLockfileRawType): Effect.Effect<LockfileFields, ParseF
 			// Bun records concrete versions on the package tuples, not per importer,
 			// so every importer dependency carries a specifier and no version. The
 			// root workspace is the `""` entry — the `"."` importer.
-			for (const [wsPath, wsEntry] of Object.entries(raw.workspaces)) {
+			for (const [wsPath, wsEntry] of R.toEntries(raw.workspaces)) {
 				importers.push(
 					LockfileImporter.make({
 						path: wsPath === "" ? "." : wsPath,
@@ -167,7 +170,7 @@ const toFields = (raw: BunLockfileRawType): Effect.Effect<LockfileFields, ParseF
 				);
 			}
 
-			for (const [wsPath, wsEntry] of Object.entries(raw.workspaces)) {
+			for (const [wsPath, wsEntry] of R.toEntries(raw.workspaces)) {
 				if (wsPath === "") continue; // root entry
 				const name = wsEntry.name === undefined || wsEntry.name === "" ? wsPath : wsEntry.name;
 				workspaceNames.add(name);
@@ -188,20 +191,20 @@ const toFields = (raw: BunLockfileRawType): Effect.Effect<LockfileFields, ParseF
 					}),
 				);
 				workspaceEntries.set(name, {
-					...(wsEntry.dependencies !== undefined ? { dependencies: wsEntry.dependencies } : {}),
-					...(wsEntry.devDependencies !== undefined ? { devDependencies: wsEntry.devDependencies } : {}),
-					...(wsEntry.peerDependencies !== undefined ? { peerDependencies: wsEntry.peerDependencies } : {}),
-					...(wsEntry.optionalDependencies !== undefined ? { optionalDependencies: wsEntry.optionalDependencies } : {}),
+					...O.getSomesStruct({ dependencies: O.fromUndefinedOr(wsEntry.dependencies) }),
+					...O.getSomesStruct({ devDependencies: O.fromUndefinedOr(wsEntry.devDependencies) }),
+					...O.getSomesStruct({ peerDependencies: O.fromUndefinedOr(wsEntry.peerDependencies) }),
+					...O.getSomesStruct({ optionalDependencies: O.fromUndefinedOr(wsEntry.optionalDependencies) }),
 				});
 			}
 		}
 
 		if (raw.packages !== undefined) {
-			for (const [key, tuple] of Object.entries(raw.packages)) {
+			for (const [key, tuple] of R.toEntries(raw.packages)) {
 				if (key === "") continue; // no identity, no row; skip, never throw
 				if (tuple.length < 1) continue;
 				const first = tuple[0];
-				if (typeof first !== "string") continue; // malformed tuples are skipped, never thrown on
+				if (!P.isString(first)) continue; // malformed tuples are skipped, never thrown on
 				// The first "@" after a scoped name's own, never the last: a version
 				// part may hold one (`file:../@scope/lib`).
 				const split = splitNameVersion(first);
@@ -212,7 +215,7 @@ const toFields = (raw: BunLockfileRawType): Effect.Effect<LockfileFields, ParseF
 				if (workspaceNames.has(name)) continue;
 
 				const integrity = yield* toIntegrityHash(
-					tuple.length >= 4 && typeof tuple[3] === "string" ? tuple[3] : undefined,
+					tuple.length >= 4 && P.isString(tuple[3]) ? tuple[3] : undefined,
 				);
 				// Tuple index 2 is the info object carrying the entry's own
 				// dependency and peer declarations.
@@ -222,7 +225,7 @@ const toFields = (raw: BunLockfileRawType): Effect.Effect<LockfileFields, ParseF
 						name,
 						version,
 						instanceId: key,
-						...(integrity !== undefined ? { integrity } : {}),
+						...O.getSomesStruct({ integrity: O.fromUndefinedOr(integrity) }),
 						isWorkspace: false,
 						...peerDeclarations(info?.peerDependencies, undefined, info?.optionalPeers),
 						resolved: resolveBunEdges(key, infoSections(info), keys),
@@ -234,10 +237,10 @@ const toFields = (raw: BunLockfileRawType): Effect.Effect<LockfileFields, ParseF
 		const workspaceDependencies = extractWorkspaceDeps(workspaceEntries, workspaceNames);
 
 		const extension = BunExtension.make({
-			...(raw.catalog !== undefined ? { catalog: raw.catalog } : {}),
-			...(raw.catalogs !== undefined ? { catalogs: raw.catalogs } : {}),
-			...(raw.overrides !== undefined ? { overrides: raw.overrides } : {}),
-			...(raw.trustedDependencies !== undefined ? { trustedDependencies: raw.trustedDependencies } : {}),
+			...O.getSomesStruct({ catalog: O.fromUndefinedOr(raw.catalog) }),
+			...O.getSomesStruct({ catalogs: O.fromUndefinedOr(raw.catalogs) }),
+			...O.getSomesStruct({ overrides: O.fromUndefinedOr(raw.overrides) }),
+			...O.getSomesStruct({ trustedDependencies: O.fromUndefinedOr(raw.trustedDependencies) }),
 		});
 
 		return {

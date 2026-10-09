@@ -4,7 +4,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -24,6 +24,7 @@ import { isWindowsRunner } from "./internal/runner.ts";
 import { spawnOnce } from "./internal/spawn.ts";
 import { CONFLICT, field, isOk, stringField, twirpCall, twirpFailureFields } from "./internal/twirp.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
+import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effected/github-actions/Artifact");
 
@@ -253,7 +254,7 @@ const toItem = (row: unknown): ArtifactItem => {
 		id: Number(stringField(row, "databaseId") ?? 0),
 		name: stringField(row, "name") ?? "",
 		size: Number(stringField(row, "size") ?? 0),
-		...(createdAt === undefined ? {} : { createdAt }),
+		...O.getSomesStruct({ createdAt: O.fromUndefinedOr(createdAt) }),
 	};
 };
 
@@ -322,7 +323,7 @@ const make = (
 						return [];
 					}
 					const rows = field(answer, "artifacts");
-					return Array.isArray(rows) ? rows.map(toItem) : [];
+					return A.isArray(rows) ? rows.map(toItem) : [];
 				},
 			);
 
@@ -575,7 +576,7 @@ const dies = unstubbed("Artifact.makeTest");
  * @example
  * ```ts
  * import { Artifact } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const artifacts = yield* Artifact;

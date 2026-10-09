@@ -111,7 +111,7 @@ export interface GitBranchShape {
  * @example
  * ```ts
  * import { GitBranch } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const ensureBranch = (name: string, sha: string) =>
  *   Effect.gen(function* () {

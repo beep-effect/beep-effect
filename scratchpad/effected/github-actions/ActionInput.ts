@@ -7,6 +7,8 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as Result from "effect/Result";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 
 const Json = S.fromJsonString(S.Unknown);
 const StringList = S.Array(S.String);
@@ -92,7 +94,7 @@ const stripComment = (line: string): string => {
  * @example
  * ```ts
  * import { ActionInput } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const dryRun = yield* ActionInput.boolean("dry-run");
@@ -224,7 +226,7 @@ export class ActionInput {
 	 * @example
 	 * ```ts
 	 * import { ActionInput } from "./index.ts";
-	 * import { Config } from "effect";
+	 * import * as Config from "effect/Config";
 	 *
 	 * // Config<"commit" | "pr">
 	 * const mode = ActionInput.literals("mode", ["commit", "pr"]).pipe(Config.withDefault("commit"));
@@ -495,7 +497,7 @@ export class ActionInput {
 		 * whole environment per `Config` read.
 		 */
 		const byInputName = new Map<string, string>();
-		for (const [key, value] of Object.entries(env)) {
+		for (const [key, value] of R.toEntries(env)) {
 			if (!key.startsWith("INPUT_") && present(value) && !byInputName.has(inputVariable(key))) {
 				byInputName.set(inputVariable(key), value);
 			}
@@ -506,7 +508,7 @@ export class ActionInput {
 			return present(direct) ? direct : byInputName.get(name);
 		};
 		return ConfigProvider.make((path) => {
-			const single = path.length === 1 && typeof path[0] === "string" ? path[0] : undefined;
+			const single = path.length === 1 && P.isString(path[0]) ? path[0] : undefined;
 			const attempted = single === undefined ? undefined : lookup(inputVariable(single));
 			const value = attempted ?? lookup(path.join("_").replaceAll(" ", "_").toUpperCase());
 			return Effect.succeed(value === undefined ? undefined : ConfigProvider.makeValue(value));
@@ -577,7 +579,7 @@ export class ActionInput {
 				// The attempt resolves through `ambient` rather than reading an
 				// environment of its own, so there is exactly one source of values and
 				// exactly one spelling of the derivation (`inputVariable`).
-				return typeof name === "string" ? ambient.load([inputVariable(name)]) : Effect.as(Effect.void, undefined);
+				return P.isString(name) ? ambient.load([inputVariable(name)]) : Effect.as(Effect.void, undefined);
 			}),
 			ambient,
 		);

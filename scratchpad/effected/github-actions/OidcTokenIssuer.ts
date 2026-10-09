@@ -227,7 +227,7 @@ const dies = unstubbed("OidcTokenIssuer.makeTest");
  * @example
  * ```ts
  * import { OidcTokenIssuer } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const issuer = yield* OidcTokenIssuer;

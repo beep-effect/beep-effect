@@ -6,6 +6,7 @@
 
 import { dual } from "effect/Function";
 import type { EngineOptions } from "./types.ts";
+import * as P from "effect/Predicate";
 
 /**
  * Escape all magic characters in a glob pattern.
@@ -22,7 +23,7 @@ import type { EngineOptions } from "./types.ts";
 const escapePattern: {
 	(options?: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): (s: string) => string;
 	(s: string, options?: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): string;
-} = dual((args) => args.length >= 2 || typeof args[0] === "string", (
+} = dual((args) => args.length >= 2 || P.isString(args[0]), (
 	s: string,
 	{
 		windowsPathsNoEscape = false,

@@ -5,7 +5,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { HttpClient } from "effect/http";
@@ -22,6 +22,7 @@ import { isWindowsRunner } from "./internal/runner.ts";
 import { spawnOnce } from "./internal/spawn.ts";
 import { twirpCall, twirpFailureFields } from "./internal/twirp.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/github-actions/ActionCache");
 
@@ -180,7 +181,7 @@ const azure: FileBlobTransfer = {
 
 /** The primary key and the ladder to fall back through. */
 const ladder = (key: string | CacheKey, restoreKeys: ReadonlyArray<string> | undefined) =>
-	typeof key === "string"
+	P.isString(key)
 		? { primary: key, fallbacks: restoreKeys ?? [] }
 		: { primary: key.key, fallbacks: restoreKeys ?? key.restoreKeys };
 
@@ -295,7 +296,7 @@ const make = (
 		): Effect.Effect<ReadonlyArray<string>, ActionCacheError> =>
 			Effect.gen(function* () {
 				const failed = (detail: string, cause?: unknown) =>
-					ActionCacheError.make({ reason: "archiveFailed", key, detail, ...(cause === undefined ? {} : { cause }) });
+					ActionCacheError.make({ reason: "archiveFailed", key, detail, ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }) });
 				const cleaned = patterns.map((pattern) => pattern.trim()).filter((p) => p !== "" && !p.startsWith("#"));
 				// The toolkit roots relative patterns at the process working directory
 				// and relativizes matches against GITHUB_WORKSPACE; on a runner the two
@@ -501,13 +502,14 @@ const dies = unstubbed("ActionCache.makeTest");
  * @example
  * ```ts
  * import { ActionCache, CacheKey } from "./index.ts";
- * import { Effect, Option } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
  *
  * const program = Effect.gen(function* () {
  *   const cache = yield* ActionCache;
  *   const key = CacheKey.of("Linux", "pnpm-store", "abc123");
  *   const hit = yield* cache.restore(["~/.pnpm-store"], key);
- *   if (Option.isNone(hit)) {
+ *   if (O.isNone(hit)) {
  *     yield* cache.save(["~/.pnpm-store"], key);
  *   }
  * });

@@ -14,7 +14,8 @@
  * ```ts
  * import { NodeServices } from "@effect/platform-node";
  * import { WorkspaceDiscovery, Workspaces } from "./index.ts";
- * import { Effect, Layer } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  *
  * const WorkspacesLayer = Workspaces.layer().pipe(Layer.provide(NodeServices.layer));
  *

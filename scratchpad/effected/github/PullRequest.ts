@@ -3,7 +3,7 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { CommitFile } from "./GitHubCommit.ts";
@@ -230,7 +230,7 @@ export interface PullRequestShape {
  * @example
  * ```ts
  * import { PullRequest } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const openOrUpdate = Effect.gen(function* () {
  *   const pulls = yield* PullRequest;
@@ -365,8 +365,8 @@ const make = (client: GitHubClient["Service"]): PullRequestShape => {
 			title: input.title,
 			head: input.head,
 			base: input.base,
-			...(input.body !== undefined ? { body: input.body } : {}),
-			...(input.draft !== undefined ? { draft: input.draft } : {}),
+			...O.getSomesStruct({ body: O.fromUndefinedOr(input.body) }),
+			...O.getSomesStruct({ draft: O.fromUndefinedOr(input.draft) }),
 		});
 		return yield* project(created);
 	});
@@ -389,10 +389,10 @@ const make = (client: GitHubClient["Service"]): PullRequestShape => {
 			// Conditional spreads, not `...patch`: under exactOptionalPropertyTypes a
 			// present-but-undefined key is not the same as an absent one, and octokit's
 			// generated parameter types say so.
-			...(patch.title !== undefined ? { title: patch.title } : {}),
-			...(patch.body !== undefined ? { body: patch.body } : {}),
-			...(patch.state !== undefined ? { state: patch.state } : {}),
-			...(patch.base !== undefined ? { base: patch.base } : {}),
+			...O.getSomesStruct({ title: O.fromUndefinedOr(patch.title) }),
+			...O.getSomesStruct({ body: O.fromUndefinedOr(patch.body) }),
+			...O.getSomesStruct({ state: O.fromUndefinedOr(patch.state) }),
+			...O.getSomesStruct({ base: O.fromUndefinedOr(patch.base) }),
 		});
 		return yield* project(updated);
 	});
@@ -462,7 +462,7 @@ const make = (client: GitHubClient["Service"]): PullRequestShape => {
 			}
 			const patch = {
 				title: input.title,
-				...(input.body !== undefined ? { body: input.body } : {}),
+				...O.getSomesStruct({ body: O.fromUndefinedOr(input.body) }),
 			};
 			return { pullRequest: yield* update(found.number, patch), created: false };
 		}),

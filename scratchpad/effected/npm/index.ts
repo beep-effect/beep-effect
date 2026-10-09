@@ -102,14 +102,15 @@ export { DependencyResolutionError, WorkspaceResolver } from "./WorkspaceResolve
  *
  * @example
  * ```ts
- * import { Effect, Option } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
  * import { CatalogResolver, Default, WorkspaceResolver } from "./index.ts";
  *
  * const program = Effect.gen(function* () {
  *   const catalog = yield* CatalogResolver;
  *   const workspace = yield* WorkspaceResolver;
  *   return yield* Effect.all([
- *     catalog.rangeOf("effect", Option.none()),
+ *     catalog.rangeOf("effect", O.none()),
  *     workspace.versionOf("@effected/semver"),
  *   ]);
  * });

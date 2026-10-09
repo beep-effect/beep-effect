@@ -17,6 +17,8 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/package-json/Person");
 
@@ -76,10 +78,10 @@ const sameRest = (a: unknown, b: unknown): boolean => JSON.stringify(a ?? {}) ==
 // fits). Splitting them would let a person be refused the replay yet handed back
 // as shorthand, dropping the very keys the refusal detected.
 const isShorthandExpressible = (person: Person): boolean =>
-	person.rest === undefined || Object.keys(person.rest).length === 0;
+	person.rest === undefined || R.keys(person.rest).length === 0;
 
 const isFaithful = (wire: PersonWire, person: Person): boolean => {
-	if (typeof wire === "string") {
+	if (P.isString(wire)) {
 		const parsed = parsePersonString(wire);
 		return (
 			parsed.name === person.name &&
@@ -115,7 +117,7 @@ const decodePersonFields = S.decodeUnknownEffect(PersonFields);
 
 const restOf = (raw: { readonly [k: string]: unknown }): Record<string, unknown> => {
 	const rest: Record<string, unknown> = {};
-	for (const [key, value] of Object.entries(raw)) {
+	for (const [key, value] of R.toEntries(raw)) {
 		if (!KNOWN_KEYS.has(key)) rest[key] = value;
 	}
 	return rest;
@@ -125,7 +127,7 @@ const restOf = (raw: { readonly [k: string]: unknown }): Record<string, unknown>
 // matches the person; otherwise rebuild it, typed fields winning on collision.
 const encodePersonObject = (person: Person): { readonly [k: string]: unknown } => {
 	const wire = wireForms.get(person);
-	if (wire !== undefined && typeof wire !== "string" && isFaithful(wire, person)) return wire;
+	if (wire !== undefined && !P.isString(wire) && isFaithful(wire, person)) return wire;
 	const known: Record<string, unknown> = { name: person.name };
 	if (person.email !== undefined) known.email = person.email;
 	if (person.url !== undefined) known.url = person.url;
@@ -139,12 +141,12 @@ const encodePersonObject = (person: Person): { readonly [k: string]: unknown } =
  * @example
  * ```ts
  * import { Person } from "./index.ts";
- * import { Schema } from "effect";
+ * import * as S from "effect/Schema";
  *
- * const ann = Schema.decodeUnknownSync(Person.FromValue)("Ann <ann@example.com> (https://example.com)");
+ * const ann = S.decodeUnknownSync(Person.FromValue)("Ann <ann@example.com> (https://example.com)");
  * ann.name; // => "Ann"
  * ann.email; // => "ann@example.com"
- * Schema.encodeSync(Person.FromValue)(ann); // => "Ann <ann@example.com> (https://example.com)"
+ * S.encodeSync(Person.FromValue)(ann); // => "Ann <ann@example.com> (https://example.com)"
  * ```
  *
  * @public
@@ -182,7 +184,7 @@ export class Person extends S.Class<Person>($I`Person`)({
 						Effect.mapError((error) => error.issue),
 						Effect.map((fields) => {
 							const rest = restOf(raw);
-							return rememberWire(Person.make({ ...fields, ...(Object.keys(rest).length > 0 ? { rest } : {}) }), raw);
+							return rememberWire(Person.make({ ...fields, ...(R.keys(rest).length > 0 ? { rest } : {}) }), raw);
 						}),
 					),
 				encode: (person: Person) => Effect.succeed(encodePersonObject(person)),
@@ -202,7 +204,7 @@ export class Person extends S.Class<Person>($I`Person`)({
 				decode: (input: string) => rememberWire(parsePersonString(input), input),
 				encode: (person: Person) => {
 					const wire = wireForms.get(person);
-					return typeof wire === "string" && isFaithful(wire, person) ? wire : serializePerson(person);
+					return P.isString(wire) && isFaithful(wire, person) ? wire : serializePerson(person);
 				},
 			}),
 		),
@@ -231,13 +233,13 @@ export class Person extends S.Class<Person>($I`Person`)({
 			S.instanceOf(Person),
 			SchemaTransformation.transform({
 				decode: (input: Person | string) =>
-					typeof input === "string" ? rememberWire(parsePersonString(input), input) : input,
+					P.isString(input) ? rememberWire(parsePersonString(input), input) : input,
 				// Only the string branch is decided here: a person from the object
 				// form encodes back through `Person.schema`, which replays its own
 				// remembered object verbatim.
 				encode: (person: Person): Person | string => {
 					const wire = wireForms.get(person);
-					if (typeof wire !== "string") return person;
+					if (!P.isString(wire)) return person;
 					if (isFaithful(wire, person)) return wire;
 					// Edited since it was decoded. Re-emit the shorthand SHAPE rather
 					// than upgrading to the object form: a manifest that wrote
@@ -266,6 +268,6 @@ export class Person extends S.Class<Person>($I`Person`)({
 	 */
 	static wireStringOf(person: Person): O.Option<string> {
 		const wire = wireForms.get(person);
-		return typeof wire === "string" && isFaithful(wire, person) ? O.some(wire) : O.none();
+		return P.isString(wire) && isFaithful(wire, person) ? O.some(wire) : O.none();
 	}
 }

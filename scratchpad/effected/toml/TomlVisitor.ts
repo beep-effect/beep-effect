@@ -184,7 +184,8 @@ const collectEventsOrFail = (text: string): Effect.Effect<Array<TomlVisitorEvent
  * @example
  * ```ts
  * import { TomlVisitor, TomlVisitorEvent } from "./index.ts";
- * import { Effect, Stream } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  *
  * const keys = TomlVisitor.visit("[server]\nport = 1\n").pipe(
  *   Stream.filter(TomlVisitorEvent.$is("KeyValue")),

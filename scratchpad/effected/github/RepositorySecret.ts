@@ -113,7 +113,8 @@ const ROUTES = {
  * @example
  * ```ts
  * import { RepositorySecret } from "./index.ts";
- * import { Effect, Redacted } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
  *
  * const program = Effect.gen(function* () {
  *   const secrets = yield* RepositorySecret;

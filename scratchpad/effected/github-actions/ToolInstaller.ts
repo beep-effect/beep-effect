@@ -533,12 +533,13 @@ const testRoot = (): string => Effect.runSync(
  * @example
  * ```ts
  * import { ToolInstaller } from "./index.ts";
- * import { Effect, Option } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
  *
  * const install = Effect.gen(function* () {
  *   const installer = yield* ToolInstaller;
  *   const cached = yield* installer.find("node", "22.11.0");
- *   if (Option.isSome(cached)) return cached.value;
+ *   if (O.isSome(cached)) return cached.value;
  *   const archive = yield* installer.download("https://nodejs.org/dist/v22.11.0/node.tar.gz");
  *   const extracted = yield* installer.extractTar(archive);
  *   return yield* installer.cacheDir(extracted, "node", "22.11.0");

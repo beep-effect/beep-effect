@@ -4,7 +4,7 @@ import type { OctokitResponse } from "@octokit/types";
 import * as Clock from "effect/Clock";
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
@@ -89,8 +89,8 @@ const makeOctokit = (options: TransportOptions): Octokit =>
 		// The one deliberate unwrap in this package: octokit needs the string.
 		// Nothing downstream re-exposes it — errors, spans and logs never carry it.
 		...(options.token !== undefined ? { auth: Redacted.value(options.token) } : {}),
-		...(options.baseUrl !== undefined ? { baseUrl: options.baseUrl } : {}),
-		...(options.userAgent !== undefined ? { userAgent: options.userAgent } : {}),
+		...O.getSomesStruct({ baseUrl: O.fromUndefinedOr(options.baseUrl) }),
+		...O.getSomesStruct({ userAgent: O.fromUndefinedOr(options.userAgent) }),
 		...(options.fetch !== undefined ? { request: { fetch: options.fetch } } : {}),
 		log: SILENT_LOG,
 	});

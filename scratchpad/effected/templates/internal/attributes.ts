@@ -1,3 +1,4 @@
+import * as R from "effect/Record";
 // The marker attribute grammar, shared by the renderer and the scanner so the
 // two can never disagree about what an attribute run is.
 //
@@ -95,7 +96,7 @@ export const parseAttributeRun = (run: string): Record<string, string> | undefin
 		}
 		const value = run.slice(valueStart, index);
 		index += 1; // consume the closing quote
-		if (Object.hasOwn(attributes, name)) {
+		if (R.has(attributes, name)) {
 			return undefined;
 		}
 		attributes[name] = value;

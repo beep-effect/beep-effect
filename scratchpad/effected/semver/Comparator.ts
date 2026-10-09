@@ -39,7 +39,7 @@ export class InvalidComparatorError extends S.TaggedError<InvalidComparatorError
  * @example
  * ```ts
  * import { Comparator, SemVer } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const comparator = yield* Comparator.parse(">=1.2.3");
@@ -100,7 +100,7 @@ export class Comparator extends S.Class<Comparator>($I`Comparator`)({
 	 * @example
 	 * ```ts
 	 * import { Comparator } from "./index.ts";
-	 * import { Result } from "effect";
+	 * import * as Result from "effect/Result";
 	 *
 	 * const ok = Comparator.parseResult(">=1.2.3");
 	 * if (Result.isSuccess(ok)) {

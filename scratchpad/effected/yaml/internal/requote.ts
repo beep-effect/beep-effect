@@ -32,6 +32,7 @@ import type { ScalarStyle } from "../YamlNode.ts";
 import { isControlChar } from "./fold.ts";
 import { renderDoubleQuoted, renderSingleQuoted } from "./stringifier.ts";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 
 /**
  * The structural slice of a scalar node the re-quoting decision reads —
@@ -80,7 +81,7 @@ export function requoteScalarText(...args: [text: string, scalar: RequoteScalarI
 		(text: string, scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode) => string | undefined
 	>(4, function requoteScalarText(text: string, scalar: RequoteScalarInput, quote: '"' | "'", mode: RequoteMode): string | undefined {
 	if (scalar.tag !== undefined || scalar.anchor !== undefined) return undefined;
-	if (typeof scalar.value !== "string") return undefined;
+	if (!P.isString(scalar.value)) return undefined;
 	const raw = text.slice(scalar.offset, scalar.offset + scalar.length);
 	// A multi-line source scalar folds line breaks into its value; re-quoting
 	// it from the value would collapse the layout, so it is skipped whole.

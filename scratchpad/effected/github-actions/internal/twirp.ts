@@ -12,6 +12,8 @@ import * as Schedule from "effect/Schedule";
 import * as Function from "effect/Function";
 import type { HttpClient } from "effect/http";
 import { HttpClientRequest } from "effect/http";
+import * as P from "effect/Predicate";
+import * as O from "@beep/utils/Option";
 
 /**
  * Returned instead of a failure when the backend answers HTTP 409.
@@ -70,12 +72,12 @@ export const twirpFailureFields = (
 		? {
 				reason: "refused",
 				detail: failure.method,
-				...(failure.status === undefined ? {} : { status: failure.status }),
+				...O.getSomesStruct({ status: O.fromUndefinedOr(failure.status) }),
 			}
 		: {
 				reason: "unreachable",
 				detail: `${failure.method} did not answer with a Twirp body`,
-				...(failure.cause === undefined ? {} : { cause: failure.cause }),
+				...O.getSomesStruct({ cause: O.fromUndefinedOr(failure.cause) }),
 			};
 
 /**
@@ -177,7 +179,7 @@ export const stringField: {
 	(name: string): (body: unknown) => string | undefined;
 } = Function.dual(2, (body: unknown, name: string): string | undefined => {
 	const value = field(body, name);
-	return typeof value === "string" && value !== "" ? value : undefined;
+	return P.isString(value) && value !== "" ? value : undefined;
 });
 
 /** Whether a Twirp response carries `ok: true`. @internal */

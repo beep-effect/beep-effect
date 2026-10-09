@@ -12,6 +12,8 @@ import {
 	toIntegrityHash,
 	validationFailure,
 } from "./shared.ts";
+import * as R from "effect/Record";
+import * as O from "@beep/utils/Option";
 
 // ── Raw schema (permissive validation scaffolding, not API) ────────────────
 
@@ -106,7 +108,7 @@ const resolveNpmEdges = (
 	const names = new Set<string>();
 	for (const section of sections) {
 		if (section === undefined) continue;
-		for (const name of Object.keys(section)) if (name !== "") names.add(name);
+		for (const name of R.keys(section)) if (name !== "") names.add(name);
 	}
 	if (names.size === 0) return {};
 
@@ -122,7 +124,7 @@ const resolveNpmEdges = (
 	for (const name of names) {
 		for (const prefix of prefixes) {
 			const candidate = prefix === "" ? `${NODE_MODULES_PREFIX}${name}` : `${prefix}${NESTED_NODE_MODULES}${name}`;
-			if (Object.hasOwn(packages, candidate)) {
+			if (R.has(packages, candidate)) {
 				edges.set(name, candidate);
 				break;
 			}
@@ -130,7 +132,7 @@ const resolveNpmEdges = (
 	}
 	// Map-backed until the last step: `Object.fromEntries` defines own data
 	// properties, so a "__proto__" dependency name neither pollutes nor drops.
-	return Object.fromEntries(edges);
+	return R.fromEntries(edges);
 };
 
 const entrySections = (entry: NpmPackageEntryType | undefined) =>
@@ -182,7 +184,7 @@ const toFields = (raw: NpmLockfileRawType): Effect.Effect<LockfileFields, ParseF
 		// First pass: identify workspace link entries. Name resolution must match
 		// the second pass (wsEntry first) or a link stub disagreeing with its
 		// resolved entry drops inter-workspace edges.
-		for (const [key, entry] of Object.entries(raw.packages)) {
+		for (const [key, entry] of R.toEntries(raw.packages)) {
 			const nameIndex = packageNameIndex(key);
 			if (nameIndex !== -1 && entry.link === true) {
 				const wsEntry = entry.resolved !== undefined ? raw.packages[entry.resolved] : undefined;
@@ -192,7 +194,7 @@ const toFields = (raw: NpmLockfileRawType): Effect.Effect<LockfileFields, ParseF
 		}
 
 		// Second pass: build packages and workspace entries.
-		for (const [key, entry] of Object.entries(raw.packages)) {
+		for (const [key, entry] of R.toEntries(raw.packages)) {
 			if (key === "") continue; // root entry
 			// Every key that names a package position, at any nesting depth —
 			// `node_modules/x`, `node_modules/x/node_modules/y` and the workspace
@@ -213,7 +215,7 @@ const toFields = (raw: NpmLockfileRawType): Effect.Effect<LockfileFields, ParseF
 						version: wsEntry?.version ?? "0.0.0",
 						instanceId: key,
 						isWorkspace: true,
-						...(resolved !== undefined ? { relativePath: resolved } : {}),
+						...O.getSomesStruct({ relativePath: O.fromUndefinedOr(resolved) }),
 						// A workspace link entry is a stub; its manifest sections —
 						// peers included — live on the resolved path entry.
 						...peerDeclarations(wsEntry?.peerDependencies, wsEntry?.peerDependenciesMeta),
@@ -228,10 +230,10 @@ const toFields = (raw: NpmLockfileRawType): Effect.Effect<LockfileFields, ParseF
 				);
 				if (wsEntry !== undefined) {
 					workspaceEntries.set(name, {
-						...(wsEntry.dependencies !== undefined ? { dependencies: wsEntry.dependencies } : {}),
-						...(wsEntry.devDependencies !== undefined ? { devDependencies: wsEntry.devDependencies } : {}),
-						...(wsEntry.peerDependencies !== undefined ? { peerDependencies: wsEntry.peerDependencies } : {}),
-						...(wsEntry.optionalDependencies !== undefined ? { optionalDependencies: wsEntry.optionalDependencies } : {}),
+						...O.getSomesStruct({ dependencies: O.fromUndefinedOr(wsEntry.dependencies) }),
+						...O.getSomesStruct({ devDependencies: O.fromUndefinedOr(wsEntry.devDependencies) }),
+						...O.getSomesStruct({ peerDependencies: O.fromUndefinedOr(wsEntry.peerDependencies) }),
+						...O.getSomesStruct({ optionalDependencies: O.fromUndefinedOr(wsEntry.optionalDependencies) }),
 					});
 				}
 				// An empty resolved path is malformed: `LockfileImporter.path` is a
@@ -255,7 +257,7 @@ const toFields = (raw: NpmLockfileRawType): Effect.Effect<LockfileFields, ParseF
 							name,
 							version: entry.version,
 							instanceId: key,
-							...(integrity !== undefined ? { integrity } : {}),
+							...O.getSomesStruct({ integrity: O.fromUndefinedOr(integrity) }),
 							isWorkspace: false,
 							dependencies: entry.dependencies ?? {},
 							...peerDeclarations(entry.peerDependencies, entry.peerDependenciesMeta),

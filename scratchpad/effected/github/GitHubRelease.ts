@@ -2,7 +2,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
@@ -119,7 +119,7 @@ export interface GitHubReleaseShape {
  * @example
  * ```ts
  * import { GitHubRelease } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const publish = Effect.gen(function* () {
  *   const releases = yield* GitHubRelease;
@@ -219,11 +219,11 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
 				owner,
 				repo,
 				tag_name: input.tag,
-				...(input.name !== undefined ? { name: input.name } : {}),
-				...(input.body !== undefined ? { body: input.body } : {}),
-				...(input.draft !== undefined ? { draft: input.draft } : {}),
-				...(input.prerelease !== undefined ? { prerelease: input.prerelease } : {}),
-				...(input.generateReleaseNotes !== undefined ? { generate_release_notes: input.generateReleaseNotes } : {}),
+				...O.getSomesStruct({ name: O.fromUndefinedOr(input.name) }),
+				...O.getSomesStruct({ body: O.fromUndefinedOr(input.body) }),
+				...O.getSomesStruct({ draft: O.fromUndefinedOr(input.draft) }),
+				...O.getSomesStruct({ prerelease: O.fromUndefinedOr(input.prerelease) }),
+				...O.getSomesStruct({ generate_release_notes: O.fromUndefinedOr(input.generateReleaseNotes) }),
 			});
 			return project(created);
 		}),
@@ -257,10 +257,10 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
 				owner,
 				repo,
 				release_id: id,
-				...(patch.name !== undefined ? { name: patch.name } : {}),
-				...(patch.body !== undefined ? { body: patch.body } : {}),
-				...(patch.draft !== undefined ? { draft: patch.draft } : {}),
-				...(patch.prerelease !== undefined ? { prerelease: patch.prerelease } : {}),
+				...O.getSomesStruct({ name: O.fromUndefinedOr(patch.name) }),
+				...O.getSomesStruct({ body: O.fromUndefinedOr(patch.body) }),
+				...O.getSomesStruct({ draft: O.fromUndefinedOr(patch.draft) }),
+				...O.getSomesStruct({ prerelease: O.fromUndefinedOr(patch.prerelease) }),
 			});
 			return project(updated);
 		}),
@@ -291,7 +291,7 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
 					repo,
 					release_id: release.id,
 					name: asset.name,
-					...(asset.label === undefined ? {} : { label: asset.label }),
+					...O.getSomesStruct({ label: O.fromUndefinedOr(asset.label) }),
 					data: asset.data,
 					baseUrl: UPLOADS_BASE_URL,
 					headers: { "content-type": asset.contentType },

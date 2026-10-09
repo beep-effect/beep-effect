@@ -5,7 +5,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
@@ -439,7 +439,7 @@ const make = Effect.gen(function* () {
 		(cause: ToolInstallerError): PackageManagerInstallerError =>
 			errorFor(pin)({
 				reason: cause.reason,
-				...(cause.subject === undefined ? {} : { subject: cause.subject }),
+				...O.getSomesStruct({ subject: O.fromUndefinedOr(cause.subject) }),
 				cause,
 			});
 
@@ -1107,7 +1107,7 @@ const dies = unstubbed("PackageManagerInstaller.makeTest");
  * ```ts
  * import { ActionOutputs, PackageManagerInstaller } from "./index.ts";
  * import { PackageManagerPin } from "../npm/index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const provision = Effect.gen(function* () {
  *   const installer = yield* PackageManagerInstaller;

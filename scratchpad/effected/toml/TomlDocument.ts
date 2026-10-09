@@ -70,7 +70,7 @@ const materializeError = (text: string, defect: unknown): TomlParseError => {
  * @example
  * ```ts
  * import { TomlDocument } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const doc = yield* TomlDocument.parse('name = "Alice"\n');

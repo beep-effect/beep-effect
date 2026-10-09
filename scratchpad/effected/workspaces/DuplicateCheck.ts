@@ -18,6 +18,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import type { Lockfile, ResolvedPackage } from "../lockfiles/index.ts";
 import * as S from "effect/Schema";
 import { indexInstances, rootInstances } from "./internal/roots.ts";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/workspaces/DuplicateCheck");
 
@@ -140,7 +141,7 @@ export class DuplicatedPackage extends S.Class<DuplicatedPackage>($I`DuplicatedP
  * ```ts
  * import { Lockfile } from "../lockfiles/index.ts";
  * import { DuplicateCheck } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * declare const text: string; // the text of a pnpm-lock.yaml
  *
@@ -278,7 +279,7 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 			if (current === undefined) break;
 			if (reached.has(current.instanceId)) continue;
 			reached.add(current.instanceId);
-			for (const targetId of Object.values(current.resolved)) {
+			for (const targetId of R.values(current.resolved)) {
 				const next = byId.get(targetId);
 				if (next !== undefined && !reached.has(targetId)) queue.push(next);
 			}
@@ -306,7 +307,7 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 		for (const pkg of lockfile.packages) {
 			if (!reached.has(pkg.instanceId)) continue;
 			const from = dependentOf(pkg);
-			for (const targetId of Object.values(pkg.resolved)) {
+			for (const targetId of R.values(pkg.resolved)) {
 				if (byId.has(targetId)) record(targetId, from);
 			}
 		}

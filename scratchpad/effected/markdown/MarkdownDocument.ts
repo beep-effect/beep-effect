@@ -33,6 +33,7 @@ import type {
 	PhrasingContent,
 } from "./MarkdownNode.ts";
 import { Definition, Root } from "./MarkdownNode.ts";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/markdown/MarkdownDocument");
 
@@ -243,7 +244,7 @@ const findInTree = (
 const selectorPredicate = (
 	selector: MarkdownNodeType | ((node: MarkdownNode) => boolean),
 ): ((node: MarkdownNode) => boolean) =>
-	typeof selector === "string" ? (node: MarkdownNode): boolean => node.type === selector : selector;
+	P.isString(selector) ? (node: MarkdownNode): boolean => node.type === selector : selector;
 
 // The plain-text projection of phrasing content, for DocumentHeading.text and
 // DocumentSection.text. MDX policy: a JSX text wrapper is transparent — its
@@ -311,7 +312,7 @@ const phrasingText = (nodes: ReadonlyArray<PhrasingContent>): string => {
  * @example
  * ```ts
  * import { MarkdownDocument } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const doc = yield* MarkdownDocument.parse("# Title\n\nSee [docs](./docs.md).\n\n## Usage\n");
@@ -510,7 +511,7 @@ export class MarkdownDocument extends S.Class<MarkdownDocument>($I`MarkdownDocum
 	sectionByHeading(match: SectionHeadingMatch, options?: SectionQueryOptions): DocumentSection | undefined {
 		const depth = options?.depth;
 		const matches: (section: DocumentSection) => boolean =
-			typeof match === "string"
+			P.isString(match)
 				? (section) => section.text.trim() === match
 				: match instanceof RegExp
 					? (section) => {

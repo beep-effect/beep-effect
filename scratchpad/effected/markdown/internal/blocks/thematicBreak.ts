@@ -8,6 +8,7 @@
 import type { ThematicBreakChar } from "../../MarkdownNode.ts";
 import { ThematicBreak } from "../../MarkdownNode.ts";
 import type { BlockConstruct, BlockStart } from "../blockTypes.ts";
+import * as O from "@beep/utils/Option";
 
 const reThematicBreak = /^(?:\*[ \t]*){3,}$|^(?:_[ \t]*){3,}$|^(?:-[ \t]*){3,}$/;
 
@@ -28,7 +29,7 @@ export const thematicBreakConstruct: BlockConstruct = {
 			// Conditional spread: an absent optionalKey must be genuinely
 			// absent, never an explicit `undefined` — passing one throws at
 			// construction.
-			...(marker === undefined ? {} : { markerChar: marker }),
+			...O.getSomesStruct({ markerChar: O.fromUndefinedOr(marker) }),
 		});
 	},
 };

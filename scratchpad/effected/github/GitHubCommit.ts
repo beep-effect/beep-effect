@@ -2,7 +2,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -142,7 +142,7 @@ export interface GitHubCommitShape {
  * @example
  * ```ts
  * import { GitHubCommit } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const changedSinceMain = Effect.gen(function* () {
  *   const commits = yield* GitHubCommit;
@@ -228,7 +228,7 @@ export const fileOf = (raw: RawFile): CommitFile =>
 			status: raw.status,
 			additions: raw.additions,
 			deletions: raw.deletions,
-			...(raw.previous_filename !== undefined ? { previousPath: raw.previous_filename } : {}),
+			...O.getSomesStruct({ previousPath: O.fromUndefinedOr(raw.previous_filename) }),
 		}),
 		(error) => new Error("Schema validation failed", { cause: error.issue }),
 	);

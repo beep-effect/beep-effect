@@ -47,6 +47,7 @@ import type { YamlNode } from "../../YamlNode.ts";
 import { YamlAlias, YamlMap, YamlScalar, YamlSeq } from "../../YamlNode.ts";
 import * as Schema from "effect/Schema";
 import { dual } from "effect/Function";
+import * as O from "@beep/utils/Option";
 
 /** The comment field triple accepted by {@link withCommentFields}. */
 export interface CommentFields {
@@ -339,13 +340,13 @@ export function withCommentFields(...args: [node: YamlNode, fields: CommentField
 		return YamlScalar.make({
 			value: node.value,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
 			...mergedCommentFields(node, fields),
-			...(node.chomp !== undefined ? { chomp: node.chomp } : {}),
-			...(node.blockIndent !== undefined ? { blockIndent: node.blockIndent } : {}),
-			...(node.raw !== undefined ? { raw: node.raw } : {}),
-			...(node.sourceMultiline !== undefined ? { sourceMultiline: node.sourceMultiline } : {}),
+			...O.getSomesStruct({ chomp: O.fromUndefinedOr(node.chomp) }),
+			...O.getSomesStruct({ blockIndent: O.fromUndefinedOr(node.blockIndent) }),
+			...O.getSomesStruct({ raw: O.fromUndefinedOr(node.raw) }),
+			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(node.sourceMultiline) }),
 			offset: node.offset,
 			length: node.length,
 		});
@@ -354,10 +355,10 @@ export function withCommentFields(...args: [node: YamlNode, fields: CommentField
 		return YamlMap.make({
 			items: node.items,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
 			...mergedCommentFields(node, fields),
-			...(node.sourceMultiline !== undefined ? { sourceMultiline: node.sourceMultiline } : {}),
+			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(node.sourceMultiline) }),
 			offset: node.offset,
 			length: node.length,
 		});
@@ -366,10 +367,10 @@ export function withCommentFields(...args: [node: YamlNode, fields: CommentField
 		return YamlSeq.make({
 			items: node.items,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
 			...mergedCommentFields(node, fields),
-			...(node.sourceMultiline !== undefined ? { sourceMultiline: node.sourceMultiline } : {}),
+			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(node.sourceMultiline) }),
 			offset: node.offset,
 			length: node.length,
 		});
@@ -398,8 +399,8 @@ function mergedCommentFields(existing: CommentFields, incoming: CommentFields): 
 			: existing.comment;
 	const spaceBefore = incoming.spaceBefore ?? existing.spaceBefore;
 	return {
-		...(commentBefore !== undefined ? { commentBefore } : {}),
-		...(comment !== undefined ? { comment } : {}),
-		...(spaceBefore !== undefined ? { spaceBefore } : {}),
+		...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(commentBefore) }),
+		...O.getSomesStruct({ comment: O.fromUndefinedOr(comment) }),
+		...O.getSomesStruct({ spaceBefore: O.fromUndefinedOr(spaceBefore) }),
 	};
 }

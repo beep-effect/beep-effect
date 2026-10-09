@@ -45,6 +45,9 @@ import { normalize } from "./internal/catalogs.ts";
 import { makeFetchConfigDependency } from "./internal/configDependencyFetch.ts";
 import type { ResolvedPnpmfile } from "./internal/configDependencyResolution.ts";
 import { lookupPnpmfiles, resolvePnpmfiles } from "./internal/configDependencyResolution.ts";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/workspaces/ConfigDependencyHooks");
 
@@ -290,7 +293,7 @@ const seedToConfig = (
 ): HookConfig => {
 	const catalogs: Record<string, Record<string, string>> = {};
 	let catalog: Record<string, string> = {};
-	for (const [name, entries] of Object.entries(seed)) {
+	for (const [name, entries] of R.toEntries(seed)) {
 		if (name === "default") catalog = { ...entries };
 		else catalogs[name] = { ...entries };
 	}
@@ -308,11 +311,11 @@ const seedToConfig = (
 
 /** A finite number if `value` is one, else the prior threaded value — a garbage age is dropped, not fatal. */
 const finiteNumberOr = (value: unknown, fallback: number | undefined): number | undefined =>
-	typeof value === "number" && Number.isFinite(value) ? value : fallback;
+	P.isNumber(value) && Number.isFinite(value) ? value : fallback;
 
 /** A string array if `value` is one, else the prior threaded value — a malformed exclude is dropped, not fatal. */
 const stringArrayOr = (value: unknown, fallback: readonly string[] | undefined): readonly string[] | undefined =>
-	Array.isArray(value) && value.every((entry: unknown): entry is string => typeof entry === "string") ? value : fallback;
+	A.isArray(value) && value.every((entry: unknown): entry is string => P.isString(entry)) ? value : fallback;
 
 /**
  * Read the catalog slice and the release-age keys back out of whatever a hook
@@ -351,7 +354,7 @@ const stringRecordOr = (
 	isStringRecord(value) ? value : fallback;
 
 const isStringRecord = (value: unknown): value is Record<string, string> =>
-	P.isObject(value) && Object.values(value).every(P.isString);
+	P.isObject(value) && R.values(value).every(P.isString);
 
 const peerRulesOr = (value: unknown, fallback: PeerDependencyRules | undefined): PeerDependencyRules | undefined => {
 	if (!P.isObject(value)) return fallback;
@@ -380,14 +383,14 @@ const peerRulesOf = (config: HookConfig): PeerDependencyRules => config.peerDepe
  * `undefined` — the fields are `optionalKey`).
  */
 const releaseAgeOf = (config: HookConfig): PartialReleaseAgeGate => ({
-	...(config.minimumReleaseAge !== undefined ? { ageMinutes: config.minimumReleaseAge } : {}),
-	...(config.minimumReleaseAgeExclude !== undefined ? { exclude: config.minimumReleaseAgeExclude } : {}),
+	...O.getSomesStruct({ ageMinutes: O.fromUndefinedOr(config.minimumReleaseAge) }),
+	...O.getSomesStruct({ exclude: O.fromUndefinedOr(config.minimumReleaseAgeExclude) }),
 });
 
 /** Fold the hook config back into the normalized `catalog name → dependency → range` record. */
 const configToEntries = (config: HookConfig): CatalogEntries => {
 	const raw: Record<string, unknown> = { ...config.catalogs };
-	if (Object.keys(config.catalog).length > 0) {
+	if (R.keys(config.catalog).length > 0) {
 		raw.default = { ...(P.isObject(raw.default) ? raw.default : {}), ...config.catalog };
 	}
 	return normalize(raw);
@@ -710,7 +713,7 @@ export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks
 	 */
 	static readonly layerLive: Layer.Layer<ConfigDependencyHooks> = Layer.succeed(ConfigDependencyHooks, {
 		inject: Effect.fn("ConfigDependencyHooks.inject")(function* (root: string, configDependencies: Readonly<Record<string, string>>, seed: Readonly<Record<string, Readonly<Record<string, string>>>>, rules: PeerDependencyRules | undefined, context: HookReplayContext | undefined) {
-				if (Object.keys(configDependencies).length === 0) return untouched(seed, rules);
+				if (R.keys(configDependencies).length === 0) return untouched(seed, rules);
 				const pnpmfiles = yield* resolvePnpmfiles(root, configDependencies, { side: context });
 				return yield* replayInProcess(pnpmfiles, seed, rules);
 			}),
@@ -756,7 +759,7 @@ export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks
 	static readonly layerFrom = (entries: Readonly<Record<string, string>>): Layer.Layer<ConfigDependencyHooks> =>
 		Layer.succeed(ConfigDependencyHooks, {
 			inject: Effect.fn("ConfigDependencyHooks.inject")(function* (_root: string, configDependencies: Readonly<Record<string, string>>, seed: Readonly<Record<string, Readonly<Record<string, string>>>>, rules: PeerDependencyRules | undefined) {
-					if (Object.keys(configDependencies).length === 0) return untouched(seed, rules);
+					if (R.keys(configDependencies).length === 0) return untouched(seed, rules);
 					const pnpmfiles = yield* lookupPnpmfiles(entries, configDependencies);
 					return yield* replayInProcess(pnpmfiles, seed, rules);
 				}),
@@ -850,7 +853,7 @@ export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks
 				const fetch = makeFetchConfigDependency(spawner);
 				return {
 					inject: Effect.fn("ConfigDependencyHooks.inject")(function* (root: string, configDependencies: Readonly<Record<string, string>>, seed: Readonly<Record<string, Readonly<Record<string, string>>>>, rules: PeerDependencyRules | undefined, context: HookReplayContext | undefined) {
-							if (Object.keys(configDependencies).length === 0) return untouched(seed, rules);
+							if (R.keys(configDependencies).length === 0) return untouched(seed, rules);
 
 							// Resolve in the parent: the `..` refusal and the declared-version
 							// ladder run here, so no subprocess ever sees a traversal name or

@@ -80,6 +80,7 @@ import type {
 import { GuardExceeded } from "./carriers.ts";
 import { MAX_NESTING_DEPTH } from "./limits.ts";
 import { ENTITY } from "./unescape.ts";
+import * as P from "effect/Predicate";
 
 /** How inline content is being assembled. */
 interface InlineContext {
@@ -819,7 +820,7 @@ const serializeMdxAttribute = (attribute: MdxJsxAttributeContent): string => {
 	if (value === undefined || value === null) {
 		return attribute.name;
 	}
-	if (typeof value === "string") {
+	if (P.isString(value)) {
 		return `${attribute.name}="${value.replaceAll('"', "&#x22;")}"`;
 	}
 	return `${attribute.name}={${value.value}}`;

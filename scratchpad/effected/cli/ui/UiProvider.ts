@@ -3,6 +3,7 @@ import type { ReactElement, ReactNode } from "react";
 import { inkModules } from "./internal/ink.ts";
 import { screenContext } from "./internal/ScreenContext.ts";
 import { uiProviders } from "./internal/UiProviders.ts";
+import * as O from "@beep/utils/Option";
 
 /**
  * What the kit's hooks read in a tree the kit did not mount: the theme, the glyph set, and optionally the size.
@@ -83,8 +84,8 @@ export const UiProvider = (props: UiProviderProps): ReactElement => {
 			theme,
 			glyphs,
 			...(columns === undefined || rows === undefined ? {} : { size: { columns, rows } }),
-			...(cancel === undefined ? {} : { cancel }),
-			...(die === undefined ? {} : { die }),
+			...O.getSomesStruct({ cancel: O.fromUndefinedOr(cancel) }),
+			...O.getSomesStruct({ die: O.fromUndefinedOr(die) }),
 			...(neutralize ? { neutralizeWorkflowCommands: true } : {}),
 		}),
 		[theme, glyphs, columns, rows, cancel, die, neutralize],

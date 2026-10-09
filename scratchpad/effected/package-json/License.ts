@@ -92,13 +92,14 @@ export type SpdxLicense = string & Brand.Brand<"SpdxLicense">;
  * @example
  * ```ts
  * import { SpdxLicense, licenseExpressionOf } from "./index.ts";
- * import { Option, Schema } from "effect";
+ * import * as O from "effect/Option";
+ * import * as S from "effect/Schema";
  *
- * const decode = Schema.decodeUnknownSync(SpdxLicense);
+ * const decode = S.decodeUnknownSync(SpdxLicense);
  *
- * Option.isSome(licenseExpressionOf(decode("MIT"))); // => true
- * Option.isSome(licenseExpressionOf(decode("UNLICENSED"))); // => false
- * Option.isSome(licenseExpressionOf(decode("SEE LICENSE IN LICENSE.txt"))); // => false
+ * O.isSome(licenseExpressionOf(decode("MIT"))); // => true
+ * O.isSome(licenseExpressionOf(decode("UNLICENSED"))); // => false
+ * O.isSome(licenseExpressionOf(decode("SEE LICENSE IN LICENSE.txt"))); // => false
  * ```
  *
  * @param license - a branded manifest license value

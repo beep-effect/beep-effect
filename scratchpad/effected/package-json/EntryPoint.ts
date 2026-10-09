@@ -3,6 +3,8 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/package-json/EntryPoint");
 
@@ -85,7 +87,7 @@ const DEFAULT_CONDITIONS: ReadonlyArray<string> = ["import", "default"];
 
 /** A plain object — not an array, not `null`. */
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && !Array.isArray(value);
+	typeof value === "object" && value !== null && !A.isArray(value);
 
 /**
  * Is this `exports` object a conditions map rather than a subpath map?
@@ -97,7 +99,7 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
  * exports nothing.
  */
 const isRootConditions = (exportsObject: Record<string, unknown>): boolean => {
-	const keys = Object.keys(exportsObject);
+	const keys = R.keys(exportsObject);
 	return keys.length > 0 && !keys.some((key) => key.startsWith("."));
 };
 
@@ -114,7 +116,7 @@ const resolveConditions = (
 ): string | undefined => {
 	for (const condition of conditions) {
 		const matched = conditionsObject[condition];
-		if (typeof matched === "string") {
+		if (P.isString(matched)) {
 			return matched;
 		}
 		if (isPlainObject(matched)) {
@@ -192,7 +194,7 @@ export const resolveEntryPoint: {
 		const conditions = options?.conditions ?? DEFAULT_CONDITIONS;
 		const exportsField = manifest.exports;
 
-		if (typeof exportsField === "string") {
+		if (P.isString(exportsField)) {
 			return Result.succeed(exportsField);
 		}
 
@@ -204,7 +206,7 @@ export const resolveEntryPoint: {
 					: Result.succeed(resolved);
 			}
 			const dot = exportsField["."];
-			if (typeof dot === "string") {
+			if (P.isString(dot)) {
 				return Result.succeed(dot);
 			}
 			if (isPlainObject(dot)) {
@@ -223,6 +225,6 @@ export const resolveEntryPoint: {
 			return Result.fail(UnresolvedEntryPointError.make({ reason: "unsupportedExportsForm" }));
 		}
 
-		return Result.succeed(typeof manifest.main === "string" && manifest.main !== "" ? manifest.main : "index.js");
+		return Result.succeed(P.isString(manifest.main) && manifest.main !== "" ? manifest.main : "index.js");
 	},
 );

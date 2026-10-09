@@ -91,9 +91,10 @@ export interface PnpmEnvLockfileReaders {
  * {@link PnpmEnvLockfileReaders}.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { PnpmEnvLockfile } from "./index.ts";
- * import { Effect, Option } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
  *
  * declare const content: string; // the text of a pnpm-lock.yaml
  *
@@ -101,7 +102,7 @@ export interface PnpmEnvLockfileReaders {
  *   const lock = yield* PnpmEnvLockfile.packageManager(content);
  *   const configDependencies = yield* PnpmEnvLockfile.configDependencies(content);
  *   return {
- *     pnpm: Option.map(lock, (pm) => pm.integrity),
+ *     pnpm: O.map(lock, (pm) => pm.integrity),
  *     plugin: configDependencies.get("@effected/pnpm-plugin-effect")?.integrity,
  *   };
  * });

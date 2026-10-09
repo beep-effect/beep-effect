@@ -8,6 +8,7 @@ import { KeyHelp } from "./KeyHelp.ts";
 import { KeyTable } from "./KeyTable.ts";
 import { UiKey } from "./UiKey.ts";
 import { Styled, useGlyphs, useTerminalSize } from "./UiTheme.ts";
+import * as P from "effect/Predicate";
 
 /**
  * Where a {@link TextInput} is: its value, the cursor within it, and whether enter was pressed.
@@ -258,7 +259,7 @@ const HELP: KeyTable<"submit"> = KeyTable.make<"submit">([{ keys: ["enter"], act
  * @example
  * ```ts
  * import { CliUi, TextInput } from "../ui.ts"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  *
  * const askName = Effect.gen(function* () {
  * 	const name = yield* CliUi.run(
@@ -354,8 +355,8 @@ export class TextInput {
 		// first character of a pasted token must not redraw the rest of it in clear), until the value is cleared.
 		const latched = react.useRef(false);
 		if (state.value === "") latched.current = false;
-		else if (typeof props.mask === "function" && !latched.current && props.mask(state.value)) latched.current = true;
-		const masking = typeof props.mask === "function" ? latched.current : props.mask;
+		else if (P.isFunction(props.mask) && !latched.current && props.mask(state.value)) latched.current = true;
+		const masking = P.isFunction(props.mask) ? latched.current : props.mask;
 		const mask =
 			masking === undefined || masking === false
 				? undefined

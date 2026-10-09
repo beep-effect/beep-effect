@@ -39,6 +39,7 @@ import { resolveExtendsTarget } from "./internal/extendsTarget.ts";
 import { ResolvedTsconfig } from "./ResolvedTsconfig.ts";
 import type { TsconfigJson } from "./TsconfigJson.ts";
 import { TsconfigJsonFromString, TsconfigParseError } from "./TsconfigJson.ts";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/tsconfig-json/TsconfigLoader");
 
@@ -91,7 +92,7 @@ const decodeConfig = S.decodeEffect(TsconfigJsonFromString);
 const extendsSpecs = (doc: TsconfigJson.Type): ReadonlyArray<string> => {
 	const ext = doc.extends;
 	if (ext === undefined) return [];
-	return typeof ext === "string" ? [ext] : ext;
+	return P.isString(ext) ? [ext] : ext;
 };
 
 /** Read + decode one config at an already-absolute, normalized path; wrap decode failures with that path. */
@@ -205,7 +206,7 @@ const compilerOptions = Effect.fn("TsconfigLoader.compilerOptions")(function* (c
  * @example
  * ```ts
  * import { TsconfigLoader } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * // Requires `FileSystem` and `Path` in `R`; provide them from a platform layer.
  * const program = Effect.gen(function* () {

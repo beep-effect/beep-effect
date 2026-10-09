@@ -7,6 +7,7 @@ import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
 import * as S from "effect/Schema";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github/Ruleset");
 
@@ -420,9 +421,9 @@ const make = (client: GitHubClient["Service"]): RulesetShape => {
       name: payload.name,
       target: payload.target,
       enforcement: payload.enforcement,
-      ...(payload.conditions !== undefined ? { conditions: payload.conditions } : {}),
-      ...(payload.rules !== undefined ? { rules: payload.rules } : {}),
-      ...(payload.bypass_actors !== undefined ? { bypass_actors: payload.bypass_actors } : {}),
+      ...O.getSomesStruct({ conditions: O.fromUndefinedOr(payload.conditions) }),
+      ...O.getSomesStruct({ rules: O.fromUndefinedOr(payload.rules) }),
+      ...O.getSomesStruct({ bypass_actors: O.fromUndefinedOr(payload.bypass_actors) }),
     };
 
     if (match !== undefined) {

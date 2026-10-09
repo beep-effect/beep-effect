@@ -94,7 +94,7 @@ export interface RepositoryVariableShape {
  * @example
  * ```ts
  * import { RepositoryVariable } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const variables = yield* RepositoryVariable;

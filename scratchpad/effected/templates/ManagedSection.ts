@@ -251,7 +251,7 @@ const unimplemented = (member: string): never => {
  * @example
  * ```ts
  * import { CommentStyle, ManagedSection, SectionId } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const Base = SectionId.make({ key: "base", commentStyle: CommentStyle.hash });
  * const Tool = SectionId.make({ key: "tool", commentStyle: CommentStyle.hash });

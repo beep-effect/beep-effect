@@ -15,6 +15,7 @@ import { Code } from "../../MarkdownNode.ts";
 import type { BlockConstruct, BlockNode } from "../blockTypes.ts";
 import { CODE_INDENT, isSpaceOrTab, peekCode } from "../preprocess.ts";
 import { unescapeString } from "../unescape.ts";
+import * as O from "@beep/utils/Option";
 
 const reBlankLine = /^[ \t]*$/;
 const reClosingCodeFence = /^(?:`{3,}|~{3,})(?=[ \t]*$)/;
@@ -121,8 +122,8 @@ export const codeConstruct: BlockConstruct = {
 		return Code.make({
 			value: block.stringContent,
 			position: context.position(block.startOffset, block.endOffset),
-			...(lang === undefined ? {} : { lang }),
-			...(meta === undefined ? {} : { meta }),
+			...O.getSomesStruct({ lang: O.fromUndefinedOr(lang) }),
+			...O.getSomesStruct({ meta: O.fromUndefinedOr(meta) }),
 			...(isFenced === true && fenceChar !== undefined ? { fenceChar } : {}),
 			...(isFenced === true && fenceLength !== undefined ? { fenceLength } : {}),
 		});

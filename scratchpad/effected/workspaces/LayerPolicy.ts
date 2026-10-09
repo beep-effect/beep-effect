@@ -6,6 +6,9 @@ import * as FileSystem from "effect/FileSystem";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ALL_DEPENDENCY_FIELDS } from "./internal/dependencyFields.ts";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/workspaces/LayerPolicy");
 
@@ -15,8 +18,8 @@ const REQUIRED_EDGE = /^\S+ -> \S+$/u;
 
 /** `input` without `keys`, when it is a plain object; anything else passes through for the schema to reject. */
 const withoutKeys = (input: unknown, keys: ReadonlyArray<string>): unknown => {
-	if (typeof input !== "object" || input === null || Array.isArray(input)) return input;
-	return Object.fromEntries(Object.entries(input).filter(([key]) => !keys.includes(key)));
+	if (typeof input !== "object" || input === null || A.isArray(input)) return input;
+	return R.fromEntries(R.toEntries(input).filter(([key]) => !keys.includes(key)));
 };
 
 /**
@@ -77,7 +80,7 @@ export class LayerPolicyError extends S.TaggedError<LayerPolicyError>($I`LayerPo
  * ```ts
  * import { NodeServices } from "@effect/platform-node";
  * import { LayerPolicy } from "./testing.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const policy = LayerPolicy.load("/repo/layers.json").pipe(Effect.provide(NodeServices.layer));
  * ```
@@ -124,7 +127,7 @@ export class LayerPolicy extends S.Class<LayerPolicy>($I`LayerPolicy`)({
 				errors: "all",
 			}).pipe(
 				Effect.mapError(
-					(cause) => LayerPolicyError.make({ reason: "decode", cause, ...(path === undefined ? {} : { path }) }),
+					(cause) => LayerPolicyError.make({ reason: "decode", cause, ...O.getSomesStruct({ path: O.fromUndefinedOr(path) }) }),
 				),
 			);
 		},

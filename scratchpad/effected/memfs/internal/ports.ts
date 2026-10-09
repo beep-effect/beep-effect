@@ -22,6 +22,7 @@ import type {
 } from "../MemoryFileSystem.ts";
 import { fallbackErrnoForTag, nodeErrno } from "./errno.ts";
 import { assertKnownFaultKeys } from "./faults.ts";
+import * as R from "effect/Record";
 
 // The port is defined in `stat` terms, so it FOLLOWS symbolic links — unlike
 // the literal inspection view it is built on. `MAX_LINK_HOPS` mirrors the
@@ -82,7 +83,7 @@ const walk = (volume: MemoryFileSystemVolume, path: string, followFinal: boolean
 export const resolvePath: {
 	(path: string, followFinal?: boolean): (volume: MemoryFileSystemVolume) => Resolved;
 	(volume: MemoryFileSystemVolume, path: string, followFinal?: boolean): Resolved;
-} = dual((args) => typeof args[0] !== "string", (volume: MemoryFileSystemVolume, path: string, followFinal = true): Resolved => {
+} = dual((args) => !P.isString(args[0]), (volume: MemoryFileSystemVolume, path: string, followFinal = true): Resolved => {
 	// A trailing slash asserts "this is a directory", as on node: the final
 	// link is followed even for `lstat`, and a resolved non-directory is
 	// ENOTDIR — never the file itself (which `walk`, dropping the empty
@@ -131,7 +132,7 @@ const settle = <A>(f: () => A): Promise<Awaited<A>> => {
 export const withFaults: {
 	<Port extends object>(faults: Partial<Record<keyof Port, (...args: never) => unknown>> | undefined, subject: string, async?: boolean): (port: Port) => Port;
 	<Port extends object>(port: Port, faults: Partial<Record<keyof Port, (...args: never) => unknown>> | undefined, subject: string, async?: boolean): Port;
-} = dual((args) => typeof args[1] !== "string", <Port extends object>(
+} = dual((args) => !P.isString(args[1]), <Port extends object>(
 	port: Port,
 	faults: Partial<Record<keyof Port, (...args: never) => unknown>> | undefined,
 	subject: string,
@@ -140,7 +141,7 @@ export const withFaults: {
 	if (faults === undefined) return port;
 	assertKnownFaultKeys(faults, port, subject);
 	const out = Object.assign({}, port);
-	const entries: ReadonlyArray<readonly [string, unknown]> = Object.entries(faults);
+	const entries: ReadonlyArray<readonly [string, unknown]> = R.toEntries(faults);
 	for (const [name, handler] of entries) {
 		if (!P.hasProperty(port, name)) continue;
 		const original = port[name];

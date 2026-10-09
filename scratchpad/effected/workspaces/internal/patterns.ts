@@ -10,6 +10,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
+import * as A from "effect/Array";
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
@@ -22,7 +23,7 @@ export interface PatternReadFailure {
 
 /** The string entries of `value` when it is an array, else `undefined`. */
 export const stringsOf = (value: unknown): ReadonlyArray<string> | undefined =>
-	Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : undefined;
+	A.isArray(value) ? value.filter((entry): entry is string => P.isString(entry)) : undefined;
 
 /** The `packages:` list of a `pnpm-workspace.yaml` document. Total on a parsed document. */
 export const pnpmPatternsOf = (document: unknown): ReadonlyArray<string> => {

@@ -14,6 +14,9 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/markdown/FrontmatterResolver");
 
@@ -231,7 +234,7 @@ const parseVersionSegments = (version: string): ReadonlyArray<number> | undefine
 };
 
 const isMapping = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && !Array.isArray(value);
+	typeof value === "object" && value !== null && !A.isArray(value);
 
 /**
  * The `$schema` declaration classifier and the package's one built-in
@@ -256,7 +259,7 @@ export class SchemaResolver {
 	 * @returns The classified declaration, or the typed classification error.
 	 */
 	static classify(value: unknown): Result.Result<SchemaDeclaration, SchemaDeclarationInvalidError> {
-		if (typeof value === "string") {
+		if (P.isString(value)) {
 			if (value.length === 0) {
 				return Result.fail(SchemaDeclarationInvalidError.make({ reason: "the declaration is empty", value }));
 			}
@@ -311,7 +314,7 @@ export class SchemaResolver {
 		data: unknown,
 		options?: { readonly requireDeclaration?: boolean },
 	): Result.Result<SchemaDeclaration | undefined, SchemaDeclarationInvalidError | SchemaDeclarationMissingError> {
-		if (!isMapping(data) || !Object.hasOwn(data, "$schema")) {
+		if (!isMapping(data) || !R.has(data, "$schema")) {
 			return options?.requireDeclaration === true
 				? Result.fail(SchemaDeclarationMissingError.make())
 				: Result.succeed(undefined);
@@ -346,7 +349,7 @@ export class SchemaResolver {
 		// A real Map keyed by name: registration names are configuration, not
 		// attacker data, but the prototype-pollution guard costs nothing here.
 		const byName = new Map<string, { versionless?: S.Top; versions: Map<string, S.Top> }>();
-		for (const [key, schema] of Object.entries(registrations)) {
+		for (const [key, schema] of R.toEntries(registrations)) {
 			const classified = SchemaResolver.classify(key);
 			if (Result.isFailure(classified) || !(S.is(SchemaDeclarationByName)(classified.success))) {
 				throw new Error(`SchemaResolver.fromRegistry: registration key "${key}" is outside the name[@version] grammar`);

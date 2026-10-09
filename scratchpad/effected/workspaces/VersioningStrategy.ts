@@ -99,7 +99,7 @@ export interface PackageRelease {
  * @example
  * ```ts
  * import { PublishabilityDetector, VersioningStrategy } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const strategy = yield* VersioningStrategy.detect({ fixedGroups: [["@acme/a", "@acme/b"]] });

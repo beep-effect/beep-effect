@@ -6,6 +6,7 @@ import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github/GitCommit");
 
@@ -126,7 +127,7 @@ export interface GitCommitShape {
  * @example
  * ```ts
  * import { FileContent, GitCommit } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const writeNotes = Effect.gen(function* () {
  *   const commits = yield* GitCommit;
@@ -197,7 +198,7 @@ const make = (client: GitHubClient["Service"]): GitCommitShape => {
 			owner,
 			repo,
 			tree: options.changes.map(treeEntry),
-			...(options.baseTree !== undefined ? { base_tree: options.baseTree } : {}),
+			...O.getSomesStruct({ base_tree: O.fromUndefinedOr(options.baseTree) }),
 		});
 		return tree.sha;
 	});

@@ -1,6 +1,7 @@
 import { dual } from "effect/Function";
 import type { ColorLevel } from "../../env/index.ts";
 import type { NamedColor, Style } from "../Token.ts";
+import * as R from "effect/Record";
 
 /** Foreground SGR parameter for each named colour: 30 to 37, then 90 to 97. */
 const NAMED: Readonly<Record<string, number | undefined>> = {
@@ -110,7 +111,7 @@ const nearest16 = (rgb: Rgb): number => {
 const foreground = (fg: NonNullable<Style["fg"]>, level: ColorLevel): string | undefined => {
 	if (level === "none") return undefined;
 	// A name that is not a colour is ignored, as a malformed hex is, rather than printing `undefined` into an escape.
-	if (!fg.startsWith("#")) return Object.hasOwn(NAMED, fg) ? String(NAMED[fg]) : undefined;
+	if (!fg.startsWith("#")) return R.has(NAMED, fg) ? String(NAMED[fg]) : undefined;
 	const rgb = parseHex(fg);
 	if (rgb === undefined) return undefined;
 	if (level === "truecolor") return `38;2;${rgb[0]};${rgb[1]};${rgb[2]}`;

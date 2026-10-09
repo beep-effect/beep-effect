@@ -166,7 +166,7 @@ const runRules = Effect.fn("PackageValidator.validate")(function* (pkg: Package,
  * @example
  * ```ts
  * import { Package, PackageValidator } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const pkg = yield* Package.decode({ name: "my-pkg", version: "1.0.0" });

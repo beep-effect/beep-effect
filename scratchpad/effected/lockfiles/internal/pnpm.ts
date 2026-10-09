@@ -17,6 +17,8 @@ import {
 	toIntegrityHash,
 	validationFailure,
 } from "./shared.ts";
+import * as R from "effect/Record";
+import * as O from "@beep/utils/Option";
 
 // ── Raw schema (permissive validation scaffolding, not API) ────────────────
 
@@ -154,7 +156,7 @@ export const parsePnpm: {
 		// typed rather than hand back an empty Lockfile — an empty result is
 		// indistinguishable from "this workspace has no packages", which is the
 		// shape that kept the multi-document bug invisible.
-		if (Object.keys(validated.importers).length === 0) {
+		if (R.keys(validated.importers).length === 0) {
 			return yield* Effect.fail(framingFailure("noImporters", documents));
 		}
 		return yield* toFields(validated);
@@ -200,7 +202,7 @@ const resolveEdges = (
 	const unnameable = new Set<string>();
 	for (const section of sections) {
 		if (section === undefined) continue;
-		for (const [name, version] of Object.entries(section)) {
+		for (const [name, version] of R.toEntries(section)) {
 			if (name === "") continue;
 			// A `link:` resolution names a directory, not a registry version, so
 			// `name@link:...` composes to nothing. pnpm records the same edge twice
@@ -243,7 +245,7 @@ const resolveEdges = (
 	}
 	// Map-backed until the last step: `Object.fromEntries` defines own data
 	// properties, so a "__proto__" dependency name neither pollutes nor drops.
-	return { resolved: Object.fromEntries(edges), unresolvedEdges: [...unnameable].sort() };
+	return { resolved: R.fromEntries(edges), unresolvedEdges: [...unnameable].sort() };
 };
 
 /**
@@ -354,7 +356,7 @@ const resolveImporterEdges = (
 	const unnameable = new Set<string>();
 	for (const group of importerDepGroups(importer)) {
 		if (group === undefined) continue;
-		for (const [name, info] of Object.entries(group)) {
+		for (const [name, info] of R.toEntries(group)) {
 			if (name === "") continue;
 			if (info.version.startsWith(LINK_PREFIX)) {
 				const target = resolveLinkTarget(importerPath, info.version.slice(LINK_PREFIX.length));
@@ -379,7 +381,7 @@ const resolveImporterEdges = (
 	}
 	// Map-backed until the last step: `Object.fromEntries` defines own data
 	// properties, so a "__proto__" dependency name neither pollutes nor drops.
-	return { resolved: Object.fromEntries(edges), unresolvedEdges: [...unnameable].sort() };
+	return { resolved: R.fromEntries(edges), unresolvedEdges: [...unnameable].sort() };
 };
 
 const toVersionMap = (
@@ -388,7 +390,7 @@ const toVersionMap = (
 	if (deps === undefined) return undefined;
 	// Object.fromEntries defines own data properties, so a "__proto__" key
 	// neither pollutes nor drops.
-	return Object.fromEntries(Object.entries(deps).map(([name, info]) => [name, info.specifier]));
+	return R.fromEntries(R.toEntries(deps).map(([name, info]) => [name, info.specifier]));
 };
 
 const importerDepGroups = (importer: PnpmImporterType) =>
@@ -400,7 +402,7 @@ const toFields = (raw: PnpmLockfileRawType): Effect.Effect<LockfileFields, Parse
 		const workspaceNames = new Set<string>();
 		const importers: Array<LockfileImporter> = [];
 
-		for (const [importerPath, importer] of Object.entries(raw.importers)) {
+		for (const [importerPath, importer] of R.toEntries(raw.importers)) {
 			if (importerPath === "") continue; // a nameless importer cannot be modeled; skip, never throw
 
 			// pnpm records `{ specifier, version }` per importer dependency; a blank
@@ -422,15 +424,15 @@ const toFields = (raw: PnpmLockfileRawType): Effect.Effect<LockfileFields, Parse
 			const peerDeps = toVersionMap(importer.peerDependencies);
 			const optDeps = toVersionMap(importer.optionalDependencies);
 			workspaceEntries.set(importerPath, {
-				...(deps !== undefined ? { dependencies: deps } : {}),
-				...(devDeps !== undefined ? { devDependencies: devDeps } : {}),
-				...(peerDeps !== undefined ? { peerDependencies: peerDeps } : {}),
-				...(optDeps !== undefined ? { optionalDependencies: optDeps } : {}),
+				...O.getSomesStruct({ dependencies: O.fromUndefinedOr(deps) }),
+				...O.getSomesStruct({ devDependencies: O.fromUndefinedOr(devDeps) }),
+				...O.getSomesStruct({ peerDependencies: O.fromUndefinedOr(peerDeps) }),
+				...O.getSomesStruct({ optionalDependencies: O.fromUndefinedOr(optDeps) }),
 			});
 
 			for (const group of importerDepGroups(importer)) {
 				if (group === undefined) continue;
-				for (const [name, info] of Object.entries(group)) {
+				for (const [name, info] of R.toEntries(group)) {
 					if (name !== "" && info.version.startsWith("link:")) {
 						workspaceNames.add(name);
 					}
@@ -438,7 +440,7 @@ const toFields = (raw: PnpmLockfileRawType): Effect.Effect<LockfileFields, Parse
 			}
 		}
 
-		for (const path of Object.keys(raw.importers)) {
+		for (const path of R.keys(raw.importers)) {
 			if (path !== "." && path !== "") {
 				workspaceNames.add(path);
 			}
@@ -454,14 +456,14 @@ const toFields = (raw: PnpmLockfileRawType): Effect.Effect<LockfileFields, Parse
 		// names one.
 		const snapshots = raw.snapshots;
 		const instanceIds = new Set<string>([
-			...(snapshots !== undefined ? Object.keys(snapshots) : []),
-			...(raw.packages !== undefined ? Object.keys(raw.packages) : []),
-			...Object.keys(raw.importers),
+			...(snapshots !== undefined ? R.keys(snapshots) : []),
+			...(raw.packages !== undefined ? R.keys(raw.packages) : []),
+			...R.keys(raw.importers),
 		]);
 		// Importer paths alone — the ancestor walk that resolves a `linkDirectory`
 		// target must not match a `name@version` key, and must not treat the root
 		// importer as every path's owner.
-		const importerPaths = new Set<string>(Object.keys(raw.importers).filter((path) => path !== "." && path !== ""));
+		const importerPaths = new Set<string>(R.keys(raw.importers).filter((path) => path !== "." && path !== ""));
 		// Normalized `<importerPath>/<publishDirectory>` → importer instance id,
 		// for every importer that declares one. This is the exact evidence that
 		// names a `link:` into a publish directory: the importer itself declared
@@ -470,7 +472,7 @@ const toFields = (raw: PnpmLockfileRawType): Effect.Effect<LockfileFields, Parse
 		// root importer "." participates (its key is the normalized
 		// publishDirectory alone), despite being excluded from the ancestor walk.
 		const publishDirTargets = new Map<string, string>();
-		for (const [importerPath, importer] of Object.entries(raw.importers)) {
+		for (const [importerPath, importer] of R.toEntries(raw.importers)) {
 			if (importerPath === "") continue;
 			if (importer.publishDirectory === undefined) continue;
 			// The root importer's path is "." — resolveLinkTarget skips "." segments,
@@ -480,7 +482,7 @@ const toFields = (raw: PnpmLockfileRawType): Effect.Effect<LockfileFields, Parse
 		}
 		const emitted = new Set<string>();
 
-		for (const [importerPath, importer] of Object.entries(raw.importers)) {
+		for (const [importerPath, importer] of R.toEntries(raw.importers)) {
 			if (importerPath === "." || importerPath === "") continue;
 			// No peers here by design: a pnpm lockfile records a workspace
 			// project's *resolved* dependencies only, never its own peer
@@ -518,7 +520,7 @@ const toFields = (raw: PnpmLockfileRawType): Effect.Effect<LockfileFields, Parse
 					name,
 					version,
 					instanceId,
-					...(integrity !== undefined ? { integrity } : {}),
+					...O.getSomesStruct({ integrity: O.fromUndefinedOr(integrity) }),
 					isWorkspace: false,
 					...peerDeclarations(meta?.peerDependencies, meta?.peerDependenciesMeta),
 					...resolveEdges(edges, instanceIds, publishDirTargets),
@@ -527,13 +529,13 @@ const toFields = (raw: PnpmLockfileRawType): Effect.Effect<LockfileFields, Parse
 		});
 
 		if (snapshots !== undefined) {
-			for (const [key, snapshot] of Object.entries(snapshots)) {
+			for (const [key, snapshot] of R.toEntries(snapshots)) {
 				// Peer declarations live on the matching per-version `packages:` entry,
 				// which is keyed by the plain "name@version" the suffix hangs off.
 				// Own-property lookup, matching the rest of this package: a key-shaped
 				// intermediate is never read through the prototype chain.
 				const plain = splitPeerSuffix(key).plain;
-				const meta = raw.packages !== undefined && Object.hasOwn(raw.packages, plain) ? raw.packages[plain] : undefined;
+				const meta = raw.packages !== undefined && R.has(raw.packages, plain) ? raw.packages[plain] : undefined;
 				yield* emit(key, meta, [snapshot.dependencies, snapshot.optionalDependencies]);
 			}
 		}
@@ -542,7 +544,7 @@ const toFields = (raw: PnpmLockfileRawType): Effect.Effect<LockfileFields, Parse
 		const covered = new Set([...emitted].map((key) => splitPeerSuffix(key).plain));
 
 		if (raw.packages !== undefined) {
-			for (const [key, pkg] of Object.entries(raw.packages)) {
+			for (const [key, pkg] of R.toEntries(raw.packages)) {
 				// A `packages:` entry no snapshot covers is an orphan — still emitted
 				// rather than dropped, since an unexplained disappearance is the worse
 				// failure. It carries no resolution, which is honest: none was recorded.
@@ -554,9 +556,9 @@ const toFields = (raw: PnpmLockfileRawType): Effect.Effect<LockfileFields, Parse
 		const workspaceDependencies = extractWorkspaceDeps(workspaceEntries, workspaceNames);
 
 		const extension = PnpmExtension.make({
-			...(raw.catalogs !== undefined ? { catalogs: raw.catalogs } : {}),
-			...(raw.overrides !== undefined ? { overrides: raw.overrides } : {}),
-			...(raw.settings !== undefined ? { settings: raw.settings } : {}),
+			...O.getSomesStruct({ catalogs: O.fromUndefinedOr(raw.catalogs) }),
+			...O.getSomesStruct({ overrides: O.fromUndefinedOr(raw.overrides) }),
+			...O.getSomesStruct({ settings: O.fromUndefinedOr(raw.settings) }),
 		});
 
 		return {

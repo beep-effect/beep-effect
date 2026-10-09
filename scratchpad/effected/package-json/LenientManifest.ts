@@ -22,6 +22,9 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ExportsField, PackageDecodeError, PublishConfigField } from "./Package.ts";
 import { PackageJsonSyntaxError } from "./PackageJsonFormat.ts";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/package-json/LenientManifest");
 
@@ -61,17 +64,17 @@ const StringOrRecord = S.Union([S.String, UnknownRecord]);
 
 // ── The permissive-shape guards backing the sift ────────────────────────────
 
-const isString = (value: unknown): value is string => typeof value === "string";
-const isBoolean = (value: unknown): value is boolean => typeof value === "boolean";
+const isString = (value: unknown): value is string => P.isString(value);
+const isBoolean = (value: unknown): value is boolean => P.isBoolean(value);
 const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && !Array.isArray(value);
+	typeof value === "object" && value !== null && !A.isArray(value);
 const isStringRecord = (value: unknown): value is Record<string, string> =>
-	isPlainRecord(value) && Object.values(value).every(isString);
-const isStringArray = (value: unknown): value is ReadonlyArray<string> => Array.isArray(value) && value.every(isString);
+	isPlainRecord(value) && R.values(value).every(isString);
+const isStringArray = (value: unknown): value is ReadonlyArray<string> => A.isArray(value) && value.every(isString);
 const isStringOrRecord = (value: unknown): value is string | Record<string, unknown> =>
 	isString(value) || isPlainRecord(value);
 const isStringOrRecordArray = (value: unknown): value is ReadonlyArray<string | Record<string, unknown>> =>
-	Array.isArray(value) && value.every(isStringOrRecord);
+	A.isArray(value) && value.every(isStringOrRecord);
 
 interface FieldGuard {
 	readonly expected: string;
@@ -134,7 +137,7 @@ const sift = (raw: Record<string, unknown>): LenientManifest => {
 	// storing data.
 	const rest: Record<string, unknown> = Object.create(null);
 	const issues: Array<LenientFieldIssue> = [];
-	for (const [key, value] of Object.entries(raw)) {
+	for (const [key, value] of R.toEntries(raw)) {
 		const guard = FIELD_GUARDS.get(key);
 		if (guard === undefined) {
 			rest[key] = value;
@@ -190,7 +193,7 @@ const decodeRecord = S.decodeUnknownExit(UnknownRecord);
  * @example
  * ```ts
  * import { LenientManifest } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const sniffed = yield* LenientManifest.decode({ name: "JSONStream", version: "1.0", license: 42 });

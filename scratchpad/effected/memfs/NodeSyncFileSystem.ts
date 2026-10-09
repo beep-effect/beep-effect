@@ -137,7 +137,7 @@ const make: FileSystem.FileSystem = FileSystem.make({
 	// file DESCRIPTOR; the adapter's async `readFile` rejects it in its callback,
 	// so it surfaces there as a system error (Unknown, ERR_INVALID_ARG_TYPE).
 	readFile: (path) =>
-		typeof path === "string"
+		P.isString(path)
 			? attempt("readFile", path, () => NFS.readFileSync(path))
 			: Effect.fail(
 					errnoException(
@@ -206,7 +206,8 @@ const make: FileSystem.FileSystem = FileSystem.make({
  * @example
  * ```ts
  * import { NodeSyncFileSystem } from "./NodeSyncFileSystem.ts";
- * import { Effect, FileSystem } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
  *
  * const program = Effect.gen(function* () {
  *   const fs = yield* FileSystem.FileSystem;

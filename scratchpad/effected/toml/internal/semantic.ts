@@ -22,6 +22,8 @@ import { TomlArray, TomlArrayTableHeader, TomlInlineTable, TomlTableHeader, Toml
 import type { TomlSemanticErrorCodeRaw } from "./diagnostics.ts";
 import { RawTomlError } from "./diagnostics.ts";
 import * as Schema from "effect/Schema";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
 
 /** Semantic-pass callbacks, fired in document order after each expression validates. */
 export interface SemanticVisitor {
@@ -250,7 +252,7 @@ const inlineNode = (node: TomlInlineTable, context: Context): SemNode => {
 export const analyze: {
 	(expressions: ReadonlyArray<TomlExpression>, visitor?: SemanticVisitor): void;
 	(visitor?: SemanticVisitor): (expressions: ReadonlyArray<TomlExpression>) => void;
-} = dual((args) => Array.isArray(args[0]), (expressions: ReadonlyArray<TomlExpression>, visitor?: SemanticVisitor): void => {
+} = dual((args) => A.isArray(args[0]), (expressions: ReadonlyArray<TomlExpression>, visitor?: SemanticVisitor): void => {
 	const root = makeNode("table-explicit");
 	const context: Context = { nextId: 1 };
 	let currentTable = root;
@@ -294,7 +296,7 @@ const setOwnProperty = (target: Record<string, unknown>, key: string, value: unk
 
 /** Own-property read that never leaks through the prototype chain (`__proto__` included). */
 const getOwnProperty = (target: Record<string, unknown>, key: string): unknown =>
-	Object.hasOwn(target, key) ? target[key] : undefined;
+	R.has(target, key) ? target[key] : undefined;
 
 /**
  * Navigate `path` in the output tree, creating plain objects for absent names
@@ -309,7 +311,7 @@ const navigateOutput = (target: Record<string, unknown>, path: ReadonlyArray<str
 			child = {};
 			setOwnProperty(current, segment, child);
 		}
-		if (Array.isArray(child)) {
+		if (A.isArray(child)) {
 			child = child[child.length - 1];
 		}
 		if (!P.isObject(child)) {
@@ -363,7 +365,7 @@ export const buildValue = (expressions: ReadonlyArray<TomlExpression>): unknown 
 				throw new TypeError("missing TOML key");
 			}
 			const existing = getOwnProperty(parent, key);
-			if (Array.isArray(existing)) {
+			if (A.isArray(existing)) {
 				existing.push({});
 			} else {
 				setOwnProperty(parent, key, [{}]);

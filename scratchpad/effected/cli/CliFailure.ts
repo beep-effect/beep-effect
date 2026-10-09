@@ -12,6 +12,9 @@ import { issueEntries, issueTreeChildren } from "./internal/format.ts";
 import { splitFrame } from "./internal/splitFrame.ts";
 import { NotInteractive } from "./NotInteractive.ts";
 import { Status } from "./Status.ts";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as O from "@beep/utils/Option";
 
 /**
  * The protocol an error class implements to say how a failure is shown: a method under this key that returns the
@@ -89,7 +92,7 @@ const MAX_DEPTH = 8;
 const MAX_SPANS = 32;
 
 const hasCliDoc = (value: unknown): value is CliDocSource =>
-	typeof value === "object" && value !== null && CliDoc in value && typeof value[CliDoc] === "function";
+	typeof value === "object" && value !== null && CliDoc in value && P.isFunction(value[CliDoc]);
 
 // String(value) can throw for an object with no prototype or a hostile toString, and says only "[object Object]" for
 // a plain failure value: such a value with a string message is that message.
@@ -98,7 +101,7 @@ const describe = (value: unknown): string => {
 		const text = String(value);
 		if (text !== "[object Object]") return text;
 		const message = typeof value === "object" && value !== null && "message" in value ? value.message : undefined;
-		return typeof message === "string" ? message : text;
+		return P.isString(message) ? message : text;
 	} catch {
 		return "[unprintable value]";
 	}
@@ -109,7 +112,7 @@ const firstLine = (text: string): string => text.split(/\r\n|\r|\n/, 1)[0] ?? ""
 const tagOf = (value: unknown): string | undefined => {
 	if (typeof value !== "object" || value === null) return undefined;
 	const tag = "_tag" in value ? value._tag : undefined;
-	return typeof tag === "string" ? tag : undefined;
+	return P.isString(tag) ? tag : undefined;
 };
 
 /** The failure status and the text of a message: one block per line, the status on the first. */
@@ -179,8 +182,8 @@ const parseFrame = (raw: string): Frame => {
 	const file = asPath(where);
 	return {
 		raw: text,
-		...(fn === undefined ? {} : { fn }),
-		...(file === undefined ? {} : { file }),
+		...O.getSomesStruct({ fn: O.fromUndefinedOr(fn) }),
+		...O.getSomesStruct({ file: O.fromUndefinedOr(file) }),
 		...(file === undefined || line === undefined || col === undefined ? {} : { line, col }),
 	};
 };
@@ -210,7 +213,7 @@ const cleanStack = (
 	stack: unknown,
 	mode: "app" | "all",
 ): { readonly frames: ReadonlyArray<Frame>; readonly hidden: number } => {
-	if (typeof stack !== "string") return { frames: [], hidden: 0 };
+	if (!P.isString(stack)) return { frames: [], hidden: 0 };
 	const lines = stack.split(/\r\n|\r|\n/).filter((line) => /^\s*at\s/.test(line));
 	const app = lines.filter((line) => !isRuntime(line) && !isDependency(line));
 	// An installed program (a global install, `npx`, a pnpm store) has every frame of its own under `node_modules`:
@@ -224,8 +227,8 @@ const frameBlock = (frame: Frame, displayPath: (absolute: string) => string): Bl
 	const where = `${displayPath(frame.file)}${frame.line === undefined ? "" : `:${frame.line}:${frame.col}`}`;
 	const target = {
 		file: frame.file,
-		...(frame.line === undefined ? {} : { line: frame.line }),
-		...(frame.col === undefined ? {} : { col: frame.col }),
+		...O.getSomesStruct({ line: O.fromUndefinedOr(frame.line) }),
+		...O.getSomesStruct({ col: O.fromUndefinedOr(frame.col) }),
 	};
 	return Doc.paragraph(
 		Doc.text("at ", "muted"),
@@ -291,7 +294,7 @@ const failBlocks = (
 	}
 	const tag = tagOf(error);
 	const custom =
-		tag === undefined || options?.render === undefined || !Object.hasOwn(options.render, tag)
+		tag === undefined || options?.render === undefined || !R.has(options.render, tag)
 			? undefined
 			: options.render[tag];
 	if (custom !== undefined) {

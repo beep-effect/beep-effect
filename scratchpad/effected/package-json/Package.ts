@@ -187,7 +187,7 @@ export type PackagePatch = Partial<{
  * @example
  * ```ts
  * import { Package } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const pkg = yield* Package.decode({ name: "my-pkg", version: "1.0.0" });
@@ -482,7 +482,7 @@ export class Package extends S.Class<Package>($I`Package`)({
 	 * ```ts
 	 * import { Default } from "../npm/index.ts";
 	 * import { Package } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const program = Effect.gen(function* () {
 	 *   const pkg = yield* Package.decode({

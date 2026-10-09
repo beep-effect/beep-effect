@@ -41,6 +41,8 @@ import type { YamlPath } from "./YamlEdit.ts";
 import { YamlEdit, YamlRange } from "./YamlEdit.ts";
 import type { YamlNode } from "./YamlNode.ts";
 import { YamlMap, YamlPair, YamlScalar, YamlSeq } from "./YamlNode.ts";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/yaml/YamlFormat");
 
@@ -181,7 +183,7 @@ function resolveRange(
 function definedFields<T extends Record<string, unknown>>(fields: T): Partial<T> {
 	const out: Partial<T> = {};
 	for (const key in fields) {
-		if (!Object.hasOwn(fields, key)) continue;
+		if (!R.has(fields, key)) continue;
 		if (fields[key] !== undefined) out[key] = fields[key];
 	}
 	return out;
@@ -380,13 +382,13 @@ function jsValueToNode(value: unknown, seen: Set<object>, depth: number): YamlNo
 			0,
 		);
 	}
-	if (Array.isArray(value) || P.isObject(value)) {
+	if (A.isArray(value) || P.isObject(value)) {
 		if (seen.has(value)) {
 			throw new ModifyFailure("CircularReference", "Replacement value contains a circular reference", 0, 0);
 		}
 		seen.add(value);
 		try {
-			if (Array.isArray(value)) {
+			if (A.isArray(value)) {
 				return YamlSeq.make({
 					items: value.map((item) => jsValueToNode(item, seen, depth + 1)),
 					style: "block",
@@ -395,7 +397,7 @@ function jsValueToNode(value: unknown, seen: Set<object>, depth: number): YamlNo
 				});
 			}
 			return YamlMap.make({
-				items: Object.keys(value).map((key) =>
+				items: R.keys(value).map((key) =>
 					YamlPair.make({
 						key: YamlScalar.make({ value: key, style: "plain", offset: 0, length: 0 }),
 						value: jsValueToNode(value[key], seen, depth + 1),
@@ -481,7 +483,7 @@ function modifyNode(node: YamlNode, path: YamlPath, depth: number, value: unknow
 	}
 
 	if (S.is(YamlSeq)(node)) {
-		const idx = typeof segment === "number" ? segment : Number(segment);
+		const idx = P.isNumber(segment) ? segment : Number(segment);
 		if (Number.isNaN(idx) || idx < 0) {
 			throw new ModifyFailure("InvalidIndex", `Invalid sequence index: ${String(segment)}`, node.offset, node.length);
 		}
@@ -594,7 +596,7 @@ function findExistingTarget(
 			if (pair.value === null) return undefined;
 			current = pair.value;
 		} else if (S.is(YamlSeq)(current)) {
-			const idx = typeof segment === "number" ? segment : Number(segment);
+			const idx = P.isNumber(segment) ? segment : Number(segment);
 			if (Number.isNaN(idx) || idx < 0 || idx >= current.items.length) return undefined;
 			const child = current.items[idx];
 			if (child === undefined) return undefined;
@@ -627,10 +629,10 @@ function renderRegionalScalarText(
 	options?: YamlStringifyOptions,
 ): string | undefined {
 	let rendered: string;
-	if (typeof value === "string" && target.style === "single-quoted") {
+	if (P.isString(value) && target.style === "single-quoted") {
 		if (isSingleQuoteUnsafe(value)) return undefined;
 		rendered = renderSingleQuoted(value);
-	} else if (typeof value === "string" && target.style === "double-quoted") {
+	} else if (P.isString(value) && target.style === "double-quoted") {
 		rendered = renderDoubleQuoted(value);
 	} else {
 		// finalNewline: false — the splice renders a scalar, never a document.
@@ -686,7 +688,7 @@ function tryRegionalScalarEdit(
 	// null renders as an empty scalar there (`a:` — the stringifier's own
 	// convention), and splicing an empty replacement would leave a trailing
 	// space instead.
-	if (typeof value !== "string" && typeof value !== "number" && typeof value !== "boolean") {
+	if (!P.isString(value) && !P.isNumber(value) && !P.isBoolean(value)) {
 		return undefined;
 	}
 	// Document-shaping options (sortKeys, indent, indentSequences, finalNewline)
@@ -732,7 +734,7 @@ function tryRegionalScalarEdit(
  * @example
  * ```ts
  * import { YamlFormat } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const formatted = YamlFormat.formatToString("a:   1\nb:\n    - x\n    - y # c\n");
  * // => "a: 1\nb:\n- x\n- y # c\n"

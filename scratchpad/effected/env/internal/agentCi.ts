@@ -2,6 +2,7 @@
 // (dist/index.mjs); CI detection is deliberately narrower than std-env's provider table.
 import * as O from "effect/Option";
 import type { Env } from "./types.ts";
+import * as P from "effect/Predicate";
 
 type AgentRule =
 	| readonly [name: string, keys: ReadonlyArray<string>]
@@ -58,7 +59,7 @@ export const detectAgent = (env: Env): O.Option<string> => {
 		);
 	}
 	for (const [name, rule] of AGENT_RULES) {
-		if (typeof rule === "function" ? rule(env) : rule.some((key) => {
+		if (P.isFunction(rule) ? rule(env) : rule.some((key) => {
 			const value = env[key];
 			return value !== undefined && value !== "";
 		})) return O.some(name);
@@ -89,7 +90,7 @@ export const detectCi = (env: Env): O.Option<"github-actions" | "generic"> => {
  */
 export const agentCiKeys: ReadonlyArray<string> = [
 	"AI_AGENT",
-	...AGENT_RULES.flatMap(([, rule]) => (typeof rule === "function" ? [] : rule)),
+	...AGENT_RULES.flatMap(([, rule]) => (P.isFunction(rule) ? [] : rule)),
 	"PATH",
 	"EDITOR",
 	"GITHUB_ACTIONS",

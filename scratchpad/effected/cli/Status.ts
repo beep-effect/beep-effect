@@ -3,6 +3,7 @@ import * as O from "effect/Option";
 import { sanitize } from "./Fmt.ts";
 import type { GlyphSet } from "./Glyphs.ts";
 import type { Style, TokenName } from "./Token.ts";
+import * as R from "effect/Record";
 
 /**
  * How one status looks: a Unicode glyph, an ASCII fallback, a token and a rank.
@@ -98,8 +99,8 @@ export class Status<Names extends string> {
 	 * @param name - a name in this vocabulary
 	 */
 	def(name: Names | CoreStatusName): StatusDef {
-		if (!Object.hasOwn(this.defs, name)) {
-			throw new Error(`Unknown status "${name}"; this vocabulary has: ${Object.keys(this.defs).join(", ")}`);
+		if (!R.has(this.defs, name)) {
+			throw new Error(`Unknown status "${name}"; this vocabulary has: ${R.keys(this.defs).join(", ")}`);
 		}
 		return this.defs[name];
 	}

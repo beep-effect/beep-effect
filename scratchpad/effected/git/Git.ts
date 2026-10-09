@@ -5,7 +5,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -1270,10 +1270,10 @@ const parseWorktreeList = (output: string): ReadonlyArray<WorktreeEntry> => {
           path,
           detached,
           bare,
-          ...(head !== undefined ? { head } : {}),
-          ...(branch !== undefined ? { branch } : {}),
-          ...(locked !== undefined ? { locked } : {}),
-          ...(prunable !== undefined ? { prunable } : {}),
+          ...O.getSomesStruct({ head: O.fromUndefinedOr(head) }),
+          ...O.getSomesStruct({ branch: O.fromUndefinedOr(branch) }),
+          ...O.getSomesStruct({ locked: O.fromUndefinedOr(locked) }),
+          ...O.getSomesStruct({ prunable: O.fromUndefinedOr(prunable) }),
         }),
       );
     }
@@ -4492,14 +4492,15 @@ const notStubbed = (method: string) => () =>
  * ```ts
  * import { Git } from "./index.ts";
  * import { NodeServices } from "@effect/platform-node";
- * import { Effect, Option } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
  *
  * const program = Effect.gen(function* () {
  *   const git = yield* Git;
  *   const root = yield* git.repoRoot(process.cwd());
  *   const branch = yield* git.currentBranch(root); // Option.none() when detached
  *   const changed = yield* git.changedFiles(root, { base: "origin/main", head: "HEAD" });
- *   return { root, branch: Option.getOrNull(branch), changed };
+ *   return { root, branch: O.getOrNull(branch), changed };
  * });
  *
  * Effect.runPromise(program.pipe(Effect.provide(Git.layer), Effect.provide(NodeServices.layer)));
@@ -4530,7 +4531,7 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
       const read = (name: string) =>
         Config.String(name).pipe(
           Config.option,
-          Effect.orElseSucceed(() => O.none<string>()),
+          Effect.orElseSucceed(O.none<string>),
           // A blank value is treated as absent — an exported-but-empty
           // variable is not a configuration worth preserving.
           Effect.map(O.filter((value) => value.trim() !== "")),
@@ -4568,11 +4569,12 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
    * @example
    * ```ts
    * import { Git } from "./index.ts";
-   * import { Effect, Option } from "effect";
+   * import * as Effect from "effect/Effect";
+   * import * as O from "effect/Option";
    *
    * const double = Git.makeTest({
    *   show: (_cwd, _ref, path) =>
-   *     Effect.succeed(path === "./package.json" ? Option.some("{}") : Option.none()),
+   *     Effect.succeed(path === "./package.json" ? O.some("{}") : O.none()),
    * });
    * // `double.show(...)` answers; `double.status(...)` dies, named.
    * ```
@@ -4667,7 +4669,7 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
    * @example
    * ```ts
    * import { Git, LsTreeEntry } from "./index.ts";
-   * import { Effect } from "effect";
+   * import * as Effect from "effect/Effect";
    *
    * const TestGit = Git.layerTest({
    *   lsTree: () =>

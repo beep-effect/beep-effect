@@ -19,6 +19,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/sbom/IdentityToken");
 
@@ -75,7 +76,7 @@ const TEST_TOKEN = "test-identity-token";
  * @example
  * ```ts
  * import { IdentityToken, SigstoreSigner } from "./index.ts";
- * import { Layer } from "effect";
+ * import * as Layer from "effect/Layer";
  *
  * const token = process.env.OIDC_TOKEN ?? "";
  * const layer = SigstoreSigner.layer.pipe(Layer.provide(IdentityToken.layerStatic(token)));
@@ -99,7 +100,7 @@ export class IdentityToken extends Context.Service<IdentityToken, IdentityTokenS
 	static readonly layerStatic = (token: Redacted.Redacted<string> | string): Layer.Layer<IdentityToken> =>
 		Layer.succeed(IdentityToken, {
 			token: Effect.fn("IdentityToken.token")(() =>
-				Effect.succeed(typeof token === "string" ? Redacted.make(token) : token),
+				Effect.succeed(P.isString(token) ? Redacted.make(token) : token),
 			),
 		});
 

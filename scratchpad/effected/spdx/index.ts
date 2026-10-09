@@ -16,7 +16,7 @@
  * @example
  * ```ts
  * import { isValidExpression, SpdxExpression } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const expr = yield* SpdxExpression.parse("(MIT OR Apache-2.0+)");

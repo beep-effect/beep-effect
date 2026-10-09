@@ -9,6 +9,7 @@
 
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as R from "effect/Record";
 
 const RawJson = S.Record(S.String, S.Unknown);
 
@@ -21,7 +22,7 @@ const RawJson = S.Record(S.String, S.Unknown);
 export const makeWire = <Self, RD = never, RE = never>(
 	Class: S.Codec<Self, unknown, RD, RE> & { readonly fields: Record<string, unknown> },
 ): S.Codec<Self, { readonly [k: string]: unknown }, RD, RE> => {
-	const knownKeys = new Set(Object.keys(Class.fields).filter((k) => k !== "rest"));
+	const knownKeys = new Set(R.keys(Class.fields).filter((k) => k !== "rest"));
 	return RawJson.pipe(
 		S.decode(
 			SchemaTransformation.transform({
@@ -33,7 +34,7 @@ export const makeWire = <Self, RD = never, RE = never>(
 					// lose the key on encode. Known keys come from `Class.fields` and
 					// cannot collide with `__proto__`.
 					const rest: Record<string, unknown> = Object.create(null);
-					for (const [key, value] of Object.entries(raw)) {
+					for (const [key, value] of R.toEntries(raw)) {
 						if (knownKeys.has(key)) known[key] = value;
 						else rest[key] = value;
 					}

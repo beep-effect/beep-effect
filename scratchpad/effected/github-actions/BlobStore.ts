@@ -3,7 +3,7 @@ import type * as Redacted from "effect/Redacted";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import * as DateTime from "effect/DateTime";
 import { HttpClient, HttpClientRequest } from "effect/http";
@@ -139,9 +139,10 @@ export interface S3Config {
  * @example
  * ```ts
  * import { BlobStore } from "./index.ts";
- * import { Effect, Schema } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as S from "effect/Schema";
  *
- * class Meta extends Schema.Class<Meta>("Meta")({ tag: Schema.String, durationMs: Schema.Finite }) {}
+ * class Meta extends S.Class<Meta>("Meta")({ tag: S.String, durationMs: S.Finite }) {}
  *
  * const program = Effect.gen(function* () {
  *   const store = yield* BlobStore;
@@ -242,7 +243,7 @@ const makeS3 = (config: S3Config): Effect.Effect<BlobStoreShape, never, HttpClie
 				{
 					accessKeyId: config.accessKeyId,
 					secretAccessKey,
-					...(sessionToken === undefined ? {} : { sessionToken }),
+					...O.getSomesStruct({ sessionToken: O.fromUndefinedOr(sessionToken) }),
 					region: config.region,
 					service: "s3",
 				},

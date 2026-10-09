@@ -13,7 +13,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
@@ -23,6 +23,7 @@ import { DependencyField } from "./DependencySection.ts";
 import { DependencySpecifier } from "./DependencySpecifier.ts";
 import type { DependencyResolutionError } from "./WorkspaceResolver.ts";
 import { WorkspaceResolver } from "./WorkspaceResolver.ts";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/npm/Manifest");
 
@@ -102,7 +103,7 @@ const makeWire = (
 				decode: (raw: { readonly [k: string]: unknown }) => {
 					const known: Record<string, unknown> = {};
 					const rest: Record<string, unknown> = {};
-					for (const [key, value] of Object.entries(raw)) {
+					for (const [key, value] of R.toEntries(raw)) {
 						if (DEPENDENCY_FIELDS.has(key)) known[key] = value;
 						else rest[key] = value;
 					}
@@ -143,7 +144,7 @@ const makeWire = (
  * @example
  * ```ts
  * import { Default, Manifest } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const manifest = yield* Manifest.decode({ name: "app", dependencies: { effect: "^4.0.0" } });
@@ -201,7 +202,7 @@ export class Manifest extends S.Class<Manifest>($I`Manifest`)({
 			const section = this[field];
 			return (
 				section !== undefined &&
-				Object.values(section).some(
+				R.values(section).some(
 					(specifier) => DependencySpecifier.isCatalog(specifier) || DependencySpecifier.isWorkspace(specifier),
 				)
 			);
@@ -262,7 +263,7 @@ const resolveManifest = Effect.fn("Manifest.resolve")(function* (manifest: Manif
 		const section = manifest[field];
 		if (section === undefined) continue;
 		const resolved: Record<string, string> = {};
-		for (const [dependency, specifier] of Object.entries(section)) {
+		for (const [dependency, specifier] of R.toEntries(section)) {
 			if (DependencySpecifier.isCatalog(specifier)) {
 				const range = yield* catalogs.rangeOf(dependency, DependencySpecifier.catalogNameOf(specifier));
 				if (O.isNone(range)) {
@@ -295,6 +296,6 @@ const resolveManifest = Effect.fn("Manifest.resolve")(function* (manifest: Manif
 	}
 	return Manifest.make({
 		...output,
-		...(manifest.rest !== undefined ? { rest: manifest.rest } : {}),
+		...O.getSomesStruct({ rest: O.fromUndefinedOr(manifest.rest) }),
 	});
 });

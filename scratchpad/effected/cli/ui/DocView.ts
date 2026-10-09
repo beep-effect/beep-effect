@@ -5,6 +5,7 @@ import { Render } from "../Render.ts";
 import { fromReact, inkModules } from "./internal/ink.ts";
 import { screenContext } from "./internal/ScreenContext.ts";
 import { useTerminalSize } from "./UiTheme.ts";
+import * as A from "effect/Array";
 
 /**
  * Props of {@link DocView}.
@@ -41,7 +42,7 @@ const contextOf = (theme: Cli.StreamTheme, width: number, neutralize: boolean): 
 
 /** The document's lines as the kit's own renderer lays them out: plain at colour `none`, painted otherwise. */
 const linesOf = (doc: Cli.Document | Cli.Block, ctx: Cli.RenderContext): ReadonlyArray<string> => {
-	const isDocument = (value: Cli.Document | Cli.Block): value is Cli.Document => Array.isArray(value);
+	const isDocument = (value: Cli.Document | Cli.Block): value is Cli.Document => A.isArray(value);
 	const document: Cli.Document = isDocument(doc) ? doc : [doc];
 	const text = ctx.color === "none" ? Render.plain(document, ctx) : Render.ansi(document, ctx);
 	return text === "" ? [] : text.split("\n");

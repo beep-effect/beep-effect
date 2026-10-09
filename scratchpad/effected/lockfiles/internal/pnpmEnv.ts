@@ -6,6 +6,7 @@ import { PackageManagerLock } from "../PackageManagerLock.ts";
 import { splitPnpmStream } from "./documents.ts";
 import type { ParseFailure } from "./shared.ts";
 import { gatePnpmVersion, validationFailure } from "./shared.ts";
+import * as R from "effect/Record";
 
 // ── Raw schema (permissive validation scaffolding, not API) ────────────────
 
@@ -57,7 +58,7 @@ const JsonString = S.fromJsonString(S.String);
  * `Object.prototype`.
  */
 const own = <V>(record: Readonly<Record<string, V>> | undefined, key: string): V | undefined =>
-	record !== undefined && Object.hasOwn(record, key) ? record[key] : undefined;
+	record !== undefined && R.has(record, key) ? record[key] : undefined;
 
 /**
  * A located, well-formed preamble that does not hold what it promises: the
@@ -144,7 +145,7 @@ export const readPnpmPackageManager = (content: string): Effect.Effect<PackageMa
 			return yield* Effect.fail(unaccounted(`snapshots[${yield* S.encodeEffect(JsonString)(key).pipe(Effect.mapError(validationFailure))}] is missing`));
 		}
 		const natives: Array<readonly [string, string]> = [];
-		for (const [name, version] of Object.entries(snapshot.optionalDependencies ?? {})) {
+		for (const [name, version] of R.toEntries(snapshot.optionalDependencies ?? {})) {
 			natives.push([name, yield* integrityOf(raw, `${name}@${version}`)]);
 		}
 		return PackageManagerLock.make({
@@ -152,7 +153,7 @@ export const readPnpmPackageManager = (content: string): Effect.Effect<PackageMa
 			specifier: declared.specifier,
 			version: declared.version,
 			integrity,
-			nativeIntegrity: Object.fromEntries(natives),
+			nativeIntegrity: R.fromEntries(natives),
 		});
 	});
 
@@ -179,7 +180,7 @@ export const readPnpmConfigDependencies = (
 		const declared = own(raw?.importers, ROOT_IMPORTER)?.configDependencies;
 		const locks = new Map<string, ConfigDependencyLock>();
 		if (raw === undefined || declared === undefined) return locks;
-		for (const [name, entry] of Object.entries(declared)) {
+		for (const [name, entry] of R.toEntries(declared)) {
 			const integrity = yield* recordedIntegrity(raw, `config dependency ${yield* S.encodeEffect(JsonString)(name).pipe(Effect.mapError(validationFailure))}`, name, entry.version);
 			locks.set(
 				name,

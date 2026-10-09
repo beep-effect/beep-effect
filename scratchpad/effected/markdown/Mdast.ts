@@ -18,6 +18,9 @@ import type {
 	Position,
 } from "./MarkdownNode.ts";
 import { Root } from "./MarkdownNode.ts";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/markdown/Mdast");
 
@@ -126,7 +129,7 @@ const projectNode = (node: AnyNode): MdastNode => {
 			return {
 				type: "text",
 				value: node.value,
-				...(node.escapeStyle === undefined ? {} : { escapeStyle: node.escapeStyle }),
+				...O.getSomesStruct({ escapeStyle: O.fromUndefinedOr(node.escapeStyle) }),
 				position,
 			};
 		case "html":
@@ -256,7 +259,7 @@ const projectMdxAttribute = (attribute: MdxJsxAttributeContent): Record<string, 
 		value:
 			value === undefined || value === null
 				? null
-				: typeof value === "string"
+				: P.isString(value)
 					? value
 					: { type: "mdxJsxAttributeValueExpression", value: value.value },
 		position: projectPosition(attribute.position),
@@ -312,15 +315,15 @@ const admittedFields: Readonly<Record<string, ReadonlyArray<string>>> = {
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && !Array.isArray(value);
+	typeof value === "object" && value !== null && !A.isArray(value);
 
 const completePoint = (
 	value: unknown,
 ): value is { readonly line: number; readonly column: number; readonly offset: number } =>
 	isRecord(value) &&
-	typeof value.line === "number" &&
-	typeof value.column === "number" &&
-	typeof value.offset === "number";
+	P.isNumber(value.line) &&
+	P.isNumber(value.column) &&
+	P.isNumber(value.offset);
 
 const normalizePosition = (value: unknown): Record<string, unknown> => {
 	if (isRecord(value) && completePoint(value.start) && completePoint(value.end)) {
@@ -340,7 +343,7 @@ const normalizePosition = (value: unknown): Record<string, unknown> => {
 // Unrecognized types pass through shallowly so schema decoding reports them
 // as typed failures rather than this walk throwing.
 const normalizeNode = (value: unknown): unknown => {
-	if (!isRecord(value) || typeof value.type !== "string") {
+	if (!isRecord(value) || !P.isString(value.type)) {
 		return value;
 	}
 	const type = value.type;
@@ -367,8 +370,8 @@ const normalizeNode = (value: unknown): unknown => {
 		return {
 			type,
 			name: value.name,
-			attributes: Array.isArray(value.attributes) ? value.attributes.map(normalizeMdxAttribute) : value.attributes,
-			children: Array.isArray(value.children) ? value.children.map(normalizeNode) : value.children,
+			attributes: A.isArray(value.attributes) ? value.attributes.map(normalizeMdxAttribute) : value.attributes,
+			children: A.isArray(value.children) ? value.children.map(normalizeNode) : value.children,
 			position: normalizePosition(value.position),
 		};
 	}
@@ -385,11 +388,11 @@ const normalizeNode = (value: unknown): unknown => {
 	}
 	// Restore the engine's carried-terminator convention on code values (the
 	// inverse of toMdast's strip).
-	if (type === "code" && typeof normalized.value === "string" && normalized.value !== "") {
+	if (type === "code" && P.isString(normalized.value) && normalized.value !== "") {
 		const code = normalized.value;
 		normalized.value = code.endsWith("\n") ? code : `${code}\n`;
 	}
-	if (Array.isArray(value.children)) {
+	if (A.isArray(value.children)) {
 		normalized.children = value.children.map(normalizeNode);
 	}
 	normalized.position = normalizePosition(value.position);
@@ -400,7 +403,7 @@ const normalizeNode = (value: unknown): unknown => {
 // a string/null value passed through (both spellings are the contract), a
 // value-expression object rebuilt with only its contract fields.
 const normalizeMdxAttribute = (value: unknown): unknown => {
-	if (!isRecord(value) || typeof value.type !== "string") {
+	if (!isRecord(value) || !P.isString(value.type)) {
 		return value;
 	}
 	if (value.type === "mdxJsxExpressionAttribute") {
@@ -462,7 +465,7 @@ const decodeRoot = S.decodeUnknownResult(Root);
  * @example
  * ```ts
  * import { Markdown, Mdast } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const root = yield* Markdown.parse("# Hello\n");

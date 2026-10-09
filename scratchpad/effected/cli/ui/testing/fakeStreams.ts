@@ -1,4 +1,5 @@
 import type { UiStreamsShape } from "../UiStreams.ts";
+import * as P from "effect/Predicate";
 
 // Effect Stream cannot provide Ink's Node stream events, raw-mode methods and write-callback barriers.
 const { Socket } = process.getBuiltinModule("node:net");
@@ -111,7 +112,7 @@ class MemoryOutput extends MemorySocket implements NodeJS.WriteStream {
 	cursorTo(x: number, y?: number, callback?: () => void): boolean;
 	cursorTo(x: number, callback: () => void): boolean;
 	cursorTo(x: number, y?: number | (() => void), callback?: () => void): boolean {
-		return typeof y === "function" ? cursorTo(this, x, undefined, y) : cursorTo(this, x, y, callback);
+		return P.isFunction(y) ? cursorTo(this, x, undefined, y) : cursorTo(this, x, y, callback);
 	}
 
 	moveCursor(dx: number, dy: number, callback?: () => void): boolean {

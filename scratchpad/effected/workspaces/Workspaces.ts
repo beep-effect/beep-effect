@@ -332,7 +332,7 @@ export class Workspaces {
 	 * @example
 	 * ```ts
 	 * import { Workspaces } from "./index.ts";
-	 * import { Layer } from "effect";
+	 * import * as Layer from "effect/Layer";
 	 *
 	 * const WorkspacesLayer = Workspaces.layer();
 	 * const AppLayer = Layer.provide(WorkspacesLayer, PlatformLayer);
@@ -544,7 +544,7 @@ export class Workspaces {
 	 * import { NodeServices } from "@effect/platform-node";
 	 * import { ToolDiscovery } from "../commands/index.ts";
 	 * import { Workspaces } from "./index.ts";
-	 * import { Layer } from "effect";
+	 * import * as Layer from "effect/Layer";
 	 *
 	 * // Bound to consts per the warning above: each factory call mints a
 	 * // fresh layer reference, and layers memoize by reference.
@@ -584,7 +584,7 @@ export class Workspaces {
 	 * ```ts
 	 * import { Manifest } from "../npm/index.ts";
 	 * import { Workspaces } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const program = Effect.gen(function* () {
 	 *   const manifest = yield* Manifest.decode({ dependencies: { effect: "catalog:" } });
@@ -620,7 +620,7 @@ export class Workspaces {
 	 * @example
 	 * ```ts
 	 * import { Workspaces } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const program = doSomethingWithResolvers.pipe(
 	 *   Effect.provide(Workspaces.resolverLayer()),
@@ -641,7 +641,7 @@ export class Workspaces {
 	 * ```ts
 	 * import { Package } from "../package-json/index.ts";
 	 * import { Workspaces } from "./index.ts";
-	 * import { Layer } from "effect";
+	 * import * as Layer from "effect/Layer";
 	 *
 	 * const WorkspacesLayer = Workspaces.layer();
 	 * const Resolvers = Workspaces.resolvers.pipe(Layer.provide(WorkspacesLayer));

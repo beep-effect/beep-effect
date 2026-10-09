@@ -189,8 +189,8 @@ export class UnknownEvent extends S.TaggedError<UnknownEvent>($I`UnknownEvent`)(
  * eagerly after those schema fields and formats the retained issue tree.
  *
  * **Example** (Inspect invalid payload details)
- * ```ts import.meta.vitest name="Inspect invalid payload details"
- * import { pipe } from "effect";
+ * ```ts
+ * import { pipe } from "effect/Function";
  * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
  * import * as A from "effect/Array";
  * import * as O from "effect/Option";
@@ -242,8 +242,8 @@ export class InvalidData extends S.TaggedError<InvalidData>($I`InvalidData`)(
    * Human-readable context for this failure; structured fields retain its details.
    *
    * **Example** (Read the invalid-payload message)
-   * ```ts import.meta.vitest name="Read the invalid-payload message"
-   * import { pipe } from "effect";
+   * ```ts
+   * import { pipe } from "effect/Function";
    * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
    * import * as A from "effect/Array";
    * import * as O from "effect/Option";
@@ -422,13 +422,13 @@ export class UnserializableData extends S.TaggedError<UnserializableData>($I`Uns
    * Human-readable context for this failure; structured fields retain its details.
    *
    * **Example** (Read the serialization message)
-   * ```ts import.meta.vitest name="Read the serialization message"
+   * ```ts
    * import { Envelope, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
    * import * as DateTime from "effect/DateTime";
    * import * as Result from "effect/Result";
    * import * as S from "effect/Schema";
    * import * as Str from "effect/String";
-   * import { pipe } from "effect";
+   * import { pipe } from "effect/Function";
    * const events = [JsonlEvent.make("snapshot", { data: S.Unknown })];
    * const result = Envelope.encodeResult({ at: DateTime.makeUnsafe(0), event: "snapshot", data: 1n }, events);
    * Result.isFailure(result) && pipe(result.failure.message, Str.startsWith('cannot serialize payload for event "snapshot":')) // => true

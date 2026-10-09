@@ -21,6 +21,7 @@ import { YamlDiagnostic } from "./YamlDiagnostic.ts";
 import type { YamlNode as YamlNodeType } from "./YamlNode.ts";
 import { YamlNode } from "./YamlNode.ts";
 import { dual } from "effect/Function";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/yaml/YamlDocument");
 
@@ -55,7 +56,7 @@ export class YamlDirective extends S.Class<YamlDirective>($I`YamlDirective`)({
  * @example
  * ```ts
  * import { YamlDocument } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const doc = yield* YamlDocument.parse("# header\nname: Alice\n");
@@ -288,8 +289,8 @@ function fromRawDocument(raw: RawYamlDocument, text: string): YamlDocument {
 		errors: raw.errors.map((e) => YamlDiagnostic.fromRaw(e, text)),
 		warnings: raw.warnings.map((w) => YamlDiagnostic.fromRaw(w, text)),
 		directives: raw.directives.map((d) => YamlDirective.make({ name: d.name, parameters: d.parameters })),
-		...(raw.commentBefore !== undefined ? { commentBefore: raw.commentBefore } : {}),
-		...(raw.comment !== undefined ? { comment: raw.comment } : {}),
+		...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(raw.commentBefore) }),
+		...O.getSomesStruct({ comment: O.fromUndefinedOr(raw.comment) }),
 		hasDocumentStart: raw.hasDocumentStart,
 		hasDocumentEnd: raw.hasDocumentEnd,
 		hasDocumentStartTab: raw.hasDocumentStartTab,
@@ -303,8 +304,8 @@ function toRawDocument(doc: YamlDocument): RawYamlDocument {
 		errors: [],
 		warnings: [],
 		directives: doc.directives,
-		...(doc.commentBefore !== undefined ? { commentBefore: doc.commentBefore } : {}),
-		...(doc.comment !== undefined ? { comment: doc.comment } : {}),
+		...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(doc.commentBefore) }),
+		...O.getSomesStruct({ comment: O.fromUndefinedOr(doc.comment) }),
 		hasDocumentStart: doc.hasDocumentStart ?? false,
 		hasDocumentEnd: doc.hasDocumentEnd ?? false,
 		hasDocumentStartTab: doc.hasDocumentStartTab ?? false,

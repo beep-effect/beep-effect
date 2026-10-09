@@ -97,7 +97,7 @@ const specVersion = SemVer.pipe(
  * @example
  * ```ts
  * import { ConfigDependencySpec } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const spec = yield* ConfigDependencySpec.parse("0.11.1+sha512-m35m…==");

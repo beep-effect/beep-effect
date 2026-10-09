@@ -1,6 +1,7 @@
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 
 // Effect FileSystem cannot resolve Ink's shared Chalk instance synchronously against Node's real filesystem.
 const { realpathSync } = process.getBuiltinModule("node:fs");
@@ -23,12 +24,12 @@ export interface InkChalk {
 }
 
 const isInkChalk = (value: unknown): value is InkChalk =>
-	(typeof value === "function" || (typeof value === "object" && value !== null)) &&
-	"level" in value && typeof value.level === "number";
+	(P.isFunction(value) || (typeof value === "object" && value !== null)) &&
+	"level" in value && P.isNumber(value.level);
 
 /** The runtime's `import.meta.resolve`, when it has one. */
 const esmResolve: ((specifier: string) => string) | undefined =
-	typeof import.meta.resolve === "function" ? (specifier) => import.meta.resolve(specifier) : undefined;
+	P.isFunction(import.meta.resolve) ? (specifier) => import.meta.resolve(specifier) : undefined;
 
 /**
  * The path of Ink's entry: through `resolve` (the runtime's `import.meta.resolve` by default), or, where that is

@@ -134,12 +134,13 @@ const quiet: StreamEnv = { isTerminal: false, color: "none", hyperlinks: false, 
  * @example
  * ```ts
  * import { TerminalEnv } from "./index.ts"
- * import { Effect, Option } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
  *
  * const program = Effect.gen(function* () {
  * 	const terminal = yield* TerminalEnv
  * 	return { color: terminal.stdout.color, width: terminal.width() }
- * }).pipe(Effect.provide(TerminalEnv.layerTest({ stdout: { color: "256", columns: Option.some(100) } })))
+ * }).pipe(Effect.provide(TerminalEnv.layerTest({ stdout: { color: "256", columns: O.some(100) } })))
  * ```
  *
  * @public

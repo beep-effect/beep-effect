@@ -312,7 +312,7 @@ function referencesOf(node: JsonLdNode): ReadonlyArray<readonly [property: strin
  * ```ts
  * import { JsonLdDocument, SoftwareSourceCode } from "./index.ts";
  * import { Conformance } from "./conformance-entry.ts";
- * import { Result } from "effect";
+ * import * as Result from "effect/Result";
  *
  * const graph = Result.getOrThrow(
  * 	JsonLdDocument.buildResult([

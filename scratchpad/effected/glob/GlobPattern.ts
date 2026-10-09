@@ -15,6 +15,7 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 import { EXPANSION_MAX, isGuardExceeded } from "./internal/limits.ts";
 import type { EngineOptions } from "./internal/minimatch.ts";
 import { GLOBSTAR, Minimatch, escape as engineEscape, unescape as engineUnescape } from "./internal/minimatch.ts";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/glob/GlobPattern");
 
@@ -219,7 +220,7 @@ export class GlobPattern extends S.Class<GlobPattern>($I`GlobPattern`)(
 	 * @example
 	 * ```ts
 	 * import { GlobPattern } from "./index.ts";
-	 * import { Result } from "effect";
+	 * import * as Result from "effect/Result";
 	 *
 	 * const compiled = GlobPattern.compileResult("src/*.ts");
 	 * if (Result.isSuccess(compiled)) {
@@ -305,7 +306,7 @@ export class GlobPattern extends S.Class<GlobPattern>($I`GlobPattern`)(
 		for (const row of set) {
 			const literals: Array<string> = [];
 			for (const part of row) {
-				if (typeof part !== "string") break;
+				if (!P.isString(part)) break;
 				literals.push(part);
 			}
 			if (common === undefined) {
@@ -335,7 +336,7 @@ export class GlobPattern extends S.Class<GlobPattern>($I`GlobPattern`)(
 	get crossesSegments(): boolean {
 		return this.#engineOf().set.some((row) => {
 			if (row.includes(GLOBSTAR)) return true;
-			const firstMagic = row.findIndex((part) => typeof part !== "string");
+			const firstMagic = row.findIndex((part) => !P.isString(part));
 			return firstMagic !== -1 && firstMagic < row.length - 1;
 		});
 	}

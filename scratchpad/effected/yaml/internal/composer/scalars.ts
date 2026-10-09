@@ -13,6 +13,9 @@ import type { ComposerState, NodeMeta } from "./state.ts";
 import { lineCol } from "./state.ts";
 import { resolveTagHandle } from "./tags.ts";
 import { dual } from "effect/Function";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
+import * as O from "@beep/utils/Option";
 
 // ---------------------------------------------------------------------------
 // YAML 1.2 Core Schema type resolution
@@ -511,7 +514,7 @@ export function collectMultilinePlainScalar(...args: [children: readonly CstNode
 	return dual<
 		(...args: [children: readonly CstNode[], startIdx: number, minContinuationColumn?: number | undefined, sourceText?: string | undefined] | [startIdx: number, minContinuationColumn?: number | undefined, sourceText?: string | undefined]) => { value: string; nextIdx: number; partsCount: number; endOffset: number } | ((children: readonly CstNode[]) => { value: string; nextIdx: number; partsCount: number; endOffset: number }),
 		(children: readonly CstNode[], startIdx: number, minContinuationColumn?: number, sourceText?: string) => { value: string; nextIdx: number; partsCount: number; endOffset: number }
-	>((args) => Array.isArray(args[0]), function collectMultilinePlainScalar(children: readonly CstNode[], startIdx: number, minContinuationColumn?: number, sourceText?: string): { value: string; nextIdx: number; partsCount: number; endOffset: number } {
+	>((args) => A.isArray(args[0]), function collectMultilinePlainScalar(children: readonly CstNode[], startIdx: number, minContinuationColumn?: number, sourceText?: string): { value: string; nextIdx: number; partsCount: number; endOffset: number } {
 	const first = children[startIdx];
 	if (first?.type !== "flow-scalar") {
 		return {
@@ -666,7 +669,7 @@ export function findNextSignificantChild(...args: [children: readonly CstNode[],
 	return dual<
 		(...args: [children: readonly CstNode[], startIdx: number, stopAtDash?: boolean | undefined] | [startIdx: number, stopAtDash?: boolean | undefined]) => number | null | ((children: readonly CstNode[]) => number | null),
 		(children: readonly CstNode[], startIdx: number, stopAtDash?: boolean) => number | null
-	>((args) => Array.isArray(args[0]), function findNextSignificantChild(children: readonly CstNode[], startIdx: number, stopAtDash: boolean = false): number | null {
+	>((args) => A.isArray(args[0]), function findNextSignificantChild(children: readonly CstNode[], startIdx: number, stopAtDash: boolean = false): number | null {
 	for (let j = startIdx; j < children.length; j++) {
 		const c = children[j];
 		if (c === undefined) continue;
@@ -1299,7 +1302,7 @@ export function makeScalar(...args: [cst: CstNode, state: ComposerState, meta?: 
 	// e.g. `0xFFEEBB` resolves to 16772795 but should round-trip as hex,
 	// `450.00` resolves to 450 but should keep the trailing zeros.
 	const needsRaw =
-		style === "plain" && typeof value !== "string" && value !== undefined && shouldPreserveRaw(rawValue, value);
+		style === "plain" && !P.isString(value) && value !== undefined && shouldPreserveRaw(rawValue, value);
 	const scalar = YamlScalar.make({
 		value,
 		style,
@@ -1307,9 +1310,9 @@ export function makeScalar(...args: [cst: CstNode, state: ComposerState, meta?: 
 		length: cst.length,
 		...(meta?.tag !== undefined ? { tag: meta.tag } : {}),
 		...(meta?.anchor !== undefined ? { anchor: meta.anchor } : {}),
-		...(comment !== undefined ? { comment } : {}),
-		...(chomp !== undefined ? { chomp } : {}),
-		...(blockIndent !== undefined ? { blockIndent } : {}),
+		...O.getSomesStruct({ comment: O.fromUndefinedOr(comment) }),
+		...O.getSomesStruct({ chomp: O.fromUndefinedOr(chomp) }),
+		...O.getSomesStruct({ blockIndent: O.fromUndefinedOr(blockIndent) }),
 		...(needsRaw ? { raw: rawValue } : {}),
 	});
 	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(scalar, meta.anchor, state, cst.offset);
@@ -1334,7 +1337,7 @@ export function shouldPreserveRaw(...args: [rawValue: string, value: unknown] | 
 		(...args: [rawValue: string, value: unknown] | [value: unknown]) => boolean | ((rawValue: string) => boolean),
 		(rawValue: string, value: unknown) => boolean
 	>(2, function shouldPreserveRaw(rawValue: string, value: unknown): boolean {
-	if (typeof value === "number") {
+	if (P.isNumber(value)) {
 		if (Number.isNaN(value) || !Number.isFinite(value)) return false;
 		return rawValue !== String(value);
 	}

@@ -5,7 +5,7 @@ import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Red from "effect/Redacted";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -259,7 +259,7 @@ const make = Effect.fnUntraced(function* () {
 					PublishError.make({
 						kind: options.kind,
 						subject: options.subject,
-						...(options.registry === undefined ? {} : { registry: options.registry }),
+						...O.getSomesStruct({ registry: O.fromUndefinedOr(options.registry) }),
 						cause,
 					}),
 				),
@@ -357,9 +357,9 @@ const make = Effect.fnUntraced(function* () {
 			version: entry.version,
 			...integrityField(entry.integrity),
 			sha256Hex: hex(digest),
-			...(entry.size === undefined ? {} : { packedSize: entry.size }),
-			...(entry.unpackedSize === undefined ? {} : { unpackedSize: entry.unpackedSize }),
-			...(entry.entryCount === undefined ? {} : { fileCount: entry.entryCount }),
+			...O.getSomesStruct({ packedSize: O.fromUndefinedOr(entry.size) }),
+			...O.getSomesStruct({ unpackedSize: O.fromUndefinedOr(entry.unpackedSize) }),
+			...O.getSomesStruct({ fileCount: O.fromUndefinedOr(entry.entryCount) }),
 		});
 	});
 
@@ -407,7 +407,7 @@ const make = Effect.fnUntraced(function* () {
 		const printed = `${output.stdout}\n${output.stderr}`;
 		const provenanceUrl = PROVENANCE_URL.exec(printed)?.[0];
 		return {
-			...(provenanceUrl === undefined ? {} : { provenanceUrl }),
+			...O.getSomesStruct({ provenanceUrl: O.fromUndefinedOr(provenanceUrl) }),
 		} satisfies PublishOutcome;
 	});
 
@@ -430,9 +430,9 @@ const make = Effect.fnUntraced(function* () {
 		return {
 			ok: true,
 			output: output.stdout,
-			...(entry.size === undefined ? {} : { packedSize: entry.size }),
-			...(entry.unpackedSize === undefined ? {} : { unpackedSize: entry.unpackedSize }),
-			...(entry.entryCount === undefined ? {} : { fileCount: entry.entryCount }),
+			...O.getSomesStruct({ packedSize: O.fromUndefinedOr(entry.size) }),
+			...O.getSomesStruct({ unpackedSize: O.fromUndefinedOr(entry.unpackedSize) }),
+			...O.getSomesStruct({ fileCount: O.fromUndefinedOr(entry.entryCount) }),
 		} satisfies DryRunOutcome;
 	});
 
@@ -475,7 +475,7 @@ const notStubbed = (method: string) => () =>
  * @example
  * ```ts
  * import { PackagePublish } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const publish = yield* PackagePublish;

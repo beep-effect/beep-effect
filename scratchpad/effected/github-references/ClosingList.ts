@@ -209,11 +209,11 @@ const parseItems = (line: string, from: number): ReadonlyArray<number> | undefin
  * @example
  * ```ts
  * import { parseReferenceList } from "./index.ts";
- * import { Option } from "effect";
+ * import * as O from "effect/Option";
  *
  * const list = parseReferenceList("Closes #247, #248 and #251");
  * // => Option.some({ keyword: "closes", closing: true, issueNumbers: [247, 248, 251] })
- * Option.isNone(parseReferenceList("Closes #1 for the rest"));
+ * O.isNone(parseReferenceList("Closes #1 for the rest"));
  * // => true
  * ```
  *

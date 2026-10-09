@@ -7,7 +7,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { ActionStateError } from "./ActionState.ts";
@@ -137,7 +137,7 @@ const identified = (
 			appName: identity.name,
 			// Never an explicit `undefined` on an `optionalKey` field: the class
 			// factory validates on construction and refuses one.
-			...(identity.userId === undefined ? {} : { appUserId: identity.userId }),
+			...O.getSomesStruct({ appUserId: O.fromUndefinedOr(identity.userId) }),
 		});
 	});
 
@@ -178,7 +178,8 @@ const identified = (
  * @example
  * ```ts
  * import { GitHubToken } from "./index.ts";
- * import { Effect, Redacted } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
  *
  * const pre = Effect.gen(function* () {
  *   return yield* GitHubToken.provision({
@@ -218,8 +219,8 @@ export class GitHubToken {
 			app.token({
 				appId: options.appId,
 				privateKey: options.privateKey,
-				...(options.installationId === undefined ? {} : { installationId: options.installationId }),
-				...(options.owner === undefined ? {} : { owner: options.owner }),
+				...O.getSomesStruct({ installationId: O.fromUndefinedOr(options.installationId) }),
+				...O.getSomesStruct({ owner: O.fromUndefinedOr(options.owner) }),
 			}),
 			(minted) =>
 				Effect.gen(function* () {
@@ -294,10 +295,10 @@ export class GitHubToken {
 			Effect.map(GitHubToken.read(options), (token) =>
 				GitHubClient.layerFromToken({
 					token: token.token,
-					...(options.retry === undefined ? {} : { retry: options.retry }),
-					...(options.baseUrl === undefined ? {} : { baseUrl: options.baseUrl }),
-					...(options.userAgent === undefined ? {} : { userAgent: options.userAgent }),
-					...(options.fetch === undefined ? {} : { fetch: options.fetch }),
+					...O.getSomesStruct({ retry: O.fromUndefinedOr(options.retry) }),
+					...O.getSomesStruct({ baseUrl: O.fromUndefinedOr(options.baseUrl) }),
+					...O.getSomesStruct({ userAgent: O.fromUndefinedOr(options.userAgent) }),
+					...O.getSomesStruct({ fetch: O.fromUndefinedOr(options.fetch) }),
 				}),
 			),
 		);

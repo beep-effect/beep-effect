@@ -179,18 +179,19 @@ const dies = unstubbed("ActionState.makeTest");
  * @example
  * ```ts
  * import { ActionState } from "./index.ts";
- * import { Effect, Schema } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as S from "effect/Schema";
  *
  * // in `pre`
  * const pre = Effect.gen(function* () {
  *   const state = yield* ActionState;
- *   yield* state.save("server-pid", 4242, Schema.Finite);
+ *   yield* state.save("server-pid", 4242, S.Finite);
  * });
  *
  * // in `post`
  * const post = Effect.gen(function* () {
  *   const state = yield* ActionState;
- *   const pid = yield* state.get("server-pid", Schema.Finite);
+ *   const pid = yield* state.get("server-pid", S.Finite);
  *   return pid;
  * });
  * ```

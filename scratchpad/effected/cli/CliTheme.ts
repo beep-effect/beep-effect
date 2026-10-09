@@ -1,13 +1,13 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import { dual } from "effect/Function";
-import type { AudienceKind, ColorLevel } from "../env/index.ts";
-import { TerminalEnv } from "../env/index.ts";
+import { Prompt } from "effect/cli";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
-import { Prompt } from "effect/cli";
+import * as O from "@beep/utils/Option";
+import type { AudienceKind, ColorLevel } from "../env/index.ts";
+import { TerminalEnv } from "../env/index.ts";
 import type { GlyphSet } from "./Glyphs.ts";
 import { Glyphs } from "./Glyphs.ts";
 import { openSequence, paintStyle } from "./internal/ansi.ts";
@@ -179,12 +179,12 @@ export class CliTheme extends Context.Service<CliTheme, CliThemeShape>()($I`CliT
 				const term =
 					choice === "auto"
 						? O.getOrUndefined(
-								yield* Config.option(Config.String("TERM")).pipe(Effect.orElseSucceed(() => O.none<string>())),
+								yield* Config.option(Config.String("TERM")).pipe(Effect.orElseSucceed(O.none<string>)),
 							)
 						: undefined;
 				const glyphs = Glyphs.select({
 					ascii: choice === "ascii" ? true : choice === "unicode" ? false : "auto",
-					...(term === undefined ? {} : { term }),
+					...O.getSomesStruct({ term: O.fromUndefinedOr(term) }),
 				});
 				return make({ stdout: terminal.stdout.color, stderr: terminal.stderr.color }, glyphs, options?.tokens);
 			}),

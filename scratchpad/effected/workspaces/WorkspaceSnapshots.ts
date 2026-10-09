@@ -24,7 +24,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import type { HookReplay } from "./ConfigDependencyHooks.ts";
 import { ConfigDependencyHooks } from "./ConfigDependencyHooks.ts";
 import { importerVersionsOf } from "./internal/importerVersions.ts";
@@ -37,6 +37,9 @@ import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
 import { PackageStateSnapshot, WorkspaceStateSnapshot } from "./WorkspaceStateSnapshot.ts";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspaceSnapshots");
 
@@ -164,17 +167,17 @@ export interface WorkspaceSnapshotsShape {
  */
 const hookVersionsOf = (replays: Readonly<Record<string, HookReplay>>): Record<string, string> => {
 	const versions: Record<string, string> = {};
-	for (const [name, replay] of Object.entries(replays)) versions[name] = replay.version;
+	for (const [name, replay] of R.toEntries(replays)) versions[name] = replay.version;
 	return versions;
 };
 
 /** Whether `value` is a non-null, non-array object. */
 const isObject = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && !Array.isArray(value);
+	typeof value === "object" && value !== null && !A.isArray(value);
 
 /** Whether every value in a record is a string — a usable dependency map. */
 const isStringRecord = (value: unknown): value is Record<string, string> =>
-	isObject(value) && Object.values(value).every((entry) => typeof entry === "string");
+	isObject(value) && R.values(value).every((entry) => P.isString(entry));
 
 /**
  * Parse JSON tolerantly into a plain object. At-ref content is not ours to fix:
@@ -199,7 +202,7 @@ const snapshotOf = (content: O.Option<string>, relativePath: string): O.Option<P
 	if (O.isNone(content)) return O.none();
 	const parsed = parseJsonObject(content.value);
 	const name = parsed.name;
-	if (typeof name !== "string" || name.length === 0) return O.none();
+	if (!P.isString(name) || name.length === 0) return O.none();
 	// Absent stays absent. At-ref content is not ours to fix, so a present but
 	// unusable `version` (a non-string, or `""`) degrades to absent rather than
 	// failing the snapshot — the tolerance this projection applies throughout.
@@ -207,7 +210,7 @@ const snapshotOf = (content: O.Option<string>, relativePath: string): O.Option<P
 	return O.some(
 		PackageStateSnapshot.make({
 			name,
-			...(typeof version === "string" && version !== "" ? { version } : {}),
+			...(P.isString(version) && version !== "" ? { version } : {}),
 			relativePath,
 			...(isStringRecord(parsed.dependencies) ? { dependencies: parsed.dependencies } : {}),
 			...(isStringRecord(parsed.devDependencies) ? { devDependencies: parsed.devDependencies } : {}),
@@ -267,7 +270,7 @@ const unstubbed = (method: string): Effect.Effect<never> =>
  * @example
  * ```ts
  * import { WorkspaceSnapshots } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const snapshots = yield* WorkspaceSnapshots;
@@ -527,7 +530,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 						// A version-less member omits the key, exactly as `snapshotOf` does
 						// for the same manifest at a ref: both sides of a diff must answer
 						// the same way, or the missing field would read as a change.
-						...(pkg.version === undefined ? {} : { version: pkg.version }),
+						...O.getSomesStruct({ version: O.fromUndefinedOr(pkg.version) }),
 						relativePath: pkg.relativePath,
 						dependencies: pkg.dependencies,
 						devDependencies: pkg.devDependencies,
@@ -591,7 +594,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 	 * @example
 	 * ```ts
 	 * import { CatalogSet, WorkspaceSnapshots, WorkspaceStateSnapshot } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const empty = WorkspaceStateSnapshot.make({
 	 *   packages: [],
@@ -622,7 +625,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 	 * @example
 	 * ```ts
 	 * import { CatalogSet, WorkspaceSnapshots, WorkspaceStateSnapshot } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const TestSnapshots = WorkspaceSnapshots.layerTest({
 	 *   worktree:

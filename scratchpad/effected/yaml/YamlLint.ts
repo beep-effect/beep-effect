@@ -19,6 +19,7 @@ import { YamlEdit } from "./YamlEdit.ts";
 import type { LintContext, LintLine, StyleObservation, YamlLintSeverity, YamlRule } from "./YamlLintRule.ts";
 import { YamlLintDiagnostic } from "./YamlLintRule.ts";
 import { YamlTokens } from "./YamlToken.ts";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/yaml/YamlLint");
 
@@ -45,7 +46,7 @@ export type YamlLintRuleSetting = typeof YamlLintRuleSetting.Type;
 
 /** Rule-aware validation of the config `rules` map (undefined = valid). */
 const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting }): string | undefined => {
-	for (const [id, entry] of Object.entries(rules)) {
+	for (const [id, entry] of R.toEntries(rules)) {
 		if (id === "parse-validity") {
 			// Always-on rule #1: it cannot be demoted, disabled or configured.
 			// Failing loud beats silently ignoring an entry that looks like it
@@ -532,7 +533,7 @@ const runRules = (
  * @example
  * ```ts
  * import { YamlLint, YamlLintConfig } from "./index.ts";
- * import { Result } from "effect";
+ * import * as Result from "effect/Result";
  *
  * const text = "a:   1\nb: 2   \n";
  *

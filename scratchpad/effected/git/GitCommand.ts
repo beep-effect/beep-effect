@@ -1,5 +1,6 @@
 import * as Stream from "effect/Stream";
 import { ChildProcess } from "effect/process";
+import * as P from "effect/Predicate";
 
 /**
  * A pure `git` invocation: the spawnable command plus the diagnostic argv the
@@ -87,9 +88,9 @@ const redactUrlUserinfo = (value: string): string =>
  * travel with the argv.
  */
 const git = (args: ReadonlyArray<GitArg>, stdin?: string): GitInvocation => {
-	const raw = args.map((arg) => (typeof arg === "string" ? arg : arg.value));
+	const raw = args.map((arg) => (P.isString(arg) ? arg : arg.value));
 	const redactedArgs = args.map((arg) =>
-		typeof arg === "string" ? arg : arg.redact === "value" ? REDACTED : redactUrlUserinfo(arg.value),
+		P.isString(arg) ? arg : arg.redact === "value" ? REDACTED : redactUrlUserinfo(arg.value),
 	);
 	return {
 		command: ChildProcess.make("git", raw, {

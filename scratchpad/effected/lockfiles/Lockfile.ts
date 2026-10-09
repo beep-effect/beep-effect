@@ -1,6 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 import { BunExtension } from "./BunExtension.ts";
@@ -229,7 +229,7 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 			packages: fields.packages,
 			workspaceDependencies: fields.workspaceDependencies,
 			importers: fields.importers,
-			...(fields.extension !== undefined ? { extension: fields.extension } : {}),
+			...O.getSomesStruct({ extension: O.fromUndefinedOr(fields.extension) }),
 		});
 	});
 
@@ -259,7 +259,7 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 				name: realName,
 				version: pkg.version,
 				instanceId: pkg.instanceId,
-				...(pkg.integrity !== undefined ? { integrity: pkg.integrity } : {}),
+				...O.getSomesStruct({ integrity: O.fromUndefinedOr(pkg.integrity) }),
 				isWorkspace: pkg.isWorkspace,
 				relativePath: pkg.relativePath,
 				dependencies: pkg.dependencies,
@@ -285,7 +285,7 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 			packages,
 			workspaceDependencies,
 			importers: this.importers,
-			...(this.extension !== undefined ? { extension: this.extension } : {}),
+			...O.getSomesStruct({ extension: O.fromUndefinedOr(this.extension) }),
 		});
 	}
 

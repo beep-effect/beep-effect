@@ -527,14 +527,15 @@ export class CacheKey extends S.Class<CacheKey>($I`CacheKey`)(
 	 * @example
 	 * ```ts
 	 * import { CacheKey } from "./index.ts";
-	 * import { Effect, Option } from "effect";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
 	 *
 	 * const key = Effect.gen(function* () {
 	 *   const hash = yield* CacheKey.hashMatching({
 	 *     workspace: "/home/runner/work/repo/repo",
 	 *     patterns: ["**\/pnpm-lock.yaml", "!**\/node_modules/**"],
 	 *   });
-	 *   return CacheKey.of("Linux", "pnpm-store", Option.getOrElse(hash, () => "empty"));
+	 *   return CacheKey.of("Linux", "pnpm-store", O.getOrElse(hash, () => "empty"));
 	 * });
 	 * ```
 	 */

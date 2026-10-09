@@ -17,6 +17,7 @@ import * as P from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import { flow } from "effect/Function";
+import * as R from "effect/Record";
 
 /**
  * A heading level GitHub renders, `1` through `6`.
@@ -296,11 +297,11 @@ export class GitHubMarkdown {
 	 * @example
 	 * ```ts
 	 * import { GitHubMarkdown } from "./index.ts";
-	 * import { Schema } from "effect";
+	 * import * as S from "effect/Schema";
 	 *
-	 * const CheckRow = Schema.Struct({
-	 *   name: Schema.String.annotate({ title: "Check" }),
-	 *   outcome: Schema.Literals(["passed", "failed"]),
+	 * const CheckRow = S.Struct({
+	 *   name: S.String.annotate({ title: "Check" }),
+	 *   outcome: S.Literals(["passed", "failed"]),
 	 * });
 	 * const checks = GitHubMarkdown.tableFor(CheckRow);
 	 * const body = checks.render([{ name: "build", outcome: "passed" }]);
@@ -313,7 +314,7 @@ export class GitHubMarkdown {
 			: [options: GitHubSchemaTableOptions<S["fields"]>]
 	): GitHubSchemaTable<S["Type"]> {
 		const overrides: unknown = options[0]?.columns ?? {};
-		const columns: ReadonlyArray<ColumnRuntime> = Object.entries(schema.fields).map(([key, field]) => {
+		const columns: ReadonlyArray<ColumnRuntime> = R.toEntries(schema.fields).map(([key, field]) => {
 			const column = P.hasProperty(overrides, key) ? overrides[key] : undefined;
 			const format = P.hasProperty(column, "format") && P.isFunction(column.format) ? column.format : undefined;
 			const header = P.hasProperty(column, "header") && P.isString(column.header) ? column.header : undefined;

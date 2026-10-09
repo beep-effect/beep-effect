@@ -49,7 +49,8 @@ import type { ConfigFileShape, ConfigLoadError } from "./ConfigFile.ts";
  * @example
  * ```ts
  * import { asConfigProvider } from "./index.ts";
- * import { ConfigProvider, Effect } from "effect";
+ * import * as ConfigProvider from "effect/ConfigProvider";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  * 	const cfg = yield* AppConfig; // a ConfigFile.Service class

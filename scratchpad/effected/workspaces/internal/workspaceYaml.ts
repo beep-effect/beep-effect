@@ -8,13 +8,14 @@ import * as P from "effect/Predicate";
 import type { PeerDependencyRules } from "../ConfigDependencyHooks.ts";
 import { NoPeerDependencyRules } from "../ConfigDependencyHooks.ts";
 import { stringsOf } from "./patterns.ts";
+import * as R from "effect/Record";
 
 /** The `configDependencies` map (name → version+integrity) of a parsed pnpm-workspace document. */
 export const configDependenciesOf = (document: unknown): Record<string, string> => {
 	if (!P.isObject(document) || !P.isObject(document.configDependencies)) return {};
 	const out: Record<string, string> = {};
-	for (const [name, spec] of Object.entries(document.configDependencies)) {
-		if (typeof spec === "string") out[name] = spec;
+	for (const [name, spec] of R.toEntries(document.configDependencies)) {
+		if (P.isString(spec)) out[name] = spec;
 	}
 	return out;
 };
@@ -40,8 +41,8 @@ export const inlinePeerDependencyRules = (document: unknown): PeerDependencyRule
 	const block = document.peerDependencyRules;
 	const allowedVersions: Record<string, string> = {};
 	if (P.isObject(block.allowedVersions)) {
-		for (const [key, value] of Object.entries(block.allowedVersions)) {
-			if (typeof value === "string") allowedVersions[key] = value;
+		for (const [key, value] of R.toEntries(block.allowedVersions)) {
+			if (P.isString(value)) allowedVersions[key] = value;
 		}
 	}
 	return {

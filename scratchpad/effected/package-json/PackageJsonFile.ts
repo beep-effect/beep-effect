@@ -199,7 +199,7 @@ export interface PackageJsonFileShape {
  * ```ts
  * import { PackageJsonFile } from "./index.ts";
  * import { NodeFileSystem, NodePath } from "@effect/platform-node";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const files = yield* PackageJsonFile;

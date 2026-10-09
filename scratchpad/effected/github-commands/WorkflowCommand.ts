@@ -1,3 +1,4 @@
+import * as R from "effect/Record";
 /**
  * The title and source location of a `::notice::`, `::warning::` or `::error::`
  * annotation.
@@ -97,7 +98,7 @@ export class WorkflowCommand {
 		properties: Readonly<Record<string, string | number | boolean | undefined>>,
 		message: string,
 	): string {
-		const rendered = Object.entries(properties)
+		const rendered = R.toEntries(properties)
 			.filter((entry): entry is [string, string | number | boolean] => entry[1] !== undefined)
 			.map(([key, value]) => `${key}=${escapeProperty(String(value))}`)
 			.join(",");

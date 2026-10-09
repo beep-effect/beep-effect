@@ -9,6 +9,7 @@ import * as S from "effect/Schema";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
 import { heredocBlock, isUsableName } from "./internal/runnerFile.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github-actions/ActionOutputs");
 
@@ -286,12 +287,13 @@ const dies = unstubbed("ActionOutputs.makeTest");
  * @example
  * ```ts
  * import { ActionOutputs } from "./index.ts";
- * import { Effect, Schema } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as S from "effect/Schema";
  *
  * const program = Effect.gen(function* () {
  *   const outputs = yield* ActionOutputs;
  *   yield* outputs.set("version", "1.2.3");
- *   yield* outputs.setJson("packages", ["a", "b"], Schema.Array(Schema.String));
+ *   yield* outputs.setJson("packages", ["a", "b"], S.Array(S.String));
  * });
  * ```
  *
@@ -420,7 +422,7 @@ export class ActionOutputs extends Context.Service<ActionOutputs, ActionOutputsS
 		const entries: Array<RecordedOutput> = [];
 		const record = (member: RecordedOutputMember, value: string, name?: string): Effect.Effect<void> =>
 			Effect.sync(() => {
-				entries.push(RecordedOutput.make({ member, value, ...(name === undefined ? {} : { name }) }));
+				entries.push(RecordedOutput.make({ member, value, ...O.getSomesStruct({ name: O.fromUndefinedOr(name) }) }));
 			});
 		const layer = Layer.succeed(ActionOutputs, {
 			set: (name, value) => withUsableName(RUNNER_FILE.set, name, record("set", value, name)),

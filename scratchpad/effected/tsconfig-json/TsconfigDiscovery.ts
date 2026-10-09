@@ -34,12 +34,13 @@ const findNearest = (
  * @example
  * ```ts
  * import { TsconfigDiscovery } from "./index.ts";
- * import { Effect, Option } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
  *
  * // Requires `FileSystem` and `Path` in `R`; provide them from a platform layer.
  * const program = Effect.gen(function* () {
  * 	const found = yield* TsconfigDiscovery.findNearest(process.cwd());
- * 	return Option.getOrUndefined(found);
+ * 	return O.getOrUndefined(found);
  * });
  * ```
  *

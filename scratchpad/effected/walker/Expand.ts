@@ -118,7 +118,7 @@ export class GlobExpansionError extends S.TaggedError<GlobExpansionError>($I`Glo
  * ```ts
  * import { GlobPatternOptions } from "../glob/index.ts";
  * import { compileAndExpand } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  * 	// Sorted, cwd-relative POSIX paths; fails with `GlobExpansionError`.

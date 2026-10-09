@@ -316,7 +316,7 @@ const TEST_DEFAULTS: Readonly<Record<string, string>> = {
  * @example
  * ```ts
  * import { ActionEnvironment } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const env = yield* ActionEnvironment;
@@ -385,7 +385,7 @@ export class ActionEnvironment extends Context.Service<ActionEnvironment, Action
 	 * ```ts
 	 * import { ActionEnvironment } from "./index.ts";
 	 * import { MemoryFileSystem } from "../memfs/index.ts";
-	 * import { Layer } from "effect";
+	 * import * as Layer from "effect/Layer";
 	 *
 	 * const layer = Layer.effect(
 	 *   ActionEnvironment,

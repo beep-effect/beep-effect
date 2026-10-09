@@ -1,6 +1,7 @@
 import { dual } from "effect/Function";
 import type { BlockOf, Counter, Inline } from "../Doc.ts";
 import { Fmt } from "../Fmt.ts";
+import * as P from "effect/Predicate";
 
 /**
  * The label a counter shows for a count: its one label, or `one` when the count is exactly 1 and `other` otherwise.
@@ -13,7 +14,7 @@ export const counterLabel: {
 	(count?: number): (counter: Counter) => string;
 	(counter: Counter, count?: number): string;
 } = dual((args) => typeof args[0] === "object" && args[0] !== null, (counter: Counter, count: number = counter.n): string =>
-	typeof counter.label === "string" ? counter.label : count === 1 ? counter.label.one : counter.label.other);
+	P.isString(counter.label) ? counter.label : count === 1 ? counter.label.one : counter.label.other);
 
 /**
  * The label a counter's column is headed with in a `CountsTable`: its one label, or its plural form, since a column
@@ -22,7 +23,7 @@ export const counterLabel: {
  * @internal
  */
 export const columnLabel = (counter: Counter): string =>
-	typeof counter.label === "string" ? counter.label : counter.label.other;
+	P.isString(counter.label) ? counter.label : counter.label.other;
 
 /**
  * The total of a `Counts` block: the caller's rule when it has one, otherwise the sum of `n` over every counter.

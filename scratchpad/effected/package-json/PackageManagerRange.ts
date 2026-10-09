@@ -186,10 +186,11 @@ const fromParts = (
  * @example
  * ```ts
  * import { PackageManagerRange } from "./index.ts";
- * import { Effect, Schema } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as S from "effect/Schema";
  *
  * const program = Effect.gen(function* () {
- *   const pm = yield* Schema.decodeUnknownEffect(PackageManagerRange.FromString)("pnpm@^11.20.0");
+ *   const pm = yield* S.decodeUnknownEffect(PackageManagerRange.FromString)("pnpm@^11.20.0");
  *   console.log(pm.name, pm.range, pm.isExact); // "pnpm" "^11.20.0" false
  * });
  * ```

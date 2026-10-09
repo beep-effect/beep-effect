@@ -1,7 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { reconcile } from "./internal/reconcile.ts";
@@ -57,7 +57,7 @@ export class SectionParseError extends S.TaggedError<SectionParseError>($I`Secti
 			reason: error.reason,
 			line: error.line,
 			// An `optionalKey` field must be OMITTED rather than set to undefined.
-			...(error.key === undefined ? {} : { key: error.key }),
+			...O.getSomesStruct({ key: O.fromUndefinedOr(error.key) }),
 			path,
 		});
 	}
@@ -103,7 +103,7 @@ export interface SectionReconciliation {
  * @example
  * ```ts
  * import { CommentStyle, SectionDocument, SectionId } from "./index.ts";
- * import { Result } from "effect";
+ * import * as Result from "effect/Result";
  *
  * const doc = SectionDocument.parseResult(source);
  * if (Result.isSuccess(doc)) {
@@ -140,7 +140,7 @@ export class SectionDocument extends S.Class<SectionDocument>($I`SectionDocument
 		const scanned = scan(text, dialect);
 		if (!scanned.ok) {
 			const { reason, line, key } = scanned.failure;
-			return Result.fail(SectionParseError.make({ reason, line, ...(key === undefined ? {} : { key }) }));
+			return Result.fail(SectionParseError.make({ reason, line, ...O.getSomesStruct({ key: O.fromUndefinedOr(key) }) }));
 		}
 		return Result.succeed(SectionDocument.make({ text, dialect, sections: scanned.sections, eol: detectEol(text) }));
 	}

@@ -5,7 +5,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -194,7 +194,7 @@ const extractVersion = (probe: VersionProbe, stdout: string): O.Option<string> =
 			if (current === null || typeof current !== "object" || !P.hasProperty(current, key)) return O.none();
 			current = current[key];
 		}
-		return typeof current === "string" ? O.some(current) : O.none();
+		return P.isString(current) ? O.some(current) : O.none();
 	} catch {
 		return O.none();
 	}
@@ -351,7 +351,7 @@ const make = Effect.fnUntraced(function* () {
 			globalVersion: evidence.global.version,
 			localVersion: evidence.local.version,
 			mismatch,
-			...(context === undefined ? {} : { context }),
+			...O.getSomesStruct({ context: O.fromUndefinedOr(context) }),
 		});
 	});
 
@@ -399,7 +399,8 @@ const notStubbed = (method: string) => () =>
  * ```ts
  * import { LocalExec, Run, Tool, ToolDiscovery } from "./index.ts";
  * import { NodeServices } from "@effect/platform-node";
- * import { Effect, Layer } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  *
  * const program = Effect.gen(function* () {
  *   const discovery = yield* ToolDiscovery;

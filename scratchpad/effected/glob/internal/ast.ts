@@ -230,7 +230,7 @@ export class AST {
 	get hasMagic(): boolean | undefined {
 		if (this.#hasMagic !== undefined) return this.#hasMagic;
 		for (const p of this.#parts) {
-			if (typeof p === "string") continue;
+			if (P.isString(p)) continue;
 			if (p.type !== null || p.hasMagic === true) {
 				this.#hasMagic = true;
 				return this.#hasMagic;
@@ -270,7 +270,7 @@ export class AST {
 			while (pp !== undefined) {
 				for (let i = p.#parentIndex + 1; pp.type === null && i < pp.#parts.length; i++) {
 					for (const part of n.#parts) {
-						if (typeof part === "string") {
+						if (P.isString(part)) {
 							throw new Error("string part in extglob AST??");
 						}
 						const source = pp.#parts[i];
@@ -288,7 +288,7 @@ export class AST {
 	push(...parts: Array<string | AST>) {
 		for (const p of parts) {
 			if (p === "") continue;
-			if (typeof p !== "string" && !(p instanceof AST && p.#parent === this)) {
+			if (!P.isString(p) && !(p instanceof AST && p.#parent === this)) {
 				throw new Error(`invalid part: ${p}`);
 			}
 			this.#parts.push(p);
@@ -298,7 +298,7 @@ export class AST {
 	toJSON() {
 		const ret: Array<unknown> =
 			this.type === null
-				? this.#parts.slice().map((p) => (typeof p === "string" ? p : p.toJSON()))
+				? this.#parts.slice().map((p) => (P.isString(p) ? p : p.toJSON()))
 				: [this.type, ...this.#parts.map((p) => {
 					if (P.isString(p)) throw new TypeError("p.toJSON is not a function");
 					return p.toJSON();
@@ -337,7 +337,7 @@ export class AST {
 
 	copyIn(part: AST | string, depth = 0) {
 		guardDepth(depth);
-		if (typeof part === "string") this.push(part);
+		if (P.isString(part)) this.push(part);
 		else this.push(part.clone(this, depth + 1));
 	}
 
@@ -638,11 +638,11 @@ export class AST {
 			this.#fillNegs();
 		}
 		if (this.type === null) {
-			const noEmpty = this.isStart() && this.isEnd() && !this.#parts.some((s) => typeof s !== "string");
+			const noEmpty = this.isStart() && this.isEnd() && !this.#parts.some((s) => !P.isString(s));
 			const src = this.#parts
 				.map((p) => {
 					const [re, _, hasMagic, uflag] =
-						typeof p === "string" ? AST.#parseGlob(p, this.#hasMagic, noEmpty) : p.toRegExpSource(allowDot, depth + 1);
+						P.isString(p) ? AST.#parseGlob(p, this.#hasMagic, noEmpty) : p.toRegExpSource(allowDot, depth + 1);
 					this.#hasMagic = this.#hasMagic || hasMagic;
 					this.#uflag = this.#uflag || uflag;
 					return re;
@@ -651,7 +651,7 @@ export class AST {
 
 			let start = "";
 			if (this.isStart()) {
-				if (typeof this.#parts[0] === "string") {
+				if (P.isString(this.#parts[0])) {
 					// this is the string that will match the start of the pattern,
 					// so we need to protect against dots and such.
 
@@ -782,7 +782,7 @@ export class AST {
 		return this.#parts
 			.map((p) => {
 				// extglob ASTs should only contain parent ASTs
-				if (typeof p === "string") {
+				if (P.isString(p)) {
 					throw new Error("string type in extglob ast??");
 				}
 				// can ignore hasMagic, because extglobs are already always magic

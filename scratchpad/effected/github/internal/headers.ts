@@ -1,4 +1,5 @@
 import * as Function from "effect/Function";
+import * as P from "effect/Predicate";
 
 // Reading GitHub's response headers.
 //
@@ -15,8 +16,8 @@ export const headerString: {
 	name: string,
 ): string | undefined => {
 	const value = headers?.[name];
-	if (typeof value === "string") return value.length > 0 ? value : undefined;
-	if (typeof value === "number") return String(value);
+	if (P.isString(value)) return value.length > 0 ? value : undefined;
+	if (P.isNumber(value)) return String(value);
 	return undefined;
 });
 

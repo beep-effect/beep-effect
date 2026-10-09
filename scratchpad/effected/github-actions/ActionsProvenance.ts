@@ -40,7 +40,7 @@ const DEFAULT_SERVER_URL = "https://github.com";
  * @example
  * ```ts
  * import { ActionsProvenance } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const provenance = yield* ActionsProvenance.capture();

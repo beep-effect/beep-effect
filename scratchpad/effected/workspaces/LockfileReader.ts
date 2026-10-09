@@ -151,7 +151,7 @@ const unstubbed = (method: string): Effect.Effect<never> =>
  * @example
  * ```ts
  * import { LockfileReader } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const reader = yield* LockfileReader;
@@ -252,7 +252,7 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 					const parsed = yield* S.decodeEffect(JsonValue)(content).pipe(Effect.orElseSucceed(() => undefined));
 					if (!P.isObject(parsed)) return O.none<string>();
 					const name = parsed.name;
-					return typeof name === "string" && name.length > 0 ? O.some(name) : O.none<string>();
+					return P.isString(name) && name.length > 0 ? O.some(name) : O.none<string>();
 				});
 
 			const [resolveOnce, invalidate] = yield* Effect.cachedInvalidateWithTTL(init, Duration.infinity);
@@ -329,7 +329,7 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 	 * ```ts
 	 * import { Lockfile } from "../lockfiles/index.ts";
 	 * import { LockfileReader } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const double = LockfileReader.makeTest({
 	 *   read:

@@ -653,7 +653,7 @@ interface Policy {
  * ```ts
  * import { Lockfile } from "../lockfiles/index.ts";
  * import { PeerCheck } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * declare const text: string; // the text of a pnpm-lock.yaml
  *

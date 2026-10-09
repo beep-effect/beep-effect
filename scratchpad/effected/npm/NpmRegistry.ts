@@ -3,7 +3,7 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import type { HttpClientError } from "effect/http";
@@ -11,6 +11,7 @@ import { HttpClient } from "effect/http";
 import { IntegrityHash } from "./IntegrityHash.ts";
 import type { RegistryCredential } from "./RegistryCredential.ts";
 import { classifyRegistry } from "./RegistryKind.ts";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/npm/NpmRegistry");
 
@@ -300,7 +301,7 @@ const make = Effect.fnUntraced(function* () {
 				const published = document.value.versions;
 				// `hasOwn` rather than a bare index: the version number is caller
 				// input, and a key like `constructor` must not read the prototype.
-				if (published === undefined || !Object.hasOwn(published, versionNumber)) {
+				if (published === undefined || !R.has(published, versionNumber)) {
 					return Effect.succeed(O.none<typeof VersionManifest.Type>());
 				}
 				return S.decodeUnknownEffect(VersionManifest)(published[versionNumber]).pipe(
@@ -342,7 +343,7 @@ const make = Effect.fnUntraced(function* () {
 		const document = yield* packument(name, target);
 		return O.match(document, {
 			onNone: (): ReadonlyArray<string> => [],
-			onSome: (found) => Object.keys(found.versions ?? {}),
+			onSome: (found) => R.keys(found.versions ?? {}),
 		});
 	});
 
@@ -362,7 +363,7 @@ const make = Effect.fnUntraced(function* () {
 			onNone: (): ReadonlyArray<PublishTime> => [],
 			onSome: (found) => {
 				const entries: Array<PublishTime> = [];
-				for (const [key, value] of Object.entries(found.time ?? {})) {
+				for (const [key, value] of R.toEntries(found.time ?? {})) {
 					if (NON_VERSION_TIME_KEYS.has(key)) continue;
 					// An unparseable timestamp drops the entry rather than failing the
 					// read: the caller's question is "when were these published", and
@@ -434,13 +435,14 @@ export interface RegistrySeed {
  * @example
  * ```ts
  * import { NpmRegistry } from "./index.ts";
- * import { Effect, Option } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
  * import { FetchHttpClient } from "effect/http";
  *
  * const program = Effect.gen(function* () {
  *   const registry = yield* NpmRegistry;
  *   const found = yield* registry.version("effect", "4.0.0");
- *   return Option.map(found, (published) => published.tarball);
+ *   return O.map(found, (published) => published.tarball);
  * });
  *
  * Effect.runPromise(program.pipe(Effect.provide(NpmRegistry.layer), Effect.provide(FetchHttpClient.layer)));
@@ -495,16 +497,16 @@ export class NpmRegistry extends Context.Service<NpmRegistry, NpmRegistryShape>(
 									name,
 									version,
 									...integrityField(found.integrity),
-									...(found.tarball === undefined ? {} : { tarball: found.tarball }),
+									...O.getSomesStruct({ tarball: O.fromUndefinedOr(found.tarball) }),
 								}),
 							),
 				);
 			},
-			versions: (name, target) => Effect.succeed(Object.keys(at(target)[name] ?? {})),
+			versions: (name, target) => Effect.succeed(R.keys(at(target)[name] ?? {})),
 			distTags: (name) => Effect.succeed({ ...(seed.distTags?.[name] ?? {}) }),
 			publishTimes: (name, target) =>
 				Effect.succeed(
-					Object.entries(at(target)[name] ?? {}).flatMap(([version, facts]) => {
+					R.toEntries(at(target)[name] ?? {}).flatMap(([version, facts]) => {
 						if (facts.publishedAt === undefined) return [];
 						const parsed = DateTime.make(facts.publishedAt);
 						return O.isNone(parsed) ? [] : [PublishTime.make({ version, publishedAt: parsed.value })];

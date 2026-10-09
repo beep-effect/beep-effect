@@ -16,6 +16,10 @@
 
 import type { CompilerOptions } from "./CompilerOptions.ts";
 import type { Reference, TsconfigJson, TypeAcquisition, WatchOptions } from "./TsconfigJson.ts";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as O from "@beep/utils/Option";
 
 /**
  * The result of resolving a tsconfig.json's full `extends` chain: the merged
@@ -104,7 +108,7 @@ const rebuildRecord = <Value>(
 	mapValue: (key: string, value: Value | undefined) => Value | undefined,
 ): Record<string, Value> => {
 	const out: Record<string, Value> = {};
-	for (const key of Object.keys(source)) {
+	for (const key of R.keys(source)) {
 		Object.defineProperty(out, key, {
 			value: mapValue(key, source[key]),
 			enumerable: true,
@@ -146,17 +150,17 @@ const transformCompilerOptionPaths = (
 	const out: { -readonly [Key in keyof CompilerOptions.Type]: CompilerOptions.Type[Key] } = { ...co };
 	for (const key of PATH_STRING_KEYS) {
 		const value = out[key];
-		if (typeof value === "string") out[key] = transform(value);
+		if (P.isString(value)) out[key] = transform(value);
 	}
 	for (const key of PATH_LIST_KEYS) {
 		const value = out[key];
-		if (Array.isArray(value)) out[key] = value.map((entry) => (typeof entry === "string" ? transform(entry) : entry));
+		if (A.isArray(value)) out[key] = value.map((entry) => (P.isString(entry) ? transform(entry) : entry));
 	}
 	if (includePathsValues) {
 		const paths = out.paths;
 		if (paths !== null && typeof paths === "object") {
 			out.paths = rebuildRecord(paths, (_key, arr) =>
-				Array.isArray(arr) ? arr.map((entry) => (typeof entry === "string" ? transform(entry) : entry)) : arr,
+				A.isArray(arr) ? arr.map((entry) => (P.isString(entry) ? transform(entry) : entry)) : arr,
 			);
 		}
 	}
@@ -213,7 +217,7 @@ const extractPassthrough = (
 	consumed: ReadonlySet<string>,
 ): Record<string, unknown> => {
 	const out: Record<string, unknown> = {};
-	for (const key of Object.keys(source)) {
+	for (const key of R.keys(source)) {
 		if (consumed.has(key)) continue;
 		Object.defineProperty(out, key, { value: source[key], enumerable: true, writable: true, configurable: true });
 	}
@@ -291,14 +295,14 @@ const merge = (base: ResolvedTsconfig, derived: TsconfigJson.Type, derivedPath: 
 		configPath: derivedPath,
 		extendedPaths: [...base.extendedPaths, derivedPath],
 		compilerOptions,
-		...(files !== undefined ? { files } : {}),
-		...(include !== undefined ? { include } : {}),
-		...(exclude !== undefined ? { exclude } : {}),
-		...(references !== undefined ? { references } : {}),
-		...(watchOptions !== undefined ? { watchOptions } : {}),
-		...(typeAcquisition !== undefined ? { typeAcquisition } : {}),
-		...(compileOnSave !== undefined ? { compileOnSave } : {}),
-		...(pathsBase !== undefined ? { pathsBase } : {}),
+		...O.getSomesStruct({ files: O.fromUndefinedOr(files) }),
+		...O.getSomesStruct({ include: O.fromUndefinedOr(include) }),
+		...O.getSomesStruct({ exclude: O.fromUndefinedOr(exclude) }),
+		...O.getSomesStruct({ references: O.fromUndefinedOr(references) }),
+		...O.getSomesStruct({ watchOptions: O.fromUndefinedOr(watchOptions) }),
+		...O.getSomesStruct({ typeAcquisition: O.fromUndefinedOr(typeAcquisition) }),
+		...O.getSomesStruct({ compileOnSave: O.fromUndefinedOr(compileOnSave) }),
+		...O.getSomesStruct({ pathsBase: O.fromUndefinedOr(pathsBase) }),
 	};
 };
 
@@ -312,8 +316,8 @@ const substituteWatchExcludes = (
 	const out: { -readonly [Key in keyof WatchOptions.Type]: WatchOptions.Type[Key] } = { ...wo };
 	for (const key of ["excludeDirectories", "excludeFiles"] as const) {
 		const value = out[key];
-		if (Array.isArray(value)) {
-			out[key] = value.map((entry) => (typeof entry === "string" ? substitute(entry) : entry));
+		if (A.isArray(value)) {
+			out[key] = value.map((entry) => (P.isString(entry) ? substitute(entry) : entry));
 		}
 	}
 	return out;
@@ -333,10 +337,10 @@ const substituteConfigDir = (resolved: ResolvedTsconfig, finalDir: string): Reso
 	return {
 		...resolved,
 		compilerOptions,
-		...(files !== undefined ? { files } : {}),
-		...(include !== undefined ? { include } : {}),
-		...(exclude !== undefined ? { exclude } : {}),
-		...(watchOptions !== undefined ? { watchOptions } : {}),
+		...O.getSomesStruct({ files: O.fromUndefinedOr(files) }),
+		...O.getSomesStruct({ include: O.fromUndefinedOr(include) }),
+		...O.getSomesStruct({ exclude: O.fromUndefinedOr(exclude) }),
+		...O.getSomesStruct({ watchOptions: O.fromUndefinedOr(watchOptions) }),
 	};
 };
 

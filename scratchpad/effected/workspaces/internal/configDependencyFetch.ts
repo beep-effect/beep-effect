@@ -51,6 +51,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import type { HookReplayContext } from "../ConfigDependencyHooks.ts";
 import { carries, manifestVersion, messageOf, sideLabel } from "./configDependencyShared.ts";
 import { splitConfigDependencySpec } from "./configDependencySpecGrammar.ts";
+import * as R from "effect/Record";
 
 // The caller's Effect FileSystem may be virtual; fetching must use the real scratch workspace and store.
 const { copyFile, mkdtemp, readFile, realpath, rm, writeFile } = process.getBuiltinModule("node:fs/promises");
@@ -199,11 +200,11 @@ export const registrySettingsOf = (document: unknown): RegistrySettings => {
 	if (!P.isObject(document)) return { registries: {} };
 	const registries: Record<string, string> = {};
 	if (P.isObject(document.registries)) {
-		for (const [scope, url] of Object.entries(document.registries)) {
-			if (typeof url === "string") registries[scope] = url;
+		for (const [scope, url] of R.toEntries(document.registries)) {
+			if (P.isString(url)) registries[scope] = url;
 		}
 	}
-	return typeof document.registry === "string" ? { registry: document.registry, registries } : { registries };
+	return P.isString(document.registry) ? { registry: document.registry, registries } : { registries };
 };
 
 /**
@@ -215,14 +216,14 @@ export const registrySettingsOf = (document: unknown): RegistrySettings => {
 export const scratchWorkspaceYaml: {
 	(version: string, settings?: RegistrySettings): (name: string) => string;
 	(name: string, version: string, settings?: RegistrySettings): string;
-} = dual((args) => typeof args[1] === "string", (
+} = dual((args) => P.isString(args[1]), (
 	name: string,
 	version: string,
 	settings: RegistrySettings = { registries: {} },
 ): string => {
 	const lines = ["configDependencies:", `  ${JSON.stringify(name)}: ${JSON.stringify(version)}`];
 	if (settings.registry !== undefined) lines.push(`registry: ${JSON.stringify(settings.registry)}`);
-	const scopes = Object.entries(settings.registries);
+	const scopes = R.toEntries(settings.registries);
 	if (scopes.length > 0) {
 		lines.push("registries:");
 		for (const [scope, url] of scopes) lines.push(`  ${JSON.stringify(scope)}: ${JSON.stringify(url)}`);

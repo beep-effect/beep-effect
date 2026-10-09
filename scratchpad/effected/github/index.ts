@@ -14,7 +14,7 @@
  * @example
  * ```ts
  * import { GitHubClient } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const client = yield* GitHubClient;

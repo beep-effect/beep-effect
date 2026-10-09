@@ -6,6 +6,8 @@ import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
+import * as P from "effect/Predicate";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github/ArtifactMetadata");
 
@@ -91,9 +93,9 @@ const make = (client: GitHubClient["Service"]): ArtifactMetadataShape => ({
 			digest: input.digest,
 			registry_url: input.registryUrl,
 			repository: input.repository,
-			...(input.artifactUrl !== undefined ? { artifact_url: input.artifactUrl } : {}),
-			...(input.path !== undefined ? { path: input.path } : {}),
+			...O.getSomesStruct({ artifact_url: O.fromUndefinedOr(input.artifactUrl) }),
+			...O.getSomesStruct({ path: O.fromUndefinedOr(input.path) }),
 		});
-		return (stored.storage_records ?? []).flatMap((record) => (typeof record.id === "number" ? [record.id] : []));
+		return (stored.storage_records ?? []).flatMap((record) => (P.isNumber(record.id) ? [record.id] : []));
 	}),
 });

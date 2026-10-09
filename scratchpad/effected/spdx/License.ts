@@ -61,7 +61,7 @@ const LICENSE_REF_PATTERN = /^(?:DocumentRef-[A-Za-z0-9.-]+:)?LicenseRef-[A-Za-z
  * @example
  * ```ts
  * import { License } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const mit = yield* License.parse("MIT");
@@ -194,11 +194,11 @@ export class License extends S.Class<License>($I`License`)({
 	 * @example
 	 * ```ts
 	 * import { License } from "./index.ts";
-	 * import { Option } from "effect";
+	 * import * as O from "effect/Option";
 	 *
-	 * console.log(Option.getOrNull(License.of("MIT").referenceUrl));
+	 * console.log(O.getOrNull(License.of("MIT").referenceUrl));
 	 * // => "https://spdx.org/licenses/MIT.html"
-	 * console.log(Option.getOrNull(License.of("LicenseRef-Acme").referenceUrl));
+	 * console.log(O.getOrNull(License.of("LicenseRef-Acme").referenceUrl));
 	 * // => null
 	 * ```
 	 */

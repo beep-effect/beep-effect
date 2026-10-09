@@ -5,6 +5,7 @@ import { sanitize } from "../Fmt.ts";
 import type { RenderContext } from "../Render.ts";
 import type { Style, TokenName } from "../Token.ts";
 import { displayWidth, graphemes } from "./displayWidth.ts";
+import * as O from "@beep/utils/Option";
 
 /**
  * A run of text with one style and one link: the unit a renderer lays out.
@@ -54,7 +55,7 @@ const safeTarget = (target: LinkTarget): LinkTarget =>
 const spansOf = (inline: Inline, ctx: RenderContext): ReadonlyArray<Span> => {
 	switch (inline._tag) {
 		case "Text":
-			return [{ text: sanitize(inline.value), ...(inline.token === undefined ? {} : { token: inline.token }) }];
+			return [{ text: sanitize(inline.value), ...O.getSomesStruct({ token: O.fromUndefinedOr(inline.token) }) }];
 		case "Code":
 			return [{ text: sanitize(inline.value), code: true }];
 		case "Link": {
@@ -180,13 +181,13 @@ export const truncateSpans: {
 		return [
 			{
 				text: ellipsis,
-				...(first.token === undefined ? {} : { token: first.token }),
-				...(first.link === undefined ? {} : { link: first.link }),
+				...O.getSomesStruct({ token: O.fromUndefinedOr(first.token) }),
+				...O.getSomesStruct({ link: O.fromUndefinedOr(first.link) }),
 			},
 		];
 	}
 	if (last.code === true) {
-		return [...out, { text: ellipsis, ...(last.link === undefined ? {} : { link: last.link }) }];
+		return [...out, { text: ellipsis, ...O.getSomesStruct({ link: O.fromUndefinedOr(last.link) }) }];
 	}
 	return [...out.slice(0, -1), { ...last, text: last.text + ellipsis }];
 });
@@ -259,7 +260,7 @@ export interface WrapOptions {
 export const wrapSpans: {
 	(width: number, options?: WrapOptions): (spans: ReadonlyArray<Span>) => ReadonlyArray<ReadonlyArray<Span>>;
 	(spans: ReadonlyArray<Span>, width: number, options?: WrapOptions): ReadonlyArray<ReadonlyArray<Span>>;
-} = dual((args) => Array.isArray(args[0]), (
+} = dual((args) => A.isArray(args[0]), (
 	spans: ReadonlyArray<Span>,
 	width: number,
 	options?: WrapOptions,

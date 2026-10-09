@@ -1,4 +1,6 @@
 import { dual } from "effect/Function";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
 /**
  * A true plain object: `{}` or `Object.create(null)`. Class instances, `Date`,
  * `Map`, `Set`, `RegExp` and arrays are values, not merge targets.
@@ -11,7 +13,7 @@ import { dual } from "effect/Function";
  * atomic — the higher-priority source wins them whole.
  */
 export const isPlainObject = (value: unknown): value is Record<string, unknown> => {
-	if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+	if (typeof value !== "object" || value === null || A.isArray(value)) return false;
 	const proto = Object.getPrototypeOf(value);
 	return proto === Object.prototype || proto === null;
 };
@@ -73,17 +75,17 @@ function mergeRecords(
 	// and reassign `result`'s prototype to attacker-controlled data — defeating
 	// FORBIDDEN and the prototype we just installed. `Object.assign` and `result[k] = v`
 	// both do this; `defineProperty` does not.
-	for (const key of Object.keys(target)) {
+	for (const key of R.keys(target)) {
 		if (FORBIDDEN.has(key)) continue;
 		define(result, key, target[key]);
 	}
-	for (const key of Object.keys(source)) {
+	for (const key of R.keys(source)) {
 		if (FORBIDDEN.has(key)) continue;
 		const sourceValue = source[key];
 		const targetValue = result[key];
-		if (Object.hasOwn(result, key) && isPlainObject(targetValue) && isPlainObject(sourceValue)) {
+		if (R.has(result, key) && isPlainObject(targetValue) && isPlainObject(sourceValue)) {
 			define(result, key, deepMerge(targetValue, sourceValue));
-		} else if (!Object.hasOwn(result, key)) {
+		} else if (!R.has(result, key)) {
 			define(result, key, sourceValue);
 		}
 	}

@@ -98,7 +98,7 @@ const spawnError = (tag: "NotFound" | "PermissionDenied", command: string, code:
  * @example
  * ```ts
  * import { Run, ScriptedSpawner } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  * import { ChildProcess } from "effect/process";
  *
  * // One call scripts the whole spawner contract:

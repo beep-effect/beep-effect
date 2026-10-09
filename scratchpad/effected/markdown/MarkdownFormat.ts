@@ -58,6 +58,7 @@ import {
 	Text,
 	ThematicBreakChar,
 } from "./MarkdownNode.ts";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/markdown/MarkdownFormat");
 
@@ -606,7 +607,7 @@ const findAncestry = (root: Root, target: MarkdownNode): ReadonlyArray<MarkdownN
  * @example
  * ```ts
  * import { MarkdownDocument, MarkdownFormat, MarkdownFormattingOptions } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const options = MarkdownFormattingOptions.make({ bulletChar: "-", headingStyle: "atx" });
  * const normalized = MarkdownFormat.formatToString("* a\n* b\n\nSetext\n======\n", undefined, options);
@@ -783,7 +784,7 @@ export class MarkdownFormat {
 			return yield* fail("UnsupportedTarget", `a ${target.type} node inside a ${parent.type} cannot be replaced`);
 		}
 		let renderRoot: Root;
-		if (typeof replacement === "string") {
+		if (P.isString(replacement)) {
 			// Synthesized render scaffolding: `make` fills the zero-width
 			// sentinel position, and the stringifier never reads it.
 			const textNode = Text.make({ value: replacement });

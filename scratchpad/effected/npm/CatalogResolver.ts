@@ -37,12 +37,13 @@ const $I = $ScratchpadId.create("effected/npm/CatalogResolver");
  *
  * @example
  * ```ts
- * import { Effect, Option } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
  * import { CatalogResolver } from "./index.ts";
  *
  * const program = Effect.gen(function* () {
  *   const resolver = yield* CatalogResolver;
- *   return yield* resolver.rangeOf("effect", Option.none());
+ *   return yield* resolver.rangeOf("effect", O.none());
  * });
  *
  * Effect.runPromise(Effect.provide(program, CatalogResolver.noop));

@@ -35,8 +35,8 @@ const $I = $ScratchpadId.create("effected/jsonl/Line");
  * a malformed *line* stay distinguishable failures.
  *
  * **Example** (Inspect a parsed value and its source)
- * ```ts import.meta.vitest name="Inspect a parsed value and its source"
- * import { pipe } from "effect";
+ * ```ts
+ * import { pipe } from "effect/Function";
  * import { Line } from "@beep/scratchpad/effected/jsonl/index";
  * import * as A from "effect/Array";
  * import * as O from "effect/Option";

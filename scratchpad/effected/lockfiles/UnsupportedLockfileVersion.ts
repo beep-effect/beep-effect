@@ -52,7 +52,7 @@ export interface UnsupportedLockfileVersion {
  * @example
  * ```ts
  * import { Lockfile, isUnsupportedLockfileVersion } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const parsed = Lockfile.parse(text, { format: "npm" }).pipe(
  *   Effect.catchTag("LockfileParseError", (error) =>

@@ -3,6 +3,8 @@ import type * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { retryAfterMillisFrom } from "./internal/headers.ts";
+import * as A from "effect/Array";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github/GraphQL");
 
@@ -74,7 +76,7 @@ export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>($I`Git
       operation,
       reason,
       errors: [],
-      ...(cause !== undefined ? { cause } : {}),
+      ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
     });
   }
 
@@ -90,13 +92,13 @@ export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>($I`Git
    */
   static fromThrowable(operation: string, error: unknown, nowMillis: number): GitHubGraphQLError {
     const record = asRecord(error);
-    const status = typeof record?.status === "number" ? record.status : undefined;
+    const status = P.isNumber(record?.status) ? record.status : undefined;
     const headers = asRecord(record?.headers) ?? asRecord(asRecord(record?.response)?.headers);
     const entries = readEntries(record?.errors);
     const reason =
       entries.length > 0
         ? entries.map((entry) => entry.message).join("; ")
-        : typeof record?.message === "string"
+        : P.isString(record?.message)
           ? record.message
           : String(error);
     const retryAfterMillis = retryAfterMillisFrom(headers, nowMillis);
@@ -105,7 +107,7 @@ export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>($I`Git
     operation,
     reason,
     errors: entries,
-    ...(retryAfterMillis !== undefined ? { retryAfterMillis } : {}),
+    ...O.getSomesStruct({ retryAfterMillis: O.fromUndefinedOr(retryAfterMillis) }),
     cause: error,
 });
   }
@@ -117,14 +119,14 @@ const asRecord = (value: unknown): Record<string, unknown> | undefined =>
   isRecord(value) ? value : undefined;
 
 const readEntries = (value: unknown): ReadonlyArray<GraphQLErrorEntry> => {
-  if (!Array.isArray(value)) return [];
+  if (!A.isArray(value)) return [];
   const entries: Array<GraphQLErrorEntry> = [];
   for (const raw of value) {
     const record = asRecord(raw);
     if (record === undefined) continue;
-    const message = typeof record.message === "string" ? record.message : String(raw);
-    const type = typeof record.type === "string" ? record.type : undefined;
-    entries.push(GraphQLErrorEntry.make({ message, ...(type !== undefined ? { type } : {}) }));
+    const message = P.isString(record.message) ? record.message : String(raw);
+    const type = P.isString(record.type) ? record.type : undefined;
+    entries.push(GraphQLErrorEntry.make({ message, ...O.getSomesStruct({ type: O.fromUndefinedOr(type) }) }));
   }
   return entries;
 };
@@ -169,12 +171,13 @@ const classify = (
  * @example
  * ```ts
  * import { GitHubClient, GraphQLDocument } from "./index.ts";
- * import { Effect, Schema } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as S from "effect/Schema";
  *
  * const OwnerLogin = GraphQLDocument.make({
  *   name: "ownerLogin",
  *   document: `query ($owner: String!) { repositoryOwner(login: $owner) { login } }`,
- *   response: Schema.Struct({ repositoryOwner: Schema.NullOr(Schema.Struct({ login: Schema.String })) }),
+ *   response: S.Struct({ repositoryOwner: S.NullOr(S.Struct({ login: S.String })) }),
  * })<{ readonly owner: string }>();
  *
  * const login = Effect.gen(function* () {

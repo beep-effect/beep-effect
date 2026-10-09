@@ -56,7 +56,8 @@ const KINDS: ReadonlyArray<AudienceKind> = ["human", "agent", "ci"];
  * @example
  * ```ts
  * import { Audience, CurrentRuntimeEnv } from "./index.ts"
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  *
  * const AudienceLive = Audience.layer({ envVar: "MYTOOL_AUDIENCE" }).pipe(Layer.provide(CurrentRuntimeEnv.layer))
  *
@@ -92,7 +93,7 @@ export class Audience extends Context.Service<Audience, AudienceShape>()($I`Audi
 				const envVar = options?.envVar;
 				if (envVar === undefined) return detected;
 
-				const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(() => O.none<string>()));
+				const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(O.none<string>));
 				if (O.isNone(raw) || raw.value === "") return detected;
 
 				const value = raw.value.toLowerCase();

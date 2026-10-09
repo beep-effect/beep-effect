@@ -11,6 +11,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { License, isValidExpression } from "../spdx/index.ts";
 import * as S from "effect/Schema";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/sbom/SbomDocument");
 
@@ -181,7 +182,7 @@ export class SbomDocument extends S.Class<SbomDocument>($I`SbomDocument`)({
 /** Drop absent keys so the emitted JSON omits them rather than carrying nulls. */
 const compact = <T extends Record<string, unknown>>(value: T): Record<string, unknown> => {
 	const out: Record<string, unknown> = {};
-	for (const [key, entry] of Object.entries(value)) {
+	for (const [key, entry] of R.toEntries(value)) {
 		if (entry !== undefined) out[key] = entry;
 	}
 	return out;

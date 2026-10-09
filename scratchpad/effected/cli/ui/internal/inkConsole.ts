@@ -5,6 +5,8 @@ import * as Inspectable from "effect/Inspectable";
 import type { FunctionComponent, ReactNode } from "react";
 import { UiStreams } from "../UiStreams.ts";
 import { inkModules } from "./ink.ts";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 
 /**
  * A `Console` that writes above a mounted Ink frame, the component that connects it, and the switch back to direct
@@ -47,13 +49,13 @@ const textOf = (args: ReadonlyArray<unknown>): string => args.map(shown).join(" 
 /** `console.table`'s rows, as a plain pipe table: an `(index)` column, then each key, then `Values` for scalars. */
 const tableOf = (data: unknown, properties?: ReadonlyArray<string>): string => {
 	if (data === null || typeof data !== "object") return textOf([data]);
-	const rows = Object.entries(data);
+	const rows = R.toEntries(data);
 	const isRecord = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === "object";
-	const keys = properties ?? [...new Set(rows.flatMap(([, value]) => (isRecord(value) ? Object.keys(value) : [])))];
+	const keys = properties ?? [...new Set(rows.flatMap(([, value]) => (isRecord(value) ? R.keys(value) : [])))];
 	const scalars = rows.some(([, value]) => !isRecord(value));
 	const header = ["(index)", ...keys, ...(scalars ? ["Values"] : [])];
 	const cell = (value: unknown): string =>
-		value === undefined ? "" : typeof value === "string" ? value : shown(value);
+		value === undefined ? "" : P.isString(value) ? value : shown(value);
 	const body = rows.map(([index, value]) => [
 		index,
 		...keys.map((key) => (isRecord(value) ? cell(value[key]) : "")),

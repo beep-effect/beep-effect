@@ -10,7 +10,7 @@
  * @example
  * ```ts
  * import { Range, SemVer } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const version = yield* SemVer.parse("1.2.3");

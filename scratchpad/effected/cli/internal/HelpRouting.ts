@@ -1,6 +1,7 @@
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import { CliOutput } from "effect/cli";
+import * as P from "effect/Predicate";
 
 type Method = Exclude<keyof Console.Console, "log" | "error">;
 
@@ -79,11 +80,11 @@ export const routeHelpOnUsageError = <A, E, R>(program: Effect.Effect<A, E, R>):
 		const routing: Console.Console = Object.assign(Object.create(sink), others);
 		routing.log = (...args: ReadonlyArray<unknown>) => {
 			release();
-			if (args.length === 1 && typeof args[0] === "string" && helps.has(args[0])) held = args;
+			if (args.length === 1 && P.isString(args[0]) && helps.has(args[0])) held = args;
 			else sink.log(...args);
 		};
 		routing.error = (...args: ReadonlyArray<unknown>) => {
-			if (held !== undefined && args.length === 1 && typeof args[0] === "string" && errors.has(args[0])) {
+			if (held !== undefined && args.length === 1 && P.isString(args[0]) && errors.has(args[0])) {
 				const help = held;
 				held = undefined;
 				sink.error(...help);

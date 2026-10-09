@@ -201,7 +201,7 @@ export interface InTotoSubjectInput {
  * @example
  * ```ts
  * import { InTotoStatement, Sha256Digest, SlsaProvenance } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const digest = yield* Sha256Digest.parse("ab".repeat(32));

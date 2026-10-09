@@ -8,6 +8,8 @@ import * as Logger from "effect/Logger";
 import * as References from "effect/References";
 import { sanitize } from "./Fmt.ts";
 import { TrustedLine, sanitizeParts, underActionsIn } from "./internal/logSafety.ts";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
 
 /**
  * How a log record is turned into a line.
@@ -47,7 +49,7 @@ export interface CliLoggerOptions {
 }
 
 const defaultRender = (message: unknown): string =>
-	Array.isArray(message) ? message.map(String).join(" ") : String(message);
+	A.isArray(message) ? message.map(String).join(" ") : String(message);
 
 /**
  * A `Logger` that renders CLI output rather than service logs: no timestamp, level or fiber id, with every level
@@ -73,7 +75,8 @@ const defaultRender = (message: unknown): string =>
  * @example
  * ```ts
  * import { CliLogger } from "./index.ts"
- * import { Console, Effect } from "effect"
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   yield* Effect.log("synced 3 repos")    // stderr, no timestamp — a diagnostic
@@ -127,7 +130,7 @@ export class CliLogger {
 export const makeCliLogger: {
 	(options?: CliLoggerOptions, underActions?: (fiber: Fiber.Fiber<unknown, unknown>) => boolean): Logger.Logger<unknown, void>;
 	(underActions?: (fiber: Fiber.Fiber<unknown, unknown>) => boolean): (options?: CliLoggerOptions) => Logger.Logger<unknown, void>;
-} = dual((args) => typeof args[0] !== "function", (
+} = dual((args) => !P.isFunction(args[0]), (
 	options: CliLoggerOptions = {},
 	underActions: (fiber: Fiber.Fiber<unknown, unknown>) => boolean = underActionsIn,
 ): Logger.Logger<unknown, void> => {

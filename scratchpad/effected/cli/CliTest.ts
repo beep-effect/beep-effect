@@ -5,6 +5,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Stream from "effect/Stream";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as R from "effect/Record";
 
 /**
  * A hermetic temp directory minted by {@link CliTest.sandbox}, removed when its
@@ -73,7 +74,7 @@ const text = <E, R>(stream: Stream.Stream<Uint8Array, E, R>): Effect.Effect<stri
  * import * as NodeServices from "@effect/platform-node/NodeServices"
  * import { assert, it } from "@effect/vitest"
  * import { CliTest } from "./testing.ts"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  *
  * it.effect("prints its version", () =>
  *   Effect.gen(function* () {
@@ -116,7 +117,7 @@ export class CliTest {
 				XDG_STATE_HOME: path.join(home, ".local", "state"),
 				XDG_CACHE_HOME: path.join(home, ".cache"),
 			};
-			for (const dir of Object.values(xdg)) yield* fs.makeDirectory(dir, { recursive: true });
+			for (const dir of R.values(xdg)) yield* fs.makeDirectory(dir, { recursive: true });
 			return { root, home, env: { HOME: home, ...xdg, PATH: options.path, NO_COLOR: "1" } };
 		});
 

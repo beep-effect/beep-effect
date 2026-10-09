@@ -98,7 +98,7 @@ export interface PullRequestCommentShape {
  * @example
  * ```ts
  * import { CommentMarker, PullRequestComment } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const marker = CommentMarker.make({ namespace: "my-action", key: "report" });
  *

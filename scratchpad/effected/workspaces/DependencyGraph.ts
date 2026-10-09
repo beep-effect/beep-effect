@@ -10,6 +10,7 @@ import * as Graph from "effect/Graph";
 import * as S from "effect/Schema";
 import { PackageNotFoundError } from "./WorkspaceDiscovery.ts";
 import { WorkspacePackage } from "./WorkspacePackage.ts";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/workspaces/DependencyGraph");
 
@@ -84,7 +85,7 @@ interface Edges {
  * @example
  * ```ts
  * import { DependencyGraph, WorkspaceDiscovery } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const discovery = yield* WorkspaceDiscovery;
@@ -111,7 +112,7 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 			reverse.set(name, new Set());
 		}
 		for (const pkg of this.packages) {
-			for (const dependency of Object.keys(pkg.allDependencies)) {
+			for (const dependency of R.keys(pkg.allDependencies)) {
 				if (!names.has(dependency) || dependency === pkg.name) continue;
 				forward.get(pkg.name)?.add(dependency);
 				reverse.get(dependency)?.add(pkg.name);

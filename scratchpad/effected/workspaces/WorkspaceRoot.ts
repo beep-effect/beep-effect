@@ -11,7 +11,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
@@ -174,7 +174,7 @@ const isAtOrBelow = (descendant: string, ancestor: string): boolean => {
  * @example
  * ```ts
  * import { WorkspaceRoot } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const root = yield* WorkspaceRoot;
@@ -188,7 +188,7 @@ const isAtOrBelow = (descendant: string, ancestor: string): boolean => {
  *
  * ```ts
  * import { WorkspaceRoot } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const roots = yield* WorkspaceRoot;
@@ -218,7 +218,7 @@ export class WorkspaceRoot extends Context.Service<WorkspaceRoot, WorkspaceRootS
 					// Conditional spreads, not explicit `undefined`: walker reads these
 					// with `?? default`, and an explicit `undefined` is fine there, but
 					// the house rule keeps optional keys absent when unset.
-					...(ceiling === undefined ? {} : { stopAt: ceiling }),
+					...O.getSomesStruct({ stopAt: O.fromUndefinedOr(ceiling) }),
 					...(options?.maxDepth === undefined ? {} : { maxDepth: options.maxDepth }),
 				});
 				const found = yield* Walker.findRoot(chain, isWorkspaceRoot);
@@ -226,7 +226,7 @@ export class WorkspaceRoot extends Context.Service<WorkspaceRoot, WorkspaceRootS
 					return yield* WorkspaceRootNotFoundError.make({
 							searchPath: start,
 							markers: WORKSPACE_MARKERS,
-							...(ceiling === undefined ? {} : { stopAt: ceiling }),
+							...O.getSomesStruct({ stopAt: O.fromUndefinedOr(ceiling) }),
 						});
 				}
 				yield* Effect.logDebug("Workspace root found").pipe(Effect.annotateLogs("workspace.root", found.value));
@@ -316,7 +316,7 @@ export class WorkspaceRoot extends Context.Service<WorkspaceRoot, WorkspaceRootS
 	 * @example
 	 * ```ts
 	 * import { WorkspaceDiscovery, WorkspaceRoot } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const TestRoot = WorkspaceRoot.layerTest("/repo");
 	 * const TestDiscovery = WorkspaceDiscovery.layerTest({

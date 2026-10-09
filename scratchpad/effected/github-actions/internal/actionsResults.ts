@@ -13,6 +13,7 @@ import * as Result from "effect/Result";
 import * as Function from "effect/Function";
 import type { ActionEnvironmentShape } from "../ActionEnvironment.ts";
 import { payloadOf } from "./jwt.ts";
+import * as P from "effect/Predicate";
 
 /**
  * The run/job identifiers the artifact protocol scopes every call to.
@@ -92,7 +93,7 @@ export const backendIdsFrom = (token: string): Result.Result<BackendIds, string>
 	}
 	const claims = payload.success;
 	const scope = typeof claims === "object" && claims !== null && "scp" in claims ? claims.scp : undefined;
-	if (typeof scope !== "string") {
+	if (!P.isString(scope)) {
 		return Result.fail("the runtime token carries no `scp` claim");
 	}
 	for (const entry of scope.split(" ")) {

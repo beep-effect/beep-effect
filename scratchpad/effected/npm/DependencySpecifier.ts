@@ -406,12 +406,12 @@ const decode = (input: string): Effect.Effect<DependencySpecifierBrand, InvalidD
  * @example
  * ```ts
  * import { DependencySpecifier } from "./index.ts";
- * import { Schema } from "effect";
+ * import * as S from "effect/Schema";
  *
  * DependencySpecifier.protocolOf("workspace:^"); // => "workspace"
  * DependencySpecifier.resolveWorkspace("workspace:^", "1.2.3"); // => "^1.2.3"
  *
- * const classified = Schema.decodeUnknownSync(DependencySpecifier.FromString)("catalog:");
+ * const classified = S.decodeUnknownSync(DependencySpecifier.FromString)("catalog:");
  * // => CatalogSpecifier { raw: "catalog:", name: Option.none() }
  * ```
  *

@@ -36,6 +36,7 @@ import { routeHelpOnUsageError } from "./internal/HelpRouting.ts";
 import { isExitCode } from "./internal/isExitCode.ts";
 import { TrustedLine } from "./internal/logSafety.ts";
 import { NotInteractive } from "./NotInteractive.ts";
+import * as P from "effect/Predicate";
 
 const isShowHelp = (u: unknown): u is CliError.ShowHelp => CliError.isCliError(u) && u._tag === "ShowHelp";
 
@@ -240,7 +241,7 @@ const lastResort = (error: unknown): ReadonlyArray<string> => {
 };
 
 const toLines = (rendered: string | ReadonlyArray<string>): ReadonlyArray<string> =>
-	typeof rendered === "string" ? [rendered] : rendered;
+	P.isString(rendered) ? [rendered] : rendered;
 
 /**
  * The error's own exit code when it carries one, otherwise the fallback.
@@ -324,7 +325,7 @@ const chooseExitCode = (error: unknown, fallback: number | undefined): number =>
  * ```ts
  * import { CliRuntime } from "./index.ts"
  * import { NodeRuntime } from "@effect/platform-node"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  *
  * NodeRuntime.runMain(program.pipe(CliRuntime.reportFailures(), Effect.provide(MainLive)))
  * ```

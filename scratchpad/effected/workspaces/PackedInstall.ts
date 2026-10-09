@@ -1,32 +1,34 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import type { CommandOutput } from "../commands/index.ts";
-import { Run } from "../commands/index.ts";
-import { Yaml } from "../yaml/index.ts";
-import type * as PlatformError from "effect/PlatformError";
 import * as Config from "effect/Config";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
+import type * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
+import type { ChildProcessSpawner } from "effect/process";
+import { ChildProcess } from "effect/process";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import type { ChildProcessSpawner } from "effect/process";
-import { ChildProcess } from "effect/process";
+import type { CommandOutput } from "../commands/index.ts";
+import { Run } from "../commands/index.ts";
+import { Yaml } from "../yaml/index.ts";
 import type { PackedManifest } from "./internal/packedInstallPlan.ts";
 import {
-	binConflict,
-	binTargetOf,
-	closureOf,
-	consumerFiles,
-	fileOverridesOf,
-	installArgs,
-	overridePath,
-	readPackedManifest,
-	scrubEnv,
-	versionOf,
+    binConflict,
+    binTargetOf,
+    closureOf,
+    consumerFiles,
+    fileOverridesOf,
+    installArgs,
+    overridePath,
+    readPackedManifest,
+    scrubEnv,
+    versionOf,
 } from "./internal/packedInstallPlan.ts";
 import { PackageManagerName } from "./PackageManagerName.ts";
 import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
@@ -423,7 +425,7 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledCo
 				const parsed: unknown = yield* S.decodeEffect(JsonValue)(text).pipe(Effect.mapError(io(`${manifest} is not JSON`)));
 				const named =
 					typeof parsed === "object" && parsed !== null && "name" in parsed ? parsed.name : undefined;
-				if (typeof named === "string") return { package: named, target };
+				if (P.isString(named)) return { package: named, target };
 			}
 			return yield* failure(
 				"UnownedBin",
@@ -546,7 +548,7 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledCo
 			const missing = (why: string) =>
 				failure("MissingBin", `${manager}: the carrier's bin ${name} ${why}`, {
 					manager,
-					...(consumer.carrier === undefined ? {} : { package: consumer.carrier }),
+					...O.getSomesStruct({ package: O.fromUndefinedOr(consumer.carrier) }),
 				});
 			if (consumer.carrier === undefined) return yield* missing("cannot be found: this consumer records no carrier");
 			const root = path.join(consumer.directory, "node_modules", ...consumer.carrier.split("/"));
@@ -617,7 +619,7 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledCo
 /** The install's scrubbed environment with the caller's entries layered on after the scrub: a deliberate CI=true must survive it. */
 const layeredEnv = (consumer: InstalledConsumer, options: BinCommandOptions): Record<string, string> => {
 	const env = scrubEnv(consumer.env === undefined ? {} : Redacted.value(consumer.env));
-	for (const [key, value] of Object.entries(options.env ?? {})) {
+	for (const [key, value] of R.toEntries(options.env ?? {})) {
 		if (value === undefined) delete env[key];
 		else env[key] = value;
 	}
@@ -627,7 +629,7 @@ const layeredEnv = (consumer: InstalledConsumer, options: BinCommandOptions): Re
 /** A bin's stdin as `ChildProcess` takes it: absent or `""` is the null device (immediate end of input), anything else is written and closed. */
 const stdinOf = (stdin: RunBinOptions["stdin"]): ChildProcess.CommandInput => {
 	if (stdin === undefined || stdin === "") return "ignore";
-	if (typeof stdin === "string") return Stream.make(new TextEncoder().encode(stdin));
+	if (P.isString(stdin)) return Stream.make(new TextEncoder().encode(stdin));
 	if (stdin instanceof Uint8Array) return Stream.make(stdin);
 	return stdin;
 };
@@ -808,7 +810,7 @@ const planClosure = Effect.fn("planClosure")(function* (carrier: string, options
 			});
 		}
 
-		const requested = Object.entries(options.overrides ?? {}).map(
+		const requested = R.toEntries(options.overrides ?? {}).map(
 			([name, spec]) => [name, overridePath(spec)] as const,
 		);
 		// The root is read only when something needs it: a double that answers only listPackages still plans.
@@ -827,7 +829,7 @@ const planClosure = Effect.fn("planClosure")(function* (carrier: string, options
 			const document = yield* Yaml.parse(text).pipe(
 				Effect.mapError((cause) => failure("InvalidOverride", `${file} is not valid YAML`, { cause })),
 			);
-			for (const [name, spec] of Object.entries(fileOverridesOf(document))) wanted.set(name, spec);
+			for (const [name, spec] of R.toEntries(fileOverridesOf(document))) wanted.set(name, spec);
 		}
 		for (const [name, spec] of requested) wanted.set(name, spec);
 
@@ -837,7 +839,7 @@ const planClosure = Effect.fn("planClosure")(function* (carrier: string, options
 			const invalid = (message: string, cause?: unknown) =>
 				failure("InvalidOverride", `override ${name}: ${message}`, {
 					package: name,
-					...(cause === undefined ? {} : { cause }),
+					...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
 				});
 			if (packed.has(name)) {
 				return yield* invalid(
@@ -905,7 +907,8 @@ const planClosure = Effect.fn("planClosure")(function* (carrier: string, options
  * import { NodeServices } from "@effect/platform-node";
  * import { Workspaces } from "./index.ts";
  * import { PackedInstall } from "./testing.ts";
- * import { Effect, Layer } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  *
  * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
  *
@@ -957,7 +960,7 @@ export class PackedInstall {
 	 * @example
 	 * ```ts
 	 * import { PackedInstall } from "./testing.ts";
-	 * import { Duration } from "effect";
+	 * import * as Duration from "effect/Duration";
 	 *
 	 * const budget = PackedInstall.timeoutBudget({
 	 *   managers: ["npm", "pnpm", "yarn", "bun"],
@@ -982,7 +985,7 @@ export class PackedInstall {
 			Duration.fromInputUnsafe(budget.packTimeout ?? DEFAULT_PACK_TIMEOUT),
 			Duration.fromInputUnsafe(MANIFEST_TIMEOUT),
 		);
-		const packages = typeof budget.packages === "number" ? budget.packages : budget.packages.length;
+		const packages = P.isNumber(budget.packages) ? budget.packages : budget.packages.length;
 		return Duration.sum(
 			Duration.sum(
 				Duration.times(perManager, new Set(budget.managers).size),
@@ -1011,7 +1014,8 @@ export class PackedInstall {
 	 * import { NodeServices } from "@effect/platform-node";
 	 * import { Workspaces } from "./index.ts";
 	 * import { PackedInstall } from "./testing.ts";
-	 * import { Effect, Layer } from "effect";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Layer from "effect/Layer";
 	 *
 	 * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
 	 * const packages = await Effect.runPromise(PackedInstall.closure("my-tool").pipe(Effect.provide(Live)));
@@ -1046,7 +1050,9 @@ export class PackedInstall {
 	 * import { Workspaces } from "./index.ts";
 	 * import type { PackedInstallOptions } from "./testing.ts";
 	 * import { PackedInstall } from "./testing.ts";
-	 * import { Duration, Effect, Layer } from "effect";
+	 * import * as Duration from "effect/Duration";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Layer from "effect/Layer";
 	 *
 	 * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
 	 * const RUN: PackedInstallOptions = {
@@ -1075,9 +1081,9 @@ export class PackedInstall {
 				PackedInstall.timeoutBudget({
 					managers: options.managers,
 					packages,
-					...(options.installTimeout === undefined ? {} : { installTimeout: options.installTimeout }),
-					...(options.packTimeout === undefined ? {} : { packTimeout: options.packTimeout }),
-					...(extra.perConsumer === undefined ? {} : { perConsumer: extra.perConsumer }),
+					...O.getSomesStruct({ installTimeout: O.fromUndefinedOr(options.installTimeout) }),
+					...O.getSomesStruct({ packTimeout: O.fromUndefinedOr(options.packTimeout) }),
+					...O.getSomesStruct({ perConsumer: O.fromUndefinedOr(extra.perConsumer) }),
 				}),
 			),
 		);
@@ -1104,7 +1110,8 @@ export class PackedInstall {
 	 * import { NodeServices } from "@effect/platform-node";
 	 * import { Workspaces } from "./index.ts";
 	 * import { PackedInstall } from "./testing.ts";
-	 * import { Effect, Layer } from "effect";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Layer from "effect/Layer";
 	 *
 	 * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
 	 * const preflight = await Effect.runPromise(
@@ -1158,7 +1165,7 @@ export class PackedInstall {
 	 * ```ts
 	 * import { assert, describe, it } from "@effect/vitest";
 	 * import { PackedInstall } from "./testing.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * declare const preflight: { readonly ready: boolean; readonly missing: ReadonlyArray<string> };
 	 * const gate = Effect.runSync(PackedInstall.gate(preflight));
@@ -1176,7 +1183,7 @@ export class PackedInstall {
 	static readonly gate = (preflight: PackedInstallPreflight): Effect.Effect<PackedInstallGate> =>
 		Effect.gen(function* () {
 			if (preflight.ready) return { action: "run", message: "" } satisfies PackedInstallGate;
-			const ci = yield* Config.option(Config.String("CI")).pipe(Effect.orElseSucceed(() => O.none<string>()));
+			const ci = yield* Config.option(Config.String("CI")).pipe(Effect.orElseSucceed(O.none<string>));
 			const underCi = O.isSome(ci) && !["", "0", "false"].includes(ci.value.toLowerCase());
 			const message = `the pack source is missing: ${preflight.missing.join(", ")}; run the prod build (build:prod) before the packed-install tests`;
 			return (
@@ -1363,7 +1370,7 @@ export class PackedInstall {
 				{ package: conflict.package },
 			);
 		}
-		const overrides = Object.fromEntries(rest.map(({ name, tarball }) => [name, tarball]));
+		const overrides = R.fromEntries(rest.map(({ name, tarball }) => [name, tarball]));
 
 		const consumers = yield* Effect.forEach(available, ({ manager, version }) =>
 			Effect.gen(function* () {
@@ -1436,7 +1443,7 @@ export class PackedInstall {
 		return PackedInstallResult.make({
 			consumers,
 			unavailable,
-			tarballs: Object.fromEntries(packed.map(({ name, tarball }) => [name, tarball])),
+			tarballs: R.fromEntries(packed.map(({ name, tarball }) => [name, tarball])),
 			scratch,
 		});
 	});

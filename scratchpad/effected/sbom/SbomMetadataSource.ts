@@ -236,7 +236,7 @@ const merge = (base: SbomMetadata, override: SbomMetadata): SbomMetadata => {
  * @example
  * ```ts
  * import { Package, Sbom, SbomMetadataSource, Supplier } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const pkg = yield* Package.decode({ name: "@acme/app", version: "1.0.0", license: "MIT" });

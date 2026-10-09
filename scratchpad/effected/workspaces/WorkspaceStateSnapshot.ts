@@ -14,7 +14,7 @@ import { CatalogResolver, DependencyResolutionError, DependencySpecifier, Worksp
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { unanimousVersionOf } from "./internal/importerVersions.ts";
@@ -135,7 +135,7 @@ export class PackageStateSnapshot extends S.Class<PackageStateSnapshot>($I`Packa
  * @example
  * ```ts
  * import { WorkspaceSnapshots } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const snapshots = yield* WorkspaceSnapshots;
@@ -382,7 +382,7 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	 * @example
 	 * ```ts
 	 * import { WorkspaceCatalogs, WorkspaceSnapshots } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const program = Effect.gen(function* () {
 	 *   const snapshots = yield* WorkspaceSnapshots;
@@ -399,8 +399,8 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 		return WorkspaceStateSnapshot.make({
 			packages: this.packages,
 			catalogs: this.catalogs,
-			...(this.importerVersions === undefined ? {} : { importerVersions: this.importerVersions }),
-			...(this.hookReplays === undefined ? {} : { hookReplays: this.hookReplays }),
+			...O.getSomesStruct({ importerVersions: O.fromUndefinedOr(this.importerVersions) }),
+			...O.getSomesStruct({ hookReplays: O.fromUndefinedOr(this.hookReplays) }),
 			seededCatalogs: seed,
 		});
 	}
@@ -453,7 +453,7 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	 * @example
 	 * ```ts
 	 * import { WorkspaceSnapshots, WorkspaceStateSnapshot } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const program = Effect.gen(function* () {
 	 *   const snapshots = yield* WorkspaceSnapshots;

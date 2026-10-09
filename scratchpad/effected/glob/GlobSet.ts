@@ -15,6 +15,7 @@ import * as S from "effect/Schema";
 import { GlobPattern, GlobPatternError } from "./GlobPattern.ts";
 import { isGuardExceeded } from "./internal/limits.ts";
 import { Minimatch, braceExpand } from "./internal/minimatch.ts";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/glob/GlobSet");
 
@@ -67,7 +68,7 @@ interface Classified {
  * @example
  * ```ts
  * import { GlobSet } from "./index.ts";
- * import { Result } from "effect";
+ * import * as Result from "effect/Result";
  *
  * const compiled = GlobSet.compileResult(["packages/*", "!packages/legacy"]);
  * if (Result.isSuccess(compiled)) {
@@ -116,7 +117,7 @@ export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
 				}
 				if (engine.comment) continue;
 				const row = engine.set.length === 1 ? engine.set[0] : undefined;
-				if (engine.negate || row === undefined || !row.every((part) => typeof part === "string")) {
+				if (engine.negate || row === undefined || !row.every((part) => P.isString(part))) {
 					wildcards.push(GlobPattern.make({ source: alternative }));
 					continue;
 				}

@@ -41,7 +41,7 @@ const $I = $ScratchpadId.create("effected/npm/WorkspaceResolver");
  *
  * @example
  * ```ts
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  * import { DependencyResolutionError, WorkspaceResolver } from "./index.ts";
  *
  * const program = Effect.gen(function* () {
@@ -107,7 +107,7 @@ export class DependencyResolutionError extends S.TaggedError<DependencyResolutio
  *
  * @example
  * ```ts
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  * import { WorkspaceResolver } from "./index.ts";
  *
  * const program = Effect.gen(function* () {

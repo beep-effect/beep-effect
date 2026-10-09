@@ -136,12 +136,13 @@ export interface GitTagShape {
  * @example
  * ```ts
  * import { GitTag } from "./index.ts";
- * import { Effect, Option } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
  *
  * const latest = Effect.gen(function* () {
  *   const tags = yield* GitTag;
  *   const newest = yield* tags.latestSemver({ prefix: "v" });
- *   return Option.map(newest, (tag) => tag.version.toString());
+ *   return O.map(newest, (tag) => tag.version.toString());
  * });
  * ```
  *

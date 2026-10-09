@@ -209,7 +209,7 @@ export class Walker {
 	 * @example
 	 * ```ts
 	 * import { Walker } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const program = Effect.gen(function* () {
 	 * 	// => ["/repo/packages/app", "/repo/packages", "/repo"]

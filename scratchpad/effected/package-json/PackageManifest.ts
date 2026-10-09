@@ -67,7 +67,7 @@ const $I = $ScratchpadId.create("effected/package-json/PackageManifest");
  * @example
  * ```ts
  * import { PackageManifest } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const root = yield* PackageManifest.decode({ private: true, packageManager: "pnpm@^11.20.0" });

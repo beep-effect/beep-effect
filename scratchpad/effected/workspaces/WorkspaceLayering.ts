@@ -9,6 +9,7 @@ import { ALL_DEPENDENCY_FIELDS } from "./internal/dependencyFields.ts";
 import type { LayerPolicy } from "./LayerPolicy.ts";
 import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
 import type { WorkspacePackage } from "./WorkspacePackage.ts";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspaceLayering");
 
@@ -144,7 +145,8 @@ const cycleOf = (
  * import { NodeServices } from "@effect/platform-node";
  * import { Workspaces } from "./index.ts";
  * import { LayerPolicy, WorkspaceLayering } from "./testing.ts";
- * import { Effect, Layer } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  *
  * const Live = Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(NodeServices.layer));
  *
@@ -210,7 +212,7 @@ export class WorkspaceLayering {
 		const names = new Set(packages.map((pkg) => pkg.name));
 		return packages.flatMap((pkg) =>
 			ALL_DEPENDENCY_FIELDS.flatMap((field) =>
-				Object.keys(pkg[field])
+				R.keys(pkg[field])
 					.filter((name) => names.has(name) && name !== pkg.name)
 					.sort()
 					.map((to) => LayerEdge.make({ from: pkg.name, to, field })),

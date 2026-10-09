@@ -52,7 +52,7 @@ export type ComparatorSet = ReadonlyArray<Comparator>;
  * @example
  * ```ts
  * import { Range, SemVer } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const range = yield* Range.parse("^1.0.0");
@@ -112,7 +112,7 @@ export class Range extends S.Class<Range>($I`Range`)({
 	 * @example
 	 * ```ts
 	 * import { Range } from "./index.ts";
-	 * import { Result } from "effect";
+	 * import * as Result from "effect/Result";
 	 *
 	 * const ok = Range.parseResult("^1.0.0");
 	 * if (Result.isSuccess(ok)) {
@@ -251,7 +251,7 @@ export class Range extends S.Class<Range>($I`Range`)({
 	 * @example
 	 * ```ts
 	 * import { Range } from "./index.ts";
-	 * import { Result } from "effect";
+	 * import * as Result from "effect/Result";
 	 *
 	 * const a = Result.getOrThrow(Range.parseResult("^1.0.0"));
 	 * const b = Result.getOrThrow(Range.parseResult(">=1.5.0"));

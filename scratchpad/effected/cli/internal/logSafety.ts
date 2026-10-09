@@ -4,6 +4,8 @@ import type * as Fiber from "effect/Fiber";
 import * as Context from "effect/Context";
 import * as O from "effect/Option";
 import { sanitize } from "../Fmt.ts";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/cli/internal/logSafety");
 
@@ -39,8 +41,8 @@ export const underActionsIn = (fiber: Fiber.Fiber<unknown, unknown>): boolean =>
  * @internal
  */
 export const sanitizeParts = (message: unknown): unknown => {
-	if (typeof message === "string") return sanitize(message);
-	if (Array.isArray(message)) return message.map((part) => (typeof part === "string" ? sanitize(part) : part));
+	if (P.isString(message)) return sanitize(message);
+	if (A.isArray(message)) return message.map((part) => (P.isString(part) ? sanitize(part) : part));
 	return message;
 };
 

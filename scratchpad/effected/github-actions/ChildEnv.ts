@@ -1,3 +1,4 @@
+import * as R from "effect/Record";
 /**
  * The environment additions {@link ChildEnv.prependPath} builds: exactly one
  * entry, keyed by the spelling of `PATH` the base environment already uses.
@@ -89,7 +90,7 @@ export class ChildEnv {
 	 * merged block must write through (trap 2 above).
 	 */
 	static pathKeyOf(base: Readonly<Record<string, string | undefined>>): string {
-		return Object.keys(base).find((key) => key.toUpperCase() === "PATH") ?? "PATH";
+		return R.keys(base).find((key) => key.toUpperCase() === "PATH") ?? "PATH";
 	}
 
 	/**

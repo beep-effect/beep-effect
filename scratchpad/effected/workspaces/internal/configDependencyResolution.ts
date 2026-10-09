@@ -42,6 +42,7 @@ import type { FetchConfigDependency, FetchFailure, RecordedLocks } from "./confi
 import type { ManifestVersion } from "./configDependencyShared.ts";
 import { carries, hooksError, ioOrNone, manifestVersion, sideLabel } from "./configDependencyShared.ts";
 import { splitConfigDependencySpec } from "./configDependencySpecGrammar.ts";
+import * as R from "effect/Record";
 
 // The caller's Effect FileSystem may be virtual; resolution must walk the real pnpm store.
 const { readFile, readdir, realpath } = process.getBuiltinModule("node:fs/promises");
@@ -102,7 +103,7 @@ interface DeclaredEntry {
 const declaredEntries = (
 	configDependencies: Readonly<Record<string, string>>,
 ): Effect.Effect<ReadonlyArray<DeclaredEntry>, CatalogAssemblyError> => {
-	const entries = Object.entries(configDependencies).map(([name, spec]) => ({
+	const entries = R.toEntries(configDependencies).map(([name, spec]) => ({
 		name,
 		version: declaredVersionOf(spec),
 		spec,
@@ -155,7 +156,7 @@ const storeFromModulesYaml = (root: string): Effect.Effect<ReadonlyArray<string>
 			const parsed = Yaml.parseResult(text.value);
 			if (Result.isFailure(parsed)) return [];
 			const document = parsed.success;
-			return P.isObject(document) && typeof document.storeDir === "string" && document.storeDir.length > 0
+			return P.isObject(document) && P.isString(document.storeDir) && document.storeDir.length > 0
 				? [document.storeDir]
 				: [];
 		}),
@@ -451,7 +452,7 @@ export interface ResolveOptions {
 export const resolvePnpmfiles: {
 	(configDependencies: Readonly<Record<string, string>>, options?: ResolveOptions): (root: string) => Effect.Effect<ReadonlyArray<ResolvedPnpmfile>, CatalogAssemblyError>;
 	(root: string, configDependencies: Readonly<Record<string, string>>, options?: ResolveOptions): Effect.Effect<ReadonlyArray<ResolvedPnpmfile>, CatalogAssemblyError>;
-} = dual((args) => typeof args[0] === "string" && args.length >= 2, (
+} = dual((args) => P.isString(args[0]) && args.length >= 2, (
 	root: string,
 	configDependencies: Readonly<Record<string, string>>,
 	options: ResolveOptions = {},
@@ -499,7 +500,7 @@ export const lookupPnpmfiles: {
 			const key = `${name}@${version}`;
 			const path = entries[key];
 			if (path === undefined) {
-				const known = Object.keys(entries);
+				const known = R.keys(entries);
 				return Effect.fail(
 					hooksError(
 						name,

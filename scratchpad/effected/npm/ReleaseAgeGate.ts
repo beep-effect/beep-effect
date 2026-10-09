@@ -18,6 +18,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/npm/ReleaseAgeGate");
 
@@ -157,7 +158,7 @@ export class ReleaseAgeGate extends S.Class<ReleaseAgeGate>($I`ReleaseAgeGate`)(
 	static combine(...contributions: readonly PartialReleaseAgeGate[]): ReleaseAgeGate {
 		const ages = contributions
 			.map((contribution) => contribution.ageMinutes)
-			.filter((age): age is number => typeof age === "number" && Number.isFinite(age));
+			.filter((age): age is number => P.isNumber(age) && Number.isFinite(age));
 		const ageMinutes = ages.length > 0 ? Math.max(0, ...ages) : 0;
 		const exclude = [...new Set(contributions.flatMap((contribution) => contribution.exclude ?? []))].sort();
 		return ReleaseAgeGate.make({ ageMinutes, exclude });

@@ -16,6 +16,8 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspacePackage");
 
@@ -245,22 +247,22 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 
 	/** Whether `name` is a production dependency. */
 	hasDependency(name: string): boolean {
-		return Object.hasOwn(this.dependencies, name);
+		return R.has(this.dependencies, name);
 	}
 
 	/** Whether `name` is a development dependency. */
 	hasDevDependency(name: string): boolean {
-		return Object.hasOwn(this.devDependencies, name);
+		return R.has(this.devDependencies, name);
 	}
 
 	/** Whether `name` is a peer dependency. */
 	hasPeerDependency(name: string): boolean {
-		return Object.hasOwn(this.peerDependencies, name);
+		return R.has(this.peerDependencies, name);
 	}
 
 	/** Whether `name` is an optional dependency. */
 	hasOptionalDependency(name: string): boolean {
-		return Object.hasOwn(this.optionalDependencies, name);
+		return R.has(this.optionalDependencies, name);
 	}
 
 	/** Whether `name` appears in any of the four dependency kinds. */
@@ -282,7 +284,7 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 		// typed `Option<string>` — would hand back `Option.some(<Function>)`. Same
 		// for `toString`, `valueOf`, `__proto__` and friends.
 		const own = (map: Readonly<Record<string, string>>): string | undefined =>
-			Object.hasOwn(map, name) ? map[name] : undefined;
+			R.has(map, name) ? map[name] : undefined;
 
 		const version =
 			own(this.dependencies) ??
@@ -307,8 +309,8 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 	 * @param pattern - A compiled pattern, or a source string to compile.
 	 */
 	matchesDependency(pattern: GlobPattern | string): boolean {
-		const compiled = typeof pattern === "string" ? GlobPattern.make({ source: pattern }) : pattern;
-		return Object.keys(this.allDependencies).some((dependency) => compiled.matches(dependency));
+		const compiled = P.isString(pattern) ? GlobPattern.make({ source: pattern }) : pattern;
+		return R.keys(this.allDependencies).some((dependency) => compiled.matches(dependency));
 	}
 
 	/**
@@ -324,15 +326,15 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 		const removed: Record<string, string> = {};
 		const changed: Record<string, { from: string; to: string }> = {};
 
-		for (const [name, version] of Object.entries(mine)) {
-			if (!Object.hasOwn(theirs, name)) added[name] = version;
+		for (const [name, version] of R.toEntries(mine)) {
+			if (!R.has(theirs, name)) added[name] = version;
 			else {
 				const previous = theirs[name];
 				if (previous !== undefined && previous !== version) changed[name] = { from: previous, to: version };
 			}
 		}
-		for (const [name, version] of Object.entries(theirs)) {
-			if (!Object.hasOwn(mine, name)) removed[name] = version;
+		for (const [name, version] of R.toEntries(theirs)) {
+			if (!R.has(mine, name)) removed[name] = version;
 		}
 		return { added, removed, changed };
 	}

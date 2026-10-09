@@ -1,5 +1,7 @@
 import * as Function from "effect/Function";
 import { sha256Hex } from "./digest.ts";
+import * as R from "effect/Record";
+import * as O from "@beep/utils/Option";
 
 // Effect Crypto cannot provide the synchronous HMAC required by SigV4.
 const { createHmac } = process.getBuiltinModule("node:crypto");
@@ -112,14 +114,14 @@ export const canonicalize: {
 		host: request.host,
 		"x-amz-date": amzDate,
 		"x-amz-content-sha256": payloadHash,
-		...(credentials.sessionToken === undefined ? {} : { "x-amz-security-token": credentials.sessionToken }),
+		...O.getSomesStruct({ "x-amz-security-token": O.fromUndefinedOr(credentials.sessionToken) }),
 	};
 
 	// Canonical headers are lowercased, whitespace-collapsed and sorted by name.
 	// The sort is not cosmetic: the signature covers this exact string, so any
 	// other order produces a valid-looking signature the server will reject with
 	// nothing more informative than `SignatureDoesNotMatch`.
-	const lowered = new Map(Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]));
+	const lowered = new Map(R.toEntries(headers).map(([name, value]) => [name.toLowerCase(), value]));
 	const canonicalNames = [...lowered.keys()].sort();
 	const canonicalHeaders = canonicalNames
 		.map((name) => `${name}:${(lowered.get(name) ?? "").trim().replace(/\s+/g, " ")}\n`)

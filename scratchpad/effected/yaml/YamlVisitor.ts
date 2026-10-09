@@ -19,6 +19,8 @@ import { YamlDiagnostic } from "./YamlDiagnostic.ts";
 import type { YamlPath } from "./YamlEdit.ts";
 import type { CollectionStyle, ScalarStyle, YamlNode, YamlPair } from "./YamlNode.ts";
 import { YamlAlias, YamlMap, YamlScalar, YamlSeq } from "./YamlNode.ts";
+import * as P from "effect/Predicate";
+import * as O from "@beep/utils/Option";
 
 /**
  * The discriminated union of YAML AST visitor events. Every variant carries
@@ -90,7 +92,8 @@ export const YamlVisitorEvent = Data.taggedEnum<YamlVisitorEvent>();
  * @example
  * ```ts
  * import { YamlVisitor, YamlVisitorEvent } from "./index.ts";
- * import { Effect, Stream } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
  *
  * // Mapping keys are scalar events too, so keys and values interleave.
  * const scalars = YamlVisitor.visit("a: 1\nb:\n  - x\n").pipe(
@@ -194,8 +197,8 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 			depth,
 			value: node.value,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
 		});
 	} else if (S.is(YamlAlias)(node)) {
 		if (node.commentBefore !== undefined) {
@@ -216,8 +219,8 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 			path,
 			depth,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
 		});
 		for (const pair of node.items) {
 			yield* walkPair(pair, path, depth + 1);
@@ -234,8 +237,8 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 			path,
 			depth,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
 		});
 		for (const [i, item] of node.items.entries()) {
 			yield* walkNode(item, [...path, i], depth + 1);
@@ -249,7 +252,7 @@ function* walkPair(pair: YamlPair, parentPath: YamlPath, depth: number): Generat
 	const resolvedValue = S.is(YamlScalar)(pair.value) ? pair.value.value : null;
 
 	const keySegment: string | number =
-		typeof resolvedKey === "string" ? resolvedKey : typeof resolvedKey === "number" ? resolvedKey : String(resolvedKey);
+		P.isString(resolvedKey) ? resolvedKey : P.isNumber(resolvedKey) ? resolvedKey : String(resolvedKey);
 
 	const pairPath: YamlPath = [...parentPath, keySegment];
 

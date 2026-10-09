@@ -17,6 +17,8 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/package-json/Repository");
 
@@ -117,7 +119,7 @@ const sameRest = (a: unknown, b: unknown): boolean => JSON.stringify(a ?? {}) ==
 /** The keys of `wire` outside the documented set, which is what `rest` holds. */
 const restOf = (wire: { readonly [k: string]: unknown }, known: ReadonlySet<string>): Record<string, unknown> => {
 	const rest: Record<string, unknown> = {};
-	for (const [key, value] of Object.entries(wire)) {
+	for (const [key, value] of R.toEntries(wire)) {
 		if (!known.has(key)) rest[key] = value;
 	}
 	return rest;
@@ -142,11 +144,11 @@ const restOf = (wire: { readonly [k: string]: unknown }, known: ReadonlySet<stri
 const isStringExpressibleRepository = (repository: Repository): boolean =>
 	repository.type === undefined &&
 	repository.directory === undefined &&
-	Object.keys(repository.rest ?? {}).length === 0;
+	R.keys(repository.rest ?? {}).length === 0;
 
 /** Whether the bare URL string can still carry everything this `bugs` entry holds. */
 const isStringExpressibleBugs = (bugs: Bugs): boolean =>
-	bugs.email === undefined && Object.keys(bugs.rest ?? {}).length === 0;
+	bugs.email === undefined && R.keys(bugs.rest ?? {}).length === 0;
 
 const isFaithfulRepository = (wire: { readonly [k: string]: unknown }, repository: Repository): boolean =>
 	wire.url === repository.url &&
@@ -171,9 +173,9 @@ const isFaithfulBugs = (wire: { readonly [k: string]: unknown }, bugs: Bugs): bo
  * @example
  * ```ts
  * import { Repository } from "./index.ts";
- * import { Schema } from "effect";
+ * import * as S from "effect/Schema";
  *
- * const repo = Schema.decodeUnknownSync(Repository.FromValue)("effected/kit");
+ * const repo = S.decodeUnknownSync(Repository.FromValue)("effected/kit");
  * repo.url; // => "effected/kit"
  * repo.browseUrl; // => Option.some("https://github.com/effected/kit")
  * // "git@github.com:effected/kit.git" browses to the same URL
@@ -242,9 +244,9 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 	 * @example
 	 * ```ts
 	 * import { Repository } from "./index.ts";
-	 * import { Schema } from "effect";
+	 * import * as S from "effect/Schema";
 	 *
-	 * const repo = Schema.decodeUnknownSync(Repository.FromValue)({
+	 * const repo = S.decodeUnknownSync(Repository.FromValue)({
 	 *   url: "effected/kit",
 	 *   directory: "packages/spdx",
 	 * });
@@ -286,20 +288,20 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 			S.instanceOf(Repository),
 			SchemaTransformation.transform({
 				decode: (input: string | { readonly [k: string]: unknown }): Repository => {
-					if (typeof input === "string") {
+					if (P.isString(input)) {
 						const repository = Repository.make({ url: input });
 						repositoryWires.set(repository, input);
 						return repository;
 					}
 					const rest: Record<string, unknown> = {};
-					for (const [key, value] of Object.entries(input)) {
+					for (const [key, value] of R.toEntries(input)) {
 						if (!KNOWN_REPOSITORY_KEYS.has(key)) rest[key] = value;
 					}
 					const repository = Repository.make({
-						url: typeof input.url === "string" ? input.url : "",
-						...(typeof input.type === "string" && { type: input.type }),
-						...(typeof input.directory === "string" && { directory: input.directory }),
-						...(Object.keys(rest).length > 0 && { rest }),
+						url: P.isString(input.url) ? input.url : "",
+						...(P.isString(input.type) && { type: input.type }),
+						...(P.isString(input.directory) && { directory: input.directory }),
+						...(R.keys(rest).length > 0 && { rest }),
 					});
 					repositoryWires.set(repository, input);
 					return repository;
@@ -308,9 +310,9 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 					const wire = repositoryWires.get(repository);
 					// Replay the shorthand only while it still describes this value —
 					// an edited url must not re-encode as the stale original.
-					if (typeof wire === "string" && wire === repository.url && isStringExpressibleRepository(repository))
+					if (P.isString(wire) && wire === repository.url && isStringExpressibleRepository(repository))
 						return wire;
-					if (wire !== undefined && typeof wire !== "string" && isFaithfulRepository(wire, repository)) return wire;
+					if (wire !== undefined && !P.isString(wire) && isFaithfulRepository(wire, repository)) return wire;
 					return {
 						...(repository.type !== undefined && { type: repository.type }),
 						url: repository.url,
@@ -349,27 +351,27 @@ export class Bugs extends S.Class<Bugs>($I`Bugs`)({
 			S.instanceOf(Bugs),
 			SchemaTransformation.transform({
 				decode: (input: string | { readonly [k: string]: unknown }): Bugs => {
-					if (typeof input === "string") {
+					if (P.isString(input)) {
 						const bugs = Bugs.make({ url: input });
 						bugsWires.set(bugs, input);
 						return bugs;
 					}
 					const rest: Record<string, unknown> = {};
-					for (const [key, value] of Object.entries(input)) {
+					for (const [key, value] of R.toEntries(input)) {
 						if (!KNOWN_BUGS_KEYS.has(key)) rest[key] = value;
 					}
 					const bugs = Bugs.make({
-						...(typeof input.url === "string" && { url: input.url }),
-						...(typeof input.email === "string" && { email: input.email }),
-						...(Object.keys(rest).length > 0 && { rest }),
+						...(P.isString(input.url) && { url: input.url }),
+						...(P.isString(input.email) && { email: input.email }),
+						...(R.keys(rest).length > 0 && { rest }),
 					});
 					bugsWires.set(bugs, input);
 					return bugs;
 				},
 				encode: (bugs: Bugs): string | { readonly [k: string]: unknown } => {
 					const wire = bugsWires.get(bugs);
-					if (typeof wire === "string" && wire === bugs.url && isStringExpressibleBugs(bugs)) return wire;
-					if (wire !== undefined && typeof wire !== "string" && isFaithfulBugs(wire, bugs)) return wire;
+					if (P.isString(wire) && wire === bugs.url && isStringExpressibleBugs(bugs)) return wire;
+					if (wire !== undefined && !P.isString(wire) && isFaithfulBugs(wire, bugs)) return wire;
 					return {
 						...(bugs.url !== undefined && { url: bugs.url }),
 						...(bugs.email !== undefined && { email: bugs.email }),

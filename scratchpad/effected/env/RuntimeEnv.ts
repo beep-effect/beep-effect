@@ -99,12 +99,13 @@ export interface RuntimeEnvOverrides {
  * @example
  * ```ts
  * import { CurrentRuntimeEnv } from "./index.ts"
- * import { Effect, Option } from "effect"
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
  *
  * const program = Effect.gen(function* () {
  * 	const env = yield* CurrentRuntimeEnv
- * 	return Option.getOrElse(env.agent, () => "no agent")
- * }).pipe(Effect.provide(CurrentRuntimeEnv.layerTest({ agent: Option.some("claude") })))
+ * 	return O.getOrElse(env.agent, () => "no agent")
+ * }).pipe(Effect.provide(CurrentRuntimeEnv.layerTest({ agent: O.some("claude") })))
  * ```
  *
  * @public

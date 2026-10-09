@@ -11,7 +11,7 @@ import { dual } from "effect/Function";
 
 import { CatalogAssemblyError } from "../../npm/index.ts";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { HookReplayContext } from "../ConfigDependencyHooks.ts";
@@ -29,7 +29,7 @@ export const hooksError: {
 } = dual(
 	3,
 	(path: string, cause: unknown, reason: CatalogAssemblyError["reason"] | undefined): CatalogAssemblyError =>
-		CatalogAssemblyError.make({ source: "hooks", path, cause, ...(reason === undefined ? {} : { reason }) }),
+		CatalogAssemblyError.make({ source: "hooks", path, cause, ...O.getSomesStruct({ reason: O.fromUndefinedOr(reason) }) }),
 );
 
 /** The message of a cause, for splicing into ours. */
@@ -97,7 +97,7 @@ export const manifestVersion: {
 				Effect.mapError((cause) => hooksError(name, cause, undefined)),
 				Effect.map(
 					(parsed): ManifestVersion =>
-						P.isObject(parsed) && typeof parsed.version === "string" && parsed.version !== ""
+						P.isObject(parsed) && P.isString(parsed.version) && parsed.version !== ""
 							? { _tag: "version", version: parsed.version }
 							: UNVERSIONED,
 				),

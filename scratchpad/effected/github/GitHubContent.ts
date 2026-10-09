@@ -7,6 +7,7 @@ import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
+import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effected/github/GitHubContent");
 
@@ -49,12 +50,13 @@ export interface GitHubContentShape {
  * @example
  * ```ts
  * import { GitHubContent } from "./index.ts";
- * import { Effect, Option } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
  *
  * const readme = Effect.gen(function* () {
  *   const content = yield* GitHubContent;
  *   const file = yield* content.getFileOption("README.md", { ref: "main" });
- *   return Option.getOrElse(file, () => "");
+ *   return O.getOrElse(file, () => "");
  * });
  * ```
  *
@@ -99,7 +101,7 @@ const make = (client: GitHubClient["Service"]): GitHubContentShape => {
 		});
 		// A directory comes back as an array. Reading one as a file would be a
 		// silent type confusion.
-		if (Array.isArray(content)) {
+		if (A.isArray(content)) {
 			return yield*GitHubError.rejected("GitHubContent.getFile", 422, `${path} is a directory`);
 		}
 		if (content.type !== "file") {

@@ -57,6 +57,7 @@ import * as Stream from "effect/Stream";
 
 import type { ErrnoCode } from "./errno.ts";
 import { ErrnoException, errnoError } from "./errno.ts";
+import * as P from "effect/Predicate";
 
 const { badArgument, systemError } = PlatformErrorNs;
 type PlatformError = PlatformErrorNs.PlatformError;
@@ -2176,7 +2177,7 @@ const chown = (volume: Volume) =>
 	});
 
 const dateTimeInput = (method: string, name: string, value: Date | number) => {
-	const milliseconds = typeof value === "number" ? value * 1000 : value.getTime();
+	const milliseconds = P.isNumber(value) ? value * 1000 : value.getTime();
 	if (!Number.isFinite(milliseconds)) {
 		return Effect.fail(argumentError(method, `${name} must be a valid Date or epoch-seconds number`));
 	}

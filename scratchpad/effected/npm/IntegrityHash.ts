@@ -202,9 +202,9 @@ const sriRestricted = brandedIntegrity.pipe(
  * @example
  * ```ts
  * import { SriIntegrityHash } from "./index.ts";
- * import { Schema } from "effect";
+ * import * as S from "effect/Schema";
  *
- * const decode = Schema.decodeUnknownExit(SriIntegrityHash);
+ * const decode = S.decodeUnknownExit(SriIntegrityHash);
  *
  * decode("sha512-3q2+7w=="); // success
  * decode("sha512.deadbeef"); // failure — corepack form
@@ -467,9 +467,9 @@ interface CorepackIntegrityHashStatics {
  * @example
  * ```ts
  * import { CorepackIntegrityHash } from "./index.ts";
- * import { Schema } from "effect";
+ * import * as S from "effect/Schema";
  *
- * const decode = Schema.decodeUnknownExit(CorepackIntegrityHash);
+ * const decode = S.decodeUnknownExit(CorepackIntegrityHash);
  *
  * decode("sha512.deadbeef"); // success
  * decode("sha512-3q2+7w=="); // failure — SRI form

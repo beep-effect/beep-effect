@@ -15,6 +15,7 @@ import { dual } from "effect/Function";
 // no hook replay, no network, no executing a historical ref's code.
 
 import type { Lockfile } from "../../lockfiles/index.ts";
+import * as R from "effect/Record";
 
 /**
  * One importer's dependency-name → resolved-version map, keyed by importer path.
@@ -114,7 +115,7 @@ export const unanimousVersionOf: {
 	(index: VersionIndex, dependency: string): string | undefined;
 } = dual(2, (index: VersionIndex, dependency: string): string | undefined => {
 	let agreed: string | undefined;
-	for (const versions of Object.values(index)) {
+	for (const versions of R.values(index)) {
 		const version = versions[dependency];
 		if (version === undefined) continue;
 		if (agreed === undefined) {

@@ -77,9 +77,9 @@ const invalid = (input: string, message: string) => Effect.fail(new SchemaIssue.
  * @example
  * ```ts
  * import { PackageManager } from "./index.ts";
- * import { Schema } from "effect";
+ * import * as S from "effect/Schema";
  *
- * const pm = Schema.decodeUnknownSync(PackageManager.FromString)("pnpm@10.33.0+sha512.abc");
+ * const pm = S.decodeUnknownSync(PackageManager.FromString)("pnpm@10.33.0+sha512.abc");
  * pm.name; // => "pnpm"
  * pm.version; // => "10.33.0"
  * pm.hasIntegrity; // => true

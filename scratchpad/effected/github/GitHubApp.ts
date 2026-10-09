@@ -6,7 +6,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
@@ -47,7 +47,7 @@ export class GitHubAppError extends S.TaggedError<GitHubAppError>($I`GitHubAppEr
 
 	/** @internal */
 	static of(kind: GitHubAppError["kind"], reason: string, cause?: unknown): GitHubAppError {
-		return GitHubAppError.make({ kind, reason, ...(cause !== undefined ? { cause } : {}) });
+		return GitHubAppError.make({ kind, reason, ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }) });
 	}
 }
 
@@ -143,7 +143,7 @@ export class InstallationToken extends S.Class<InstallationToken>($I`Installatio
 			? BotIdentity.githubActions
 			: BotIdentity.forApp({
 					appSlug: this.appSlug,
-					...(this.appUserId !== undefined ? { appUserId: this.appUserId } : {}),
+					...O.getSomesStruct({ appUserId: O.fromUndefinedOr(this.appUserId) }),
 				});
 	}
 }
@@ -221,7 +221,7 @@ export class AppIdentity extends S.Class<AppIdentity>($I`AppIdentity`)({
 	botIdentity(): BotIdentity {
 		return BotIdentity.forApp({
 			appSlug: this.slug,
-			...(this.userId !== undefined ? { appUserId: this.userId } : {}),
+			...O.getSomesStruct({ appUserId: O.fromUndefinedOr(this.userId) }),
 		});
 	}
 }
@@ -276,7 +276,8 @@ export interface GitHubAppOptions {
  * @example
  * ```ts
  * import { GitHubApp, GitHubClient } from "./index.ts";
- * import { Effect, Redacted } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
  *
  * const program = Effect.gen(function* () {
  *   const client = yield* GitHubClient;

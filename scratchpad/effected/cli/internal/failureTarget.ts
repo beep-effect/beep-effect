@@ -1,14 +1,14 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import { dual } from "effect/Function";
-import type { AudienceShape } from "../../env/index.ts";
-import { Audience, TerminalEnv } from "../../env/index.ts";
-import { CommandNeutralizer } from "../../github-commands/index.ts";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as MutableRef from "effect/MutableRef";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
+import type { AudienceShape } from "../../env/index.ts";
+import { Audience, TerminalEnv } from "../../env/index.ts";
+import { CommandNeutralizer } from "../../github-commands/index.ts";
 import { CliFailure } from "../CliFailure.ts";
 import { CliLinks } from "../CliLinks.ts";
 import { CliTheme } from "../CliTheme.ts";
@@ -112,9 +112,9 @@ const build = (audience?: AudienceShape, settings: FailureSettings = {}): Effect
 		return {
 			ctx,
 			format,
-			...(stackFrames === undefined ? {} : { stackFrames }),
-			...(spans === undefined ? {} : { spans }),
-			...(appModule === undefined ? {} : { appModule }),
+			...O.getSomesStruct({ stackFrames: O.fromUndefinedOr(stackFrames) }),
+			...O.getSomesStruct({ spans: O.fromUndefinedOr(spans) }),
+			...O.getSomesStruct({ appModule: O.fromUndefinedOr(appModule) }),
 		};
 	});
 
@@ -190,9 +190,9 @@ export const linesOf: {
 ): ReadonlyArray<string> => {
 	const full = CliFailure.toDoc(cause, {
 		displayPath: target.ctx.displayPath,
-		...(target.stackFrames === undefined ? {} : { stackFrames: target.stackFrames }),
-		...(spans === undefined ? {} : { spans }),
-		...(target.appModule === undefined ? {} : { appModule: target.appModule }),
+		...O.getSomesStruct({ stackFrames: O.fromUndefinedOr(target.stackFrames) }),
+		...O.getSomesStruct({ spans: O.fromUndefinedOr(spans) }),
+		...O.getSomesStruct({ appModule: O.fromUndefinedOr(target.appModule) }),
 	});
 	const doc = status ? full : withoutStatus(full);
 	const text = Render[target.format](doc, target.ctx);
@@ -256,7 +256,7 @@ export const readSpans: {
 	Effect.gen(function* () {
 		if (explicit !== undefined) return { spans: explicit, invalid: undefined };
 		if (envVar === undefined) return { spans: undefined, invalid: undefined };
-		const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(() => O.none<string>()));
+		const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(O.none<string>));
 		if (O.isNone(raw) || raw.value === "") return { spans: undefined, invalid: undefined };
 		const value = raw.value.toLowerCase();
 		const spans = SPAN_SETTINGS.find((setting) => setting === value);

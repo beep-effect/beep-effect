@@ -11,7 +11,7 @@
  * @example
  * ```ts
  * import { JsonLdDocument, NodeRef, SoftwareSourceCode, TechArticle } from "./index.ts";
- * import { Result } from "effect";
+ * import * as Result from "effect/Result";
  *
  * const built = JsonLdDocument.buildResult([
  * 	SoftwareSourceCode.make({ "@id": "https://example.com/pkg#source", name: "example" }),

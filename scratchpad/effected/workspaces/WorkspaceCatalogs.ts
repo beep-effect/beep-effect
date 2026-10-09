@@ -23,7 +23,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
@@ -44,6 +44,9 @@ import type { LockfileReadFailure } from "./LockfileReader.ts";
 import { LockfileReader } from "./LockfileReader.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspaceCatalogs");
 
@@ -192,7 +195,7 @@ export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 
 	/** Whether any catalog declares anything. */
 	get isEmpty(): boolean {
-		return Object.keys(this.entries).length === 0;
+		return R.keys(this.entries).length === 0;
 	}
 
 	/**
@@ -209,7 +212,7 @@ export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 	 */
 	resolveSpecifier(dependency: string, specifier: string): O.Option<string> {
 		const resolved = rangeOf(this.entries, dependency, specifier);
-		return typeof resolved === "string" ? O.some(resolved) : O.none();
+		return P.isString(resolved) ? O.some(resolved) : O.none();
 	}
 
 	/**
@@ -227,11 +230,11 @@ export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 
 /** Whether `value` is a non-null, non-array object. */
 const isObject = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && !Array.isArray(value);
+	typeof value === "object" && value !== null && !A.isArray(value);
 
 /** Whether every value in an object is a string — a usable `dependency → range` catalog. */
 const isStringRecord = (value: unknown): value is Record<string, string> =>
-	isObject(value) && Object.values(value).every((entry) => typeof entry === "string");
+	isObject(value) && R.values(value).every((entry) => P.isString(entry));
 
 /** The `catalog` / `catalogs` blocks of a parsed pnpm-workspace document. */
 const catalogBlocksOf = (
@@ -283,7 +286,7 @@ const inlineReleaseAge = (document: unknown): Effect.Effect<PartialReleaseAgeGat
 	if (document.minimumReleaseAgeExclude !== undefined && document.minimumReleaseAgeExclude !== null) {
 		raw.exclude = document.minimumReleaseAgeExclude;
 	}
-	if (Object.keys(raw).length === 0) return Effect.succeed({});
+	if (R.keys(raw).length === 0) return Effect.succeed({});
 	return S.decodeEffect(PartialReleaseAgeGate)(raw).pipe(
 		Effect.catchTag(
 			"SchemaError",
@@ -334,7 +337,7 @@ const validatedCatalogBlocks = (
 			);
 		}
 		const checked: Record<string, Record<string, string>> = {};
-		for (const [name, entries] of Object.entries(catalogs)) {
+		for (const [name, entries] of R.toEntries(catalogs)) {
 			if (!isStringRecord(entries)) {
 				return Effect.fail(
 					malformed(
@@ -362,8 +365,8 @@ const validatedCatalogBlocks = (
 	}
 
 	return Effect.succeed({
-		...(validCatalog !== undefined ? { catalog: validCatalog } : {}),
-		...(validCatalogs !== undefined ? { catalogs: validCatalogs } : {}),
+		...O.getSomesStruct({ catalog: O.fromUndefinedOr(validCatalog) }),
+		...O.getSomesStruct({ catalogs: O.fromUndefinedOr(validCatalogs) }),
 	});
 };
 
@@ -378,7 +381,7 @@ const manifestCatalogBlocks = (
 	CatalogAssemblyError
 > => {
 	// Absent, explicitly null, or the npm/yarn array form: nothing to misread.
-	if (workspaces === undefined || workspaces === null || Array.isArray(workspaces)) return Effect.succeed({});
+	if (workspaces === undefined || workspaces === null || A.isArray(workspaces)) return Effect.succeed({});
 	if (!isObject(workspaces)) {
 		return Effect.fail(
 			malformed("manifest", "package.json", `"workspaces" must be an array or object, got ${typeof workspaces}`),
@@ -387,7 +390,7 @@ const manifestCatalogBlocks = (
 
 	if (workspaces.packages !== undefined && workspaces.packages !== null) {
 		const packages = workspaces.packages;
-		if (!Array.isArray(packages) || !packages.every((entry) => typeof entry === "string")) {
+		if (!A.isArray(packages) || !packages.every((entry) => P.isString(entry))) {
 			return Effect.fail(malformed("manifest", "package.json", `"workspaces.packages" must be an array of strings`));
 		}
 	}
@@ -738,7 +741,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 					// Read as TEXT beside `lockfiles.read()` because the env preamble
 					// the fetch verifies against is a document `Lockfile` does not model.
 					const lockfileText =
-						Object.keys(configDependenciesOf(document)).length === 0
+						R.keys(configDependenciesOf(document)).length === 0
 							? undefined
 							: yield* fs
 									.readFileString(path.join(root, filenameFor("pnpm")))
@@ -781,7 +784,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 				yield* Effect.logDebug("Catalogs assembled").pipe(
 					Effect.annotateLogs({
 						"workspace.root": root,
-						"workspace.catalogs": Object.keys(assembled.entries).join(","),
+						"workspace.catalogs": R.keys(assembled.entries).join(","),
 						"workspace.releaseAgeMinutes": releaseAgeGate.ageMinutes,
 					}),
 				);
@@ -930,7 +933,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 	 * @example
 	 * ```ts
 	 * import { CatalogSet, WorkspaceCatalogs } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const double = WorkspaceCatalogs.makeTest({
 	 *   set: Effect.succeed(CatalogSet.fromCatalogs({ default: { effect: "4.0.0" } })),
@@ -968,7 +971,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 	 * @example
 	 * ```ts
 	 * import { CatalogSet, WorkspaceCatalogs } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const TestCatalogs = WorkspaceCatalogs.layerTest({
 	 *   set: Effect.succeed(CatalogSet.empty()),

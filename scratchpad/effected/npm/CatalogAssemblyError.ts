@@ -10,12 +10,13 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/npm/CatalogAssemblyError");
 
 /** The message a cause carries, if it carries a non-empty one: an `Error`'s `message`, or a thrown string. */
 const causeMessage = (cause: unknown): string | undefined => {
-	const text = cause instanceof Error ? cause.message : typeof cause === "string" ? cause : undefined;
+	const text = cause instanceof Error ? cause.message : P.isString(cause) ? cause : undefined;
 	return text === undefined || text.trim() === "" ? undefined : text;
 };
 

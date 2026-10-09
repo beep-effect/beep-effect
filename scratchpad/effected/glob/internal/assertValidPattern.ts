@@ -8,9 +8,10 @@
 // as a defect.
 
 import { GuardExceeded, MAX_PATTERN_LENGTH } from "./limits.ts";
+import * as P from "effect/Predicate";
 
 export const assertValidPattern: (pattern: unknown) => void = (pattern: unknown): asserts pattern is string => {
-	if (typeof pattern !== "string") {
+	if (!P.isString(pattern)) {
 		throw new TypeError("invalid pattern");
 	}
 

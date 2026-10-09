@@ -16,6 +16,7 @@ import { renderMarkdown } from "./internal/renderMarkdown.ts";
 import { renderPlain } from "./internal/renderPlain.ts";
 import type { Style, TokenName } from "./Token.ts";
 import { Token } from "./Token.ts";
+import * as O from "@beep/utils/Option";
 
 /**
  * Everything a renderer needs to know about where its output is going.
@@ -239,7 +240,7 @@ export class Render {
 				: options.neutralizeWorkflowCommands === false
 					? { neutralizeWorkflowCommands: false }
 					: {}),
-			...(options.linkBase === undefined ? {} : { linkBase: options.linkBase }),
+			...O.getSomesStruct({ linkBase: O.fromUndefinedOr(options.linkBase) }),
 		};
 	};
 

@@ -33,6 +33,8 @@ import { clearMeta, commentProps, createState, hasMeta, sameLine } from "./state
 import { parseDirective, validateTagHandlesInDocument } from "./tags.ts";
 import * as Schema from "effect/Schema";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
+import * as O from "@beep/utils/Option";
 
 /** The flow-composer dispatch wired into every state this module creates. */
 const FLOW: FlowComposers = { composeFlowMap, composeFlowSeq };
@@ -482,8 +484,8 @@ export function composeDocument(...args: [cst: CstNode, state: ComposerState, ha
 					style: "plain",
 					offset: child.offset,
 					length: scalarLength,
-					...(combined.tag !== undefined ? { tag: combined.tag } : {}),
-					...(combined.anchor !== undefined ? { anchor: combined.anchor } : {}),
+					...O.getSomesStruct({ tag: O.fromUndefinedOr(combined.tag) }),
+					...O.getSomesStruct({ anchor: O.fromUndefinedOr(combined.anchor) }),
 				});
 				if ((combined.anchor !== undefined && combined.anchor !== "")) registerAnchor(contents, combined.anchor, state, child.offset);
 				clearMeta(meta);
@@ -739,8 +741,8 @@ export function composeDocument(...args: [cst: CstNode, state: ComposerState, ha
 		hasDocumentStart: hasDocStart,
 		hasDocumentEnd: hasDocEnd,
 		hasDocumentStartTab: hasDocStartTab,
-		...(headerForDocument !== undefined ? { commentBefore: headerForDocument } : {}),
-		...(documentCommentAfter !== undefined ? { comment: documentCommentAfter } : {}),
+		...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(headerForDocument) }),
+		...O.getSomesStruct({ comment: O.fromUndefinedOr(documentCommentAfter) }),
 	};
 })(...args);
 }
@@ -1000,12 +1002,12 @@ function decorateSourceMultiline(node: YamlNode | null, text: string): YamlNode 
 		return YamlScalar.make({
 			value: node.value,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
 			...commentProps(node),
-			...(node.chomp !== undefined ? { chomp: node.chomp } : {}),
-			...(node.blockIndent !== undefined ? { blockIndent: node.blockIndent } : {}),
-			...(node.raw !== undefined ? { raw: node.raw } : {}),
+			...O.getSomesStruct({ chomp: O.fromUndefinedOr(node.chomp) }),
+			...O.getSomesStruct({ blockIndent: O.fromUndefinedOr(node.blockIndent) }),
+			...O.getSomesStruct({ raw: O.fromUndefinedOr(node.raw) }),
 			sourceMultiline: true,
 			offset: node.offset,
 			length: node.length,
@@ -1023,8 +1025,8 @@ function decorateSourceMultiline(node: YamlNode | null, text: string): YamlNode 
 		return YamlMap.make({
 			items: newItems,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
 			...commentProps(node),
 			...(multiline ? { sourceMultiline: true } : {}),
 			offset: node.offset,
@@ -1037,8 +1039,8 @@ function decorateSourceMultiline(node: YamlNode | null, text: string): YamlNode 
 		return YamlSeq.make({
 			items: newItems,
 			style: node.style,
-			...(node.tag !== undefined ? { tag: node.tag } : {}),
-			...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
 			...commentProps(node),
 			...(multiline ? { sourceMultiline: true } : {}),
 			offset: node.offset,
@@ -1056,8 +1058,8 @@ function decorateDocumentSourceMultiline(doc: RawYamlDocument, text: string): Ra
 		errors: doc.errors,
 		warnings: doc.warnings,
 		directives: doc.directives,
-		...(doc.commentBefore !== undefined ? { commentBefore: doc.commentBefore } : {}),
-		...(doc.comment !== undefined ? { comment: doc.comment } : {}),
+		...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(doc.commentBefore) }),
+		...O.getSomesStruct({ comment: O.fromUndefinedOr(doc.comment) }),
 		hasDocumentStart: doc.hasDocumentStart,
 		hasDocumentEnd: doc.hasDocumentEnd,
 		hasDocumentStartTab: doc.hasDocumentStartTab,
@@ -1091,7 +1093,7 @@ export function composeFirstDocument(...args: [text: string, options?: ParseOpti
 	return dual<
 		(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]) => RawYamlDocument | ((text: string) => RawYamlDocument),
 		(text: string, options?: ParseOptionsInput) => RawYamlDocument
-	>((args) => typeof args[0] === "string", function composeFirstDocument(text: string, options?: ParseOptionsInput): RawYamlDocument {
+	>((args) => P.isString(args[0]), function composeFirstDocument(text: string, options?: ParseOptionsInput): RawYamlDocument {
 	return composeFirstDocumentCounted(text, options).document;
 })(...args);
 }
@@ -1110,7 +1112,7 @@ export function composeFirstDocumentCounted(...args: [text: string, options?: Pa
 	return dual<
 		(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]) => { readonly document: RawYamlDocument; readonly documentCount: number } | ((text: string) => { readonly document: RawYamlDocument; readonly documentCount: number }),
 		(text: string, options?: ParseOptionsInput) => { readonly document: RawYamlDocument; readonly documentCount: number }
-	>((args) => typeof args[0] === "string", function composeFirstDocumentCounted(text: string, options?: ParseOptionsInput): { readonly document: RawYamlDocument; readonly documentCount: number } {
+	>((args) => P.isString(args[0]), function composeFirstDocumentCounted(text: string, options?: ParseOptionsInput): { readonly document: RawYamlDocument; readonly documentCount: number } {
 	const cstNodes = parseCSTAll(text);
 	const state = createState(text, FLOW, options);
 
@@ -1139,7 +1141,7 @@ export function composeAllDocuments(...args: [text: string, options?: ParseOptio
 	return dual<
 		(...args: [text: string, options?: ParseOptionsInput | undefined] | [options?: ParseOptionsInput | undefined]) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> } | ((text: string) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> }),
 		(text: string, options?: ParseOptionsInput) => { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> }
-	>((args) => typeof args[0] === "string", function composeAllDocuments(text: string, options?: ParseOptionsInput): { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> } {
+	>((args) => P.isString(args[0]), function composeAllDocuments(text: string, options?: ParseOptionsInput): { readonly documents: ReadonlyArray<RawYamlDocument>; readonly streamErrors: ReadonlyArray<RawDiagnostic> } {
 	const cstNodes = parseCSTAll(text);
 	const documents: RawYamlDocument[] = [];
 
@@ -1175,12 +1177,12 @@ function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode 
 		return YamlMap.make({
 			items,
 			style: contents.style,
-			...(contents.tag !== undefined ? { tag: contents.tag } : {}),
-			...(contents.anchor !== undefined ? { anchor: contents.anchor } : {}),
-			...(contents.commentBefore !== undefined ? { commentBefore: contents.commentBefore } : {}),
-			...(contents.comment !== undefined ? { comment: contents.comment } : {}),
-			...(contents.spaceBefore !== undefined ? { spaceBefore: contents.spaceBefore } : {}),
-			...(contents.sourceMultiline !== undefined ? { sourceMultiline: contents.sourceMultiline } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(contents.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(contents.anchor) }),
+			...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(contents.commentBefore) }),
+			...O.getSomesStruct({ comment: O.fromUndefinedOr(contents.comment) }),
+			...O.getSomesStruct({ spaceBefore: O.fromUndefinedOr(contents.spaceBefore) }),
+			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(contents.sourceMultiline) }),
 			offset: contents.offset,
 			length: contents.length,
 		});
@@ -1193,12 +1195,12 @@ function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode 
 		return YamlSeq.make({
 			items,
 			style: contents.style,
-			...(contents.tag !== undefined ? { tag: contents.tag } : {}),
-			...(contents.anchor !== undefined ? { anchor: contents.anchor } : {}),
-			...(contents.commentBefore !== undefined ? { commentBefore: contents.commentBefore } : {}),
-			...(contents.comment !== undefined ? { comment: contents.comment } : {}),
-			...(contents.spaceBefore !== undefined ? { spaceBefore: contents.spaceBefore } : {}),
-			...(contents.sourceMultiline !== undefined ? { sourceMultiline: contents.sourceMultiline } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(contents.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(contents.anchor) }),
+			...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(contents.commentBefore) }),
+			...O.getSomesStruct({ comment: O.fromUndefinedOr(contents.comment) }),
+			...O.getSomesStruct({ spaceBefore: O.fromUndefinedOr(contents.spaceBefore) }),
+			...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(contents.sourceMultiline) }),
 			offset: contents.offset,
 			length: contents.length,
 		});
@@ -1210,11 +1212,11 @@ function attachHeaderToFirstEntry(contents: YamlNode, header: string): YamlNode 
 function stripOwnComment(node: YamlMap | YamlSeq): YamlNode {
 	const shared = {
 		style: node.style,
-		...(node.tag !== undefined ? { tag: node.tag } : {}),
-		...(node.anchor !== undefined ? { anchor: node.anchor } : {}),
-		...(node.commentBefore !== undefined ? { commentBefore: node.commentBefore } : {}),
-		...(node.spaceBefore !== undefined ? { spaceBefore: node.spaceBefore } : {}),
-		...(node.sourceMultiline !== undefined ? { sourceMultiline: node.sourceMultiline } : {}),
+		...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
+		...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
+		...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(node.commentBefore) }),
+		...O.getSomesStruct({ spaceBefore: O.fromUndefinedOr(node.spaceBefore) }),
+		...O.getSomesStruct({ sourceMultiline: O.fromUndefinedOr(node.sourceMultiline) }),
 		offset: node.offset,
 		length: node.length,
 	};

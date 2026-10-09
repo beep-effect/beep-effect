@@ -193,7 +193,7 @@ const RESERVED = 3;
  * @example
  * ```ts
  * import { CliUi, MultiSelect } from "../ui.ts"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  *
  * const pickFeatures = Effect.gen(function* () {
  * 	const features = yield* CliUi.run(

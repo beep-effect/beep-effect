@@ -12,6 +12,7 @@ import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { formatVersion, parseVersion } from "./internal/grammar.ts";
 import { compareBuild, comparePrereleaseIdentifier } from "./internal/order.ts";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/semver/SemVer");
 
@@ -69,7 +70,7 @@ const buildIdentifier = S.String.check(S.isPattern(/^[0-9A-Za-z-]+$/u));
  * @example
  * ```ts
  * import { SemVer } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const v = yield* SemVer.parse("1.2.3");
@@ -192,7 +193,7 @@ export class SemVer extends S.Class<SemVer>($I`SemVer`)({
 	 * @example
 	 * ```ts
 	 * import { SemVer } from "./index.ts";
-	 * import { Result } from "effect";
+	 * import * as Result from "effect/Result";
 	 *
 	 * const ok = SemVer.parseResult("1.2.3");
 	 * if (Result.isSuccess(ok)) {
@@ -683,14 +684,14 @@ export class SemVerBump {
 		}
 
 		if (id !== undefined) {
-			const currentPrefix = typeof pre[0] === "string" ? pre[0] : null;
+			const currentPrefix = P.isString(pre[0]) ? pre[0] : null;
 			if (currentPrefix !== id) {
 				return SemVer.make({ major, minor, patch, prerelease: [id, 0], build: [] });
 			}
 		}
 
 		const last = pre[pre.length - 1];
-		if (typeof last === "number") {
+		if (P.isNumber(last)) {
 			const next: Array<string | number> = [...pre];
 			next[next.length - 1] = last + 1;
 			try {

@@ -83,10 +83,10 @@ export class EnvOverride {
 			// A record becomes a provider on every call, so its current values are read; a provider is used as given.
 			const raw =
 				source === undefined
-					? yield* config.pipe(Effect.orElseSucceed(() => O.none<string>()))
+					? yield* config.pipe(Effect.orElseSucceed(O.none<string>))
 					: yield* config
 							.parse(isProvider(source) ? source : ConfigProvider.fromEnvRecord({ ...source }))
-							.pipe(Effect.orElseSucceed(() => O.none<string>()));
+							.pipe(Effect.orElseSucceed(O.none<string>));
 			if (O.isNone(raw) || raw.value === "") {
 				return { audience: kind, accepted: O.none(), rejected: O.none() };
 			}

@@ -45,6 +45,8 @@
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { CompilerOptions } from "./CompilerOptions.ts";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
 
 /**
  * The nine `compilerOptions` / `watchOptions` enum families this codec knows.
@@ -318,15 +320,15 @@ const encodeCompilerOptions = (options: CompilerOptions.Type): ProgrammaticCompi
 
 	for (const [key, family] of COMPILER_OPTION_ENUM_KEYS) {
 		const value = source[key];
-		if (typeof value === "string") {
+		if (P.isString(value)) {
 			const encoded = encode(family, value);
 			if (O.isSome(encoded)) result[key] = encoded.value;
 		}
 	}
 
 	const lib = source.lib;
-	if (Array.isArray(lib)) {
-		result.lib = lib.map((entry) => (typeof entry === "string" ? `lib.${normalizeLibReference(entry)}.d.ts` : entry));
+	if (A.isArray(lib)) {
+		result.lib = lib.map((entry) => (P.isString(entry) ? `lib.${normalizeLibReference(entry)}.d.ts` : entry));
 	}
 
 	return result;
@@ -338,15 +340,15 @@ const decodeCompilerOptions = (numeric: Readonly<Record<string, unknown>>): Reco
 
 	for (const [key, family] of COMPILER_OPTION_ENUM_KEYS) {
 		const value = numeric[key];
-		if (typeof value === "number") {
+		if (P.isNumber(value)) {
 			const decoded = decode(family, value);
 			if (O.isSome(decoded)) result[key] = decoded.value;
 		}
 	}
 
 	const lib = numeric.lib;
-	if (Array.isArray(lib)) {
-		result.lib = lib.map((entry) => (typeof entry === "string" ? normalizeLibReference(entry) : entry));
+	if (A.isArray(lib)) {
+		result.lib = lib.map((entry) => (P.isString(entry) ? normalizeLibReference(entry) : entry));
 	}
 
 	return result;

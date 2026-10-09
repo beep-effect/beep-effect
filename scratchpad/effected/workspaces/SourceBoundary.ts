@@ -632,7 +632,7 @@ export class SourceBoundary {
 	 * ```ts
 	 * import { NodeServices } from "@effect/platform-node";
 	 * import { SourceBoundary } from "./testing.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const scan = SourceBoundary.scan({
 	 *   root: "/repo/packages/engine/src",

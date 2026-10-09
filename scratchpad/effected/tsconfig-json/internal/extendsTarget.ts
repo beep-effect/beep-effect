@@ -21,6 +21,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Path from "effect/Path";
 import { dual } from "effect/Function";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
 
 /** Conditions honored in an `exports` condition object, plus the always-eligible `default`. */
 const CONDITIONS = new Set(["require", "types", "node"]);
@@ -55,12 +57,12 @@ const matchWildcard = (pattern: string, subpath: string): string | null => {
 /** Substitute a captured wildcard segment into an export value, hardened against dunder keys and unbounded nesting. */
 const substituteWildcard = (value: unknown, captured: string, depth: number): unknown => {
 	if (depth > MAX_EXPORTS_DEPTH) return null;
-	if (typeof value === "string") return value.replace(/\*/g, captured);
-	if (Array.isArray(value)) return value.map((entry) => substituteWildcard(entry, captured, depth + 1));
+	if (P.isString(value)) return value.replace(/\*/g, captured);
+	if (A.isArray(value)) return value.map((entry) => substituteWildcard(entry, captured, depth + 1));
 	if (P.isObject(value)) {
 		const result: Record<string, unknown> = { __proto__: null };
-		for (const key of Object.keys(value)) {
-			if (DUNDER_KEYS.has(key) || !Object.hasOwn(value, key)) continue;
+		for (const key of R.keys(value)) {
+			if (DUNDER_KEYS.has(key) || !R.has(value, key)) continue;
 			result[key] = substituteWildcard(value[key], captured, depth + 1);
 		}
 		return result;
@@ -70,21 +72,21 @@ const substituteWildcard = (value: unknown, captured: string, depth: number): un
 
 /** Find the export value for a subpath: exact key first, then a single-`*` pattern (substituted), else `undefined`. */
 const matchExportKey = (exports: unknown, subpath: string): unknown => {
-	if (typeof exports === "string") return subpath === "." ? exports : undefined;
-	if (Array.isArray(exports)) return subpath === "." ? exports : undefined;
+	if (P.isString(exports)) return subpath === "." ? exports : undefined;
+	if (A.isArray(exports)) return subpath === "." ? exports : undefined;
 	if (!P.isObject(exports)) return undefined;
 	const obj = exports;
-	const keys = Object.keys(obj);
+	const keys = R.keys(obj);
 	// An object whose keys all start with "." is a subpath map; otherwise it is a
 	// root-level condition object (sugar for the "." target).
 	const isSubpathMap = keys.length > 0 && keys.every((key) => key.startsWith("."));
 	if (!isSubpathMap) return subpath === "." ? obj : undefined;
-	if (!DUNDER_KEYS.has(subpath) && Object.hasOwn(obj, subpath)) return obj[subpath];
+	if (!DUNDER_KEYS.has(subpath) && R.has(obj, subpath)) return obj[subpath];
 	// Node/tsc pattern selection: among matching `*` patterns the LONGEST base
 	// prefix (the text before the star) wins — most specific, not first-in-order.
 	let best: { readonly pattern: string; readonly captured: string; readonly prefixLength: number } | undefined;
 	for (const pattern of keys) {
-		if (DUNDER_KEYS.has(pattern) || !pattern.includes("*") || !Object.hasOwn(obj, pattern)) continue;
+		if (DUNDER_KEYS.has(pattern) || !pattern.includes("*") || !R.has(obj, pattern)) continue;
 		const captured = matchWildcard(pattern, subpath);
 		if (captured === null) continue;
 		const prefixLength = pattern.indexOf("*");
@@ -103,8 +105,8 @@ const matchExportKey = (exports: unknown, subpath: string): unknown => {
  */
 const resolveConditionValue = (value: unknown, depth: number): string | undefined => {
 	if (depth > MAX_EXPORTS_DEPTH) return undefined;
-	if (typeof value === "string") return value.endsWith(".json") ? value : undefined;
-	if (Array.isArray(value)) {
+	if (P.isString(value)) return value.endsWith(".json") ? value : undefined;
+	if (A.isArray(value)) {
 		for (const entry of value) {
 			const resolved = resolveConditionValue(entry, depth + 1);
 			if (resolved !== undefined) return resolved;
@@ -113,8 +115,8 @@ const resolveConditionValue = (value: unknown, depth: number): string | undefine
 	}
 	if (P.isObject(value)) {
 		const obj = value;
-		for (const key of Object.keys(obj)) {
-			if (DUNDER_KEYS.has(key) || !Object.hasOwn(obj, key)) continue;
+		for (const key of R.keys(obj)) {
+			if (DUNDER_KEYS.has(key) || !R.has(obj, key)) continue;
 			if (CONDITIONS.has(key) || key === "default") {
 				const resolved = resolveConditionValue(obj[key], depth + 1);
 				if (resolved !== undefined) return resolved;
@@ -164,7 +166,7 @@ const readManifest = (
 
 /** Read an own property of an untrusted record, guarding dunder keys and inherited members. */
 const ownProp = (record: Record<string, unknown>, key: string): unknown =>
-	!DUNDER_KEYS.has(key) && Object.hasOwn(record, key) ? record[key] : undefined;
+	!DUNDER_KEYS.has(key) && R.has(record, key) ? record[key] : undefined;
 
 /**
  * Resolve relative/rooted targets: the exact file wins verbatim (even
@@ -236,7 +238,7 @@ const tryCandidate = (
 		// field must also fall through rather than resolve to `path.resolve(pkgDir, "")`,
 		// which is the package directory itself.
 		const tsField = ownProp(record, "tsconfig");
-		if (typeof tsField === "string" && tsField !== "") {
+		if (P.isString(tsField) && tsField !== "") {
 			const abs = path.resolve(pkgDir, tsField);
 			if (yield* fs.exists(abs)) return O.some(abs);
 		}

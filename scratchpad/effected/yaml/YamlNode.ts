@@ -13,6 +13,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { YamlPath } from "./YamlEdit.ts";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/yaml/YamlNode");
 
@@ -407,13 +408,13 @@ function findByPath(root: YamlNode, path: YamlPath): O.Option<YamlNode> {
 			return O.none();
 		}
 
-		if (typeof segment === "string") {
+		if (P.isString(segment)) {
 			// Navigate by key — requires a YamlMap
 			if (!(S.is(YamlMap)(current))) {
 				return O.none();
 			}
 			const pair: YamlPair | undefined = current.items.find(
-				(p: YamlPair) => S.is(YamlScalar)(p.key) && typeof p.key.value === "string" && p.key.value === segment,
+				(p: YamlPair) => S.is(YamlScalar)(p.key) && P.isString(p.key.value) && p.key.value === segment,
 			);
 			if (pair === undefined || pair.value === null) {
 				return O.none();
@@ -488,7 +489,7 @@ function descendToNode(node: YamlNode, target: YamlNode, path: Array<string | nu
 
 	if (S.is(YamlMap)(node)) {
 		for (const pair of node.items) {
-			if (S.is(YamlScalar)(pair.key) && typeof pair.key.value === "string") {
+			if (S.is(YamlScalar)(pair.key) && P.isString(pair.key.value)) {
 				if (pair.key === target) {
 					path.push(pair.key.value);
 					return true;

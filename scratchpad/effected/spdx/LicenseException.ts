@@ -22,7 +22,7 @@ const $I = $ScratchpadId.create("effected/spdx/LicenseException");
  * @example
  * ```ts
  * import { LicenseException } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const e = yield* LicenseException.parse("Classpath-exception-2.0");

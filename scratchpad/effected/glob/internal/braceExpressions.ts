@@ -6,6 +6,7 @@
 // guard.
 
 import { dual } from "effect/Function";
+import * as R from "effect/Record";
 
 // translate the various posix character classes into unicode properties
 // this works across all unicode locales
@@ -87,7 +88,7 @@ export const parseClass: {
 		}
 		if (c === "[" && !escaping) {
 			// either a posix class, a collation equivalent, or just a [
-			for (const [cls, [unip, u, neg]] of Object.entries(posixClasses)) {
+			for (const [cls, [unip, u, neg]] of R.toEntries(posixClasses)) {
 				if (glob.startsWith(cls, i)) {
 					// invalid, [a-[] is fine, but not [a-[:alpha]]
 					if (rangeStart !== "") {

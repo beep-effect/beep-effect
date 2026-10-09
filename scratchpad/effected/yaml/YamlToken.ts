@@ -146,7 +146,7 @@ export class YamlTokens {
 	 * @example
 	 * ```ts
 	 * import { YamlTokens } from "./index.ts";
-	 * import { Result } from "effect";
+	 * import * as Result from "effect/Result";
 	 *
 	 * const result = YamlTokens.tokenize("a: 1\n");
 	 * if (Result.isSuccess(result)) {

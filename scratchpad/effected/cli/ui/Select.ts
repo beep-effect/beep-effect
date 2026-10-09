@@ -1,4 +1,4 @@
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import type { ReactElement } from "react";
 import { Fmt } from "../Fmt.ts";
 import type { Screen } from "./CliUi.ts";
@@ -175,7 +175,7 @@ const RESERVED = 3;
  * @example
  * ```ts
  * import { CliUi, Select } from "../ui.ts"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  *
  * const pickTarget = Effect.gen(function* () {
  * 	const target = yield* CliUi.run(
@@ -252,8 +252,8 @@ export class Select {
 		const cancel = useScreenCancel();
 		const [state, setState] = react.useState(() =>
 			init(props.choices, {
-				...(props.initial === undefined ? {} : { initial: props.initial }),
-				...(props.height === undefined ? {} : { height: props.height }),
+				...O.getSomesStruct({ initial: O.fromUndefinedOr(props.initial) }),
+				...O.getSomesStruct({ height: O.fromUndefinedOr(props.height) }),
 			}),
 		);
 		const submitted = state.submitted;

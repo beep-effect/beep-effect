@@ -77,7 +77,7 @@ export class RepoRef extends S.Class<RepoRef>($I`RepoRef`)({
  * @example
  * ```ts
  * import { Repo, RepoRef } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * declare const syncOne: Effect.Effect<void, never, Repo>;
  * declare const targets: ReadonlyArray<RepoRef>;

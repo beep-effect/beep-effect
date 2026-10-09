@@ -6,6 +6,7 @@ import { inkModules } from "./internal/ink.ts";
 import { useScreenGuard } from "./internal/ScreenContext.ts";
 import type { KeyName } from "./UiKey.ts";
 import { UiKey } from "./UiKey.ts";
+import * as P from "effect/Predicate";
 
 /**
  * One row of a {@link KeyTable}: the keys that trigger an action, and the help line that names it.
@@ -67,20 +68,20 @@ const WORDS: Record<KeyName, string> = {
 };
 
 const labelOf = (key: KeyName | { readonly char: string }, glyphs: Cli.GlyphSet): string => {
-	if (typeof key !== "string") return key.char;
+	if (!P.isString(key)) return key.char;
 	return (glyphs.kind === "unicode" ? ARROWS[key] : undefined) ?? WORDS[key];
 };
 
 /** A typed space is only ever reported as the named space key, so a `{ char: " " }` binding means `"space"`. */
 const normalise = (key: KeyName | { readonly char: string }): KeyName | { readonly char: string } =>
-	typeof key !== "string" && key.char === " " ? "space" : key;
+	!P.isString(key) && key.char === " " ? "space" : key;
 
 /** Two keys shadow each other in help when they would match the same press, so a char compares in NFC as matching does. */
 const identity = (key: KeyName | { readonly char: string }): string =>
-	typeof key === "string" ? `named:${key}` : `char:${key.char.normalize("NFC")}`;
+	P.isString(key) ? `named:${key}` : `char:${key.char.normalize("NFC")}`;
 
 const bound = (binding: KeyName | { readonly char: string }, key: UiKey): boolean =>
-	typeof binding === "string"
+	P.isString(binding)
 		? key._tag === "Named" && key.name === binding
 		: // Compared in NFC, so a precomposed binding matches decomposed input and the reverse.
 			key._tag === "Char" && key.char.normalize("NFC") === binding.char.normalize("NFC");
@@ -236,7 +237,7 @@ const keysOf = (input: string, key: Parameters<typeof UiKey.fromInk>[1]): Readon
 export const useKeys: {
 	<Action>(dispatch: (action: Action) => void, options?: UseKeysOptions): (table: KeyTable<Action>) => void;
 	<Action>(table: KeyTable<Action>, dispatch: (action: Action) => void, options?: UseKeysOptions): void;
-} = dual((args) => typeof args[0] !== "function", <Action>(
+} = dual((args) => !P.isFunction(args[0]), <Action>(
 	table: KeyTable<Action>,
 	dispatch: (action: Action) => void,
 	options: UseKeysOptions = {},

@@ -18,6 +18,7 @@ import { ConfigEvent } from "./ConfigEvent.ts";
 import type { ConfigMatch, ConfigProbe } from "./ConfigResolver.ts";
 import { ConfigResolver } from "./ConfigResolver.ts";
 import type { ConfigSource, MergeStrategy, NonEmptySources } from "./MergeStrategy.ts";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/config-file/ConfigFile");
 
@@ -769,13 +770,13 @@ const testLayer = <Self, A, I, S extends ConfigFileShape<A> = ConfigFileShape<A>
 			const dir = yield* fs.makeTempDirectory({ prefix: "effected-config-file-" }).pipe(Effect.orDie);
 			yield* Effect.addFinalizer(() => fs.remove(dir, { recursive: true }).pipe(Effect.orDie));
 
-			for (const [name, content] of Object.entries(options.files)) {
+			for (const [name, content] of R.toEntries(options.files)) {
 				const target = path.join(dir, name);
 				yield* fs.makeDirectory(path.dirname(target), { recursive: true }).pipe(Effect.orDie);
 				yield* fs.writeFileString(target, content).pipe(Effect.orDie);
 			}
 
-			const resolvers = Object.keys(options.files).map((name) => ConfigResolver.staticDir({ dir, filename: name }));
+			const resolvers = R.keys(options.files).map((name) => ConfigResolver.staticDir({ dir, filename: name }));
 
 			return makeImpl(
 				{
@@ -889,9 +890,9 @@ export class ConfigFile {
 	 * @example
 	 * ```ts
 	 * import { ConfigFile, ConfigResolver, JsonCodec, MergeStrategy } from "./index.ts";
-	 * import { Schema } from "effect";
+	 * import * as S from "effect/Schema";
 	 *
-	 * const AppShape = Schema.Struct({ port: Schema.Finite });
+	 * const AppShape = S.Struct({ port: S.Finite });
 	 * class AppConfig extends ConfigFile.Service<AppConfig, typeof AppShape.Type>()("app/Config") {}
 	 *
 	 * const AppConfigLive = ConfigFile.layer(AppConfig, {
@@ -962,9 +963,10 @@ export class ConfigFile {
 	 * @example
 	 * ```ts
 	 * import { ConfigFile, JsonCodec } from "./index.ts";
-	 * import { Effect, Schema } from "effect";
+	 * import * as Effect from "effect/Effect";
+	 * import * as S from "effect/Schema";
 	 *
-	 * const MyConfig = Schema.Struct({ port: Schema.Finite });
+	 * const MyConfig = S.Struct({ port: S.Finite });
 	 *
 	 * // Requires `FileSystem` in `R`; provide it from a platform layer.
 	 * const program = Effect.gen(function* () {

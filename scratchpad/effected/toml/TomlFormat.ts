@@ -39,6 +39,7 @@ import {
 	TomlTableHeader,
 	TomlTrivia,
 } from "./TomlNode.ts";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/toml/TomlFormat");
 
@@ -538,7 +539,7 @@ const failResolve = (code: TomlErrorCodeRaw, message: string, offset = 0, length
 };
 
 const requireIndex = (segment: TomlSegment, what: string, offset: number, length: number): number => {
-	if (typeof segment !== "number" || !Number.isInteger(segment) || segment < 0) {
+	if (!P.isNumber(segment) || !Number.isInteger(segment) || segment < 0) {
 		return failResolve(
 			"DottedKeyConflict",
 			`${what} requires a non-negative integer index, received "${String(segment)}"`,
@@ -844,7 +845,7 @@ const terminal = (cur: Cursor, segment: TomlSegment, value: unknown, ctx: Modify
  * @example
  * ```ts
  * import { TomlFormat } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const formatted = TomlFormat.formatToString('  title="x"   #note\n[server]\nport=1');
  * // => 'title = "x" # note\n[server]\nport = 1\n'

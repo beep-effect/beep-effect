@@ -28,7 +28,7 @@ const classifyDiff = (a: SemVer, b: SemVer): "major" | "minor" | "patch" | "prer
  * @example
  * ```ts
  * import { SemVer, VersionDiff } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const a = yield* SemVer.parse("1.2.3");

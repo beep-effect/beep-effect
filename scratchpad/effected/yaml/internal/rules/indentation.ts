@@ -18,6 +18,7 @@ import * as S from "effect/Schema";
 import type { LintContext, LintLine, YamlRule } from "../../YamlLintRule.ts";
 import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import { coveringToken, isScalarContinuationLine, nonNegativeIntegerOption } from "./util.ts";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/indentation");
 
@@ -117,7 +118,7 @@ export const indentation: YamlRule = {
 		const content = contentLines(ctx);
 
 		// Check 1: every new level indents by one consistent unit.
-		let unit = typeof spacesOpt === "number" ? spacesOpt : undefined;
+		let unit = P.isNumber(spacesOpt) ? spacesOpt : undefined;
 		const stack: Array<number> = [0];
 		for (const { line, indent } of content) {
 			const top = stack[stack.length - 1] ?? 0;
@@ -148,7 +149,7 @@ export const indentation: YamlRule = {
 
 		// Check 2: sequences under a mapping key follow one policy. Detected
 		// on consecutive content-line pairs `key:` → `- item`.
-		let seqIndented = typeof seqOpt === "boolean" ? seqOpt : undefined;
+		let seqIndented = P.isBoolean(seqOpt) ? seqOpt : undefined;
 		for (let i = 1; i < content.length; i++) {
 			const prev = content[i - 1];
 			const curr = content[i];

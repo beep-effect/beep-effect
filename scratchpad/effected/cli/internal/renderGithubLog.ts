@@ -4,6 +4,7 @@ import type { Block, Document } from "../Doc.ts";
 import { sanitize } from "../Fmt.ts";
 import type { RenderContext } from "../Render.ts";
 import { plainInline, renderPlainLines } from "./renderPlain.ts";
+import * as O from "@beep/utils/Option";
 
 /** Plain lines, neutralized; a block that draws nothing, such as an empty table, gives no line at all. */
 const plainLines = (blocks: ReadonlyArray<Block>, ctx: RenderContext): ReadonlyArray<string> =>
@@ -14,10 +15,10 @@ const annotationLine = (block: Extract<Block, { readonly _tag: "Annotation" }>):
 	WorkflowCommand[block.level](sanitize(block.message), {
 		...(block.title === undefined ? {} : { title: sanitize(block.title) }),
 		...(block.file === undefined ? {} : { file: sanitize(block.file) }),
-		...(block.line === undefined ? {} : { startLine: block.line }),
-		...(block.endLine === undefined ? {} : { endLine: block.endLine }),
-		...(block.col === undefined ? {} : { startColumn: block.col }),
-		...(block.endColumn === undefined ? {} : { endColumn: block.endColumn }),
+		...O.getSomesStruct({ startLine: O.fromUndefinedOr(block.line) }),
+		...O.getSomesStruct({ endLine: O.fromUndefinedOr(block.endLine) }),
+		...O.getSomesStruct({ startColumn: O.fromUndefinedOr(block.col) }),
+		...O.getSomesStruct({ endColumn: O.fromUndefinedOr(block.endColumn) }),
 	});
 
 /** A group's body: plain text, except an annotation, which is still a command inside a group. */

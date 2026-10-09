@@ -8,6 +8,7 @@ import { ChildProcessSpawner } from "effect/process";
 import { isErrno } from "./internal/fsProbe.ts";
 import { IeeeNumber } from "./internal/ieeeNumber.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github-actions/DetachedProcess");
 
@@ -146,7 +147,7 @@ export type DetachedProcessError =
  * @example
  * ```ts
  * import { ActionState, DetachedProcess, ProcessId } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const post = Effect.gen(function* () {
  *   const pid = yield* (yield* ActionState).get("server-pid", ProcessId);
@@ -287,7 +288,7 @@ const dies = unstubbed("DetachedProcess.makeTestOps");
  * @example
  * ```ts
  * import { DetachedProcess } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const pid = yield* DetachedProcess.spawn({
@@ -323,7 +324,7 @@ export class DetachedProcess {
 			try: () => {
 				try {
 					const child = spawnChild(options.command, [...(options.args ?? [])], {
-						...(options.cwd === undefined ? {} : { cwd: options.cwd }),
+						...O.getSomesStruct({ cwd: O.fromUndefinedOr(options.cwd) }),
 						env: { ...(options.base ?? process.env), ...options.env },
 						detached: true,
 						stdio: ["ignore", descriptor, descriptor],

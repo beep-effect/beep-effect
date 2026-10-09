@@ -307,7 +307,7 @@ const collectLicenses = (expr: SpdxExpression, into: Array<License>): void => {
  * @example
  * ```ts
  * import { SpdxExpression } from "./index.ts";
- * import { Result } from "effect";
+ * import * as Result from "effect/Result";
  *
  * const expr = Result.getOrThrow(SpdxExpression.parseResult("(MIT OR Apache-2.0)"));
  * SpdxExpression.licensesOf(expr).map((license) => license.id);
@@ -349,11 +349,12 @@ const licensesOf = (expr: SpdxExpression): ReadonlyArray<License> => {
  * @example
  * ```ts
  * import { SpdxExpression } from "./index.ts";
- * import { Option, Result } from "effect";
+ * import * as O from "effect/Option";
+ * import * as Result from "effect/Result";
  *
  * const parse = (input: string) => Result.getOrThrow(SpdxExpression.parseResult(input));
  *
- * Option.map(SpdxExpression.primaryLicense(parse("(MIT OR Apache-2.0)")), (license) => license.id);
+ * O.map(SpdxExpression.primaryLicense(parse("(MIT OR Apache-2.0)")), (license) => license.id);
  * // => Option.some("MIT")
  * SpdxExpression.primaryLicense(parse("(MIT AND Apache-2.0)"));
  * // => Option.none()

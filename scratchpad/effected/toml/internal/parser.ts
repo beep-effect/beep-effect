@@ -45,6 +45,8 @@ import {
 	skipBom,
 } from "./scanner.ts";
 import * as Schema from "effect/Schema";
+import * as P from "effect/Predicate";
+import * as O from "@beep/utils/Option";
 
 const LF = 0x0a;
 const CR = 0x0d;
@@ -125,13 +127,13 @@ const parseLineEnd = (source: string, pos: number): { readonly comment?: string;
 		i = scanned.end;
 	}
 	if (i >= source.length) {
-		return { ...(comment !== undefined ? { comment } : {}), end: i };
+		return { ...O.getSomesStruct({ comment: O.fromUndefinedOr(comment) }), end: i };
 	}
 	const after = scanNewline(source, i);
 	if (after === i) {
 		return raise("ExpectedNewline", "expected a newline after the expression", i, 1);
 	}
-	return { ...(comment !== undefined ? { comment } : {}), end: after };
+	return { ...O.getSomesStruct({ comment: O.fromUndefinedOr(comment) }), end: after };
 };
 
 /**
@@ -260,13 +262,13 @@ const scalarNode = (source: string, pos: number): Parsed<TomlValueNode> => {
 	}
 	const scalar = classifyValueToken(token.value, pos);
 	const length = token.end - pos;
-	if (typeof scalar === "boolean") {
+	if (P.isBoolean(scalar)) {
 		return { node: TomlBoolean.make({ value: scalar, offset: pos, length }), end: token.end };
 	}
-	if (typeof scalar === "bigint") {
+	if (P.isBigInt(scalar)) {
 		return { node: TomlInteger.make({ value: scalar, offset: pos, length }), end: token.end };
 	}
-	if (typeof scalar === "number") {
+	if (P.isNumber(scalar)) {
 		const node = isFloatToken(token.value)
 			? TomlFloat.make({ value: scalar, offset: pos, length })
 			: TomlInteger.make({ value: scalar, offset: pos, length });
@@ -360,7 +362,7 @@ const parseKeyValueExpression = (source: string, lineStart: number, keyStart: nu
 		node: TomlKeyValue.make({
 			keyPath: keyPath.node,
 			value: value.node,
-			...(lineEnd.comment !== undefined ? { comment: lineEnd.comment } : {}),
+			...O.getSomesStruct({ comment: O.fromUndefinedOr(lineEnd.comment) }),
 			offset: lineStart,
 			length: lineEnd.end - lineStart,
 		}),
@@ -392,7 +394,7 @@ const parseHeaderExpression = (
 	const lineEnd = parseLineEnd(source, i);
 	const fields = {
 		keyPath: keyPath.node,
-		...(lineEnd.comment !== undefined ? { comment: lineEnd.comment } : {}),
+		...O.getSomesStruct({ comment: O.fromUndefinedOr(lineEnd.comment) }),
 		offset: lineStart,
 		length: lineEnd.end - lineStart,
 	};

@@ -284,7 +284,8 @@ const badNamespace = (namespace: string): Error | undefined => {
  * @example
  * ```ts
  * import { AppDirs, Xdg } from "./index.ts";
- * import { Effect, Layer } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  *
  * // Bound once to a const, with the ambient `Xdg` environment provided and kept.
  * const AppDirsLive = Layer.provideMerge(AppDirs.layer({ namespace: "myapp", native: true }), Xdg.layer);

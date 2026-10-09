@@ -56,8 +56,8 @@ export type ByteCount = typeof ByteCount.Type;
  * which is why `end - offset` is not always `length`.
  *
  * **Example** (Locate a terminated line in UTF-8 bytes)
- * ```ts import.meta.vitest name="Locate a terminated line in UTF-8 bytes"
- * import { pipe } from "effect";
+ * ```ts
+ * import { pipe } from "effect/Function";
  * import { Line } from "@beep/scratchpad/effected/jsonl/index";
  * import * as A from "effect/Array";
  * import * as O from "effect/Option";

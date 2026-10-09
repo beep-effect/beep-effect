@@ -291,9 +291,9 @@ const encode: {
  * returns its pipeable form. Selected decoding filters the frame before data.
  *
  * **Example** (Decode in a pipeline)
- * ```ts import.meta.vitest name="Decode in a pipeline"
+ * ```ts
  * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
- * import { pipe } from "effect";
+ * import { pipe } from "effect/Function";
  * import * as A from "effect/Array";
  * import * as O from "effect/Option";
  * import * as S from "effect/Schema";
@@ -366,7 +366,7 @@ export const Envelope = {
    *
    * **Example** (Pipe a line through its registry)
    *
-   * ```ts import.meta.vitest name="Pipe a line through its registry"
+   * ```ts
    * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
    * import * as A from "effect/Array";
    * import * as O from "effect/Option";
@@ -374,7 +374,7 @@ export const Envelope = {
    * const events = [JsonlEvent.make("started", { data: S.String })];
    * const text = '{"at":"2026-10-06T00:00:00Z","event":"started","data":"ready"}';
    * const line = O.getOrThrow(A.head(Line.split(text)));
-   * import { pipe } from "effect";
+   * import { pipe } from "effect/Function";
    * import * as Result from "effect/Result";
    * pipe(line, Envelope.decodeResult(events), Result.map((row) => row.data)) // => Result.succeed("ready")
    * ```
@@ -465,7 +465,7 @@ export const Envelope = {
    *
    * **Example** (Decode a line in Effect)
    *
-   * ```ts import.meta.vitest name="Decode a line in Effect"
+   * ```ts
    * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
    * import * as A from "effect/Array";
    * import * as O from "effect/Option";
@@ -473,7 +473,7 @@ export const Envelope = {
    * const events = [JsonlEvent.make("started", { data: S.String })];
    * const text = '{"at":"2026-10-06T00:00:00Z","event":"started","data":"ready"}';
    * const line = O.getOrThrow(A.head(Line.split(text)));
-   * import { Effect } from "effect";
+   * import * as Effect from "effect/Effect";
    * const program = Effect.gen(function* () {
    *   const envelope = yield* Envelope.decode(line, events);
    *   envelope.data // => "ready"
@@ -490,11 +490,11 @@ export const Envelope = {
    *
    * **Example** (Encode a payload lazily)
    *
-   * ```ts import.meta.vitest name="Encode a payload lazily"
+   * ```ts
    * import { Envelope, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
    * import * as S from "effect/Schema";
    * const events = [JsonlEvent.make("started", { data: S.String })];
-   * import { Effect } from "effect";
+   * import * as Effect from "effect/Effect";
    * import * as DateTime from "effect/DateTime";
    * import * as Str from "effect/String";
    * const program = Envelope.encode({at:DateTime.makeUnsafe(0),event:"started",data:"ready"}, events);

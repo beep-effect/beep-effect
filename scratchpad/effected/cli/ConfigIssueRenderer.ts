@@ -21,7 +21,7 @@ import { formatIssue } from "./internal/format.ts";
  * @example
  * ```ts
  * import { ConfigIssueRenderer } from "./index.ts"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  *
  * const load = configFile.load.pipe(
  *   Effect.catchTag("ConfigValidationError", (error) =>

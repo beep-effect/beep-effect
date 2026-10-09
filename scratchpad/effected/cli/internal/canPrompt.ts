@@ -1,7 +1,7 @@
-import type { TerminalEnvShape } from "../../env/index.ts";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import type { TerminalEnvShape } from "../../env/index.ts";
 
 /**
  * Whether the terminal facts let a run prompt: a terminal on standard input and on standard output, and a `TERM` that
@@ -14,7 +14,7 @@ import * as O from "effect/Option";
 export const canPrompt = (terminal: TerminalEnvShape): Effect.Effect<boolean> =>
 	terminal.stdinIsTerminal && terminal.stdout.isTerminal
 		? Effect.map(
-				Config.option(Config.String("TERM")).pipe(Effect.orElseSucceed(() => O.none<string>())),
+				Config.option(Config.String("TERM")).pipe(Effect.orElseSucceed(O.none<string>)),
 				(term) => !(O.isSome(term) && term.value === "dumb"),
 			)
 		: Effect.succeed(false);

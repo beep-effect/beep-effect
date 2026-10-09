@@ -24,6 +24,8 @@ import { manifestPatternsOf, pnpmPatternsOf } from "./internal/patterns.ts";
 import { Traversal, badMaxDepthMessage, isPruned, isValidMaxDepth, joinRelative } from "./internal/traverse.ts";
 import type { WorkspaceDiscoveryError } from "./WorkspaceDiscovery.ts";
 import { PublishConfig, WorkspacePackage } from "./WorkspacePackage.ts";
+import * as R from "effect/Record";
+import * as O from "@beep/utils/Option";
 
 /**
  * The synchronous file operations the sync entry points need, supplied by the
@@ -471,7 +473,7 @@ const readPackageSync = (
 	const raw = read.raw;
 
 	const name = raw.name;
-	if (typeof name !== "string" || name.length === 0) {
+	if (!P.isString(name) || name.length === 0) {
 		return { root, path: packageJsonPath, kind: "missingName", cause: undefined };
 	}
 	// Absent stays absent — pnpm accepts a version-less private package, and the
@@ -482,7 +484,7 @@ const readPackageSync = (
 	// `invalidShape` with these exact sentences; here they are the same kind and
 	// the same sentence, reported rather than raised.
 	const version = raw.version;
-	if (version !== undefined && typeof version !== "string") {
+	if (version !== undefined && !P.isString(version)) {
 		return {
 			root,
 			path: packageJsonPath,
@@ -500,7 +502,7 @@ const readPackageSync = (
 	}
 
 	const isStringRecord = (value: unknown): value is Record<string, string> =>
-		P.isObject(value) && Object.values(value).every(P.isString);
+		P.isObject(value) && R.values(value).every(P.isString);
 
 	const stringRecord = (value: unknown): Record<string, string> | undefined =>
 		isStringRecord(value) ? value : undefined;
@@ -513,7 +515,7 @@ const readPackageSync = (
 
 	return WorkspacePackage.make({
 		name,
-		...(version !== undefined ? { version } : {}),
+		...O.getSomesStruct({ version: O.fromUndefinedOr(version) }),
 		path: directory,
 		packageJsonPath,
 		relativePath,

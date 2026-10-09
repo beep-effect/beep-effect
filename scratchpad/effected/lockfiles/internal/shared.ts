@@ -11,6 +11,10 @@ import type { PnpmExtension } from "../PnpmExtension.ts";
 import type { ResolvedPackage } from "../ResolvedPackage.ts";
 import type { UnsupportedLockfileVersion } from "../UnsupportedLockfileVersion.ts";
 import { WorkspaceDependency } from "../WorkspaceDependency.ts";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as O from "@beep/utils/Option";
 
 /**
  * The four dependency sections of a manifest, in a stable order — the shared
@@ -135,7 +139,7 @@ const buildImporterDependency = (
 		...(resolved !== undefined && resolved.plain !== ""
 			? {
 					version: resolved.plain,
-					...(resolved.peerSuffix !== undefined ? { peerSuffix: resolved.peerSuffix } : {}),
+					...O.getSomesStruct({ peerSuffix: O.fromUndefinedOr(resolved.peerSuffix) }),
 				}
 			: {}),
 	});
@@ -171,7 +175,7 @@ export const importerDependencies: {
 	for (const field of DEP_TYPES) {
 		const section = entry[field];
 		if (section === undefined) continue;
-		for (const [name, value] of Object.entries(section)) {
+		for (const [name, value] of R.toEntries(section)) {
 			const { specifier, version } = read(value);
 			const dep = buildImporterDependency(name, specifier, field, version);
 			if (dep !== undefined) deps.push(dep);
@@ -212,7 +216,7 @@ const EMPTY_PEERS: PeerDeclarations = { peerDependencies: {}, peerDependenciesMe
 export const peerDeclarations: {
 	(meta: Readonly<Record<string, { readonly optional?: boolean }>> | undefined, optionalPeers?: ReadonlyArray<string> | undefined): (peers: Readonly<Record<string, string>> | undefined) => PeerDeclarations;
 	(peers: Readonly<Record<string, string>> | undefined, meta: Readonly<Record<string, { readonly optional?: boolean }>> | undefined, optionalPeers?: ReadonlyArray<string> | undefined): PeerDeclarations;
-} = dual((args) => args.length >= 2 && !Array.isArray(args[1]), (
+} = dual((args) => args.length >= 2 && !A.isArray(args[1]), (
 	peers: Readonly<Record<string, string>> | undefined,
 	meta: Readonly<Record<string, { readonly optional?: boolean }>> | undefined,
 	optionalPeers?: ReadonlyArray<string> | undefined,
@@ -220,7 +224,7 @@ export const peerDeclarations: {
 	if (peers === undefined && meta === undefined && optionalPeers === undefined) return EMPTY_PEERS;
 	const flags = new Map<string, boolean>();
 	if (meta !== undefined) {
-		for (const [name, value] of Object.entries(meta)) {
+		for (const [name, value] of R.toEntries(meta)) {
 			flags.set(name, value?.optional === true);
 		}
 	}
@@ -228,8 +232,8 @@ export const peerDeclarations: {
 		for (const name of optionalPeers) flags.set(name, true);
 	}
 	return {
-		peerDependencies: peers === undefined ? {} : Object.fromEntries(Object.entries(peers)),
-		peerDependenciesMeta: Object.fromEntries([...flags].map(([name, optional]) => [name, { optional }])),
+		peerDependencies: peers === undefined ? {} : R.fromEntries(R.toEntries(peers)),
+		peerDependenciesMeta: R.fromEntries([...flags].map(([name, optional]) => [name, { optional }])),
 	};
 });
 
@@ -269,7 +273,7 @@ export const requireLockfileVersion: {
 	raw: string | number,
 ): Effect.Effect<void, ParseFailure> => {
 	const minimum = MINIMUM_LOCKFILE_VERSION[format];
-	const parsed = typeof raw === "number" ? raw : Number.parseFloat(raw);
+	const parsed = P.isNumber(raw) ? raw : Number.parseFloat(raw);
 	if (Number.isFinite(parsed) && parsed >= minimum) return Effect.void;
 	// Typed as the exported public shape, so the record a consumer narrows to
 	// with `isUnsupportedLockfileVersion` and the record built here cannot
@@ -432,7 +436,7 @@ export const extractWorkspaceDeps: {
 		for (const depType of DEP_TYPES) {
 			const depMap = entry[depType];
 			if (depMap === undefined) continue;
-			for (const [name, constraint] of Object.entries(depMap)) {
+			for (const [name, constraint] of R.toEntries(depMap)) {
 				if (workspaceNames.has(name)) {
 					deps.push(WorkspaceDependency.make({ from, to: name, depType, constraint }));
 				}

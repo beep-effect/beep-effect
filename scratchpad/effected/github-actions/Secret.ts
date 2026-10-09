@@ -2,6 +2,7 @@ import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 import { ActionOutputs } from "./ActionOutputs.ts";
+import * as R from "effect/Record";
 
 /**
  * The declassification seam: the **only** place in this package where a
@@ -39,7 +40,7 @@ import { ActionOutputs } from "./ActionOutputs.ts";
  * @example
  * ```ts
  * import { Secret } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const env = yield* Secret.forChildEnv({ MY_TOKEN: theToken });
@@ -75,7 +76,7 @@ export class Secret {
 		Effect.gen(function* () {
 			const outputs = yield* ActionOutputs;
 			const declassified: Record<string, string> = {};
-			for (const [name, secret] of Object.entries(entries)) {
+			for (const [name, secret] of R.toEntries(entries)) {
 				const plaintext = Redacted.value(secret);
 				yield* outputs.setSecret(plaintext);
 				declassified[name] = plaintext;

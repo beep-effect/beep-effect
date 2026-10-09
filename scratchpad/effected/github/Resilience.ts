@@ -72,7 +72,8 @@ export interface RetryableFailure {
  * @example
  * ```ts
  * import { GitHubClient, RetryPolicy } from "./index.ts";
- * import { Duration, Redacted } from "effect";
+ * import * as Duration from "effect/Duration";
+ * import * as Redacted from "effect/Redacted";
  *
  * const layer = GitHubClient.layerFromToken({
  *   token: Redacted.make("ghp_example"),

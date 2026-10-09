@@ -139,9 +139,10 @@ const HEADER_BYTES = MAGIC.length + 1 + 4;
  * @example
  * ```ts
  * import { BlobEnvelope } from "./index.ts";
- * import { Result, Schema } from "effect";
+ * import * as Result from "effect/Result";
+ * import * as S from "effect/Schema";
  *
- * const Meta = Schema.Struct({ tag: Schema.String });
+ * const Meta = S.Struct({ tag: S.String });
  *
  * const framed = BlobEnvelope.encodeResult({ tag: "v1" }, new Uint8Array([1, 2, 3]), Meta);
  * if (Result.isSuccess(framed)) {

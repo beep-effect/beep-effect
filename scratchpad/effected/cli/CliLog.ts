@@ -1,20 +1,23 @@
-import { dual } from "effect/Function";
-import type { AudienceKind, RuntimeEnv } from "../env/index.ts";
-import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../env/index.ts";
-import { CommandNeutralizer } from "../github-commands/index.ts";
-import type * as Fiber from "effect/Fiber";
-import type * as FileSystem from "effect/FileSystem";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import type * as Fiber from "effect/Fiber";
+import type * as FileSystem from "effect/FileSystem";
+import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as LogLevel from "effect/LogLevel";
 import * as Logger from "effect/Logger";
-import * as O from "effect/Option";
+import * as LogLevel from "effect/LogLevel";
+import * as O from "@beep/utils/Option";
 import * as PathModule from "effect/Path";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as References from "effect/References";
+import type { AudienceKind, RuntimeEnv } from "../env/index.ts";
+import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../env/index.ts";
+import { CommandNeutralizer } from "../github-commands/index.ts";
 import type { CliLoggerOptions } from "./CliLogger.ts";
 import { makeCliLogger } from "./CliLogger.ts";
 import { CliTheme } from "./CliTheme.ts";
@@ -53,7 +56,7 @@ const MAX_INDENT = 64;
 const indentOf = (indent: number | string | undefined): string => {
 	if (indent === undefined) return "";
 	// Floored and capped: `indent: 1e12` would make `repeat` throw a RangeError inside the log call.
-	if (typeof indent === "number")
+	if (P.isNumber(indent))
 		return Number.isFinite(indent) && indent > 0 ? " ".repeat(Math.min(MAX_INDENT, Math.floor(indent))) : "";
 	return sanitize(indent).replace(/\r\n|\r|\n/g, "");
 };
@@ -222,13 +225,13 @@ const readLevel = (
 	Effect.gen(function* () {
 		if (explicit !== undefined) return { level: explicit, invalid: undefined };
 		if (envVar === undefined) return { level: "None", invalid: undefined };
-		const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(() => O.none<string>()));
+		const raw = yield* Config.option(Config.String(envVar)).pipe(Effect.orElseSucceed(O.none<string>));
 		if (O.isNone(raw) || raw.value === "") return { level: "None", invalid: undefined };
 		const level = LEVELS[raw.value.toLowerCase()];
 		if (level !== undefined) return { level, invalid: undefined };
 		return {
 			level: "None",
-			invalid: `${envVar}=${raw.value} is not a log level (${Object.keys(LEVELS).join("|")}); ignoring it`,
+			invalid: `${envVar}=${raw.value} is not a log level (${R.keys(LEVELS).join("|")}); ignoring it`,
 		};
 	});
 
@@ -457,7 +460,7 @@ export class CliLog {
 					// The program's text is sanitised before anything is painted, and the line is neutralized last.
 					const component = annotations.component === undefined ? "" : ` [${sanitize(String(annotations.component))}]`;
 					const message = sanitize(
-						Array.isArray(record.message) ? record.message.map(String).join(" ") : String(record.message),
+						A.isArray(record.message) ? record.message.map(String).join(" ") : String(record.message),
 					);
 					const name = record.logLevel.toUpperCase();
 					const levelText = paintStyle(LEVEL_STYLES[name] ?? {}, color, name);
@@ -508,7 +511,7 @@ export class CliLog {
 									"path" in file
 										? O.some(file.path)
 										: yield* Config.option(Config.String(file.envVar)).pipe(
-												Effect.orElseSucceed(() => O.none<string>()),
+												Effect.orElseSucceed(O.none<string>),
 											);
 								if (O.isSome(target) && target.value !== "") {
 									const location = yield* PathModule.Path;
@@ -660,10 +663,10 @@ export const platformLogLayer: {
 				return CliLog.layer({
 					level,
 					format: "json",
-					...(options.plainLogger === undefined ? {} : { plainLogger: options.plainLogger }),
-					...(options.logger === undefined ? {} : { logger: options.logger }),
-					...(options.extraLoggers === undefined ? {} : { extraLoggers: options.extraLoggers }),
-					...(options.neutralize === undefined ? {} : { neutralize: options.neutralize }),
+					...O.getSomesStruct({ plainLogger: O.fromUndefinedOr(options.plainLogger) }),
+					...O.getSomesStruct({ logger: O.fromUndefinedOr(options.logger) }),
+					...O.getSomesStruct({ extraLoggers: O.fromUndefinedOr(options.extraLoggers) }),
+					...O.getSomesStruct({ neutralize: O.fromUndefinedOr(options.neutralize) }),
 					runtimeEnv,
 				});
 			}

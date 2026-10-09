@@ -25,6 +25,7 @@ import {
 import { applyRoot, normalizeAbsolute, seedWith } from "./internal/seed.ts";
 import { makeVolumeService } from "./internal/view.ts";
 import * as internal from "./internal/volume.ts";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/memfs/MemoryFileSystem");
 
@@ -765,7 +766,7 @@ const buildHandle = (
 				runMutation(
 					Effect.andThen(
 						ensureParent(at(path)),
-						typeof content === "string" ? raw.writeFileString(at(path), content) : raw.writeFile(at(path), content),
+						P.isString(content) ? raw.writeFileString(at(path), content) : raw.writeFile(at(path), content),
 					),
 					"writeFile",
 					path,
@@ -841,7 +842,8 @@ const buildHandle = (
  * @example
  * ```ts
  * import { MemoryFileSystem } from "./index.ts";
- * import { Effect, FileSystem } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
  *
  * const program = Effect.gen(function* () {
  *   const fs = yield* FileSystem.FileSystem;
@@ -968,7 +970,9 @@ export class MemoryFileSystem {
 	 * @example
 	 * ```ts
 	 * import { MemoryFileSystem } from "./index.ts";
-	 * import { Effect, Layer, PlatformError } from "effect";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Layer from "effect/Layer";
+	 * import * as PlatformError from "effect/PlatformError";
 	 *
 	 * const Volume = MemoryFileSystem.layerWith({ "/repo/src/a.ts": "export {}\n" });
 	 *
@@ -1033,7 +1037,7 @@ export class MemoryFileSystem {
 	 * @example
 	 * ```ts
 	 * import { MemoryFileSystem } from "./index.ts";
-	 * import { PlatformError } from "effect";
+	 * import * as PlatformError from "effect/PlatformError";
 	 *
 	 * const flaky = MemoryFileSystem.layerWith(
 	 *   { "/config.json": "{}" },
@@ -1189,7 +1193,8 @@ export class MemoryFileSystem {
 	 * @example
 	 * ```ts
 	 * import { MemoryFileSystem } from "./index.ts";
-	 * import { Effect, FileSystem } from "effect";
+	 * import * as Effect from "effect/Effect";
+	 * import * as FileSystem from "effect/FileSystem";
 	 *
 	 * const Volume = MemoryFileSystem.layerWith({ "/a.txt": "seed" });
 	 *
@@ -1265,7 +1270,7 @@ export class MemoryFileSystem {
 	 * @example
 	 * ```ts
 	 * import { MemoryFileSystem } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const program = Effect.gen(function* () {
 	 * 	const { volume } = yield* MemoryFileSystem.makeHandle({

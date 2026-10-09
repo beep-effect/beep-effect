@@ -6,6 +6,7 @@ import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github/Attestation");
 
@@ -123,7 +124,7 @@ const make = (client: GitHubClient["Service"]): AttestationShape => ({
 			UploadResponse,
 		);
 		return AttestationRecord.make({
-			...(stored.id !== undefined ? { id: stored.id } : {}),
+			...O.getSomesStruct({ id: O.fromUndefinedOr(stored.id) }),
 			url: `https://github.com/${owner}/${repo}/attestations/${stored.id ?? ""}`,
 		});
 	}),
@@ -161,7 +162,7 @@ const make = (client: GitHubClient["Service"]): AttestationShape => ({
 			return [
 				AttestationListEntry.make({
 					url,
-					...(entry.predicate_type !== undefined ? { predicateType: entry.predicate_type } : {}),
+					...O.getSomesStruct({ predicateType: O.fromUndefinedOr(entry.predicate_type) }),
 				}),
 			];
 		});

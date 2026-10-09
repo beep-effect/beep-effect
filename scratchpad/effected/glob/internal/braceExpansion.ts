@@ -38,6 +38,7 @@ import * as Effect from "effect/Effect";
 import * as Random from "effect/Random";
 import { balanced } from "./balancedMatch.ts";
 import { EXPANSION_MAX, GuardExceeded, MAX_NESTING_DEPTH, assertCap } from "./limits.ts";
+import * as P from "effect/Predicate";
 
 const escSlash = `\0SLASH${Effect.runSync(Random.next)}\0`;
 const escOpen = `\0OPEN${Effect.runSync(Random.next)}\0`;
@@ -122,7 +123,7 @@ export interface BraceExpansionOptions {
 export const expand: {
 	(options?: BraceExpansionOptions): (str: string) => Array<string>;
 	(str: string, options?: BraceExpansionOptions): Array<string>;
-} = dual((args) => args.length >= 2 || typeof args[0] === "string", (str: string, options: BraceExpansionOptions = {}): Array<string> => {
+} = dual((args) => args.length >= 2 || P.isString(args[0]), (str: string, options: BraceExpansionOptions = {}): Array<string> => {
 	if (str === "") {
 		return [];
 	}

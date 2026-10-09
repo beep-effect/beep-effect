@@ -19,6 +19,7 @@ import { dual } from "effect/Function";
 import type { PlatformError, SystemErrorTag } from "effect/PlatformError";
 import { systemError } from "effect/PlatformError";
 import type { MemoryFileSystemErrnoError } from "../MemoryFileSystem.ts";
+import * as P from "effect/Predicate";
 
 export type ErrnoCode =
 	| "EACCES"
@@ -97,9 +98,9 @@ export const fallbackErrnoForTag = (tag: string): string => {
 export class ErrnoException extends Data.TaggedError("ErrnoException")<{ readonly code: ErrnoCode; readonly path: string | undefined; readonly message: string }> {
 	constructor(code: ErrnoCode, pathOrDescriptor: string | number | undefined) {
 		super({
-			message: `${code}: ${errnoMessages[code]}${typeof pathOrDescriptor === "string" ? `, '${pathOrDescriptor}'` : ""}`,
+			message: `${code}: ${errnoMessages[code]}${P.isString(pathOrDescriptor) ? `, '${pathOrDescriptor}'` : ""}`,
 			code,
-			path: typeof pathOrDescriptor === "string" ? pathOrDescriptor : undefined,
+			path: P.isString(pathOrDescriptor) ? pathOrDescriptor : undefined,
 		});
 		this.name = "Error";
 	}

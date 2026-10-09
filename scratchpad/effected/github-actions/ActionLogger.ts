@@ -11,6 +11,9 @@ import * as LogLevel from "effect/LogLevel";
 import * as Logger from "effect/Logger";
 import * as References from "effect/References";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github-actions/ActionLogger");
 
@@ -24,23 +27,23 @@ const $I = $ScratchpadId.create("effected/github-actions/ActionLogger");
  * indented form buys nothing and costs readability.
  */
 const formatMessage = (message: unknown): string => {
-	const parts = Array.isArray(message) ? message : [message];
+	const parts = A.isArray(message) ? message : [message];
 	return parts.map((part) => Inspectable.toStringUnknown(part, 0)).join(" ");
 };
 
 /** A log annotation read as text, when it is text. */
 const textAnnotation = (record: Readonly<Record<string, unknown>>, key: string): string | undefined => {
 	const value = record[key];
-	return typeof value === "string" ? value : undefined;
+	return P.isString(value) ? value : undefined;
 };
 
 /** A log annotation read as a number, accepting the string form the runner produces. */
 const numericAnnotation = (record: Readonly<Record<string, unknown>>, key: string): number | undefined => {
 	const value = record[key];
-	if (typeof value === "number") {
+	if (P.isNumber(value)) {
 		return Number.isFinite(value) ? value : undefined;
 	}
-	if (typeof value === "string" && value !== "") {
+	if (P.isString(value) && value !== "") {
 		const parsed = Number(value);
 		return Number.isFinite(parsed) ? parsed : undefined;
 	}
@@ -64,12 +67,12 @@ const readAnnotations = (record: Readonly<Record<string, unknown>>): AnnotationP
 	const startColumn = numericAnnotation(record, "startColumn");
 	const endColumn = numericAnnotation(record, "endColumn");
 	return {
-		...(title === undefined ? {} : { title }),
-		...(file === undefined ? {} : { file }),
-		...(startLine === undefined ? {} : { startLine }),
-		...(endLine === undefined ? {} : { endLine }),
-		...(startColumn === undefined ? {} : { startColumn }),
-		...(endColumn === undefined ? {} : { endColumn }),
+		...O.getSomesStruct({ title: O.fromUndefinedOr(title) }),
+		...O.getSomesStruct({ file: O.fromUndefinedOr(file) }),
+		...O.getSomesStruct({ startLine: O.fromUndefinedOr(startLine) }),
+		...O.getSomesStruct({ endLine: O.fromUndefinedOr(endLine) }),
+		...O.getSomesStruct({ startColumn: O.fromUndefinedOr(startColumn) }),
+		...O.getSomesStruct({ endColumn: O.fromUndefinedOr(endColumn) }),
 	};
 };
 
@@ -374,7 +377,7 @@ const make = Effect.gen(function* () {
  * @example
  * ```ts
  * import { ActionLogger } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const logger = yield* ActionLogger;

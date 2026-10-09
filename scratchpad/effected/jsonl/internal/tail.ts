@@ -168,7 +168,7 @@ const readWindow = Effect.fn("Jsonl.readWindow")(function* (
  * ```ts
  * import { readRangeWindow } from "@beep/scratchpad/effected/jsonl/internal/tail";
  * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const fs = yield* MemoryFileSystem.make;
  *   yield* fs.writeFile("/events.jsonl", new Uint8Array([0x34, 0x32, 0x0a, 0xe2]));
@@ -382,7 +382,7 @@ export const handleBomBytes: (file: FileSystem.File) => Effect.Effect<number, Pl
  * ```ts
  * import { probeBomBytes } from "@beep/scratchpad/effected/jsonl/internal/tail";
  * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const fs = yield* MemoryFileSystem.make;
  *   yield* fs.writeFileString("/events.jsonl", "\ufeff42\n");
@@ -444,7 +444,7 @@ export const probeBomBytes: {
  * ```ts
  * import { readTail } from "@beep/scratchpad/effected/jsonl/internal/tail";
  * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const fs = yield* MemoryFileSystem.make;
  *   yield* fs.writeFileString("/events.jsonl", "\ufeff42\n");
@@ -515,7 +515,7 @@ export const readTail: {
  * import { readTailUntil } from "@beep/scratchpad/effected/jsonl/internal/tail";
  * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
  * import { Line } from "@beep/scratchpad/effected/jsonl/index";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";
  * const program = Effect.gen(function* () {
  *   const fs = yield* MemoryFileSystem.make;

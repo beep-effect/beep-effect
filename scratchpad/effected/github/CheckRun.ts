@@ -11,6 +11,7 @@ import { GitHubClient } from "./GitHubClient.ts";
 import type { GitHubError } from "./GitHubError.ts";
 import { numericId } from "./internal/ids.ts";
 import { Repo } from "./Repo.ts";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github/CheckRun");
 
@@ -196,7 +197,7 @@ export interface CheckRunShape {
    * @example
    * ```ts
    * import { CheckRun, CheckRunOutput } from "./index.ts";
-   * import { Effect } from "effect";
+   * import * as Effect from "effect/Effect";
    *
    * const lintWithCheck = (sha: string) =>
    *   Effect.gen(function* () {
@@ -262,7 +263,7 @@ const wireOutput = (output: CheckRunOutput) => {
   return {
     title: capped.title,
     summary: capped.summary,
-    ...(capped.text !== undefined ? { text: capped.text } : {}),
+    ...O.getSomesStruct({ text: O.fromUndefinedOr(capped.text) }),
     ...(capped.annotations !== undefined
       ? {
         annotations: capped.annotations.map((annotation) => ({
@@ -271,7 +272,7 @@ const wireOutput = (output: CheckRunOutput) => {
           end_line: annotation.endLine,
           annotation_level: annotation.level,
           message: annotation.message,
-          ...(annotation.title !== undefined ? { title: annotation.title } : {}),
+          ...O.getSomesStruct({ title: O.fromUndefinedOr(annotation.title) }),
         })),
       }
       : {}),

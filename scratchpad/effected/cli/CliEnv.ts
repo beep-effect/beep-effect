@@ -6,7 +6,7 @@ import type * as Stdio from "effect/Stdio";
 import type * as Terminal from "effect/Terminal";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as LayerModule from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import type { CliOutput } from "effect/cli";
 import { CliInteractive } from "./CliInteractive.ts";
 import type { CliLinks, EditorLinks } from "./CliLinks.ts";
@@ -194,8 +194,8 @@ export class CliEnv {
 		// `FileSystem` and `Path` are read from the environment if it has them, not required, so this layer and every
 		// `CliRuntime.main` overload keep their requirements; without them `auto` is `vscode` on the terminal signal only.
 		const withLinks = ambientLinksLayer({
-			...(options.editorLinks === undefined ? {} : { editorLinks: options.editorLinks }),
-			...(options.editorLinksEnvVar === undefined ? {} : { envVar: options.editorLinksEnvVar }),
+			...O.getSomesStruct({ editorLinks: O.fromUndefinedOr(options.editorLinks) }),
+			...O.getSomesStruct({ envVar: O.fromUndefinedOr(options.editorLinksEnvVar) }),
 		}).pipe(LayerModule.provideMerge(withTheme));
 		// Sets the CliInteractive reference from the audience and terminal; it has no output type of its own.
 		const withInteractive = CliInteractive.layer.pipe(LayerModule.provideMerge(withLinks));

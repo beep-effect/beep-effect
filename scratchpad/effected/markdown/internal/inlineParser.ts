@@ -65,6 +65,7 @@ import type { Bracket, Delimiter, InlineDialect, InlineScanner, InlineSource } f
 import { MAX_NESTING_DEPTH } from "./limits.ts";
 import { globalOf, stickyOf } from "./patterns.ts";
 import { sourceOffsetAt } from "./segments.ts";
+import * as O from "@beep/utils/Option";
 
 const C_UNDERSCORE = 0x5f;
 const C_ASTERISK = 0x2a;
@@ -545,12 +546,12 @@ class InlineParser implements InlineScanner {
 			case "html":
 				return Html.make({ value: node.value, position });
 			case "break":
-				return Break.make({ position, ...(breakStyle === undefined ? {} : { breakStyle }) });
+				return Break.make({ position, ...O.getSomesStruct({ breakStyle: O.fromUndefinedOr(breakStyle) }) });
 			case "emphasis":
 				return Emphasis.make({
 					children: this.materialize(node, depth + 1),
 					position,
-					...(markerChar === undefined ? {} : { markerChar }),
+					...O.getSomesStruct({ markerChar: O.fromUndefinedOr(markerChar) }),
 				});
 			case "delete":
 				return Delete.make({ children: this.materialize(node, depth + 1), position });
@@ -558,20 +559,20 @@ class InlineParser implements InlineScanner {
 				return Strong.make({
 					children: this.materialize(node, depth + 1),
 					position,
-					...(markerChar === undefined ? {} : { markerChar }),
+					...O.getSomesStruct({ markerChar: O.fromUndefinedOr(markerChar) }),
 				});
 			case "link":
 				return Link.make({
 					url: url ?? "",
 					children: this.materialize(node, depth + 1),
 					position,
-					...(title === undefined ? {} : { title }),
+					...O.getSomesStruct({ title: O.fromUndefinedOr(title) }),
 				});
 			case "image":
 				return Image.make({
 					url: url ?? "",
 					position,
-					...(title === undefined ? {} : { title }),
+					...O.getSomesStruct({ title: O.fromUndefinedOr(title) }),
 					...(node.value === "" ? {} : { alt: node.value }),
 				});
 			case "linkReference":
@@ -580,7 +581,7 @@ class InlineParser implements InlineScanner {
 					referenceType: referenceType ?? "shortcut",
 					children: this.materialize(node, depth + 1),
 					position,
-					...(label === undefined ? {} : { label }),
+					...O.getSomesStruct({ label: O.fromUndefinedOr(label) }),
 				});
 			case "footnoteReference":
 				// The GFM counterpart of `linkReference`, and unresolved for the
@@ -589,14 +590,14 @@ class InlineParser implements InlineScanner {
 				return FootnoteReference.make({
 					identifier: identifier ?? "",
 					position,
-					...(label === undefined ? {} : { label }),
+					...O.getSomesStruct({ label: O.fromUndefinedOr(label) }),
 				});
 			case "imageReference":
 				return ImageReference.make({
 					identifier: identifier ?? "",
 					referenceType: referenceType ?? "shortcut",
 					position,
-					...(label === undefined ? {} : { label }),
+					...O.getSomesStruct({ label: O.fromUndefinedOr(label) }),
 					...(node.value === "" ? {} : { alt: node.value }),
 				});
 			default:

@@ -63,7 +63,7 @@ export interface RepositorySecurityShape {
  * @example
  * ```ts
  * import { RepositorySecurity } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const harden = Effect.gen(function* () {
  *   const security = yield* RepositorySecurity;

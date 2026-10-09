@@ -1445,7 +1445,7 @@ export interface JournalClass<Self, Id extends string, R extends JsonlEvent.Regi
    * import { $ScratchpadId } from "@beep/identity/packages";
    * import { Journal, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
    * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
-   * import { Effect } from "effect";
+   * import * as Effect from "effect/Effect";
    * import * as Layer from "effect/Layer";
    * import * as S from "effect/Schema";
    * const $I = $ScratchpadId.create("examples/jsonl/layer");

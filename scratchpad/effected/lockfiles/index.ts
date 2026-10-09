@@ -18,9 +18,9 @@
  * Every entrypoint takes content as a string; this package performs no IO.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { Lockfile } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * declare const content: string; // the text of a pnpm-lock.yaml
  *

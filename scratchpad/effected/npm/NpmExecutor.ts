@@ -1,7 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LocalExec } from "../commands/index.ts";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/process";
 import { PublishError } from "./PublishError.ts";
@@ -82,9 +82,9 @@ export class NpmExecutor extends S.Class<NpmExecutor>($I`NpmExecutor`)({
 	 */
 	withCacheDir(cacheDir: string): NpmExecutor {
 		return NpmExecutor.make({
-			...(this.spec !== undefined ? { spec: this.spec } : {}),
+			...O.getSomesStruct({ spec: O.fromUndefinedOr(this.spec) }),
 			cacheDir,
-			...(this.extraArgs !== undefined ? { extraArgs: this.extraArgs } : {}),
+			...O.getSomesStruct({ extraArgs: O.fromUndefinedOr(this.extraArgs) }),
 		});
 	}
 
@@ -107,8 +107,8 @@ export class NpmExecutor extends S.Class<NpmExecutor>($I`NpmExecutor`)({
 	 */
 	withExtraArgs(args: ReadonlyArray<string>): NpmExecutor {
 		return NpmExecutor.make({
-			...(this.spec !== undefined ? { spec: this.spec } : {}),
-			...(this.cacheDir !== undefined ? { cacheDir: this.cacheDir } : {}),
+			...O.getSomesStruct({ spec: O.fromUndefinedOr(this.spec) }),
+			...O.getSomesStruct({ cacheDir: O.fromUndefinedOr(this.cacheDir) }),
 			extraArgs: args,
 		});
 	}

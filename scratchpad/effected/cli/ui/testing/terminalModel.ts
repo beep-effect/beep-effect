@@ -1,4 +1,5 @@
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 const ESC = String.fromCharCode(0x1b);
 
 /**
@@ -21,7 +22,7 @@ const ESC = String.fromCharCode(0x1b);
 export const screenAfter: {
 	(rows?: number): (written: string) => ReadonlyArray<string>;
 	(written: string, rows?: number): ReadonlyArray<string>;
-} = dual((args) => typeof args[0] === "string", (written: string, rows?: number): ReadonlyArray<string> => {
+} = dual((args) => P.isString(args[0]), (written: string, rows?: number): ReadonlyArray<string> => {
 	const lines: Array<string> = [""];
 	let row = 0;
 	let column = 0;

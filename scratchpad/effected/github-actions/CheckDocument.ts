@@ -11,6 +11,7 @@ import * as Semaphore from "effect/Semaphore";
 import { CheckState } from "./CheckState.ts";
 import { unstubbed } from "./internal/unstubbed.ts";
 import { ManagedDocument } from "./ManagedDocument.ts";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/github-actions/CheckDocument");
 
@@ -337,7 +338,7 @@ export interface CheckDocumentShape {
  * @example
  * ```ts
  * import { CheckDocument, CheckReport, GitHubMarkdown } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const layer = CheckDocument.layer({
  *   namespace: "my-action",
@@ -390,7 +391,7 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 				const gate = yield* Semaphore.make(1);
 				const passTimeout = options.sinkTimeout ?? "30 seconds";
 				// Normalized once: the bare-function sink is exactly `{ write }`.
-				const sink = typeof options.sink === "function" ? { write: options.sink } : options.sink;
+				const sink = P.isFunction(options.sink) ? { write: options.sink } : options.sink;
 				const stamp = options.stamp;
 				const stampMeta = stamp === undefined ? undefined : { at: stamp.at, runId: stamp.runId };
 				const staleLoggedRef = yield* Ref.make(false);

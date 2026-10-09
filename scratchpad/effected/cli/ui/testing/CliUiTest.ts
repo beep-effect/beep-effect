@@ -16,7 +16,7 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Queue from "effect/Queue";
 import * as Stream from "effect/Stream";
 import { TestClock } from "effect/testing";
@@ -31,6 +31,7 @@ import { UiRenderOptions } from "../internal/renderOptions.ts";
 import { UiStreams } from "../UiStreams.ts";
 import { makeFakeStreams } from "./fakeStreams.ts";
 import { screenAfter } from "./terminalModel.ts";
+import * as P from "effect/Predicate";
 
 /**
  * Options for {@link CliUiTest.render}, {@link CliUiTest.view} and {@link CliUiTest.session}, and the terminal's
@@ -500,8 +501,8 @@ const NOT_A_KEY = (method: string, text: string): string =>
 
 /** The bytes of a named key or a `{ char }`; a bare string that names no key is a defect saying how to send text. */
 const bytesOf = (key: KeyName | { readonly char: string }, method: "press" | "chunk"): Effect.Effect<string> => {
-	if (typeof key !== "string") return Effect.succeed(key.char);
-	return Object.hasOwn(KEY_BYTES, key) ? Effect.succeed(KEY_BYTES[key]) : Effect.die(new Error(NOT_A_KEY(method, key)));
+	if (!P.isString(key)) return Effect.succeed(key.char);
+	return R.has(KEY_BYTES, key) ? Effect.succeed(KEY_BYTES[key]) : Effect.die(new Error(NOT_A_KEY(method, key)));
 };
 
 /** A `Cancelled` from the root entrypoint, matched by shape: this entry may carry its own copy of the class. */
@@ -817,7 +818,7 @@ const capturingConsole = (ambient: Console.Console) => {
  * import { assert, it } from "@effect/vitest"
  * import { Select } from "../../ui.ts"
  * import { CliUiTest } from "../../ui-testing.ts"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  *
  * it.effect("chooses the second option", () =>
  *   Effect.gen(function* () {
@@ -1045,7 +1046,7 @@ export class CliUiTest {
 	 * ```ts
 	 * import { assert, it } from "@effect/vitest"
 	 * import { CliUiTest } from "../../ui-testing.ts"
-	 * import { Effect } from "effect"
+	 * import * as Effect from "effect/Effect";
 	 * import { Text } from "ink"
 	 * import { createElement } from "react"
 	 *
@@ -1078,11 +1079,11 @@ export class CliUiTest {
 			const { columns, rows, color, glyphs, interactive, ...view } = options;
 			const terminal = makeTerminal(
 				{
-					...(columns === undefined ? {} : { columns }),
-					...(rows === undefined ? {} : { rows }),
-					...(color === undefined ? {} : { color }),
-					...(glyphs === undefined ? {} : { glyphs }),
-					...(interactive === undefined ? {} : { interactive }),
+					...O.getSomesStruct({ columns: O.fromUndefinedOr(columns) }),
+					...O.getSomesStruct({ rows: O.fromUndefinedOr(rows) }),
+					...O.getSomesStruct({ color: O.fromUndefinedOr(color) }),
+					...O.getSomesStruct({ glyphs: O.fromUndefinedOr(glyphs) }),
+					...O.getSomesStruct({ interactive: O.fromUndefinedOr(interactive) }),
 				},
 				{ screens: "production" },
 			);
@@ -1184,7 +1185,7 @@ export class CliUiTest {
 		readonly test: (value: unknown) => boolean;
 		readonly serialize: (value: unknown) => string;
 	} = {
-		test: (value) => typeof value === "string" && (value.includes("\u001b") || MARKUP.test(value)),
+		test: (value) => P.isString(value) && (value.includes("\u001b") || MARKUP.test(value)),
 		serialize: (value) => trimLines(styled(String(value))),
 	};
 }

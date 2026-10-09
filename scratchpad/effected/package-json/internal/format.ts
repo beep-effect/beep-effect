@@ -1,4 +1,6 @@
 import { dual } from "effect/Function";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
 
 // Pure package.json serialization helpers: canonical top-level key ordering
 // (the `sort-package-json` order), map-field alphabetization and
@@ -162,14 +164,14 @@ const SORTED_MAP_KEYS: ReadonlySet<string> = new Set([
 /** Alphabetize the entries of a plain-object map field. */
 const sortMapEntries = (value: Record<string, unknown>): Record<string, unknown> => {
 	const result: Record<string, unknown> = {};
-	for (const key of Object.keys(value).sort(byCodePoint)) {
+	for (const key of R.keys(value).sort(byCodePoint)) {
 		result[key] = value[key];
 	}
 	return result;
 };
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-	value !== null && typeof value === "object" && !Array.isArray(value);
+	value !== null && typeof value === "object" && !A.isArray(value);
 
 /**
  * Order top-level keys canonically (known keys by {@link KEY_ORDER}, then
@@ -181,7 +183,7 @@ export const sortKeys = (obj: Record<string, unknown>): Record<string, unknown> 
 	const restPublic: Array<[string, unknown]> = [];
 	const restPrivate: Array<[string, unknown]> = [];
 
-	for (const key of Object.keys(obj)) {
+	for (const key of R.keys(obj)) {
 		const index = KEY_INDEX.get(key);
 		if (index !== undefined) known.push([key, obj[key], index]);
 		else if (key.startsWith("_")) restPrivate.push([key, obj[key]]);
@@ -215,7 +217,7 @@ export const stripEmptyDependencyMaps = (raw: Record<string, unknown>): Record<s
 	const result = { ...raw };
 	for (const key of STRIP_EMPTY_KEYS) {
 		const value = result[key];
-		if (isPlainObject(value) && Object.keys(value).length === 0) {
+		if (isPlainObject(value) && R.keys(value).length === 0) {
 			delete result[key];
 		}
 	}

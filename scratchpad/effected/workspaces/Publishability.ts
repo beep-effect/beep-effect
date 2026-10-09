@@ -80,7 +80,8 @@ export interface PublishabilityDetectorShape {
  * @example
  * ```ts
  * import { PublishabilityDetector, PublishTarget } from "./index.ts";
- * import { Effect, Layer } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  *
  * const internalOnly = Layer.succeed(PublishabilityDetector, {
  *   detect: (pkg) =>
@@ -106,7 +107,8 @@ export interface PublishabilityDetectorShape {
  *
  * ```ts
  * import { PublishabilityDetector, PublishTarget } from "./index.ts";
- * import { Effect, Layer } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  *
  * declare const lookupPolicy: (
  *   name: string,
@@ -146,7 +148,8 @@ export class PublishabilityDetector extends Context.Service<PublishabilityDetect
 	 * @example
 	 * ```ts
 	 * import { PublishabilityDetector } from "./index.ts";
-	 * import { Effect, Layer } from "effect";
+	 * import * as Effect from "effect/Effect";
+	 * import * as Layer from "effect/Layer";
 	 *
 	 * // A policy that defers to npm semantics for everything it does not veto.
 	 * const withVeto = Layer.succeed(PublishabilityDetector, {

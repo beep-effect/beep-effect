@@ -270,9 +270,10 @@ const renderBlock = (format: FrontmatterFormat, body: string): string => {
  * @example
  * ```ts
  * import { MarkdownDocument, MarkdownFrontmatter, MarkdownParseOptions, YamlFrontmatter } from "./index.ts";
- * import { Effect, Schema } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as S from "effect/Schema";
  *
- * const Meta = Schema.Struct({ title: Schema.String });
+ * const Meta = S.Struct({ title: S.String });
  *
  * const program = Effect.gen(function* () {
  *   // Frontmatter capture is opt-in at parse time.

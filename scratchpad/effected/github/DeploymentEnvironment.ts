@@ -62,7 +62,7 @@ export interface DeploymentEnvironmentShape {
  * @example
  * ```ts
  * import { DeploymentEnvironment } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const environments = yield* DeploymentEnvironment;

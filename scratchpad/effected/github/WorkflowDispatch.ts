@@ -4,7 +4,7 @@ import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
@@ -136,7 +136,8 @@ export interface WorkflowDispatchShape {
  * @example
  * ```ts
  * import { WorkflowDispatch } from "./index.ts";
- * import { Duration, Effect } from "effect";
+ * import * as Duration from "effect/Duration";
+ * import * as Effect from "effect/Effect";
  *
  * const release = Effect.gen(function* () {
  *   const workflows = yield* WorkflowDispatch;
@@ -205,7 +206,7 @@ const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
       repo,
       workflow_id: workflow,
       ref,
-      ...(inputs !== undefined ? { inputs } : {}),
+      ...O.getSomesStruct({ inputs: O.fromUndefinedOr(inputs) }),
     });
   });
 

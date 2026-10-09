@@ -1,6 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/github/TokenPermissions");
 
@@ -101,7 +102,7 @@ export class TokenPermissionError extends S.TaggedError<TokenPermissionError>($I
  * @example
  * ```ts
  * import { TokenPermissions } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * declare const permissions: Record<string, string>;
  *
@@ -127,7 +128,7 @@ export class TokenPermissions extends S.Class<TokenPermissions>($I`TokenPermissi
    */
   static fromGitHub(permissions: Readonly<Record<string, string>>): TokenPermissions {
     const granted: Record<string, PermissionLevel> = {};
-    for (const [name, level] of Object.entries(permissions)) {
+    for (const [name, level] of R.toEntries(permissions)) {
       if (level === "read" || level === "write" || level === "admin") granted[name] = level;
     }
     return TokenPermissions.make({ granted });
@@ -137,7 +138,7 @@ export class TokenPermissions extends S.Class<TokenPermissions>($I`TokenPermissi
   compare(required: Readonly<Record<string, PermissionLevel>>): PermissionResult {
     const missing: Array<PermissionGap> = [];
     const extra: Array<ExtraPermission> = [];
-    for (const [permission, want] of Object.entries(required)) {
+    for (const [permission, want] of R.toEntries(required)) {
       const have = this.granted[permission];
       if (have === undefined) {
         missing.push(PermissionGap.make({ permission, required: want }));
@@ -149,7 +150,7 @@ export class TokenPermissions extends S.Class<TokenPermissions>($I`TokenPermissi
         }));
       }
     }
-    for (const [permission, have] of Object.entries(this.granted)) {
+    for (const [permission, have] of R.toEntries(this.granted)) {
       const want = required[permission];
       if (want === undefined) {
         extra.push(ExtraPermission.make({ permission, granted: have }));

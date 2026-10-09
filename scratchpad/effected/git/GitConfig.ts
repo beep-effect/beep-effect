@@ -1,6 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type {
@@ -237,13 +237,13 @@ const fromRaw = (text: string, raw: RawParse): GitConfig =>
     sections: raw.sections.map((section) =>
       GitConfigSection.make({
         name: section.name,
-        ...(section.subsection !== undefined ? { subsection: section.subsection } : {}),
+        ...O.getSomesStruct({ subsection: O.fromUndefinedOr(section.subsection) }),
         offset: section.offset,
         length: section.contentEnd - section.offset,
         entries: section.entries.map((entry) =>
           GitConfigEntry.make({
             key: entry.key,
-            ...(entry.value !== undefined ? { value: entry.value } : {}),
+            ...O.getSomesStruct({ value: O.fromUndefinedOr(entry.value) }),
             offset: entry.offset,
             length: entry.length,
           }),
@@ -316,13 +316,15 @@ const appendAtEof = (text: string, content: string): string =>
  * @example
  * ```ts
  * import { GitConfig } from "./index.ts";
- * import { Effect, Option, Result } from "effect";
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option";
+ * import * as Result from "effect/Result";
  *
  * const program = Effect.gen(function* () {
  *   const config = yield* GitConfig.parse('[remote "origin"]\n\turl = git@example.com:o/r.git\n');
  *   const url = config.get("remote", "origin", "url"); // Option.some("git@example.com:o/r.git")
  *   const edited = config.set("remote", "origin", "pushurl", "git@example.com:o/fork.git");
- *   return { url: Option.getOrNull(url), text: Result.isSuccess(edited) ? edited.success.stringify() : config.text };
+ *   return { url: O.getOrNull(url), text: Result.isSuccess(edited) ? edited.success.stringify() : config.text };
  * });
  * ```
  *
@@ -415,7 +417,7 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
         directives.push(
           GitConfigInclude.make({
             path: entry.value,
-            ...(section.subsection !== undefined ? { condition: section.subsection } : {}),
+            ...O.getSomesStruct({ condition: O.fromUndefinedOr(section.subsection) }),
           }),
         );
       }
@@ -582,8 +584,8 @@ const editError = (
     op,
     reason,
     section,
-    ...(subsection !== undefined ? { subsection } : {}),
-    ...(key !== undefined ? { key } : {}),
+    ...O.getSomesStruct({ subsection: O.fromUndefinedOr(subsection) }),
+    ...O.getSomesStruct({ key: O.fromUndefinedOr(key) }),
   });
 
 /** Validates the writable parts of an edit's address; returns the typed refusal, or nothing. */

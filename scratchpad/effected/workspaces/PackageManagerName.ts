@@ -17,6 +17,8 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { WorkspaceManifestError } from "./WorkspacePackage.ts";
+import * as A from "effect/Array";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/workspaces/PackageManagerName");
 
@@ -124,7 +126,7 @@ interface ManagerHint {
 
 /** Whether `value` is a non-null, non-array object — corepack's own shape test. */
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && !Array.isArray(value);
+	typeof value === "object" && value !== null && !A.isArray(value);
 
 /**
  * The exact version a `name` + `version` pair denotes, or none when the version
@@ -157,19 +159,19 @@ const devEnginesHint = (manifest: Record<string, unknown>): O.Option<ManagerHint
 	if (!isPlainObject(slot)) return O.none();
 
 	const name = slot.name;
-	if (typeof name !== "string" || name === "" || name.includes("@")) return O.none();
+	if (!P.isString(name) || name === "" || name.includes("@")) return O.none();
 
 	const version = slot.version;
 	return O.some({
 		name,
-		version: typeof version === "string" && version !== "" ? exactVersionOf(name, version) : O.none<string>(),
+		version: P.isString(version) && version !== "" ? exactVersionOf(name, version) : O.none<string>(),
 	});
 };
 
 /** The corepack top-level `packageManager` hint, or none when absent or malformed. */
 const corepackHint = (manifest: Record<string, unknown>): O.Option<ManagerHint> => {
 	const raw = manifest.packageManager;
-	if (typeof raw !== "string") return O.none();
+	if (!P.isString(raw)) return O.none();
 	return S.decodeOption(PackageManager.FromString)(raw).pipe(
 		O.map((pm) => ({ name: pm.name, version: O.some(pm.version) })),
 	);
@@ -524,14 +526,15 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 	 * @example
 	 * ```ts
 	 * import { DetectedPackageManager, PackageManagerDetector } from "./index.ts";
-	 * import { Effect, Option } from "effect";
+	 * import * as Effect from "effect/Effect";
+	 * import * as O from "effect/Option";
 	 *
 	 * const TestDetector = PackageManagerDetector.layerTest({
 	 *   detect: () =>
 	 *     Effect.succeed(
 	 *       DetectedPackageManager.make({
 	 *         name: "pnpm",
-	 *         version: Option.none(),
+	 *         version: O.none(),
 	 *         runtime: "node",
 	 *         evidence: "pnpm-workspace.yaml",
 	 *       }),

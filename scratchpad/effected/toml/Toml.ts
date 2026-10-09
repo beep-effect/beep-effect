@@ -181,7 +181,7 @@ export interface TomlBoundCodec<T, RD = never, RE = never> {
  * @example
  * ```ts
  * import { Toml } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const value = yield* Toml.parse('name = "Alice"\nage = 30');
@@ -216,7 +216,7 @@ export class Toml {
 	 * @example
 	 * ```ts
 	 * import { Toml } from "./index.ts";
-	 * import { Result } from "effect";
+	 * import * as Result from "effect/Result";
 	 *
 	 * const ok = Toml.parseResult('name = "Alice"');
 	 * if (Result.isSuccess(ok)) {
@@ -267,7 +267,7 @@ export class Toml {
 	 * @example
 	 * ```ts
 	 * import { Toml } from "./index.ts";
-	 * import { Result } from "effect";
+	 * import * as Result from "effect/Result";
 	 *
 	 * const ok = Toml.stringifyResult({ name: "Alice" });
 	 * if (Result.isSuccess(ok)) {
@@ -371,9 +371,10 @@ export class Toml {
 	 * @example
 	 * ```ts
 	 * import { Toml } from "./index.ts";
-	 * import { Effect, Schema } from "effect";
+	 * import * as Effect from "effect/Effect";
+	 * import * as S from "effect/Schema";
 	 *
-	 * const Config = Schema.Struct({ name: Schema.String });
+	 * const Config = S.Struct({ name: S.String });
 	 * const config = Toml.bind(Config);
 	 *
 	 * const program = Effect.gen(function* () {

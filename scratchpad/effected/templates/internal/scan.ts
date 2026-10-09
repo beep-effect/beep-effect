@@ -13,6 +13,7 @@ import type { CommentStyle } from "../CommentStyle.ts";
 import { PlacedSection, Section } from "../Section.ts";
 import type { Eol, SectionDialect } from "../SectionDialect.ts";
 import { parseAttributeRun } from "./attributes.ts";
+import * as O from "@beep/utils/Option";
 
 /** The ways a document can be structurally unreadable. */
 export const SCAN_FAILURE_REASONS = [
@@ -135,7 +136,7 @@ const collectHits = (text: string, dialect: SectionDialect): ReadonlyArray<Marke
 				start,
 				end: start + match[0].length,
 				// An absent optional field must be OMITTED, not set to undefined.
-				...(attributes === undefined ? {} : { attributes }),
+				...O.getSomesStruct({ attributes: O.fromUndefinedOr(attributes) }),
 			});
 		}
 	}
@@ -191,7 +192,7 @@ export const scan: {
 					// Omitted when the marker carries none: the constructor default
 					// fills the canonical empty record, so a bare marker and an
 					// explicit `attributes: {}` are the same section under equality.
-					...(open.attributes === undefined ? {} : { attributes: open.attributes }),
+					...O.getSomesStruct({ attributes: O.fromUndefinedOr(open.attributes) }),
 				}),
 				start: open.start,
 				end: hit.end,

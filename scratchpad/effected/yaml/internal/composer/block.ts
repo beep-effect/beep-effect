@@ -51,6 +51,7 @@ import {
 } from "./state.ts";
 import * as Schema from "effect/Schema";
 import { dual } from "effect/Function";
+import * as O from "@beep/utils/Option";
 
 // ---------------------------------------------------------------------------
 // Compose block map
@@ -141,7 +142,7 @@ function composeBlockMapInner(
 		length,
 		...(meta?.tag !== undefined ? { tag: meta.tag } : {}),
 		...(meta?.anchor !== undefined ? { anchor: meta.anchor } : {}),
-		...(mapComment !== undefined ? { comment: mapComment } : {}),
+		...O.getSomesStruct({ comment: O.fromUndefinedOr(mapComment) }),
 	});
 
 	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(map, meta.anchor, state, offset);
@@ -347,7 +348,7 @@ export function flattenBlockMapChildren(...args: [children: readonly CstNode[], 
 						style: "block",
 						offset: innerOffset,
 						length: innerEnd - innerOffset,
-						...(innerTrailing !== undefined ? { comment: innerTrailing } : {}),
+						...O.getSomesStruct({ comment: O.fromUndefinedOr(innerTrailing) }),
 					});
 					pushNode(innerMap, innerOffset);
 					i = lookahead.endIdx - 1; // outer loop will i++ to endIdx (skip the slice)
@@ -371,8 +372,8 @@ export function flattenBlockMapChildren(...args: [children: readonly CstNode[], 
 						style: "plain",
 						offset: child.offset,
 						length: 0,
-						...(flushMeta.tag !== undefined ? { tag: flushMeta.tag } : {}),
-						...(flushMeta.anchor !== undefined ? { anchor: flushMeta.anchor } : {}),
+						...O.getSomesStruct({ tag: O.fromUndefinedOr(flushMeta.tag) }),
+						...O.getSomesStruct({ anchor: O.fromUndefinedOr(flushMeta.anchor) }),
 					});
 					if ((flushMeta.anchor !== undefined && flushMeta.anchor !== "")) registerAnchor(scalar, flushMeta.anchor, state, child.offset);
 					resetAllMeta();
@@ -473,8 +474,8 @@ export function flattenBlockMapChildren(...args: [children: readonly CstNode[], 
 						style: "plain",
 						offset: child.offset,
 						length: 0,
-						...(flushMeta.tag !== undefined ? { tag: flushMeta.tag } : {}),
-						...(flushMeta.anchor !== undefined ? { anchor: flushMeta.anchor } : {}),
+						...O.getSomesStruct({ tag: O.fromUndefinedOr(flushMeta.tag) }),
+						...O.getSomesStruct({ anchor: O.fromUndefinedOr(flushMeta.anchor) }),
 					});
 					if ((flushMeta.anchor !== undefined && flushMeta.anchor !== "")) registerAnchor(scalar, flushMeta.anchor, state, child.offset);
 					resetAllMeta();
@@ -591,8 +592,8 @@ export function flattenBlockMapChildren(...args: [children: readonly CstNode[], 
 						style: "plain",
 						offset: child.offset,
 						length: child.length,
-						...(keyMeta.tag !== undefined ? { tag: keyMeta.tag } : {}),
-						...(keyMeta.anchor !== undefined ? { anchor: keyMeta.anchor } : {}),
+						...O.getSomesStruct({ tag: O.fromUndefinedOr(keyMeta.tag) }),
+						...O.getSomesStruct({ anchor: O.fromUndefinedOr(keyMeta.anchor) }),
 					});
 					if ((keyMeta.anchor !== undefined && keyMeta.anchor !== "")) registerAnchor(scalar, keyMeta.anchor, state, child.offset);
 					resetAllMeta();
@@ -674,8 +675,8 @@ export function flattenBlockMapChildren(...args: [children: readonly CstNode[], 
 					// so findAtOffset covers continuation lines and the
 					// sourceMultiline decoration pass sees the real extent.
 					length: partsCount > 1 ? endOffset - child.offset : child.length,
-					...(plainMeta.tag !== undefined ? { tag: plainMeta.tag } : {}),
-					...(plainMeta.anchor !== undefined ? { anchor: plainMeta.anchor } : {}),
+					...O.getSomesStruct({ tag: O.fromUndefinedOr(plainMeta.tag) }),
+					...O.getSomesStruct({ anchor: O.fromUndefinedOr(plainMeta.anchor) }),
 					...(needsRaw ? { raw: value } : {}),
 				});
 				if ((plainMeta.anchor !== undefined && plainMeta.anchor !== "")) registerAnchor(scalar, plainMeta.anchor, state, child.offset);
@@ -779,8 +780,8 @@ export function flattenBlockMapChildren(...args: [children: readonly CstNode[], 
 					style: "plain",
 					offset: child.offset,
 					length: 0,
-					...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
-					...(pendingMeta.anchor !== undefined ? { anchor: pendingMeta.anchor } : {}),
+					...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
+					...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 				});
 				if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(emptyKey, pendingMeta.anchor, state, child.offset);
 				const outerOnlyMeta = hasMeta(outerMeta) ? outerMeta : undefined;
@@ -854,8 +855,8 @@ export function flattenBlockMapChildren(...args: [children: readonly CstNode[], 
 			style: "plain",
 			offset: 0,
 			length: 0,
-			...(trailingMeta.tag !== undefined ? { tag: trailingMeta.tag } : {}),
-			...(trailingMeta.anchor !== undefined ? { anchor: trailingMeta.anchor } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(trailingMeta.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(trailingMeta.anchor) }),
 		});
 		if ((trailingMeta.anchor !== undefined && trailingMeta.anchor !== "")) registerAnchor(scalar, trailingMeta.anchor, state, 0);
 		items.push({ kind: "node", node: scalar });
@@ -962,7 +963,7 @@ export function buildPairs(...args: [items: SemanticItem[], pairs: YamlPair[], t
 			}
 		}
 		const fields: CommentFields = {
-			...(commentBefore !== undefined ? { commentBefore } : {}),
+			...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(commentBefore) }),
 			...(pendingSpace ? { spaceBefore: true } : {}),
 		};
 		pending = [];
@@ -1801,7 +1802,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 			let decorated = node;
 			if (commentBefore !== undefined || pendingSpace) {
 				decorated = withCommentFields(node, {
-					...(commentBefore !== undefined ? { commentBefore } : {}),
+					...O.getSomesStruct({ commentBefore: O.fromUndefinedOr(commentBefore) }),
 					...(pendingSpace ? { spaceBefore: true } : {}),
 				});
 			}
@@ -1847,8 +1848,8 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 						style: "plain",
 						offset: child.offset,
 						length: 0,
-						...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
-						...(pendingMeta.anchor !== undefined ? { anchor: pendingMeta.anchor } : {}),
+						...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
+						...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 					});
 					if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(emptyScalar, pendingMeta.anchor, state, child.offset);
 					pendingMeta = {};
@@ -1919,8 +1920,8 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 						// Span the whole folded scalar — see the value-position
 						// site above.
 						length: endOffset - child.offset,
-						...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
-						...(pendingMeta.anchor !== undefined ? { anchor: pendingMeta.anchor } : {}),
+						...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
+						...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 					});
 					if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
 					pendingMeta = {};
@@ -1956,8 +1957,8 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 					style: "plain",
 					offset: child.offset,
 					length: 0,
-					...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
-					...(pendingMeta.anchor !== undefined ? { anchor: pendingMeta.anchor } : {}),
+					...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
+					...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 				});
 				if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(emptyKey, pendingMeta.anchor, state, child.offset);
 				pendingMeta = {};
@@ -2019,8 +2020,8 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 			style: "plain",
 			offset: 0,
 			length: 0,
-			...(pendingMeta.tag !== undefined ? { tag: pendingMeta.tag } : {}),
-			...(pendingMeta.anchor !== undefined ? { anchor: pendingMeta.anchor } : {}),
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag) }),
+			...O.getSomesStruct({ anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
 		});
 		if ((pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")) registerAnchor(scalar, pendingMeta.anchor, state, 0);
 		items.push(scalar);
@@ -2073,7 +2074,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 		length: seqEnd - cst.offset,
 		...(meta?.tag !== undefined ? { tag: meta.tag } : {}),
 		...(meta?.anchor !== undefined ? { anchor: meta.anchor } : {}),
-		...(seqComment !== undefined ? { comment: seqComment } : {}),
+		...O.getSomesStruct({ comment: O.fromUndefinedOr(seqComment) }),
 	});
 
 	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(seq, meta.anchor, state, cst.offset);
@@ -2127,7 +2128,7 @@ export function composeFlatBlockMap(...args: [children: readonly CstNode[], star
 		length: end - offset,
 		...(meta?.tag !== undefined ? { tag: meta.tag } : {}),
 		...(meta?.anchor !== undefined ? { anchor: meta.anchor } : {}),
-		...(mapComment !== undefined ? { comment: mapComment } : {}),
+		...O.getSomesStruct({ comment: O.fromUndefinedOr(mapComment) }),
 	});
 
 	if ((meta?.anchor !== undefined && meta?.anchor !== "")) registerAnchor(map, meta.anchor, state, offset);

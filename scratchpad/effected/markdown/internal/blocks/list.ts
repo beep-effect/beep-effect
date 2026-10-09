@@ -22,6 +22,7 @@ import { List, ListItem } from "../../MarkdownNode.ts";
 import type { BlockConstruct, BlockNode, BlockScanner, BlockStart, ListData } from "../blockTypes.ts";
 import { flowChildren, listItemChildren } from "../blockTypes.ts";
 import { isSpaceOrTab, peekCode } from "../preprocess.ts";
+import * as O from "@beep/utils/Option";
 
 const reBulletListMarker = /^[*+-]/;
 const reOrderedListMarker = /^(\d{1,9})([.)])/;
@@ -57,7 +58,7 @@ const parseListMarker = (scanner: BlockScanner, container: BlockNode): ListData 
 			tight: true,
 			padding: 0,
 			markerOffset,
-			...(bulletChar === undefined ? {} : { bulletChar }),
+			...O.getSomesStruct({ bulletChar: O.fromUndefinedOr(bulletChar) }),
 		};
 		markerLength = bullet[0].length;
 	} else if (ordered !== null && (container.type !== "paragraph" || Number.parseInt(ordered[1] ?? "", 10) === 1)) {
@@ -68,7 +69,7 @@ const parseListMarker = (scanner: BlockScanner, container: BlockNode): ListData 
 			padding: 0,
 			markerOffset,
 			start: Number.parseInt(ordered[1] ?? "1", 10),
-			...(delimiter === undefined ? {} : { delimiter }),
+			...O.getSomesStruct({ delimiter: O.fromUndefinedOr(delimiter) }),
 		};
 		markerLength = ordered[0].length;
 	} else {
@@ -216,7 +217,7 @@ export const listItemConstruct: BlockConstruct = {
 			// GFM's task-list start (`gfm` dialect only) is the only writer of
 			// `checked`; an item that carried no checkbox keeps the key ABSENT
 			// rather than false, which is the mdast contract.
-			...(block.data.checked === undefined ? {} : { checked: block.data.checked }),
+			...O.getSomesStruct({ checked: O.fromUndefinedOr(block.data.checked) }),
 		}),
 };
 

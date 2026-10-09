@@ -16,7 +16,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
@@ -27,6 +27,7 @@ import { readPatterns } from "./internal/patterns.ts";
 import { WorkspacePackage } from "./WorkspacePackage.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspaceDiscovery");
 
@@ -291,7 +292,7 @@ export interface WorkspaceDiscoveryShape {
  * @example
  * ```ts
  * import { WorkspaceDiscovery } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const discovery = yield* WorkspaceDiscovery;
@@ -352,7 +353,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					const raw = parsed;
 
 					const name = raw.name;
-					if (typeof name !== "string" || name.length === 0) {
+					if (!P.isString(name) || name.length === 0) {
 						return yield* WorkspaceDiscoveryError.make({
 								root,
 								path: packageJsonPath,
@@ -368,7 +369,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					// version. Both are `invalidShape`, with the sentence the sync facade
 					// attaches to the same skip.
 					const version = raw.version;
-					if (version !== undefined && typeof version !== "string") {
+					if (version !== undefined && !P.isString(version)) {
 						return yield* WorkspaceDiscoveryError.make({
 								root,
 								path: packageJsonPath,
@@ -393,7 +394,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 					// is the ordinary shape), a non-empty string verbatim.
 					return yield* S.decodeEffect(WorkspacePackage)({
 						name,
-						...(version !== undefined ? { version } : {}),
+						...O.getSomesStruct({ version: O.fromUndefinedOr(version) }),
 						path: directory,
 						packageJsonPath,
 						relativePath,
@@ -403,7 +404,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 						// The as-read record rides along so consumers reach fields outside
 						// the discovery slice without a second file read.
 						manifestRecord: raw,
-						...(typeof raw.private === "boolean" ? { private: raw.private } : {}),
+						...(P.isBoolean(raw.private) ? { private: raw.private } : {}),
 						...(isStringRecord(raw.dependencies) ? { dependencies: raw.dependencies } : {}),
 						...(isStringRecord(raw.devDependencies) ? { devDependencies: raw.devDependencies } : {}),
 						...(isStringRecord(raw.peerDependencies) ? { peerDependencies: raw.peerDependencies } : {}),
@@ -721,7 +722,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 	 * @example
 	 * ```ts
 	 * import { WorkspaceDiscovery, WorkspacePackage } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const double = WorkspaceDiscovery.makeTest({
 	 *   listPackages:
@@ -821,7 +822,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 	 * @example
 	 * ```ts
 	 * import { WorkspaceDiscovery } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * const TestDiscovery = WorkspaceDiscovery.layerTest({
 	 *   listPackages: Effect.succeed([]),
@@ -852,7 +853,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 	 * ```ts
 	 * import { Package } from "../package-json/index.ts";
 	 * import { WorkspaceDiscovery } from "./index.ts";
-	 * import { Layer } from "effect";
+	 * import * as Layer from "effect/Layer";
 	 *
 	 * const resolvers = WorkspaceDiscovery.workspaceResolver.pipe(
 	 *   Layer.provide(WorkspaceDiscovery.layer()),
@@ -904,4 +905,4 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 }
 
 const isStringRecord = (value: unknown): value is Record<string, string> =>
-	P.isObject(value) && Object.values(value).every(P.isString);
+	P.isObject(value) && R.values(value).every(P.isString);

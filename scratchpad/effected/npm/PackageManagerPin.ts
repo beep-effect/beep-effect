@@ -136,7 +136,7 @@ const pinVersion = SemVer.pipe(
  * @example
  * ```ts
  * import { PackageManagerPin } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const pin = yield* PackageManagerPin.parse("pnpm@11.17.0+sha512.deadbeef");

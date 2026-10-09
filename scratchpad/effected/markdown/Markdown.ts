@@ -208,7 +208,7 @@ export class Markdown {
 	 * @example
 	 * ```ts
 	 * import { Markdown } from "./index.ts";
-	 * import { Result } from "effect";
+	 * import * as Result from "effect/Result";
 	 *
 	 * const ok = Markdown.parseResult("# Title\n\nBody *text*.\n");
 	 * if (Result.isSuccess(ok)) {
@@ -274,7 +274,7 @@ export class Markdown {
 	 * @example
 	 * ```ts
 	 * import { Markdown } from "./index.ts";
-	 * import { Result } from "effect";
+	 * import * as Result from "effect/Result";
 	 *
 	 * const ok = Markdown.parsePhrasingResult("see [the docs](./docs.md)");
 	 * if (Result.isSuccess(ok)) {

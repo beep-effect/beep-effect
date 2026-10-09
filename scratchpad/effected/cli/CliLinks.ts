@@ -1,15 +1,15 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import type { AudienceKind } from "../env/index.ts";
-import { CurrentRuntimeEnv } from "../env/index.ts";
-import { Walker } from "../walker/index.ts";
-import type * as LayerType from "effect/Layer";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import type * as LayerType from "effect/Layer";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import type { AudienceKind } from "../env/index.ts";
+import { CurrentRuntimeEnv } from "../env/index.ts";
+import { Walker } from "../walker/index.ts";
 import type { LinkTarget } from "./Doc.ts";
 import { sanitize } from "./Fmt.ts";
 import { isAllowedLinkUrl } from "./internal/linkScheme.ts";
@@ -135,7 +135,7 @@ const findRoot = (fs: FileSystem.FileSystem, path: Path.Path, cwd: string): Effe
 	);
 
 const readOption = (name: string): Effect.Effect<O.Option<string>> =>
-	Config.option(Config.String(name)).pipe(Effect.orElseSucceed(() => O.none<string>()));
+	Config.option(Config.String(name)).pipe(Effect.orElseSucceed(O.none<string>));
 
 interface Ambient {
 	readonly fs: O.Option<FileSystem.FileSystem>;

@@ -2,6 +2,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CommentStyle } from "./CommentStyle.ts";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/templates/Section");
 
@@ -70,7 +71,7 @@ export class SectionId extends S.Class<SectionId>($I`SectionId`)({
 			commentStyle: this.commentStyle,
 			content,
 			// An absent optional argument must be OMITTED, not passed as undefined.
-			...(attributes === undefined ? {} : { attributes }),
+			...O.getSomesStruct({ attributes: O.fromUndefinedOr(attributes) }),
 		});
 	}
 }

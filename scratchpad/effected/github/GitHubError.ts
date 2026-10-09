@@ -2,6 +2,8 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { headerNumber, headerString, retryAfterMillisFrom } from "./internal/headers.ts";
+import * as A from "effect/Array";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/github/GitHubError");
 
@@ -173,7 +175,7 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
 			kind: "decode",
 			operation,
 			reason,
-			...(cause !== undefined ? { cause } : {}),
+			...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
 		});
 	}
 
@@ -199,8 +201,8 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
     kind,
     operation,
     reason: facts.reason,
-    ...(facts.status !== undefined ? { status: facts.status } : {}),
-    ...(retryAfterMillis !== undefined ? { retryAfterMillis } : {}),
+    ...O.getSomesStruct({ status: O.fromUndefinedOr(facts.status) }),
+    ...O.getSomesStruct({ retryAfterMillis: O.fromUndefinedOr(retryAfterMillis) }),
     ...(facts.validation.length > 0 ? { validation: facts.validation } : {}),
     cause: error,
 });
@@ -212,7 +214,7 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
 	 * @example
 	 * ```ts
 	 * import { GitHubError } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * declare const read: Effect.Effect<string, GitHubError>;
 	 *
@@ -237,7 +239,7 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
 	 * @example
 	 * ```ts
 	 * import { GitHubError } from "./index.ts";
-	 * import { Effect } from "effect";
+	 * import * as Effect from "effect/Effect";
 	 *
 	 * declare const create: Effect.Effect<void, GitHubError>;
 	 *
@@ -281,9 +283,9 @@ const readThrowable = (error: unknown): Throwable => {
 	const headers = asRecord(response?.headers);
 	const data = asRecord(response?.data);
 	return {
-		status: typeof record.status === "number" ? record.status : undefined,
+		status: P.isNumber(record.status) ? record.status : undefined,
 		headers,
-		reason: sanitizeReason(typeof record.message === "string" ? record.message : String(error)),
+		reason: sanitizeReason(P.isString(record.message) ? record.message : String(error)),
 		validation: readValidation(data),
 	};
 };
@@ -316,7 +318,7 @@ const MAX_REASON_LENGTH = 500;
 /** GitHub's validation failures arrive as `data.errors[]` entries. */
 const readValidation = (data: Record<string, unknown> | undefined): ReadonlyArray<GitHubValidationEntry> => {
 	const errors = data?.errors;
-	if (!Array.isArray(errors)) return [];
+	if (!A.isArray(errors)) return [];
 	const entries: Array<GitHubValidationEntry> = [];
 	for (const raw of errors) {
 		const record = asRecord(raw);
@@ -328,10 +330,10 @@ const readValidation = (data: Record<string, unknown> | undefined): ReadonlyArra
 		if (resource === undefined && field === undefined && code === undefined && message === undefined) continue;
 		entries.push(
 			GitHubValidationEntry.make({
-				...(resource !== undefined ? { resource } : {}),
-				...(field !== undefined ? { field } : {}),
-				...(code !== undefined ? { code } : {}),
-				...(message !== undefined ? { message } : {}),
+				...O.getSomesStruct({ resource: O.fromUndefinedOr(resource) }),
+				...O.getSomesStruct({ field: O.fromUndefinedOr(field) }),
+				...O.getSomesStruct({ code: O.fromUndefinedOr(code) }),
+				...O.getSomesStruct({ message: O.fromUndefinedOr(message) }),
 			}),
 		);
 	}
@@ -339,7 +341,7 @@ const readValidation = (data: Record<string, unknown> | undefined): ReadonlyArra
 };
 
 const stringField = (record: Record<string, unknown>, key: string): string | undefined =>
-	typeof record[key] === "string" ? record[key] : undefined;
+	P.isString(record[key]) ? record[key] : undefined;
 
 const ALREADY_EXISTS = "already exists";
 

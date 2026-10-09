@@ -7,7 +7,7 @@ import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Semaphore from "effect/Semaphore";
 import type { Param } from "effect/cli";
 import { Prompt } from "effect/cli";
@@ -188,8 +188,8 @@ const mount = <A>(
 					exitOnCtrlC: false,
 					patchConsole: false,
 					...(overrides.debug === true ? { debug: true } : {}),
-					...(overrides.onRender === undefined ? {} : { onRender: overrides.onRender }),
-					...(overrides.maxFps === undefined ? {} : { maxFps: overrides.maxFps }),
+					...O.getSomesStruct({ onRender: O.fromUndefinedOr(overrides.onRender) }),
+					...O.getSomesStruct({ maxFps: O.fromUndefinedOr(overrides.maxFps) }),
 				}),
 			),
 			(instance) =>
@@ -219,7 +219,7 @@ const mount = <A>(
  * @example
  * ```ts
  * import { CliUi, Confirm } from "../ui.ts"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect";
  *
  * // Answers `otherwise` when there is no person to ask, and fails with `Cancelled` when they back out.
  * const ask = CliUi.prompt(Confirm.screen({ message: "Overwrite the config?" }), {

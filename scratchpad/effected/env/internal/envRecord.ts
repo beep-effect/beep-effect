@@ -1,6 +1,7 @@
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import type { Env } from "./types.ts";
 
 /**
@@ -10,7 +11,7 @@ import type { Env } from "./types.ts";
  * @internal
  */
 export const normalizeEnv = (record: Env): Env =>
-	Object.fromEntries(Object.entries(record).filter(([, value]) => value !== undefined && value !== ""));
+	R.fromEntries(R.toEntries(record).filter(([, value]) => value !== undefined && value !== ""));
 
 /**
  * Read a fixed key set from the ambient `ConfigProvider` into a plain {@link Env} record.
@@ -25,12 +26,12 @@ export const normalizeEnv = (record: Env): Env =>
 export const readEnv = (keys: ReadonlyArray<string>): Effect.Effect<Env> =>
 	Effect.forEach(keys, (key) =>
 		Config.option(Config.String(key)).pipe(
-			Effect.orElseSucceed(() => O.none<string>()),
+			Effect.orElseSucceed(O.none<string>),
 			Effect.map((value) => [key, value] as const),
 		),
 	).pipe(
 		Effect.map((entries) =>
-			Object.fromEntries(
+			R.fromEntries(
 				entries.flatMap(([key, value]) => (O.isSome(value) && value.value !== "" ? [[key, value.value]] : [])),
 			),
 		),

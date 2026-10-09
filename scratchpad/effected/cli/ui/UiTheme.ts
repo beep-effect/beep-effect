@@ -5,6 +5,7 @@ import type { ReactElement, ReactNode } from "react";
 import { inkModules } from "./internal/ink.ts";
 import type { ScreenContextValue } from "./internal/ScreenContext.ts";
 import { screenContext } from "./internal/ScreenContext.ts";
+import * as O from "@beep/utils/Option";
 
 /**
  * The styling props of an Ink `Text` that a {@link @effected/cli!Style} maps to.
@@ -78,7 +79,7 @@ export const inkProps: {
 	color === "none"
 		? {}
 		: {
-				...(style.fg === undefined ? {} : { color: style.fg }),
+				...O.getSomesStruct({ color: O.fromUndefinedOr(style.fg) }),
 				...(style.bold === true ? { bold: true } : {}),
 				...(style.dim === true ? { dimColor: true } : {}),
 				...(style.italic === true ? { italic: true } : {}),

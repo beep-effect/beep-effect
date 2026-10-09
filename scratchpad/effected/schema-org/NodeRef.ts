@@ -2,6 +2,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/schema-org/NodeRef");
 
@@ -110,7 +111,7 @@ export class NodeRef extends S.Class<NodeRef>($I`NodeRef`)({
 	 * than as a throw at an arbitrary call site.
 	 */
 	static to(target: string | HasNodeId): NodeRef {
-		return NodeRef.make({ "@id": typeof target === "string" ? target : target["@id"] });
+		return NodeRef.make({ "@id": P.isString(target) ? target : target["@id"] });
 	}
 
 	/**

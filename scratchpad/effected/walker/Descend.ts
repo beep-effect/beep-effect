@@ -459,7 +459,7 @@ export function descend(
  * ```ts
  * import { GlobPattern } from "../glob/index.ts";
  * import { descend } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  * 	const pattern = yield* GlobPattern.compile("src/*.ts");

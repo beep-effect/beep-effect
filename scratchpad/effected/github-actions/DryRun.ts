@@ -53,7 +53,7 @@ const make = (enabled: boolean): DryRunShape => ({
  * @example
  * ```ts
  * import { DryRun } from "./index.ts";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect";
  *
  * const program = Effect.gen(function* () {
  *   const dryRun = yield* DryRun;

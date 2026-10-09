@@ -5,6 +5,7 @@ import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
 import { DEP_TYPES, isWorkspaceSpecifier } from "./internal/shared.ts";
 import type { Lockfile } from "./Lockfile.ts";
+import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/lockfiles/LockfileIntegrity");
 
@@ -115,7 +116,7 @@ export class LockfileIntegrity extends S.Class<LockfileIntegrity>($I`LockfileInt
 				const depMap = manifest[depType];
 				if (depMap === undefined) continue;
 
-				for (const [dependency, constraint] of Object.entries(depMap)) {
+				for (const [dependency, constraint] of R.toEntries(depMap)) {
 					if (isWorkspaceSpecifier(constraint)) continue;
 
 					const candidates = resolvedIndex.get(dependency);
