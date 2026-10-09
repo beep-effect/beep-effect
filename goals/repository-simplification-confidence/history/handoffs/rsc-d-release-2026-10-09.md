@@ -55,8 +55,8 @@ Inspect the original tree with `git ls-tree --name-only d839776128c29c6c4cc7c293
 The full-directory checkout also restores historical config/README. Restore
 code/policy by reverting the PR with it, including the private-note graph guard;
 restored private notes alone deliberately fail the current guard. The orchestrator records merge SHA
-in stage-2-policy.md after merge (R34). Never merge or retire from this lane
-until the orchestrator directs retirement.
+in stage-2-policy.md after merge (R34). Do not merge the PR from this lane. Retire the lane worktree only after the
+orchestrator merges the PR and explicitly directs worktree retirement.
 
 ## Verification and scope
 

@@ -81,4 +81,5 @@ state are recorded; stage 1 closes when every lane owner and recovery path in
 
 D latest evidence: [external-contract census and reset policy](history/receipts/stage-2-policy.md)
 and [release lane handoff](history/handoffs/rsc-d-release-2026-10-09.md).
-The census precedes note retirement; final gates and E-09 remain pending.
+The census preceded the committed note retirement (`ec2080bb68`); final gates
+and E-09 remain pending.

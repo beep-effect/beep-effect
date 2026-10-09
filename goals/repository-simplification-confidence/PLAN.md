@@ -292,6 +292,7 @@ bun run beep quality package-verify <@beep/package>
 ### D lane progress (2026-10-09)
 
 Census committed before retirement at `da1a85157d`. D reset implementation and
-one-commit note retirement are in progress, with gate evidence tracked in
+one-commit note retirement are committed (`ec2080bb68`, code review repairs
+through `106bd48a2d`); package, parity and hosted evidence remain pending in
 `history/handoffs/rsc-d-release-2026-10-09.md`. GitHub Packages is externally
 blocked by read:packages; desktop verification is E-owned and pending E-09.
