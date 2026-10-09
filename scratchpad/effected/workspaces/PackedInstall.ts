@@ -1,10 +1,13 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import type * as PlatformError from "effect/PlatformError";
@@ -16,6 +19,7 @@ import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 import type { CommandOutput } from "../commands/index.ts";
 import { Run } from "../commands/index.ts";
 import { Yaml } from "../yaml/index.ts";
@@ -34,7 +38,7 @@ import {
 } from "./internal/packedInstallPlan.ts";
 import { PackageManagerName } from "./PackageManagerName.ts";
 import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
-import type { WorkspacePackage } from "./WorkspacePackage.ts";
+import { WorkspacePackage } from "./WorkspacePackage.ts";
 
 const $I = $ScratchpadId.create("effected/workspaces/PackedInstall");
 
@@ -696,18 +700,25 @@ const failure = (
 ): PackedInstallError => PackedInstallError.make({ reason, message, ...extra });
 
 /** A package from outside the workspace that replaces registry resolution: where it is and how to get a tarball of it. */
-interface Replacement {
-	readonly name: string;
-	/** Absolute and realpath'd. */
-	readonly source: string;
-	readonly kind: "directory" | "tarball";
-}
+const ReplacementKind = LiteralKit(["directory", "tarball"]).annotate(
+	$I.annote("ReplacementKind", { description: "Whether a replacement is packed from a directory or uses an existing tarball." }),
+);
+
+const Replacement = S.Struct({
+	name: S.String.annotate({ description: "The package name the replacement must pack." }),
+	source: S.String.annotate({ description: "The absolute, realpath-resolved replacement source." }),
+	kind: ReplacementKind,
+}).annotate($I.annote("Replacement", { description: "An external package source replacing registry resolution." }));
+
+type Replacement = typeof Replacement.Type;
 
 /** Everything a run packs, in the order it packs it: the carrier, the rest of the closure, then the replacements by name. */
-interface ClosurePlan {
-	readonly closure: ReadonlyArray<WorkspacePackage>;
-	readonly replacements: ReadonlyArray<Replacement>;
-}
+const ClosurePlan = S.Struct({
+	closure: S.Array(WorkspacePackage).annotate({ description: "The carrier followed by the remaining workspace closure, in pack order." }),
+	replacements: S.Array(Replacement).annotate({ description: "External replacements in package-name order, packed after the workspace closure." }),
+}).annotate($I.annote("ClosurePlan", { description: "The ordered workspace closure and external replacements a run packs." }));
+
+type ClosurePlan = typeof ClosurePlan.Type;
 
 const namesOf = (plan: ClosurePlan): ReadonlyArray<string> => [
 	...plan.closure.map((pkg) => pkg.name),
@@ -756,7 +767,7 @@ const planClosure = Effect.fn("planClosure")(function* (carrier: string, options
 
 		const packed = MutableHashSet.fromIterable(closure.success.map((pkg) => pkg.name));
 		const replacements: Array<Replacement> = [];
-		for (const name of [...MutableHashMap.keys(wanted)].sort()) {
+		for (const name of pipe(wanted, MutableHashMap.keys, A.fromIterable, A.sort(Str.Order))) {
 			const invalid = (message: string, cause?: unknown) =>
 				failure("InvalidOverride", `override ${name}: ${message}`, {
 					package: name,
@@ -1210,7 +1221,7 @@ export class PackedInstall {
 				return path.join(destination, only);
 			});
 		/** The packed manifest, read with `tar` from `cwd`, refused if only a workspace could resolve it. */
-		const inspect = Effect.fn("inspect")(function* (name: string, tarball: string, cwd: string) {
+		const inspect = Effect.fn("inspect")(function* (name: string, tarball: string, cwd: string, workspace: boolean = false) {
 				const text = yield* Run.text(command("tar", ["-xzOf", tarball, "package/package.json"], cwd), {
 					timeout: MANIFEST_TIMEOUT,
 				}).pipe(
@@ -1224,6 +1235,13 @@ export class PackedInstall {
 						package: name,
 						cause: manifest.failure,
 					});
+				}
+				if (workspace && manifest.success.name !== name) {
+					return yield* failure(
+						"PackFailed",
+						`${tarball} packs ${manifest.success.name ?? "a package with no name"}, not ${name}`,
+						{ package: name },
+					);
 				}
 				if (manifest.success.unresolved.length > 0) {
 					return yield* failure(
@@ -1254,7 +1272,7 @@ export class PackedInstall {
 				}
 			}
 			const tarball = yield* pack(pkg.name, cwd, source === "source" ? "pnpm" : "npm", destination);
-			packed.push({ name: pkg.name, tarball, manifest: yield* inspect(pkg.name, tarball, destination) });
+			packed.push({ name: pkg.name, tarball, manifest: yield* inspect(pkg.name, tarball, destination, true) });
 		}
 		for (const [offset, replacement] of plan.replacements.entries()) {
 			const destination = path.join(scratch, "tarballs", String(plan.closure.length + offset));
@@ -1344,7 +1362,7 @@ export class PackedInstall {
 							Effect.map((names) =>
 								names.length === 0
 									? "node_modules/.bin is empty"
-									: `node_modules/.bin holds: ${[...names].sort().join(", ")}`,
+									: `node_modules/.bin holds: ${A.sort(names, Str.Order).join(", ")}`,
 							),
 							Effect.orElseSucceed(() => "node_modules/.bin does not exist or cannot be listed"),
 						);

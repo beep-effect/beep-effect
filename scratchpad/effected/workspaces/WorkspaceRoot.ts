@@ -19,13 +19,6 @@ import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspaceRoot");
 
-/** The defect produced when a root manifest contains JSON null. */
-class WorkspaceRootManifestError extends S.TaggedError<WorkspaceRootManifestError>($I`WorkspaceRootManifestError`)(
-	"WorkspaceRootManifestError",
-	{ message: S.String },
-	$I.annote("WorkspaceRootManifestError", { description: "The defect produced when a root manifest contains JSON null." }),
-) {}
-
 const JsonValue = S.fromJsonString(S.Unknown);
 
 /**
@@ -139,8 +132,6 @@ const isWorkspaceRoot = Effect.fn("isWorkspaceRoot")(function* (dir: string): Ef
 		catch: () => undefined,
 	}).pipe(Effect.orElseSucceed(() => ({})));
 
-	// A JSON null previously failed on property access; retain that defect.
-	if (parsed === null) throw WorkspaceRootManifestError.make({ message: "Cannot read properties of null (reading 'workspaces')" });
 	return P.isObjectKeyword(parsed) && !P.isFunction(parsed) && "workspaces" in parsed &&
 		parsed.workspaces !== undefined && parsed.workspaces !== null;
 });

@@ -1,8 +1,11 @@
-import { assert, describe, layer } from "@effect/vitest";
+import { assert, describe, it, layer } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { LockfileReadError, LockfileReader, WorkspaceDiscovery, Workspaces } from "../../effected/workspaces/index.ts";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import { ChangeDetectionError, LockfileReadError, LockfileReader, WorkspaceDiscovery, Workspaces } from "../../effected/workspaces/index.ts";
+import { LayerPolicyError } from "../../effected/workspaces/LayerPolicy.ts";
 import type { Tree } from "./fixtures.ts";
 import { manifest, platform } from "./fixtures.ts";
 
@@ -268,4 +271,23 @@ describe("LockfileReader — a malformed lockfile", () => {
 			}),
 		);
 	});
+});
+
+
+describe("workspace error encoding", () => {
+	it.effect("preserves the originating failure stack in all three error schemas", () =>
+		Effect.gen(function* () {
+			const cause = new Error("originating failure");
+			assert.isString(cause.stack);
+			const encoded = yield* Effect.all([
+				S.encodeEffect(LockfileReadError)(LockfileReadError.make({ lockfilePath: "/repo/pnpm-lock.yaml", format: "pnpm", cause })),
+				S.encodeEffect(ChangeDetectionError)(ChangeDetectionError.make({ operation: "diff", cause })),
+				S.encodeEffect(LayerPolicyError)(LayerPolicyError.make({ reason: "read", cause })),
+			]);
+			for (const error of encoded) {
+				assert.isTrue(P.isObject(error.cause));
+				if (P.isObject(error.cause)) assert.strictEqual(error.cause.stack, cause.stack);
+			}
+		}),
+	);
 });

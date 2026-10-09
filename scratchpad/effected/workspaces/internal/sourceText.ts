@@ -1,4 +1,7 @@
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
+import * as Str from "effect/String";
 import * as MutableHashSet from "effect/MutableHashSet";
 // The one lexer behind SourceBoundary: a single pass that tells code from
 // comments and literals, so a scanner looking for real references never trips
@@ -72,6 +75,34 @@ const GLOBAL_OBJECTS = MutableHashSet.fromIterable(["globalThis", "global", "win
 /** Whether `char` can continue an identifier. */
 export const isIdentifierChar = (char: string | undefined): boolean => char !== undefined && IDENTIFIER.test(char);
 
+/** A complete code point starting at a UTF-16 offset, for string and lexer-buffer lookups. */
+export const codePointAt: {
+	(at: number): (text: string | ReadonlyArray<string>) => string | undefined;
+	(text: string | ReadonlyArray<string>, at: number): string | undefined;
+} = dual(2, (text: string | ReadonlyArray<string>, at: number): string | undefined => {
+	const first = text[at];
+	const second = text[at + 1];
+	return first !== undefined && second !== undefined && /[\uD800-\uDBFF]/u.test(first) && /[\uDC00-\uDFFF]/u.test(second)
+		? first + second
+		: first;
+});
+
+/** A complete code point ending just before a UTF-16 offset. */
+export const codePointBefore: {
+	(at: number): (text: string | ReadonlyArray<string>) => string | undefined;
+	(text: string | ReadonlyArray<string>, at: number): string | undefined;
+} = dual(2, (text: string | ReadonlyArray<string>, at: number): string | undefined => {
+	const last = text[at - 1];
+	const first = text[at - 2];
+	return first !== undefined && last !== undefined && /[\uD800-\uDBFF]/u.test(first) && /[\uDC00-\uDFFF]/u.test(last)
+		? first + last
+		: last;
+});
+
+/** The four ECMAScript line terminators. */
+const isLineTerminator = (char: string | undefined): boolean =>
+	char === "\n" || char === "\r" || char === "\u2028" || char === "\u2029";
+
 /** Lex `text` once into its comment-free view, its code-only view and its literals. */
 export const lex = (text: string): LexedSource => {
 	const kept: Array<string> = [];
@@ -86,7 +117,7 @@ export const lex = (text: string): LexedSource => {
 	const length = text.length;
 	let i = 0;
 
-	const blank = (char: string): string => (char === "\n" || char === "\r" ? char : " ");
+	const blank = (char: string): string => (isLineTerminator(char) ? char : " ");
 	/** Emit one input character: `keep` for the comment-free view, `live` for the code view. */
 	const emit = (char: string, keep: boolean, live: boolean): void => {
 		kept.push(keep ? char : blank(char));
@@ -103,7 +134,8 @@ export const lex = (text: string): LexedSource => {
 	/** The identifier ending at code offset `end`, or `""`. */
 	const wordAt = (end: number): string => {
 		let start = end;
-		while (start >= 0 && isIdentifierChar(code[start])) start--;
+		while (start >= 0 && isIdentifierChar(codePointBefore(code, start + 1)))
+			start -= codePointBefore(code, start + 1)?.length ?? 1;
 		return code.slice(start + 1, end + 1).join("");
 	};
 
@@ -115,7 +147,7 @@ export const lex = (text: string): LexedSource => {
 	const endsBinding = (j: number): boolean => {
 		const char = code[j] ?? "";
 		if (char === "]" || char === "}") return true;
-		return isIdentifierChar(char) && !MutableHashSet.has(DECLARATIONS, wordAt(j)) && !isRegexKeyword(j);
+		return isIdentifierChar(codePointBefore(code, j + 1)) && !MutableHashSet.has(DECLARATIONS, wordAt(j)) && !isRegexKeyword(j);
 	};
 
 	/** Whether the identifier ending at code offset `j` is a keyword after which a `/` opens a regex. */
@@ -133,7 +165,7 @@ export const lex = (text: string): LexedSource => {
 	/** Whether the code at offset `j` ends an operand (a value a postfix operator or a `/` division can follow). */
 	const endsOperand = (j: number): boolean => {
 		const char = code[j] ?? "";
-		return char === ")" || char === "]" || (isIdentifierChar(char) && !isRegexKeyword(j));
+		return char === ")" || char === "]" || (isIdentifierChar(codePointBefore(code, j + 1)) && !isRegexKeyword(j));
 	};
 
 	/** Whether a `/` here opens a regex, judged by the last code token. */
@@ -141,7 +173,7 @@ export const lex = (text: string): LexedSource => {
 		const j = lastCode(code.length - 1);
 		if (j < 0) return true;
 		const last = code[j] ?? "";
-		if (isIdentifierChar(last)) return isRegexKeyword(j);
+		if (isIdentifierChar(codePointBefore(code, j + 1))) return isRegexKeyword(j);
 		// `x!` is a TypeScript non-null assertion: an operand, so `/` divides.
 		if (last === "!") return !endsOperand(j - 1);
 		// `i++` / `i--` is a postfix update: an operand, so `/` divides.
@@ -153,7 +185,7 @@ export const lex = (text: string): LexedSource => {
 	/** The if/while/for/with keyword whose condition the `(` about to be emitted opens, if any. */
 	const opensCondition = (): string | undefined => {
 		const j = lastCode(code.length - 1);
-		if (j < 0 || !isIdentifierChar(code[j])) return undefined;
+		if (j < 0 || !isIdentifierChar(codePointBefore(code, j + 1))) return undefined;
 		let word = wordAt(j);
 		let end = j - word.length;
 		// `for await (`: the keyword sits one word further back.
@@ -171,7 +203,7 @@ export const lex = (text: string): LexedSource => {
 		let inClass = false;
 		for (; j < length; j++) {
 			const char = text[j] ?? "";
-			if (char === "\n" || char === "\r") return false;
+			if (isLineTerminator(char)) return false;
 			if (char === "\\") {
 				j++;
 				continue;
@@ -207,8 +239,13 @@ export const lex = (text: string): LexedSource => {
 				emit(char, true, false);
 				i++;
 				if (i < length) {
-					emit(text[i] ?? "", true, false);
+					const escaped = text[i];
+					emit(escaped ?? "", true, false);
 					i++;
+					if (escaped === "\r" && text[i] === "\n") {
+						emit("\n", true, false);
+						i++;
+					}
 				}
 				continue;
 			}
@@ -218,7 +255,7 @@ export const lex = (text: string): LexedSource => {
 				literals.push({ start, value: text.slice(start + 1, i - 1) });
 				return;
 			}
-			if (char === "\n") return;
+			if (char === "\n" || char === "\r") return;
 			emit(char, true, false);
 			i++;
 		}
@@ -232,8 +269,13 @@ export const lex = (text: string): LexedSource => {
 				emit(char, true, false);
 				i++;
 				if (i < length) {
-					emit(text[i] ?? "", true, false);
+					const escaped = text[i];
+					emit(escaped ?? "", true, false);
 					i++;
+					if (escaped === "\r" && text[i] === "\n") {
+						emit("\n", true, false);
+						i++;
+					}
 				}
 				continue;
 			}
@@ -255,7 +297,7 @@ export const lex = (text: string): LexedSource => {
 	};
 
 	if (text.startsWith("#!")) {
-		while (i < length && text[i] !== "\n") {
+		while (i < length && !isLineTerminator(text[i])) {
 			emit(text[i] ?? "", false, false);
 			i++;
 		}
@@ -265,7 +307,7 @@ export const lex = (text: string): LexedSource => {
 		const char = text[i] ?? "";
 		const next = text[i + 1];
 		if (char === "/" && next === "/") {
-			while (i < length && text[i] !== "\n") {
+			while (i < length && !isLineTerminator(text[i])) {
 				emit(text[i] ?? "", false, false);
 				i++;
 			}
@@ -347,8 +389,8 @@ export const references: {
 } = dual(2, (code: string, name: string): ReadonlyArray<number> => {
 	const found: Array<number> = [];
 	for (let at = code.indexOf(name); at !== -1; at = code.indexOf(name, at + name.length)) {
-		const before = code[at - 1];
-		if (isIdentifierChar(before) || before === "#" || isIdentifierChar(code[at + name.length])) continue;
+		const before = codePointBefore(code, at);
+		if (isIdentifierChar(before) || before === "#" || isIdentifierChar(codePointAt(code, at + name.length))) continue;
 		let j = at - 1;
 		while (j >= 0 && SPACE.test(code[j] ?? "")) j--;
 		if (code[j] !== ".") {
@@ -362,7 +404,8 @@ export const references: {
 		let end = code[j - 1] === "?" ? j - 2 : j - 1;
 		while (end >= 0 && SPACE.test(code[end] ?? "")) end--;
 		let start = end;
-		while (start >= 0 && isIdentifierChar(code[start])) start--;
+		while (start >= 0 && isIdentifierChar(codePointBefore(code, start + 1)))
+			start -= codePointBefore(code, start + 1)?.length ?? 1;
 		if (MutableHashSet.has(GLOBAL_OBJECTS, code.slice(start + 1, end + 1))) found.push(at);
 	}
 	return found;
@@ -373,12 +416,34 @@ const wordEndingAt = (code: string, end: number): string => {
 	let j = end;
 	while (j >= 0 && SPACE.test(code[j] ?? "")) j--;
 	let start = j;
-	while (start >= 0 && isIdentifierChar(code[start])) start--;
+	while (start >= 0 && isIdentifierChar(codePointBefore(code, start + 1)))
+		start -= codePointBefore(code, start + 1)?.length ?? 1;
 	return code[start] === "." ? "" : code.slice(start + 1, j + 1);
 };
 
+const STRING_ESCAPES: Readonly<Record<string, string>> = {
+	b: "\b", f: "\f", n: "\n", r: "\r", t: "\t", v: "\v",
+};
+
+/** Cook string escapes without evaluating source; the lexer's raw literal and offsets stay intact. */
+const cookSpecifier = (raw: string): string => raw.replace(/\r\n?/gu, "\n").replace(
+	/\\(?:\r\n|[\n\r\u2028\u2029]|x[\da-f]{2}|u[\da-f]{4}|u\{[\da-f]+\}|[0-3][0-7]{0,2}|[4-7][0-7]?|.)/giu,
+	(escape) => {
+		const value = escape.slice(1);
+		if (isLineTerminator(value[0])) return "";
+		if (Str.startsWith("x")(value)) return String.fromCharCode(Number.parseInt(value.slice(1), 16));
+		if (Str.startsWith("u")(value)) {
+			const point = Number.parseInt(value[1] === "{" ? value.slice(2, -1) : value.slice(1), 16);
+			return point <= 0x10ffff ? String.fromCodePoint(point) : escape;
+		}
+		if (/^[0-7]/u.test(value)) return String.fromCharCode(Number.parseInt(value, 8));
+		return O.getOrElse(R.get(STRING_ESCAPES, value), () => value);
+	},
+);
+
 /**
- * The literals that are module specifiers: after `from` or `import`, or the
+ * Cooked literals that are module specifiers, retaining their opening-quote
+ * offsets: after `from` or `import`, or the
  * whole first argument of `import(` or `require(` (followed by `)` or `,`, so
  * `import("./x" + name)` is not read as `"./x"`).
  */
@@ -395,12 +460,16 @@ export const specifierLiterals = (lexed: LexedSource): ReadonlyArray<SourceLiter
 		}
 		const keyword = wordEndingAt(lexed.code, j);
 		return keyword === "from" || keyword === "import";
-	});
+	}).map((literal) => ({ start: literal.start, value: cookSpecifier(literal.value) }));
 
 /** A lookup from an offset in `text` to its 1-based line and UTF-16 column. */
 export const locate = (text: string): ((offset: number) => { readonly line: number; readonly column: number }) => {
 	const starts: Array<number> = [0];
-	for (let i = 0; i < text.length; i++) if (text[i] === "\n") starts.push(i + 1);
+	for (let i = 0; i < text.length; i++) {
+		if (!isLineTerminator(text[i])) continue;
+		if (text[i] === "\r" && text[i + 1] === "\n") i++;
+		starts.push(i + 1);
+	}
 	return (offset) => {
 		let low = 0;
 		let high = starts.length - 1;

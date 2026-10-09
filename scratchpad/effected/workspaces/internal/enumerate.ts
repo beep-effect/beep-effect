@@ -1,3 +1,7 @@
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
+import * as Order from "effect/Order";
+import * as Str from "effect/String";
 import { dual } from "effect/Function";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -31,7 +35,10 @@ export interface EnumeratedDirectory {
 }
 
 /** Why an enumeration failed. Every member is a caller-visible condition, never a defect. */
-export type EnumerationFailureKind = "missingBaseDir" | "depthExceeded" | "budgetExceeded" | "unreadableDirectory";
+export const EnumerationFailureKind = LiteralKit(["missingBaseDir", "depthExceeded", "budgetExceeded", "unreadableDirectory"]).annotate(
+	$I.annote("EnumerationFailureKind", { description: "The caller-visible reasons workspace enumeration can fail." }),
+);
+export type EnumerationFailureKind = typeof EnumerationFailureKind.Type;
 
 /** The enumerator's raw failure record; the facade materializes the typed error. */
 export interface EnumerationFailure {
@@ -193,6 +200,5 @@ export const enumerate: {
 	for (const [relativePath, absolute] of included) {
 		results.push({ relativePath, path: absolute });
 	}
-	results.sort((a, b) => (a.relativePath < b.relativePath ? -1 : a.relativePath > b.relativePath ? 1 : 0));
-	return results;
+	return A.sort(results, Order.mapInput(Str.Order, (entry: EnumeratedDirectory) => entry.relativePath));
 }));

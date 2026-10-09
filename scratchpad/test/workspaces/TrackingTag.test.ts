@@ -115,6 +115,41 @@ describe("TrackingTag.forVersion — non-derivable input", () => {
 	});
 });
 
+describe("TrackingTag.forVersion — numeric and suffix regressions", () => {
+	it("oversized major and minor fields derive nothing without throwing", () => {
+		for (const oversized of ["9007199254740992", "9".repeat(400)]) {
+			for (const version of [`${oversized}.2.3`, `1.${oversized}.3`]) {
+				assert.deepStrictEqual(TrackingTag.forVersion(version), []);
+				assert.deepStrictEqual(TrackingTag.forVersion(version, { precision: "major" }), []);
+				assert.deepStrictEqual(TrackingTag.forVersion(`${version}-beta.1`, { includePrerelease: true }), []);
+			}
+		}
+		assert.deepStrictEqual(
+			TrackingTag.forVersion("9007199254740991.9007199254740991.0").map((tag) => tag.value),
+			["v9007199254740991", "v9007199254740991.9007199254740991"],
+		);
+	});
+
+	it("malformed suffixes derive nothing even when prereleases are included", () => {
+		for (const version of [
+			"1.2.3+", "1.2.3+bad/path", "1.2.3+build..id", "1.2.3+build+id",
+			"1.2.3-", "1.2.3-01", "1.2.3-beta..1", "1.2.3-beta/1", "1.2.3-beta.01",
+			"1.2.3\n", "1.2.3+build\n",
+		]) {
+			assert.deepStrictEqual(TrackingTag.forVersion(version), [], version);
+			assert.deepStrictEqual(TrackingTag.forVersion(version, { includePrerelease: true }), [], version);
+		}
+		assert.deepStrictEqual(
+			TrackingTag.forVersion("1.2.3+build.01-alpha").map((tag) => tag.value),
+			["v1", "v1.2"],
+		);
+		assert.deepStrictEqual(
+			TrackingTag.forVersion("1.2.3-01alpha.0+build.01", { includePrerelease: true }).map((tag) => tag.value),
+			["v1", "v1.2"],
+		);
+	});
+});
+
 describe("classifyTag — release vs tracking vs neither", () => {
 	it("a bare semver string is a RELEASE tag", () => {
 		const result = classifyTag("1.0.0");
@@ -189,6 +224,41 @@ describe("classifyTag — release vs tracking vs neither", () => {
 		assert.strictEqual(classifyTag("@scope/pkg").kind, "unrecognized");
 		assert.strictEqual(classifyTag("v").kind, "unrecognized");
 		assert.strictEqual(classifyTag("vX").kind, "unrecognized");
+	});
+});
+
+describe("classifyTag — numeric and suffix regressions", () => {
+	it("oversized tracking fields are unrecognized without throwing", () => {
+		for (const oversized of ["9007199254740992", "9".repeat(400)]) {
+			for (const tag of [`v${oversized}`, `v${oversized}.2`, `v1.${oversized}`]) {
+				assert.deepStrictEqual(classifyTag(tag), { kind: "unrecognized" });
+				assert.deepStrictEqual(classifyTag(`@scope/pkg@${tag}`), { kind: "unrecognized" });
+			}
+		}
+		const result = classifyTag("v9007199254740991.9007199254740991");
+		assert.strictEqual(result.kind, "tracking");
+		if (result.kind !== "tracking") return assert.fail("expected a tracking tag at the integer boundary");
+		assert.strictEqual(result.tag.major, 9007199254740991);
+		assert.strictEqual(result.tag.minor, 9007199254740991);
+	});
+
+	it("malformed version suffixes are unrecognized in every release style", () => {
+		for (const version of [
+			"1.2.3+", "1.2.3+bad/path", "1.2.3+build..id", "1.2.3+build+id",
+			"1.2.3-", "1.2.3-01", "1.2.3-beta..1", "1.2.3-beta/1", "1.2.3-beta.01",
+			"1.2.3\n", "1.2.3+build\n",
+		]) {
+			for (const tag of [version, `v${version}`, `pkg@${version}`, `@scope/pkg@v${version}`]) {
+				assert.deepStrictEqual(classifyTag(tag), { kind: "unrecognized" }, tag);
+			}
+		}
+		for (const version of ["1.2.3+build.01-alpha", "1.2.3-01alpha.0+build.01"]) {
+			const result = classifyTag(`@scope/pkg@v${version}`);
+			assert.strictEqual(result.kind, "release");
+			if (result.kind !== "release") return assert.fail("expected a valid release suffix");
+			assert.strictEqual(result.tag.version, version);
+			assert.strictEqual(result.tag.packageName, "@scope/pkg");
+		}
 	});
 });
 

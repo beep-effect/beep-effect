@@ -1,5 +1,6 @@
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as O from "effect/Option";
 import * as R from "effect/Record";
 // The ONLY module that imports `@pnpm/catalogs.*`.
 //
@@ -50,33 +51,22 @@ export const catalogNameOf = (specifier: string): string | null => parseCatalogP
 /** Normalize the arbitrary shape of a catalog map into `CatalogEntries`, dropping anything unusable. */
 export const normalize = (raw: unknown): CatalogEntries => {
 	if (!P.isObjectOrArray(raw)) return {};
-	const entries: CatalogEntries = {};
+	const entries: Array<readonly [string, Record<string, string>]> = [];
 	for (const [catalogName, catalog] of P.isObject(raw) ? R.toEntries(raw) : R.toEntries<keyof typeof raw & string, unknown>(raw)) {
 		if (!P.isObjectOrArray(catalog)) continue;
-		const clean: Record<string, string> = {};
+		const clean: Array<readonly [string, string]> = [];
 		for (const [dependency, value] of P.isObject(catalog) ? R.toEntries(catalog) : R.toEntries<keyof typeof catalog & string, unknown>(catalog)) {
 			if (P.isString(value)) {
-				// `__proto__` as a plain assignment would mutate the prototype; route
-				// every key through defineProperty, matching JSON.parse semantics.
-				define(clean, dependency, value);
+				clean.push([dependency, value]);
 			} else if (P.isObjectKeyword(value) && !P.isFunction(value) && "specifier" in value) {
-				// A pnpm LOCKFILE catalog entry is `{ specifier, version }`; the
-				// specifier is the declared range, which is what a catalog resolves to.
+				// Lockfile entries carry the declared range in `specifier`.
 				const specifier = value.specifier;
-				if (P.isString(specifier)) define(clean, dependency, specifier);
+				if (P.isString(specifier)) clean.push([dependency, specifier]);
 			}
 		}
-		define(entries, catalogName, clean);
+		entries.push([catalogName, R.fromEntries(clean)]);
 	}
-	return entries;
-};
-
-const define = (target: Record<string, unknown>, key: string, value: unknown): void => {
-	if (key === "__proto__") {
-		Object.defineProperty(target, key, { value, writable: true, enumerable: true, configurable: true });
-	} else {
-		target[key] = value;
-	}
+	return R.fromEntries(entries);
 };
 
 /**
@@ -94,7 +84,10 @@ export const rangeOf: {
 	dependency: string,
 	specifier: string,
 ): string | undefined | CatalogMisconfiguration => {
-	if (catalogNameOf(specifier) === null) return undefined;
+	const catalogName = catalogNameOf(specifier);
+	if (catalogName === null) return undefined;
+	const catalog = O.flatMap(R.get<string, Catalogs[string]>(catalogs, catalogName), O.fromUndefinedOr);
+	if (O.isNone(catalog) || !R.has<string, string | undefined>(catalog.value, dependency)) return undefined;
 	const result = resolveFromCatalog(catalogs, { alias: dependency, bareSpecifier: specifier });
 	return matchCatalogResolveResult<string | undefined | CatalogMisconfiguration>(result, {
 		found: (hit) => hit.resolution.specifier,

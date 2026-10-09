@@ -1,5 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import { CyclicDependencyError, DependencyGraph, PackageNotFoundError, WorkspacePackage } from "../../effected/workspaces/index.ts";
 
 /** A workspace member with the given dependency edges. */
@@ -28,19 +31,19 @@ describe("DependencyGraph", () => {
 		const graph = DependencyGraph.make({
 			packages: [pkg("a", { b: "1.0.0", react: "^19.0.0" }), pkg("b")],
 		});
-		assert.deepStrictEqual([...(graph.adjacency.get("a") ?? [])], ["b"]);
+		assert.deepStrictEqual([...O.getOrElse(HashMap.get(graph.adjacency, "a"), HashSet.empty<string>)], ["b"]);
 	});
 
 	it("draws edges from devDependencies too", () => {
 		const graph = DependencyGraph.make({
 			packages: [pkg("a", { b: "1.0.0" }, "devDependencies"), pkg("b")],
 		});
-		assert.deepStrictEqual([...(graph.adjacency.get("a") ?? [])], ["b"]);
+		assert.deepStrictEqual([...O.getOrElse(HashMap.get(graph.adjacency, "a"), HashSet.empty<string>)], ["b"]);
 	});
 
 	it("drops a self-edge", () => {
 		const graph = DependencyGraph.make({ packages: [pkg("a", { a: "1.0.0" })] });
-		assert.deepStrictEqual([...(graph.adjacency.get("a") ?? [])], []);
+		assert.deepStrictEqual([...O.getOrElse(HashMap.get(graph.adjacency, "a"), HashSet.empty<string>)], []);
 		assert.isFalse(graph.hasCycle);
 	});
 
@@ -245,6 +248,6 @@ describe("DependencyGraph", () => {
 		const packages: ReadonlyArray<WorkspacePackage> = [pkg("a", { b: "1.0.0" }), pkg("b")] as const;
 		const graph = DependencyGraph.make({ packages });
 		assert.deepStrictEqual(graph.names, ["a", "b"]);
-		assert.deepStrictEqual([...(graph.adjacency.get("a") ?? [])], ["b"]);
+		assert.deepStrictEqual([...O.getOrElse(HashMap.get(graph.adjacency, "a"), HashSet.empty<string>)], ["b"]);
 	});
 });

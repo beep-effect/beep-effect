@@ -15,7 +15,8 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
-import * as MutableHashMap from "effect/MutableHashMap";
+import * as HashMap from "effect/HashMap";
+import * as R from "effect/Record";
 import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
@@ -24,10 +25,10 @@ import { CatalogSet } from "./WorkspaceCatalogs.ts";
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspaceStateSnapshot");
 
-// A frozen, prototype-free empty map shared as the default for every absent
+// A readonly empty record shared as the default for every absent
 // dependency record — the `WorkspacePackage` precedent, so an omitted record
 // round-trips as `{}` rather than `undefined`.
-const EMPTY: Record<string, string> = Object.freeze<Record<string, string>>(Object.create(null));
+const EMPTY: Readonly<Record<string, string>> = R.fromEntries([]);
 
 const DependencyMap = S.Record(S.String, S.String).pipe(
 	S.withDecodingDefaultKey(Effect.succeed(EMPTY)),
@@ -109,12 +110,12 @@ export class PackageStateSnapshot extends S.Class<PackageStateSnapshot>($I`Packa
 	 * `optionalDependencies`.
 	 */
 	get allDependencies(): Record<string, string> {
-		return {
-			...this.optionalDependencies,
-			...this.peerDependencies,
-			...this.devDependencies,
-			...this.dependencies,
-		};
+		return R.fromEntries([
+			...R.toEntries(this.optionalDependencies),
+			...R.toEntries(this.peerDependencies),
+			...R.toEntries(this.devDependencies),
+			...R.toEntries(this.dependencies),
+		]);
 	}
 }
 
@@ -205,28 +206,31 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	 */
 	seededCatalogs: S.optionalKey(CatalogSet).annotateKey({ description: "Catalogs supplied from OUTSIDE this moment, consulted only when `catalogs` cannot answer." }),
 }, $I.annote("WorkspaceStateSnapshot", { description: "The state of a whole workspace at one moment — its packages and its assembled catalog set — as a serializable value." })) {
-	#versionIndex: ReadonlyMap<string, string> | undefined;
-	#packageIndex: MutableHashMap.MutableHashMap<string, PackageStateSnapshot> | undefined;
+	#versionIndex: HashMap.HashMap<string, string> | undefined;
+	#versionNames: ReadonlyArray<string> | undefined;
+	#packageIndex: HashMap.HashMap<string, PackageStateSnapshot> | undefined;
 	#catalogResolver: Layer.Layer<CatalogResolver> | undefined;
 	#workspaceResolver: Layer.Layer<WorkspaceResolver> | undefined;
 	#resolvers: Layer.Layer<CatalogResolver | WorkspaceResolver> | undefined;
 
-	#versions(): ReadonlyMap<string, string> {
+	#versions(): HashMap.HashMap<string, string> {
 		if (this.#versionIndex === undefined) {
-			// Only members that declared a version: an absent version stays absent
-			// here, rather than being presented as a placeholder string.
-			const index = MutableHashMap.empty<string, string>();
-			for (const pkg of this.packages) if (pkg.version !== undefined) MutableHashMap.set(index, pkg.name, pkg.version);
-			// String keys live in the documented native backing map, preserving the
-			// public ReadonlyMap contract and insertion order.
-			this.#versionIndex = index.backing;
+			let index = HashMap.empty<string, string>();
+			const names: Array<string> = [];
+			for (const pkg of this.packages) {
+				if (pkg.version === undefined) continue;
+				if (!HashMap.has(index, pkg.name)) names.push(pkg.name);
+				index = HashMap.set(index, pkg.name, pkg.version);
+			}
+			this.#versionNames = names;
+			this.#versionIndex = index;
 		}
 		return this.#versionIndex;
 	}
 
-	#packages(): MutableHashMap.MutableHashMap<string, PackageStateSnapshot> {
+	#packages(): HashMap.HashMap<string, PackageStateSnapshot> {
 		if (this.#packageIndex === undefined) {
-			this.#packageIndex = MutableHashMap.fromIterable(this.packages.map((pkg) => [pkg.name, pkg] as const));
+			this.#packageIndex = HashMap.fromIterable(this.packages.map((pkg) => [pkg.name, pkg] as const));
 		}
 		return this.#packageIndex;
 	}
@@ -240,13 +244,29 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	 * so every value is a real version and presence answers "has a version",
 	 * not membership — ask {@link WorkspaceStateSnapshot.package} for that.
 	 */
-	get versions(): ReadonlyMap<string, string> {
+	get versions(): HashMap.HashMap<string, string> {
 		return this.#versions();
+	}
+
+	/**
+	 * Versioned package names in first-insertion order, excluding unversioned members.
+	 *
+	 * **Example** (Reading versions in package order)
+	 * ```ts
+	 * import * as HashMap from "effect/HashMap";
+	 * import { CatalogSet, WorkspaceStateSnapshot } from "./index.ts";
+	 * const snapshot = WorkspaceStateSnapshot.make({ packages: [], catalogs: CatalogSet.empty() });
+	 * const ordered = snapshot.versionNames.map((name) => HashMap.get(snapshot.versions, name));
+	 * ```
+	 */
+	get versionNames(): ReadonlyArray<string> {
+		this.#versions();
+		return this.#versionNames ?? [];
 	}
 
 	/** A single captured package by name, or `Option.none()`. Total. */
 	package(name: string): O.Option<PackageStateSnapshot> {
-		return MutableHashMap.get(this.#packages(), name);
+		return HashMap.get(this.#packages(), name);
 	}
 
 	/**
@@ -313,7 +333,7 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	 */
 	resolveIn(importerPath: string, dependency: string, specifier: string): O.Option<string> {
 		return this.#resolveWith(dependency, specifier, () =>
-			O.fromUndefinedOr(this.importerVersions?.[importerPath]?.[dependency]),
+			O.flatMap(R.get(this.importerVersions ?? {}, importerPath), R.get(dependency)),
 		);
 	}
 
@@ -339,7 +359,7 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 			// A version-less member is absent from the index, so it resolves to
 			// `none` exactly as a non-member does — there is nothing to substitute
 			// for `workspace:^`.
-			Match.tag("workspace", () => O.fromUndefinedOr(this.#versions().get(dependency))),
+			Match.tag("workspace", () => HashMap.get(this.#versions(), dependency)),
 			Match.orElse(O.none<string>),
 		);
 	}
@@ -522,7 +542,7 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 				// declared no version fails typed — the same answer the discovery-backed
 				// resolver gives.
 				versionOf: Effect.fn("WorkspaceResolver.versionOf")((packageName: string): Effect.Effect<O.Option<string>, DependencyResolutionError> => {
-					const member = O.getOrUndefined(MutableHashMap.get(this.#packages(), packageName));
+					const member = O.getOrUndefined(HashMap.get(this.#packages(), packageName));
 					if (member === undefined) return Effect.succeed(O.none<string>());
 					const version = member.version;
 					if (version === undefined) {

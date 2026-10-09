@@ -3,6 +3,8 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import * as S from "effect/Schema";
+import { BoundaryFixture, BoundaryRule as BoundaryRuleModel, OffenceRule as OffenceRuleModel } from "../../effected/workspaces/SourceBoundary.ts";
 import { assert, describe, it } from "@effect/vitest";
 import type { BoundaryRule, OffenceRule } from "../../effected/workspaces/testing.ts";
 import { SourceBoundary } from "../../effected/workspaces/testing.ts";
@@ -100,26 +102,26 @@ describe("SourceBoundary.referencesProcess", () => {
 describe("SourceBoundary.importSpecifiers", () => {
 	it("reads static, side-effect, re-export, type-only, dynamic and require specifiers, in order", () => {
 		const text = [
-			'import { a } from "./a.ts";',
-			'import "./side-effect.ts";',
-			'export { b } from "./b.ts";',
-			'export * as c from "./c.ts";',
-			'import type { D } from "./d.ts";',
-			'const e = await import("./e.ts");',
+			'import { a } from "./a.js";',
+			'import "./side-effect.js";',
+			'export { b } from "./b.js";',
+			'export * as c from "./c.js";',
+			'import type { D } from "./d.js";',
+			'const e = await import("./e.js");',
 			"const f = await import(`./f.js`);",
-			'const g = require("./g.ts");',
-			'import h = require("./h.ts");',
+			'const g = require("./g.js");',
+			'import h = require("./h.js");',
 		].join("\n");
 		assert.deepStrictEqual(SourceBoundary.importSpecifiers(text), [
-			"./a.ts",
-			"./side-effect.ts",
-			"./b.ts",
-			"./c.ts",
-			"./d.ts",
-			"./e.ts",
+			"./a.js",
+			"./side-effect.js",
+			"./b.js",
+			"./c.js",
+			"./d.js",
+			"./e.js",
 			"./f.js",
-			"./g.ts",
-			"./h.ts",
+			"./g.js",
+			"./h.js",
 		]);
 	});
 
@@ -137,15 +139,15 @@ describe("SourceBoundary.importSpecifiers", () => {
 	});
 
 	it("ignores a call whose literal is only the first operand of a computed specifier", () => {
-		const text = 'const x = await import("./x" + name);\nconst y = require("./y" + name);';
+		const text = 'const x = await import("./x" + name);\nconst y = require("./y/" + name);';
 		assert.deepStrictEqual(SourceBoundary.importSpecifiers(text), []);
 	});
 
 	it("ignores strings that are not specifiers, commented-out imports and computed dynamic imports", () => {
 		const text = [
 			'const s = "node:process";',
-			'// import x from "./gone.ts";',
-			'const t = obj.require("./not.ts");',
+			'// import x from "./gone.js";',
+			'const t = obj.require("./not.js");',
 			'declare module "./ambient.js" {}',
 			"const u = import(`./${name}.js`);",
 		].join("\n");
@@ -351,4 +353,48 @@ describe("SourceBoundary on the real tree", () => {
 		assert.notInclude(SourceBoundary.importSpecifiers(text), "url");
 		assert.include(SourceBoundary.importSpecifiers(text), "effect/process");
 	});
+});
+
+
+describe("SourceBoundary review regressions", () => {
+	it("owns structural rule and fixture schemas and a public offence literal kit", () => {
+		for (const rule of OffenceRuleModel.literals) {
+			assert.isTrue(OffenceRuleModel.is[rule](rule));
+			assert.strictEqual(OffenceRuleModel.Enum[rule], rule);
+		}
+		assert.isTrue(S.is(BoundaryRuleModel)({ forbidImports: ["node:*"] }));
+		assert.isTrue(S.is(BoundaryRuleModel)({ forbidTokens: ["eval("] }));
+		for (const fixture of SourceBoundary.fixtures) assert.isTrue(S.is(BoundaryFixture)(fixture));
+	});
+
+	it("matches cooked escaped imports while reporting their original quote position", () => {
+		const text = 'import p from "\\u006eode:process";';
+		assert.deepStrictEqual(SourceBoundary.importSpecifiers(text), ["node:process"]);
+		assert.isTrue(SourceBoundary.importsNode(text, "process"));
+		assert.deepStrictEqual(
+			SourceBoundary.check("f.ts", text, ["node:process", { forbidImports: ["node:*"] }]).map((o) => o.label),
+			["f.ts:1:15 node:process node:process", "f.ts:1:15 forbidImports node:process"],
+		);
+	});
+
+	for (const source of ["const 𝒙process = 1; 𝒙process;", "const process𝒙 = 1; process𝒙;"]) {
+		it(`spares complete astral identifiers: ${source}`, () => {
+			assert.isFalse(SourceBoundary.referencesProcess(source));
+			assert.deepStrictEqual(SourceBoundary.check("f.ts", source, ["process", { forbidTokens: ["process"] }]), []);
+		});
+	}
+
+	it("uses complete code points for stdout, console members and ignore-token boundaries", () => {
+		assert.deepStrictEqual(SourceBoundary.check("f.ts", "𝒙stdout.write(x); stdout.write𝒙(x);", ["stdout-write"]), []);
+		assert.deepStrictEqual(lines("console.error𝒙(x);", "console-stdout"), [1]);
+		assert.isTrue(SourceBoundary.referencesProcess("process.env.__PACKAGE_VERSION__𝒙;"));
+	});
+
+	for (const separator of ["\r", "\u2028", "\u2029", "\r\n"]) {
+		it(`ends a line comment and locates the following code after ${separator.codePointAt(0)}`, () => {
+			const text = `// harmless${separator}process.touch();`;
+			assert.strictEqual(SourceBoundary.stripComments(text), `           ${separator}process.touch();`);
+			assert.deepStrictEqual(SourceBoundary.check("f.ts", text, ["process"]).map((o) => o.label), ["f.ts:2:1 process process"]);
+		});
+	}
 });

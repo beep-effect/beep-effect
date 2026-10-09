@@ -23,12 +23,12 @@ const $I = $ScratchpadId.create("effected/workspaces/WorkspacePackage");
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
-const EMPTY: Record<string, string> = Object.freeze<Record<string, string>>(Object.create(null));
+const EMPTY: Readonly<Record<string, string>> = R.fromEntries([]);
 
-// The frozen empty default for `manifestRecord`, shared like the dependency-map
+// The readonly empty default for `manifestRecord`, shared like the dependency-map
 // default: construction sites and serialized values without the field decode to
 // `{}` rather than failing or carrying `undefined`.
-const EMPTY_MANIFEST: Record<string, unknown> = Object.freeze<Record<string, unknown>>(Object.create(null));
+const EMPTY_MANIFEST: Readonly<Record<string, unknown>> = R.fromEntries([]);
 
 /**
  * The `publishConfig` fields workspace tooling reads.
@@ -237,12 +237,12 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 	 * `optionalDependencies`.
 	 */
 	get allDependencies(): Record<string, string> {
-		return {
-			...this.optionalDependencies,
-			...this.peerDependencies,
-			...this.devDependencies,
-			...this.dependencies,
-		};
+		return R.fromEntries([
+			...R.toEntries(this.optionalDependencies),
+			...R.toEntries(this.peerDependencies),
+			...R.toEntries(this.devDependencies),
+			...R.toEntries(this.dependencies),
+		]);
 	}
 
 	/** Whether `name` is a production dependency. */
@@ -277,21 +277,11 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 
 	/** The declared specifier for `name`, searched across all four kinds. */
 	dependencyVersion(name: string): O.Option<string> {
-		// `Object.hasOwn`, not bracket access — and every sibling predicate above
-		// already gets this right, which is what makes the inconsistency the tell.
-		// A plain-object dependency map inherits from `Object.prototype`, so a bare
-		// `this.dependencies["constructor"]` returns a FUNCTION, and this method —
-		// typed `Option<string>` — would hand back `Option.some(<Function>)`. Same
-		// for `toString`, `valueOf`, `__proto__` and friends.
-		const own = (map: Readonly<Record<string, string>>): string | undefined =>
-			R.has(map, name) ? map[name] : undefined;
-
-		const version =
-			own(this.dependencies) ??
-			own(this.devDependencies) ??
-			own(this.peerDependencies) ??
-			own(this.optionalDependencies);
-		return version === undefined ? O.none() : O.some(version);
+		return R.get(this.dependencies, name).pipe(
+			O.orElse(() => R.get(this.devDependencies, name)),
+			O.orElse(() => R.get(this.peerDependencies, name)),
+			O.orElse(() => R.get(this.optionalDependencies, name)),
+		);
 	}
 
 	/**
@@ -322,21 +312,21 @@ export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePack
 	dependencyDiff(other: WorkspacePackage): DependencyDiff {
 		const mine = this.allDependencies;
 		const theirs = other.allDependencies;
-		const added: Record<string, string> = {};
-		const removed: Record<string, string> = {};
-		const changed: Record<string, { from: string; to: string }> = {};
+		const added: Array<readonly [string, string]> = [];
+		const removed: Array<readonly [string, string]> = [];
+		const changed: Array<readonly [string, { readonly from: string; readonly to: string }]> = [];
 
 		for (const [name, version] of R.toEntries(mine)) {
-			if (!R.has(theirs, name)) added[name] = version;
+			if (!R.has(theirs, name)) added.push([name, version]);
 			else {
-				const previous = theirs[name];
-				if (previous !== undefined && previous !== version) changed[name] = { from: previous, to: version };
+				const previous = O.getOrUndefined(R.get(theirs, name));
+				if (previous !== undefined && previous !== version) changed.push([name, { from: previous, to: version }]);
 			}
 		}
 		for (const [name, version] of R.toEntries(theirs)) {
-			if (!R.has(mine, name)) removed[name] = version;
+			if (!R.has(mine, name)) removed.push([name, version]);
 		}
-		return { added, removed, changed };
+		return { added: R.fromEntries(added), removed: R.fromEntries(removed), changed: R.fromEntries(changed) };
 	}
 
 	/**

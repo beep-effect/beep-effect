@@ -9,6 +9,7 @@
 // already have their own test doubles.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as A from "effect/Array";
@@ -33,7 +34,7 @@ const $I = $ScratchpadId.create("effected/workspaces/VersioningStrategy");
  *
  * @public
  */
-export const VersioningStrategyType = S.Literals(["single", "fixed-group", "independent"]).pipe($I.annoteSchema("VersioningStrategyType", { description: "How a workspace assigns versions across its publishable packages." }));
+export const VersioningStrategyType = LiteralKit(["single", "fixed-group", "independent"]).pipe($I.annoteSchema("VersioningStrategyType", { description: "How a workspace assigns versions across its publishable packages." }));
 
 /**
  * The decoded type of {@link (VersioningStrategyType:variable)}.
@@ -45,11 +46,22 @@ export type VersioningStrategyType = typeof VersioningStrategyType.Type;
 /**
  * Arguments to {@link VersioningStrategy.classify}.
  *
+ * **Example** (Check structural classification input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { ClassifyOptions } from "./VersioningStrategy.ts";
+ *
+ * S.is(ClassifyOptions)({ packages: ["a", "b"], fixedGroups: [["a", "b"]] }); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
-export interface ClassifyOptions {
+export const ClassifyOptions = S.Struct({
 	/** Publishable package names, in any order. Duplicates are collapsed. */
-	readonly packages: ReadonlyArray<string>;
+	packages: S.Array(S.String).annotateKey({ description: "Publishable package names, in any order; duplicates are collapsed." }),
 	/**
 	 * Groups of packages that version in lockstep.
 	 *
@@ -62,8 +74,16 @@ export interface ClassifyOptions {
 	 * publishable, or do not exist; only whether some single group covers the
 	 * whole publishable set matters.
 	 */
-	readonly fixedGroups?: ReadonlyArray<ReadonlyArray<string>>;
-}
+	fixedGroups: S.String.pipe(S.Array, S.Array, S.optionalKey).annotateKey({ description: "Groups of packages that version in lockstep." }),
+}).pipe($I.annoteSchema("ClassifyOptions", { description: "Publishable package names and optional fixed groups used to classify a workspace." }));
+
+/**
+ * Structural arguments accepted by workspace versioning classification.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ClassifyOptions = typeof ClassifyOptions.Type;
 
 /**
  * Arguments to {@link VersioningStrategy.detect}.
@@ -78,19 +98,38 @@ export interface VersioningDetectOptions {
 /**
  * One entry in a release batch: which package went out, at which version.
  *
- * @remarks
+ * **Details**
  * Deliberately structural and minimal — a caller passes whatever it already
  * has (a publish result, a changeset plan row) without projecting it into a
  * package-specific type first.
  *
+ * **Example** (Check a release batch entry)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { PackageRelease } from "./VersioningStrategy.ts";
+ *
+ * S.is(PackageRelease)({ name: "@acme/cli", version: "1.2.3" }); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
-export interface PackageRelease {
+export const PackageRelease = S.Struct({
 	/** The package that was released. */
-	readonly name: string;
+	name: S.String.annotateKey({ description: "The package that was released." }),
 	/** The version it was released at. */
-	readonly version: string;
-}
+	version: S.String.annotateKey({ description: "The version it was released at." }),
+}).pipe($I.annoteSchema("PackageRelease", { description: "A structural release batch entry naming a package and its released version." }));
+
+/**
+ * A structural package name and version pair in a release batch.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PackageRelease = typeof PackageRelease.Type;
 
 /**
  * How a workspace versions, and the tagging that follows from it.

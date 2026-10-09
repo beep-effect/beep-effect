@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 // What the config-dependency ladder (`configDependencyResolution.ts`) and its
 // fetch rung (`configDependencyFetch.ts`) share: the typed `hooks` failure,
@@ -15,6 +16,8 @@ import * as O from "@beep/utils/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { HookReplayContext } from "../ConfigDependencyHooks.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/internal/configDependencyShared");
 
 // The caller's Effect FileSystem may be virtual; replay must read the real Node module store.
 const { readFile } = process.getBuiltinModule("node:fs/promises");
@@ -65,20 +68,27 @@ export const ioOrNone: {
  * manifest, there is one carrying no usable version, or it carries `version`.
  * Closed, so no caller has to know a sentinel for "no version".
  */
-export type ManifestVersion =
-	| { readonly _tag: "absent" }
-	| { readonly _tag: "unversioned" }
-	| { readonly _tag: "version"; readonly version: string };
+export const ManifestVersion = S.TaggedUnion({
+	absent: {},
+	unversioned: {},
+	version: {
+		version: S.NonEmptyString.annotateKey({ description: "The manifest's non-empty version string, read verbatim." }),
+	},
+}).annotate($I.annote("ManifestVersion", {
+	description: "Whether a package manifest is absent, lacks a usable version, or carries a non-empty version string.",
+}));
 
-const ABSENT: ManifestVersion = { _tag: "absent" };
-const UNVERSIONED: ManifestVersion = { _tag: "unversioned" };
+export type ManifestVersion = typeof ManifestVersion.Type;
+
+const ABSENT: ManifestVersion = ManifestVersion.cases.absent.make({});
+const UNVERSIONED: ManifestVersion = ManifestVersion.cases.unversioned.make({});
 
 /** Whether a manifest carries exactly `declared`. Only a `version` state can. */
 export const carries: {
 	(declared: string): (manifest: ManifestVersion) => boolean;
 	(manifest: ManifestVersion, declared: string): boolean;
 } = dual(2, (manifest: ManifestVersion, declared: string): boolean =>
-	manifest._tag === "version" && manifest.version === declared);
+	ManifestVersion.guards.version(manifest) && manifest.version === declared);
 
 /**
  * The version state of the `package.json` in `dir`: `absent` when there is
@@ -98,7 +108,7 @@ export const manifestVersion: {
 				Effect.map(
 					(parsed): ManifestVersion =>
 						P.isObject(parsed) && P.isString(parsed.version) && parsed.version !== ""
-							? { _tag: "version", version: parsed.version }
+							? ManifestVersion.cases.version.make({ version: parsed.version })
 							: UNVERSIONED,
 				),
 			);

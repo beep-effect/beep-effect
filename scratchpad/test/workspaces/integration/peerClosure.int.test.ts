@@ -169,13 +169,13 @@ describe("the closure rule, on a toy graph (positive controls)", () => {
 	});
 });
 
-describe("every published @effected package declares its full peer closure", () => {
+describe("every published @beep package declares its full peer closure", () => {
 	layer(Live)((it) => {
 		it.effect("none is missing a peer that a dependency or peer of it requires", () =>
 			Effect.gen(function* () {
 				const packages = yield* (yield* WorkspaceDiscovery).listPackages;
 				const manifests: ReadonlyArray<Manifest> = packages
-					.filter((pkg) => pkg.name.startsWith("@effected/"))
+					.filter((pkg) => pkg.name.startsWith("@beep/"))
 					.map((pkg) => {
 						const meta = pkg.manifestRecord.peerDependenciesMeta;
 						const isOptional = (name: string): boolean => {

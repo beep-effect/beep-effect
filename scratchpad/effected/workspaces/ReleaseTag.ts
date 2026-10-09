@@ -11,6 +11,7 @@
 // API, so changing a default here would not rewrite a consumer's existing tags.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/workspaces/ReleaseTag");
@@ -25,7 +26,7 @@ const $I = $ScratchpadId.create("effected/workspaces/ReleaseTag");
  *
  * @public
  */
-export const TagStyle = S.Literals(["single", "scoped"]).pipe($I.annoteSchema("TagStyle", { description: "Whether one shared tag names a whole release, or one tag names each package." }));
+export const TagStyle = LiteralKit(["single", "scoped"]).pipe($I.annoteSchema("TagStyle", { description: "Whether one shared tag names a whole release, or one tag names each package." }));
 
 /**
  * The decoded type of {@link (TagStyle:variable)}: `"single" | "scoped"`.
@@ -69,6 +70,12 @@ interface VersionCore {
 /** Digits only, and no leading zeros beyond `0` itself — SemVer's numeric identifier. */
 const NUMERIC_IDENTIFIER = /^(?:0|[1-9]\d*)$/;
 
+/** Complete SemVer grammar, including non-empty prerelease and build identifiers. */
+const VersionText = S.String.check(
+	S.isPattern(/^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$(?![\s\S])/),
+).pipe($I.annoteSchema("VersionText", { description: "A complete SemVer version with valid prerelease and build identifiers." }));
+const isVersionText = S.is(VersionText);
+
 /**
  * Read a version's numeric core, or nothing when it is not `X.Y.Z[-pre][+build]`.
  *
@@ -78,6 +85,7 @@ const NUMERIC_IDENTIFIER = /^(?:0|[1-9]\d*)$/;
  * reading.
  */
 const versionCore = (version: string): VersionCore | undefined => {
+	if (!isVersionText(version)) return undefined;
 	const withoutBuild = version.split("+", 1)[0] ?? "";
 	const dash = withoutBuild.indexOf("-");
 	const prerelease = dash !== -1;
@@ -184,6 +192,7 @@ export class TrackingTag extends S.Class<TrackingTag>($I`TrackingTag`)({
 	static forVersion(version: string, options?: TrackingTagOptions): ReadonlyArray<TrackingTag> {
 		const core = versionCore(version);
 		if (core === undefined) return [];
+		if (!S.is(TrackingTag.fields.major)(core.major) || !S.is(TrackingTag.fields.minor)(core.minor)) return [];
 		if (core.prerelease && options?.includePrerelease !== true) return [];
 
 		const packageName = options?.packageName;
@@ -213,21 +222,6 @@ const splitTag = (tag: string): { readonly packageName?: string; readonly rest: 
 	if (packageName === "" || rest === "") return undefined;
 	return { packageName, rest };
 };
-
-/**
- * What an arbitrary tag string denotes.
- *
- * @remarks
- * `unrecognized` is a real answer, not a failure: a repository's tags include
- * branches-turned-tags, `latest`, and whatever else humans wrote, and forcing
- * those into a bucket is exactly what a classifier must not do.
- *
- * @public
- */
-export type TagClassification =
-	| { readonly kind: "release"; readonly tag: ReleaseTag }
-	| { readonly kind: "tracking"; readonly tag: TrackingTag }
-	| { readonly kind: "unrecognized" };
 
 /**
  * Decide whether a tag string is a release tag, a tracking alias, or neither.
@@ -282,6 +276,9 @@ export const classifyTag = (tag: string): TagClassification => {
 
 	const major = Number(segments[0]);
 	const minor = segments.length === 2 ? Number(segments[1]) : undefined;
+	if (!S.is(TrackingTag.fields.major)(major) || (minor !== undefined && !S.is(TrackingTag.fields.minor)(minor))) {
+		return { kind: "unrecognized" };
+	}
 	return {
 		kind: "tracking",
 		tag: TrackingTag.make({
@@ -364,3 +361,50 @@ export class ReleaseTag extends S.Class<ReleaseTag>($I`ReleaseTag`)({
 		});
 	}
 }
+
+/**
+ * What an arbitrary tag string denotes.
+ *
+ * **Details**
+ *
+ * `unrecognized` is a real answer, not a failure: a repository's tags include
+ * branches-turned-tags, `latest`, and whatever else humans wrote, and forcing
+ * those into a bucket is exactly what a classifier must not do.
+ *
+ * **Example** (Recognize a classification)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { TagClassification, classifyTag } from "./ReleaseTag.ts";
+ *
+ * S.is(TagClassification)(classifyTag("v1")); // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TagClassification = S.Union([
+	S.Struct({
+		kind: S.Literal("release").annotateKey({ description: "An immutable release tag." }),
+		tag: ReleaseTag.annotateKey({ description: "The recognized release tag." }),
+	}),
+	S.Struct({
+		kind: S.Literal("tracking").annotateKey({ description: "A floating tracking alias." }),
+		tag: TrackingTag.annotateKey({ description: "The recognized tracking tag." }),
+	}),
+	S.Struct({
+		kind: S.Literal("unrecognized").annotateKey({ description: "A tag outside both supported grammars." }),
+	}),
+]).pipe(
+	S.toTaggedUnion("kind"),
+	$I.annoteSchema("TagClassification", { description: "Whether an arbitrary tag denotes a release, a tracking alias, or neither." }),
+);
+
+/**
+ * The structural result of classifying a tag string.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TagClassification = typeof TagClassification.Type;

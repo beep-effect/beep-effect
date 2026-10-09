@@ -32,11 +32,12 @@ import { PnpmEnvLockfile } from "../../lockfiles/index.ts";
 import type { CatalogAssemblyError } from "../../npm/index.ts";
 import { PackageManagerCache } from "../../npm/index.ts";
 import { Yaml } from "../../yaml/index.ts";
-import * as Arr from "effect/Array";
+import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "@beep/utils/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import type { HookReplayContext, HookReplaySource } from "../ConfigDependencyHooks.ts";
@@ -225,9 +226,10 @@ const storesFromEnvironment = Effect.fn("storesFromEnvironment")(function* (root
 			// `.sort()` orders `v10 < v11 < v9`, and since the first store holding
 			// a version now answers, a pnpm upgrade that left `v10` beside `v11`
 			// would otherwise replay the stale copy without a word.
-			const versions = (yield* entriesOf(root, storeRoot))
-				.filter((entry) => /^v\d+$/.test(entry))
-				.sort((a, b) => Number(b.slice(1)) - Number(a.slice(1)));
+			const versions = A.sort(
+				(yield* entriesOf(root, storeRoot)).filter((entry) => /^v\d+$/.test(entry)),
+				Order.mapInput(Order.flip(Order.Number), (version: string) => Number(version.slice(1))),
+			);
 			for (const version of versions) stores.push(join(storeRoot, version));
 		}
 		return stores;
@@ -368,7 +370,7 @@ const pnpmfileIn = (name: string, dir: string): Effect.Effect<O.Option<string>, 
 	entriesOf(name, dir).pipe(
 		Effect.map((entries) =>
 			O.map(
-				Arr.findFirst(PNPMFILE_CANDIDATES, (candidate) => entries.includes(candidate)),
+				A.findFirst(PNPMFILE_CANDIDATES, (candidate) => entries.includes(candidate)),
 				(filename) => join(dir, filename),
 			),
 		),

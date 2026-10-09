@@ -1,4 +1,9 @@
 // biome-ignore-all lint/suspicious/noTemplateCurlyInString: the shipped fixtures are source text, and a template substitution inside one is the point
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
+import * as Num from "effect/Number";
+import * as Order from "effect/Order";
+import * as Str from "effect/String";
 import { $ScratchpadId } from "@beep/identity/packages";
 import { GlobSet } from "../glob/index.ts";
 import * as Effect from "effect/Effect";
@@ -9,7 +14,7 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import * as R from "effect/Record";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { isIdentifierChar, lex, locate, references, specifierLiterals } from "./internal/sourceText.ts";
+import { codePointAt, codePointBefore, isIdentifierChar, lex, locate, references, specifierLiterals } from "./internal/sourceText.ts";
 
 const $I = $ScratchpadId.create("effected/workspaces/SourceBoundary");
 
@@ -53,14 +58,12 @@ const $I = $ScratchpadId.create("effected/workspaces/SourceBoundary");
  *
  * @public
  */
-export type BoundaryRule =
-	| "process"
-	| "node:process"
-	| "stdout-write"
-	| "console"
-	| "console-stdout"
-	| { readonly forbidImports: ReadonlyArray<string> }
-	| { readonly forbidTokens: ReadonlyArray<string> };
+export const BoundaryRule = S.Union([
+	S.Literals(["process", "node:process", "stdout-write", "console", "console-stdout"]),
+	S.Struct({ forbidImports: S.Array(S.String).annotateKey({ description: "Forbidden module names or prefixes." }) }),
+	S.Struct({ forbidTokens: S.Array(S.String).annotateKey({ description: "Exact forbidden code tokens." }) }),
+]).pipe($I.annoteSchema("BoundaryRule", { description: "One rule a source file must keep." }));
+export type BoundaryRule = typeof BoundaryRule.Type;
 
 /**
  * Options for the `process` rule.
@@ -83,16 +86,26 @@ export interface ReferenceOptions {
  *
  * @public
  */
-export interface BoundaryFixture {
-	/** What the snippet exercises. */
-	readonly name: string;
-	/** The source text. */
-	readonly source: string;
-	/** The rule it is checked against. */
-	readonly rule: BoundaryRule;
-	/** Whether that rule must flag it. */
-	readonly flagged: boolean;
-}
+export const BoundaryFixture = S.Struct({
+	name: S.String.annotateKey({ description: "What the snippet exercises." }),
+	source: S.String.annotateKey({ description: "The source text." }),
+	rule: BoundaryRule.annotateKey({ description: "The rule it is checked against." }),
+	flagged: S.Boolean.annotateKey({ description: "Whether that rule must flag it." }),
+}).pipe($I.annoteSchema("BoundaryFixture", { description: "A snippet with the verdict one rule must reach on it." }));
+export type BoundaryFixture = typeof BoundaryFixture.Type;
+
+/**
+ * The rule an {@link Offence} names: every string {@link BoundaryRule}, plus
+ * `"forbidImports"` for any `{ forbidImports }` rule and `"forbidTokens"` for
+ * any `{ forbidTokens }` rule. These are the keys of
+ * {@link ScanOptions.allowRules}.
+ *
+ * @public
+ */
+export const OffenceRule = LiteralKit([
+	"process", "node:process", "stdout-write", "console", "console-stdout", "forbidImports", "forbidTokens",
+]).pipe($I.annoteSchema("OffenceRule", { description: "The rule an offence names, including import and token rules." }));
+export type OffenceRule = typeof OffenceRule.Type;
 
 /**
  * One place a source file breaks a {@link BoundaryRule}.
@@ -107,15 +120,7 @@ export class Offence extends S.Class<Offence>($I`Offence`)({
 	/** The 1-based column, in UTF-16 code units. */
 	column: S.Finite.annotateKey({ description: "The 1-based column, in UTF-16 code units." }),
 	/** The rule broken. */
-	rule: S.Literals([
-		"process",
-		"node:process",
-		"stdout-write",
-		"console",
-		"console-stdout",
-		"forbidImports",
-		"forbidTokens",
-	]).annotateKey({ description: "The rule broken." }),
+	rule: OffenceRule.annotateKey({ description: "The rule broken." }),
 	/** What matched: the identifier, the call, the import specifier, or the token. */
 	detail: S.String.annotateKey({ description: "What matched: the identifier, the call, the import specifier, or the token." }),
 }, $I.annote("Offence", { description: "One place a source file breaks a BoundaryRule." })) {
@@ -124,16 +129,6 @@ export class Offence extends S.Class<Offence>($I`Offence`)({
 		return `${this.file}:${this.line}:${this.column} ${this.rule} ${this.detail}`;
 	}
 }
-
-/**
- * The rule an {@link Offence} names: every string {@link BoundaryRule}, plus
- * `"forbidImports"` for any `{ forbidImports }` rule and `"forbidTokens"` for
- * any `{ forbidTokens }` rule. These are the keys of
- * {@link ScanOptions.allowRules}.
- *
- * @public
- */
-export type OffenceRule = Offence["rule"];
 
 /**
  * What a scan read and found.
@@ -192,9 +187,11 @@ export interface ScanOptions extends ReferenceOptions {
 
 const DEFAULT_EXTENSIONS: ReadonlyArray<string> = [".ts", ".mts", ".cts", ".js", ".mjs", ".cjs"];
 const DECLARATION = /\.d\.[cm]?ts$/;
-const byCodeUnit = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
-const byPosition = (a: Offence, b: Offence): number =>
-	byCodeUnit(a.file, b.file) || a.line - b.line || a.column - b.column;
+const byCodeUnit = Str.Order;
+const byPosition = Order.combine(
+	Order.mapInput(Str.Order, (o: Offence) => o.file),
+	Order.combine(Order.mapInput(Num.Order, (o: Offence) => o.line), Order.mapInput(Num.Order, (o: Offence) => o.column)),
+);
 
 const EXEMPT: ReadonlyArray<string> = ["process.env.__PACKAGE_VERSION__"];
 /**
@@ -222,7 +219,7 @@ const processReads = (code: string, ignoreTokens: ReadonlyArray<string>): Readon
 	references(code, "process").filter(
 		(at) =>
 			isMemberAccess(code, at) ||
-			!ignoreTokens.some((token) => code.startsWith(token, at) && !isIdentifierChar(code[at + token.length])),
+			!ignoreTokens.some((token) => code.startsWith(token, at) && !isIdentifierChar(codePointAt(code, at + token.length))),
 	);
 
 const stdoutWrites = (code: string): ReadonlyArray<{ readonly at: number; readonly method: string }> =>
@@ -232,7 +229,7 @@ const stdoutWrites = (code: string): ReadonlyArray<{ readonly at: number; readon
 			end: (match.index ?? 0) + match[0].length,
 			method: match[1] ?? "write",
 		}))
-		.filter(({ at, end }) => !isIdentifierChar(code[at - 1]) && code[at - 1] !== "#" && !isIdentifierChar(code[end]))
+		.filter(({ at, end }) => !isIdentifierChar(codePointBefore(code, at)) && code[at - 1] !== "#" && !isIdentifierChar(codePointAt(code, end)))
 		.filter(({ end, method }) => method === "write" || END_WITH_CHUNK.test(code.slice(end)))
 		.map(({ at, method }) => ({ at, method }));
 
@@ -245,7 +242,7 @@ const memberAfter = (code: string, at: number, name: string): string | undefined
 	j++;
 	while (j < code.length && /\s/.test(code[j] ?? "")) j++;
 	let end = j;
-	while (isIdentifierChar(code[end])) end++;
+	while (isIdentifierChar(codePointAt(code, end))) end += codePointAt(code, end)?.length ?? 1;
 	return end > j ? code.slice(j, end) : undefined;
 };
 
@@ -256,12 +253,12 @@ const memberAfter = (code: string, at: number, name: string): string | undefined
  */
 const tokenOccurrences = (code: string, token: string): ReadonlyArray<number> => {
 	if (token.length === 0) return [];
-	const guardStart = isIdentifierChar(token[0]);
-	const guardEnd = isIdentifierChar(token[token.length - 1]);
+	const guardStart = isIdentifierChar(codePointAt(token, 0));
+	const guardEnd = isIdentifierChar(codePointBefore(token, token.length));
 	const found: Array<number> = [];
 	for (let at = code.indexOf(token); at !== -1; at = code.indexOf(token, at + 1)) {
-		if (guardStart && (isIdentifierChar(code[at - 1]) || code[at - 1] === "#")) continue;
-		if (guardEnd && isIdentifierChar(code[at + token.length])) continue;
+		if (guardStart && (isIdentifierChar(codePointBefore(code, at)) || code[at - 1] === "#")) continue;
+		if (guardEnd && isIdentifierChar(codePointAt(code, at + token.length))) continue;
 		found.push(at);
 	}
 	return found;
@@ -276,6 +273,13 @@ const isNodeModule = (specifier: string, module: string): boolean =>
 	[module, `node:${module}`].some((name) => specifier === name || specifier.startsWith(`${name}/`));
 
 const FIXTURES: ReadonlyArray<BoundaryFixture> = [
+	{ name: "node:process: an escaped import", source: 'import p from "\\u006eode:process";', rule: "node:process", flagged: true },
+	{ name: "process: astral identifier prefix", source: "const 𝒙process = 1; 𝒙process;", rule: "process", flagged: false },
+	{ name: "process: astral identifier suffix", source: "const process𝒙 = 1; process𝒙;", rule: "process", flagged: false },
+	{ name: "process: after a CR line comment", source: "// harmless\rprocess.touch();", rule: "process", flagged: true },
+	{ name: "process: after a line-separator comment", source: "// harmless\u2028process.touch();", rule: "process", flagged: true },
+	{ name: "process: after a paragraph-separator comment", source: "// harmless\u2029process.touch();", rule: "process", flagged: true },
+
 	{ name: "process: destructuring", source: "const { env } = process;", rule: "process", flagged: true },
 	{ name: "process: bracket access", source: 'const env = process["env"];', rule: "process", flagged: true },
 	{
@@ -614,8 +618,7 @@ export class SourceBoundary {
 				}
 			}
 		}
-		return found
-			.sort((a, b) => a.offset - b.offset)
+		return A.sort(found, Order.mapInput(Num.Order, (f: (typeof found)[number]) => f.offset))
 			.map(({ offset, rule, detail }) => Offence.make({ file, ...at(offset), rule, detail }));
 	};
 
@@ -623,9 +626,9 @@ export class SourceBoundary {
 	 * Check every source file under `root` against `rules`.
 	 *
 	 * @remarks
-	 * Walks with an explicit stack, visiting each real directory once (via
-	 * `realPath`), so a symlink loop terminates and a linked directory is not
-	 * scanned twice. `node_modules` is never entered. Paths come back relative
+	 * Walks with an explicit stack and real-directory ancestry (via
+	 * `realPath`), so ancestor symlink cycles terminate while distinct logical
+	 * paths are each scanned with their own waiver policy. `node_modules` is never entered. Paths come back relative
 	 * and `/`-separated whatever the platform's separator, and that is also
 	 * what `allow` globs match against. A missing root fails; it never scans
 	 * nothing. A dangling symlink under the root is skipped, having nothing to
@@ -657,14 +660,16 @@ export class SourceBoundary {
 		const allowed: Array<string> = [];
 		const offences: Array<Offence> = [];
 		const waived: Array<Offence> = [];
-		const visited = MutableHashSet.empty<string>();
-		const pending: Array<string> = [options.root];
+		const pending: Array<{ readonly directory: string; readonly ancestors: ReadonlyArray<string> }> = [
+			{ directory: options.root, ancestors: [] },
+		];
 		while (pending.length > 0) {
-			const directory = pending.pop();
-			if (directory === undefined) break;
+			const next = pending.pop();
+			if (next === undefined) break;
+			const { directory, ancestors } = next;
 			const real = yield* fs.realPath(directory);
-			if (MutableHashSet.has(visited, real)) continue;
-			MutableHashSet.add(visited, real);
+			if (A.some(ancestors, (ancestor) => ancestor === real)) continue;
+			const ancestry = A.append(ancestors, real);
 			for (const name of yield* fs.readDirectory(directory)) {
 				const full = path.join(directory, name);
 				// stat follows links, so a dangling one fails NotFound; it has nothing to scan, so skip it.
@@ -681,7 +686,7 @@ export class SourceBoundary {
 				if (O.isNone(found)) continue;
 				const info = found.value;
 				if (info.type === "Directory") {
-					if (name !== "node_modules") pending.push(full);
+					if (name !== "node_modules") pending.push({ directory: full, ancestors: ancestry });
 					continue;
 				}
 				if (
@@ -703,10 +708,10 @@ export class SourceBoundary {
 			}
 		}
 		return SourceScan.make({
-			files: files.sort(byCodeUnit),
-			allowed: allowed.sort(byCodeUnit),
-			offences: offences.sort(byPosition),
-			waived: waived.sort(byPosition),
+			files: A.sort(files, byCodeUnit),
+			allowed: A.sort(allowed, byCodeUnit),
+			offences: A.sort(offences, byPosition),
+			waived: A.sort(waived, byPosition),
 		});
 	});
 

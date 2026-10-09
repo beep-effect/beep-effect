@@ -68,6 +68,11 @@ const specVersion = SemVer.pipe(
 	S.check(
 		S.makeFilter((version: SemVer) =>
 			version.build.length === 0 ? undefined : "Expected a version without build metadata",
+			{
+				identifier: $I`VersionWithoutBuildMetadata`,
+				title: "Version without build metadata",
+				description: "Config dependency versions cannot carry build metadata because the first plus sign begins integrity.",
+			},
 		),
 	),
 );
@@ -141,6 +146,7 @@ export class ConfigDependencySpec extends S.Class<ConfigDependencySpec>($I`Confi
 				encode: (spec: ConfigDependencySpec) => Effect.succeed(spec.toString()),
 			}),
 		),
+		$I.annoteSchema("ConfigDependencySpecFromString", { description: "A bidirectional codec for exact config dependency versions with optional inline SRI integrity, preserving their parsed spelling." }),
 	);
 
 	/**

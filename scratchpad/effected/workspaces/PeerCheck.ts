@@ -1,3 +1,4 @@
+import { LiteralKit } from "@beep/schema/LiteralKit";
 // Unsatisfied peer-dependency detection over a parsed lockfile — a pure
 // VALUE, not a service. No IO, nothing in `R`, no error channel.
 //
@@ -90,11 +91,13 @@ const $I = $ScratchpadId.create("effected/workspaces/PeerCheck");
  *
  * @public
  */
-export type UnverifiedReason =
-	| "peerRulesNotApplied"
-	| "unresolvedEdge"
-	| "peerRangeUnresolved"
-	| "peerVersionUnresolved";
+export const UnverifiedReason = LiteralKit([
+	"peerRulesNotApplied",
+	"unresolvedEdge",
+	"peerRangeUnresolved",
+	"peerVersionUnresolved",
+]).pipe($I.annoteSchema("UnverifiedReason", { description: "Why a peer report is not a complete answer." }));
+export type UnverifiedReason = typeof UnverifiedReason.Type;
 
 /**
  * Options for {@link PeerCheck.run}.
@@ -273,7 +276,9 @@ const linkTargetPath = (importerPath: string, target: string): string => {
 	for (const segment of [...segments, ...target.split("/")]) {
 		if (segment === "" || segment === ".") continue;
 		if (segment === "..") {
-			resolved.pop();
+			const last = resolved[resolved.length - 1];
+			if (last === undefined || last === "..") resolved.push(segment);
+			else resolved.pop();
 			continue;
 		}
 		resolved.push(segment);
@@ -397,7 +402,7 @@ interface Join {
  */
 const providerContext = (
 	roots: ImporterRoots,
-	byId: ReadonlyMap<string, ResolvedPackage>,
+	byId: MutableHashMap.MutableHashMap<string, ResolvedPackage>,
 	links: ReadonlyArray<LinkEdge>,
 ): MutableHashMap.MutableHashMap<string, ResolvedPackage> => {
 	const context = MutableHashMap.empty<string, ResolvedPackage>();
@@ -410,7 +415,7 @@ const providerContext = (
 		return context;
 	}
 	for (const [name, instanceId] of R.toEntries(roots.instance.resolved)) {
-		const provider = byId.get(instanceId);
+		const provider = O.getOrUndefined(MutableHashMap.get(byId, instanceId));
 		if (provider !== undefined) MutableHashMap.set(context, name, provider);
 	}
 	return context;
@@ -706,7 +711,7 @@ export class PeerCheck extends S.Class<PeerCheck>($I`PeerCheck`)({
 	 * finding may be missing or spurious, and failing closed is the requirement.
 	 */
 	unverified: S.Array(
-		S.Literals(["peerRulesNotApplied", "unresolvedEdge", "peerRangeUnresolved", "peerVersionUnresolved"]),
+		UnverifiedReason,
 	).annotateKey({ description: "Why this report is not a complete answer, or empty when it is." }),
 }, $I.annote("PeerCheck", { description: "The result of checking a lockfile for unsatisfied peer dependencies." })) {
 	/** The unsatisfied peers a gate should act on — the non-optional ones. */
@@ -862,7 +867,7 @@ export class PeerCheck extends S.Class<PeerCheck>($I`PeerCheck`)({
 				// package directory's row, which is what the lockfile model
 				// resolves the same edge to.
 				const pkg = O.getOrUndefined(MutableHashMap.get(byLinkTarget, target));
-				const row = index.workspaceByPath.get(pkg === undefined ? target : linkTargetPath(".", pkg.relativePath));
+				const row = O.getOrUndefined(MutableHashMap.get(index.workspaceByPath, pkg === undefined ? target : linkTargetPath(".", pkg.relativePath)));
 				const covered = pkg !== undefined;
 				if (!covered) unjoinedLink = true;
 				if (covered && row !== undefined) MutableHashSet.add(joinable, row.instanceId);
@@ -969,7 +974,7 @@ const walksFrom = (roots: ImporterRoots, join: Join): ReadonlyArray<Walk> =>
 const collect = (
 	importerPath: string,
 	roots: ReadonlyArray<Walk>,
-	byId: ReadonlyMap<string, ResolvedPackage>,
+	byId: MutableHashMap.MutableHashMap<string, ResolvedPackage>,
 	rows: Array<UnsatisfiedPeer>,
 	seen: MutableHashSet.MutableHashSet<string>,
 	policy: Policy,
@@ -1055,7 +1060,7 @@ const collect = (
 		// deeper package's peers against the wrong importer's dependencies.
 		if (current.path.length > 0 && current.instance.isWorkspace) continue;
 		for (const targetId of R.values(current.instance.resolved)) {
-			const next = byId.get(targetId);
+			const next = O.getOrUndefined(MutableHashMap.get(byId, targetId));
 			if (next === undefined || MutableHashSet.has(visited, targetId)) continue;
 			queue.push({
 				instance: next,
@@ -1166,10 +1171,10 @@ const judge = (
 	peer: string,
 	wanted: string,
 	optional: boolean,
-	byId: ReadonlyMap<string, ResolvedPackage>,
+	byId: MutableHashMap.MutableHashMap<string, ResolvedPackage>,
 ): Verdict => {
 	const providerId = instance.resolved[peer];
-	const provider = providerId === undefined ? undefined : byId.get(providerId);
+	const provider = providerId === undefined ? undefined : O.getOrUndefined(MutableHashMap.get(byId, providerId));
 	if (provider === undefined) {
 		// An ABSENT optional peer is satisfied by definition — that is what
 		// "optional" means, and reporting it would be a false positive. An

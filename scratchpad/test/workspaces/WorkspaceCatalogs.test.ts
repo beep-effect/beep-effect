@@ -5,6 +5,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import {
 	CatalogSet,
 	LockfileReadError,
@@ -584,5 +585,41 @@ describe("WorkspaceCatalogs.refresh — the explicit memoization boundary", () =
 				assert.deepStrictEqual(rules.allowedVersions, { "@x/before>effect": "^4.0.0" });
 			}),
 		);
+	});
+});
+
+
+describe("CatalogSet — own-key resolution", () => {
+	for (const name of ["constructor", "toString", "__proto__"]) {
+		it(`does not resolve inherited dependency ${name}`, () => {
+			const set = CatalogSet.fromCatalogs({ default: { effect: "^4.0.0" } });
+			assert.deepStrictEqual(set.rangeOf(name, O.none()), O.none());
+			assert.deepStrictEqual(set.resolveSpecifier(name, "catalog:"), O.none());
+		});
+		it(`does not resolve inherited catalog ${name}`, () => {
+			const set = CatalogSet.empty();
+			assert.deepStrictEqual(set.rangeOf("name", O.some(name)), O.none());
+			assert.deepStrictEqual(set.resolveSpecifier("name", `catalog:${name}`), O.none());
+		});
+	}
+
+	it("resolves an explicitly declared constructor dependency", () => {
+		const set = CatalogSet.fromCatalogs({ default: { constructor: "^1.2.3" } });
+		assert.deepStrictEqual(set.rangeOf("constructor", O.none()), O.some("^1.2.3"));
+		assert.deepStrictEqual(set.resolveSpecifier("constructor", "catalog:"), O.some("^1.2.3"));
+	});
+
+	it("normalizes sparse arrays and their extra enumerable catalog entries", () => {
+		const dependencies: Array<string> & { extra?: string } = [];
+		dependencies[2] = "^2.0.0";
+		dependencies.extra = "^3.0.0";
+		const catalogs: Array<unknown> & { extra?: unknown } = [];
+		catalogs[1] = dependencies;
+		catalogs.extra = { effect: "^4.0.0" };
+		const set = CatalogSet.fromCatalogs(catalogs);
+		assert.deepStrictEqual(R.keys(set.entries), ["1", "extra"]);
+		assert.deepStrictEqual(set.rangeOf("2", O.some("1")), O.some("^2.0.0"));
+		assert.deepStrictEqual(set.rangeOf("extra", O.some("1")), O.some("^3.0.0"));
+		assert.deepStrictEqual(set.rangeOf("effect", O.some("extra")), O.some("^4.0.0"));
 	});
 });

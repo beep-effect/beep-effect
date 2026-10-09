@@ -1,0 +1,55 @@
+{
+  "layers": [
+    [
+      "@lab/github-actions"
+    ],
+    [
+      "@lab/cli",
+      "@lab/sbom",
+      "@lab/workspaces",
+      "@lab/xdg"
+    ],
+    [
+      "@lab/config-file",
+      "@lab/lockfiles",
+      "@lab/package-json",
+      "@lab/tsconfig-json"
+    ],
+    [
+      "@lab/github",
+      "@lab/markdown",
+      "@lab/npm",
+      "@lab/walker"
+    ],
+    [
+      "@lab/commands",
+      "@lab/engine",
+      "@lab/env",
+      "@lab/git",
+      "@lab/github-commands",
+      "@lab/github-references",
+      "@lab/glob",
+      "@lab/jsonc",
+      "@lab/jsonl",
+      "@lab/memfs",
+      "@lab/schema-org",
+      "@lab/semver",
+      "@lab/spdx",
+      "@lab/templates",
+      "@lab/toml",
+      "@lab/yaml"
+    ]
+  ],
+  "tooling": [],
+  "unconstrained": [
+    "lab-module-graph"
+  ],
+  "fields": [
+    "dependencies",
+    "peerDependencies",
+    "optionalDependencies"
+  ],
+  "requiredEdges": [
+    "@lab/workspaces -> @lab/npm"
+  ]
+}

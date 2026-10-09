@@ -18,6 +18,28 @@ const workspacesOver = (tree: Tree) => Workspaces.layer({ cwd: "/repo" }).pipe(L
 // ── CatalogSet.fromManifestWorkspaces: the hard-fail package.json reader ─────
 
 describe("CatalogSet.fromManifestWorkspaces", () => {
+	it.effect("reads Bun top-level default and named catalogs with array workspaces", () =>
+		Effect.gen(function* () {
+			const text = yield* S.encodeEffect(JsonValue)({
+				workspaces: ["packages/*"],
+				catalog: { effect: "^4.0.0" },
+				catalogs: { build: { typescript: "^6.0.0" } },
+			});
+			const set = yield* CatalogSet.fromManifestWorkspaces(text);
+			assert.deepStrictEqual(set.rangeOf("effect", O.none()), O.some("^4.0.0"));
+			assert.deepStrictEqual(set.rangeOf("typescript", O.some("build")), O.some("^6.0.0"));
+		}),
+	);
+
+	it.effect("rejects malformed top-level catalogs rather than silently dropping them", () =>
+		Effect.gen(function* () {
+			const text = yield* S.encodeEffect(JsonValue)({ workspaces: ["packages/*"], catalog: { effect: 42 } });
+			const error = yield* Effect.flip(CatalogSet.fromManifestWorkspaces(text));
+			assert.strictEqual(error.source, "catalog");
+			assert.strictEqual(error.path, "catalog");
+		}),
+	);
+
 	it.effect("an absent workspaces field yields the empty set", () =>
 		Effect.gen(function* () {
 			const set = yield* CatalogSet.fromManifestWorkspaces(Result.getOrThrow(S.encodeResult(JsonValue)({ name: "root" })));
@@ -225,4 +247,17 @@ describe("WorkspaceCatalogs.set — a bun workspace with no pnpm-workspace.yaml"
 			}),
 		);
 	});
+});
+
+
+describe("CatalogSet — validated hostile catalog names", () => {
+	it.effect("retains own __proto__ catalog and dependency keys through manifest validation", () =>
+		Effect.gen(function* () {
+			const set = yield* CatalogSet.fromManifestWorkspaces(
+				'{"workspaces":{"catalogs":{"__proto__":{"__proto__":"^1.0.0","constructor":"^2.0.0"}}}}',
+			);
+			assert.deepStrictEqual(set.rangeOf("__proto__", O.some("__proto__")), O.some("^1.0.0"));
+			assert.deepStrictEqual(set.rangeOf("constructor", O.some("__proto__")), O.some("^2.0.0"));
+		}),
+	);
 });

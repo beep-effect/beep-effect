@@ -46,6 +46,8 @@ import { IntegrityHash } from "../../npm/index.ts";
 import { Yaml } from "../../yaml/index.ts";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import type { HookReplayContext } from "../ConfigDependencyHooks.ts";
@@ -63,7 +65,7 @@ const { basename, dirname, join } = process.getBuiltinModule("node:path");
  * `undefined` when that side has no lockfile.
  */
 export type RecordedLocks = Effect.Effect<
-	ReadonlyMap<string, ConfigDependencyLock> | undefined,
+	HashMap.HashMap<string, ConfigDependencyLock> | undefined,
 	LockfileParseError | LockfileFramingError
 >;
 
@@ -158,7 +160,7 @@ export const expectedIntegrity = Effect.fn("expectedIntegrity")(function* (
 			),
 		),
 	);
-	const lock = locks?.get(name);
+	const lock = O.getOrUndefined(O.flatMap(O.fromUndefinedOr(locks), HashMap.get(name)));
 	const locked = lock !== undefined && lock.version === version ? lock.integrity : undefined;
 	if (inline !== undefined && locked !== undefined && inline !== locked) {
 		return yield* Effect.fail(

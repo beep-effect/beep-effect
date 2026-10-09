@@ -58,6 +58,13 @@ class WorkspaceCatalogsDefect extends S.TaggedError<WorkspaceCatalogsDefect>($I`
 ) {}
 
 const JsonValue = S.fromJsonString(S.Unknown);
+const CatalogRecord = S.Record(S.String, S.String).annotate(
+	$I.annote("CatalogRecord", { description: "Own dependency names mapped to catalog ranges." }),
+);
+const CatalogRecords = S.Record(S.String, CatalogRecord).annotate(
+	$I.annote("CatalogRecords", { description: "Own catalog names mapped to dependency records." }),
+);
+const isCatalogRecords = S.is(CatalogRecords);
 
 /**
  * Each importer's dependency-name → resolved-version map, keyed by importer path
@@ -95,7 +102,7 @@ export type ImporterVersions = Readonly<Record<string, Readonly<Record<string, s
  */
 export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 	/** Catalog name → dependency name → version range. */
-	entries: S.Record(S.String, S.Record(S.String, S.String)).annotateKey({ description: "Catalog name → dependency name → version range." }),
+	entries: CatalogRecords.annotateKey({ description: "Catalog name → dependency name → version range." }),
 }, $I.annote("CatalogSet", { description: "An immutable, fully-normalized catalog collection — the one catalog resolution semantic in the package." })) {
 	/** The empty set — a workspace with no catalogs. */
 	static empty(): CatalogSet {
@@ -165,21 +172,32 @@ export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 	}
 
 	/**
-	 * The `catalog` / `catalogs` blocks of a root `package.json` `workspaces` field
-	 * — bun's package.json analogue of pnpm's `pnpm-workspace.yaml` blocks.
+	 * The `catalog` / `catalogs` blocks of a root `package.json`, at top level or
+	 * in its `workspaces` object — bun's analogue of pnpm's workspace blocks.
 	 *
-	 * @remarks
+	 * **Details**
 	 * **Hard-fail by design**, preserving the semantics catalog output is
 	 * load-bearing for: a present-but-malformed `workspaces` shape (a number, a
 	 * string, an object with a malformed `packages` / `catalog` / `catalogs`), or
 	 * the default catalog declared twice — once as `workspaces.catalog` and again
 	 * as `workspaces.catalogs.default` — fails with `CatalogAssemblyError`
 	 * naming what was wrong. An absent `workspaces` field, one explicitly `null`,
-	 * or the plain array form (npm/yarn patterns, which carry no catalogs) yields
-	 * the empty set. Presence is checked structurally, so an explicitly-declared
+	 * or the plain array form contributes no nested catalogs; top-level catalogs
+	 * still contribute. Presence is checked structurally, so an explicitly-declared
 	 * empty `catalog: {}` still counts as a declaration.
 	 *
+	 * **Example** (Read a top-level Bun catalog)
+	 *
+	 * ```ts
+	 * import { CatalogSet } from "./WorkspaceCatalogs.ts";
+	 *
+	 * CatalogSet.fromManifestWorkspaces('{"workspaces":["packages/*"],"catalog":{"effect":"^4.0.0"}}');
+	 * // Effect yielding a CatalogSet with effect in the default catalog.
+	 * ```
+	 *
 	 * @param text - The raw root `package.json` text.
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static readonly fromManifestWorkspaces = Effect.fn("CatalogSet.fromManifestWorkspaces")(function* (text: string) {
 		const manifest = yield* S.decodeEffect(JsonValue)(text).pipe(Effect.mapError((cause) => CatalogAssemblyError.make({ source: "manifest", path: "package.json", cause })));
@@ -191,7 +209,11 @@ export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 				});
 		}
 		const blocks = yield* manifestCatalogBlocks(manifest.workspaces);
-		return CatalogSet.fromBunBlocks(blocks);
+		const topLevel = yield* validatedCatalogBlocks(manifest.catalog, manifest.catalogs, {
+			catalog: "catalog",
+			catalogs: "catalogs",
+		});
+		return CatalogSet.merge(CatalogSet.fromBunBlocks(topLevel), CatalogSet.fromBunBlocks(blocks));
 	});
 
 	/** Merge sets. Later sets win per dependency within a catalog. */
@@ -230,7 +252,7 @@ export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 	 */
 	rangeOf(dependency: string, catalog: O.Option<string>): O.Option<string> {
 		const name = O.getOrElse(catalog, () => "default");
-		return O.fromUndefinedOr(this.entries[name]?.[dependency]);
+		return O.flatMap(R.get(this.entries, name), R.get(dependency));
 	}
 }
 
@@ -239,8 +261,7 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
 
 /** Whether every value in an object is a string — a usable `dependency → range` catalog. */
-const isStringRecord = (value: unknown): value is Record<string, string> =>
-	isObject(value) && R.values(value).every((entry) => P.isString(entry));
+const isStringRecord = S.is(CatalogRecord);
 
 /** The `catalog` / `catalogs` blocks of a parsed pnpm-workspace document. */
 const catalogBlocksOf = (
@@ -342,7 +363,6 @@ const validatedCatalogBlocks = (
 				malformed("catalog", labels.catalogs, `"${labels.catalogs}" must map catalog names to catalogs`),
 			);
 		}
-		const checked: Record<string, Record<string, string>> = {};
 		for (const [name, entries] of R.toEntries(catalogs)) {
 			if (!isStringRecord(entries)) {
 				return Effect.fail(
@@ -353,9 +373,8 @@ const validatedCatalogBlocks = (
 					),
 				);
 			}
-			Object.defineProperty(checked, name, { value: entries, enumerable: true, writable: true, configurable: true });
 		}
-		validCatalogs = checked;
+		if (isCatalogRecords(catalogs)) validCatalogs = catalogs;
 	}
 
 	// The default catalog declared twice — pnpm rejects the equivalent

@@ -3,10 +3,10 @@
   "effectedCommit": "af7566a9da2eff169cb74955efcc5ede1e5de9f8",
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
-    "module": "sbom",
+    "module": "workspaces",
     "stage": 1,
     "commit": null,
-    "at": "2026-10-09T15:21:09.482Z"
+    "at": "2026-10-09T15:21:24.529Z"
   },
   "rows": [
     {
@@ -10143,7 +10143,7 @@
       "module": "workspaces",
       "wave": 4,
       "position": 3,
-      "stage": 0,
+      "stage": 1,
       "status": "in-progress",
       "provisionalHome": "tooling/library",
       "upstreamPaths": {
@@ -10948,10 +10948,16 @@
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],
-      "commits": [],
+      "commits": [
+        {
+          "stage": 0,
+          "sha": null
+        }
+      ],
       "blocked": null,
       "notes": [
-        "2026-10-09T11:34:09.401Z beep laws done (four laws clean, allowlisted sites listed); S1 held by the environment-bound tests in TESTS_NOT_PASSING.md"
+        "2026-10-09T11:34:09.401Z beep laws done (four laws clean, allowlisted sites listed); S1 held by the environment-bound tests in TESTS_NOT_PASSING.md",
+        "2026-10-09T15:21:24.529Z S1: green: env-bound tests resolved per the 2026-10-09 rulings; tsgo, oxlint and the four laws clean; audit green (parity strict)"
       ],
       "closedAt": null
     },

@@ -10,13 +10,14 @@ import { dual } from "effect/Function";
 import type { Lockfile, ResolvedPackage } from "../../lockfiles/index.ts";
 import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
 
 /** The two lookups every walk needs, built once per lockfile. */
 export interface InstanceIndex {
 	/** Every instance by its `instanceId`. */
-	readonly byId: ReadonlyMap<string, ResolvedPackage>;
+	readonly byId: MutableHashMap.MutableHashMap<string, ResolvedPackage>;
 	/** Workspace rows by the importer path they stand for. */
-	readonly workspaceByPath: ReadonlyMap<string, ResolvedPackage>;
+	readonly workspaceByPath: MutableHashMap.MutableHashMap<string, ResolvedPackage>;
 }
 
 export const indexInstances = (lockfile: Lockfile): InstanceIndex => {
@@ -25,9 +26,7 @@ export const indexInstances = (lockfile: Lockfile): InstanceIndex => {
 	for (const pkg of lockfile.packages) {
 		if (pkg.isWorkspace && pkg.relativePath !== undefined) MutableHashMap.set(workspaceByPath, pkg.relativePath, pkg);
 	}
-	// Primitive string keys live in the public backing map. Expose the existing
-	// ReadonlyMap boundary so callers retain native lookup and iteration semantics.
-	return { byId: byId.backing, workspaceByPath: workspaceByPath.backing };
+	return { byId, workspaceByPath };
 };
 
 /**
@@ -59,8 +58,8 @@ export const rootInstances: {
 	importerPath: string,
 	index: InstanceIndex,
 ): ImporterRoots | undefined => {
-	const own = index.workspaceByPath.get(importerPath);
-	if (own !== undefined) return { _tag: "own", instance: own };
+	const own = MutableHashMap.get(index.workspaceByPath, importerPath);
+	if (O.isSome(own)) return { _tag: "own", instance: own.value };
 
 	const importer = lockfile.importer(importerPath);
 	if (importer._tag === "None") return undefined;
@@ -84,10 +83,10 @@ export const rootInstances: {
 		// precisely because a version alone cannot name a peer-resolved
 		// instance, and dropping it is what made the root importer of a
 		// workspace with two peer variants silently unanswerable.
-		const composed = index.byId.get(`${dep.name}@${dep.version}${dep.peerSuffix ?? ""}`);
-		if (composed === undefined) continue;
+		const composed = MutableHashMap.get(index.byId, `${dep.name}@${dep.version}${dep.peerSuffix ?? ""}`);
+		if (O.isNone(composed)) continue;
 		resolvable = true;
-		instances.push(composed);
+		instances.push(composed.value);
 	}
 
 	// An importer with no dependencies at all is legitimately clean, not

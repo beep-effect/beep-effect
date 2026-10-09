@@ -13,6 +13,7 @@
 import { assert, describe, it, layer, vi } from "@effect/vitest";
 import { LocalExec, ScriptedSpawner } from "../../effected/commands/index.ts";
 import { Git, LsTreeEntry } from "../../effected/git/index.ts";
+import * as HashMap from "effect/HashMap";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -114,7 +115,7 @@ describe("stopAt — the unbounded controls resolve the OUTER workspace", () => 
 				const catalogs = yield* (yield* WorkspaceCatalogs).set;
 				assert.strictEqual(catalogs.entries.default?.effect, "^4.0.0");
 				const snapshot = yield* (yield* WorkspaceSnapshots).at("HEAD");
-				assert.isTrue(snapshot.versions.has("other"));
+				assert.isTrue(HashMap.has(snapshot.versions, "other"));
 			}),
 		);
 	});

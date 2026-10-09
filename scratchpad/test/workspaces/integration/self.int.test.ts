@@ -2,10 +2,9 @@
 // The package discovering the repository it lives in.
 //
 // Everything else in the suite runs against a virtual filesystem. This runs
-// against the real one, through `@effect/platform-node`, and is the only place
-// that proves the whole stack composes: root walk, pnpm-workspace.yaml parse,
-// enumeration, per-package decode, the graph, the real pnpm catalogs, and the
-// real pnpm-lock.yaml with importer-path names resolved.
+// against the lab's real Bun workspace through `@effect/platform-node`:
+// root walk, workspace enumeration, per-package decode, dependency ordering,
+// the default catalog, and bun.lock with workspace paths resolved.
 //
 // It also pins the sync escape hatch against the async surface: `vitest-agent`
 // calls the sync pair, and if the two ever disagree its project list silently
@@ -49,9 +48,9 @@ const syncOps: WorkspacesSyncOptions = {
 const Platform = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const Live = Workspaces.layer({ cwd }).pipe(Layer.provideMerge(Platform));
 
-describe("the effected repository, discovered by the package that lives in it", () => {
+describe("the lab Bun workspace, discovered by the package that lives in it", () => {
 	layer(Live)((it) => {
-		it.effect("finds the workspace root and its pnpm packages patterns", () =>
+		it.effect("finds the workspace root and its bun workspace patterns", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
 				const info = yield* discovery.info;
@@ -64,10 +63,10 @@ describe("the effected repository, discovered by the package that lives in it", 
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
 				const names = (yield* discovery.listPackages).map((pkg) => pkg.name);
-				assert.include(names, "@effected/workspaces");
-				assert.include(names, "@effected/lockfiles");
-				assert.include(names, "@effected/glob");
-				assert.include(names, "@effected/walker");
+				assert.include(names, "@beep/scratchpad");
+				assert.include(names, "@beep/schema");
+				assert.include(names, "@beep/utils");
+				assert.include(names, "@beep/identity");
 			}),
 		);
 
@@ -76,17 +75,17 @@ describe("the effected repository, discovered by the package that lives in it", 
 				const discovery = yield* WorkspaceDiscovery;
 				const owner = yield* discovery.resolveFile(fileURLToPath(import.meta.url));
 				assert.isTrue(O.isSome(owner));
-				assert.strictEqual(O.getOrThrow(owner).name, "@effected/workspaces");
+				assert.strictEqual(O.getOrThrow(owner).name, "@beep/scratchpad");
 			}),
 		);
 
-		it.effect("detects pnpm", () =>
+		it.effect("detects bun", () =>
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
 				const detector = yield* PackageManagerDetector;
 				const info = yield* discovery.info;
 				const detected = yield* detector.detect(info.root);
-				assert.strictEqual(detected.name, "pnpm");
+				assert.strictEqual(detected.name, "bun");
 			}),
 		);
 
@@ -94,13 +93,15 @@ describe("the effected repository, discovered by the package that lives in it", 
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
 				const graph = DependencyGraph.make({ packages: yield* discovery.listPackages });
-				assert.isFalse(graph.hasCycle, "the @effected graph must stay acyclic");
+				assert.isFalse(graph.hasCycle, "the lab workspace graph must stay acyclic");
 
 				const order = yield* graph.sort();
-				// workspaces depends on lockfiles, glob and walker, so all three must
-				// precede it in a topological order.
-				const self = order.indexOf("@effected/workspaces");
-				for (const dependency of ["@effected/lockfiles", "@effected/glob", "@effected/walker"]) {
+				// The lab package depends on schema, utils and identity; all three
+				// must precede it in a topological order.
+				assert.include(order, "@beep/scratchpad");
+				const self = order.indexOf("@beep/scratchpad");
+				for (const dependency of ["@beep/schema", "@beep/utils", "@beep/identity"]) {
+					assert.include(order, dependency);
 					assert.isBelow(order.indexOf(dependency), self, `${dependency} must build before workspaces`);
 				}
 			}),
@@ -110,25 +111,24 @@ describe("the effected repository, discovered by the package that lives in it", 
 			Effect.gen(function* () {
 				const catalogs = yield* WorkspaceCatalogs;
 				const set = yield* catalogs.set;
-				// This repo pins `effect` in a named `effect` catalog, and every
-				// package depends on `catalog:effect`.
-				const range = set.rangeOf("effect", O.some("effect"));
+				// The lab pins Effect 4 in Bun's default catalog, consumed as catalog:.
+				const range = set.rangeOf("effect", O.none());
 				assert.isTrue(O.isSome(range), "the effect catalog must resolve");
 				assert.match(O.getOrThrow(range), /^\^?4\./);
 			}),
 		);
 
-		it.effect("reads the real pnpm-lock.yaml with importer paths resolved to real names", () =>
+		it.effect("reads the real bun.lock with importer paths resolved to real names", () =>
 			Effect.gen(function* () {
 				const reader = yield* LockfileReader;
 				const lockfile = yield* reader.read;
-				assert.strictEqual(lockfile.format, "pnpm");
+				assert.strictEqual(lockfile.format, "bun");
 
 				const workspaceNames = lockfile.packages.filter((pkg) => pkg.isWorkspace).map((pkg) => pkg.name);
-				// The pure parser emits IMPORTER PATHS here (`packages/glob`); the
-				// second stage — which is this package's IO — rewrites them.
-				assert.include(workspaceNames, "@effected/glob");
-				assert.notInclude(workspaceNames, "packages/glob");
+				// Workspace entries must be exposed by their manifest names,
+				// rather than the paths of the lab workspace members.
+				assert.include(workspaceNames, "@beep/utils");
+				assert.notInclude(workspaceNames, "packages/foundation/modeling/utils");
 			}),
 		);
 	});
@@ -162,8 +162,8 @@ describe("the sync escape hatch agrees with the Effect surface", () => {
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
 				const info = yield* discovery.info;
-				const async = yield* discovery.getPackage("@effected/workspaces");
-				const sync = getWorkspacePackagesSync(info.root, syncOps).find((pkg) => pkg.name === "@effected/workspaces");
+				const async = yield* discovery.getPackage("@beep/scratchpad");
+				const sync = getWorkspacePackagesSync(info.root, syncOps).find((pkg) => pkg.name === "@beep/scratchpad");
 				assert.isDefined(sync);
 				assert.deepStrictEqual(sync?.dependencies, async.dependencies);
 				assert.strictEqual(sync?.relativePath, async.relativePath);

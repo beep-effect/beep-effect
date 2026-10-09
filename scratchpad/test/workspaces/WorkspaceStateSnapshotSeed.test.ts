@@ -11,6 +11,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { CatalogResolver } from "../../effected/npm/index.ts";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { CatalogSet, PackageStateSnapshot, WorkspaceStateSnapshot } from "../../effected/workspaces/index.ts";
 
@@ -266,4 +267,33 @@ describe("WorkspaceStateSnapshot — seededCatalogs and serialization", () => {
 			assert.deepStrictEqual(decoded.resolve("effect", "catalog:"), O.some("^4.0.0"));
 		}),
 	);
+});
+
+
+describe("WorkspaceStateSnapshot — inherited names preserve fallback precedence", () => {
+	for (const name of ["constructor", "toString", "__proto__"]) {
+		it(`uses the seed for own dependency ${name} absent from captured catalogs`, () => {
+			const own = snapshot({ catalogs: catalogs({ default: { effect: "^4.0.0" } }) });
+			const seeded = own.withSeededCatalogs(catalogs({ default: R.fromEntries([[name, "^2.0.0"]]) }));
+			assert.deepStrictEqual(seeded.resolve(name, "catalog:"), O.some("^2.0.0"));
+		});
+		it(`uses the importer for dependency ${name} absent from both catalog sets`, () => {
+			const own = snapshot({
+				catalogs: catalogs({ default: { effect: "^4.0.0" } }),
+				importerVersions: { ".": R.fromEntries([[name, "2.0.0"]]) },
+			});
+			const seeded = own.withSeededCatalogs(catalogs({ default: { other: "^3.0.0" } }));
+			assert.deepStrictEqual(seeded.resolve(name, "catalog:"), O.some("2.0.0"));
+			assert.deepStrictEqual(seeded.resolveIn(".", name, "catalog:"), O.some("2.0.0"));
+		});
+	}
+
+	it("dependency defaults and merged records contain no inherited own keys", () => {
+		const pkg = PackageStateSnapshot.make({ name: "bare", relativePath: "." });
+		for (const name of ["constructor", "toString", "__proto__"]) {
+			for (const record of [pkg.dependencies, pkg.devDependencies, pkg.peerDependencies, pkg.optionalDependencies, pkg.allDependencies]) {
+				assert.deepStrictEqual(R.get(record, name), O.none());
+			}
+		}
+	});
 });

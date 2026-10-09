@@ -1,3 +1,6 @@
+import * as A from "effect/Array";
+import * as Order from "effect/Order";
+import * as Str from "effect/String";
 import { dual } from "effect/Function";
 // The synchronous escape hatch — over CONSUMER-SUPPLIED operations.
 //
@@ -26,8 +29,9 @@ import { manifestPatternsOf, pnpmPatternsOf } from "./internal/patterns.ts";
 import { Traversal, badMaxDepthMessage, isPruned, isValidMaxDepth, joinRelative } from "./internal/traverse.ts";
 import type { WorkspaceDiscoveryError } from "./WorkspaceDiscovery.ts";
 import { PublishConfig, WorkspacePackage } from "./WorkspacePackage.ts";
-import * as R from "effect/Record";
 import * as O from "@beep/utils/Option";
+
+const isDependencyMap = S.is(WorkspacePackage.fields.dependencies);
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspacesSync");
 
@@ -536,17 +540,11 @@ const readPackageSync = (
 		};
 	}
 
-	const isStringRecord = (value: unknown): value is Record<string, string> =>
-		P.isObject(value) && R.values(value).every(P.isString);
-
 	const stringRecord = (value: unknown): Record<string, string> | undefined =>
-		isStringRecord(value) ? value : undefined;
+		isDependencyMap(value) ? value : undefined;
 
 	const publishConfig = raw.publishConfig;
-	const config =
-		P.isObjectKeyword(publishConfig) && !P.isFunction(publishConfig)
-			? Effect.runSyncExit(S.decodeEffect(PublishConfig)(publishConfig))
-			: undefined;
+	const config = Effect.runSyncExit(S.decodeUnknownEffect(PublishConfig)(publishConfig));
 
 	return WorkspacePackage.make({
 		name,
@@ -565,7 +563,7 @@ const readPackageSync = (
 		// The as-read record rides along, exactly as the Effect enumerator's
 		// projection does — one read, tolerant access to the rest of the manifest.
 		manifestRecord: raw,
-		...(config !== undefined && Exit.isSuccess(config) ? { publishConfig: config.value } : {}),
+		...(Exit.isSuccess(config) ? { publishConfig: config.value } : {}),
 	});
 };
 
@@ -739,7 +737,7 @@ export const getWorkspacePackagesSync: {
 		if (S.is(WorkspacePackage)(read)) members.push(read);
 		else options.onSkip?.(read);
 	};
-	for (const [relativePath, absolute] of [...included].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+	for (const [relativePath, absolute] of A.sort(included, Order.mapInput(Str.Order, ([relativePath]: [string, string]) => relativePath))) {
 		if (relativePath === "." || absolute === root) continue;
 		admit(readPackageSync(options, root, absolute, relativePath));
 	}

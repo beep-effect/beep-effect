@@ -145,6 +145,7 @@ export {
 	type SyncPath,
 	type WorkspaceDiscoverySkip,
 	type WorkspaceDiscoverySkipKind,
+	WorkspaceEnumerationDepthError,
 	type WorkspacesSyncOptions,
 	findWorkspaceRootSync,
 	getWorkspacePackagesSync,

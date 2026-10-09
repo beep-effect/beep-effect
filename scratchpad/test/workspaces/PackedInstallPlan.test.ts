@@ -1,4 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -320,9 +322,9 @@ describe("fileOverridesOf", () => {
 			["constructor", "../ctor"],
 			["prototype", "../proto"],
 		]);
-		assert.isNull(Object.getPrototypeOf(out));
+		assert.deepStrictEqual([R.get(out, "constructor"), R.get(out, "prototype")], [O.some("../ctor"), O.some("../proto")]);
 		assert.isFalse(Object.hasOwn(out, "__proto__"));
-		assert.isUndefined(fileOverridesOf({ overrides: {} }).constructor);
+		assert.deepStrictEqual(R.get(fileOverridesOf({ overrides: {} }), "constructor"), O.none());
 	});
 
 	it("a document without an overrides map has none", () => {

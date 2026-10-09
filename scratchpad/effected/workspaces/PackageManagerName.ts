@@ -7,6 +7,7 @@
 // parse), and because `@effected/package-json` already exports a
 // `PackageManager` class for the corepack `pnpm@10.33.0` field.
 
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { $ScratchpadId } from "@beep/identity/packages";
 import { PackageManager } from "../package-json/index.ts";
 import * as Context from "effect/Context";
@@ -17,7 +18,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { WorkspaceManifestError } from "./WorkspacePackage.ts";
-import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/workspaces/PackageManagerName");
@@ -33,7 +33,7 @@ class PackageManagerDetectorDefect extends S.TaggedError<PackageManagerDetectorD
  *
  * @public
  */
-export const PackageManagerName = S.Literals(["npm", "pnpm", "yarn", "bun"]).pipe($I.annoteSchema("PackageManagerName", { description: "The four package managers this package understands." }));
+export const PackageManagerName = LiteralKit(["npm", "pnpm", "yarn", "bun"]).pipe($I.annoteSchema("PackageManagerName", { description: "The four package managers this package understands." }));
 
 /**
  * The decoded type of {@link (PackageManagerName:variable)}: `"npm" | "pnpm" | "yarn" | "bun"`.
@@ -60,7 +60,7 @@ export type PackageManagerName = typeof PackageManagerName.Type;
  *
  * @public
  */
-export const PackageManagerEvidence = S.Literals([
+export const PackageManagerEvidence = LiteralKit([
 	// The workspace tier: which manager runs this WORKSPACE.
 	"pnpm-workspace.yaml",
 	"bun.lock",
@@ -123,14 +123,23 @@ export class DetectedPackageManager extends S.Class<DetectedPackageManager>($I`D
  * A manager named by one of the two manifest fields: the name, plus the exact
  * version when the field carries one that parses.
  */
-interface ManagerHint {
-	readonly name: string;
-	readonly version: O.Option<string>;
-}
+const ManagerHint = S.Struct({
+	name: S.String.annotateKey({ description: "The manager name declared by the manifest." }),
+	version: S.Option(S.String).annotateKey({ description: "The exact parsed version, or none when absent or invalid." }),
+}).pipe($I.annoteSchema("ManagerHint", { description: "A normalized manifest manager hint whose invalid version does not discard its name." }));
+
+type ManagerHint = typeof ManagerHint.Type;
 
 /** Whether `value` is a non-null, non-array object — corepack's own shape test. */
-const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
+export const JsonObject = S.Record(S.String, S.Unknown).pipe(
+	$I.annoteSchema("JsonObject", { description: "A string-keyed object accepted as a manifest or policy, excluding null, arrays and functions." }),
+);
+
+/** A manifest or policy object with arbitrary field values. */
+export type JsonObject = typeof JsonObject.Type;
+
+/** Whether a value satisfies the manifest-object schema. */
+export const isPlainObject = S.is(JsonObject);
 
 /**
  * The exact version a `name` + `version` pair denotes, or none when the version
@@ -166,10 +175,10 @@ const devEnginesHint = (manifest: Record<string, unknown>): O.Option<ManagerHint
 	if (!P.isString(name) || name === "" || name.includes("@")) return O.none();
 
 	const version = slot.version;
-	return O.some({
+	return O.some(ManagerHint.make({
 		name,
 		version: P.isString(version) && version !== "" ? exactVersionOf(name, version) : O.none<string>(),
-	});
+	}));
 };
 
 /** The corepack top-level `packageManager` hint, or none when absent or malformed. */
@@ -177,7 +186,7 @@ const corepackHint = (manifest: Record<string, unknown>): O.Option<ManagerHint> 
 	const raw = manifest.packageManager;
 	if (!P.isString(raw)) return O.none();
 	return S.decodeOption(PackageManager.FromString)(raw).pipe(
-		O.map((pm) => ({ name: pm.name, version: O.some(pm.version) })),
+		O.map((pm) => ManagerHint.make({ name: pm.name, version: O.some(pm.version) })),
 	);
 };
 

@@ -42,8 +42,17 @@ import { PackageStateSnapshot, WorkspaceStateSnapshot } from "./WorkspaceStateSn
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspaceSnapshots");
+const JsonValue = S.fromJsonString(S.Unknown);
+const JsonObject = S.Record(S.String, S.Unknown).annotate(
+	$I.annote("JsonObject", { description: "A non-array JSON object read from a manifest." }),
+);
+const DependencyRecord = S.Record(S.String, S.String).annotate(
+	$I.annote("DependencyRecord", { description: "Manifest dependency names mapped to specifiers." }),
+);
 
 /**
  * Every failure `WorkspaceSnapshots.at` can surface: git's own typed
@@ -174,26 +183,17 @@ const hookVersionsOf = (replays: Readonly<Record<string, HookReplay>>): Record<s
 };
 
 /** Whether `value` is a non-null, non-array object. */
-const isObject = (value: unknown): value is Record<string, unknown> =>
-	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
+const isObject = S.is(JsonObject);
 
 /** Whether every value in a record is a string — a usable dependency map. */
-const isStringRecord = (value: unknown): value is Record<string, string> =>
-	isObject(value) && R.values(value).every((entry) => P.isString(entry));
+const isStringRecord = S.is(DependencyRecord);
 
-/**
- * Parse JSON tolerantly into a plain object. At-ref content is not ours to fix:
- * a corrupt or non-object manifest degrades to `{}` rather than failing the
- * whole snapshot, matching the tolerant projection discovery already uses.
- */
-const parseJsonObject = (text: string): Record<string, unknown> => {
-	try {
-		const parsed: unknown = JSON.parse(text);
-		return isObject(parsed) ? parsed : {};
-	} catch {
-		return {};
-	}
-};
+/** Parse a manifest tolerantly, retaining the empty-object fallback. */
+const parseJsonObject = (text: string): Record<string, unknown> =>
+	Result.match(S.decodeResult(JsonValue)(text), {
+		onFailure: () => ({}),
+		onSuccess: (parsed) => isObject(parsed) ? parsed : {},
+	});
 
 /**
  * Project one `package.json` text (as read at a ref) into a
@@ -445,7 +445,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 			// against the compiled glob set — no directory descent, because
 			// `ls-tree -r` already enumerates every path (globstar included).
 			const entries = yield* git.lsTree(root, ref);
-			const memberDirs: Array<string> = [];
+			const collected: Array<string> = [];
 			let hasRootManifest = false;
 			for (const entry of entries) {
 				if (entry.type !== "blob") continue;
@@ -455,9 +455,9 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 				}
 				if (!entry.path.endsWith("/package.json")) continue;
 				const dir = entry.path.slice(0, entry.path.length - "/package.json".length);
-				if (globs.matches(dir)) memberDirs.push(dir);
+				if (globs.matches(dir)) collected.push(dir);
 			}
-			memberDirs.sort();
+			const memberDirs = A.sort(collected, Order.String);
 
 			const members = yield* Effect.forEach(
 				memberDirs,

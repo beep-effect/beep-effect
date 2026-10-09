@@ -3,6 +3,7 @@ import { assert, describe, it, layer } from "@effect/vitest";
 import { WorkspaceResolver } from "../../effected/npm/index.ts";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -94,8 +95,8 @@ describe("WorkspaceDiscovery — one-level patterns", () => {
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
 				const importers = yield* discovery.importerMap;
-				assert.strictEqual(importers.get("packages/alpha")?.name, "@x/alpha");
-				assert.strictEqual(importers.get(".")?.name, "root");
+				assert.strictEqual(O.getOrUndefined(HashMap.get(importers, "packages/alpha"))?.name, "@x/alpha");
+				assert.strictEqual(O.getOrUndefined(HashMap.get(importers, "."))?.name, "root");
 			}),
 		);
 
@@ -792,8 +793,8 @@ describe("WorkspaceDiscovery.layerTest — one stubbed method", () => {
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
 				const map = yield* discovery.importerMap;
-				assert.strictEqual(map.get("packages/utils")?.name, "@x/utils");
-				assert.strictEqual(map.size, 2);
+				assert.strictEqual(O.getOrUndefined(HashMap.get(map, "packages/utils"))?.name, "@x/utils");
+				assert.strictEqual(HashMap.size(map), 2);
 			}),
 		);
 
@@ -835,7 +836,7 @@ describe("WorkspaceDiscovery.makeTest — the empty-workspace defaults", () => {
 			Effect.gen(function* () {
 				const discovery = yield* WorkspaceDiscovery;
 				assert.deepStrictEqual(yield* discovery.listPackages, []);
-				assert.strictEqual((yield* discovery.importerMap).size, 0);
+				assert.strictEqual(HashMap.size(yield* discovery.importerMap), 0);
 				assert.deepStrictEqual(yield* discovery.resolveFiles(["/repo/a.ts"]), []);
 				assert.isTrue(O.isNone(yield* discovery.resolveFile("/repo/a.ts")));
 				yield* discovery.refresh;

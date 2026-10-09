@@ -1,6 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { GlobPattern } from "../../effected/glob/index.ts";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { PublishConfig, WorkspacePackage } from "../../effected/workspaces/index.ts";
@@ -293,5 +294,46 @@ describe("WorkspacePackage.manifestRecord", () => {
 			relativePath: "packages/old",
 		};
 		assert.throws(() => Result.getOrThrow(S.decodeUnknownResult(WorkspacePackage)(preField)));
+	});
+});
+
+
+describe("WorkspacePackage — own-key records", () => {
+	const withProto = (version: string) => WorkspacePackage.make({
+		name: "x", ...base, dependencies: R.fromEntries([["__proto__", version]]),
+	});
+	const bare = WorkspacePackage.make({ name: "x", ...base });
+
+	it("reports a __proto__ addition as an own diff entry", () => {
+		const diff = withProto("1.0.0").dependencyDiff(bare);
+		assert.deepStrictEqual(diff.added, R.fromEntries([["__proto__", "1.0.0"]]));
+		assert.deepStrictEqual(R.get(diff.added, "__proto__"), O.some("1.0.0"));
+		assert.deepStrictEqual(diff.removed, {});
+		assert.deepStrictEqual(diff.changed, {});
+	});
+
+	it("reports a __proto__ removal as an own diff entry", () => {
+		const diff = bare.dependencyDiff(withProto("1.0.0"));
+		assert.deepStrictEqual(diff.removed, R.fromEntries([["__proto__", "1.0.0"]]));
+		assert.deepStrictEqual(R.get(diff.removed, "__proto__"), O.some("1.0.0"));
+		assert.deepStrictEqual(diff.added, {});
+		assert.deepStrictEqual(diff.changed, {});
+	});
+
+	it("reports a __proto__ change as an own diff entry", () => {
+		const diff = withProto("2.0.0").dependencyDiff(withProto("1.0.0"));
+		assert.deepStrictEqual(diff.changed, R.fromEntries([["__proto__", { from: "1.0.0", to: "2.0.0" }]]));
+		assert.deepStrictEqual(R.get(diff.changed, "__proto__"), O.some({ from: "1.0.0", to: "2.0.0" }));
+		assert.deepStrictEqual(diff.added, {});
+		assert.deepStrictEqual(diff.removed, {});
+	});
+
+	it("reads declared hostile keys while defaults have no own entries", () => {
+		for (const name of ["__proto__", "constructor", "toString"]) {
+			assert.deepStrictEqual(bare.dependencyVersion(name), O.none());
+			assert.deepStrictEqual(R.get(bare.manifestRecord, name), O.none());
+			const pkg = WorkspacePackage.make({ name: "x", ...base, dependencies: R.fromEntries([[name, "1.0.0"]]) });
+			assert.deepStrictEqual(pkg.dependencyVersion(name), O.some("1.0.0"));
+		}
 	});
 });

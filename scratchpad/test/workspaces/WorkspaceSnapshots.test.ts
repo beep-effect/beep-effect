@@ -2,6 +2,7 @@
 import { assert, describe, it, layer } from "@effect/vitest";
 import { Git, GitCommandError, LsTreeEntry } from "../../effected/git/index.ts";
 import { CatalogAssemblyError, CatalogResolver, WorkspaceResolver } from "../../effected/npm/index.ts";
+import * as HashMap from "effect/HashMap";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Layer from "effect/Layer";
@@ -111,7 +112,7 @@ describe("WorkspaceSnapshots.at — the c594ff1 fallback", () => {
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
 				const snapshot = yield* snapshots.at("HEAD");
-				const names = [...snapshot.versions.keys()].sort();
+				const names = [...HashMap.keys(snapshot.versions)].sort();
 				// Root PLUS both members. A collapse-to-root bug returns just ["root"].
 				assert.deepStrictEqual(names, ["@x/alpha", "@x/beta", "root"]);
 				// No pnpm-workspace.yaml at the ref: config dependencies do not exist on
@@ -150,7 +151,7 @@ describe("WorkspaceSnapshots.at — glob filtering over ls-tree", () => {
 			Effect.gen(function* () {
 				const snapshots = yield* WorkspaceSnapshots;
 				const snapshot = yield* snapshots.at("HEAD");
-				const names = [...snapshot.versions.keys()].sort();
+				const names = [...HashMap.keys(snapshot.versions)].sort();
 				// `tools/gen` is a package.json but outside `packages/*`; the root is
 				// always included.
 				assert.deepStrictEqual(names, ["@x/alpha", "root"]);
@@ -177,7 +178,7 @@ const parityTree: Tree = {
 
 /** The observable state of a snapshot, normalized for comparison. */
 const projected = (snapshot: WorkspaceStateSnapshot) => ({
-	versions: [...snapshot.versions.entries()].sort(),
+	versions: [...HashMap.entries(snapshot.versions)].sort(),
 	catalogs: snapshot.catalogs.entries,
 	effectResolved: snapshot.resolve("effect", "catalog:"),
 	alphaResolved: snapshot.resolve("@x/alpha", "workspace:*"),
@@ -266,7 +267,7 @@ describe("WorkspaceSnapshots.at — a failed init is retried", () => {
 				// A bare `Effect.cached` would replay the failure here. The success-only
 				// memo invalidated its cell, so the second call re-runs the init.
 				const second = yield* snapshots.at("HEAD");
-				assert.deepStrictEqual([...second.versions.keys()].sort(), ["@x/alpha", "@x/beta", "root"]);
+				assert.deepStrictEqual([...HashMap.keys(second.versions)].sort(), ["@x/alpha", "@x/beta", "root"]);
 			}),
 		);
 	});
@@ -347,7 +348,7 @@ describe('WorkspaceStateSnapshot — a version-less member is absent, never `""`
 	});
 
 	it("versions lists only members that declared a version; package() still answers membership", () => {
-		assert.deepStrictEqual([...bareVersionSnapshot.versions.entries()], [["@x/alpha", "1.2.3"]]);
+		assert.deepStrictEqual([...HashMap.entries(bareVersionSnapshot.versions)], [["@x/alpha", "1.2.3"]]);
 		assert.isTrue(O.isSome(bareVersionSnapshot.package("@x/bare")));
 	});
 
@@ -404,7 +405,7 @@ describe("WorkspaceSnapshots — version-less manifests at a ref and in the work
 					const root = O.getOrThrow(snapshot.package("root"));
 					assert.isFalse(Object.hasOwn(bare, "version"));
 					assert.isFalse(Object.hasOwn(root, "version"));
-					assert.deepStrictEqual([...snapshot.versions.keys()], ["@x/alpha"]);
+					assert.deepStrictEqual(snapshot.versionNames, ["@x/alpha"]);
 					assert.isTrue(O.isNone(snapshot.resolve("@x/bare", "workspace:^")));
 				}
 				// The two sides are the same value, member for member, so a diff of a
@@ -757,6 +758,62 @@ describe("WorkspaceSnapshots.at — a hook replay failure at the ref surfaces ty
 					assert.strictEqual(error.source, "hooks");
 					assert.strictEqual(error.path, "@scope/plugin");
 				}
+			}),
+		);
+	});
+});
+
+
+describe("WorkspaceStateSnapshot.versions — Effect collection and explicit order", () => {
+	it("keeps first insertion order and last version, excluding unversioned members", () => {
+		const state = WorkspaceStateSnapshot.make({
+			catalogs: CatalogSet.empty(),
+			packages: [
+				PackageStateSnapshot.make({ name: "z", version: "1.0.0", relativePath: "z" }),
+				PackageStateSnapshot.make({ name: "bare", relativePath: "." }),
+				PackageStateSnapshot.make({ name: "a", version: "2.0.0", relativePath: "a" }),
+				PackageStateSnapshot.make({ name: "z", version: "3.0.0", relativePath: "z" }),
+			],
+		});
+		assert.deepStrictEqual(state.versionNames, ["z", "a"]);
+		assert.strictEqual(HashMap.size(state.versions), 2);
+		assert.deepStrictEqual(HashMap.get(state.versions, "z"), O.some("3.0.0"));
+		assert.deepStrictEqual(HashMap.get(state.versions, "a"), O.some("2.0.0"));
+		assert.deepStrictEqual(HashMap.get(state.versions, "bare"), O.none());
+		assert.strictEqual(state.versions, state.versions);
+		assert.strictEqual(state.versionNames, state.versionNames);
+	});
+});
+
+
+const tolerantJsonRefs: RefTrees = {
+	HEAD: {
+		"package.json": rootManifest(["packages/*"]),
+		"packages/valid/package.json": '{"name":"valid","version":"1.0.0","dependencies":{"constructor":"^1.0.0","__proto__":"^2.0.0"}}',
+		"packages/invalid-json/package.json": "{",
+		"packages/array/package.json": '[{"name":"array"}]',
+		"packages/null/package.json": "null",
+		"packages/string/package.json": '"string"',
+		"packages/number/package.json": "42",
+		"packages/boolean/package.json": "true",
+		"packages/no-name/package.json": '{}',
+		"packages/bad-fields/package.json": '{"name":"bad-fields","version":42,"dependencies":{"effect":42},"devDependencies":[]}',
+	},
+};
+
+describe("WorkspaceSnapshots.at — tolerant JSON schema decoding", () => {
+	layer(snapshotsLayer(scriptGit(tolerantJsonRefs), npmMarkerOnly))((it) => {
+		it.effect("keeps valid own keys and degrades corrupt, non-object and malformed fields", () =>
+			Effect.gen(function* () {
+				const snapshots = yield* WorkspaceSnapshots;
+				const state = yield* snapshots.at("HEAD");
+				assert.deepStrictEqual(state.packages.map((pkg) => pkg.name), ["root", "bad-fields", "valid"]);
+				const valid = O.getOrThrow(state.package("valid"));
+				assert.deepStrictEqual(valid.dependencies, { ["constructor"]: "^1.0.0", ["__proto__"]: "^2.0.0" });
+				const badFields = O.getOrThrow(state.package("bad-fields"));
+				assert.isUndefined(badFields.version);
+				assert.deepStrictEqual(badFields.dependencies, {});
+				assert.deepStrictEqual(badFields.devDependencies, {});
 			}),
 		);
 	});

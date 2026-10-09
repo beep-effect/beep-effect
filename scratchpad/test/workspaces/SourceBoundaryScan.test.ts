@@ -91,6 +91,33 @@ describe("SourceBoundary.scan over a virtual tree", () => {
 		);
 	});
 
+	const ALIASES = {
+		"/alias/src/allowed": MemoryFileSystem.symlink("/alias/src/actual"),
+		"/alias/src/actual/a.ts": "process.cwd();",
+		"/alias/src/actual/loop": MemoryFileSystem.symlink("/alias/src"),
+	};
+	layer(Layer.mergeAll(MemoryFileSystem.layerWith(ALIASES), Path.layer), LIVE_CLOCK)((it) => {
+		it.effect("an allowed directory alias cannot hide an offence under another logical path", () =>
+			Effect.gen(function* () {
+				const scan = yield* SourceBoundary.scan({ root: "/alias/src", rules: ["process"], allow: ["allowed/**"] });
+				assert.deepStrictEqual(scan.files, ["actual/a.ts", "allowed/a.ts"]);
+				assert.deepStrictEqual(scan.allowed, ["allowed/a.ts"]);
+				assert.deepStrictEqual(scan.violations, ["actual/a.ts:1:1 process process"]);
+			}).pipe(Effect.timeout("3 seconds")),
+		);
+		it.effect("a per-rule waiver on an alias cannot hide an offence under another logical path", () =>
+			Effect.gen(function* () {
+				const scan = yield* SourceBoundary.scan({
+					root: "/alias/src", rules: ["process"], allowRules: { process: ["allowed/**"] },
+				});
+				assert.deepStrictEqual(scan.files, ["actual/a.ts", "allowed/a.ts"]);
+				assert.deepStrictEqual(scan.allowed, []);
+				assert.deepStrictEqual(scan.violations, ["actual/a.ts:1:1 process process"]);
+				assert.deepStrictEqual(scan.waived.map((o) => o.label), ["allowed/a.ts:1:1 process process"]);
+			}).pipe(Effect.timeout("3 seconds")),
+		);
+	});
+
 	// A dangling link: its target never existed, so stat (which follows links) fails NotFound.
 	const DANGLING = { ...SEED, "/repo/src/dangling.ts": MemoryFileSystem.symlink("/repo/gone.ts") };
 	layer(

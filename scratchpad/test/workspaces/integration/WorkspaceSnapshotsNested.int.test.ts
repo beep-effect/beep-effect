@@ -25,6 +25,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
+import * as HashMap from "effect/HashMap";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -95,7 +96,7 @@ describe("WorkspaceSnapshots.at — a workspace root nested inside a larger git 
 
 			// The inner root plus both inner members — NOT `outer-root`/`@outer/a`.
 			// The un-prefixed reader collapses to just ["outer-root"].
-			const names = [...snapshot.versions.keys()].sort();
+			const names = [...HashMap.keys(snapshot.versions)].sort();
 			assert.deepStrictEqual(names, ["@inner/a", "@inner/b", "inner-root"]);
 
 			// The inner catalog. The un-prefixed reader carries the OUTER `^3.0.0`.

@@ -15,7 +15,7 @@
 // override that missed) or to download itself (a `packageManager` pin that
 // did not match the running version) fails instead of quietly succeeding.
 //
-// Run it through pnpm (`pnpm test` or `pnpm vitest run`): the first test
+// Run it through Bun (`bunx --no-install vitest run`): the first test
 // asserts the parent manager's context is present, so the scrub is exercised
 // against the real variables rather than a hand-written list.
 
@@ -337,12 +337,12 @@ const assertConsumer = Effect.fn("assertConsumer")(function* (consumer: Installe
 
 describe("PackedInstall against a real fixture workspace", () => {
 	layer(Live, { excludeTestServices: true })((it) => {
-		it.effect("runs under pnpm, and every manager spawn gets the parent's context scrubbed", () =>
+		it.effect("runs under bun, and every manager spawn gets the parent's context scrubbed", () =>
 			Effect.sync(() => {
-				// Positive control: the real pnpm context is present in this process.
+				// Positive control: the real Bun context is present in this process.
 				const leaked = Object.keys(process.env).filter((key) => /^(npm_|pnpm_config_|PNPM_SCRIPT_SRC_DIR$)/i.test(key));
-				assert.isAbove(leaked.length, 0, "run this suite through pnpm (pnpm test) so its context is real");
-				assert.match(process.env.npm_config_user_agent ?? "", /^pnpm\//);
+				assert.isAbove(leaked.length, 0, "run this suite through bunx so its context is real");
+				assert.match(process.env.npm_config_user_agent ?? "", /^bun\//);
 				assert.deepStrictEqual(
 					Object.keys(CHILD_ENV).filter((key) => leaked.includes(key)),
 					[],

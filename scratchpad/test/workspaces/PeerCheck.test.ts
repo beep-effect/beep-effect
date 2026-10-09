@@ -744,6 +744,24 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states", () =
 		}),
 	);
 
+	it.effect("keeps escaping ROOT links distinct from an unrelated internal package", () =>
+		Effect.gen(function* () {
+			for (const target of ["../packages/a", "../../packages/a", "../outside/../packages/a"]) {
+				const lockfile = yield* Lockfile.parse(
+					fixture("peers/linkdeep-root/pnpm-lock.yaml").replace("version: link:packages/a", `version: link:${target}`),
+					{ format: "pnpm" },
+				);
+				const report = PeerCheck.run(lockfile, {
+					peerDependencyRules: NoPeerDependencyRules,
+					workspacePackages: [probeA()],
+				});
+				assert.deepStrictEqual(report.unsatisfied, []);
+				assert.deepStrictEqual(report.unresolvedImporters, []);
+				assert.deepStrictEqual(report.unverified, ["unresolvedEdge"]);
+			}
+		}),
+	);
+
 	it.effect("keeps the marker for a covered link: target with no lockfile row to walk", () =>
 		Effect.gen(function* () {
 			// A supplied manifest whose directory the lockfile records no importer

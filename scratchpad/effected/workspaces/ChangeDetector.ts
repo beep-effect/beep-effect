@@ -13,6 +13,8 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
@@ -84,7 +86,7 @@ export class ChangeDetectionError extends S.TaggedError<ChangeDetectionError>($I
 	/** The operation that could not run. */
 	operation: S.String.annotateKey({ description: "The operation that could not run." }),
 	/** The originating failure. */
-	cause: S.Defect().annotateKey({ description: "The originating failure." }),
+	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The originating failure." }),
 }, $I.annote("ChangeDetectionError", { description: "Raised when change detection cannot proceed for a reason that is not one of git's own typed failures — the wrapper for \"detection has no ground to stand on\"." })) {
 	/** Renders the failed operation into a one-line message. */
 	override get message(): string {
@@ -181,10 +183,10 @@ export class ChangeDetector extends Context.Service<ChangeDetector, ChangeDetect
 				head: options.head,
 				relative: true,
 			});
-			if (!options.includeUncommitted) return [...committed].sort();
+			if (!options.includeUncommitted) return A.sort(A.fromIterable(committed), Str.Order);
 
 			const working = yield* git.workingChanges(root, { relative: true });
-			return [...MutableHashSet.fromIterable([...committed, ...working])].sort();
+			return A.sort(A.fromIterable(MutableHashSet.fromIterable([...committed, ...working])), Str.Order);
 		});
 
 		/**

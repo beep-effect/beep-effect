@@ -51,7 +51,7 @@ export class LockfileReadError extends S.TaggedError<LockfileReadError>($I`Lockf
 	/** The format the detected package manager implies. */
 	format: LockfileFormat.annotateKey({ description: "The format the detected package manager implies." }),
 	/** The originating failure. */
-	cause: S.Defect().annotateKey({ description: "The originating failure." }),
+	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The originating failure." }),
 }, $I.annote("LockfileReadError", { description: "Raised when the workspace's lockfile cannot be read off disk." })) {
 	/** Renders the unreadable path into a one-line message. */
 	override get message(): string {
@@ -111,13 +111,13 @@ export interface LockfileReaderShape {
  *
  * @public
  */
-export interface LockfileReaderOptions {
+export const LockfileReaderOptions = S.Struct({
 	/**
 	 * The directory the workspace root is resolved from.
 	 *
 	 * @defaultValue `process.cwd()`, read lazily on first use.
 	 */
-	readonly cwd?: string;
+	cwd: S.optionalKey(S.String).annotateKey({ description: "The directory to resolve the workspace root from; defaults lazily to the current directory on first use." }),
 	/**
 	 * A ceiling for the root ascent from `cwd`, passed straight through to the
 	 * `stopAt` of {@link WorkspaceRoot}'s `find`.
@@ -132,8 +132,11 @@ export interface LockfileReaderOptions {
 	 *
 	 * @defaultValue no ceiling — the ascent runs to the filesystem root.
 	 */
-	readonly stopAt?: string | undefined;
-}
+	stopAt: S.optional(S.String).annotateKey({ description: "An inclusive ceiling for the workspace-root ascent; absent or undefined means no ceiling." }),
+}).pipe($I.annoteSchema("LockfileReaderOptions", { description: "Root-resolution options for the lockfile reader, leaving current-directory resolution lazy." }));
+
+/** The root-resolution options accepted by the lockfile reader layer. */
+export type LockfileReaderOptions = typeof LockfileReaderOptions.Type;
 
 class LockfileReaderTestDoubleError extends S.TaggedError<LockfileReaderTestDoubleError>($I`LockfileReaderTestDoubleError`)("LockfileReaderTestDoubleError", {
 	message: S.String,

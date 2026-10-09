@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
+import { WorkspaceEnumerationDepthError } from "../../effected/workspaces/index.ts";
+import { WorkspaceEnumerationDepthError as SyncDepthError } from "../../effected/workspaces/WorkspacesSync.ts";
 import { SourceBoundary } from "../../effected/workspaces/testing.ts";
 
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../../effected/workspaces");
@@ -30,6 +32,10 @@ const TESTING_ONLY =
 	/effected\/workspaces\/(testing|SourceBoundary|LayerPolicy|WorkspaceLayering|PackedInstall|internal\/sourceText|internal\/packedInstallPlan)\.ts$/;
 
 describe("entrypoint boundary", () => {
+	it("exports the synchronous enumeration depth error from the main entrypoint", () => {
+		assert.strictEqual(WorkspaceEnumerationDepthError, SyncDepthError);
+	});
+
 	it("nothing reachable from `.` belongs to ./testing", () => {
 		const offenders = [...reachableFrom(resolve(SRC, "index.ts"))].filter((file) => TESTING_ONLY.test(file));
 		assert.deepStrictEqual(offenders, [], "repo-shape checks belong behind ./testing");

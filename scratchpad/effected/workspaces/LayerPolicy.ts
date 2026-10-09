@@ -6,10 +6,9 @@ import * as FileSystem from "effect/FileSystem";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ALL_DEPENDENCY_FIELDS } from "./internal/dependencyFields.ts";
-import * as A from "effect/Array";
+import { isPlainObject } from "./PackageManagerName.ts";
 import * as R from "effect/Record";
 import * as O from "@beep/utils/Option";
-import * as P from "effect/Predicate";
 import * as Match from "effect/Match";
 
 const $I = $ScratchpadId.create("effected/workspaces/LayerPolicy");
@@ -20,7 +19,7 @@ const REQUIRED_EDGE = /^\S+ -> \S+$/u;
 
 /** `input` without `keys`, when it is a plain object; anything else passes through for the schema to reject. */
 const withoutKeys = (input: unknown, keys: ReadonlyArray<string>): unknown => {
-	if (!P.isObjectKeyword(input) || P.isFunction(input) || A.isArray(input)) return input;
+	if (!isPlainObject(input)) return input;
 	return R.fromEntries(R.toEntries(input).filter(([key]) => !keys.includes(key)));
 };
 
@@ -35,7 +34,7 @@ export class LayerPolicyError extends S.TaggedError<LayerPolicyError>($I`LayerPo
 	/** The file, when the policy came from one. */
 	path: S.optionalKey(S.String).annotateKey({ description: "The file, when the policy came from one." }),
 	/** The originating failure. */
-	cause: S.Defect().annotateKey({ description: "The originating failure." }),
+	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The originating failure." }),
 }, $I.annote("LayerPolicyError", { description: "Raised when a layer policy cannot be read, parsed or decoded." })) {
 	/** Renders the failure kind and the file into one line. */
 	override get message(): string {
@@ -96,7 +95,9 @@ export class LayerPolicy extends S.Class<LayerPolicy>($I`LayerPolicy`)({
 	/** Globs matched against package names (never relative paths) for packages whose own edges are not checked. */
 	unconstrained: S.Array(S.String).check(
 		S.makeFilter((patterns) => Result.isSuccess(GlobSet.compileResult(patterns)), {
+			identifier: $I`CompilableGlobPatterns`,
 			title: "compilable glob patterns",
+			description: "Every unconstrained package pattern must compile as a glob.",
 		}),
 	).annotateKey({ description: "Globs matched against package names (never relative paths) for packages whose own edges are not checked." }),
 	/** The dependency maps to check. Absent means all four. */

@@ -411,6 +411,28 @@ describe("PackedInstall.run past the pack", () => {
 		);
 	});
 
+	for (const [name, tarball] of [["@x/carrier", CARRIER_TGZ], ["@x/lib", LIB_TGZ]] as const) {
+		for (const packedName of ["@wrong/package", undefined]) {
+			const wrongIdentity = ScriptedSpawner.make(script((command, args) =>
+				command === "tar" && args[1] === tarball
+					? { stdout: JSON.stringify({ name: packedName, version: "1.0.0" }) }
+					: manifests()(command, args),
+			));
+			installSuite(wrongIdentity, seedWith())((it) => {
+				it.effect(`${name}: a packed manifest with ${packedName ?? "no name"} fails PackFailed before any install`, () =>
+					Effect.gen(function* () {
+						const error = yield* Effect.flip(
+							PackedInstall.run({ carrier: "@x/carrier", closure: "auto", managers: ["npm"], bins: [], env: ENV }),
+						);
+						assert.deepStrictEqual([error.reason, error.package], ["PackFailed", name]);
+						assert.strictEqual(error.message, `${tarball} packs ${packedName ?? "a package with no name"}, not ${name}`);
+						assert.isFalse(wrongIdentity.spawns.some((spawn) => spawn.args[0] === "install"));
+					}),
+				);
+			});
+		}
+	}
+
 	const absent = ScriptedSpawner.make(manifests());
 	installSuite(
 		absent,

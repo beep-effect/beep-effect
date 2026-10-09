@@ -283,8 +283,8 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 			if (MutableHashSet.has(reached, current.instanceId)) continue;
 			MutableHashSet.add(reached, current.instanceId);
 			for (const targetId of R.values(current.resolved)) {
-				const next = byId.get(targetId);
-				if (next !== undefined && !MutableHashSet.has(reached, targetId)) queue.push(next);
+				const next = MutableHashMap.get(byId, targetId);
+				if (O.isSome(next) && !MutableHashSet.has(reached, targetId)) queue.push(next.value);
 			}
 		}
 
@@ -311,7 +311,7 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 			if (!MutableHashSet.has(reached, pkg.instanceId)) continue;
 			const from = dependentOf(pkg);
 			for (const targetId of R.values(pkg.resolved)) {
-				if (byId.has(targetId)) record(targetId, from);
+				if (MutableHashMap.has(byId, targetId)) record(targetId, from);
 			}
 		}
 

@@ -108,6 +108,20 @@ describe("WorkspaceRoot.find — ascent bounds", () => {
 	});
 });
 
+describe("WorkspaceRoot.find — malformed ancestor manifest", () => {
+	layer(rootsOver({
+		"/ws/pnpm-workspace.yaml": "packages:\n  - packages/*\n",
+		"/ws/packages/a/package.json": "null",
+	}))((it) => {
+		it.effect("continues past a null manifest to the valid workspace root above it", () =>
+			Effect.gen(function* () {
+				const roots = yield* WorkspaceRoot;
+				assert.strictEqual(yield* roots.find("/ws/packages/a/src"), "/ws");
+			}),
+		);
+	});
+});
+
 // ── the carried discovery root (item 5) ─────────────────────────────────────
 
 const discovered: Tree = {

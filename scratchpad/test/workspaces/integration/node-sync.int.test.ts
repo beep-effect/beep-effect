@@ -6,7 +6,7 @@
 // surface; this one proves the SHIPPED preset is that same wiring: the
 // node-bound ops must find the same root and the same packages a consumer
 // wiring `node:fs` / `node:path` by hand would find, from a `packages/`
-// subdirectory of a real pnpm workspace.
+// subdirectory of a real Bun workspace.
 
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import nodePathModule, { dirname, resolve } from "node:path";
@@ -18,7 +18,7 @@ import { nodeFileSystem, nodePath, nodeSyncOps } from "../../../effected/workspa
 
 /** This package's own directory — the repo root is somewhere above it. */
 const here = dirname(fileURLToPath(import.meta.url));
-const cwd = resolve(here, "..", "..");
+const cwd = resolve(here, "..", "..", "..", "..", "packages", "foundation", "modeling", "utils");
 
 // The hand-wiring the preset replaces, kept as the oracle.
 const handWired: WorkspacesSyncOptions = {
@@ -36,7 +36,7 @@ describe("the node-sync preset against the real repository", () => {
 		const root = findWorkspaceRootSync(cwd, nodeSyncOps);
 		assert.isNotNull(root);
 		if (root === null) return assert.fail("expected a workspace root");
-		assert.isTrue(nodeFileSystem.exists(nodePath.join(root, "pnpm-workspace.yaml")));
+		assert.isTrue(nodeFileSystem.exists(nodePath.join(root, "bun.lock")));
 	});
 
 	it("getWorkspacePackagesSync enumerates this package and its siblings", () => {
@@ -44,9 +44,9 @@ describe("the node-sync preset against the real repository", () => {
 		assert.isNotNull(root);
 		if (root === null) return assert.fail("expected a workspace root");
 		const names = getWorkspacePackagesSync(root, nodeSyncOps).map((pkg) => pkg.name);
-		assert.include(names, "@effected/workspaces");
-		assert.include(names, "@effected/glob");
-		assert.include(names, "@effected/walker");
+		assert.include(names, "@beep/scratchpad");
+		assert.include(names, "@beep/utils");
+		assert.include(names, "@beep/identity");
 	});
 
 	it("agrees exactly with hand-wired node ops", () => {

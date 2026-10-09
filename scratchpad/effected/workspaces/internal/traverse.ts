@@ -1,3 +1,5 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 // The ONE workspace traversal.
@@ -16,6 +18,16 @@ import * as HashSet from "effect/HashSet";
 // of drift unrepresentable rather than merely fixed.
 
 import { MAX_ENUMERATION_ENTRIES, PRUNED_DIRECTORIES } from "./limits.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/internal/traverse");
+
+/** A positive integer depth bound, including integers beyond the safe-integer range. */
+const MaxDepth = S.Finite.check(
+	S.makeFilter(Number.isInteger, $I.annote("IntegerDepth", {
+		description: "An integer depth bound, with the same accepted range as Number.isInteger.",
+	})),
+	S.isGreaterThanOrEqualTo(1),
+).annotate($I.annote("MaxDepth", { description: "A positive integer workspace traversal depth bound." }));
 
 /** A directory queued for reading: its root-relative POSIX path, its absolute path, and its depth below the base. */
 export interface TraversalFrame {
@@ -48,7 +60,7 @@ export const joinRelative: {
  * PROGRAMMER error, not a data condition, so both entry points treat it as a
  * defect (an `Effect.die` / a thrown `RangeError`) rather than a typed failure.
  */
-export const isValidMaxDepth = (maxDepth: number): boolean => Number.isInteger(maxDepth) && maxDepth >= 1;
+export const isValidMaxDepth = S.is(MaxDepth);
 
 /** The message both entry points use when `maxDepth` is not a positive integer. */
 export const badMaxDepthMessage = (maxDepth: number): string =>

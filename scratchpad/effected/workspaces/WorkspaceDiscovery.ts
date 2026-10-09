@@ -7,6 +7,10 @@
 // It is also where `@effected/npm`'s `WorkspaceResolver` contract is
 // implemented: `versionOf` is a lookup over the discovered package list.
 
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
+import * as HashMap from "effect/HashMap";
+import * as Order from "effect/Order";
 import { $ScratchpadId } from "@beep/identity/packages";
 import { GlobSet } from "../glob/index.ts";
 import { DependencyResolutionError, WorkspaceResolver } from "../npm/index.ts";
@@ -21,7 +25,6 @@ import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
-import type { EnumerationFailureKind } from "./internal/enumerate.ts";
 import { enumerate } from "./internal/enumerate.ts";
 import { findLayerRoot } from "./internal/layerRoot.ts";
 import { readPatterns } from "./internal/patterns.ts";
@@ -31,6 +34,17 @@ import { WorkspaceRoot } from "./WorkspaceRoot.ts";
 import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspaceDiscovery");
+
+const WorkspaceDiscoveryErrorKind = LiteralKit(["read", "invalidJson", "invalidShape", "invalidYaml", "missingName"]).annotate(
+	$I.annote("WorkspaceDiscoveryErrorKind", { description: "The reasons workspace manifest discovery can fail." }),
+);
+const WorkspacePatternErrorKind = LiteralKit(["missingBaseDir", "uncompilable", "depthExceeded", "budgetExceeded", "unreadableDirectory"]).annotate(
+	$I.annote("WorkspacePatternErrorKind", { description: "The reasons a workspace pattern can fail to enumerate." }),
+);
+const byName = Order.make<WorkspacePackage>((a, b) => {
+	const comparison = a.name.localeCompare(b.name);
+	return comparison < 0 ? -1 : comparison > 0 ? 1 : 0;
+});
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
@@ -64,7 +78,7 @@ export class WorkspaceDiscoveryError extends S.TaggedError<WorkspaceDiscoveryErr
 	/** The file that failed. */
 	path: S.String.annotateKey({ description: "The file that failed." }),
 	/** What went wrong with it. */
-	kind: S.Literals(["read", "invalidJson", "invalidShape", "invalidYaml", "missingName"]).annotateKey({ description: "What went wrong with it." }),
+	kind: WorkspaceDiscoveryErrorKind.annotateKey({ description: "What went wrong with it." }),
 	/** The originating failure, if there was one. */
 	cause: S.Defect().annotateKey({ description: "The originating failure, if there was one." }),
 }, $I.annote("WorkspaceDiscoveryError", { description: "Raised when a workspace member's `package.json` cannot be read, parsed, or used — it is missing, malformed, or lacks a `name`." })) {
@@ -87,7 +101,7 @@ export class WorkspacePatternError extends S.TaggedError<WorkspacePatternError>(
 	/** The offending pattern, verbatim. */
 	pattern: S.String.annotateKey({ description: "The offending pattern, verbatim." }),
 	/** Why it could not be enumerated. */
-	kind: S.Literals(["missingBaseDir", "uncompilable", "depthExceeded", "budgetExceeded", "unreadableDirectory"]).annotateKey({ description: "Why it could not be enumerated." }),
+	kind: WorkspacePatternErrorKind.annotateKey({ description: "Why it could not be enumerated." }),
 	/** A short, structured detail — the missing directory, or the bound exceeded. */
 	detail: S.String.annotateKey({ description: "A short, structured detail — the missing directory, or the bound exceeded." }),
 }, $I.annote("WorkspacePatternError", { description: "Raised when a `packages:` pattern cannot be enumerated: its base directory is absent (usually a typo), the descent exceeded its depth cap, or the visit budget was exhausted." })) {
@@ -151,11 +165,6 @@ export type WorkspaceLookupFailure =
  */
 export type WorkspaceDiscoveryFailure = Exclude<WorkspaceLookupFailure, PackageNotFoundError>;
 
-/** The enumeration failure kinds map straight onto the pattern-error kinds. */
-const patternKindOf = (
-	kind: EnumerationFailureKind,
-): "missingBaseDir" | "depthExceeded" | "budgetExceeded" | "unreadableDirectory" => kind;
-
 /**
  * Options for the {@link WorkspaceDiscovery} layer.
  *
@@ -210,8 +219,12 @@ export interface WorkspaceDiscoveryShape {
 	readonly info: Effect.Effect<WorkspaceInfo, WorkspaceDiscoveryFailure>;
 	/** Every workspace package, root first, then the rest sorted by relative path. */
 	readonly listPackages: Effect.Effect<ReadonlyArray<WorkspacePackage>, WorkspaceDiscoveryFailure>;
-	/** The discovered packages keyed by their root-relative importer path. */
-	readonly importerMap: Effect.Effect<ReadonlyMap<string, WorkspacePackage>, WorkspaceDiscoveryFailure>;
+	/**
+	 * The discovered packages keyed by their root-relative importer path.
+	 * Use `listPackages` as the explicit root-first sequence for ordered importer
+	 * iteration; HashMap iteration does not preserve insertion order.
+	 */
+	readonly importerMap: Effect.Effect<HashMap.HashMap<string, WorkspacePackage>, WorkspaceDiscoveryFailure>;
 	/** A single package by name. */
 	readonly getPackage: (name: string) => Effect.Effect<WorkspacePackage, WorkspaceLookupFailure>;
 	/** The package owning an absolute file path, by longest-prefix match. */
@@ -475,7 +488,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 								WorkspacePatternError.make({
 									root,
 									pattern: failure.pattern,
-									kind: patternKindOf(failure.kind),
+									kind: failure.kind,
 									detail: failure.detail,
 								}),
 						),
@@ -558,31 +571,32 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 
 			const packages = memo.pipe(Effect.map((state) => state.packages));
 
-			/**
-			 * The longest-prefix index, built once per package list.
-			 *
-			 * Keyed on the package array's identity: the memo hands back the *same*
-			 * array on every call, so this is a hit for the whole life of the memo, and
-			 * `refresh()` produces a fresh array — a cache miss — which is exactly the
-			 * invalidation we want. No staleness is representable.
-			 */
-			const ownerIndexes = new WeakMap<
-				ReadonlyArray<WorkspacePackage>,
-				ReadonlyArray<{ readonly prefix: string; readonly package: WorkspacePackage }>
-			>();
+			// Each service owns only its latest snapshot's indexes. Reference equality
+			// detects refresh without changing equality on caller-owned arrays.
+			const indexOwner: {
+				ownerIndex: {
+					readonly snapshot: ReadonlyArray<WorkspacePackage>;
+					readonly entries: ReadonlyArray<{ readonly prefix: string; readonly package: WorkspacePackage }>;
+				} | undefined;
+				packageIndex: {
+					readonly snapshot: ReadonlyArray<WorkspacePackage>;
+					readonly entries: MutableHashMap.MutableHashMap<string, WorkspacePackage>;
+				} | undefined;
+			} = { ownerIndex: undefined, packageIndex: undefined };
 
 			const owners = (
 				all: ReadonlyArray<WorkspacePackage>,
 			): ReadonlyArray<{ readonly prefix: string; readonly package: WorkspacePackage }> => {
-				const cached = ownerIndexes.get(all);
-				if (cached !== undefined) return cached;
-				const index = all
-					.map((pkg) => ({
+				const cached = indexOwner.ownerIndex;
+				if (cached !== undefined && cached.snapshot === all) return cached.entries;
+				const index = A.sort(
+					all.map((pkg) => ({
 						prefix: pkg.path.endsWith(path.sep) ? pkg.path : pkg.path + path.sep,
 						package: pkg,
-					}))
-					.sort((a, b) => b.prefix.length - a.prefix.length);
-				ownerIndexes.set(all, index);
+					})),
+					Order.mapInput(Order.Number, (entry: { readonly prefix: string }) => -entry.prefix.length),
+				);
+				indexOwner.ownerIndex = { snapshot: all, entries: index };
 				return index;
 			};
 
@@ -596,18 +610,16 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 				return O.none();
 			};
 
-			const packageIndexes = new WeakMap<ReadonlyArray<WorkspacePackage>, MutableHashMap.MutableHashMap<string, WorkspacePackage>>();
-
 			const packagesByName = (all: ReadonlyArray<WorkspacePackage>): MutableHashMap.MutableHashMap<string, WorkspacePackage> => {
-				const cached = packageIndexes.get(all);
-				if (cached !== undefined) return cached;
+				const cached = indexOwner.packageIndex;
+				if (cached !== undefined && cached.snapshot === all) return cached.entries;
 				// First-write-wins, matching the `all.find` this index replaced: discovery does not
 				// reject duplicate names, and a plain `new Map(all.map(...))` would keep the last.
 				const index = MutableHashMap.empty<string, WorkspacePackage>();
 				for (const pkg of all) {
 					if (!MutableHashMap.has(index, pkg.name)) MutableHashMap.set(index, pkg.name, pkg);
 				}
-				packageIndexes.set(all, index);
+				indexOwner.packageIndex = { snapshot: all, entries: index };
 				return index;
 			};
 
@@ -623,7 +635,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 
 				importerMap: Effect.suspend(Effect.fn("WorkspaceDiscovery.importerMap")(function* () {
 					const all = yield* packages;
-					return MutableHashMap.fromIterable(all.map((pkg) => [pkg.relativePath, pkg] as const)).backing;
+					return HashMap.fromIterable(all.map((pkg) => [pkg.relativePath, pkg] as const));
 				})),
 
 				getPackage: Effect.fn("WorkspaceDiscovery.getPackage")(function* (name: string) {
@@ -656,7 +668,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 						const owner = ownerOf(filePath, index);
 						if (O.isSome(owner)) MutableHashMap.set(seen, owner.value.name, owner.value);
 					}
-					return [...MutableHashMap.values(seen)].sort((a, b) => a.name.localeCompare(b.name));
+					return A.sort(MutableHashMap.values(seen), byName);
 				}),
 
 				refreshIn: Effect.fn("WorkspaceDiscovery.refreshIn")(function* (directory: string) {
@@ -676,7 +688,10 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 						Effect.forEach([...MutableHashMap.values(rootMemos)], (cell) => cell.invalidate, { discard: true }),
 						() => {
 							MutableHashMap.clear(rootMemos);
-							return invalidate;
+							return Effect.tap(invalidate, () => Effect.sync(() => {
+								indexOwner.ownerIndex = undefined;
+								indexOwner.packageIndex = undefined;
+							}));
 						},
 					)),
 			};
@@ -769,7 +784,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 				Effect.die(
 					WorkspaceDiscoveryCause.make({ message: "WorkspaceDiscovery.makeTest: info() was called but not stubbed — no honest default WorkspaceInfo exists for a test double; pass an `info` override." }),
 				)),
-			importerMap: Effect.suspend(() => Effect.map(listPackages, (all) => MutableHashMap.fromIterable(all.map((pkg) => [pkg.relativePath, pkg] as const)).backing)),
+			importerMap: Effect.suspend(() => Effect.map(listPackages, (all) => HashMap.fromIterable(all.map((pkg) => [pkg.relativePath, pkg] as const)))),
 			getPackage: (name: string) =>
 				Effect.flatMap(listPackages, (all) => {
 					const found = all.find((pkg) => pkg.name === name);
@@ -785,7 +800,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 						const owner = ownerOf(filePath, all);
 						if (O.isSome(owner)) MutableHashMap.set(seen, owner.value.name, owner.value);
 					}
-					return [...MutableHashMap.values(seen)].sort((a, b) => a.name.localeCompare(b.name));
+					return A.sort(MutableHashMap.values(seen), byName);
 				}),
 			// Both per-root methods DIE unstubbed rather than deriving from
 			// `listPackages`. Deriving would model a world in which every root holds
@@ -867,16 +882,21 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 			// Name → version, where a version-less member is present with `undefined`:
 			// membership and version are two different questions here, and `has` is
 			// what tells them apart.
-			const versionIndexes = new WeakMap<ReadonlyArray<WorkspacePackage>, MutableHashMap.MutableHashMap<string, string | undefined>>();
+			const resolverOwner: {
+				versionIndex: {
+					readonly snapshot: ReadonlyArray<WorkspacePackage>;
+					readonly entries: MutableHashMap.MutableHashMap<string, string | undefined>;
+				} | undefined;
+			} = { versionIndex: undefined };
 			const versionsByName = (all: ReadonlyArray<WorkspacePackage>): MutableHashMap.MutableHashMap<string, string | undefined> => {
-				const cached = versionIndexes.get(all);
-				if (cached !== undefined) return cached;
+				const cached = resolverOwner.versionIndex;
+				if (cached !== undefined && cached.snapshot === all) return cached.entries;
 				// First-write-wins, matching the `all.find` this index replaced.
 				const index = MutableHashMap.empty<string, string | undefined>();
 				for (const pkg of all) {
 					if (!MutableHashMap.has(index, pkg.name)) MutableHashMap.set(index, pkg.name, pkg.version);
 				}
-				versionIndexes.set(all, index);
+				resolverOwner.versionIndex = { snapshot: all, entries: index };
 				return index;
 			};
 			return {

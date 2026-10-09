@@ -16,6 +16,8 @@ import { dual } from "effect/Function";
 
 import type { Lockfile } from "../../lockfiles/index.ts";
 import * as R from "effect/Record";
+import * as O from "effect/Option";
+import * as MutableHashMap from "effect/MutableHashMap";
 
 /**
  * One importer's dependency-name → resolved-version map, keyed by importer path.
@@ -78,9 +80,9 @@ const isConcreteVersion = (version: string): boolean =>
  * fallback is inert for them.
  */
 export const importerVersionsOf = (lockfile: Lockfile): VersionIndex => {
-	const index: Record<string, Record<string, string>> = Object.create(null);
+	const index = MutableHashMap.empty<string, Record<string, string>>();
 	for (const importer of lockfile.importers) {
-		const versions: Record<string, string> = Object.create(null);
+		const versions = MutableHashMap.empty<string, string>();
 		for (const dependency of importer.dependencies) {
 			const recorded = dependency.version;
 			if (recorded === undefined) continue;
@@ -89,14 +91,11 @@ export const importerVersionsOf = (lockfile: Lockfile): VersionIndex => {
 			// First field wins only when a later one disagrees; pnpm records the same
 			// resolved version across every field that declares the dependency, so a
 			// conflict here is a malformed lockfile rather than a real ambiguity.
-			versions[dependency.name] ??= version;
+			if (!MutableHashMap.has(versions, dependency.name)) MutableHashMap.set(versions, dependency.name, version);
 		}
-		// `Object.fromEntries`-equivalent own-property semantics via a null-prototype
-		// object: a `__proto__` importer path or dependency name neither pollutes nor
-		// silently drops.
-		index[importer.path] = versions;
+		MutableHashMap.set(index, importer.path, R.fromEntries(versions));
 	}
-	return index;
+	return R.fromEntries(index);
 };
 
 /**
@@ -116,7 +115,7 @@ export const unanimousVersionOf: {
 } = dual(2, (index: VersionIndex, dependency: string): string | undefined => {
 	let agreed: string | undefined;
 	for (const versions of R.values(index)) {
-		const version = versions[dependency];
+		const version = O.getOrUndefined(R.get(versions, dependency));
 		if (version === undefined) continue;
 		if (agreed === undefined) {
 			agreed = version;

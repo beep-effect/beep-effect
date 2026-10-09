@@ -14,6 +14,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { Lockfile } from "../../effected/lockfiles/index.ts";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { CatalogSet, WorkspaceStateSnapshot } from "../../effected/workspaces/index.ts";
@@ -177,4 +178,40 @@ describe("WorkspaceStateSnapshot — wire compatibility", () => {
 		}));
 		assert.isTrue(O.isNone(decoded.resolve("effect", "catalog:effect:peers")));
 	});
+});
+
+
+describe("importer versions — own-key records", () => {
+	for (const name of ["constructor", "toString", "__proto__"]) {
+		it(`does not fabricate an inherited importer ${name}`, () => {
+			const state = snapshot({ ".": { effect: "1.0.0" } });
+			assert.deepStrictEqual(state.resolveIn(name, "name", "catalog:missing"), O.none());
+			assert.deepStrictEqual(state.resolveIn(name, "effect", "catalog:missing"), O.none());
+		});
+		it(`does not fabricate an inherited dependency ${name}`, () => {
+			const state = snapshot({ ".": { effect: "1.0.0" } });
+			assert.deepStrictEqual(state.resolveIn(".", name, "catalog:missing"), O.none());
+			assert.deepStrictEqual(state.resolve(name, "catalog:missing"), O.none());
+			assert.isUndefined(unanimousVersionOf({ ".": { effect: "1.0.0" } }, name));
+		});
+		it(`preserves own importer and dependency ${name}, first field wins`, () => {
+			const lockfile = Result.getOrThrow(S.decodeResult(Lockfile)({
+				format: "pnpm", lockfileVersion: "9.0", packages: [], workspaceDependencies: [],
+				importers: [
+					{ path: name, dependencies: [
+						{ name, specifier: "^1.0.0", version: "1.0.0", depType: "dependencies" },
+						{ name, specifier: "^2.0.0", version: "2.0.0", depType: "devDependencies" },
+					] },
+					{ path: "packages/z", dependencies: [] },
+					{ path: "packages/a", dependencies: [] },
+				],
+			}));
+			const index = importerVersionsOf(lockfile);
+			assert.deepStrictEqual(R.keys(index), [name, "packages/z", "packages/a"]);
+			assert.deepStrictEqual(O.flatMap(R.get(index, name), R.get(name)), O.some("1.0.0"));
+			assert.strictEqual(unanimousVersionOf(index, name), "1.0.0");
+			const state = snapshot(index);
+			assert.deepStrictEqual(state.resolveIn(name, name, "catalog:missing"), O.some("1.0.0"));
+		});
+	}
 });

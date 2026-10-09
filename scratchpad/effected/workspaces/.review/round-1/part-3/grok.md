@@ -1,0 +1,23 @@
+I'll review those seven workspace files against the pinned upstream oracle and the port decisions, and report only findings. First I'm loading the binding decisions, port notes, and the files themselves.The review scope is those seven files. Next I’ll read the binding decisions, recorded deviations, and a structural diff against the pinned upstream copies.`WorkspaceLayering.checkWorkspace` yields `listPackages` without calling it. I’ll confirm whether that signature changed, then compare the other six files the same way.The remaining open question is whether `fromBunBlocks` keeps a `__proto__` catalog that upstream drops. I'll read that path and the deviation rules before writing findings.### grok-1-1
+- file: scratchpad/effected/workspaces/WorkspaceCatalogs.ts:160
+- class: bug   severity: required
+- standard: EFFECTED_PORT_GOAL.md D9 / §14   evidence: Upstream `fromBunBlocks` (`WorkspaceCatalogs.ts:137`) copies `blocks.catalogs` with `Object.assign` onto `{}`. `Object.assign` writes with `[[Set]]`, and an ordinary object's `__proto__` setter replaces `[[Prototype]]` and creates no own key, so `normalize` (`Object.entries` / `R.toEntries`) omits that catalog. The lab copies with object spread (`CopyDataProperties` → `[[DefineOwnProperty]]`), and `normalize`'s `define` (`internal/catalogs.ts:75`) then stores `__proto__` as an own enumerable catalog. `fromManifestWorkspaces` (line 194) and bun `fromLockfile` (line 148) both call `fromBunBlocks`. pnpm's `getCatalogsFromWorkspaceManifest` already spreads, and `scratchpad/test/workspaces/WorkspaceCatalogs.test.ts:112` locks the own-key outcome only for `fromLockfileCatalogs`. README Port notes → Deviations and the ledger `deviations` array are empty. A key-skip copy would satisfy `beep-laws/no-native-runtime` and keep upstream membership, so the retained catalog needs an `upstream-bug` record.
+- failure: `CatalogSet.fromBunBlocks({ catalogs: JSON.parse('{"__proto__":{"evil":"1.0.0"}}') })` keeps an own `__proto__` catalog whose range is `1.0.0`. Upstream's assign path yields an empty set. When `catalog` is also an object and the `__proto__` value has a `default` object, upstream's `[[Set]]` reads that inherited `default` and merges it into the default catalog; the spread path's default catalog contains only the explicit `catalog` block.
+- fix: Record an `upstream-bug` deviation (Object.assign `[[Set]]` on `__proto__`, against the module's own-key catalog test and pnpm's spread) in `PORT_LEDGER.json` and README Port notes → Deviations, and extend the `__proto__` test to `fromBunBlocks`. Keep the spread or a `defineProperty` copy of every own key.
+
+### grok-1-2
+- file: scratchpad/effected/workspaces/WorkspaceLayering.ts:75
+- class: docs   severity: backlog
+- standard: effect-tsgo `schemaNumber` (TS377098); EFFECTED_PORT_GOAL.md §14   evidence: Upstream `LayeringReport.edgeCount` is `Schema.Number` (`WorkspaceLayering.ts:66`). The lab field is `S.Finite`. `check` assigns `edges.length`, which is finite, so a live check result matches. `schemaNumber` tells `Schema.Number` to accept `NaN` and the infinities and names `Schema.Finite` as the replacement. Deviations lists none.
+- failure: Decoding a `LayeringReport` with a non-finite `edgeCount` fails in the lab and succeeds upstream. The check path still reports `edges.length`.
+- fix: Add one ledger and README deviation with cause `law:schema-number`, stating that `check` output is unchanged.
+
+### grok-1-3
+- file: scratchpad/effected/workspaces/WorkspaceDiscovery.ts:341
+- class: docs   severity: backlog
+- standard: effect-laws-v1.md law 7; D15; `SchemaGetter.parseJson`   evidence: `S.decodeEffect(JsonValue)` uses `SchemaGetter.parseJson`, whose catch drops the `SyntaxError` and fails with `SchemaIssue.InvalidValue` expected `"a valid JSON string"` (`SchemaGetter.ts:1266-1270`). Upstream `Effect.try(JSON.parse)` places that `SyntaxError` on `kind: "invalidJson"`. The same law replaces `new Error(...)` with `WorkspaceDiscoveryCause` (`WorkspaceDiscovery.ts:355`), `WorkspaceCatalogsDefect` (`WorkspaceCatalogs.ts:190`), and the null-manifest defect `WorkspaceRootManifestError` (`WorkspaceRoot.ts:143`), whose message is the V8 sentence `Cannot read properties of null (reading 'workspaces')`. Kinds stay, and the locked `invalidShape` sentences stay. Deviations lists none.
+- failure: An `invalidJson` failure's `cause.message` is the schema expectation `"a valid JSON string"`. A null root `package.json` still dies during ascent, and the defect class is `WorkspaceRootManifestError`.
+- fix: Add one ledger and README deviation, cause `law:no-native-Error` / `law:D15`, listing these cause classes and the `invalidJson` message.
+
+REQUIRED: 1
+BACKLOG: 2

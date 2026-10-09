@@ -4,6 +4,8 @@
 // root package.json `workspaces` field (array form, or the legacy
 // `{ packages: [...] }` object form). The YAML is parsed with `@effected/yaml`.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Yaml } from "../../yaml/index.ts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -12,12 +14,20 @@ import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
 import * as A from "effect/Array";
 
+const $I = $ScratchpadId.create("effected/workspaces/internal/patterns");
+
+/** The caller-visible reasons reading workspace patterns can fail. */
+export const PatternReadFailureKind = LiteralKit(["read", "invalidYaml", "invalidJson"]).annotate(
+	$I.annote("PatternReadFailureKind", { description: "The caller-visible reasons reading workspace patterns can fail." }),
+);
+export type PatternReadFailureKind = typeof PatternReadFailureKind.Type;
+
 const JsonValue = S.fromJsonString(S.Unknown);
 
 /** The reason a pattern read failed, with the file it failed on. */
 export interface PatternReadFailure {
 	readonly path: string;
-	readonly kind: "read" | "invalidYaml" | "invalidJson";
+	readonly kind: PatternReadFailureKind;
 	readonly cause: unknown;
 }
 

@@ -1,6 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -171,7 +172,7 @@ export const consumerFiles = (
 	const extra = R.fromEntries(
 		R.toEntries(input.dependencies)
 			.filter(([name]) => name !== input.carrier.name)
-			.map(([name, spec]) => [name, R.has(specs, name) ? (specs[name] ?? spec) : spec] as const),
+			.map(([name, spec]) => [name, O.getOrElse(R.get(specs, name), () => spec)] as const),
 	);
 	const manifest = {
 		name: `packed-install-${input.manager}`,
@@ -321,19 +322,25 @@ const BARE_NAME = /^(?:@[^/@\s>]+\/)?[^/@\s>]+$/;
  * name to the path after `file:` (relative paths are the caller's to resolve,
  * against the workspace root, as pnpm does). Entries that are not strings,
  * not `file:`, or keyed by anything but a bare package name are skipped, and
- * so is `__proto__`, which no npm package can be named. The map has no
- * prototype, so a package named `constructor` or `prototype` is an ordinary
- * own entry and a missing name never resolves to an inherited member.
+ * so is `__proto__`, which no npm package can be named. A package named
+ * `constructor` or `prototype` is an ordinary own entry; read the public
+ * record with `R.get` so missing names never resolve to inherited members.
  */
 export const fileOverridesOf = (document: unknown): Record<string, string> => {
-	const out: Record<string, string> = Object.create(null);
+	let out = HashMap.empty<string, string>();
+	const order: Array<string> = [];
 	if (!P.isObject(document) || !P.isObject(document.overrides))
-		return out;
+		return R.fromEntries([]);
 	for (const [name, spec] of R.toEntries(document.overrides)) {
 		if (name === "__proto__") continue;
-		if (P.isString(spec) && spec.startsWith("file:") && BARE_NAME.test(name)) out[name] = spec.slice(5);
+		if (P.isString(spec) && spec.startsWith("file:") && BARE_NAME.test(name)) {
+			out = HashMap.set(out, name, spec.slice(5));
+			order.push(name);
+		}
 	}
-	return out;
+	return R.fromEntries(A.getSomes(order.map((name) =>
+		O.map(HashMap.get(out, name), (spec) => [name, spec] as const),
+	)));
 };
 
 /** An `overrides` value without the `file:` prefix a caller may copy from a workspace file. */

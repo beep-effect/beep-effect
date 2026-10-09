@@ -1,3 +1,7 @@
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
+import * as Order from "effect/Order";
+import { pipe } from "effect/Function";
 import { $ScratchpadId } from "@beep/identity/packages";
 import { GlobSet } from "../glob/index.ts";
 import { DependencyField } from "../npm/index.ts";
@@ -46,7 +50,8 @@ export interface LayeringGraph {
 	readonly edges: ReadonlyArray<LayerEdge>;
 }
 
-type OffenceReason = "upward" | "sameLayer" | "toolingReachesLayer" | "intoUnconstrained" | "intoUnclassified";
+const OffenceReason = LiteralKit(["upward", "sameLayer", "toolingReachesLayer", "intoUnconstrained", "intoUnclassified"]);
+type OffenceReason = typeof OffenceReason.Type;
 
 /**
  * What a layering check found.
@@ -62,7 +67,7 @@ export class LayeringReport extends S.Class<LayeringReport>($I`LayeringReport`)(
 	offenders: S.Array(
 		S.Struct({
 			edge: LayerEdge,
-			reason: S.Literals(["upward", "sameLayer", "toolingReachesLayer", "intoUnconstrained", "intoUnclassified"]),
+			reason: OffenceReason,
 		}),
 	).annotateKey({ description: "Edges that break the policy, each with why." }),
 	/** The members of every dependency cycle in the checked fields, or none. */
@@ -111,7 +116,7 @@ const cycleOf = (
 	names: ReadonlyArray<string>,
 	edges: ReadonlyArray<LayerEdge>,
 ): O.Option<ReadonlyArray<string>> => {
-	const sorted = [...MutableHashSet.fromIterable([...names, ...edges.flatMap((e) => [e.from, e.to])])].sort();
+	const sorted = A.sort(A.fromIterable(MutableHashSet.fromIterable([...names, ...edges.flatMap((e) => [e.from, e.to])])), Order.String);
 	const graph = Graph.directed<string, string>((mutable) => {
 		const index = MutableHashMap.empty<string, Graph.NodeIndex>();
 		for (const name of sorted) MutableHashMap.set(index, name, Graph.addNode(mutable, name));
@@ -129,7 +134,7 @@ const cycleOf = (
 			if (name !== undefined) MutableHashSet.add(members, name);
 		}
 	}
-	return MutableHashSet.size(members) === 0 ? O.none() : O.some([...members].sort());
+	return MutableHashSet.size(members) === 0 ? O.none() : O.some(A.sort(A.fromIterable(members), Order.String));
 };
 
 /**
@@ -196,14 +201,21 @@ export class WorkspaceLayering {
 		const names = MutableHashSet.fromIterable(graph.names);
 		const present = MutableHashSet.fromIterable(edges.map((e) => `${e.from} -> ${e.to}`));
 		return LayeringReport.make({
-			duplicates: [...declared]
-				.filter(([name, times]) => times > 1 || unconstrained.matches(name))
-				.map(([name]) => name)
-				.sort(),
-			unclassified: graph.names.filter((name) => place(name).kind === "unclassified").sort(),
+			duplicates: pipe(
+				A.fromIterable(declared),
+				A.filter(([name, times]) => times > 1 || unconstrained.matches(name)),
+				A.map(([name]) => name),
+				A.sort(Order.String),
+			),
+			unclassified: A.sort(A.filter(graph.names, (name) => place(name).kind === "unclassified"), Order.String),
 			offenders,
 			cycle: cycleOf(graph.names, edges),
-			missingDeclared: [...MutableHashMap.keys(declared)].filter((name) => !MutableHashSet.has(names, name)).sort(),
+			missingDeclared: declared.pipe(
+				MutableHashMap.keys,
+				A.fromIterable,
+				A.filter((name) => !MutableHashSet.has(names, name)),
+				A.sort(Order.String),
+			),
 			missingRequiredEdges: (policy.requiredEdges ?? []).filter((required) => !MutableHashSet.has(present, required)),
 			edgeCount: edges.length,
 		});
@@ -214,10 +226,10 @@ export class WorkspaceLayering {
 		const names = MutableHashSet.fromIterable(packages.map((pkg) => pkg.name));
 		return packages.flatMap((pkg) =>
 			ALL_DEPENDENCY_FIELDS.flatMap((field) =>
-				R.keys(pkg[field])
-					.filter((name) => MutableHashSet.has(names, name) && name !== pkg.name)
-					.sort()
-					.map((to) => LayerEdge.make({ from: pkg.name, to, field })),
+				A.map(
+					A.sort(A.filter(R.keys(pkg[field]), (name) => MutableHashSet.has(names, name) && name !== pkg.name), Order.String),
+					(to) => LayerEdge.make({ from: pkg.name, to, field }),
+				),
 			),
 		);
 	};

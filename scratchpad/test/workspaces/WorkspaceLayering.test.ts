@@ -1,6 +1,8 @@
 import { assert, describe, it, layer } from "@effect/vitest";
 import type { DependencyField } from "../../effected/npm/index.ts";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import { DependencyGraph, WorkspaceDiscovery, WorkspacePackage } from "../../effected/workspaces/index.ts";
 import type { LayeringGraph } from "../../effected/workspaces/testing.ts";
@@ -168,7 +170,7 @@ describe("WorkspaceLayering.edgesOf", () => {
 			WorkspaceLayering.edgesOf(packages).map((e) => e.label),
 			["a -> b (dependencies)", "a -> b (devDependencies)", "c -> b (dependencies)"],
 		);
-		assert.strictEqual(DependencyGraph.make({ packages }).adjacency.get("a")?.size, 1);
+		assert.strictEqual(O.getOrUndefined(O.map(HashMap.get(DependencyGraph.make({ packages }).adjacency, "a"), HashSet.size)), 1);
 	});
 });
 
