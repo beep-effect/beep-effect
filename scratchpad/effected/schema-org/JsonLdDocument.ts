@@ -1,5 +1,8 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { APIReference } from "./APIReference.ts";
@@ -11,6 +14,9 @@ import { SoftwareSourceCode } from "./SoftwareSourceCode.ts";
 import { TechArticle } from "./TechArticle.ts";
 
 const $I = $ScratchpadId.create("effected/schema-org/JsonLdDocument");
+
+// The public accessor retains the native ReadonlySet contract through its schema codec.
+const decodeStringSet = S.decodeResult(S.toCodecIso(S.ReadonlySet(S.String)));
 
 /**
  * Indicates that two nodes in one graph claim the same `@id`.
@@ -82,16 +88,16 @@ const NODE_SCHEMAS = {
 } as const;
 
 /** The terms a node's `additional` catch-all may never set. */
-const reservedTerms = (node: JsonLdNode): ReadonlySet<string> =>
-	new Set(Object.keys(NODE_SCHEMAS[node["@type"]].fields));
+const reservedTerms = (node: JsonLdNode): MutableHashSet.MutableHashSet<string> =>
+	MutableHashSet.fromIterable(R.keys<string, unknown>(NODE_SCHEMAS[node["@type"]].fields));
 
 /** Every `@id` a node points at through a `NodeRef`, in any field. */
 const referencedIds = (node: JsonLdNode): ReadonlyArray<string> => {
 	const ids: Array<string> = [];
-	const values: ReadonlyArray<unknown> = Object.values(node);
+	const values = R.values<string, unknown>({ ...node });
 	for (const value of values) {
 		if (S.is(NodeRef)(value)) ids.push(value["@id"]);
-		else if (Array.isArray(value)) for (const item of value) if (S.is(NodeRef)(item)) ids.push(item["@id"]);
+		else if (A.isArray(value)) for (const item of value) if (S.is(NodeRef)(item)) ids.push(item["@id"]);
 	}
 	return ids;
 };
@@ -113,7 +119,7 @@ const SCRIPT_ESCAPES: Readonly<Record<string, string>> = {
 /** Drops keys whose value is `undefined`; JSON-LD has no undefined and no meaningful null. */
 const withoutUndefined = (value: Record<string, S.Json | undefined>): Record<string, S.Json> => {
 	const out: Record<string, S.Json> = {};
-	for (const [key, entry] of Object.entries(value)) if (entry !== undefined) out[key] = entry;
+	for (const [key, entry] of R.toEntries(value)) if (entry !== undefined) out[key] = entry;
 	return out;
 };
 
@@ -185,20 +191,20 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	static buildResult(
 		nodes: ReadonlyArray<JsonLdNode>,
 	): Result.Result<JsonLdDocument, InvalidNodeIdError | DuplicateNodeIdError | ConflictingTermError> {
-		const seen = new Set<string>();
+		const seen = MutableHashSet.empty<string>();
 		for (const node of nodes) {
 			const id = node["@id"];
 			if (!NodeRef.isValidId(id)) return Result.fail(InvalidNodeIdError.make({ input: id }));
-			if (seen.has(id)) return Result.fail(DuplicateNodeIdError.make({ id }));
-			seen.add(id);
+			if (MutableHashSet.has(seen, id)) return Result.fail(DuplicateNodeIdError.make({ id }));
+			MutableHashSet.add(seen, id);
 
 			for (const referenced of referencedIds(node)) {
 				if (!NodeRef.isValidId(referenced)) return Result.fail(InvalidNodeIdError.make({ input: referenced }));
 			}
 
 			const reserved = reservedTerms(node);
-			for (const term of Object.keys(node.additional ?? {})) {
-				if (reserved.has(term)) return Result.fail(ConflictingTermError.make({ nodeId: id, term }));
+			for (const term of R.keys(node.additional ?? {})) {
+				if (MutableHashSet.has(reserved, term)) return Result.fail(ConflictingTermError.make({ nodeId: id, term }));
 			}
 		}
 		return Result.succeed(JsonLdDocument.make({ "@graph": nodes }));
@@ -215,7 +221,7 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 
 	/** The `@id` of every node in the graph. */
 	get nodeIds(): ReadonlySet<string> {
-		return new Set(this["@graph"].map((node) => node["@id"]));
+		return Result.getOrThrow(decodeStringSet(this["@graph"].map((node) => node["@id"])));
 	}
 
 	/**
@@ -229,9 +235,9 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	 */
 	get danglingReferences(): ReadonlyArray<string> {
 		const defined = this.nodeIds;
-		const dangling = new Set<string>();
+		const dangling = MutableHashSet.empty<string>();
 		for (const node of this["@graph"]) {
-			for (const id of referencedIds(node)) if (!defined.has(id)) dangling.add(id);
+			for (const id of referencedIds(node)) if (!defined.has(id)) MutableHashSet.add(dangling, id);
 		}
 		return [...dangling];
 	}

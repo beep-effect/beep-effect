@@ -1,6 +1,10 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FOREIGN_PREFIX_SET } from "./internal/vocabulary.ts";
@@ -260,28 +264,28 @@ function nativeTerm(term: string): string | undefined {
 	if (colon === -1) return term;
 	// A declared foreign prefix is not ours to judge; an undeclared one is
 	// returned whole, so it falls through to the unknown-term branch.
-	return FOREIGN_PREFIX_SET.has(term.slice(0, colon)) ? undefined : term;
+	return MutableHashSet.has(FOREIGN_PREFIX_SET, term.slice(0, colon)) ? undefined : term;
 }
 
 /** The terms a node actually asserts: its typed fields plus its flattened catch-all, minus the JSON-LD keywords. */
 function assertedTerms(node: JsonLdNode): ReadonlyArray<string> {
 	const { additional, ...typed } = node;
 	const terms: Array<string> = [];
-	for (const [term, value] of Object.entries(typed)) {
+	for (const [term, value] of R.toEntries<string, unknown>(typed)) {
 		if (term === "@id" || term === "@type" || value === undefined) continue;
 		terms.push(term);
 	}
-	for (const term of Object.keys(additional ?? {})) terms.push(term);
+	for (const term of R.keys(additional ?? {})) terms.push(term);
 	return terms;
 }
 
 /** Every `NodeRef` a node holds, paired with the property it sits in. */
 function referencesOf(node: JsonLdNode): ReadonlyArray<readonly [property: string, id: string]> {
 	const out: Array<readonly [string, string]> = [];
-	const entries: ReadonlyArray<readonly [string, unknown]> = Object.entries(node);
+	const entries = R.toEntries<string, unknown>({ ...node });
 	for (const [property, value] of entries) {
 		if (S.is(NodeRef)(value)) out.push([property, value["@id"]]);
-		else if (Array.isArray(value)) {
+		else if (A.isArray(value)) {
 			for (const item of value) if (S.is(NodeRef)(item)) out.push([property, item["@id"]]);
 		}
 	}
@@ -424,26 +428,13 @@ export class Conformance {
 		const danglingReferences = options?.danglingReferences ?? "ignore";
 
 		const issues = Conformance.check(graph);
-		const fails = issues.some((issue) => {
-			switch (issue._tag) {
-				case "PropertyNotOnType":
-					return true;
-				case "UnknownTerm":
-					return unknownTerms === "fail";
-				case "DeprecatedType":
-				case "DeprecatedProperty":
-					return deprecations === "report";
-				case "DanglingReference":
-					return danglingReferences === "report";
-				default:
-					// Exhaustive today. This branch exists so a sixth issue kind is a
-					// TYPE error here rather than a silent non-failure — a `return false`
-					// with no `satisfies never` would quietly let a new issue through
-					// every gate.
-					issue satisfies never;
-					return false;
-			}
-		});
+		const fails = issues.some((issue) => Match.valueTags(issue, {
+			PropertyNotOnType: () => true,
+			UnknownTerm: () => unknownTerms === "fail",
+			DeprecatedType: () => deprecations === "report",
+			DeprecatedProperty: () => deprecations === "report",
+			DanglingReference: () => danglingReferences === "report",
+		}));
 
 		return fails ? Result.fail(NonConformantGraphError.make({ issues })) : Result.succeed(graph);
 	}

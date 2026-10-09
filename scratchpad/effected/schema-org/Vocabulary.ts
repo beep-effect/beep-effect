@@ -1,4 +1,8 @@
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import {
 	DOMAIN_PROPERTIES,
 	PROPERTY_INDEX,
@@ -12,6 +16,9 @@ import {
 	decodeRow,
 } from "./internal/vocabulary.ts";
 
+// Public queries retain native ReadonlySet values, including their insertion order.
+const decodeStringSet = S.decodeResult(S.toCodecIso(S.ReadonlySet(S.String)));
+
 /**
  * Strict ancestors of a type index: every supertype reachable through
  * `rdfs:subClassOf`, excluding the type itself.
@@ -23,13 +30,13 @@ import {
  * dropped at generation time, so a branch that left the schema namespace
  * simply terminates here while its native siblings still carry the answer.
  */
-function walkAncestors(index: number): ReadonlySet<number> {
-	const seen = new Set<number>();
+function walkAncestors(index: number): MutableHashSet.MutableHashSet<number> {
+	const seen = MutableHashSet.empty<number>();
 	const stack = [...decodeRow(SUB_CLASS_OF[index])];
 	while (stack.length > 0) {
 		const parent = stack.pop();
-		if (parent === undefined || seen.has(parent)) continue;
-		seen.add(parent);
+		if (parent === undefined || MutableHashSet.has(seen, parent)) continue;
+		MutableHashSet.add(seen, parent);
 		for (const grandparent of decodeRow(SUB_CLASS_OF[parent])) stack.push(grandparent);
 	}
 	return seen;
@@ -37,14 +44,14 @@ function walkAncestors(index: number): ReadonlySet<number> {
 
 // Rows decode on demand and are memoized by index: a caller that asks about
 // three types never pays to decode the other 930.
-const ancestorCache: Array<ReadonlySet<number> | undefined> = new Array<ReadonlySet<number> | undefined>(
+const ancestorCache: Array<MutableHashSet.MutableHashSet<number> | undefined> = new Array<MutableHashSet.MutableHashSet<number> | undefined>(
 	TYPE_NAMES.length,
 );
-const propertyCache: Array<ReadonlySet<number> | undefined> = new Array<ReadonlySet<number> | undefined>(
+const propertyCache: Array<MutableHashSet.MutableHashSet<number> | undefined> = new Array<MutableHashSet.MutableHashSet<number> | undefined>(
 	TYPE_NAMES.length,
 );
 
-function ancestorIndices(index: number): ReadonlySet<number> {
+function ancestorIndices(index: number): MutableHashSet.MutableHashSet<number> {
 	const cached = ancestorCache[index];
 	if (cached !== undefined) return cached;
 	const computed = walkAncestors(index);
@@ -53,13 +60,13 @@ function ancestorIndices(index: number): ReadonlySet<number> {
 }
 
 /** Every property legal on a type index: its own `domainIncludes` members unioned with every ancestor's. */
-function propertyIndices(index: number): ReadonlySet<number> {
+function propertyIndices(index: number): MutableHashSet.MutableHashSet<number> {
 	const cached = propertyCache[index];
 	if (cached !== undefined) return cached;
-	const computed = new Set<number>();
-	for (const property of decodeRow(DOMAIN_PROPERTIES[index])) computed.add(property);
+	const computed = MutableHashSet.empty<number>();
+	for (const property of decodeRow(DOMAIN_PROPERTIES[index])) MutableHashSet.add(computed, property);
 	for (const ancestor of ancestorIndices(index)) {
-		for (const property of decodeRow(DOMAIN_PROPERTIES[ancestor])) computed.add(property);
+		for (const property of decodeRow(DOMAIN_PROPERTIES[ancestor])) MutableHashSet.add(computed, property);
 	}
 	propertyCache[index] = computed;
 	return computed;
@@ -121,12 +128,12 @@ export class Vocabulary {
 
 	/** Whether `name` is a class schema.org defines — for example `"TechArticle"`. */
 	static hasType(name: string): boolean {
-		return TYPE_INDEX.has(name);
+		return MutableHashMap.has(TYPE_INDEX, name);
 	}
 
 	/** Whether `name` is a property schema.org defines — for example `"codeRepository"`. */
 	static hasProperty(name: string): boolean {
-		return PROPERTY_INDEX.has(name);
+		return MutableHashMap.has(PROPERTY_INDEX, name);
 	}
 
 	/**
@@ -140,14 +147,14 @@ export class Vocabulary {
 	 * above them.
 	 */
 	static ancestorsOf(type: string): ReadonlySet<string> {
-		const index = TYPE_INDEX.get(type);
-		if (index === undefined) return new Set<string>();
-		const out = new Set<string>();
+		const index = O.getOrUndefined(MutableHashMap.get(TYPE_INDEX, type));
+		if (index === undefined) return Result.getOrThrow(decodeStringSet([]));
+		const out: Array<string> = [];
 		for (const ancestor of ancestorIndices(index)) {
 			const name = TYPE_NAMES[ancestor];
-			if (name !== undefined) out.add(name);
+			if (name !== undefined) out.push(name);
 		}
-		return out;
+		return Result.getOrThrow(decodeStringSet(out));
 	}
 
 	/**
@@ -160,14 +167,14 @@ export class Vocabulary {
 	 * `domainIncludes` — they arrive from `CreativeWork` and `Thing`.
 	 */
 	static propertiesOf(type: string): ReadonlySet<string> {
-		const index = TYPE_INDEX.get(type);
-		if (index === undefined) return new Set<string>();
-		const out = new Set<string>();
+		const index = O.getOrUndefined(MutableHashMap.get(TYPE_INDEX, type));
+		if (index === undefined) return Result.getOrThrow(decodeStringSet([]));
+		const out: Array<string> = [];
 		for (const property of propertyIndices(index)) {
 			const name = PROPERTY_NAMES[property];
-			if (name !== undefined) out.add(name);
+			if (name !== undefined) out.push(name);
 		}
-		return out;
+		return Result.getOrThrow(decodeStringSet(out));
 	}
 
 	/**
@@ -187,10 +194,10 @@ export class Vocabulary {
 	 * exactly what `Conformance` does.
 	 */
 	static isPropertyOn(property: string, type: string): boolean {
-		const typeIdx = TYPE_INDEX.get(type);
-		const propertyIdx = PROPERTY_INDEX.get(property);
+		const typeIdx = O.getOrUndefined(MutableHashMap.get(TYPE_INDEX, type));
+		const propertyIdx = O.getOrUndefined(MutableHashMap.get(PROPERTY_INDEX, property));
 		if (typeIdx === undefined || propertyIdx === undefined) return false;
-		return propertyIndices(typeIdx).has(propertyIdx);
+		return MutableHashSet.has(propertyIndices(typeIdx), propertyIdx);
 	}
 
 	/**
@@ -208,10 +215,10 @@ export class Vocabulary {
 	 * name lowercase,, and no name appears in both tables.
 	 */
 	static supersededBy(term: string): O.Option<string> {
-		const typeIdx = TYPE_INDEX.get(term);
-		if (typeIdx !== undefined) return supersedingName(SUPERSEDED_TYPE_MAP.get(typeIdx), TYPE_NAMES);
-		const propertyIdx = PROPERTY_INDEX.get(term);
-		if (propertyIdx !== undefined) return supersedingName(SUPERSEDED_PROPERTY_MAP.get(propertyIdx), PROPERTY_NAMES);
+		const typeIdx = O.getOrUndefined(MutableHashMap.get(TYPE_INDEX, term));
+		if (typeIdx !== undefined) return supersedingName(O.getOrUndefined(MutableHashMap.get(SUPERSEDED_TYPE_MAP, typeIdx)), TYPE_NAMES);
+		const propertyIdx = O.getOrUndefined(MutableHashMap.get(PROPERTY_INDEX, term));
+		if (propertyIdx !== undefined) return supersedingName(O.getOrUndefined(MutableHashMap.get(SUPERSEDED_PROPERTY_MAP, propertyIdx)), PROPERTY_NAMES);
 		return O.none();
 	}
 }
