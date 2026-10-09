@@ -373,3 +373,13 @@
   test layer, and add schema-derived declaration properties; rerun the affected checks.
 - Prevention: run schema-first and Effect Vitest laws with new schema fixture files before
   the final publication admission, alongside test-tsgo. No baseline refresh is needed.
+
+## 2026-10-09 — H2 isolates concurrent fixture verification cache
+
+- Task: run full package audit and scoped completion coverage in the two allowed admissions.
+- Evidence: D's merged friction receipt records an `ENOTEMPTY` collision in the shared
+  package `.vitest-cache`; the installed Vitest help provides `--fsModuleCachePath`.
+- Recovery: give the scoped run its own ignored lane-local module-cache path before
+  admission; the test set, instrumentation and coverage baseline stay unchanged.
+- Prevention: verification commands should allocate separate module-cache directories
+  when the full package audit and scoped coverage can overlap.
