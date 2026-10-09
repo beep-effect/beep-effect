@@ -134,16 +134,19 @@ const readSessionIdentityHash = Effect.fnUntraced(function* (
 });
 
 class SessionStampGap extends S.Class<SessionStampGap>($I`SessionStampGap`)({
-  start: S.OptionFromOptionalKey(S.Number),
-  end: S.OptionFromOptionalKey(S.Number),
+  start: S.OptionFromOptionalKey(S.Finite),
+  end: S.OptionFromOptionalKey(S.Finite),
   client: S.OptionFromOptionalKey(HookPulseAgentKind),
 }) {}
 const timestampEpoch = flow(S.decodeOption(S.DateTimeUtcFromString), O.map(DateTime.toEpochMillis));
 const readOptionalEvidence = Effect.fnUntraced(function* (file: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* fs
-    .readFileString(file)
-    .pipe(Effect.catch((cause) => (cause.reason._tag === "NotFound" ? Effect.succeed("") : Effect.fail(cause))));
+  return yield* fs.readFileString(file).pipe(
+    Effect.catchIf(
+      (cause) => cause.reason._tag === "NotFound",
+      () => Effect.succeed("")
+    )
+  );
 });
 const readStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -165,13 +168,12 @@ const readStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
       })
     );
   }
-  const files = yield* fs
-    .readDirectory(evidenceRoot)
-    .pipe(
-      Effect.catch((cause) =>
-        cause.reason._tag === "NotFound" ? Effect.succeed(A.empty<string>()) : Effect.fail(cause)
-      )
-    );
+  const files = yield* fs.readDirectory(evidenceRoot).pipe(
+    Effect.catchIf(
+      (cause) => cause.reason._tag === "NotFound",
+      () => Effect.succeed(A.empty<string>())
+    )
+  );
   for (const name of A.filter(files, Str.startsWith("hook-pulse-refusals-"))) {
     const text = yield* fs.readFileString(path.join(evidenceRoot, name));
     for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {

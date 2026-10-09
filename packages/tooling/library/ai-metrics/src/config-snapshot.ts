@@ -683,11 +683,11 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       (file) =>
         fs.stat(file).pipe(
           Effect.map((info) => info.type === "File"),
-          Effect.catch((cause) =>
-            cause.reason._tag === "NotFound"
-              ? Effect.succeed(false)
-              : Effect.fail(configSnapshotFailure("Cannot inspect indexed config snapshot file.", cause))
-          )
+          Effect.catchIf(
+            (cause) => cause.reason._tag === "NotFound",
+            () => Effect.succeed(false)
+          ),
+          Effect.mapError((cause) => configSnapshotFailure("Cannot inspect indexed config snapshot file.", cause))
         )
     );
     const excluded = yield* Ref.make(A.empty<string>());
