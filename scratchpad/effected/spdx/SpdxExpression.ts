@@ -1,5 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -32,20 +34,16 @@ type SpdxNode =
  * {@link (SpdxExpression:variable).FromString}'s encode can never drift.
  */
 function serialize(node: SpdxNode): string {
-	switch (node._tag) {
-		case "License":
-			return node.plus ? `${node.id}+` : node.id;
-		case "LicenseRef": {
+	return Match.valueTags(node, {
+		License: (node) => (node.plus ? `${node.id}+` : node.id),
+		LicenseRef: (node) => {
 			const prefix = node.documentRef !== undefined ? `DocumentRef-${node.documentRef}:` : "";
 			return `${prefix}LicenseRef-${node.ref}`;
-		}
-		case "WithException":
-			return `${serialize(node.license)} WITH ${node.exception}`;
-		case "And":
-			return `(${serialize(node.left)} AND ${serialize(node.right)})`;
-		case "Or":
-			return `(${serialize(node.left)} OR ${serialize(node.right)})`;
-	}
+		},
+		WithException: (node) => `${serialize(node.license)} WITH ${node.exception}`,
+		And: (node) => `(${serialize(node.left)} AND ${serialize(node.right)})`,
+		Or: (node) => `(${serialize(node.left)} OR ${serialize(node.right)})`,
+	});
 }
 
 /**
@@ -174,20 +172,18 @@ function materializeSimple(raw: RawSimpleLicense): LicenseNode | LicenseRefNode 
 // cannot overflow. `.make` validates each node; construction is linear in the
 // node count on this Schema class family.
 function materialize(raw: RawExpression): SpdxExpression {
-	switch (raw.kind) {
-		case "license":
-		case "licenseRef":
-			return materializeSimple(raw);
-		case "with":
-			return WithExceptionNode.make({
+	return Match.value(raw).pipe(
+		Match.discriminatorsExhaustive("kind")({
+			license: materializeSimple,
+			licenseRef: materializeSimple,
+			with: (raw) => WithExceptionNode.make({
 				license: materializeSimple(raw.license),
 				exception: raw.exception,
-			});
-		case "and":
-			return AndNode.make({ left: materialize(raw.left), right: materialize(raw.right) });
-		case "or":
-			return OrNode.make({ left: materialize(raw.left), right: materialize(raw.right) });
-	}
+			}),
+			and: (raw) => AndNode.make({ left: materialize(raw.left), right: materialize(raw.right) }),
+			or: (raw) => OrNode.make({ left: materialize(raw.left), right: materialize(raw.right) }),
+		}),
+	);
 }
 
 /**
@@ -272,23 +268,21 @@ const licenseOfLeaf = (leaf: LicenseNode | LicenseRefNode): O.Option<License> =>
 
 /** Append every license leaf, left to right, skipping ids that do not resolve. */
 const collectLicenses = (expr: SpdxExpression, into: Array<License>): void => {
-	switch (expr._tag) {
-		case "License":
-		case "LicenseRef": {
+	Match.value(expr).pipe(
+		Match.tag("License", "LicenseRef", (expr) => {
 			const license = licenseOfLeaf(expr);
 			if (O.isSome(license)) into.push(license.value);
-			return;
-		}
-		case "WithException":
+		}),
+		Match.tag("WithException", (expr) => {
 			// The exception qualifies the license; the license is what is carried.
 			collectLicenses(expr.license, into);
-			return;
-		case "And":
-		case "Or":
+		}),
+		Match.tag("And", "Or", (expr) => {
 			collectLicenses(expr.left, into);
 			collectLicenses(expr.right, into);
-			return;
-	}
+		}),
+		Match.exhaustive,
+	);
 };
 
 /**
@@ -320,10 +314,10 @@ const collectLicenses = (expr: SpdxExpression, into: Array<License>): void => {
 const licensesOf = (expr: SpdxExpression): ReadonlyArray<License> => {
 	const collected: Array<License> = [];
 	collectLicenses(expr, collected);
-	const seen = new Set<string>();
+	const seen = MutableHashSet.empty<string>();
 	return collected.filter((license) => {
-		if (seen.has(license.id)) return false;
-		seen.add(license.id);
+		if (MutableHashSet.has(seen, license.id)) return false;
+		MutableHashSet.add(seen, license.id);
 		return true;
 	});
 };
@@ -363,19 +357,14 @@ const licensesOf = (expr: SpdxExpression): ReadonlyArray<License> => {
  * @param expr - the expression to read
  * @returns the primary license, or none when the expression has no single one
  */
-const primaryLicense = (expr: SpdxExpression): O.Option<License> => {
-	switch (expr._tag) {
-		case "License":
-		case "LicenseRef":
-			return licenseOfLeaf(expr);
-		case "WithException":
-			return licenseOfLeaf(expr.license);
-		case "Or":
-			return primaryLicense(expr.left);
-		case "And":
-			return O.none();
-	}
-};
+const primaryLicense = (expr: SpdxExpression): O.Option<License> =>
+	Match.valueTags(expr, {
+		License: licenseOfLeaf,
+		LicenseRef: licenseOfLeaf,
+		WithException: (expr) => licenseOfLeaf(expr.license),
+		Or: (expr) => primaryLicense(expr.left),
+		And: O.none,
+	});
 
 /**
  * The SPDX license-expression facade: the AST union schema plus the parse,

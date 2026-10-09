@@ -1,5 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -96,10 +97,11 @@ export class License extends S.Class<License>($I`License`)({
 	 * catalog members.
 	 */
 	static readonly catalog: ReadonlyMap<string, License> = (() => {
-		const map = new Map<string, License>();
-		for (const id of LICENSE_IDS) map.set(id, License.make({ id, deprecated: false }));
-		for (const id of DEPRECATED_LICENSE_IDS) map.set(id, License.make({ id, deprecated: true }));
-		return map;
+		const map = MutableHashMap.empty<string, License>();
+		for (const id of LICENSE_IDS) MutableHashMap.set(map, id, License.make({ id, deprecated: false }));
+		for (const id of DEPRECATED_LICENSE_IDS) MutableHashMap.set(map, id, License.make({ id, deprecated: true }));
+		// Primitive string keys retain the native ReadonlyMap API and catalog order.
+		return map.backing;
 	})();
 
 	/**

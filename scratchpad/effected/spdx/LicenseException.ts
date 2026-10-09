@@ -1,5 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { DEPRECATED_EXCEPTION_IDS, EXCEPTION_IDS } from "./internal/exceptions.ts";
@@ -50,10 +51,11 @@ export class LicenseException extends S.Class<LicenseException>($I`LicenseExcept
 	 * id. Built once from the vendored datasets at module load.
 	 */
 	static readonly catalog: ReadonlyMap<string, LicenseException> = (() => {
-		const map = new Map<string, LicenseException>();
-		for (const id of EXCEPTION_IDS) map.set(id, LicenseException.make({ id, deprecated: false }));
-		for (const id of DEPRECATED_EXCEPTION_IDS) map.set(id, LicenseException.make({ id, deprecated: true }));
-		return map;
+		const map = MutableHashMap.empty<string, LicenseException>();
+		for (const id of EXCEPTION_IDS) MutableHashMap.set(map, id, LicenseException.make({ id, deprecated: false }));
+		for (const id of DEPRECATED_EXCEPTION_IDS) MutableHashMap.set(map, id, LicenseException.make({ id, deprecated: true }));
+		// Primitive string keys retain the native ReadonlyMap API and catalog order.
+		return map.backing;
 	})();
 
 	/**
