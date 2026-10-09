@@ -61,7 +61,13 @@ const WorkflowStep = S.Struct({
   env: S.optionalKey(S.Record(S.String, S.Unknown)),
 });
 type WorkflowStep = typeof WorkflowStep.Type;
-const WorkflowJobs = S.Record(S.String, S.Struct({ steps: WorkflowStep.pipe(S.Array, S.optionalKey) }));
+const WorkflowJobs = S.Record(
+  S.String,
+  S.Struct({
+    permissions: S.optionalKey(S.Record(S.String, S.String)),
+    steps: WorkflowStep.pipe(S.Array, S.optionalKey),
+  })
+);
 type WorkflowJobs = typeof WorkflowJobs.Type;
 const decodeWorkflowSteps = S.decodeUnknownEffect(S.Array(WorkflowStep));
 const decodeWorkflowJobs = S.decodeUnknownEffect(WorkflowJobs);
@@ -271,6 +277,34 @@ const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: bool
 };
 
 it.layer(NodeServices.layer, { timeout: "10 seconds" })("CI runner security", (it) => {
+  it.effect(
+    "scopes hosted governance reads to Security and exercises its job token on pull requests",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const jobs = yield* workflowJobs(
+        parsedDocument(yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml")))
+      );
+      expect(jobs.verify?.permissions).toEqual({ contents: "read" });
+      expect(jobs.security?.permissions).toEqual({ contents: "read", actions: "read", "pull-requests": "write" });
+      const securitySteps = jobSteps(jobs, "security");
+      const hosted = stepByName(securitySteps, "Check hosted settings policy");
+      expect(hosted.env).toEqual({ GH_TOKEN: "${{ github.token }}" });
+      expect(hosted.if).toBeUndefined();
+      expect(hosted.run).toContain("bun run beep ci ruleset --check");
+      expect(hosted.run).toContain("bun run beep ci settings --check");
+      expect(hosted.run).toContain("bun run beep ci held-group");
+      assert.isAbove(
+        stepIndexByName(securitySteps, "Check hosted settings policy"),
+        stepIndexByName(securitySteps, "Dependency review")
+      );
+      const localPolicy = stepByName(jobSteps(jobs, "verify"), "Check workflow policy");
+      expect(localPolicy.env).toBeUndefined();
+      expect(localPolicy.run).toBe("bun run beep ci workflow-lint");
+    })
+  );
+
   it.effect(
     "preserves the requested PR lane when an older checkout has no resource helper",
     Effect.fnUntraced(function* () {

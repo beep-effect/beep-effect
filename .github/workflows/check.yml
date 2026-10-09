@@ -241,17 +241,9 @@ jobs:
           security-trusted-origins: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
           liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
 
-      - name: Check workflow and hosted settings policy
+      - name: Check workflow policy
         if: matrix.id == 'repo-sanity' && steps.lane-gate.outputs.should_run == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          bun run beep ci workflow-lint
-          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
-            bun run beep ci ruleset --check
-            bun run beep ci settings --check
-            bun run beep ci held-group
-          fi
+        run: bun run beep ci workflow-lint
 
       - name: Verify regenerate merge-driver bootstrap
         if: matrix.id == 'codegen' && steps.lane-gate.outputs.should_run == 'true'
@@ -1094,6 +1086,7 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
+      actions: read
       pull-requests: write
     steps:
       - name: Checkout repository
@@ -1133,6 +1126,16 @@ jobs:
           fail-on-severity: high
           deny-licenses: AGPL-3.0, GPL-3.0
           comment-summary-in-pr: on-failure
+
+      # Exercise the documented read permission with GITHUB_TOKEN on PRs too,
+      # before relying on these governance reads after a main push.
+      - name: Check hosted settings policy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          bun run beep ci ruleset --check
+          bun run beep ci settings --check
+          bun run beep ci held-group
 
   nix:
     name: Nix Shell

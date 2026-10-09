@@ -745,3 +745,7 @@ Program PR #1568 Heavy Admit run 37974783576 used the unlisted caller `heavy-adm
 ### 2026-10-09 — E publication allowlist after D policy
 
 After D's release-policy PR #1566 lands, remove the unused `changesets/action@*` Actions allowlist pattern (E-19). No current workflow references that action, and private publication machinery is dormant under D's recorded reactivation policy. Keep every other allowlist field and pattern. The immediately preceding full export is `history/receipts/stage-3-github-settings.md#before-changesets-action-allowlist`. Reverse with PUT `repos/beep-effect/beep-effect/actions/permissions/selected-actions` restoring the snapshot's `github_owned_allowed`, `verified_allowed` and `patterns_allowed`; publication activation must deliberately restore its action permission.
+
+### 2026-10-09 — E hosted governance job-token proof
+
+Move live ruleset, desktop settings and held-main reads from the contents-only verification matrix to the existing Security job, adding only `actions: read` there. Keep pure workflow lint in Repo Sanity. Reason: human review found the push-only Actions API calls unproven under GITHUB_TOKEN, despite successful personal-token probes. Run the hosted reads on PRs too, after dependency review, to establish that exact job-token path before merge. A held-main failure is repository-state evidence and must be attributed accordingly. Reverse the workflow/test change together; no writer credential, environment attachment or other job permission is broadened.
