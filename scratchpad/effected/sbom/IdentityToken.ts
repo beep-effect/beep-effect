@@ -91,7 +91,9 @@ export class IdentityToken extends Context.Service<IdentityToken, IdentityTokenS
 	 */
 	static readonly layerStatic = (token: Redacted.Redacted<string> | string): Layer.Layer<IdentityToken> =>
 		Layer.succeed(IdentityToken, {
-			token: () => Effect.succeed(typeof token === "string" ? Redacted.make(token) : token),
+			token: Effect.fn("IdentityToken.token")(() =>
+				Effect.succeed(typeof token === "string" ? Redacted.make(token) : token),
+			),
 		});
 
 	/**

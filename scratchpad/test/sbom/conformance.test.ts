@@ -70,7 +70,7 @@ const fullDocument = () =>
 		}),
 	});
 
-const emitted = () => JSON.parse(Sbom.toJson(fullDocument())) as Record<string, never>;
+const emitted = (): Record<string, unknown> => JSON.parse(Sbom.toJson(fullDocument()));
 
 describe("CycloneDX 1.6 conformance — derived from the vendored schema", () => {
 	it("the vendored schema is the released 1.6 one", () => {
