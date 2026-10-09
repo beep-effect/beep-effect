@@ -234,3 +234,12 @@ user-manager environment and unchanged resource caps. A launcher exporting
 these variables would prevent this environment-only failure. The run-7 ruling
 also removes the repeated publication hold caused by stale main inventory;
 the owner refresh remains the corrective path, with no lane inventory edit.
+
+## Run-7 hosted first-round discoveries
+
+Property Laws exposes four encoded-row subjects absent from earlier compiler
+and server checks; expected rows omit the new nullable pair. Added the pair
+mechanically (76 total sites). A dependent domain property suite in P1 would
+have caught these before publish. Six heavy jobs fail before running code
+with `goals_only: unbound variable`; heavy.yml is identical to main, and the
+orchestrator owns its repair. Logs and acknowledgements are retained locally.

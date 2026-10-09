@@ -883,3 +883,68 @@ jq pass; anchor scan pass; diff whitespace pass; reflection-artifacts
 blocking=0/advisory=0; doctor blocking_new=0/blocking_inherited=0, three
 unrelated completion advisories. ContradictionDetection golden source is
 byte-identical to origin/main; inventory has no lane diff.
+
+### Run-7 PR2 publication and review round 1
+
+Committed D21 and receipts at bdcf150cc11025f63304b10a4cb88a1e7febe8a3;
+one initial fallback push created PR2 #1593 with ready-for-heavy.
+`bun run beep yeet ready` succeeded; GitHub confirms OPEN, isDraft=false,
+headRefOid equals the pushed head and structural MERGEABLE. This is
+content-final readiness, not all-green merge readiness.
+Started bounded readiness job e986c7a7-06f8-413d-8229-f1ab9434f26b (40 minutes);
+its short wait timed out while the monitor remained running.
+`yeet closeout --require-review-comments 0` succeeded; live reads show zero
+unresolved threads. Vercel todox rate-limit row acknowledged environment-only.
+
+Hosted round-1 attribution, read from each completed job's API log at once:
+
+- Heavy Coverage Regression, Doctest, Docgen, Build, Lint Policy, Test
+  Integration and Check all fail before lane execution. Bootstrap calls
+  scripts/ci-change-profile.sh before Node setup (`node: command not found`),
+  then dereferences goals_only under set -u (`goals_only: unbound variable`).
+  heavy.yml matches origin/main byte-for-byte. All seven rows acknowledged
+  wontfix with the orchestrator S11 ownership, not waived or declared passing.
+- Repo Sanity fails on inherited private-workspace changesets
+  .changeset/effected-allowlist-drop.md (@beep/repo-configs) and
+  .changeset/jsonl-effect-first.md (@beep/repo-configs, @beep/scratchpad).
+  No lane changeset exists; .changeset matches main. Row acknowledged wontfix
+  for S11 owner repair. Lane changeset-status itself passes blocking_paths=0.
+- Property Laws has an introduced exact-row mismatch: EvidenceVerification
+  encoded fixture and workspace/email/turn encoded fixtures omit deletedAt
+  and deletedByPrincipal. D22 adds null to these four fixture subjects only;
+  mechanical count 76, below 90, zero slice model/behavior changes.
+  Property row acknowledged with the repair underway; final fix commit and
+  proof results follow below. No new detector/inventory exception.
+
+The two additional private packages @beep/epistemic-domain and
+@beep/workspace-domain need no changeset under D10/#1566. Forced impact is
+exact-wire test fixture compatibility only; reversal removes their nullable
+expected fields together with the kernel rollback. Default package-verify
+proofs are scheduled through beep-heavy, at most two own commands at once.
+
+### Forced changes without changesets — run-7 additions
+
+| Package | Change | Why compatibility impact would have been major | Reversal |
+| --- | --- | --- | --- |
+| @beep/epistemic-domain (private) | Two null fields in one exact encoded-row test subject | Exact persisted-row wire shape gains fields with the shared kernel | Remove fixture pair with kernel rollback |
+| @beep/workspace-domain (private) | Two null fields in workspace, email and turn exact encoded-row test subjects | Exact persisted-row wire shape gains fields with the shared kernel | Remove three fixture pairs with kernel rollback |
+
+These are four mechanical sites, all test fixtures. Existing D10/#1566
+private-workspace release policy forbids release notes for these packages.
+
+Fresh run-7 results: kernel/schema turbo check+test+docgen+lint passes
+19/19 tasks (11 cache hits, 8 executed, 14.86 seconds). Default
+@beep/epistemic-domain package-verify passes audit 13.4s and docgen 3.9s;
+default @beep/workspace-domain passes audit 12.6s and docgen 7.7s.
+These two proofs include the four mechanical exact-wire fixture repairs.
+Before the review-round push, main #1589 (3200e01946) merges cleanly and
+changes only scripts/ci-change-profile.sh, repairing the inherited heavy
+bootstrap issue. No owned source/migration/bundle/packet conflict; no extra
+push solely to merge main. Both main merges ride the one round-1 push.
+Post-merge stream is unchanged active status with no packet finding.
+
+Hosted JSDoc Ratchet fails after 388 seconds with only the generic
+`Failed to generate JSDoc documentation inventory.` Its log contains no
+source finding or cause, and no inventory artifact is available. Row
+acknowledged wontfix pending attribution, explicitly not a waiver or an
+inherited classification. Current local CI-parity rerun is diagnostic.

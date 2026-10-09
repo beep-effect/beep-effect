@@ -163,6 +163,8 @@ describe("@beep/workspace-domain", () => {
     Effect.gen(function* () {
       const workspaceWire = {
         ...baseEntityInput("WorkspaceWorkspace", 20),
+        deletedAt: null,
+        deletedByPrincipal: null,
         fixtureKey: "workspace.acme",
         name: "Acme Workspace",
         organizationFixtureKey: "org.acme",
@@ -171,6 +173,8 @@ describe("@beep/workspace-domain", () => {
       };
       const emailWire = {
         ...baseEntityInput("WorkspaceEmailArtifact", 21),
+        deletedAt: null,
+        deletedByPrincipal: null,
         artifactFixtureKey: "artifact.email-intake",
         body: "We need help preparing a provisional patent application.",
         from: { address: "ada@example.com" },
@@ -245,6 +249,8 @@ describe("@beep/workspace-domain", () => {
     Effect.gen(function* () {
       const turnWire = {
         ...baseEntityInput("WorkspaceTurn", 14),
+        deletedAt: null,
+        deletedByPrincipal: null,
         items: [{ itemType: "message", messageId: 11 }],
         parentTurnId: null,
         threadId: 10,
