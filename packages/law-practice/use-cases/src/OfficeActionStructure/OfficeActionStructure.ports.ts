@@ -30,12 +30,19 @@ import type { OfficeActionStructureStorageError } from "./OfficeActionStructure.
 
 const $I = $LawPracticeUseCasesId.create("OfficeActionStructure/OfficeActionStructure.ports");
 const VerifiedSourceSchema: S.Codec<VerifiedSourceText> = VerifiedSourceText;
-const OfficeActionStructureInputStruct = S.Struct({
-  document: DocStructureDocument,
-  verifiedSource: VerifiedSourceSchema,
-  rule: DocStructureRuleFamily.pipe(S.withConstructorDefault(Effect.succeed(officeActionRuleV1))),
-  ocrPages: S.Array(PageOcrResult).pipe(S.withConstructorDefault(Effect.succeed([]))),
-});
+type OfficeActionStructureInputFields = {
+  readonly document: typeof DocStructureDocument;
+  readonly verifiedSource: S.Codec<VerifiedSourceText>;
+  readonly rule: S.withConstructorDefault<typeof DocStructureRuleFamily>;
+  readonly ocrPages: S.withConstructorDefault<S.Array<typeof PageOcrResult>>;
+};
+const OfficeActionStructureInputStruct: S.Struct<OfficeActionStructureInputFields> =
+  S.Struct<OfficeActionStructureInputFields>({
+    document: DocStructureDocument,
+    verifiedSource: VerifiedSourceSchema,
+    rule: DocStructureRuleFamily.pipe(S.withConstructorDefault(Effect.succeed(officeActionRuleV1))),
+    ocrPages: S.Array(PageOcrResult).pipe(S.withConstructorDefault(Effect.succeed([]))),
+  });
 const OfficeActionStructureInputBase: S.Class<OfficeActionStructureInput, typeof OfficeActionStructureInputStruct, {}> =
   S.Class<OfficeActionStructureInput>($I`OfficeActionStructureInput`)(
     OfficeActionStructureInputStruct,

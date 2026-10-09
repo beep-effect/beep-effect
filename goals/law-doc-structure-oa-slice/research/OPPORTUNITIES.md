@@ -129,3 +129,12 @@
   actual mismatched identity on the failed attempt. Add a cross-scope failure
   and recovery test without weakening verification.
 - Prevention: mirror the substrate’s authorized-matter history semantics.
+
+## 2026-10-09 — Explicit opaque-proof field schemas
+
+- Evidence: TS4094 moved from exported classes to inferred Struct declarations
+  after the named-base repair. Runtime and source-floor tests continued to pass.
+- Attribution: introduced declaration inference.
+- Repair: give each opaque-proof Struct a named field type and explicit schema
+  annotation, completing the existing named-base pattern without a type cast.
+- Prevention: include field-schema annotations in the opaque-proof example.
