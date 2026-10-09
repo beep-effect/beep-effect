@@ -2350,16 +2350,102 @@
       "wave": 1,
       "position": 11,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "tooling/library",
       "upstreamPaths": {
         "src": "packages/templates/src",
         "test": "packages/templates/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "CheckOutcome",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "CommentStyle",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Eol",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ManagedSection",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ManagedSectionOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "ManagedSectionShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "PlacedSection",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Section",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SectionDialect",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SectionDocument",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SectionFileError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SectionId",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SectionKey",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "SectionParseError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SectionReconciliation",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "SectionRenderError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "SyncOutcome",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
-      "fixturesBytes": 0,
+      "fixturesBytes": 4645,
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],
