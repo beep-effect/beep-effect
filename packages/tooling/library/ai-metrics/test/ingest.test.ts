@@ -693,13 +693,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
         yield* writeText(
           sourcePath,
           [
-            '{"type":"session_meta","timestamp":"2026-10-09T10:00:00Z","payload":{"id":"current"}}',
+            scenario === "prefix"
+              ? '{"type":"session_meta","timestamp":"2026-10-09T09:59:00Z","payload":{"id":"current"}}'
+              : '{"type":"session_meta","timestamp":"2026-10-09T10:00:00Z","payload":{"id":"current"}}',
             '{"type":"response_item","timestamp":"2026-10-09T10:01:00Z","payload":{"type":"function_call","name":"fixture","arguments":"{}"}}',
           ].join("\n")
         );
         const provider = ConfigProvider.fromUnknown({
           BEEP_HOOK_PULSE_HASH_SALT: "hook-fixture-namespace",
           BEEP_AGENT_EVIDENCE_ROOT: hookRoot,
+          BEEP_HOOK_PULSE_DISARM_SENTINEL: scenario === "custom-sentinel" ? path.join(hookRoot, "custom.disarmed") : "",
         });
         yield* Effect.gen(function* () {
           const initial = yield* decodePulse({
@@ -742,6 +745,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
             unreadable: () => [start, tool],
             refused: () => [start, tool],
             disarmed: () => [start, tool],
+            prefix: () => [start, tool],
+            "empty-sentinel": () => [start, tool],
+            "custom-sentinel": () => [start, tool],
           });
           yield* writeText(
             path.join(hookDir, "fixture.ndjson"),
@@ -773,6 +779,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
                 })
               )
             );
+          if (scenario === "empty-sentinel") yield* writeText(path.join(hookRoot, "hook-pulse.disarmed"), "");
+          if (scenario === "custom-sentinel") yield* writeText(path.join(hookRoot, "custom.disarmed"), "");
           yield* runAiMetricsForwarder(
             AiMetricsForwarderInput.make({
               homeDir,
