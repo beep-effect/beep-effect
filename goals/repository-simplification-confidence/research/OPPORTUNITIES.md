@@ -340,3 +340,12 @@ are available. Cancellation is not a proof failure or a package pass.
   use a tiny shell wait boundary around the measured command to preserve 128+signal.
   Synthetic regressions cover recovered sampling failure and TERM/INT/KILL child status.
 - Prevention: make lost-sample and child-signal cases part of the initial port fixtures.
+
+- C Run 4 full package gate: 5,796 tests pass, three profile fixtures fail
+  with `Cannot find package 'desktop'`; `bunx --bun` substitutes Bun for Node
+  and eval argv indexing differs. The pre-runtime pattern reader now uses
+  scoped file/key environment inputs, which preserve the Node/Bun contract.
+  Docgen also rejects JSON import attributes with TS2823 under its CommonJS
+  example compiler; plain JSON imports retain the same owner data and compile
+  on both paths. An early dual-runtime shim fixture and docgen module-mode
+  compatibility check would have caught both before the 816.5s package audit.

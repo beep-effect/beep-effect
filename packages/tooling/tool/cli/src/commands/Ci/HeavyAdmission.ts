@@ -39,7 +39,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { CiCommandError } from "./Ci.errors.ts";
-import ciPatterns from "./CiOperational.patterns.json" with { type: "json" };
+import ciPatterns from "./CiOperational.patterns.json";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
 

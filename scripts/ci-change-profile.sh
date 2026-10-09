@@ -24,7 +24,7 @@ desktop_rust_relevant=true
 # crate itself plus the workflow and gate that carry the steps.
 # Before Bun/dependencies exist, Node reads the schema owner's declarative patterns.
 pattern_file="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json"
-read_pattern() { node -e 'process.stdout.write(require(process.argv[1])[process.argv[2]])' "$pattern_file" "$1"; }
+read_pattern() { BEEP_CI_PATTERN_FILE="$pattern_file" BEEP_CI_PATTERN_NAME="$1" node -e 'process.stdout.write(require(process.env.BEEP_CI_PATTERN_FILE)[process.env.BEEP_CI_PATTERN_NAME])'; }
 desktop_rust_pattern="$(read_pattern desktop)"
 goals_document_pattern="$(read_pattern goals)"
 

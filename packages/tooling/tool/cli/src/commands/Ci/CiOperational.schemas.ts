@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
-import patterns from "./CiOperational.patterns.json" with { type: "json" };
+import patterns from "./CiOperational.patterns.json";
 
 const $I = $RepoCliId.create("commands/Ci/CiOperational.schemas");
 
