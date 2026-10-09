@@ -160,6 +160,7 @@ const canonicalRowKeys = [
   "surface",
   "harnessHash",
   "sessionRole",
+  "sessionStartSource",
 ];
 
 // Pulls a `def <name>: [ "a", "b" ];` allowlist back out of the writer. The
