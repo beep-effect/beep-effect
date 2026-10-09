@@ -283,3 +283,21 @@ runtime/package/parity result is claimed until the collector writes it.
   timing/reference receipts, reflection and completed-retained closeout.
   The canon goal remains active in P1/P2 with P3 pending. Recovery is revert
   of the integration PR plus replayable preserved exports and regeneration.
+
+### Final main refresh after publication
+
+Yeet publication succeeded at `fefa70189d053e1242fa8f3d457ad71147c63581`
+with all 16 cheap gates and frozen-install preflight passing. Its new watcher
+`ef83cd9b-6bb3-4df8-9938-fec19306007d` was stopped and its terminal inbox row
+acknowledged. Final-head Vercel rate-limit rows were acknowledged environment-only.
+Both review threads remain resolved upstream; Yeet treats the supplementary
+reply as stale and posts nothing to an already resolved thread.
+
+Main advanced with docs-only #1577 during publication. Merge snapshot
+`c7bf8376acc5f143f69b14a5a4a52a02b1206996` incorporates
+`78b77b1084d83eb105e9161d56c68d6848b63047`. A path comparison against qualified
+`4be0599a18` confirms CLI source and root gate inputs remain identical. The
+inventory did not move, so the run-4 ruling requires no further regeneration.
+The preceding linkage retains its explicit generation snapshot. This addendum
+and merge are published as one complete final wave; the final report supplies
+its exact receipt-successor SHA. The orchestrator must use that latest PR head.
