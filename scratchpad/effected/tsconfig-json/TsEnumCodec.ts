@@ -71,6 +71,12 @@ const EnumFamily = LiteralKit([
 	"fallbackPolling",
 ]).annotate($I.annote("EnumFamily", { description: "The compiler and watcher enum families supported by the numeric codec." }));
 
+/**
+ * The supported compiler-option and watcher enum-family names.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EnumFamily = typeof EnumFamily.Type;
 
 /** One family's forward (string→number, aliases included) and reverse (number→canonical string) maps. */
@@ -241,18 +247,11 @@ const COMPILER_OPTION_ENUM_KEYS: ReadonlyArray<readonly [key: string, family: En
  * transcription of TypeScript's own `CompilerOptionsValue`,
  * transcribed (not imported) to honor this package's zero-`typescript` rule.
  *
+ * **Details**
+ *
  * Transcribed verbatim from `typescript@6.0.3`'s
  * `node_modules/typescript/lib/typescript.d.ts` (the version `@typescript/vfs@1.6.4`,
- * the encode target's consumer, pins):
- *
- * ```ts
- * type CompilerOptionsValue = string | number | boolean | (string | number)[]
- *   | string[] | MapLike<string[]> | PluginImport[] | ProjectReference[]
- *   | null | undefined;
- * interface MapLike<T> { [index: string]: T }
- * interface PluginImport { name: string }
- * interface ProjectReference { path: string; originalPath?: string; prepend?: boolean; circular?: boolean }
- * ```
+ * the encode target's consumer, pins). The Example below retains that transcription.
  *
  * The one member deliberately omitted is `TsConfigSourceFile` (present only in
  * the interface's index signature, not `CompilerOptionsValue` itself): it is a
@@ -264,7 +263,26 @@ const COMPILER_OPTION_ENUM_KEYS: ReadonlyArray<readonly [key: string, family: En
  * value returned by {@link TsEnumCodec.encodeCompilerOptions}: unknown options
  * and readonly arrays pass through unchanged.
  *
+ * **Example** (Describe the transcribed compiler API value union)
+ *
+ * ```ts
+ * import type { ProgrammaticCompilerOptionsValue } from "@beep/scratchpad/effected/tsconfig-json/TsEnumCodec";
+ *
+ * type CompilerOptionsValue = string | number | boolean | (string | number)[]
+ *   | string[] | MapLike<string[]> | PluginImport[] | ProjectReference[]
+ *   | null | undefined;
+ * interface MapLike<T> { [index: string]: T }
+ * interface PluginImport { name: string }
+ * interface ProjectReference { path: string; originalPath?: string; prepend?: boolean; circular?: boolean }
+ *
+ * const value: CompilerOptionsValue = "compiler-plugin";
+ * const accepted: ProgrammaticCompilerOptionsValue = value;
+ * console.log(accepted) // compiler-plugin
+ * ```
+ *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export type ProgrammaticCompilerOptionsValue =
 	| string
@@ -296,9 +314,9 @@ export type ProgrammaticCompilerOptionsValue =
  *
  * ```ts
  * import * as S from "effect/Schema";
- * import { ProgrammaticCompilerOptions } from "./TsEnumCodec.ts";
+ * import { ProgrammaticCompilerOptions } from "@beep/scratchpad/effected/tsconfig-json/TsEnumCodec";
  *
- * S.is(ProgrammaticCompilerOptions)({ target: 10, futureOption: { enabled: true } }); // true
+ * console.log(S.is(ProgrammaticCompilerOptions)({ target: 10, futureOption: { enabled: true } })) // true
  * ```
  *
  * @public
@@ -375,7 +393,19 @@ const decodeCompilerOptions = (numeric: Readonly<Record<string, unknown>>): Reco
  * families. Plain data: every lookup is a synchronous map read
  * returning `Option.Option`, never a thrown error.
  *
+ * **Example** (Encode an alias and decode its canonical spelling)
+ *
+ * ```ts
+ * import { TsEnumCodec } from "@beep/scratchpad/effected/tsconfig-json/TsEnumCodec";
+ * import * as O from "effect/Option";
+ *
+ * console.log(O.getOrUndefined(TsEnumCodec.encode("target", "es6"))) // 2
+ * console.log(O.getOrUndefined(TsEnumCodec.decode("target", 2))) // es2015
+ * ```
+ *
  * @public
+ * @category codecs
+ * @since 0.0.0
  */
 export class TsEnumCodec {
 	private constructor() {}
@@ -383,6 +413,19 @@ export class TsEnumCodec {
 	/**
 	 * Encodes a family's canonical (or alias) string spelling to its numeric
 	 * form. `Option.none()` for a string with no table entry — never guessed.
+	 *
+	 * **Example** (Encode known and unknown enum spellings)
+	 *
+	 * ```ts
+	 * import { TsEnumCodec } from "@beep/scratchpad/effected/tsconfig-json/TsEnumCodec";
+	 * import * as O from "effect/Option";
+	 *
+	 * console.log(O.getOrUndefined(TsEnumCodec.encode("moduleResolution", "node"))) // 2
+	 * console.log(O.isNone(TsEnumCodec.encode("target", "future-target"))) // true
+	 * ```
+	 *
+	 * @category encoding
+	 * @since 0.0.0
 	 */
 	static readonly encode = encode;
 
@@ -390,16 +433,41 @@ export class TsEnumCodec {
 	 * Decodes a family's numeric value to its canonical string spelling.
 	 * `Option.none()` for a numeric value with no table entry (a future TS
 	 * enum member) — never guessed.
+	 *
+	 * **Example** (Decode canonical and unknown numeric enums)
+	 *
+	 * ```ts
+	 * import { TsEnumCodec } from "@beep/scratchpad/effected/tsconfig-json/TsEnumCodec";
+	 * import * as O from "effect/Option";
+	 *
+	 * console.log(O.getOrUndefined(TsEnumCodec.decode("moduleResolution", 2))) // node10
+	 * console.log(O.isNone(TsEnumCodec.decode("target", 12345))) // true
+	 * ```
+	 *
+	 * @category decoding
+	 * @since 0.0.0
 	 */
 	static readonly decode = decode;
 
 	/**
-	 * Normalizes any spelling of a `lib` reference — the plain short name
+	 * Normalizes each supported spelling of a `lib` reference — the plain short name
 	 * (`esnext`), the on-disk file name (`lib.esnext.d.ts`), or an absolute
 	 * path to one (`/…/typescript/lib/lib.dom.iterable.d.ts`) — to the
 	 * canonical lowercase short name (`esnext`, `dom.iterable`). Strips a
 	 * leading directory, the `lib.` prefix and the `.d.ts` suffix; idempotent
 	 * on an already-short name.
+	 *
+	 * **Example** (Normalize library filenames and short names)
+	 *
+	 * ```ts
+	 * import { TsEnumCodec } from "@beep/scratchpad/effected/tsconfig-json/TsEnumCodec";
+	 *
+	 * console.log(TsEnumCodec.normalizeLibReference("/typescript/lib/lib.DOM.Iterable.d.ts")) // dom.iterable
+	 * console.log(TsEnumCodec.normalizeLibReference("esnext")) // esnext
+	 * ```
+	 *
+	 * @category normalization
+	 * @since 0.0.0
 	 */
 	static readonly normalizeLibReference = normalizeLibReference;
 
@@ -416,6 +484,20 @@ export class TsEnumCodec {
 	 *
 	 * Passthrough values remain `unknown` in the return type. Encoding does not
 	 * establish assignability to TypeScript's narrower `ts.CompilerOptions`.
+	 *
+	 * **Example** (Encode compiler enums and library filenames)
+	 *
+	 * ```ts
+	 * import { TsEnumCodec } from "@beep/scratchpad/effected/tsconfig-json/TsEnumCodec";
+	 *
+	 * const encoded = TsEnumCodec.encodeCompilerOptions({ target: "es2023", strict: true, lib: ["esnext"] });
+	 * console.log(encoded.target) // 10
+	 * console.log(encoded.lib?.[0]) // lib.esnext.d.ts
+	 * console.log(encoded.strict) // true
+	 * ```
+	 *
+	 * @category encoding
+	 * @since 0.0.0
 	 */
 	static readonly encodeCompilerOptions = encodeCompilerOptions;
 
@@ -431,6 +513,20 @@ export class TsEnumCodec {
 	 * {@link (CompilerOptions:namespace).Type}: an unmappable passthrough
 	 * value would violate that narrower type's contract. Every other key is
 	 * copied through untouched.
+	 *
+	 * **Example** (Decode libraries while preserving future enum values)
+	 *
+	 * ```ts
+	 * import { TsEnumCodec } from "@beep/scratchpad/effected/tsconfig-json/TsEnumCodec";
+	 *
+	 * const decoded = TsEnumCodec.decodeCompilerOptions({ target: 10, module: 12345, lib: ["lib.esnext.d.ts"] });
+	 * console.log(decoded.target) // es2023
+	 * console.log(decoded.module) // 12345
+	 * console.log(JSON.stringify(decoded.lib)) // ["esnext"]
+	 * ```
+	 *
+	 * @category decoding
+	 * @since 0.0.0
 	 */
 	static readonly decodeCompilerOptions = decodeCompilerOptions;
 }

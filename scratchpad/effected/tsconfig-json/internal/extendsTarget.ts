@@ -6,6 +6,8 @@
  * keys are skipped, and substituted maps are built with `Object.create(null)` —
  * a JSON-parsed `{"__proto__": …}` key must never read or assign a prototype.
  *
+ * **Gotchas**
+ *
  * A hostile `package.json` must never defect or fail the whole resolution: a
  * malformed manifest is absorbed to "no resolution for that candidate", and
  * only a genuine `PlatformError` from the underlying IO flows through the typed
@@ -130,9 +132,26 @@ const resolveConditionValue = (value: unknown, depth: number): string | undefine
 /**
  * Resolve a `package.json` `exports` map for a subpath key (`"."` for the
  * package root, `"./sub"` for a subpath) to its `.json` target string. Pure and
- * hardened; exported for direct unit testing. The returned target is verbatim
+ * hardened; exported for direct unit testing.
+ *
+ * **Details**
+ *
+ * The returned target is verbatim
  * from the manifest (still relative to the package directory) — the caller joins
  * and probes it.
+  *
+ * **Example** (Resolve a conditional package subpath)
+ *
+ * ```ts
+ * import { resolveExports } from "@beep/scratchpad/effected/tsconfig-json/internal/extendsTarget";
+ * import * as O from "effect/Option";
+ *
+ * const target = resolveExports({ "./base": { types: "./base.json" } }, "./base");
+ * console.log(O.getOrElse(target, () => "missing")) // ./base.json
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const resolveExports: {
 	(exports: unknown, subpath: string): O.Option<string>;
@@ -250,9 +269,24 @@ const tryCandidate = Effect.fnUntraced(function* (
  * specifiers walk up the ancestor `node_modules` chain, skipping ancestors
  * named `node_modules`, and resolve against the first package found.
  *
+ * **Details**
+ *
  * Absence is `Option.none()`; a malformed manifest is coerced to an empty one
  * (tsc parity — the candidate's manifest-less lookups still run); a
  * `PlatformError` from the underlying IO flows through.
+  *
+ * **Example** (Construct a relative extends lookup)
+ *
+ * ```ts
+ * import { resolveExtendsTarget } from "@beep/scratchpad/effected/tsconfig-json/internal/extendsTarget";
+ * import * as Effect from "effect/Effect";
+ *
+ * const program = resolveExtendsTarget("./base.json", "/project/tsconfig.json");
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const resolveExtendsTarget: {
 	(spec: string, fromConfigPath: string): Effect.Effect<O.Option<string>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path>;

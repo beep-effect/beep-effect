@@ -365,7 +365,24 @@ const substituteConfigDir: {
  * ({@link (ResolvedTsconfig:class).merge}), and the `${configDir}` final
  * phase ({@link (ResolvedTsconfig:class).substituteConfigDir}).
  *
+ * **Example** (Resolve a derived compiler option)
+ *
+ * ```ts
+ * import { ResolvedTsconfig } from "@beep/scratchpad/effected/tsconfig-json/ResolvedTsconfig";
+ *
+ * const base: ResolvedTsconfig = {
+ *   configPath: "/project/base.json",
+ *   extendedPaths: ["/project/base.json"],
+ *   compilerOptions: { strict: true },
+ * };
+ * const resolved = ResolvedTsconfig.merge(base, { compilerOptions: { strict: false } }, "/project/tsconfig.json");
+ * console.log(resolved.compilerOptions.strict) // false
+ * console.log(resolved.extendedPaths.length) // 2
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class ResolvedTsconfig extends S.Opaque<ResolvedTsconfig>()(ResolvedTsconfigData) {
 
@@ -377,6 +394,23 @@ export class ResolvedTsconfig extends S.Opaque<ResolvedTsconfig>()(ResolvedTscon
 	 * {@link (ResolvedTsconfig:class).substituteConfigDir}), and `paths`
 	 * VALUES stay verbatim. Only `compilerOptions` path surfaces are touched;
 	 * `files`/`include`/`exclude` are re-rooted at merge time instead.
+	 *
+	 * **Example** (Absolutize paths while retaining path mappings)
+	 *
+	 * ```ts
+	 * import { ResolvedTsconfig } from "@beep/scratchpad/effected/tsconfig-json/ResolvedTsconfig";
+	 *
+	 * const doc = ResolvedTsconfig.absolutize(
+	 *   { compilerOptions: { outDir: "dist", paths: { app: ["src/app"] } } },
+	 *   "/project",
+	 *   (directory, entry) => `${directory}/${entry}`,
+	 * );
+	 * console.log(doc.compilerOptions?.outDir) // /project/dist
+	 * console.log(doc.compilerOptions?.paths?.app?.[0]) // src/app
+	 * ```
+	 *
+	 * @category normalization
+	 * @since 0.0.0
 	 */
 	static readonly absolutize = absolutize;
 
@@ -386,6 +420,25 @@ export class ResolvedTsconfig extends S.Opaque<ResolvedTsconfig>()(ResolvedTscon
 	 * own config last. `derivedPath` is the derived config's absolute
 	 * normalized path, from which the re-rooting frame and `pathsBase` are
 	 * computed.
+	 *
+	 * **Example** (Merge a derived file list and inherit checking options)
+	 *
+	 * ```ts
+	 * import { ResolvedTsconfig } from "@beep/scratchpad/effected/tsconfig-json/ResolvedTsconfig";
+	 *
+	 * const base: ResolvedTsconfig = {
+	 *   configPath: "/project/base.json",
+	 *   extendedPaths: ["/project/base.json"],
+	 *   compilerOptions: { strict: true },
+	 * };
+	 * const resolved = ResolvedTsconfig.merge(base, { files: [] }, "/project/app/tsconfig.json");
+	 * console.log(resolved.configPath) // /project/app/tsconfig.json
+	 * console.log(resolved.files?.length) // 0
+	 * console.log(resolved.compilerOptions.strict) // true
+	 * ```
+	 *
+	 * @category combinators
+	 * @since 0.0.0
 	 */
 	static readonly merge = merge;
 
@@ -397,6 +450,25 @@ export class ResolvedTsconfig extends S.Opaque<ResolvedTsconfig>()(ResolvedTscon
 	 * `files`/`include`/`exclude`, and `watchOptions`'
 	 * `excludeDirectories`/`excludeFiles`. Every other field is left
 	 * untouched.
+	 *
+	 * **Example** (Substitute the final config directory)
+	 *
+	 * ```ts
+	 * import { ResolvedTsconfig } from "@beep/scratchpad/effected/tsconfig-json/ResolvedTsconfig";
+	 *
+	 * const resolved: ResolvedTsconfig = {
+	 *   configPath: "/project/tsconfig.json",
+	 *   extendedPaths: ["/project/tsconfig.json"],
+	 *   compilerOptions: { outDir: "${configDir}/dist" },
+	 *   include: ["${configDir}/src"],
+	 * };
+	 * const substituted = ResolvedTsconfig.substituteConfigDir(resolved, "/project");
+	 * console.log(substituted.compilerOptions.outDir) // /project/dist
+	 * console.log(substituted.include?.[0]) // /project/src
+	 * ```
+	 *
+	 * @category normalization
+	 * @since 0.0.0
 	 */
 	static readonly substituteConfigDir = substituteConfigDir;
 }

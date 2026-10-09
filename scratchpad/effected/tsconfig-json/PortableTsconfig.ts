@@ -209,12 +209,25 @@ const PortableTsconfigData = S.Struct({
 /**
  * Options for {@link (PortableTsconfig:class).make}.
  *
+ * **Example** (Enable resolution-dependent type packages)
+ *
+ * ```ts
+ * import { PortableTsconfigOptions } from "@beep/scratchpad/effected/tsconfig-json/PortableTsconfig";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.decodeUnknownSync(PortableTsconfigOptions)({ includeTypes: true }).includeTypes) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const PortableTsconfigOptions = S.Struct({
 	/**
 	 * Carry `types` (an array of `@types` package NAMES) onto the portable
 	 * shape when the source declares it. Defaults to `false`.
+	 *
+	 * **Details**
 	 *
 	 * Opt in when the consuming environment can resolve those packages — it
 	 * materializes `@types` into its virtual filesystem, or type-checks against
@@ -231,7 +244,13 @@ export const PortableTsconfigOptions = S.Struct({
 	description: "Opt-ins for resolution-dependent portable compiler options.",
 }));
 
-/** The schema-derived portable projection options. @public */
+/**
+ * The schema-derived portable projection options.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
 export type PortableTsconfigOptions = typeof PortableTsconfigOptions.Type;
 
 // Implementation of PortableTsconfig.make; the public contract lives on the static.
@@ -259,7 +278,19 @@ const make = (
  * narrows a resolved or bare compiler-options object to the allow-listed,
  * machine-independent subset described on {@link (PortableTsconfig:interface)}.
  *
+ * **Example** (Keep checking options in a portable config)
+ *
+ * ```ts
+ * import { PortableTsconfig } from "@beep/scratchpad/effected/tsconfig-json/PortableTsconfig";
+ *
+ * const portable = PortableTsconfig.make({ strict: true, outDir: "/project/dist" });
+ * console.log(portable.compilerOptions.strict) // true
+ * console.log(portable.compilerOptions.outDir) // undefined
+ * ```
+ *
  * @public
+ * @category models
+ * @since 0.0.0
  */
 export class PortableTsconfig extends S.Opaque<PortableTsconfig>()(PortableTsconfigData) {
 
@@ -274,6 +305,8 @@ export class PortableTsconfig extends S.Opaque<PortableTsconfig>()(PortableTscon
 	 * package does not yet classify never leaks onto the portable shape by
 	 * accident.
 	 *
+	 * **Details**
+	 *
 	 * `types` is the one deliberate exception, and it is opt-in rather than
 	 * unclassified: it is portable (package names, not paths) but carrying it
 	 * makes TypeScript demand those packages be resolvable, which a virtual
@@ -283,9 +316,26 @@ export class PortableTsconfig extends S.Opaque<PortableTsconfig>()(PortableTscon
 	 * `typeRoots` is never carried — machine-specific,
 	 * config-location-dependent directories.
 	 *
+	 * **Example** (Carry type packages while forcing portable flags)
+	 *
+	 * ```ts
+	 * import { PortableTsconfig } from "@beep/scratchpad/effected/tsconfig-json/PortableTsconfig";
+	 *
+	 * const portable = PortableTsconfig.make(
+	 *   { types: ["node"], typeRoots: ["/project/types"], composite: true },
+	 *   { includeTypes: true },
+	 * );
+	 * console.log(portable.compilerOptions.composite) // false
+	 * console.log(portable.compilerOptions.noEmit) // true
+	 * console.log(portable.compilerOptions.typeRoots) // undefined
+	 * console.log(JSON.stringify(portable.compilerOptions.types)) // ["node"]
+	 * ```
+	 *
 	 * @param input - The resolved config, or a bare compiler-options bag.
 	 * @param options - Opt-ins for options that are portable but
 	 * resolution-dependent. Omitted means the strict, always-safe subset.
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static override readonly make = make;
 }

@@ -1,41 +1,13 @@
 # tsconfig-json (lab port of @effected/tsconfig-json)
 
-[![npm](https://img.shields.io/npm/v/@effected%2Ftsconfig-json?label=npm&color=cb3837)](https://www.npmjs.com/package/@effected/tsconfig-json)
-[![License: MIT](https://img.shields.io/badge/License-MIT-4caf50.svg)](https://opensource.org/licenses/MIT)
-[![Node.js %3E%3D24.11.0](https://img.shields.io/badge/Node.js-%3E%3D24.11.0-5fa04e.svg)](https://nodejs.org/)
-[![TypeScript 7.0](https://img.shields.io/badge/TypeScript-7.0-3178c6.svg)](https://www.typescriptlang.org/)
 
 Composable tsconfig.json handling for Effect: document and compiler-option schemas, `extends`-chain resolution with tsc's own merge semantics, nearest-config discovery and a portable-config filter for virtual TypeScript environments. Every parse is JSONC — comments and trailing commas are legal everywhere, exactly as tsc treats them — and options the schemas do not know pass through decode and encode untouched instead of being dropped.
-
-> **Pre-`1.0.0`.** This package is part of the `@effected/*` kit, built on stable
-> Effect v4 (`effect` `^4.0.0`) and still in `0.x` development. Stable Effect
-> makes a kit `1.0.0` possible, not automatic. To keep your `effect` and
-> `@effect/*` versions on the line the kit is built and tested against, install
-> [`@effected/pnpm-plugin-effect`](https://www.npmjs.com/package/@effected/pnpm-plugin-effect).
->
-> **Stability: unstable.** This package's API surface is not yet considered
-> complete and may change across `0.x` releases. Pin an exact version — even a
-> package marked *stable* before `1.0.0` can introduce a breaking change by
-> accident, and an exact pin turns that into a type-check error rather than a
-> runtime surprise. Full policy: [release strategy](https://github.com/spencerbeggs/effected#release-strategy).
 
 ## Why @effected/tsconfig-json
 
 Reading a tsconfig.json correctly means reproducing what tsc does, and what tsc does is more than `JSON.parse` plus `Object.assign`. An `extends` target resolves like a module: a bare specifier walks ancestor `node_modules` directories, a package's `exports` map can redirect or block it, and a `tsconfig` field in its manifest can point somewhere else entirely. Merging the chain is per-field, path options absolutize against the config that declared them rather than the one you loaded, and `${configDir}` substitutes once at the end against the top config's directory. These rules were extracted from the TypeScript compiler's source and encoded here as data-driven tests, so the resolution you get is the resolution tsc computes.
 
 The package does all of this without importing `typescript`, not even as a type. It works at the string level — `"target": "es2023"` stays a string through schema, merge and discovery — and the version-coupled numeric enum mappings live in `TsEnumCodec` as plain data tables, so converting to the numeric shape a real compiler expects is an explicit final step rather than a dependency you carry everywhere. Malformed input always fails through a typed error channel, and the recursive `extends` walk carries cycle and depth guards, because a config file is untrusted input.
-
-## Install
-
-```bash
-npm install @effected/tsconfig-json @effected/jsonc @effected/walker effect
-```
-
-```bash
-pnpm add @effected/tsconfig-json @effected/jsonc @effected/walker effect
-```
-
-Requires Node.js >=24.11.0. `effect` v4, `@effected/jsonc` and `@effected/walker` are peer dependencies; there are no runtime dependencies of its own.
 
 All `@effected/*` packages are ESM-only: the exports maps publish only `import` conditions, so `require()` — including tools that resolve in CJS mode — fails with Node's `ERR_PACKAGE_PATH_NOT_EXPORTED` rather than loading a CJS build that does not exist. Import from an ES module.
 
@@ -46,9 +18,10 @@ All IO goes through `FileSystem` and `Path` from `effect` core, not a platform p
 Resolve a config and its full `extends` chain:
 
 ```ts
-import { TsconfigLoader } from "@effected/tsconfig-json";
+import { TsconfigLoader } from "@beep/scratchpad/effected/tsconfig-json";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
-import { Effect, Layer } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 const PlatformLive = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
@@ -65,17 +38,18 @@ console.log(resolved.compilerOptions);
 Find the nearest config first when you only have a starting directory:
 
 ```ts
-import { TsconfigDiscovery } from "@effected/tsconfig-json";
-import { Effect, Option } from "effect";
+import { TsconfigDiscovery } from "@beep/scratchpad/effected/tsconfig-json";
+import * as Effect from "effect/Effect";
 
 const nearest = TsconfigDiscovery.findNearest(process.cwd());
 // Effect<Option<string>, never, FileSystem | Path> — absence is Option.none(), never an error
+console.log(Effect.isEffect(nearest)); // true
 ```
 
 Hand the result to a real compiler by encoding the enum families to their numeric form, or narrow it to the portable subset a virtual TypeScript environment can safely reuse:
 
 ```ts
-import { PortableTsconfig, TsEnumCodec } from "@effected/tsconfig-json";
+import { PortableTsconfig, TsEnumCodec } from "@beep/scratchpad/effected/tsconfig-json";
 
 console.log(TsEnumCodec.encodeCompilerOptions({ target: "es2023", strict: true, lib: ["esnext"] }));
 // { target: 10, strict: true, lib: [ 'lib.esnext.d.ts' ] }
@@ -96,7 +70,7 @@ Bundler plugin hooks and config factories often cannot await. `TsconfigLoaderSyn
 ```ts
 import { existsSync, readFileSync } from "node:fs";
 import * as path from "node:path";
-import { TsconfigLoaderSync } from "@effected/tsconfig-json";
+import { TsconfigLoaderSync } from "@beep/scratchpad/effected/tsconfig-json";
 
 const options = {
   fileSystem: { exists: existsSync, readFile: (p: string) => readFileSync(p, "utf8") },
@@ -105,6 +79,7 @@ const options = {
 
 const compilerOptions = TsconfigLoaderSync.compilerOptions("./tsconfig.json", options);
 // the merged options for the full extends chain — the same result TsconfigLoader.resolve computes
+console.log(compilerOptions); // the merged compiler options from ./tsconfig.json
 ```
 
 `load` and `resolve` have the same synchronous forms. Failures are the async pipeline's own typed errors thrown as themselves — `TsconfigParseError`, `TsconfigExtendsError` or a `PlatformError` wrapping whatever your `readFile` threw — never a fiber-failure wrapper.
@@ -136,7 +111,7 @@ export default defineConfig({
 
 ```ts
 import { dirname } from "node:path";
-import { TsEnumCodec } from "@effected/tsconfig-json";
+import { TsEnumCodec } from "@beep/scratchpad/effected/tsconfig-json";
 import { createDefaultMapFromNodeModules } from "@typescript/vfs";
 import ts from "typescript";
 

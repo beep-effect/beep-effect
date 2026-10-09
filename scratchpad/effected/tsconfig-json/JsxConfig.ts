@@ -30,6 +30,12 @@ const JsxVariants = JsxRuntime.toTaggedUnion("runtime")({
 	description: "The JSX transform configuration, with a required import source only for the automatic runtime.",
 }));
 
+/**
+ * The runtime-discriminated JSX transform shape, with an import source for the automatic variant.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type JsxConfig = typeof JsxVariants.Type;
 
 // TypeScript cannot extend a constructor returning a union. Widen only the
@@ -43,7 +49,17 @@ const JsxBase: Omit<typeof JsxVariants, "Type"> & S.Schema<object> = JsxVariants
  * `react`) and, for the automatic runtime, the import source the transform
  * emits (`jsxImportSource`, defaulting to `"react"` per tsc).
  *
+ * **Example** (Construct an automatic JSX runtime)
+ *
+ * ```ts
+ * import { JsxConfig } from "@beep/scratchpad/effected/tsconfig-json/JsxConfig";
+ *
+ * console.log(JsxConfig.make({ runtime: "automatic", importSource: "react" }).runtime) // automatic
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const JsxConfig = class extends S.Opaque<JsxConfig>()(JsxBase) {
 	/**
@@ -54,6 +70,20 @@ export const JsxConfig = class extends S.Opaque<JsxConfig>()(JsxBase) {
 	 * no `importSource`. `"preserve"`, `"react-native"` and an absent `jsx`
 	 * yield `Option.none()` — JSX is left untransformed (or absent entirely),
 	 * so there is nothing for a bundler to configure.
+	 *
+	 * **Example** (Project transformed and preserved JSX)
+	 *
+	 * ```ts
+	 * import { JsxConfig } from "@beep/scratchpad/effected/tsconfig-json/JsxConfig";
+	 * import * as O from "effect/Option";
+	 *
+	 * const config = JsxConfig.fromCompilerOptions({ jsx: "react-jsx" });
+	 * console.log(O.map(config, (value) => value.runtime).pipe(O.getOrElse(() => "absent"))) // automatic
+	 * console.log(O.isNone(JsxConfig.fromCompilerOptions({ jsx: "preserve" }))) // true
+	 * ```
+	 *
+	 * @category constructors
+	 * @since 0.0.0
 	 */
 	static fromCompilerOptions(options: CompilerOptions.Type): O.Option<JsxConfig> {
 		return Match.value(options.jsx).pipe(

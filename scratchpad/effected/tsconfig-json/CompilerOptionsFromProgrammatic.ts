@@ -43,21 +43,41 @@ const $I = $ScratchpadId.create("effected/tsconfig-json/CompilerOptionsFromProgr
  * able to receive invalid known fields, including unmappable numeric enum
  * values, so it can reject them with a typed schema issue.
  *
+ * **Example** (Accept a record before option validation)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { ProgrammaticRecord } from "@beep/scratchpad/effected/tsconfig-json/CompilerOptionsFromProgrammatic";
+ *
+ * const record = S.decodeUnknownSync(ProgrammaticRecord)({ target: 999 });
+ * console.log(record.target); // 999
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ProgrammaticRecord = S.Record(S.String, S.Unknown).annotate(
 	$I.annote("ProgrammaticRecord", { description: "Unvalidated programmatic compiler options, including invalid known fields and unknown passthrough values." }),
 );
 
+/**
+ * The decoded shape of {@link (ProgrammaticRecord:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ProgrammaticRecord = typeof ProgrammaticRecord.Type;
 
 /**
  * A codec between the **programmatic** `compilerOptions` shape TypeScript's own
  * API uses and this package's decoded {@link (CompilerOptions:namespace).Type}.
  *
+ * **Details**
+ *
  * Decoding accepts the numeric-enum spelling (`{ target: ts.ScriptTarget.ES2025 }`),
- * the canonical string spelling, case-varying strings (`"ESNext"`), any mixture of
- * the three in one object, and `lib` entries in any of their three spellings
+ * the canonical string spelling, case-varying strings (`"ESNext"`), a mixture of
+ * the three in one object, and `lib` entries in each of their three spellings
  * (`"esnext"`, `"lib.esnext.d.ts"`, an absolute path to the lib file) — producing
  * validated {@link (CompilerOptions:namespace).Type} with canonical lowercase enum
  * strings and short-form `lib`. Unknown and removed keys pass through, exactly as
@@ -67,7 +87,7 @@ export type ProgrammaticRecord = typeof ProgrammaticRecord.Type;
  * Encoding is {@link TsEnumCodec.encodeCompilerOptions}: numeric enum values and
  * `lib` in the file-name form (`lib.esnext.d.ts`).
  *
- * **Details**
+ * **Gotchas**
  *
  * A numeric value with no table entry — a future TypeScript enum member — survives
  * normalization as a number and then **fails decode** with a typed schema issue,
@@ -79,14 +99,15 @@ export type ProgrammaticRecord = typeof ProgrammaticRecord.Type;
  *
  * ```ts
  * import * as S from "effect/Schema";
- * import { CompilerOptionsFromProgrammatic } from "./index.ts";
+ * import { CompilerOptionsFromProgrammatic } from "@beep/scratchpad/effected/tsconfig-json/CompilerOptionsFromProgrammatic";
  *
- * const decoded = S.decodeUnknownResult(CompilerOptionsFromProgrammatic)({
+ * const decoded = S.decodeUnknownSync(CompilerOptionsFromProgrammatic)({
  * 	target: 12,
  * 	strict: true,
  * 	lib: ["lib.esnext.d.ts"],
  * });
- * console.log(decoded); // Success containing { target: "es2025", strict: true, lib: ["esnext"] }
+ * console.log(decoded.target); // es2025
+ * console.log(decoded.lib?.[0]); // esnext
  * ```
  *
  * @public
@@ -108,4 +129,10 @@ export const CompilerOptionsFromProgrammatic: S.Codec<CompilerOptions, Programma
 		S.annotate($I.annote("CompilerOptionsFromProgrammatic", { description: "A validating codec between programmatic numeric compiler options and canonical string compiler options." })),
 	);
 
+/**
+ * The decoded shape of {@link (CompilerOptionsFromProgrammatic:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CompilerOptionsFromProgrammatic = typeof CompilerOptionsFromProgrammatic.Type;

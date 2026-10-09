@@ -213,79 +213,225 @@ const LibKit = LiteralKit([
 );
 
 /**
- * `compilerOptions.target` — the ECMAScript target. `es5` is deprecated in TS
+ * Validates the ECMAScript language target for `compilerOptions.target`.
+ *
+ * **Gotchas**
+ *
+ * `es5` is deprecated in TS
  * 6.0; `es3` has no literal (a removed value — a `target: "es3"` value fails
  * decode against this schema rather than silently passing through, since
  * `target` itself is a live, typed field).
  *
+ * **Example** (Decode Target without case sensitivity)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { Target } from "@beep/scratchpad/effected/tsconfig-json/CompilerOptions";
+ *
+ * console.log(S.decodeUnknownSync(Target)("ES2025")); // es2025
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const Target = caseInsensitiveLiterals(TargetKit).annotate(
 	$I.annote("Target", { description: "The ECMAScript language target, including supported aliases." }),
 );
 
+/**
+ * The decoded shape accepted by {@link (Target:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Target = typeof Target.Type;
 
 /**
- * `compilerOptions.module` — the module output format. `none`, `amd`, `umd`
+ * Validates the JavaScript module output format for `compilerOptions.module`.
+ *
+ * **Gotchas**
+ *
+ * `none`, `amd`, `umd`
  * and `system` are deprecated in TS 6.0.
  *
+ * **Example** (Decode Module without case sensitivity)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { Module } from "@beep/scratchpad/effected/tsconfig-json/CompilerOptions";
+ *
+ * console.log(S.decodeUnknownSync(Module)("CommonJS")); // commonjs
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const Module = caseInsensitiveLiterals(ModuleKit).annotate(
 	$I.annote("Module", { description: "The emitted JavaScript module format." }),
 );
 
+/**
+ * The decoded shape accepted by {@link (Module:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Module = typeof Module.Type;
 
 /**
- * `compilerOptions.moduleResolution`. `node10`, `node` and `classic` are
+ * Validates the import resolution strategy for `compilerOptions.moduleResolution`.
+ *
+ * **Gotchas**
+ *
+ * `node10`, `node` and `classic` are
  * deprecated in TS 6.0.
  *
+ * **Example** (Decode ModuleResolution without case sensitivity)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { ModuleResolution } from "@beep/scratchpad/effected/tsconfig-json/CompilerOptions";
+ *
+ * console.log(S.decodeUnknownSync(ModuleResolution)("Bundler")); // bundler
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const ModuleResolution = caseInsensitiveLiterals(ModuleResolutionKit).annotate(
 	$I.annote("ModuleResolution", { description: "The strategy used to resolve module imports." }),
 );
 
+/**
+ * The decoded shape accepted by {@link (ModuleResolution:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ModuleResolution = typeof ModuleResolution.Type;
 
 /**
- * `compilerOptions.jsx`. There is no `none` literal — tsc's option map has
+ * Validates the JSX emit mode for `compilerOptions.jsx`.
+ *
+ * **Gotchas**
+ *
+ * There is no `none` literal — tsc's option map has
  * only these five.
  *
+ * **Example** (Decode Jsx without case sensitivity)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { Jsx } from "@beep/scratchpad/effected/tsconfig-json/CompilerOptions";
+ *
+ * console.log(S.decodeUnknownSync(Jsx)("React-JSX")); // react-jsx
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const Jsx = caseInsensitiveLiterals(JsxKit).annotate(
 	$I.annote("Jsx", { description: "The JSX emit mode." }),
 );
 
+/**
+ * The decoded shape accepted by {@link (Jsx:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Jsx = typeof Jsx.Type;
 
-/** `compilerOptions.newLine`. @public */
+/**
+ * Validates the newline sequence for `compilerOptions.newLine`.
+ *
+ * **Example** (Decode NewLine without case sensitivity)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { NewLine } from "@beep/scratchpad/effected/tsconfig-json/CompilerOptions";
+ *
+ * console.log(S.decodeUnknownSync(NewLine)("LF")); // lf
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
 export const NewLine = caseInsensitiveLiterals(NewLineKit).annotate(
 	$I.annote("NewLine", { description: "The newline sequence used in emitted files." }),
 );
 
+/**
+ * The decoded shape accepted by {@link (NewLine:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type NewLine = typeof NewLine.Type;
 
-/** `compilerOptions.moduleDetection`. @public */
+/**
+ * Validates the source-file module detection strategy for `compilerOptions.moduleDetection`.
+ *
+ * **Example** (Decode ModuleDetection without case sensitivity)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { ModuleDetection } from "@beep/scratchpad/effected/tsconfig-json/CompilerOptions";
+ *
+ * console.log(S.decodeUnknownSync(ModuleDetection)("Force")); // force
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ModuleDetection = caseInsensitiveLiterals(ModuleDetectionKit).annotate(
 	$I.annote("ModuleDetection", { description: "The strategy for identifying module source files." }),
 );
 
+/**
+ * The decoded shape accepted by {@link (ModuleDetection:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ModuleDetection = typeof ModuleDetection.Type;
 
 /**
- * `compilerOptions.lib` member values — the complete TS 6.0.3 set, lowercase
- * canonical.
+ * Validates `compilerOptions.lib` member values against the complete TS 6.0.3 set.
+ *
+ * **Details**
+ *
+ * Values decode case-insensitively and encode to canonical lowercase.
+ *
+ * **Example** (Decode Lib without case sensitivity)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { Lib } from "@beep/scratchpad/effected/tsconfig-json/CompilerOptions";
+ *
+ * console.log(S.decodeUnknownSync(Lib)("DOM.Iterable")); // dom.iterable
+ * ```
  *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const Lib = caseInsensitiveLiterals(LibKit).annotate(
 	$I.annote("Lib", { description: "A supported TypeScript standard library short name." }),
 );
 
+/**
+ * The decoded shape accepted by {@link (Lib:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Lib = typeof Lib.Type;
 
 // `compilerOptions.ignoreDeprecations` — the values are version strings, not
@@ -305,12 +451,29 @@ const PluginEntry = S.StructWithRest(S.Struct({ name: S.String.annotateKey({ des
 ]).annotate($I.annote("PluginEntry", { description: "A named language-service plugin with arbitrary plugin configuration preserved." }));
 
 /**
- * `compilerOptions`, decoded as every live boolean, string, path, array,
- * record, number and enum field — each `optionalKey` — intersected with a
+ * Validates string-level compiler options while preserving options outside the known schema.
+ *
+ * **Details**
+ *
+ * Every live boolean, string, path, array,
+ * record, number and enum field is an `optionalKey`, intersected with a
  * passthrough record so unknown and removed keys survive decode and re-encode
  * untouched, which keeps the schema tolerant of newer compiler options.
  *
+ * **Example** (Preserve unknown options through a round trip)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { CompilerOptions } from "@beep/scratchpad/effected/tsconfig-json/CompilerOptions";
+ *
+ * const options = S.decodeUnknownSync(CompilerOptions)({ target: "ESNext", strict: true, futureOption: "kept" });
+ * console.log(options.target); // esnext
+ * console.log(S.encodeSync(CompilerOptions)(options).futureOption); // kept
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
  */
 export const CompilerOptions = S.StructWithRest(
 	S.Struct({
@@ -451,6 +614,12 @@ export const CompilerOptions = S.StructWithRest(
 	[S.Record(S.String, S.Unknown)],
 ).annotate($I.annote("CompilerOptions", { description: "Optional typed compiler options with unknown and removed options preserved." }));
 
+/**
+ * The decoded shape accepted by {@link (CompilerOptions:variable)}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CompilerOptions = typeof CompilerOptions.Type;
 
 /**
@@ -458,18 +627,24 @@ export type CompilerOptions = typeof CompilerOptions.Type;
  * decoded and encoded shapes.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace CompilerOptions {
 	/**
 	 * The decoded `compilerOptions` shape: every typed field optional, plus passthrough for unknown keys.
 	 *
 	 * @public
+	 * @category type-level
+	 * @since 0.0.0
 	 */
 	export type Type = CompilerOptions;
 	/**
 	 * The encoded (on-disk JSON) `compilerOptions` shape.
 	 *
 	 * @public
+	 * @category type-level
+	 * @since 0.0.0
 	 */
 	export type Encoded = typeof CompilerOptions.Encoded;
 }

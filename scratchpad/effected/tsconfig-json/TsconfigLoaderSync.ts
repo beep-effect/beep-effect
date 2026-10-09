@@ -42,76 +42,133 @@ class UnsupportedPathOperationError extends S.TaggedError<UnsupportedPathOperati
 ) {}
 
 /**
- * The synchronous file operations {@link TsconfigLoaderSync} needs, supplied
- * by the consumer. Node's built-ins satisfy it directly:
+ * The synchronous file operations {@link TsconfigLoaderSync} needs, supplied by the consumer.
+ *
+ * **Details**
+ *
+ * Node's built-ins satisfy it directly. `readFile` returns the file's text and
+ * may throw on failure (a missing file, a permission error); the throw is wrapped
+ * in a `PlatformError` and rethrown through the loader's typed channel.
+ *
+ * **Example** (Adapt Node file operations)
  *
  * ```ts
+ * import type { SyncFileSystem } from "@beep/scratchpad/effected/tsconfig-json/TsconfigLoaderSync";
  * import { existsSync, readFileSync } from "node:fs";
  *
  * const fileSystem: SyncFileSystem = {
- * 	exists: existsSync,
- * 	readFile: (p) => readFileSync(p, "utf8"),
+ *   exists: existsSync,
+ *   readFile: (p) => readFileSync(p, "utf8"),
  * };
+ * console.log(typeof fileSystem.readFile) // function
  * ```
  *
- * `readFile` returns the file's text and may throw on failure (a missing
- * file, a permission error); the throw is wrapped in a `PlatformError` and
- * rethrown through the loader's typed channel.
- *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface SyncFileSystem {
-	/** Whether a file exists at `path`. Directory hits follow the loader's documented file-only contract. */
+	/**
+	 * Whether a file exists at `path`. Directory hits follow the loader's documented file-only contract.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly exists: (path: string) => boolean;
-	/** Read the file at `path` as text. May throw; the throw surfaces as a `PlatformError`. */
+	/**
+	 * Read the file at `path` as text. May throw; the throw surfaces as a `PlatformError`.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly readFile: (path: string) => string;
 }
 
 /**
- * The synchronous path operations {@link TsconfigLoaderSync} needs, supplied
- * by the consumer. Deliberately a structural subset of `node:path`, so the
- * built-in module (and its `win32` / `posix` variants, or a Bun / Deno
- * equivalent) satisfies it verbatim:
+ * The synchronous path operations {@link TsconfigLoaderSync} needs, supplied by the consumer.
+ *
+ * **Details**
+ *
+ * Deliberately a structural subset of `node:path`, so the built-in module
+ * (and its `win32` / `posix` variants, or a Bun / Deno equivalent) satisfies
+ * it verbatim. The loader passes these through untouched — Windows correctness
+ * comes from supplying a win32-appropriate implementation, not from anything here.
+ *
+ * **Example** (Supply Node path operations)
  *
  * ```ts
+ * import type { TsconfigLoaderSyncOptions } from "@beep/scratchpad/effected/tsconfig-json/TsconfigLoaderSync";
+ * import { existsSync, readFileSync } from "node:fs";
  * import * as path from "node:path";
  *
  * const options: TsconfigLoaderSyncOptions = {
- * 	fileSystem: { exists: existsSync, readFile: (p) => readFileSync(p, "utf8") },
- * 	path, // node:path IS a SyncPath
+ *   fileSystem: { exists: existsSync, readFile: (p) => readFileSync(p, "utf8") },
+ *   path, // node:path IS a SyncPath
  * };
+ * console.log(options.path.basename("tsconfig.json")) // tsconfig.json
  * ```
  *
- * The loader passes these through untouched — Windows correctness comes from
- * supplying a win32-appropriate implementation, not from anything here.
- *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface SyncPath {
-	/** Resolve segments to an absolute path (rightmost-wins, like `path.resolve`). */
+	/**
+	 * Resolve segments to an absolute path (rightmost-wins, like `path.resolve`).
+	 *
+	 * @since 0.0.0
+	 */
 	readonly resolve: (...segments: ReadonlyArray<string>) => string;
-	/** The directory portion of `p` (like `path.dirname`). */
+	/**
+	 * The directory portion of `p` (like `path.dirname`).
+	 *
+	 * @since 0.0.0
+	 */
 	readonly dirname: (p: string) => string;
-	/** Join segments with the implementation's separator (like `path.join`). */
+	/**
+	 * Join segments with the implementation's separator (like `path.join`).
+	 *
+	 * @since 0.0.0
+	 */
 	readonly join: (...segments: ReadonlyArray<string>) => string;
-	/** Whether `p` is absolute under this implementation's convention. */
+	/**
+	 * Whether `p` is absolute under this implementation's convention.
+	 *
+	 * @since 0.0.0
+	 */
 	readonly isAbsolute: (p: string) => boolean;
-	/** The final segment of `p` (like `path.basename`). */
+	/**
+	 * The final segment of `p` (like `path.basename`).
+	 *
+	 * @since 0.0.0
+	 */
 	readonly basename: (p: string) => string;
 }
 
 /**
  * The consumer-supplied operations backing one {@link TsconfigLoaderSync}
- * call: the file operations and the path implementation. Both are required —
+ * call: the file operations and the path implementation.
+ *
+ * **Details**
+ *
+ * Both are required —
  * this package never imports `node:*` and never assumes posix, so the
  * platform binding is entirely the caller's.
  *
  * @public
+ * @category type-level
+ * @since 0.0.0
  */
 export interface TsconfigLoaderSyncOptions {
-	/** The synchronous file operations (Node: `existsSync` / `readFileSync`). */
+	/**
+	 * The synchronous file operations (Node: `existsSync` / `readFileSync`).
+	 *
+	 * @since 0.0.0
+	 */
 	readonly fileSystem: SyncFileSystem;
-	/** The synchronous path implementation (Node: the `node:path` module itself). */
+	/**
+	 * The synchronous path implementation (Node: the `node:path` module itself).
+	 *
+	 * @since 0.0.0
+	 */
 	readonly path: SyncPath;
 }
 
@@ -150,6 +207,8 @@ const makePathService = (path: SyncPath): Path.Path =>
  * report it: a `PlatformError` whose `SystemError` reason carries module
  * `"FileSystem"`, method `"readFileString"`, and the original throw as
  * `cause`.
+ *
+ * **Gotchas**
  *
  * NOTE the deliberate asymmetry with `makePathService`: an unsupported `Path`
  * member throws a named defect, but an unsupported `FileSystem` member
@@ -217,7 +276,8 @@ const compilerOptions = (configPath: string, options: TsconfigLoaderSyncOptions)
  * APIs (bundler plugin hooks, config factories); everything else should use
  * {@link TsconfigLoader} with real platform layers.
  *
- * @remarks
+ * **Gotchas**
+ *
  * The two adapters treat unsupported members asymmetrically: a `Path` member
  * the loader pipeline never calls throws a named defect on contact, while a
  * `FileSystem` member outside the two overridden here (`exists`,
@@ -226,18 +286,23 @@ const compilerOptions = (configPath: string, options: TsconfigLoaderSyncOptions)
  * therefore surfaces as a `NotFound` rather than a defect — extend the
  * adapter when that happens.
  *
+ * **Example** (Resolve with Node platform operations)
+ *
  * ```ts
  * import { existsSync, readFileSync } from "node:fs";
  * import * as path from "node:path";
- * import { TsconfigLoaderSync } from "./index.ts";
+ * import { TsconfigLoaderSync } from "@beep/scratchpad/effected/tsconfig-json/TsconfigLoaderSync";
  *
  * const resolved = TsconfigLoaderSync.resolve("./tsconfig.json", {
  * 	fileSystem: { exists: existsSync, readFile: (p) => readFileSync(p, "utf8") },
  * 	path,
  * });
+ * console.log(typeof resolved.compilerOptions) // object
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class TsconfigLoaderSync {
 	private constructor() {}
@@ -247,6 +312,25 @@ export class TsconfigLoaderSync {
 	 * file through the consumer-supplied operations. Throws
 	 * `TsconfigParseError` or a `PlatformError` — the async pipeline's exact
 	 * typed failures.
+	 *
+	 * **Example** (Read a config from supplied text)
+	 *
+	 * ```ts
+	 * import { TsconfigLoaderSync } from "@beep/scratchpad/effected/tsconfig-json/TsconfigLoaderSync";
+	 * import * as path from "node:path/posix";
+	 *
+	 * const config = TsconfigLoaderSync.load("/project/tsconfig.json", {
+	 *   fileSystem: {
+	 *     exists: (p) => p === "/project/tsconfig.json",
+	 *     readFile: () => '{"compilerOptions":{"target":"ES2022"}}',
+	 *   },
+	 *   path,
+	 * });
+	 * console.log(config.compilerOptions?.target) // es2022
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	static readonly load = load;
 
@@ -256,6 +340,25 @@ export class TsconfigLoaderSync {
 	 * consumer-supplied operations. Throws `TsconfigParseError`,
 	 * `TsconfigExtendsError` or a `PlatformError` — the async pipeline's exact
 	 * typed failures.
+	 *
+	 * **Example** (Resolve a config from supplied text)
+	 *
+	 * ```ts
+	 * import { TsconfigLoaderSync } from "@beep/scratchpad/effected/tsconfig-json/TsconfigLoaderSync";
+	 * import * as path from "node:path/posix";
+	 *
+	 * const config = TsconfigLoaderSync.resolve("/project/tsconfig.json", {
+	 *   fileSystem: {
+	 *     exists: (p) => p === "/project/tsconfig.json",
+	 *     readFile: () => '{"compilerOptions":{"target":"ES2022"}}',
+	 *   },
+	 *   path,
+	 * });
+	 * console.log(config.configPath) // /project/tsconfig.json
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	static readonly resolve = resolve;
 
@@ -263,6 +366,25 @@ export class TsconfigLoaderSync {
 	 * {@link TsconfigLoader.compilerOptions}, synchronously: resolve the full
 	 * `extends` chain and project out the merged `compilerOptions`. Throws
 	 * the same typed failures as {@link TsconfigLoaderSync.resolve}.
+	 *
+	 * **Example** (Read effective options from supplied text)
+	 *
+	 * ```ts
+	 * import { TsconfigLoaderSync } from "@beep/scratchpad/effected/tsconfig-json/TsconfigLoaderSync";
+	 * import * as path from "node:path/posix";
+	 *
+	 * const config = TsconfigLoaderSync.compilerOptions("/project/tsconfig.json", {
+	 *   fileSystem: {
+	 *     exists: (p) => p === "/project/tsconfig.json",
+	 *     readFile: () => '{"compilerOptions":{"target":"ES2022"}}',
+	 *   },
+	 *   path,
+	 * });
+	 * console.log(config.target) // es2022
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
 	 */
 	static readonly compilerOptions = compilerOptions;
 }

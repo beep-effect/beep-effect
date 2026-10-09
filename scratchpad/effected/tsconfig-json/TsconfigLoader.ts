@@ -54,12 +54,31 @@ const MAX_EXTENDS_DEPTH = 32;
  * Raised when a config's `extends` chain cannot be resolved: an unresolvable
  * target (`"not-found"`), a re-entrant chain (`"cycle"`), a chain deeper than
  * `MAX_EXTENDS_DEPTH` (`"depth"`), or an empty target string (`"empty"`).
+ *
+ * **Details**
+ *
  * `path` is the config whose `extends` failed, `target` is what it tried to
  * extend (the offending spec for `"not-found"`/`"empty"`, the re-entered config
  * path for `"cycle"`, the refused config for `"depth"`), and `chain` is the full
  * resolution chain of normalized absolute paths.
  *
+ * **Example** (Inspect an unresolved extends target)
+ *
+ * ```ts
+ * import { TsconfigExtendsError } from "@beep/scratchpad/effected/tsconfig-json/TsconfigLoader";
+ *
+ * const error = TsconfigExtendsError.make({
+ *   path: "/project/tsconfig.json",
+ *   target: "./missing.json",
+ *   reason: "not-found",
+ *   chain: ["/project/tsconfig.json"],
+ * });
+ * console.log(error.message) // cannot resolve extends target "./missing.json" from "/project/tsconfig.json"
+ * ```
+ *
  * @public
+ * @category errors
+ * @since 0.0.0
  */
 export class TsconfigExtendsError extends S.TaggedError<TsconfigExtendsError>($I`TsconfigExtendsError`)("TsconfigExtendsError", {
 	/** The config whose `extends` could not be resolved. */
@@ -71,6 +90,26 @@ export class TsconfigExtendsError extends S.TaggedError<TsconfigExtendsError>($I
 	/** The full resolution chain of normalized absolute config paths. */
 	chain: S.Array(S.String).annotateKey({ description: "The full resolution chain of normalized absolute config paths." }),
 }, $I.annote("TsconfigExtendsError", { description: "Raised when a config's `extends` chain cannot be resolved: an unresolvable target (`\"not-found\"`), a re-entrant chain (`\"cycle\"`), a chain deeper than `MAX_EXTENDS_DEPTH` (`\"depth\"`), or an empty target string (`\"empty\"`). `path` is the config whose `extends` failed, `target` is what it tried to extend (the offending spec for `\"not-found\"`/`\"empty\"`, the re-entered config path for `\"cycle\"`, the refused config for `\"depth\"`), and `chain` is the full resolution chain of normalized absolute paths." })) {
+	/**
+	 * Explains the failed extends target, cycle, depth limit, or empty specifier.
+	 *
+	 * **Example** (Describe an empty extends target)
+	 *
+	 * ```ts
+	 * import { TsconfigExtendsError } from "@beep/scratchpad/effected/tsconfig-json/TsconfigLoader";
+	 *
+	 * const error = TsconfigExtendsError.make({
+	 *   path: "/project/tsconfig.json",
+	 *   target: "",
+	 *   reason: "empty",
+	 *   chain: ["/project/tsconfig.json"],
+	 * });
+	 * console.log(error.message) // empty extends target in "/project/tsconfig.json"
+	 * ```
+	 *
+	 * @category getters
+	 * @since 0.0.0
+	 */
 	override get message(): string {
 		return this.reason === "not-found"
 			? `cannot resolve extends target "${this.target}" from "${this.path}"`
@@ -204,7 +243,7 @@ const compilerOptions = Effect.fn("TsconfigLoader.compilerOptions")(function* (c
  * **Example** (Read the target from a resolved tsconfig)
  *
  * ```ts
- * import { TsconfigLoader } from "./index.ts";
+ * import { TsconfigLoader } from "@beep/scratchpad/effected/tsconfig-json/TsconfigLoader";
  * import * as Effect from "effect/Effect";
  *
  * // Requires `FileSystem` and `Path` in `R`; provide them from a platform layer.
@@ -212,19 +251,39 @@ const compilerOptions = Effect.fn("TsconfigLoader.compilerOptions")(function* (c
  * 	const resolved = yield* TsconfigLoader.resolve("./tsconfig.json");
  * 	return resolved.compilerOptions.target;
  * });
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @public
+ * @category services
+ * @since 0.0.0
  */
 export class TsconfigLoader {
 	private constructor() {}
 
 	/**
 	 * Read one config file and decode it through {@link TsconfigJsonFromString}.
+	 *
+	 * **Details**
+	 *
 	 * A decode failure is wrapped in a {@link TsconfigParseError} carrying the
 	 * file's absolute path; a `PlatformError` from the read flows through
 	 * untranslated. No `extends` resolution — {@link TsconfigLoader.resolve}
 	 * drives that.
+	 *
+	 * **Example** (Construct a single-config read)
+	 *
+	 * ```ts
+	 * import { TsconfigLoader } from "@beep/scratchpad/effected/tsconfig-json/TsconfigLoader";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = TsconfigLoader.load("./tsconfig.json");
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 *
 	 */
 	static readonly load = load;
 
@@ -234,11 +293,29 @@ export class TsconfigLoader {
 	 * absolutize its path options, resolve `extends` depth-first with
 	 * per-branch cycle and depth guards, fold the chain
 	 * own-config-last, then substitute a leading `${configDir}` once
-	 * against the top config's directory. `configPath` +
+	 * against the top config's directory.
+	 *
+	 * **Details**
+	 *
+	 * `configPath` +
 	 * `extendedPaths` come back base-most first, own config last. Every
 	 * failure is a typed error — `TsconfigParseError` (a malformed file,
 	 * carrying that file's path), `TsconfigExtendsError` (a broken chain), or
 	 * a `PlatformError` from IO — never a defect.
+	 *
+	 * **Example** (Construct an extends-chain resolution)
+	 *
+	 * ```ts
+	 * import { TsconfigLoader } from "@beep/scratchpad/effected/tsconfig-json/TsconfigLoader";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = TsconfigLoader.resolve("./tsconfig.json");
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 *
 	 */
 	static readonly resolve = resolve;
 
@@ -247,6 +324,20 @@ export class TsconfigLoader {
 	 * merged `compilerOptions` — a thin projection of
 	 * {@link TsconfigLoader.resolve} for the common "just give me the
 	 * effective options" query. Same pipeline, same typed failures.
+	 *
+	 * **Example** (Construct an effective-options query)
+	 *
+	 * ```ts
+	 * import { TsconfigLoader } from "@beep/scratchpad/effected/tsconfig-json/TsconfigLoader";
+	 * import * as Effect from "effect/Effect";
+	 *
+	 * const program = TsconfigLoader.compilerOptions("./tsconfig.json");
+	 * console.log(Effect.isEffect(program)) // true
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 *
 	 */
 	static readonly compilerOptions = compilerOptions;
 }
