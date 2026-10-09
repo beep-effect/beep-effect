@@ -377,3 +377,20 @@ Production source/test/config trees are unchanged after `22898c9175`;
 remaining edits are packet evidence. Both queued heavy units are inactive;
 the serial fallback scripts have terminal result files and both PTY sessions
 finished. The readiness monitor is tracked separately until its handoff.
+
+Final publication gate rerun at `f86085c043` passes every cheap lane except the
+same documented EV015 judgment. Its P0 row is acknowledged under the run-4
+ruling; the final evidence wave is directly pushed as authorized.
+PR #1572 is OPEN, not draft, structurally conflict-free, with zero unresolved
+threads in a fresh GraphQL read. Ordinary mergeStateStatus is blocked while
+new-head checks/review window remain pending; no green-hosted claim is made.
+
+Worker monitor handoff: job wait first returned wave exit 2 for acknowledged
+infrastructure failures; a second wait continued observation. The worker then
+cancelled the job for the S11 orchestrator handoff. The terminal job status is
+terminated without a verdict (wait exit 3), explicitly not merge-ready.
+Its proof-job inbox row is acknowledged observed. Both heavy wrapper units and
+the proof unit are inactive with MainPID 0; all serial proof sessions finished.
+A fresh bounded monitor can be submitted by the orchestrator from the retained
+lane; SPEC records the handoff decision and reversal. The worker never merges
+or retires this lane.

@@ -395,3 +395,16 @@ Two review threads concerning that distinction are answered and resolved via
 `yeet reply`; PLAN records the applicable S11 exit rather than claiming CLEAN.
 Reversal: restore the ordinary hosted-green P3 gate when the program's S11
 exception ends; the detector's runtime/schema semantics do not change.
+
+### 2026-10-09 — Worker-owned monitor handoff
+
+After all local qualification passed and PR #1572 was ready, the worker
+cancelled its detached monitor for the S11 orchestrator handoff. The monitor
+had reported inbox waves and pending/infra-red hosted checks, never
+`merge-ready: yes`; its terminal receipt is terminated without a verdict.
+This avoids leaving a worker-owned unit running after the final report while
+preserving the program's split ownership of content delivery and merge.
+The orchestrator retains the ordinary thread/conflict/review-window gate and
+owns hosted-red burn-down. Reversal: submit a fresh bounded `yeet monitor
+--until-ready --detach --job-max-runtime "90m"` from this checkout and wait
+its new job. No hosted-green or merge claim follows from cancellation.

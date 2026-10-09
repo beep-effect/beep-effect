@@ -144,3 +144,22 @@ package-verify: @beep/epistemic-domain: pass (fresh default audit 8.1s/docgen 3.
 hosted-parity: test-tsgo: pass, 331 CLI files | docgen local: pass --full metadata/package docs/examples/aggregate | jsdoc-ratchet: pass, zero legacy findings | knowledge refs: pass, zero live gated observations | fallow audit+health: pass, all ci lane stages | config-sync check: pass | scoped coverage: pass, domain 99/use-cases 70 tests, ten touched source files meet baselines/floors, executable detector files 100% all metrics; zero-counter barrels use owner normalization
 handoff: goals/epistemic-contradiction-detection/history/handoffs/contradiction-detect-2026-10-09.md
 open items: EV015 at golden test line 126 is pending B admission: serial, fork-free TestClock advancement falsifies clock dependence. Canonical it.layer removes all ten EV002 and the EV003 wrapper; no suppression or policy inventory change. Yeet publish refused only EV015; direct push is authorized by the run-4 ruling. Reverse by isolating test services through an equivalent canonical harness or admitting the judgment through the policy owner. S11 assigns merge and hosted-red burn-down to the orchestrator; SAST/Secret Scanning currently fail before scans on Docker unauthenticated pull rate limits, and Vercel fails on build rate limits. Their inbox rows are attributed environment-only. Option 1 uses class-specific detector identities plus SemVer; a future contract owner may migrate that seat and owns the ContradictionMatchBasisKind follow-up. DetectedContradiction emits content plus key/digest; fixture stamps lift each emission to the full entity and assert hasValidSeals, with content/Submit checks additional. Stamping remains caller-owned. Proposal facts carry the other assertion as {subject, predicate, value, polarity}; content-derived ids and shipped digests retain two distinct proposals. Exact negation is equal canonical values/opposite polarity on every predicate; value-conflict is unequal values/both asserted on declared single-valued predicates; other combinations emit nothing. Undeclared predicates get no value-conflict; missing modality is comparable. Reverse these semantics by versioning the detector and preserving compatibility vectors. Four concept files were hand-authored after architecture dry-run planned out-of-scope metadata and placeholder writes; research/OPPORTUNITIES.md retains the friction receipt. Withdraw the additive API by removing the new concept/export/barrel and rerunning config-sync. Config-sync added exactly one ContradictionDetection alias in tsconfig.json and one in vitest.aliases.generated.json; no inherited hunk. Both private packages carry no changesets under #1566; release notes are in the table above, no lane reversal of repo-wide policy. Two packet-status review threads were answered and resolved through yeet reply; PLAN/SPEC distinguish S11 delivery from ordinary hosted-green readiness. Heavy queue exceeded twenty minutes; own queued wrappers stopped, verified inactive, and remaining checks passed serially inside the existing 36G/40G zero-swap lane cgroup under the authorized fallback. Graft saved approximately 49034 tokens in one discovery call. Final hosted/readiness handoff receipt and push head are appended below before the final message.
+
+### Final delivery and monitor ownership receipt
+
+At pushed evidence head `f86085c043`, #1572 is OPEN and ready, structurally
+conflict-free, with zero unresolved threads. Final cheap gates pass except the
+reviewed EV015 judgment authorized for publication. The packet is
+completed-retained and P0-P4 complete under the documented S11 handoff; hosted
+CI is not asserted green and no merge occurred.
+
+The bounded worker monitor was observed through inbox waves and pending/infra
+reds, then cancelled for transfer to the orchestrator. Its terminal receipt
+is terminated without verdict, not merge-ready. Reversal is a fresh bounded
+`yeet monitor --until-ready --detach` and job wait from this retained lane.
+All worker-owned heavy units and the proof unit are inactive, MainPID 0;
+serial proof sessions are finished, and the cancellation inbox row is observed.
+This final metadata commit changes packet evidence only; the qualified
+source/test/config tree remains identical to `22898c9175`.
+
+final f86085c0436f528c47a64db910f1ce982baf8245 #1572
