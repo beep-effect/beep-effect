@@ -185,3 +185,15 @@
   package JSDoc lint alone.
 - Prevention: validate categories against `.patterns/jsdoc-documentation.md`
   before the first runtime audit, so a dependency blocker does not hide docs reds.
+
+## Reader-owner branch unavailable at bounded resume deadline (2026-10-09)
+
+- Work: resume M2 by cherry-picking the separately owned XML-reader repair.
+- Evidence: thirteen `git fetch origin fix/schema-xml-text-node` attempts from
+  21:43:18Z through 22:43:27Z all returned `couldn't find remote ref`. Fresh main
+  still uses the reserved XML text key. Exact receipts are in the lane handoff.
+- Response: committed the candidate and independent documentation repair,
+  ended the owned poll at its deadline, retained active M2/M3 and pending M4,
+  and published no incomplete wave.
+- Prevention: announce a fetchable owner commit with its SHA before resuming a
+  dependent lane, or provide a revised dependency-wait budget in its brief.
