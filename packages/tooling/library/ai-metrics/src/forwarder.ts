@@ -138,6 +138,7 @@ class SessionStampGap extends S.Class<SessionStampGap>($I`SessionStampGap`)({
   start: S.OptionFromOptionalKey(S.Finite),
   end: S.OptionFromOptionalKey(S.Finite),
   client: S.OptionFromOptionalKey(HookPulseAgentKind),
+  eventLoss: S.Boolean,
 }) {}
 const timestampEpoch = flow(S.decodeOption(S.DateTimeUtcFromString), O.map(DateTime.toEpochMillis));
 const readOptionalEvidence = Effect.fnUntraced(function* (file: string) {
@@ -161,7 +162,14 @@ const readStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
   const sentinelExists = yield* fs.exists(sentinelPath);
   if (sentinelExists) {
     const sentinel = yield* HookPulseDisarmSentinel.decodeJsonEffect(yield* fs.readFileString(sentinelPath));
-    gaps.push(SessionStampGap.make({ start: timestampEpoch(sentinel.disarmedAt), end: O.none(), client: O.none() }));
+    gaps.push(
+      SessionStampGap.make({
+        start: timestampEpoch(sentinel.disarmedAt),
+        end: O.none(),
+        client: O.none(),
+        eventLoss: false,
+      })
+    );
   }
   const windows = yield* readOptionalEvidence(hookPulseDisarmWindowsPath(evidenceRoot));
   for (const line of A.filter(Str.split(windows, "\n"), Str.isNonEmpty)) {
@@ -171,6 +179,7 @@ const readStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
         start: O.flatMap(window.disarmedAt, timestampEpoch),
         end: timestampEpoch(window.rearmedAt),
         client: O.none(),
+        eventLoss: false,
       })
     );
   }
@@ -191,6 +200,7 @@ const readStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
           start: at,
           end: O.map(at, (value) => value + 999),
           client: refusal.agentKind === "unknown" ? O.none() : O.some(refusal.agentKind),
+          eventLoss: true,
         })
       );
     }
@@ -200,19 +210,23 @@ const readStampGaps = Effect.fnUntraced(function* (evidenceRoot: string) {
 const recordAvoidsStampGaps = (
   record: AiMetricsDerivedTranscriptRecord,
   client: HookPulseAgentKind,
-  gaps: O.Option<ReadonlyArray<SessionStampGap>>
+  gaps: O.Option<ReadonlyArray<SessionStampGap>>,
+  closedAt: O.Option<number>
 ): boolean =>
   O.exists(gaps, (known) => {
     const relevant = A.filter(known, (gap) => O.isNone(gap.client) || O.contains(gap.client, client));
-    if (A.isReadonlyArrayEmpty(relevant)) return true;
     const sanitized = record.privacy.sanitized;
     const start = O.flatMap(sanitized.firstTimestamp, timestampEpoch);
     const last = O.flatMap(sanitized.lastTimestamp, timestampEpoch);
     if (O.isNone(start) || O.isNone(last) || last.value < start.value) return false;
-    const end = last.value;
+    const end = O.getOrElse(closedAt, () => last.value);
     return A.every(
       relevant,
-      (gap) => O.exists(gap.end, (last) => last < start.value) || O.exists(gap.start, (first) => first > end)
+      (gap) =>
+        O.exists(gap.end, (last) => last < start.value) ||
+        (gap.eventLoss
+          ? O.exists(closedAt, (closed) => O.exists(gap.start, (first) => first > closed))
+          : O.exists(gap.start, (first) => first > end))
     );
   });
 
@@ -221,13 +235,32 @@ type SessionStampIndex = {
   readonly sessions: MutableHashMap.MutableHashMap<string, HashSet.HashSet<string>>;
   readonly freshStarts: MutableHashMap.MutableHashMap<string, HashSet.HashSet<number>>;
   readonly firstObserved: MutableHashMap.MutableHashMap<string, number>;
+  readonly lastObserved: MutableHashMap.MutableHashMap<string, number>;
+  readonly endings: MutableHashMap.MutableHashMap<string, number>;
 };
 
 const collectSessionStamp = (index: SessionStampIndex, pulse: HookPulseV1): void => {
   if (pulse.instrumentClass !== "production" || O.isNone(pulse.transcriptPath)) return;
-  const { stamps, sessions, freshStarts, firstObserved } = index;
+  const { stamps, sessions, freshStarts, firstObserved, lastObserved, endings } = index;
   const key = `${pulse.agentKind}:${pulse.transcriptPath.value}`;
   const observedAt = DateTime.toEpochMillis(pulse.ts);
+  MutableHashMap.set(
+    lastObserved,
+    key,
+    Math.max(
+      O.getOrElse(MutableHashMap.get(lastObserved, key), () => observedAt),
+      observedAt
+    )
+  );
+  if (pulse.hookEvent === "SessionEnd")
+    MutableHashMap.set(
+      endings,
+      key,
+      Math.max(
+        O.getOrElse(MutableHashMap.get(endings, key), () => observedAt),
+        observedAt
+      )
+    );
   MutableHashMap.set(
     firstObserved,
     key,
@@ -1298,6 +1331,8 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
     const sessions = MutableHashMap.empty<string, HashSet.HashSet<string>>();
     const freshStarts = MutableHashMap.empty<string, HashSet.HashSet<number>>();
     const firstObserved = MutableHashMap.empty<string, number>();
+    const lastObserved = MutableHashMap.empty<string, number>();
+    const endings = MutableHashMap.empty<string, number>();
     let hookCollectionComplete = true;
     yield* Effect.forEach(
       A.filter(shards, Str.endsWith(".ndjson")),
@@ -1314,7 +1349,8 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
         for (const line of Str.split(text, "\n")) {
           const row = HookPulseV1.decodeJsonResult(line);
           if (Str.isNonEmpty(line) && Result.isFailure(row)) hookCollectionComplete = false;
-          if (Result.isSuccess(row)) collectSessionStamp({ stamps, sessions, freshStarts, firstObserved }, row.success);
+          if (Result.isSuccess(row))
+            collectSessionStamp({ stamps, sessions, freshStarts, firstObserved, lastObserved, endings }, row.success);
         }
       }),
       { discard: true }
@@ -1329,8 +1365,14 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       const sessionHarnessHash = O.flatMap(
         O.filter(kind, () => hookCollectionComplete),
         (agentKind) => {
-          if (!recordAvoidsStampGaps(record, agentKind, stampGaps)) return O.none();
           const key = `${agentKind}:${hookPathHash}`;
+          const closedAt = O.filter(
+            MutableHashMap.get(endings, key),
+            (end) =>
+              O.exists(MutableHashMap.get(lastObserved, key), (last) => end >= last) &&
+              O.exists(O.flatMap(sanitized.lastTimestamp, timestampEpoch), (last) => end >= last)
+          );
+          if (!recordAvoidsStampGaps(record, agentKind, stampGaps, closedAt)) return O.none();
           return pipe(
             MutableHashMap.get(sessions, key),
             O.filter(() =>

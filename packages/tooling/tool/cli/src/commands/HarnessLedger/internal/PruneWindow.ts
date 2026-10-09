@@ -334,6 +334,7 @@ const windowReport = (
     A.filter(
       ranked,
       (tally) =>
+        scan.undecodableLines === 0 &&
         parentRegime(tally) === "in-regime" &&
         !parentSummary(tally).unknownStart &&
         active(tally) &&
@@ -343,8 +344,7 @@ const windowReport = (
     A.map(parentSummary),
     A.sort(byNewestFirst)
   );
-  const countFor = (kind: HookPulseAgentKind) =>
-    Math.min(window, A.length(A.filter(qualifying, (tally) => tally.agentKind === kind)));
+  const countFor = (kind: HookPulseAgentKind) => A.length(A.filter(qualifying, (tally) => tally.agentKind === kind));
   const counts = {
     "claude-code": countFor("claude-code"),
     "codex-cli": countFor("codex-cli"),
@@ -367,6 +367,7 @@ const windowReport = (
     ),
     sessionsSkippedDisarmed: A.length(A.filter(selectedGrouped, overlapsDisarm)),
     sessionsSkippedRefused: A.length(A.filter(selectedGrouped, overlapsRefusal)),
+    sessionsSkippedCorrupt: scan.undecodableLines > 0 ? A.length(selectedGrouped) : 0,
     sessionsBelowActivityFloor: A.length(
       A.filter(
         selectedGrouped,
@@ -522,6 +523,7 @@ class TranscriptFileCounts extends S.Class<TranscriptFileCounts>($I`TranscriptFi
   pathHash: Sha256Hex,
   calls: S.Natural,
   undecodableLines: S.Natural,
+  identityConflict: S.Boolean,
 }) {}
 
 const transcriptToolCount = (row: typeof TranscriptRow.Type): number => {
@@ -622,6 +624,7 @@ const transcriptRepresentativePriority = (
 class ReconciliationTranscriptFile extends S.Class<ReconciliationTranscriptFile>($I`ReconciliationTranscriptFile`)({
   file: S.String,
   identity: S.String,
+  hookKeys: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(A.empty<string>()))),
   canonical: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
 }) {}
 
@@ -685,10 +688,27 @@ const selectTranscriptRepresentatives = Effect.fnUntraced(function* (
       Effect.mapError(HarnessLedgerIoError.wrap("Cannot hash transcript alias identity."))
     );
     const priority = transcriptRepresentativePriority(file, canonical.value, pathHash, hooks);
-    if (O.exists(MutableHashMap.get(selected, canonical.value), (prior) => prior.priority >= priority)) continue;
+    const prior = MutableHashMap.get(selected, canonical.value);
+    const chosen = O.match(prior, {
+      onNone: () => candidate,
+      onSome: (old) => (old.priority >= priority ? old.candidate : candidate),
+    });
+    const hookKeys = A.dedupe([
+      pathHash,
+      ...O.getOrElse(
+        O.map(prior, (old) => old.candidate.hookKeys),
+        A.empty<string>
+      ),
+    ]);
     MutableHashMap.set(selected, canonical.value, {
-      candidate: ReconciliationTranscriptFile.make({ ...candidate, canonical }),
-      priority,
+      candidate: ReconciliationTranscriptFile.make({ ...chosen, canonical, hookKeys }),
+      priority: Math.max(
+        priority,
+        O.getOrElse(
+          O.map(prior, (old) => old.priority),
+          () => 0
+        )
+      ),
     });
   }
   return A.map(A.fromIterable(MutableHashMap.values(selected)), (entry) => entry.candidate);
@@ -735,6 +755,7 @@ const readTranscriptCounts = Effect.fn("HarnessLedger.readTranscriptCounts")(fun
     pathHash,
     calls: tally.calls,
     undecodableLines: tally.undecodableLines + (tally.identityConflict ? 1 : 0),
+    identityConflict: tally.identityConflict,
   });
 });
 
@@ -782,6 +803,7 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
   );
   const sessions = MutableHashMap.empty<string, number>();
   const selectedSessionHooks = MutableHashMap.empty<string, number>();
+  const selectedPathHooks = MutableHashMap.empty<string, number>();
   const transcriptPaths = MutableHashMap.empty<string, number>();
   for (const file of files) {
     const counts = yield* readTranscriptCounts(file, physicalRoot, agentKind, hashSalt, failures);
@@ -793,19 +815,21 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
       O.getOrElse(MutableHashMap.get(sessions, counts.sessionHash), () => 0) + counts.calls
     );
     MutableHashMap.set(transcriptPaths, counts.pathHash, counts.calls);
-    O.match(MutableHashMap.get(hooks, counts.pathHash), {
-      onNone: F.constVoid,
-      onSome: (count) =>
-        MutableHashMap.set(
-          selectedSessionHooks,
-          counts.sessionHash,
-          O.getOrElse(MutableHashMap.get(selectedSessionHooks, counts.sessionHash), () => 0) + count
-        ),
-    });
+    const hookCount = counts.identityConflict
+      ? 0
+      : A.reduce(file.hookKeys, 0, (sum, key) => sum + O.getOrElse(MutableHashMap.get(hooks, key), () => 0));
+    if (hookCount > 0) {
+      MutableHashMap.set(selectedPathHooks, counts.pathHash, hookCount);
+      MutableHashMap.set(
+        selectedSessionHooks,
+        counts.sessionHash,
+        O.getOrElse(MutableHashMap.get(selectedSessionHooks, counts.sessionHash), () => 0) + hookCount
+      );
+    }
   }
   undecodableLines += HashSet.size(yield* Ref.get(failures));
   const counts = agentKind === "claude-code" ? sessions : transcriptPaths;
-  const matchedHooks = agentKind === "claude-code" ? selectedSessionHooks : hooks;
+  const matchedHooks = agentKind === "claude-code" ? selectedSessionHooks : selectedPathHooks;
   const transcriptToolEvents = A.reduce(A.fromIterable(MutableHashMap.values(counts)), 0, (sum, count) => sum + count);
   const hookedToolEvents = A.reduce(
     A.fromIterable(counts),

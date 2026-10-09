@@ -376,10 +376,7 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
     onNone: () => Effect.succeed(A.empty<PruneProposal>()),
     onSome: (windowEnd) => buildPruneProposals(fingerprint, fresh, observed, windowEnd),
   });
-  const sharedHarnessWindowFull = A.every(
-    R.values(observed.sessionsByAgentKind),
-    (count) => count >= options.windowSessions
-  );
+  const sharedHarnessWindowFull = A.every(R.values(observed.sessionsByAgentKind), (count) => count >= 30);
   return HarnessLedgerPruneReport.make({
     sharedHarnessWindowFull,
     // Transcript reconciliation is independently reported. Missing reconciliation
@@ -397,6 +394,7 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
     clientCoverage: observed.clientCoverage,
     sessionsSkippedDisarmed: observed.sessionsSkippedDisarmed,
     sessionsSkippedRefused: observed.sessionsSkippedRefused,
+    sessionsSkippedCorrupt: observed.sessionsSkippedCorrupt,
     sessionsBelowActivityFloor: observed.sessionsBelowActivityFloor,
     sessionsSkippedRole: observed.sessionsSkippedRole,
     sessionsSkippedUnknownRestart: observed.sessionsSkippedUnknownRestart,

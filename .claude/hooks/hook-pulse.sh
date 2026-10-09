@@ -534,7 +534,7 @@ END {
     collected="$(
       for candidate in "${indexed_paths[@]}"; do
         [ -n "${candidate}" ] || continue
-        IFS=/ read -r -a segments <<<"${candidate}"
+        IFS=/ read -r -d '' -a segments < <(printf '%s\0' "${candidate}")
         case "${segments[0]}" in
           .codex|.claude|.ai|.aiassistant|.cursor|.agents|.junie|.grok) limit=9 ;;
           *) limit=8 ;;

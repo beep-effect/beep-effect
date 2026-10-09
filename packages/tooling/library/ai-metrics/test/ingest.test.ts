@@ -136,6 +136,8 @@ const ForwarderStampScenario = LiteralKit([
   "corrupt",
   "unreadable",
   "refused",
+  "trailing-refusal",
+  "closed-before-refusal",
   "disarmed",
   "prefix",
   "empty-sentinel",
@@ -753,6 +755,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
             corrupt: () => [start, tool],
             unreadable: () => [start, tool],
             refused: () => [start, tool],
+            "trailing-refusal": () => [start, tool],
+            "closed-before-refusal": () => [
+              start,
+              tool,
+              HookPulseV1.make({ ...tool, hookEvent: "SessionEnd", ts: DateTime.makeUnsafe("2026-10-09T10:01:30Z") }),
+            ],
             disarmed: () => [start, tool],
             prefix: () => [start, tool],
             "empty-sentinel": () => [start, tool],
@@ -764,12 +772,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
           );
           if (scenario === "corrupt") yield* writeText(path.join(hookDir, "bad.ndjson"), "not JSON\n");
           if (scenario === "unreadable") yield* fs.makeDirectory(path.join(hookDir, "bad.ndjson"));
-          if (scenario === "refused")
+          if (scenario === "refused" || scenario === "trailing-refusal" || scenario === "closed-before-refusal")
             yield* writeText(
               path.join(hookRoot, "hook-pulse-refusals-fixture.ndjson"),
               yield* S.encodeEffect(S.fromJsonString(HookPulseRefusal))(
                 HookPulseRefusal.make({
-                  ts: DateTime.makeUnsafe("2026-10-09T10:00:30Z"),
+                  ts: DateTime.makeUnsafe(scenario === "refused" ? "2026-10-09T10:00:30Z" : "2026-10-09T10:02:00Z"),
                   agentKind: "codex-cli",
                   reason: "timeout",
                 })
@@ -803,7 +811,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
               rawArchiveKey: Redacted.make(Base64.encode(new Uint8Array(32).fill(7))),
             })
           );
-          const expected = scenario === "qualified" ? stamp : null;
+          const expected = scenario === "qualified" || scenario === "closed-before-refusal" ? stamp : null;
           const db = yield* DuckDb;
           expect(yield* db.query("SELECT session_harness_hash AS stamp FROM ai_metrics_sessions")).toEqual([
             { stamp: expected },

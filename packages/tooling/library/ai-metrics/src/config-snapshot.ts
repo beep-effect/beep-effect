@@ -683,21 +683,10 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
         budget.maxDepth + (A.some(CONFIG_ROOTS, (root) => Str.startsWith(`${root}/`)(relative)) ? 1 : 0)
     );
     const local = pathApi.join(pathApi.resolve(repoRoot), ".claude/settings.local.json");
-    const existing = yield* Effect.filter(
-      pipe(
-        A.map(bounded, (relative) => pathApi.join(pathApi.resolve(repoRoot), relative)),
-        A.append(local),
-        A.dedupe
-      ),
-      (file) =>
-        fs.stat(file).pipe(
-          Effect.map((info) => info.type === "File"),
-          Effect.catchIf(
-            (cause) => cause.reason._tag === "NotFound",
-            () => Effect.succeed(false)
-          ),
-          Effect.mapError((cause) => configSnapshotFailure("Cannot inspect indexed config snapshot file.", cause))
-        )
+    const candidates = pipe(
+      A.map(bounded, (relative) => pathApi.join(pathApi.resolve(repoRoot), relative)),
+      A.append(local),
+      A.dedupe
     );
     const excluded = yield* Ref.make(A.empty<string>());
     const probes = MutableHashMap.empty<string, boolean>();
@@ -721,10 +710,29 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       }
       return true;
     });
-    const paths = yield* Effect.filter(pipe(existing, A.dedupe, A.sort(Order.String)), outsideNestedCheckout);
+    const eligible = yield* Effect.filter(candidates, outsideNestedCheckout);
+    const existing = yield* Effect.filter(eligible, (file) =>
+      fs.stat(file).pipe(
+        Effect.map((info) => info.type === "File"),
+        Effect.catchIf(
+          (cause) => cause.reason._tag === "NotFound",
+          () => Effect.succeed(false)
+        ),
+        Effect.mapError((cause) => configSnapshotFailure("Cannot inspect indexed config snapshot file.", cause))
+      )
+    );
+    const sessionPaths = A.filter(existing, (file) => {
+      const relative = normalizeRepoPath(pathApi, repoRoot, file);
+      return relative === "AGENTS.md" || relative === "CLAUDE.md" || relative === ".mcp.json";
+    });
+    const paths = pipe(existing, A.dedupe, A.sort(Order.String));
+    const prioritized = A.appendAll(
+      sessionPaths,
+      A.filter(paths, (file) => !A.contains(sessionPaths, file))
+    );
     return {
       excludedNestedRootPaths: pipe(yield* Ref.get(excluded), A.dedupe, A.sort(Order.String)),
-      paths: A.take(paths, budget.maxFiles),
+      paths: pipe(prioritized, A.take(budget.maxFiles), A.sort(Order.String)),
       truncationReason:
         A.length(paths) > budget.maxFiles
           ? O.some(AiMetricsConfigSnapshotTruncationReason.Enum["max-files"])
@@ -818,6 +826,9 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
   // exhaust the budget and starve `AGENTS.md`/`CLAUDE.md` out of the snapshot entirely. That is
   // worse than truncation: both are session-scope paths, so losing them silently changes the
   // session/baseline split and corrupts `sessionHash` rather than merely shrinking the snapshot.
+  yield* walk(pathApi.join(repoRoot, "AGENTS.md"), 0, () => true);
+  yield* walk(pathApi.join(repoRoot, "CLAUDE.md"), 0, () => true);
+  yield* walk(pathApi.join(repoRoot, ".mcp.json"), 0, () => true);
   yield* walk(repoRoot, 0, isAgentDocName);
   yield* Effect.forEach(
     CONFIG_ROOTS,
@@ -833,7 +844,6 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     { discard: true }
   );
 
-  yield* walk(pathApi.join(repoRoot, ".mcp.json"), 0, () => true);
   const walked = yield* Ref.get(pathsRef);
   return {
     excludedNestedRootPaths: pipe(yield* Ref.get(excludedRef), A.dedupe, A.sort(Order.String)),

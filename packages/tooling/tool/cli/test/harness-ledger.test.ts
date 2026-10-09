@@ -429,12 +429,11 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const alphaId = yield* contextSurfaceId("skill", "alpha");
       const betaId = yield* contextSurfaceId("skill", "beta");
       const notionId = yield* contextSurfaceId("mcp-server", "notion");
-      // A: in regime, touches alpha, plus an undecodable line.
+      // A: in regime, touches alpha.
       yield* writeShard(stateDir, "2026-09-25", sessionA, [
         yield* sessionStart(sessionA, "2026-09-25T09:59:00.000Z", current),
         yield* pulse(sessionA, "2026-09-25T10:00:00.000Z", O.some(alphaId)),
         yield* pulse(sessionA, "2026-09-25T10:05:00.000Z", O.none()),
-        "{not json",
       ]);
       // B: in regime, touches nothing.
       yield* writeShard(stateDir, "2026-09-24", sessionB, [
@@ -460,7 +459,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       expect(dryRun.sessionsSkippedOutOfRegime).toBe(1);
       expect(dryRun.sessionsSkippedUnstamped).toBe(1);
       expect(dryRun.shardsRead).toBe(4);
-      expect(dryRun.undecodableLines).toBe(1);
+      expect(dryRun.undecodableLines).toBe(0);
       expect(dryRun.candidates).toBe(3);
       expect(dryRun.touchedCandidates).toBe(3);
       expect(dryRun.written).toBe(false);
@@ -485,12 +484,20 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const narrow = yield* ledger.pruneProposals(HarnessLedgerPruneOptions.make({ ...options, windowSessions: 1 }));
       expect(narrow.sessionsObserved).toBe(1);
       expect(narrow.windowFull).toBe(true);
+      expect(narrow.sharedHarnessWindowFull).toBe(false);
       assertSome(
         A.last(harnessLedgerPruneReportLines(narrow, false)),
         "dry run: zero-touch candidates are advisory; transcript and surface coverage are unqualified."
       );
       // Only the skipped sessions newer than the window's oldest session count.
       expect([narrow.sessionsSkippedOutOfRegime, narrow.sessionsSkippedUnstamped]).toStrictEqual([1, 1]);
+      yield* writeShard(stateDir, "2026-09-28", sessionD, ["{not json"]);
+      const corrupt = yield* ledger.pruneProposals(options);
+      expect(corrupt.sessionsObserved).toBe(0);
+      expect(corrupt.sessionsSkippedCorrupt).toBe(4);
+      expect(corrupt.undecodableLines).toBe(1);
+      expect(corrupt.touchedCandidates).toBe(3);
+      expect(corrupt.windowFull).toBe(false);
     })
   );
 
@@ -1201,6 +1208,14 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
           yield* encode({ sessionId: "second", message: { content: [{ type: "tool_use" }] } }),
         ].join("\n")
       );
+      const firstIdentity = Sha256Hex.make(yield* hashPrivateIdentifier("first", yield* hookPulseHashSalt));
+      const hook = yield* HookPulseV1.decodeJsonEffect(yield* pulse(firstIdentity, "2026-10-09T10:00:00Z", O.none()));
+      const transcriptPath = Sha256Hex.make(
+        yield* hashPrivateIdentifier(path.join(root, "mixed.jsonl"), yield* hookPulseHashSalt)
+      );
+      yield* writeShard(stateDir, "2026-10-09", firstIdentity, [
+        yield* HookPulseV1.encodeJsonEffect(HookPulseV1.make({ ...hook, transcriptPath: O.some(transcriptPath) })),
+      ]);
       const report = yield* (yield* HarnessLedgerService).reconcile(stateDir, root, "claude-code");
       expect(report.transcriptToolEvents).toBe(2);
       expect(report.sessionsWithoutHooks).toBe(1);

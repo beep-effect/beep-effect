@@ -269,6 +269,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
           const pathApi = yield* Path.Path;
           const repoRoot = pathApi.join(tmpDir, "repo");
           yield* makeFixtureRepo(repoRoot);
+          yield* writeText(pathApi.join(repoRoot, ".mcp.json"), "{}\n");
           yield* Effect.forEach(
             A.range(1, 20),
             (index) => writeText(pathApi.join(repoRoot, `.claude/leftover/note-${index}.md`), `leftover ${index}\n`),
@@ -285,6 +286,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
 
           expect(paths).toContain("AGENTS.md");
           expect(paths).toContain("CLAUDE.md");
+          expect(paths).toContain(".mcp.json");
           pipe(result.bounds.truncated, assertTrue);
           assertSome(result.bounds.truncationReason, AiMetricsConfigSnapshotTruncationReason.Enum["max-files"]);
         })
