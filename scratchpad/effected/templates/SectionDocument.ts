@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
@@ -11,6 +12,8 @@ import type { Eol, SectionRenderError } from "./SectionDialect.ts";
 import { SectionDialect } from "./SectionDialect.ts";
 import type { SyncOutcome } from "./SectionOutcome.ts";
 import { CheckOutcome } from "./SectionOutcome.ts";
+
+const $I = $ScratchpadId.create("effected/templates/SectionDocument");
 
 /**
  * Raised when a document's managed-section structure cannot be read without
@@ -26,16 +29,16 @@ import { CheckOutcome } from "./SectionOutcome.ts";
  *
  * @public
  */
-export class SectionParseError extends S.TaggedError<SectionParseError>()("SectionParseError", {
+export class SectionParseError extends S.TaggedError<SectionParseError>($I`SectionParseError`)("SectionParseError", {
 	/** Which ambiguity was found. */
-	reason: S.Literals(SCAN_FAILURE_REASONS),
+	reason: S.Literals(SCAN_FAILURE_REASONS).annotateKey({ description: "Which ambiguity was found." }),
 	/** 1-based line of the offending marker. */
-	line: S.Finite,
+	line: S.Finite.annotateKey({ description: "1-based line of the offending marker." }),
 	/** The section key involved, when the failure names one. */
-	key: S.optionalKey(S.String),
+	key: S.optionalKey(S.String).annotateKey({ description: "The section key involved, when the failure names one." }),
 	/** The file the document came from. Absent for a document parsed from a string. */
-	path: S.optionalKey(S.String),
-}) {
+	path: S.optionalKey(S.String).annotateKey({ description: "The file the document came from. Absent for a document parsed from a string." }),
+}, $I.annote("SectionParseError", { description: "Raised when a document's managed-section structure cannot be read without guessing." })) {
 	override get message(): string {
 		const where = this.path === undefined ? `line ${this.line}` : `${this.path}:${this.line}`;
 		const which = this.key === undefined ? "" : ` for section "${this.key}"`;
@@ -111,16 +114,16 @@ export interface SectionReconciliation {
  *
  * @public
  */
-export class SectionDocument extends S.Class<SectionDocument>("SectionDocument")({
+export class SectionDocument extends S.Class<SectionDocument>($I`SectionDocument`)({
 	/** The document's source text, exactly as parsed. */
-	text: S.String,
+	text: S.String.annotateKey({ description: "The document's source text, exactly as parsed." }),
 	/** The marker vocabulary this document was read with. */
-	dialect: SectionDialect,
+	dialect: SectionDialect.annotateKey({ description: "The marker vocabulary this document was read with." }),
 	/** Every managed section found, in document order. */
-	sections: S.Array(PlacedSection),
+	sections: S.Array(PlacedSection).annotateKey({ description: "Every managed section found, in document order." }),
 	/** The document's dominant line ending. */
-	eol: S.Literals(["\n", "\r\n"]),
-}) {
+	eol: S.Literals(["\n", "\r\n"]).annotateKey({ description: "The document's dominant line ending." }),
+}, $I.annote("SectionDocument", { description: "A parsed document: its text, the dialect it was read with, and every managed section found in it." })) {
 	/**
 	 * Parse a document. The synchronous primitive.
 	 *

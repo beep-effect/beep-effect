@@ -1,9 +1,12 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Equal from "effect/Equal";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CommentStyle } from "./CommentStyle.ts";
 import { ATTRIBUTE_NAME_PATTERN, isValidAttributeValue, parseAttributeRun } from "./internal/attributes.ts";
 import type { Section, SectionId } from "./Section.ts";
+
+const $I = $ScratchpadId.create("effected/templates/SectionDialect");
 
 /**
  * The line ending a document uses.
@@ -22,7 +25,7 @@ export type Eol = "\n" | "\r\n";
  *
  * @public
  */
-export class SectionRenderError extends S.TaggedError<SectionRenderError>()("SectionRenderError", {
+export class SectionRenderError extends S.TaggedError<SectionRenderError>($I`SectionRenderError`)("SectionRenderError", {
 	/**
 	 * `markerInContent` — the content carries a line the scanner would read as
 	 * a marker, which would move the block boundary and let the next sync
@@ -38,12 +41,12 @@ export class SectionRenderError extends S.TaggedError<SectionRenderError>()("Sec
 	 * break; either would render a marker the scanner could not read back
 	 * verbatim, and there is no escaping mechanism by design.
 	 */
-	reason: S.Literals(["markerInContent", "unknownCommentStyle", "duplicateDeclaration", "invalidAttribute"]),
+	reason: S.Literals(["markerInContent", "unknownCommentStyle", "duplicateDeclaration", "invalidAttribute"]).annotateKey({ description: "`markerInContent` — the content carries a line the scanner would read as a marker, which would move the block boundary and let the next sync consume user text. `unknownCommentStyle` — the section's comment style is not in the dialect's set, so the block would be written into a document where the scanner could never find it again, growing a duplicate on every run. `duplicateDeclaration` — the same identity was declared twice in one call, so the caller stated two intentions for one block and any choice between them would be a guess; this is the caller-side twin of the document-side `duplicateSection`. `invalidAttribute` — an attribute's name is outside the `[A-Za-z][A-Za-z0-9_-]*` grammar, or its value contains `\"` or a line break; either would render a marker the scanner could not read back verbatim, and there is no escaping mechanism by design." }),
 	/** The key of the section that could not be rendered. */
-	key: S.String,
+	key: S.String.annotateKey({ description: "The key of the section that could not be rendered." }),
 	/** The offending attribute's name, when the refusal names one. */
-	attribute: S.optionalKey(S.String),
-}) {
+	attribute: S.optionalKey(S.String).annotateKey({ description: "The offending attribute's name, when the refusal names one." }),
+}, $I.annote("SectionRenderError", { description: "Raised when a section cannot be turned into marker-delimited text." })) {
 	override get message(): string {
 		switch (this.reason) {
 			case "markerInContent":
@@ -93,7 +96,7 @@ const matcherCache = new WeakMap<
  *
  * @public
  */
-export class SectionDialect extends S.Class<SectionDialect>("SectionDialect")({
+export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)({
 	/**
 	 * The phrase between the key and the closing rule.
 	 *
@@ -102,10 +105,10 @@ export class SectionDialect extends S.Class<SectionDialect>("SectionDialect")({
 	 * phrase can never contain the `---` rule and make a marker ambiguous
 	 * against itself.
 	 */
-	phrase: S.String.check(S.isPattern(/^[A-Za-z0-9][A-Za-z0-9 _]*$/u)),
+	phrase: S.String.check(S.isPattern(/^[A-Za-z0-9][A-Za-z0-9 _]*$/u)).annotateKey({ description: "The phrase between the key and the closing rule." }),
 	/** Which comment styles the document scanner recognizes. At least one. */
-	styles: S.Array(CommentStyle).check(S.isMinLength(1)),
-}) {
+	styles: S.Array(CommentStyle).check(S.isMinLength(1)).annotateKey({ description: "Which comment styles the document scanner recognizes. At least one." }),
+}, $I.annote("SectionDialect", { description: "The marker vocabulary: what phrase delimits a managed section, and which comment styles a document is scanned for." })) {
 	/**
 	 * The zero-configuration dialect: the phrase `MANAGED SECTION` and every
 	 * preset comment style.

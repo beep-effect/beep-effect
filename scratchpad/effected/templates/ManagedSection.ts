@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as O from "effect/Option";
 import type * as PlatformError from "effect/PlatformError";
 import * as A from "effect/Array";
@@ -11,6 +12,8 @@ import type { SectionRenderError } from "./SectionDialect.ts";
 import { SectionDialect } from "./SectionDialect.ts";
 import { SectionDocument, SectionParseError } from "./SectionDocument.ts";
 import type { CheckOutcome, SyncOutcome } from "./SectionOutcome.ts";
+
+const $I = $ScratchpadId.create("effected/templates/ManagedSection");
 
 /**
  * Raised when the file behind a managed-section operation could not be read or
@@ -27,14 +30,14 @@ import type { CheckOutcome, SyncOutcome } from "./SectionOutcome.ts";
  *
  * @public
  */
-export class SectionFileError extends S.TaggedError<SectionFileError>()("SectionFileError", {
+export class SectionFileError extends S.TaggedError<SectionFileError>($I`SectionFileError`)("SectionFileError", {
 	/** The file the operation was against. */
-	path: S.String,
+	path: S.String.annotateKey({ description: "The file the operation was against." }),
 	/** Which half of the read-modify-write failed. */
-	operation: S.Literals(["read", "write"]),
+	operation: S.Literals(["read", "write"]).annotateKey({ description: "Which half of the read-modify-write failed." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.Defect(),
-}) {
+	cause: S.Defect().annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("SectionFileError", { description: "Raised when the file behind a managed-section operation could not be read or written." })) {
 	override get message(): string {
 		return `Failed to ${this.operation} managed sections in "${this.path}"`;
 	}
@@ -266,7 +269,7 @@ const unimplemented = (member: string): never => {
  * @public
  */
 export class ManagedSection extends Context.Service<ManagedSection, ManagedSectionShape>()(
-	"@beep/scratchpad/effected/templates/ManagedSection",
+	$I`ManagedSection`,
 ) {
 	/**
 	 * The default layer, reading and writing {@link SectionDialect.default}

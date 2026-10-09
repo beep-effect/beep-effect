@@ -147,7 +147,7 @@ describe("SectionDialect", () => {
 		it("phrase exports its pattern", () => {
 			assert.nestedPropertyVal(
 				S.toJsonSchemaDocument(SectionDialect),
-				"definitions.SectionDialectEncoded.properties.phrase.pattern",
+				"definitions.@beep/scratchpad/effected/templates/SectionDialect/SectionDialectEncoded.properties.phrase.pattern",
 				"^[A-Za-z0-9][A-Za-z0-9 _]*$",
 			);
 		});

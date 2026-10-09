@@ -89,7 +89,7 @@ describe("SectionKey JSON Schema export", () => {
 		assert.nestedPropertyVal(S.toJsonSchemaDocument(SectionKey), "schema.pattern", pattern);
 		assert.nestedPropertyVal(
 			S.toJsonSchemaDocument(SectionId),
-			"definitions.SectionIdEncoded.properties.key.pattern",
+			"definitions.@beep/scratchpad/effected/templates/Section/SectionIdEncoded.properties.key.pattern",
 			pattern,
 		);
 	});

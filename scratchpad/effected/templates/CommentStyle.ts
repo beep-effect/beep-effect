@@ -1,4 +1,7 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/templates/CommentStyle");
 
 /**
  * A comment delimiter: non-empty, and free of control characters.
@@ -39,12 +42,12 @@ const Delimiter = S.String.check(S.isPattern(/^\P{Cc}+$/u));
  *
  * @public
  */
-export class CommentStyle extends S.Class<CommentStyle>("CommentStyle")({
+export class CommentStyle extends S.Class<CommentStyle>($I`CommentStyle`)({
 	/** Opens the comment. Non-empty, single-line. */
-	prefix: Delimiter,
+	prefix: Delimiter.annotateKey({ description: "Opens the comment. Non-empty, single-line." }),
 	/** Closes the comment, for wrapped styles. Omitted for line styles. */
-	suffix: S.optionalKey(Delimiter),
-}) {
+	suffix: S.optionalKey(Delimiter).annotateKey({ description: "Closes the comment, for wrapped styles. Omitted for line styles." }),
+}, $I.annote("CommentStyle", { description: "How a managed section's markers are commented out in a given file format." })) {
 	/** Shell, YAML, TOML, Python, Dockerfile, `.env`. */
 	static readonly hash: CommentStyle = CommentStyle.make({ prefix: "#" });
 
