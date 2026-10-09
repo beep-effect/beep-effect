@@ -1286,6 +1286,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer confo
       expect(DateTime.formatIso(row.ts)).not.toBe("2026-03-02T00:00:00.000Z");
       const valid = yield* runWriter("", { writerArgs: ["--refuse", "timeout"], attemptUtc: "2026-08-01T23:59:59Z" });
       expect(valid.refusalFiles).toEqual(["hook-pulse-refusals-2026-08-01.ndjson"]);
+      expect(valid.refusals).toHaveLength(1);
       const validRow = yield* S.decodeEffect(S.fromJsonString(HookPulseRefusal))(A.getUnsafe(valid.refusals, 0));
       expect(DateTime.formatIso(validRow.ts)).toBe("2026-08-01T23:59:59.000Z");
     })
