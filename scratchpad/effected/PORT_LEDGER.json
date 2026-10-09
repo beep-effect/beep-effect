@@ -3,10 +3,10 @@
   "effectedCommit": "af7566a9da2eff169cb74955efcc5ede1e5de9f8",
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
-    "module": "github-commands",
+    "module": "xdg",
     "stage": 3,
     "commit": null,
-    "at": "2026-10-09T16:49:32.680Z"
+    "at": "2026-10-09T16:49:45.899Z"
   },
   "rows": [
     {
@@ -9547,7 +9547,7 @@
       "module": "xdg",
       "wave": 4,
       "position": 1,
-      "stage": 2,
+      "stage": 3,
       "status": "in-progress",
       "provisionalHome": "tooling/library",
       "upstreamPaths": {
@@ -9695,6 +9695,12 @@
           "upstreamBehaviour": "Xdg.layer reads HOME with Config.String, so HOME=\"\" succeeds and fallback application paths can be relative.",
           "labBehaviour": "Xdg.layer reads HOME with Config.NonEmptyString, turning HOME=\"\" into the existing typed XdgEnvError with a ConfigError cause and unchanged missing-HOME message, never a defect.",
           "reason": "upstream-bug: round-1 grok-1-1 identifies the pinned oracle empty-HOME hole and relative-path consequence; fix-xdg-g1.md:64 records the separate required-HOME fix. Xdg.test.ts:108 explicitly supplies HOME=\"\" and checks Fail, absence of Die, variable, message and cause."
+        },
+        {
+          "test": "module suite scratchpad/test/xdg/** at per-file 100 percent coverage",
+          "upstreamBehaviour": "scratchpad/effected/xdg/XdgConfig.ts:74 carried a branch no input can reach",
+          "labBehaviour": "removed the unreachable private empty constructor and made the static utility class abstract, retaining direct-construction prohibition and all static resolver/save-path behavior.",
+          "reason": "coverage: section 11.3, an unreachable branch is a finding against the source; simplified without a behaviour change"
         }
       ],
       "backlog": [
@@ -9798,13 +9804,18 @@
         },
         {
           "stage": 1,
+          "sha": "47cb8e678b910a31789de20bfd12b8575b9508bd"
+        },
+        {
+          "stage": 2,
           "sha": null
         }
       ],
       "blocked": null,
       "notes": [
         "2026-10-09T11:20:22.694Z S1: green under tsgo, oxlint and the four beep laws; upstream tests pass; audit green (parity strict)",
-        "2026-10-09T16:20:03.277Z S2: S2 green: docgen with all enforcement flags and the JSDoc law; carriers converted; README adapted (section 10.3)"
+        "2026-10-09T16:20:03.277Z S2: S2 green: docgen with all enforcement flags and the JSDoc law; carriers converted; README adapted (section 10.3)",
+        "2026-10-09T16:49:45.899Z S3: S3 green: per-file 100 percent coverage, canon detectors clean (0 ledgered exceptions), property floor"
       ],
       "closedAt": null
     },

@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -75,9 +76,8 @@ describe("Xdg", () => {
 		it.effect("HOME being unset is a typed failure, never a defect", () =>
 			Effect.gen(function* () {
 				const exit = yield* Effect.exit(Effect.void.pipe(provideLayer(env({}))));
-				const cause = Exit.getCause(exit);
-				assert.isTrue(O.isSome(cause));
-				const reasons = O.getOrThrow(cause).reasons;
+				assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
+				const reasons = exit.cause.reasons;
 				assert.isTrue(reasons.some(Cause.isFailReason));
 				assert.isFalse(reasons.some(Cause.isDieReason));
 			}),

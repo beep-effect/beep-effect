@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertExitFailure, assertNone } from "@effect/vitest/utils";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -423,7 +424,7 @@ describe("AppDirs", () => {
 						),
 					),
 				);
-				assert.isTrue(O.isNone(runtime));
+				assertNone(runtime);
 				assert.deepStrictEqual(made, []);
 			}),
 		);
@@ -465,9 +466,8 @@ describe("AppDirs", () => {
 			it.effect(name, () =>
 				Effect.gen(function* () {
 					const exit = yield* Effect.exit(build(namespace));
-					const cause = Exit.getCause(exit);
-					assert.isTrue(O.isSome(cause));
-					const reasons = O.getOrThrow(cause).reasons;
+					assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
+					const reasons = exit.cause.reasons;
 					// The discriminating assertion: it is a DEFECT, not laundered into E.
 					// Without this line, an implementation that raised a typed error would
 					// still pass every other assertion here.

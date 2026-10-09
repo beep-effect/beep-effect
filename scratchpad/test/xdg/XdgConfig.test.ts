@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { ConfigFile, JsonCodec, MergeStrategy } from "../../effected/config-file/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as Effect from "effect/Effect";
@@ -81,35 +82,35 @@ describe("XdgConfig.resolver", () => {
 	it.effect("finds the file in the app's own config directory", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
-			assert.deepStrictEqual(found, O.some("/home/ada/.config/myapp/rc.json"));
+			assertSome(found, "/home/ada/.config/myapp/rc.json");
 		}).pipe(provideLayer(context({ present: ["/home/ada/.config/myapp/rc.json"] }))),
 	);
 
 	it.effect("falls through to a system config dir — the search path v3 never had", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
-			assert.deepStrictEqual(found, O.some("/etc/xdg/myapp/rc.json"));
+			assertSome(found, "/etc/xdg/myapp/rc.json");
 		}).pipe(provideLayer(context({ present: ["/etc/xdg/myapp/rc.json"] }))),
 	);
 
 	it.effect("finds a file present ONLY in the last system dir", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
-			assert.deepStrictEqual(found, O.some("/opt/xdg/myapp/rc.json"));
+			assertSome(found, "/opt/xdg/myapp/rc.json");
 		}).pipe(provideLayer(context({ present: ["/opt/xdg/myapp/rc.json"] }))),
 	);
 
 	it.effect("earlier entries in XDG_CONFIG_DIRS win over later ones", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
-			assert.deepStrictEqual(found, O.some("/etc/xdg/myapp/rc.json"));
+			assertSome(found, "/etc/xdg/myapp/rc.json");
 		}).pipe(provideLayer(context({ present: ["/etc/xdg/myapp/rc.json", "/opt/xdg/myapp/rc.json"] }))),
 	);
 
 	it.effect("the app's own directory beats every system dir", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
-			assert.deepStrictEqual(found, O.some("/home/ada/.config/myapp/rc.json"));
+			assertSome(found, "/home/ada/.config/myapp/rc.json");
 		}).pipe(
 			provideLayer(
 				context({
@@ -135,7 +136,7 @@ describe("XdgConfig.resolver", () => {
 			// `catchAll`, so an EACCES on the first candidate returned `none` and the
 			// remaining search path was never consulted.
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
-			assert.deepStrictEqual(found, O.some("/etc/xdg/myapp/rc.json"));
+			assertSome(found, "/etc/xdg/myapp/rc.json");
 		}).pipe(
 			provideLayer(
 				context({
@@ -149,7 +150,7 @@ describe("XdgConfig.resolver", () => {
 	it.effect("is None when the file is nowhere on the search path", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
-			assert.isTrue(O.isNone(found));
+			assertNone(found);
 		}).pipe(provideLayer(context({}))),
 	);
 });
@@ -158,7 +159,7 @@ describe("XdgConfig.nativeResolver", () => {
 	it.effect("probes the macOS Application Support directory", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.nativeResolver({ namespace: "myapp", filename: "rc.json" }));
-			assert.deepStrictEqual(found, O.some("/home/ada/Library/Application Support/myapp/rc.json"));
+			assertSome(found, "/home/ada/Library/Application Support/myapp/rc.json");
 		}).pipe(provideLayer(context({ present: ["/home/ada/Library/Application Support/myapp/rc.json"] }, "darwin"))),
 	);
 
@@ -168,7 +169,7 @@ describe("XdgConfig.nativeResolver", () => {
 			const found = yield* resolve(XdgConfig.nativeResolver({ namespace: "myapp", filename: "rc.json" })).pipe(
 				provideLayer(context({ probed }, "linux")),
 			);
-			assert.isTrue(O.isNone(found));
+			assertNone(found);
 			assert.deepStrictEqual(probed, []);
 		}),
 	);
@@ -176,7 +177,7 @@ describe("XdgConfig.nativeResolver", () => {
 	it.effect("absorbs an unreadable native directory into None", () =>
 		Effect.gen(function* () {
 			const found = yield* resolve(XdgConfig.nativeResolver({ namespace: "myapp", filename: "rc.json" }));
-			assert.isTrue(O.isNone(found));
+			assertNone(found);
 		}).pipe(provideLayer(context({ denied: ["/home/ada/Library/Application Support/myapp/rc.json"] }, "darwin"))),
 	);
 });

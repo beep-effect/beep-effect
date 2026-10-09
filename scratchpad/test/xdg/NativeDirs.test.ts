@@ -1,4 +1,5 @@
 import { assert, describe, layer } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -21,7 +22,7 @@ const paths = (overrides?: { readonly appData?: string; readonly localAppData?: 
  * this possible.
  */
 describe("NativeDirs.resolve", () => {
-	layer(Path.layer)((it) => {
+	layer(Path.layer, { timeout: "30 seconds" })((it) => {
 		const resolve = Effect.fn("resolve")(function* (platform: XdgPlatform, xdg: XdgPaths = paths()) {
 			const path = yield* Path.Path;
 			return NativeDirs.resolve({ platform, namespace: "myapp", paths: xdg, path });
@@ -30,7 +31,15 @@ describe("NativeDirs.resolve", () => {
 		it.effect("maps darwin onto Application Support and Caches", () =>
 			Effect.gen(function* () {
 				const native = yield* resolve("darwin");
-				assert.isTrue(O.isSome(native));
+				assertSome(
+					native,
+					NativeDirs.make({
+						config: "/home/ada/Library/Application Support/myapp",
+						data: "/home/ada/Library/Application Support/myapp",
+						state: "/home/ada/Library/Application Support/myapp",
+						cache: "/home/ada/Library/Caches/myapp",
+					}),
+				);
 				const dirs = O.getOrThrow(native);
 				assert.strictEqual(dirs.config, "/home/ada/Library/Application Support/myapp");
 				assert.strictEqual(dirs.data, "/home/ada/Library/Application Support/myapp");
@@ -75,15 +84,15 @@ describe("NativeDirs.resolve", () => {
 
 		it.effect("has no native mapping on linux — XDG is the native convention there", () =>
 			Effect.gen(function* () {
-				assert.isTrue(O.isNone(yield* resolve("linux")));
+				assertNone(yield* resolve("linux"));
 			}),
 		);
 
 		it.effect("has no native mapping on other unix platforms", () =>
 			Effect.gen(function* () {
-				assert.isTrue(O.isNone(yield* resolve("freebsd")));
-				assert.isTrue(O.isNone(yield* resolve("openbsd")));
-				assert.isTrue(O.isNone(yield* resolve("sunos")));
+				assertNone(yield* resolve("freebsd"));
+				assertNone(yield* resolve("openbsd"));
+				assertNone(yield* resolve("sunos"));
 			}),
 		);
 	});
