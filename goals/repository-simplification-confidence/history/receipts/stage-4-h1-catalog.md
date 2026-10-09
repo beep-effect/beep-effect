@@ -209,3 +209,11 @@ gate before merging the repair. R73 still holds catalog/register publication
 after A's Knip merge. These are explicit sequencing blockers, not H1
 acceptance. The next owner resumes with the main merge, detector, register,
 removals, compatibility wave and separately deferred tsgo ratchet.
+
+Final main merge: packet #1560 landed as `83d8967a03` during the fetch.
+Three-way conflict resolution against packet `3dbf109066` retained both
+main's stage-1/reviewer updates and H1's evidence. Merge repair `ef80a753e4`
+acknowledges P0 `base-conflict-356cda027626` with `--fix-sha`. Dependencies
+and OSV bytes remain identical to implementation head; no owner-generated
+source inventory or shared dependency file was edited. Hosted report-head
+Security/knowledge results must be read after publication.

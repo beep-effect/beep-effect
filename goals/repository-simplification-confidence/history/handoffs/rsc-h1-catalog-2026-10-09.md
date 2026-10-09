@@ -93,7 +93,7 @@ source/manifest/lockfile and OSV bytes are unchanged from the proved OSV wave.
 ## Run 2 (after crash)
 
 lane: rsc-h1-catalog
-head: f55e40f7a0af7e75bb4e5d89b208c313cc2d1664 (resume/report base; the report publication advances this branch)
+head: ef80a753e4b92ce733ec6c20f2a47dffde09d426 (main-merged report base; resolve published head from PR #1562)
 PR: #1562 (wave 1 OSV: #1562; tsgo ratchet: SPEC Decision Log row "H1 tsgo ratchet deferral")
 package-verify: not applicable (no workspace package edited)
 hosted-parity: test-tsgo: pass (retained terminal result); docgen local: pass (retained noop); jsdoc-ratchet: pass; knowledge refs: fail (inherited, orchestrator/lane C); fallow audit+health: pass; coverage read: pass (no measured source touched); Security (OSV): pass locally at 18fdc60e50 and hosted at f55e40f7a0, fresh report-head result required
