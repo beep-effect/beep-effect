@@ -45,3 +45,28 @@ judgment route for new canonical platform tests would have prevented this detour
   and run the default compiler policy before interpreting runtime tests as proof.
 - Repair verification: the existing metrics property and focused gate/scrub tests
   pass. Affected default package proofs are being rerun; no pass is inferred.
+
+## 2026-10-09 — shared heavy-slot queue fairness
+
+- Work: required schema/file-processing default package proofs and hosted parity.
+- Evidence: the owned unit remained in the slot wrapper's five-second polling loop
+  for 30 minutes, with no first command log or result file; no proof command ran.
+- Attribution: environment-only admission delay, not a proof failure.
+- Decision: requeue that unstarted job once with the same 32G cap and two-owned-job
+  maximum. Reason: change the polling timing without bypassing the shared budget.
+  Reversal: stop the replacement queued unit and restore the original submission.
+- Prevention: use a FIFO queue for heavy admission rather than independent polling
+  that allows newly submitted work to claim every released slot first.
+
+## 2026-10-09 — package audit typing and parser complexity
+
+- Work: default file-processing audit and hosted fallow parity.
+- Evidence: `SecretScrub.test.ts` passed a constructor directly to Array.map,
+  which passed its numeric index as MakeOptions; an array index was possibly
+  undefined. Signed repair supplies an explicit constructor callback and builds
+  the forged-input canary from a nonempty builder collection.
+- Fallow attributed one introduced cognitive-complexity finding to privateMatches.
+  Flattened delimiter transitions with early continues preserve nested and orphan
+  behavior without a suppression.
+- Prevention: run compiler policy and fallow before interpreting focused runtime
+  results as full package proof. Updated default proofs remain pending.

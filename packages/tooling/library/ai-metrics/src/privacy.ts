@@ -9,6 +9,7 @@ import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import {
   countCredentialCategory,
+  maskCredentialCategory,
   replaceCredentialAssignmentsOutsideHeaders,
   replaceCredentialCategory,
 } from "@beep/schema/CredentialPatternBank";
@@ -684,10 +685,11 @@ export const makeAiMetricsSourceAttribution = Effect.fn("AiMetrics.makeAiMetrics
  * @since 0.0.0
  */
 export const redactAiMetricsSensitiveText: (text: string) => string = flow(
-  replaceCredentialAssignmentsOutsideHeaders("$1=[REDACTED]"),
+  maskCredentialCategory("secret-assignment"),
   replaceCredentialCategory("auth-header", "$1: [REDACTED]"),
   replaceCredentialCategory("bearer-token", "$1 [REDACTED]"),
-  replaceCredentialCategory("provider-key", "[REDACTED_SECRET]")
+  replaceCredentialCategory("provider-key", "[REDACTED_SECRET]"),
+  replaceCredentialAssignmentsOutsideHeaders("$1=[REDACTED]")
 );
 
 const redactionResultFor = (content: string): AiMetricsRedactionResult => {

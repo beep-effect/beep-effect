@@ -228,3 +228,26 @@ original input and include independently overlapping categories. Reason: a colon
 normalization must not bypass complete header redaction or leak later words.
 Reversal: remove this canonical rendering adapter and restore the P0 metrics bank.
 This preserves existing complete-header output behind unchanged export types.
+
+### Explicit service requirement and release safety
+
+The standalone FilingDecisionLlmLayer now requires SecretScrubService explicitly.
+The composed DocumentsServerLlmLayer provides the default scrub layer, and the two
+standalone test compositions provide their scrub service. Reason: preserve an
+injectable fail-closed service boundary without hidden ambient fallback. The
+changed public Layer requirement receives a major documents-server changeset;
+other existing redaction types remain unchanged and their stricter outputs remain
+minor. Reversal: remove the gate requirement, service wiring and additive inbox
+reason together; restore the prior layer contract before merging.
+
+### Nested assignment coverage and original counts
+
+Canonical assignment enumeration advances from each candidate key start and
+deduplicates identical value offsets with Effect HashSet. Distinct nested values
+remain matches, even when a newly supported colon prefix encloses an assignment
+that an original bank already recognized. Both consumers mask the union of value
+extents before applying their existing rendering. Metrics header protection is
+only a final formatting step after masking. Reason: preserve R5 coverage across
+quoted multiline and header overlaps. Raw counts include both distinct assignment
+value extents in the quoted-header fixture. Reversal: restore the original
+per-consumer bank and remove the overlap fixtures together.

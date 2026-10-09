@@ -103,3 +103,16 @@ The final consumer table contains eight cases, including header/assignment overl
 Complete header lines retain header-rendering precedence in metrics, while raw-input
 assignment and header counts remain independent. This avoids colon normalization
 bypassing full header masking. Existing metrics bearer properties pass after repair.
+
+A ninth consumer case pins a quoted assignment containing header-like text.
+Metrics first masks assignments while preserving their separator, then redacts
+headers/schemes/provider keys, and finally normalizes assignment rendering outside
+surviving headers. This preserves complete quoted and multiline assignment coverage
+while retaining the exact legacy header format. All nine renderer comparisons pass
+with 0 mismatches; matching rules and raw category counts are unchanged.
+
+Nested assignments are enumerated from candidate starts, with identical value
+offsets deduplicated. A colon header inside a quoted assignment contributes a
+second distinct assignment extent; counts use the original input. Union masking
+precedes consumer formatting, so complete headers and multiline nested values
+cannot lose original-bank coverage. Nine renderer fixtures pin these outcomes.

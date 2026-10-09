@@ -5,6 +5,7 @@
  */
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -62,8 +63,29 @@ export const credentialRules: ReadonlyArray<CredentialRule> = [
 const RedactionMarker = LiteralKit(["[REDACTED]", "[REDACTED_SECRET]"]);
 const isRedactionMarker = S.is(RedactionMarker);
 const isMarker = (text: string) => isRedactionMarker(Str.replaceAll(/^["']|["']$/gu, "")(Str.trim(text)));
-const rawMatches = (text: string, grammar: CredentialRule) =>
-  Str.matchAll(new RegExp(grammar.pattern, grammar.flags))(text);
+const rawMatches = (text: string, grammar: CredentialRule): ReadonlyArray<RegExpMatchArray> => {
+  const pattern = new RegExp(grammar.pattern, grammar.flags);
+  if (!CredentialCategory.is["secret-assignment"](grammar.category)) {
+    return A.fromIterable(Str.matchAll(pattern)(text));
+  }
+  let found = A.empty<RegExpMatchArray>();
+  let seen = HashSet.empty<string>();
+  let match = O.fromNullOr(pattern.exec(text));
+  while (O.isSome(match)) {
+    const valueStart = match.value.index + Str.length(capture(match.value, 1)) + Str.length(capture(match.value, 2));
+    const valueEnd = valueStart + Str.length(capture(match.value, 3));
+    const span = `${valueStart}:${valueEnd}`;
+    if (!HashSet.has(seen, span)) {
+      found = A.append(found, match.value);
+      seen = HashSet.add(seen, span);
+    }
+    // Search from the next ASCII key position so a newly recognized prefix cannot
+    // consume a nested assignment that either original bank would have matched.
+    pattern.lastIndex = match.value.index + 1;
+    match = O.fromNullOr(pattern.exec(text));
+  }
+  return found;
+};
 const categoryRule = (category: CredentialCategory) =>
   A.findFirst(credentialRules, (candidate) => candidate.category === category);
 const capture = (match: RegExpMatchArray, index: number) => O.getOrElse(O.fromUndefinedOr(match[index]), () => "");
@@ -83,14 +105,16 @@ const privateMatches = (text: string, grammar: CredentialRule): ReadonlyArray<Cr
     if (Str.toLowerCase(capture(token, 0)) === "<private>") {
       if (depth === 0) start = offset(token);
       depth += 1;
-    } else if (depth > 0) {
-      depth -= 1;
-      if (depth === 0)
-        found = A.append(found, makeMatch("private-tag", start, offset(token) + Str.length(capture(token, 0))));
-    } else {
+      continue;
+    }
+    if (depth === 0) {
       // An orphan delimiter leaves the private extent unknown: mask the whole input.
       found = A.append(found, makeMatch("private-tag", 0, Str.length(text), "unresolved"));
+      continue;
     }
+    depth -= 1;
+    if (depth === 0)
+      found = A.append(found, makeMatch("private-tag", start, offset(token) + Str.length(capture(token, 0))));
   }
   if (depth > 0) found = A.append(found, makeMatch("private-tag", start, Str.length(text), "unresolved"));
   return found;
@@ -174,6 +198,33 @@ export const countCredentialCategory: {
   )
 );
 
+const renderAssignmentUnion = (text: string, grammar: CredentialRule, replacement: string): string => {
+  let selected = O.none<RegExpMatchArray>();
+  let cursor = 0;
+  let end = 0;
+  let output = "";
+  for (const match of rawMatches(text, grammar)) {
+    const start = offset(match);
+    const nextEnd = start + Str.length(capture(match, 0));
+    if (O.isSome(selected) && start < end) {
+      end = N.max(end, nextEnd);
+      continue;
+    }
+    if (O.isSome(selected)) {
+      output += Str.replaceAll(new RegExp(grammar.pattern, grammar.flags), replacement)(capture(selected.value, 0));
+      cursor = end;
+    }
+    output += Str.slice(cursor, start)(text);
+    selected = O.some(match);
+    end = nextEnd;
+  }
+  if (O.isSome(selected)) {
+    output += Str.replaceAll(new RegExp(grammar.pattern, grammar.flags), replacement)(capture(selected.value, 0));
+    cursor = end;
+  }
+  return output + Str.slice(cursor)(text);
+};
+
 /**
  * Apply the canonical grammar with a consumer-owned replacement template.
  * **Example** (Keep clean text unchanged)
@@ -193,7 +244,9 @@ export const replaceCredentialCategory: {
     O.map((grammar) =>
       CredentialCategory.is["private-tag"](category)
         ? maskCredentialMatches(text, privateMatches(text, grammar))
-        : Str.replaceAll(new RegExp(grammar.pattern, grammar.flags), replacement)(text)
+        : CredentialCategory.is["secret-assignment"](category)
+          ? renderAssignmentUnion(text, grammar, replacement)
+          : Str.replaceAll(new RegExp(grammar.pattern, grammar.flags), replacement)(text)
     ),
     O.getOrElse(() => text)
   )
@@ -203,8 +256,9 @@ export const replaceCredentialCategory: {
  * Replace assignment values outside complete header lines, preserving header rendering precedence.
  *
  * **Details**
- * Assignment and header matches still count independently on raw input. This renderer avoids
- * removing a header's colon before its complete value can be redacted by the header renderer.
+ * Assignment and header matches still count independently on raw input. Metrics uses this
+ * for final formatting after masking values with separators intact and redacting headers.
+ * Surviving header lines retain their header-specific rendering.
  *
  * **Example** (Keep public text unchanged)
  * ```ts import.meta.vitest name="Keep public text unchanged"
@@ -277,3 +331,25 @@ export const maskCredentialMatches: {
   }
   return output + Str.slice(cursor)(text);
 });
+
+/**
+ * Mask one category's union of original value spans without rewriting its surrounding syntax.
+ *
+ * **Example** (Mask a category on public text)
+ * ```ts import.meta.vitest name="Mask a category on public text"
+ * import { maskCredentialCategory } from "@beep/schema/CredentialPatternBank"
+ * console.log(maskCredentialCategory("public text", "secret-assignment"))
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const maskCredentialCategory: {
+  (text: string, category: CredentialCategory): string;
+  (category: CredentialCategory): (text: string) => string;
+} = dual(2, (text: string, category: CredentialCategory) =>
+  maskCredentialMatches(
+    text,
+    A.filter(detectCredentials(text), (match) => match.category === category)
+  )
+);

@@ -109,3 +109,35 @@ Hosted P0 Lint Policy: inherited knowledge-reference gate in another goal's SPEC
 confirmed on origin/main. Hosted P0 Coverage Regression: two unchanged repo-cli
 sources, outside lane ownership. Exact completed job logs were read; both rows
 carry scope/evidence acknowledgements for the orchestrator's consolidated repair.
+
+Release-safety decision: standalone FilingDecisionLlmLayer has a new explicit
+SecretScrubService requirement, so documents-server receives a major changeset.
+The composed LLM layer supplies the default scrubber and standalone tests supply
+it explicitly. Reason: avoid a hidden fallback while keeping the service injectable.
+Reversal: remove the gate/service wiring and additive reason as a single change.
+Existing CauseRedaction/metrics export types stay unchanged; their changesets stay
+minor. All eight consumer renderer cases compare with 0 mismatches. Signed
+implementation and repair commit passes the commit-range secrets lane (no leaks).
+
+Required schema/file-processing admission was requeued once after 30 minutes with
+no command execution. The budget and two-owned-job limit are unchanged. This is
+queue friction, not a package failure or a pass; the replacement remains required.
+
+The header-overlap renderer now masks complete assignments before header redaction,
+with separators retained until final formatting outside surviving header lines.
+This also preserves quoted assignments containing header-like text and prevents
+multiline values from escaping header precedence. Nine old/new renderer cases:
+0 mismatches. Reason: confidentiality and legacy rendering must both survive
+consolidation. Reversal: restore the prior metrics bank and remove this adapter.
+
+### 2026-10-09 — current proof repair
+
+P1 remains in progress. The file-processing audit typing repair is signed in
+`da22cab2e1d60616a833331219155f62a1834224` and its inbox row is acknowledged.
+Local docgen and the regenerated JSDoc ratchet passed. Fallow found one introduced
+private-tag parser complexity issue; its equivalent flattened transitions are
+being verified. Nested assignments now mask the union before consumer formatting,
+deduplicating equal value offsets and counting distinct original extents. Reason
+and reversal are recorded in SPEC. Updated schema/file-processing and consumer
+default proofs are queued under the unchanged shared budget. PR #1570 remains
+draft; no content-final or merge-readiness claim is made.

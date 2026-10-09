@@ -54,6 +54,13 @@ describe("metrics canonical bank compatibility", () => {
       expect(redactAiMetricsSensitiveText(`Authorization: Bearer ${canary()}`) === "Authorization: [REDACTED]").toBe(
         true
       );
+      for (const input of [
+        `APP_TOKEN="public Authorization: ${canary()}"`,
+        `APP_TOKEN="Authorization: public" OTHER_TOKEN=${canary()}`,
+        `Authorization: APP_TOKEN="public\n${canary()}"`,
+      ]) {
+        expect(Str.includes(canary())(redactAiMetricsSensitiveText(input))).toBe(false);
+      }
     })
   );
 });

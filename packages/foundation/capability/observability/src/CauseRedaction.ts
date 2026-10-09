@@ -34,7 +34,7 @@
  */
 import { $ObservabilityId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { replaceCredentialCategory } from "@beep/schema/CredentialPatternBank";
+import { maskCredentialCategory, replaceCredentialCategory } from "@beep/schema/CredentialPatternBank";
 import { A, Str } from "@beep/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -155,7 +155,7 @@ export type RedactionChannel = typeof RedactionChannel.Type;
 // Matching semantics come exclusively from the canonical versioned bank.
 // Rendering, category selection and whitespace policy remain owned by this consumer.
 const redactionSteps: ReadonlyArray<(input: string) => string> = A.make(
-  replaceCredentialCategory("secret-assignment", `$1$2${REDACTION_PLACEHOLDER}`),
+  maskCredentialCategory("secret-assignment"),
   replaceCredentialCategory("auth-header", `$1$2${REDACTION_PLACEHOLDER}`),
   replaceCredentialCategory("bearer-token", `$1$2${REDACTION_PLACEHOLDER}`),
   replaceCredentialCategory("provider-key", REDACTION_PLACEHOLDER),
