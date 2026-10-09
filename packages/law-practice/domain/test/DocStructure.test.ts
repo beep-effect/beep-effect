@@ -1,11 +1,24 @@
 import {
   DocStructureAbstentionCode,
+  DocStructureDocument,
   DocStructureRuleFamily,
+  OfficeActionFinalityCandidate,
+  OfficeActionRecognizedPair,
+  officeActionRuleV1,
   recognizeOfficeActionPair,
+  ShortenedStatutoryPeriodCandidate,
 } from "@beep/law-practice-domain";
+import { TextAnchor } from "@beep/provenance/TextAnchor";
+import {
+  VerifyTextAnchorAgainstVerifiedSourceInput,
+  verifyTextAnchorAgainstVerifiedSource,
+} from "@beep/provenance/VerifiedTextAnchor";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { fixtureSource, TestCrypto } from "./officeActionFixtures.ts";
 
 const finality = "THIS ACTION IS MADE FINAL";
 const period =
@@ -57,5 +70,82 @@ describe("office-action pure raw rule v1", () => {
     });
     expect(recognizeOfficeActionPair(positive, "layout-derived")).toMatchObject({ code: "low-quality-source" });
     expect(recognizeOfficeActionPair(positive, "embedded-pdf-text").status).toBe("recognized");
+    expect(recognizeOfficeActionPair(`This action is NON-FINAL.\n${period}`, "direct-text")).toMatchObject({
+      finality: "NON-FINAL",
+    });
   });
+});
+
+it.layer(TestCrypto)("candidate metadata coherence", (it) => {
+  it.effect("rejects mismatched source, document and rule metadata atomically", () =>
+    Effect.gen(function* () {
+      const original = yield* fixtureSource(positive);
+      const changed = yield* fixtureSource(`prefix ${positive}`);
+      const raw = recognizeOfficeActionPair(positive, "direct-text");
+      if (raw.status !== "recognized") return yield* Effect.die("Expected pair");
+      const firstProof = yield* verifyTextAnchorAgainstVerifiedSource(
+        VerifyTextAnchorAgainstVerifiedSourceInput.make({
+          anchor: raw.finalityAnchor,
+          verifiedSource: original.verifiedSource,
+        })
+      );
+      const periodProof = yield* verifyTextAnchorAgainstVerifiedSource(
+        VerifyTextAnchorAgainstVerifiedSourceInput.make({
+          anchor: raw.periodAnchor,
+          verifiedSource: original.verifiedSource,
+        })
+      );
+      const common = {
+        schemaVersion: "1",
+        source: original.source,
+        document: DocStructureDocument.make({ documentId: "fixture", sourceVersion: "1", modality: "direct-text" }),
+        rule: officeActionRuleV1,
+        confidence: UnitInterval.make(0.95),
+      };
+      const first = OfficeActionFinalityCandidate.make({
+        ...common,
+        schemaVersion: "1",
+        anchor: firstProof,
+        finality: "FINAL",
+      });
+      const period = (overrides: Partial<typeof common> = {}) =>
+        ShortenedStatutoryPeriodCandidate.make({
+          ...common,
+          ...overrides,
+          schemaVersion: "1",
+          anchor: periodProof,
+          months: 3,
+        });
+      expect(OfficeActionRecognizedPair.make({ candidates: [first, period()] }).candidates).toHaveLength(2);
+      expect(() =>
+        OfficeActionFinalityCandidate.make({
+          ...common,
+          schemaVersion: "1",
+          source: changed.source,
+          anchor: firstProof,
+          finality: "FINAL",
+        })
+      ).toThrow();
+      expect(() => period({ source: changed.source })).toThrow();
+      for (const second of [
+        period({ document: DocStructureDocument.make({ ...common.document, documentId: "other" }) }),
+        period({ rule: DocStructureRuleFamily.make({ ...officeActionRuleV1, version: 2 }) }),
+      ])
+        expect(() => OfficeActionRecognizedPair.make({ candidates: [first, second] })).toThrow();
+      const otherProof = yield* verifyTextAnchorAgainstVerifiedSource(
+        VerifyTextAnchorAgainstVerifiedSourceInput.make({
+          anchor: TextAnchor.make({ startChar: S.Natural.make(0), endChar: S.Natural.make(6), quote: "prefix" }),
+          verifiedSource: changed.verifiedSource,
+        })
+      );
+      const otherPeriod = ShortenedStatutoryPeriodCandidate.make({
+        ...common,
+        schemaVersion: "1",
+        source: changed.source,
+        anchor: otherProof,
+        months: 3,
+      });
+      expect(() => OfficeActionRecognizedPair.make({ candidates: [first, otherPeriod] })).toThrow();
+    })
+  );
 });

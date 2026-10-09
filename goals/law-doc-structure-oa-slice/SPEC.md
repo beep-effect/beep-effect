@@ -137,6 +137,13 @@ seed implementation without replacing that doctrine.
 
 | 2026-10-09 (h) | Retain attempt chains under expected source scope plus document id, including cross-scope failures; actual source identity stays separately recorded. Typed OCR diagnostics are persisted and replayed, and opaque proof classes use the existing named typed base pattern. Reason: match the substrate’s authorized-matter history, preserve quality closure across restart and emit portable declarations. Reversal: a future explicit matter/history adapter may replace the store key under a new attempt schema version while preserving immutable v1 receipts and replay. | P1/P2 focused server proof; VerifiedSpan history contract |
 
+| 2026-10-09 (i) | Cancel the obsolete P0 Heavy Admit run after confirming its immutable fixture-only head, because the implemented P1/P2 head needs a new run and old queued jobs consume runners. Reason: AGENTS Quality Operator directs cancellation for lanes that must rerun; no old-head green claim is made. Reversal: rerun the immutable old-head workflow if historical comparison is needed, while publication schedules the successor head. | PR #1573 P0 Heavy Admit; wave 2 exact-head proof |
+
+| 2026-10-09 (i supplement) | Stop the automatic P0 readiness monitor after its checks settle on the superseded draft head. Reason: final readiness must be bound to the final wave, and the old observer cannot satisfy that proof. Reversal: resubmit a readiness monitor; P3 explicitly submits the required 90-minute final-head job. | P0 detached monitor terminal receipt; brief P3 Mechanics |
+
+| 2026-10-09 (j) | Keep deterministic test builders inside each package’s compiler boundary and share raw fixture data only. Reason: importing TypeScript test helpers across rootDir fails the canonical compiler; no reusable crypto/identity fixture service exists in the test-utils surface. Reversal: consolidate through an owner-added test-utils API and migrate local builders, without widening package compiler roots. | Server TS6059 and deterministicKeys diagnostics; P2 package proof |
+| 2026-10-09 (k) | Record release notes without changesets for all three private packages, under main #1566 and the orchestrator standing ruling. Additive APIs would warrant minor releases if published; no existing public API breaks require a major release. Reversal: remove these handoff notes and add owner-generated changesets if the packages become published. | Handoff release-note table; removed only four lane-authored changesets. |
+
 ## Acceptance Criteria
 
 - [ ] P0 records an attorney-reviewed, license-safe fixture inventory covering
@@ -198,3 +205,4 @@ seed implementation without replacing that doctrine.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None | N/A | N/A | N/A | N/A |
+

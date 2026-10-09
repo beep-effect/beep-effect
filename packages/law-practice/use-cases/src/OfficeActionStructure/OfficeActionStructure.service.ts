@@ -23,7 +23,6 @@ import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { OfficeActionRawPair } from "@beep/law-practice-domain";
 import type { OfficeActionStructureInput, OfficeActionStructureShape } from "./OfficeActionStructure.ports.ts";
@@ -43,15 +42,20 @@ const rawRecognition = (input: OfficeActionStructureInput) =>
     A.isReadonlyArrayEmpty(input.ocrPages) ? input.document.modality : "ocr-derived",
     input.rule
   );
-const grounded = (pair: OfficeActionRawPair): ReadonlyArray<GroundedExtraction> =>
-  A.map([pair.finalityAnchor, pair.periodAnchor], (anchor, i) =>
-    GroundedExtraction.cases.match_exact.make({
-      label: O.getOrElse(A.get(labels, i), () => "uncovered"),
-      text: anchor.quote,
-      matchedText: anchor.quote,
-      span: { start: anchor.startChar, end: anchor.endChar },
-    })
-  );
+const grounded = (pair: OfficeActionRawPair): ReadonlyArray<GroundedExtraction> => [
+  GroundedExtraction.cases.match_exact.make({
+    label: labels[0],
+    text: pair.finalityAnchor.quote,
+    matchedText: pair.finalityAnchor.quote,
+    span: { start: pair.finalityAnchor.startChar, end: pair.finalityAnchor.endChar },
+  }),
+  GroundedExtraction.cases.match_exact.make({
+    label: labels[1],
+    text: pair.periodAnchor.quote,
+    matchedText: pair.periodAnchor.quote,
+    span: { start: pair.periodAnchor.startChar, end: pair.periodAnchor.endChar },
+  }),
+];
 const fromExtractions = Effect.fn("OfficeActionStructure.fromExtractions")(function* (
   input: OfficeActionStructureInput,
   extractions: ReadonlyArray<GroundedExtraction>

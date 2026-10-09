@@ -94,7 +94,7 @@ export const recognizeOfficeActionPair: {
   ): OfficeActionRawOutcome => {
     const abstain = (code: DocStructureAbstentionCode) => DocStructureAbstention.make({ code, rule });
     if (modality === "ocr-derived" || modality === "layout-derived") return abstain("low-quality-source");
-    if (rule.id !== officeActionRuleV1.id || rule.version !== 1) return abstain("rule-not-covered");
+    if (rule.version !== 1) return abstain("rule-not-covered");
     if (isUnsupported(text)) return abstain("unsupported");
     if (isNonOperative(text)) return abstain("absent");
     if (isMissingCheckbox(text)) return abstain("ambiguous");

@@ -8,6 +8,7 @@ import {
   OfficeActionAttemptRequest,
   OfficeActionDocketIntake,
   OfficeActionEvidenceConsumer,
+  OfficeActionStoredOutcome,
   OfficeActionStructureAttempt,
   OfficeActionStructureStore,
 } from "@beep/law-practice-use-cases/OfficeActionStructure";
@@ -23,6 +24,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -95,6 +97,27 @@ it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-act
         const encoded = yield* S.encodeEffect(S.fromJsonString(OfficeActionStructureAttempt))(first);
         const decoded = yield* S.decodeEffect(S.fromJsonString(OfficeActionStructureAttempt))(encoded);
         expect(decoded).toEqual(first);
+        const contradicted = OfficeActionStructureAttempt.make({
+          ...first,
+          outcome: OfficeActionStoredOutcome.cases.abstained.make({ code: "absent", rule: first.rule }),
+        });
+        expect((yield* intake.replay(contradicted, state.verification).pipe(Effect.flip))._tag).toBe(
+          "OfficeActionStructureStorageError"
+        );
+        const failedReceipt = OfficeActionStructureAttempt.make({
+          ...first,
+          outcome: OfficeActionStoredOutcome.cases.failed.make({ reason: "invalid-anchor" }),
+        });
+        expect((yield* intake.replay(failedReceipt, state.verification).pipe(Effect.flip))._tag).toBe(
+          "VerifiedTextAnchorError"
+        );
+        const wrongPrevious = OfficeActionStructureAttempt.make({
+          ...first,
+          attemptId: "bad-link",
+          previousAttemptId: O.some("missing"),
+        });
+        expect((yield* store.append(wrongPrevious).pipe(Effect.flip)).message).toContain("predecessor");
+
         const replayed = yield* intake.replay(decoded, state.verification);
         yield* intake.deliver(replayed);
 
@@ -244,8 +267,59 @@ it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-act
           `${yield* S.encodeEffect(S.fromJsonString(OfficeActionStructureAttempt))(corrupt)}\n`
         );
         expect((yield* store.read.pipe(Effect.flip))._tag).toBe("OfficeActionStructureStorageError");
+
+        const firstLine = `${yield* S.encodeEffect(S.fromJsonString(OfficeActionStructureAttempt))(first)}\n`;
+        yield* fs.writeFileString(filename, firstLine + firstLine);
+        expect((yield* store.read.pipe(Effect.flip))._tag).toBe("OfficeActionStructureStorageError");
+        yield* fs.writeFileString(filename, "");
+        expect(yield* store.read).toHaveLength(0);
         yield* fs.writeFileString(filename, original);
       })
     );
   });
+});
+
+it.layer(StateLive)("storage failures remain typed", (it) => {
+  it.effect("rejects initialization, writer-lock and append failures", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const state = yield* TestState;
+      const failure = PlatformError.systemError({
+        _tag: "PermissionDenied",
+        module: "FileSystem",
+        method: "writeFileString",
+      });
+      const attempt = OfficeActionStructureAttempt.make({
+        schemaVersion: "1",
+        attemptId: "storage-failure",
+        document,
+        expectedSource: state.verification.expectedSource,
+        source: state.verification.source,
+        rule: DocStructureRuleFamily.make({ id: "uspto-oa-finality-ssp", version: 1 }),
+        extractions: [],
+        outcome: OfficeActionStoredOutcome.cases.failed.make({ reason: "invalid-anchor" }),
+      });
+      const run = (patched: FileSystem.FileSystem) =>
+        Effect.gen(function* () {
+          const store = yield* OfficeActionStructureStore;
+          return yield* store.append(attempt);
+        }).pipe(
+          Effect.provide(
+            officeActionStructureFileStore("/failures/attempts.jsonl").pipe(
+              Layer.provide(Layer.succeed(FileSystem.FileSystem, patched))
+            )
+          )
+        );
+      const initialization = yield* run({ ...fs, makeDirectory: () => Effect.fail(failure) }).pipe(Effect.flip);
+      expect(initialization.message).toContain("initialize");
+      const locked = yield* run({ ...fs, writeFileString: () => Effect.fail(failure) }).pipe(Effect.flip);
+      expect(locked.message).toContain("lock");
+      const append = yield* run({
+        ...fs,
+        writeFileString: (path, text, options) =>
+          options?.flag === "a" ? Effect.fail(failure) : fs.writeFileString(path, text, options),
+      }).pipe(Effect.flip);
+      expect(append.message).toContain("append");
+    })
+  );
 });

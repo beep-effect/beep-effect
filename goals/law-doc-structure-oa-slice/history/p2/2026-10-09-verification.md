@@ -41,6 +41,8 @@ recognition and from future-model shadow observations.
 - Server tests: serialized receipt round trip, separate Layer restart, immutable
   v1 replay after a v2 abstention, linked failed and successful re-anchor attempts,
   duplicate ids, incomplete lines, broken predecessor chains and keyed lookup.
+  A cross-scope failure is retained under its expected scope and a linked
+  recovery succeeds; typed OCR diagnostics survive persistence and replay.
   The test consumer receives two evidence inputs and has no approval/admission
   state; abstentions are never delivered.
 - Independent local disk writer and fresh-process replay both passed. The first
@@ -53,7 +55,13 @@ The three package-verifies and hosted-parity results are recorded below when
 terminal. Their result logs remain in the private ledger. They are distinct
 from the focused proof and from exact-head hosted CI.
 
-Pending machine-wide heavy admission at this checkpoint.
+| Package | Result | Evidence |
+| --- | --- | --- |
+| `@beep/law-practice-domain` | pass | Audit 14.7 s; docgen 9.4 s; opaque-proof declaration emission passes. |
+| `@beep/law-practice-use-cases` | pass | Audit 12.9 s; docgen 8.5 s; opaque declaration and test typecheck pass. |
+| `@beep/law-practice-server` | pending | Dependency field-type repair; package rerun queued. |
+
+Hosted-parity commands remain pending heavy admission at this checkpoint.
 
 ## Attributed hosted policy red
 
@@ -61,3 +69,8 @@ Wave 1 PR #1573 passes publication cheap gates. Hosted Repo Sanity rejects its
 private use-cases changeset, while publication requires that same private product
 workspace note. This shared changeset policy conflict is routed to the
 orchestrator under S11; no gate or package privacy is changed by this slice.
+
+The obsolete P0 Heavy Admit workflow was cancelled after confirming its immutable
+fixture-only head. Wave 2 requires implementation-head verification; cancelled
+old-head jobs are neither successes nor final-head failures. Decision Log (i)
+records the reason and reversal.

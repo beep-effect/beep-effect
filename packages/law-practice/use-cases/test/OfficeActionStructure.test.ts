@@ -16,6 +16,7 @@ import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/p
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { fixtureInventory, fixtureOcrPage, fixtureSource, readFixture, TestCrypto } from "./officeActionFixtures.ts";
@@ -99,6 +100,47 @@ it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extr
           span: { start: anchor.startChar, end: anchor.endChar },
         });
       const period = candidate("shortened-statutory-period", raw.periodAnchor);
+      const finality = candidate("action-finality", raw.finalityAnchor);
+      expect((yield* structure.fromExtractions(input, [period, period]).pipe(Effect.flip)).reason).toBe(
+        "invalid-anchor"
+      );
+      expect((yield* structure.fromExtractions(input, [finality, finality]).pipe(Effect.flip)).reason).toBe(
+        "invalid-anchor"
+      );
+      const fuzzy = (label: string, anchor: typeof raw.finalityAnchor) =>
+        GroundedExtraction.cases.match_fuzzy.make({
+          label,
+          text: anchor.quote,
+          matchedText: anchor.quote,
+          span: { start: anchor.startChar, end: anchor.endChar },
+        });
+      expect(
+        yield* structure.fromExtractions(input, [fuzzy("action-finality", raw.finalityAnchor), period])
+      ).toMatchObject({ code: "rule-not-covered" });
+      expect(
+        yield* structure.fromExtractions(input, [finality, fuzzy("shortened-statutory-period", raw.periodAnchor)])
+      ).toMatchObject({ code: "rule-not-covered" });
+      const invalidPeriod = GroundedExtraction.cases.match_exact.make({
+        label: "shortened-statutory-period",
+        text: raw.periodAnchor.quote,
+        matchedText: raw.periodAnchor.quote,
+        span: { start: raw.periodAnchor.startChar, end: raw.periodAnchor.startChar },
+      });
+      expect((yield* structure.fromExtractions(input, [finality, invalidPeriod]).pipe(Effect.flip)).reason).toBe(
+        "invalid-anchor"
+      );
+      const otherQuote = "A";
+      const other = GroundedExtraction.cases.match_exact.make({
+        label: "action-finality",
+        text: otherQuote,
+        matchedText: otherQuote,
+        span: {
+          start: S.Natural.make(Str.indexOf("A")(text).pipe(O.getOrElse(() => 0))),
+          end: S.Natural.make(Str.indexOf("A")(text).pipe(O.getOrElse(() => 0)) + 1),
+        },
+      });
+      expect(yield* structure.fromExtractions(input, [other, period])).toMatchObject({ code: "rule-not-covered" });
+
       const encodedFinality = yield* S.encodeEffect(GroundedExtraction.cases.match_exact)(
         candidate("action-finality", raw.finalityAnchor)
       );
