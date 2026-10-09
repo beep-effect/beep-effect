@@ -181,14 +181,28 @@ describe("specifier rewrites", () => {
     const forms = [
       'import "@effected/glob";',
       'const m = await import("@effected/glob");',
+      "import {",
+      "  a,",
       '} from "@effected/glob/node";',
       'vi.mock("@effected/glob", () => ({}));',
+      'export * from "@effected/walker";',
       'const id = Context.Service("@effected/memfs/Volume");',
-      'throw new TypeError(`@effected/toml internal cap`);',
+      "throw new TypeError(`@effected/toml internal cap`);",
       'return name.startsWith("@effected/");',
+      "/**",
+      " * ```ts",
+      ' * import { McpProbe } from "@effected/mcp/testing";',
+      " * ```",
+      " */",
+      "const input = ['import { App } from \"@effected/app/x\";'];",
     ].join("\n");
-    assert.deepStrictEqual(foreignSpecifierLines("b.ts", forms), ["b.ts:1", "b.ts:2", "b.ts:3", "b.ts:4"]);
-    const alias = 'import { x } from "@beep/scratchpad/effected/jsonc/index";\n * import { y } from "@beep/scratchpad/effected/jsonc/index"';
+    assert.deepStrictEqual(foreignSpecifierLines("b.ts", forms), ["b.ts:1", "b.ts:2", "b.ts:5", "b.ts:6", "b.ts:7"]);
+    const alias = [
+      'import { x } from "@beep/scratchpad/effected/jsonc/index";',
+      "/**",
+      ' * import { y } from "@beep/scratchpad/effected/jsonc/index"',
+      " */",
+    ].join("\n");
     assert.deepStrictEqual(foreignSpecifierLines("t.ts", alias), ["t.ts:1"]);
   });
 });

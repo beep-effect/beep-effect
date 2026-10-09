@@ -18,7 +18,7 @@ import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ModuleKind, ModuleResolutionKind, Node, Project, ScriptTarget, SyntaxKind } from "ts-morph";
+import { ModuleKind, ModuleResolutionKind, Node, Project, ScriptTarget, SyntaxKind, ts } from "ts-morph";
 import { ExportEntry, type ExportKind } from "./Ledger.schema.ts";
 import type { ExportDeclaration, SourceFile } from "ts-morph";
 
@@ -264,24 +264,31 @@ export const scanUnsafeAssertions = (
   return A.flatMap(files, ([absolute, label]) => scanOne(project.addSourceFileAtPath(absolute), label));
 };
 
-// Import and export specifiers only (static, dynamic, side-effect, require and
-// vitest module mocks). A string that merely starts with the scope, such as a
-// service identity or an error message, is upstream text that S0 carries as is.
-const FOREIGN =
-  /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*|\bvi\.(?:mock|doMock|unmock|importActual|importMock)\s*\(\s*)["']@effected\/[^"']*["']/;
-const LAB_ALIAS = /^\s*(?:import|export)\b.*\bfrom\s+["']@beep\/scratchpad\/effected\/|\bimport\(\s*["']@beep\/scratchpad\/effected\//;
+const MODULE_MOCK =
+  /^\s*(?:await\s+)?vi\.(?:mock|doMock|unmock|importActual|importMock)\s*\(\s*["'](?:@effected\/|@beep\/scratchpad\/effected\/)/;
+
+const isForeignSpecifier = (specifier: string): boolean =>
+  Str.startsWith("@effected/")(specifier) || Str.startsWith("@beep/scratchpad/effected/")(specifier);
 
 /**
- * Lines that still name an `@effected/*` specifier, or import lab source
- * through the `@beep/scratchpad/effected/*` alias instead of a relative path
- * (D13; JSDoc example fences may use the alias), as `label:line`.
+ * Lines whose module specifier still names `@effected/*`, or reaches lab
+ * source through the `@beep/scratchpad/effected/*` alias instead of a relative
+ * path (D13), as `label:line`.
+ *
+ * **Details**
+ *
+ * Specifiers are read by the TypeScript pre-processor, so only real imports,
+ * exports, dynamic imports and `require` calls count, plus vitest module
+ * mocks at statement start. The same text inside a comment, a JSDoc example
+ * or a string (a service identity, an error message, test input) is upstream
+ * content that the verbatim copy carries as is.
  *
  * **Example** (Find foreign specifiers in text)
  *
  * ```ts
  * import { foreignSpecifierLines } from "@beep/scratchpad/effected/runner/Exports"
  *
- * console.log(foreignSpecifierLines("a.ts", 'import { x } from "@effected/glob";\nconst y = 1;')) // ["a.ts:1"]
+ * console.log(foreignSpecifierLines("a.ts", 'import { x } from "@effected/glob";\nconst y = "@effected/glob";')) // ["a.ts:1"]
  * ```
  *
  * @category parsing
@@ -290,13 +297,16 @@ const LAB_ALIAS = /^\s*(?:import|export)\b.*\bfrom\s+["']@beep\/scratchpad\/effe
 export const foreignSpecifierLines: {
   (text: string): (label: string) => ReadonlyArray<string>;
   (label: string, text: string): ReadonlyArray<string>;
-} = dual(
-  2,
-  (label: string, text: string): ReadonlyArray<string> =>
-    A.filterMap(Str.split("\n")(text), (line, index) =>
-      FOREIGN.test(line) || LAB_ALIAS.test(line) ? Result.succeed(`${label}:${index + 1}`) : Result.failVoid
-    )
-);
+} = dual(2, (label: string, text: string): ReadonlyArray<string> => {
+  const lineOf = (position: number): number => Str.split("\n")(Str.slice(0, position)(text)).length;
+  const imported = A.filterMap(ts.preProcessFile(text, true, true).importedFiles, (file) =>
+    isForeignSpecifier(file.fileName) ? Result.succeed(lineOf(file.pos)) : Result.failVoid
+  );
+  const mocked = A.filterMap(Str.split("\n")(text), (line, index) =>
+    MODULE_MOCK.test(line) ? Result.succeed(index + 1) : Result.failVoid
+  );
+  return A.map(A.dedupe(A.sort([...imported, ...mocked], Order.Number)), (line) => `${label}:${line}`);
+});
 
 /**
  * The exports map of each upstream kit package, by package name
