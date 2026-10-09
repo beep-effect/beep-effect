@@ -273,6 +273,9 @@ export const workflowJobContexts = Effect.fn("CiGovernance.workflowJobContexts")
  * prSizeLabelDiff(25, ["size/S", "size/L", "bug"]).remove // => ["size/S"]
  * ```
  *
+ * @param count - Number of changed files in the pull request.
+ * @param labels - Current label names, including unrelated labels to retain.
+ * @returns The target size label and the add/remove operations required to reconcile it.
  * @category utilities
  * @since 0.0.0
  */
@@ -295,6 +298,9 @@ export const prSizeLabelDiff = (count: number, labels: ReadonlyArray<string>) =>
  * heldGroupRunIds([], 0) // => []
  * ```
  *
+ * @param runs - Main Check runs ordered by their GitHub creation timestamps.
+ * @param nowMillis - Current Unix epoch time in milliseconds.
+ * @returns Waiting run identifiers whose pending successors indicate a held concurrency group.
  * @category diagnostics
  * @since 0.0.0
  */
@@ -330,6 +336,8 @@ export const heldGroupRunIds = (runs: ReadonlyArray<typeof HeldRun.Type>, nowMil
  * desktopEnvironmentApproved({ protection_rules: [] }) // => false
  * ```
  *
+ * @param environment - The decoded protection rules returned by GitHub.
+ * @returns Whether at least one required-reviewer rule contains a reviewer.
  * @category predicates
  * @since 0.0.0
  */
