@@ -1,0 +1,5 @@
+{"id":"metadata","format":"ttl"}
+{"id": "ipc-fixture", "format": "xml", "loadKind": "classification-scheme", "schemeKind": "ipc", "edition": "2026.01", "verified": true, "loadStatus": "VETTED", "path": "ipc.xml", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"}
+{"id": "cpc-fixture", "format": "xml", "loadKind": "classification-scheme", "schemeKind": "cpc", "edition": "2026.08", "verified": true, "loadStatus": "VETTED", "path": "cpc", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"}
+{"id": "nice-structure-fixture", "format": "xml", "loadKind": "classification-scheme", "schemeKind": "nice", "edition": "13-2026", "verified": true, "loadStatus": "VETTED", "path": "nice-structure.xml", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"}
+{"id": "nice-texts-fixture", "format": "xml", "loadKind": "classification-scheme", "schemeKind": "nice", "edition": "13-2026", "verified": true, "loadStatus": "VETTED", "path": "nice-texts.xml", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"}
