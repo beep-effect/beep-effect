@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`
+Status: `completed-retained`
 
 ## Phases
 
@@ -11,7 +11,7 @@ Status: `active`
 | P0 Research | complete | Reconcile the retired entity stack to EntityKit and effect-drizzle; measure both nullable encodings. | Required facts + blockers recorded. |
 | P1 Implement | complete | Add `deletedAt`/`deletedByPrincipal` to auditColumns; evidence the existing DomainModel retirement; demonstrate the `.errors.ts` convention. | `SPEC.md` acceptance criteria met. |
 | P2 Verify | complete | Run kernel package checks + tests + docgen; capture evidence. | Green or blockers documented. |
-| P3 Close | pending | PR, review response, closeout reflection, readiness. | Status/evidence updated; reflection exists. |
+| P3 Close | complete | PR, review response, closeout reflection, readiness. | Status/evidence updated; reflection exists. |
 
 ## P3 Closeout Checklist
 

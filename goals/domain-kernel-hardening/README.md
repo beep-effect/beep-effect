@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -42,21 +42,20 @@ in [`MAP.md`](../../explorations/domain-layer-hardening/MAP.md).
 
 ## Current Phase
 
-`P3 Close` — P2 qualification is complete on the fresh main-based branch.
-P0/P1 implementation is merged via #1577 and #1593. The amended run-order
-ruling keeps the P3 reflection and completion transition in the next wave;
-lifecycle remains active until that owner-command transition.
+`P3 Close` — complete. P0/P1/P2 merged via #1577, #1593 and #1599;
+this wave retains the packet with its reflection and owner-command completion
+transition. Implementation is merged; P3 publication readiness is recorded in
+the handoff separately from hosted merge readiness.
 
 ## Latest Evidence
 
-`history/handoffs/domain-kernel-2026-10-09.md` — fresh P2 default proofs pass for
-shared-domain, db-admin, professional-desktop and repo-cli. The six-server gate
-passes 492 tests (one skipped), coverage passes 120 tests with no uncovered
-entity units, and kernel/schema, migration drift, bundle codegen, test-tsgo,
-knowledge refs and Fallow pass. Dependent UI TS2589, Accounts schema-first
-findings and eight JSDoc ratchet metrics are reproduced inherited main reds,
-recorded separately under D27. Local docgen selects no package inputs for the
-packet-only wave; the kernel/schema docgen task passes in its package gate.
+[`history/reflections/2026-10-09-codex.md`](history/reflections/2026-10-09-codex.md)
+critiques tooling, implementation and the prompt, with owner follow-ups.
+[`history/handoffs/domain-kernel-2026-10-09.md`](history/handoffs/domain-kernel-2026-10-09.md)
+retains the P0-P3 receipts and proof limits: four default P2 package proofs,
+492 six-server tests (one skipped), 120 coverage tests with executable entity
+rows at 100%, migration drift and desktop bundle parity. P2 inherited UI,
+Accounts and JSDoc failures remain attributed under D27; no baseline waiver.
 P0 grounding remains at `research/p0-kernel-surface-2026-10-09.md`.
 
 ## Notes
