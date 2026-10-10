@@ -2360,6 +2360,24 @@ else exit 92; fi
       const repairRecords = yield* fs.readFileString(ledgerPath);
       expect(repairRecords).toContain('"repairStatus":"unsupported"');
       expect(repairRecords).toContain('"repairStatus":"unchanged"');
+      const retainedTikaPath = path.join(
+        attemptRoot,
+        "derived/attachment-repairs",
+        `${bytesToHex(sha256(Uint8Array.of(0x25, 0x50, 0x44, 0x46)))}.tika.txt`
+      );
+      yield* fs.writeFileString(retainedTikaPath, "");
+      const emptyEvidenceError = yield* RT.repairDetectedAttachment(
+        { absolutePath: mismatchedAttachment, relativePath: "Attachment-document.bin" },
+        "pdf",
+        attemptRoot,
+        "attempt-empty-evidence",
+        "object-empty-evidence",
+        options,
+        mailContext,
+        0,
+        100
+      ).pipe(Effect.flip);
+      expect(emptyEvidenceError.message).toContain("Retained attachment Tika evidence is empty");
       const zeroAttachment = path.join(attemptRoot, "Attachment-empty.bin");
       const emptyTika = path.join(root, "empty-tika");
       yield* fs.writeFile(zeroAttachment, new Uint8Array());

@@ -9,9 +9,10 @@ digests while retaining the originals.
 
 ## Next action
 
-P0 and P4 are complete. Hand the provenance summaries to pass-3
-identification and the practice-kg bundle; then record the P1-P2 ceilings in
-the decision log before the live mail slice.
+P1 is in-progress. Publish the engine fix for volatile Tika metadata on duplicate
+attachments. The separately authorized fresh slice is blocked on independent
+archive and transformation labels; request the orchestrator scope ruling for
+that contract, then use the recorded source and ceilings. Retain the original sealed failure. P2 and P3 remain pending.
 
 ## Launcher
 
@@ -37,6 +38,14 @@ ingestion v2, enrichment v2, and practice-kg bundle v2 remain gated MAP
 re-entry points. The solo-practice corpus kit remains deferred.
 
 ## Latest evidence
+
+2026-10-10 — Sealed P1 diagnosis attributes an attachment-reuse engine defect.
+Eleven repaired digests and 22 unsupported dispositions preceded a duplicate
+attachment. Two real Tika invocations exited 0 with unchanged extracted content
+and one differing parser-duration field. First-evidence reuse passes the new
+synthetic regression. The fresh family is authorized by run 4; acceptance is
+pending. See `history/p1/2026-10-10-engine-failure-diagnosis.md`.
+
 
 2026-10-06 — P0 resumed and P4 opened (lane E, corpus provenance completion).
 The 2026-08-27 archive run had stalled at a 90.25 GB root-archive partial;

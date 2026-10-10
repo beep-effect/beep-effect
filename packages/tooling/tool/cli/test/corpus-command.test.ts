@@ -4168,6 +4168,33 @@ awk 'BEGIN { for (i = 0; i < 6000; i++) printf "é" }'
   );
 
   it.effect(
+    "reuses the first Tika evidence for duplicate attachments with volatile parser metadata",
+    Effect.fnUntraced(function* () {
+      const path = yield* Path.Path;
+      const fixture = yield* makeMailRestorationFixture(
+        duplicateAttachmentPffexportStub,
+        "#!/bin/sh\ncat /proc/sys/kernel/random/uuid\n"
+      );
+      const summary = yield* restoreMail(mailRestorationOptions(fixture));
+      const { records } = yield* readTransformationLedgerFixture(
+        path.join(fixture.corpusRoot, "staging/restoration/runs/synthetic-mail-restoration/ledgers/mail/slice.jsonl")
+      );
+      const repairs = A.filter(
+        records,
+        (record) => record.recordType === "attachment-type-repair" && record.repairStatus === "repaired"
+      );
+      const textChildren = A.filter(
+        records,
+        (record) => record.recordType === "mail-child-pass" && Str.endsWith(".tika.txt")(record.childRelativePath)
+      );
+      expect(summary.passCount).toBe(1);
+      expect(summary.unapprovedCount).toBe(0);
+      expect(repairs).toHaveLength(2);
+      expect(textChildren).toHaveLength(1);
+    })
+  );
+
+  it.effect(
     "resumes one durably started mail attempt and a pending summary without resetting the family clock",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;

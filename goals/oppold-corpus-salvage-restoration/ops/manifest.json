@@ -5,12 +5,12 @@
     "title": "Oppold Corpus Salvage Restoration",
     "status": "active",
     "created": "2026-08-24",
-    "updated": "2026-10-06",
+    "updated": "2026-10-10",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/oppold-corpus-salvage-restoration",
   "lifecycle": "active",
-  "statusNote": "2026-10-06 lane E (corpus provenance completion): the Aug-27 P0 archive run stalled at a 90.25 GB root-archive partial when its writer died; resumed 2026-10-06 under re-measured denominators after the operator deliberately deleted 1,818 noise files from the T7 (new inherited-loss class). P4 adds the normalized mail header index, the attachment clipped-extension repair with undo journal, and the exiftool metadata census as repo tooling (`beep corpus provenance`).",
+  "statusNote": "2026-10-10: P1 sealed an engine-failure on duplicate attachment Tika metadata. Run-4 diagnosis attributes an engine defect; the fix and a fresh family are authorized. P1 stays in-progress until fresh acceptance passes. P0 and P4 complete; P2 and P3 pending.",
   "mission": "Preserve and verify the current T7 salvage state, then restore mail, reconcile all three recycle volumes, and convert distinct legacy-Word digests with originals retained.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -53,7 +53,7 @@
     {
       "id": "P1",
       "name": "Mail vertical slice",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

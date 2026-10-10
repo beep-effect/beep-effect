@@ -932,17 +932,30 @@ const repairDetectedAttachment = Effect.fn("CorpusRestoration.repairDetectedAtta
     context,
     attemptOutputCeiling
   );
-  const tikaText = yield* extractAttachmentText(
-    derivedPath,
-    attemptId,
-    options,
-    context,
-    attemptStartedAt,
-    attemptRoot,
-    attemptOutputCeiling
-  );
+  const fs = yield* FileSystem.FileSystem;
   const tikaRelativePath = path.join("derived", "attachment-repairs", `${digest.sha256}.tika.txt`);
-  yield* persistAttachmentText(attemptRoot, tikaRelativePath, tikaText, context, attemptOutputCeiling);
+  const tikaPath = path.join(attemptRoot, tikaRelativePath);
+  const textExists = yield* fs
+    .exists(tikaPath)
+    .pipe(CorpusCommandError.mapError("Failed checking retained attachment Tika evidence."));
+  if (textExists) {
+    yield* requireCanonicalContainedPath(attemptRoot, tikaPath);
+    const retainedText = yield* hashRestorationFileStreaming(tikaPath, 1024 * 1024);
+    if (retainedText.sizeBytes <= 0) {
+      return yield* transformationError("Retained attachment Tika evidence is empty.");
+    }
+  } else {
+    const tikaText = yield* extractAttachmentText(
+      derivedPath,
+      attemptId,
+      options,
+      context,
+      attemptStartedAt,
+      attemptRoot,
+      attemptOutputCeiling
+    );
+    yield* persistAttachmentText(attemptRoot, tikaRelativePath, tikaText, context, attemptOutputCeiling);
+  }
   const derivedDigest = yield* hashRestorationFileStreaming(derivedPath, 1024 * 1024);
   if (derivedDigest.sizeBytes <= 0) {
     return yield* transformationError(`Attachment repair produced an empty derived file for attempt ${attemptId}.`);

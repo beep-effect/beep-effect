@@ -89,6 +89,17 @@ independent verification 11,451/11,451.
 **Exit:** zero unaccounted children and approved amplification. Otherwise stop;
 do not expand to the estate.
 
+**Progress 2026-10-10:** the first slice sealed an unapproved engine failure.
+Diagnosis attributes repeated Tika extraction of duplicate attachment digests:
+parser-duration metadata changes between invocations. Run 4 authorizes a fix and
+one fresh slice after its PR is content-final. Fresh run-root label:
+`t7-salvage-2026-08-10-p1-engine-fix`, under the same corpus restoration runs
+parent, with `ledgers/mail/slice.jsonl`, `output/mail/slice/`, and `writer-claims/`.
+The original run is retained; P1 remains in-progress until fresh acceptance.
+Launch is blocked on a separate archive/output-label contract: the public command
+currently uses one label for both and cannot create the authorized fresh family.
+
+
 ## P2 — Transformation wave
 
 Run the remaining work in this order:

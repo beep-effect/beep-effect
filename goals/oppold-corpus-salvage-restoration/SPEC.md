@@ -502,3 +502,28 @@ check transitions and acknowledged the three deployment rate-limit failures, the
 stopped that local monitor at the run-2 handoff boundary. The final-file gate takes
 over under S11; no hosted-green or merge-ready verdict is claimed. This avoids an
 unowned running job after worker exit. Reversal: resubmit the same bounded monitor.
+
+### 2026-10-10: first Tika evidence per attachment digest
+
+The sealed P1 engine failure is attributed to repeated Tika extraction of an
+identical attachment: its parser-duration JSON metadata varies between runs.
+The runner now reuses the first successful, nonempty, canonically contained Tika
+child for that digest within the same attempt. Repair-copy digest checks, final
+child hashes, budgets, and acceptance still apply. The diagnostic and synthetic
+regression are recorded in `history/p1/2026-10-10-engine-failure-diagnosis.md`.
+
+The run-4 orchestrator ruling authorizes a fresh slice family after the engine-fix
+PR is content-final, using the same source object and ceilings. The reserved fresh output
+label is `t7-salvage-2026-08-10-p1-engine-fix`. Launch is blocked: the current
+public command couples archive selection and transformation output to one
+`runLabel`. A new label selects an absent archive; the old label reaches the
+sealed ledger. A separate preservation/output identity contract requires an
+orchestrator scope ruling; no fresh flag or archive alias is added here. The original run and freeze
+record are retained unchanged. A separate fresh freeze record identifies the
+fixed code and launch script. P1 stays in-progress until fresh acceptance passes.
+Reversal: close the PR, revert the fix, and retain both run directories.
+
+Release notes without changesets: `@beep/repo-cli` is private and ignored by the
+release configuration. This correctness fix changes no public schema or API and
+would require no major release; #1566 and the standing private-workspace ruling
+require no changeset. Reverse by reverting the implementation and this decision.

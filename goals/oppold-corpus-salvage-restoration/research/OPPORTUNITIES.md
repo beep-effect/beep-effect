@@ -344,3 +344,36 @@ the unpushed commit before retrying.` The run-2 ruling authorizes direct push an
 PR creation with the heavy label, Yeet ready, and a bounded readiness monitor.
 No inventory baseline or unrelated source is changed. Attribution-aware publication
 that accepts an explicit inherited-fence receipt would prevent repeated worker stops.
+
+### 2026-10-10: duplicate attachments repeat volatile Tika metadata
+
+- Work: diagnose the sealed P1 `engine-failure` without changing its ledger.
+- Evidence: 33 dispositions, 11 copies and 11 text children; the next attachment
+  repeats a repaired digest. Two exact-sandbox invocations exited 0, differed in
+  one parser-duration field, and retained identical extracted content. A synthetic
+  duplicate fixture with varying parser output fails before the fix and passes
+  after first-evidence reuse.
+- Prevention: content-addressed extraction should retain the first successful
+  result per digest; a duplicate fixture must include volatile parser metadata
+  rather than only fixed stub text. Preserve the first evidence, validate
+  containment and nonempty bytes, and hash its final child normally.
+- Attribution: engine defect; no source corruption or sandbox failure established.
+- Reversal: revert the engine-fix PR and retain both run trees. The original
+  sealed failure remains immutable; only the orchestrator authorizes a fresh family.
+
+### 2026-10-10: fresh-family authority has no independent output label
+
+- Work: prepare the run-4 authorized fresh ledger while retaining the sealed run.
+- Evidence: `prepareTransformationRun` passes the same `runLabel` into archive
+  verification and preservation selection, and joins it into the transformation
+  run root. The public `restore-mail` command has no independent transformation
+  label. A new label selects an absent preservation archive; the original label
+  selects a terminal immutable ledger.
+- Prevention: model preservation identity separately from transformation-family
+  identity before offering a fresh-family recovery route. Test both families
+  against one sealed archive while preserving the first terminal ledger.
+- Disposition: publish the proven engine fix; stop the fresh launch without a new
+  flag, archive alias, or hand-authored run state. The brief reserves expansion
+  beyond the bounded fix for the orchestrator.
+- Reversal: no live state was added. A scoped contract ruling can authorize the
+  separate label and its schema/command/reconciliation tests.
