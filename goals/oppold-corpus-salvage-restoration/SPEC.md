@@ -187,7 +187,7 @@ P1 writes under the run root in this location inventory:
       and atomic attempt promotion reconcile to zero unaccounted children.
 - [ ] Attachment byte signatures drive type repair and second-pass
       extraction.
-- [ ] Synthetic fixtures cover corrupt, password, and codepage lanes without
+- [x] Synthetic fixtures cover corrupt, password, and codepage lanes without
       corpus content.
 - [ ] Measured disk/time amplification stays within the approved expansion
       ceiling.
@@ -502,3 +502,38 @@ check transitions and acknowledged the three deployment rate-limit failures, the
 stopped that local monitor at the run-2 handoff boundary. The final-file gate takes
 over under S11; no hosted-green or merge-ready verdict is claimed. This avoids an
 unowned running job after worker exit. Reversal: resubmit the same bounded monitor.
+
+
+### 2026-10-09: P1 live slice sealed with an unapproved engine failure
+
+PR1 #1596 merged the two probe-proven fixes before the immutable start. The fresh
+prerequisites passed, and the frozen manifest records the exact invocation, engine
+versions, code head, script digest, and policy digest. The slice ran once and exited 1:
+zero store passes, one unapproved `engine-failure` exception, zero warning rows,
+33 attachment dispositions (11 repaired, 22 unsupported, zero unchanged), and zero
+terminal child rows. Its final row is `family-acceptance-failure`, with expected and
+terminal count one and unapproved count one. Completed child reconciliation and
+repair/Tika child acceptance are unproven; leave those boxes unticked.
+
+The selected input was 56,140,800 bytes; retained output and family disk usage were
+115,418,004 bytes, or 2.055866749x. Family elapsed was 350,398 ms; re-verification was
+282,677 ms, and queue wait approximately 204 ms. No PASS attempt duration exists;
+the attempt-start to exception interval was 349,607 ms. Retained disk and family time
+are below the frozen ceilings, but do not establish a passing slice. Free bytes were
+440,721,391,616 immediately before launch and 442,226,008,064 after it.
+
+The four fresh synthetic exception/accounting/resume tests passed. Only that P1 box
+is supported. P1 remains in-progress; P0/P4 complete, P2/P3 pending, lifecycle active.
+Do not retry a sealed family or change the selection. Any fresh-ledger route belongs
+to the orchestrator. Reversal: the R7 whole-run removal authority remains with the
+orchestrator; this lane retains all output and ledger evidence without mutation.
+Ledger SHA-256: `efb4b558c2d1680f87a684a69d6aa021653234d12928aa9f27a6943de8970e9f`.
+
+### 2026-10-09: publish the sealed-failure evidence under the inherited fence
+
+The docs-only evidence wave passed fourteen of sixteen cheap gates. Schema-first
+and Effect-Vitest inventory findings are inherited in surfaces matching main;
+no package source changed. Apply the brief's inherited publication-fence ruling:
+direct push and PR creation with the heavy label, Yeet ready, and bounded monitoring.
+The orchestrator owns consolidated reds under S11. Reversal: close the evidence
+PR, retaining the immutable failed run and its frozen manifest.

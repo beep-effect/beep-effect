@@ -314,3 +314,134 @@ hosted-parity: test-tsgo: pass | docgen local: pass | jsdoc-ratchet: pass | know
 handoff: goals/oppold-corpus-salvage-restoration/history/handoffs/corpus-restore-2026-10-09.md
 open items: Orchestrator owns PR1 gate/merge and inherited hosted reds; hosted readiness pending, no unresolved review threads at handoff. Required bounded monitor observed transitions then was cancelled and acknowledged for final-file monitoring transfer; reverse by resubmitting it. Do not write the frozen run manifest or launch the slice until the orchestrator reports PR1 MERGED. P1 remains pending. Decisions retain budget-bound Tika capture, portable engine-name escape preserving MIME names, ratio 4, attempt 7,200,000 ms, total 43,200,000 ms, total output 2,147,483,648 bytes, 100 GB free floor, R6 freeze record, R7 output authority, and private-workspace release notes under #1566; reverse fixes/docs before launch by reverting commits. Run-2 authorizes inherited-fence fallback; reverse by closing unmerged PR. All own units ended.
 final 041fc523031dd3ed57b4636cf339975feb8871ae #1596
+
+## Run 3 — PR1 merged; frozen live slice
+
+PR1 #1596 is MERGED, merge commit `320cedc0518a187a214ca49defc98d540dc440d1`.
+Both bounded implementation files last changed on main at that commit; the owned
+Corpus/libpff trees have no diff against main. Lane merged main to
+`a842f07837fdf6d52357a43e79ebeeed36f849f8` and switched to the evidence branch.
+Dependencies remain installed; the merge changed no lockfile. Adoption has zero
+conflicts; doctor remains zero new/inherited blocking and three unrelated advisories.
+The completed probe and full PR1 package/parity proofs above are retained.
+
+| Prerequisite | State | Re-measurement |
+| --- | --- | --- |
+| 3a P0 | met | P0 complete; expected seal matched; directory-pass 755, file-pass 10,696, inherited-loss 4, preflight 1, seal 1 |
+| 3b selection | met | PST 53; eligible 23; input 56,140,800 bytes; selected object and source digest unchanged |
+| 3c state | met | No slice ledger; no earlier start stamp or live invocation |
+| 3d engines | met | pffexport 20260917; bubblewrap 0.13.0; OpenJDK 27 (2026-09-15); both nested sandbox smokes exit 0; Java resolution and Tika digest unchanged |
+| 3e capacity | met | 440,530,395,136 free bytes; above 100 GB floor |
+| 3f synthetic exceptions | met | Fresh focused suite: four passed, 71 skipped; 6.25 seconds |
+| 3g main source | met | Both bounded fixes merged at PR1 merge SHA; zero owned source diff against main |
+| 3h capture | met | Retained probe: 59 runs, 43 above old bound, zero nonzero/empty; merged budget-bound fix |
+| 3i names | met | Retained probe: one backslash file, zero directories/collisions/existing escape names; merged name fix |
+
+Frozen ceilings remain ratio 4, attempt 7,200,000 ms, family 43,200,000 ms,
+output 2,147,483,648 bytes, free floor 100,000,000,000 bytes. Derivation above is unchanged.
+Launch script syntax passes; SHA-256
+`641fcd4ab9a2bc0857ff7f90a547575974150b929ea542015bf193ea18a04ea9`.
+Run manifest: `history/evidence/p1-slice-run-manifest.json`; code head as above,
+engine versions remeasured, policy digest pending the tool's first start row.
+No code will change while the slice is running. Reversal authority remains R7:
+the orchestrator may remove the complete additive run; this lane never removes it.
+
+- Live launch n=1 submitted at `2026-10-10T00:06:17Z`; free bytes immediately before launch 440721391616. Unit `beep-heavy-corpus-restore-p1-1.service`.
+
+- Archive re-verification finished; first family start at `2026-10-10T00:10:59.881Z`.
+  Re-verification phase duration 282677 ms. Attempt n=1 is active.
+  Frozen policy SHA-256 `2bc3fc673c343ef6008b9b3bb1c85e000ac59239d345f3e50d4d08aaf6a5a2c8` equals the exact invocation contract;
+  recorded once in the run manifest. The manifest is now immutable.
+
+### Run-3 sealed failure aggregates
+
+- Unit `beep-heavy-corpus-restore-p1-1.service` ended; result 1. No interruption or retry.
+- Queue phase approximately 204 ms (submission timestamp precision one second).
+  Archive re-verification 282,677 ms; verification completion count one.
+- Attempt `mail:011b25c2d38deca005ce17dd:r0`; retry ordinal zero.
+  Attempt-start to exception interval 349607 ms; no PASS elapsedMillis exists.
+  Family elapsed 350,398 ms; total from script start to seal 633,079 ms.
+- Record counts: attachment-type-repair 33; family-run-start 1; family-attempt-start 1;
+  mail-store-exception 1; family-run-summary 1; family-acceptance-failure 1.
+  mail-store-pass 0; mail-warning 0; mail-child-pass 0; interruptions 0.
+- Source objectId `da19981ddcd62e532156584b7d8ef06762122f1cffc3f032ac36436d5492fdae`;
+  input 56,140,800 bytes; retained output 115,418,004 bytes; family du bytes 115,418,004.
+  Retained disk amplification 2.055866749x; below ratio 4 and total output ceiling.
+  There is no accepted disk/time amplification or completed child reconciliation.
+- Exception class `engine-failure`, approved false; passCount 0, exceptionCount 1,
+  terminalCount 1, expectedCount 1, unapprovedCount 1. Last row family-acceptance-failure.
+- Repairs: repaired 11; unsupported 22; unchanged 0; distinct repaired digests 11.
+  Final engine children 0; final derived copy/Tika children 0; other children 0.
+  The repair acceptance box remains unticked because terminal child evidence is absent.
+- Private live-log line count 4; verification-summary count 1. No log or exception
+  message was read or copied. Free bytes immediately before launch 440,721,391,616;
+  after run 442,226,008,064 (other machine writes/deletions can affect this measurement).
+- Ledger SHA-256 `efb4b558c2d1680f87a684a69d6aa021653234d12928aa9f27a6943de8970e9f`.
+  Output-tree SHA-256 `58b8190d63b6f77c2f33e903a036427289405faed382e6ff5bd274155304988b`.
+- Stop: immutable sealed failure. Do not relaunch, change flags, pick another source,
+  or mutate any run artifact. P1 becomes in-progress; only the synthetic exception
+  checkbox is supported. P0/P4 complete, P2/P3 pending, lifecycle active.
+  Reversal remains an orchestrator decision under R7; the lane retains all evidence.
+
+- Failure packet verification: GOAL character budget, manifest parse, required packet
+  reference scan, diff whitespace, and new-evidence hygiene pass. Doctor unchanged:
+  zero new/inherited blocking, three unrelated advisories. Index check passes.
+- PR2 changes packet material only. Package-verify and code hosted-parity lanes are
+  not run for PR2 (docs-only: no package source changed); PR1 full package and parity
+  proof is retained above. The required packet knowledge-reference check is running.
+- Final pre-publication fetch/merge: already up to date. Live unit inactive; all
+  run artifacts retained, launch script and manifest digests unchanged.
+
+### Run-3 inherited publication fence
+
+- Packet knowledge refs passes: 45,529 observations, zero live gated.
+- Canonical publication committed `5fd397161d`, then refused before push:
+  `github-checks:cheap-gates: failed 2 step(s)`; `lint:schema-first: exit 1`;
+  `lint:effect-vitest: exit 1`; `yeet publish cheap-gates failed after creating
+  the local commit; nothing was pushed. Fix the gate, then amend or reset the
+  unpushed commit before retrying.` Fourteen of sixteen cheap gates passed,
+  including committed JSDoc ratchet, Knip and Fallow audit/dead-code/health.
+- Schema findings are the two Accounts candidates and three test advisories.
+  Main advanced during the proof; merged it to `461a33c7dd910187d436154f8fe9e721fe1e4a2d`.
+  All package/app source and the schema inventory now match main; zero lane
+  diff in every finding surface. No lockfile change; no reinstall needed.
+- Effect-Vitest's one new-to-inventory finding is in the inherited
+  PracticeKg projections test. A fresh isolated gate reproduces it; the file
+  matches main. It is not a corpus lane regression. No baseline changed.
+- The inherited-fence ruling authorizes direct push and PR creation, Yeet
+  ready, and bounded monitor. The orchestrator owns those inherited reds under
+  S11. Reversal: close the evidence PR; retain immutable live artifacts.
+  The root cheap-gate inbox was acknowledged with the ownership attribution.
+
+### Run-3 publication closeout
+
+- PR2 #1600 OPEN and ready for review, with ready-for-heavy. Initial pushed/API
+  head 2f2dca9dad3893a7f310fb8e73b69d5b6d5bbd01 matched. Yeet ready passed.
+- Published-head packet knowledge check passed: 45,530 observations, zero live gated.
+  Three Vercel deployment build-rate-limit rows acknowledged as environment-only.
+  Latest complete thread read: zero unresolved, no pagination remaining.
+- The required forty-minute bounded readiness monitor was submitted and observed
+  hosted transitions. It was cancelled and terminal status acknowledged at this
+  sealed-failure handoff boundary; no merge-ready/hosted-green verdict is claimed.
+  The first stop attempt lacked the standard user-bus exports; the corrected
+  command stopped the actual unit. No own proof, monitor, or live unit remains.
+  Orchestrator owns further hosted monitoring and the fresh-ledger decision.
+  Reversal of monitoring transfer: resubmit the same bounded readiness monitor.
+- Final main merge incorporated #1597 at main 7061685922; owned Corpus/libpff
+  sources and lockfile unchanged. Report snapshot head below includes that merge.
+  Subsequent commit adds only this closeout/report receipt; the terminal worker
+  report names its pushed head. Frozen script, manifest, and ledger are unchanged.
+- Historical PR1 final-file line: 1596 32b860f538 2026-10-09T23:42:33Z PR1 pre-run fix.
+  Merge outcome: #1596 MERGED at 320cedc0518a187a214ca49defc98d540dc440d1.
+- Graft retrieval saved approximately 120,779 tokens in one call.
+
+### Run-3 final report — verified evidence snapshot
+
+lane: corpus-restore
+head: 8c34937f0f6800696b4efe1d5ed2230bb68645c3 (exact evidence snapshot; subsequent commit adds only this handoff closeout/report)
+PR(s): #1596 MERGED (PR1 fixes); #1600 OPEN, ready for review (PR2 sealed-failure evidence)
+package-verify: @beep/repo-cli: pass; @beep/libpff: pass (retained PR1 full proof; no package source changed in PR2)
+hosted-parity: test-tsgo: not run (docs-only: no package source changed) | docgen local: not run (docs-only: no package source changed) | jsdoc-ratchet: not run as separate parity lane (docs-only; committed cheap gate passes) | knowledge refs: pass, published-head zero live gated | fallow audit+health: pass in cheap gates | scoped coverage: not run (docs-only: no package source changed); PR1 full parity and coverage pass, retained above
+handoff: goals/oppold-corpus-salvage-restoration/history/handoffs/corpus-restore-2026-10-09.md
+open items: One live slice sealed family-acceptance-failure with one unapproved engine-failure, zero store passes, zero warnings and zero terminal child rows; P1 in-progress, P0/P4 complete, P2/P3 pending, lifecycle active. Input 56,140,800 bytes, retained output 115,418,004 bytes (2.055866749x), family 350,398 ms, archive re-verification 282,677 ms; 11 repaired and 22 unsupported dispositions. No accepted child reconciliation or precise underlying cause claimed. Ledger SHA-256 efb4b558c2d1680f87a684a69d6aa021653234d12928aa9f27a6943de8970e9f. Orchestrator owns any diagnostic/fresh-ledger route and inherited schema/Effect-Vitest burn-down; no retry or artifact mutation. Frozen ratio 4, attempt 7,200,000 ms, family 43,200,000 ms, output 2,147,483,648 bytes and 100 GB floor retained; whole-run reversal belongs to orchestrator under R7. PR2 published through the inherited-fence fallback; reverse by closing the PR while retaining artifacts. Monitor stopped and acknowledged for handoff; reverse by resubmitting the bounded monitor. Hosted checks pending; zero unresolved threads at last complete read. All own units ended.
+blocked: P1 slice is immutably sealed with one unapproved engine-failure; orchestrator decision required for any fresh-ledger route.
