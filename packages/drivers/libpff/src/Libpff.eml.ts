@@ -79,7 +79,8 @@ export const PFFEXPORT_EML_FILE_NAME = "Message.eml";
 
 const sanitizeHeaderValue = (value: string): string => Str.trim(Str.replace(headerValueUnsafePattern, " ")(value));
 
-const sanitizeQuotedValue = (value: string): string => Str.replace(quotePattern, "'")(sanitizeHeaderValue(value));
+const sanitizeQuotedValue = (value: string): string =>
+  Str.replaceAll("\\", "\\\\")(Str.replace(quotePattern, "'")(sanitizeHeaderValue(value)));
 
 const foldBase64Lines = (encoded: string): string => {
   const lines: Array<string> = [];
