@@ -39,7 +39,11 @@ P1 implementation is done; P0 and P2 remain in progress. Route A consumes the
 existing certificate registration. The orchestrator adds the attorney-only RBAC
 contacts grant after PR 1 merges. All three edited-package verifications and test
 typechecks pass. Driver docgen and knowledge references pass; identity-dependent
-infra docgen has an attributed inherited third-party failure under S11. JSDoc ratchet, fallow and scoped coverage also pass. Publication is next. No live mailbox call or write has run.
+infra docgen has an attributed inherited third-party failure under S11. JSDoc
+ratchet, fallow and scoped coverage passed before publication. PR 1 #1591 has
+merged; follow-up #1595 repairs manifest ordering and contacts JSON schema
+hoisting found by hosted checks. The scoped grant handback remains pending.
+No live mailbox call or write has run.
 
 ## Latest Evidence
 

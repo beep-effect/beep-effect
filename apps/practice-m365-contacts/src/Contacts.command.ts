@@ -14,6 +14,8 @@ import { ContactInputs, ContactsError } from "./Contacts.schemas.ts";
 import { ContactSeeding, contactSeedingLayer } from "./Contacts.service.ts";
 import { ContactsStateLive } from "./Contacts.state.ts";
 
+const CountsReportJson = S.fromJsonString(S.Unknown);
+
 const inputFlags = { csv: Flag.String("csv").pipe(Flag.atLeast(0)), vcf: Flag.String("vcf").pipe(Flag.atLeast(0)) };
 const yes = Flag.Boolean("yes").pipe(Flag.withDefault(false));
 const privateConfigFailure = () => ContactsError.make({ reason: "input" });
@@ -32,7 +34,7 @@ const liveMailbox = Layer.unwrap(
   }).pipe(Effect.mapError(privateConfigFailure))
 );
 
-const print = (value: unknown) => S.encodeEffect(S.fromJsonString(S.Unknown))(value).pipe(Effect.flatMap(Console.log));
+const print = (value: unknown) => S.encodeEffect(CountsReportJson)(value).pipe(Effect.flatMap(Console.log));
 
 /** Build the contact CLI; mailbox selection comes exclusively from the env file.
  * **Example** (Build a CLI)
