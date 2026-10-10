@@ -79,3 +79,25 @@ Unit tests stay outside `test/integration`; package integration tests live under
 ## License
 
 MIT
+
+## Versioned docketing and party-role vocabulary
+
+`VocabularyRegistry` loads the committed `docketing`, `party-kinds` and
+`legal-roles` schemes at version `1.0.0`. The seeds contain 25, 6 and 11
+concepts, respectively. TTL, JSON-LD and TS data share stable IRIs; party
+holders and contextual roles share no concept or hierarchy edge.
+
+```ts
+import { VocabularyRegistry } from "@beep/ontology/VocabularyRegistry"
+import * as Effect from "effect/Effect"
+
+const lookup = VocabularyRegistry.use((registry) =>
+  registry.resolve({ kind: "docketing", version: "1.0.0" }, "StatementOfUseDeadline")
+).pipe(Effect.provide(VocabularyRegistry.layer))
+```
+
+Missing versions and unknown notations return `VocabularyError`. Definitions
+are descriptive; consumers own jurisdiction, authority evidence, date
+computation, entities and role assignments. See the goal's
+`research/2026-10-09-m3-vocabulary-contract.md` for the frozen IRI table and
+deprecation rule.

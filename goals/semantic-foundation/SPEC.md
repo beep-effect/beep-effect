@@ -147,7 +147,7 @@ qualified coverage, package audit/docgen and the complete real-edition/M1 table.
 ### M3 acceptance (2026-10-09)
 
 - [ ] Docketing, party-kind and legal-role seeds have TTL/JSON-LD/TS parity.
-- [ ] Every IRI uses the repository authority; party kinds and roles remain disjoint.
+- [ ] Every IRI uses the repository authority; party-kind and role scheme identities remain separate.
 - [ ] Replayable CQ 1/5/7/8/18 fixtures resolve versioned concept IRIs.
 - [ ] Frozen vocabulary contract and read-only trademark packet spawn seed are retained.
 
@@ -165,7 +165,7 @@ qualified coverage, package audit/docgen and the complete real-edition/M1 table.
 | M2 lookup tests | Pinned hierarchy and CQ 9/10 fixtures | Green |
 | Real-manifest decode (R3) | Shared decoder test reads the asset-pack manifest without vendor bytes | Zero parse errors; alignment and classification routes asserted |
 | M2 real-artifact proof | Handoff table from beep-heavy runtime proof | All schemes and M1 regression pass |
-| M3 separation and CQs | Seed parity, disjoint kinds/roles and CQ 1/5/7/8/18 fixtures | Green |
+| M3 separation and CQs | Seed parity, separate kinds/roles and CQ 1/5/7/8/18 fixtures | Green |
 | Reflection closeout | `bun run beep lint reflection-artifacts` | Green before completion |
 
 ## Stop Conditions
@@ -239,3 +239,17 @@ qualified coverage, package audit/docgen and the complete real-edition/M1 table.
 | Date | Decision | Reason | How to reverse |
 | --- | --- | --- | --- |
 | 2026-10-09 | Refresh the lane-created ClassificationXml.ts R4 row to lines 97.52, statements 97.74, branches 96.29, functions 95.89 from the sanctioned writer. | The cardinality/range fixture suite covers 90 tests; the new file retains 3 uncovered lines/statements/functions and 1 branch. Existing main rows and aggregate floors remain unchanged. | Delete this new-file row when zero uncovered units are reached. |
+
+## M3 decisions — 2026-10-09
+
+| Decision | Reason / evidence | Reversal |
+| --- | --- | --- |
+| Three separate schemes at explicit version 1.0.0, with stable concept IRIs; no latest. | CQ fixtures and serialization parity preserve reproducibility. | Deprecate released IRIs; new semantics use new IRIs/version. Before merge revert the three seed/registry modules together. |
+| Open, extended, final and missed are evidence-backed descriptors, not exclusive intrinsic phases; Section15 is elective. | Independent category and adversarial reviews identified optional targets and overlapping statuses. | Publish revised labels/definitions under a new explicit version; never repoint an IRI. |
+| Party identity is separate from roles, with institutional rigidity and historical-role caveats. | Six holder labels and eleven contextual role terms are SKOS concepts, not OWL entity classes. | Deprecate any unsuitable institutional label; consumers retain identity/role records, which this packet does not create. |
+| Public source notes distinguish procedural context from repository definitions; external mappings stay empty. | No vetted M3 manifest correspondence; label matching is not evidence. | Add only independently vetted exactMatch/closeMatch metadata in a later explicit version. |
+| Private ontology receives release notes, no changeset, per #1566 and standing ruling. | New versioned vocabulary is additive; it would not require a major bump. Earlier VendorLoadKind widening would be major if published. | Remove new APIs/seeds before merge, or deprecate/version afterward; revert loader widening with classification manifest rows. |
+
+The [M3 contract](./research/2026-10-09-m3-vocabulary-contract.md) freezes
+all 42 concept IRIs and records the prose PROV assignment pattern. The
+bootstrap plan is retained without creating the downstream packet.

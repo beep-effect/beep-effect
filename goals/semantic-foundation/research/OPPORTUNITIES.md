@@ -343,3 +343,15 @@ blocker was attributed; its partial full-docgen replay is not a green proof.
   Fallow audit now reports zero introduced findings.
 - **Prevention:** include the Effect-Vitest and Fallow audit in bounded package
   handoff evidence; package audit/docgen alone does not cover these root gates.
+
+### 2026-10-09 M3 Effect helper naming
+
+The first M3 coverage run passed 96 tests but one new separation assertion failed: `isEmpty is not a function`. Effect v4 Array exports `isArrayEmpty`; fixed the assertion after reading the reference API. A typecheck before execution would have caught this test-only mistake. No reader or registry failure.
+
+### 2026-10-09 inherited wave-1 publication fence
+
+Yeet retry passed every gate except schema-first inventory findings in untouched AccountsSecretsLayout.schemas.ts plus pre-existing test advisories. Effect-Vitest and Fallow repairs passed. Acknowledged the composite inbox as inherited and used the standing orchestrator fallback to push M2 and open draft #1598, labelled ready-for-heavy. Vercel deployment URLs report build-rate-limit; acknowledged environment-only, no upgrade.
+
+### 2026-10-09 M3 package audit catches test-only Effect diagnostics
+
+Package audit rejected synchronous schema encoding in the TTL parity helper, nonfinite CQ numbers and a void property predicate. Replaced them with encode/decode Effects, Finite and a boolean property result. The dedicated test-tsgo command had passed while package audit emitted stricter diagnostics; retain both proofs.

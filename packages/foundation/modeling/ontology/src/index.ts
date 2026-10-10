@@ -79,3 +79,6 @@ export * from "./TaxonomyLoader.ts";
  * @since 0.0.0
  */
 export * from "./TaxonomyRegistry.ts";
+export * from "./Vocabulary.models.ts";
+export * from "./Vocabulary.seed.ts";
+export * from "./VocabularyRegistry.ts";
