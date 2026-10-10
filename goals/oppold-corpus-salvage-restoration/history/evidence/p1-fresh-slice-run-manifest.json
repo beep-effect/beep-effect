@@ -24,6 +24,6 @@
     "tikaJar": "~/.local/share/tika/tika-app-3.3.1.jar",
     "tikaJarSha256": "0e8ee9795ac4244feab466f4a5a9c3b94675af392848243842cb6e1e69d27103"
   },
-  "policySha256": null,
+  "policySha256": "2bc3fc673c343ef6008b9b3bb1c85e000ac59239d345f3e50d4d08aaf6a5a2c8",
   "preservationLabel": "t7-salvage-2026-08-10"
 }

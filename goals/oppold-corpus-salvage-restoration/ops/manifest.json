@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/oppold-corpus-salvage-restoration",
   "lifecycle": "active",
-  "statusNote": "2026-10-10: P1 sealed an engine-failure on duplicate attachment Tika metadata. Run-4 diagnosis attributes an engine defect; run 5 authorizes an independent preservation selector and a date-stamped fresh family after content-final PR3. P1 stays in-progress until fresh acceptance passes. P0 and P4 complete; P2 and P3 pending.",
+  "statusNote": "2026-10-10: P1 fresh slice accepted one store, 3339 accounted children, zero unapproved rows and warnings; disk/time ceilings hold. Original sealed failure retained unchanged. PR4 carries aggregate evidence and packet flips after merged PR3 #1606. P0/P1/P4 complete; P2/P3 pending and outside this lane; lifecycle stays active awaiting orchestrator expansion and P2 ceilings.",
   "mission": "Preserve and verify the current T7 salvage state, then restore mail, reconcile all three recycle volumes, and convert distinct legacy-Word digests with originals retained.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -53,7 +53,7 @@
     {
       "id": "P1",
       "name": "Mail vertical slice",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
