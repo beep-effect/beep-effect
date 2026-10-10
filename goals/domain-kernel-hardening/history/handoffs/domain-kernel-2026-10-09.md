@@ -1262,3 +1262,16 @@ packets row (~383), and cohort prose (~406). Future owner work: stale
 DomainModel.make detector, desktop migration release/application with rollback,
 reviewed inventory refresh and source repairs for inherited gates. No merge
 or retirement is performed by this lane. Publication/monitor receipts follow.
+
+
+P3 Yeet heavy publication is terminal exit 1 after committing c5227081e7,
+with 14/16 cheap lanes green. Exact refusal: "yeet publish cheap-gates failed
+after creating the local commit; nothing was pushed." Only schema-first
+(AccountsSecretField/AccountsSecretsItem, three property advisories) and
+Effect-Vitest (one existing PracticeKg identity) fail. Entire packages/apps/
+standards/lockfile diff against main is empty. Fallow audit/dead-code/health,
+committed JSDoc ratchet, goals doctor/index, imports and other cheap lanes pass.
+The full JSDoc CI parity result remains retained P2 evidence, not replaced by
+the narrower passing committed-inventory check. Record D31 and use run-9's
+fallback: one initial git push, labelled PR creation, Yeet ready and a bounded
+monitor; acknowledge inherited rows and settle every owned job before handoff.
