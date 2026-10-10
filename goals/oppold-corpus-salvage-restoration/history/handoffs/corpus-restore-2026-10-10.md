@@ -72,3 +72,48 @@ The diagnostic wrapper ended. No fresh live slice has started.
   lockfile did not change; package and parity evidence still cover the same code.
 - No fresh freeze record, launch script, started stamp, result or run-tree write
   exists. Fresh launch is withheld on the independent-label contract precondition.
+
+## Publication attribution and fallback
+
+- Initial Yeet refusal: `yeet publish requires reviewed staged changes or a clean
+  local commit ahead of the publish remote/base.` The receipt was unstaged;
+  explicitly staging that one owned handoff corrected the intent precondition.
+- Canonical publish then committed `63055473d6ee9825b53cbde66681fc13b3f6b783`
+  and refused before push: `github-checks:cheap-gates: failed 2 step(s)`;
+  `lint:schema-first: exit 1`; `lint:effect-vitest: exit 1`;
+  `yeet publish cheap-gates failed after creating the local commit; nothing was
+  pushed. Fix the gate, then amend or reset the unpushed commit before retrying.`
+- Fourteen of sixteen gates pass, including committed JSDoc, Knip, private
+  changeset-status, packet doctor/index, and all Fallow blocking lanes.
+- Schema findings: two Accounts candidates and three unrelated test advisories.
+  Effect-Vitest: one PracticeKg projections test finding. All finding surfaces
+  match origin/main. Root P0 inbox receipt acknowledged with this attribution.
+- The inherited-fence ruling and run 4 authorize direct push plus labelled PR
+  creation after the full addressed wave. No finding inventory, CI rule, or
+  baseline is changed. Reversal: close the unmerged PR and retain evidence.
+
+- Prerequisite 3f freshly met: focused four exception/accounting/resume cases
+  pass, 72 skipped, 3.27 seconds. Prerequisite 3d smokes freshly met: both exit 0.
+- Freeze values match the original manifest. Selected objectId and SHA-256 remain
+  `da19981ddcd62e532156584b7d8ef06762122f1cffc3f032ac36436d5492fdae` and
+  `d547453d9d9680d28c898892982e8b3798452fa9e608a40f860ef88cd152907d`.
+- Tika jar SHA-256 remains
+  `0e8ee9795ac4244feab466f4a5a9c3b94675af392848243842cb6e1e69d27103`.
+- Frozen prior ceilings remain ratio 4, attempt 7,200,000 ms, family 43,200,000 ms,
+  output 2,147,483,648 bytes, floor 100,000,000,000 bytes; probe derivation is
+  retained in the previous handoff. No fresh policy or launch-script digest exists.
+- Graft retrieval saved approximately 52,465 tokens in one reported call.
+
+## Completed run-4 proof
+
+- Scoped coverage exit 0: 295 files, 5,892 tests, 1,484.75 seconds. Package
+  percentages exceed the committed baseline: lines 86.38/85.11, statements
+  86.05/84.91, branches 78.62/76.56, functions 82.96/81.10. The touched
+  RestorationTransformations file is 100% in all four metrics. No baseline changed.
+- Coverage wrapper unit `run-p1400125-i93542044.service` ended; both nested
+  engine smokes exit 0. All own heavy verification wrappers are now terminal.
+- Final required fetch/merge incorporated unrelated main work only; owned
+  Corpus/libpff source, tests, and lockfile did not change. Full package and
+  parity proofs remain applicable to the reviewed implementation.
+- Post-diagnostic capacity: 433,952,366,592 free bytes. This measurement includes
+  other machine activity and is not a fresh-run amplification result.

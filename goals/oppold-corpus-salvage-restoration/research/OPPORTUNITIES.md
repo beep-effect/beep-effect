@@ -404,3 +404,17 @@ No unrelated source or inventory baseline was changed.
   beyond the bounded fix for the orchestrator.
 - Reversal: no live state was added. A scoped contract ruling can authorize the
   separate label and its schema/command/reconciliation tests.
+
+### 2026-10-10: run-4 publication repeats inherited inventory fences
+
+- Evidence: Yeet committed the reviewed update, then
+  `github-checks:cheap-gates: failed 2 step(s)`:
+  `lint:schema-first: exit 1`, `lint:effect-vitest: exit 1`. Nothing pushed.
+  Fourteen other cheap gates pass. Five schema entries and one PracticeKg
+  projections entry belong to source files matching main.
+- Disposition: use the standing inherited-fence direct-push and labelled-PR
+  fallback, authorized again by run 4. The orchestrator owns consolidated
+  burn-down under S11; no lane baseline or CI setting is changed.
+- Prevention: classify inherited inventory before publication admission so a
+  scoped repair lane does not repeatedly stop on unrelated debt.
+- Reversal: close the unmerged engine-fix PR and retain the immutable evidence.
