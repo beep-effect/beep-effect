@@ -1,5 +1,19 @@
 # Tooling friction receipts
 
+## Main-red repair: downstream test cache missed upstream kernel columns
+
+The domain-kernel P1 change (#1593, 6513e85d2c) added `deletedAt` and
+`deletedByPrincipal`, but a downstream law-practice tables test task replayed
+the stale green `cache hit, replaying logs 3a087b1f2d538283`. Main run
+38019764454 at 3aa125a5d6 exposed 11 failures in `Test Unit (unit-b)` after
+#1605 changed the inputs. A fresh `beep-heavy env TURBO_FORCE=true bun run
+--filter @beep/law-practice-tables test` reproduces exactly 11 failed and 34
+passed tests across three files. The test task inputs do not cover workspace
+dependency sources; covering upstream kernel sources in the downstream task
+hash, or qualifying dependent tests uncached after kernel changes, would have
+prevented the stale green. This lane updates only the existing expected-column
+helpers and records this receipt; cache configuration repair remains a follow-up.
+
 ## 2026-10-09 — heavy admission environment
 
 - Doing: P0 dependent typecheck through `beep-heavy`.

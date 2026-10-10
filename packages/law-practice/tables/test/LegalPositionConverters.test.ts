@@ -195,6 +195,8 @@ const candidateInput = {
 const BASE_INSERT_KEYS: ReadonlyArray<string> = [
   "createdAt",
   "createdByPrincipal",
+  "deletedAt",
+  "deletedByPrincipal",
   "entityType",
   "orgId",
   "publicId",
