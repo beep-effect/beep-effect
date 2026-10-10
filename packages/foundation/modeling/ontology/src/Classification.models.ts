@@ -365,7 +365,10 @@ export class ClassificationError extends S.TaggedError<ClassificationError>($I`C
   {
     reason: ClassificationFailureReason,
     detail: S.String,
-  }
+  },
+  $I.annoteError<ClassificationError>("ClassificationError", {
+    description: "Rejected pinned classification source or lookup.",
+  })
 ) {}
 
 const classificationComposer = (pin: ClassificationPin) =>

@@ -368,3 +368,12 @@ This separates an absent local proof artifact from actual inventory regression.
 ### 2026-10-09 source URL preflight
 
 M3 HTTP preflight found leading-zero MPEP routes and an obsolete WIPO path returned 404. Corrected to live USPTO routes, specific Inventorship section 2109 and WIPO PCT fees page. All originally valid sources returned 200; no authority bytes are tracked. A link preflight before seed freeze prevents plausible-looking broken citations.
+
+### 2026-10-09 generated JSDoc inventory finds a lane-owned annotation gap
+
+The isolated inventory completed and root ratchet reports eight increased
+totals. Its ontology records isolate one lane-owned schema annotation gap:
+ClassificationError lacks annoteError. M3 export records are resolved. Added
+the missing identity annotation and re-proved the package; remaining ratchet
+findings are outside ontology. Include this fix in one consolidated correction
+wave, never lower the tracked root baseline.
