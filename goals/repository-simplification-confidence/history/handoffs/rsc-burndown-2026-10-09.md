@@ -138,3 +138,10 @@ records its job id and exact status. This terminal documentation update changes
 no package source, generated scripts, inventory or policy baseline after proof.
 Permission state remained unrestricted / Never ask. No merge or retirement was
 performed. The original retained stash and ignored patch remain recoverable.
+
+Two P2 human review comments identify the deliberate whole-SPEC union and
+whole-scratchpad scanner boundaries requested by the brief. Their tracked
+follow-ups are RSC-BD-REVIEW-01 and RSC-BD-REVIEW-02 in
+`history/receipts/stage-6-rsc-burndown-review-followups.md`; replies explain the
+current mandate, risk, reversible setting and acceptance for the follow-up.
+No source or policy boundary is silently changed during this review wave.
