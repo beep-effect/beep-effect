@@ -51,3 +51,16 @@ Friction receipts, recorded when they happened.
   with the Coverage Regression lane red on its own new file. Prevention: run
   the scoped coverage of new and changed files before calling a PR final.
 
+## 2026-10-09 sitting closeout
+
+- The worker brief referenced a Mechanics section and handoff filename but
+  supplied neither. Its private inputs were read-only and work was restricted
+  to the lane. Evidence: `practice-kg-sitting-closeout.md`, Report section.
+  Prevention: validate the named sections and writable handoff/private-map
+  destinations before dispatch. The lane retains the alias map in ignored
+  local state for the orchestrator to archive.
+- `beep-heavy` could not reach the user manager without the runtime bus
+  environment. Evidence: `Failed to connect to user scope bus` on the first
+  package-verification launch. Setting the existing runtime directory and bus
+  address let the approved wrapper run. Prevention: carry those settings into
+  worker launches that use user-systemd scopes.

@@ -399,22 +399,19 @@ describe("@beep/practice-kg-mcp self-check", () => {
           const refusal = yield* refusalLine(bundleDir);
           expect(refusal.message).toContain("does not answer the queries this server's tools run");
           expect(refusal.cause).toContain(table);
-          const startup = yield* Effect.promise(async () => {
-            const child = Bun.spawn(["bun", "run", "src/bin.ts", "--bundle-dir", bundleDir], {
-              stdin: "ignore",
-              stdout: "pipe",
-              stderr: "pipe",
-            });
-            const [exitCode, stdout, stderr] = await Promise.all([
-              child.exited,
-              new Response(child.stdout).text(),
-              new Response(child.stderr).text(),
-            ]);
-            return { exitCode, stdout, stderr };
+          const child = Bun.spawn(["bun", "run", "src/bin.ts", "--bundle-dir", bundleDir], {
+            stdin: "ignore",
+            stdout: "pipe",
+            stderr: "pipe",
+          });
+          const startup = yield* Effect.all({
+            exitCode: Effect.promise(() => child.exited),
+            stdout: Effect.promise(() => new Response(child.stdout).text()),
+            stderr: Effect.promise(() => new Response(child.stderr).text()),
           });
           expect(startup.exitCode).not.toBe(0);
-          expect(startup.stdout).not.toContain('"jsonrpc"');
-          expect(startup.stderr).toContain("does not answer the queries this server's tools run");
+          expect(startup.stdout).toBe("");
+          expect(startup.stderr).toBe(`${refusal.message}\n`);
         })
       );
     }
