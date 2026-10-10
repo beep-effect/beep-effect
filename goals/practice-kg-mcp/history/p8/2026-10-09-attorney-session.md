@@ -41,8 +41,9 @@ G-3 grades the earlier incomplete run even though a later retry improved it.
 | AC-6.2 | right | Agent-selected check found a loose email by text search after email_search returned nothing. | DF-4 |
 
 ML-1 through ML-4 and CL-1 through CL-2 replace identifying question IDs in
-their order in the answer log. The private alias map is held outside tracked
-repository content; the orchestrator must retain it with the private archive.
+their order in the private answer log. The orchestrator must retain an explicit
+alias map with the private archive. This lane leaves the read-only archive
+unchanged and retains no identifying map inside the worktree.
 
 ## Defects and next owners
 

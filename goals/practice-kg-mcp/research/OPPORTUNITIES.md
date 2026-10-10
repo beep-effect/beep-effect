@@ -57,8 +57,8 @@ Friction receipts, recorded when they happened.
   supplied neither. Its private inputs were read-only and work was restricted
   to the lane. Evidence: `practice-kg-sitting-closeout.md`, Report section.
   Prevention: validate the named sections and writable handoff/private-map
-  destinations before dispatch. The lane retains the alias map in ignored
-  local state for the orchestrator to archive.
+  destinations before dispatch. The private answer log retains the identifying
+  IDs and their order; the orchestrator must archive the explicit alias map.
 - `beep-heavy` could not reach the user manager without the runtime bus
   environment. Evidence: `Failed to connect to user scope bus` on the first
   package-verification launch. Setting the existing runtime directory and bus
