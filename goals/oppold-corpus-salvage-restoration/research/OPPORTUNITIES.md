@@ -554,3 +554,136 @@ No baseline, CI policy, changeset, or source repair was made here.
   Apply the already authorized inherited-fence fallback with one wave push;
   do not change inventory, unrelated tests or CI. Reverse by closing/reverting
   PR4's documentation changes, retaining both immutable execution records.
+
+
+## 2026-10-10: bounded expansion has no occurrence selector
+
+- Doing: run-8 preflight for up to ten distinct store families after merged P1.
+- Evidence: `selectMailCandidates` supports one fixed smallest recycle PST or
+  the whole estate; the public schema and flag inventory expose no store selector.
+  A fresh output label repeats P1, while expected-count changes alone fail the
+  denominator contract after the immutable start. Zero families were launched.
+- Prevention: verify a bounded occurrence-selection contract before authorizing
+  a sequential expansion wave. Include the selection in each freeze record.
+- Disposition: record the plan and stop before launch; orchestrator supplies
+  the contract or authorizes a scoped implementation. No corpus or code mutation.
+- Reversal: revert the plan, retaining both sealed P1 families and manifests.
+
+
+## 2026-10-10: inherited publication fence on P2 launch preflight
+
+- Doing: publishing the bounded P2 plan and the public-selector blocker.
+- Evidence: 15 of 16 collected cheap gates pass; schema-first exits 1 on the
+  same three schema-test advisories in files matching origin/main.
+  Exact refusal: `yeet publish cheap-gates failed after creating the local
+  commit; nothing was pushed.` No package source or inventory changed.
+- Prevention: consolidated main advisory repair under the orchestrator's S11.
+- Disposition: standing fence permits named receipt commit and one direct
+  wave push with labelled PR and ready; no CI or inventory waiver.
+- Reversal: close/revert the plan PR; retain both immutable P1 families.
+
+
+### 2026-10-10: independent ratio and family caps disagreed
+
+PR5 review found 539157504 × 4 exceeds 2147483648 by 9146368 bytes.
+Prevention: filter inputs against floor(family cap / ratio) before wave
+membership selection. Run-9 correction admits nine inputs at most 536870912
+bytes, largest 456877056; eighteen larger inputs wait. No family started.
+Reversal: revert the plan correction, retaining immutable P1 evidence.
+
+
+### 2026-10-10: PR5 membership correction repeats inherited fence
+
+Fifteen cheap gates pass; `lint:schema-first: exit 1` alone stops publication
+after the local commit. Three codec-test advisories match main. Use the standing
+direct-push fallback; consolidated main repair prevents this repeated scanner
+wave. Reversal: revert the correction, retaining sealed P1 evidence.
+
+
+### 2026-10-10: selector preflight compiled a schema per call
+
+Focused Oxlint found `no-inline-schema-compile` on the new membership JSON
+codec inside the occurrence preflight. Attribution: introduced. Hoisted the
+schema decoder to module scope, preserving behavior and parser caching.
+A targeted source lint before the full dependency-build closure would have
+prevented the wasted package proof; both cancelled wrappers are terminal,
+not counted as proof. No suppression or inventory baseline was added.
+Reversal: revert the selector implementation; no P2 family was started.
+
+
+### 2026-10-10: successful JSDoc inventory exposes inherited total growth
+
+Run-9 JSDoc parity generated the live inventory, then failed eight total
+ratchets. All finding-bearing files match main; zero introduced file findings.
+Package docgen compiles the new membership models successfully. Main's S11
+burn-down owns the existing documentation debt; no baseline is changed here.
+Prevention: qualify generated totals in the consolidated main repair, alongside
+inventory-generation health. Reversal: supersede this attribution after repair.
+
+
+### 2026-10-10: parity launch briefly exceeded the lane's own slot count
+
+Started knowledge-reference verification before the two active heavy proofs had
+both settled. Stopped that exact worker-owned unit immediately and observed exit
+130; no result is counted. Queue follow-up commands only after observing a freed
+slot. Machine-wide limits were unchanged; no corpus command ran.
+Reversal: rerun the same check inside the two-command bound.
+
+
+### 2026-10-10: package coverage gain masked an introduced per-file gap
+
+Stock scoped coverage passed 295 files and 5898 tests in 1712.33 seconds.
+Package percentages exceeded all committed floors, but the touched transformation
+file fell from 100 percent to 99.93 lines, 99.82 statements, 99.87 branches and
+99.52 functions. Attribution: introduced. The plan reader contained an unreachable
+empty-selection callback after its length guard; archive-kind refusal and the
+implicit preservation-label path lacked tests. Moved the empty check before the
+uniqueness check, added boundary tests and retained every baseline unchanged.
+Prevention: compare touched-file rows before accepting package-wide improvements.
+Default package proof and stock coverage are repeated on the corrected source.
+
+
+### 2026-10-10: focused Vitest must run from the package root
+
+A two-file refresh passed the package config from the repository root and exited
+1 with “No test files found”; no tests executed. The package-relative include
+pattern requires the package working directory. Relaunched there through
+beep-heavy with the prescribed Bun runtime. Prevention: keep the focused test
+command package-relative rather than combining root paths with package config.
+
+
+### 2026-10-10: legacy per-file coverage floors also carry inherited drift
+
+The full comparison of the first scoped summary found 28 metric drops across
+12 untouched files in addition to the introduced transformation gap. Every
+inherited file matches origin/main. Package floors pass; their improvement does
+not clear stale surviving-file floors. Attribution: inherited under S11, retained
+for the consolidated main burn-down. Prevention: report package and file results
+separately, and refresh an inherited-only baseline in its owning lane. This lane
+changes no baseline and repeats stock coverage to prove its touched-file repair.
+
+
+### 2026-10-10: global Effect Vitest gate caught two introduced assertions
+
+The first unpublished selector commit passed 14 of 16 cheap gates. The two
+failed lanes carried the three inherited schema advisories and two new Effect
+Vitest findings in the selector test. Replaced a Boolean Exit matcher with the canonical assertTrue pipeline;
+replaced a negative Option equality assertion with explicit required start rows
+and a policy-digest inequality. Focused tests and compiler parity pass; the
+global detector reports introduced zero. No detector baseline edit.
+Prevention: run the global test-style detector before long source proofs.
+The failed attempt is acknowledged as superseded, with no permission to push
+until a fresh cheap scan proves that only inherited schema advisories remain.
+
+
+### Run-9B publication fence fallback
+
+Fresh publication attempt passes fifteen of sixteen cheap gates, including
+Effect Vitest with introduced zero, Fallow and committed-inventory JSDoc.
+Only lint:schema-first fails: three advisory fixture files match origin/main
+exactly. The failed command is the schema-first Turbo lane; refusal text is
+“yeet publish cheap-gates failed after creating the local commit; nothing was
+pushed.” Attribution: inherited, not introduced. Inbox row acknowledged
+under S11/S12. Authorized fallback: one direct feature-branch push, labelled
+PR creation, ready and bounded detached readiness monitor. No unrelated repair
+or baseline/CI waiver. Final default package audit is still active.

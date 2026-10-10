@@ -5,11 +5,11 @@
  * @since 0.0.0
  */
 
+import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import { Command, Flag } from "effect/cli";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CorpusCommandError } from "./Corpus.errors.ts";
@@ -274,6 +274,14 @@ const restorationRunLabelFlag = Flag.String("run-label").pipe(
 const restorationPreservationLabelFlag = Flag.String("preservation-label").pipe(
   Flag.optional,
   Flag.withDescription("Sealed preservation archive label; defaults to --run-label")
+);
+const restorationOccurrenceFlag = Flag.String("occurrence").pipe(
+  Flag.optional,
+  Flag.withDescription("One SHA-256 occurrence identity from --membership-file; slice scope only")
+);
+const restorationMembershipFileFlag = Flag.String("membership-file").pipe(
+  Flag.optional,
+  Flag.withDescription("Committed bounded-wave membership JSON required with --occurrence")
 );
 const restorationCrashPointFlag = Flag.ChoiceWithValue("crash-point", [
   ["none", "none"],
@@ -641,6 +649,8 @@ const corpusRestorationMailCommand = Command.make(
     maxElapsedMillis: restorationMaxElapsedFlag,
     maxTotalElapsedMillis: restorationMaxTotalElapsedFlag,
     maxTotalOutputBytes: restorationMaxTotalOutputFlag,
+    occurrence: restorationOccurrenceFlag,
+    membershipFile: restorationMembershipFileFlag,
     pffexport: pffexportFlag,
     preservationLabel: restorationPreservationLabelFlag,
     runLabel: restorationRunLabelFlag.pipe(Flag.withDescription("Immutable transformation output and ledger label")),
@@ -656,6 +666,8 @@ const corpusRestorationMailCommand = Command.make(
     maxElapsedMillis,
     maxTotalElapsedMillis,
     maxTotalOutputBytes,
+    occurrence,
+    membershipFile,
     pffexport,
     preservationLabel,
     runLabel,
@@ -671,6 +683,7 @@ const corpusRestorationMailCommand = Command.make(
       maxElapsedMillis,
       maxTotalElapsedMillis,
       maxTotalOutputBytes,
+      ...O.getSomesStruct({ occurrence, membershipFile }),
       pffexportPath: O.getOrElse(pffexport, () => "pffexport"),
       preservationLabel: O.getOrElse(preservationLabel, () => runLabel),
       runLabel,

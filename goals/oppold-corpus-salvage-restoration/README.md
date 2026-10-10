@@ -9,9 +9,11 @@ digests while retaining the originals.
 
 ## Next action
 
-P1 complete; P2 ceilings come next. The orchestrator owns expansion and P2/P3
-work. Retain the accepted fresh family, the original sealed failure, both freeze
-records, and their aggregate evidence. This lane publishes PR4 only.
+P1 is complete. Run-9 corrects the first P2 wave to nine occurrences within
+both retained output ceilings and authorizes a bounded occurrence selector in
+PR6. The committed membership pins source identities and sizes. Run 10 owns
+the sequential wave after the selector is content-final; no P2 family has started.
+Retain both sealed P1 families and freeze records.
 
 ## Launcher
 

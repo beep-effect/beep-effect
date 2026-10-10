@@ -349,6 +349,69 @@ const TransformationEvidenceIdentity = S.Struct({
 });
 
 /**
+ * Pins an allowed PST occurrence to its preserved bytes and bounded input size.
+ *
+ * **Example** (Decode an occurrence member)
+ *
+ * ```ts
+ * import { MailOccurrenceMember } from "@beep/repo-cli/commands/Corpus"
+ * import * as S from "effect/Schema"
+ * import * as Str from "effect/String"
+ *
+ * const member = S.decodeEffect(MailOccurrenceMember)({
+ *   objectId: Str.repeat(64)("a"), sha256: Str.repeat(64)("b"), sizeBytes: 1048576,
+ * })
+ * console.log(member)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class MailOccurrenceMember extends S.Class<MailOccurrenceMember>($I`MailOccurrenceMember`)(
+  {
+    objectId: Sha256Hex,
+    sha256: Sha256Hex,
+    sizeBytes: PosInt.check(S.isGreaterThanOrEqualTo(1048576), S.isLessThanOrEqualTo(536870912)),
+  },
+  $I.annote("MailOccurrenceMember", {
+    description: "One non-stub PST occurrence whose ratio-four allowance fits the retained two-GiB family cap.",
+  })
+) {}
+
+/**
+ * Decodes a bounded wave's explicit occurrence allowlist and archive identity.
+ *
+ * **Example** (Decode a one-member wave)
+ *
+ * ```ts
+ * import { MailOccurrenceMembership } from "@beep/repo-cli/commands/Corpus"
+ * import * as S from "effect/Schema"
+ * import * as Str from "effect/String"
+ *
+ * const membership = S.decodeEffect(MailOccurrenceMembership)({
+ *   schema: "mail-occurrence-membership/v1", preservationLabel: "synthetic",
+ *   maxInputBytes: 536870912,
+ *   members: [{ objectId: Str.repeat(64)("a"), sha256: Str.repeat(64)("b"), sizeBytes: 1048576 }],
+ * })
+ * console.log(membership)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class MailOccurrenceMembership extends S.Class<MailOccurrenceMembership>($I`MailOccurrenceMembership`)(
+  {
+    schema: S.Literal("mail-occurrence-membership/v1"),
+    preservationLabel: RunLabel,
+    maxInputBytes: S.Literal(536870912),
+    members: S.Array(MailOccurrenceMember).check(S.isMinLength(1), S.isMaxLength(10)),
+  },
+  $I.annote("MailOccurrenceMembership", {
+    description: "At most ten pinned mail occurrences authorized by a committed bounded-wave plan.",
+  })
+) {}
+
+/**
  * Validated inputs for the mail slice or full estate run.
  *
  * **Details**
@@ -395,6 +458,8 @@ export class RestorationMailOptions extends S.Class<RestorationMailOptions>($I`R
     maxTotalElapsedMillis: PosInt,
     maxTotalOutputBytes: PosInt,
     pffexportPath: S.NonEmptyString,
+    occurrence: Sha256Hex.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    membershipFile: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     preservationLabel: RunLabel.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     runLabel: RunLabel.pipe(
       S.withConstructorDefault(Effect.succeed("t7-salvage-2026-08-10")),

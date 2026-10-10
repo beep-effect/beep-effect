@@ -9,6 +9,7 @@ import {
   encodeArchiveLedgerRecordJson,
   encodeRestorationAcceptanceRecordJson,
   encodeTransformationLedgerRecordJson,
+  MailOccurrenceMember,
   preserveRestorationArchive,
   RestorationAcceptanceRecord,
   RestorationLegacyWordOptions,
@@ -28,6 +29,7 @@ import { expect, layer } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
+import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -473,6 +475,31 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
     Effect.gen(function* () {
       const value = yield* RT.maximumPageRmse(["one"], [], legacyOptions, legacyBudget);
       expect(value).toBe(Number.POSITIVE_INFINITY);
+    })
+  );
+
+  it.effect(
+    "requires one preserved PST for a planned occurrence",
+    Effect.fnUntraced(function* () {
+      const path = yield* Path.Path;
+      const pst = archivedFile(sha("selected"), "mail/store.pst", 1048576);
+      const member = yield* S.decodeEffect(MailOccurrenceMember)({
+        objectId: pst.objectId,
+        sha256: pst.sha256,
+        sizeBytes: pst.sizeBytes,
+      });
+      const candidates = RT.mailCandidates(path, "/archive", [pst]);
+      const candidate = O.getOrThrow(A.head(candidates));
+      expect(yield* RT.selectPlannedMailCandidate(member, candidates)).toEqual(candidates);
+      for (const invalid of [
+        [],
+        [candidate, candidate],
+        RT.mailCandidates(path, "/archive", [archivedFile(pst.objectId, "mail/message.eml", pst.sizeBytes)]),
+        [{ ...candidate, pass: O.none() }],
+      ]) {
+        const error = yield* RT.selectPlannedMailCandidate(member, invalid).pipe(Effect.flip);
+        expect(error._tag).toBe("CorpusCommandError");
+      }
     })
   );
 

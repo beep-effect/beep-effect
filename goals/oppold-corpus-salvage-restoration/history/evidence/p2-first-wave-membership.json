@@ -1,0 +1,52 @@
+{
+  "schema": "mail-occurrence-membership/v1",
+  "preservationLabel": "t7-salvage-2026-08-10",
+  "maxInputBytes": 536870912,
+  "members": [
+    {
+      "objectId": "2a117127f49f4e806b2a2461afe973a637ab956bbb4d88060fb438623dcdf71e",
+      "sha256": "1d97dfd772f8cd629d8efcc047b71fb0f3eb8a4753e6e0b204cc0bb775b90d1a",
+      "sizeBytes": 61727744
+    },
+    {
+      "objectId": "886bd60cee359bcca9ee313bdeb4c08a4c7c3de3e676c021d50425741bfbac14",
+      "sha256": "4501c21643be4ec9bb146983cd3760c73a8ddb41604c68126198f734dba0f95d",
+      "sizeBytes": 98804736
+    },
+    {
+      "objectId": "888eeb36b076ff20ad7048e2bebe55ba7bd929b94698676fdc23e7601aecb96d",
+      "sha256": "4120aa082ab2640bc072520d95bd974b84962eeb63ed948fb989fe8ebe2db069",
+      "sizeBytes": 98804736
+    },
+    {
+      "objectId": "2ddb92385b12e303bcb4b7d3e1710eaea50557c93ec066378bcbf243103d4f75",
+      "sha256": "52c2e1331b4f09ada7a741e221afebdfab79d2d4f54a30518350b91c6c08f342",
+      "sizeBytes": 119120896
+    },
+    {
+      "objectId": "492971fd43294de2fc1f47e58ad0ec78fa0438af9004fcb1166ad42ffd09437d",
+      "sha256": "722872e1f639f3cf9d771708dd0f817111a024880292aeaaf9964b664d9f9c81",
+      "sizeBytes": 157975552
+    },
+    {
+      "objectId": "fa64112f2a788933cc33f970f51bebe2135ab410bc43089164a3e78869a870a4",
+      "sha256": "2b8108bc1db6feef777023648cd55c200ff838ad43e0e8ea5afe508bb93f5264",
+      "sizeBytes": 190989312
+    },
+    {
+      "objectId": "9a7fab20677805c46b25d8953cecbafb4eacf082e02d7f603fd720add1f76df3",
+      "sha256": "77b95a03291e7fd49496b88c7d7b052f723abc3d6176a2c1492033c4d776d2a5",
+      "sizeBytes": 354026496
+    },
+    {
+      "objectId": "306991c7dc9caabb34f1e1c6149caf9964f2d9fe046682e753f65ea7efccc932",
+      "sha256": "ae4087e97704630b08c37eaa19e6d524bf2b60f8deca36eab78c336784ca4002",
+      "sizeBytes": 436306944
+    },
+    {
+      "objectId": "90fe1bba1664bb79ffe5b6bdca9b720f27ec1e001314cf8788cef57282a2f3f1",
+      "sha256": "efa55f979cbcd6ca4f7e58880abce689645daba36a9058e2d36ba71f077a12bb",
+      "sizeBytes": 456877056
+    }
+  ]
+}
