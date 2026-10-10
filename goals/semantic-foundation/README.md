@@ -105,3 +105,14 @@ and separate party-kind/legal-role vocabulary contracts. M4 remains gated and ro
   regressions. Its sole ontology blocking gap, ClassificationError annotation,
   was corrected. Ontology package JSDoc lint and post-correction package
   audit/docgen pass; coverage remains qualified.
+
+### Latest base integration
+
+- Main #1597 repairs the inherited scratchpad docgen target. After merging
+  origin/main at 7061685922, docgen:local passes for ontology and scratchpad.
+- Post-integration ontology package audit/docgen, test-tsgo, scoped coverage,
+  Fallow, knowledge refs and secrets pass. Root JSDoc ratchet remains red
+  against the retained isolated inventory; the owned annotation gap is fixed.
+- Both human P2 review threads are answered and resolved through Yeet.
+  Portable python3 archive verification passes; classification admission-index
+  performance is retained as a SPEC/OPPORTUNITIES follow-up.

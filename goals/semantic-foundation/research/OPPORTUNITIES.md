@@ -392,3 +392,13 @@ skip validation safely. No global/native WeakMap is introduced.
 
 Review discussion r4235607666: use python3 for portable archive checks. The
 verify-only asset pack check proves actual execution after the replacement.
+
+### 2026-10-09 moving base during final review
+
+Main advanced to #1595 and #1597 while review was closing. The latter fixes
+the inherited scratchpad ES2024 docgen target. Merged origin/main once more
+before final handoff, as Mechanics requires, and reran the parity set.
+Docgen:local now passes. This requires a base-integration push after the
+completed review wave; no lane-owned source change or additional review
+repair is included. A stable integration frontier would have avoided that
+extra publication. No rebase, force push or upstream repair was performed.
