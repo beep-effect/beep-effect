@@ -674,3 +674,16 @@ global detector reports introduced zero. No detector baseline edit.
 Prevention: run the global test-style detector before long source proofs.
 The failed attempt is acknowledged as superseded, with no permission to push
 until a fresh cheap scan proves that only inherited schema advisories remain.
+
+
+### Run-9B publication fence fallback
+
+Fresh publication attempt passes fifteen of sixteen cheap gates, including
+Effect Vitest with introduced zero, Fallow and committed-inventory JSDoc.
+Only lint:schema-first fails: three advisory fixture files match origin/main
+exactly. The failed command is the schema-first Turbo lane; refusal text is
+“yeet publish cheap-gates failed after creating the local commit; nothing was
+pushed.” Attribution: inherited, not introduced. Inbox row acknowledged
+under S11/S12. Authorized fallback: one direct feature-branch push, labelled
+PR creation, ready and bounded detached readiness monitor. No unrelated repair
+or baseline/CI waiver. Final default package audit is still active.
