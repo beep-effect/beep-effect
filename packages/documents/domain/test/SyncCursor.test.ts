@@ -59,7 +59,11 @@ describe("SyncCursor entity", () => {
       assertNone(decoded.lastEventId);
       assertNone(decoded.lastError);
       expect(decoded.status).toBe("active");
-      expect(yield* encodeSyncCursor(decoded)).toStrictEqual(freshCursorRow);
+      expect(yield* encodeSyncCursor(decoded)).toStrictEqual({
+        ...freshCursorRow,
+        deletedAt: null,
+        deletedByPrincipal: null,
+      });
     })
   );
 
