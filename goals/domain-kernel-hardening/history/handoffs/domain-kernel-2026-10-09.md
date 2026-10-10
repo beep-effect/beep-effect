@@ -1184,3 +1184,38 @@ All base merges ride the initial wave. Default proofs and fresh full JSDoc
 inventory precede both unrelated final main integrations; no exact-final-head
 all-green claim. Packet checks and stream are repeated after this merge.
 No lane changes to inherited inventory, private release notes or source.
+
+### P2 published-head closeout
+
+PR3 #1599 is OPEN/isDraft=false at bd155e8943aed0a623d29cea1e500913ef75383b,
+structural MERGEABLE, with zero actionable/unresolved threads at final
+closeout and required hosted checks pending. PR1/PR2 are confirmed MERGED.
+One P2 push only. PR body includes inherited attribution, proof limits and
+fallback; no review reply draft is needed because no thread exists.
+
+The 40-minute monitor observed this published head; its short job wait
+timed out, which did not end the monitor. Cancelled it at handoff, confirmed
+terminated/unit inactive, and acknowledged the proof result observed. Three
+Vercel build-rate-limit rows are acknowledged environment-only. Final inbox
+has no live unacknowledged row. D29 records settlement and reversal (resubmit
+the bounded monitor). No ready verdict or merge waiver is claimed.
+
+A final fetch found #1597 main7061685922 (scratchpad docgen ES2024 owner fix).
+It merged cleanly locally as b3e30f8907, with no kernel or packet change.
+Because it causes no PR conflict and a push solely to refresh main is outside
+the budget, the unpublished clean merge was reversed using ORIG_HEAD back
+to the exact published head before any further edits. No published history
+rewrite, other edits or data lost. Integrate it in the next authorized wave.
+
+The report below describes the exact published PR3 head. This containing
+local closeout commit adds only SPEC/handoff receipts and is deliberately
+not another push. P3 reflection/completion remains a later wave.
+
+lane: domain-kernel
+head: bd155e8943aed0a623d29cea1e500913ef75383b (exact published PR3 head; subsequent local closeout commit contains receipts only)
+PR(s): PR1 #1577 MERGED at 78b77b1084 | PR2 #1593 MERGED at 6513e85d2c | PR3 #1599 OPEN, content-final, ready for review, exact head confirmed; hosted merge readiness pending
+package-verify: @beep/shared-domain: pass; @beep/db-admin: pass; @beep/professional-desktop: pass; @beep/repo-cli: pass. All four default audit+docgen proofs ran through beep-heavy in P2 and precede the unrelated final main integrations #1596/#1595; no fresh exact-final-head default audit claim. Other P1-touched package proofs remain retained in the handoff. P2 edits no package source.
+hosted-parity: test-tsgo: pass, including rerun after #1596 (335 files; 149 packages covered by their check scripts skipped) | docgen local: pass/noop, packet-only diff selects no packages; kernel/schema docgen gate passes | jsdoc-ratchet: fail, inventory generation succeeds then eight inherited metric regressions match P1 D24; no baseline edit | knowledge refs: pass, 0 live gated observations | fallow audit+health: pass, full CI lane and publication cheap lanes | scoped coverage: pass, 120 tests, executable entity files 100% across all four metrics and zero uncovered units. Kernel/schema gate passes 19/19 cached tasks; db-admin 29/29 tasks includes migration drift; desktop codegen check passes; six-server gate passes 492 tests with one skipped, uncached. Hosted checks and review window remain pending.
+handoff: goals/domain-kernel-hardening/history/handoffs/domain-kernel-2026-10-09.md
+open items: P0/P1/P2 complete; P3 reflection and completed-retained transition remain the next separate wave under run-8, lifecycle active. D26 starts P2 from merged main and carries named P1 receipt only; reversal is withdrawing the P2 packet commit, retaining merged implementation. D27/D28 record inherited UI TS2589, Accounts schema-first findings, eight JSDoc metrics and the current PracticeKg EV002 inventory re-anchor; reversal is owner source/inventory repair plus integration/rerun, or closing the unmerged P2 evidence PR. Yeet refused two cheap gates with 14 passing lanes; authorized fallback used one push, PR creation, ready and bounded monitoring. P0 refusal row and three Vercel rate-limit rows are acknowledged; zero unresolved threads at final closeout, no unacknowledged live inbox row. D29 settles the bounded monitor after published-head observation (terminated, unit inactive, receipt observed); reversal is resubmitting the 40-minute monitor. A clean post-push #1597 main merge was reversed via ORIG_HEAD before any further edits or push, preserving the one-push budget; reversal is integrating that owner fix in a later authorized wave. No PR merge, rebase, inventory suppression, dependency/lockfile edit or live database operation. Mechanical implementation count remains 89; P2 adds zero sites and zero slice model/behavior edits. Final report is appended and committed locally without another publication push. Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet at 349, Parked packets row at 383 and cohort prose at 406. Follow-ups: P3 closeout, stale DomainModel.make detector, desktop migration release rollout, inherited gate owner repair. Graft saved approximately 54,192 tokens across two calls.
+final bd155e8943aed0a623d29cea1e500913ef75383b #1599
