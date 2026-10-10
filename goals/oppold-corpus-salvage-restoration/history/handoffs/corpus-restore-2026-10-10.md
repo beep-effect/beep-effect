@@ -287,3 +287,153 @@ blocked: fresh slice needs independent preservation and transformation labels; P
   the stable committed source. The isolated V8 run uses a separate ignored
   report directory, preserving the full report. No source changed for this
   correction. Reverse by rerunning either proof; no corpus state exists yet.
+
+
+### Post-push receipts reserved for PR4 (run-5 authority)
+
+- Single run-5 addressed-wave push confirmed on PR3 #1606:
+  `b9544eaca267af17e10b12cd416e80285636a372`. PR stays OPEN and ready. Full
+  thread read is complete with zero threads. Body updated for the final code.
+- Bounded monitor submitted as
+  `beep-proof-dbfe4297-6417-4c04-a9eb-1ee913238281.service` (40-minute maximum);
+  waiting on the same job after the inherited Repo Sanity wave.
+- Completed Repo Sanity job 114122237833 was read immediately: Syncpack fails
+  on two inherited minimatch/smol-toml version mismatches. All manifests, lockfile
+  and Syncpack inputs match main. Acknowledged under S11 for the orchestrator;
+  no source or dependency edit. Vercel rate-limit receipt also acknowledged.
+- The source and tests are byte-identical to the fresh manifest's code snapshot
+  after publication. Full stable coverage is still running; no fresh family,
+  launch stamp or result exists. Post-push aggregates, the filled policy digest
+  and this report append will be PR4 material, preserving run 5's one code push.
+
+### Run 5 fresh launch and hosted attribution
+
+- Fresh launch n=2 submitted detached as `beep-heavy-corpus-restore-p1-2.service`.
+  Source matches frozen code snapshot `005d103faf8ab7c529cae8acece27bf93bc0ab95`;
+  published PR3 head is `b9544eaca267af17e10b12cd416e80285636a372`.
+- Fresh output label: `t7-salvage-2026-08-10-p1-2026-10-10-engine-fix`;
+  preservation selector: `t7-salvage-2026-08-10`.
+- Ledger: `~/data-home/oppold-corpus/staging/restoration/runs/`
+  `t7-salvage-2026-08-10-p1-2026-10-10-engine-fix/ledgers/mail/slice.jsonl`.
+- Pre-launch free bytes: 432775737344; engine values and launch script match the
+  committed fresh manifest. Original sealed run remains untouched.
+- Hosted Heavy / Lint Policy job 114122483280 failed inherited tsgo profile/directive
+  checks, 30 hoist-schema oxlint errors, three schema test advisories, JSDoc inventory
+  generation, and two deprecated-API fixture project-service checks. Identified failing
+  files and configs match origin/main; no Corpus finding. Inbox row
+  `Heavy_Lint_Policy-50eaf9593865` acknowledged wontfix under S11.
+- Hosted JSDoc Ratchet job 114122237783 failed inventory generation, matching the
+  prior head failure class. Local inventory and committed JSDoc/package docgen pass.
+  Inbox row `JSDoc_Ratchet-031f7615f63d` acknowledged wontfix under S11.
+- These post-push receipts and the eventual aggregate slice outcome are reserved for
+  PR4; run 5 authorizes one code push on PR3, already completed. No further push.
+
+### Run 5 stable coverage and launch timestamp
+
+- Scoped repo-cli coverage passed at the published code tree: 295 files, 5894 tests,
+  1425.60 seconds. Statements 86.05%, branches 78.62%, functions 82.95%, lines
+  86.38%; all exceed the package regression baseline (84.91%, 76.56%, 81.10%,
+  85.11%, respectively). RestorationTransformations has 100% in all four metrics.
+- Launch n=2 started at 2026-10-10T03:54:04.229Z. The detached unit is active;
+  archive verification precedes the new family-run-start. No completion claim yet.
+- Final pre-report fetch and merge origin/main: already up to date, no source change.
+
+### Run 5 continuation boundary
+
+- Latest ruling explicitly permits the detached live slice to outlive this worker.
+  Unit `beep-heavy-corpus-restore-p1-2.service` remains active. Latest private log
+  count: one line; verification-summary count: zero. No tool log lines were read.
+- On continuation, poll `~/.cache/beep/corpus-restore/p1-fresh-slice-2.result`
+  and the unit every 60 seconds. Read the fresh ledger only through projections
+  that omit paths and messages. Fill `policySha256` in the committed fresh manifest
+  exactly once from its first family-run-start; its current null is pending,
+  not a changed policy. Freeze source and engines until the family seals.
+- Retain the original ledger SHA-256
+  `efb4b558c2d1680f87a684a69d6aa021653234d12928aa9f27a6943de8970e9f`.
+  A nonzero live result, exception, warning, or sealed failure stops the lane;
+  never mutate or retry a sealed run. Original and fresh output trees stay intact.
+- The local readiness monitor was cancelled and observed terminal (exit 130,
+  cancelled, no verdict); its unit is inactive. All inbox rows are acknowledged.
+  Orchestrator owns the next monitor and S11 merge gate. Never merge from this lane.
+- PR3 received exactly one run-5 code push. These post-push continuation receipts
+  remain uncommitted for later PR4 with the aggregate outcome; no fourth PR opened.
+- Graft lookup reported about 172483 tokens saved.
+
+### Run 5 final report
+
+```text
+lane: corpus-restore
+head: b9544eaca267af17e10b12cd416e80285636a372 (exact published PR3 head)
+PR(s): #1596 MERGED; #1600 MERGED; #1606 OPEN, content-final and ready, not merged
+package-verify: @beep/repo-cli: pass (full audit and docgen, plus fresh lint/check after main integration); @beep/libpff: not edited in run 5, merged PR1 proof retained
+hosted-parity: test-tsgo: pass (335 files); docgen local: pass; jsdoc-ratchet: fail, inherited scratchpad totals, while committed JSDoc and package docgen pass; knowledge refs: pass (45552 observations, zero live gated findings); fallow audit+health: pass, zero introduced findings; scoped coverage: pass (295 files, 5894 tests; lines 86.38%, statements 86.05%, branches 78.62%, functions 82.95%, all above baseline; RestorationTransformations 100% in all four metrics)
+handoff: goals/oppold-corpus-salvage-restoration/history/handoffs/corpus-restore-2026-10-10.md
+open items: Fresh slice n=2 started at 2026-10-10T03:54:04.229Z under the run-5 detached-handoff authority and remains active during archive verification; no fresh ledger or acceptance result yet. Optional preservationLabel now selects the original archive while runLabel names fresh transformation output. Original sealed ledger SHA-256 is unchanged. Freeze source and engines until seal; fill the fresh manifest policy hash once from its first family-run-start, then collect sanitized aggregates for later PR4. Post-push SPEC, handoff, and OPPORTUNITIES receipts remain uncommitted for that PR4; the one authorized PR3 code push is complete. Hosted Repo Sanity, JSDoc Ratchet, and Lint Policy reds are attributed to unchanged main files and acknowledged for the orchestrator's S11 burn-down. Zero review threads and zero unacknowledged inbox rows. Local readiness monitor cancelled and observed terminal; no merge-ready verdict claimed. Reversal: close/revert PR3 and retain both run directories. Never retry or mutate a sealed family. Graft reported about 172483 tokens saved.
+final b9544eaca267af17e10b12cd416e80285636a372 #1606
+beep-heavy-corpus-restore-p1-2.service
+```
+
+## Run 6 — accepted fresh slice, PR4 evidence
+
+- Read the complete updated brief; latest run-6 ruling governs this relaunch.
+  Fresh unit is inactive and result is 0. No new slice, source edit, or run-tree
+  write was made. The original sealed failure ledger digest remains unchanged.
+- Fetched main and cut the prescribed slice-evidence branch at
+  `9e0711e4591b74825b56fab5c0ad13c3246c66d3`; API confirms PR3 #1606 MERGED.
+  Preserved the three owned post-push dirty receipts for this PR.
+- Read-only packet adoption: zero conflicts. Doctor baseline: 211 packets,
+  zero new/inherited blocking findings, three unrelated advisories.
+- Graft lookup reported approximately 62,624 tokens saved in one call.
+
+### Prerequisites remeasured on run 6
+
+| Check | State | Measured value |
+| --- | --- | --- |
+| 3a preservation | met | Original run and archive-manifest-seal match; directory-pass 755, file-pass 10,696, loss 4, preflight 1, seal 1 |
+| 3b selection | met | PST 53, eligible 23; input 56,140,800 bytes; source object and digest match frozen manifest |
+| 3c state | met | Fresh final acceptance-pass, expected/terminal 1, unapproved 0; original failure unchanged |
+| 3d engines | met | pffexport 20260917, bubblewrap 0.13.0, OpenJDK 27 (2026-09-15); real Java and Tika digest match manifest; both nested sandbox smokes exit 0 |
+| 3e capacity | met | Pre-launch 432,775,737,344 bytes; post-run 432,579,956,736, above 100 GB floor |
+| 3f synthetic lanes | met | Four required tests pass freshly, 73 skipped, 2.53 seconds |
+| 3g main code | met | Corpus/libpff source diff against main empty; PR1 and PR3 fixes merged |
+| 3h capture | met | Budget capture retained; 59 probe runs, 43 formerly truncated, zero nonzero/empty |
+| 3i names | met | Escape retained; one probe backslash file, zero collisions and existing escape names |
+
+### Fresh aggregate result
+
+- Unit `beep-heavy-corpus-restore-p1-2.service`, n=2; attempt
+  `mail:011b25c2d38deca005ce17dd:r0`, retry ordinal zero.
+- Record counts: start 1, attempt-start 1, store-pass 1, child-pass 3,339,
+  repair 206, summary 1, acceptance-pass 1; exception/warning/interruption 0.
+- Input 56,140,800 bytes; store output and family du 132,668,272 bytes;
+  attempt/family disk amplification 2.363134690x, below 4x.
+- Attempt 809,685 ms, 15,122.981 ms/MiB; family 822,686 ms.
+  Archive re-verification 254,472 ms; separate queue duration unavailable
+  because the prior receipt omitted submission time. No inferred timing claim.
+- Engine children 3,237; accounted children 3,339; derived copy 51 and Tika 51,
+  other 0; 59 repaired occurrences / 51 distinct digests, unsupported 147,
+  unchanged 0. Zero unaccounted children; every step-7 acceptance predicate true.
+- Private log counts: two lines, one verification summary; no lines copied.
+- Fresh ledger SHA-256:
+  `33ad3245d090f519b573769503ebb39162a8806864f664ab0817b705a72fccf5`.
+- Fresh policy hash filled once from first start:
+  `2bc3fc673c343ef6008b9b3bb1c85e000ac59239d345f3e50d4d08aaf6a5a2c8`.
+  All other frozen fields and the launch-script hash remain unchanged.
+- All five SPEC P1 boxes and GOAL P1 box supported; P1 phase flipped complete.
+  P0/P4 complete, P2/P3 pending, lifecycle active. No reflection or later phase
+  work is started. Reversal: revert PR4 packet flips, retain both immutable
+  families; R7 whole-run removal remains the orchestrator's authority.
+- Full aggregate record and frozen manifest accompany this PR; the receipts
+  reserved after PR3's one addressed push are retained together.
+- Package-verify: no edited package in this docs-only PR; PR3's full CLI audit,
+  docgen and fresh quick checks passed. All six hosted-parity source lanes
+  not run for this PR (docs-only); PR3 results remain above. Packet knowledge
+  references are checked separately as the step-8 matrix requires.
+
+- Run-6 pre-publication matrix: GOAL budget, manifest JSON, required packet
+  references, goals doctor, goals index, and whitespace checks pass.
+  Knowledge refs at main snapshot: 45,552 observations, zero live gated.
+  Final fetch/merge before publication is current; no package or lockfile diff.
+- Content-final scope is packet-only. PR4 publishes acceptance evidence,
+  the one-time policy fill and phase flips together with all retained receipts.
+  P2/P3 and unrelated inherited main findings remain outside this lane.

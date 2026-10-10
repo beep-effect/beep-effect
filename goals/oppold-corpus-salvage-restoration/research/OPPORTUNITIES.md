@@ -479,3 +479,31 @@ No baseline, CI policy, changeset, or source repair was made here.
 - Disposition: stopped and observed the contaminated wrapper, started fresh full
   scoped coverage, and held the live launch. No source workaround or suppression.
 - Reversal: rerun the proof; no live corpus state was created.
+
+
+### 2026-10-10: the amended head reaches another inherited Repo Sanity fence
+
+- Doing: reading the completed hosted Repo Sanity red immediately from its job
+  endpoint while the overall workflow continues.
+- Evidence: job 114122237833 passes changeset-graph, config sync, boundaries
+  configuration and versions, then Syncpack fails on the minimatch override
+  (10.2.5 versus 10.2.6) and scratchpad smol-toml (1.9.0 versus ^1.9.0).
+  Package manifests, lockfile and Syncpack configuration have zero lane diff.
+- Prevention: run the same manifest-consistency check before calling the
+  inherited-red burn-down final, so it does not expose a second dependency fence.
+- Disposition: acknowledge as inherited under S11; the orchestrator owns repair.
+  No dependency, lockfile, rule or scope expansion is made.
+- Reversal: the acknowledgement can be superseded by the orchestrator's fix.
+
+### 2026-10-10: inherited hosted policy failures obscure the Corpus proof
+
+- Work: verify PR3 #1606 after the independent preservation label change.
+- Evidence: Heavy / Lint Policy job 114122483280 failed tsgo profile/directive rules,
+  30 hoist-schema oxlint errors, three schema test advisories, JSDoc inventory
+  generation, and two deprecated-API fixture project-service checks. The identified
+  failing files and configs match origin/main. JSDoc Ratchet job 114122237783 failed
+  inventory generation with the prior head's same failure class.
+- Attribution: inherited S11 orchestrator burn-down; rows acknowledged wontfix.
+  Local package verification, test-tsgo, and package docgen passed.
+- Prevention: burn down the inherited policy and hosted inventory defects once on
+  main, then propagate that head to dependent lanes. No unrelated repair in this lane.

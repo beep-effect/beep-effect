@@ -22,7 +22,9 @@ Current phase state:
   `restore-verify` reported terminals=11451 passes=11451 over the same bytes.
 - **P1 Mail vertical slice:** run-bound source-path extraction, child
   reconciliation, attachment repair, sandboxing, hard resource ceilings, and
-  synthetic exception lanes are implemented; the live slice follows P0.
+  synthetic exception lanes are implemented. **Complete 2026-10-10:** the fresh
+  slice sealed acceptance with one store pass, 3,339 accounted children, zero
+  warnings/exceptions, and measured disk/time amplification within ceilings.
 - **P2 Transformation wave:** recycle, legacy-Word, and acceptance tooling has
   synthetic occurrence, fidelity, restart, tamper, and acceptance-integrity
   coverage; the single live wave follows the passing slice.
@@ -109,6 +111,13 @@ the fresh manifest and private log policy retain the original freeze evidence.
 The outcome lands later as PR4; P1 remains in-progress until accepted.
 
 
+**Met 2026-10-10:** fresh family accepted one store with zero unaccounted
+children. Input 56,140,800 bytes; output 132,668,272 bytes (2.363134690x);
+attempt 809,685 ms, family 822,686 ms. All 3,339 children reconcile (3,237 engine
+plus 51 repair-copy and 51 Tika children); 59 repaired occurrences / 51 distinct
+digests, 147 unsupported, zero unchanged. No warnings, exceptions, or interruptions.
+Both sealed families are retained; see the fresh slice acceptance record.
+
 ## P2 — Transformation wave
 
 Run the remaining work in this order:
@@ -189,8 +198,10 @@ P0 is sealed under the 2026-10-06 re-measured denominators (decision log).
 P1 ceilings are set by the 2026-10-09 sizing-probe decision: ratio 4, two hours
 per attempt, 2 GiB total output, and twelve hours total elapsed. Only P2's
 ceilings remain undecided. The two probe-proven pre-run fixes merged through
-#1596 before the live slice. P1 is now blocked by an immutable sealed engine
-failure; the orchestrator owns any fresh-ledger route. The T7 exFAT volume
+#1596 before the first live slice. That immutable failure remains evidence;
+the run-4/5 authorized fresh family passed after the PR3 engine and selector
+fixes. P1 is complete; only P2 ceilings and expansion remain for the orchestrator.
+The T7 exFAT volume
 carries a dirty flag;
 an unmounted `fsck.exfat` is an operator decision and is not required for the
 read-only archive run.

@@ -9,11 +9,9 @@ digests while retaining the originals.
 
 ## Next action
 
-Run-5 authority resolves the independent archive/output-label contract on PR3
-#1606. After content-final and fresh preflight, launch one date-stamped fresh
-slice using the original preservation archive. Retain the sealed first failure
-and both freeze records; publish the fresh aggregate outcome later as PR4. P1
-remains in-progress until accepted; P2/P3 remain pending.
+P1 complete; P2 ceilings come next. The orchestrator owns expansion and P2/P3
+work. Retain the accepted fresh family, the original sealed failure, both freeze
+records, and their aggregate evidence. This lane publishes PR4 only.
 
 ## Launcher
 
@@ -39,6 +37,18 @@ ingestion v2, enrichment v2, and practice-kg bundle v2 remain gated MAP
 re-entry points. The solo-practice corpus kit remains deferred.
 
 ## Latest evidence
+
+2026-10-10 — Fresh P1 slice sealed acceptance: one store pass, zero warnings,
+exceptions or interruptions, 3,339 accounted children (3,237 engine plus 51
+repair-copy and 51 Tika children). Attachment dispositions: 59 repaired
+occurrences / 51 distinct digests, 147 unsupported, zero unchanged. Input
+56,140,800 bytes; promoted output/family disk usage 132,668,272 bytes
+(2.363134690x); attempt 809,685 ms, family 822,686 ms. All ceilings hold.
+Archive re-verification took 254,472 ms before family start. Four focused
+restoration tests pass. P1 complete, P0/P4 complete, P2/P3 pending, lifecycle
+active. PR3 #1606 merged; PR4 records the outcome and post-push receipts.
+See `history/p1/2026-10-10-fresh-slice-acceptance.md`.
+
 
 2026-10-10 — Run-5 selector regression passes: a new mail family uses the original
 sealed archive, creates a distinct transformation identity and output tree, and

@@ -177,19 +177,20 @@ P1 writes under the run root in this location inventory:
 | Surface | Location |
 | --- | --- |
 | Corpus home | `~/data-home/oppold-corpus` |
-| P1 run root, relative to corpus home | `staging/restoration/runs/t7-salvage-2026-08-10/**` |
+| Original sealed failure, relative to corpus home | `staging/restoration/runs/t7-salvage-2026-08-10/**` |
+| Accepted fresh run, relative to corpus home | `staging/restoration/runs/t7-salvage-2026-08-10-p1-2026-10-10-engine-fix/**` |
 | Run-root children | `ledgers/mail/slice.jsonl`, `output/mail/slice/`, and `writer-claims/` |
 
-- [ ] One metadata-selected non-stub PST occurrence from a recycle surface
+- [x] One metadata-selected non-stub PST occurrence from a recycle surface
       completes end to end through the public source-path runner at concurrency
       one and `-m all`.
-- [ ] Raw engine output, per-child SHA-256, child counts, warnings, failures,
+- [x] Raw engine output, per-child SHA-256, child counts, warnings, failures,
       and atomic attempt promotion reconcile to zero unaccounted children.
-- [ ] Attachment byte signatures drive type repair and second-pass
+- [x] Attachment byte signatures drive type repair and second-pass
       extraction.
 - [x] Synthetic fixtures cover corrupt, password, and codepage lanes without
       corpus content.
-- [ ] Measured disk/time amplification stays within the approved expansion
+- [x] Measured disk/time amplification stays within the approved expansion
       ceiling.
 
 ### P4 provenance index
@@ -623,3 +624,57 @@ by the bounded monitor. No source waiver, inventory or CI change is made. The
 full package gate, corrected test-tsgo, docgen and both real-engine smokes pass;
 coverage must finish before the fresh launch. Reversal: close PR3 and retain
 evidence; the orchestrator owns these inherited rows under S11.
+
+### 2026-10-10: run-5 detached slice handoff
+
+The run-5 ruling explicitly permits the fresh slice to remain in its detached unit
+when this worker reports the amended PR3 head. The original sealed run is retained
+byte-identical; the fresh run uses the independently selected original archive and
+its own date-stamped output label. No source changes are allowed after its
+family-run-start until it seals. Outcome aggregates and the pending policy hash
+fill belong to the later PR4, together with these post-push receipts.
+
+The bounded local Yeet readiness monitor was cancelled at this handoff after
+reading and acknowledging inherited Repo Sanity, JSDoc Ratchet, and Lint Policy
+reds. Its terminal job receipt is observed; no merge-ready verdict is claimed.
+The orchestrator retains the S11 merge gate and the running slice continuation.
+Reversal: resubmit the bounded monitor, or close/revert PR3 while retaining both
+run directories as immutable evidence. Never reset or retry a sealed family.
+
+
+### 2026-10-10: fresh P1 slice accepted; retain both sealed families
+
+Run-6 authority records the successful fresh slice in PR4 after PR3 #1606
+merged at `9e0711e4591b74825b56fab5c0ad13c3246c66d3`. The live source and
+engines stayed frozen through its seal. The fresh family exited 0 and ended
+in `family-acceptance-pass`: expected and terminal count one, pass count one,
+unapproved count zero; no exception, warning, or interrupted-attempt rows.
+
+All 3,339 child rows reconcile: 3,237 engine children and 102 derived children,
+comprising 51 repair copies and 51 Tika text children. The 59 repaired attachment
+occurrences have 51 distinct repaired digests; 147 unsupported dispositions and
+zero unchanged dispositions remain explicit. Reused duplicate evidence accounts
+for eight repaired occurrences without additional derived children. All five P1
+acceptance boxes are supported, including the freshly passing four restoration
+fixtures and the named libpff diagnostic classification tests above.
+
+Input 56,140,800 bytes; promoted output and family disk usage 132,668,272 bytes
+(2.363134690x, below ratio 4). Attempt elapsed 809,685 ms (15,122.981 ms/MiB);
+family elapsed 822,686 ms, below the two-hour attempt and twelve-hour family
+ceilings. Full archive re-verification preceded the family start by 254,472 ms.
+The prior launch receipt did not record a separate submission timestamp, so a
+numeric slot-queue duration cannot be reconstructed and is not claimed.
+Pre-launch free bytes were 432,775,737,344; post-run measurement 432,579,956,736.
+The latter includes concurrent machine activity, not just this family.
+
+Fill the fresh manifest's null policy hash exactly once from its first start:
+`2bc3fc673c343ef6008b9b3bb1c85e000ac59239d345f3e50d4d08aaf6a5a2c8`.
+All other frozen fields remain unchanged. Fresh ledger SHA-256:
+`33ad3245d090f519b573769503ebb39162a8806864f664ab0817b705a72fccf5`.
+The original sealed failure ledger remains byte-identical and retained. The
+aggregate record is `history/p1/2026-10-10-fresh-slice-acceptance.md`.
+
+P1 is complete; P0/P4 remain complete, P2/P3 pending, lifecycle active. The
+orchestrator owns P2 ceilings and expansion; this lane starts neither phase.
+Reversal: revert these packet flips and retain both immutable run directories;
+whole-run removal remains an orchestrator decision under R7.
