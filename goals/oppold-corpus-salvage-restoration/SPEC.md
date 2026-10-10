@@ -751,3 +751,49 @@ Reversal: revert PR4's phase-completion edits and reopen P1 while retaining
 both immutable manifests and families. No new execution is authorized by
 this correction; a future execution requires its own pre-execution record.
 P2 does not start in this run.
+
+
+### 2026-10-10: P2 first bounded mail expansion plan and selector preflight
+
+Run-8 authority follows merged PR4 #1609. P1 remains complete. Its measured
+basis is 2.363134690x output amplification, 822,686 ms family time, and the
+orchestrator-reported 20 GB peak RSS. Retain ratio 4, attempt 7,200,000 ms,
+family 43,200,000 ms, output 2,147,483,648 bytes per family, and the
+100,000,000,000-byte free-space floor. No cap or engine change is authorized.
+
+Plan at most ten distinct remaining non-stub PST occurrences, smallest input
+first, breaking size ties by objectId. The sealed archive has 53 PST occurrences:
+28 at least 1 MiB and 25 below that threshold. The accepted P1 occurrence is
+excluded, leaving 27 eligible expansion occurrences. The first ten range from
+61,727,744 to 539,157,504 input bytes. The 25 stub-sized occurrences and non-PST
+mail families remain unresolved estate obligations, outside this first bounded
+extraction wave; they are not silently counted as accepted or approved exceptions.
+The membership is ten occurrences, not client names. Recompute and freeze exact
+object and source digests before launch after the selector contract is available.
+
+Each member requires its own pre-launch freeze record, fresh output label and
+ledger, preservationLabel selecting the original sealed archive, and expected
+store count one. Launch detached under beep-heavy, one family unit at a time;
+after a successful seal and complete reconciliation wait 60 seconds before the
+next family. Stop at the first sealed failure, diagnose before further work,
+and never retry that sealed family. No engine or launcher code changes inside
+the wave. End with aggregate evidence, leaving P2 incomplete until all estate
+and recycle/DOC obligations close.
+
+Pre-launch blocker: the public command cannot select a remaining occurrence.
+`selectMailCandidates` takes exactly the smallest eligible recycle PST for
+slice scope and all mail candidates for full scope. `RestorationMailOptions`
+and the restore-mail flag inventory expose no object selector, offset or bounded
+candidate list. Independent preservationLabel selects an archive, not a store.
+New output labels would repeat accepted P1; full scope violates the brief's
+explicit prohibition and the ten-family bound. Changing expected count alone
+would seal a denominator failure after family-run-start. No such invocation ran.
+
+Decision: retain this plan and stop before creating any family. Do not bypass
+the public command, mutate the preservation ledger, or implement an unassigned
+selector fix. The orchestrator must supply a bounded occurrence-selection
+contract or authorize its implementation before the wave can start. Current
+free bytes 230,195,183,616 exceed the floor; engines match the fresh P1 freeze
+record; both sandbox smokes and all four focused restoration tests pass.
+Reversal: revert this packet plan, retaining both sealed P1 families and freeze
+records. Zero P2 family units or ledgers were created; P2 stays pending.

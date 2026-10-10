@@ -213,3 +213,17 @@ read-only archive run.
 - Keep all corpus paths, object records, and ledgers outside this public repo.
 - If a parent-MAP gate fires, reopen the exploration at `decompose`. Do not
   append G2-G4 or bundle v2 to this packet.
+
+
+## P2 bounded-wave launch preflight — 2026-10-10
+
+Run-8 authorizes the first wave after #1609 merged. Retained ceilings and the
+P1 measured basis are recorded in SPEC. Plan ten remaining non-stub PST
+occurrences in ascending size/object identity order, one fresh family at a time,
+with 60 seconds between successful seals. Stop at the first failure; no code
+change inside the wave. Stub-sized and non-PST estate obligations stay open.
+
+Launch is blocked: slice scope always selects the accepted P1 occurrence;
+full scope selects the entire estate and is forbidden. The public options have
+no bounded occurrence selector. Zero families started. P2 stays pending until
+the orchestrator supplies or authorizes that contract; P1 remains complete.

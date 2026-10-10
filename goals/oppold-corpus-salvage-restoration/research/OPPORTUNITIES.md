@@ -554,3 +554,17 @@ No baseline, CI policy, changeset, or source repair was made here.
   Apply the already authorized inherited-fence fallback with one wave push;
   do not change inventory, unrelated tests or CI. Reverse by closing/reverting
   PR4's documentation changes, retaining both immutable execution records.
+
+
+## 2026-10-10: bounded expansion has no occurrence selector
+
+- Doing: run-8 preflight for up to ten distinct store families after merged P1.
+- Evidence: `selectMailCandidates` supports one fixed smallest recycle PST or
+  the whole estate; the public schema and flag inventory expose no store selector.
+  A fresh output label repeats P1, while expected-count changes alone fail the
+  denominator contract after the immutable start. Zero families were launched.
+- Prevention: verify a bounded occurrence-selection contract before authorizing
+  a sequential expansion wave. Include the selection in each freeze record.
+- Disposition: record the plan and stop before launch; orchestrator supplies
+  the contract or authorizes a scoped implementation. No corpus or code mutation.
+- Reversal: revert the plan, retaining both sealed P1 families and manifests.

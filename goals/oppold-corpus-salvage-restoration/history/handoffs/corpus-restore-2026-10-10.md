@@ -566,3 +566,74 @@ will cite pre-launch commit evidence and exact runtime hash reconstruction.
 Orchestrator owns S11 merge and inherited main repair. No new monitor is
 started for this review-only amendment; no worker-owned job remains running.
 Reversal: close/revert PR4's documentation changes and retain both families.
+
+
+### Run 7 final report (post-push receipt)
+
+lane: corpus-restore
+head: 16d9d11fd45f51ca1583cc0e1802c3f155e23076 (exact published PR head)
+PR(s): #1596 MERGED | #1600 MERGED | #1606 MERGED | #1609 OPEN, content-final and ready for review
+package-verify: not run (docs-only correction; no edited package); @beep/repo-cli: PR3 full pass retained; @beep/libpff: PR1 pass retained
+hosted-parity: test-tsgo: not run (docs-only; PR3 pass retained) | docgen local: not run (docs-only; PR3 pass retained) | jsdoc-ratchet: committed cheap gate pass; full source parity not run (docs-only) | knowledge refs: pass, zero live gated observations | fallow audit+health: cheap gates pass, zero introduced findings; full source parity not run (docs-only) | scoped coverage: not run (docs-only; PR3 above-baseline proof retained)
+handoff: goals/oppold-corpus-salvage-restoration/history/handoffs/corpus-restore-2026-10-10.md
+open items: The single authorized correction push is complete. The review thread is answered and resolved; complete pagination confirms zero unresolved threads. P1 remains complete: the fresh freeze record was committed at 03:24:20Z before launch at 03:54:04.229Z, with source identity, engine identity, code/script identities and ceilings present; only its authorized one-time policy fill followed execution. Both ledgers and manifests record 2bc3fc673c343ef6008b9b3bb1c85e000ac59239d345f3e50d4d08aaf6a5a2c8. The review digest 1fcde5680cb42357e784ae4309cd05ce633999bc79b582479219ed07915d090e hashes the literal home alias; runtime expansion reproduces the persisted digest. #1606 changed code identity, which this policy hash excludes. The correction preserves both digests and associates each execution with its separate freeze record. Both immutable manifests and sealed ledgers remain unchanged. Four focused tests and both real engine smokes pass; packet checks add no blockers. Fifteen cheap gates pass; three inherited schema-test advisories alone block Yeet publication and are acknowledged under the authorized fallback/S11. Hosted checks and the restarted review window remain with the orchestrator; no merge-ready verdict or merge is claimed. P2/P3 remain pending, with no new family launched and no worker-owned unit running. Reversal: revert PR4 completion edits and reopen P1, retaining both immutable families and manifests. All correction and verification receipts are committed; this exact-head post-push report is appended locally to the handoff without a second push. Graft saved approximately 52,649 tokens in one call.
+final 16d9d11fd45f51ca1583cc0e1802c3f155e23076 #1609
+
+
+### Run-7 amendment resume: merged-state verification
+
+This resume found the authorized correction already published and merged.
+The initial user-bus probe failed before any heavy work; explicit runtime
+directory and bus address restored the approved heavy lane, as already
+documented by the earlier environment receipts. No corpus invocation ran.
+
+lane: corpus-restore
+head: 16d9d11fd45f51ca1583cc0e1802c3f155e23076 (exact PR4 head verified by GitHub)
+PR(s): #1596 MERGED | #1600 MERGED | #1606 MERGED | #1609 MERGED at fefc757271279231e0e02ba2497f3ed118249caa, 2026-10-10T06:13:07Z
+package-verify: not run (no package edited in this resume); @beep/repo-cli: PR3 pass retained; @beep/libpff: PR1 pass retained
+hosted-parity: test-tsgo: not run (no package edits) | docgen local: not run (no package edits) | jsdoc-ratchet: not run (no package edits; correction-wave cheap gate pass retained) | knowledge refs: pass, zero live gated observations | fallow audit+health: not run (no package edits; correction-wave cheap gate passes retained) | scoped coverage: not run (no package edits; PR3 above-baseline proof retained)
+handoff: goals/oppold-corpus-salvage-restoration/history/handoffs/corpus-restore-2026-10-10.md
+open items: Latest run-7 amendment is already delivered and merged. Reviewer withdrew the reopening request; complete thread pagination confirms zero unresolved threads. P1 remains complete. Fresh freeze record preceded execution; only its authorized policy fill changed. Runtime hash reproduces 2bc3fc673c343ef6008b9b3bb1c85e000ac59239d345f3e50d4d08aaf6a5a2c8; literal home-alias hash reproduces 1fcde5680cb42357e784ae4309cd05ce633999bc79b582479219ed07915d090e. Both immutable ledgers retain their recorded digests. Fresh family accepted one store and 3339 accounted children, zero warnings/exceptions/unapproved outcomes; output 132668272 bytes / input 56140800 bytes = 2.363134690x; attempt 809685 ms, family 822686 ms. Four focused tests and both engine smokes pass freshly. Packet doctor/index and knowledge-reference checks pass. Current free bytes 258901647360; P0 seal and 23-candidate selection unchanged; engine identities match. Fresh unit inactive, result 0, private log two lines. Main integrated locally at 4c85ada71eb5e7b15371ec2eb2580ee64ee4d192. No push, new PR, new family or merge performed by this resume. P2/P3 remain pending: the latest amendment explicitly requires a separate orchestrator relaunch for P2. Reversal: revert PR4 phase completion and reopen P1 while retaining both immutable families/manifests. Existing and current post-push handoff receipts remain local, uncommitted; no extra push to the merged branch. Lane retained as requested. Graft saved approximately 52649 tokens in one call.
+final 16d9d11fd45f51ca1583cc0e1802c3f155e23076 #1609
+
+
+## Run 8: bounded P2 plan, blocked before first launch
+
+PR4 #1609 merged at fefc757271279231e0e02ba2497f3ed118249caa.
+Fetched and merged main once; created the P2 wave branch from origin/main,
+preserving all local post-push handoff receipts. No lockfile or source changes.
+Packet plan read-only adoption has no conflicts. Doctor baseline has zero
+blocking findings and three unrelated advisories, none for this packet.
+
+| Relaunch prerequisite | State | Measured evidence |
+| --- | --- | --- |
+| P0 seal | met | 755 directory passes, 10696 file passes, four inherited losses, one preflight, one seal in expected sealed run |
+| Slice candidate | met | 23 recycle-eligible; accepted input 56140800 bytes; both P1 ledgers unchanged |
+| Existing state | met | Original failure retained; fresh passCount 1, unapprovedCount 0, elapsed 822686 ms, output 132668272 bytes |
+| Engines | met | pffexport 20260917, bubblewrap 0.13.0, OpenJDK 27 dated 2026-09-15, real Java path unchanged, Tika digest matches freeze |
+| Engine sandbox | met | Tika 3.3.1 and pffexport smokes pass through beep-heavy |
+| Capacity | met | 230195183616 free bytes, above 100000000000 floor |
+| Synthetic lanes | met | Four focused restoration tests pass, 73 skipped, 9.56 seconds |
+| Main code | met | No owned package source diff from main |
+| Fix/probe evidence | retained | PR1/PR3 proof retained, no new fix or probe |
+| Active family units | met | Zero corpus-restore family units running |
+| Distinct expansion selection | not met | No public occurrence selector; slice repeats P1, full estate forbidden |
+
+P2 plan: at most ten of 27 remaining non-stub PST occurrences, ascending size
+then object identity; input range 61727744 to 539157504 bytes. The 25 stub-sized
+occurrences and non-PST estate obligations remain unresolved outside this wave.
+Retain ratio 4, attempt 7200000 ms, family 43200000 ms, output 2147483648 bytes,
+100 GB free-space floor. Basis: P1 2.363134690x, 822686 ms family, reported
+20 GB peak RSS. One detached beep-heavy family at a time, fresh freeze/ledger,
+60 seconds between accepted seals, stop on first failure, no code change inside
+wave. No launcher script, frozen P2 manifest, family unit or ledger is created
+because selection cannot meet the contract. No private log text was read.
+
+Original ledger SHA-256:
+efb4b558c2d1680f87a684a69d6aa021653234d12928aa9f27a6943de8970e9f.
+Fresh ledger SHA-256:
+33ad3245d090f519b573769503ebb39162a8806864f664ab0817b705a72fccf5.
+Decision/reversal: stop before launching; orchestrator supplies or authorizes a
+bounded occurrence-selection contract. Revert the packet plan to reverse;
+retain both immutable families. P1 complete, P2/P3 pending, lifecycle active.
+Graft saved approximately 219244 tokens in two calls.

@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/oppold-corpus-salvage-restoration",
   "lifecycle": "active",
-  "statusNote": "2026-10-10: P1 fresh slice accepted one store, 3339 accounted children, zero unapproved rows and warnings; disk/time ceilings hold. Original sealed failure retained unchanged. PR4 carries aggregate evidence and packet flips after merged PR3 #1606. P0/P1/P4 complete; P2/P3 pending and outside this lane; lifecycle stays active awaiting orchestrator expansion and P2 ceilings.",
+  "statusNote": "2026-10-10: P0/P1/P4 complete; PR4 #1609 merged. Run-8 P2 bounded-wave plan retains ceilings and at most ten distinct remaining stores; launch blocked on missing public occurrence selector, zero families started. P2/P3 pending, lifecycle active.",
   "mission": "Preserve and verify the current T7 salvage state, then restore mail, reconcile all three recycle volumes, and convert distinct legacy-Word digests with originals retained.",
   "executionCapable": true,
   "reflectionRequired": true,
