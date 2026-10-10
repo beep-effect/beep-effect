@@ -1,9 +1,9 @@
 # P2 first bounded wave: pre-launch result
 
-Run-8 authority follows merged #1609. Planned membership: ten distinct remaining
-non-stub PST occurrences, ascending size then object identity; 27 remaining
-eligible occurrences in the archive, 25 stub-sized occurrences outside this
-first extraction wave. Input range 61,727,744 to 539,157,504 bytes. Other estate
+Run-8 authority follows merged #1609. Planned membership: nine distinct remaining
+non-stub PST occurrences, ascending size then object identity; nine bounded occurrences among 27 remaining
+non-stub occurrences in the archive, 25 stub-sized occurrences outside this
+first extraction wave. Input range 61,727,744 to 456,877,056 bytes. Other estate
 obligations remain open. Basis: accepted P1 2.363134690x, family 822,686 ms,
 and orchestrator-reported 20 GB peak RSS.
 
@@ -25,3 +25,8 @@ unchanged; no active corpus family unit. Packet checks add no blocker.
 P1 stays complete; P2 stays pending. The orchestrator must supply a bounded
 selection contract or authorize a scoped implementation before launch.
 Reversal: revert this packet plan; retain both sealed families and freeze records.
+
+Run-9 correction: maximum admissible input 536,870,912 bytes at ratio 4
+under the 2,147,483,648-byte family cap. Eighteen larger occurrences wait
+for a later ceiling ruling; the previous largest planned member is excluded.
+Largest admitted ratio allowance: 1,827,508,224 bytes. No family launched.

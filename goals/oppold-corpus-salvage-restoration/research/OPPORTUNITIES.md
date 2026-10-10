@@ -581,3 +581,12 @@ No baseline, CI policy, changeset, or source repair was made here.
 - Disposition: standing fence permits named receipt commit and one direct
   wave push with labelled PR and ready; no CI or inventory waiver.
 - Reversal: close/revert the plan PR; retain both immutable P1 families.
+
+
+### 2026-10-10: independent ratio and family caps disagreed
+
+PR5 review found 539157504 × 4 exceeds 2147483648 by 9146368 bytes.
+Prevention: filter inputs against floor(family cap / ratio) before wave
+membership selection. Run-9 correction admits nine inputs at most 536870912
+bytes, largest 456877056; eighteen larger inputs wait. No family started.
+Reversal: revert the plan correction, retaining immutable P1 evidence.

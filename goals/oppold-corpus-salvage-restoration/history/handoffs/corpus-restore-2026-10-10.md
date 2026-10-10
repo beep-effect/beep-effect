@@ -657,3 +657,25 @@ labelled PR, ready and bounded monitoring; no unrelated repair or waiver.
 The first publisher invocation refused unstaged intent before commit; staging
 reviewed owned files corrected it. All heavy publisher wrappers are terminal.
 Reversal: close/revert this plan PR, retaining all sealed corpus evidence.
+
+
+### Run-8 final report — post-push handoff
+
+lane: corpus-restore
+head: fe330749bbd1e14db0fa0c29738f8307a1981740 (exact published PR5 head)
+PR(s): #1596 MERGED | #1600 MERGED | #1606 MERGED | #1609 MERGED | #1610 OPEN, content-final and ready for review
+package-verify: not run (PR5 changes packet documents only; no edited package); @beep/repo-cli: PR3 pass retained; @beep/libpff: PR1 pass retained
+hosted-parity: test-tsgo: not run (docs-only; PR3 pass retained) | docgen local: not run (docs-only; PR3 pass retained) | jsdoc-ratchet: committed cheap gate pass; full source parity not run (docs-only) | knowledge refs: pass at exact published head, 45555 observations, zero live gated | fallow audit+health: cheap gates pass with zero introduced findings; full source parity not run (docs-only) | scoped coverage: not run (docs-only; PR3 above-baseline proof retained)
+handoff: goals/oppold-corpus-salvage-restoration/history/handoffs/corpus-restore-2026-10-10.md
+open items: Run-8 P2 authority is recognized and its bounded plan is published in PR5 #1610, with a preflight record under history/p2. No P2 family, ledger or launcher was created. The public command has no occurrence selector: slice selects the accepted smallest recycle PST, while full selects the entire estate and is forbidden. Fresh output labels cannot select distinct remaining stores; expected-count changes would seal a denominator failure. The orchestrator must supply the bounded selection contract or authorize its implementation. Plan: at most ten of 27 remaining non-stub PST occurrences, ascending size then object identity; 25 stub-sized occurrences and non-PST estate obligations remain unresolved. Retain ratio 4, attempt 7200000 ms, family 43200000 ms, output 2147483648 bytes per family, 100 GB floor, one detached family unit at a time, 60 seconds between successful seals, stop on first failure, no code change inside wave. Basis: P1 2.363134690x, 822686 ms family, orchestrator-reported 20 GB peak RSS. Four focused tests and both engine smokes pass; 230195183616 bytes free at preflight; both sealed P1 ledger digests and freeze records unchanged. Packet checks pass without new blockers. Fifteen of sixteen cheap gates pass; sole red is three inherited schema-test advisories in files matching origin/main, acknowledged under the standing fence/S11. Direct fallback published one addressed wave and verified exact PR head. Complete review pagination returns zero threads; ready invoked. Bounded monitor was submitted, polled, deliberately cancelled and observed terminated; its inbox row is acknowledged. No merge-ready verdict or merge claimed; hosted CI/window remain with the orchestrator. Zero unacknowledged inbox rows, no worker-owned job running. P0/P1/P4 complete, P2/P3 pending, lifecycle active. Reversal: close/revert the plan PR and retain both immutable families/manifests. Plan, blocker and publication receipts are committed; this exact-head post-push report and monitor-closeout decision are appended locally without a second push. Graft saved approximately 219244 tokens in two calls.
+blocked: P2 wave cannot start within bounds: restore-mail has no bounded occurrence selector; zero families launched, plan published as #1610.
+
+
+## Run 9A: corrected bounded membership
+
+PR5 remains open. Recomputed wave: nine members among 27 remaining non-stub
+PST occurrences, ascending size then objectId, input 61727744 to 456877056
+bytes. Eighteen inputs above 536870912 bytes await a later ceiling ruling.
+Retain ratio 4 and family output cap 2147483648 bytes. Largest admitted
+ratio allowance 1827508224 bytes fits. No family launched; P1 complete,
+P2 pending. Reversal: revert planning correction and retain sealed families.
