@@ -1,12 +1,12 @@
 /**
- * @beep/t3-code
+ * T3 Code MCP transport and typed wire contracts.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 /**
- * Version of the @beep/t3-code package.
+ * Version of the T3 Code transport package.
  *
  * **Example** (Read the package version)
  *

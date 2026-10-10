@@ -150,3 +150,11 @@ The [post-integration attribution](research/T3-POST-INTEGRATION-GATES.md) record
 from PR #1583 and PracticeKg EV002 fingerprint drift from PR #1593. The golden
 EV015 is fixed. Publication may use the explicitly inherited-fence
 fallback if Yeet refuses only these two lanes; this does not grant merge readiness.
+
+## Hosted corrective wave
+
+[Exact-head triage](research/T3-HOSTED-TRIAGE.md) separates two owned repair seams
+from shared-main failures. The T3 barrel comment is repaired; the real-lock test
+uses an explicit process handshake rather than an undeclared Python executable.
+Main's targeted docgen repair is integrated. Focused Node/Bun proof, package verification and independent review pass.
+Corrective publication and fresh hosted proof remain pending; the packet stays active.

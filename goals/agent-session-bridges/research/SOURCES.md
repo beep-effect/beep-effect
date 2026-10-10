@@ -215,3 +215,5 @@ session was contacted. This is authored research in a new isolated lane.
 - [Scoped T3 reflection](../history/reflections/2026-10-09-codex-t3.md): final-extension lessons and prospective same-PR closeout, without a completed lifecycle claim.
 
 - [Post-integration gate attribution](T3-POST-INTEGRATION-GATES.md): 14 pass/two shared-main reds, exact upstream source/fingerprint provenance, verified owner routing and bounded publication fallback.
+
+- [T3 hosted triage](T3-HOSTED-TRIAGE.md): exact77fd CI and review findings, introduced repairs and inherited ownership.

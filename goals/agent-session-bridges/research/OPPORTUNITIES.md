@@ -202,3 +202,17 @@ where a literal sentinel can trigger a multi-line secret detector during merges.
   refusal and completing the owned checks, using the standing inherited-fence
   fallback if necessary. Keep hosted readiness and merge claims separate. No
   baseline relaxation or duplicate source repair belongs in this lane.
+
+## 2026-10-09 — final hosted policy and Node coverage expose omitted inner-loop checks
+
+- Work: triage the exact `77fd55b858` hosted run for PR #1571.
+- Evidence: root ESLint rejects two bare package names in the T3 barrel's JSDoc;
+  the Node coverage run's real SQLite writer-lock fixture observes an ambiguous
+  submission rather than delivered state. Package audit/docgen alone did not
+  establish either hosted outcome. The prior Node `bun:` import failure and
+  container-pull scanner failures are cleared on this head.
+- Prevention: include the root zero-warning TSDoc command for a new barrel and
+  prove fixture process startup/release on the same Node runtime used by coverage.
+  Diagnose the ambiguous result before changing retry policy or assertions.
+- Action: repair owned failures in one corrective wave, preserve inherited
+  source attribution, and keep hosted readiness unclaimed until the fresh head.

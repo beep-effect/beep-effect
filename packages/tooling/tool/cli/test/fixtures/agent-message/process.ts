@@ -4,9 +4,11 @@ import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Reactivity from "effect/reactivity/Reactivity";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 
@@ -20,6 +22,15 @@ const program = Effect.scoped(
     const client = yield* makeAgentMessageSqliteClient(filename, "100 millis");
     const store = yield* makeAgentMessageStore().pipe(Effect.provideService(SqlClient.SqlClient, client));
     const fs = yield* FileSystem.FileSystem;
+    if (stage === "lock") {
+      yield* client`BEGIN IMMEDIATE`;
+      yield* fs.writeFileString(checkpoint, "locked", { mode: 0o600 });
+      yield* fs
+        .exists(`${checkpoint}.release`)
+        .pipe(Effect.repeat({ schedule: Schedule.spaced("10 millis"), until: identity<boolean> }));
+      yield* client`ROLLBACK`;
+      return;
+    }
     if (stage === "accept") {
       const input = yield* Config.String("BEEP_MESSAGE_FIXTURE_ENVELOPE");
       const message = yield* fs.readFileString(input).pipe(Effect.flatMap(S.decodeEffect(EnvelopeJson)));

@@ -19,12 +19,13 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as Reactivity from "effect/reactivity/Reactivity";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
 import type { AgentMessageStoreShape } from "@beep/repo-cli/commands/AgentMessage";
@@ -226,12 +227,28 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
       fixture((store, filename) =>
         Effect.gen(function* () {
           const context = yield* Effect.context<Scope.Scope | ChildProcessSpawner.ChildProcessSpawner>();
+          const fs = yield* FileSystem.FileSystem;
+          const checkpoint = `${filename}.lock`;
           const completed = yield* Deferred.make<void>();
+          const lockedProcess = yield* Deferred.make<ChildProcessHandle>();
           let submits = 0;
+          let contention = 0;
           const wrapped: AgentMessageStoreShape = {
             ...store,
             complete: (...args) =>
-              store.complete(...args).pipe(Effect.tap(() => Deferred.succeed(completed, undefined))),
+              store.complete(...args).pipe(
+                Effect.tapError((error) =>
+                  error.message === lockTimeout.message
+                    ? Effect.gen(function* () {
+                        contention++;
+                        const lock = yield* Deferred.await(lockedProcess);
+                        yield* fs.writeFileString(`${checkpoint}.release`, "release", { mode: 0o600 });
+                        expect(Number(yield* lock.exitCode)).toBe(0);
+                      })
+                    : Effect.void
+                ),
+                Effect.tap(() => Deferred.succeed(completed, undefined))
+              ),
           };
           const fiber = yield* runAgentMessageDispatchLoop("target", "target-owner").pipe(
             Effect.provideService(AgentMessageStore, wrapped),
@@ -240,15 +257,22 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
                 function* () {
                   submits++;
                   const lock = yield* ChildProcess.make(
-                    "python",
-                    [
-                      "-c",
-                      "import sqlite3,sys,time; c=sqlite3.connect(sys.argv[1]); c.execute('BEGIN IMMEDIATE'); print('READY',flush=True); time.sleep(1.2); c.rollback()",
-                      filename,
-                    ],
-                    { stdout: "pipe", stderr: "inherit" }
+                    process.execPath,
+                    [new URL("./fixtures/agent-message/process.ts", import.meta.url).pathname],
+                    {
+                      env: {
+                        BEEP_MESSAGE_FIXTURE_DATABASE: filename,
+                        BEEP_MESSAGE_FIXTURE_CHECKPOINT: checkpoint,
+                        BEEP_MESSAGE_FIXTURE_STAGE: "lock",
+                      },
+                      stdout: "ignore",
+                      stderr: "inherit",
+                    }
                   );
-                  yield* lock.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead);
+                  yield* Deferred.succeed(lockedProcess, lock);
+                  yield* fs
+                    .exists(checkpoint)
+                    .pipe(Effect.repeat({ schedule: Schedule.spaced("10 millis"), until: identity<boolean> }));
                   return yield* Effect.succeed<"delivered">("delivered");
                 },
                 Effect.provide(context),
@@ -259,6 +283,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           );
           yield* Deferred.await(completed);
           expect(submits).toBe(1);
+          expect(contention).toBe(1);
           expect((yield* store.receipts("message"))[2]?.status).toBe("delivered");
           yield* Fiber.interrupt(fiber);
         })
