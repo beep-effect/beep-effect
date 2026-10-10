@@ -59,3 +59,16 @@ The diagnostic wrapper ended. No fresh live slice has started.
   Finding categories are inherited scratchpad source; this lane changes no export
   documentation and the scratchpad tree has no lane diff. No baseline is altered.
   Full package proof and Fallow remain active.
+
+- Full @beep/repo-cli package-verify passed: audit 821.1 seconds, docgen 26.4
+  seconds. Both real nested engine smokes exit 0. Scoped coverage remains active.
+- Fallow complete lane passed, including audit, dead-code and health: zero
+  introduced findings. Parity batch exit 1 belongs only to inherited JSDoc totals.
+- All 593 scratchpad export files were compared byte-for-byte with main and match.
+  No JSDoc finding file or baseline was edited.
+- PR2 #1600 merged; incorporated main at `34c8928d779a4e59f42c747455f507d532727edf`.
+  Packet conflicts were resolved by retaining all sealed-failure evidence, then
+  adding run-4 diagnosis and contract blocker. Owned Corpus/libpff surfaces and
+  lockfile did not change; package and parity evidence still cover the same code.
+- No fresh freeze record, launch script, started stamp, result or run-tree write
+  exists. Fresh launch is withheld on the independent-label contract precondition.
