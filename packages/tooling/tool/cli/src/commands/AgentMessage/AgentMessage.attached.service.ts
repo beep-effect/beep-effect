@@ -229,15 +229,14 @@ export const makeAttachedT3Dispatch = Effect.fn("AgentMessage.attachedDispatch")
       runId,
     });
   });
-  const submit = Effect.fn("AgentMessage.attachedSubmit")(function* (claim: Claim) {
+  const prepare = Effect.fn("AgentMessage.attachedPrepare")(function* (claim: Claim) {
     const grant = yield* receivingGrant();
-    if (!receivingGrantAllows(grant, claim.envelope)) return "failed";
-    const preflight = yield* verifyAttachedT3(profile, false).pipe(
+    if (!receivingGrantAllows(grant, claim.envelope))
+      return yield* failure("Attached peer grant does not authorize the queued message.");
+    yield* verifyAttachedT3(profile, false).pipe(
       Effect.provideService(T3Code, t3),
-      Effect.provideService(FileSystem.FileSystem, fs),
-      Effect.result
+      Effect.provideService(FileSystem.FileSystem, fs)
     );
-    if (Result.isFailure(preflight)) return "failed";
     const clientRequestId = `beep:${yield* sha256Hex(A.join([claim.envelope.repositoryScope, claim.envelope.from, claim.envelope.messageId], "\n"))}`;
     yield* record({
       state: "planned",
@@ -246,6 +245,12 @@ export const makeAttachedT3Dispatch = Effect.fn("AgentMessage.attachedDispatch")
       clientRequestId,
     });
     const text = yield* trustedBrief(claim.envelope);
+    return { clientRequestId, text };
+  });
+  const submit = Effect.fn("AgentMessage.attachedSubmit")(function* (claim: Claim) {
+    const prepared = yield* prepare(claim).pipe(Effect.result);
+    if (Result.isFailure(prepared)) return "failed";
+    const { clientRequestId, text } = prepared.success;
     const result = yield* t3.sendQueued(profile.threadId, text, clientRequestId);
     yield* record({
       state: "submitted",

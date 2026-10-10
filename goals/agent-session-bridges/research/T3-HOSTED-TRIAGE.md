@@ -196,3 +196,52 @@ and a new review window; the preceding results belong to `5ab82d71ed`.
 After integration, the attached service, attached tests and runtime tests retain
 their final reviewed SHA256 values above. CLI quick lint/check pass (4.2s/7.7s),
 and direct full CLI test TSGo exits zero. No native inference was repeated.
+
+## Integrated hosted result and definite pre-submission rejection
+
+Head `e1c8cace20` settled at 26 successful and seven failed check runs. Both CLI
+unit shards passed 5,945 tests with six skipped. Coverage passed the CLI suite
+(5,940 passed, eleven skipped), including eleven attached cases and four runtime
+cases. It failed the same four documents-domain and eleven law-table fixtures,
+plus two Practice KG startup checks that received empty stderr instead of the
+expected incompatible-bundle message. The entire Practice KG app tree and its
+Host test match integrated main; this receipt does not establish the underlying
+startup failure cause. No aggregate coverage-ratchet pass is claimed.
+
+Repo Sanity now clears the changeset graph and fails at the two main-identical
+minimatch/smol-toml version disagreements. Policy lint clears Accounts,
+PracticeKg and missing doctest entries, while retaining main-identical
+language-service, inline-schema, property-test-advisory and fixture-project
+inputs. There are no T3 or AgentMessage diagnostics in that job.
+
+JSDoc Ratchet remains a masked hosted error. A direct production inventory writer
+run on this head succeeded locally in 292 seconds across 148 packages, using
+private outputs. An older main-only job also has the generic error. Neither
+source equality nor local success identifies the current hosted exception; its
+origin remains unknown, and inventory generation is not a ratchet-metrics pass.
+
+A later P1 review identified definite rejection being misclassified as ambiguity:
+receiving-grant expiry or another preparation failure could occur before any
+native send yet fence the endpoint. The repaired dispatch separates all
+preparation from submission. Typed preparation failures return `failed`; defects
+and interruption remain uncaught, and every path after `sendQueued` begins keeps
+its existing ambiguity behavior. No retry or ambiguity-clear operation is added.
+
+A real-router regression exercises grant expiry after message acceptance, a
+corrupt grant file, and a planned-checkpoint write failure. Each settles failed,
+performs zero native sends, and leaves a subsequent message claimable. Node
+coverage and Bun pass twelve focused cases. Direct full CLI test TSGo, quick
+package lint/check, root Oxlint and whitespace checks pass. The existing
+Effect-Vitest membership remains one current/one baseline, with zero introduced
+or resolved findings. Earlier live proofs retain their original source binding;
+no native inference or retained-hold mutation was repeated.
+
+Repair source SHA256:
+
+- Attached service: `ec6a8f78095e565cea41dfc22ac4737dae5396a2918ee8311586cd8586055858`.
+- Attached tests: `c1afae94d3945d9593fe504fa8f84da01268000b6d21895385889c0c739dd861`.
+
+The new head must earn its own hosted results. Later-round minor fixture-path
+portability is tracked in #1587, and future private-package publication exports
+in #1607. Neither is claimed repaired here. Required hosted reds still prevent
+merge readiness and operative packet completion.

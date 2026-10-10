@@ -1,3 +1,4 @@
+import { EndpointDispatch, makeAgentMessageRouter } from "@beep/repo-cli/commands/AgentMessage";
 import { ModelId } from "@beep/repo-cli/commands/Models/Models.catalog.schemas";
 import {
   AgentMessageStore,
@@ -73,7 +74,7 @@ const binding = (id: string) =>
       policyEvidence: "launch-enforced",
     }),
   });
-const setup = Effect.fn("AttachedTest.setup")(function* () {
+const setup = Effect.fn("AttachedTest.setup")(function* (grantLifetimeMs = 60000) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const directory = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
@@ -91,7 +92,7 @@ const setup = Effect.fn("AttachedTest.setup")(function* () {
     repositoryScope: "repo",
     conversationScope: O.some("conversation"),
     allowedRecipients: ["a"],
-    expiresAt: now + 60000,
+    expiresAt: now + grantLifetimeMs,
     maxMessages: 1,
   });
   yield* store.registerGrant(grant);
@@ -301,6 +302,68 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("Attached T3 and scoped 
       const result = yield* dispatch.submit(state.claim).pipe(Effect.result);
       result.pipe(Result.isFailure, Utils.assertTrue);
     })
+  );
+  it.effect("definite pre-submission failures release the claim without native exposure", () =>
+    Effect.forEach(
+      ["expired-grant", "corrupt-grant", "checkpoint"],
+      (scenario) =>
+        Effect.gen(function* () {
+          const state = yield* setup(1000);
+          const path = yield* Path.Path;
+          const clock = yield* Clock.Clock;
+          const { driver, sent } = yield* fixture(state, "ack");
+          yield* state.store.complete(state.claim, "failed", state.now + 1);
+          yield* state.store.accept(
+            Envelope.make({ ...state.claim.envelope, messageId: "rejected", idempotencyKey: "rejected" }),
+            state.now + 2
+          );
+          const stateDir = path.join(state.directory, "blocked-checkpoint");
+          yield* Match.value(scenario).pipe(
+            Match.when("expired-grant", () => Effect.void),
+            Match.when("corrupt-grant", () => state.fs.writeFileString(state.grantFile, "{}")),
+            Match.orElse(() => state.fs.writeFileString(stateDir, "checkpoint directory is a file"))
+          );
+          const dispatch = yield* makeAttachedT3Dispatch(
+            state.profile,
+            scenario === "checkpoint" ? stateDir : state.directory
+          ).pipe(Effect.provideService(AgentMessageStore, state.store), Effect.provideService(T3Code, driver));
+          const now = scenario === "expired-grant" ? state.grant.expiresAt : state.now + 3;
+          const router = yield* makeAgentMessageRouter.pipe(
+            Effect.provideService(AgentMessageStore, state.store),
+            Effect.provideService(EndpointDispatch, dispatch)
+          );
+          const receipt = yield* router
+            .dispatchOne("b", "owner-b", now, now + 20000, () => Effect.succeed(now + 1))
+            .pipe(
+              Effect.provideService(Clock.Clock, {
+                ...clock,
+                currentTimeMillis: Effect.succeed(now),
+                currentTimeMillisUnsafe: () => now,
+              })
+            );
+          Utils.assertSome(
+            O.map(receipt, (receipt) => receipt.status),
+            "failed"
+          );
+          expect(yield* Ref.get(sent)).toBe(0);
+          const later = Envelope.make({
+            ...state.claim.envelope,
+            messageId: "later",
+            idempotencyKey: "later",
+            createdAt: now,
+            expiresAt: now + 30000,
+          });
+          yield* state.store.accept(later, now);
+          Utils.assertSome(
+            O.map(
+              yield* state.store.claimNext("b", "owner-b", now + 1, now + 20000),
+              (claim) => claim.envelope.messageId
+            ),
+            "later"
+          );
+        }),
+      { concurrency: 1 }
+    )
   );
   it.effect("drift, stale runs and lost submission receipts fail without resubmission", () =>
     Effect.forEach(

@@ -250,3 +250,17 @@ where a literal sentinel can trigger a multi-line secret detector during merges.
   focused runtime success and package source checks do not cover this policy.
 - Action: simplify scenario selection, retain both new assertions and verify
   the actual Fallow gates without altering thresholds or inventory.
+
+## 2026-10-09 — hosted inventory failure hides its original cause
+
+- Work: attribute JSDoc Ratchet on the integrated messaging head.
+- Evidence: job `114119379881` emits only "Failed to generate JSDoc documentation
+  inventory." A direct invocation of the production writer succeeds locally in
+  292 seconds across 148 packages, with private outputs. An older main-only job
+  has the same generic failure; neither fact proves the current hosted cause.
+- Prevention: preserve a sanitized nested cause in the hosted artifact before
+  mapping it to the generic CLI error. Source equality alone cannot attribute
+  an input-dependent generator failure.
+- Action: keep the hosted cause unknown, retain local and hosted evidence
+  separately, and do not weaken the ratchet or claim a local generation pass
+  satisfies the hosted gate.
