@@ -89,12 +89,13 @@ export class SmokeFailure extends S.TaggedError<SmokeFailure>($I`SmokeFailure`)(
 ) {}
 
 /**
- * Failure of the headless `--self-check`, already reported as its one JSON line.
+ * Failure of a bundle check after its refusal has already been printed.
  *
  * **Details**
  *
  * The self-check owns stdout: it prints `{"ok":false,"message":…}` itself, so
- * this error opts out of the main runner's own error log through
+ * Startup uses the same error after printing one refusal to stderr.
+ * This error opts out of the main runner's own error log through
  * `Runtime.errorReported`. The process still exits non-zero.
  *
  * **Example** (Create a self-check failure)
@@ -116,7 +117,7 @@ export class SelfCheckFailure extends S.TaggedError<SelfCheckFailure>($I`SelfChe
     message: S.NonEmptyString,
   },
   $I.annoteError<SelfCheckFailure>("SelfCheckFailure", {
-    description: "Self-check failure that was already printed as the self-check result line.",
+    description: "Bundle-check failure whose refusal was already printed.",
   })
 ) {
   override readonly [Runtime.errorReported] = false;

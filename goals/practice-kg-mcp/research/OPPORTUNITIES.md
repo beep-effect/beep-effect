@@ -51,3 +51,30 @@ Friction receipts, recorded when they happened.
   with the Coverage Regression lane red on its own new file. Prevention: run
   the scoped coverage of new and changed files before calling a PR final.
 
+## 2026-10-09 sitting closeout
+
+- The worker brief referenced a Mechanics section and handoff filename but
+  supplied neither. Its private inputs were read-only and work was restricted
+  to the lane. Evidence: `practice-kg-sitting-closeout.md`, Report section.
+  Prevention: validate the named sections and writable handoff/private-map
+  destinations before dispatch. The private answer log retains the identifying
+  IDs and their order; the orchestrator must archive the explicit alias map.
+- `beep-heavy` could not reach the user manager without the runtime bus
+  environment. Evidence: `Failed to connect to user scope bus` on the first
+  package-verification launch. Setting the existing runtime directory and bus
+  address let the approved wrapper run. Prevention: carry those settings into
+  worker launches that use user-systemd scopes.
+- The findings summary did not distinguish manifest-only provenance from a
+  database lookup. The successful 01:06Z call had no reference; the failed call
+  that followed used a document digest. Prevention: record query stage and
+  input shape alongside the outcome. The lane stopped its first publication
+  before push to correct the diagnosis.
+- Yeet refused publication on inherited schema-first findings in Accounts and
+  M365 and an inherited Effect-Vitest finding in the projection tests. All
+  affected source files and inventories are unchanged against origin/main.
+  The new Host test fixture initially added one Effect-Vitest finding; moving
+  its resource setup into `it.layer` removed it without refreshing the baseline.
+  Full host package audit/docgen passed after that repair. Evidence:
+  `yeet publish`, `lint effect-vitest`, and the final package-verification log.
+  Prevention: keep inherited policy repairs with the consolidated base owner
+  and use suite-layer fixture setup for new tests.

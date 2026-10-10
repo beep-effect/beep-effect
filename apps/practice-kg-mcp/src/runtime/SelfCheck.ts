@@ -224,6 +224,8 @@ const readMatterStore = Effect.fn("PracticeKgSelfCheck.readMatterStore")(functio
     .query(matterColumnsProbe)
     .pipe(
       Effect.andThen(duckdb.query(correspondentColumnsProbe)),
+      Effect.andThen(duckdb.query(PracticeKgQueries.getDocument, [SELF_CHECK_REFERENCE, null, 1, 1])),
+      Effect.andThen(duckdb.query(PracticeKgQueries.searchText, [SELF_CHECK_REFERENCE, null, 1])),
       Effect.andThen(duckdb.query("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matters")),
       Effect.flatMap(decodeCountRows),
       Effect.map(firstCount),
@@ -284,6 +286,8 @@ const requireStore = Effect.fn("PracticeKgSelfCheck.requireStore")(function* (bu
  * the tools read, then counted. A store that will not open (held by another
  * process, unreadable or corrupt) and a store whose tables are older than the
  * manifest claims are refused with different messages, each naming the store.
+ * Document get and text search run their tool SQL, including the full-text index.
+ * The stdio entrypoint also runs this check before starting the MCP transport.
  * Only `SELECT` statements run, and both stores close before the report is
  * returned. The stores are the ones `makePracticeKgHostResourcesLayer` hands
  * the stdio server, so a passing report covers the files the server reads.
