@@ -3,13 +3,13 @@
   "initiative": {
     "id": "semantic-foundation",
     "title": "Semantic Foundation",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-08",
-    "updated": "2026-10-09",
+    "updated": "2026-10-10",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/semantic-foundation",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "statusNote": "Reopened 2026-10-09 for M2 and M3 as ready slices for oppold-corpus-semantic-ingestion-v2; M4 routed to the legal-document-intake P4 lane.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -70,7 +70,7 @@
     {
       "id": "M3",
       "name": "Docketing and Party Roles",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "M4",
@@ -80,12 +80,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

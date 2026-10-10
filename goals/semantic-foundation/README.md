@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -37,8 +37,8 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Reopened 2026-10-09 for M2 classification schemes, then M3 docketing and
-party-role vocabulary. M4 remains gated and routed to legal-document-intake P4.
+Closed after M1-M3 on 2026-10-09 with version-pinned classification, docketing
+and separate party-kind/legal-role vocabulary contracts. M4 remains gated and routed to legal-document-intake P4.
 
 ## Latest Evidence
 
@@ -50,7 +50,7 @@ party-role vocabulary. M4 remains gated and routed to legal-document-intake P4.
 - Real-manifest M1 regression preserves nine concepts and the vetted FOLIO
   email alignment; IPC/CPC identities remain distinct and Nice terms resolve.
 - Coverage remains above unchanged aggregate floors; only lane-created rows
-  are added under R4. M3 remains in progress, lifecycle active, M4 pending.
+  are added under R4. M3 is complete, lifecycle completed-retained, M4 pending.
 - [Append-only handoff](./history/handoffs/semantic-m2m3-2026-10-09.md) retains
   the proof table, checksums, source heads and publication receipts.
 
@@ -81,3 +81,22 @@ party-role vocabulary. M4 remains gated and routed to legal-document-intake P4.
 - The older ontology-survey scope is absorbed here by decision from
   [`explorations/legal-ontology-landscape`](../../explorations/legal-ontology-landscape/README.md);
   its packet was removed 2026-07-14, so the former no-edit fence is moot.
+
+### M3 complete and packet closeout (2026-10-09)
+
+- 42 terms in three explicit version-1.0.0 schemes; TTL/JSON-LD/TS parity,
+  every pinned notation and CQ 1/5/7/8/18 fixtures pass in Vocabulary.test.ts.
+- All 97 package tests pass; M3 production files have 100% coverage. Package
+  audit/docgen pass (12.0s / 6.0s), reflection lint has zero findings.
+- [Frozen contract](./research/2026-10-09-m3-vocabulary-contract.md) retains
+  all IRIs, deprecation rules, source boundaries and the read-only bootstrap
+  plan. No trademark packet was created.
+- Wave 1 [#1598](https://github.com/beep-effect/beep-effect/pull/1598) run
+  [38007435907](https://github.com/beep-effect/beep-effect/actions/runs/38007435907)
+  has inherited Repo Sanity private changeset failures and Vercel rate limits;
+  Heavy checks were queued at closeout. Exact final-head state is retained in
+  the handoff after publication.
+- Root docgen:local fails on unchanged scratchpad displayWidth.ts ES2024 regex
+  examples. Ontology package docgen passes. The final parity receipts distinguish
+  this inherited root failure from the package result.
+- [Closeout reflection](./history/reflections/2026-10-09-codex.md).

@@ -146,10 +146,15 @@ qualified coverage, package audit/docgen and the complete real-edition/M1 table.
 
 ### M3 acceptance (2026-10-09)
 
-- [ ] Docketing, party-kind and legal-role seeds have TTL/JSON-LD/TS parity.
-- [ ] Every IRI uses the repository authority; party-kind and role scheme identities remain separate.
-- [ ] Replayable CQ 1/5/7/8/18 fixtures resolve versioned concept IRIs.
-- [ ] Frozen vocabulary contract and read-only trademark packet spawn seed are retained.
+- [x] Docketing, party-kind and legal-role seeds have TTL/JSON-LD/TS parity.
+- [x] Every IRI uses the repository authority; party-kind and role scheme identities remain separate.
+- [x] Replayable CQ 1/5/7/8/18 fixtures resolve versioned concept IRIs.
+- [x] Frozen vocabulary contract and read-only trademark packet spawn seed are retained.
+
+M3 evidence: Vocabulary.test.ts has serialization parity, complete pinned
+lookups, separate scheme hierarchy, typed failures and replayable CQ fixtures.
+All 97 tests pass; all new M3 src files are fully covered. Package audit/docgen
+passed after test-helper corrections; the contract includes the spawn plan.
 
 ## Verification Matrix
 

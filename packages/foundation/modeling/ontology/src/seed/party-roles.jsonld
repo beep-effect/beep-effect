@@ -22,7 +22,7 @@
       "skos:definition": "A real-world person or organization identified independently of its legal roles.",
       "skos:broader": [],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0605.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s605.html"
       },
       "skos:scopeNote": "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned."
     },
@@ -41,7 +41,7 @@
         }
       ],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0605.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s605.html"
       },
       "skos:scopeNote": "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned."
     },
@@ -60,7 +60,7 @@
         }
       ],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0605.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s605.html"
       },
       "skos:scopeNote": "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned."
     },
@@ -79,7 +79,7 @@
         }
       ],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0605.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s605.html"
       },
       "skos:scopeNote": "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned."
     },
@@ -98,7 +98,7 @@
         }
       ],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0605.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s605.html"
       },
       "skos:scopeNote": "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned."
     },
@@ -117,7 +117,7 @@
         }
       ],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0605.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s605.html"
       },
       "skos:scopeNote": "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned."
     },
@@ -138,7 +138,7 @@
       "skos:definition": "A contextual role attributing conception of a specified invention to a natural person on supporting evidence.",
       "skos:broader": [],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0210.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s2109.html"
       },
       "skos:scopeNote": "35 USC 100(f)."
     },
@@ -153,7 +153,7 @@
       "skos:definition": "A contextual role identifying the party applying in a specified patent or trademark matter.",
       "skos:broader": [],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0605.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s605.html"
       },
       "skos:scopeNote": "35 USC 118; 37 CFR 1.42. This patent source supplies patent context only; trademark applicability requires separate authority evidence."
     },
@@ -168,7 +168,7 @@
       "skos:definition": "A contextual role identifying a party to which rights are transferred by an assignment.",
       "skos:broader": [],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0301.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s301.html"
       },
       "skos:scopeNote": "35 USC 261."
     },
@@ -183,7 +183,7 @@
       "skos:definition": "A contextual role identifying a party holding rights in a specified asset.",
       "skos:broader": [],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0301.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s301.html"
       },
       "skos:scopeNote": "35 USC 261; 15 USC 1058. This patent source supplies patent context only; trademark applicability requires separate authority evidence."
     },
@@ -198,7 +198,7 @@
       "skos:definition": "A contextual role identifying the official examining a specified application or proceeding.",
       "skos:broader": [],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0707.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s707.html"
       },
       "skos:scopeNote": "35 USC 131."
     },
@@ -213,7 +213,7 @@
       "skos:definition": "A contextual role identifying the practitioner recorded as representing a party in a specified matter.",
       "skos:broader": [],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0402.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s402.html"
       },
       "skos:scopeNote": "37 CFR 1.32; 37 CFR 2.17. This patent source supplies patent context only; trademark applicability requires separate authority evidence."
     },
@@ -228,7 +228,7 @@
       "skos:definition": "A contextual role identifying the designated recipient or sender of matter correspondence.",
       "skos:broader": [],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0403.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s403.html"
       },
       "skos:scopeNote": "37 CFR 1.33."
     },
@@ -243,7 +243,7 @@
       "skos:definition": "A contextual role identifying a party designated as a client communication contact.",
       "skos:broader": [],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0403.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s403.html"
       },
       "skos:scopeNote": "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned."
     },
@@ -258,7 +258,7 @@
       "skos:definition": "A contextual role identifying the party signing a specified document or submission.",
       "skos:broader": [],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0502.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s502.html"
       },
       "skos:scopeNote": "37 CFR 1.4(d)."
     },
@@ -273,7 +273,7 @@
       "skos:definition": "A contextual role identifying a party receiving permission under a specified licence.",
       "skos:broader": [],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0301.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s301.html"
       },
       "skos:scopeNote": "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned."
     },
@@ -288,7 +288,7 @@
       "skos:definition": "A contextual role identifying a party granting permission under a specified licence.",
       "skos:broader": [],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0301.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s301.html"
       },
       "skos:scopeNote": "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned."
     }

@@ -355,3 +355,16 @@ Yeet retry passed every gate except schema-first inventory findings in untouched
 ### 2026-10-09 M3 package audit catches test-only Effect diagnostics
 
 Package audit rejected synchronous schema encoding in the TTL parity helper, nonfinite CQ numbers and a void property predicate. Replaced them with encode/decode Effects, Finite and a boolean property result. The dedicated test-tsgo command had passed while package audit emitted stricter diagnostics; retain both proofs.
+
+### 2026-10-09 final root parity attribution
+
+`docgen:local` selected unchanged scratchpad and failed `displayWidth.ts` TS1501
+(ES2024 regex flag while examples target an older edition). Ontology package
+docgen passed. No scratchpad diff against main: inherited, not repaired here.
+`jsdoc:ratchet:check` initially had no `.beep/ci` inventory and failed artifact
+read; generate the inventory only under `.beep/ci`, then rerun the ratchet.
+This separates an absent local proof artifact from actual inventory regression.
+
+### 2026-10-09 source URL preflight
+
+M3 HTTP preflight found leading-zero MPEP routes and an obsolete WIPO path returned 404. Corrected to live USPTO routes, specific Inventorship section 2109 and WIPO PCT fees page. All originally valid sources returned 200; no authority bytes are tracked. A link preflight before seed freeze prevents plausible-looking broken citations.

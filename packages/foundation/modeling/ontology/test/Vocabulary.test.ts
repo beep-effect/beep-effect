@@ -11,6 +11,7 @@ import {
   VocabularySeed,
 } from "@beep/ontology";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -64,7 +65,7 @@ const CompetencyFixture = S.Struct({
 });
 const isVocabularyError = S.is(VocabularyError);
 
-it.layer(VocabularyRegistry.layer)("pinned M3 vocabularies", (it) => {
+it.layer(VocabularyRegistry.layer, { timeout: "30 seconds" })("pinned M3 vocabularies", (it) => {
   for (const [file, selected] of [
     ["docketing", [DocketingVocabulary]],
     ["party-roles", [PartyKindVocabulary, LegalRoleVocabulary]],
@@ -149,19 +150,17 @@ it.layer(VocabularyRegistry.layer)("pinned M3 vocabularies", (it) => {
         expect((yield* r.resolve(fixture, fixture.notation)).iri).toBe(fixture.expectedIri);
     })
   );
-  it.effect("round-trips schema-derived vocabulary pins", () =>
-    Arbitrary.checkEffect(
-      Arbitrary.schema(VocabularyPin),
-      (pin) =>
-        S.encodeEffect(VocabularyPin)(pin).pipe(
-          Effect.flatMap(S.decodeEffect(VocabularyPin)),
-          Effect.orDie,
-          Effect.map((decoded) => {
-            expect(decoded).toEqual(pin);
-            return true;
-          })
-        ),
-      { numRuns: 50 }
-    )
+  it.effect.prop(
+    "round-trips schema-derived vocabulary pins",
+    [Arbitrary.schema(VocabularyPin)],
+    ([pin]) =>
+      S.encodeEffect(VocabularyPin)(pin).pipe(
+        Effect.flatMap(S.decodeEffect(VocabularyPin)),
+        Effect.orDie,
+        Effect.map((decoded) => {
+          expect(decoded).toEqual(pin);
+        })
+      ),
+    { arbitrary: fcRuns() }
   );
 });

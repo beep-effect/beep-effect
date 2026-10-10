@@ -11,7 +11,7 @@
   skos:notation "Party" ;
   skos:prefLabel "Party" ;
   skos:definition "A real-world person or organization identified independently of its legal roles." ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0605.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s605.html> ;
   skos:scopeNote "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/party-kinds/concept/NaturalPersonParty> a skos:Concept ;
@@ -20,7 +20,7 @@
   skos:prefLabel "Natural person party" ;
   skos:definition "A human party whose identity persists across matters and role changes." ;
   skos:broader <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/party-kinds/concept/Party> ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0605.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s605.html> ;
   skos:scopeNote "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/party-kinds/concept/OrganizationParty> a skos:Concept ;
@@ -29,7 +29,7 @@
   skos:prefLabel "Organization party" ;
   skos:definition "An institutional party whose identity persists across changes of personnel and legal roles." ;
   skos:broader <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/party-kinds/concept/Party> ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0605.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s605.html> ;
   skos:scopeNote "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/party-kinds/concept/LawFirm> a skos:Concept ;
@@ -38,7 +38,7 @@
   skos:prefLabel "Law firm" ;
   skos:definition "An organization identified as a provider of legal professional services." ;
   skos:broader <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/party-kinds/concept/OrganizationParty> ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0605.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s605.html> ;
   skos:scopeNote "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/party-kinds/concept/PatentOffice> a skos:Concept ;
@@ -47,7 +47,7 @@
   skos:prefLabel "Patent office" ;
   skos:definition "An institution identified as an authority administering patent procedures." ;
   skos:broader <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/party-kinds/concept/OrganizationParty> ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0605.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s605.html> ;
   skos:scopeNote "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/party-kinds/concept/TrademarkOffice> a skos:Concept ;
@@ -56,7 +56,7 @@
   skos:prefLabel "Trademark office" ;
   skos:definition "An institution identified as an authority administering trademark procedures." ;
   skos:broader <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/party-kinds/concept/OrganizationParty> ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0605.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s605.html> ;
   skos:scopeNote "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/legal-roles> a skos:ConceptScheme ;
@@ -68,7 +68,7 @@
   skos:notation "InventorRole" ;
   skos:prefLabel "Inventor role" ;
   skos:definition "A contextual role attributing conception of a specified invention to a natural person on supporting evidence." ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0210.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s2109.html> ;
   skos:scopeNote "35 USC 100(f)." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/legal-roles/concept/ApplicantRole> a skos:Concept ;
@@ -76,7 +76,7 @@
   skos:notation "ApplicantRole" ;
   skos:prefLabel "Applicant role" ;
   skos:definition "A contextual role identifying the party applying in a specified patent or trademark matter." ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0605.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s605.html> ;
   skos:scopeNote "35 USC 118; 37 CFR 1.42. This patent source supplies patent context only; trademark applicability requires separate authority evidence." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/legal-roles/concept/AssigneeRole> a skos:Concept ;
@@ -84,7 +84,7 @@
   skos:notation "AssigneeRole" ;
   skos:prefLabel "Assignee role" ;
   skos:definition "A contextual role identifying a party to which rights are transferred by an assignment." ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0301.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s301.html> ;
   skos:scopeNote "35 USC 261." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/legal-roles/concept/OwnerRole> a skos:Concept ;
@@ -92,7 +92,7 @@
   skos:notation "OwnerRole" ;
   skos:prefLabel "Owner role" ;
   skos:definition "A contextual role identifying a party holding rights in a specified asset." ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0301.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s301.html> ;
   skos:scopeNote "35 USC 261; 15 USC 1058. This patent source supplies patent context only; trademark applicability requires separate authority evidence." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/legal-roles/concept/ExaminerRole> a skos:Concept ;
@@ -100,7 +100,7 @@
   skos:notation "ExaminerRole" ;
   skos:prefLabel "Examiner role" ;
   skos:definition "A contextual role identifying the official examining a specified application or proceeding." ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0707.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s707.html> ;
   skos:scopeNote "35 USC 131." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/legal-roles/concept/AttorneyOfRecordRole> a skos:Concept ;
@@ -108,7 +108,7 @@
   skos:notation "AttorneyOfRecordRole" ;
   skos:prefLabel "Attorney of record role" ;
   skos:definition "A contextual role identifying the practitioner recorded as representing a party in a specified matter." ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0402.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s402.html> ;
   skos:scopeNote "37 CFR 1.32; 37 CFR 2.17. This patent source supplies patent context only; trademark applicability requires separate authority evidence." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/legal-roles/concept/CorrespondentRole> a skos:Concept ;
@@ -116,7 +116,7 @@
   skos:notation "CorrespondentRole" ;
   skos:prefLabel "Correspondent role" ;
   skos:definition "A contextual role identifying the designated recipient or sender of matter correspondence." ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0403.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s403.html> ;
   skos:scopeNote "37 CFR 1.33." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/legal-roles/concept/ClientContactRole> a skos:Concept ;
@@ -124,7 +124,7 @@
   skos:notation "ClientContactRole" ;
   skos:prefLabel "Client contact role" ;
   skos:definition "A contextual role identifying a party designated as a client communication contact." ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0403.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s403.html> ;
   skos:scopeNote "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/legal-roles/concept/SignerRole> a skos:Concept ;
@@ -132,7 +132,7 @@
   skos:notation "SignerRole" ;
   skos:prefLabel "Signer role" ;
   skos:definition "A contextual role identifying the party signing a specified document or submission." ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0502.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s502.html> ;
   skos:scopeNote "37 CFR 1.4(d)." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/legal-roles/concept/LicenseeRole> a skos:Concept ;
@@ -140,7 +140,7 @@
   skos:notation "LicenseeRole" ;
   skos:prefLabel "Licensee role" ;
   skos:definition "A contextual role identifying a party receiving permission under a specified licence." ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0301.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s301.html> ;
   skos:scopeNote "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned." .
 
 <https://ns.beep.sh/ontology/semantic-foundation/vocabulary/legal-roles/concept/LicensorRole> a skos:Concept ;
@@ -148,6 +148,6 @@
   skos:notation "LicensorRole" ;
   skos:prefLabel "Licensor role" ;
   skos:definition "A contextual role identifying a party granting permission under a specified licence." ;
-  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s0301.html> ;
+  dct:source <https://www.uspto.gov/web/offices/pac/mpep/s301.html> ;
   skos:scopeNote "Repository definition; this public authority provides procedural context, not a universal definition. Scope and supporting evidence are consumer-owned." .
 

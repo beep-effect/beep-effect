@@ -22,7 +22,7 @@
       "skos:definition": "A docket target for an action associated with a matter, authority and supporting evidence.",
       "skos:broader": [],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0710.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s710.html"
       },
       "skos:scopeNote": "Authority periods are contextual; no date is calculated."
     },
@@ -37,7 +37,7 @@
       "skos:definition": "An observed occurrence supporting creation, revision or satisfaction of a docket target.",
       "skos:broader": [],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0710.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s710.html"
       },
       "skos:scopeNote": "An occurrence differs from a planned deadline."
     },
@@ -56,7 +56,7 @@
         }
       ],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0710.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s710.html"
       },
       "skos:scopeNote": "35 USC 133 and applicable procedural rules; jurisdiction must be supplied."
     },
@@ -75,7 +75,7 @@
         }
       ],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0710.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s710.html"
       },
       "skos:scopeNote": "Repository planning concept; not a statutory obligation."
     },
@@ -94,7 +94,7 @@
         }
       ],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0710.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s710.html"
       },
       "skos:scopeNote": "35 USC 133; 37 CFR 1.134 and 1.136."
     },
@@ -132,7 +132,7 @@
         }
       ],
       "dct:source": {
-        "@id": "https://www.wipo.int/en/web/pct-system/texts/nat-phase"
+        "@id": "https://www.wipo.int/en/web/pct-system/fees/index"
       },
       "skos:scopeNote": "National-phase jurisdiction and applicable national law are required; no US annual-fee inference."
     },
@@ -151,7 +151,7 @@
         }
       ],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0609.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s609.html"
       },
       "skos:scopeNote": "37 CFR 1.97 and 1.98; timing depends on prosecution context."
     },
@@ -170,7 +170,7 @@
         }
       ],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0706.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s706.html"
       },
       "skos:scopeNote": "37 CFR 1.114; context determines whether and when an RCE is appropriate."
     },
@@ -208,7 +208,7 @@
         }
       ],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0211.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s211.html"
       },
       "skos:scopeNote": "35 USC 120; 37 CFR 1.78; no pendency calculation."
     },
@@ -394,7 +394,7 @@
       "skos:definition": "A recorded status of a docket target, supported by a consumer-owned observation.",
       "skos:broader": [],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0710.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s710.html"
       },
       "skos:scopeNote": "Repository status vocabulary; no legal conclusion is derived. Status descriptors may overlap; no exclusive state partition is asserted."
     },
@@ -413,7 +413,7 @@
         }
       ],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0710.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s710.html"
       },
       "skos:scopeNote": "Repository state label; does not establish remaining time. Status descriptors may overlap; no exclusive state partition is asserted."
     },
@@ -451,7 +451,7 @@
         }
       ],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0710.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s710.html"
       },
       "skos:scopeNote": "Deadline finality differs from a final office action; neither is inferred from this label. Status descriptors may overlap; no exclusive state partition is asserted."
     },
@@ -470,7 +470,7 @@
         }
       ],
       "dct:source": {
-        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s0710.html"
+        "@id": "https://www.uspto.gov/web/offices/pac/mpep/s710.html"
       },
       "skos:scopeNote": "The consumer owns the observation, date and any remedial analysis. Status descriptors may overlap; no exclusive state partition is asserted."
     }
