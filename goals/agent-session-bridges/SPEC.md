@@ -141,7 +141,7 @@ Reversal: revoke disposable external credentials and detach owned runtime
 bindings, preserving the user-interacted profile and private evidence. No
 registered orchestrator role or provider fallback policy changed.
 
-## Attached T3 acceptance (functional proof complete; final gates open)
+## Attached T3 acceptance (prospective merged-main declaration)
 
 - [x] Thin `@beep/t3-code` driver and `attach-t3` compose existing EndpointDispatch/store loop; separate AttachedT3 profile records external ownership, T3 host thread, workspace/lane/task, provider/model and host-reported configuration. Independently observed provider-native identity/policy baseline has separate provenance/time; a host thread id is never fabricated as native identity. No native child ownership is fabricated.
 - [x] Owned coordinator/worker are recorded as valid desktop-session register units with exact private addresses, ownership and orphan plan; no global orchestrator ledger claim, new role election, fallback or merge authority.
@@ -150,7 +150,8 @@ registered orchestrator role or provider fallback policy changed.
 - [x] T3 Codex delegates a real bounded one-file repository audit via the scoped Beep queue to T3 Claude; autonomous correlated result and ACK return without controller relay, both dispatches settle, and the coordinator writes a private report. Reverse initiation is exercised as a bounded second brief where needed. Original visible/native identities and policy evidence are preserved.
 - [x] Explicit queue mode, stable same-client request correlation, bounded reads/waits/cancellation, revocation/reconnect/stale-run fixtures and ambiguity recovery are tested. Accepted/queued is not consumed; ACK plus supported correlated terminal result qualifies completion. Lost launch without retry key is reconciled first.
 - [x] Cleanup closes only owned bridge resources and revokes owned external auth; it retains the app and conversations without model reconfiguration. Earlier owned archive/unarchive credential rotation is recorded separately. Native T3 messaging remains independently authorized outside Beep grants; CLI protocol scope does not imply OS isolation of Full-access threads. Per-thread MCP injection, cold unload and separate-app attachment remain unqualified.
-- [ ] Source-bound sanitized integration receipts, touched-package verification, independent review, exact final-head hosted/Yeet gates and a new scoped reflection/closeout pass.
+- [x] Source-bound sanitized integration receipts, touched-package verification, independent review and scoped reflection are recorded, with historical complete proof separated from later parity and interrupted-refactor evidence.
+- [ ] Required exact final-head hosted checks, fresh review closure, latest-push/ready review window and actual Yeet merge remain externally unproved. This condition must be satisfied before the prospective completed-retained declaration takes effect on merged main; retirement follows actual merge.
 
 ### T3 admission decision
 
@@ -171,3 +172,14 @@ See [T3 integration design](research/T3-INTEGRATION.md) and [executed receipt](r
 See [post-integration attribution](research/T3-POST-INTEGRATION-GATES.md) for
 exact files, fingerprints, source equality and upstream PR provenance. No
 introduced failure or merge gate is waived by this publication decision.
+
+### Final same-PR declaration decision
+
+| Date | Decision | Reason | Reversal |
+| --- | --- | --- | --- |
+| 2026-10-09 | Land the scoped reflection and prospective completed-retained lifecycle in the final implementation PR wave | Same-PR closeout requires one coherent final head; operative execution remains active until required hosted/review/window gates and actual merge | Revert the packet declaration before merge if acceptance changes; preserve immutable receipts and both ambiguity holds. Retirement occurs only after actual merge |
+
+This declaration qualifies only the admitted bounded attached-T3 slice. It does
+not add separate Desktop attachment, always-on operation, physical unload, global
+authority, OS isolation or atomic policy comparison. No replay or new native
+inference is required to replace the partial final-refactor receipt.

@@ -3,13 +3,13 @@
   "initiative": {
     "id": "agent-session-bridges",
     "title": "Agent Session Bridges",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-09",
     "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-session-bridges",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Compose managed and attached T3-owned sessions with the durable router and scoped messaging, proving bounded repository task delegation without global role takeover.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -21,7 +21,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until acceptance and verification pass and the implementation PR is driven through Yeet to mergeable under exact-head hosted checks/review/window rules, with final closeout reflection and lifecycle updates landed; merge and retire through the existing gate.",
+    "statement": "Prospective completed-retained declaration for merged main only. Operative execution remains active until this final packet/implementation head passes required hosted checks, fresh review-thread closure and the latest-push/ready review window, then PR1571 actually merges through Yeet. Phase-complete values describe that merged state, not current hosted readiness or retirement. Preserve two reverse ambiguity holds; retire only after actual merge.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -106,17 +106,17 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -134,5 +134,5 @@
   ],
   "dependsOn": ["goals/agent-message-router"],
   "resumeCondition": "Satisfied on 2026-10-09: documented versioned router contract and combined 20 injected/schema/tool/filesystem tests passed. Execution activated; later review findings are remediation within active work.",
-  "statusNote": "PR1571 published77fd55b858; exact-head hosted triage complete with zero outstanding review threads. Owned T3 JSDoc and real-lock test portability repairs pass focused Node coverage/Bun without Python, CLI quick verification, full T3 audit/docgen and independent review. Main docgen repair1597 integrated91c9bf69e2. Corrective publication pending; shared-main source/inventory reds retain existing owners. Lifecycle active; final hosted/review/window gates pending. Complete live receipt and interrupted reverse ambiguity holds remain distinct."
+  "statusNote": "Prospective completed-retained state for merged main only; execution remains active. Corrective head27c8b24596 is published and this final packet wave will have its own head. Source-bound hardened task proof, later parity/review, package verification, scoped reflection and runtime-portability repairs are recorded. Main1597 integrated91c9bf69e2; required final-head hosted/review/window gates and actual merge remain unproved. No current green/merge/retirement claim. Two reverse ambiguity holds, revoked external credentials and original conversations remain retained."
 }

@@ -1,11 +1,12 @@
 # GOAL: Agent Session Bridges
 
-Active attached-T3 extension. Read README.md, SPEC.md, PLAN.md,
+Prospective completed-retained declaration for merged main only; execution remains active until final-head hosted/review/window gates and actual merge. Read README.md, SPEC.md, PLAN.md,
 ops/manifest.json, research/T3-INTEGRATION.md and research/SOURCES.md in this
 packet. AGENTS.md, required skills and architecture outrank packet prose.
 Prior managed receipts/reflection retain their recorded scope; they do not close
-this extension. PR #1571 is draft while integration changes; final hosted gates,
-reflection, merge and retirement remain open.
+this extension. PR #1571 corrective head27c8b24596 is published; final packet
+wave must earn its own hosted/review/window/merge gate. Reflection is recorded;
+no current green, merge or retirement is asserted.
 
 Hardened bidirectional task proof passed at captured source. Later refactor/helper tests, independent reviews, full CLI package proof and repository docgen passed. Historical cheap gates: 15 pass/one inherited EV015. Main repair integrated at 5868dc8218; post-integration cheap gate: 14 pass/two inherited reds. Read research/T3-POST-INTEGRATION-GATES.md for source attribution and inherited-fence publication if Yeet refuses only those reds. Keep hosted/merge gates open.
 

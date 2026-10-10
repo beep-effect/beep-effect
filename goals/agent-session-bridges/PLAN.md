@@ -2,20 +2,24 @@
 
 ## Status
 
-Active extension for attached T3-owned Claude/Codex task coordination, authorized
-2026-10-09. [PR #1571](https://github.com/beep-effect/beep-effect/pull/1571) is draft
-while content changes. Earlier managed proofs and prospective closeout are retained
-as history; they do not complete this expanded scope or the exact final-head gate.
+Prospective `completed-retained` declaration for merged main only. Operative
+execution remains active until the final packet/implementation head satisfies
+required hosted checks, fresh review closure, the review window and actual Yeet
+merge. Corrective head `27c8b24596` is published; this final packet wave resets
+the exact-head proof boundary. No current green/merge/retirement is asserted.
 
 ## Phases
 
-| Phase | Status | Work | Exit criterion |
-| --- | --- | --- | --- |
-| P0 Research | complete | Installed T3 qualification and admitted thin-driver/host/peer-CLI design | Scope, authority and policy-race limits recorded |
-| P1 Implement | complete | t3-code driver, attached profile/dispatch and grant-bound peer CLI; valid register units | Scoped implementation and real bounded delegated audit |
-| P2 Verify | ongoing | Driver/host/store integration fixtures and owned visible T3 task proof; independent review | Actual correlated ACK/settled outcomes, policy/readback and sanitized receipts; package checks pass |
-| P3 Yeet: PR to mergeable | pending | Publish coherent final wave, mark ready, resolve reviews and monitor | Exact final-head hosted checks and review window satisfy existing gate |
-| P4 Close | pending | New scoped reflection, same-PR lifecycle declaration, merge and retirement | Completion supported by gate and scoped acceptance |
+The manifest and statuses below declare the **merged-main state**. Current
+external hosted/review/window/merge gates remain pending.
+
+| Phase | Prospective merged status | Evidence / effective boundary |
+| --- | --- | --- |
+| P0 Research | complete | Installed host qualification, admitted architecture and authority limits |
+| P1 Implement | complete | Thin driver, attached composition, scoped peer CLI and bounded task proof |
+| P2 Verify | complete on merge | Source-bound local checks/reviews recorded; final-head required hosted checks remain pending |
+| P3 Yeet: PR to mergeable | complete on merge | Fresh review read, required checks and latest-push/ready window must earn merge-ready proof |
+| P4 Close | complete on merge | Reflection and lifecycle declaration land together; actual lane retirement follows merge |
 
 ## First attached-host slice
 
@@ -70,7 +74,8 @@ passed. Final cheap gates passed 15 lanes and failed only inherited EV015. See
 [final local verification](research/T3-LOCAL-VERIFICATION.md). Canonical task/fingerprint bookkeeping is separately recorded in
 [T3 cache review](research/T3-CACHE-REVIEW.md). Main repair 6513e85d2c is now integrated through 5868dc8218;
 the post-integration cheap gate completed: 14 pass/two attributed inherited reds. Exact final-head hosted readiness, review window,
-scoped reflection validation, merge and retirement remain pending.
+scoped reflection validation passed; final-head hosted gates, merge and
+retirement remain pending.
 
 The later [refactor reconciliation](research/T3-REFACTOR-RECONCILIATION.json)
 records four h3 ACKs and both coordinator reports, with only the forward pair
@@ -81,18 +86,17 @@ bridges were absent and not restarted, and immutable peer grants remain behind
 the ambiguity fences. No resend occurred. This partial refactor exercise does
 not replace the earlier complete hardened proof or finish final goal gates.
 
-### Same-PR lifecycle closeout plan
+### Same-PR lifecycle declaration
 
-The scoped [T3 reflection](history/reflections/2026-10-09-codex-t3.md) is prepared.
-Keep the manifest active through post-integration publication checks. Once the
-content and local gates are final, land the prospective completed-retained
-lifecycle, phase declarations and final acceptance row with this reflection in
-the same implementation PR. Their effective completion remains conditional on
-the exact final-head hosted checks, answered/resolved review threads and review
-window. Then merge through Yeet and retire the lane. Preserve both reverse
-ambiguity holds and the separate source-qualified receipts throughout closeout.
+The scoped [T3 reflection](history/reflections/2026-10-09-codex-t3.md) and
+prospective completed-retained lifecycle now belong to the same final PR wave.
+Execution remains active until that wave's exact final-head hosted checks,
+answered/resolved reviews, review window and actual merge. The external SPEC
+acceptance remains unchecked until those facts are known; its merged-state
+condition is explicit. Merge through Yeet and retire only after actual merge.
+Preserve both reverse ambiguity holds and separate source receipts throughout.
 
-Post-integration publication follows the [attribution receipt](research/T3-POST-INTEGRATION-GATES.md):
-14 pass/two shared-main reds. Try Yeet first; its refusal solely on those inherited
-lanes permits the operator-inherited-fence fallback. Preserve owner
-routing and red receipts; hosted/review/window/merge gates remain required.
+The earlier inherited-fence publication decision allowed a reviewable conflict
+resolution push, without waiving any required hosted or merge gate. Historical
+14-pass/two-red attribution remains in its dated receipt; current hosted results
+must be read from the final head.

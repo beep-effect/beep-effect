@@ -2,13 +2,17 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
-**Active attached-T3 extension, [PR #1571](https://github.com/beep-effect/beep-effect/pull/1571).**
-The operator authorized integration after the T3-owned host qualification.
-The earlier prospective closeout is superseded for this expanded scope. Managed
-proofs remain historical evidence. T3 implementation and bounded forward/reverse
-audit proof passed; full final verification and exact final-head hosted/review/window/merge gates are open. The PR returned to draft for this work.
+This lifecycle declaration is **for merged main only**.
+
+**Prospective final state, [PR #1571](https://github.com/beep-effect/beep-effect/pull/1571).**
+Operative execution remains active until the final metadata/implementation head
+passes required hosted checks, a fresh review-thread read and the review window,
+and the PR actually merges through Yeet. Manifest phase-complete values describe
+that merged state. They do not claim current green checks, merge or retirement.
+Corrective head `27c8b24596` is published; this packet wave creates a new head
+that must earn its own gates. Scoped live/source receipts remain separate.
 
 Source: [ops/manifest.json](ops/manifest.json).
 
@@ -33,7 +37,7 @@ Compose managed and attached T3-owned sessions with the durable router and scope
 
 ## Current Phase
 
-P1 implementation and bounded attached T3 task proof are complete. P2 final verification is ongoing; P3 hosted readiness and P4 closeout remain pending. The active lifecycle does not claim merge or global orchestrator authority.
+Implementation, scoped local proof and reflection are recorded. Current execution is awaiting the final-head hosted/review/window and actual merge gates. Prospective P2/P3/P4 completion takes effect on merged main; retirement follows actual merge. No global orchestrator authority is conferred.
 
 First slice: Prove autonomous scoped send/reply between owned native Codex and Grok through the actual durable router; qualify Claude separately and retain Cursor access classification.
 
@@ -141,9 +145,8 @@ the ambiguity fences. No resend occurred. This partial refactor exercise does
 not replace the earlier complete hardened proof or finish final goal gates.
 
 The [scoped T3 reflection](history/reflections/2026-10-09-codex-t3.md) is prepared
-for same-PR closeout. The manifest remains active until the final local gate and
-publication wave are established; prospective completion takes effect only
-through the exact-head hosted/review/merge gate.
+for same-PR closeout. The manifest carries a prospective merged-main declaration. Operative execution
+remains active until exact-head hosted/review/window gates and actual merge.
 
 The [post-integration attribution](research/T3-POST-INTEGRATION-GATES.md) records
 14 passing cheap lanes and two inherited shared-main reds: Accounts schema-first
@@ -157,4 +160,6 @@ fallback if Yeet refuses only these two lanes; this does not grant merge readine
 from shared-main failures. The T3 barrel comment is repaired; the real-lock test
 uses an explicit process handshake rather than an undeclared Python executable.
 Main's targeted docgen repair is integrated. Focused Node/Bun proof, package verification and independent review pass.
-Corrective publication and fresh hosted proof remain pending; the packet stays active.
+Corrective head `27c8b24596` is published. Final packet-head hosted proof remains
+pending; operative execution stays active until the prospective declaration
+takes effect through the exact-head gate and actual merge.

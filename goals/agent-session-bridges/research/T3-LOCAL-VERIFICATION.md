@@ -1,6 +1,6 @@
 # T3 integration final local verification
 
-Observed 2026-10-09 after the final source repairs. This records local proof; PR #1571 remains draft at its earlier remote head and this implementation has not been pushed or merged.
+Historical local snapshot observed 2026-10-09 before initial T3 publication. The table binds those checks and sources; it does not describe current PR status. Corrective head27c8b24596 is now published, with final packet/head hosted gates pending.
 
 | Check | Result |
 | --- | --- |
@@ -27,4 +27,13 @@ Main repair 6513e85d2c is now imported by merge commit 5868dc8218. See the froze
 [T3 main integration receipt](T3-MAIN-INTEGRATION.md). The post-integration cheap
 gate completed with 14 pass/two attributed inherited reds; no earlier package or cheap-gate result is promoted to the
 merged head. Publication, exact-head hosted checks/review/window and merge remain
-required. The scoped T3 reflection is prepared, with lifecycle still active.
+required. The scoped T3 reflection is recorded, with operative execution still
+active until the prospective merged-main declaration earns its exact-head gate.
+
+## Prospective final packet declaration
+
+The scoped reflection and completed-retained lifecycle declaration are included
+in the final same-PR metadata wave. They describe merged main only; execution
+remains active until that final head passes required hosted/review/window gates
+and actually merges. No successful current hosted coverage/docgen/ratchet result
+or lane retirement is inferred from these local proofs.

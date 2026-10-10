@@ -212,7 +212,7 @@ session was contacted. This is authored research in a new isolated lane.
 - [Final local verification](T3-LOCAL-VERIFICATION.md): completed package checks and exact publication boundary.
 
 - [Shared main integration](T3-MAIN-INTEGRATION.md): frozen receipt for main 6513e85d2c integrated through 5868dc8218, canonical conflict regeneration and retained cache scope; post-integration gates remain separate.
-- [Scoped T3 reflection](../history/reflections/2026-10-09-codex-t3.md): final-extension lessons and prospective same-PR closeout, without a completed lifecycle claim.
+- [Scoped T3 reflection](../history/reflections/2026-10-09-codex-t3.md): final-extension lessons and prospective completed-retained declaration for merged main only; operative execution and external gates remain open.
 
 - [Post-integration gate attribution](T3-POST-INTEGRATION-GATES.md): 14 pass/two shared-main reds, exact upstream source/fingerprint provenance, verified owner routing and bounded publication fallback.
 
