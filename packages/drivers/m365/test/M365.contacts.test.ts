@@ -62,6 +62,8 @@ const wire = {
   changeKey: "version-1",
   personalNotes: "Private synthetic backup field",
 };
+const CaptureBodyJson = S.fromJsonString(S.Unknown);
+
 const base = "https://graph.microsoft.com/v1.0";
 const fixturePayload = (method: string, url: string) => {
   if (method === "POST")
@@ -79,7 +81,7 @@ const layer = (appOnly: boolean, status = 200, transport = false, retries = 0) =
           const url = request.pipe(HttpClientRequest.toUrl, O.getOrThrow).toString();
           const body =
             request.body._tag === "Uint8Array"
-              ? S.decodeOption(S.fromJsonString(S.Unknown))(new TextDecoder().decode(request.body.body))
+              ? S.decodeOption(CaptureBodyJson)(new TextDecoder().decode(request.body.body))
               : O.none();
           yield* Ref.update(
             captures,
