@@ -69,3 +69,12 @@ Friction receipts, recorded when they happened.
   that followed used a document digest. Prevention: record query stage and
   input shape alongside the outcome. The lane stopped its first publication
   before push to correct the diagnosis.
+- Yeet refused publication on inherited schema-first findings in Accounts and
+  M365 and an inherited Effect-Vitest finding in the projection tests. All
+  affected source files and inventories are unchanged against origin/main.
+  The new Host test fixture initially added one Effect-Vitest finding; moving
+  its resource setup into `it.layer` removed it without refreshing the baseline.
+  Full host package audit/docgen passed after that repair. Evidence:
+  `yeet publish`, `lint effect-vitest`, and the final package-verification log.
+  Prevention: keep inherited policy repairs with the consolidated base owner
+  and use suite-layer fixture setup for new tests.
