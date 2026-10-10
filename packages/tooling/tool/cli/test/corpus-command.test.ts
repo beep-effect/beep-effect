@@ -20,6 +20,7 @@ import {
   encodeCorpusProvenanceRecordJson,
   encodeTransformationLedgerRecordJson,
   extractCorpus,
+  MailOccurrenceMembership,
   pairRecycleBinEntries,
   parseRecycleBinMetadata,
   preserveRestorationArchive,
@@ -1560,6 +1561,7 @@ const readProvenanceRecords = Effect.fn("CorpusTest.readProvenanceRecords")(func
 });
 
 const decodeArchiveMoveManifestRecordJson = S.decodeUnknownEffect(S.fromJsonString(CorpusArchiveMoveManifestRecord));
+const encodeMailOccurrenceMembershipJson = S.encodeEffect(S.fromJsonString(MailOccurrenceMembership));
 
 const readArchiveMoveManifestRecords = Effect.fn("CorpusTest.readArchiveMoveManifestRecords")(function* (
   manifestPath: string
@@ -3862,7 +3864,8 @@ exit 0
 
 const makeMailRestorationFixture = Effect.fn("CorpusTest.makeMailRestorationFixture")(function* (
   pffexportScript: string,
-  tikaScript: string = restorationTikaStub
+  tikaScript: string = restorationTikaStub,
+  additionalStore: O.Option<number> = O.none()
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -3883,6 +3886,9 @@ const makeMailRestorationFixture = Effect.fn("CorpusTest.makeMailRestorationFixt
   const mailBytes = new Uint8Array(1024 * 1024 + 31);
   mailBytes.fill(0x42);
   yield* fs.writeFile(mailPath, mailBytes);
+  if (O.isSome(additionalStore)) {
+    yield* fs.writeFile(path.join(sourceRoot, "second.pst"), new Uint8Array(additionalStore.value));
+  }
   yield* fs.writeFileString(rootArchive, "verbatim-root-archive");
   const collectorRow = yield* S.encodeEffect(collectorManifestJson)(
     CollectorManifestRecord.cases.copied.make({
@@ -4030,6 +4036,35 @@ const tamperRestartedMailSegment = (
     Match.exhaustive
   );
 
+const makeMailMembershipFixture = Effect.fnUntraced(function* (
+  fixture: { readonly corpusRoot: string },
+  preservationLabel: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const text = yield* fs.readFileString(
+    path.join(fixture.corpusRoot, "raw", preservationLabel, "archive-ledger.jsonl")
+  );
+  const records = yield* Effect.forEach(
+    A.filter(Str.split(/\r?\n/u)(text), Str.isNonEmpty),
+    decodeArchiveLedgerRecordJson
+  );
+  const pass = yield* Effect.fromOption(
+    A.findFirst(records, (row) => row.recordType === "archive-file-pass" && row.sizeBytes === 1024 * 1024 + 64)
+  );
+  if (pass.recordType !== "archive-file-pass") return yield* Effect.die("Expected synthetic PST pass.");
+  const membership = yield* S.decodeEffect(MailOccurrenceMembership)({
+    schema: "mail-occurrence-membership/v1",
+    preservationLabel,
+    maxInputBytes: 536870912,
+    members: [{ objectId: pass.objectId, sha256: pass.sha256, sizeBytes: pass.sizeBytes }],
+  });
+  const membershipFile = path.join(fixture.corpusRoot, "membership.json");
+  yield* fs.writeFileString(membershipFile, yield* encodeMailOccurrenceMembershipJson(membership));
+  const member = yield* Effect.fromOption(A.head(membership.members));
+  return { membershipFile, member, membership };
+});
+
 it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restoration mail", (it) => {
   it.effect(
     "runs the public source-path engine with all-item mode and accounts every raw and repaired child",
@@ -4069,6 +4104,182 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
         true
       );
       repair.pipe(O.isSome, assertTrue);
+    })
+  );
+
+  it.effect(
+    "decodes bounded occurrence selection and rejects malformed identities",
+    Effect.fnUntraced(function* () {
+      const fixture = yield* makeMailRestorationFixture(restorationPffexportStub);
+      const encoded = yield* S.encodeEffect(RestorationMailOptions)(mailRestorationOptions(fixture));
+      const options = yield* S.decodeEffect(RestorationMailOptions)({
+        ...encoded,
+        occurrence: Str.repeat(64)("a"),
+        membershipFile: "membership.json",
+      });
+      assertSome(options.occurrence, Sha256Hex.make(Str.repeat(64)("a")));
+      assertSome(options.membershipFile, "membership.json");
+      const invalid = yield* S.decodeEffect(RestorationMailOptions)({
+        ...encoded,
+        occurrence: "outside-plan",
+      }).pipe(Effect.exit);
+      invalid.pipe(Exit.isFailure, assertTrue);
+    })
+  );
+
+  it.effect(
+    "selects a planned occurrence and derives expectedCount one while default remains slice",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* makeMailRestorationFixture(
+        restorationPffexportStub,
+        restorationTikaStub,
+        O.some(1024 * 1024 + 64)
+      );
+      const defaults = mailRestorationOptions(fixture);
+      assertNone(defaults.occurrence);
+      assertNone(defaults.membershipFile);
+      yield* restoreMail(defaults);
+      const originalLedger = path.join(
+        fixture.corpusRoot,
+        "staging/restoration/runs",
+        defaults.runLabel,
+        "ledgers/mail/slice.jsonl"
+      );
+      const originalBytes = yield* fs.readFileString(originalLedger);
+      const { member, membershipFile } = yield* makeMailMembershipFixture(fixture, defaults.runLabel);
+      const options = yield* S.decodeEffect(RestorationMailOptions)({
+        ...(yield* S.encodeEffect(RestorationMailOptions)(defaults)),
+        runLabel: "planned-occurrence",
+        preservationLabel: defaults.runLabel,
+        occurrence: member.objectId,
+        membershipFile,
+        expectedStoreCount: 99,
+      });
+      const summary = yield* restoreMail(options);
+      const { records } = yield* readTransformationLedgerFixture(
+        path.join(fixture.corpusRoot, "staging/restoration/runs/planned-occurrence/ledgers/mail/slice.jsonl")
+      );
+      expect(
+        A.map(
+          A.filter(records, (row) => row.recordType === "family-run-start"),
+          (row) => row.expectedCount
+        )
+      ).toEqual([1]);
+      expect(summary.passCount).toBe(1);
+      const passes = A.filter(records, isTransformationLedgerRecordCasesMailStorePass);
+      expect(A.map(passes, (pass) => pass.objectId)).toEqual([member.objectId]);
+      const original = yield* readTransformationLedgerFixture(originalLedger);
+      expect(
+        A.map(A.filter(original.records, isTransformationLedgerRecordCasesMailStorePass), (pass) => pass.objectId)
+      ).not.toEqual([member.objectId]);
+      expect(yield* fs.readFileString(originalLedger)).toBe(originalBytes);
+      const oldStart = O.getOrThrow(A.findFirst(original.records, (row) => row.recordType === "family-run-start"));
+      const newStart = O.getOrThrow(A.findFirst(records, (row) => row.recordType === "family-run-start"));
+      expect(newStart.policySha256).not.toBe(oldStart.policySha256);
+      const implicitFixture = yield* makeMailRestorationFixture(
+        restorationPffexportStub,
+        restorationTikaStub,
+        O.some(1024 * 1024 + 64)
+      );
+      const implicitDefaults = mailRestorationOptions(implicitFixture);
+      const implicitPlan = yield* makeMailMembershipFixture(implicitFixture, implicitDefaults.runLabel);
+      const implicitOptions = yield* S.decodeEffect(RestorationMailOptions)({
+        ...(yield* S.encodeEffect(RestorationMailOptions)(implicitDefaults)),
+        occurrence: implicitPlan.member.objectId,
+        membershipFile: implicitPlan.membershipFile,
+      });
+      assertNone(implicitOptions.preservationLabel);
+      expect((yield* restoreMail(implicitOptions)).passCount).toBe(1);
+    })
+  );
+
+  it.effect(
+    "refuses out-of-plan occurrences and full selection before creating family state",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* makeMailRestorationFixture(
+        restorationPffexportStub,
+        restorationTikaStub,
+        O.some(1024 * 1024 + 64)
+      );
+      const defaults = mailRestorationOptions(fixture);
+      const { member, membershipFile } = yield* makeMailMembershipFixture(fixture, defaults.runLabel);
+      for (const encoded of [
+        { occurrence: Str.repeat(64)("f"), membershipFile, scope: "slice" },
+        { occurrence: member.objectId, membershipFile, scope: "full" },
+        { occurrence: member.objectId, scope: "slice" },
+        { membershipFile, scope: "slice" },
+      ]) {
+        const options = yield* S.decodeUnknownEffect(RestorationMailOptions)({
+          ...(yield* S.encodeEffect(RestorationMailOptions)(defaults)),
+          ...encoded,
+          runLabel: "refused-plan",
+          preservationLabel: defaults.runLabel,
+        });
+        const error = yield* restoreMail(options).pipe(Effect.flip);
+        expect(error._tag).toBe("CorpusCommandError");
+        expect(yield* fs.exists(path.join(fixture.corpusRoot, "staging/restoration/runs/refused-plan"))).toBe(false);
+      }
+    })
+  );
+
+  it.effect(
+    "refuses malformed bounded plans and archive identity drift before family start",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* makeMailRestorationFixture(
+        restorationPffexportStub,
+        restorationTikaStub,
+        O.some(1024 * 1024 + 64)
+      );
+      const defaults = mailRestorationOptions(fixture);
+      const { member, membershipFile, membership } = yield* makeMailMembershipFixture(fixture, defaults.runLabel);
+      const encoded = yield* encodeMailOccurrenceMembershipJson(membership);
+      const options = yield* S.decodeEffect(RestorationMailOptions)({
+        ...(yield* S.encodeEffect(RestorationMailOptions)(defaults)),
+        occurrence: member.objectId,
+        membershipFile,
+        runLabel: "refused-plan",
+        preservationLabel: defaults.runLabel,
+      });
+      for (const text of [
+        "invalid json",
+        Str.replace(defaults.runLabel, "wrong-archive")(encoded),
+        yield* encodeMailOccurrenceMembershipJson(
+          MailOccurrenceMembership.make({ ...membership, members: [member, member] })
+        ),
+      ]) {
+        yield* fs.writeFileString(membershipFile, text);
+        yield* restoreMail(options).pipe(Effect.flip);
+        expect(yield* fs.exists(path.join(fixture.corpusRoot, "staging/restoration/runs/refused-plan"))).toBe(false);
+      }
+      yield* fs.writeFileString(membershipFile, encoded);
+      yield* restoreMail(RestorationMailOptions.make({ ...options, maxTotalOutputBytes: PosInt.make(1) })).pipe(
+        Effect.flip
+      );
+      yield* fs.remove(membershipFile);
+      yield* restoreMail(options).pipe(Effect.flip);
+      for (const changed of [
+        { ...member, objectId: Sha256Hex.make(Str.repeat(64)("f")) },
+        { ...member, sha256: Sha256Hex.make(Str.repeat(64)("f")) },
+        { ...member, sizeBytes: PosInt.make(member.sizeBytes + 1) },
+      ]) {
+        const changedMembership = yield* S.decodeEffect(MailOccurrenceMembership)({
+          ...(yield* S.encodeEffect(MailOccurrenceMembership)(membership)),
+          members: [changed],
+        });
+        yield* fs.writeFileString(membershipFile, yield* encodeMailOccurrenceMembershipJson(changedMembership));
+        const changedOptions = yield* S.decodeEffect(RestorationMailOptions)({
+          ...(yield* S.encodeEffect(RestorationMailOptions)(options)),
+          occurrence: changed.objectId,
+        });
+        yield* restoreMail(changedOptions).pipe(Effect.flip);
+        expect(yield* fs.exists(path.join(fixture.corpusRoot, "staging/restoration/runs/refused-plan"))).toBe(false);
+      }
     })
   );
 

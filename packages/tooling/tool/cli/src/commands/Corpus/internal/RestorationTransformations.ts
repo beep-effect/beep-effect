@@ -40,6 +40,7 @@ import {
   decodeTransformationLedgerRecordJson,
   encodeRestorationAcceptanceRecordJson,
   encodeTransformationLedgerRecordJson,
+  MailOccurrenceMembership,
   RestorationAcceptanceRecord,
   RestorationRunSummary,
   TransformationLedgerRecord,
@@ -65,6 +66,7 @@ import type {
   RestorationRecycleOptions,
 } from "./Restoration.schemas.ts";
 
+const decodeMailOccurrenceMembershipJson = S.decodeEffect(S.fromJsonString(MailOccurrenceMembership));
 const decodeArtifactId = S.decodeEffect(ArtifactId);
 const decodeContentDigest = S.decodeEffect(ContentDigest);
 const decodeOperationId = S.decodeEffect(OperationId);
@@ -668,6 +670,52 @@ const selectMailCandidates = (
     1
   );
 };
+
+const readMailOccurrenceSelection = Effect.fn("CorpusRestoration.readMailOccurrenceSelection")(function* (
+  options: RestorationMailOptions
+) {
+  if (O.isNone(options.occurrence) && O.isNone(options.membershipFile)) return O.none();
+  if (options.scope !== "slice" || O.isNone(options.occurrence) || O.isNone(options.membershipFile)) {
+    return yield* transformationError("Occurrence selection requires slice scope and a membership file.");
+  }
+  const fs = yield* FileSystem.FileSystem;
+  const text = yield* fs
+    .readFileString(options.membershipFile.value)
+    .pipe(CorpusCommandError.mapError("Failed reading the bounded mail membership file."));
+  const membership = yield* decodeMailOccurrenceMembershipJson(text).pipe(
+    CorpusCommandError.mapError("Invalid bounded mail membership file.")
+  );
+  if (membership.preservationLabel !== O.getOrElse(options.preservationLabel, () => options.runLabel)) {
+    return yield* transformationError("Mail membership does not select this preservation archive.");
+  }
+  const occurrence = options.occurrence.value;
+  const members = A.filter(membership.members, (member) => member.objectId === occurrence);
+  const member = yield* Effect.fromOption(A.head(members), () => transformationError("Missing mail occurrence."));
+  if (members.length !== 1) {
+    return yield* transformationError("Selected occurrence must appear exactly once in the bounded mail plan.");
+  }
+  if (member.sizeBytes * options.maxAmplificationRatio > options.maxTotalOutputBytes) {
+    return yield* transformationError("Selected occurrence ratio allowance exceeds the family output ceiling.");
+  }
+  return O.some({ member, membershipSha256: digestString(text) });
+});
+
+const selectPlannedMailCandidate = Effect.fn("CorpusRestoration.selectPlannedMailCandidate")(function* (
+  member: MailOccurrenceMembership["members"][number],
+  candidates: ReadonlyArray<MailCandidate>
+) {
+  const selected = A.filter(candidates, (candidate) => candidate.objectId === member.objectId);
+  const candidate = yield* Effect.fromOption(A.head(selected), () =>
+    transformationError("Planned mail occurrence is absent from the sealed archive.")
+  );
+  if (selected.length !== 1 || candidate.family !== "pst" || O.isNone(candidate.pass)) {
+    return yield* transformationError("Planned occurrence must select exactly one preserved PST.");
+  }
+  if (candidate.pass.value.sha256 !== member.sha256 || candidate.pass.value.sizeBytes !== member.sizeBytes) {
+    return yield* transformationError("Planned mail occurrence differs from its preserved bytes.");
+  }
+  return selected;
+});
 
 const classifyMailFailure = (message: string): "codepage" | "corrupt" | "engine-failure" | "password" => {
   const normalized = Str.toLowerCase(message);
@@ -2284,6 +2332,8 @@ export const restoreMailImpl = Effect.fn("CorpusRestoration.restoreMail")(functi
 ): Effect.fn.Return<RestorationRunSummary, CorpusCommandError, TransformationRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const selection = yield* readMailOccurrenceSelection(options);
+  const expectedStoreCount = O.isSome(selection) ? 1 : options.expectedStoreCount;
   const prepared = yield* prepareTransformationRun(
     options.corpusRoot,
     options.runLabel,
@@ -2291,17 +2341,21 @@ export const restoreMailImpl = Effect.fn("CorpusRestoration.restoreMail")(functi
     options.scope,
     O.getOrElse(options.preservationLabel, () => options.runLabel)
   );
+  const availableCandidates = mailCandidates(path, prepared.archiveRoot, prepared.preservationRecords);
+  const candidates = O.isSome(selection)
+    ? yield* selectPlannedMailCandidate(selection.value.member, availableCandidates)
+    : selectMailCandidates(path, options.scope, availableCandidates);
   return yield* withTransformationFamilyWriter(
     prepared,
     Effect.gen(function* () {
       const run = yield* beginOrResumeFamilyRun(
         prepared,
-        options.expectedStoreCount,
+        expectedStoreCount,
         options.maxTotalElapsedMillis,
         options.maxTotalOutputBytes,
         transformationPolicySha256([
           options.bwrapPath,
-          options.expectedStoreCount,
+          expectedStoreCount,
           options.javaPath,
           options.maxAmplificationRatio,
           options.maxElapsedMillis,
@@ -2310,19 +2364,18 @@ export const restoreMailImpl = Effect.fn("CorpusRestoration.restoreMail")(functi
           options.pffexportPath,
           options.scope,
           options.tikaJarPath,
+          ...O.getOrElse(
+            O.map(selection, ({ member, membershipSha256 }) => [member.objectId, membershipSha256]),
+            () => []
+          ),
         ])
       );
       const pendingSummary = yield* familyHasPendingSummary(run);
-      const candidates = selectMailCandidates(
-        path,
-        options.scope,
-        mailCandidates(path, run.archiveRoot, run.preservationRecords)
-      );
-      if (candidates.length !== options.expectedStoreCount) {
+      if (candidates.length !== expectedStoreCount) {
         return yield* rejectFamilyPreflight(
           pendingSummary,
           run,
-          options.expectedStoreCount,
+          expectedStoreCount,
           options.maxTotalElapsedMillis,
           options.maxTotalOutputBytes,
           "Mail candidate denominator drifted from the approved run contract.",
@@ -2332,7 +2385,7 @@ export const restoreMailImpl = Effect.fn("CorpusRestoration.restoreMail")(functi
       if (!pendingSummary) {
         yield* requireFamilyCapacity(
           run,
-          options.expectedStoreCount,
+          expectedStoreCount,
           options.maxTotalElapsedMillis,
           options.maxTotalOutputBytes
         );
@@ -2349,7 +2402,7 @@ export const restoreMailImpl = Effect.fn("CorpusRestoration.restoreMail")(functi
         return yield* rejectFamilyPreflight(
           pendingSummary,
           run,
-          options.expectedStoreCount,
+          expectedStoreCount,
           options.maxTotalElapsedMillis,
           options.maxTotalOutputBytes,
           "Existing retained mail output already exceeds the approved cumulative output ceiling.",
@@ -2371,7 +2424,7 @@ export const restoreMailImpl = Effect.fn("CorpusRestoration.restoreMail")(functi
         run.startedAt,
         candidates.length,
         counters,
-        options.expectedStoreCount,
+        expectedStoreCount,
         true,
         options.maxTotalElapsedMillis,
         options.maxTotalOutputBytes,
@@ -5089,6 +5142,7 @@ export const restorationTransformationTesting = {
   sandboxRuntimeBinds,
   sandboxedTool,
   selectMailCandidates,
+  selectPlannedMailCandidate,
   signatureExtension,
   sourceExtension,
   sortedRecycleGroups,

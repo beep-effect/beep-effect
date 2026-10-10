@@ -751,3 +751,108 @@ Reversal: revert PR4's phase-completion edits and reopen P1 while retaining
 both immutable manifests and families. No new execution is authorized by
 this correction; a future execution requires its own pre-execution record.
 P2 does not start in this run.
+
+
+### 2026-10-10: P2 first bounded mail expansion plan and selector preflight
+
+Run-8 authority follows merged PR4 #1609. P1 remains complete. Its measured
+basis is 2.363134690x output amplification, 822,686 ms family time, and the
+orchestrator-reported 20 GB peak RSS. Retain ratio 4, attempt 7,200,000 ms,
+family 43,200,000 ms, output 2,147,483,648 bytes per family, and the
+100,000,000,000-byte free-space floor. No cap or engine change is authorized.
+
+Plan nine distinct remaining non-stub PST occurrences, smallest input
+first, breaking size ties by objectId. The sealed archive has 53 PST occurrences:
+28 at least 1 MiB and 25 below that threshold. The accepted P1 occurrence is
+excluded, leaving 27 eligible expansion occurrences. The first wave admits only inputs at most 536,870,912 bytes: nine occurrences
+range from 61,727,744 to 456,877,056 input bytes; eighteen larger occurrences
+wait for a later wave with its own ceiling ruling. The 25 stub-sized occurrences and non-PST
+mail families remain unresolved estate obligations, outside this first bounded
+extraction wave; they are not silently counted as accepted or approved exceptions.
+The membership is nine occurrences, not client names. Recompute and freeze exact
+object and source digests before launch after the selector contract is available.
+
+Each member requires its own pre-launch freeze record, fresh output label and
+ledger, preservationLabel selecting the original sealed archive, and expected
+store count one. Launch detached under beep-heavy, one family unit at a time;
+after a successful seal and complete reconciliation wait 60 seconds before the
+next family. Stop at the first sealed failure, diagnose before further work,
+and never retry that sealed family. No engine or launcher code changes inside
+the wave. End with aggregate evidence, leaving P2 incomplete until all estate
+and recycle/DOC obligations close.
+
+Pre-launch blocker: the public command cannot select a remaining occurrence.
+`selectMailCandidates` takes exactly the smallest eligible recycle PST for
+slice scope and all mail candidates for full scope. `RestorationMailOptions`
+and the restore-mail flag inventory expose no object selector, offset or bounded
+candidate list. Independent preservationLabel selects an archive, not a store.
+New output labels would repeat accepted P1; full scope violates the brief's
+explicit prohibition and the ten-family bound. Changing expected count alone
+would seal a denominator failure after family-run-start. No such invocation ran.
+
+Decision: retain this plan and stop before creating any family. Do not bypass
+the public command, mutate the preservation ledger, or implement an unassigned
+selector fix. The orchestrator must supply a bounded occurrence-selection
+contract or authorize its implementation before the wave can start. Current
+free bytes 230,195,183,616 exceed the floor; engines match the fresh P1 freeze
+record; both sandbox smokes and all four focused restoration tests pass.
+Reversal: revert this packet plan, retaining both sealed P1 families and freeze
+records. Zero P2 family units or ledgers were created; P2 stays pending.
+
+
+### 2026-10-10: PR5 bounded monitor closeout at selector blocker
+
+PR5 #1610 is content-final and ready. The worker submitted the required
+forty-minute bounded monitor, polled it, then cancelled it at the pre-launch
+selection blocker and observed terminal status. Its inbox row is acknowledged;
+no worker-owned job remains active. Full review pagination has zero threads.
+Hosted checks and the review window remain pending with the orchestrator;
+no merge-ready verdict or merge is claimed. Reversal: resubmit the same
+bounded monitor after the orchestrator supplies the next contract. The plan,
+both sealed P1 families and all frozen acceptance evidence remain unchanged.
+This post-push receipt is retained locally for the next authorized packet wave.
+
+
+### 2026-10-10: P2 wave membership respects both output ceilings
+
+Run-9 ruling retains ratio 4 and the 2,147,483,648-byte family output cap.
+An input must be at most 536,870,912 bytes so its ratio allowance fits that cap.
+Recomputed membership: nine remaining occurrences, ascending size then objectId,
+from 61,727,744 to 456,877,056 bytes; eighteen larger occurrences are deferred.
+The largest admitted input allows 1,827,508,224 bytes at ratio 4, within the cap.
+The prior 539,157,504-byte member is excluded. No family has started.
+Decision: correct PR5 before implementing the authorized selector in PR6.
+Reversal: revert these planning edits; retain both immutable P1 families.
+
+
+### 2026-10-10: bounded occurrence selector for the first P2 wave
+
+Run-9 authorizes one optional occurrence identity plus an explicit membership
+file in restore-mail. The schema pins each member's objectId, source SHA-256
+and input bytes; accepts one to ten non-stub members no larger than 536,870,912
+bytes; and names the preservation archive. The committed first-wave membership
+contains nine entries in ascending input-size/objectId order, range 61,727,744
+to 456,877,056 bytes. It contains no paths or client names.
+
+The command pairs --occurrence with --membership-file and requires slice scope.
+It rejects absent, duplicate, out-of-plan, wrong-archive, non-PST, digest/size-drift
+and over-budget selections before family-run-start. Selection derives expected
+store count one. Absent selection retains the existing scope and denominator
+behavior; the full-estate invocation remains outside this lane's authority.
+A selected family's policy hash additionally freezes objectId and the exact
+membership-file SHA-256. Defaults preserve the original ten-field policy digest.
+Independent preservationLabel continues to select the original sealed archive;
+a fresh runLabel names each transformation family and its immutable ledger.
+
+| Surface | Location |
+| --- | --- |
+| Committed first-wave membership | history/evidence/p2-first-wave-membership.json |
+
+Decision: add the schema, public flags and pre-start guard in PR6; run 10 owns
+the nine sequential detached families. No family runs during implementation.
+Every future family needs a pre-execution freeze record including selected
+identity and membership digest. No engine or launcher change inside the wave.
+Reversal: close/revert PR6 and retain both immutable P1 families; no P2 output
+exists. No changeset: @beep/repo-cli is private under #1566 and the standing
+private-workspace ruling. This optional behavior is compatible, not a major
+public API break; reversal restores the original fixed slice selection.
