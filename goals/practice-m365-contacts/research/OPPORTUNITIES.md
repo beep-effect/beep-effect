@@ -126,3 +126,23 @@
   Option assertion. Native filesystem judgment records why real permissions,
   lock and export behavior need the platform layer; inherited rows stay open.
 - Prevention: run cheap policy integration before long dependent docgen closure.
+
+## 2026-10-09 — hosted inventory red omits its underlying cause
+
+- Activity: follow-up PR #1595 readiness monitoring; JSDoc Ratchet failed.
+- Evidence: completed hosted inventory log prints only
+  `Failed to generate JSDoc documentation inventory.` Main `3200e01946`
+  job 114066037311 reproduces that same failure independently.
+- Attribution: inherited under S11; no TypeScript/docgen-config follow-up diff.
+- Prevention: retain the typed inventory error cause in the failure capsule so
+  agents can attribute it directly without a second main-job comparison.
+
+## 2026-10-09 — full lint policy finds codec construction inside callbacks
+
+- Activity: follow-up Heavy Lint Policy completed-log attribution.
+- Evidence: five contacts schema-hoisting errors in command output, export and
+  fixtures; package audits had passed but omit this root oxlint policy.
+- Remediation: hoist existing JSON schemas to private module constants; run the
+  scoped root rule directly, then requalify affected packages and one push wave.
+- Prevention: include scoped root oxlint in the package handoff contract, and
+  inspect every named failure before acknowledging an aggregate hosted red.
