@@ -507,3 +507,22 @@ No baseline, CI policy, changeset, or source repair was made here.
   Local package verification, test-tsgo, and package docgen passed.
 - Prevention: burn down the inherited policy and hosted inventory defects once on
   main, then propagate that head to dependent lanes. No unrelated repair in this lane.
+
+### 2026-10-10: accepted-slice documentation hits inherited schema advisories
+
+- Work: publish PR4's aggregate acceptance evidence and P1 flips.
+- Evidence: Yeet created the packet commit and refused before push with
+  `github-checks:cheap-gates: failed 1 step(s)`, `lint:schema-first: exit 1`,
+  and `yeet publish cheap-gates failed after creating the local commit; nothing
+  was pushed.` Fifteen other gates pass, including committed JSDoc, Effect-Vitest,
+  Knip and all Fallow blocking lanes.
+- Attribution: three pre-existing schema-codec test advisories; all three
+  affected files match origin/main. No source, inventory or CI changes here.
+- Disposition: use the standing inherited-fence fallback: named-path receipt
+  commit, direct push and labelled PR creation, then Yeet ready and bounded
+  monitoring. The orchestrator owns repair and S11 merge; the live acceptance
+  remains valid independent of inherited publication findings.
+- Prevention: give advisory inventory admission explicit inherited attribution,
+  then burn down those main findings once instead of duplicating lane repairs.
+- Reversal: close PR4 or supersede the disposition with the orchestrator repair;
+  retain both sealed families and aggregate evidence.

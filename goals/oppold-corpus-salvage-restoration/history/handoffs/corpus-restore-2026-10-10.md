@@ -437,3 +437,20 @@ beep-heavy-corpus-restore-p1-2.service
 - Content-final scope is packet-only. PR4 publishes acceptance evidence,
   the one-time policy fill and phase flips together with all retained receipts.
   P2/P3 and unrelated inherited main findings remain outside this lane.
+
+### Run-6 publication refusal and authorized fallback
+
+- Yeet committed evidence at
+  `11f593b957c0c21a7a2386efc6cc10a4db95e2d7` and refused before push:
+  `github-checks:cheap-gates: failed 1 step(s)`; `lint:schema-first: exit 1`;
+  `yeet publish cheap-gates failed after creating the local commit; nothing
+  was pushed.`
+- Fifteen gates pass, including committed JSDoc, Effect-Vitest, Knip, Fallow
+  audit/dead-code/health, packet doctor/index, and changeset-status.
+- The only findings are the same three inherited schema-codec test advisories.
+  All affected test files and their inventory match origin/main byte-for-byte.
+  No source or inventory edit is made; the standing inherited fence authorizes
+  named-path receipt commit, direct push, labelled PR, ready and bounded monitor.
+- Exact committed knowledge check: 45,555 observations, zero live gated.
+  Lifecycle and all untouched phases stay correct. Reverse this disposition by
+  closing PR4, retaining both sealed families, or the orchestrator's main repair.

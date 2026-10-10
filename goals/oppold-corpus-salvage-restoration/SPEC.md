@@ -678,3 +678,13 @@ P1 is complete; P0/P4 remain complete, P2/P3 pending, lifecycle active. The
 orchestrator owns P2 ceilings and expansion; this lane starts neither phase.
 Reversal: revert these packet flips and retain both immutable run directories;
 whole-run removal remains an orchestrator decision under R7.
+
+### 2026-10-10: publish accepted P1 evidence under the inherited fence
+
+PR4 changes packet documents only. Fifteen of sixteen cheap gates pass; only
+three inherited schema-codec test advisories fail. All finding files match main.
+The standing inherited-fence ruling authorizes the direct push and labelled PR
+fallback, followed by Yeet ready and a bounded monitor. No source, inventory,
+baseline or CI rule changes. The orchestrator owns S11 merge and inherited reds;
+this lane never merges. Reversal: close/revert PR4 packet flips while retaining
+both immutable families and the one-time completed freeze record.
