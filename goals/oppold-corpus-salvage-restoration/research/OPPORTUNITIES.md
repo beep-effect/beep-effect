@@ -344,3 +344,17 @@ the unpushed commit before retrying.` The run-2 ruling authorizes direct push an
 PR creation with the heavy label, Yeet ready, and a bounded readiness monitor.
 No inventory baseline or unrelated source is changed. Attribution-aware publication
 that accepts an explicit inherited-fence receipt would prevent repeated worker stops.
+
+
+### 2026-10-09: a passing dry probe did not guarantee live second-pass acceptance
+
+The RAM-only probe completed all 59 extraction candidates with no nonzero or empty
+results, and both bounded fixes passed synthetic and package proof before #1596
+merged. The frozen live slice nevertheless ended after 33 attachment dispositions
+with one unapproved `engine-failure`, sealing the family. Counts-only evidence
+shows 11 repairs, 22 unsupported dispositions, no warnings, and no terminal child
+rows. The exception message and private log lines remain private and unread.
+No precise underlying cause is claimed. A probe that reuses the driver's complete
+quota handoff, synthesized-message and second-pass runtime contract would reduce
+this gap. Do not rerun the sealed slice; a diagnostic or fresh-ledger route is an
+orchestrator follow-up. No code or frozen policy changed during the run.

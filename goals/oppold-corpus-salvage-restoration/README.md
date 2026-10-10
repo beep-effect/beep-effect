@@ -9,9 +9,10 @@ digests while retaining the originals.
 
 ## Next action
 
-P0 and P4 are complete. Hand the provenance summaries to pass-3
-identification and the practice-kg bundle; then record the P1-P2 ceilings in
-the decision log before the live mail slice.
+P1 is in-progress and blocked by a sealed `family-acceptance-failure`. The
+orchestrator decides any fresh-ledger route; do not retry this slice. P0/P4
+remain complete, and P2/P3 remain pending. P1 ceilings are frozen; P2 ceilings
+remain undecided.
 
 ## Launcher
 
@@ -37,6 +38,17 @@ ingestion v2, enrichment v2, and practice-kg bundle v2 remain gated MAP
 re-entry points. The solo-practice corpus kit remains deferred.
 
 ## Latest evidence
+
+2026-10-09 — PR1 #1596 merged the probe-proven Tika capture and portable-name
+fixes. The frozen live slice ran once and sealed a failure: one unapproved
+`engine-failure`, zero store passes, zero warning rows, and zero terminal child
+rows. Attachment dispositions: 11 repaired, 22 unsupported, zero unchanged.
+Input 56,140,800 bytes; retained output 115,418,004 bytes (2.055866749x);
+family elapsed 350,398 ms; archive re-verification 282,677 ms. The output fits
+the frozen disk/time ceilings, but final child reconciliation did not complete.
+The four fresh synthetic exception/accounting/resume cases pass. P1 remains
+in-progress; no second launch or artifact mutation is authorized. See the
+handoff and frozen run manifest for aggregate evidence and digests.
 
 2026-10-06 — P0 resumed and P4 opened (lane E, corpus provenance completion).
 The 2026-08-27 archive run had stalled at a 90.25 GB root-archive partial;

@@ -314,3 +314,80 @@ hosted-parity: test-tsgo: pass | docgen local: pass | jsdoc-ratchet: pass | know
 handoff: goals/oppold-corpus-salvage-restoration/history/handoffs/corpus-restore-2026-10-09.md
 open items: Orchestrator owns PR1 gate/merge and inherited hosted reds; hosted readiness pending, no unresolved review threads at handoff. Required bounded monitor observed transitions then was cancelled and acknowledged for final-file monitoring transfer; reverse by resubmitting it. Do not write the frozen run manifest or launch the slice until the orchestrator reports PR1 MERGED. P1 remains pending. Decisions retain budget-bound Tika capture, portable engine-name escape preserving MIME names, ratio 4, attempt 7,200,000 ms, total 43,200,000 ms, total output 2,147,483,648 bytes, 100 GB free floor, R6 freeze record, R7 output authority, and private-workspace release notes under #1566; reverse fixes/docs before launch by reverting commits. Run-2 authorizes inherited-fence fallback; reverse by closing unmerged PR. All own units ended.
 final 041fc523031dd3ed57b4636cf339975feb8871ae #1596
+
+## Run 3 — PR1 merged; frozen live slice
+
+PR1 #1596 is MERGED, merge commit `320cedc0518a187a214ca49defc98d540dc440d1`.
+Both bounded implementation files last changed on main at that commit; the owned
+Corpus/libpff trees have no diff against main. Lane merged main to
+`a842f07837fdf6d52357a43e79ebeeed36f849f8` and switched to the evidence branch.
+Dependencies remain installed; the merge changed no lockfile. Adoption has zero
+conflicts; doctor remains zero new/inherited blocking and three unrelated advisories.
+The completed probe and full PR1 package/parity proofs above are retained.
+
+| Prerequisite | State | Re-measurement |
+| --- | --- | --- |
+| 3a P0 | met | P0 complete; expected seal matched; directory-pass 755, file-pass 10,696, inherited-loss 4, preflight 1, seal 1 |
+| 3b selection | met | PST 53; eligible 23; input 56,140,800 bytes; selected object and source digest unchanged |
+| 3c state | met | No slice ledger; no earlier start stamp or live invocation |
+| 3d engines | met | pffexport 20260917; bubblewrap 0.13.0; OpenJDK 27 (2026-09-15); both nested sandbox smokes exit 0; Java resolution and Tika digest unchanged |
+| 3e capacity | met | 440,530,395,136 free bytes; above 100 GB floor |
+| 3f synthetic exceptions | met | Fresh focused suite: four passed, 71 skipped; 6.25 seconds |
+| 3g main source | met | Both bounded fixes merged at PR1 merge SHA; zero owned source diff against main |
+| 3h capture | met | Retained probe: 59 runs, 43 above old bound, zero nonzero/empty; merged budget-bound fix |
+| 3i names | met | Retained probe: one backslash file, zero directories/collisions/existing escape names; merged name fix |
+
+Frozen ceilings remain ratio 4, attempt 7,200,000 ms, family 43,200,000 ms,
+output 2,147,483,648 bytes, free floor 100,000,000,000 bytes. Derivation above is unchanged.
+Launch script syntax passes; SHA-256
+`641fcd4ab9a2bc0857ff7f90a547575974150b929ea542015bf193ea18a04ea9`.
+Run manifest: `history/evidence/p1-slice-run-manifest.json`; code head as above,
+engine versions remeasured, policy digest pending the tool's first start row.
+No code will change while the slice is running. Reversal authority remains R7:
+the orchestrator may remove the complete additive run; this lane never removes it.
+
+- Live launch n=1 submitted at `2026-10-10T00:06:17Z`; free bytes immediately before launch 440721391616. Unit `beep-heavy-corpus-restore-p1-1.service`.
+
+- Archive re-verification finished; first family start at `2026-10-10T00:10:59.881Z`.
+  Re-verification phase duration 282677 ms. Attempt n=1 is active.
+  Frozen policy SHA-256 `2bc3fc673c343ef6008b9b3bb1c85e000ac59239d345f3e50d4d08aaf6a5a2c8` equals the exact invocation contract;
+  recorded once in the run manifest. The manifest is now immutable.
+
+### Run-3 sealed failure aggregates
+
+- Unit `beep-heavy-corpus-restore-p1-1.service` ended; result 1. No interruption or retry.
+- Queue phase approximately 204 ms (submission timestamp precision one second).
+  Archive re-verification 282,677 ms; verification completion count one.
+- Attempt `mail:011b25c2d38deca005ce17dd:r0`; retry ordinal zero.
+  Attempt-start to exception interval 349607 ms; no PASS elapsedMillis exists.
+  Family elapsed 350,398 ms; total from script start to seal 633,079 ms.
+- Record counts: attachment-type-repair 33; family-run-start 1; family-attempt-start 1;
+  mail-store-exception 1; family-run-summary 1; family-acceptance-failure 1.
+  mail-store-pass 0; mail-warning 0; mail-child-pass 0; interruptions 0.
+- Source objectId `da19981ddcd62e532156584b7d8ef06762122f1cffc3f032ac36436d5492fdae`;
+  input 56,140,800 bytes; retained output 115,418,004 bytes; family du bytes 115,418,004.
+  Retained disk amplification 2.055866749x; below ratio 4 and total output ceiling.
+  There is no accepted disk/time amplification or completed child reconciliation.
+- Exception class `engine-failure`, approved false; passCount 0, exceptionCount 1,
+  terminalCount 1, expectedCount 1, unapprovedCount 1. Last row family-acceptance-failure.
+- Repairs: repaired 11; unsupported 22; unchanged 0; distinct repaired digests 11.
+  Final engine children 0; final derived copy/Tika children 0; other children 0.
+  The repair acceptance box remains unticked because terminal child evidence is absent.
+- Private live-log line count 4; verification-summary count 1. No log or exception
+  message was read or copied. Free bytes immediately before launch 440,721,391,616;
+  after run 442,226,008,064 (other machine writes/deletions can affect this measurement).
+- Ledger SHA-256 `efb4b558c2d1680f87a684a69d6aa021653234d12928aa9f27a6943de8970e9f`.
+  Output-tree SHA-256 `58b8190d63b6f77c2f33e903a036427289405faed382e6ff5bd274155304988b`.
+- Stop: immutable sealed failure. Do not relaunch, change flags, pick another source,
+  or mutate any run artifact. P1 becomes in-progress; only the synthetic exception
+  checkbox is supported. P0/P4 complete, P2/P3 pending, lifecycle active.
+  Reversal remains an orchestrator decision under R7; the lane retains all evidence.
+
+- Failure packet verification: GOAL character budget, manifest parse, required packet
+  reference scan, diff whitespace, and new-evidence hygiene pass. Doctor unchanged:
+  zero new/inherited blocking, three unrelated advisories. Index check passes.
+- PR2 changes packet material only. Package-verify and code hosted-parity lanes are
+  not run for PR2 (docs-only: no package source changed); PR1 full package and parity
+  proof is retained above. The required packet knowledge-reference check is running.
+- Final pre-publication fetch/merge: already up to date. Live unit inactive; all
+  run artifacts retained, launch script and manifest digests unchanged.
