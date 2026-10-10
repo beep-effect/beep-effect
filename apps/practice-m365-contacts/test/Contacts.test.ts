@@ -28,6 +28,9 @@ import { loadContacts } from "@/Contacts.source";
 import { ContactsState, makeContactsState } from "@/Contacts.state";
 import type { Contact } from "@beep/law-practice-use-cases/DocumentIdentification";
 
+const JournalJson = S.fromJsonString(RunJournal);
+const ExportRowJson = S.fromJsonString(S.Record(S.String, S.Unknown));
+
 const raw = (name: string, emails: ReadonlyArray<string>, company = "Fixture company") =>
   RawContactCard.make({
     displayName: name,
@@ -291,7 +294,7 @@ describe("contact seeding", () => {
           yield* fs.makeDirectory(path.join(root, "state"));
           yield* fs.writeFileString(
             path.join(root, "state", "fixture-run.json"),
-            yield* S.encodeEffect(S.fromJsonString(RunJournal))(journal)
+            yield* S.encodeEffect(JournalJson)(journal)
           );
           const edited = GraphContact.make({
             ...stored("edited", "Edited fixture", "edited@example.test", O.some(journal.runId)),
@@ -378,9 +381,7 @@ describe("contact seeding", () => {
                 const receipt = yield* job.export(out);
                 expect(receipt.count).toBe(1);
                 expect(receipt.sha256).toHaveLength(64);
-                const content = yield* S.decodeEffect(S.fromJsonString(S.Record(S.String, S.Unknown)))(
-                  yield* fs.readFileString(out)
-                );
+                const content = yield* S.decodeEffect(ExportRowJson)(yield* fs.readFileString(out));
                 expect(content).toMatchObject(wire);
                 expect((yield* fs.stat(out)).mode & 0o777).toBe(0o600);
                 expect((yield* fs.stat(path.dirname(out))).mode & 0o777).toBe(0o700);

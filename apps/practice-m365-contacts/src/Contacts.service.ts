@@ -33,6 +33,8 @@ import type { M365Error } from "@beep/m365";
 import type { PlatformError } from "effect/PlatformError";
 import type { ContactCensus, ContactInputs } from "./Contacts.schemas.ts";
 
+const ExportRowJson = S.fromJsonString(S.Record(S.String, S.Unknown));
+
 const $I = $PracticeM365ContactsId.create("Contacts.service");
 
 type JobError = ContactsError | M365Error | PlatformError | S.SchemaError;
@@ -340,7 +342,7 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
           const lines = yield* Effect.forEach(
             contacts,
             (row) =>
-              S.encodeEffect(S.fromJsonString(S.Record(S.String, S.Unknown)))({
+              S.encodeEffect(ExportRowJson)({
                 ...O.getOrThrow(row.contact.rawJson),
                 exportFolderId: O.getOrElse(row.folderId, () =>
                   O.getOrElse(row.contact.parentFolderId, () => "default")
