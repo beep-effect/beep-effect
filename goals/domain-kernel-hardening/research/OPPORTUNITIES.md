@@ -304,3 +304,9 @@ index.lock collision. Both attempts ended without a commit or push; staged
 packet intent survived. No lock was removed. Awaiting the first mutation's
 terminal result before launching the next prevents this avoidable friction.
 The retry uses strictly sequential commit then heavy publish.
+
+P2 publication's collected cheap gates pass 14/16 lanes but refuse on inherited
+schema-first and the already admitted PracticeKg Effect-Vitest re-anchor.
+The current scan reports one PracticeKg identity; the prior EV015 is history.
+Affected source/inventory matches main. Run-8 authorizes fallback publication;
+owner inventory/source repair on main would remove this repeated fence.

@@ -1166,3 +1166,21 @@ active summary above with no packet finding.
 A direct commit and Yeet launched too close together collided on index.lock.
 Both are terminal with exit 1/128, no commit/push and no lost staged intent.
 No lock removed; publication retries sequentially. Friction recorded at once.
+
+Yeet heavy publish refuses with exactly two red cheap gates: schema-first
+and effect-vitest; 14/16 lanes pass, no push. Exact refusal: "yeet publish
+cheap-gates failed after creating the local commit; nothing was pushed."
+Schema-first repeats Accounts candidates/property advisories. Effect-Vitest
+reports one new identity in PracticeKg.projections.test.ts (the already
+admitted EV002 re-anchor); historical EV015 is not reported by this scan.
+Source/inventory comparison to main passes. P0 local-shard-12ef2c31f4c1 is
+acknowledged wontfix with S11 owner attribution, not waived or called green.
+D28 records the authorized push/PR/ready/bounded-monitor fallback and reversal
+(close the unmerged evidence PR; integrate owner repair and rerun).
+
+Main #1595 at 5e0df516a2 then merges cleanly: M365 contacts source/tests and
+packet only, no kernel/schema/migration/bundle or owned packet overlap.
+All base merges ride the initial wave. Default proofs and fresh full JSDoc
+inventory precede both unrelated final main integrations; no exact-final-head
+all-green claim. Packet checks and stream are repeated after this merge.
+No lane changes to inherited inventory, private release notes or source.
