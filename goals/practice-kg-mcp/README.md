@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -50,27 +50,22 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P8 Handoff + close. P6, P7, P9, P10 and P11 are complete (2026-10-06 to
-2026-10-07): the graph is keyed by client, every row resolves to provenance
-(AC-2, proved by `verify.ts`), the server needs no network (AC-5, proved under
-enforced isolation), and the bundle exposes a stable matter-lookup contract and
-a correspondent lookup for the docket-intake, email, and Box services
-(`research/matter-lookup-contract.md`). The attorney's working files, saved
-emails and docket register are in the bundle (`2026-10-06-03` on his PC with
-extension 0.3.1; `2026-10-07-01` with extension 0.4.0 adds anchor dominance
-(D-23) and matter correspondents (D-24)). Installs are verified without a
-person by `practice-kg-mcp --self-check`. P11 (2026-10-07) added the mail
-archives: bundle `2026-10-07-04` (`2026-10-07-02` rebuilt with one count per
-message, D-27) places archive messages on matters by the docket reference in
-their subject lines (D-26), so correspondents cover 169
-of 187 matters instead of 23; it was diffed against `2026-10-07-01` with
-`verify.ts --compare-to` (D-25) and lost nothing. Extension 0.4.0 reads it
-unchanged; the PC moves from `2026-10-07-01` to it in the next quiet window.
-What remains needs people: one session with him, scripted in
-`research/attorney-session.md` (in-chat `kg_provenance`, G-1..G-5 verdicts,
-his own questions for AC-6).
+All phases are complete. The 2026-10-09 sitting supplied the remaining P5
+correctness verdicts and P8 handoff questions. The operator completed the later
+review with ChatGPT computer use after the attorney-facing app proved unusable.
+The locked log has 16 verdicts; failures and known-defect confirmations remain
+visible in the evidence and tracked follow-ups. D-28/D-29 record the assisted
+review boundary and S15's switch to agent evaluations. The program orchestrator
+owns the final PR's checks, review and merge.
 
 ## Latest Evidence
+
+- 2026-10-09: [Attorney sitting](history/p8/2026-10-09-attorney-session.md),
+  [retrieval diagnosis](history/p8/2026-10-09-retrieval-failure-diagnosis.md)
+  and [closeout reflection](history/reflections/2026-10-09-codex.md).
+  Final tally: 1 pass, 11 right, 1 partly right, 1 wrong and 2 known-defect
+  confirmations. Startup and self-check now probe document get and text search;
+  the PC configuration repair and identical-input replay remain with the orchestrator.
 
 - 2026-10-07: **P11 review fixes** — bundle `2026-10-07-04`: a filed email
   and its archive copy count once, and an archive item without a

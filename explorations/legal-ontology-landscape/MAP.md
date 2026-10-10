@@ -1,8 +1,9 @@
 # Legal Ontology Landscape Map
 
-**Lifecycle annotation (2026-08-27):** research and semantic-foundation M1 are
-complete. M2-M4 remain future product-gated capabilities; the trademark
-docketing candidate remains queued behind semantic-foundation M3.
+**Lifecycle annotation (2026-10-09):** research and semantic-foundation M1-M3
+are complete with pinned classification and vocabulary contracts. M4 remains
+gated and routed to legal-document-intake P4. The trademark docketing candidate
+has a retained bootstrap plan; no downstream packet was created.
 
 ## Candidate Goal Packets
 

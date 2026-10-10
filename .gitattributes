@@ -8,3 +8,7 @@ standards/fallow.boundaries.generated.jsonc merge=regenerate
 tsconfig.json merge=regenerate
 tsconfig.packages.json merge=regenerate
 apps/professional-desktop/src/runtime/Migrations.gen.ts merge=regenerate
+
+# Packet decision and friction ledgers retain independent lane append entries.
+goals/*/SPEC.md merge=union
+goals/*/research/OPPORTUNITIES.md merge=union

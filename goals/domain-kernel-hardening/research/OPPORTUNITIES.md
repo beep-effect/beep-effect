@@ -270,3 +270,54 @@ refused because its index.lock was active. The following commit was empty.
 Waited for the merge, staged named paths, and amended that unpublished
 commit; never removed the lock or changed published history. Awaiting every
 mutating Git operation before staging would prevent this sequencing error.
+
+## P2 tool-shell user bus receipt
+
+The first two beep-heavy launches failed before starting proof work: user scope
+bus transport lacked XDG_RUNTIME_DIR and DBUS_SESSION_BUS_ADDRESS. Supplying
+the standard user-bus environment restored the approved heavy lane, retaining
+BEEP_HEAVY_MEM=32G and TURBO_CONCURRENCY=2. A launch wrapper that carries these
+non-secret variables into tool shells would prevent this friction. No cap or
+home configuration changed.
+
+## P2 inherited verification receipts
+
+The dependent check stops at @beep/ui build with TS2589 (type instantiation
+excessively deep); 68/70 tasks finished before the failure. Schema-first
+stops on AccountsSecretField and AccountsSecretsItem in
+packages/tooling/tool/cli/src/commands/Accounts/AccountsSecretsLayout.schemas.ts:
+object schemas prefer annotated S.Class over S.Struct. Both source trees,
+standards and lockfile match origin/main byte-for-byte; this wave edits only
+the goal packet. Owner repair on main followed by integration prevents
+repeating these unrelated failures. No source or baseline suppression added.
+
+P2 JSDoc inventory generation succeeds but the totals ratchet fails on eight
+metrics in main-identical source: empty-section, leading-blank, missing export
+categories/examples/since, schema annotations, trailing-blank and unsafe
+examples. This reproduces P1 D24. Owner repair and a generated inventory
+refresh on main prevent repeat qualification costs; no baseline changes here.
+
+## P2 sequential publication receipt
+
+Starting Yeet publish before the direct git commit hook settled caused an
+index.lock collision. Both attempts ended without a commit or push; staged
+packet intent survived. No lock was removed. Awaiting the first mutation's
+terminal result before launching the next prevents this avoidable friction.
+The retry uses strictly sequential commit then heavy publish.
+
+P2 publication's collected cheap gates pass 14/16 lanes but refuse on inherited
+schema-first and the already admitted PracticeKg Effect-Vitest re-anchor.
+The current scan reports one PracticeKg identity; the prior EV015 is history.
+Affected source/inventory matches main. Run-8 authorizes fallback publication;
+owner inventory/source repair on main would remove this repeated fence.
+
+
+## P3 inherited publication fence
+
+The P3 packet-only Yeet publish collects all 16 cheap lanes: 14 pass, schema-first
+and Effect-Vitest fail. AccountsSecretField/AccountsSecretsItem and the existing
+PracticeKg inventory re-anchor match origin/main byte-for-byte, as do all package,
+app, standards and lockfile files. Exact refusal: "yeet publish cheap-gates failed
+after creating the local commit; nothing was pushed." Run-9 permits the inherited
+fallback. Owner source/inventory repair on main would remove the repeated fence;
+no lane baseline refresh, suppression or package repair is performed.

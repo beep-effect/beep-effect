@@ -1,6 +1,7 @@
 import {
   ConceptAlignment,
   DocumentClass,
+  decodeLoadManifestEntry,
   FilingSegment,
   isFilingSegment,
   LibrarianInput,
@@ -14,6 +15,7 @@ import {
   VendorAlignmentManifestEntry,
   VendorAlignmentTargetNotFound,
   VendorConceptSlice,
+  VendorLoadKind,
   VendorManifestEntry,
   VendorSliceAlignmentNotAdmitted,
   VendorSliceConceptMismatch,
@@ -37,6 +39,7 @@ import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const decodeLibrarianInputResult = S.decodeResult(LibrarianInput);
 const decodeUnknownFilingSegmentOption = S.decodeUnknownOption(FilingSegment);
@@ -77,6 +80,44 @@ const loadWith = Effect.fnUntraced(function* (readFileString: FileSystem.FileSys
 it.layer(Layer.merge(TaxonomyLoader.layer, BunFileSystem.layer), { timeout: "30 seconds" })(
   "semantic foundation",
   (it) => {
+    it.effect(
+      "skips classification-scheme rows without changing the M1 seed",
+      Effect.fnUntraced(function* () {
+        const loaded = yield* loadWith(() =>
+          Effect.succeed('{"id":"ipc","format":"xml","loadKind":"classification-scheme","loadStatus":"VETTED"}')
+        );
+        expect(loaded).toEqual(SemanticFoundationSeed);
+        expect(VendorLoadKind.literals).toEqual(["concept-alignment", "classification-scheme"]);
+      })
+    );
+
+    it.effect(
+      "rejects an unknown loadKind with TaxonomyManifestParseError",
+      Effect.fnUntraced(function* () {
+        const error = yield* loadWith(() =>
+          Effect.succeed('{"id":"unknown","format":"xml","loadKind":"unknown"}')
+        ).pipe(Effect.flip);
+        error.pipe(isTaxonomyManifestParseError, assertTrue);
+      })
+    );
+
+    it.effect(
+      "decodes the real asset manifest without vendor bytes and preserves kind routing",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = "../../../../explorations/legal-ontology-landscape/assets/manifest.jsonl";
+        const content = yield* fs.readFileString(path);
+        const lines = A.filter(Str.split(content, "\n"), Str.isNonEmpty);
+        const entries = yield* Effect.forEach(lines, (line, index) => decodeLoadManifestEntry(path, line, index));
+        const admitted = A.getSomes(entries);
+        expect(admitted).toHaveLength(1);
+        expect(admitted[0]).toMatchObject({ id: "folio-email-communication", loadKind: "concept-alignment" });
+        // Every nonalignment row, including every future classification row,
+        // must route away from the M1 seed path.
+        expect(A.filter(entries, O.isNone)).toHaveLength(lines.length - 1);
+      })
+    );
+
     it.effect(
       "loads the committed seed plus an explicitly VETTED fixture slice",
       Effect.fnUntraced(function* () {

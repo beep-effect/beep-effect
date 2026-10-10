@@ -378,11 +378,11 @@
       }
     },
     "@beep/epistemic-domain": {
-      "reviewer": "Claude Fable 5.1 (cache baseline merge-friendly lane, fix/cache-baseline-merge-friendly)",
-      "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
+      "reviewer": "Codex rsc-burndown",
+      "reason": "Canonical generated doctest scripts repair changes the three manifest script digests; no cache qualification is granted.",
       "basis": {
-        "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
+        "path": "goals/repository-simplification-confidence/history/receipts/stage-6-rsc-burndown-cache-review.md",
+        "sha256": "670bc05bfcb13413abc5c26b230aa19067e96d714d76ccb60e79c2e57785f17b"
       }
     },
     "@beep/epistemic-server": {
@@ -410,11 +410,11 @@
       }
     },
     "@beep/epistemic-use-cases": {
-      "reviewer": "Claude Fable 5.1 (cache baseline merge-friendly lane, fix/cache-baseline-merge-friendly)",
-      "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
+      "reviewer": "Codex rsc-burndown",
+      "reason": "Canonical generated doctest scripts repair changes the three manifest script digests; no cache qualification is granted.",
       "basis": {
-        "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
+        "path": "goals/repository-simplification-confidence/history/receipts/stage-6-rsc-burndown-cache-review.md",
+        "sha256": "670bc05bfcb13413abc5c26b230aa19067e96d714d76ccb60e79c2e57785f17b"
       }
     },
     "@beep/exiftool": {
@@ -546,11 +546,11 @@
       }
     },
     "@beep/law-practice-server": {
-      "reviewer": "Codex oa-slice worker",
-      "reason": "Re-record the direct provenance dependency digest for the server; commands, inputs, outputs, environment and cache flags retain their reviewed posture; no qualification promotion.",
+      "reviewer": "Codex rsc-burndown",
+      "reason": "Canonical generated doctest scripts repair changes the three manifest script digests; no cache qualification is granted.",
       "basis": {
-        "path": "goals/law-doc-structure-oa-slice/history/p2/2026-10-09-cache-review.md",
-        "sha256": "b73ef298caaa8a25ef7793cbda148d82c4e11a1183986ff53151eeb69a4f4903"
+        "path": "goals/repository-simplification-confidence/history/receipts/stage-6-rsc-burndown-cache-review.md",
+        "sha256": "670bc05bfcb13413abc5c26b230aa19067e96d714d76ccb60e79c2e57785f17b"
       }
     },
     "@beep/law-practice-tables": {
@@ -33187,7 +33187,7 @@
       {
         "computation": "@beep/epistemic-domain#audit",
         "command": "bun run --if-present beep:audit",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/effect-drizzle#audit",
           "@beep/identity#audit",
@@ -33255,7 +33255,7 @@
       {
         "computation": "@beep/epistemic-domain#build",
         "command": "bun run beep:build",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/effect-drizzle#build",
           "@beep/identity#build",
@@ -33310,7 +33310,7 @@
       {
         "computation": "@beep/epistemic-domain#check",
         "command": "bun run beep:check",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/effect-drizzle#build",
           "@beep/identity#build",
@@ -33352,7 +33352,7 @@
       {
         "computation": "@beep/epistemic-domain#coverage",
         "command": "bunx vitest run --coverage",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/effect-drizzle#build",
           "@beep/identity#build",
@@ -33406,7 +33406,7 @@
       {
         "computation": "@beep/epistemic-domain#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/epistemic-domain#transit",
           "@beep/repo-docgen#transit"
@@ -33443,9 +33443,62 @@
         }
       },
       {
+        "computation": "@beep/epistemic-domain#doctest",
+        "command": "bun run beep:doctest",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
+        "dependencies": [
+          "@beep/effect-drizzle#transit",
+          "@beep/identity#transit",
+          "@beep/provenance#transit",
+          "@beep/schema#transit",
+          "@beep/shared-domain#transit",
+          "@beep/test-runner#transit",
+          "@beep/test-utils#transit",
+          "@beep/utils#transit",
+          "@beep/utils#transit"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!node_modules/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../packages/foundation/modeling/utils/src/**",
+            "../../../packages/tooling/tool/cli/test/global-cleanup.ts",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "../../../vitest.aliases.generated.json",
+            "../../../vitest.setup.ts",
+            "../../../vitest.shared.ts",
+            ".env",
+            ".env.*",
+            "package.json",
+            "src/**",
+            "test/**",
+            "tsconfig*.json",
+            "vitest*.config.ts"
+          ],
+          "env": [
+            "BEEP_VITEST_DOCTEST"
+          ],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "@beep/utils#transit",
+            "^transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
         "computation": "@beep/epistemic-domain#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -33480,7 +33533,7 @@
       {
         "computation": "@beep/epistemic-domain#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "//#lint:policy-fingerprint",
           "@beep/effect-drizzle#transit",
@@ -33556,7 +33609,7 @@
       {
         "computation": "@beep/epistemic-domain#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -33585,7 +33638,7 @@
       {
         "computation": "@beep/epistemic-domain#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "//#lint:policy-fingerprint"
         ],
@@ -33640,7 +33693,7 @@
       {
         "computation": "@beep/epistemic-domain#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "//#lint:policy-fingerprint"
         ],
@@ -33694,7 +33747,7 @@
       {
         "computation": "@beep/epistemic-domain#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/effect-drizzle#transit",
           "@beep/identity#transit",
@@ -33742,7 +33795,7 @@
       {
         "computation": "@beep/epistemic-domain#test",
         "command": "bun run beep:test",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/effect-drizzle#transit",
           "@beep/identity#transit",
@@ -33793,7 +33846,7 @@
       {
         "computation": "@beep/epistemic-domain#test:property",
         "command": "bun run beep:test",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/effect-drizzle#transit",
           "@beep/identity#transit",
@@ -36010,7 +36063,7 @@
       {
         "computation": "@beep/epistemic-use-cases#audit",
         "command": "bun run --if-present beep:audit",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/epistemic-domain#audit",
           "@beep/file-processing#audit",
@@ -36080,7 +36133,7 @@
       {
         "computation": "@beep/epistemic-use-cases#build",
         "command": "bun run beep:build",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/epistemic-domain#build",
           "@beep/file-processing#build",
@@ -36137,7 +36190,7 @@
       {
         "computation": "@beep/epistemic-use-cases#check",
         "command": "bun run beep:check",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/epistemic-domain#build",
           "@beep/file-processing#build",
@@ -36181,7 +36234,7 @@
       {
         "computation": "@beep/epistemic-use-cases#coverage",
         "command": "bunx vitest run --coverage",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/epistemic-domain#build",
           "@beep/file-processing#build",
@@ -36237,7 +36290,7 @@
       {
         "computation": "@beep/epistemic-use-cases#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/epistemic-use-cases#transit",
           "@beep/repo-docgen#transit"
@@ -36274,9 +36327,64 @@
         }
       },
       {
+        "computation": "@beep/epistemic-use-cases#doctest",
+        "command": "bun run beep:doctest",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
+        "dependencies": [
+          "@beep/epistemic-domain#transit",
+          "@beep/file-processing#transit",
+          "@beep/identity#transit",
+          "@beep/provenance#transit",
+          "@beep/rdf#transit",
+          "@beep/schema#transit",
+          "@beep/semantic-web#transit",
+          "@beep/shared-domain#transit",
+          "@beep/test-runner#transit",
+          "@beep/test-utils#transit",
+          "@beep/utils#transit"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!node_modules/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../packages/foundation/modeling/utils/src/**",
+            "../../../packages/tooling/tool/cli/test/global-cleanup.ts",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "../../../vitest.aliases.generated.json",
+            "../../../vitest.setup.ts",
+            "../../../vitest.shared.ts",
+            ".env",
+            ".env.*",
+            "package.json",
+            "src/**",
+            "test/**",
+            "tsconfig*.json",
+            "vitest*.config.ts"
+          ],
+          "env": [
+            "BEEP_VITEST_DOCTEST"
+          ],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "@beep/utils#transit",
+            "^transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
         "computation": "@beep/epistemic-use-cases#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -36311,7 +36419,7 @@
       {
         "computation": "@beep/epistemic-use-cases#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "//#lint:policy-fingerprint",
           "@beep/epistemic-domain#transit",
@@ -36389,7 +36497,7 @@
       {
         "computation": "@beep/epistemic-use-cases#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -36418,7 +36526,7 @@
       {
         "computation": "@beep/epistemic-use-cases#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "//#lint:policy-fingerprint"
         ],
@@ -36473,7 +36581,7 @@
       {
         "computation": "@beep/epistemic-use-cases#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "//#lint:policy-fingerprint"
         ],
@@ -36527,7 +36635,7 @@
       {
         "computation": "@beep/epistemic-use-cases#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/epistemic-domain#transit",
           "@beep/file-processing#transit",
@@ -36577,7 +36685,7 @@
       {
         "computation": "@beep/epistemic-use-cases#test",
         "command": "bun run beep:test",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/epistemic-domain#transit",
           "@beep/file-processing#transit",
@@ -36630,7 +36738,7 @@
       {
         "computation": "@beep/epistemic-use-cases#test:property",
         "command": "bun run beep:test",
-        "commandDigest": "9837202c82143cc7dcdc9dd213781aebc266cabb771ea0b886c3a53948cfc585",
+        "commandDigest": "10b92f2f9af4280db34a448980834ff5e257644bb40b4f468331d48f88f36db1",
         "dependencies": [
           "@beep/epistemic-domain#transit",
           "@beep/file-processing#transit",
@@ -47460,7 +47568,7 @@
       {
         "computation": "@beep/law-practice-server#audit",
         "command": "bun run --if-present beep:audit",
-        "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
+        "commandDigest": "8d5dcbd4c135a82d21a6090b3ceaa80b5c521ef06c628e5fbaa2b9b19b949f4c",
         "dependencies": [
           "@beep/box#audit",
           "@beep/duckdb#audit",
@@ -47548,7 +47656,7 @@
       {
         "computation": "@beep/law-practice-server#build",
         "command": "bun run beep:build",
-        "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
+        "commandDigest": "8d5dcbd4c135a82d21a6090b3ceaa80b5c521ef06c628e5fbaa2b9b19b949f4c",
         "dependencies": [
           "@beep/box#build",
           "@beep/duckdb#build",
@@ -47623,7 +47731,7 @@
       {
         "computation": "@beep/law-practice-server#check",
         "command": "bun run beep:check",
-        "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
+        "commandDigest": "8d5dcbd4c135a82d21a6090b3ceaa80b5c521ef06c628e5fbaa2b9b19b949f4c",
         "dependencies": [
           "@beep/box#build",
           "@beep/duckdb#build",
@@ -47685,7 +47793,7 @@
       {
         "computation": "@beep/law-practice-server#coverage",
         "command": "bunx vitest run --coverage",
-        "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
+        "commandDigest": "8d5dcbd4c135a82d21a6090b3ceaa80b5c521ef06c628e5fbaa2b9b19b949f4c",
         "dependencies": [
           "@beep/box#build",
           "@beep/duckdb#build",
@@ -47759,7 +47867,7 @@
       {
         "computation": "@beep/law-practice-server#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
+        "commandDigest": "8d5dcbd4c135a82d21a6090b3ceaa80b5c521ef06c628e5fbaa2b9b19b949f4c",
         "dependencies": [
           "@beep/law-practice-server#transit",
           "@beep/repo-docgen#transit"
@@ -47796,9 +47904,82 @@
         }
       },
       {
+        "computation": "@beep/law-practice-server#doctest",
+        "command": "bun run beep:doctest",
+        "commandDigest": "8d5dcbd4c135a82d21a6090b3ceaa80b5c521ef06c628e5fbaa2b9b19b949f4c",
+        "dependencies": [
+          "@beep/box#transit",
+          "@beep/duckdb#transit",
+          "@beep/epistemic-domain#transit",
+          "@beep/epistemic-server#transit",
+          "@beep/epistemic-tables#transit",
+          "@beep/epistemic-use-cases#transit",
+          "@beep/file-processing#transit",
+          "@beep/identity#transit",
+          "@beep/langextract#transit",
+          "@beep/law-practice-domain#transit",
+          "@beep/law-practice-tables#transit",
+          "@beep/law-practice-use-cases#transit",
+          "@beep/libpff#transit",
+          "@beep/m365#transit",
+          "@beep/mcp-kit#transit",
+          "@beep/md#transit",
+          "@beep/nlp#transit",
+          "@beep/pglite#transit",
+          "@beep/postgres#transit",
+          "@beep/provenance#transit",
+          "@beep/schema#transit",
+          "@beep/shared-domain#transit",
+          "@beep/shared-use-cases#transit",
+          "@beep/test-runner#transit",
+          "@beep/test-utils#transit",
+          "@beep/tika#transit",
+          "@beep/uspto#transit",
+          "@beep/utils#transit",
+          "@beep/utils#transit"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!node_modules/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../packages/foundation/modeling/utils/src/**",
+            "../../../packages/tooling/tool/cli/test/global-cleanup.ts",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "../../../vitest.aliases.generated.json",
+            "../../../vitest.setup.ts",
+            "../../../vitest.shared.ts",
+            ".env",
+            ".env.*",
+            "package.json",
+            "src/**",
+            "test/**",
+            "tsconfig*.json",
+            "vitest*.config.ts"
+          ],
+          "env": [
+            "BEEP_VITEST_DOCTEST"
+          ],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "@beep/utils#transit",
+            "^transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
         "computation": "@beep/law-practice-server#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
+        "commandDigest": "8d5dcbd4c135a82d21a6090b3ceaa80b5c521ef06c628e5fbaa2b9b19b949f4c",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -47833,7 +48014,7 @@
       {
         "computation": "@beep/law-practice-server#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
+        "commandDigest": "8d5dcbd4c135a82d21a6090b3ceaa80b5c521ef06c628e5fbaa2b9b19b949f4c",
         "dependencies": [
           "//#lint:policy-fingerprint",
           "@beep/box#transit",
@@ -47929,7 +48110,7 @@
       {
         "computation": "@beep/law-practice-server#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
+        "commandDigest": "8d5dcbd4c135a82d21a6090b3ceaa80b5c521ef06c628e5fbaa2b9b19b949f4c",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -47958,7 +48139,7 @@
       {
         "computation": "@beep/law-practice-server#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
+        "commandDigest": "8d5dcbd4c135a82d21a6090b3ceaa80b5c521ef06c628e5fbaa2b9b19b949f4c",
         "dependencies": [
           "//#lint:policy-fingerprint"
         ],
@@ -48013,7 +48194,7 @@
       {
         "computation": "@beep/law-practice-server#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
+        "commandDigest": "8d5dcbd4c135a82d21a6090b3ceaa80b5c521ef06c628e5fbaa2b9b19b949f4c",
         "dependencies": [
           "//#lint:policy-fingerprint"
         ],
@@ -48067,7 +48248,7 @@
       {
         "computation": "@beep/law-practice-server#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
+        "commandDigest": "8d5dcbd4c135a82d21a6090b3ceaa80b5c521ef06c628e5fbaa2b9b19b949f4c",
         "dependencies": [
           "@beep/box#transit",
           "@beep/duckdb#transit",
@@ -48135,7 +48316,7 @@
       {
         "computation": "@beep/law-practice-server#test",
         "command": "bun run beep:test",
-        "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
+        "commandDigest": "8d5dcbd4c135a82d21a6090b3ceaa80b5c521ef06c628e5fbaa2b9b19b949f4c",
         "dependencies": [
           "@beep/box#transit",
           "@beep/duckdb#transit",

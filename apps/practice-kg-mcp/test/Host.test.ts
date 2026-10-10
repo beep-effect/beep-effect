@@ -1,5 +1,6 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import {
+  PracticeKgBundle,
   PracticeKgBundleManifest,
   PracticeKgCounts,
   PracticeKgSchemaVersions,
@@ -415,6 +416,55 @@ describe("@beep/practice-kg-mcp self-check", () => {
     );
   });
 });
+
+for (const [kind, table] of [
+  ["TABLE", "document_text"],
+  ["VIEW", "fts_bm25"],
+]) {
+  describe(`practice KG startup without ${table}`, () => {
+    const fixtureLayer = Layer.effect(
+      PracticeKgBundle,
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-startup-" });
+        const bundleDir = yield* makePracticeKgSmokeBundle(root);
+        yield* DuckDb.use((db) => db.run(`DROP ${kind} ${table}`)).pipe(
+          provideScopedLayer(
+            DuckDb.makeNodeLayer(
+              DuckDbConnectionOptions.make({ databasePath: path.join(bundleDir, "practice.duckdb") })
+            )
+          )
+        );
+        return PracticeKgBundle.of(yield* loadPracticeKgBundleContext(bundleDir));
+      })
+    ).pipe(Layer.provide(TestServices));
+    it.layer(Layer.mergeAll(TestServices, fixtureLayer), { timeout: "2 minutes" })((it) => {
+      it.effect(
+        "refuses self-check and startup with one message before speaking MCP",
+        Effect.fnUntraced(function* () {
+          const { bundleDir } = yield* PracticeKgBundle;
+          const refusal = yield* refusalLine(bundleDir);
+          expect(refusal.message).toContain("does not answer the queries this server's tools run");
+          expect(refusal.cause).toContain(table);
+          const child = Bun.spawn(["bun", "run", "src/bin.ts", "--bundle-dir", bundleDir], {
+            stdin: "ignore",
+            stdout: "pipe",
+            stderr: "pipe",
+          });
+          const startup = yield* Effect.all({
+            exitCode: Effect.promise(() => child.exited),
+            stdout: Effect.promise(() => new Response(child.stdout).text()),
+            stderr: Effect.promise(() => new Response(child.stderr).text()),
+          });
+          expect(startup.exitCode).not.toBe(0);
+          expect(startup.stdout).toBe("");
+          expect(startup.stderr).toBe(`${refusal.message}\n`);
+        })
+      );
+    });
+  });
+}
 
 const encodeReportLine = S.encodeUnknownEffect(S.fromJsonString(PracticeKgSelfCheckReport));
 const encodeRefusalLine = S.encodeUnknownEffect(S.fromJsonString(PracticeKgSelfCheckRefusal));

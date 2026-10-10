@@ -3,14 +3,14 @@
   "initiative": {
     "id": "domain-kernel-hardening",
     "title": "Domain Kernel Hardening",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-06-29",
-    "updated": "2026-10-09",
+    "updated": "2026-10-10",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/domain-kernel-hardening",
-  "lifecycle": "active",
-  "statusNote": "Resumed 2026-10-09 under the corpus-ingestion run-order program; resume condition met by the practice-kg bundle v2 plan.",
+  "lifecycle": "completed-retained",
+  "statusNote": "P0-P2 merged via #1577, #1593 and #1599; P3 reflection and retained completion recorded under the run-9 ruling.",
   "researchReports": ["research/SOURCES.md"],
   "executionCapable": true,
   "reflectionRequired": true,
@@ -57,12 +57,12 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

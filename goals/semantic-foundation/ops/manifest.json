@@ -5,12 +5,12 @@
     "title": "Semantic Foundation",
     "status": "completed-retained",
     "created": "2026-07-08",
-    "updated": "2026-08-30",
+    "updated": "2026-10-10",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/semantic-foundation",
   "lifecycle": "completed-retained",
-  "statusNote": "M1 and R1-R4 are complete. M2-M4 remain future product-gated capabilities outside this M1 outcome.",
+  "statusNote": "Reopened 2026-10-09 for M2 and M3 as ready slices for oppold-corpus-semantic-ingestion-v2; M4 routed to the legal-document-intake P4 lane.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -65,12 +65,12 @@
     {
       "id": "M2",
       "name": "Classification Schemes",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "M3",
       "name": "Docketing and Party Roles",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "M4",
@@ -93,12 +93,12 @@
     "jq . goals/semantic-foundation/ops/manifest.json",
     "rg -n \"semantic-foundation|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/semantic-foundation",
     "git diff --check -- goals/semantic-foundation explorations/legal-ontology-landscape explorations/ATLAS.md",
-    "bun run beep yeet verify",
+    "hosted CI on the PR",
     "bun run beep lint reflection-artifacts"
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",
-    "The implementation would exceed M1 or pull M2-M4 work forward without the named gate.",
+    "The implementation would exceed M1-M3 or pull M4 work forward without the named gate.",
     "The former ontology-survey packet was removed 2026-07-14, so its edit fence is moot; stop if work exceeds the scope absorbed from explorations/legal-ontology-landscape or requires law-practice domain entities, document-intake workflow code, graph-store wiring, or SPARQL engine wiring.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."

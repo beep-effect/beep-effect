@@ -901,3 +901,81 @@ Effect v4 ChildProcessSpawner boundary preserves both runtimes and all
 assertions; rerun the affected fixtures, type and package checks. Checking
 the canonical process API before choosing the native boundary would have
 prevented this extra qualification wave. No suppression or inventory edit.
+
+## 2026-10-09: burn-down qualification waits behind the shared heavy slots
+
+- Doing: running the inherited-red attribution scan, full docgen, and focused
+  EffectImports regressions in the burn-down lane.
+- Evidence: each admitted wrapper reports `all 5 slots busy, waiting` before
+  execution. The lane remains within its required memory limits; no peer job
+  or slot lock was stopped or modified.
+- Would have prevented it: reserving a short attribution/repair slot for the
+  inherited-red owner while dependent lanes queue their long package proofs.
+
+## 2026-10-09: base moved again between integration and burn-down publication
+
+- Doing: publishing the scoped inherited-red repair after integrating #1580.
+- Evidence: Yeet refused the stale base after #1583 landed, naming the workflow
+  and both shared packet ledgers. No commit or push occurred on this attempt.
+- Would have prevented it: a coordinated publication window for the inherited
+  repair owner, avoiding repeated admission and requalification of moving bases.
+
+## 2026-10-09: new inherited admissions block the scoped burn-down repair
+
+- Doing: requalifying after #1583 integration for the inherited-red repair.
+- Evidence: `lint:effect-vitest` reports 12 new findings in six #1583 test
+  files; the golden detector and deletion regression are absent from that list.
+  The red ledger assigns these judgments to the admission lane, while this
+  repair brief permits exactly one inventory occurrence.
+- Would have prevented it: landing the owned admissions before dependent
+  publication, or coordinating the repair owner with the incoming red wave.
+
+## 2026-10-09: base integration invalidated an in-flight package proof
+
+- Doing: integrating #1583 while a second full package audit was still running.
+- Evidence: the audit retained old module behavior while tests expected newly
+  ported APIs. Its 14 suite failures and five test failures are quarantined;
+  a fresh stable-source replay passed all 106 tests across five relevant files.
+- Would have prevented it: keeping the checkout fixed for the entire admitted
+  proof and integrating the next base only after its process has exited.
+
+### 2026-10-09 — burn-down admission list omits the C golden-workflow advisory
+
+- **Work:** Run 2 qualifies the fourteen occurrence-specific C admissions.
+- **Evidence:** `bun run lint:schema-first` resolves both Accounts object findings
+  but reports missing `SFV4-arbitrary-tests` at
+  `packages/tooling/tool/cli/test/ci-runner-security.test.ts:79`. The C handoff's
+  Run 4 terminal publication table already identifies this golden regression
+  advisory; the source is unchanged from main. The resume ruling admits two
+  schema rows plus twelve test rows and forbids changing other inventory rows.
+- **Attribution:** inherited C golden-workflow judgment, outside the explicit
+  fourteen-row admission count. This is a red gate, not a qualification pass.
+- **Prevention:** reconcile the scanner's full terminal occurrence table against
+  the delegated count before issuing a bounded admission brief. B's census can
+  resolve the advisory; this worker retains the count and uses only the
+  explicitly authorized publication fallback if Yeet holds on it.
+
+## 2026-10-09: resumed burn-down publication limitations
+
+The refreshed main inventory conflicted with the retained admissions; merge
+resolution preserved occurrence fingerprints and regenerated anchors through
+the canonical scanner. The local merge hook separately flagged a PEM header
+in inherited scratchpad JSDoc; the hosted Secret Scanning check passed and no
+new scanner ignore row was added. Complete machine-readable coverage rows and
+a dependency-review manifest-path exclusion would avoid unsafe approximations
+of the remaining baseline and fixture-boundary tasks.
+
+The generated doctest script repair invalidated cache-policy manifest digests.
+The canonical reviewed recorder stamped only its three package subjects and
+retained all other reviews; its audit reports zero blocking findings. Full
+policy separately finds inherited scratchpad diagnostic suppressions and a
+root language-service profile mismatch. Keep source fixed during proofs;
+report these inherited gates rather than broadening exception inventories.
+
+Terminal attribution: the private-package changeset repair passes hosted graph
+and status checks. Repo Sanity instead fails unchanged minimatch/smol-toml
+versions; JSDoc Ratchet retains its opaque inventory-generation failure. Fresh
+repo-cli audit/docgen passed. Manifest-only quick checks initially lacked
+upstream dist declarations; rebuilding the dependency closure and replaying
+all three checks passed. Record proof prerequisite scope with each result so
+an environment-only first attempt is not mistaken for a source regression.

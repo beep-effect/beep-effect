@@ -978,21 +978,48 @@ const canonicalConfigResult = ([pkg, config]: DocgenConfiguredPackage): Result.R
 const logSkippedMetadataCheck = ([pkg, config]: DocgenConfiguredPackage) =>
   Console.log(`docgen:local: skipped JSDoc metadata check for ${pkg.name} (non-canonical outDir: ${config.outDir})`);
 
-// The full proof ratchets every package whose generated docs are aggregated
-// into docs/generated, which is also the population the scoped planner can
-// select. A non-canonical outDir (the scratchpad's focused quality-analysis
-// output) is skipped exactly as the aggregate step skips it. Proof manifests
-// are deliberately not consulted: they prove generation, not metadata, and
+/**
+ * Filter metadata-check candidates to packages with a canonical docgen outDir,
+ * logging each skipped package for both scoped and full proofs.
+ *
+ * **Example** (Filter discovered metadata candidates)
+ *
+ * ```ts
+ * import { filterDocgenMetadataCheckPackagesForTesting } from "@beep/repo-cli/test/Docgen"
+ * import * as Effect from "effect/Effect"
+ *
+ * const checkable = filterDocgenMetadataCheckPackagesForTesting([], 2)
+ * console.log(Effect.isEffect(checkable)) // true
+ * ```
+ *
+ * @param packages - Candidate packages: every configured package (full) or the planner's direct selections (scoped).
+ * @param parallel - Maximum concurrent docgen.json reads.
+ * @returns An effect yielding the packages whose metadata the proof checks.
+ * @category testing
+ * @since 0.0.0
+ */
+export const filterDocgenMetadataCheckPackagesForTesting = Effect.fn("DocgenLocal.filterMetadataCheckPackages")(
+  function* (packages: ReadonlyArray<DocgenWorkspacePackage>, parallel: number) {
+    const configured = yield* Effect.forEach(packages, loadConfiguredPackage, { concurrency: localParallel(parallel) });
+    const [checked, skipped] = A.partition(configured, canonicalConfigResult);
+    yield* Effect.forEach(skipped, logSkippedMetadataCheck, { discard: true });
+    return checked;
+  }
+);
+
+// Both proofs ratchet only packages whose generated docs are aggregated into
+// docs/generated: full mode discovers all configured packages, while scoped
+// mode filters the planner's direct selections through the same canonical
+// outDir partition. A non-canonical outDir (the scratchpad's focused quality
+// analysis output) is skipped exactly as the aggregate step skips it. Proof
+// manifests are deliberately not consulted: they prove generation, not metadata, and
 // generation alone let an unknown @category merge on main (#1054) that only
 // the next PR's scoped check paid for (#1057).
 const discoverFullMetadataCheckPackages = Effect.fn("DocgenLocal.discoverFullMetadataCheckPackages")(function* (
   parallel: number
 ) {
   const packages = yield* discoverConfiguredPackages();
-  const configured = yield* Effect.forEach(packages, loadConfiguredPackage, { concurrency: localParallel(parallel) });
-  const [checked, skipped] = A.partition(configured, canonicalConfigResult);
-  yield* Effect.forEach(skipped, logSkippedMetadataCheck, { discard: true });
-  return checked;
+  return yield* filterDocgenMetadataCheckPackagesForTesting(packages, parallel);
 });
 
 const runFullDocgen = Effect.fn("DocgenLocal.runFullDocgen")(function* (repoRoot: string, parallel: number) {
@@ -1197,7 +1224,8 @@ const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan
     yield* Console.log(`docgen:local: reused ${A.length(proofStatuses)} current package proof manifest(s)`);
   } else {
     const selectedPackages = selectDirectDocgenPackagesForTesting(packages, plan.selectedPackages);
-    yield* checkPackageDocumentation(selectedPackages, plan.parallel);
+    const metadataCheckPackages = yield* filterDocgenMetadataCheckPackagesForTesting(selectedPackages, plan.parallel);
+    yield* checkPackageDocumentation(metadataCheckPackages, plan.parallel);
     yield* runStepWithStallWatchdog(
       "turbo docgen",
       turboBinaryPath(repoRoot),

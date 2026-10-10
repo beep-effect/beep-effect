@@ -19,6 +19,7 @@ import {
   discoverOrphanDocgenConfigPaths,
   docgenLocalFullReasonsForTesting,
   docgenLocalTurboArgsForTesting,
+  filterDocgenMetadataCheckPackagesForTesting,
   generateAnalysisReport,
   generateQualityJson,
   generateQualityReport,
@@ -1133,6 +1134,41 @@ export const ProofFixture = 1;
       expect(logs).toContain("docgen:local: checking JSDoc metadata for 1 package(s)");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
   });
+
+  it.effect("skips the scoped JSDoc metadata check for packages with a non-canonical docgen outDir", () =>
+    Effect.gen(function* () {
+      yield* temporaryRepository;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      yield* seedDocgenPackage();
+      const probeDir = path.join(process.cwd(), "packages", "foundation", "modeling", "probe");
+      yield* fs.makeDirectory(path.join(probeDir, "src"), { recursive: true });
+      yield* fs.writeFileString(
+        path.join(probeDir, "package.json"),
+        yield* encodeJson({ name: "@beep/probe", version: "0.0.0" })
+      );
+      yield* fs.writeFileString(
+        path.join(probeDir, "docgen.json"),
+        yield* encodeJson({ srcDir: "src", outDir: ".jsdoc-loop/generated-docs" })
+      );
+      yield* fs.writeFileString(path.join(probeDir, "src", "index.ts"), invalidCategorySource);
+
+      const packages = yield* discoverDocgenWorkspacePackages(process.cwd());
+      const selected = selectDocgenLocalPackagesForTesting(packages, [
+        "packages/foundation/modeling/schema/docgen.json",
+        "packages/foundation/modeling/probe/docgen.json",
+      ]);
+      const directPackages = selectDirectDocgenPackagesForTesting(packages, selected);
+      expect(A.map(directPackages, (pkg) => pkg.name)).toEqual(["@beep/probe", "@beep/schema"]);
+
+      const checked = yield* filterDocgenMetadataCheckPackagesForTesting(directPackages, 2);
+      expect(A.map(checked, (pkg) => pkg.name)).toEqual(["@beep/schema"]);
+      const logs = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+      expect(logs).toContain(
+        "docgen:local: skipped JSDoc metadata check for @beep/probe (non-canonical outDir: .jsdoc-loop/generated-docs)"
+      );
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
 
   it.effect(
     "rejects local docgen JSON output without plan mode",
