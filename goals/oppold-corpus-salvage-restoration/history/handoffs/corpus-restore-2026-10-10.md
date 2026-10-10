@@ -271,3 +271,19 @@ blocked: fresh slice needs independent preservation and transformation labels; P
   receipt by name, then one direct push to the existing PR. No unrelated test,
   baseline, inventory or CI rule is edited. Reversal: close PR3, retain evidence.
 - Fresh code snapshot and launch script remain unchanged; coverage continues.
+
+- Root P0 publication row acknowledged as inherited/wontfix, assigned to the
+  orchestrator under S11 and the standing fence. The initial acknowledgement
+  used a lane label rather than the stable row id; listing the inbox and
+  acknowledging the stable row completed the receipt.
+- Coverage began before #1605's merge, then its new directory-removal regression
+  encountered an older loaded module without the new NotFound recovery. Both
+  files have zero diff against main; the old definition location differs from
+  current source. Fresh standalone proof and the same V8 coverage script both
+  pass all 31 tests (11.01 seconds for coverage). This is a mixed-revision proof
+  environment, not a Corpus implementation failure.
+- Stopped and observed the contaminated wrapper
+  `run-p2241367-i94322145.service`, then restarted full scoped coverage against
+  the stable committed source. The isolated V8 run uses a separate ignored
+  report directory, preserving the full report. No source changed for this
+  correction. Reverse by rerunning either proof; no corpus state exists yet.

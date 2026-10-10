@@ -466,3 +466,16 @@ No baseline, CI policy, changeset, or source repair was made here.
 - Disposition: follow the standing inherited-fence ruling: record the refusal,
   commit owned receipts by name, and push the full addressed wave once to PR3.
 - Reversal: close PR3 and retain the packet and both immutable run directories.
+
+
+### 2026-10-10: merging during coverage mixed test and module revisions
+
+- Doing: incorporating #1605 while the full package coverage process was active.
+- Evidence: the new directory-removal regression failed with NotFound against
+  an older loaded module. Current source contains the recovery and both affected
+  files match main. A fresh run of the same V8 script passes all 31 tests.
+- Prevention: let an active proof finish or invalidate it before merging changes
+  in a package under test; restart the proof against one stable source revision.
+- Disposition: stopped and observed the contaminated wrapper, started fresh full
+  scoped coverage, and held the live launch. No source workaround or suppression.
+- Reversal: rerun the proof; no live corpus state was created.
