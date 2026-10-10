@@ -490,3 +490,59 @@ handoff: goals/oppold-corpus-salvage-restoration/history/handoffs/corpus-restore
 open items: P1 complete: fresh family accepted one store, 3339 accounted children, zero unapproved rows/warnings/exceptions; 59 repaired occurrences with 51 copy/Tika digest pairs, 147 unsupported dispositions; output 132668272 bytes / input 56140800 bytes = 2.363134690x, attempt 809685 ms, family 822686 ms, re-verification 254472 ms, all ceilings hold. Queue duration unavailable because prior receipt omitted submission timestamp. Policy hash filled exactly once; original failure ledger unchanged. P0/P4 complete, P2/P3 pending and lifecycle active; orchestrator owns P2 ceilings and expansion. PR4 required CI and review window pending; inherited schema test advisories assigned under S11, no source/inventory/CI waiver. Bounded monitor cancelled and observed terminal; resume with the same bounded command if needed. Reverse packet flips by reverting PR4 and retain both immutable families. Zero review threads and unacknowledged inbox rows; no worker-owned job running; never merged. Graft reported approximately 62624 tokens saved in one call.
 final 4f24989ecd35f24b947ef29ea8a3d002aea46944 #1609
 ```
+
+
+## Run 7 amendment: policy-identity review, no P2 launch
+
+Latest scope is the 05:45:31Z ruling: answer PR4 #1609 first, one push on the
+existing slice branch, no P2 and no merge. Main was fetched and merged once.
+Worktree started clean; package source equals main. Packet doctor baseline:
+zero new/inherited blockers; three unrelated advisories, none for this packet.
+
+| Relaunch prerequisite | State | Measured evidence |
+| --- | --- | --- |
+| P0 seal | met | 755 directory passes, 10696 file passes, four inherited losses, one preflight, one seal; expected run identity unchanged |
+| Metadata candidate | met | 23 eligible; input 56140800 bytes; object and source digest match both manifests |
+| Transformation state | met | Original sealed failure and fresh sealed pass; ledger SHA-256 values unchanged |
+| Engine identity | met | pffexport 20260917, bubblewrap 0.13.0, OpenJDK 27 dated 2026-09-15; Java real path and Tika digest unchanged |
+| Capacity | met | 195356336128 free bytes, above 100000000000 floor; no new run planned |
+| Main code | met | No diff in owned Corpus or libpff source; no package edited |
+| Capture and portable-name fixes | retained | PR1 merged; probe and synthetic proof retained; no new probe or code changes |
+| Live unit and result | met | n=2 unit inactive, result 0; private log two lines; no private log or journal text read |
+
+Freeze provenance is independently established by commit
+`d8b0e6f15516e38d2d0fe64f4fdf4c651447dea9`, timestamp 03:24:20Z,
+preceding script start 03:54:04.229Z and family start 03:58:18.701Z.
+All source, engine, ceiling, code and script fields are already there;
+structural comparison proves only the authorized null-to-policy fill changed.
+Retained launch script SHA-256 matches
+`f49f831f309f4b625167b25c8c415cca7705e2364a934e6a2012daaa14dd5ca2`.
+Both ledgers and both manifests contain policy SHA-256
+`2bc3fc673c343ef6008b9b3bb1c85e000ac59239d345f3e50d4d08aaf6a5a2c8`.
+The review's alternate
+`1fcde5680cb42357e784ae4309cd05ce633999bc79b582479219ed07915d090e`
+is reproduced exactly by hashing a literal home alias. Runtime expansion
+reproduces the persisted hash. #1606 changed code identity, not these hash
+inputs. The acceptance and SPEC append preserve both digests, associate each
+execution with its own freeze record, and document this verified distinction.
+
+Decision: P1 remains complete because its separate fresh freeze record was
+complete before execution, except the policy fill authorized by runs 5/6.
+Reversal: revert PR4 phase flips and reopen P1; retain both immutable families
+and manifests. P2 remains pending and no expansion is launched in this run.
+Original ledger SHA-256 remains
+`efb4b558c2d1680f87a684a69d6aa021653234d12928aa9f27a6943de8970e9f`;
+fresh ledger SHA-256 remains
+`33ad3245d090f519b573769503ebb39162a8806864f664ab0817b705a72fccf5`.
+Graft reported approximately 52649 tokens saved in one call.
+
+Run-7 verification: four required synthetic restoration tests pass, 73 skipped,
+4.37 seconds. Both real sandbox engine smokes pass. The first combined smoke
+wrapper lost its command arguments and failed before any corpus invocation;
+the exact direct commands from the brief then passed. No live run was launched.
+Packet doctor/index, manifest parse, GOAL budget, required reference search,
+knowledge refs (zero live gated observations), and diff whitespace checks pass.
+Both immutable manifests are byte-identical to the pre-correction head.
+Added prose contains no absolute home paths or ledger path/message fields.
+Package-verify and source hosted-parity are not run for this packet-only wave;
+PR1/PR3 package proof and hosted attribution remain the retained source evidence.

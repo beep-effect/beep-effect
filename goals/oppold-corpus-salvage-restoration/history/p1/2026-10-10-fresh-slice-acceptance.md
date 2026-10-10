@@ -107,3 +107,54 @@ proof is retained in the handoff. P2 ceilings and expansion remain with the
 orchestrator. Reverse the packet flips by reverting PR4; retain both immutable
 families and freeze records. Whole-run removal remains the orchestrator's R7
 authority, never a lane cleanup.
+
+## Run-7 correction: separate freeze records and exact policy inputs
+
+This section corrects the policy-identity ambiguity raised on PR4 #1609.
+It preserves both digests cited in the review:
+
+- Persisted policy digest in both manifests and both family-run-start rows:
+  `2bc3fc673c343ef6008b9b3bb1c85e000ac59239d345f3e50d4d08aaf6a5a2c8`.
+- Review recomputation using the literal home alias in the Tika jar path:
+  `1fcde5680cb42357e784ae4309cd05ce633999bc79b582479219ed07915d090e`.
+
+The original `history/evidence/p1-slice-run-manifest.json` governed only the
+run-3 family that sealed a failure. The separate
+`history/evidence/p1-fresh-slice-run-manifest.json` governed the authorized
+fresh n=2 family that sealed a pass. The fresh execution did not use the
+original freeze record. Neither manifest is edited by this correction.
+
+The fresh record was committed in
+`d8b0e6f15516e38d2d0fe64f4fdf4c651447dea9` at 2026-10-10T03:24:20Z,
+before script start at 03:54:04.229Z and family-run-start at 03:58:18.701Z.
+That committed version already contains the source object and SHA-256,
+code snapshot, script SHA-256, both labels, engine paths and versions,
+Tika jar SHA-256, and all four ceilings. Its policy hash was null.
+A structural comparison with the current fresh manifest proves that the
+only change is the authorized one-time policy fill from its first start row.
+The retained launch script still matches its frozen SHA-256. Source identity,
+engine identity and ceilings therefore preceded execution; none was backfilled.
+
+The hashing code joins ten ordered values with NUL separators and hashes
+those bytes with SHA-256. It hashes the runtime Tika jar path, not the public
+manifest's home alias. Expanding that alias with the same HOME used by the
+launch script reproduces the persisted digest exactly. Hashing the literal
+`~` produces the review's alternate digest exactly. The alternate is not a
+production computation for the invocation that ran. No absolute home path
+or corpus path from a ledger row is reproduced here.
+
+The run-7 ruling anticipated a digest change from #1606. Direct ledger and
+source checks show that its code fix changed code identity and output-family
+selection, but did not change this policy digest: the hash excludes code
+versions, runLabel and preservationLabel. Both executions used identical
+engine paths, scope, expected count and ceilings, so both start rows contain
+the same digest. The distinct freeze records and their different code and
+script digests establish execution identity. The policy digest alone does not.
+
+Decision: retain P1 complete. The fresh pre-execution record is complete under
+R6 and the run-5/6 authorized policy-fill exception, and its persisted policy
+matches the runtime inputs. The accepted aggregate outcome remains valid.
+Reversal: revert PR4's phase-completion edits and reopen P1 while retaining
+both immutable manifests and families. No new execution is authorized by
+this correction; a future execution requires its own pre-execution record.
+P2 does not start in this run.

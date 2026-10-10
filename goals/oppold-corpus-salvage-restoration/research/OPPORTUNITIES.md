@@ -526,3 +526,19 @@ No baseline, CI policy, changeset, or source repair was made here.
   then burn down those main findings once instead of duplicating lane repairs.
 - Reversal: close PR4 or supersede the disposition with the orchestrator repair;
   retain both sealed families and aggregate evidence.
+
+
+## 2026-10-10: public home aliases changed a policy recomputation
+
+- Doing: answering PR4 #1609's policy-identity review thread before expansion.
+- Evidence: both immutable manifests and both persisted start rows have
+  `2bc3fc673c343ef6008b9b3bb1c85e000ac59239d345f3e50d4d08aaf6a5a2c8`.
+  Recomputing with the manifest's literal home alias gives
+  `1fcde5680cb42357e784ae4309cd05ce633999bc79b582479219ed07915d090e`;
+  expanding the alias as the launch script does reproduces the persisted hash.
+  The pre-launch commit contains every fresh frozen field except the explicitly
+  deferred policy hash. #1606 changes code identity, which this hash excludes.
+- Prevented by: document the ordered hash inputs, runtime home expansion, and
+  the separate original/fresh freeze-record associations beside acceptance.
+  Preserve public path hygiene and both immutable records. No code change or
+  new run is needed. Reversal: revert the clarification and reopen acceptance.
