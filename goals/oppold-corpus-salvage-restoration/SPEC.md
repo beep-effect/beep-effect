@@ -528,3 +528,12 @@ Do not retry a sealed family or change the selection. Any fresh-ledger route bel
 to the orchestrator. Reversal: the R7 whole-run removal authority remains with the
 orchestrator; this lane retains all output and ledger evidence without mutation.
 Ledger SHA-256: `efb4b558c2d1680f87a684a69d6aa021653234d12928aa9f27a6943de8970e9f`.
+
+### 2026-10-09: publish the sealed-failure evidence under the inherited fence
+
+The docs-only evidence wave passed fourteen of sixteen cheap gates. Schema-first
+and Effect-Vitest inventory findings are inherited in surfaces matching main;
+no package source changed. Apply the brief's inherited publication-fence ruling:
+direct push and PR creation with the heavy label, Yeet ready, and bounded monitoring.
+The orchestrator owns consolidated reds under S11. Reversal: close the evidence
+PR, retaining the immutable failed run and its frozen manifest.

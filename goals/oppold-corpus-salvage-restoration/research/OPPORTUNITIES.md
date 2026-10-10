@@ -358,3 +358,16 @@ No precise underlying cause is claimed. A probe that reuses the driver's complet
 quota handoff, synthesized-message and second-pass runtime contract would reduce
 this gap. Do not rerun the sealed slice; a diagnostic or fresh-ledger route is an
 orchestrator follow-up. No code or frozen policy changed during the run.
+
+### 2026-10-09: the failure-evidence PR inherited publication reds
+
+The docs-only P1 failure report passed fourteen of sixteen cheap gates. Yeet
+refused with `github-checks:cheap-gates: failed 2 step(s)`,
+`lint:schema-first: exit 1`, and `lint:effect-vitest: exit 1`, then reported
+`yeet publish cheap-gates failed after creating the local commit; nothing was
+pushed.` The five schema inventory entries and the PracticeKg projections test
+finding are inherited; after merging newer main all package/app source and
+inventory surfaces match main. The inherited-fence ruling authorizes direct
+push plus PR creation, ready and bounded monitoring. Attribution-aware
+publication would avoid requiring that fallback for aggregate failure evidence.
+No unrelated source or inventory baseline was changed.

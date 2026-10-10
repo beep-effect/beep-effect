@@ -391,3 +391,24 @@ the orchestrator may remove the complete additive run; this lane never removes i
   proof is retained above. The required packet knowledge-reference check is running.
 - Final pre-publication fetch/merge: already up to date. Live unit inactive; all
   run artifacts retained, launch script and manifest digests unchanged.
+
+### Run-3 inherited publication fence
+
+- Packet knowledge refs passes: 45,529 observations, zero live gated.
+- Canonical publication committed `5fd397161d`, then refused before push:
+  `github-checks:cheap-gates: failed 2 step(s)`; `lint:schema-first: exit 1`;
+  `lint:effect-vitest: exit 1`; `yeet publish cheap-gates failed after creating
+  the local commit; nothing was pushed. Fix the gate, then amend or reset the
+  unpushed commit before retrying.` Fourteen of sixteen cheap gates passed,
+  including committed JSDoc ratchet, Knip and Fallow audit/dead-code/health.
+- Schema findings are the two Accounts candidates and three test advisories.
+  Main advanced during the proof; merged it to `461a33c7dd910187d436154f8fe9e721fe1e4a2d`.
+  All package/app source and the schema inventory now match main; zero lane
+  diff in every finding surface. No lockfile change; no reinstall needed.
+- Effect-Vitest's one new-to-inventory finding is in the inherited
+  PracticeKg projections test. A fresh isolated gate reproduces it; the file
+  matches main. It is not a corpus lane regression. No baseline changed.
+- The inherited-fence ruling authorizes direct push and PR creation, Yeet
+  ready, and bounded monitor. The orchestrator owns those inherited reds under
+  S11. Reversal: close the evidence PR; retain immutable live artifacts.
+  The root cheap-gate inbox was acknowledged with the ownership attribution.
