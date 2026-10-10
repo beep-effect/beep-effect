@@ -679,3 +679,17 @@ bytes. Eighteen inputs above 536870912 bytes await a later ceiling ruling.
 Retain ratio 4 and family output cap 2147483648 bytes. Largest admitted
 ratio allowance 1827508224 bytes fits. No family launched; P1 complete,
 P2 pending. Reversal: revert planning correction and retain sealed families.
+
+
+### Run-9A publication receipt
+
+Fifteen of sixteen cheap gates pass; sole refusal is `lint:schema-first: exit 1`,
+`github-checks:cheap-gates: failed 1 step(s)` and `yeet publish cheap-gates
+failed after creating the local commit; nothing was pushed.` The three advisory
+files match origin/main. Standing inherited-fence fallback applies: named receipt
+commit and one addressed-wave push to #1610, then answer/resolve and ready.
+Four focused restoration tests and both engine smokes pass; 228470427648 bytes
+free, P0 seal and both P1 ledger digests unchanged, zero active family units.
+Knowledge refs passes with zero live gated observations; packet doctor adds
+no blocker. No source changed; full source parity not run for this docs wave.
+Reversal: close/revert PR5 correction and retain sealed families.

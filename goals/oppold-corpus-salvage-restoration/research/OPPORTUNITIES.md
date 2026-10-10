@@ -590,3 +590,11 @@ Prevention: filter inputs against floor(family cap / ratio) before wave
 membership selection. Run-9 correction admits nine inputs at most 536870912
 bytes, largest 456877056; eighteen larger inputs wait. No family started.
 Reversal: revert the plan correction, retaining immutable P1 evidence.
+
+
+### 2026-10-10: PR5 membership correction repeats inherited fence
+
+Fifteen cheap gates pass; `lint:schema-first: exit 1` alone stops publication
+after the local commit. Three codec-test advisories match main. Use the standing
+direct-push fallback; consolidated main repair prevents this repeated scanner
+wave. Reversal: revert the correction, retaining sealed P1 evidence.
