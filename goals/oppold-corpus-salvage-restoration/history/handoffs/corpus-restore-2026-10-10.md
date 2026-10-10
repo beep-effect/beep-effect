@@ -637,3 +637,23 @@ Decision/reversal: stop before launching; orchestrator supplies or authorizes a
 bounded occurrence-selection contract. Revert the packet plan to reverse;
 retain both immutable families. P1 complete, P2/P3 pending, lifecycle active.
 Graft saved approximately 219244 tokens in two calls.
+
+
+### Run-8 publication proof and inherited-fence fallback
+
+GOAL budget, JSON manifest, required packet-reference check, goals doctor/index,
+knowledge refs (45,555 observations, zero live gated), whitespace and frozen
+manifest comparisons pass. Four focused tests and both engine smokes pass.
+The fresh launcher still matches its pre-launch digest. No package was edited;
+all six full source hosted-parity lanes are not run (docs-only), with PR1/PR3
+proof retained. Collected cheap gates pass 15 of 16, including committed JSDoc,
+Effect-Vitest, Knip and Fallow audit/dead-code/health, zero introduced findings.
+
+Exact refusal: `github-checks:cheap-gates: failed 1 step(s)`;
+`lint:schema-first: exit 1`; `yeet publish cheap-gates failed after creating
+the local commit; nothing was pushed.` The three schema-test advisory files
+and inventory match origin/main. The standing fence authorizes direct push,
+labelled PR, ready and bounded monitoring; no unrelated repair or waiver.
+The first publisher invocation refused unstaged intent before commit; staging
+reviewed owned files corrected it. All heavy publisher wrappers are terminal.
+Reversal: close/revert this plan PR, retaining all sealed corpus evidence.

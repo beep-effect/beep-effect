@@ -568,3 +568,16 @@ No baseline, CI policy, changeset, or source repair was made here.
 - Disposition: record the plan and stop before launch; orchestrator supplies
   the contract or authorizes a scoped implementation. No corpus or code mutation.
 - Reversal: revert the plan, retaining both sealed P1 families and manifests.
+
+
+## 2026-10-10: inherited publication fence on P2 launch preflight
+
+- Doing: publishing the bounded P2 plan and the public-selector blocker.
+- Evidence: 15 of 16 collected cheap gates pass; schema-first exits 1 on the
+  same three schema-test advisories in files matching origin/main.
+  Exact refusal: `yeet publish cheap-gates failed after creating the local
+  commit; nothing was pushed.` No package source or inventory changed.
+- Prevention: consolidated main advisory repair under the orchestrator's S11.
+- Disposition: standing fence permits named receipt commit and one direct
+  wave push with labelled PR and ready; no CI or inventory waiver.
+- Reversal: close/revert the plan PR; retain both immutable P1 families.
