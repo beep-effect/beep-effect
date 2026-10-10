@@ -11,3 +11,6 @@ goals/**/history/outputs/
 # Desktop dev bootstrap probes a local portless HTTPS proxy and is not packaged application code.
 apps/desktop/scripts/dev-with-portless.ts
 infra/ci-runners/sdks/
+
+# Scratchpad is an unshipped lab; its key and XSS fixtures are scanner subjects.
+scratchpad/

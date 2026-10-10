@@ -954,3 +954,20 @@ prevented this extra qualification wave. No suppression or inventory edit.
   the delegated count before issuing a bounded admission brief. B's census can
   resolve the advisory; this worker retains the count and uses only the
   explicitly authorized publication fallback if Yeet holds on it.
+
+## 2026-10-09: resumed burn-down publication limitations
+
+The refreshed main inventory conflicted with the retained admissions; merge
+resolution preserved occurrence fingerprints and regenerated anchors through
+the canonical scanner. The local merge hook separately flagged a PEM header
+in inherited scratchpad JSDoc; the hosted Secret Scanning check passed and no
+new scanner ignore row was added. Complete machine-readable coverage rows and
+a dependency-review manifest-path exclusion would avoid unsafe approximations
+of the remaining baseline and fixture-boundary tasks.
+
+The generated doctest script repair invalidated cache-policy manifest digests.
+The canonical reviewed recorder stamped only its three package subjects and
+retained all other reviews; its audit reports zero blocking findings. Full
+policy separately finds inherited scratchpad diagnostic suppressions and a
+root language-service profile mismatch. Keep source fixed during proofs;
+report these inherited gates rather than broadening exception inventories.
