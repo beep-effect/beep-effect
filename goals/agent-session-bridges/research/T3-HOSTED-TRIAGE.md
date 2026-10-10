@@ -90,3 +90,62 @@ removes that finding without changing the lock fixture or inventory.
 
 This supersedes only the runtime test's local proof above. Fresh hosted outcomes
 and the shared-main blockers remain separate gates.
+
+## Later hosted review: exact completion with a queued successor
+
+Review [4236011886](https://github.com/beep-effect/beep-effect/pull/1571#discussion_r4236011886)
+identified a P1 availability defect: after the exact submitted run completes,
+a different queued run may already be active. The blanket active-run rejection
+incorrectly made that successful delivery ambiguous and fenced subsequent mail.
+
+The repair rejects only contradictory active status for the exact submitted run.
+It preserves exact-run completion/provider/model checks, host configuration and
+identity checks, participant ACK, one submission and no replay. A positive
+fixture covers a different active successor; a negative fixture retains rejection
+when the exact completed run is also reported active.
+
+- Attached service SHA256:
+  `3af807fa01d0d3cf97e4b9916324314d415cc0a9b2c808607d95fb0a795fdd99`.
+- Attached test SHA256:
+  `d1f3dcaed814b0fac3163120071977f1f0acd6d8c23e6a1a8ab918b8e26ad559`.
+- Eleven focused cases pass under Bun (1.40s) and Node V8 coverage (9.36s).
+  CLI quick lint/check pass; the affected Effect-Vitest row is unchanged, with
+  zero introduced findings. Independent source-bound review finds zero issues.
+- The full test type check exposed an additional runtime-fixture error channel;
+  the correction and direct compiler proof are recorded below.
+
+This is deterministic qualification of the new source, not another live model
+run. Preserve the original complete live receipt and the two interrupted reverse
+ambiguity holds. No old message is replayed or cleared.
+
+Four later-round P2 threads are answered and resolved with tracked acceptance:
+reflection/status/revocation wording in [#1581](https://github.com/beep-effect/beep-effect/issues/1581),
+and completion after attached lease expiry in [#1603](https://github.com/beep-effect/beep-effect/issues/1603).
+The latter remains fail-closed but can terminate the worker; its scoped follow-up
+must preserve claim fencing and one native submission.
+
+The `7e54626755` CI run reproduced the inherited eleven law-practice audit-field
+fixture failures (job `114108772083`). Remaining work was cancelled because the
+P1 repair requires a new head. Lint's aggregate failure reports cancelled shards;
+that cancellation does not establish a source regression.
+
+### Correction to the earlier test-typecheck claim
+
+The earlier `package-test-typecheck` exit-zero result proved that its report
+was written, not that the captured compiler passed. The report contained
+TS2375/377003: filesystem/process `PlatformError` escaped the fixture's
+`complete` implementation. This supersedes the earlier test-compiler-pass claim.
+The final proof must use direct TSGo and inspect its actual exit code. Runtime
+execution, package source checks and their recorded timings remain separate.
+
+Final runtime fixture SHA256 is
+`24488b59120bcd789a520421b34068343e97550a80eafeb784c2850239917946`.
+Its typed wrapper converts only fixture `PlatformError` into `RouterError`,
+preserving lock-timeout errors, assertion defects and all cleanup/delivery
+assertions. Independent review found zero actionable findings. Direct full CLI
+test TSGo exits zero. The four runtime cases pass with Python absent under Node
+coverage (11.49s) and Bun (2.20s); CLI quick lint/check pass (3.6s/7.2s), as do
+root Oxlint and diff hygiene. The quick package scope is supported by the small
+postcheck change, the eleven attached regressions, four runtime regressions and
+direct full test compilation. Earlier full package/live proofs retain their
+original source binding; final hosted readiness remains unproved.

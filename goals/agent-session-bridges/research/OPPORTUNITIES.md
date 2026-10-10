@@ -227,3 +227,16 @@ where a literal sentinel can trigger a multi-line secret detector during merges.
   loop; package lint/check and runtime execution do not replace this gate.
 - Action: inject only the test's required services and preserve the existing
   lock contention assertions. Do not transfer or weaken the inventory exception.
+
+## 2026-10-09 — package typecheck producer exit is not compiler success
+
+- Work: verify the runtime lock fixture's declared store error channel.
+- Evidence: `package-test-typecheck` writes a result artifact and exits zero even
+  when its captured compiler exit is nonzero. The prior report misread producer
+  success as compiler success; the stored result carried TS2375/377003 for
+  `PlatformError` escaping the fixture's `complete` wrapper.
+- Prevention: read the stored result's exit code or invoke TSGo directly with
+  the package test project and preserve its actual exit. An artifact-write
+  command's success is not proof that the compiler passed.
+- Action: correct the fixture error boundary, run direct TSGo, and supersede
+  the earlier compiler-pass claim explicitly in the qualification receipt.

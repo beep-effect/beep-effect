@@ -91,7 +91,7 @@ const validateObservedRun = Effect.fn("AgentMessage.attachedObservedRun")(functi
     run.value.status !== "completed" ||
     run.value.providerInstanceId !== profile.expectedConfiguration.modelSelection.instanceId ||
     run.value.model !== profile.expectedConfiguration.modelSelection.model ||
-    O.isSome(O.fromNullishOr(after.thread.activeRunId))
+    after.thread.activeRunId === runId
   ) {
     return yield* failure("Attached T3 exact run did not settle under the expected host configuration.");
   }

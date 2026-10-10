@@ -153,18 +153,26 @@ const setup = Effect.fn("AttachedTest.setup")(function* () {
 });
 const fixture = Effect.fn("AttachedTest.driver")(function* (
   state: Effect.Success<ReturnType<typeof setup>>,
-  scenario: "ack" | "no-ack" | "drift" | "stale" | "lost" | "busy"
+  scenario: "ack" | "no-ack" | "drift" | "stale" | "lost" | "busy" | "next-active" | "same-active"
 ) {
   const sent = yield* Ref.make(0);
   const read = Effect.fnUntraced(function* () {
     const count = yield* Ref.get(sent);
+    const activeRunId =
+      scenario === "busy" && count === 0
+        ? "other-run"
+        : count > 0 && scenario === "next-active"
+          ? "next-run"
+          : count > 0 && scenario === "same-active"
+            ? "run"
+            : null;
     return yield* decodeRead({
       thread: {
         threadId: "owned-thread",
         projectId: "project",
-        status: scenario === "busy" && count === 0 ? "running" : "completed",
+        status: activeRunId === null ? "completed" : "running",
         latestRunId: count > 0 ? "run" : null,
-        activeRunId: scenario === "busy" && count === 0 ? "other-run" : null,
+        activeRunId,
         providerInstanceId: "codex",
         model: "gpt-6.1-sol",
         runtimeMode: "full-access",
@@ -255,6 +263,31 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("Attached T3 and scoped 
         Effect.provideService(T3Code, driver)
       );
       expect(yield* dispatch.submit(state.claim)).toBe("delivered");
+      expect(yield* Ref.get(sent)).toBe(1);
+    })
+  );
+  it.effect("settles the exact completed run when a different queued run is active", () =>
+    Effect.gen(function* () {
+      const state = yield* setup();
+      const { driver, sent } = yield* fixture(state, "next-active");
+      const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
+        Effect.provideService(AgentMessageStore, state.store),
+        Effect.provideService(T3Code, driver)
+      );
+      expect(yield* dispatch.submit(state.claim)).toBe("delivered");
+      expect(yield* Ref.get(sent)).toBe(1);
+    })
+  );
+  it.effect("rejects contradictory active status for the exact completed run without resubmission", () =>
+    Effect.gen(function* () {
+      const state = yield* setup();
+      const { driver, sent } = yield* fixture(state, "same-active");
+      const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
+        Effect.provideService(AgentMessageStore, state.store),
+        Effect.provideService(T3Code, driver)
+      );
+      const result = yield* dispatch.submit(state.claim).pipe(Effect.result);
+      result.pipe(Result.isFailure, Utils.assertTrue);
       expect(yield* Ref.get(sent)).toBe(1);
     })
   );

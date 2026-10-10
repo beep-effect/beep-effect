@@ -236,8 +236,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
           let contention = 0;
           const wrapped: AgentMessageStoreShape = {
             ...store,
-            complete: (...args) =>
-              store.complete(...args).pipe(
+            complete: Effect.fnUntraced(function* (...args: Parameters<AgentMessageStoreShape["complete"]>) {
+              return yield* store.complete(...args).pipe(
                 Effect.tapError((error) =>
                   error.message === lockTimeout.message
                     ? Effect.gen(function* () {
@@ -248,8 +248,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
                       })
                     : Effect.void
                 ),
-                Effect.tap(() => Deferred.succeed(completed, undefined))
-              ),
+                Effect.tap(() => Deferred.succeed(completed, undefined)),
+                Effect.catchTag("PlatformError", () =>
+                  RouterError.make({ code: "storage", message: "Synthetic lock release fixture failed." })
+                )
+              );
+            }),
           };
           const fiber = yield* runAgentMessageDispatchLoop("target", "target-owner").pipe(
             Effect.provideService(AgentMessageStore, wrapped),
