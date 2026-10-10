@@ -23,15 +23,15 @@ import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Reactivity from "effect/reactivity/Reactivity";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
+import * as Scope from "effect/Scope";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
 import type { AgentMessageStoreShape } from "@beep/repo-cli/commands/AgentMessage";
-import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
-import type * as Scope from "effect/Scope";
 
 const lockTimeout = RouterError.make({
   code: "storage",
@@ -226,7 +226,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
     it.effect("a released real SQLite writer lock drains completion without another prompt", () =>
       fixture((store, filename) =>
         Effect.gen(function* () {
-          const context = yield* Effect.context<Scope.Scope | ChildProcessSpawner.ChildProcessSpawner>();
+          const scope = yield* Scope.Scope;
+          const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
           const fs = yield* FileSystem.FileSystem;
           const checkpoint = `${filename}.lock`;
           const completed = yield* Deferred.make<void>();
@@ -275,7 +276,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
                     .pipe(Effect.repeat({ schedule: Schedule.spaced("10 millis"), until: identity<boolean> }));
                   return yield* Effect.succeed<"delivered">("delivered");
                 },
-                Effect.provide(context),
+                Effect.provideService(Scope.Scope, scope),
+                Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
                 Effect.mapError(() => RouterError.make({ code: "storage", message: "Synthetic lock fixture failed." }))
               ),
             }),

@@ -216,3 +216,14 @@ where a literal sentinel can trigger a multi-line secret detector during merges.
   Diagnose the ambiguous result before changing retry policy or assertions.
 - Action: repair owned failures in one corrective wave, preserve inherited
   source attribution, and keep hosted readiness unclaimed until the fresh head.
+
+## 2026-10-09 — test body changes invalidate broad-context admission
+
+- Work: publish the final packet wave after the runtime portability repair.
+- Evidence: the collected cheap gates detected a new EV002 statement fingerprint
+  in `AgentMessage.runtime.test.ts` at its broad `Effect.provide(context)` call.
+  The edited lock body changed the previously admitted statement fingerprint.
+- Prevention: include the Effect-Vitest detector in the focused test repair
+  loop; package lint/check and runtime execution do not replace this gate.
+- Action: inject only the test's required services and preserve the existing
+  lock contention assertions. Do not transfer or weaken the inventory exception.

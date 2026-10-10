@@ -67,3 +67,26 @@ fixture, not the attached production transport or grants.
 
 These checks validate the corrective diff locally. They are not a successful
 fresh hosted coverage run, and inherited unit fixtures still need their owners.
+
+## Final publication detector repair
+
+The final packet publish at `934a73fa3b` detected one additional owned EV002
+statement fingerprint in the edited runtime test. Replacing broad context
+capture/provision with explicit `Scope` and `ChildProcessSpawner` injection
+removes that finding without changing the lock fixture or inventory.
+
+- Focused membership: five current rows against six baseline rows, zero
+  introduced and one resolved. The other five fingerprints are unchanged.
+- Node coverage with `python` absent: four of four pass (12.23s). Bun with the
+  same PATH: four of four pass (2.25s). Canonical test type check and root Oxlint
+  pass; CLI quick verification passes lint (4.2s) and check (7.4s).
+- Independent review: zero actionable findings on runtime test SHA256
+  `5fc9d0be1ba9fcbd1893bdd6c89468874dd7b1a311d9177b1cc11f2d8447eec9`.
+  Fixture SHA256 remains
+  `63fe34553324fc9dab1e348b606d8bc03b328b278612f94f118a2948ab069899`.
+- Child ownership, real lock acquisition/release, rollback, exit-zero check,
+  single submission, single contention event and delivered-state assertions
+  are retained. Production behavior and previous live T3 receipts are unchanged.
+
+This supersedes only the runtime test's local proof above. Fresh hosted outcomes
+and the shared-main blockers remain separate gates.
