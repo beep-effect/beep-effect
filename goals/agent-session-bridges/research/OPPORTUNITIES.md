@@ -187,3 +187,18 @@ quoted in JSDoc describing PKCS conversion, with no credential or key body.
 The existing exact-fingerprint ignore mechanism records that one documentation
 match; the full staged scan still runs. Prefer descriptive header names in prose
 where a literal sentinel can trigger a multi-line secret detector during merges.
+
+## 2026-10-09 — advancing main replaces the inherited publication blocker
+
+- Work: resolve PR #1571 conflicts and verify merged main before publication.
+- Evidence: main `6513e85d2c` integrated through `5868dc8218`; its inventory
+  resolves the previous golden-test membership blocker. The subsequent collected
+  cheap gate instead reports Accounts schema admission rows from #1583 and a
+  PracticeKg projection-test inventory mismatch from #1593. These source files
+  match main; existing owners retain their repairs.
+- Prevention: finish schema/test inventory admission with each source change and
+  retain inherited-red attribution independently from conflict resolution.
+- Decision: publish the conflict resolution after recording the canonical gate
+  refusal and completing the owned checks, using the standing inherited-fence
+  fallback if necessary. Keep hosted readiness and merge claims separate. No
+  baseline relaxation or duplicate source repair belongs in this lane.

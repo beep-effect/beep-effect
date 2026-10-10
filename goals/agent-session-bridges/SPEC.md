@@ -161,3 +161,13 @@ registered orchestrator role or provider fallback policy changed.
 | 2026-10-09 | Exclusive owned target plus pre/post policy readback, with explicit race | T3 send has no expected-policy/native/model CAS; fingerprints alone cannot promise atomic pre-inference fencing | Hold ambiguous drift; require upstream compare-and-send before advertising stronger control |
 
 See [T3 integration design](research/T3-INTEGRATION.md) and [executed receipt](research/T3-INTEGRATION-QUALIFICATION.json) for topology, actual proof and evidence limits.
+
+### Post-integration inherited-gate publication decision
+
+| Date | Decision | Reason | Reversal |
+| --- | --- | --- | --- |
+| 2026-10-09 | Attempt Yeet publication, then inherited-fence fallback only for the two attributed shared-main reds | Operator requested resolving PR #1571 conflicts; pushing the resolved branch makes resolution reviewable. Gate is 14 pass/two inherited failures, routed to existing owners | Normal revert; retain red receipts and draft PR. No duplicated inherited fix or baseline change; required hosted/review/window gates still block merge |
+
+See [post-integration attribution](research/T3-POST-INTEGRATION-GATES.md) for
+exact files, fingerprints, source equality and upstream PR provenance. No
+introduced failure or merge gate is waived by this publication decision.

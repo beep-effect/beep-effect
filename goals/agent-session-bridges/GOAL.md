@@ -7,7 +7,7 @@ Prior managed receipts/reflection retain their recorded scope; they do not close
 this extension. PR #1571 is draft while integration changes; final hosted gates,
 reflection, merge and retirement remain open.
 
-Hardened bidirectional task proof passed at captured source. Later refactor/helper tests, independent reviews, full CLI package proof and repository docgen passed. Cheap gates: 15 pass; inherited main EV015 blocks publication. Read research/T3-LOCAL-VERIFICATION.md and both live/reconciliation receipts; finish P2 then P3/P4.
+Hardened bidirectional task proof passed at captured source. Later refactor/helper tests, independent reviews, full CLI package proof and repository docgen passed. Historical cheap gates: 15 pass/one inherited EV015. Main repair integrated at 5868dc8218; post-integration cheap gate: 14 pass/two inherited reds. Read research/T3-POST-INTEGRATION-GATES.md for source attribution and inherited-fence publication if Yeet refuses only those reds. Keep hosted/merge gates open.
 
 Maintain thin @beep/t3-code external MCP driver, repo CLI attach-t3 composition
 with existing EndpointDispatch/store loop, and grant-bound peer CLI using the

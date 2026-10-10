@@ -168,7 +168,9 @@ this live result is not relabeled as proof of its later hash. Full repository
 docgen retry passed after infrastructure preparation. The final full CLI package
 verification passed (audit 812.1 seconds, docgen 24.8 seconds). Final cheap gates
 passed 15 lanes and failed only inherited EV015; hosted/merge/closeout remain open.
-The inherited main EV015 remains owned by its main lane.
+That EV015 attribution is historical. Main repair 6513e85d2c was integrated
+through 5868dc8218; the post-integration cheap gate completed: 14 pass/two attributed inherited reds. See
+[T3 main integration](T3-MAIN-INTEGRATION.md).
 
 [Cache posture review](T3-CACHE-REVIEW.md) records canonical task/fingerprint
 bookkeeping separately from runtime qualification and cache reuse correctness.

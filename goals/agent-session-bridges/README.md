@@ -125,7 +125,8 @@ refactor and final header-helper repair passed their focused tests and independe
 reviews; captured live hashes remain separate from later source verification.
 Final cheap gates passed 15 lanes and failed only the inherited main EV015.
 See [final local verification](research/T3-LOCAL-VERIFICATION.md). Publication,
-exact final-head hosted gates and same-PR closeout remain blocked on the main-owned repair.
+main repair 6513e85d2c is integrated at 5868dc8218; the post-integration cheap
+gate completed with 14 pass/two inherited reds; exact-head hosted gates remain pending.
 [Cache posture review](research/T3-CACHE-REVIEW.md) qualifies bookkeeping only.
 Separate Claude/ChatGPT Desktop adapters, always-on operation, OS isolation and
 global orchestrator authority remain unqualified.
@@ -138,3 +139,14 @@ both reverse claims ambiguous. Both external credentials re-probed HTTP401;
 bridges were absent and not restarted, and immutable peer grants remain behind
 the ambiguity fences. No resend occurred. This partial refactor exercise does
 not replace the earlier complete hardened proof or finish final goal gates.
+
+The [scoped T3 reflection](history/reflections/2026-10-09-codex-t3.md) is prepared
+for same-PR closeout. The manifest remains active until the final local gate and
+publication wave are established; prospective completion takes effect only
+through the exact-head hosted/review/merge gate.
+
+The [post-integration attribution](research/T3-POST-INTEGRATION-GATES.md) records
+14 passing cheap lanes and two inherited shared-main reds: Accounts schema-first
+from PR #1583 and PracticeKg EV002 fingerprint drift from PR #1593. The golden
+EV015 is fixed. Publication may use the explicitly inherited-fence
+fallback if Yeet refuses only these two lanes; this does not grant merge readiness.

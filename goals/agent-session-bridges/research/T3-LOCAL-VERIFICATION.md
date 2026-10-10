@@ -19,3 +19,12 @@ The inherited failure is `packages/epistemic/use-cases/test/ContradictionDetecti
 Final attached service SHA256: `67114b1635604b7f43400a9ae3d39b264f0c8e09151dbf7951b5578ac135dca6`. The final type-import ordering emits byte-identical JavaScript to the live refactor source. Final driver service SHA256: `933a5f13539586081714b139a98c7b2089f8a8090b2f3dc5774fa3e485d75d0a`. Its header-helper repair has independent absent/present-session parity and full package proof.
 
 The [complete hardened proof](T3-INTEGRATION-QUALIFICATION.json) and [interrupted refactor reconciliation](T3-REFACTOR-RECONCILIATION.json) retain their exact source boundaries. Four final-refactor ACKs and both reports do not erase two reverse ambiguity holds after interruption. No message was replayed. Existing app conversations remain; the experiment's external credentials were revoked. Always-on operation and attachment to separate first-party desktop apps remain unqualified.
+
+## Advancing-main integration follow-up
+
+The above cheap-gate failure and instruction to integrate main are historical.
+Main repair 6513e85d2c is now imported by merge commit 5868dc8218. See the frozen
+[T3 main integration receipt](T3-MAIN-INTEGRATION.md). The post-integration cheap
+gate completed with 14 pass/two attributed inherited reds; no earlier package or cheap-gate result is promoted to the
+merged head. Publication, exact-head hosted checks/review/window and merge remain
+required. The scoped T3 reflection is prepared, with lifecycle still active.

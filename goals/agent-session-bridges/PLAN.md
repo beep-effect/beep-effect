@@ -68,9 +68,9 @@ header-helper repair passed focused tests and independent reviews; live hashes
 remain historical. Full repository docgen and final CLI package verification
 passed. Final cheap gates passed 15 lanes and failed only inherited EV015. See
 [final local verification](research/T3-LOCAL-VERIFICATION.md). Canonical task/fingerprint bookkeeping is separately recorded in
-[T3 cache review](research/T3-CACHE-REVIEW.md). The inherited main EV015 remains
-its main owner's responsibility. Exact final-head hosted readiness, review window,
-new scoped reflection, merge and retirement remain pending.
+[T3 cache review](research/T3-CACHE-REVIEW.md). Main repair 6513e85d2c is now integrated through 5868dc8218;
+the post-integration cheap gate completed: 14 pass/two attributed inherited reds. Exact final-head hosted readiness, review window,
+scoped reflection validation, merge and retirement remain pending.
 
 The later [refactor reconciliation](research/T3-REFACTOR-RECONCILIATION.json)
 records four h3 ACKs and both coordinator reports, with only the forward pair
@@ -80,3 +80,19 @@ both reverse claims ambiguous. Both external credentials re-probed HTTP401;
 bridges were absent and not restarted, and immutable peer grants remain behind
 the ambiguity fences. No resend occurred. This partial refactor exercise does
 not replace the earlier complete hardened proof or finish final goal gates.
+
+### Same-PR lifecycle closeout plan
+
+The scoped [T3 reflection](history/reflections/2026-10-09-codex-t3.md) is prepared.
+Keep the manifest active through post-integration publication checks. Once the
+content and local gates are final, land the prospective completed-retained
+lifecycle, phase declarations and final acceptance row with this reflection in
+the same implementation PR. Their effective completion remains conditional on
+the exact final-head hosted checks, answered/resolved review threads and review
+window. Then merge through Yeet and retire the lane. Preserve both reverse
+ambiguity holds and the separate source-qualified receipts throughout closeout.
+
+Post-integration publication follows the [attribution receipt](research/T3-POST-INTEGRATION-GATES.md):
+14 pass/two shared-main reds. Try Yeet first; its refusal solely on those inherited
+lanes permits the operator-inherited-fence fallback. Preserve owner
+routing and red receipts; hosted/review/window/merge gates remain required.

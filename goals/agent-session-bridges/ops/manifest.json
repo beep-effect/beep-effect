@@ -58,7 +58,10 @@
     "goals/agent-session-bridges/research/T3-CACHE-REVIEW.md",
     "goals/agent-session-bridges/research/T3-REFACTOR-RECONCILIATION.json",
     "goals/agent-session-bridges/research/T3-CACHE-HELPER-REVIEW.md",
-    "goals/agent-session-bridges/research/T3-LOCAL-VERIFICATION.md"
+    "goals/agent-session-bridges/research/T3-LOCAL-VERIFICATION.md",
+    "goals/agent-session-bridges/research/T3-MAIN-INTEGRATION.md",
+    "goals/agent-session-bridges/history/reflections/2026-10-09-codex-t3.md",
+    "goals/agent-session-bridges/research/T3-POST-INTEGRATION-GATES.md"
   ],
   "researchReports": [
     "research/SOURCES.md",
@@ -74,7 +77,9 @@
     "research/T3-CACHE-REVIEW.md",
     "research/T3-REFACTOR-RECONCILIATION.json",
     "research/T3-CACHE-HELPER-REVIEW.md",
-    "research/T3-LOCAL-VERIFICATION.md"
+    "research/T3-LOCAL-VERIFICATION.md",
+    "research/T3-MAIN-INTEGRATION.md",
+    "research/T3-POST-INTEGRATION-GATES.md"
   ],
   "agentLaunchers": [
     {
@@ -127,5 +132,5 @@
   ],
   "dependsOn": ["goals/agent-message-router"],
   "resumeCondition": "Satisfied on 2026-10-09: documented versioned router contract and combined 20 injected/schema/tool/filesystem tests passed. Execution activated; later review findings are remediation within active work.",
-  "statusNote": "Local implementation and package verification complete: full CLI audit/docgen, driver package, repository docgen, focused tests and independent reviews pass. Cheap gates 15pass/1 inherited EV015 failure. Complete hardened live proof retained separately from interrupted final-refactor fourACK/twoheld outcome. External proof credentials revoked; original conversations retained. Publication, hosted gates, final scoped reflection, merge and retirement remain pending the main-owned repair."
+  "statusNote": "Local implementation and source-bound package verification complete. Main6513e85d2c integrated through5868dc8218 fixes goldenEV015. Post-integration cheap gate14pass/two inherited shared-main reds: Accounts schema-first PR1583 and PracticeKg EV002 fingerprint PR1593, routed to standards/PracticeKg owners. Resolving requested PR1571 conflicts requires a reviewable push; use inherited-fence fallback only if Yeet refuses those failures. Complete hardened live proof retained separately from interrupted final-refactor fourACK/twoheld. Scoped reflection prepared. Lifecycle active; publication, exact-head hosted/review/window, prospective same-PR completion, merge and retirement remain open."
 }
