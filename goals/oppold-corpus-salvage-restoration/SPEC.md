@@ -554,11 +554,30 @@ public command couples archive selection and transformation output to one
 `runLabel`. A new label selects an absent archive; the old label reaches the
 sealed ledger. A separate preservation/output identity contract requires an
 orchestrator scope ruling; no fresh flag or archive alias is added here. The original run and freeze
-record are retained unchanged. A separate fresh freeze record identifies the
-fixed code and launch script. P1 stays in-progress until fresh acceptance passes.
+record are retained unchanged. A separate fresh freeze record must identify the
+fixed code and launch script before a future launch; none exists yet. P1 stays in-progress until fresh acceptance passes.
 Reversal: close the PR, revert the fix, and retain both run directories.
 
 Release notes without changesets: `@beep/repo-cli` is private and ignored by the
 release configuration. This correctness fix changes no public schema or API and
 would require no major release; #1566 and the standing private-workspace ruling
 require no changeset. Reverse by reverting the implementation and this decision.
+
+
+### 2026-10-10: synthetic proof and monitor handoff
+
+The retained synthetic acceptance checkbox is backed by
+`packages/drivers/libpff/test/Libpff.pffexport.test.ts`: "classifies bounded process
+diagnostics without retaining raw stderr" and "classifies password and codepage
+process diagnostics", plus the freshly passing restoration exception/accounting
+fixtures. This names the evidence requested by the run-4 addendum; it does not
+claim that the sealed live slice passed.
+
+PR3 #1606 is ready for review. Its bounded readiness monitor was submitted and
+polled, then deliberately cancelled at the fresh-label contract blocker so this
+lane exits with no owned background job active. The terminal proof receipt was
+observed. Hosted checks and the review window remain pending; no merge-ready
+claim is made. The orchestrator owns the next monitor and S11 merge gate.
+Reversal: resubmit `bun run beep yeet monitor --until-ready --detach
+--job-max-runtime "40 minutes"` from this lane after the final receipt push.
+The monitor cancellation changes no source, ledger, acceptance, or CI rules.

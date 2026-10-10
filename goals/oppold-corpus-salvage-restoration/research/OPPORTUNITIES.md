@@ -418,3 +418,24 @@ No unrelated source or inventory baseline was changed.
 - Prevention: classify inherited inventory before publication admission so a
   scoped repair lane does not repeatedly stop on unrelated debt.
 - Reversal: close the unmerged engine-fix PR and retain the immutable evidence.
+
+
+### 2026-10-10: receipt proof lacked user-bus variables
+
+Final receipt knowledge-reference verification failed before admission with
+"Failed to connect to user scope bus" because the noninteractive shell lacked
+`XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`. No proof or corpus command ran.
+Retried the same beep-heavy command with the documented user-bus environment.
+Prevention: preserve those variables on every noninteractive heavy invocation.
+No configuration or unit file was changed.
+
+
+### 2026-10-10: inherited changeset graph stops hosted Repo Sanity
+
+Read completed job 114115190524 immediately through the Actions jobs logs API.
+Changeset-graph rejects private-workspace notes in
+`.changeset/effected-allowlist-drop.md` and `.changeset/jsonl-effect-first.md`;
+both match main and are untouched by this lane. Hosted Repo Sanity stops before
+its remaining checks. Attribution: inherited, orchestrator S11 burn-down owns it.
+Prevention: enforce private-workspace release-note policy before those notes land.
+No baseline, CI policy, changeset, or source repair was made here.

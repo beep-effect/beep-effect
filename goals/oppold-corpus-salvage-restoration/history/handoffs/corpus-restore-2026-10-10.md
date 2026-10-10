@@ -117,3 +117,54 @@ The diagnostic wrapper ended. No fresh live slice has started.
   parity proofs remain applicable to the reviewed implementation.
 - Post-diagnostic capacity: 433,952,366,592 free bytes. This measurement includes
   other machine activity and is not a fresh-run amplification result.
+
+
+## Ready PR and blocked fresh launch
+
+- PR3 #1606 is OPEN and ready, labelled ready-for-heavy. The published snapshot
+  head is `d672b360744123fb7d9e92d6a5319e850e131a49`; API head matches.
+- Full review-thread read: zero threads, complete pagination. Hosted checks still
+  pending. Three Vercel build-rate-limit receipts were acknowledged as environment
+  only; no purchase, source workaround, or quota change.
+- Bounded monitor unit
+  `beep-proof-d40a4917-428b-405b-ae11-f16551a88ebc.service` was submitted with a
+  40-minute maximum, polled, deliberately cancelled for the blocked handoff,
+  confirmed terminated, and its terminal receipt observed. The SPEC records the
+  decision and reversal. No owned monitor, gate, or heavy wrapper remains active.
+- Final snapshot knowledge refs: 45,551 observations (16,825 live, 28,726 archival),
+  zero live gated. No source/test/lockfile changes after the completed proof.
+- Final fetch and merge: already up to date. PR1 #1596 and PR2 #1600 are MERGED;
+  this lane never merged a PR. PR3 remains the orchestrator's S11 responsibility.
+- Fresh label contract remains unresolved; no fresh family was launched and no
+  freeze manifest, launch script, stamp, result, or run directory was created.
+  P1 remains in-progress, P0/P4 complete, P2/P3 pending, lifecycle active.
+- Reversal: close PR3 and revert its engine fix; retain the original immutable
+  ledger and output. Resume monitoring with the bounded command in SPEC. The
+  orchestrator must rule on independent archive/output identities before launch.
+
+## Final report for the verified implementation snapshot
+
+This report names the published, fully verified implementation snapshot. The
+following receipt-only commit records this report and the monitor handoff; the
+terminal report names that commit's exact pushed head.
+
+```text
+lane: corpus-restore
+head: d672b360744123fb7d9e92d6a5319e850e131a49 (verified implementation snapshot)
+PR(s): #1596 MERGED; #1600 MERGED; #1606 OPEN, ready for review
+package-verify: @beep/repo-cli: pass; @beep/libpff: not edited in run 4
+hosted-parity: test-tsgo pass | docgen local pass | jsdoc-ratchet fail (inherited scratchpad totals; committed cheap gate pass) | knowledge refs pass (45,551 observations, zero live gated) | fallow audit+health pass | scoped coverage pass (295 files, 5,892 tests; touched file 100% in all four metrics)
+handoff: goals/oppold-corpus-salvage-restoration/history/handoffs/corpus-restore-2026-10-10.md
+open items: fresh slice blocked by coupled archive/output runLabel; independent identity contract requires orchestrator scope ruling. P1 stays in-progress. Engine fix reuses first retained Tika evidence, with regression and empty-evidence coverage; reverse by reverting PR3. Inherited publication/JSDoc reds assigned to orchestrator under S11. Monitor deliberately terminated and observed; reverse by resubmitting bounded monitor. Original sealed ledger retained unchanged; no fresh launch or acceptance claim.
+blocked: fresh slice needs independent preservation and transformation labels; PR #1606 engine fix is ready.
+```
+
+
+- Receipt-only verification: knowledge refs pass again, 45,551 observations and
+  zero live gated; goals doctor has 211 packets, zero new/inherited blocking,
+  three unrelated advisories; goals index and whitespace check pass.
+- First completed hosted red was read immediately: Repo Sanity job 114115190524,
+  changeset-graph preflight, private-workspace release notes in
+  `.changeset/effected-allowlist-drop.md` and `.changeset/jsonl-effect-first.md`.
+  Both files match origin/main and have no lane diff. This is inherited and
+  belongs to the orchestrator's S11 burn-down; no changeset or rule was edited.
