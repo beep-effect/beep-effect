@@ -33,6 +33,7 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
@@ -158,14 +159,12 @@ const fixture = Effect.fn("AttachedTest.driver")(function* (
   const sent = yield* Ref.make(0);
   const read = Effect.fnUntraced(function* () {
     const count = yield* Ref.get(sent);
-    const activeRunId =
-      scenario === "busy" && count === 0
-        ? "other-run"
-        : count > 0 && scenario === "next-active"
-          ? "next-run"
-          : count > 0 && scenario === "same-active"
-            ? "run"
-            : null;
+    const activeRunId = Match.value({ scenario, submitted: count > 0 }).pipe(
+      Match.when({ scenario: "busy", submitted: false }, () => "other-run"),
+      Match.when({ scenario: "next-active", submitted: true }, () => "next-run"),
+      Match.when({ scenario: "same-active", submitted: true }, () => "run"),
+      Match.orElse(() => null)
+    );
     return yield* decodeRead({
       thread: {
         threadId: "owned-thread",

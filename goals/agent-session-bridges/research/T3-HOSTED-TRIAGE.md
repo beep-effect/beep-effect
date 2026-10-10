@@ -149,3 +149,21 @@ root Oxlint and diff hygiene. The quick package scope is supported by the small
 postcheck change, the eleven attached regressions, four runtime regressions and
 direct full test compilation. Earlier full package/live proofs retain their
 original source binding; final hosted readiness remains unproved.
+
+### Final fixture complexity proof
+
+The collected publication gate detected added complexity in the two-scenario
+fixture expansion. Scenario selection now uses `Match`, with no production or
+assertion change. Independent comparison covers all 24 combinations of eight
+scenarios and three submission counts, with zero differences. Final attached
+test SHA256 is
+`52ffd0cc9112fbec5831d4203b775c2c44f9aef9e0e474eeab3b9b645609c91f`.
+
+Actual Fallow audit exits zero with zero introduced findings; its single
+inherited-adjacent duplication remains nonblocking. Fallow health exits zero
+with zero findings. Bun passes eleven cases (1.67s), Node coverage passes eleven
+(11.92s), direct full CLI test TSGo and CLI quick verification pass. The attached
+Effect-Vitest row remains byte-equivalent with zero introduced findings.
+Independent review finds zero actionable issues. No threshold, baseline or
+inventory was changed. These results supersede only the attached test's earlier
+hash and focused timings; the reviewed production service hash is unchanged.

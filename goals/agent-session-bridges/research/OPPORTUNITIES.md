@@ -240,3 +240,13 @@ where a literal sentinel can trigger a multi-line secret detector during merges.
   command's success is not proof that the compiler passed.
 - Action: correct the fixture error boundary, run direct TSGo, and supersede
   the earlier compiler-pass claim explicitly in the qualification receipt.
+
+## 2026-10-09 — expanded queue fixture crosses complexity gate
+
+- Work: publish the P1 exact-run postcheck repair with two regression scenarios.
+- Evidence: the collected Fallow audit and health checks report one new
+  complexity finding after the fixture's additional nested scenario branches.
+- Prevention: run the complexity checks when expanding a multi-scenario fixture;
+  focused runtime success and package source checks do not cover this policy.
+- Action: simplify scenario selection, retain both new assertions and verify
+  the actual Fallow gates without altering thresholds or inventory.
