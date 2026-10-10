@@ -452,3 +452,17 @@ No baseline, CI policy, changeset, or source repair was made here.
 - Disposition: supplied the existing runtime and bus values per command; kept
   the 32G cap and concurrency 2. No unit, home configuration or permissions changed.
 - Reversal: omit these per-command environment values after a harness forwards them.
+
+
+### 2026-10-10: three advisory rows survive the inherited-red burn-down
+
+- Doing: publishing the independent preservation selector as the run-5 wave.
+- Evidence: fifteen cheap gates pass; schema-first alone exits 1 on three
+  pre-existing codec-test property-coverage advisories. All finding files match
+  origin/main. Yeet reports "cheap-gates failed after creating the local commit;
+  nothing was pushed." The run's parity ratchet has zero introduced findings.
+- Prevention: inherited advisory attribution should permit scoped delivery
+  without repeating a complete publication scanner wave.
+- Disposition: follow the standing inherited-fence ruling: record the refusal,
+  commit owned receipts by name, and push the full addressed wave once to PR3.
+- Reversal: close PR3 and retain the packet and both immutable run directories.

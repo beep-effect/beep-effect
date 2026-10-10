@@ -610,3 +610,16 @@ adds a backward-compatible optional selector, requiring no major release and no
 changeset. Reversal: close PR3 and revert its implementation and decision; retain
 both run directories as evidence. No original or sealed state is deleted. The
 slice outcome belongs to a later PR4, as run 5 directs.
+
+
+### 2026-10-10: run-5 publication fence disposition
+
+Main #1605 removes the private changesets and enforced schema candidates, but
+three inherited test advisories still make `lint:schema-first` exit 1. Every
+finding file matches origin/main; all other fifteen cheap gates pass, including
+Effect-Vitest, committed JSDoc, and Fallow. The standing inherited-fence ruling
+authorizes one direct addressed-wave push to existing ready PR3 #1606, followed
+by the bounded monitor. No source waiver, inventory or CI change is made. The
+full package gate, corrected test-tsgo, docgen and both real-engine smokes pass;
+coverage must finish before the fresh launch. Reversal: close PR3 and retain
+evidence; the orchestrator owns these inherited rows under S11.

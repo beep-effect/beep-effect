@@ -255,3 +255,19 @@ blocked: fresh slice needs independent preservation and transformation labels; P
   ratchet findings, but still exits 1 on three inherited test advisories; all
   three files match origin/main. The standing inherited-fence ruling applies.
 - 🌱 graft saved approximately 172,483 tokens in this run.
+
+
+### Run-5 inherited publish fence
+
+- Yeet committed the fresh freeze record as
+  `d8b0e6f15516e38d2d0fe64f4fdf4c651447dea9` and refused before push:
+  `github-checks:cheap-gates: failed 1 step(s)`; `lint:schema-first: exit 1`;
+  `yeet publish cheap-gates failed after creating the local commit; nothing was
+  pushed. Fix the gate, then amend or reset the unpushed commit before retrying.`
+- Fifteen cheap gates pass, including Effect-Vitest, committed JSDoc, Knip,
+  private changeset-status, packet doctor/index and Fallow audit/dead-code/health.
+- Only three pre-existing schema-codec test advisories remain. Their files
+  match origin/main. The inherited-fence ruling authorizes committing this
+  receipt by name, then one direct push to the existing PR. No unrelated test,
+  baseline, inventory or CI rule is edited. Reversal: close PR3, retain evidence.
+- Fresh code snapshot and launch script remain unchanged; coverage continues.
