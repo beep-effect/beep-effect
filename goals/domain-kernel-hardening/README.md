@@ -42,15 +42,21 @@ in [`MAP.md`](../../explorations/domain-layer-hardening/MAP.md).
 
 ## Current Phase
 
-`P2 Verify` — P1 implementation and full local qualification are complete.
-The amended run-order ruling publishes P1, P2 and P3 as separate waves; lifecycle
-remains active until the P3 reflection and owner-command completion transition.
+`P3 Close` — P2 qualification is complete on the fresh main-based branch.
+P0/P1 implementation is merged via #1577 and #1593. The amended run-order
+ruling keeps the P3 reflection and completion transition in the next wave;
+lifecycle remains active until that owner-command transition.
 
 ## Latest Evidence
 
-`history/handoffs/domain-kernel-2026-10-09.md` — eleven passing package proofs,
-repaired six-server gate, 64 migration-replay tests, full local hosted-parity set,
-external bundle-schema decision D16 and mechanical fixture repair D17.
+`history/handoffs/domain-kernel-2026-10-09.md` — fresh P2 default proofs pass for
+shared-domain, db-admin, professional-desktop and repo-cli. The six-server gate
+passes 492 tests (one skipped), coverage passes 120 tests with no uncovered
+entity units, and kernel/schema, migration drift, bundle codegen, test-tsgo,
+knowledge refs and Fallow pass. Dependent UI TS2589, Accounts schema-first
+findings and eight JSDoc ratchet metrics are reproduced inherited main reds,
+recorded separately under D27. Local docgen selects no package inputs for the
+packet-only wave; the kernel/schema docgen task passes in its package gate.
 P0 grounding remains at `research/p0-kernel-surface-2026-10-09.md`.
 
 ## Notes
