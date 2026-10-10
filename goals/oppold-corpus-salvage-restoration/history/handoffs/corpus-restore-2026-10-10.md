@@ -454,3 +454,39 @@ beep-heavy-corpus-restore-p1-2.service
 - Exact committed knowledge check: 45,555 observations, zero live gated.
   Lifecycle and all untouched phases stay correct. Reverse this disposition by
   closing PR4, retaining both sealed families, or the orchestrator's main repair.
+
+### Run-6 ready PR and monitor closeout
+
+- PR4 #1609 OPEN and ready, heavy label present; API head matches published
+  `4f24989ecd35f24b947ef29ea8a3d002aea46944`. Branch and source are current.
+- Full paginated review read returns zero threads; no unanswered thread exists.
+  Yeet reply was invoked and returned no drafts; no reply is needed for zero threads.
+- Bounded monitor submitted, polled with a ten-second wait (timeout did not end
+  the job), then deliberately cancelled for the worker handoff. Terminal status
+  observed and acknowledged; unit inactive. SPEC records reason and reversal.
+  No readiness verdict is claimed; the orchestrator owns the next S11 gate.
+- Three Vercel deployment build-rate-limit rows acknowledged environment-only.
+  No completed required hosted red exists at this observation. Hosted checks
+  and the twenty-minute review window remain pending.
+- Zero unacknowledged inbox rows. All owned heavy wrappers, live slice unit,
+  and bounded readiness monitor are now terminal. This lane never merged.
+- Final required fetch/merge current. All source and frozen fields remain fixed;
+  only terminal publication receipts and this report are added next.
+
+### Run-6 final report — verified packet snapshot
+
+This report describes the published packet snapshot below. A final receipt-only
+commit records the report and monitor handoff; the terminal report names that
+receipt commit's exact pushed head. No package, live ledger or acceptance data
+changes in that receipt wave.
+
+```text
+lane: corpus-restore
+head: 4f24989ecd35f24b947ef29ea8a3d002aea46944 (verified published packet snapshot)
+PR(s): #1596 MERGED; #1600 MERGED; #1606 MERGED; #1609 OPEN, content-final and ready for review
+package-verify: not run (PR4 is docs-only; no edited package); @beep/repo-cli full pass from PR3 retained; @beep/libpff PR1 pass retained
+hosted-parity: test-tsgo: not run (docs-only; PR3 pass retained) | docgen local: not run (docs-only; PR3 pass retained) | jsdoc-ratchet: not run (docs-only; PR3 inherited failure retained; PR4 committed cheap gate pass) | knowledge refs: pass as packet matrix (45555 observations, zero live gated); source parity not run (docs-only) | fallow audit+health: pass in collected cheap gates, zero introduced findings; full parity not run (docs-only; PR3 pass retained) | scoped coverage: not run (docs-only; PR3 5894 tests and above-baseline coverage retained)
+handoff: goals/oppold-corpus-salvage-restoration/history/handoffs/corpus-restore-2026-10-10.md
+open items: P1 complete: fresh family accepted one store, 3339 accounted children, zero unapproved rows/warnings/exceptions; 59 repaired occurrences with 51 copy/Tika digest pairs, 147 unsupported dispositions; output 132668272 bytes / input 56140800 bytes = 2.363134690x, attempt 809685 ms, family 822686 ms, re-verification 254472 ms, all ceilings hold. Queue duration unavailable because prior receipt omitted submission timestamp. Policy hash filled exactly once; original failure ledger unchanged. P0/P4 complete, P2/P3 pending and lifecycle active; orchestrator owns P2 ceilings and expansion. PR4 required CI and review window pending; inherited schema test advisories assigned under S11, no source/inventory/CI waiver. Bounded monitor cancelled and observed terminal; resume with the same bounded command if needed. Reverse packet flips by reverting PR4 and retain both immutable families. Zero review threads and unacknowledged inbox rows; no worker-owned job running; never merged. Graft reported approximately 62624 tokens saved in one call.
+final 4f24989ecd35f24b947ef29ea8a3d002aea46944 #1609
+```

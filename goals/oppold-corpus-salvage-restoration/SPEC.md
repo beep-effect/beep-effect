@@ -688,3 +688,15 @@ fallback, followed by Yeet ready and a bounded monitor. No source, inventory,
 baseline or CI rule changes. The orchestrator owns S11 merge and inherited reds;
 this lane never merges. Reversal: close/revert PR4 packet flips while retaining
 both immutable families and the one-time completed freeze record.
+
+### 2026-10-10: PR4 monitor handoff at content-final
+
+PR4 #1609 is ready for review. Its forty-minute bounded monitor was submitted,
+polled with a bounded wait, then deliberately cancelled at the worker handoff
+and observed terminated. Three Vercel build-rate-limit failures were acknowledged
+as environment-only; no money or source workaround is involved. The full review
+thread query returned zero threads with complete pagination. Hosted checks and
+the review window remain pending; no merge-ready claim is made. This avoids an
+owned running job at exit under the brief's Mechanics. The orchestrator owns the
+next S11 monitor and gate. Reversal: resubmit the same bounded monitor; retain
+both sealed families and the phase evidence regardless of CI or gate outcome.
