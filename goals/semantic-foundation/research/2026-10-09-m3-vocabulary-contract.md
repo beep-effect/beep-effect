@@ -1,6 +1,6 @@
 # M3 version-pinned ready vocabulary contract
 
-Status: ready candidate, 2026-10-09. Package `@beep/ontology` exports
+Status: ready, 2026-10-09. Serialization parity, pinned lookups and the replayable CQ fixtures pass. Package `@beep/ontology` exports
 `VocabularyRegistry`, `VocabularyPin`, `VocabularySeed`, `VocabularyConcept`,
 `VocabularyError` and the three committed seeds. Exact `load({kind,version})`
 and `resolve({kind,version},notation)` fail closed for missing/unknown pins
