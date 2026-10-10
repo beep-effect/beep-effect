@@ -554,3 +554,47 @@ No baseline, CI policy, changeset, or source repair was made here.
   Apply the already authorized inherited-fence fallback with one wave push;
   do not change inventory, unrelated tests or CI. Reverse by closing/reverting
   PR4's documentation changes, retaining both immutable execution records.
+
+
+## 2026-10-10: bounded expansion has no occurrence selector
+
+- Doing: run-8 preflight for up to ten distinct store families after merged P1.
+- Evidence: `selectMailCandidates` supports one fixed smallest recycle PST or
+  the whole estate; the public schema and flag inventory expose no store selector.
+  A fresh output label repeats P1, while expected-count changes alone fail the
+  denominator contract after the immutable start. Zero families were launched.
+- Prevention: verify a bounded occurrence-selection contract before authorizing
+  a sequential expansion wave. Include the selection in each freeze record.
+- Disposition: record the plan and stop before launch; orchestrator supplies
+  the contract or authorizes a scoped implementation. No corpus or code mutation.
+- Reversal: revert the plan, retaining both sealed P1 families and manifests.
+
+
+## 2026-10-10: inherited publication fence on P2 launch preflight
+
+- Doing: publishing the bounded P2 plan and the public-selector blocker.
+- Evidence: 15 of 16 collected cheap gates pass; schema-first exits 1 on the
+  same three schema-test advisories in files matching origin/main.
+  Exact refusal: `yeet publish cheap-gates failed after creating the local
+  commit; nothing was pushed.` No package source or inventory changed.
+- Prevention: consolidated main advisory repair under the orchestrator's S11.
+- Disposition: standing fence permits named receipt commit and one direct
+  wave push with labelled PR and ready; no CI or inventory waiver.
+- Reversal: close/revert the plan PR; retain both immutable P1 families.
+
+
+### 2026-10-10: independent ratio and family caps disagreed
+
+PR5 review found 539157504 × 4 exceeds 2147483648 by 9146368 bytes.
+Prevention: filter inputs against floor(family cap / ratio) before wave
+membership selection. Run-9 correction admits nine inputs at most 536870912
+bytes, largest 456877056; eighteen larger inputs wait. No family started.
+Reversal: revert the plan correction, retaining immutable P1 evidence.
+
+
+### 2026-10-10: PR5 membership correction repeats inherited fence
+
+Fifteen cheap gates pass; `lint:schema-first: exit 1` alone stops publication
+after the local commit. Three codec-test advisories match main. Use the standing
+direct-push fallback; consolidated main repair prevents this repeated scanner
+wave. Reversal: revert the correction, retaining sealed P1 evidence.

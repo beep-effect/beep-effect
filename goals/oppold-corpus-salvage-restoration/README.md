@@ -9,9 +9,11 @@ digests while retaining the originals.
 
 ## Next action
 
-P1 complete; P2 ceilings come next. The orchestrator owns expansion and P2/P3
-work. Retain the accepted fresh family, the original sealed failure, both freeze
-records, and their aggregate evidence. This lane publishes PR4 only.
+P1 is complete and PR4 #1609 merged. Run-8 authorizes P2 with the retained
+ceilings and a first wave of at most ten distinct remaining stores. Its plan is
+recorded in SPEC; launch is blocked because the public command has no bounded
+occurrence selector. Zero P2 families started. The orchestrator owns the missing
+selection contract; retain both sealed P1 families and freeze records.
 
 ## Launcher
 
