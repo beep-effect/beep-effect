@@ -1,0 +1,20 @@
+{
+  "previous": "ba6f7534354b4ee487268ccae0bb8dfe75b20b872051aad04b859d8ff68b3d20",
+  "review": {
+    "reviewer": "GPT-6.1-Sol medium (agent messaging baseline review)",
+    "reason": "Record only the intentional ACP/provider/MCP dependency edges and six added policy-fingerprint inputs after structural main integration; preserve archived main review provenance, cache settings, scope, profile, epoch and qualification ledger without granting reuse qualification.",
+    "basis": {
+      "path": "standards/cache-qualification-agent-message-review.md",
+      "sha256": "0d93e997fde1f3c98b1ba2210899135e7c13da5b2ba1687396b31b2cc9a1adbc"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": ["//", "@beep/ai-provider-cli", "@beep/repo-cli"]
+}

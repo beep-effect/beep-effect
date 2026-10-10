@@ -1,0 +1,222 @@
+{
+  "date": "2026-10-09",
+  "artifact": {
+    "version": "0.0.45",
+    "sourceCommit": "365aa87982a4d81cc8e0c085e8d1a40ca7daecdc",
+    "appImageSha256": "b75d10597ac55cd8d30941fcfe6d26581cb76a1aeb4403a13ca3dbb3539ee776"
+  },
+  "route": "T3 native MCP between T3-owned Claude and Codex conversations",
+  "verified": {
+    "autonomousIdleRoundtrip": true,
+    "reverseInitiation": true,
+    "codexBusySteerConsumed": true,
+    "queuedAcknowledgmentConsumed": true,
+    "sameClientDuplicateNoExtraRun": true,
+    "uiReconnect": true,
+    "supportedDetachReattachSameNativeIdentity": true,
+    "executionPolicyContinuity": true,
+    "codexCommandTurnCancellation": true,
+    "claudeGenerationCancellation": true,
+    "readOnlyMutationDenied": true,
+    "revokedClientsDenied": true
+  },
+  "notVerified": [
+    "first-party Desktop conversation attachment",
+    "physical cold native unload",
+    "desktop app restart",
+    "provider switch within conversation",
+    "restart delivery mode",
+    "production Beep-to-T3 adapter",
+    "Beep recipient-scoped grants applied to T3 environment",
+    "full repository orchestrator workflow through T3",
+    "Claude command cancellation"
+  ],
+  "attemptLimits": [
+    "B2 reply prompt was incomplete; only steering was observed",
+    "Claude D1 foreground sleep was refused; D2 used no-tool generation"
+  ],
+  "nativePolicy": {
+    "codex": {
+      "recordCount": 7,
+      "policy": {
+        "approval_policy": "never",
+        "sandbox_policy": {
+          "type": "danger-full-access"
+        },
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "originalIdentityRetained": true,
+      "runStatuses": [
+        "completed",
+        "completed",
+        "completed",
+        "completed",
+        "completed",
+        "completed",
+        "interrupted"
+      ],
+      "lateObservationWindowSeconds": 5,
+      "unchangedAtSecondSnapshot": true
+    },
+    "claude": {
+      "recordCount": 8,
+      "policy": {
+        "permissionMode": "bypassPermissions"
+      },
+      "originalIdentityRetained": true,
+      "runStatuses": [
+        "completed",
+        "completed",
+        "completed",
+        "completed",
+        "completed",
+        "completed",
+        "completed",
+        "interrupted"
+      ],
+      "lateObservationWindowSeconds": 5,
+      "unchangedAtSecondSnapshot": true
+    }
+  },
+  "cleanup": {
+    "externalSessionsRevoked": 4,
+    "remainingExternalTestSessions": 0,
+    "revokedReadOnlyHttpStatus": 401,
+    "revokedFullAccessHttpStatus": 401,
+    "ownedRuntimeBindingsAfterDetach": 0,
+    "physicalProcessTeardownVerified": false,
+    "desktopBootstrapPreserved": true,
+    "userInteractedProfilePreserved": true
+  },
+  "privateEvidence": [
+    {
+      "file": "installed-sha256.txt",
+      "sha256": "6c167a5ca2ad08275d95f4a99d8220590141dda1fd098f3f70aa85d52e8305e5"
+    },
+    {
+      "file": "oauth-proof.json",
+      "sha256": "2384fdb66e5800be5aa5ca6f7618248dcde68ffeff22f81c5f31e5fa0686d136"
+    },
+    {
+      "file": "readonly-launch-denial.json",
+      "sha256": "d4595e62ac3d6dc22d30efe037e8312c8f8600c134ec2959ee8c76e44b8cc71e"
+    },
+    {
+      "file": "exchange-start.json",
+      "sha256": "961a20da3a30cafbb845bdec327b95123481b2dbe205804bb94a51f50b57eee7"
+    },
+    {
+      "file": "codex-activity-a1.json",
+      "sha256": "cab6da8d80e8d11a13a3cf08053c9ba654f124bddd046bb8029a5637bb8a41fc"
+    },
+    {
+      "file": "claude-activity-a1.json",
+      "sha256": "bffe81af821c25a6770e585b111296ac17fc25fea79dcb85b34b31717e5172b8"
+    },
+    {
+      "file": "busy-start-b3.json",
+      "sha256": "c90843839d85a30094f186cc57f35ea76a49b5dc8a78e2bca72d45c164d2c0fe"
+    },
+    {
+      "file": "busy-observed-b3.json",
+      "sha256": "2ec5056d2ed955ad3ecde5d22990aa44b83a7f172397d1d9da3b4311ab4c0b38"
+    },
+    {
+      "file": "reverse-start-b3.json",
+      "sha256": "dd5bd6d37db6c32fd7dd2fe4b96a47bd4d3df35e10bc719fa2255885ca34d1e6"
+    },
+    {
+      "file": "codex-activity-b3-final.json",
+      "sha256": "ca59a9a02abcbd09a5a5111c1b2b098278d247d64175e443f29d39e45bbe3d8b"
+    },
+    {
+      "file": "claude-activity-b3-final.json",
+      "sha256": "7d92e2de475af2aae6dced38c4e6cb3333fa3289abc9508576c52527e58a4dca"
+    },
+    {
+      "file": "duplicate-send.json",
+      "sha256": "ea08a00b7b0b5a38c1353c3e8904747ebe4faf404333b3413d2006708f97dc74"
+    },
+    {
+      "file": "duplicate-after.json",
+      "sha256": "b9478a8b102767cb40712c33657dd9c0155b2e6988928e453fc1c067b8174cb5"
+    },
+    {
+      "file": "owned-detach-observation.sanitized.json",
+      "sha256": "05efe8598f1ec9c43a1d655553da0cd7d610a673cd6b652ab18196c8d7b9f128"
+    },
+    {
+      "file": "codex-resume-c1.json",
+      "sha256": "deec209ac4b7453f891d28b63243e20dab4c5fb1fddafd6ec590431175fbd156"
+    },
+    {
+      "file": "claude-resume-c1.json",
+      "sha256": "5d16a67da2849c5ecb6dcf3857790f8c6b80fcab02e1761c76a1ae96d90ee95f"
+    },
+    {
+      "file": "codex-resume-wait-c1.json",
+      "sha256": "0a7ed1df7bcf658acf1ce51fa814e72f6cbdc9f2bd5fec9ab9c623679ab21034"
+    },
+    {
+      "file": "claude-resume-wait-c1.json",
+      "sha256": "7ee2e4cc30d82a72b86353deae90cf1be05d252d481610aba5c0754d1c03c68f"
+    },
+    {
+      "file": "owned-native-policy-c1.sanitized.json",
+      "sha256": "03f3e473f2d0c137b0d4b1c39a133f85aec7010079b413fb1794168c99039f53"
+    },
+    {
+      "file": "codex-active-d1.json",
+      "sha256": "6566b450f30c907f4f901daabf8da094c5695113832bbc1c7dfb15b101bb07c6"
+    },
+    {
+      "file": "codex-interrupt-d1.json",
+      "sha256": "72c5f669011905f8b0c22642b687c2b69b6ebee51bfb7237a19433fcb93cb2ed"
+    },
+    {
+      "file": "codex-wait-d1.json",
+      "sha256": "1ae8f18a8dd5a82acf0bba412010983c85946373e25d2e295501e592fdda95e2"
+    },
+    {
+      "file": "claude-active-d1.json",
+      "sha256": "1038b29374ad4a610d75d096c1e1f165c2ccb9b37c5f52c451c31c4bfeb78f96"
+    },
+    {
+      "file": "claude-active-d2.json",
+      "sha256": "2de2951480b5e55f0896704c1a679a6e01f0d524473e723422c6e60abf251fd8"
+    },
+    {
+      "file": "claude-interrupt-d2.json",
+      "sha256": "7b6c68d96d28d37c833bfe237f388ea19326e69ff07efc2ffa2d1c1d01e4d1fd"
+    },
+    {
+      "file": "claude-wait-d2.json",
+      "sha256": "a3794763c8821e7c4d472d978f2fecaa2cbe45f581dda4d3c61f2ccf5442bf31"
+    },
+    {
+      "file": "owned-native-final.sanitized.json",
+      "sha256": "245731d7ce5e8d67ebb065ea482832e793f63ea45b0a0f453a916f1bdef31d91"
+    },
+    {
+      "file": "codex-detach-cleanup.json",
+      "sha256": "0957869e8f8411586d6138a0fe9be9dfeeb1ca4a4109c35c0a58af4dd81ddad1"
+    },
+    {
+      "file": "claude-detach-cleanup.json",
+      "sha256": "da6162bcacd09aa428bd9bb86d3a8d392311471fbc3d775b687d92e504aad920"
+    },
+    {
+      "file": "cleanup-auth.sanitized.json",
+      "sha256": "6a7e253f138a8e4beccd6ee373389083f5359889589cbd02b4c8ce22e80230b2"
+    },
+    {
+      "file": "t3-codex-proof.jpg",
+      "sha256": "25b8368701f71409dd4dcb8674eedf0ca859c186120bf3c1a15c38b038fe1146"
+    },
+    {
+      "file": "t3-claude-proof.jpg",
+      "sha256": "9f983fbfcedad7d0047b45d6c60e6639cab0879080cde7fcfb8411a6337ee952"
+    }
+  ]
+}

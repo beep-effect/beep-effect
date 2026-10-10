@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "cross-provider-agent-communication",
+    "title": "Cross-provider agent communication",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/agent-message-router", "goals/agent-session-bridges"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-09",
+    "updated": "2026-10-09"
+  }
+}

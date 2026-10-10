@@ -1,0 +1,40 @@
+{
+  "cliVersion": "2.1.295",
+  "requestedModel": "claude-opus-5-5",
+  "requestedEffort": "medium",
+  "modelTurns": 0,
+  "safeMode": true,
+  "toolSet": [],
+  "mcpConfig": {},
+  "settingSources": [],
+  "handshake": [
+    {
+      "type": "control_response",
+      "subtype": "success",
+      "responseKeys": [
+        "account",
+        "agents",
+        "analytics_disabled",
+        "available_output_styles",
+        "capabilities",
+        "commands",
+        "current_permission_mode",
+        "fast_mode_disabled_reason",
+        "fast_mode_state",
+        "feedback_mode",
+        "ide_rc_auto_enable_gate",
+        "models",
+        "output_style",
+        "pid",
+        "remote_control_auto_connect_default",
+        "remote_control_auto_enable",
+        "remote_control_auto_on_by_default",
+        "remote_control_available",
+        "session_state",
+        "user_output_styles_dir"
+      ],
+      "error": null
+    }
+  ],
+  "exitCode": 143
+}

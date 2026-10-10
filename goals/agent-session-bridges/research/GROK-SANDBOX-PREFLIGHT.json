@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "agent-native-preflight/v1",
+  "date": "2026-10-09",
+  "provider": "grok",
+  "nativeVersion": "1.0.50",
+  "modelObserved": "grok-4.7",
+  "modelCalls": 0,
+  "mode": "native-mcp-child-sandbox-diagnostic",
+  "launchBuiltinWhitelist": ["search_tool", "use_tool"],
+  "ownedProcessStopped": true,
+  "stages": [
+    {
+      "method": "initialize",
+      "ok": true,
+      "errorCode": null
+    },
+    {
+      "method": "authenticate",
+      "ok": true,
+      "errorCode": null
+    },
+    {
+      "method": "session/new",
+      "ok": true,
+      "errorCode": null
+    }
+  ],
+  "sqliteWritable": true,
+  "siblingWorkspaceWriteRefused": true,
+  "siblingWorkspaceWriteError": "PermissionError",
+  "mcpConnectedToolCount": 6,
+  "sandboxProfile": "beep-messaging extends read-only with exact owned mailbox allowance",
+  "autonomousReplyProved": false,
+  "sourceQualification": "diagnostic script and installed native runtime; does not qualify final repository driver source"
+}

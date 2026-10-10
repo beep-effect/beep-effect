@@ -130,3 +130,7 @@ e081aea6aef0c979251013960d8d93adba86eb7d:packages/drivers/venice-ai/test/fixture
 # effected port (local lab branch): upstream JSDoc that names the PEM header while explaining
 # key formats. A doc comment, no key material; copied verbatim at S0.
 scratchpad/effected/github/GitHubApp.ts:private-key:56
+
+# Documentation-only PEM header in imported effected-port JSDoc; no key body.
+# Scoped to the exact staged finding produced when integrating main.
+scratchpad/effected/github/GitHubApp.ts:private-key:120

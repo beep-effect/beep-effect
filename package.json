@@ -602,6 +602,7 @@
     "packages/drivers/pdf-tools",
     "apps/practice-mail-tagging",
     "apps/practice-identify",
-    "apps/practice-m365-contacts"
+    "apps/practice-m365-contacts",
+    "packages/drivers/t3-code"
   ]
 }

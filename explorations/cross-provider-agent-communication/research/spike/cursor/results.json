@@ -1,0 +1,80 @@
+{
+  "provider": "cursor",
+  "version": "2026.10.01-e373342",
+  "mode_requested": "ask",
+  "mcpServers_requested": [],
+  "idle": [
+    {
+      "sample": 1,
+      "nonce_received": false,
+      "exact_echo": false,
+      "rpc_error": null,
+      "stopReason": "end_turn",
+      "first_text_ms": 262.71,
+      "completion_ms": 262.94
+    }
+  ],
+  "busy_queue": [],
+  "cancel": [],
+  "steer": {
+    "status": "unknown",
+    "reason": "ACP does not document steering; SDK not probed"
+  },
+  "existing_app_attach": {
+    "status": "unknown",
+    "reason": "Owned ACP process only; no app touched"
+  },
+  "global_config_isolation": {
+    "status": "partial",
+    "reason": "Empty cwd and mcpServers []; user MCP config contains 2 entries; CLI has no verified settingSources suppression"
+  },
+  "model_calls_attempted": 1,
+  "model_observed": "claude-opus-5-5[context=300k,effort=medium,fast=false]",
+  "set_mode_success": true,
+  "same_session_used": true,
+  "halt_reason": "First failed idle receipt; no blind retries",
+  "reverse_methods": [],
+  "owned_process_stopped": true,
+  "resume": {
+    "model_turns": 0,
+    "original_process_stopped": true,
+    "live_attach_proven": false,
+    "load_rpc_success": false,
+    "load_error": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "message": "Owned disposable session not found"
+      }
+    },
+    "history_update_count": 0,
+    "model_observed": null,
+    "mode_observed": null,
+    "owned_process_stopped": true
+  },
+  "blocker": {
+    "classification": "subscription-or-plan-access",
+    "observed_text": "Upgrade your plan to continue",
+    "rpc_stopReason": "end_turn",
+    "nonce_received": false,
+    "no_retries": true
+  },
+  "busy_queue_status": "blocked-before-first-sample",
+  "cancel_status": "blocked-before-first-sample",
+  "actual_model_generation": "not-proven",
+  "permission_behavior": {
+    "client_policy": "deny all reverse tool/permission requests",
+    "server_permission_requests_observed": 0,
+    "enforcement_proven": false
+  },
+  "sample_plan": {
+    "idle_requested": 5,
+    "idle_attempted": 1,
+    "idle_model_receipts_passed": 0,
+    "idle_remaining_not_run": 4,
+    "busy_requested": 5,
+    "busy_not_run": 5,
+    "cancel_requested": 5,
+    "cancel_not_run": 5
+  }
+}

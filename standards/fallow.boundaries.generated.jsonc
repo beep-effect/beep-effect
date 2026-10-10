@@ -792,6 +792,12 @@
         ]
       },
       {
+        "name": "@beep/t3-code",
+        "patterns": [
+          "packages/drivers/t3-code/src/**"
+        ]
+      },
+      {
         "name": "@beep/tailscale",
         "patterns": [
           "packages/drivers/tailscale/src/**"
@@ -1084,6 +1090,7 @@
       {
         "from": "@beep/ai-provider-cli",
         "allow": [
+          "@beep/acp",
           "@beep/ai-provider-cli",
           "@beep/identity",
           "@beep/schema",
@@ -1092,6 +1099,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/acp",
           "@beep/ai-provider-cli",
           "@beep/identity",
           "@beep/schema",
@@ -3581,6 +3589,7 @@
       {
         "from": "@beep/repo-cli",
         "allow": [
+          "@beep/ai-provider-cli",
           "@beep/chalk",
           "@beep/colors",
           "@beep/duckdb",
@@ -3593,6 +3602,7 @@
           "@beep/identity",
           "@beep/libpff",
           "@beep/m365",
+          "@beep/mcp-kit",
           "@beep/md",
           "@beep/obs",
           "@beep/observability",
@@ -3609,6 +3619,7 @@
           "@beep/runpod",
           "@beep/schema",
           "@beep/skill-contract",
+          "@beep/t3-code",
           "@beep/technical-drawing",
           "@beep/tesseract",
           "@beep/test-runner",
@@ -3618,6 +3629,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/ai-provider-cli",
           "@beep/chalk",
           "@beep/colors",
           "@beep/duckdb",
@@ -3630,6 +3642,7 @@
           "@beep/identity",
           "@beep/libpff",
           "@beep/m365",
+          "@beep/mcp-kit",
           "@beep/md",
           "@beep/obs",
           "@beep/observability",
@@ -3646,6 +3659,7 @@
           "@beep/runpod",
           "@beep/schema",
           "@beep/skill-contract",
+          "@beep/t3-code",
           "@beep/technical-drawing",
           "@beep/tesseract",
           "@beep/test-runner",
@@ -4017,6 +4031,23 @@
           "@beep/graph-3d",
           "@beep/storybook",
           "@beep/ui",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/t3-code",
+        "allow": [
+          "@beep/identity",
+          "@beep/mcp-kit",
+          "@beep/schema",
+          "@beep/t3-code",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/mcp-kit",
+          "@beep/schema",
+          "@beep/t3-code",
           "@beep/utils"
         ]
       },

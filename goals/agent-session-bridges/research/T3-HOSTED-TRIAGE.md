@@ -1,0 +1,247 @@
+# T3 hosted triage at 77fd55b858
+
+The completed [Check run](https://github.com/beep-effect/beep-effect/actions/runs/38007697861)
+was read at the exact PR #1571 head `77fd55b858`. Review closure reports zero
+unresolved or actionable follow-up threads. That read is a dated observation,
+not a waiver of the required fresh pre-merge read.
+
+## Owned findings
+
+- Root zero-warning ESLint rejects two bare package names in the T3 barrel
+  JSDoc. The comment-only repair replaces them with plain transport prose;
+  focused ESLint and full driver audit/docgen pass (17.3s and 2.3s).
+- Node coverage fails the real SQLite writer-lock runtime test with `ambiguous`
+  instead of `delivered`. A reproduction with Node, Bun and `python3` available
+  but no `python` produces the same failure: the fixture's undeclared executable
+  fails before the intended lock exercise. The corrective fixture uses the
+  existing process runtime and explicit lock/release synchronization. Production
+  retry behavior is unchanged; final focused verification is recorded below.
+
+The second finding overlaps the test-portability portion of [#1587](https://github.com/beep-effect/beep-effect/issues/1587).
+The other items in that issue are not claimed fixed.
+
+## Inherited and environment attribution
+
+| Hosted lane | Exact observation | Attribution / remaining action |
+| --- | --- | --- |
+| Repo Sanity | Changeset graph rejects private workspace release notes in `effected-allowlist-drop.md` and `jsonl-effect-first.md` | Files match integrated main; arrived through #1592. Shared-main owner repair, no local waiver |
+| Test Unit A | Four documents-domain exact-wire fixtures omit new audit fields | Tests match integrated main; audit schema expansion from #1593 needs owner fixture reconciliation |
+| Test Unit B | Eleven law-practice-tables converter/column fixtures omit new audit fields | Tests match integrated main; same #1593 owner repair |
+| Coverage | Repeats inherited entity fixture failures plus the owned real-lock failure above | Fix the owned fixture here; no measured coverage-regression pass is claimed |
+| Heavy / Docgen | Scratchpad `/v` regular expression example compiled at ES2022 | Exact fix landed in #1597 and is integrated through `91c9bf69e2`; fresh hosted proof still required |
+| JSDoc Ratchet | Inventory generation fails before a findings report; wrapper masks the underlying exception | Same failure on main `320cedc` in job `114080589463`; generator/wrapper source matches main. Underlying exception remains unknown |
+| Heavy / Lint Policy | Three inherited manifests lack doctest entries; main's language-service profile and 119 scratchpad files violate tsgo policy; 31 inline-schema diagnostics across 23 main-identical files; existing Accounts/PracticeKg inventories; two law-practice fixture project-service errors | Retain shared-main ownership. T3's two root TSDoc warnings are separately repaired above |
+| Vercel deployments | Build rate limit | Allowed rate-limit exception only; no paid upgrade |
+
+Secret Scanning, Security, SAST, Build, Check, Test Integration, Doctest,
+Property Laws, both CLI unit partitions, package lint partitions and the other
+successful checks retain their actual green outcomes on this head. In particular,
+the old container pull failure and Node `bun:` import failure did not recur.
+No failing job was blindly rerun or labelled successful.
+
+## Delivery boundary
+
+The branch remains under the existing Yeet publication and exact-head hosted
+review/window gates. Inherited inventory/source repairs stay with their owners.
+The earlier complete live T3 receipt and interrupted refactor receipt are
+unchanged; this corrective wave changes a documentation comment and a test
+fixture, not the attached production transport or grants.
+
+## Corrective local verification
+
+- Node coverage with `python` absent from PATH: four runtime cases passed in
+  13.55s. The fixture reproducer failed before the repair under the same condition.
+- Bun with the same restricted PATH: four runtime cases passed in 3.52s.
+- Fixture type check, canonical test type check, focused Biome and root Oxlint:
+  passed. CLI package verification `--quick` passed lint (3.7s) and check (7.4s).
+  The quick scope is justified by test/fixture-only changes and the explicit
+  Node/Bun execution above; production source and exported documentation did not
+  change. The earlier full CLI audit remains separately source-bound evidence.
+- Independent review: zero actionable findings on runtime test SHA256
+  `bb863a61d85515bd27652527c9843604f055c060ec2a55da90741462be150b63`
+  and fixture SHA256
+  `63fe34553324fc9dab1e348b606d8bc03b328b278612f94f118a2948ab069899`.
+- T3 full package audit/docgen and zero-warning ESLint passed for the comment
+  repair. Configuration sync, cache policy, goal doctor, reflection validation
+  and diff hygiene also passed after main integration.
+
+These checks validate the corrective diff locally. They are not a successful
+fresh hosted coverage run, and inherited unit fixtures still need their owners.
+
+## Final publication detector repair
+
+The final packet publish at `934a73fa3b` detected one additional owned EV002
+statement fingerprint in the edited runtime test. Replacing broad context
+capture/provision with explicit `Scope` and `ChildProcessSpawner` injection
+removes that finding without changing the lock fixture or inventory.
+
+- Focused membership: five current rows against six baseline rows, zero
+  introduced and one resolved. The other five fingerprints are unchanged.
+- Node coverage with `python` absent: four of four pass (12.23s). Bun with the
+  same PATH: four of four pass (2.25s). Canonical test type check and root Oxlint
+  pass; CLI quick verification passes lint (4.2s) and check (7.4s).
+- Independent review: zero actionable findings on runtime test SHA256
+  `5fc9d0be1ba9fcbd1893bdd6c89468874dd7b1a311d9177b1cc11f2d8447eec9`.
+  Fixture SHA256 remains
+  `63fe34553324fc9dab1e348b606d8bc03b328b278612f94f118a2948ab069899`.
+- Child ownership, real lock acquisition/release, rollback, exit-zero check,
+  single submission, single contention event and delivered-state assertions
+  are retained. Production behavior and previous live T3 receipts are unchanged.
+
+This supersedes only the runtime test's local proof above. Fresh hosted outcomes
+and the shared-main blockers remain separate gates.
+
+## Later hosted review: exact completion with a queued successor
+
+Review [4236011886](https://github.com/beep-effect/beep-effect/pull/1571#discussion_r4236011886)
+identified a P1 availability defect: after the exact submitted run completes,
+a different queued run may already be active. The blanket active-run rejection
+incorrectly made that successful delivery ambiguous and fenced subsequent mail.
+
+The repair rejects only contradictory active status for the exact submitted run.
+It preserves exact-run completion/provider/model checks, host configuration and
+identity checks, participant ACK, one submission and no replay. A positive
+fixture covers a different active successor; a negative fixture retains rejection
+when the exact completed run is also reported active.
+
+- Attached service SHA256:
+  `3af807fa01d0d3cf97e4b9916324314d415cc0a9b2c808607d95fb0a795fdd99`.
+- Attached test SHA256:
+  `d1f3dcaed814b0fac3163120071977f1f0acd6d8c23e6a1a8ab918b8e26ad559`.
+- Eleven focused cases pass under Bun (1.40s) and Node V8 coverage (9.36s).
+  CLI quick lint/check pass; the affected Effect-Vitest row is unchanged, with
+  zero introduced findings. Independent source-bound review finds zero issues.
+- The full test type check exposed an additional runtime-fixture error channel;
+  the correction and direct compiler proof are recorded below.
+
+This is deterministic qualification of the new source, not another live model
+run. Preserve the original complete live receipt and the two interrupted reverse
+ambiguity holds. No old message is replayed or cleared.
+
+Four later-round P2 threads are answered and resolved with tracked acceptance:
+reflection/status/revocation wording in [#1581](https://github.com/beep-effect/beep-effect/issues/1581),
+and completion after attached lease expiry in [#1603](https://github.com/beep-effect/beep-effect/issues/1603).
+The latter remains fail-closed but can terminate the worker; its scoped follow-up
+must preserve claim fencing and one native submission.
+
+The `7e54626755` CI run reproduced the inherited eleven law-practice audit-field
+fixture failures (job `114108772083`). Remaining work was cancelled because the
+P1 repair requires a new head. Lint's aggregate failure reports cancelled shards;
+that cancellation does not establish a source regression.
+
+### Correction to the earlier test-typecheck claim
+
+The earlier `package-test-typecheck` exit-zero result proved that its report
+was written, not that the captured compiler passed. The report contained
+TS2375/377003: filesystem/process `PlatformError` escaped the fixture's
+`complete` implementation. This supersedes the earlier test-compiler-pass claim.
+The final proof must use direct TSGo and inspect its actual exit code. Runtime
+execution, package source checks and their recorded timings remain separate.
+
+Final runtime fixture SHA256 is
+`24488b59120bcd789a520421b34068343e97550a80eafeb784c2850239917946`.
+Its typed wrapper converts only fixture `PlatformError` into `RouterError`,
+preserving lock-timeout errors, assertion defects and all cleanup/delivery
+assertions. Independent review found zero actionable findings. Direct full CLI
+test TSGo exits zero. The four runtime cases pass with Python absent under Node
+coverage (11.49s) and Bun (2.20s); CLI quick lint/check pass (3.6s/7.2s), as do
+root Oxlint and diff hygiene. The quick package scope is supported by the small
+postcheck change, the eleven attached regressions, four runtime regressions and
+direct full test compilation. Earlier full package/live proofs retain their
+original source binding; final hosted readiness remains unproved.
+
+### Final fixture complexity proof
+
+The collected publication gate detected added complexity in the two-scenario
+fixture expansion. Scenario selection now uses `Match`, with no production or
+assertion change. Independent comparison covers all 24 combinations of eight
+scenarios and three submission counts, with zero differences. Final attached
+test SHA256 is
+`52ffd0cc9112fbec5831d4203b775c2c44f9aef9e0e474eeab3b9b645609c91f`.
+
+Actual Fallow audit exits zero with zero introduced findings; its single
+inherited-adjacent duplication remains nonblocking. Fallow health exits zero
+with zero findings. Bun passes eleven cases (1.67s), Node coverage passes eleven
+(11.92s), direct full CLI test TSGo and CLI quick verification pass. The attached
+Effect-Vitest row remains byte-equivalent with zero introduced findings.
+Independent review finds zero actionable issues. No threshold, baseline or
+inventory was changed. These results supersede only the attached test's earlier
+hash and focused timings; the reviewed production service hash is unchanged.
+
+## Settled hosted proof and shared repair integration
+
+Head `5ab82d71ed` completed fresh CI with 26 successful and seven failed check
+runs. Both CLI unit shards, both package lint shards, Build, Check, Docgen,
+Doctest, Test Integration, Property Laws, Storybook, codegen, security and scanner
+checks passed. Coverage job `114112107010` passed all eleven attached cases, all
+four runtime cases and the full CLI suite (5,939 passed, eleven skipped). Its
+only failing shards contained the same four documents-domain and eleven
+law-practice-tables audit-field fixtures. The aggregate coverage comparison is
+not claimed successful.
+
+The remaining red jobs were Repo Sanity, JSDoc Ratchet, Unit A/B plus their
+aggregate, policy lint and coverage. Final policy job `114112107069` cleared the
+owned T3 warning and passed the 342-file test type-check stage. It retained only
+main-identical policy/inventory failures or newer-main ontology diagnostics.
+The final review read had zero unresolved threads, and the review window elapsed.
+Required reds still prevented merge readiness.
+
+Shared repair [#1605](https://github.com/beep-effect/beep-effect/pull/1605) then
+merged as `3aa125a5d6`. It is integrated once through `8b7a52bdfd`, without
+conflicts, removing the private-workspace changesets and repairing shared
+inventory/doctest entries. The audit-field fixtures and masked JSDoc generator
+remain separate owner work. The integrated head must earn fresh hosted checks
+and a new review window; the preceding results belong to `5ab82d71ed`.
+
+After integration, the attached service, attached tests and runtime tests retain
+their final reviewed SHA256 values above. CLI quick lint/check pass (4.2s/7.7s),
+and direct full CLI test TSGo exits zero. No native inference was repeated.
+
+## Integrated hosted result and definite pre-submission rejection
+
+Head `e1c8cace20` settled at 26 successful and seven failed check runs. Both CLI
+unit shards passed 5,945 tests with six skipped. Coverage passed the CLI suite
+(5,940 passed, eleven skipped), including eleven attached cases and four runtime
+cases. It failed the same four documents-domain and eleven law-table fixtures,
+plus two Practice KG startup checks that received empty stderr instead of the
+expected incompatible-bundle message. The entire Practice KG app tree and its
+Host test match integrated main; this receipt does not establish the underlying
+startup failure cause. No aggregate coverage-ratchet pass is claimed.
+
+Repo Sanity now clears the changeset graph and fails at the two main-identical
+minimatch/smol-toml version disagreements. Policy lint clears Accounts,
+PracticeKg and missing doctest entries, while retaining main-identical
+language-service, inline-schema, property-test-advisory and fixture-project
+inputs. There are no T3 or AgentMessage diagnostics in that job.
+
+JSDoc Ratchet remains a masked hosted error. A direct production inventory writer
+run on this head succeeded locally in 292 seconds across 148 packages, using
+private outputs. An older main-only job also has the generic error. Neither
+source equality nor local success identifies the current hosted exception; its
+origin remains unknown, and inventory generation is not a ratchet-metrics pass.
+
+A later P1 review identified definite rejection being misclassified as ambiguity:
+receiving-grant expiry or another preparation failure could occur before any
+native send yet fence the endpoint. The repaired dispatch separates all
+preparation from submission. Typed preparation failures return `failed`; defects
+and interruption remain uncaught, and every path after `sendQueued` begins keeps
+its existing ambiguity behavior. No retry or ambiguity-clear operation is added.
+
+A real-router regression exercises grant expiry after message acceptance, a
+corrupt grant file, and a planned-checkpoint write failure. Each settles failed,
+performs zero native sends, and leaves a subsequent message claimable. Node
+coverage and Bun pass twelve focused cases. Direct full CLI test TSGo, quick
+package lint/check, root Oxlint and whitespace checks pass. The existing
+Effect-Vitest membership remains one current/one baseline, with zero introduced
+or resolved findings. Earlier live proofs retain their original source binding;
+no native inference or retained-hold mutation was repeated.
+
+Repair source SHA256:
+
+- Attached service: `ec6a8f78095e565cea41dfc22ac4737dae5396a2918ee8311586cd8586055858`.
+- Attached tests: `c1afae94d3945d9593fe504fa8f84da01268000b6d21895385889c0c739dd861`.
+
+The new head must earn its own hosted results. Later-round minor fixture-path
+portability is tracked in #1587, and future private-package publication exports
+in #1607. Neither is claimed repaired here. Required hosted reds still prevent
+merge readiness and operative packet completion.

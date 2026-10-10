@@ -1909,5 +1909,10 @@
   ],
   "@beep/epistemic-domain/values/ContradictionDetection": [
     "./packages/epistemic/domain/src/values/ContradictionDetection/index.ts"
-  ]
+  ],
+  "@beep/repo-cli/commands/AgentMessage": [
+    "./packages/tooling/tool/cli/src/commands/AgentMessage/index.ts"
+  ],
+  "@beep/t3-code": ["./packages/drivers/t3-code/src/index.ts"],
+  "@beep/t3-code/*": ["./packages/drivers/t3-code/src/*"]
 }

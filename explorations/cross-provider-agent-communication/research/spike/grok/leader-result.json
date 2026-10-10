@@ -1,0 +1,11 @@
+{
+  "ownedLeader": true,
+  "sameAgentInstance": false,
+  "loadSuccess": true,
+  "loadError": null,
+  "postReconnectPromptSuccess": true,
+  "postReconnectStopReason": "end_turn",
+  "model": "grok-4.7",
+  "effort": "medium",
+  "UIAttachment": false
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "agent-comms-roundtrip/v1",
+  "delivery": "controller-mediated model-output forwarding",
+  "autonomousReplyToolIntegration": false,
+  "existingAppClaim": false,
+  "codexPin": {
+    "model": "gpt-6.1-sol",
+    "reasoningEffort": "medium",
+    "approvalPolicy": "never",
+    "sandbox": {
+      "type": "readOnly",
+      "networkAccess": false
+    }
+  },
+  "grokPin": {
+    "model": "grok-4.7",
+    "effort": "medium"
+  },
+  "outcome": "passed",
+  "codexToGrokNonceReceived": true,
+  "grokToCodexReplyAcknowledged": true,
+  "allSessionsOwned": true,
+  "sameSessionsThroughout": true,
+  "elapsedSeconds": 8.54,
+  "codexReverseRequestsDenied": 0,
+  "grokReverseRequests": 0,
+  "grokStopReason": "end_turn",
+  "ownedProcessesStopped": true
+}

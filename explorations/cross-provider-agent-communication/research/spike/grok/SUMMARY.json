@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "agent-comms-spike/grok/v1",
+  "runtimeVersion": "1.0.50",
+  "runtimeCommit": "c58f321264ba",
+  "requestedModel": "grok-4.7",
+  "reportedModel": "grok-4.7-build",
+  "effort": "medium",
+  "authRoute": "existing cached subscription token read-only bind; no API key environment",
+  "isolation": {
+    "hooks": 0,
+    "plugins": 0,
+    "mcpServers": 0,
+    "projectInstructions": 0,
+    "initialSkills": 0,
+    "runtimeGeneratedBundledSkills": 22,
+    "permissionMode": "plan",
+    "sandbox": "read-only",
+    "builtInToolsAllowlist": "empty CLI argument",
+    "clientToolRequests": "refused",
+    "subagents": false,
+    "webSearch": false
+  },
+  "idle": {
+    "samples": 5,
+    "nonceReplies": 5,
+    "deliveryMode": "idle interjection converted to queued turn",
+    "latencySeconds": [1.705, 1.304, 1.704, 1.203, 1.304]
+  },
+  "busy": {
+    "samples": 5,
+    "nonceReplies": 5,
+    "originalPromptPendingAtSend": true,
+    "sameActiveTurnSteeringProven": false,
+    "deliveryMode": "queued follow-up",
+    "latencySeconds": [8.589, 5.336, 6.332, 4.542, 7.161]
+  },
+  "cancel": {
+    "case": "cancel",
+    "stopReason": "cancelled",
+    "durationSeconds": 0.31
+  },
+  "ownedLeaderResume": {
+    "ownedLeader": true,
+    "sameAgentInstance": false,
+    "loadSuccess": true,
+    "loadError": null,
+    "postReconnectPromptSuccess": true,
+    "postReconnectStopReason": "end_turn",
+    "model": "grok-4.7",
+    "effort": "medium",
+    "UIAttachment": false
+  },
+  "ownedLeaderAttachWithoutLoad": {
+    "ownedLeader": true,
+    "sameAgentInstance": false,
+    "noLoadIssued": true,
+    "loadError": null,
+    "postReconnectPromptSuccess": false,
+    "postReconnectStopReason": null,
+    "promptError": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": "unknown session id"
+    },
+    "model": "grok-4.7",
+    "effort": "medium",
+    "UIAttachment": false
+  },
+  "existingUserUIAttachment": "unknown; no unrelated session inspected",
+  "durableBrokerReplay": "not tested; no broker implemented",
+  "extensionWireMethod": "_x.ai/interject",
+  "unprefixedMethod": "x.ai/interject rejected -32601",
+  "toolsOrPermissionsRequested": 0
+}

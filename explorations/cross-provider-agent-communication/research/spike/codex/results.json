@@ -1,0 +1,123 @@
+{
+  "provider": "codex",
+  "version": "0.162.0",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "mode": "owned standalone app-server, Unix socket",
+  "mcp_disabled_count": 4,
+  "plugins_hooks_apps_disabled": true,
+  "samples": [
+    {
+      "test": "idle",
+      "sample": 1,
+      "ack_nonce": true,
+      "status": "completed",
+      "model_reply_ms": 3528.1
+    },
+    {
+      "test": "idle",
+      "sample": 2,
+      "ack_nonce": true,
+      "status": "completed",
+      "model_reply_ms": 2568.6
+    },
+    {
+      "test": "idle",
+      "sample": 3,
+      "ack_nonce": true,
+      "status": "completed",
+      "model_reply_ms": 4166.1
+    },
+    {
+      "test": "idle",
+      "sample": 4,
+      "ack_nonce": true,
+      "status": "completed",
+      "model_reply_ms": 2174.7
+    },
+    {
+      "test": "idle",
+      "sample": 5,
+      "ack_nonce": true,
+      "status": "completed",
+      "model_reply_ms": 1958.5
+    },
+    {
+      "test": "active-steer",
+      "sample": 1,
+      "rpc_accepted": true,
+      "same_turn_nonce": true,
+      "status": "completed",
+      "transport_ack_ms": 0.66
+    },
+    {
+      "test": "active-steer",
+      "sample": 2,
+      "rpc_accepted": true,
+      "same_turn_nonce": true,
+      "status": "completed",
+      "transport_ack_ms": 0.61
+    },
+    {
+      "test": "active-steer",
+      "sample": 3,
+      "rpc_accepted": true,
+      "same_turn_nonce": true,
+      "status": "completed",
+      "transport_ack_ms": 0.67
+    },
+    {
+      "test": "active-steer",
+      "sample": 4,
+      "rpc_accepted": true,
+      "same_turn_nonce": true,
+      "status": "completed",
+      "transport_ack_ms": 0.78
+    },
+    {
+      "test": "active-steer",
+      "sample": 5,
+      "rpc_accepted": true,
+      "same_turn_nonce": true,
+      "status": "completed",
+      "transport_ack_ms": 0.56
+    }
+  ],
+  "initialize_ok": true,
+  "thread_start": {
+    "model": "gpt-6.1-sol",
+    "modelProvider": "openai",
+    "reasoningEffort": "medium",
+    "approvalPolicy": "never",
+    "sandbox": {
+      "type": "readOnly",
+      "networkAccess": false
+    },
+    "permissions": null
+  },
+  "stale_steer_rejected": true,
+  "cancel": {
+    "accepted": true,
+    "status": "interrupted"
+  },
+  "transport_read": {
+    "n": 100,
+    "p95_ms": 87.26,
+    "max_ms": 91.84,
+    "description": "local thread/read RPC, not durable broker acceptance"
+  },
+  "reconnect": {
+    "accepted": false,
+    "same_thread": false,
+    "permissions": {
+      "approvalPolicy": null,
+      "sandbox": null,
+      "permissions": null
+    },
+    "server_restart": false,
+    "desktop_attachment": false
+  },
+  "reverse_requests_denied": 0,
+  "outcome": "completed",
+  "owned_process_exit": 0
+}

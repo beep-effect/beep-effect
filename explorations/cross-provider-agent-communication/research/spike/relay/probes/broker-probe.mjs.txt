@@ -1,0 +1,172 @@
+import { spawn } from "node:child_process";
+import { randomBytes } from "node:crypto";
+import { mkdir, open, realpath, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { isAbsolute, relative, resolve } from "node:path";
+import { HarnessDriverClient } from "@agent-relay/harness-driver";
+
+const requestedRoot = process.env.BEEP_SPIKE_ROOT;
+if (!requestedRoot) throw new Error("BEEP_SPIKE_ROOT must identify a fresh owned cache directory");
+const cache = await realpath(resolve(homedir(), ".cache/beep"));
+const root = await realpath(resolve(requestedRoot));
+const beneathCache = relative(cache, root);
+if (!beneathCache || beneathCache.startsWith("..") || isAbsolute(beneathCache)) {
+  throw new Error("BEEP_SPIKE_ROOT must be strictly below ~/.cache/beep");
+}
+if (root === resolve(cache, "agent-comms-spike/relay")) {
+  throw new Error("Refusing to overwrite the original captured spike directory");
+}
+const state = `${root}/broker-state`;
+await mkdir(state, { recursive: true });
+const raw = await open(`${root}/broker.private.log`, "w", 0o600);
+const key = `br_${randomBytes(16).toString("hex")}`;
+const child = spawn(
+  `${root}/node_modules/@agent-relay/broker-linux-x64/bin/agent-relay-broker`,
+  [
+    "init",
+    "--local-only",
+    "--instance-name",
+    "synthetic-spike",
+    "--persist",
+    "--state-dir",
+    state,
+    "--api-port",
+    "0",
+    "--api-bind",
+    "127.0.0.1",
+  ],
+  {
+    cwd: root,
+    env: { PATH: process.env.PATH, LANG: "C.UTF-8", RELAY_BROKER_API_KEY: key },
+    stdio: ["ignore", "pipe", "pipe"],
+  }
+);
+let output = "";
+child.stdout.on("data", (b) => {
+  output += b.toString();
+  raw.write(b);
+});
+child.stderr.on("data", (b) => raw.write(b));
+const result = { packages: "13.2.0", launch_mode: "local-only", provider_models_launched: 0, steps: [] };
+let client;
+let url;
+const timer = setTimeout(() => child.kill("SIGTERM"), 90000);
+function err(e) {
+  return {
+    name: e?.name,
+    code: e?.code,
+    message: String(e?.message ?? e)
+      .replaceAll(root, "<cache>")
+      .replaceAll(key, "<generated-key>"),
+  };
+}
+async function test(name, f) {
+  try {
+    const value = await f();
+    result.steps.push({ name, ok: true, value });
+    console.log(JSON.stringify({ stage: name, ok: true }));
+    return value;
+  } catch (e) {
+    result.steps.push({ name, ok: false, error: err(e) });
+    console.log(JSON.stringify({ stage: name, ok: false, error: err(e) }));
+    return null;
+  }
+}
+try {
+  for (let i = 0; i < 100; i++) {
+    const m = output.match(/https?:\/\/127\.0\.0\.1:\d+/);
+    if (m) {
+      url = m[0];
+      break;
+    }
+    if (child.exitCode !== null) throw Error("Broker exited before API ready");
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  if (!url) {
+    const { readFile } = await import("node:fs/promises");
+    const c = JSON.parse(await readFile(`${state}/connection.json`, "utf8"));
+    url = c.url;
+  }
+  client = new HarnessDriverClient({ baseUrl: url, apiKey: key, requestTimeoutMs: 5000 });
+  await test("health", () => client.healthCheck());
+  await test("session", async () => {
+    const s = await client.getSession();
+    return {
+      broker_version: s.broker_version,
+      mode: s.mode,
+      protocol_version: s.protocol_version,
+      has_workspace_key: !!s.workspace_key,
+      has_relay_base_url: !!s.relay_base_url,
+    };
+  });
+  await test("send_to_absent_local", () =>
+    client.sendMessage({
+      to: "missing-synthetic-fixture",
+      from: "synthetic-sender",
+      text: "SYNTHETIC_ONLY",
+      mode: "wait",
+    }));
+  const h = await test("spawn_native_fixture", async () => {
+    const h = await client.spawnHeadless({
+      name: "synthetic-fixture",
+      cli: "fixture",
+      cwd: root,
+      channels: [],
+      skipRelayPrompt: true,
+      harnessConfig: {
+        runtime: "native",
+        command: "python3",
+        args: [`${root}/fixture.py`],
+        cwd: root,
+        sessionId: "synthetic-only",
+        metadata: { fixture: true },
+      },
+    });
+    return { name: h.name, runtime: h.runtime };
+  });
+  if (h) {
+    await new Promise((r) => setTimeout(r, 300));
+    await test("native_control", () =>
+      client.sendNativeHarnessCommand("synthetic-fixture", {
+        kind: "submit_user_message",
+        idempotency_key: "synthetic-control-1",
+        text: "SYNTHETIC_NONCE",
+        mode: "idle",
+      }));
+    await test("manual_delivery_mode", () => client.setInboundDeliveryMode("synthetic-fixture", "manual_flush"));
+    await test("send_to_present_local", () =>
+      client.sendMessage({
+        to: "synthetic-fixture",
+        from: "synthetic-sender",
+        text: "SYNTHETIC_MESSAGE",
+        mode: "wait",
+      }));
+    await new Promise((r) => setTimeout(r, 1500));
+    await test("health_after_local_send", () => client.healthCheck());
+    await test("pending", () => client.getPending("synthetic-fixture"));
+    await test("flush", () => client.flushPending("synthetic-fixture"));
+    await test("agent_events", async () => {
+      const h = await client.getAgentEventHistory("synthetic-fixture");
+      return { event_kinds: h.events.map((x) => x.event.kind), high_water: h.high_water_sequence, gap: h.gap };
+    });
+    await test("release_fixture", () => client.release("synthetic-fixture", "owned probe complete"));
+  }
+} catch (e) {
+  result.failure = err(e);
+} finally {
+  clearTimeout(timer);
+  client?.disconnect();
+  child.kill("SIGTERM");
+  await new Promise((r) => {
+    if (child.exitCode !== null) return r();
+    child.once("exit", r);
+    setTimeout(() => {
+      child.kill("SIGKILL");
+      r();
+    }, 5000).unref();
+  });
+  result.owned_broker_stopped = child.exitCode !== null || child.signalCode !== null;
+  await raw.close();
+  await writeFile(`${root}/broker-results.json`, JSON.stringify(result, null, 2), { mode: 0o600 });
+  console.log(JSON.stringify({ stage: "done", broker_stopped: result.owned_broker_stopped, failure: result.failure }));
+}

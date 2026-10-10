@@ -1,0 +1,138 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "agent-session-bridges",
+    "title": "Agent Session Bridges",
+    "status": "completed-retained",
+    "created": "2026-10-09",
+    "updated": "2026-10-09",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/agent-session-bridges",
+  "lifecycle": "completed-retained",
+  "mission": "Compose managed and attached T3-owned sessions with the durable router and scoped messaging, proving bounded repository task delegation without global role takeover.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/cross-provider-agent-communication",
+    "graduated": "2026-10-09"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Prospective completed-retained declaration for merged main only. Operative execution remains active until this final packet/implementation head passes required hosted checks, fresh review-thread closure and the latest-push/ready review window, then PR1571 actually merges through Yeet. Phase-complete values describe that merged state, not current hosted readiness or retirement. Preserve two reverse ambiguity holds; retire only after actual merge.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/agent-session-bridges/README.md",
+    "goals/agent-session-bridges/SPEC.md",
+    "goals/agent-session-bridges/PLAN.md",
+    "goals/agent-session-bridges/GOAL.md",
+    "goals/agent-session-bridges/research/SOURCES.md",
+    "explorations/cross-provider-agent-communication/BRIEF.md",
+    "explorations/cross-provider-agent-communication/DECISIONS.md",
+    "explorations/cross-provider-agent-communication/MAP.md",
+    "explorations/cross-provider-agent-communication/research/ARCHITECTURE.md",
+    "explorations/cross-provider-agent-communication/research/spike/README.md",
+    "goals/agent-message-router/research/IMPLEMENTATION.md",
+    "goals/agent-message-router/research/PROGRESS.md",
+    "goals/agent-message-router/research/STORAGE-REVERSAL.md",
+    "docs/runbooks/agent-messaging.md",
+    "goals/agent-session-bridges/research/probes/README.md",
+    "goals/agent-session-bridges/research/probes/managed-roundtrip.py",
+    "goals/agent-message-router/research/ACCEPTANCE-AUDIT.md",
+    "goals/agent-session-bridges/research/NATIVE-QUALIFICATION.md",
+    "goals/agent-session-bridges/research/GROK-SANDBOX-PREFLIGHT.json",
+    "goals/agent-message-router/research/FOLLOW-UPS.md",
+    "goals/agent-session-bridges/research/GROK-MANAGED-ROUNDTRIP.json",
+    "goals/agent-session-bridges/history/reflections/2026-10-09-codex.md",
+    "goals/agent-session-bridges/research/CLAUDE-MANAGED-ROUNDTRIP.json",
+    "goals/agent-session-bridges/research/CLAUDE-PATCH-REVIEW.md",
+    "goals/agent-session-bridges/research/T3-INTEGRATION.md",
+    "explorations/cross-provider-agent-communication/research/T3CODE-QUALIFICATION.md",
+    "goals/agent-session-bridges/research/T3-INTEGRATION-QUALIFICATION.json",
+    "goals/agent-session-bridges/research/T3-INTEGRATION-INITIAL-QUALIFICATION.json",
+    "goals/agent-session-bridges/research/T3-CACHE-REVIEW.md",
+    "goals/agent-session-bridges/research/T3-REFACTOR-RECONCILIATION.json",
+    "goals/agent-session-bridges/research/T3-CACHE-HELPER-REVIEW.md",
+    "goals/agent-session-bridges/research/T3-LOCAL-VERIFICATION.md",
+    "goals/agent-session-bridges/research/T3-MAIN-INTEGRATION.md",
+    "goals/agent-session-bridges/history/reflections/2026-10-09-codex-t3.md",
+    "goals/agent-session-bridges/research/T3-POST-INTEGRATION-GATES.md",
+    "goals/agent-session-bridges/research/T3-HOSTED-TRIAGE.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../agent-message-router/research/PROGRESS.md",
+    "../agent-message-router/research/STORAGE-REVERSAL.md",
+    "research/probes/README.md",
+    "../agent-message-router/research/ACCEPTANCE-AUDIT.md",
+    "research/NATIVE-QUALIFICATION.md",
+    "research/CLAUDE-PATCH-REVIEW.md",
+    "research/T3-INTEGRATION.md",
+    "research/T3-INTEGRATION-QUALIFICATION.json",
+    "research/T3-INTEGRATION-INITIAL-QUALIFICATION.json",
+    "research/T3-CACHE-REVIEW.md",
+    "research/T3-REFACTOR-RECONCILIATION.json",
+    "research/T3-CACHE-HELPER-REVIEW.md",
+    "research/T3-LOCAL-VERIFICATION.md",
+    "research/T3-MAIN-INTEGRATION.md",
+    "research/T3-POST-INTEGRATION-GATES.md",
+    "research/T3-HOSTED-TRIAGE.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/agent-session-bridges/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/agent-session-bridges/GOAL.md)\" -le 4000",
+    "jq . goals/agent-session-bridges/ops/manifest.json",
+    "git diff --check -- goals/agent-session-bridges",
+    "bun run beep goals doctor",
+    "bun run beep explore --check",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "New money, paid services/endpoints, quota top-ups or plan changes require the operator.",
+    "Permission/model or session ownership mismatch fences the affected route before inference.",
+    "The same external blocker persists after bounded investigation; preserve evidence and continue independent work."
+  ],
+  "dependsOn": ["goals/agent-message-router"],
+  "resumeCondition": "Satisfied on 2026-10-09: documented versioned router contract and combined 20 injected/schema/tool/filesystem tests passed. Execution activated; later review findings are remediation within active work.",
+  "statusNote": "Prospective completed-retained state for merged main only; execution remains active. Corrective head27c8b24596 is published and this final packet wave will have its own head. Source-bound hardened task proof, later parity/review, package verification, scoped reflection and runtime-portability repairs are recorded. Main1597 integrated91c9bf69e2; required final-head hosted/review/window gates and actual merge remain unproved. No current green/merge/retirement claim. Two reverse ambiguity holds, revoked external credentials and original conversations remain retained."
+}

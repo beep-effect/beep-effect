@@ -10,6 +10,13 @@ final messages. A stopping point is handed back as a short recap plus one
 structured prompt whose options are the concrete next steps. The law is the
 "Guided Closeout" section of `AGENTS.md`; this skill is the shape.
 
+When holding the orchestrator role, update the private handoff under
+[the orchestrate skill](../orchestrate/SKILL.md) before the ledger row and prompt.
+Record each unit's authorized communication route and unresolved delivery holds.
+A cross-provider message ACK confirms receipt; role takeover requires the
+successor's explicit acknowledgment and orchestrator ledger row. Do not resume
+an existing Desktop task merely to deliver a closeout message.
+
 ## At session start
 
 Read `bun run beep session open` (the Claude SessionStart hook prints the

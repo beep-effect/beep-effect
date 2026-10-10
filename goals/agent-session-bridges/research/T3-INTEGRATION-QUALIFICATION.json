@@ -1,0 +1,367 @@
+{
+  "schemaVersion": "agent-t3-integration-qualification/v1",
+  "observedAt": "2026-10-09T23:29:45.371883+00:00",
+  "qualification": "hardened inbound-scope attached T3-owned bidirectional repository audit coordination",
+  "installedHost": {
+    "sourceCommit": "365aa87982a4d81cc8e0c085e8d1a40ca7daecdc",
+    "version": "0.0.45",
+    "artifactDigestProvenance": "prior installed T3 host qualification; not a fresh artifact hash observation"
+  },
+  "tasks": [
+    {
+      "initiator": "codex",
+      "worker": "claude",
+      "file": "AGENTS.md",
+      "audit": "fallback triggers, direct-provider exclusions and onward delegation"
+    },
+    {
+      "initiator": "claude",
+      "worker": "codex",
+      "file": "AGENTS.md",
+      "audit": "mergeability, inherited-red ownership and retirement"
+    }
+  ],
+  "router": {
+    "logicalMessages": 4,
+    "allAcknowledged": true,
+    "allAttemptGenerationOne": true,
+    "allDispatchSettled": true,
+    "persistedGrantUsePerProvider": 2,
+    "receiptStatuses": ["accepted", "claimed", "acknowledged"],
+    "receiptCount": 12,
+    "note": "ACK preceded dispatcher finish; dispatch_active=0 establishes final settlement."
+  },
+  "nativeObservation": {
+    "codex": {
+      "nativeIdentityMatchesPrime": true,
+      "providerStatus": "idle",
+      "runs": [
+        {
+          "ordinal": 1,
+          "status": "completed",
+          "terminalTimestampRecorded": true
+        },
+        {
+          "ordinal": 2,
+          "status": "completed",
+          "terminalTimestampRecorded": true
+        },
+        {
+          "ordinal": 3,
+          "status": "completed",
+          "terminalTimestampRecorded": true
+        },
+        {
+          "ordinal": 4,
+          "status": "completed",
+          "terminalTimestampRecorded": true
+        },
+        {
+          "ordinal": 5,
+          "status": "completed",
+          "terminalTimestampRecorded": true
+        },
+        {
+          "ordinal": 6,
+          "status": "completed",
+          "terminalTimestampRecorded": true
+        },
+        {
+          "ordinal": 7,
+          "status": "completed",
+          "terminalTimestampRecorded": true
+        }
+      ],
+      "nonterminalRunCount": 0,
+      "policyRecords": [
+        {
+          "approval_policy": "never",
+          "sandbox_policy": {
+            "type": "danger-full-access"
+          },
+          "model": "gpt-6.1-sol",
+          "effort": "medium"
+        },
+        {
+          "approval_policy": "never",
+          "sandbox_policy": {
+            "type": "danger-full-access"
+          },
+          "model": "gpt-6.1-sol",
+          "effort": "medium"
+        },
+        {
+          "approval_policy": "never",
+          "sandbox_policy": {
+            "type": "danger-full-access"
+          },
+          "model": "gpt-6.1-sol",
+          "effort": "medium"
+        },
+        {
+          "approval_policy": "never",
+          "sandbox_policy": {
+            "type": "danger-full-access"
+          },
+          "model": "gpt-6.1-sol",
+          "effort": "medium"
+        },
+        {
+          "approval_policy": "never",
+          "sandbox_policy": {
+            "type": "danger-full-access"
+          },
+          "model": "gpt-6.1-sol",
+          "effort": "medium"
+        },
+        {
+          "approval_policy": "never",
+          "sandbox_policy": {
+            "type": "danger-full-access"
+          },
+          "model": "gpt-6.1-sol",
+          "effort": "medium"
+        },
+        {
+          "approval_policy": "never",
+          "sandbox_policy": {
+            "type": "danger-full-access"
+          },
+          "model": "gpt-6.1-sol",
+          "effort": "medium"
+        }
+      ],
+      "hostConfiguration": {
+        "modelSelection": {
+          "instanceId": "codex",
+          "model": "gpt-6.1-sol",
+          "options": [
+            {
+              "id": "reasoningEffort",
+              "value": "medium"
+            },
+            {
+              "id": "serviceTier",
+              "value": "default"
+            }
+          ]
+        },
+        "runtimeMode": "full-access",
+        "interactionMode": "default"
+      },
+      "nativeFileSha256": "d9457d75d7831c7f24e6aecaad6ffe18591cde2ce5d5f9bdfd4920374ba6ab80",
+      "nativeToolCallCount": 17
+    },
+    "claude": {
+      "nativeIdentityMatchesPrime": true,
+      "providerStatus": "idle",
+      "runs": [
+        {
+          "ordinal": 1,
+          "status": "completed",
+          "terminalTimestampRecorded": true
+        },
+        {
+          "ordinal": 2,
+          "status": "completed",
+          "terminalTimestampRecorded": true
+        },
+        {
+          "ordinal": 3,
+          "status": "completed",
+          "terminalTimestampRecorded": true
+        },
+        {
+          "ordinal": 4,
+          "status": "completed",
+          "terminalTimestampRecorded": true
+        },
+        {
+          "ordinal": 5,
+          "status": "completed",
+          "terminalTimestampRecorded": true
+        },
+        {
+          "ordinal": 6,
+          "status": "completed",
+          "terminalTimestampRecorded": true
+        },
+        {
+          "ordinal": 7,
+          "status": "completed",
+          "terminalTimestampRecorded": true
+        }
+      ],
+      "nonterminalRunCount": 0,
+      "policyRecords": [
+        {
+          "permissionMode": "bypassPermissions"
+        },
+        {
+          "permissionMode": "bypassPermissions"
+        },
+        {
+          "permissionMode": "bypassPermissions"
+        },
+        {
+          "permissionMode": "bypassPermissions"
+        },
+        {
+          "permissionMode": "bypassPermissions"
+        },
+        {
+          "permissionMode": "bypassPermissions"
+        },
+        {
+          "permissionMode": "bypassPermissions"
+        }
+      ],
+      "hostConfiguration": {
+        "modelSelection": {
+          "instanceId": "claudeAgent",
+          "model": "claude-opus-5-5",
+          "options": [
+            {
+              "id": "effort",
+              "value": "medium"
+            },
+            {
+              "id": "fastMode",
+              "value": false
+            }
+          ]
+        },
+        "runtimeMode": "full-access",
+        "interactionMode": "default"
+      },
+      "nativeFileSha256": "fb4085767a2ea58ff81f30d408320029e610d16ef3cdfce85080bffc5d887135",
+      "nativeToolCallCount": 15
+    }
+  },
+  "activityScope": {
+    "liveObservedCommands": "own brief, grant-bound peer messaging, AGENTS.md line reads, one private report per coordinator",
+    "controllerForwardedReplies": false,
+    "trackedEditAttribution": "not established: concurrent T3 checkpoints include other agents edits",
+    "prime": "negative scope receipt: Codex made eight command executions in three batched exec calls, including inbox inspection and an inbox ACK, after a no-tool prime brief; Claude prime completed with no tools but inherited hook friction. Four completed runs per provider include this prime plus three live runs. Final seven completed runs per provider comprise prime, three original and three hardened runs.",
+    "claudeStopHook": "coordinator self-report describes an old P0 demand despite root empty-inbox snapshot; observed live command metadata contains no Yeet ACK."
+  },
+  "cleanup": {
+    "externalCredentialHttpStatus": {
+      "externalOauth": 401,
+      "enrollment": 401
+    },
+    "ownedBridgeWorkersStopped": 2,
+    "nativeAppAndConversationsRetained": true,
+    "persistedPeerGrantsInvalidated": {
+      "codex": {
+        "exitCode": 1,
+        "error": "Launch grant expired or its enrollment was replaced."
+      },
+      "claude": {
+        "exitCode": 1,
+        "error": "Launch grant expired or its enrollment was replaced."
+      }
+    },
+    "invalidationMethod": "supported endpoint replacement with higher generation, fresh owner, supported false; no pending dispatch"
+  },
+  "limits": [
+    "Exclusive owned targets and host pre/post readback do not provide atomic expected-policy compare-and-send.",
+    "Claude effort/model are host configuration; native permissionMode records separately show bypassPermissions.",
+    "Full access is not OS isolation; native T3 tools have independent authority outside Beep grants.",
+    "Old internal bearer was not HTTP-probed; external OAuth and enrollment credentials were re-probed HTTP401 after revocation.",
+    "Native application and conversations retained; bridge workers stopped and register units retired as metadata only.",
+    "No always-on route, separate Claude/ChatGPT Desktop attachment, global orchestrator role or physical native unload qualified."
+  ],
+  "verification": {
+    "independentImplementationReviewRemainingFindings": 0,
+    "driverReviewerTests": 10,
+    "attachedReviewerTests": 8,
+    "ownerCombinedBunTests": 56,
+    "ownerCombinedNodeCoverageTests": 56,
+    "fullCliAndRepositoryDocgen": "full CLI proof cancelled pending final cohesion refactor; full repository docgen retry passed",
+    "exactFinalHeadHostedReviewMergeCloseout": "pending",
+    "inboundScopeRepair": "Known pre-submission guard independently reviewed: zero findings; actual sender-grant accept/claim foreign-conversation and unallowed-sender regressions, reviewer9/9pass.",
+    "fullRepositoryDocgen": "passed root retry after infrastructure preparation",
+    "postLiveCohesionRefactor": "pending separate tests and independent review; no live receipt is silently promoted to subsequent source",
+    "cachePosture": "canonical fingerprint/cache-policy bookkeeping reviewed separately in T3-CACHE-REVIEW.md; not cache reuse qualification",
+    "inheritedMainBlocker": "EV015 persists on origin/main3200e01946; owner main lane remains responsible"
+  },
+  "productionSources": [
+    {
+      "file": "packages/drivers/t3-code/src/index.ts",
+      "sha256": "2efbe9ce83c0eda02e2ca87e856a142b56d0c15010a4e4d6593abd9b67fc448f"
+    },
+    {
+      "file": "packages/drivers/t3-code/src/T3Code.models.ts",
+      "sha256": "2ed2cac226ca01278b2f89f4cf17c24a4bf88773507045c617f37d0726c2ff91"
+    },
+    {
+      "file": "packages/drivers/t3-code/src/T3Code.errors.ts",
+      "sha256": "c0244ba0dac93b89ac335545567d4431a344d1347ede6cde12c9f098a61562bd"
+    },
+    {
+      "file": "packages/drivers/t3-code/src/T3Code.service.ts",
+      "sha256": "19fddf42ed7c7d044f443788178b38691875837a58c5e09077fe0cfd38e80259"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.attached.command.ts",
+      "sha256": "882dbe5b772a79f22d2e8584ac87cd00cc41ca52042a7cdd6ae237071f2217ae"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.attached.schemas.ts",
+      "sha256": "a81514e575879094045165515a719ec94c739a27a9b5760ce636773bb253255e"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.attached.service.ts",
+      "sha256": "b3db46f0edda48574e8c8cdabba30546e38fbad42afc85c7737341d45490adf8"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.peer.command.ts",
+      "sha256": "b1d1e7119949fd9588600b15bf948636a46733fb459e4ce7aa86dd83d9763db9"
+    }
+  ],
+  "privateEvidence": [
+    {
+      "file": "native-postbaseline.sanitized.json",
+      "sha256": "95185a6afd5f433dc1c7fac7816fad87f635342b088826db1a1ecbef71989e99"
+    },
+    {
+      "file": "router-final.sanitized.json",
+      "sha256": "616d4fb8149e64ee78810d8432f0cb5caba4164c03770469a23e310f753988d1"
+    },
+    {
+      "file": "cleanup.sanitized.json",
+      "sha256": "6e20247011df8363a1dd940392bee36d22374f32638bfe81be48b1ef31cd0673"
+    },
+    {
+      "file": "final-codex-configuration.json",
+      "sha256": "adf3486faac4627f712b2db341924c011364bc3401815a089c73a85e7fda7856"
+    },
+    {
+      "file": "final-claude-configuration.json",
+      "sha256": "1fc493c2e8ffbc1ac42f882386264eea26b36fc77afee416d6f49ce9467dd262"
+    },
+    {
+      "file": "final-codex-activity.json",
+      "sha256": "6afa78acc4d407fe85d48a61916d289d62397fa60c459ba50aafa636ff5d321c"
+    },
+    {
+      "file": "final-claude-activity.json",
+      "sha256": "38f47948cb3eead6fa64eb1f505278a9fda78b053e061d0fbb9b26477b844268"
+    },
+    {
+      "file": "codex-coordination-report.md",
+      "sha256": "4bf80d5afa7b878b1a16b585a9b9aa84dbec3bb2dda2857b753795c46418d6b9"
+    },
+    {
+      "file": "claude-coordination-report.md",
+      "sha256": "0d1a07c223b2ddceab43e3f98bccac79fd1500f97a8f288f846c21f27c56d966"
+    },
+    {
+      "file": "agent-comms-t3-scope-independent-review.md",
+      "sha256": "049f58e032e4d839e3ae5fb9681ee568987b6444d01eaf037c698546673b63e9"
+    }
+  ],
+  "sourceBinding": "Production digests bind hardened live source before subsequent Fallow cohesion refactor. Later source requires separate test/review evidence.",
+  "historicalEvidence": "T3-INTEGRATION-INITIAL-QUALIFICATION.json retains original proof and prime/internal credential incident digests; old internal bearer was not HTTP-probed."
+}

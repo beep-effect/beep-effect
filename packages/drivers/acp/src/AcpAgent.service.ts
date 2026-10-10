@@ -184,6 +184,11 @@ export interface AcpAgentShape extends AcpProtocol.AcpExtensionRegistrars {
       request: AcpSchema.SetSessionConfigOptionRequest
     ) => Effect.Effect<AcpSchema.SetSessionConfigOptionResponse, AcpError.AcpError>
   ) => Effect.Effect<void>;
+  readonly handleSetSessionMode: (
+    handler: (
+      request: AcpSchema.SetSessionModeRequest
+    ) => Effect.Effect<AcpSchema.SetSessionModeResponse, AcpError.AcpError>
+  ) => Effect.Effect<void>;
   readonly handleSetSessionModel: (
     handler: (
       request: AcpSchema.SetSessionModelRequest
@@ -255,6 +260,9 @@ interface AcpCoreAgentRequestHandlers {
   setSessionConfigOption?: (
     request: AcpSchema.SetSessionConfigOptionRequest
   ) => Effect.Effect<AcpSchema.SetSessionConfigOptionResponse, AcpError.AcpError>;
+  setSessionMode?: (
+    request: AcpSchema.SetSessionModeRequest
+  ) => Effect.Effect<AcpSchema.SetSessionModeResponse, AcpError.AcpError>;
   setSessionModel?: (
     request: AcpSchema.SetSessionModelRequest
   ) => Effect.Effect<AcpSchema.SetSessionModelResponse, AcpError.AcpError>;
@@ -391,6 +399,8 @@ export const make = Effect.fn($I`AcpAgent_make`)(function* (
         runHandler({ handler: coreHandlers.resumeSession, method: AGENT_METHODS.session_resume, payload }),
       [AGENT_METHODS.session_close]: (payload) =>
         runHandler({ handler: coreHandlers.closeSession, method: AGENT_METHODS.session_close, payload }),
+      [AGENT_METHODS.session_set_mode]: (payload) =>
+        runHandler({ handler: coreHandlers.setSessionMode, method: AGENT_METHODS.session_set_mode, payload }),
       [AGENT_METHODS.session_set_model]: (payload) =>
         runHandler({ handler: coreHandlers.setSessionModel, method: AGENT_METHODS.session_set_model, payload }),
       [AGENT_METHODS.session_set_config_option]: (payload) =>
@@ -469,6 +479,12 @@ export const make = Effect.fn($I`AcpAgent_make`)(function* (
     (handler: NonNullable<AcpCoreAgentRequestHandlers["closeSession"]>) =>
       Effect.sync(() => {
         coreHandlers.closeSession = handler;
+      })
+  );
+  const handleSetSessionMode = Effect.fn($I`AcpAgent_handleSetSessionMode`)(
+    (handler: NonNullable<AcpCoreAgentRequestHandlers["setSessionMode"]>) =>
+      Effect.sync(() => {
+        coreHandlers.setSessionMode = handler;
       })
   );
   const handleSetSessionModel = Effect.fn($I`AcpAgent_handleSetSessionModel`)(
@@ -562,6 +578,7 @@ export const make = Effect.fn($I`AcpAgent_make`)(function* (
     handleForkSession,
     handleResumeSession,
     handleCloseSession,
+    handleSetSessionMode,
     handleSetSessionModel,
     handleSetSessionConfigOption,
     handlePrompt,

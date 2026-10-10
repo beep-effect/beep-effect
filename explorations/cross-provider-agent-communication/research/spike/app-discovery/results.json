@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-09",
+  "readOnly": true,
+  "desktopCliVersion": "0.162.0-alpha.17.2",
+  "pathCliVersion": "0.162.0",
+  "desktopTransport": "owned stdio child",
+  "defaultSharedDaemonVersionQuery": "failed ENOENT",
+  "installedSourceDaemonOptIn": "CODEX_APP_SERVER_USE_LOCAL_DAEMON=1 with eligibility/version gates",
+  "disposableProfileCandidate": "CODEX_ELECTRON_USER_DATA_PATH owned separate directory",
+  "appEnrollment": "not probed",
+  "threadsContacted": 0,
+  "modelTurns": 0,
+  "sourceProvenance": [
+    {
+      "basename": "application-network-startup-CfAQmSYg.js",
+      "sha256": "cd6e8a8fbc4354a6e6ff19c6e4bf6fc1fb3960c63708c83871357c6238f516a8",
+      "locations": ["Ws.connect", "Gs", "Us.spawnProcess", "xr", "tc"]
+    },
+    {
+      "basename": "bootstrap-Du6FqCuH.js",
+      "sha256": "7c8665efb642d0683d42bb0c2b4ac6c80bfd3c19eecd0fa0ee5a8a9934fa17c4",
+      "locations": [
+        "oD",
+        "app.setPath(userData)",
+        "iD",
+        "requestSingleInstanceLock"
+      ]
+    }
+  ],
+  "nativeAppControlAvailable": false,
+  "nativeDesktopEnrollment": "unproved; native app control APIs unavailable"
+}

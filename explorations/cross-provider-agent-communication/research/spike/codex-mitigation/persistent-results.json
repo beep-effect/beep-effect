@@ -1,0 +1,70 @@
+{
+  "provider": "codex",
+  "test": "explicit-policy mitigation on owned persistent session reconnect and restart",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "samples": [],
+  "before": {
+    "model": "gpt-6.1-sol",
+    "reasoningEffort": "medium",
+    "approvalPolicy": "never",
+    "sandbox": {
+      "type": "readOnly",
+      "networkAccess": false
+    },
+    "permissions": null
+  },
+  "initial_nonce": true,
+  "client_reconnect": {
+    "accepted": true,
+    "same_thread": true,
+    "permission_equal": true,
+    "model_equal": true,
+    "after": {
+      "model": "gpt-6.1-sol",
+      "reasoningEffort": "medium",
+      "approvalPolicy": "never",
+      "sandbox": {
+        "type": "readOnly",
+        "networkAccess": false
+      },
+      "permissions": null
+    },
+    "nonce": true
+  },
+  "server_restart": {
+    "accepted": true,
+    "same_thread": true,
+    "permission_equal": true,
+    "model_equal": true,
+    "after": {
+      "model": "gpt-6.1-sol",
+      "reasoningEffort": "medium",
+      "approvalPolicy": "never",
+      "sandbox": {
+        "type": "readOnly",
+        "networkAccess": false
+      },
+      "permissions": null
+    },
+    "nonce": true
+  },
+  "queue": {
+    "exit": 0,
+    "same_session_nonce": true,
+    "permission_equal": true,
+    "after": {
+      "model": "gpt-6.1-sol",
+      "reasoningEffort": "medium",
+      "approvalPolicy": "never",
+      "sandbox": {
+        "type": "readOnly",
+        "networkAccess": false
+      },
+      "permissions": null
+    }
+  },
+  "outcome": "completed",
+  "owned_thread_archived": true,
+  "process_exit": 0
+}

@@ -9,6 +9,9 @@
   },
   "references": [
     {
+      "path": "../../../drivers/ai-provider-cli/tsconfig.json"
+    },
+    {
       "path": "../../../drivers/duckdb/tsconfig.json"
     },
     {
@@ -48,6 +51,9 @@
       "path": "../../../drivers/runpod/tsconfig.json"
     },
     {
+      "path": "../../../drivers/t3-code/tsconfig.json"
+    },
+    {
       "path": "../../../drivers/tesseract/tsconfig.json"
     },
     {
@@ -64,6 +70,9 @@
     },
     {
       "path": "../../../foundation/capability/file-processing/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/capability/mcp-kit/tsconfig.json"
     },
     {
       "path": "../../../foundation/capability/observability/tsconfig.json"

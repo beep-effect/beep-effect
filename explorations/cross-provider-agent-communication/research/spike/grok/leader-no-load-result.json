@@ -1,0 +1,16 @@
+{
+  "ownedLeader": true,
+  "sameAgentInstance": false,
+  "noLoadIssued": true,
+  "loadError": null,
+  "postReconnectPromptSuccess": false,
+  "postReconnectStopReason": null,
+  "promptError": {
+    "code": -32602,
+    "message": "Invalid params",
+    "data": "unknown session id"
+  },
+  "model": "grok-4.7",
+  "effort": "medium",
+  "UIAttachment": false
+}
