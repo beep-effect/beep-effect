@@ -135,6 +135,8 @@ const prepareTable = Effect.fnUntraced(function* () {
       schema_version text NOT NULL,
       created_at bigint NOT NULL,
       created_by_principal jsonb NOT NULL,
+      deleted_at bigint,
+      deleted_by_principal jsonb,
       updated_at bigint NOT NULL,
       updated_by_principal jsonb NOT NULL,
       source text NOT NULL,

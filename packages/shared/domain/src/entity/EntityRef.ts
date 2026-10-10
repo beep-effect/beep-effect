@@ -6,29 +6,16 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
 import { dual, pipe } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as EntityId from "./EntityId.ts";
+import { EntityRefInvariantError } from "./EntityRef.errors.ts";
+
+export { EntityRefError, EntityRefInvariantError } from "./EntityRef.errors.ts";
 
 const $I = $SharedDomainId.create("entity/EntityRef");
 const entityTypePattern = /^[A-Z][A-Za-z0-9]*$/u;
-
-const EntityRefInvariantErrorFields = {
-  actualEntityType: S.String,
-  actualId: S.Unknown.pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent)),
-  entityType: S.String,
-} satisfies S.Struct.Fields;
-// actualId is opaque unknown: equivalence is declared diagnostic identity, actualId stays payload.
-
-class EntityRefInvariantError extends S.TaggedError<EntityRefInvariantError>($I`EntityRefInvariantError`)(
-  "EntityRefInvariantError",
-  EntityRefInvariantErrorFields,
-  $I.annoteError<EntityRefInvariantError>("EntityRefInvariantError", {
-    description: "EntityRef runtime invariant failure.",
-  })
-) {}
 
 /**
  * Entity type grammar used by polymorphic references.

@@ -126,6 +126,8 @@ describe("@beep/agents-domain ProviderInstance", () => {
     Effect.gen(function* () {
       const encoded = {
         ...productEntityFixtureInput("AgentsProviderInstance", 7),
+        deletedAt: null,
+        deletedByPrincipal: null,
         binaryPath: "/usr/local/bin/claude",
         envVars: { NO_PROXY: "localhost" },
         homePath: "/home/beep/.beep/providers/personal-max",
@@ -156,6 +158,8 @@ describe("@beep/agents-domain ProviderInstance", () => {
     Effect.gen(function* () {
       const encoded = {
         ...productEntityFixtureInput("AgentsProviderInstance", 8),
+        deletedAt: null,
+        deletedByPrincipal: null,
         binaryPath: "/usr/local/bin/codex",
         envVars: {},
         homePath: null,

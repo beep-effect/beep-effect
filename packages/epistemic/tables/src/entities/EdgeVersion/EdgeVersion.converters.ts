@@ -27,6 +27,8 @@ import type { Table } from "./EdgeVersion.table.ts";
  * const row = {
  *   createdAt: 1,
  *   createdByPrincipal: { kind: "System", component: "Runtime" },
+ *   deletedAt: null,
+ *   deletedByPrincipal: null,
  *   entityType: "EpistemicEdgeVersion",
  *   evidenceScope: null,
  *   expiredAt: null,
@@ -141,6 +143,8 @@ const decodeEdgeVersionRow = S.decodeUnknownResult(EdgeVersion);
  * const row = {
  *   createdAt: 1,
  *   createdByPrincipal: { kind: "System", component: "Runtime" },
+ *   deletedAt: null,
+ *   deletedByPrincipal: null,
  *   entityType: "EpistemicEdgeVersion",
  *   evidenceScope: null,
  *   expiredAt: null,
@@ -206,6 +210,8 @@ export const toEdgeVersionInsert = (
  * const row = {
  *   createdAt: 1,
  *   createdByPrincipal: { kind: "System", component: "Runtime" },
+ *   deletedAt: null,
+ *   deletedByPrincipal: null,
  *   entityType: "EpistemicEdgeVersion",
  *   evidenceScope: null,
  *   expiredAt: null,

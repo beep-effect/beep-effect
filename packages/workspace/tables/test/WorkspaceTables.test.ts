@@ -142,7 +142,14 @@ describe("WorkspaceTables", () => {
       expect(threadInsert.title).toBe("Matter intake");
       expect(threadInsert.workspaceId).toBe(2);
       expect(threadInsert.entityType).toBe("WorkspaceThread");
-      const roundTrippedThread = yield* Effect.fromResult(Thread.fromThreadRow({ ...threadInsert, id: 10 }));
+      const roundTrippedThread = yield* Effect.fromResult(
+        Thread.fromThreadRow({
+          ...threadInsert,
+          deletedAt: threadInsert.deletedAt ?? null,
+          deletedByPrincipal: threadInsert.deletedByPrincipal ?? null,
+          id: 10,
+        })
+      );
       expect(roundTrippedThread.title).toBe("Matter intake");
 
       const message = yield* decodeUnknownMessageModel({
@@ -156,7 +163,14 @@ describe("WorkspaceTables", () => {
       expect("id" in messageInsert).toBe(false);
       expect(messageInsert.role).toBe("user");
       expect(messageInsert.threadId).toBe(10);
-      const roundTrippedMessage = yield* Effect.fromResult(Message.fromMessageRow({ ...messageInsert, id: 20 }));
+      const roundTrippedMessage = yield* Effect.fromResult(
+        Message.fromMessageRow({
+          ...messageInsert,
+          deletedAt: messageInsert.deletedAt ?? null,
+          deletedByPrincipal: messageInsert.deletedByPrincipal ?? null,
+          id: 20,
+        })
+      );
       expect(roundTrippedMessage.role).toBe("user");
 
       const turn = yield* decodeUnknownTurnModel({
@@ -174,6 +188,8 @@ describe("WorkspaceTables", () => {
       const roundTripped = yield* Effect.fromResult(
         Turn.fromTurnRow({
           ...turnInsert,
+          deletedAt: turnInsert.deletedAt ?? null,
+          deletedByPrincipal: turnInsert.deletedByPrincipal ?? null,
           id: 30,
           // $inferInsert types parentTurnId as optional (number | null | undefined);
           // the select-row converter expects number | null, so resolve the absent
@@ -211,6 +227,8 @@ describe("WorkspaceTables", () => {
       const roundTripped = yield* Effect.fromResult(
         Workspace.fromWorkspaceRow({
           ...workspaceInsert,
+          deletedAt: workspaceInsert.deletedAt ?? null,
+          deletedByPrincipal: workspaceInsert.deletedByPrincipal ?? null,
           id: 40,
           vaultRootPath: workspaceInsert.vaultRootPath ?? null,
         })
@@ -229,13 +247,27 @@ describe("WorkspaceTables", () => {
       const messageInsert = yield* Effect.fromResult(Message.toMessageInsert(message));
       const turnInsert = yield* Effect.fromResult(Turn.toTurnInsert(turn));
       const workspaceInsert = yield* Effect.fromResult(Workspace.toWorkspaceInsert(workspace));
-      const roundTrippedThread = yield* Effect.fromResult(Thread.fromThreadRow({ ...threadInsert, id: thread.id }));
+      const roundTrippedThread = yield* Effect.fromResult(
+        Thread.fromThreadRow({
+          ...threadInsert,
+          deletedAt: threadInsert.deletedAt ?? null,
+          deletedByPrincipal: threadInsert.deletedByPrincipal ?? null,
+          id: thread.id,
+        })
+      );
       const roundTrippedMessage = yield* Effect.fromResult(
-        Message.fromMessageRow({ ...messageInsert, id: message.id })
+        Message.fromMessageRow({
+          ...messageInsert,
+          deletedAt: messageInsert.deletedAt ?? null,
+          deletedByPrincipal: messageInsert.deletedByPrincipal ?? null,
+          id: message.id,
+        })
       );
       const roundTrippedTurn = yield* Effect.fromResult(
         Turn.fromTurnRow({
           ...turnInsert,
+          deletedAt: turnInsert.deletedAt ?? null,
+          deletedByPrincipal: turnInsert.deletedByPrincipal ?? null,
           id: turn.id,
           parentTurnId: absentAsNull(turnInsert.parentTurnId),
         })
@@ -243,6 +275,8 @@ describe("WorkspaceTables", () => {
       const roundTrippedWorkspace = yield* Effect.fromResult(
         Workspace.fromWorkspaceRow({
           ...workspaceInsert,
+          deletedAt: workspaceInsert.deletedAt ?? null,
+          deletedByPrincipal: workspaceInsert.deletedByPrincipal ?? null,
           id: workspace.id,
           vaultRootPath: absentAsNull(workspaceInsert.vaultRootPath),
         })

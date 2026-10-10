@@ -98,6 +98,8 @@ export const toWorkspaceInsert = (workspace: Workspace): Result.Result<Workspace
       (encoded): WorkspaceInsert => ({
         createdAt: encoded.createdAt,
         createdByPrincipal: encoded.createdByPrincipal,
+        deletedAt: encoded.deletedAt,
+        deletedByPrincipal: encoded.deletedByPrincipal,
         entityType: encoded.entityType,
         fixtureKey: encoded.fixtureKey,
         name: encoded.name,
@@ -131,6 +133,8 @@ export const toWorkspaceInsert = (workspace: Workspace): Result.Result<Workspace
  * const row = {
  *   createdAt: 1,
  *   createdByPrincipal: principal,
+ *   deletedAt: null,
+ *   deletedByPrincipal: null,
  *   entityType: "WorkspaceWorkspace",
  *   fixtureKey: "workspace.default",
  *   id: 1,
