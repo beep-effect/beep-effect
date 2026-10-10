@@ -310,3 +310,14 @@ schema-first and the already admitted PracticeKg Effect-Vitest re-anchor.
 The current scan reports one PracticeKg identity; the prior EV015 is history.
 Affected source/inventory matches main. Run-8 authorizes fallback publication;
 owner inventory/source repair on main would remove this repeated fence.
+
+
+## P3 inherited publication fence
+
+The P3 packet-only Yeet publish collects all 16 cheap lanes: 14 pass, schema-first
+and Effect-Vitest fail. AccountsSecretField/AccountsSecretsItem and the existing
+PracticeKg inventory re-anchor match origin/main byte-for-byte, as do all package,
+app, standards and lockfile files. Exact refusal: "yeet publish cheap-gates failed
+after creating the local commit; nothing was pushed." Run-9 permits the inherited
+fallback. Owner source/inventory repair on main would remove the repeated fence;
+no lane baseline refresh, suppression or package repair is performed.

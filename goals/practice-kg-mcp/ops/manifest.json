@@ -3,14 +3,14 @@
   "initiative": {
     "id": "practice-kg-mcp",
     "title": "Practice KG MCP",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-27",
-    "updated": "2026-10-06",
+    "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/practice-kg-mcp",
-  "lifecycle": "active",
-  "statusNote": "P6 and P7 are complete (2026-10-06): client-keyed graph, AC-2 proved by the bundle verification sweep, AC-5 proved under network isolation, and a stable matter-lookup contract for downstream services. Open: AC-6 (runbook-only install on the attorney's PC) and his correctness calls on G-1 through G-5, both of which need a person.",
+  "lifecycle": "completed-retained",
+  "statusNote": "All phases complete. The 2026-10-09 assisted attorney sitting is locked with 16 verdicts; P5 correctness and P8 handoff evidence are recorded with the reflection. S15 replaces future person-driven sittings with agent evaluations. DF-1 through DF-8 remain owned follow-ups; PC configuration and identical-input retrieval replay belong to the orchestrator.",
   "mission": "Ship the first queryable IP-law knowledge graph over the Oppold corpus to Tom's Claude Desktop as a read-only, local-first, .mcpb-packaged stdio MCP server over a portable data bundle, taking live ownership of the orphaned knowledge-graph scope.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -77,7 +77,7 @@
     {
       "id": "P5",
       "name": "Acceptance evidence",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P6",
@@ -92,7 +92,7 @@
     {
       "id": "P8",
       "name": "Handoff + close",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P9",
