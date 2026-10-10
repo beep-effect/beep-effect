@@ -167,3 +167,32 @@ Effect-Vitest row remains byte-equivalent with zero introduced findings.
 Independent review finds zero actionable issues. No threshold, baseline or
 inventory was changed. These results supersede only the attached test's earlier
 hash and focused timings; the reviewed production service hash is unchanged.
+
+## Settled hosted proof and shared repair integration
+
+Head `5ab82d71ed` completed fresh CI with 26 successful and seven failed check
+runs. Both CLI unit shards, both package lint shards, Build, Check, Docgen,
+Doctest, Test Integration, Property Laws, Storybook, codegen, security and scanner
+checks passed. Coverage job `114112107010` passed all eleven attached cases, all
+four runtime cases and the full CLI suite (5,939 passed, eleven skipped). Its
+only failing shards contained the same four documents-domain and eleven
+law-practice-tables audit-field fixtures. The aggregate coverage comparison is
+not claimed successful.
+
+The remaining red jobs were Repo Sanity, JSDoc Ratchet, Unit A/B plus their
+aggregate, policy lint and coverage. Final policy job `114112107069` cleared the
+owned T3 warning and passed the 342-file test type-check stage. It retained only
+main-identical policy/inventory failures or newer-main ontology diagnostics.
+The final review read had zero unresolved threads, and the review window elapsed.
+Required reds still prevented merge readiness.
+
+Shared repair [#1605](https://github.com/beep-effect/beep-effect/pull/1605) then
+merged as `3aa125a5d6`. It is integrated once through `8b7a52bdfd`, without
+conflicts, removing the private-workspace changesets and repairing shared
+inventory/doctest entries. The audit-field fixtures and masked JSDoc generator
+remain separate owner work. The integrated head must earn fresh hosted checks
+and a new review window; the preceding results belong to `5ab82d71ed`.
+
+After integration, the attached service, attached tests and runtime tests retain
+their final reviewed SHA256 values above. CLI quick lint/check pass (4.2s/7.7s),
+and direct full CLI test TSGo exits zero. No native inference was repeated.
