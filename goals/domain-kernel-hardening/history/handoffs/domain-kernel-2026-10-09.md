@@ -1032,3 +1032,155 @@ Final post-#1594 kernel/schema rerun passes 19/19 tasks uncached,
 18.048 seconds. Stream check still prints only the active summary for this
 slug; doctor blocking_new=0/blocking_inherited=0. The final ordered packet
 set is repeated before the amended commit and last push below.
+
+### Final published-head closeout receipt
+
+Round-2 push confirms PR2 head 832e26dcbbbb2c2bd9a0642f70d9141d85f36119.
+`yeet ready` reports already ready; final closeout succeeds, live status
+shows zero unresolved threads, and GitHub confirms OPEN/isDraft=false and
+structural MERGEABLE. Current required checks are pending, not all-green.
+Both main updates ride the allowed repair pushes; total push count is three.
+No round-3 push or PR merge.
+
+D25: the 40-minute monitor observed all three heads and final-head pending
+checks. Cancelled it before handoff; job status is terminated and systemd
+unit inactive. Its proof result is acknowledged observed. This is not a
+ready verdict or a merge waiver. Reversal: resubmit the same bounded monitor
+from this lane. All owned heavy tool sessions are terminal.
+The following report describes the exact published head; this containing
+local closeout commit changes only SPEC/handoff receipts and is deliberately
+not a fourth push. The published handoff already carries implementation,
+qualification, decisions and mechanical-site tables.
+
+lane: domain-kernel
+head: 832e26dcbbbb2c2bd9a0642f70d9141d85f36119 (exact published PR2 head; subsequent local closeout commit contains receipts only)
+PR(s): PR1 #1577 MERGED at 78b77b1084d83eb105e9161d56c68d6848b63047 | PR2 #1593 OPEN, content-final, ready for review, exact head confirmed; hosted merge readiness pending
+package-verify: @beep/shared-domain: pass; @beep/agents-tables: pass; @beep/architecture-lab-tables: pass; @beep/documents-tables: pass; @beep/epistemic-tables: pass; @beep/workspace-tables: pass; @beep/db-admin: pass; @beep/professional-desktop: pass; @beep/repo-cli: pass; @beep/agents-server: pass; @beep/law-practice-server: pass; @beep/epistemic-domain: pass; @beep/workspace-domain: pass; @beep/agents-domain: pass; @beep/law-practice-domain: pass. Original eleven default proofs are retained run-3/run-4 evidence, not fresh proofs of subsequent main integrations. Four domain default audit+docgen proofs are fresh in run 7 and precede the final XML-only main fix. After that fix, the required kernel/schema check+test+docgen+lint gate passes 19/19 tasks uncached. Complete local Property Laws passes 90/90 tasks uncached before the XML-only integration.
+hosted-parity: test-tsgo: pass (retained run-4 evidence, not rerun in run 7) | docgen local: pass (retained run-4 evidence; fresh kernel/schema and four domain docgen proofs also pass) | jsdoc-ratchet: fail (fresh local inventory generation passes; eight ratchet metrics grow only in main-identical source files, zero owned kernel findings in those metrics; hosted generic generation failure does not reproduce locally and its cause remains unexposed) | knowledge refs: pass (retained run-4 evidence, not rerun) | fallow audit+health: pass (retained run-4 evidence, not rerun) | scoped coverage: pass (retained run-4 evidence, 120 tests, existing entity baseline met, zero uncovered executable units; not rerun). Final-head hosted checks remain pending; no all-green hosted proof is claimed.
+handoff: goals/domain-kernel-hardening/history/handoffs/domain-kernel-2026-10-09.md
+open items: P0/P1 complete; P2/P3 pending as separate waves under the amended ruling; lifecycle active, no completed-retained claim. PR2 has zero unresolved review threads at final read and remains structurally MERGEABLE; required checks and the review window still gate merge readiness. Publication used exactly three pushes: initial, round 1, round 2; never merged a PR or rebased published work. D21 leaves the stale Effect/Vitest inventory to B; reversal is owner refresh plus main integration and gate rerun. Seven PracticeKg anchor rows are enumerated in the committed handoff. D22/D23 repair 17 exact-wire fixture subjects across four domain packages; cumulative mechanical count 89 within 90, zero slice model/behavior edits; reverse with kernel rollback. D24 attributes local JSDoc growth to main-owned epistemic-use-cases, repo-cli, scratchpad, infra and freshbooks sources; reverse by integrating owner source repairs, not relaxing the baseline. Orchestrator S11 owns the two invalid private-workspace changesets and inherited inventory/JSDoc reds; #1589 bootstrap fix and #1594 XML fix are integrated. Vercel build-rate-limit rows acknowledged environment-only. D25 settles the bounded readiness monitor after final-head observation; job is terminated, unit inactive, proof receipt observed, no owned running job remains; reversal is resubmitting the 40-minute monitor from this lane. The last local commit appends this exact closeout report and monitor decision only, with no extra push. Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet at 349, Parked packets row at 383, cohort prose at 406. Follow-ups: stale DomainModel.make detector, desktop migration rollout, and hosted inventory-generation diagnostics. Graft saved approximately 161,134 tokens across six retrieval calls.
+final 832e26dcbbbb2c2bd9a0642f70d9141d85f36119 #1593
+
+## Run 8 — P2 qualification after PR2 merge
+
+Live GitHub reads confirm PR1 #1577 MERGED at 78b77b1084 and PR2 #1593
+MERGED at 6513e85d2c. Run-8 ruling starts feat/domain-kernel-hardening-p2
+from origin/main at that merge. Named closeout receipt eb8eebb418 is carried
+as 06b81a9fb0 because it records D25 and P1's terminal monitor state, absent
+from the squash. No implementation commit is replayed; no merged branch push.
+
+D26 records the phase sequencing and reversal in SPEC: revert the P2 packet
+commit to withdraw evidence/state; retain the merged kernel and P1 receipts.
+The old feature-head ancestry check fails as expected after squash. The
+applicable content-superset proof passes: git diff --quiet between PR2 head
+832e26dcbb and origin/main for this packet. Main is the exact PR2 packet.
+git merge origin/main reports already up to date. No conflict, migration
+regeneration, schema change, fixture repair or new mechanical site. The
+implementation count remains 89 (zero slice-model/behavior edits).
+
+Read-only adopt plan: 16 entries, conflicts=[], no report row, preserved
+manifest unmodeled keys including researchReports. Active preview skips a
+write because stream already derives active. The stream proof prints only:
+
+```text
+- goals/domain-kernel-hardening: revision=2 tip=2@97ceca70c0e7 status=active furthest=P0 resume=P0
+```
+
+There is no packet finding for this slug. P2 does not claim completed-retained;
+P3 remains a later wave under the latest ruling. Doctor reports
+blocking_new=0/blocking_inherited=0, three unrelated completion advisories.
+
+Fresh P2 receipts (heavy commands through beep-heavy with 32G memory floor
+and Turbo concurrency 2, no more than two owned heavy jobs):
+
+| Command | Result | Evidence limit |
+| --- | --- | --- |
+| kernel/schema check test docgen lint | Pass: 19/19 tasks, all cached | Cached exact task inputs; no uncached claim |
+| db-admin check test | Pass: 29/29 tasks, 17 cached, 12 executed | Includes migrations:check |
+| desktop codegen:check | Pass | Bundle remains synchronized |
+| dependent check ...shared-domain | Fail: @beep/ui build TS2589, 68 successful of 70 | UI source and lockfile match main; inherited |
+| six-server test gate | Pass uncached: 6/6 tasks, 492 passed, 1 skipped | All six named server suites; legacy bundle parity/load/serve tests included |
+| test-tsgo | Pass: 335 files in repo-cli; 149 packages covered by their check scripts skipped | No claim those skipped checks were rerun by this command |
+| schema-first | Fail: 2 Accounts object-schema candidates and 3 untracked property advisories | All five files/findings inherited from main |
+| schema-topology | Pass | Canonical schema topology |
+| docgen local --base origin/main | Pass/noop | Packet-only diff selects no packages; kernel docgen passed above |
+| CI knowledge refs --check | Pass: 0 live gated observations | Archival observations remain advisory |
+
+Inherited attribution: git diff --quiet origin/main -- packages apps standards
+bun.lock succeeds. This wave edits only the packet; no owner source, scanner,
+lockfile or inventory suppression. Schema-first error symbols are
+AccountsSecretField and AccountsSecretsItem in AccountsSecretsLayout.schemas.ts;
+advisories are Contacts.test.ts, M365.contacts.test.ts and ci-runner-security.test.ts.
+Orchestrator owns main repair and integration, not this lane. Tool-shell bus
+friction and inherited gate receipts were recorded immediately in OPPORTUNITIES.
+Remaining package/hosted-parity results and publication receipt follow below.
+
+Fallow full CI lane exits 0: audit, dead-code and health checks pass;
+boundaries, flags and security advisories are not blocking. Scoped coverage
+exits 0: 9 files, 120 tests pass; entity executable rows are all 100% across
+lines/statements/branches/functions with zero uncovered units, meeting the
+entity baseline (empty index barrel has zero executable units). New
+EntityRef.errors.ts is also 100%, though absent from the historical baseline.
+Default shared-domain package proof passes audit 6.9s/docgen 3.4s.
+Default db-admin proof passes audit 16.1s/docgen 9.1s.
+
+Default professional-desktop package proof passes audit 23.1s/docgen 15.9s.
+JSDoc parity fails after successful inventory generation: eight metric
+regressions (empty-section, leading-blank, missingExportCategories,
+missingExportExamples, missingExportSince, schemaAnnotationFindings,
+trailing-blank, unsafeExampleFindings). D27 records these alongside UI and
+Accounts reds as inherited results, allowed by GOAL acceptance and assigned
+to S11 owner repair. Reversal: integrate owner fixes and rerun; no scanner or
+baseline waiver. Whole packages/apps/standards diff from main is empty.
+
+The ordered packet verification set passes before P2 publication edits:
+GOAL 3,521 characters; jq; anchor scan; git diff --check; reflection
+blocking_findings=0/advisory_findings=0; doctor has no blocking findings.
+The set is repeated after marking P2 complete and integrating main.
+Latest ROADMAP references remain unchanged and orchestrator-owned: platform
+re-entry bullet at 349, Parked packets row at 383, cohort prose at 406.
+Future work remains the P3 reflection/completion wave, the stale
+DomainModel.make detector, and desktop release rollout of the new migration.
+Graft retrieval estimate in run 8 is 54,192 tokens across two calls.
+
+Final default repo-cli package proof passes audit 875.2s/docgen 24.9s.
+All four expected default proofs are green in run 8; earlier package proofs
+remain retained evidence for the other P1-touched private workspaces. No
+package is edited in P2. All owned local proof sessions are terminal.
+P2 is now complete in the manifest/PLAN, README advances to P3, and lifecycle
+remains active. Final packet checks and publication receipts follow.
+
+Final base refresh integrates main #1596 at 320cedc051 cleanly. It changes
+corpus restoration packet, libpff and repo-cli restoration source/tests,
+with no kernel/schema, migration, desktop bundle or owned packet overlap.
+The four default package proofs precede that unrelated integration; they
+are not claimed as fresh default audits of the resulting head. Test-tsgo is
+rerun for the changed repo-cli test surface. No new P2-authored package edit.
+This base integration rides the initial publish wave, with no extra push.
+After merge the whole packages/apps/standards/lockfile diff from main is
+still empty, preserving the source-bound inherited-red attribution.
+
+Post-merge test-tsgo passes again (335 files). The final packet set passes
+in order, reflection 0/0 and doctor no blocking finding; stream remains the
+active summary above with no packet finding.
+A direct commit and Yeet launched too close together collided on index.lock.
+Both are terminal with exit 1/128, no commit/push and no lost staged intent.
+No lock removed; publication retries sequentially. Friction recorded at once.
+
+Yeet heavy publish refuses with exactly two red cheap gates: schema-first
+and effect-vitest; 14/16 lanes pass, no push. Exact refusal: "yeet publish
+cheap-gates failed after creating the local commit; nothing was pushed."
+Schema-first repeats Accounts candidates/property advisories. Effect-Vitest
+reports one new identity in PracticeKg.projections.test.ts (the already
+admitted EV002 re-anchor); historical EV015 is not reported by this scan.
+Source/inventory comparison to main passes. P0 local-shard-12ef2c31f4c1 is
+acknowledged wontfix with S11 owner attribution, not waived or called green.
+D28 records the authorized push/PR/ready/bounded-monitor fallback and reversal
+(close the unmerged evidence PR; integrate owner repair and rerun).
+
+Main #1595 at 5e0df516a2 then merges cleanly: M365 contacts source/tests and
+packet only, no kernel/schema/migration/bundle or owned packet overlap.
+All base merges ride the initial wave. Default proofs and fresh full JSDoc
+inventory precede both unrelated final main integrations; no exact-final-head
+all-green claim. Packet checks and stream are repeated after this merge.
+No lane changes to inherited inventory, private release notes or source.
