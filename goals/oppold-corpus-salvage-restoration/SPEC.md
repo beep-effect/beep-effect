@@ -548,14 +548,11 @@ child hashes, budgets, and acceptance still apply. The diagnostic and synthetic
 regression are recorded in `history/p1/2026-10-10-engine-failure-diagnosis.md`.
 
 The run-4 orchestrator ruling authorizes a fresh slice family after the engine-fix
-PR is content-final, using the same source object and ceilings. The reserved fresh output
-label is `t7-salvage-2026-08-10-p1-engine-fix`. Launch is blocked: the current
-public command couples archive selection and transformation output to one
-`runLabel`. A new label selects an absent archive; the old label reaches the
-sealed ledger. A separate preservation/output identity contract requires an
-orchestrator scope ruling; no fresh flag or archive alias is added here. The original run and freeze
-record are retained unchanged. A separate fresh freeze record must identify the
-fixed code and launch script before a future launch; none exists yet. P1 stays in-progress until fresh acceptance passes.
+PR is content-final, using the same source object and ceilings. Run 5 authorizes the independent preservation selector and a date-stamped fresh
+output label, `t7-salvage-2026-08-10-p1-2026-10-10-engine-fix`. The original run
+and freeze record are retained unchanged. A separate fresh freeze record identifies
+the fixed code and launch script before launch. P1 stays in-progress until fresh
+acceptance passes.
 Reversal: close the PR, revert the fix, and retain both run directories.
 
 Release notes without changesets: `@beep/repo-cli` is private and ignored by the
@@ -581,3 +578,35 @@ claim is made. The orchestrator owns the next monitor and S11 merge gate.
 Reversal: resubmit `bun run beep yeet monitor --until-ready --detach
 --job-max-runtime "40 minutes"` from this lane after the final receipt push.
 The monitor cancellation changes no source, ledger, acceptance, or CI rules.
+
+
+### 2026-10-10: independent preservation and transformation labels (run 5)
+
+The orchestrator authorizes an optional `preservationLabel` option and
+`--preservation-label` flag for mail restoration. The schema decodes absence as
+Option; the runner defaults it to `runLabel`, preserving every existing call.
+Archive verification, evidence selection, and input reads use the preservation
+label; transformation placement and family identity retain the output `runLabel`.
+Family identity already incorporates the preservation seal and run identity, so
+a changed archive cannot resume a persisted family silently.
+
+The synthetic test "selects one sealed preservation archive for a fresh mail run
+without changing the sealed family" proves a new terminal ledger and output tree
+from the original sealed archive, a distinct transformation identity, and a
+byte-identical original sealed ledger. Original-label tests prove the default.
+
+Fresh invocation uses run label `t7-salvage-2026-08-10-p1-2026-10-10-engine-fix`
+and preservation label `t7-salvage-2026-08-10`. The fresh run root is
+`staging/restoration/runs/t7-salvage-2026-08-10-p1-2026-10-10-engine-fix/` beneath
+the corpus home, with the same ledger/output/claims children and private-log
+policy. Ceilings remain ratio 4, attempt 7,200,000 ms, family 43,200,000 ms,
+output 2,147,483,648 bytes, and a 100,000,000,000-byte free-space floor. The
+same selected object and unchanged engines are remeasured before launch. The
+fresh manifest is `history/evidence/p1-fresh-slice-run-manifest.json`; the old
+manifest is never rewritten. No code changes occur once the fresh start exists.
+
+Release notes without changesets (#1566): the private `@beep/repo-cli` workspace
+adds a backward-compatible optional selector, requiring no major release and no
+changeset. Reversal: close PR3 and revert its implementation and decision; retain
+both run directories as evidence. No original or sealed state is deleted. The
+slice outcome belongs to a later PR4, as run 5 directs.

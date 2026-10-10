@@ -100,11 +100,13 @@ fresh-ledger route. P1 is in-progress, P2/P3 remain pending.
 Diagnosis attributes repeated Tika extraction of duplicate attachment digests:
 parser-duration metadata changes between invocations. Run 4 authorizes a fix and
 one fresh slice after its PR is content-final. Fresh run-root label:
-`t7-salvage-2026-08-10-p1-engine-fix`, under the same corpus restoration runs
+`t7-salvage-2026-08-10-p1-2026-10-10-engine-fix`, under the same corpus restoration runs
 parent, with `ledgers/mail/slice.jsonl`, `output/mail/slice/`, and `writer-claims/`.
 The original run is retained; P1 remains in-progress until fresh acceptance.
-Launch is blocked on a separate archive/output-label contract: the public command
-currently uses one label for both and cannot create the authorized fresh family.
+Run 5 authorizes `--preservation-label t7-salvage-2026-08-10` independently of
+the fresh output label. Launch follows content-final PR3 #1606 and preflight;
+the fresh manifest and private log policy retain the original freeze evidence.
+The outcome lands later as PR4; P1 remains in-progress until accepted.
 
 
 ## P2 — Transformation wave

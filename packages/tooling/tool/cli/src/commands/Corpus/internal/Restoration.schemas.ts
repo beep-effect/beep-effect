@@ -351,6 +351,12 @@ const TransformationEvidenceIdentity = S.Struct({
 /**
  * Validated inputs for the mail slice or full estate run.
  *
+ * **Details**
+ *
+ * `runLabel` names the transformation output and ledger. An omitted
+ * `preservationLabel` selects the archive with that same label; supplying it
+ * allows a fresh transformation family to use an existing sealed archive.
+ *
  * **Example** (Create mail restoration options)
  *
  * ```ts
@@ -389,6 +395,7 @@ export class RestorationMailOptions extends S.Class<RestorationMailOptions>($I`R
     maxTotalElapsedMillis: PosInt,
     maxTotalOutputBytes: PosInt,
     pffexportPath: S.NonEmptyString,
+    preservationLabel: RunLabel.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     runLabel: RunLabel.pipe(
       S.withConstructorDefault(Effect.succeed("t7-salvage-2026-08-10")),
       S.withDecodingDefaultTypeKey(Effect.succeed("t7-salvage-2026-08-10"))

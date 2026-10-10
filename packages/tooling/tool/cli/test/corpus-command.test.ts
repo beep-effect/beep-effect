@@ -4102,6 +4102,53 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
   );
 
   it.effect(
+    "selects one sealed preservation archive for a fresh mail run without changing the sealed family",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* makeMailRestorationFixture(restorationPffexportStub);
+      const originalOptions = mailRestorationOptions(fixture);
+      assertNone(originalOptions.preservationLabel);
+      yield* restoreMail(originalOptions);
+      const originalLedger = path.join(
+        fixture.corpusRoot,
+        "staging/restoration/runs/synthetic-mail-restoration/ledgers/mail/slice.jsonl"
+      );
+      const sealedText = yield* fs.readFileString(originalLedger);
+      const freshLabel = "synthetic-mail-restoration-fresh";
+      const freshOptions = yield* S.decodeEffect(RestorationMailOptions)({
+        ...(yield* S.encodeEffect(RestorationMailOptions)(originalOptions)),
+        preservationLabel: originalOptions.runLabel,
+        runLabel: freshLabel,
+      });
+      assertSome(freshOptions.preservationLabel, originalOptions.runLabel);
+      const summary = yield* restoreMail(freshOptions);
+      const freshRoot = path.join(fixture.corpusRoot, "staging/restoration/runs", freshLabel);
+      const original = yield* readTransformationLedgerFixture(originalLedger);
+      const fresh = yield* readTransformationLedgerFixture(path.join(freshRoot, "ledgers/mail/slice.jsonl"));
+      const originalStart = A.findFirst(original.records, (row) => row.recordType === "family-run-start");
+      const freshStart = A.findFirst(fresh.records, (row) => row.recordType === "family-run-start");
+      originalStart.pipe(O.getOrUndefined, assertDefined);
+      freshStart.pipe(O.getOrUndefined, assertDefined);
+      if (O.isSome(originalStart) && O.isSome(freshStart)) {
+        expect(freshStart.value.preservationRunId).toBe(originalStart.value.preservationRunId);
+        expect(freshStart.value.transformationRunId).not.toBe(originalStart.value.transformationRunId);
+        expect(freshStart.value.runLabel).toBe(freshLabel);
+      }
+      expect(summary.passCount).toBe(1);
+      expect(
+        A.last(fresh.records).pipe(
+          O.map((row) => row.recordType),
+          O.getOrUndefined
+        )
+      ).toBe("family-acceptance-pass");
+      expect(yield* fs.exists(path.join(freshRoot, "output/mail/slice/attempts"))).toBe(true);
+      expect(yield* fs.exists(path.join(fixture.corpusRoot, "raw", freshLabel))).toBe(false);
+      expect(yield* fs.readFileString(originalLedger)).toBe(sealedText);
+    })
+  );
+
+  it.effect(
     "fails closed when Tika text exceeds the remaining output budget",
     Effect.fnUntraced(function* () {
       const path = yield* Path.Path;

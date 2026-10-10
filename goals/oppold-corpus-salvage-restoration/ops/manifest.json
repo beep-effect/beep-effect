@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/oppold-corpus-salvage-restoration",
   "lifecycle": "active",
-  "statusNote": "2026-10-10: P1 sealed an engine-failure on duplicate attachment Tika metadata. Run-4 diagnosis attributes an engine defect; the fix and a fresh family are authorized. P1 stays in-progress until fresh acceptance passes. P0 and P4 complete; P2 and P3 pending.",
+  "statusNote": "2026-10-10: P1 sealed an engine-failure on duplicate attachment Tika metadata. Run-4 diagnosis attributes an engine defect; run 5 authorizes an independent preservation selector and a date-stamped fresh family after content-final PR3. P1 stays in-progress until fresh acceptance passes. P0 and P4 complete; P2 and P3 pending.",
   "mission": "Preserve and verify the current T7 salvage state, then restore mail, reconcile all three recycle volumes, and convert distinct legacy-Word digests with originals retained.",
   "executionCapable": true,
   "reflectionRequired": true,

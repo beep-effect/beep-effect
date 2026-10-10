@@ -439,3 +439,16 @@ both match main and are untouched by this lane. Hosted Repo Sanity stops before
 its remaining checks. Attribution: inherited, orchestrator S11 burn-down owns it.
 Prevention: enforce private-workspace release-note policy before those notes land.
 No baseline, CI policy, changeset, or source repair was made here.
+
+
+### 2026-10-10: run-5 user-bus environment absent
+
+- Doing: starting the prescribed heavy package and parity commands.
+- Evidence: both wrappers refused before launching work because the user-bus
+  address and runtime directory were undefined. The workstation user manager
+  is available with the established explicit bus environment.
+- Prevention: export the user-manager environment in every lane harness,
+  including interactive resumption surfaces, before heavy admission.
+- Disposition: supplied the existing runtime and bus values per command; kept
+  the 32G cap and concurrency 2. No unit, home configuration or permissions changed.
+- Reversal: omit these per-command environment values after a harness forwards them.

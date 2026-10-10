@@ -271,17 +271,18 @@ const prepareTransformationRun = Effect.fn("CorpusRestoration.prepareTransformat
   corpusRoot: string,
   runLabel: string,
   family: TransformationFamily,
-  scope: "full" | "slice"
+  scope: "full" | "slice",
+  preservationLabel: string = runLabel
 ): Effect.fn.Return<TransformationRunContext, CorpusCommandError, TransformationRequirements> {
-  yield* verifyRestorationArchiveImpl({ corpusRoot, runLabel });
+  yield* verifyRestorationArchiveImpl({ corpusRoot, runLabel: preservationLabel });
   const path = yield* Path.Path;
-  const preservation = yield* currentPreservationEvidence(corpusRoot, runLabel);
+  const preservation = yield* currentPreservationEvidence(corpusRoot, preservationLabel);
   const runRoot = path.join(corpusRoot, "staging", "restoration", "runs", runLabel);
   const transformationRunId = `transformation:${digestString(
     `${runLabel}\u0000${preservation.seal.runId}\u0000${preservation.seal.manifestSha256}\u0000${family}\u0000${scope}`
   )}`;
   return {
-    archiveRoot: path.join(corpusRoot, "raw", runLabel),
+    archiveRoot: path.join(corpusRoot, "raw", preservationLabel),
     corpusRoot,
     family,
     ledgerPath: path.join(runRoot, "ledgers", family, `${scope}.jsonl`),
@@ -2283,7 +2284,13 @@ export const restoreMailImpl = Effect.fn("CorpusRestoration.restoreMail")(functi
 ): Effect.fn.Return<RestorationRunSummary, CorpusCommandError, TransformationRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const prepared = yield* prepareTransformationRun(options.corpusRoot, options.runLabel, "mail", options.scope);
+  const prepared = yield* prepareTransformationRun(
+    options.corpusRoot,
+    options.runLabel,
+    "mail",
+    options.scope,
+    O.getOrElse(options.preservationLabel, () => options.runLabel)
+  );
   return yield* withTransformationFamilyWriter(
     prepared,
     Effect.gen(function* () {

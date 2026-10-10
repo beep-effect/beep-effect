@@ -168,3 +168,81 @@ blocked: fresh slice needs independent preservation and transformation labels; P
   `.changeset/effected-allowlist-drop.md` and `.changeset/jsonl-effect-first.md`.
   Both files match origin/main and have no lane diff. This is inherited and
   belongs to the orchestrator's S11 burn-down; no changeset or rule was edited.
+
+
+## Run 5 — independent archive selector
+
+- Started on PR3 #1606, OPEN and ready, at
+  `d237794cdaf3fb46907469bf86bd937f0dcba9f4`; fetch/merge was already current.
+  No unrelated dirty paths; dependencies present and lockfile unchanged.
+- Applied run-5 authority: optional preservation selector defaults to the output
+  label; a new output label selects the original sealed archive without aliases.
+  Schema first, existing service contract retained, then runner/command wiring.
+- Focused regression plus the four required exception/accounting/resume tests:
+  five pass, 72 skipped, 3.57 seconds. Original family bytes unchanged by the test.
+- Adoption: zero conflicts. Doctor: 211 packets, zero blocking, three unrelated
+  advisories; this is the run-5 baseline. P0/P4 complete, P1 in-progress, P2/P3 pending.
+- Environment receipt: initial beep-heavy wrappers refused before spawning
+  (`DBUS_SESSION_BUS_ADDRESS` and `XDG_RUNTIME_DIR` absent). Supplying the
+  established user-bus environment restores admission. No home configuration
+  or unit files changed; Memory cap stays 32G, Turbo concurrency 2.
+- Initial test-tsgo found three introduced diagnostics in the new test: prefer
+  typed schema decoder and two pipeable opportunities. All three corrected;
+  parity recheck follows. No compiler or lint suppression added.
+
+### Run-5 prerequisite measurements
+
+| Check | State | Measured value |
+| --- | --- | --- |
+| 3a preservation | met | archive-manifest-seal; directory 755, file 10,696, inherited-loss 4, preflight 1, seal 1 |
+| 3b selection | met | PST 53, eligible 23; input 56,140,800 bytes; object and digest unchanged |
+| 3c state | met | Original sealed failure SHA-256 unchanged; fresh family absent before launch |
+| 3d engines | versions met; smokes pending | pffexport 20260917; bubblewrap 0.13.0; OpenJDK 27 dated 2026-09-15; Java resolution and jar digest match original freeze |
+| 3e capacity | met | 435,364,773,888 bytes free; exceeds 100 GB floor |
+| 3f synthetic lanes | met | Five focused tests pass including new selector regression |
+| 3g code | authorized exception | PR1 fixes on main; run-4/5 permit PR3 content-final code before merge |
+| 3h capture | met | Original probe retained: 59 runs, 43 formerly truncated; zero nonzero/empty |
+| 3i names | met | Original probe retained: one backslash file, zero collisions and escape-name ambiguity |
+
+| Package | Change | Release impact | Reversal |
+| --- | --- | --- | --- |
+| @beep/repo-cli | Optional preservation selector separate from output label | Backward-compatible optional API; no major release; private workspace, no changeset under #1566 | Close/revert PR3; retain both run directories |
+
+- New date-stamped family reserved by run 5, same source, ceilings and engines.
+  Existing failure ledger SHA-256 still
+  `efb4b558c2d1680f87a684a69d6aa021653234d12928aa9f27a6943de8970e9f`.
+  No new family has started at this receipt.
+
+- Main's inherited-red burn-down #1605 arrived during proof. Merged main
+  `3aa125a5d6b632f53a4bff0a99f49513e66bb459` once before publication. No owned
+  Corpus/libpff surface, packet file or lockfile moved. The merge removes the
+  inherited private-workspace changesets and updates inventories; no lane-owned
+  repair or baseline change was made. A fresh quick package check and the one
+  changed main test supplement the current full package proof.
+- Local JSDoc Ratchet repeats all eight prior scratchpad total increases;
+  scratchpad has zero diff against main. Hosted old-head Repo Sanity failed on
+  the two private changesets now removed by #1605. Hosted JSDoc inventory gives
+  only "Failed to generate JSDoc documentation inventory." Local inventory
+  succeeds. Those old-head checks are superseded by the pending amended push.
+- Fresh script SHA-256 reserved before launch:
+  `f49f831f309f4b625167b25c8c415cca7705e2364a934e6a2012daaa14dd5ca2`.
+  Original probe stderr remains one line. Both original identities match;
+  the fresh ledger is absent. No corpus content or tool log lines were read out.
+
+- Full @beep/repo-cli package verification passes: audit 766.7 seconds, docgen
+  21.8 seconds. Main's changed Effect-imports test passes: 31 tests, 1.92 seconds.
+  All five focused mail tests pass after diagnostics and formatting corrections
+  (3.78 seconds). Package source has no subsequent lane edits.
+- Full local docgen passes (two packages, 24.3 seconds); Fallow audit, health,
+  dead-code and advisory lanes pass with zero introduced findings. Knowledge
+  references pass: 45,552 observations, zero live gated. Scoped coverage is
+  still running. A second heavy wrapper performs the fresh quick package check,
+  test-tsgo recheck, and both nested real-engine smokes.
+
+- Fresh quick package check passes: lint 3.7 seconds, check 6.7 seconds.
+  Corrected test-tsgo passes; both nested real-engine smokes exit 0 (Tika 3.3.1
+  and pffexport 20260917). No raised caps or engine changes.
+- Publication will carry one addressed code wave on PR3 #1606. Fresh launch
+  waits for coverage, then uses the code snapshot and separate freeze record.
+  Live acceptance/outcome and the post-launch handoff append are PR4 material
+  under run 5, without a second implementation push or a fourth PR now.
