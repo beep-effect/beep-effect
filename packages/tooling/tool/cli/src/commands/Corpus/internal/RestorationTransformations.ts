@@ -271,17 +271,18 @@ const prepareTransformationRun = Effect.fn("CorpusRestoration.prepareTransformat
   corpusRoot: string,
   runLabel: string,
   family: TransformationFamily,
-  scope: "full" | "slice"
+  scope: "full" | "slice",
+  preservationLabel: string = runLabel
 ): Effect.fn.Return<TransformationRunContext, CorpusCommandError, TransformationRequirements> {
-  yield* verifyRestorationArchiveImpl({ corpusRoot, runLabel });
+  yield* verifyRestorationArchiveImpl({ corpusRoot, runLabel: preservationLabel });
   const path = yield* Path.Path;
-  const preservation = yield* currentPreservationEvidence(corpusRoot, runLabel);
+  const preservation = yield* currentPreservationEvidence(corpusRoot, preservationLabel);
   const runRoot = path.join(corpusRoot, "staging", "restoration", "runs", runLabel);
   const transformationRunId = `transformation:${digestString(
     `${runLabel}\u0000${preservation.seal.runId}\u0000${preservation.seal.manifestSha256}\u0000${family}\u0000${scope}`
   )}`;
   return {
-    archiveRoot: path.join(corpusRoot, "raw", runLabel),
+    archiveRoot: path.join(corpusRoot, "raw", preservationLabel),
     corpusRoot,
     family,
     ledgerPath: path.join(runRoot, "ledgers", family, `${scope}.jsonl`),
@@ -932,17 +933,30 @@ const repairDetectedAttachment = Effect.fn("CorpusRestoration.repairDetectedAtta
     context,
     attemptOutputCeiling
   );
-  const tikaText = yield* extractAttachmentText(
-    derivedPath,
-    attemptId,
-    options,
-    context,
-    attemptStartedAt,
-    attemptRoot,
-    attemptOutputCeiling
-  );
+  const fs = yield* FileSystem.FileSystem;
   const tikaRelativePath = path.join("derived", "attachment-repairs", `${digest.sha256}.tika.txt`);
-  yield* persistAttachmentText(attemptRoot, tikaRelativePath, tikaText, context, attemptOutputCeiling);
+  const tikaPath = path.join(attemptRoot, tikaRelativePath);
+  const textExists = yield* fs
+    .exists(tikaPath)
+    .pipe(CorpusCommandError.mapError("Failed checking retained attachment Tika evidence."));
+  if (textExists) {
+    yield* requireCanonicalContainedPath(attemptRoot, tikaPath);
+    const retainedText = yield* hashRestorationFileStreaming(tikaPath, 1024 * 1024);
+    if (retainedText.sizeBytes <= 0) {
+      return yield* transformationError("Retained attachment Tika evidence is empty.");
+    }
+  } else {
+    const tikaText = yield* extractAttachmentText(
+      derivedPath,
+      attemptId,
+      options,
+      context,
+      attemptStartedAt,
+      attemptRoot,
+      attemptOutputCeiling
+    );
+    yield* persistAttachmentText(attemptRoot, tikaRelativePath, tikaText, context, attemptOutputCeiling);
+  }
   const derivedDigest = yield* hashRestorationFileStreaming(derivedPath, 1024 * 1024);
   if (derivedDigest.sizeBytes <= 0) {
     return yield* transformationError(`Attachment repair produced an empty derived file for attempt ${attemptId}.`);
@@ -2270,7 +2284,13 @@ export const restoreMailImpl = Effect.fn("CorpusRestoration.restoreMail")(functi
 ): Effect.fn.Return<RestorationRunSummary, CorpusCommandError, TransformationRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const prepared = yield* prepareTransformationRun(options.corpusRoot, options.runLabel, "mail", options.scope);
+  const prepared = yield* prepareTransformationRun(
+    options.corpusRoot,
+    options.runLabel,
+    "mail",
+    options.scope,
+    O.getOrElse(options.preservationLabel, () => options.runLabel)
+  );
   return yield* withTransformationFamilyWriter(
     prepared,
     Effect.gen(function* () {

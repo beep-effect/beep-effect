@@ -9,10 +9,11 @@ digests while retaining the originals.
 
 ## Next action
 
-P1 is in-progress and blocked by a sealed `family-acceptance-failure`. The
-orchestrator decides any fresh-ledger route; do not retry this slice. P0/P4
-remain complete, and P2/P3 remain pending. P1 ceilings are frozen; P2 ceilings
-remain undecided.
+Run-5 authority resolves the independent archive/output-label contract on PR3
+#1606. After content-final and fresh preflight, launch one date-stamped fresh
+slice using the original preservation archive. Retain the sealed first failure
+and both freeze records; publish the fresh aggregate outcome later as PR4. P1
+remains in-progress until accepted; P2/P3 remain pending.
 
 ## Launcher
 
@@ -38,6 +39,20 @@ ingestion v2, enrichment v2, and practice-kg bundle v2 remain gated MAP
 re-entry points. The solo-practice corpus kit remains deferred.
 
 ## Latest evidence
+
+2026-10-10 — Run-5 selector regression passes: a new mail family uses the original
+sealed archive, creates a distinct transformation identity and output tree, and
+leaves the first terminal ledger unchanged. All five focused tests pass. The
+fresh live slice uses the retained object, engines and ceilings after PR3 is
+content-final; its outcome is separate evidence for PR4.
+
+2026-10-10 — Sealed P1 diagnosis attributes an attachment-reuse engine defect.
+Eleven repaired digests and 22 unsupported dispositions preceded a duplicate
+attachment. Two real Tika invocations exited 0 with unchanged extracted content
+and one differing parser-duration field. First-evidence reuse passes the new
+synthetic regression. The fresh family is authorized by run 4; acceptance is
+pending. See `history/p1/2026-10-10-engine-failure-diagnosis.md`.
+
 
 2026-10-09 — PR1 #1596 merged the probe-proven Tika capture and portable-name
 fixes. The frozen live slice ran once and sealed a failure: one unapproved

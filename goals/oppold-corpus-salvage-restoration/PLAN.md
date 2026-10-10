@@ -96,6 +96,19 @@ elapsed 350,398 ms. Eleven repairs and 22 unsupported dispositions are recorded,
 but final child acceptance is absent. Stop without retry; the orchestrator owns any
 fresh-ledger route. P1 is in-progress, P2/P3 remain pending.
 
+**Progress 2026-10-10:** the first slice sealed an unapproved engine failure.
+Diagnosis attributes repeated Tika extraction of duplicate attachment digests:
+parser-duration metadata changes between invocations. Run 4 authorizes a fix and
+one fresh slice after its PR is content-final. Fresh run-root label:
+`t7-salvage-2026-08-10-p1-2026-10-10-engine-fix`, under the same corpus restoration runs
+parent, with `ledgers/mail/slice.jsonl`, `output/mail/slice/`, and `writer-claims/`.
+The original run is retained; P1 remains in-progress until fresh acceptance.
+Run 5 authorizes `--preservation-label t7-salvage-2026-08-10` independently of
+the fresh output label. Launch follows content-final PR3 #1606 and preflight;
+the fresh manifest and private log policy retain the original freeze evidence.
+The outcome lands later as PR4; P1 remains in-progress until accepted.
+
+
 ## P2 — Transformation wave
 
 Run the remaining work in this order:

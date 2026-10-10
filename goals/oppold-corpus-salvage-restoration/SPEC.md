@@ -537,3 +537,89 @@ no package source changed. Apply the brief's inherited publication-fence ruling:
 direct push and PR creation with the heavy label, Yeet ready, and bounded monitoring.
 The orchestrator owns consolidated reds under S11. Reversal: close the evidence
 PR, retaining the immutable failed run and its frozen manifest.
+
+### 2026-10-10: first Tika evidence per attachment digest
+
+The sealed P1 engine failure is attributed to repeated Tika extraction of an
+identical attachment: its parser-duration JSON metadata varies between runs.
+The runner now reuses the first successful, nonempty, canonically contained Tika
+child for that digest within the same attempt. Repair-copy digest checks, final
+child hashes, budgets, and acceptance still apply. The diagnostic and synthetic
+regression are recorded in `history/p1/2026-10-10-engine-failure-diagnosis.md`.
+
+The run-4 orchestrator ruling authorizes a fresh slice family after the engine-fix
+PR is content-final, using the same source object and ceilings. Run 5 authorizes the independent preservation selector and a date-stamped fresh
+output label, `t7-salvage-2026-08-10-p1-2026-10-10-engine-fix`. The original run
+and freeze record are retained unchanged. A separate fresh freeze record identifies
+the fixed code and launch script before launch. P1 stays in-progress until fresh
+acceptance passes.
+Reversal: close the PR, revert the fix, and retain both run directories.
+
+Release notes without changesets: `@beep/repo-cli` is private and ignored by the
+release configuration. This correctness fix changes no public schema or API and
+would require no major release; #1566 and the standing private-workspace ruling
+require no changeset. Reverse by reverting the implementation and this decision.
+
+
+### 2026-10-10: synthetic proof and monitor handoff
+
+The retained synthetic acceptance checkbox is backed by
+`packages/drivers/libpff/test/Libpff.pffexport.test.ts`: "classifies bounded process
+diagnostics without retaining raw stderr" and "classifies password and codepage
+process diagnostics", plus the freshly passing restoration exception/accounting
+fixtures. This names the evidence requested by the run-4 addendum; it does not
+claim that the sealed live slice passed.
+
+PR3 #1606 is ready for review. Its bounded readiness monitor was submitted and
+polled, then deliberately cancelled at the fresh-label contract blocker so this
+lane exits with no owned background job active. The terminal proof receipt was
+observed. Hosted checks and the review window remain pending; no merge-ready
+claim is made. The orchestrator owns the next monitor and S11 merge gate.
+Reversal: resubmit `bun run beep yeet monitor --until-ready --detach
+--job-max-runtime "40 minutes"` from this lane after the final receipt push.
+The monitor cancellation changes no source, ledger, acceptance, or CI rules.
+
+
+### 2026-10-10: independent preservation and transformation labels (run 5)
+
+The orchestrator authorizes an optional `preservationLabel` option and
+`--preservation-label` flag for mail restoration. The schema decodes absence as
+Option; the runner defaults it to `runLabel`, preserving every existing call.
+Archive verification, evidence selection, and input reads use the preservation
+label; transformation placement and family identity retain the output `runLabel`.
+Family identity already incorporates the preservation seal and run identity, so
+a changed archive cannot resume a persisted family silently.
+
+The synthetic test "selects one sealed preservation archive for a fresh mail run
+without changing the sealed family" proves a new terminal ledger and output tree
+from the original sealed archive, a distinct transformation identity, and a
+byte-identical original sealed ledger. Original-label tests prove the default.
+
+Fresh invocation uses run label `t7-salvage-2026-08-10-p1-2026-10-10-engine-fix`
+and preservation label `t7-salvage-2026-08-10`. The fresh run root is
+`staging/restoration/runs/t7-salvage-2026-08-10-p1-2026-10-10-engine-fix/` beneath
+the corpus home, with the same ledger/output/claims children and private-log
+policy. Ceilings remain ratio 4, attempt 7,200,000 ms, family 43,200,000 ms,
+output 2,147,483,648 bytes, and a 100,000,000,000-byte free-space floor. The
+same selected object and unchanged engines are remeasured before launch. The
+fresh manifest is `history/evidence/p1-fresh-slice-run-manifest.json`; the old
+manifest is never rewritten. No code changes occur once the fresh start exists.
+
+Release notes without changesets (#1566): the private `@beep/repo-cli` workspace
+adds a backward-compatible optional selector, requiring no major release and no
+changeset. Reversal: close PR3 and revert its implementation and decision; retain
+both run directories as evidence. No original or sealed state is deleted. The
+slice outcome belongs to a later PR4, as run 5 directs.
+
+
+### 2026-10-10: run-5 publication fence disposition
+
+Main #1605 removes the private changesets and enforced schema candidates, but
+three inherited test advisories still make `lint:schema-first` exit 1. Every
+finding file matches origin/main; all other fifteen cheap gates pass, including
+Effect-Vitest, committed JSDoc, and Fallow. The standing inherited-fence ruling
+authorizes one direct addressed-wave push to existing ready PR3 #1606, followed
+by the bounded monitor. No source waiver, inventory or CI change is made. The
+full package gate, corrected test-tsgo, docgen and both real-engine smokes pass;
+coverage must finish before the fresh launch. Reversal: close PR3 and retain
+evidence; the orchestrator owns these inherited rows under S11.

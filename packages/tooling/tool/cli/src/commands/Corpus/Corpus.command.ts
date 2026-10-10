@@ -271,6 +271,10 @@ const restorationRunLabelFlag = Flag.String("run-label").pipe(
   Flag.withDefault("t7-salvage-2026-08-10"),
   Flag.withDescription("Immutable destination label under corpus raw storage")
 );
+const restorationPreservationLabelFlag = Flag.String("preservation-label").pipe(
+  Flag.optional,
+  Flag.withDescription("Sealed preservation archive label; defaults to --run-label")
+);
 const restorationCrashPointFlag = Flag.ChoiceWithValue("crash-point", [
   ["none", "none"],
   ["after-payload-sync", "after-payload-sync"],
@@ -638,7 +642,8 @@ const corpusRestorationMailCommand = Command.make(
     maxTotalElapsedMillis: restorationMaxTotalElapsedFlag,
     maxTotalOutputBytes: restorationMaxTotalOutputFlag,
     pffexport: pffexportFlag,
-    runLabel: restorationRunLabelFlag,
+    preservationLabel: restorationPreservationLabelFlag,
+    runLabel: restorationRunLabelFlag.pipe(Flag.withDescription("Immutable transformation output and ledger label")),
     scope: restorationMailScopeFlag,
     tikaJar: tikaJarFlag,
   },
@@ -652,6 +657,7 @@ const corpusRestorationMailCommand = Command.make(
     maxTotalElapsedMillis,
     maxTotalOutputBytes,
     pffexport,
+    preservationLabel,
     runLabel,
     scope,
     tikaJar,
@@ -666,6 +672,7 @@ const corpusRestorationMailCommand = Command.make(
       maxTotalElapsedMillis,
       maxTotalOutputBytes,
       pffexportPath: O.getOrElse(pffexport, () => "pffexport"),
+      preservationLabel: O.getOrElse(preservationLabel, () => runLabel),
       runLabel,
       scope,
       tikaJarPath: tikaJar,

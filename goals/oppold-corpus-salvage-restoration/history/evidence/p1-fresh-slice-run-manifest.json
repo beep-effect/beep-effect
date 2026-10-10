@@ -1,0 +1,29 @@
+{
+  "schema": "p1-slice-run-manifest/v1",
+  "runLabel": "t7-salvage-2026-08-10-p1-2026-10-10-engine-fix",
+  "scope": "slice",
+  "expectedStores": 1,
+  "objectId": "da19981ddcd62e532156584b7d8ef06762122f1cffc3f032ac36436d5492fdae",
+  "sourceSha256": "d547453d9d9680d28c898892982e8b3798452fa9e608a40f860ef88cd152907d",
+  "codeHead": "005d103faf8ab7c529cae8acece27bf93bc0ab95",
+  "launchScriptSha256": "f49f831f309f4b625167b25c8c415cca7705e2364a934e6a2012daaa14dd5ca2",
+  "ceilings": {
+    "maxAmplificationRatio": 4,
+    "maxElapsedMillis": 7200000,
+    "maxTotalElapsedMillis": 43200000,
+    "maxTotalOutputBytes": 2147483648
+  },
+  "engines": {
+    "pffexportPath": "/usr/bin/pffexport",
+    "pffexportVersion": "pffexport 20260917",
+    "bwrapPath": "/usr/bin/bwrap",
+    "bwrapVersion": "bubblewrap 0.13.0",
+    "javaPath": "/usr/bin/java",
+    "javaRealPath": "/usr/lib/jvm/java-27-openjdk/bin/java",
+    "javaVersion": "openjdk version \"27\" 2026-09-15",
+    "tikaJar": "~/.local/share/tika/tika-app-3.3.1.jar",
+    "tikaJarSha256": "0e8ee9795ac4244feab466f4a5a9c3b94675af392848243842cb6e1e69d27103"
+  },
+  "policySha256": null,
+  "preservationLabel": "t7-salvage-2026-08-10"
+}
