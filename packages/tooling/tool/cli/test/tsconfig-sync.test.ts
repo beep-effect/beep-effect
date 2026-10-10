@@ -562,7 +562,7 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
                 skipLibCheck: true,
                 moduleResolution: "bundler",
                 module: "esnext",
-                target: "es2022",
+                target: "es2024",
                 lib: ["ESNext", "DOM", "DOM.Iterable"],
                 rewriteRelativeImportExtensions: true,
                 allowImportingTsExtensions: true,
@@ -594,6 +594,7 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
               "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/modeling/identity/claudecode/",
             examplesCompilerOptions: {
               module: "esnext",
+              target: "es2024",
               moduleDetection: "force",
               verbatimModuleSyntax: true,
               allowJs: false,

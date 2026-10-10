@@ -507,7 +507,9 @@ export const createCanonicalDocgenConfig = Effect.fn("createCanonicalDocgenConfi
  * Managed `@beep/*` entries in `examplesCompilerOptions.paths` are pruned:
  * docgen examples resolve `@beep/*` imports through workspace `node_modules`
  * symlinks and package export maps, so those mappings are dead configuration.
- * Package-local custom aliases (for example an app's `@/*`) survive.
+ * Package-local custom aliases (for example an app's `@/*`) survive. A package's own
+ * `examplesCompilerOptions` `module`, `target` and `types` also survive, so a package
+ * whose source needs a newer target (a regex `v` flag needs es2024) can raise it.
  *
  * **Example** (Preserve package exclude extras)
  *
@@ -594,6 +596,13 @@ export const mergeManagedDocgenConfig: {
             R.get("module"),
             O.filter(P.isString),
             O.map((module) => ({ module })),
+            O.getOrElse(() => ({}))
+          ),
+          ...pipe(
+            options,
+            R.get("target"),
+            O.filter(P.isString),
+            O.map((target) => ({ target })),
             O.getOrElse(() => ({}))
           ),
           ...pipe(
