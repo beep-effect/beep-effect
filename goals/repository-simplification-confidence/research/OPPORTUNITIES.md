@@ -971,3 +971,11 @@ retained all other reviews; its audit reports zero blocking findings. Full
 policy separately finds inherited scratchpad diagnostic suppressions and a
 root language-service profile mismatch. Keep source fixed during proofs;
 report these inherited gates rather than broadening exception inventories.
+
+Terminal attribution: the private-package changeset repair passes hosted graph
+and status checks. Repo Sanity instead fails unchanged minimatch/smol-toml
+versions; JSDoc Ratchet retains its opaque inventory-generation failure. Fresh
+repo-cli audit/docgen passed. Manifest-only quick checks initially lacked
+upstream dist declarations; rebuilding the dependency closure and replaying
+all three checks passed. Record proof prerequisite scope with each result so
+an environment-only first attempt is not mistaken for a source regression.

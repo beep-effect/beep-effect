@@ -111,3 +111,30 @@ The authorized direct push/PR fallback is used with the inherited schema reds
 reported. Full policy also identifies inherited scratchpad disabled diagnostic
 directives and the root language-service profile mismatch. These remain with
 the porting/policy owners; they are not suppressed in this repair.
+
+## Terminal publication result
+
+PR #1605 is published and ready for review. Source proof head:
+`01f5f2cd8d5fb29dadd4a534cdad5cf11e253336`. Fresh full repo-cli verification
+passed audit 837.8s and docgen 24.4s. The three generated-script packages passed
+quick lint/check after their upstream build closure passed all 39 tasks; the
+first missing-dist TS6305 runs were environment-only and acknowledged.
+Effect/Vitest, both import lanes, test-tsgo, knowledge refs, Fallow audit/health,
+workflow lint and the reviewed cache-policy audit pass. Full policy remains
+red on inherited test advisories, scratchpad diagnostics/inline schemas and
+JSDoc/deprecation surfaces; package-scripts itself is repaired and passes.
+
+Hosted SAST, Secret Scanning, Security, Build, Check, Docgen, Doctest and Test
+Integration passed on the source proof head. Repo Sanity's changeset graph and
+status pass; its remaining red is inherited minimatch/smol-toml syncpack drift.
+JSDoc Ratchet again reports the inherited opaque inventory-generation failure.
+Vercel failures explicitly link to build-rate-limit and are environment-only.
+All observed inbox rows were attributed and acknowledged; no review threads
+were present at the successful thread read. No merge-ready claim is made.
+
+The bounded readiness monitor remains registered for the orchestrator. The
+S13 final signal records the current published head; the external worker report
+records its job id and exact status. This terminal documentation update changes
+no package source, generated scripts, inventory or policy baseline after proof.
+Permission state remained unrestricted / Never ask. No merge or retirement was
+performed. The original retained stash and ignored patch remain recoverable.
