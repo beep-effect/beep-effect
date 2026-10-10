@@ -14,10 +14,11 @@ published here.
 There are 14 failing calls and 12 succeeding calls in this ledger. Failure
 results report `store-query-failed` or the bundle-store refusal. The extension
 name fails as well as `practice-kg`. The extension name later succeeds on
-bundle `2026-10-07-04`. A graph-provenance lookup succeeds at 01:06:03.433Z,
-then another provenance lookup fails 0.699 seconds later. This distinction
-matters because document provenance uses DuckDB while node provenance uses
-the graph store.
+bundle `2026-10-07-04`. A provenance call with no input reference succeeds at 01:06:03.433Z,
+then a digest-based provenance lookup fails 0.699 seconds later. The first
+returns bundle-manifest metadata without querying either store. The second
+queries document provenance in DuckDB; the first cannot prove graph-store
+retrieval worked.
 
 ## Per-call ledger
 
@@ -66,7 +67,7 @@ between 01:23:28Z and 01:23:34Z.
 | --- | --- | --- |
 | Legacy Desktop entry launches `server-2026-10-06-01`. | The private PC findings identify a legacy `mcpServers.practice-kg` entry with a 0.0.0 manifest and no configured runtime bundle directory. Three failing document reads use the `practice-kg` namespace. | Remove the duplicate entry. It can explain this namespace's failures, but cannot by itself explain extension-name failures. Namespace alone does not prove which process handled it. |
 | Claude Code launches the extension executable without `BUNDLE_DIR`. | The private findings identify this omitted environment value. Current `bin.ts` refuses missing bundle configuration before serving. | Add the explicit bundle environment to Claude Code. Historical executable behavior and process environment are not captured per call, so this remains a configuration defect rather than a proved sole cause. |
-| Bundle `2026-10-07-04` has a real document-store defect. | Extension-name document tools fail while graph provenance can work; later extension-name get/search results explicitly name this bundle and succeed. The old self-check omitted document and FTS queries. | The evidence supports a document-query compatibility/runtime failure, but does not prove permanent bundle corruption. Request-dependent failure, changed process/store state, or a missing query dependency remain possible. Preserve the bundle; rerun identical failing inputs after the configuration repair. |
+| Bundle `2026-10-07-04` has a real document-store defect. | Extension-name document tools fail while the no-reference manifest response works; later extension-name get/search results explicitly name this bundle and succeed. The old self-check omitted document and FTS queries. | The evidence supports a document-query compatibility/runtime failure, but does not prove permanent bundle corruption. Request-dependent failure, changed process/store state, or a missing query dependency remain possible. Preserve the bundle; rerun identical failing inputs after the configuration repair. |
 
 The deciding observation is that both namespaces fail and the extension later
 reads the same reported bundle successfully. Correct both configuration defects

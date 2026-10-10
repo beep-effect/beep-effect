@@ -64,3 +64,8 @@ Friction receipts, recorded when they happened.
   package-verification launch. Setting the existing runtime directory and bus
   address let the approved wrapper run. Prevention: carry those settings into
   worker launches that use user-systemd scopes.
+- The findings summary did not distinguish manifest-only provenance from a
+  database lookup. The successful 01:06Z call had no reference; the failed call
+  that followed used a document digest. Prevention: record query stage and
+  input shape alongside the outcome. The lane stopped its first publication
+  before push to correct the diagnosis.
