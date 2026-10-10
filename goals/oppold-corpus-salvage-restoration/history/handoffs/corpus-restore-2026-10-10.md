@@ -246,3 +246,12 @@ blocked: fresh slice needs independent preservation and transformation labels; P
   waits for coverage, then uses the code snapshot and separate freeze record.
   Live acceptance/outcome and the post-launch handoff append are PR4 material
   under run 5, without a second implementation push or a fourth PR now.
+
+- Verified code snapshot committed at
+  `005d103faf8ab7c529cae8acece27bf93bc0ab95`. The separate fresh run manifest
+  names this snapshot, both labels, unchanged engines, source and ceilings,
+  script digest, and an initially null policy digest (filled only from start).
+- Post-#1605 schema scan now has zero enforced candidates, zero introduced
+  ratchet findings, but still exits 1 on three inherited test advisories; all
+  three files match origin/main. The standing inherited-fence ruling applies.
+- 🌱 graft saved approximately 172,483 tokens in this run.
