@@ -100,3 +100,8 @@ and separate party-kind/legal-role vocabulary contracts. M4 remains gated and ro
   examples. Ontology package docgen passes. The final parity receipts distinguish
   this inherited root failure from the package result.
 - [Closeout reflection](./history/reflections/2026-10-09-codex.md).
+
+- The isolated JSDoc inventory completed; root ratchet has inherited total
+  regressions. Its sole ontology blocking gap, ClassificationError annotation,
+  was corrected. Ontology package JSDoc lint and post-correction package
+  audit/docgen pass; coverage remains qualified.
