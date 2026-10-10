@@ -377,6 +377,48 @@ describe("@beep/practice-kg-mcp self-check", () => {
       })
     );
 
+    for (const [kind, table] of [
+      ["TABLE", "document_text"],
+      ["VIEW", "fts_bm25"],
+    ]) {
+      it.effect(
+        `refuses a current-format bundle missing ${table} before serving document tools`,
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-self-check-" });
+          const bundleDir = yield* makePracticeKgSmokeBundle(root);
+          yield* DuckDb.use((db) => db.run(`DROP ${kind} ${table}`)).pipe(
+            provideScopedLayer(
+              DuckDb.makeNodeLayer(
+                DuckDbConnectionOptions.make({ databasePath: path.join(bundleDir, "practice.duckdb") })
+              )
+            )
+          );
+
+          const refusal = yield* refusalLine(bundleDir);
+          expect(refusal.message).toContain("does not answer the queries this server's tools run");
+          expect(refusal.cause).toContain(table);
+          const startup = yield* Effect.promise(async () => {
+            const child = Bun.spawn(["bun", "run", "src/bin.ts", "--bundle-dir", bundleDir], {
+              stdin: "ignore",
+              stdout: "pipe",
+              stderr: "pipe",
+            });
+            const [exitCode, stdout, stderr] = await Promise.all([
+              child.exited,
+              new Response(child.stdout).text(),
+              new Response(child.stderr).text(),
+            ]);
+            return { exitCode, stdout, stderr };
+          });
+          expect(startup.exitCode).not.toBe(0);
+          expect(startup.stdout).not.toContain('"jsonrpc"');
+          expect(startup.stderr).toContain("does not answer the queries this server's tools run");
+        })
+      );
+    }
+
     it.effect(
       "refuses a current-format manifest over matter tables built for the previous format",
       Effect.fnUntraced(function* () {

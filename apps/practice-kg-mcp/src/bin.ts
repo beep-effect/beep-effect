@@ -8,11 +8,13 @@ import * as Bool from "effect/Boolean";
  * @since 0.0.0
  */
 import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { runEntrypoint } from "./entrypoint.ts";
+import { SelfCheckFailure } from "./PracticeKgMcp.errors.ts";
 import { PracticeKgHostError } from "./runtime/Host.ts";
 import {
   loadPracticeKgBundleContext,
@@ -54,9 +56,16 @@ const resolveBundle = Effect.fnUntraced(function* (flags: BundleFlags) {
 });
 
 const serve = Effect.fnUntraced(function* (flags: BundleFlags) {
-  const resolved = yield* resolveBundle(flags);
-  const context = yield* loadPracticeKgBundleContext(resolved.bundleDir, resolved.corpusRoot);
-  return yield* Layer.launch(makePracticeKgHostLayer(context));
+  return yield* Effect.gen(function* () {
+    const resolved = yield* resolveBundle(flags);
+    yield* runPracticeKgSelfCheck(resolved.bundleDir, resolved.corpusRoot);
+    const context = yield* loadPracticeKgBundleContext(resolved.bundleDir, resolved.corpusRoot);
+    return yield* Layer.launch(makePracticeKgHostLayer(context));
+  }).pipe(
+    Effect.catchTag("PracticeKgHostError", (error) =>
+      Console.error(error.message).pipe(Effect.andThen(SelfCheckFailure.make({ cause: error, message: error.message })))
+    )
+  );
 });
 
 // The self-check never builds the stdio server layer, so stdin is left alone.
