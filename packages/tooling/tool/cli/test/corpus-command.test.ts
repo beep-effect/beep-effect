@@ -4073,6 +4073,71 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
   );
 
   it.effect(
+    "retains full Tika text beyond 4096 characters within the remaining output budget",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* makeMailRestorationFixture(
+        restorationPffexportStub,
+        "#!/bin/sh\nhead -c 8192 /dev/zero | tr '\\000' x\n"
+      );
+      const summary = yield* restoreMail(mailRestorationOptions(fixture));
+      const runRoot = path.join(fixture.corpusRoot, "staging/restoration/runs/synthetic-mail-restoration");
+      const { records } = yield* readTransformationLedgerFixture(path.join(runRoot, "ledgers/mail/slice.jsonl"));
+      const textChild = A.findFirst(
+        records,
+        (record) => record.recordType === "mail-child-pass" && Str.endsWith(".tika.txt")(record.childRelativePath)
+      );
+      expect(summary.passCount).toBe(1);
+      textChild.pipe(O.isSome, assertTrue);
+      if (O.isSome(textChild) && textChild.value.recordType === "mail-child-pass") {
+        expect(textChild.value.sizeBytes).toBe(8193);
+        expect(textChild.value.engineReported).toBe(false);
+        const text = yield* fs.readFileString(
+          path.join(runRoot, "output/mail/slice/attempts", textChild.value.attemptId, textChild.value.childRelativePath)
+        );
+        expect(text).toBe(`${Str.repeat(8192)("x")}\n`);
+      }
+    })
+  );
+
+  it.effect(
+    "fails closed when Tika text exceeds the remaining output budget",
+    Effect.fnUntraced(function* () {
+      const path = yield* Path.Path;
+      for (const tikaScript of [
+        "#!/bin/sh\nhead -c 120000 /dev/zero | tr '\\000' x\n",
+        `#!/bin/sh
+awk 'BEGIN { for (i = 0; i < 6000; i++) printf "é" }'
+`,
+      ]) {
+        const fixture = yield* makeMailRestorationFixture(restorationPffexportStub, tikaScript);
+        const options = RestorationMailOptions.make({
+          ...mailRestorationOptions(fixture),
+          maxAmplificationRatio: 0.01,
+        });
+        yield* restoreMail(options).pipe(Effect.flip);
+        const { records } = yield* readTransformationLedgerFixture(
+          path.join(fixture.corpusRoot, "staging/restoration/runs/synthetic-mail-restoration/ledgers/mail/slice.jsonl")
+        );
+        expect(A.some(records, (record) => record.recordType === "family-acceptance-failure")).toBe(true);
+        expect(
+          A.some(
+            records,
+            (record) => record.recordType === "mail-store-exception" && record.exceptionKind === "engine-failure"
+          )
+        ).toBe(true);
+        expect(
+          A.some(
+            records,
+            (record) => record.recordType === "mail-child-pass" && Str.endsWith(".tika.txt")(record.childRelativePath)
+          )
+        ).toBe(false);
+      }
+    })
+  );
+
+  it.effect(
     "reuses identical content-addressed attachment derivatives",
     Effect.fnUntraced(function* () {
       const path = yield* Path.Path;

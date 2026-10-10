@@ -84,6 +84,7 @@ become these binding constraints:
 - Do not re-found ontology work or pull a gated semantic candidate into this
   packet.
 - Freeze each run's rules, prompts, schemas, engine selection, and versions.
+  The P1 run manifest is the freeze record described in the 2026-10-09 decision below.
 - Preserve reusable seams without making a productization claim.
 - Run at most one full transformation pass in the approximately three-week
   wave. Stop and rescope if disk/time preflight exceeds approved ceilings.
@@ -170,6 +171,14 @@ The packet inherits both binding predecessor debt ledgers:
 - [ ] Preservation passes independently of every transformation result.
 
 ### P1 mail vertical slice
+
+P1 writes under the run root in this location inventory:
+
+| Surface | Location |
+| --- | --- |
+| Corpus home | `~/data-home/oppold-corpus` |
+| P1 run root, relative to corpus home | `staging/restoration/runs/t7-salvage-2026-08-10/**` |
+| Run-root children | `ledgers/mail/slice.jsonl`, `output/mail/slice/`, and `writer-claims/` |
 
 - [ ] One metadata-selected non-stub PST occurrence from a recycle surface
       completes end to end through the public source-path runner at concurrency
@@ -345,8 +354,151 @@ only `/` and NUL. The orphaned journal of the aborted run stays valid undo
 input for its 375 renames. Reversal: `--mode undo` on each journal in reverse
 order of their run ids.
 
+### 2026-10-09: retain Tika text within the remaining attempt budget
+
+The RAM-only probe ran 59 repair candidates: 43 produced more than 4,096 characters,
+the maximum was 1,578,537, and none exited nonzero or produced empty text. The previous
+capture bound would fail this selected slice despite available output capacity. Reuse
+`OutputBound` with the remaining attempt budget after hashing retained output and checking
+free space; reserve the final newline and validate UTF-8 bytes before persistence. Keep the
+full content-addressed text and fail closed on truncation or exhausted capacity. Existing
+process and filesystem service contracts remain sufficient. Synthetic tests prove full
+8,192-character capture and rejection above the remaining budget. The extra capture check
+adds one tree hash per candidate; the sizing margin covers it. Reversal: revert the CLI edit;
+no slice ledger exists at this decision.
+
+### 2026-10-09: escape backslash names at the libpff boundary
+
+The probe found one backslash-bearing file, zero such directories, zero escape collisions,
+and zero pre-existing `%5C` names. The escape is unambiguous on this store. A named internal
+schema transforms each engine name component to `PosixPath` by replacing only `\` with
+`%5C`. After quota handoff and before walking children, rename entries inside the driver's
+export trees; refuse collisions with the existing non-portable-path warning and overwrite
+nothing. Carry original attachment names into synthesized EML, with MIME quoted-string
+escaping. Canonical checks resolve each checked ancestor while retaining backslash components,
+including the raw quota handoff, because Bun's realpath treats that byte specially. Keep the shared path and restoration row
+schemas unchanged. Synthetic tests cover escaped files and folders, reference/disk agreement,
+EML display names, and preservation of both entries on collision. Reversal: revert the libpff
+edit; no slice ledger exists yet. The release-note decision below supersedes the patch changeset.
+
+### 2026-10-09: private-workspace release notes without changesets
+
+`@beep/libpff` and `@beep/repo-cli` are private workspaces. Main #1566 and the brief's
+2026-10-09T20:33Z standing ruling forbid changesets naming private workspaces, superseding R3.
+Remove the unpublished libpff patch changeset and record both bounded fixes in the handoff's
+"Release notes without changesets" table. These fixes require no major release: existing portable
+paths and public schemas retain their contracts; escaping previously rejected names and retaining
+budget-bounded text correct unsupported-input behavior. Widening the public path schemas would
+have changed their contract, and was rejected. Reversal: revert the implementation and this
+release-note decision together; preserve the append-only handoff as evidence.
+
+### 2026-10-09: P1 slice ceilings, sizing probe, and invocation
+
+The raw-only priors (0.98x and 0.77x with pffexport 20260608) exclude synthesized EML,
+all-item body formats, orphan/recovered output, repair copies, and Tika text. The RAM-only
+probe measured I = 56,140,800 input bytes, R = 46,317,339 raw output bytes (2,630 files),
+D = 19,659,481 repair-copy bytes, T = 5,252,872 Tika bytes, and 607 items. Orphan and
+recovered trees contained zero files/bytes. There were 3,399 entries, zero existing EML
+collisions, 206 attachments / 41,580,376 bytes, 147 unsupported, zero unchanged, and 59
+repair candidates. All 59 Tika invocations succeeded with nonempty output. Probe counts
+and script digest are retained in the handoff.
+
+O = R + 1.37R + 4,096 × items + D + T = 137,170,718.43 bytes.
+Freeze `--max-amplification-ratio 4` = max(4, ceil(1.5O/I)); the attempt ceiling is
+224,563,200 bytes. Probe durations were pffexport 583 ms, Tika 894,687 ms, and one
+full tree hash 35 ms. The elapsed expression is
+3 × (583 + 894,687 + 2 × 59 × 35) + 600,000 = 3,298,200 ms;
+freeze `--max-elapsed-millis 7200000` = max(7,200,000, that expression).
+Freeze `--max-total-output-bytes 2147483648` = max(2,147,483,648,
+ceil(2.5 × 56,140,800 × 4)) = max(2,147,483,648, 561,408,000).
+Freeze `--max-total-elapsed-millis 43200000` = max(43,200,000, 3 × 7,200,000).
+These total caps allow one retained interruption plus retry; the family clock includes queue
+wait and re-verification on a retry. Require at least 100,000,000,000 bytes free on every
+launch as well as the tool's output-capacity checks. Measured pre-probe free space was
+471,790,534,656 bytes; remeasure immediately before launch.
+
+Fixed invocation inventory:
+
+| Flag | Frozen value |
+| --- | --- |
+| `--scope` | `slice` |
+| `--expected-stores` | `1` |
+| `--run-label` | `t7-salvage-2026-08-10` |
+| `--corpus-root` | `~/data-home/oppold-corpus` |
+| `--pffexport` | `/usr/bin/pffexport` |
+| `--bwrap` | `/usr/bin/bwrap` |
+| `--java` | `/usr/bin/java` |
+| `--tika-jar` | `~/.local/share/tika/tika-app-3.3.1.jar` |
+
+The persisted policy freezes these
+engine paths, scope, denominator, and ceilings at `family-run-start`; changes are refused.
+The engine freeze values are pffexport 20260917, bubblewrap 0.13.0,
+`openjdk version "27" 2026-09-15`, Java real path
+`/usr/lib/jvm/java-27-openjdk/bin/java`, and Tika jar SHA-256
+`0e8ee9795ac4244feab466f4a5a9c3b94675af392848243842cb6e1e69d27103` (Apache Tika 3.3.1).
+Reversal: revert this docs decision; retain the append-only ledger and output as evidence.
+P2/P3 remain outside this lane.
+
+### 2026-10-09: the P1 run manifest is the freeze record
+
+`transformationPolicySha256` hashes engine paths, scope, expected stores, and four ceilings,
+not engine versions. `history/evidence/p1-slice-run-manifest.json`, written before launch,
+therefore records Java version and real path, Tika jar digest, pffexport and bubblewrap
+versions beside the policy digest, launch-script digest, ceilings, selected object digest,
+and code head. Fill the policy digest once the first start row exists, then never change
+the manifest. A version mismatch on any relaunch is a stop. Only main's merged code may
+write the immutable ledger. Reversal: revert the docs decision, retaining the manifest as evidence.
+
+### 2026-10-09: P1 output path
+
+Designate the P1 location inventory above as the write authority for
+`staging/restoration/runs/t7-salvage-2026-08-10/**` under corpus home:
+`ledgers/mail/slice.jsonl`, `output/mail/slice/`, and `writer-claims/`.
+Only `restore-mail` writes those surfaces. Accept its built-in re-verification's conditional
+content-addressed report write to `raw/t7-salvage-2026-08-10/verification/<sha256>.jsonl`:
+a byte-identical report already exists for the unchanged sealed archive, so a new report
+would indicate changed verification evidence. The lane's other external write inventory is:
+
+| Surface | Root | Allowed contents |
+| --- | --- | --- |
+| Private logs, relative to corpus home | `logs/corpus-restore/` | Tool stdout/stderr; read counts only |
+| Scratch | `~/.cache/beep/corpus-restore/` | Scripts, numeric probe counts, start stamps, and exit codes only |
+
+Never print private log lines or corpus paths/content. Reversal: deletion of the run directory
+wholesale is an orchestrator decision; this lane never deletes it.
+
 ## Exception ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None | N/A | N/A | N/A | N/A |
+
+### 2026-10-09: P1 launch held at the inherited publication gate
+
+The bounded fixes, RAM probe, ceilings, freeze-record design, and output authority are retained.
+Both full package verifications and the corrected local hosted-parity set passed; restoration
+coverage is 100% in every metric. PR1 publication at `e28c05e497` failed before push: 15 of 16
+cheap gates passed, and schema-first alone failed on five untracked entries inherited from main
+(two Accounts candidates and three unrelated test advisories). All affected files and their
+inventory are unchanged by this lane. Do not widen ownership or edit an inventory baseline here;
+the orchestrator owns the consolidated main repair. No slice ledger, live launch, or PR exists.
+P1 stays pending, lifecycle active, P2/P3 pending. Resume by merging the main repair and publishing
+PR1 under R2, then complete its published-head proof and final-file gate before writing the run
+manifest or launching. Reversal: revert the bounded local fixes and packet decisions; there is no
+live output to reverse, and the append-only handoff remains evidence.
+
+### 2026-10-09: PR1 inherited-fence publication fallback
+
+The orchestrator run-2 ruling authorizes direct push and PR creation after the
+canonical publisher refused only five inherited schema inventory entries. Their
+source surfaces match main; introduced findings were repaired and scoped proof
+passes. PR1 retains the heavy label, readiness monitor, review handling, and exact
+head final-file gate. The orchestrator owns inherited hosted reds and the merge.
+The frozen manifest and live slice wait for its merged report. Reversal: close the
+unmerged PR and revert the bounded changes before any live run.
+
+The worker started the required forty-minute bounded Yeet monitor, observed hosted
+check transitions and acknowledged the three deployment rate-limit failures, then
+stopped that local monitor at the run-2 handoff boundary. The final-file gate takes
+over under S11; no hosted-green or merge-ready verdict is claimed. This avoids an
+unowned running job after worker exit. Reversal: resubmit the same bounded monitor.

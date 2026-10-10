@@ -20,13 +20,15 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { A, O, R, Str, Struct } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow } from "effect/Function";
+import { flow, identity } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Stream from "effect/Stream";
 import {
   assembleEml,
@@ -53,6 +55,14 @@ const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive in
 const decodePosixPath = S.decodeEffect(PosixPath);
 
 const $I = $LibpffId.create("Libpff.pffexport");
+
+const PffexportNameComponent = S.NonEmptyString.pipe(
+  S.decodeTo(PosixPath, SchemaTransformation.transform({ decode: Str.replaceAll("\\", "%5C"), encode: identity })),
+  $I.annoteSchema("PffexportNameComponent", {
+    description: "Escapes backslash name bytes in engine output without interpreting them as path separators.",
+  })
+);
+const decodePffexportNameComponent = S.decodeEffect(PffexportNameComponent);
 
 const defaultPffexportPath = "pffexport";
 const defaultSystemdRunPath = "systemd-run";
@@ -349,6 +359,7 @@ interface WalkedFile {
 
 interface ExportedEntry {
   readonly absolutePath: string;
+  readonly originalName: string;
   readonly ref: ArtifactReference;
 }
 
@@ -534,6 +545,8 @@ const claimReleaseFailedWarning =
 /**
  * Create the real pffexport-backed file-processing engine.
  *
+ * **Details**
+ *
  * Captures the file system, path, and process-spawner services at
  * construction and probes `pffexport -V` once to populate
  * `descriptor.version`; a failed probe leaves the version unset rather than
@@ -541,9 +554,12 @@ const claimReleaseFailedWarning =
  * requires `effect/Crypto` so child artifact ids can be derived through the
  * shared SHA-backed artifact id schema. File-backed source artifacts are
  * passed to `pffexport` by path; in-memory artifacts use a private temporary
- * snapshot.
+ * snapshot. Exported file and directory names escape backslashes to `%5C`
+ * before child references are built. A colliding escaped name yields a
+ * non-portable-path warning without overwriting either entry; synthesized
+ * EML retains original attachment display names.
  *
- * **Example** (Usage)
+ * **Example** (Configure an export engine)
  * ```ts
  * import { makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff"
  * import * as Effect from "effect/Effect";
@@ -997,16 +1013,28 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     ...O.getSomesStruct({ version }),
   });
 
+  const resolveExportEntry = Effect.fn("Libpff.pffexport.resolveExportEntry")(function* (
+    absolutePath: string
+  ): Effect.fn.Return<string, LibpffError> {
+    if (O.isSome(yield* fs.readLink(absolutePath).pipe(Effect.option))) {
+      return yield* makeLibpffError("process", { cause: "export tree contains a symbolic link" });
+    }
+    // Bun's realpath interprets literal backslashes. Resolve each checked
+    // parent, retaining every component verbatim until the escape pass.
+    if (Str.includes("\\")(absolutePath)) {
+      const parent = yield* resolveExportEntry(path.dirname(absolutePath));
+      return path.join(parent, path.basename(absolutePath));
+    }
+    return yield* fs
+      .realPath(absolutePath)
+      .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "export entry resolution failed" })));
+  });
+
   const requireCanonicalExportEntry = Effect.fn("Libpff.pffexport.requireCanonicalExportEntry")(function* (
     canonicalRoot: string,
     absolutePath: string
   ): Effect.fn.Return<FileSystem.File.Info, LibpffError> {
-    if (O.isSome(yield* fs.readLink(absolutePath).pipe(Effect.option))) {
-      return yield* makeLibpffError("process", { cause: "export tree contains a symbolic link" });
-    }
-    const canonicalPath = yield* fs
-      .realPath(absolutePath)
-      .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "export entry resolution failed" })));
+    const canonicalPath = yield* resolveExportEntry(absolutePath);
     const relativeCanonicalPath = path.relative(canonicalRoot, canonicalPath);
     if (
       path.isAbsolute(relativeCanonicalPath) ||
@@ -1277,9 +1305,73 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     return files;
   });
 
+  const escapeExportDirectory = Effect.fn("Libpff.pffexport.escapeExportDirectory")(function* (
+    canonicalRoot: string,
+    directory: string,
+    originalNames: HashMap.HashMap<string, string>,
+    warnings: Array<string>
+  ): Effect.fn.Return<HashMap.HashMap<string, string>, LibpffError> {
+    const names = yield* fs
+      .readDirectory(directory)
+      .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "export name inspection failed" })));
+    let retainedNames = originalNames;
+    for (const name of A.sort(names, Str.Order)) {
+      const source = path.join(directory, name);
+      const info = yield* requireCanonicalExportEntry(canonicalRoot, source);
+      const escaped = yield* decodePffexportNameComponent(name).pipe(
+        Effect.mapError(() => makeLibpffError("process", { cause: "export name escape failed" }))
+      );
+      const destination = path.join(directory, escaped);
+      let entryPath = source;
+      if (escaped !== name) {
+        const collision = yield* fs
+          .exists(destination)
+          .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "escaped export name inspection failed" })));
+        if (collision) {
+          warnings.push(nonPortablePathWarning(Number(info.size)));
+          continue;
+        }
+        yield* fs
+          .rename(source, destination)
+          .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "export name escape rename failed" })));
+        entryPath = destination;
+      }
+      retainedNames = yield* Match.value(info.type).pipe(
+        Match.when("Directory", () => escapeExportDirectory(canonicalRoot, entryPath, retainedNames, warnings)),
+        Match.when("File", () =>
+          Effect.succeed(HashMap.set(retainedNames, path.relative(config.exportRoot, entryPath), name))
+        ),
+        Match.orElse(() =>
+          Effect.fail(makeLibpffError("process", { cause: "export tree contains a non-regular entry" }))
+        )
+      );
+    }
+    return retainedNames;
+  });
+
+  const escapeExportNames = Effect.fn("Libpff.pffexport.escapeExportNames")(function* (
+    targetBase: string,
+    treeSuffixes: ReadonlyArray<string>,
+    warnings: Array<string>
+  ): Effect.fn.Return<HashMap.HashMap<string, string>, LibpffError> {
+    const canonicalRoot = yield* fs
+      .realPath(config.exportRoot)
+      .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "export root resolution failed" })));
+    let originalNames = HashMap.empty<string, string>();
+    for (const suffix of treeSuffixes) {
+      const root = `${targetBase}${suffix}`;
+      const exists = yield* fs
+        .exists(root)
+        .pipe(Effect.mapError(() => makeLibpffError("process", { cause: "export tree check failed" })));
+      if (exists) originalNames = yield* escapeExportDirectory(canonicalRoot, root, originalNames, warnings);
+    }
+    return originalNames;
+  });
+
   const buildChildEntries = Effect.fn("Libpff.pffexport.buildChildEntries")(function* (
     operation: ExportArchiveOperation,
     files: ReadonlyArray<WalkedFile>,
+    originalNames: HashMap.HashMap<string, string>,
     warnings: Array<string>
   ): Effect.fn.Return<Array<ExportedEntry>, LibpffError, Crypto.Crypto> {
     const entries: Array<ExportedEntry> = [];
@@ -1292,6 +1384,9 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       const childId = yield* deriveChildId(operation, decoded.value);
       entries.push({
         absolutePath: file.absolutePath,
+        originalName: O.getOrElse(HashMap.get(originalNames, file.relativePath), () =>
+          path.basename(file.absolutePath)
+        ),
         ref: ArtifactReference.make({
           id: childId,
           relativePath: decoded.value,
@@ -1324,9 +1419,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         ),
     });
     const attachments = yield* Effect.forEach(item.attachments, (entry) =>
-      readItemBytes(entry.absolutePath).pipe(
-        Effect.map((bytes) => ({ bytes, fileName: posixBasename(entry.ref.relativePath) }))
-      )
+      readItemBytes(entry.absolutePath).pipe(Effect.map((bytes) => ({ bytes, fileName: entry.originalName })))
     );
     const boundaryId = yield* deriveArtifactId([operation.source.id, item.directoryPath, "boundary"]).pipe(
       Effect.mapError(() => makeLibpffError("process", { cause: "child artifact id derivation failed" }))
@@ -1537,10 +1630,11 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     yield* runPffexport(sourcePath, targetBase);
 
     const warnings: Array<string> = [];
+    const originalNames = yield* escapeExportNames(targetBase, treeSuffixes, warnings);
     const files = yield* collectExportedFiles(targetBase, treeSuffixes);
     const rawOutputBytes = A.reduce(files, 0, (bytes, file) => bytes + file.sizeBytes);
     yield* requireRawOutputWithinLimit(rawOutputBytes);
-    const entries = yield* buildChildEntries(operation, files, warnings);
+    const entries = yield* buildChildEntries(operation, files, originalNames, warnings);
     const children: Array<ArtifactReference> = A.map(entries, (entry) => entry.ref);
 
     const entryPathIndex: Record<string, boolean> = {};

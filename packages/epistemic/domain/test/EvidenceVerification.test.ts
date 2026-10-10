@@ -153,6 +153,8 @@ describe("EvidenceVerification", () => {
     const manifestationKey = Result.getOrThrow(manifestationKeyFor(SharedEpistemic.EvidenceId.make(4), verifiedAnchor));
     const input = {
       ...productEntityFixtureInput("EpistemicEvidenceVerification", 7),
+      deletedAt: null,
+      deletedByPrincipal: null,
       evidenceId: 4,
       manifestationKey,
       verifiedAnchor: Result.getOrThrow(encodeUnknownTextAnchorVerificationReceiptResult(verifiedAnchor)),

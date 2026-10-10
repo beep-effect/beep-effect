@@ -1918,7 +1918,9 @@ else exit 92; fi
         "expired",
         options,
         { ...context, family: "mail", mailScope: O.some<"full" | "slice">("full") },
-        -1_000
+        -1_000,
+        context.outputRoot,
+        100
       ).pipe(Effect.flip);
       expect(expiredAttachmentError.message).toContain("Attachment repair exhausted the elapsed-time budget");
       expect(
@@ -1931,6 +1933,41 @@ else exit 92; fi
           "attempt-1"
         )
       ).toEqual({ inputBytes: 0, outputBytes: 0, passed: false, unapproved: true });
+    })
+  );
+
+  it.effect("refuses to launch Tika when retained children exhaust the attempt output budget", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "tika-output-exhausted-" });
+      const retainedPath = path.join(root, "retained.bin");
+      yield* fs.writeFileString(retainedPath, "retained");
+      const now = DateTime.toEpochMillis(yield* DateTime.now);
+      const options = RestorationMailOptions.make({
+        corpusRoot: root,
+        expectedStoreCount: S.Natural.make(1),
+        javaPath: "/missing-java-must-not-launch",
+        maxAmplificationRatio: 1,
+        maxElapsedMillis: PosInt.make(60_000),
+        maxTotalElapsedMillis: PosInt.make(60_000),
+        maxTotalOutputBytes: PosInt.make(8),
+        pffexportPath: "pffexport",
+        scope: "slice",
+        tikaJarPath: "/missing-tika-must-not-launch.jar",
+      });
+      const error = yield* RT.extractAttachmentText(
+        retainedPath,
+        "exhausted-output",
+        options,
+        { ...context, corpusRoot: root, family: "mail", mailScope: O.some<"full" | "slice">("slice"), startedAt: now },
+        now,
+        root,
+        8
+      ).pipe(Effect.flip);
+      expect(error.message).toBe("Attachment Tika evidence has no remaining output budget.");
+      expect(yield* fs.readFileString(retainedPath)).toBe("retained");
+      expect(yield* fs.readDirectory(root)).toEqual(["retained.bin"]);
     })
   );
 

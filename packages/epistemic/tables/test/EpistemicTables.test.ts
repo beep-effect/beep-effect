@@ -42,6 +42,8 @@ const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null
 
 const edgeVersionRow = (insert: EdgeVersion.EdgeVersionInsert, id: number): EdgeVersion.EdgeVersionRow => ({
   ...insert,
+  deletedAt: absentAsNull(insert.deletedAt),
+  deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
   id,
   evidenceScope: absentAsNull(insert.evidenceScope),
   expiredAt: absentAsNull(insert.expiredAt),
@@ -188,6 +190,8 @@ const fallbackReasonCases = [
 const baseEntityColumnNames = {
   createdAt: "created_at",
   createdByPrincipal: "created_by_principal",
+  deletedAt: "deleted_at",
+  deletedByPrincipal: "deleted_by_principal",
   entityType: "entity_type",
   id: "id",
   orgId: "org_id",
@@ -405,6 +409,8 @@ describe("EpistemicTables", () => {
       const decoded = yield* Effect.fromResult(
         UsageRecord.fromUsageRecordRow({
           ...insert,
+          deletedAt: absentAsNull(insert.deletedAt),
+          deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
           id: 10,
           // $inferInsert types the nullable columns as optional (number | null |
           // undefined); the select-row converter expects number | null, so resolve
@@ -439,7 +445,14 @@ describe("EpistemicTables", () => {
       expect(insert.lifecycle).toBe("candidate");
       expect(insert.snapshot).toStrictEqual({ text: "The application describes a processor." });
 
-      const decoded = yield* Effect.fromResult(CandidateClaim.fromCandidateClaimRow({ ...insert, id: 10 }));
+      const decoded = yield* Effect.fromResult(
+        CandidateClaim.fromCandidateClaimRow({
+          ...insert,
+          deletedAt: absentAsNull(insert.deletedAt),
+          deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
+          id: 10,
+        })
+      );
       expect(decoded.id).toBe(10);
       expect(decoded.fixtureKey).toBe("claim:patentability");
       expect(decoded.lifecycle).toBe("candidate");
@@ -463,7 +476,14 @@ describe("EpistemicTables", () => {
         startChar: 12,
       });
 
-      const decoded = yield* Effect.fromResult(Evidence.fromEvidenceRow({ ...insert, id: 10 }));
+      const decoded = yield* Effect.fromResult(
+        Evidence.fromEvidenceRow({
+          ...insert,
+          deletedAt: absentAsNull(insert.deletedAt),
+          deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
+          id: 10,
+        })
+      );
       expect(decoded.id).toBe(10);
       expect(decoded.span.quote).toBe("a processor configured to receive sensor data");
       expect(decoded.span.confidence).toBe(0.92);
@@ -477,6 +497,8 @@ describe("EpistemicTables", () => {
       const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
       const legacyRow = {
         ...insert,
+        deletedAt: absentAsNull(insert.deletedAt),
+        deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
         id: 10,
         span: {
           ...insert.span,
@@ -506,6 +528,8 @@ describe("EpistemicTables", () => {
       const quote = Str.repeat(EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1)("a");
       const legacyRow = {
         ...insert,
+        deletedAt: absentAsNull(insert.deletedAt),
+        deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
         id: 10,
         span: {
           ...insert.span,
@@ -646,7 +670,14 @@ describe("EpistemicTables", () => {
         },
       ]);
 
-      const decoded = yield* Effect.fromResult(ClaimDisposition.fromClaimDispositionRow({ ...insert, id: 10 }));
+      const decoded = yield* Effect.fromResult(
+        ClaimDisposition.fromClaimDispositionRow({
+          ...insert,
+          deletedAt: absentAsNull(insert.deletedAt),
+          deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
+          id: 10,
+        })
+      );
       expect(decoded.id).toBe(10);
       expect(decoded.status).toBe("rejected");
       expect(decoded.violations[0]?.severity).toBe("violation");
@@ -661,6 +692,8 @@ describe("EpistemicTables", () => {
       const decoded = yield* Effect.fromResult(
         UsageRecord.fromUsageRecordRow({
           ...insert,
+          deletedAt: absentAsNull(insert.deletedAt),
+          deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
           id: record.id,
           activityId: insert.activityId ?? null,
           costUsdApproxMicros: insert.costUsdApproxMicros ?? null,

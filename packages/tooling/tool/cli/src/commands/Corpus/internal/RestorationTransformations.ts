@@ -147,11 +147,6 @@ const transformationError = (message: string): CorpusCommandError => CorpusComma
 
 const nonNegative = (value: number): number => S.Natural.make(Math.trunc(Math.max(value, 0)));
 
-const attachmentProbeOutputBound = OutputBound.make({
-  maxChars: 4096,
-  truncatedNotice: "\n[attachment probe output truncated]",
-});
-
 const sandboxRuntimeRoots: ReadonlyArray<string> = ["/usr", "/bin", "/lib", "/lib64", "/etc", "/var"];
 
 const sandboxRuntimeBinds = Effect.fn("CorpusRestoration.sandboxRuntimeBinds")(function* (): Effect.fn.Return<
@@ -821,7 +816,9 @@ const extractAttachmentText = Effect.fn("CorpusRestoration.extractAttachmentText
   attemptId: string,
   options: RestorationMailOptions,
   context: TransformationRunContext,
-  attemptStartedAt: number
+  attemptStartedAt: number,
+  attemptRoot: string,
+  attemptOutputCeiling: number
 ): Effect.fn.Return<string, CorpusCommandError, TransformationRequirements> {
   const path = yield* Path.Path;
   const now = DateTime.toEpochMillis(yield* DateTime.now);
@@ -831,6 +828,12 @@ const extractAttachmentText = Effect.fn("CorpusRestoration.extractAttachmentText
   );
   if (remainingProbeMillis <= 0) {
     return yield* transformationError(`Attachment repair exhausted the elapsed-time budget for ${attemptId}.`);
+  }
+  const retained = yield* hashTransformationTree(attemptRoot);
+  const available = yield* availableRestorationBytesAt(context.corpusRoot);
+  const remainingOutputBytes = Math.min(attemptOutputCeiling - retained.sizeBytes, available);
+  if (remainingOutputBytes <= 1) {
+    return yield* transformationError("Attachment Tika evidence has no remaining output budget.");
   }
   const java = sandboxedTool(path, options.javaPath, "java");
   const probe = yield* runCaptured({
@@ -851,7 +854,7 @@ const extractAttachmentText = Effect.fn("CorpusRestoration.extractAttachmentText
       "-t",
       "/input/source",
     ],
-    bound: attachmentProbeOutputBound,
+    bound: OutputBound.make({ maxChars: remainingOutputBytes - 1, truncatedNotice: "" }),
     command: options.bwrapPath,
     forceKillAfter: "1 second",
     source: "stdout",
@@ -861,7 +864,11 @@ const extractAttachmentText = Effect.fn("CorpusRestoration.extractAttachmentText
   if (probe.exitCode !== 0 || probe.truncated || Str.isEmpty(probe.output)) {
     return yield* transformationError(`Attachment repair second pass failed for attempt ${attemptId}.`);
   }
-  return `${probe.output}\n`;
+  const text = `${probe.output}\n`;
+  if (utf8ToBytes(text).length > remainingOutputBytes) {
+    return yield* transformationError("Attachment Tika evidence has no remaining output budget.");
+  }
+  return text;
 });
 
 const persistAttachmentText = Effect.fn("CorpusRestoration.persistAttachmentText")(function* (
@@ -925,7 +932,15 @@ const repairDetectedAttachment = Effect.fn("CorpusRestoration.repairDetectedAtta
     context,
     attemptOutputCeiling
   );
-  const tikaText = yield* extractAttachmentText(derivedPath, attemptId, options, context, attemptStartedAt);
+  const tikaText = yield* extractAttachmentText(
+    derivedPath,
+    attemptId,
+    options,
+    context,
+    attemptStartedAt,
+    attemptRoot,
+    attemptOutputCeiling
+  );
   const tikaRelativePath = path.join("derived", "attachment-repairs", `${digest.sha256}.tika.txt`);
   yield* persistAttachmentText(attemptRoot, tikaRelativePath, tikaText, context, attemptOutputCeiling);
   const derivedDigest = yield* hashRestorationFileStreaming(derivedPath, 1024 * 1024);
