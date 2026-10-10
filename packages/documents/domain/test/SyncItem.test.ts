@@ -63,7 +63,11 @@ describe("SyncItem entity", () => {
       assertSome<string>(decoded.remoteId, "9001");
       assertNone(decoded.lastError);
       expect(decoded.syncState).toBe("pending");
-      expect(yield* encodeSyncItem(decoded)).toStrictEqual(fileRow);
+      expect(yield* encodeSyncItem(decoded)).toStrictEqual({
+        ...fileRow,
+        deletedAt: null,
+        deletedByPrincipal: null,
+      });
     })
   );
 
