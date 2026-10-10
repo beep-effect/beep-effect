@@ -47,6 +47,17 @@ synthetic regression. The fresh family is authorized by run 4; acceptance is
 pending. See `history/p1/2026-10-10-engine-failure-diagnosis.md`.
 
 
+2026-10-09 — PR1 #1596 merged the probe-proven Tika capture and portable-name
+fixes. The frozen live slice ran once and sealed a failure: one unapproved
+`engine-failure`, zero store passes, zero warning rows, and zero terminal child
+rows. Attachment dispositions: 11 repaired, 22 unsupported, zero unchanged.
+Input 56,140,800 bytes; retained output 115,418,004 bytes (2.055866749x);
+family elapsed 350,398 ms; archive re-verification 282,677 ms. The output fits
+the frozen disk/time ceilings, but final child reconciliation did not complete.
+The four fresh synthetic exception/accounting/resume cases pass. P1 remains
+in-progress; no second launch or artifact mutation is authorized. See the
+handoff and frozen run manifest for aggregate evidence and digests.
+
 2026-10-06 — P0 resumed and P4 opened (lane E, corpus provenance completion).
 The 2026-08-27 archive run had stalled at a 90.25 GB root-archive partial;
 the source tree had since lost 1,818 operator-deleted noise files (recorded
