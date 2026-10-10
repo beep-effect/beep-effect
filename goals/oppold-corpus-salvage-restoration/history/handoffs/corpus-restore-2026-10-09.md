@@ -412,3 +412,36 @@ the orchestrator may remove the complete additive run; this lane never removes i
   ready, and bounded monitor. The orchestrator owns those inherited reds under
   S11. Reversal: close the evidence PR; retain immutable live artifacts.
   The root cheap-gate inbox was acknowledged with the ownership attribution.
+
+### Run-3 publication closeout
+
+- PR2 #1600 OPEN and ready for review, with ready-for-heavy. Initial pushed/API
+  head 2f2dca9dad3893a7f310fb8e73b69d5b6d5bbd01 matched. Yeet ready passed.
+- Published-head packet knowledge check passed: 45,530 observations, zero live gated.
+  Three Vercel deployment build-rate-limit rows acknowledged as environment-only.
+  Latest complete thread read: zero unresolved, no pagination remaining.
+- The required forty-minute bounded readiness monitor was submitted and observed
+  hosted transitions. It was cancelled and terminal status acknowledged at this
+  sealed-failure handoff boundary; no merge-ready/hosted-green verdict is claimed.
+  The first stop attempt lacked the standard user-bus exports; the corrected
+  command stopped the actual unit. No own proof, monitor, or live unit remains.
+  Orchestrator owns further hosted monitoring and the fresh-ledger decision.
+  Reversal of monitoring transfer: resubmit the same bounded readiness monitor.
+- Final main merge incorporated #1597 at main 7061685922; owned Corpus/libpff
+  sources and lockfile unchanged. Report snapshot head below includes that merge.
+  Subsequent commit adds only this closeout/report receipt; the terminal worker
+  report names its pushed head. Frozen script, manifest, and ledger are unchanged.
+- Historical PR1 final-file line: 1596 32b860f538 2026-10-09T23:42:33Z PR1 pre-run fix.
+  Merge outcome: #1596 MERGED at 320cedc0518a187a214ca49defc98d540dc440d1.
+- Graft retrieval saved approximately 120,779 tokens in one call.
+
+### Run-3 final report — verified evidence snapshot
+
+lane: corpus-restore
+head: 8c34937f0f6800696b4efe1d5ed2230bb68645c3 (exact evidence snapshot; subsequent commit adds only this handoff closeout/report)
+PR(s): #1596 MERGED (PR1 fixes); #1600 OPEN, ready for review (PR2 sealed-failure evidence)
+package-verify: @beep/repo-cli: pass; @beep/libpff: pass (retained PR1 full proof; no package source changed in PR2)
+hosted-parity: test-tsgo: not run (docs-only: no package source changed) | docgen local: not run (docs-only: no package source changed) | jsdoc-ratchet: not run as separate parity lane (docs-only; committed cheap gate passes) | knowledge refs: pass, published-head zero live gated | fallow audit+health: pass in cheap gates | scoped coverage: not run (docs-only: no package source changed); PR1 full parity and coverage pass, retained above
+handoff: goals/oppold-corpus-salvage-restoration/history/handoffs/corpus-restore-2026-10-09.md
+open items: One live slice sealed family-acceptance-failure with one unapproved engine-failure, zero store passes, zero warnings and zero terminal child rows; P1 in-progress, P0/P4 complete, P2/P3 pending, lifecycle active. Input 56,140,800 bytes, retained output 115,418,004 bytes (2.055866749x), family 350,398 ms, archive re-verification 282,677 ms; 11 repaired and 22 unsupported dispositions. No accepted child reconciliation or precise underlying cause claimed. Ledger SHA-256 efb4b558c2d1680f87a684a69d6aa021653234d12928aa9f27a6943de8970e9f. Orchestrator owns any diagnostic/fresh-ledger route and inherited schema/Effect-Vitest burn-down; no retry or artifact mutation. Frozen ratio 4, attempt 7,200,000 ms, family 43,200,000 ms, output 2,147,483,648 bytes and 100 GB floor retained; whole-run reversal belongs to orchestrator under R7. PR2 published through the inherited-fence fallback; reverse by closing the PR while retaining artifacts. Monitor stopped and acknowledged for handoff; reverse by resubmitting the bounded monitor. Hosted checks pending; zero unresolved threads at last complete read. All own units ended.
+blocked: P1 slice is immutably sealed with one unapproved engine-failure; orchestrator decision required for any fresh-ledger route.
