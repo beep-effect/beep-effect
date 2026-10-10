@@ -62,7 +62,11 @@ describe("SyncOperation entity", () => {
       assertSome<string>(decoded.targetParentRelPath, "matters/client-default");
       assertNone(decoded.lastError);
       expect(decoded.status).toBe("queued");
-      expect(yield* encodeSyncOperation(decoded)).toStrictEqual(uploadRow);
+      expect(yield* encodeSyncOperation(decoded)).toStrictEqual({
+        ...uploadRow,
+        deletedAt: null,
+        deletedByPrincipal: null,
+      });
     })
   );
 

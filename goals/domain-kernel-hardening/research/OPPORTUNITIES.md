@@ -1,5 +1,28 @@
 # Tooling friction receipts
 
+## Main-red repair: downstream test cache missed upstream kernel columns
+
+The domain-kernel P1 change (#1593, 6513e85d2c) added `deletedAt` and
+`deletedByPrincipal`, but a downstream law-practice tables test task replayed
+the stale green `cache hit, replaying logs 3a087b1f2d538283`. Main run
+38019764454 at 3aa125a5d6 exposed 11 failures in `Test Unit (unit-b)` after
+#1605 changed the inputs. A fresh `beep-heavy env TURBO_FORCE=true bun run
+--filter @beep/law-practice-tables test` reproduces exactly 11 failed and 34
+passed tests across three files. The test task inputs do not cover workspace
+dependency sources; covering upstream kernel sources in the downstream task
+hash, or qualifying dependent tests uncached after kernel changes, would have
+prevented the stale green. This lane updates only the existing expected-column
+helpers and records this receipt; cache configuration repair remains a follow-up.
+
+Main run 38019764454 attempt 2, `Test Unit (unit-a)` job 114124110280,
+also exposes four documents-domain exact-wire failures: SyncCursor, SyncItem,
+SyncConflict and SyncOperation. Clean main 3aa125a5d6 reproduces four failed
+and 23 passed tests through `beep-heavy` with `TURBO_FORCE=true`. Each encoded
+row gains the same null-valued pair. SPEC D4 requires this encoding while
+accepting missing input keys, so the repair preserves those inputs and adds
+the pair to their expected outputs. PR #1608's previous unit-a green therefore
+does not qualify these upstream changes without an uncached package run.
+
 ## 2026-10-09 — heavy admission environment
 
 - Doing: P0 dependent typecheck through `beep-heavy`.
@@ -7,6 +30,13 @@
 - Attribution: environment-only; this shell omitted the user-manager bus environment.
 - Remedy: set `XDG_RUNTIME_DIR=/run/user/1000` and the matching user bus address on heavy invocations.
 - Prevention: initialize these variables in the lane execution environment.
+
+The documents-domain quick proof also first failed with TS6305 because
+`@beep/rdf` dependency declarations were absent. Restoring the dependency
+build outputs through `beep-heavy bunx turbo run build --filter=@beep/rdf...`
+removed the import failure and its cascading taxonomy diagnostics. The full
+quick proof then passed lint and check; worktree provisioning should restore
+required declaration outputs before package verification.
 
 ## 2026-10-09 — dependent check admission queue
 
