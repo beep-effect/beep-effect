@@ -1,0 +1,100 @@
+[
+  {
+    "cq": 1,
+    "kind": "docketing",
+    "version": "1.0.0",
+    "notation": "OpenDeadlineState",
+    "expectedIri": "https://ns.beep.sh/ontology/semantic-foundation/vocabulary/docketing/concept/OpenDeadlineState"
+  },
+  {
+    "cq": 1,
+    "kind": "docketing",
+    "version": "1.0.0",
+    "notation": "ExtendedDeadlineState",
+    "expectedIri": "https://ns.beep.sh/ontology/semantic-foundation/vocabulary/docketing/concept/ExtendedDeadlineState"
+  },
+  {
+    "cq": 1,
+    "kind": "docketing",
+    "version": "1.0.0",
+    "notation": "MissedDeadlineState",
+    "expectedIri": "https://ns.beep.sh/ontology/semantic-foundation/vocabulary/docketing/concept/MissedDeadlineState"
+  },
+  {
+    "cq": 5,
+    "kind": "party-kinds",
+    "version": "1.0.0",
+    "notation": "NaturalPersonParty",
+    "expectedIri": "https://ns.beep.sh/ontology/semantic-foundation/vocabulary/party-kinds/concept/NaturalPersonParty"
+  },
+  {
+    "cq": 5,
+    "kind": "legal-roles",
+    "version": "1.0.0",
+    "notation": "InventorRole",
+    "expectedIri": "https://ns.beep.sh/ontology/semantic-foundation/vocabulary/legal-roles/concept/InventorRole"
+  },
+  {
+    "cq": 7,
+    "kind": "docketing",
+    "version": "1.0.0",
+    "notation": "OfficeActionResponseDeadline",
+    "expectedIri": "https://ns.beep.sh/ontology/semantic-foundation/vocabulary/docketing/concept/OfficeActionResponseDeadline"
+  },
+  {
+    "cq": 7,
+    "kind": "docketing",
+    "version": "1.0.0",
+    "notation": "IDSDeadline",
+    "expectedIri": "https://ns.beep.sh/ontology/semantic-foundation/vocabulary/docketing/concept/IDSDeadline"
+  },
+  {
+    "cq": 7,
+    "kind": "docketing",
+    "version": "1.0.0",
+    "notation": "RCEDueDate",
+    "expectedIri": "https://ns.beep.sh/ontology/semantic-foundation/vocabulary/docketing/concept/RCEDueDate"
+  },
+  {
+    "cq": 8,
+    "kind": "docketing",
+    "version": "1.0.0",
+    "notation": "StatementOfUseDeadline",
+    "expectedIri": "https://ns.beep.sh/ontology/semantic-foundation/vocabulary/docketing/concept/StatementOfUseDeadline"
+  },
+  {
+    "cq": 8,
+    "kind": "docketing",
+    "version": "1.0.0",
+    "notation": "OppositionDeadline",
+    "expectedIri": "https://ns.beep.sh/ontology/semantic-foundation/vocabulary/docketing/concept/OppositionDeadline"
+  },
+  {
+    "cq": 8,
+    "kind": "docketing",
+    "version": "1.0.0",
+    "notation": "TrademarkRenewalDeadline",
+    "expectedIri": "https://ns.beep.sh/ontology/semantic-foundation/vocabulary/docketing/concept/TrademarkRenewalDeadline"
+  },
+  {
+    "cq": 18,
+    "kind": "legal-roles",
+    "version": "1.0.0",
+    "notation": "AttorneyOfRecordRole",
+    "expectedIri": "https://ns.beep.sh/ontology/semantic-foundation/vocabulary/legal-roles/concept/AttorneyOfRecordRole"
+  },
+  {
+    "cq": 18,
+    "kind": "legal-roles",
+    "version": "1.0.0",
+    "notation": "AssigneeRole",
+    "expectedIri": "https://ns.beep.sh/ontology/semantic-foundation/vocabulary/legal-roles/concept/AssigneeRole"
+  },
+  {
+    "cq": 18,
+    "kind": "legal-roles",
+    "version": "1.0.0",
+    "notation": "CorrespondentRole",
+    "expectedIri": "https://ns.beep.sh/ontology/semantic-foundation/vocabulary/legal-roles/concept/CorrespondentRole"
+  }
+]

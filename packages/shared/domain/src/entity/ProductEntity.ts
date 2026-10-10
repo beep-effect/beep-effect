@@ -4,7 +4,7 @@
  * **Details**
  *
  * The full persisted-product contract: base timestamps and row version, audit
- * provenance, tenant org scoping, and the id-derived identity columns
+ * provenance and Principal-typed soft-delete, tenant org scoping, and the id-derived identity columns
  * (branded serial id, entity-type literal, and url-safe public id with its
  * unique index).
  *
@@ -41,14 +41,15 @@ export const kit = OrgEntity.kit;
  * Explicit upstream variant fields preserve the legacy constructor authority:
  * audit and context values stay out of JSON writes, created timestamps default
  * only on insert, updated timestamps default on insert and update, and row
- * versions remain absent from insert payloads.
+ * versions remain absent from insert payloads. Soft-delete absence decodes to
+ * Option.none and encodes as SQL null; constructor omissions default to none.
  *
- * **Example** (Inspect shared row-version variants)
+ * **Example** (Inspect soft-delete select variants)
  *
  * ```ts
  * import { fields } from "@beep/shared-domain/entity/ProductEntity"
  *
- * console.log(Object.keys(fields.rowVersion.schema.schemas))
+ * console.log(Object.keys(fields.deletedAt.schema.schemas))
  * ```
  *
  * @category schemas

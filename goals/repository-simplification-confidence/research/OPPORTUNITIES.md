@@ -938,3 +938,19 @@ prevented this extra qualification wave. No suppression or inventory edit.
   a fresh stable-source replay passed all 106 tests across five relevant files.
 - Would have prevented it: keeping the checkout fixed for the entire admitted
   proof and integrating the next base only after its process has exited.
+
+### 2026-10-09 — burn-down admission list omits the C golden-workflow advisory
+
+- **Work:** Run 2 qualifies the fourteen occurrence-specific C admissions.
+- **Evidence:** `bun run lint:schema-first` resolves both Accounts object findings
+  but reports missing `SFV4-arbitrary-tests` at
+  `packages/tooling/tool/cli/test/ci-runner-security.test.ts:79`. The C handoff's
+  Run 4 terminal publication table already identifies this golden regression
+  advisory; the source is unchanged from main. The resume ruling admits two
+  schema rows plus twelve test rows and forbids changing other inventory rows.
+- **Attribution:** inherited C golden-workflow judgment, outside the explicit
+  fourteen-row admission count. This is a red gate, not a qualification pass.
+- **Prevention:** reconcile the scanner's full terminal occurrence table against
+  the delegated count before issuing a bounded admission brief. B's census can
+  resolve the advisory; this worker retains the count and uses only the
+  explicitly authorized publication fallback if Yeet holds on it.

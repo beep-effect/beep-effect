@@ -43,6 +43,7 @@
     "./DocumentIdentification": "./src/DocumentIdentification/index.ts",
     "./MailTagging": "./src/MailTagging/index.ts",
     "./internal/*": null,
+    "./OfficeActionStructure": "./src/OfficeActionStructure/index.ts",
     "./package.json": "./package.json"
   },
   "files": [
@@ -70,6 +71,7 @@
     "@beep/m365": "workspace:^",
     "@beep/mcp-kit": "workspace:^",
     "@beep/postgres": "workspace:^",
+    "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/shared-use-cases": "workspace:^",
     "@beep/tika": "workspace:^",

@@ -714,6 +714,22 @@
       "reason": "Subprocess regression driver: these codecs decode child-runner evidence for explicit watchdog, cancellation and finalizer-order scenarios. Native schema-derived property behavior is exercised by the runtime.test.ts.txt child fixture and Vitest.test.ts; adding a codec round-trip in the parent would not test the process lifecycle contract."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Accounts/AccountsSecretsLayout.schemas.ts",
+      "symbol": "AccountsSecretField",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "repository-simplification-confidence",
+      "reason": "Lane C reviewed exception at source line 31: AccountsSecretField is a lossless external wire object; arbitrary future metadata participates in identity. Reconsider when lane B's census lands."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Accounts/AccountsSecretsLayout.schemas.ts",
+      "symbol": "AccountsSecretsItem",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "repository-simplification-confidence",
+      "reason": "Lane C reviewed exception at source line 68: AccountsSecretsItem must preserve unknown vault-item metadata across decode/encode. Reconsider when lane B's census lands."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
       "symbol": "KnowledgeDocumentLine",
       "kind": "exported-type-literal",

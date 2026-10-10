@@ -1,0 +1,112 @@
+import * as A from "effect/Array";
+import { pipe } from "effect/Function";
+import * as Str from "effect/String";
+
+/** V2: after leading .NET whitespace (including U+0085, excluding U+FEFF), the line starts with `::`. */
+const V2 = /^[\t-\r \u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000]*::/;
+
+/** Legacy: `##[` anywhere. */
+const LEGACY = /##\[/g;
+
+/** The runner's line breaks: it splits at a lone CR as well as at LF and CRLF. */
+const LINE_BREAK = /\r\n|\r|\n/;
+
+/** U+200B, written by code point so the source carries no invisible character. */
+const ZERO_WIDTH_SPACE = String.fromCodePoint(0x200b);
+
+const neutralize = (line: string): string => {
+	const legacy = pipe(line, Str.replace(LEGACY, `##${ZERO_WIDTH_SPACE}[`));
+	return V2.test(legacy) ? `${ZERO_WIDTH_SPACE}${legacy}` : legacy;
+};
+
+/**
+ * Make text safe to write to a GitHub Actions log: no line of it can be read by the runner as a workflow command.
+ *
+ * **Details**
+ *
+ * The runner has TWO command parsers, and a line is a command if either accepts it
+ * (`actions/runner`, `src/Runner.Common/ActionCommand.cs` and `src/Runner.Worker/ActionCommandManager.cs`, where
+ * `TryProcessCommand` tries `TryParseV2` and then `TryParse`):
+ *
+ * - **V2** (`TryParseV2`): `message.TrimStart()` with .NET's whitespace, which includes U+0085, then
+ *   `StartsWith("::")`. A line like that gets a zero-width space (U+200B) in front of it, which .NET does not count
+ *   as whitespace, so it no longer starts with `::`.
+ * - **Legacy** (`TryParse`): `message.IndexOf("##[")`, so `##[` is a command WHEREVER it occurs in the line, not only
+ *   at its start. Every occurrence gets a zero-width space between the `##` and the `[`.
+ *
+ * A bare `##` with no `[` straight after it is not a command and is left alone, so a markdown heading is untouched.
+ * Input is split at CR, LF and CRLF, as the runner splits a stream, so a lone CR starts a line.
+ *
+ * The result is **idempotent**: a line this has neutralized matches neither rule, so neutralizing it again changes
+ * nothing. That is what lets a renderer that neutralizes as it builds and a facade that neutralizes the finished text
+ * both apply it without a second marker.
+ *
+ * This does not escape a command you mean to write: that is {@link WorkflowCommand}, whose message and property
+ * escaping is a different protocol. There is no detector here either, on purpose: a function that decided what is a
+ * command, shipped beside the code that neutralizes it, would be the implementation's own opinion, and a test using it
+ * would pin the output as its own oracle.
+ *
+ * **Example** (Neutralize modern and legacy workflow commands in log text)
+ *
+ * ```ts
+ * import { CommandNeutralizer } from "@beep/scratchpad/effected/github-commands/CommandNeutralizer";
+ *
+ * const safe = CommandNeutralizer.text("note\n::add-mask::secret\nprefix ##[error]x");
+ * // The `::` line starts with a zero-width space and the `##[` has one inside it; "note" is untouched.
+ * console.log(safe === "note\n\u200b::add-mask::secret\nprefix ##\u200b[error]x") // true
+ * ```
+ *
+ * @public
+ * @category utilities
+ * @since 0.0.0
+ */
+export class CommandNeutralizer {
+	private constructor() {}
+
+	/**
+	 * Split `text` at the runner's line breaks and neutralize each line.
+	 *
+	 * **Example** (Neutralize lines separated by carriage returns)
+	 *
+	 * ```ts
+	 * import { CommandNeutralizer } from "@beep/scratchpad/effected/github-commands/CommandNeutralizer";
+	 *
+	 * const lines = CommandNeutralizer.lines("note\r::error::x");
+	 * console.log(lines.length) // 2
+	 * console.log(lines[1] === "\u200b::error::x") // true
+	 * ```
+	 *
+	 * @param text - text that is data, not a command
+	 * @returns one entry per line, in order
+	 * @category utilities
+	 * @since 0.0.0
+	 */
+	static lines(text: string): ReadonlyArray<string> {
+		return pipe(text, Str.split(LINE_BREAK), A.map(neutralize));
+	}
+
+	/**
+  * Neutralize `text` and join the lines with a line feed.
+  *
+  * **Details**
+  *
+  * Line breaks come back as LF whatever they were, which is what the runner reads them as.
+  *
+  * **Example** (Normalize line breaks without adding a second marker)
+  *
+  * ```ts
+  * import { CommandNeutralizer } from "@beep/scratchpad/effected/github-commands/CommandNeutralizer";
+  *
+  * const safe = CommandNeutralizer.text("note\r\n::error::x");
+  * console.log(safe === "note\n\u200b::error::x") // true
+  * console.log(CommandNeutralizer.text(safe) === safe) // true
+  * ```
+  *
+  * @param text - text that is data, not a command
+  * @category utilities
+  * @since 0.0.0
+  */
+	static text(text: string): string {
+		return pipe(CommandNeutralizer.lines(text), A.join("\n"));
+	}
+}

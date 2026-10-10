@@ -1,0 +1,16 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: false
+  excludeLinksFromLockfile: false
+
+importers:
+
+  packages/a:
+    publishDirectory: dist
+
+  packages/b:
+    dependencies:
+      probe-a:
+        specifier: workspace:*
+        version: link:../a/dist

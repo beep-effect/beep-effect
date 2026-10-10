@@ -1,6 +1,4 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
-import { Table as CandidateClaimTable } from "@beep/epistemic-tables/entities/CandidateClaim";
-import { Table as EvidenceTable } from "@beep/epistemic-tables/entities/Evidence";
 import { ContentDigest } from "@beep/file-processing/Artifact";
 import {
   normalizePatentApplicationDocument,
@@ -29,6 +27,7 @@ import {
   PracticeKgProjectionsLive,
   PracticeKgQueries,
   PracticeKgToolkitLayer,
+  practiceKgClaimsPhysicalColumns,
   practiceKgMcpProtocols,
   readPracticeKgClaimsCarry,
   reconcileAnchors,
@@ -2149,8 +2148,11 @@ describe("practice KG projections", () => {
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
           yield* Effect.forEach(
             [
-              ["epistemic_candidate_claim", declaredColumnNames(getColumns(CandidateClaimTable))],
-              ["epistemic_evidence", declaredColumnNames(getColumns(EvidenceTable))],
+              [
+                "epistemic_candidate_claim",
+                declaredColumnNames(practiceKgClaimsPhysicalColumns.epistemic_candidate_claim),
+              ],
+              ["epistemic_evidence", declaredColumnNames(practiceKgClaimsPhysicalColumns.epistemic_evidence)],
             ] as const,
             ([tableName, declared]) =>
               Effect.gen(function* () {

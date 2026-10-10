@@ -92,6 +92,11 @@ cannot widen non-goals without a dated `SPEC.md` change.
 - Do not create law-practice package models or document-intake workflow code in
   this packet.
 
+### 2026-10-09 gate amendment
+
+M2 and M3 product gates are met by the Decision Log product pull. M3 code
+starts after M2 tests and the real-artifact proof pass. M4 remains gated.
+
 ## Milestones
 
 | Milestone | Gate | Capability | Exit criteria |
@@ -126,6 +131,31 @@ cannot widen non-goals without a dated `SPEC.md` change.
       `explorations/legal-ontology-landscape`; the removed packet's fence is
       moot as of 2026-07-14.
 
+### M2 acceptance (2026-10-09)
+
+- [x] Pinned IPC/CPC/Nice editions resolve hierarchy with distinct scheme identities.
+- [x] Typed failures cover mismatches, unpinned editions, unvetted rows and path escape.
+- [x] Real manifest decoder preserves M1 admission and skips classification rows (R3).
+- [x] Real-artifact proof records edition, counts, checksums and three lookups per scheme.
+- [x] CPC scope and all source reuse evidence are recorded in the licence ledger (R2).
+
+M2 evidence: Classification.test.ts includes replayable CQ lookup and cardinality
+fixtures. SemanticFoundation.test.ts has `decodes the real asset manifest without
+vendor bytes and preserves kind routing`. Run-8 handoff records 90 tests,
+qualified coverage, package audit/docgen and the complete real-edition/M1 table.
+
+### M3 acceptance (2026-10-09)
+
+- [x] Docketing, party-kind and legal-role seeds have TTL/JSON-LD/TS parity.
+- [x] Every IRI uses the repository authority; party-kind and role scheme identities remain separate.
+- [x] Replayable CQ 1/5/7/8/18 fixtures resolve versioned concept IRIs.
+- [x] Frozen vocabulary contract and read-only trademark packet spawn seed are retained.
+
+M3 evidence: Vocabulary.test.ts has serialization parity, complete pinned
+lookups, separate scheme hierarchy, typed failures and replayable CQ fixtures.
+All 97 tests pass; all new M3 src files are fully covered. Package audit/docgen
+passed after test-helper corrections; the contract includes the spawn plan.
+
 ## Verification Matrix
 
 | Check | Command or evidence | Required result |
@@ -136,14 +166,17 @@ cannot widen non-goals without a dated `SPEC.md` change.
 | Whitespace | `git diff --check -- goals/semantic-foundation explorations/legal-ontology-landscape explorations/ATLAS.md` | Passes |
 | M1 registry/loader | Package-local tests for `@beep/ontology` and touched target packages | Green |
 | M1 intake loop | Fixture proves sample document -> taxonomy concept -> document class -> filing path with aligned concept IRI | Green |
-| Repo quality | `bun run beep yeet verify` | Green or unrelated failures documented |
+| Repo quality (M2/M3) | hosted CI on the PR | Required checks green on the PR head, or each failure attributed as unrelated in the handoff (RULINGS S11) |
+| M2 lookup tests | Pinned hierarchy and CQ 9/10 fixtures | Green |
+| Real-manifest decode (R3) | Shared decoder test reads the asset-pack manifest without vendor bytes | Zero parse errors; alignment and classification routes asserted |
+| M2 real-artifact proof | Handoff table from beep-heavy runtime proof | All schemes and M1 regression pass |
+| M3 separation and CQs | Seed parity, separate kinds/roles and CQ 1/5/7/8/18 fixtures | Green |
 | Reflection closeout | `bun run beep lint reflection-artifacts` | Green before completion |
 
 ## Stop Conditions
 
 - Required source files are missing or materially contradictory.
-- The implementation would exceed M1 or pull M2-M4 work forward without the
-  named gate.
+- The implementation would exceed M1-M3 or pull M4 work forward without the named gate.
 - A change exceeds the ontology-survey scope absorbed from
   `explorations/legal-ontology-landscape` (the former packet was removed
   2026-07-14), or requires touching law-practice domain entities,
@@ -155,8 +188,75 @@ cannot widen non-goals without a dated `SPEC.md` change.
   policy approval.
 - The same blocker repeats after reasonable investigation.
 
+## Decision Log
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-09 | Reopen for M2 and M3. | The operator requested agent completion of the Corpus Ingestion Run Order on 2026-10-09; the orchestrator explicitly pulled both milestones. M3 implementation waits for M2 tests and real-artifact readiness. | Run `bun run beep goals set-status semantic-foundation completed-retained` and `git revert` the delivery PR. |
+| 2026-10-09 | M4 stays `pending`, routed to legal-document-intake P4. | This lane supplies version-pinned vocabulary slices; M4 has a separate owner. | Reassign M4 in manifest `statusNote`. |
+| 2026-10-09 | Repo-quality proof for M2/M3 is hosted CI on the PR. | AGENTS.md Quality Operator requires push-first publication; hosted CI is authoritative and `bun run beep yeet verify` is on demand. | Restore `bun run beep yeet verify` in the SPEC Verification Matrix, manifest verificationCommands and PLAN verification block; run `beep-heavy bun run beep yeet verify` before completion. |
+| 2026-10-09 | R5 changes both stop-condition surfaces from "The implementation would exceed M1 or pull M2-M4 work forward without the named gate." to "The implementation would exceed M1-M3 or pull M4 work forward without the named gate." | The named product pull admits M2 and M3 while retaining the M4 gate. | Restore the old text in SPEC and manifest together in one commit. |
+| 2026-10-09 | Pin IPC 2026.01, CPC 2026.08 and Nice 13-2026 (texts revision 20260715). | Official WIPO configuration marks 20260101 current; CPC bulk page lists 202608. Future IPC 20270101 is not current. | Add a new separately pinned edition after fetching and proving it; keep existing identities. |
+| 2026-10-09 | Edition-scoped scheme and concept IRIs use `$SemanticFoundationId`; IPC and CPC have distinct spaces. | Shared notation is not shared identity. External IRIs never carry identity. | Introduce a versioned contract migration; deprecate old IRIs without re-pointing them. |
+| 2026-10-09 | External IRIs are only exactMatch metadata backed by VETTED rows; otherwise omit them. | Prevent label-based identity and unadmitted external mappings. | Add explicit vetted mapping rows with evidence and tests. |
+| 2026-10-09 | Full editions load only from vendor files; tracked fixtures are synthetic and metadata is bounded. | No tracked third-party payload; avoid unbounded package seeds. | Amend scope with redistribution evidence and a bounded data plan. |
+| 2026-10-09 | Locarno and Vienna stay deferred. | P2 limits this pull to IPC/CPC/Nice. | Record a new product pull and amend scope. |
+| 2026-10-09 | IPC and Nice reuse gate accepts WIPO CC BY 4.0 with attribution and conversion notice. | Terms page and edition download templates returned HTTP 200; templates link master files and show no service-specific override. | Mark sources UNVETTED and stop loading if an overriding term appears. |
+| 2026-10-09 | CPC loads identifiers only: symbols, parent hierarchy and titles (R2). | EPO linked-open-data page returned HTTP 200 and names CC BY 4.0 for Linked open EP data, but does not name scheme XML or bulk zips. No definitions, notes, references or warnings are admitted. | Broaden only with explicit XML reuse evidence, a new ledger row and parser tests. |
+| 2026-10-09 | R3 adds the VendorLoadKind LiteralKit domain and M1 classification skip route, with an exported row decoder. | Every M1 real-manifest load must survive the new classification rows; tests must share production decoding. | Revert this loader commit and M2 rows together; never revert the loader alone while rows remain. |
+| 2026-10-09 | Select shared `decodeVendorManifestRow` and canonical vendor-path containment for M1/M2; implementation is checkpointed at `14596dceef` pending the separately owned XML-reader fix and runtime proof. | The M1 reflection requested one manifest validator when another runtime kind exists; sharing admission rejects unknown discriminators consistently and preserves symlink guards. | Revert the shared extraction and registry together, retaining the R3 skip route while classification rows remain. |
+| 2026-10-09 | Release notes replace a changeset for private `@beep/ontology`, per #1566 and the standing orchestrator ruling. | The package is private; M2 adds pinned classification APIs and shared admission without breaking existing M1 callers, so no major release would be needed. Private workspaces cannot appear in changesets. | Revert the additive M2 API/extraction and classification manifest rows together; if publication policy changes, use the then-current release mechanism. |
+
+| 2026-10-09 | Adapt classification element content to the landed `#text` reader contract (run-6 ruling); retain child elements named `text`. | Nice attributed heading/label content and attributed IPC/CPC text nodes use the reserved content key. | Revert the consumer adaptation only if the shared reader contract is also reversed; never add a fallback conflating content and child elements. |
+| 2026-10-09 | R4 adds the new `ClassificationRegistry.ts` row: lines 95.61, statements 95.72, branches 86.36, functions 91.93. | The sanctioned scoped coverage writer measured these error paths; existing rows and package totals remain unchanged. | Delete this row once the file has zero uncovered units. |
+| 2026-10-09 | R4 adds the new `internal/ClassificationXml.ts` row: lines 93.27, statements 93.23, branches 100, functions 87.32. | The sanctioned scoped coverage writer measured these parser paths; existing rows and package totals remain unchanged. | Delete this row once the file has zero uncovered units. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None | — | — | A drafting-time exception about absent exploration source files was removed 2026-07-08: the files exist (`CAPTURE.md`, `research/01-direction-grounding.md`, `assets/README.md`) and this SPEC was reconciled against them at review. | — |
+
+## Decision Log — shared XML reader repair, 2026-10-09
+
+- Use fast-xml-parser's reserved `#text` key and migrate the ISO 4217 and IANA
+  parsed-node consumers in the same PR. The key cannot collide with a valid
+  XML element name; reverting these three source edits reverses the change.
+- Follow the live private-workspace release policy: both `@beep/schema` and
+  `@beep/repo-cli` have `private: true` on base `4e82f6d942`. The lane brief's
+  published-schema premise is stale. A staged patch changeset failed the
+  changeset graph guard, so remove it and list the packages in the PR body.
+  Publication activation requires its own release-policy decision.
+
+- Block XML publication on inherited cheap-gate reds from integrated base
+  `cb64e0484f`; retain the local source and handoff commits and route the
+  unrelated repairs to the orchestrator for one main PR. Resume by merging
+  the main repair and retrying Yeet; no gate waiver or unrelated inventory
+  refresh is introduced by this lane.
+
+### Resume 8 XML decisions
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-09 | Admit singleton or repeated IPC/CPC title containers and Nice headings with ArrayEnsure; join only admitted title content. | Run-8 ruling authorizes cardinality fixes; full CPC editions contain repeated CPC-specific-text siblings. Required fields remain required; the shared XML reader is unchanged. | Revert the consumer/test repair together; M2 runtime admission becomes incomplete. |
+| 2026-10-09 | Normalize CPC section/class/subclass parents and depths by symbol, preserving XML hierarchy for groups/subgroups. | The A21 range container nests A22 in the section master, while the A22B master starts at its subclass; container nesting otherwise creates conflicting parents. | Revert the normalization and range fixture together; retain the fail-closed duplicate-parent check. |
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-09 | Refresh the lane-created ClassificationXml.ts R4 row to lines 97.52, statements 97.74, branches 96.29, functions 95.89 from the sanctioned writer. | The cardinality/range fixture suite covers 90 tests; the new file retains 3 uncovered lines/statements/functions and 1 branch. Existing main rows and aggregate floors remain unchanged. | Delete this new-file row when zero uncovered units are reached. |
+
+## M3 decisions — 2026-10-09
+
+| Decision | Reason / evidence | Reversal |
+| --- | --- | --- |
+| Three separate schemes at explicit version 1.0.0, with stable concept IRIs; no latest. | CQ fixtures and serialization parity preserve reproducibility. | Deprecate released IRIs; new semantics use new IRIs/version. Before merge revert the three seed/registry modules together. |
+| Open, extended, final and missed are evidence-backed descriptors, not exclusive intrinsic phases; Section15 is elective. | Independent category and adversarial reviews identified optional targets and overlapping statuses. | Publish revised labels/definitions under a new explicit version; never repoint an IRI. |
+| Party identity is separate from roles, with institutional rigidity and historical-role caveats. | Six holder labels and eleven contextual role terms are SKOS concepts, not OWL entity classes. | Deprecate any unsuitable institutional label; consumers retain identity/role records, which this packet does not create. |
+| Public source notes distinguish procedural context from repository definitions; external mappings stay empty. | No vetted M3 manifest correspondence; label matching is not evidence. | Add only independently vetted exactMatch/closeMatch metadata in a later explicit version. |
+| Private ontology receives release notes, no changeset, per #1566 and standing ruling. | New versioned vocabulary is additive; it would not require a major bump. Earlier VendorLoadKind widening would be major if published. | Remove new APIs/seeds before merge, or deprecate/version afterward; revert loader widening with classification manifest rows. |
+
+The [M3 contract](./research/2026-10-09-m3-vocabulary-contract.md) freezes
+all 42 concept IRIs and records the prose PROV assignment pattern. The
+bootstrap plan is retained without creating the downstream packet.
+
+| 2026-10-09 review | Defer classification lookup indexing to the tracked admission-handle performance follow-up. | The public API accepts caller-supplied snapshots and validates them each time; skipping validation requires an immutable, service-owned admission contract. This P2 cost does not change edition/hierarchy correctness or the ready-slice acceptance gate. | Introduce an indexed handle in a later compatible API, or a major version if replacing snapshot input; preserve invalid/reversed-link fixtures and benchmark CPC repeated lookups. |

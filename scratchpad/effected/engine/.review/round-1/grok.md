@@ -1,0 +1,23 @@
+I'll review the engine port at that commit against the pinned upstream oracle and the binding decisions, and report findings only.The guard's scheduler changed from upstream. I'll check whether a beep law forces that, and whether the tests still pin the old timing.### grok-1-1
+- file: scratchpad/effected/engine/ProcessGuard.ts:281
+- class: bug   severity: required
+- standard: D9 / section 14 (observable order)   evidence: Upstream `ProcessGuard.run` schedules both crash injections with `setTimeout(..., 0)` (`packages/engine/src/ProcessGuard.ts` around the `inject?.at === "load"` await and the `markConnected` callback). This port uses `setImmediate` at line 281 (`at: "connected"`) and line 313 (`at: "load"`). `effecttsgo/global-timers` (`TS377072`) flags `setTimeout` and does not mention `setImmediate`. `entrypoints.test.ts` requires this file to import nothing, so `Effect.sleep` is unavailable. `scratchpad/effected/DIAGNOSTIC_EXCEPTIONS.md` already records a `globalTimers` skip on this file whose reason is preserving host timing; the current file has no such directive. Carried `KNOWLEDGE.md` still says `setTimeout` is the only global (lines 60–61 and 161). Node runs `setImmediate` in the check phase and `setTimeout(0)` in a timers phase; `scratchpad/effected/cli/ui/testing/CliUiTest.ts` lines 481–482 document that split. `purity.test.ts` does not forbid either timer, and `ProcessGuard.test.ts` waits 20ms, so both gates stay green.
+- failure: `injectCrash` no longer lands on a timers-phase tick. `markConnected` runs from the server's listening / `onReady` path (an I/O callback). From that phase, `setImmediate` runs in the same turn's check phase, and `setTimeout(0)` runs in the next timers phase. An injected `host.exit(1)` can therefore cut off 0ms timer work that upstream still runs, including a flush queued during connect. The public text was rewritten to describe `setImmediate` (lines 134 and 140). No deviation is recorded. `setImmediate` is also absent in hosts that have `setTimeout` and no Node globals, so `injectCrash` throws there before `load`.
+- fix: Call `setTimeout(callback, 0)` at both sites. Put `// @effect-diagnostics-next-line globalTimers:off` on the line above each call, stating that this module cannot import `effect` and the delay has to stay on the timers phase. Restore the two JSDoc sentences to `` `setTimeout(0)` ``. Keep the explicit promise chain. Leave `KNOWLEDGE.md` unchanged.
+
+### grok-1-2
+- file: scratchpad/test/engine/entrypoints.test.ts:9
+- class: test   severity: required
+- standard: D9 / section 11.1 (upstream built-graph contract)   evidence: The test file lives in `scratchpad/test/engine/`. `ROOT` is `resolve(dirname(import.meta.url), "..")`, so it is `scratchpad/test`. `BUILT` is `resolve(ROOT, "dist", "dev", "pkg")`, so the assertion reads `scratchpad/test/dist/dev/pkg/guard.js`. `SRC` was retargeted to `scratchpad/effected/engine` (line 8). Upstream resolves `BUILT` from the package root, beside `src` (`packages/engine/dist/dev/pkg`). `TESTS_NOT_PASSING.md` still says this file was left as copied and fails only because dist is absent.
+- failure: The built-graph test never inspects a build of this module. Emitting `dist/dev/pkg/guard.js` next to `scratchpad/effected/engine`, which is the upstream layout, still fails `existsSync`. A `dist` tree under `scratchpad/test` would satisfy the assertion for a different module.
+- fix: Set `BUILT` to `resolve(SRC, "dist", "dev", "pkg")` and delete `ROOT`. The missing build artifact remains the recorded environment failure until a build exists.
+
+### grok-1-3
+- file: scratchpad/effected/engine/Distribution.ts:37
+- class: schema   severity: required
+- standard: D5 and operator step 4 (every exported schema takes its identity from `$ScratchpadId`)   evidence: `Distribution` and `Remediation` both end in `$I.annoteSchema(...)`. `DistributionField` is `S.NullOr(Distribution)` with no annotation. `$I.annoteSchema` only calls `schema.annotate` (`packages/foundation/modeling/identity/src/Id.ts` `annoteSchema`), so the wrapper does not inherit `Distribution`'s identifier. The same pass annotates other exported unions (`JsoncSegment`, `VersionProbe`, `FileChange`).
+- failure: The public envelope schema has no identifier, title, or description in its own annotation record. Callers and docgen that key exported schemas by identity see an anonymous `NullOr`.
+- fix: Pipe the existing value through `$I.annoteSchema("DistributionField", { description })`, using the description already in the doc comment above it. Do not change the `NullOr` wire value.
+
+REQUIRED: 3
+BACKLOG: 0

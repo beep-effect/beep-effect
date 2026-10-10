@@ -1,0 +1,15 @@
+{
+  "actor": "operator",
+  "at": "2026-10-09T18:30:31.099Z",
+  "body": {
+    "previous": "completed-retained",
+    "status": "active",
+    "type": "status-set"
+  },
+  "expectedRevision": 2,
+  "packet": "semantic-foundation",
+  "parent": "80edc50ae267b2673866e960a4d79a756aa1fe72c6b3fbf792888e6f6bdc83b7",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 3
+}

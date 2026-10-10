@@ -73,6 +73,8 @@ const decodeSyncCursorRow = S.decodeUnknownResult(SyncCursor);
  * const row = {
  *   createdAt: 1,
  *   createdByPrincipal: { kind: "System", component: "Runtime" },
+ *   deletedAt: null,
+ *   deletedByPrincipal: null,
  *   entityType: "DocumentsSyncCursor",
  *   id: 1,
  *   lastError: null,
@@ -119,6 +121,8 @@ export const toSyncCursorInsert = (syncCursor: SyncCursor): Result.Result<SyncCu
  * const row = {
  *   createdAt: 1,
  *   createdByPrincipal: { kind: "System", component: "Runtime" },
+ *   deletedAt: null,
+ *   deletedByPrincipal: null,
  *   entityType: "DocumentsSyncCursor",
  *   id: 1,
  *   lastError: "box: stream position expired",

@@ -102,6 +102,8 @@ export const toThreadInsert = (thread: Thread): Result.Result<ThreadInsert, Thre
       (encoded): ThreadInsert => ({
         createdAt: encoded.createdAt,
         createdByPrincipal: encoded.createdByPrincipal,
+        deletedAt: encoded.deletedAt,
+        deletedByPrincipal: encoded.deletedByPrincipal,
         entityType: encoded.entityType,
         orgId: encoded.orgId,
         publicId: encoded.publicId,
@@ -129,6 +131,8 @@ export const toThreadInsert = (thread: Thread): Result.Result<ThreadInsert, Thre
  * const row = {
  *   createdAt: 1,
  *   createdByPrincipal: { component: "Runtime", kind: "System" },
+ *   deletedAt: null,
+ *   deletedByPrincipal: null,
  *   entityType: "WorkspaceThread",
  *   id: 10,
  *   orgId: 1,

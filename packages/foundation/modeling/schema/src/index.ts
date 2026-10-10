@@ -44,6 +44,12 @@ export * from "./CountryCode.ts";
  */
 export * from "./CountryName.ts";
 /**
+ * Versioned credential/private-tag detection grammar.
+ * @category utilities
+ * @since 0.0.0
+ */
+export * as CredentialPatternBank from "./CredentialPatternBank/index.ts";
+/**
  * @since 0.0.0
  * @category validation
  */

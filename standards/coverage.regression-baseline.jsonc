@@ -18048,6 +18048,18 @@
         "functions": 33
       },
       "files": {
+        "packages/foundation/modeling/ontology/src/ClassificationRegistry.ts": {
+          "lines": 95.61,
+          "statements": 95.72,
+          "branches": 86.36,
+          "functions": 91.93,
+          "uncovered": {
+            "lines": 5,
+            "statements": 5,
+            "branches": 3,
+            "functions": 5
+          }
+        },
         "packages/foundation/modeling/ontology/src/Fold.assembly.ts": {
           "lines": 91.44,
           "statements": 91.48,
@@ -18166,6 +18178,18 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/foundation/modeling/ontology/src/internal/ClassificationXml.ts": {
+          "lines": 97.52,
+          "statements": 97.74,
+          "branches": 96.29,
+          "functions": 95.89,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 1,
+            "functions": 3
           }
         },
         "packages/foundation/modeling/ontology/src/internal/Fold.ts": {

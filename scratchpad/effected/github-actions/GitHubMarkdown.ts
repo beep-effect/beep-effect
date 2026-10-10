@@ -1,0 +1,567 @@
+import * as A from "effect/Array";
+import {
+	Code,
+	Html,
+	InlineCode,
+	Link,
+	List,
+	ListItem,
+	Markdown,
+	Paragraph,
+	Root,
+	Table,
+	TableCell,
+	TableRow,
+} from "../markdown/index.ts";
+import * as Result from "effect/Result";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
+import { flow } from "effect/Function";
+import * as R from "effect/Record";
+
+/**
+ * A heading level GitHub renders, `1` through `6`.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GitHubHeadingDepth = 1 | 2 | 3 | 4 | 5 | 6;
+
+/**
+ * Options for {@link GitHubMarkdown.list}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface GitHubListOptions {
+	/**
+	 *  Render `1.`-numbered items instead of bullets.
+	 * @since 0.0.0
+	 */
+	readonly ordered?: boolean | undefined;
+}
+
+/**
+ * The row-schema constraint {@link GitHubMarkdown.tableFor} accepts: a
+ * schema exposing a struct field map — `S.Struct` and `S.Class`
+ * both qualify.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GitHubRowSchema = S.Constraint & { readonly fields: S.Struct.Fields };
+
+/**
+ * The field keys of a row schema whose column REQUIRES an explicit
+ * `format`: fields whose encoded side is not a string (their codec has no
+ * string projection to borrow), and fields whose encoding needs services
+ * (a sync cell render cannot provide them).
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GitHubSchemaTableFormatRequiredKeys<Fields extends S.Struct.Fields> = {
+	[K in keyof Fields]: [Fields[K]["Encoded"]] extends [string | undefined]
+		? [Fields[K]["EncodingServices"]] extends [never]
+			? never
+			: K
+		: K;
+}[keyof Fields];
+
+/**
+ * Per-column configuration for {@link GitHubMarkdown.tableFor}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface GitHubSchemaTableColumn<Value> {
+	/**
+	 * The column header, overriding the field schema's `title` annotation
+	 * and the field-name fallback. Pre-rendered markdown, like every cell.
+	 * @since 0.0.0
+	 */
+	readonly header?: string | undefined;
+	/**
+	 * Render a cell from the decoded field value instead of encoding it
+	 * through the field's codec. Required — by type — for a field whose
+	 * encoded side is not a string.
+	 * @since 0.0.0
+	 */
+	readonly format?: ((value: Value) => string) | undefined;
+}
+
+/**
+ * {@link GitHubSchemaTableColumn} with the `format` obligation discharged —
+ * the entry shape a non-string-encoded field demands.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface GitHubSchemaTableFormattedColumn<Value> extends GitHubSchemaTableColumn<Value> {
+	readonly format: (value: Value) => string;
+}
+
+/**
+ * The per-field column map for {@link GitHubMarkdown.tableFor}: entries are
+ * optional except where the field's encoded side is not a string, where the
+ * entry — and its `format` — are required.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GitHubSchemaTableColumns<Fields extends S.Struct.Fields> = {
+	readonly [K in GitHubSchemaTableFormatRequiredKeys<Fields>]: GitHubSchemaTableFormattedColumn<
+		Exclude<Fields[K]["Type"], undefined>
+	>;
+} & {
+	readonly [K in Exclude<keyof Fields, GitHubSchemaTableFormatRequiredKeys<Fields>>]?: GitHubSchemaTableColumn<
+		Exclude<Fields[K]["Type"], undefined>
+	>;
+};
+
+/**
+ * Options for {@link GitHubMarkdown.tableFor}. The whole bag is optional
+ * exactly when every field's encoded side is a string; one field without a
+ * string projection makes `columns` — and the entry carrying its `format` —
+ * required.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GitHubSchemaTableOptions<Fields extends S.Struct.Fields> = [
+	GitHubSchemaTableFormatRequiredKeys<Fields>,
+] extends [never]
+	? { readonly columns?: GitHubSchemaTableColumns<Fields> | undefined }
+	: { readonly columns: GitHubSchemaTableColumns<Fields> };
+
+/**
+ * A renderer minted by {@link GitHubMarkdown.tableFor}: columns are fixed by
+ * the schema, rows are supplied at each render.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface GitHubSchemaTable<Row> {
+	/**
+	 * Render the current rows as a GFM table. Pure and repeatable — identical
+	 * rows produce identical output, so re-rendering from changed state is
+	 * just calling it again.
+	 *
+	 * **Example** (Render rows repeatedly)
+	 *
+	 * ```ts
+	 * import { GitHubMarkdown } from "@beep/scratchpad/effected/github-actions/GitHubMarkdown";
+	 *
+	 * import * as S from "effect/Schema";
+	 *
+	 * const rows = GitHubMarkdown.tableFor(S.Struct({ name: S.String }));
+	 * console.log(rows.render([{ name: "build" }]) === rows.render([{ name: "build" }])) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	render(rows: ReadonlyArray<Row>): string;
+}
+
+/** The runtime view of a column after the type-level obligations are erased. */
+interface ColumnRuntime {
+	readonly key: string;
+	readonly header: string;
+	readonly cell: (value: unknown) => string;
+}
+
+/**
+ * A block node whose value passes through the serializer verbatim, which is
+ * exactly how a pre-rendered markdown fragment must travel: GFM structure
+ * around it is escaped, the fragment itself is not.
+ */
+const passthrough = (value: string): Html => Html.make({ value });
+
+/**
+ * Serialize a tree the writer built itself.
+ *
+ * **Details**
+ *
+ * `Markdown.stringifyResult` is total over every tree this module can
+ * construct — its only failure is the hardening nesting-depth guard (cap
+ * 256) — so the impossible arm is a defect, **not** a silent fallback to
+ * unescaped string joining.
+ *
+ * What makes the guard unreachable is not that these trees are small; it is
+ * that **their depth does not depend on input**. A fragment handed to a
+ * member always becomes a **leaf**, never a subtree: the composition members
+ * (`table`, `list`, `link`) wrap it in a single `passthrough` node, and the
+ * content members (`code`, `codeBlock`) carry it as a node's `value` string.
+ * Either way nothing re-parses a fragment into child nodes, so a composition
+ * nests strings rather than nodes and the deepest tree the writer can build
+ * is a table's five levels, whatever it is handed. Pinned by
+ * `__test__/GitHubMarkdown.test.ts`, which nests the writer's own output a
+ * thousand deep — four times the cap — and still renders.
+ *
+ * Keep that property when adding a member: a member that accepts a *node*, or
+ * that re-parses a fragment into one, makes depth input-dependent and this
+ * whole argument — and the no-wrapping guidance on the class — collapses.
+ */
+const render = (root: Root): string => Result.getOrThrow(Markdown.stringifyResult(root)).trimEnd();
+
+const block = (node: Root["children"][number]): string => render(Root.make({ children: [node] }));
+
+/**
+ * The fluent markdown writer for GitHub surfaces — PR comments, check-run
+ * summaries, job summaries.
+ *
+ * **Details**
+ *
+ * Every member takes **pre-rendered markdown** (links, emphasis, emoji — the
+ * caller's fragments pass through verbatim) and returns a `string`, so
+ * compositions read as plain string assembly. What the writer owns is the
+ * *structure*: wherever a fragment could break the construct around it, the
+ * output goes through `@effected/markdown`'s node classes and serializer
+ * rather than string joining. A table cell carrying `>=1 || <2` renders with
+ * its pipes escaped instead of shifting every column after it; a code block
+ * whose content contains a fence gets a longer fence; inline code containing
+ * a backtick gets a wider delimiter; a URL containing spaces or parentheses
+ * is angle-bracketed.
+ *
+ * This module is the package's **only** importer of `@effected/markdown`, so
+ * an action that never renders markdown never links the engine.
+ *
+ * **Renders cannot fail, so do not `Effect.try`-wrap them.** The serializer's
+ * single failure mode is a nesting-depth guard, and no input can reach it: a
+ * fragment handed to a member becomes a leaf — a passthrough node or a node's
+ * `value` string — never a parsed subtree, so a composition nests strings
+ * rather than nodes and the tree's depth is fixed by the construct, not by
+ * what it is handed. A test nests the writer's own output a thousand deep and
+ * still renders. Wrapping is boilerplate that also widens the catch to
+ * anything else thrown inside the builder — a reporting surface degrading for
+ * reasons it did not intend.
+ *
+ * Two exceptions, both in {@link GitHubMarkdown.tableFor} and neither in the
+ * serializer. Cells encode through the row schema, so a value smuggled past
+ * the types throws its `SchemaError`; and a column's own `format` function is
+ * called directly, so its totality is the caller's to guarantee. Well-typed
+ * rows through the default codec are total.
+ *
+ * **Example** (Compose a release validation report)
+ *
+ * ```ts
+ * import { GitHubMarkdown } from "@beep/scratchpad/effected/github-actions/GitHubMarkdown";
+ *
+ * const log = "build passed";
+ * const body = [
+ *   GitHubMarkdown.heading("Release Validation"),
+ *   GitHubMarkdown.table(["Check", "Outcome"], [["build", "✅ passed"]]),
+ *   GitHubMarkdown.details("Logs", GitHubMarkdown.codeBlock(log, "text")),
+ * ].join("\n\n");
+ * console.log(body.includes("Release Validation")) // true
+ * ```
+ *
+ * @public
+ * @category formatting
+ * @since 0.0.0
+ */
+export class GitHubMarkdown {
+	private constructor() {}
+
+	/**
+	 * A GFM table.
+	 *
+	 * **Details**
+	 *
+	 * Cells are pre-rendered markdown; the serializer escapes the pipes GFM
+	 * would otherwise read as column breaks. Rows shorter than the header are
+	 * padded with empty cells rather than shifting.
+	 *
+	 * **Example** (Escape pipes in table cells)
+	 *
+	 * ```ts
+	 * import { GitHubMarkdown } from "@beep/scratchpad/effected/github-actions/GitHubMarkdown";
+	 *
+	 * const table = GitHubMarkdown.table(["Range"], [[">=1 || <2"]]);
+	 * console.log(table.includes("\\|")) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	static table(headers: ReadonlyArray<string>, rows: ReadonlyArray<ReadonlyArray<string>>): string {
+		// A raw newline inside a cell terminates the GFM row — the same
+		// corruption class the pipe escaping exists to prevent, reachable
+		// through a multi-line `format` result or a multi-line value. GitHub
+		// renders `<br>` inside a cell, so line structure survives inline.
+		const inline = (value: string): string => value.replace(/\r?\n/g, "<br>");
+		const cells = (values: ReadonlyArray<string>): TableRow =>
+			TableRow.make({
+				children: A.map(headers, (_, index) =>
+					TableCell.make({ children: [passthrough(inline(values[index] ?? ""))] }),
+				),
+			});
+		return block(Table.make({ children: [cells(headers), ...rows.map(cells)] }));
+	}
+
+	/**
+	 * A GFM table whose columns are defined ONCE by a row schema.
+	 *
+	 * **Details**
+	 *
+	 * The schema is the single authority for the table's shape: column order
+	 * is field declaration order, each header is the field's `title`
+	 * annotation (fall back: the property name, overridable per column), and
+	 * each cell is the field value's **encoded** string form — a branded or
+	 * typed field projects through its own codec, so the vocabulary lives
+	 * with the schema instead of being respelled at every call site, and a
+	 * row cannot transpose columns because it is a typed object, not a
+	 * positional array.
+	 *
+	 * A field whose encoded side is not a string has no string projection to
+	 * borrow; the type of `options` makes its column's `format` — and
+	 * therefore `columns` and `options` themselves — required. An absent or
+	 * `undefined` optional field renders as an empty cell without consulting
+	 * codec or formatter.
+	 *
+	 * The renderer is a pure value: `render` maps current rows through
+	 * {@link GitHubMarkdown.table}, so escaping is inherited and identical
+	 * rows produce identical output. Rows are already-decoded values of the
+	 * schema's type, so encoding them is total in practice; a value smuggled
+	 * past the types throws the codec's `SchemaError` as a defect, **not** a
+	 * silent fallback.
+	 *
+	 * This is the **only** member where a throw is reachable at runtime, and
+	 * neither route is the serializer — see the no-wrapping remark on
+	 * {@link GitHubMarkdown}. There are two:
+	 *
+	 * - the **codec**, for a value smuggled past the types. A caller holding
+	 *   only well-typed rows (the normal case, and what the types express)
+	 *   needs no wrapping; a caller feeding rows decoded from somewhere
+	 *   untyped should decode through the schema rather than guard the render.
+	 * - a column's own **`format`** function, which is called directly and
+	 *   bypasses the codec entirely. Nothing here can make user code total, so
+	 *   a `format` that can throw makes its render able to throw — keep
+	 *   formatters total, or guard at the formatter rather than the render.
+	 *
+	 * Only string-keyed fields become columns; symbol keys are not
+	 * enumerable table columns.
+	 *
+	 * **Example** (Render check rows using schema-defined columns)
+	 *
+	 * ```ts
+	 * import { GitHubMarkdown } from "@beep/scratchpad/effected/github-actions/GitHubMarkdown";
+	 * import * as S from "effect/Schema";
+	 *
+	 * const CheckRow = S.Struct({
+	 *   name: S.String.annotate({ title: "Check" }),
+	 *   outcome: S.Literals(["passed", "failed"]),
+	 * });
+	 * const checks = GitHubMarkdown.tableFor(CheckRow);
+	 * const body = checks.render([{ name: "build", outcome: "passed" }]);
+	 * console.log(body.includes("build")) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	static tableFor<RowSchema extends GitHubRowSchema>(
+		schema: RowSchema,
+		...options: [GitHubSchemaTableFormatRequiredKeys<RowSchema["fields"]>] extends [never]
+			? [options?: GitHubSchemaTableOptions<RowSchema["fields"]>]
+			: [options: GitHubSchemaTableOptions<RowSchema["fields"]>]
+	): GitHubSchemaTable<RowSchema["Type"]> {
+		const overrides: unknown = options[0]?.columns ?? {};
+		const columns: ReadonlyArray<ColumnRuntime> = R.toEntries(schema.fields).map(([key, field]) => {
+			const column = P.hasProperty(overrides, key) ? overrides[key] : undefined;
+			const format = P.hasProperty(column, "format") && P.isFunction(column.format) ? column.format : undefined;
+			const header = P.hasProperty(column, "header") && P.isString(column.header) ? column.header : undefined;
+			// The caller's `format` wins; otherwise the field's own encoder renders
+			// the cell (an encoder yielding nothing is an empty cell). Built once
+			// per column, not per cell — this is the one path that renders in a loop.
+			const encode = flow(
+				S.encodeUnknownResult(S.make<S.Codec<unknown, unknown>>(field.ast)),
+				Result.getOrThrow,
+			);
+			const project = (value: unknown): string => {
+				const rendered: unknown = format === undefined ? encode(value) ?? "" : format(value);
+				return Result.getOrThrow(S.decodeUnknownResult(S.String)(rendered));
+			};
+			return {
+				key,
+				header: header ?? SchemaAST.resolveTitle(field.ast) ?? key,
+				cell: (value: unknown): string => (value === undefined ? "" : project(value)),
+			};
+		});
+		const headers = columns.map((column) => column.header);
+		return {
+			render: (rows: ReadonlyArray<RowSchema["Type"]>): string =>
+				GitHubMarkdown.table(
+					headers,
+					rows.map((row) => columns.map((column) => column.cell(P.hasProperty(row, column.key) ? row[column.key] : undefined))),
+				),
+		};
+	}
+
+	/**
+	 *  An ATX heading; the level defaults to `2`.
+	 *
+	 * **Example** (Render the default heading level)
+	 *
+	 * ```ts
+	 * import { GitHubMarkdown } from "@beep/scratchpad/effected/github-actions/GitHubMarkdown";
+	 *
+	 * console.log(GitHubMarkdown.heading("Checks")) // ## Checks
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	static heading(text: string, level: GitHubHeadingDepth = 2): string {
+		return `${"#".repeat(level)} ${text}`;
+	}
+
+	/**
+	 *  A link. URLs the destination cannot carry raw are angle-bracketed.
+	 *
+	 * **Example** (Render a repository link)
+	 *
+	 * ```ts
+	 * import { GitHubMarkdown } from "@beep/scratchpad/effected/github-actions/GitHubMarkdown";
+	 *
+	 * console.log(GitHubMarkdown.link("Repo", "https://github.com/acme/repo")) // [Repo](https://github.com/acme/repo)
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	static link(text: string, url: string): string {
+		return block(Paragraph.make({ children: [Link.make({ url, children: [passthrough(text)] })] }));
+	}
+
+	/**
+	 *  Inline code. Content containing backticks widens the delimiter.
+	 *
+	 * **Example** (Render inline command text)
+	 *
+	 * ```ts
+	 * import { GitHubMarkdown } from "@beep/scratchpad/effected/github-actions/GitHubMarkdown";
+	 *
+	 * console.log(GitHubMarkdown.code("bun test")) // `bun test`
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	static code(text: string): string {
+		return block(Paragraph.make({ children: [InlineCode.make({ value: text })] }));
+	}
+
+	/**
+	 *  A fenced code block. Content containing a fence lengthens the fence.
+	 *
+	 * **Example** (Fence a text log)
+	 *
+	 * ```ts
+	 * import { GitHubMarkdown } from "@beep/scratchpad/effected/github-actions/GitHubMarkdown";
+	 *
+	 * const block = GitHubMarkdown.codeBlock("build passed", "text");
+	 * console.log(block.includes("build passed")) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	static codeBlock(content: string, language?: string): string {
+		// The explicit fenceChar keeps a language-less block FENCED: without it
+		// the serializer falls back to an indented code block, which GitHub
+		// renders but which cannot be copy-pasted around other markdown safely.
+		return block(
+			Code.make({
+				value: content,
+				fenceChar: "`",
+				...(language === undefined || language === "" ? {} : { lang: language }),
+			}),
+		);
+	}
+
+	/**
+	 * A list of pre-rendered markdown items.
+	 *
+	 * **Details**
+	 *
+	 * A multi-line item is indented onto continuation lines, so it stays part
+	 * of its bullet instead of terminating the list.
+	 *
+	 * **Example** (Render numbered checks)
+	 *
+	 * ```ts
+	 * import { GitHubMarkdown } from "@beep/scratchpad/effected/github-actions/GitHubMarkdown";
+	 *
+	 * const list = GitHubMarkdown.list(["build", "test"], { ordered: true });
+	 * console.log(list.startsWith("1.")) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	static list(items: ReadonlyArray<string>, options?: GitHubListOptions): string {
+		const ordered = options?.ordered ?? false;
+		return block(
+			List.make({
+				ordered,
+				...(ordered ? { start: 1 } : {}),
+				children: items.map((item) => ListItem.make({ children: [passthrough(item)] })),
+			}),
+		);
+	}
+
+	/**
+	 * A collapsible `<details>` block.
+	 *
+	 * **Gotchas**
+	 *
+	 * mdast has no details node, so this is the one construct the writer emits
+	 * as raw HTML. The blank lines around `body` are what make GitHub render
+	 * the markdown inside it; `summary` is HTML context — markdown is **not**
+	 * rendered there, so bold a summary with `<strong>`, not `**`.
+	 *
+	 * **Example** (Wrap logs in a collapsible block)
+	 *
+	 * ```ts
+	 * import { GitHubMarkdown } from "@beep/scratchpad/effected/github-actions/GitHubMarkdown";
+	 *
+	 * const details = GitHubMarkdown.details("Logs", GitHubMarkdown.code("build passed"));
+	 * console.log(details.startsWith("<details>")) // true
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	static details(summary: string, body: string): string {
+		return `<details>\n<summary>${summary}</summary>\n\n${body}\n\n</details>`;
+	}
+
+	/**
+	 * Pre-rendered markdown, passed through by name.
+	 *
+	 * **Details**
+	 *
+	 * The identity function, deliberately: every writer member already treats
+	 * its fragments as markdown, so `raw` adds no behavior — it adds the
+	 * *statement* that a value is already rendered. Use it where a fragment
+	 * from elsewhere enters a composition and a reader would otherwise wonder
+	 * whether it still needs escaping. Prefer it to `Html.make`, which passes
+	 * markdown through correctly but announces the wrong intent.
+	 *
+	 * **Example** (Mark an existing markdown fragment)
+	 *
+	 * ```ts
+	 * import { GitHubMarkdown } from "@beep/scratchpad/effected/github-actions/GitHubMarkdown";
+	 *
+	 * console.log(GitHubMarkdown.raw("**passed**")) // **passed**
+	 * ```
+	 *
+	 * @since 0.0.0
+	 */
+	static raw(markdown: string): string {
+		return markdown;
+	}
+}

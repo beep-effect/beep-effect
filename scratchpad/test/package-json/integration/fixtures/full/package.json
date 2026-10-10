@@ -1,0 +1,64 @@
+{
+  "name": "@scope/full-pkg",
+  "version": "2.1.0",
+  "private": true,
+  "description": "A full package with all typed fields",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./utils": "./src/utils.ts"
+  },
+  "main": "./src/index.ts",
+  "bin": {
+    "my-cli": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "biome check",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "effect": "^3.0.0",
+    "lodash": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "effect": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "effect": {
+      "optional": true
+    }
+  },
+  "optionalDependencies": {
+    "fsevents": "^2.3.0"
+  },
+  "packageManager": "pnpm@10.33.0+sha512.abc123",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "10.33.0",
+      "onFail": "ignore"
+    },
+    "runtime": [
+      {
+        "name": "node",
+        "version": "24.11.0",
+        "onFail": "ignore"
+      }
+    ]
+  },
+  "publishConfig": {
+    "access": "public",
+    "directory": "dist/npm",
+    "linkDirectory": true,
+    "registry": "https://registry.npmjs.org/"
+  }
+}

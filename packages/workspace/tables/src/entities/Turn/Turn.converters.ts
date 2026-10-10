@@ -104,6 +104,8 @@ export const toTurnInsert = (turn: Turn): Result.Result<TurnInsert, TurnConverte
       (encoded): TurnInsert => ({
         createdAt: encoded.createdAt,
         createdByPrincipal: encoded.createdByPrincipal,
+        deletedAt: encoded.deletedAt,
+        deletedByPrincipal: encoded.deletedByPrincipal,
         entityType: encoded.entityType,
         items: encoded.items,
         orgId: encoded.orgId,
@@ -133,6 +135,8 @@ export const toTurnInsert = (turn: Turn): Result.Result<TurnInsert, TurnConverte
  * const row = {
  *   createdAt: 1,
  *   createdByPrincipal: { component: "Runtime", kind: "System" },
+ *   deletedAt: null,
+ *   deletedByPrincipal: null,
  *   entityType: "WorkspaceTurn",
  *   id: 12,
  *   items: [{ itemType: "message", messageId: 11 }],

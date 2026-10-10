@@ -1,0 +1,36 @@
+lockfileVersion: '9.0'
+
+# HAND-AUTHORED. `kit-skew/` after `pnpm update @effected/npm`: ONE edit, npm
+# now pulls commands 0.3.1, so the 0.2.1 row is gone.
+
+importers:
+
+  .:
+    dependencies:
+      '@effected/npm':
+        specifier: ^0.8.2
+        version: 0.8.3
+
+      '@effected/workspaces':
+        specifier: ^0.10.1
+        version: 0.10.1
+
+packages:
+
+  '@effected/commands@0.3.1': {}
+
+  '@effected/npm@0.8.3': {}
+
+  '@effected/workspaces@0.10.1': {}
+
+snapshots:
+
+  '@effected/commands@0.3.1': {}
+
+  '@effected/npm@0.8.3':
+    dependencies:
+      '@effected/commands': 0.3.1
+
+  '@effected/workspaces@0.10.1':
+    dependencies:
+      '@effected/commands': 0.3.1

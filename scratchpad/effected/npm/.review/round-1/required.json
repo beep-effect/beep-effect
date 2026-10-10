@@ -1,0 +1,360 @@
+{
+  "module": "npm",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/npm/DependencySection.ts",
+        "scratchpad/effected/npm/RegistryKind.ts",
+        "scratchpad/effected/npm/PackageManagerPin.ts",
+        "scratchpad/effected/npm/IntegrityHash.ts",
+        "scratchpad/effected/npm/DependencySpecifier.ts",
+        "scratchpad/effected/npm/index.ts"
+      ],
+      "tests": [
+        "scratchpad/test/npm/DependencySection.test.ts",
+        "scratchpad/test/npm/RegistryKind.test.ts",
+        "scratchpad/test/npm/PackageManagerPin.test.ts",
+        "scratchpad/test/npm/IntegrityHash.test.ts",
+        "scratchpad/test/npm/DependencySpecifier.test.ts",
+        "scratchpad/test/npm/reachability.test.ts"
+      ],
+      "findings": [
+        "npm-9",
+        "npm-10",
+        "npm-12",
+        "npm-13",
+        "npm-14",
+        "npm-15",
+        "npm-16",
+        "npm-17",
+        "npm-18",
+        "npm-30",
+        "npm-31",
+        "npm-33",
+        "allow-1",
+        "allow-2"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/npm/RegistryCredential.ts",
+        "scratchpad/effected/npm/PackagePublish.ts",
+        "scratchpad/effected/npm/NpmRegistry.ts",
+        "scratchpad/effected/npm/PublishError.ts"
+      ],
+      "tests": [
+        "scratchpad/test/npm/PackagePublish.test.ts",
+        "scratchpad/test/npm/NpmRegistry.test.ts",
+        "scratchpad/test/npm/publish-fixtures.ts"
+      ],
+      "findings": [
+        "npm-3",
+        "npm-4",
+        "npm-5",
+        "npm-6",
+        "npm-7",
+        "npm-19",
+        "npm-20",
+        "npm-22",
+        "npm-23",
+        "npm-29",
+        "npm-32",
+        "npm-36"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/npm/Manifest.ts",
+        "scratchpad/effected/npm/CatalogAssemblyError.ts",
+        "scratchpad/effected/npm/WorkspaceResolver.ts",
+        "scratchpad/effected/npm/PackageTarball.ts"
+      ],
+      "tests": [
+        "scratchpad/test/npm/Manifest.test.ts",
+        "scratchpad/test/npm/CatalogAssemblyError.test.ts",
+        "scratchpad/test/npm/CatalogResolver.test.ts",
+        "scratchpad/test/npm/WorkspaceResolver.test.ts",
+        "scratchpad/test/npm/PackageTarball.test.ts",
+        "scratchpad/test/npm/deliberatelyInvalid.ts"
+      ],
+      "findings": [
+        "npm-1",
+        "npm-2",
+        "npm-21",
+        "npm-24",
+        "npm-25",
+        "npm-26",
+        "npm-27",
+        "npm-28"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/npm/PackageManagerCache.ts"
+      ],
+      "tests": [
+        "scratchpad/test/npm/PackageManagerCache.test.ts"
+      ],
+      "findings": [
+        "npm-8",
+        "npm-11"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/npm/NpmExecutor.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "npm-35"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/npm/ReleaseAgeGate.ts"
+      ],
+      "tests": [
+        "scratchpad/test/npm/ReleaseAgeGate.test.ts"
+      ],
+      "findings": [
+        "npm-34"
+      ]
+    }
+  ],
+  "findings": {
+    "npm-1": {
+      "file": "scratchpad/effected/npm/Manifest.ts",
+      "class": "bug",
+      "summary": "An own non-dependency field invokes the inherited __proto__ setter and disappears during round-trip.",
+      "fix": "Build the unknown-field record from collected entries with effect/Record.fromEntries, preserving own __proto__ data and typed-field precedence. Add the exact unknown-field round-trip regression to Manifest.test.ts. Supply the upstream-bug evidence to the central deviation codemod; do not edit the ledger or Port notes."
+    },
+    "npm-2": {
+      "file": "scratchpad/test/npm/WorkspaceResolver.test.ts",
+      "class": "law",
+      "summary": "The oracle constructor-rejection test was weakened to a different boundary; it cannot detect loss of constructor validation.",
+      "fix": "Add scratchpad/test/npm/deliberatelyInvalid.ts with the single approved generic unknown-to-T cast. Restore the upstream .make assertion and invalid reason using deliberatelyInvalid<\"mechanism\" | \"no-version\">(\"bogus\"). Preserve the decoder assertion only as an additional test."
+    },
+    "npm-3": {
+      "file": "scratchpad/effected/npm/RegistryCredential.ts",
+      "class": "bug",
+      "summary": "A new curried accepted-input shape was added without an allowed cause.",
+      "fix": "Remove the data-last overload and dual wrapper; restore the upstream two-argument calling convention and any oracle test lines rewritten solely for currying. Coordinate with npm-4: EF-1 forces a typed Effect result, so restoring the calling convention does not restore the forbidden synchronous throw."
+    },
+    "npm-4": {
+      "file": "scratchpad/effected/npm/RegistryCredential.ts",
+      "class": "effect-idiom",
+      "summary": "Expected username validation can escape before an Effect exists, or become a defect inside a generator.",
+      "fix": "Keep the upstream two-argument calling convention, return Effect.Effect<BasicCredential, InvalidBasicAuthUsernameError>, and use Effect.fail for colon-bearing usernames. Adapt PackagePublish.test.ts success and rejection calls to execute the Effect, preserving the existing assertions. This API deviation is law:EF-1; central bookkeeping only."
+    },
+    "npm-5": {
+      "file": "scratchpad/effected/npm/RegistryCredential.ts",
+      "class": "schema",
+      "summary": "Pure credential data lacks executable schemas, identity metadata and derived guards; it is not a service-contract exception.",
+      "fix": "Define identity-annotated boundary-compatible schemas for token/basic credentials using S.Redacted(S.String) and a discriminator-specific union; derive the existing same-name types. Preserve structural inputs and redaction, and construct the basic result through its schema. Existing type-only barrel exports can stay type-only; any added public runtime export is centrally inventoried."
+    },
+    "npm-6": {
+      "file": "scratchpad/effected/npm/PackagePublish.ts",
+      "class": "schema",
+      "summary": "Representable payload/config models have no schema source of truth.",
+      "fix": "Introduce annotated boundary-compatible schemas and derive the existing type names. Preserve optional-versus-explicit-undefined semantics and existing inputs; keep PackagePublishShape as a service interface. Normalize finite outcome cases internally if needed, preserving the public outcome shape."
+    },
+    "npm-7": {
+      "file": "scratchpad/effected/npm/NpmRegistry.ts",
+      "class": "schema",
+      "summary": "Registry boundary and seed data have no annotated executable schema contract.",
+      "fix": "Define annotated schemas and derive these existing types, retaining nested record contents, Redacted credential types, and optional-versus-explicit-undefined inputs. Keep NpmRegistryShape as the service interface and avoid gratuitous public shape changes."
+    },
+    "npm-8": {
+      "file": "scratchpad/effected/npm/PackageManagerCache.ts",
+      "class": "schema",
+      "summary": "The options payload has no schema source of truth or identity annotations.",
+      "fix": "Define an identity-annotated boundary-compatible options schema and derive DefaultCacheDirectoryOptions, preserving optional values and the current default-directory behavior."
+    },
+    "npm-9": {
+      "file": "scratchpad/effected/npm/DependencySection.ts",
+      "class": "schema",
+      "summary": "Two named domains bypass the required kit vocabulary.",
+      "fix": "Replace both schemas with annotated LiteralKit values from @beep/schema/LiteralKit. Preserve literal order, .literals, same-name types, field mappings and decoded string values."
+    },
+    "npm-10": {
+      "file": "scratchpad/effected/npm/RegistryKind.ts",
+      "class": "schema",
+      "summary": "The reusable registry vocabulary lacks its required LiteralKit construction.",
+      "fix": "Use the annotated LiteralKit with the same literal order and outputs. Kit dispatch can replace duplicated dispatch lists when behavior remains identical."
+    },
+    "npm-11": {
+      "file": "scratchpad/effected/npm/PackageManagerCache.ts",
+      "class": "schema",
+      "summary": "The reusable manager vocabulary bypasses LiteralKit.",
+      "fix": "Use an annotated LiteralKit retaining the exact literal order, same-name type and directory results."
+    },
+    "npm-12": {
+      "file": "scratchpad/effected/npm/PackageManagerPin.ts",
+      "class": "schema",
+      "summary": "The named domain bypasses the kit and has a second source of truth for acceptance.",
+      "fix": "Define the annotated LiteralKit in the same order and replace isPinName with S.is(PackageManagerPinName), preserving parse acceptance and existing pin representations."
+    },
+    "npm-13": {
+      "file": "scratchpad/effected/npm/IntegrityHash.ts",
+      "class": "schema",
+      "summary": "A named algorithm vocabulary is duplicated between a public type and an anonymous guard schema.",
+      "fix": "Define the identity-annotated IntegrityAlgorithm LiteralKit, derive its same-name type and guard, and expose its runtime value through index.ts. Keep the five literals and algorithmOf results identical. Added-export bookkeeping belongs to the codemod."
+    },
+    "npm-14": {
+      "file": "scratchpad/effected/npm/DependencySpecifier.ts",
+      "class": "schema",
+      "summary": "The protocol vocabulary is maintained outside the required schema/kit source of truth.",
+      "fix": "Create an annotated LiteralKit in upstream order (range, tag, git, url, npm, file, link, portal, catalog, workspace, unknown), derive the same-name type and export the value from index.ts. Preserve classification outputs; leave export bookkeeping to the codemod."
+    },
+    "npm-15": {
+      "file": "scratchpad/effected/npm/IntegrityHash.ts",
+      "class": "schema",
+      "summary": "Four exported schemas lack their own namespaced identity and meaningful schema metadata.",
+      "fix": "Annotate each underlying schema with a distinct $I identity and description before defining the S.Opaque classes required by allow-1/allow-2. Preserve branded string behavior and codec wiring; retarget only object-identity assertions made obsolete by the operator-approved representation."
+    },
+    "npm-16": {
+      "file": "scratchpad/effected/npm/IntegrityHash.ts",
+      "class": "schema",
+      "summary": "The remaining non-class SriIntegrityHash schema omits its same-name derived type companion.",
+      "fix": "Add export type SriIntegrityHash = typeof SriIntegrityHash.Type, retaining IntegrityHashBrand. Existing value re-exports carry the merged type. Do not add type aliases that conflict with the named S.Opaque classes required by allow-1/allow-2; the central codemod records actual added types."
+    },
+    "npm-17": {
+      "file": "scratchpad/effected/npm/IntegrityHash.ts",
+      "class": "schema",
+      "summary": "Reusable checks omit identifier/title/description even where the owning schema has annotations.",
+      "fix": "Provide $I-derived identifiers, titles and descriptions for each reusable check, including replacements introduced by npm-18. Preserve predicates and user-facing rejection messages."
+    },
+    "npm-18": {
+      "file": "scratchpad/effected/npm/IntegrityHash.ts",
+      "class": "schema",
+      "summary": "Named string constraints and guards are maintained outside the schema source of truth.",
+      "fix": "Define annotated string constraints using equivalent built-in schema checks, derive the named guards with S.is and compose aggregate schemas from them. Preserve the grammar and rejection behavior; the pin-name instance is deduped into npm-12."
+    },
+    "npm-19": {
+      "file": "scratchpad/effected/npm/NpmRegistry.ts",
+      "class": "schema",
+      "summary": "RegistryReadError permits irrelevant case payloads and does not narrow case-specific fields to an internal validated variant.",
+      "fix": "Represent transport/status/decode as discriminator-specific annotated schema members. Preserve public tags and external compatibility through a facade/transform; normalize to a case-specific internal model before branching. Any law-forced stricter input must have its adjusted upstream assertions identified for the central codemod."
+    },
+    "npm-20": {
+      "file": "scratchpad/effected/npm/PublishError.ts",
+      "class": "schema",
+      "summary": "PublishError permits irrelevant case payloads and does not narrow case-specific fields to an internal validated variant.",
+      "fix": "Model the publish error cases with annotated discriminator-specific members and preserve public tags and boundary compatibility through a facade/transform. Any law-forced stricter input must have its adjusted upstream assertions identified for the central codemod."
+    },
+    "npm-21": {
+      "file": "scratchpad/effected/npm/PackageTarball.ts",
+      "class": "schema",
+      "summary": "TarballError permits irrelevant case payloads and does not narrow case-specific fields to an internal validated variant.",
+      "fix": "Use one named LiteralKit reason domain and discriminator-specific annotated members; derive fail's reason type from that domain. Preserve the public tag, reason values and external compatibility through a facade/transform. Any law-forced stricter input must have its adjusted upstream assertions identified for the central codemod."
+    },
+    "npm-22": {
+      "file": "scratchpad/effected/npm/NpmRegistry.ts",
+      "class": "schema",
+      "summary": "Cause serialization omits the originating stack required by the error-schema contract.",
+      "fix": "Use S.Defect({ includeStack: true }) in RegistryReadError cause fields, preserving existing optionality. Add or adapt a focused encode assertion in this group's corresponding tests; identify the law-driven wire change for central bookkeeping."
+    },
+    "npm-23": {
+      "file": "scratchpad/effected/npm/PublishError.ts",
+      "class": "schema",
+      "summary": "Cause serialization omits the originating stack required by the error-schema contract.",
+      "fix": "Use S.Defect({ includeStack: true }) in PublishError cause fields, preserving existing optionality. Add or adapt a focused encode assertion in this group's corresponding tests; identify the law-driven wire change for central bookkeeping."
+    },
+    "npm-24": {
+      "file": "scratchpad/effected/npm/PackageTarball.ts",
+      "class": "schema",
+      "summary": "Cause serialization omits the originating stack required by the error-schema contract.",
+      "fix": "Use S.Defect({ includeStack: true }) in TarballError cause fields, preserving existing optionality. Add or adapt a focused encode assertion in this group's corresponding tests; identify the law-driven wire change for central bookkeeping."
+    },
+    "npm-25": {
+      "file": "scratchpad/effected/npm/Manifest.ts",
+      "class": "schema",
+      "summary": "Cause serialization omits the originating stack required by the error-schema contract.",
+      "fix": "Use S.Defect({ includeStack: true }) in ManifestDecodeError cause fields, preserving existing optionality. Add or adapt a focused encode assertion in this group's corresponding tests; identify the law-driven wire change for central bookkeeping."
+    },
+    "npm-26": {
+      "file": "scratchpad/effected/npm/CatalogAssemblyError.ts",
+      "class": "schema",
+      "summary": "Cause serialization omits the originating stack required by the error-schema contract.",
+      "fix": "Use S.Defect({ includeStack: true }) in CatalogAssemblyError cause fields, preserving existing optionality. Add or adapt a focused encode assertion in this group's corresponding tests; identify the law-driven wire change for central bookkeeping."
+    },
+    "npm-27": {
+      "file": "scratchpad/effected/npm/WorkspaceResolver.ts",
+      "class": "schema",
+      "summary": "Cause serialization omits the originating stack required by the error-schema contract.",
+      "fix": "Use S.Defect({ includeStack: true }) in DependencyResolutionError cause fields, preserving existing optionality. Add or adapt a focused encode assertion in this group's corresponding tests; identify the law-driven wire change for central bookkeeping."
+    },
+    "npm-28": {
+      "file": "scratchpad/effected/npm/CatalogAssemblyError.ts",
+      "class": "effect-idiom",
+      "summary": "Domain logic retains the prohibited direct native string-helper form.",
+      "fix": "Use equivalent effect/String helpers with the same trimming, grammar and indexing behavior. Preserve the upstream test assertions."
+    },
+    "npm-29": {
+      "file": "scratchpad/effected/npm/PublishError.ts",
+      "class": "effect-idiom",
+      "summary": "Domain logic retains the prohibited direct native string-helper form.",
+      "fix": "Use equivalent effect/String helpers with the same trimming, grammar and indexing behavior. Preserve the upstream test assertions."
+    },
+    "npm-30": {
+      "file": "scratchpad/effected/npm/DependencySpecifier.ts",
+      "class": "effect-idiom",
+      "summary": "Domain logic retains the prohibited direct native string-helper form.",
+      "fix": "Use equivalent effect/String helpers with the same trimming, grammar and indexing behavior. Preserve the upstream test assertions."
+    },
+    "npm-31": {
+      "file": "scratchpad/effected/npm/PackageManagerPin.ts",
+      "class": "effect-idiom",
+      "summary": "Domain logic retains the prohibited direct native string-helper form.",
+      "fix": "Use equivalent effect/String helpers with the same trimming, grammar and indexing behavior. Preserve the upstream test assertions."
+    },
+    "npm-32": {
+      "file": "scratchpad/effected/npm/PackagePublish.ts",
+      "class": "effect-idiom",
+      "summary": "A single JSON-to-pack transformation is split into two schemas and duplicate boundary mappings.",
+      "fix": "Use S.fromJsonString around the existing PackJson union and one decode/mapError, preserving accepted JSON forms and later result selection. Remove PackJsonString. Keep the native-JSON cause-class bookkeeping in codemod-3."
+    },
+    "npm-33": {
+      "file": "scratchpad/effected/npm/index.ts",
+      "class": "law",
+      "summary": "A public-entry consumer cannot name the public credential error. This is a missing code export, beyond merely recording an added export.",
+      "fix": "Re-export InvalidBasicAuthUsernameError from the RegistryCredential block in index.ts. Added exports/ledger/Port notes are handled centrally; no bookkeeping file is assigned to this group."
+    },
+    "npm-34": {
+      "file": "scratchpad/effected/npm/ReleaseAgeGate.ts",
+      "class": "schema",
+      "summary": "The replacement itself changes failure issues by applying the finite constraint twice; this is more than recording a forced Number-to-Finite change.",
+      "fix": "Restore the exempt upstream S.Number.check(S.isGreaterThanOrEqualTo(0), S.isFinite()) composition and any test lines changed solely for the redundant replacement. Preserve the original order of checks. S2 owns the associated comment adaptation."
+    },
+    "npm-35": {
+      "file": "scratchpad/effected/npm/NpmExecutor.ts",
+      "class": "effect-idiom",
+      "summary": "The lab adds a named trace span even though the effect-fn law can be met without that observable addition.",
+      "fix": "Use Effect.fnUntraced for the extracted helper, preserving the required function idiom and upstream tracing behavior. Restore any oracle assertions rewritten for the new span; do not merely rename and record it."
+    },
+    "npm-36": {
+      "file": "scratchpad/effected/npm/PackagePublish.ts",
+      "class": "effect-idiom",
+      "summary": "A domain encoder uses direct native array/string helpers despite an equivalent Effect encoding primitive; this is a cited idiom violation, not a measured-performance claim.",
+      "fix": "Use effect/encoding/Hex.encode for the digest and delete hex. Preserve the upstream packed-tarball SHA-256 expected bytes in PackagePublish.test.ts."
+    },
+    "allow-1": {
+      "file": "scratchpad/effected/npm/DependencySpecifier.ts",
+      "class": "law",
+      "summary": "The operator removed this exception: native schema-static attachment must be replaced.",
+      "fix": "Replace Object.assign augmentation with an S.Opaque class exposing explicit static members and the annotated branded schema. Wire decode and FromString to the new public schema consistently; retain branded-string behavior and all upstream statics. Retarget affected schema-representation/identity assertions in DependencySpecifier.test.ts. No Object.defineProperties workaround; central codemod removes the exception and records the deviation."
+    },
+    "allow-2": {
+      "file": "scratchpad/effected/npm/IntegrityHash.ts",
+      "class": "law",
+      "summary": "The operator removed this exception: both native static attachments must be replaced.",
+      "fix": "Use S.Opaque classes with explicit static members for augmented integrity schemas, with coherent codec/decoder wiring and identity annotations. Retain upstream names, branded strings and conversion behavior. Retarget schema-identity assertions in IntegrityHash.test.ts and PackageManagerPin.test.ts to the new representation. No Object.defineProperties workaround; central codemod removes the exception and records the deviation."
+    }
+  }
+}

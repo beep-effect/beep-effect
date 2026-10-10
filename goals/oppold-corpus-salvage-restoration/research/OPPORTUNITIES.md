@@ -245,3 +245,129 @@ because the coordinator has no queue.
 - **Prevented by:** an explicit walk boundary (the corpus home for the
   census) separate from the directory being walked, and dedupe by canonical
   path so a symlinked file is censused once under its real location.
+
+## 2026-10-09 — Worker environment omitted the user bus
+
+- **Doing:** starting the P1 sandbox smoke and focused exception fixtures through `beep-heavy`.
+- **Evidence:** both wrappers exited 1 before starting their commands because the user-bus environment was absent. The existing user bus was reachable after supplying its standard runtime environment; the same prerequisite commands then queued normally.
+- **Prevented by:** verify the launcher's forwarded user-bus environment at worker admission, before any heavy command or immutable corpus operation.
+
+## 2026-10-09 — Slot contention delays preflight
+
+- **Doing:** running two bounded prerequisites through `beep-heavy` before the RAM-only sizing probe.
+- **Evidence:** both jobs reported all three slots busy and remained queued for more than ten minutes; no prerequisite command had started and no slice ledger existed.
+- **Prevented by:** reserve a short preflight admission window or expose queue position and expected holder completion to the worker. The existing cap and sibling jobs remain untouched.
+
+### 2026-10-09: the synthetic Tika stub hid the real capture size
+
+While sizing the first mail slice, all 59 second-pass extractions succeeded,
+but 43 exceeded the fixed 4,096-character capture limit (maximum 1,578,537).
+The synthetic stub produced a short line, so it could not expose the failure.
+A fixture above the previous limit and a fixture above the remaining output
+budget would have prevented this. Keep full text within the attempt budget;
+retain fail-closed budget checks. This is the same launcher-versus-real-engine
+proof gap recorded on 2026-08-27.
+
+### 2026-10-09: canonical resolution precedes the name escape
+
+The synthetic backslash fixture exposed `export entry resolution failed` under Bun.
+The quota handoff also validates the raw tree before the portable-name escape,
+so testing only the direct export would miss nested backslash components there.
+Canonical resolution must check ancestors without rewriting literal name bytes;
+a quota-handoff fixture, including a rejected symbolic link, now proves that
+contract before child references are built. A fixture covering the live quota
+path would have prevented this second validation gap.
+
+### 2026-10-09: an unrelated reference gate blocks a scoped parity check
+
+The required `CI=true bun run beep knowledge refs --check` exits 1 on one inherited
+external-mirror reference in `goals/repository-simplification-confidence/SPEC.md`.
+The file is unchanged and has the same blob on HEAD and origin/main. This lane's
+reference changes introduce no gated finding. A consolidated main repair, owned
+by the orchestrator, prevents repeated unrelated remediation across workers.
+
+Attribution correction: HEAD matches the tested main base `36027982f2`; origin/main
+advanced during the proof and now differs. The gate is inherited from that tested base,
+not introduced by this lane. Inspect the newer main during the required publish merge.
+
+### 2026-10-09: the name walk exceeded the complexity budget
+
+Fallow audit and health identify the new `escapeExportDirectory` at cognitive
+complexity 10 against a ceiling of 8. Attribute it as introduced, replace the
+nested file-kind conditional with the existing Match dispatch, and keep the
+collision refusal unchanged. No baseline or suppression is added. A focused
+complexity check during the edit would have caught this before the full lane.
+
+### 2026-10-09: aggregate coverage concealed a newly uncovered guard
+
+The package percentages passed, but the touched restoration file fell from 100% to
+99.93% lines, 99.94% statements, and 99.87% branches at the newly added zero-budget
+Tika guard. An exhausted-retained-output fixture now proves refusal before Java launch
+and preserves the original child bytes. Checking per-file rows alongside aggregate
+percentages prevents an offsetting package improvement from hiding a new coverage gap.
+
+### 2026-10-09: publication inherited inventory reds from newly merged main
+
+PR1 publication committed locally, then stopped before push. Cheap gates failed on
+Accounts schema inventory entries inherited byte-for-byte from main and thirteen
+Effect-Vitest inventory findings outside the owned tests. Three additional findings
+were introduced here: two resource-layer hook timeouts and an Option Boolean assertion.
+Added explicit 30-second hook timeouts and used the existing assertion helper; no
+inventory baseline changed. Running the membership scan before publication and landing
+shared inventory repairs once on main would prevent this failed publication wave.
+
+### 2026-10-09: the suggested assertion form conflicted with the compiler rule
+
+The Effect-Vitest detector suggested an assertion helper for the new Option check.
+Test-tsgo then rejected its nested-call form as a missed pipeable opportunity. Using
+`textChild.pipe(O.isSome, assertTrue)` keeps the same check and satisfies the helper
+style. A detector remediation sketch that uses the pipeable form would avoid this
+second edit. No compiler diagnostic or lint rule was suppressed.
+
+### 2026-10-09: authorized run locations were classified as mirror references
+
+The required knowledge-reference check found five live external-mirror observations in
+this packet's new corpus, Tika, and scratch location prose. The brief requires these
+exact locations, while the census recognizes explicit inventory tables as path data.
+Converted the location and invocation records into labeled inventories, preserving
+all values and write authorities. No classifier, convention set, or gate was changed.
+Use a location inventory for machine-bound run contracts before the first check.
+
+### 2026-10-09: inherited inventory refusal required an explicit fallback ruling
+
+The fully addressed P1 pre-run wave passed fifteen of sixteen cheap gates, but
+publication stopped on five inventory entries in source surfaces identical to main.
+The exact refusal was `github-checks:cheap-gates: failed 1 step(s)` and
+`lint:schema-first: exit 1`, followed by `yeet publish cheap-gates failed after
+creating the local commit; nothing was pushed. Fix the gate, then amend or reset
+the unpushed commit before retrying.` The run-2 ruling authorizes direct push and
+PR creation with the heavy label, Yeet ready, and a bounded readiness monitor.
+No inventory baseline or unrelated source is changed. Attribution-aware publication
+that accepts an explicit inherited-fence receipt would prevent repeated worker stops.
+
+
+### 2026-10-09: a passing dry probe did not guarantee live second-pass acceptance
+
+The RAM-only probe completed all 59 extraction candidates with no nonzero or empty
+results, and both bounded fixes passed synthetic and package proof before #1596
+merged. The frozen live slice nevertheless ended after 33 attachment dispositions
+with one unapproved `engine-failure`, sealing the family. Counts-only evidence
+shows 11 repairs, 22 unsupported dispositions, no warnings, and no terminal child
+rows. The exception message and private log lines remain private and unread.
+No precise underlying cause is claimed. A probe that reuses the driver's complete
+quota handoff, synthesized-message and second-pass runtime contract would reduce
+this gap. Do not rerun the sealed slice; a diagnostic or fresh-ledger route is an
+orchestrator follow-up. No code or frozen policy changed during the run.
+
+### 2026-10-09: the failure-evidence PR inherited publication reds
+
+The docs-only P1 failure report passed fourteen of sixteen cheap gates. Yeet
+refused with `github-checks:cheap-gates: failed 2 step(s)`,
+`lint:schema-first: exit 1`, and `lint:effect-vitest: exit 1`, then reported
+`yeet publish cheap-gates failed after creating the local commit; nothing was
+pushed.` The five schema inventory entries and the PracticeKg projections test
+finding are inherited; after merging newer main all package/app source and
+inventory surfaces match main. The inherited-fence ruling authorizes direct
+push plus PR creation, ready and bounded monitoring. Attribution-aware
+publication would avoid requiring that fallback for aggregate failure evidence.
+No unrelated source or inventory baseline was changed.

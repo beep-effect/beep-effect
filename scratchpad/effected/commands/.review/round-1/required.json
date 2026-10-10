@@ -1,0 +1,102 @@
+{
+  "module": "commands",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/commands/Tool.ts",
+        "scratchpad/effected/commands/LocalExec.ts",
+        "scratchpad/effected/commands/ToolDiscovery.ts",
+        "scratchpad/effected/commands/Run.ts",
+        "scratchpad/effected/commands/ScriptedSpawner.ts",
+        "scratchpad/effected/commands/internal/capture.ts"
+      ],
+      "tests": [
+        "scratchpad/test/commands/LocalExec.test.ts",
+        "scratchpad/test/commands/ToolDiscovery.test.ts",
+        "scratchpad/test/commands/Run.test.ts",
+        "scratchpad/test/commands/ScriptedSpawner.test.ts",
+        "scratchpad/test/commands/Retry.test.ts",
+        "scratchpad/test/commands/e2e/Run.e2e.test.ts"
+      ],
+      "findings": [
+        "sol-1-2",
+        "sol-1-3",
+        "sol-1-4",
+        "sol-1-5",
+        "sol-1-6",
+        "fable-1-5",
+        "fable-1-6",
+        "fable-1-7"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/commands/Redaction.ts"
+      ],
+      "tests": [
+        "scratchpad/test/commands/Redaction.test.ts"
+      ],
+      "findings": [
+        "fable-1-4"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-1-2": {
+      "file": "scratchpad/effected/commands/Tool.ts",
+      "class": "schema",
+      "summary": "Four named literal domains lack the required LiteralKit surface.",
+      "fix": "Replace these four S.Literals declarations with LiteralKit from @beep/schema/LiteralKit, retaining literals, identity annotations and same-name type exports. Leave anonymous inline unions unchanged; do not add as const. Retain the LocalExec and ToolDiscovery oracle tests."
+    },
+    "sol-1-3": {
+      "file": "scratchpad/effected/commands/ToolDiscovery.ts",
+      "class": "law",
+      "summary": "VersionJson discovery retains a forbidden native JSON boundary.",
+      "fix": "Use S.decodeUnknownOption(S.fromJsonString(S.Unknown))(stdout), then traverse the existing dotted path with Option composition. Preserve None for malformed JSON, missing properties and non-string results, and retain the object/function/property checks. Keep the existing VersionJson oracle cases and add a focused malformed-JSON/path regression if absent."
+    },
+    "sol-1-4": {
+      "file": "scratchpad/effected/commands/ToolDiscovery.ts",
+      "class": "schema",
+      "summary": "The internal cached discovery model has only erased interfaces instead of owning schemas.",
+      "fix": "Define module-local identity-annotated Probe and Evidence schemas and derive their same-name types. Preserve the current plain-object representation, Option values, cache lifetime and resolution behavior; an annotated S.Struct avoids introducing a new equality/prototype contract. Retain cache and policy tests."
+    },
+    "sol-1-5": {
+      "file": "scratchpad/effected/commands/internal/capture.ts",
+      "class": "law",
+      "summary": "A cross-module capture error exposed to callers is not schema-backed or identity-annotated.",
+      "fix": "Convert OutputTooLarge directly to an identity-annotated S.TaggedError with an annotated limit field and update its construction in collectBounded. Preserve the OutputTooLarge tag, limit payload and instanceof behavior; do not introduce additional acceptance changes beyond a cited forcing law. Retain and strengthen the bounded-output Run test to check the mapped cause and limit."
+    },
+    "sol-1-6": {
+      "file": "scratchpad/effected/commands/Run.ts",
+      "class": "law",
+      "summary": "Dedicated-module import conversion is incomplete in source and six test files.",
+      "fix": "Use dedicated namespace imports from effect/process/ChildProcess, effect/process/ChildProcessSpawner and effect/testing/TestClock everywhere these executable imports occur; preserve type-only imports where applicable. Restrict this fix to source and executable test imports. JSDoc example imports belong to the deferred S2 record, not this required fix."
+    },
+    "fable-1-4": {
+      "file": "scratchpad/effected/commands/Redaction.ts",
+      "class": "type-safety",
+      "summary": "An unforced read-only-to-mutable API change permits consumers to modify process-wide redaction policy.",
+      "fix": "Restore the upstream read-only shape with HashSet.HashSet<string> and HashSet.fromIterable for SECRET_FLAGS; use HashSet.has. Convert the private extra-flags set consistently and retain Redaction.SECRET_FLAGS. Restore any upstream test lines changed solely to accommodate mutability; add a focused persistent-set test showing a derived set cannot change subsequent scrubbing. Native Set remains forbidden; record the law-forced collection replacement centrally."
+    },
+    "fable-1-5": {
+      "file": "scratchpad/effected/commands/Run.ts",
+      "class": "schema",
+      "summary": "The reused exit-code domain lacks an owning integer schema and accepts fractional exit codes.",
+      "fix": "Add one module-local identity-annotated ExitCode = S.Int building block and reuse it for all three fields, retaining optionality in the errors. Add focused integer/fractional constructor or decoder checks in Run.test.ts while preserving actual process/oracle cases. This cited integer-domain refinement is a law-forced change; its sites and adjusted tests go to the central deviation codemod."
+    },
+    "fable-1-6": {
+      "file": "scratchpad/test/commands/Run.test.ts",
+      "class": "tsgo",
+      "summary": "File-wide diagnostic suppressions hide required Effect diagnostics in the module test gate.",
+      "fix": "Remove the five skip-file directives and clear the exposed diagnostics within these test files. Build required Layers into Contexts under a scope and provide those Contexts, or provide existing service values, preserving fresh scripted state and cache isolation. Use live-clock Effect execution plus Effect.sleep for the real-process delay while retaining lifecycle assertions. Do not waive diagnostics or change repo config. The separate it.layer/assertion/property canon migration remains S3 backlog; no new ScriptedSpawner API is required for this fix."
+    },
+    "fable-1-7": {
+      "file": "scratchpad/effected/commands/Run.ts",
+      "class": "schema",
+      "summary": "Five public data models lack schema values, runtime guards and canonical identities.",
+      "fix": "Create identity-annotated same-name schemas with derived types for the five data models: string-array fields for LauncherPrefixes; a union of the four existing error schemas for ToolResolutionFailure; and faithful optional/opaque carriers for RunOptions, ScriptResult and SpawnRecord. Make LocalExecError a value import for the union. Preserve optional undefined handling, Duration.Input, Redacted values, PlatformError objects, full CommandOptions, writable unrefed state, and the upstream public type shapes. Reuse existing schemas where possible; do not use an arbitrary-object predicate as a faithful external-type validator or narrow numeric fields without a forcing standard. Retain all relevant oracle tests and add focused shape checks in the existing files. Added-export and deviation entries are generated centrally, never assigned to this group."
+    }
+  }
+}

@@ -1010,4 +1010,59 @@ ALTER TABLE law_practice_patent_citation_event
   );
 `,
   },
+  {
+    name: "20261009202131_audit_soft_delete",
+    sql: `ALTER TABLE "architecture_lab_worker" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "architecture_lab_worker" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "documents_sync_conflict" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "documents_sync_conflict" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "documents_sync_cursor" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "documents_sync_cursor" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "documents_sync_item" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "documents_sync_item" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "documents_sync_operation" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "documents_sync_operation" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "epistemic_candidate_claim" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "epistemic_candidate_claim" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "epistemic_claim_disposition" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "epistemic_claim_disposition" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_candidate" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_candidate" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_disposition" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_disposition" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_receipt" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "epistemic_contradiction_receipt" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "epistemic_edge_version" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "epistemic_edge_version" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "epistemic_evidence" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "epistemic_evidence" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "epistemic_evidence_verification" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "epistemic_evidence_verification" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "epistemic_usage_record" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "epistemic_usage_record" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "law_practice_act_frame" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "law_practice_act_frame" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "law_practice_candor_disposition" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "law_practice_candor_disposition" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "law_practice_correction_delta" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "law_practice_correction_delta" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "law_practice_ids_submission_fact" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "law_practice_ids_submission_fact" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "law_practice_legal_opposition_candidate" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "law_practice_legal_opposition_candidate" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "law_practice_legal_position_relator" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "law_practice_legal_position_relator" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "law_practice_patent_citation_event" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "law_practice_patent_citation_event" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "law_practice_power_exercise" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "law_practice_power_exercise" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "workspace_message" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "workspace_message" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "workspace_thread" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "workspace_thread" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "workspace_turn" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "workspace_turn" ADD COLUMN "deleted_by_principal" jsonb;--> statement-breakpoint
+ALTER TABLE "workspace_workspace" ADD COLUMN "deleted_at" bigint;--> statement-breakpoint
+ALTER TABLE "workspace_workspace" ADD COLUMN "deleted_by_principal" jsonb;`,
+  },
 ];

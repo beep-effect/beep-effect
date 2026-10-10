@@ -42,13 +42,22 @@ in [`MAP.md`](../../explorations/domain-layer-hardening/MAP.md).
 
 ## Current Phase
 
-`P1 Implement` — apply the measured GeneratedByApp nullable codecs with
-constructor and decoding defaults; add the error role module and generated
-migration under the explicit SPEC contract. P0 prototype has been reverted.
+`P3 Close` — P2 qualification is complete on the fresh main-based branch.
+P0/P1 implementation is merged via #1577 and #1593. The amended run-order
+ruling keeps the P3 reflection and completion transition in the next wave;
+lifecycle remains active until that owner-command transition.
 
 ## Latest Evidence
 
-`research/p0-kernel-surface-2026-10-09.md` — completed surface map, both encoding measurements, chosen design and migration preview.
+`history/handoffs/domain-kernel-2026-10-09.md` — fresh P2 default proofs pass for
+shared-domain, db-admin, professional-desktop and repo-cli. The six-server gate
+passes 492 tests (one skipped), coverage passes 120 tests with no uncovered
+entity units, and kernel/schema, migration drift, bundle codegen, test-tsgo,
+knowledge refs and Fallow pass. Dependent UI TS2589, Accounts schema-first
+findings and eight JSDoc ratchet metrics are reproduced inherited main reds,
+recorded separately under D27. Local docgen selects no package inputs for the
+packet-only wave; the kernel/schema docgen task passes in its package gate.
+P0 grounding remains at `research/p0-kernel-surface-2026-10-09.md`.
 
 ## Notes
 

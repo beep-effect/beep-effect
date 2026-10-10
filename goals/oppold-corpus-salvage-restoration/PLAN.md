@@ -73,7 +73,14 @@ independent verification 11,451/11,451.
    never a client filename.
 2. Run a public source-path libpff process at concurrency one with `-m all`.
 3. Persist raw engine output, per-child digests, child counts, warnings,
-   failures, and atomic attempt promotion.
+   failures, and atomic attempt promotion under the following P1 location inventory:
+
+   | Surface | Location |
+   | --- | --- |
+   | Corpus home | `~/data-home/oppold-corpus` |
+   | P1 run root, relative to corpus home | `staging/restoration/runs/t7-salvage-2026-08-10/**` |
+   | Run-root children | `ledgers/mail/slice.jsonl`, `output/mail/slice/`, and `writer-claims/` |
+
 4. Repair attachment types from byte signatures and run second-pass
    extraction.
 5. Exercise corrupt, password, and codepage lanes with synthetic fixtures.
@@ -81,6 +88,13 @@ independent verification 11,451/11,451.
 
 **Exit:** zero unaccounted children and approved amplification. Otherwise stop;
 do not expand to the estate.
+
+**Not met 2026-10-09:** the one frozen slice sealed `family-acceptance-failure`
+after one unapproved `engine-failure`; zero store passes and zero terminal child rows.
+Retained output 115,418,004 bytes / input 56,140,800 bytes (2.055866749x), family
+elapsed 350,398 ms. Eleven repairs and 22 unsupported dispositions are recorded,
+but final child acceptance is absent. Stop without retry; the orchestrator owns any
+fresh-ledger route. P1 is in-progress, P2/P3 remain pending.
 
 ## P2 — Transformation wave
 
@@ -158,10 +172,13 @@ five named roots. Step 4 is the orchestrator hand-off to workstreams C and D.
 
 ## Current blockers
 
-P0 runs under the 2026-10-06 re-measured denominators (decision log). P1-P2
-transformation ceilings (retained output, elapsed time, fidelity) are still
-agent-decided per the 2026-10-06 autonomy charter and must be recorded in the
-decision log before the live slice. The T7 exFAT volume carries a dirty flag;
+P0 is sealed under the 2026-10-06 re-measured denominators (decision log).
+P1 ceilings are set by the 2026-10-09 sizing-probe decision: ratio 4, two hours
+per attempt, 2 GiB total output, and twelve hours total elapsed. Only P2's
+ceilings remain undecided. The two probe-proven pre-run fixes merged through
+#1596 before the live slice. P1 is now blocked by an immutable sealed engine
+failure; the orchestrator owns any fresh-ledger route. The T7 exFAT volume
+carries a dirty flag;
 an unmounted `fsck.exfat` is an operator decision and is not required for the
 read-only archive run.
 

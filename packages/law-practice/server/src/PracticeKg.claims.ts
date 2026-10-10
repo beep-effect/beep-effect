@@ -26,6 +26,7 @@ import { OfficeActionReview, OfficeActionReviewInput } from "@beep/law-practice-
 import { PatentClaimCandidateInput, patentClaimCandidateFrom } from "@beep/law-practice-use-cases/PatentClaimCandidate";
 import { SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { getColumns } from "drizzle-orm";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -37,6 +38,7 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import { SqlClient as SqlClientService } from "effect/sql/SqlClient";
 import { PosInt } from "./internal/PosInt.ts";
 import { withDuckDb } from "./PracticeKg.rows.ts";
@@ -97,6 +99,34 @@ export class PracticeKgPatentDocumentInput extends S.Class<PracticeKgPatentDocum
   })
 ) {}
 
+/**
+ * Physical columns of the externally versioned practice-KG claims store.
+ *
+ * **Details**
+ *
+ * These bundle-owned tables are outside the db-admin migration chain. The
+ * shipped bundle predates the kernel's nullable soft-delete pair; its CREATE,
+ * insert and carry projections retain that physical contract. Repo-owned
+ * CandidateClaim and Evidence tables still receive both columns through
+ * db-admin. Only this external store excludes them.
+ *
+ * **Example** (Inspect the external candidate column contract)
+ *
+ * ```ts import.meta.vitest name="Inspect the external candidate column contract"
+ * import { practiceKgClaimsPhysicalColumns } from "@beep/law-practice-server"
+ *
+ * practiceKgClaimsPhysicalColumns.epistemic_candidate_claim.publicId.name // => "public_id"
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export const practiceKgClaimsPhysicalColumns = {
+  epistemic_candidate_claim: Struct.omit(getColumns(CandidateClaimTable.Table), ["deletedAt", "deletedByPrincipal"]),
+  epistemic_evidence: Struct.omit(getColumns(EvidenceTable.Table), ["deletedAt", "deletedByPrincipal"]),
+};
+
+// External physical schema: deliberately independent of the db-admin schema.
 const createClaimsTables = [
   `CREATE TABLE IF NOT EXISTS epistemic_candidate_claim (
   created_at BIGINT NOT NULL,

@@ -74,6 +74,28 @@ done
 exit 0
 `;
 
+const backslashNameStub = `#!/usr/bin/env bash
+${stubVersionBanner}
+target=""
+prev=""
+for arg in "$@"; do
+  if [ "$prev" = "-t" ]; then target="$arg"; fi
+  prev="$arg"
+done
+item="$target.export/folder\\\\part/Message00001"
+mkdir -p "$item/Attachments"
+printf 'Subject: synthetic\\n' > "$item/OutlookHeaders.txt"
+printf 'synthetic body' > "$item/Message.txt"
+printf 'original' > "$item/Attachments/a\\\\b.pdf"
+exit 0
+`;
+
+const backslashCollisionStub = Str.replace(
+  "printf 'original'",
+  `printf 'preserved' > "$item/Attachments/a%5Cb.pdf"
+printf 'original'`
+)(backslashNameStub);
+
 const unevenBudgetStub = `#!/usr/bin/env bash
 ${stubVersionBanner}
 target=""
@@ -304,6 +326,55 @@ describe("makePffexportFileProcessingEngine", { concurrent: false }, () => {
     }),
     { arbitrary: fcRuns(25) }
   );
+
+  it.layer(NodeServices.layer, { timeout: 30_000 })("portable engine names", (it) => {
+    it.effect(
+      "escapes backslash files and folders while preserving EML display names",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { exportRoot, operation, stubPath } = yield* fixture(backslashNameStub);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+        );
+        const result = yield* engine.exportArchive(operation);
+        expect(result.warnings).toEqual([]);
+        for (const child of result.children) {
+          expect(S.is(PosixPath)(child.relativePath)).toBe(true);
+          expect(yield* fs.exists(path.join(exportRoot, child.relativePath))).toBe(true);
+          expect(yield* fs.realPath(path.join(exportRoot, child.relativePath))).toBe(
+            path.join(exportRoot, child.relativePath)
+          );
+        }
+        const item = path.join(exportRoot, `${operation.source.id}.export`, "folder%5Cpart", "Message00001");
+        expect(yield* fs.readFileString(path.join(item, "Attachments", "a%5Cb.pdf"))).toBe("original");
+        expect(yield* fs.readFileString(path.join(item, "Message.eml"))).toContain('filename="a\\\\b.pdf"');
+      })
+    );
+
+    it.effect(
+      "refuses backslash escape collisions without renaming or overwriting",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { exportRoot, operation, stubPath } = yield* fixture(backslashCollisionStub);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+        );
+        const result = yield* engine.exportArchive(operation);
+        expect(A.some(result.warnings, Str.includes("non-portable path"))).toBe(true);
+        const root = path.join(
+          exportRoot,
+          `${operation.source.id}.export`,
+          "folder%5Cpart",
+          "Message00001",
+          "Attachments"
+        );
+        expect(yield* fs.readFileString(path.join(root, "a\\b.pdf"))).toBe("original");
+        expect(yield* fs.readFileString(path.join(root, "a%5Cb.pdf"))).toBe("preserved");
+      })
+    );
+  });
 
   it.layer(NodeServices.layer)("exports directly from a file locator when the caller omits source bytes", (it) => {
     it.effect(
@@ -1234,6 +1305,76 @@ exec "$@"
         expect(secondResult.children.length).toBe(firstResult.children.length);
         expect(yield* fs.exists(path.join(exportRoot, `${operation.source.id}.export`))).toBe(true);
         expect(A.some(yield* fs.readDirectory(exportRoot), Str.startsWith(".pffexport-quota-"))).toBe(false);
+      })
+    );
+  });
+
+  it.layer(NodeServices.layer, { timeout: 30_000 })("portable quota handoff", (it) => {
+    it.effect(
+      "validates raw backslash folders before escaping a bounded quota handoff",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { operation, exportRoot, stubPath } = yield* fixture(stubPffexport);
+        const fixtureRoot = path.dirname(stubPath);
+        const handoffSource = path.join(fixtureRoot, "quota-handoff-source");
+        const item = path.join(handoffSource, `${operation.source.id}.export`, "folder\\part", "Message00001");
+        const bwrapPath = path.join(fixtureRoot, "successful-quota-bwrap-stub");
+        const systemdRunPath = path.join(fixtureRoot, "successful-systemd-run-stub");
+        yield* fs.makeDirectory(path.join(item, "Attachments"), { recursive: true });
+        yield* fs.writeFileString(path.join(item, "OutlookHeaders.txt"), "Subject: synthetic\n");
+        yield* fs.writeFileString(path.join(item, "Message.txt"), "synthetic body");
+        yield* fs.writeFileString(path.join(item, "Attachments", "a\\b.pdf"), "original");
+        yield* fs.writeFileString(
+          bwrapPath,
+          `#!/usr/bin/env bash
+exec /usr/bin/tar -C "${handoffSource}" -cf - .
+`
+        );
+        yield* fs.writeFileString(
+          systemdRunPath,
+          `#!/usr/bin/env bash
+set -eu
+while [ "$#" -gt 0 ]; do
+  if [ "$1" = "--" ]; then shift; break; fi
+  shift
+done
+exec "$@"
+`
+        );
+        yield* Effect.forEach([bwrapPath, systemdRunPath], (file) => fs.chmod(file, 0o755), { discard: true });
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({
+            bwrapPath: O.some(bwrapPath),
+            exportRoot,
+            maxOutputBytes: O.some(PosInt.make(1_000_000)),
+            pffexportPath: stubPath,
+            systemdRunPath,
+          })
+        );
+        const result = yield* engine.exportArchive(operation);
+        expect(result.warnings).toStrictEqual([]);
+        expect(result.children.length).toBe(5);
+        for (const child of result.children) {
+          expect(S.is(PosixPath)(child.relativePath)).toBe(true);
+          expect(yield* fs.exists(path.join(exportRoot, child.relativePath))).toBe(true);
+        }
+        const escapedItem = path.join(exportRoot, `${operation.source.id}.export`, "folder%5Cpart", "Message00001");
+        expect(yield* fs.readFileString(path.join(escapedItem, "Attachments", "a%5Cb.pdf"))).toBe("original");
+        expect(yield* fs.readFileString(path.join(escapedItem, "Message.eml"))).toContain('filename="a\\\\b.pdf"');
+        yield* fs.symlink("/etc/passwd", path.join(item, "Attachments", "unsafe\\link"));
+        const unsafeEngine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({
+            bwrapPath: O.some(bwrapPath),
+            exportRoot,
+            existingExportPolicy: "replace",
+            maxOutputBytes: O.some(PosInt.make(1_000_000)),
+            pffexportPath: stubPath,
+            systemdRunPath,
+          })
+        );
+        const unsafeResult = yield* unsafeEngine.exportArchive(operation).pipe(Effect.flip);
+        expect(unsafeResult.reason).toBe("archive-export-failed");
       })
     );
   });

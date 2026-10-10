@@ -1,0 +1,42 @@
+lockfileVersion: '9.0'
+
+# HAND-AUTHORED. foo@1.0.0 exists twice — once resolved against its optional
+# peer bar, once without it. Same version, two instances: NOT a duplicate.
+
+importers:
+
+  .:
+    dependencies:
+      bar:
+        specifier: ^1.0.0
+        version: 1.0.0
+      foo:
+        specifier: ^1.0.0
+        version: 1.0.0(bar@1.0.0)
+
+  packages/other:
+    dependencies:
+      foo:
+        specifier: ^1.0.0
+        version: 1.0.0
+
+packages:
+
+  bar@1.0.0: {}
+
+  foo@1.0.0:
+    peerDependencies:
+      bar: ^1.0.0
+    peerDependenciesMeta:
+      bar:
+        optional: true
+
+snapshots:
+
+  bar@1.0.0: {}
+
+  foo@1.0.0: {}
+
+  foo@1.0.0(bar@1.0.0):
+    dependencies:
+      bar: 1.0.0

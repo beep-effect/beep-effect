@@ -38,3 +38,29 @@ stable-source replay passed all 106 tests in five files, including the formerly
 failing operational adapters, Knowledge import family, and deletion regression.
 A complete stable-head package proof remains unclaimed. Resume publication
 only after the owned admissions land; keep the checkout fixed during proofs.
+
+## Run 2 — authorized occurrence-specific C admission
+
+Resume ruling dated 2026-10-09T22:52Z assigns this lane the fourteen reviewed
+C occurrences and authorizes direct commit/push/PR creation if Yeet still
+refuses. The two Accounts StructWithRest exceptions preserve lossless external
+wire metadata. The twelve test exceptions retain invocation-specific fixture
+layers, shorter helper scopes, real platform boundaries, and the relocated
+installed-Graft regression. Every exception records program ownership, lane C,
+its source-bound reason and reconsideration when B's census lands. Existing
+inventory rows and counters remain untouched.
+
+Integrated main `cb64e0484f` (#1588) before source freeze and qualification.
+The seven original fixes and full-docgen pass remain recorded above; Run 2
+qualification will provide fresh terminal gate and full-package results.
+No merge or retirement is authorized. Revert the burn-down PR to reverse the
+repair and these admissions; B's census is the follow-up review boundary.
+
+Run 2 schema-first attribution: both approved Accounts candidates are resolved,
+but `SFV4-arbitrary-tests` at `ci-runner-security.test.ts:79` remains inherited.
+C's terminal publication attribution table describes that golden workflow
+advisory, beyond the explicit two-plus-twelve admission ruling. No fifteenth
+inventory row is added. The unchanged-main source proves attribution; the gate
+is reported red, and the resume ruling's authorized fallback applies if Yeet
+still refuses. B's census owns reconsideration. The friction receipt is in
+`research/OPPORTUNITIES.md`.
