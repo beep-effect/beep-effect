@@ -542,3 +542,15 @@ No baseline, CI policy, changeset, or source repair was made here.
   the separate original/fresh freeze-record associations beside acceptance.
   Preserve public path hygiene and both immutable records. No code change or
   new run is needed. Reversal: revert the clarification and reopen acceptance.
+
+## 2026-10-10: the inherited schema fence repeated on the correction wave
+
+- Doing: publishing the policy-identity clarification on existing PR4 #1609.
+- Evidence: 15 cheap gates passed; schema-first exited 1 on three pre-existing
+  schema-codec test advisories. All affected files match origin/main. Exact
+  refusal: `yeet publish cheap-gates failed after creating the local commit;
+  nothing was pushed.` The staged correction introduced no source finding.
+- Prevented by: main's orchestrator-owned schema advisory repair under S11.
+  Apply the already authorized inherited-fence fallback with one wave push;
+  do not change inventory, unrelated tests or CI. Reverse by closing/reverting
+  PR4's documentation changes, retaining both immutable execution records.

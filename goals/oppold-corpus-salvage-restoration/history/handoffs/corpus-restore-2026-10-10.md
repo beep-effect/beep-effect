@@ -546,3 +546,23 @@ Both immutable manifests are byte-identical to the pre-correction head.
 Added prose contains no absolute home paths or ledger path/message fields.
 Package-verify and source hosted-parity are not run for this packet-only wave;
 PR1/PR3 package proof and hosted attribution remain the retained source evidence.
+
+### Run-7 publication fence and single-push fallback
+
+Yeet committed the correction at
+`f335de0b83f88a8a8b8e5c84481b054f20551f95`; collected cheap gates
+passed 15 of 16 lanes. Exact refusal:
+`github-checks:cheap-gates: failed 1 step(s)`;
+`lint:schema-first: exit 1`;
+`yeet publish cheap-gates failed after creating the local commit; nothing was
+pushed. Fix the gate, then amend or reset the unpushed commit before retrying.`
+Three schema-codec test advisories are inherited: their files match origin/main
+byte for byte. No Corpus finding, no introduced parity finding, no source edit.
+Committed JSDoc, Effect-Vitest, Knip and Fallow audit/dead-code/health pass.
+The standing inherited-fence ruling authorizes a named receipt commit and
+one direct push of the fully addressed wave to existing PR4 #1609.
+The PR is already ready; Yeet ready is repeated after the push. Thread reply
+will cite pre-launch commit evidence and exact runtime hash reconstruction.
+Orchestrator owns S11 merge and inherited main repair. No new monitor is
+started for this review-only amendment; no worker-owned job remains running.
+Reversal: close/revert PR4's documentation changes and retain both families.
