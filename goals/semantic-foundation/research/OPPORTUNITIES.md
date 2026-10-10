@@ -377,3 +377,18 @@ ClassificationError lacks annoteError. M3 export records are resolved. Added
 the missing identity annotation and re-proved the package; remaining ratchet
 findings are outside ontology. Include this fix in one consolidated correction
 wave, never lower the tracked root baseline.
+
+### 2026-10-09 review follow-up: classification index admission
+
+Review discussion r4235607653 identifies O(n) validation on every resolve and
+a second O(n) narrower scan. Full CPC has 254,314 concepts. Retain the current
+fail-closed caller-supplied snapshot contract for this delivery, and track a
+performance follow-up here: introduce a service-owned validated snapshot/index
+handle with an IRI lookup and children index built once. Preserve pin/scheme
+checks and invalid/reversed hierarchy rejection; benchmark repeated CPC lookups
+and verify fresh service instances do not share mutable admission state.
+Object caching alone needs an explicit immutable ownership rule before it can
+skip validation safely. No global/native WeakMap is introduced.
+
+Review discussion r4235607666: use python3 for portable archive checks. The
+verify-only asset pack check proves actual execution after the replacement.

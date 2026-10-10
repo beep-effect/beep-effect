@@ -58,7 +58,7 @@ while IFS= read -r row; do
   if [ -n "$archive_path" ]; then
     # Validate every member before the host unpacker sees the archive. Reject
     # symlinks and traversal, including existing symlink ancestors in vendor/.
-    python - "$download" "$out" "$vendor_root" <<'PYZIP'
+    python3 - "$download" "$out" "$vendor_root" <<'PYZIP'
 import os, stat, sys, zipfile
 from pathlib import PurePosixPath
 archive, destination, root = sys.argv[1:]

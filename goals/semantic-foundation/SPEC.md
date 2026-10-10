@@ -258,3 +258,5 @@ passed after test-helper corrections; the contract includes the spawn plan.
 The [M3 contract](./research/2026-10-09-m3-vocabulary-contract.md) freezes
 all 42 concept IRIs and records the prose PROV assignment pattern. The
 bootstrap plan is retained without creating the downstream packet.
+
+| 2026-10-09 review | Defer classification lookup indexing to the tracked admission-handle performance follow-up. | The public API accepts caller-supplied snapshots and validates them each time; skipping validation requires an immutable, service-owned admission contract. This P2 cost does not change edition/hierarchy correctness or the ready-slice acceptance gate. | Introduce an indexed handle in a later compatible API, or a major version if replacing snapshot input; preserve invalid/reversed-link fixtures and benchmark CPC repeated lookups. |
