@@ -1219,3 +1219,46 @@ hosted-parity: test-tsgo: pass, including rerun after #1596 (335 files; 149 pack
 handoff: goals/domain-kernel-hardening/history/handoffs/domain-kernel-2026-10-09.md
 open items: P0/P1/P2 complete; P3 reflection and completed-retained transition remain the next separate wave under run-8, lifecycle active. D26 starts P2 from merged main and carries named P1 receipt only; reversal is withdrawing the P2 packet commit, retaining merged implementation. D27/D28 record inherited UI TS2589, Accounts schema-first findings, eight JSDoc metrics and the current PracticeKg EV002 inventory re-anchor; reversal is owner source/inventory repair plus integration/rerun, or closing the unmerged P2 evidence PR. Yeet refused two cheap gates with 14 passing lanes; authorized fallback used one push, PR creation, ready and bounded monitoring. P0 refusal row and three Vercel rate-limit rows are acknowledged; zero unresolved threads at final closeout, no unacknowledged live inbox row. D29 settles the bounded monitor after published-head observation (terminated, unit inactive, receipt observed); reversal is resubmitting the 40-minute monitor. A clean post-push #1597 main merge was reversed via ORIG_HEAD before any further edits or push, preserving the one-push budget; reversal is integrating that owner fix in a later authorized wave. No PR merge, rebase, inventory suppression, dependency/lockfile edit or live database operation. Mechanical implementation count remains 89; P2 adds zero sites and zero slice model/behavior edits. Final report is appended and committed locally without another publication push. Orchestrator owns stale docs/ROADMAP.md platform re-entry bullet at 349, Parked packets row at 383 and cohort prose at 406. Follow-ups: P3 closeout, stale DomainModel.make detector, desktop migration release rollout, inherited gate owner repair. Graft saved approximately 54,192 tokens across two calls.
 final bd155e8943aed0a623d29cea1e500913ef75383b #1599
+
+
+## Run 9 — P3 retained closeout
+
+Latest run-9 ruling supersedes the original two-PR plan: PR3 #1599 is confirmed
+MERGED at 592c5c94c45a99bbb10d34c63c2ec4084f263203. Started
+feat/domain-kernel-hardening-p3 from fetched origin/main and cherry-picked the
+named receipts-only commit 9405c1a56e as 6102309587. This preserves D29 and
+the final P2 report without pushing to the merged P2 branch. No other carry.
+
+D30 records the fresh-branch closeout, retained P2 proof limits and reversal:
+revert P3 prose and use goals set-status to reopen active, preserving generated
+event history; close an unmerged P3 PR if withdrawing. Reflection is
+history/reflections/2026-10-09-codex.md (local execution date), covering tooling,
+implementation and prompt critique, stale DomainModel.make scanner and desktop
+release TODOs. Set P3 complete in place, then owner-command
+`bun run beep goals set-status domain-kernel-hardening completed-retained`
+appended event 3 and regenerated trace/index. No hand-written event or trace.
+Unmodeled manifest keys remain present. PLAN/README/SPEC agree with completion.
+
+Ordered packet verification passes before publication: GOAL <=4000 characters
+(unchanged 3521), jq, anchor scan, packet diff whitespace, reflection lint
+blocking_findings=0/advisory_findings=0, doctor blocking_new=0 and
+blocking_inherited=0. Doctor has three other-packet completion advisories and
+none for this packet, whose prior merged subjects cite the slug.
+Stream proof emits exactly this owned summary with no packet finding:
+`- goals/domain-kernel-hardening: revision=3 tip=3@50c49bfd7fac status=completed-retained furthest=P0 resume=P0`
+No other-packet packet findings appear in the retained stream output. The
+stream stage remains P0 because phase bookkeeping lives in the manifest;
+status/trace/event integrity is the required check.
+
+P3 changes no package, mechanical fixture, slice model/behavior, migration,
+bundle, inventory, dependency or lockfile. Final mechanical count remains 89.
+Default package and hosted-parity proofs are the retained P2 evidence above;
+no new exact-P3-head package proof claim. Do not rerun broad implementation
+proof for this prose/lifecycle-only wave. Publication's cheap gates will run
+through beep-heavy under existing caps and the inherited-fence ruling.
+
+Orchestrator still owns ROADMAP's platform re-entry bullet (~349), Parked
+packets row (~383), and cohort prose (~406). Future owner work: stale
+DomainModel.make detector, desktop migration release/application with rollback,
+reviewed inventory refresh and source repairs for inherited gates. No merge
+or retirement is performed by this lane. Publication/monitor receipts follow.
