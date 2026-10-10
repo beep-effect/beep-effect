@@ -345,10 +345,11 @@ ratchets hold at zero — keep-green only, no new clicks past zero.
   [`gov-legal-data-driver-delivery`](../goals/gov-legal-data-driver-delivery/README.md)
   packet's evidence/specs, opened per named-driver pull when a product feature
   needs a specific driver, never as a batch.
-- **Platform re-entries** as slots free:
+- **Domain kernel hardening** resumed 2026-10-09:
   [`domain-kernel-hardening`](../goals/domain-kernel-hardening/README.md)
-  (before KG tables scale) and
-  a fresh packet citing [`one-round-loop`](../goals/one-round-loop/README.md)'s
+  completed P0 in #1577 and is implementing P1 before KG tables scale.
+- **Platform re-entry** as slots free: a fresh packet citing
+  [`one-round-loop`](../goals/one-round-loop/README.md)'s
   evidence/specs (when CI round-trips bottleneck a lane).
 
 ## LATER — gate: librarian + graph-&-ask shipped
@@ -380,7 +381,6 @@ renders their current local status view.
 
 | Packet | Resumes when |
 | --- | --- |
-| [`domain-kernel-hardening`](../goals/domain-kernel-hardening/README.md) | Before KG tables scale — opens with PRD P2 librarian. |
 | [`hybrid-retrieval-fusion-core`](../goals/hybrid-retrieval-fusion-core/README.md) | A retrieval consumer lands (intake P5, or belief-view RRF follow-on). |
 | [`law-doc-structure-oa-slice`](../goals/law-doc-structure-oa-slice/README.md) | Intake P4 needs OA structure; wave-2 routed findings seed it. |
 | [`law-time-capture-spine`](../goals/law-time-capture-spine/README.md) | The Tom task-set ask is driven (P0 dependency). |
@@ -403,7 +403,8 @@ renders their current local status view.
 | [`configurable-full-document-editor`](../goals/configurable-full-document-editor/README.md) | Paused 2026-08-24. Resumes when intake P5 (viewer) pulls an editor surface. |
 | [`repo-cli-modularization`](../goals/repo-cli-modularization/README.md) | Paused 2026-08-30 with all ten phases complete but no delivered PR (delivery PR #339 closed after #326 overlapped). Resumes for current-main reconciliation, authoritative proof, and a replacement delivery PR driven to mergeable; its completion gate stays unsatisfied until that PR merges. |
 
-Beyond `domain-kernel-hardening`, this cohort has three vintages. The eight
+`domain-kernel-hardening` resumed on 2026-10-09; P0 landed in #1577 and P1 is
+in progress. The remaining parked cohort has three vintages. The eight
 rows through `voice-composer-slice` were graduated 2026-07-14 and saw zero
 execution; the 2026-08-17 re-eval moved them here explicitly rather than
 leaving them implied-active, and their manifests stay `active` (they are

@@ -385,6 +385,9 @@ contract item 5). The repository-facing sweeps are under
 These facts constrain sequencing and evidence; they change no locked
 disposition above. PLAN.md "Sweep sequencing facts" turns them into lane order.
 
+- Per-lane receipts are named `history/receipts/stage-<n>-<lane>.md`, never a
+  shared `stage-5-acceptance.md`.
+
 - Knip is a required status check (`Knip`) on the `main` ruleset. The
   `check.yml` Knip job and the ruleset context are removed in the same change
   (workstream E, with or before workstream A's Knip removal); otherwise every

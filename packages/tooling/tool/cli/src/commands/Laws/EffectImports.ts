@@ -19,6 +19,7 @@ import { pipe } from "effect/Function";
 import * as Inspectable from "effect/Inspectable";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -1780,13 +1781,25 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
       discoveredFiles,
       A.map((file) => toPosixPath(path.isAbsolute(file) ? path.relative(process.cwd(), file) : file)),
       A.filter((file) => isPathInActiveScope(options, excludePaths, file)),
-      A.dedupe
+      A.dedupe,
+      A.sort(Order.String)
     );
-    scannedFiles = A.length(markdownFiles);
-
     for (const relativePath of markdownFiles) {
       const absolutePath = path.join(process.cwd(), relativePath);
-      const original = yield* fs.readFileString(absolutePath);
+      // A parallel gate can remove a temporary directory after glob discovery.
+      // Source loading uses addSourceFileAtPathIfExists; retain that policy here.
+      const content = yield* fs.readFileString(absolutePath).pipe(
+        Effect.asSome,
+        Effect.catchIf(
+          (error) => P.isTagged("NotFound")(error.reason),
+          () => Effect.succeedNone
+        )
+      );
+      if (O.isNone(content)) {
+        continue;
+      }
+      scannedFiles += 1;
+      const original = content.value;
       const fenceSummary = transformFencedContent(rootMappings, relativePath, original, true);
       scannedFences += fenceSummary.scannedFences;
       rootImportsRewritten += fenceSummary.rootImportsRewritten;
