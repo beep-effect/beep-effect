@@ -25,7 +25,10 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.ts";
+import { renderCapabilityMermaidSection } from "./Graph.mermaid.ts";
+import { compileCapabilityProjection, evaluateCapabilityGraph } from "./Graph.projection.ts";
 import { goalManifestPhases, listGoalPackets, parseGoalManifestText, readmeMissionLine } from "./Inventory.ts";
+import type { GoalManifest } from "./Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Goals/PortfolioIndex");
 
@@ -196,6 +199,7 @@ export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexCo
   const records = yield* listGoalPackets(repoRoot);
   let rows = A.empty<PortfolioIndexRow>();
   let invalid = A.empty<string>();
+  let decoded = A.empty<readonly [string, GoalManifest]>();
 
   for (const record of records) {
     const parsed = record.manifestText === undefined ? O.none() : parseGoalManifestText(record.manifestText);
@@ -208,6 +212,7 @@ export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexCo
       invalid = A.append(invalid, record.slug);
       continue;
     }
+    decoded = A.append(decoded, [record.slug, manifest.value] as const);
     const phases = goalManifestPhases(manifest.value);
     const mission = pipe(
       O.fromNullishOr(manifest.value.mission),
@@ -227,7 +232,17 @@ export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexCo
     );
   }
 
-  return renderPortfolioIndex(A.sort(rows, rowBySlug), A.sort(invalid, Order.String));
+  // The capability graph uses only manifests whose id matches their directory, so
+  // the lenient table and the fail-closed graph never disagree about identity.
+  const projection = compileCapabilityProjection(
+    pipe(
+      decoded,
+      A.filter(([slug, manifest]) => manifest.initiative.id === slug),
+      A.map(([, manifest]) => manifest)
+    )
+  );
+  const graph = renderCapabilityMermaidSection(projection, evaluateCapabilityGraph(projection));
+  return `${renderPortfolioIndex(A.sort(rows, rowBySlug), A.sort(invalid, Order.String))}${graph}\n`;
 });
 
 /**

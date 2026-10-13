@@ -44,8 +44,10 @@ P4 in progress — Workstream D's projection slice. `beep goals next|explain|cat
 ship as read-only commands over an in-memory SQLite projection, differential-tested
 against a pure-TS evaluator. The live-census FP-eyeball report is
 [`research/p4-report-goals-projection.md`](./research/p4-report-goals-projection.md);
-its verdict gates the Mermaid INDEX block (design PR 2), the D5/D8 doctor findings
-(PR 3), and a manifest-only PR that declares four missing `provides`. Design and
+`goals index` now also renders the capability graph as a Mermaid section in the local
+`goals/INDEX.md` (design PR 2, relic collapse per G4). The report's verdict gates the
+D5/D8 doctor findings (PR 3) and a manifest-only PR that declares four missing
+`provides`. Design and
 mini-grill outcomes:
 [`research/p4-goals-projection-design.md`](./research/p4-goals-projection-design.md),
 [`research/p4-goals-projection-decisions.md`](./research/p4-goals-projection-decisions.md).

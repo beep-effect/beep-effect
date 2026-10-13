@@ -63,6 +63,25 @@ const validateUndo = Effect.fn("ContactSeeding.validateUndo")(function* (
   if (!dryRun && !yes) return yield* ContactsError.make({ reason: "confirmation" });
 });
 
+const selectUndoJournals = Effect.fn("ContactSeeding.selectUndoJournals")(function* (
+  journals: ReadonlyArray<RunJournal>,
+  run: O.Option<string>,
+  byCategory: boolean
+) {
+  const selected = byCategory ? journals : A.filter(journals, (journal) => O.contains(journal.runId)(run));
+  if (!byCategory && A.isReadonlyArrayEmpty(selected)) return yield* ContactsError.make({ reason: "missing-journal" });
+  if (
+    !byCategory &&
+    A.some(
+      selected,
+      (journal) =>
+        O.isSome(journal.pendingSourceKey) || (A.isReadonlyArrayEmpty(journal.contacts) && O.isNone(journal.receipt))
+    )
+  )
+    return yield* ContactsError.make({ reason: "ambiguous-write" });
+  return selected;
+});
+
 /** Seeding service; offline commands require no mailbox capability.
  * **Example** (Inspect the service key)
  * ```ts
@@ -182,9 +201,6 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
               const planned = yield* plan(inputs, false, false);
               yield* failUntracked(planned.untrackedTagged);
               const creates = A.filter(planned.rows, ContactPlanRow.guards.Create);
-              if (A.isReadonlyArrayEmpty(creates)) return planned.report;
-              let journal = RunJournal.make({ runId: planned.report.runId, folderCreated: false, contacts: [] });
-              yield* state.save(journal);
               const savedIds = HashSet.fromIterable(A.getSomes(A.map(planned.journals, (run) => run.folderId)));
               const recorded = A.filter(planned.inventory.folders, (folder) => HashSet.has(savedIds, folder.id));
               const named = A.filter(planned.inventory.folders, (folder) =>
@@ -192,6 +208,18 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
               );
               const choices = A.isReadonlyArrayNonEmpty(recorded) ? recorded : named;
               if (A.length(choices) > 1) return yield* ContactsError.make({ reason: "folder-ambiguous" });
+              let journal = RunJournal.make({ runId: planned.report.runId, folderCreated: false, contacts: [] });
+              yield* state.save(journal);
+              if (A.isReadonlyArrayEmpty(creates)) {
+                yield* state.save(
+                  RunJournal.make({
+                    ...journal,
+                    folderId: O.map(A.head(choices), (folder) => folder.id),
+                    receipt: O.some(planned.report),
+                  })
+                );
+                return planned.report;
+              }
               const folder = O.isSome(A.head(choices)) ? O.getOrThrow(A.head(choices)) : yield* port.createFolder;
               journal = RunJournal.make({
                 ...journal,
@@ -262,7 +290,9 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
                 journal = updated;
                 created++;
               }
-              return ContactReport.make({ ...planned.report, created });
+              const receipt = ContactReport.make({ ...planned.report, created });
+              yield* state.save(RunJournal.make({ ...journal, receipt: O.some(receipt) }));
+              return receipt;
             })
           )
         ),
@@ -274,12 +304,19 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
               const port = yield* online();
               const inventory = yield* port.inventory;
               const journals = yield* state.journals;
-              const selectedRuns = byCategory
-                ? journals
-                : A.filter(journals, (journal) => O.contains(journal.runId)(run));
-              if (!byCategory && A.isReadonlyArrayEmpty(selectedRuns))
-                return yield* ContactsError.make({ reason: "state" });
+              const selectedRuns = yield* selectUndoJournals(journals, run, byCategory);
               const receipts = A.flatMap(selectedRuns, (journal) => journal.contacts);
+              if (!byCategory && A.isReadonlyArrayEmpty(receipts)) {
+                const receipt = reportPlan(O.getOrThrow(run), [], 0);
+                if (!dryRun) {
+                  yield* Effect.forEach(
+                    selectedRuns,
+                    (journal) => state.save(RunJournal.make({ ...journal, undoReceipt: O.some(receipt) })),
+                    { concurrency: 1 }
+                  );
+                }
+                return receipt;
+              }
               const receiptOf = (row: (typeof inventory.contacts)[number]) =>
                 A.findFirst(receipts, (entry) => entry.contactId === row.contact.id);
               const unchanged = (row: (typeof inventory.contacts)[number]) =>

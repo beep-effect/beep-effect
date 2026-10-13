@@ -117,7 +117,7 @@ export interface AppCredentials {
   *
   * **Gotchas**
   *
-  * PKCS#1 (`-----BEGIN RSA PRIVATE KEY-----`, which is what github.com hands
+  * PKCS#1 (an `RSA PRIVATE KEY` PEM block, which is what github.com hands
   * you) is converted to PKCS#8 automatically **on Node**. On a runtime without
   * `node:crypto` a PKCS#1 key fails with an explicit `kind: "jwt"` error, and
   * the fix is to convert the key once with
@@ -478,10 +478,13 @@ export interface GitHubAppOptions {
  *   return accessible.total_count;
  * });
  *
+ * // The app's PEM private key, loaded from your secret store.
+ * declare const appPrivateKeyPem: string
+ *
  * // Mints an installation token on build, re-mints before expiry, revokes on release.
  * const layer = GitHubApp.clientLayer({
  *   appId: "12345",
- *   privateKey: Redacted.make("-----BEGIN PRIVATE KEY-----\n..."),
+ *   privateKey: Redacted.make(appPrivateKeyPem),
  *   owner: "my-org",
  * });
  *

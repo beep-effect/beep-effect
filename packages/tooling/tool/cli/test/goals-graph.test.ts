@@ -15,6 +15,7 @@ import {
   GraphCapabilityEdge,
   goalsCommand,
   loadCapabilityProjection,
+  renderCapabilityMermaidSection,
   renderCatalogHuman,
   renderExplainHuman,
   renderFrontierHuman,
@@ -422,6 +423,36 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "60 seconds" })((it) 
         ]);
         assertTrue(Str.includes("pkt-a <-> pkt-b")(renderFrontierHuman(buildFrontierReport(projection, answers))));
         assertTrue(Str.includes("cycle: pkt-a <-> pkt-b")(renderExplainHuman(explain(projection, answers, "pkt-a"))));
+      })
+    );
+  });
+
+  describe("goals capability graph — Mermaid INDEX section", { concurrent: false }, () => {
+    it.effect("renders live packets, relic providers, fog, and blockers; collapses other completed packets", () =>
+      Effect.gen(function* () {
+        const { projection, answers } = yield* differential([
+          { id: "pkt-done", status: "completed-retained", provides: ["cap/done"] },
+          { id: "pkt-history", status: "completed-retained", provides: ["cap/old"] },
+          { id: "pkt-live", status: "active", provides: ["cap/live"], requires: ["cap/done", "cap/ghost"] },
+          { id: "pkt-next", status: "paused", requires: ["cap/live"] },
+          { id: "pkt-ref", status: "reference", provides: ["cap/ghost"] },
+        ]);
+        const section = renderCapabilityMermaidSection(projection, answers);
+        const has = (line: string) => assertTrue(Str.includes(line)(section));
+        has("2 live packets, 1 relic providers, 1 fog capabilities; 1 other completed packets collapsed");
+        has('  p_pkt_live["pkt-live"]:::active');
+        has('  p_pkt_next["pkt-next"]:::paused');
+        has('  p_pkt_done(["pkt-done"]):::relic');
+        has('  fog_cap_ghost{{"fog:cap/ghost"}}:::fog');
+        has('  p_pkt_done -->|"cap/done"| p_pkt_live');
+        has('  p_pkt_live -.->|"cap/live"| p_pkt_next');
+        has("  fog_cap_ghost -.-> p_pkt_live");
+        has("| [pkt-live](./pkt-live/README.md) | `cap/ghost` |");
+        has("| [pkt-next](./pkt-next/README.md) | `cap/live` |");
+        assertTrue(!Str.includes("pkt-history")(section));
+        // A reference provider is not drawn, so it must not appear as an edge endpoint either.
+        assertTrue(!Str.includes("p_pkt_ref")(section));
+        strictEqual(pipe(projection, renderCapabilityMermaidSection(answers)), section);
       })
     );
   });

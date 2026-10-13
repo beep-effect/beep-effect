@@ -143,6 +143,12 @@ survive a later rename. The state location defaults to
    op run --env-file=apps/practice-m365-contacts/contacts.env -- bun run apps/practice-m365-contacts/src/bin.ts apply --yes --csv <input.csv>
    ```
 
+   If every identifiable source contact is already present anywhere in the
+   mailbox, apply creates no contact and no folder. It discovers the dedicated
+   folder if present and saves a zero-entry journal with matched-existing and
+   skipped counts. Do not duplicate or tag existing contacts to populate a
+   folder. A later no-op undo saves its own receipt without deleting anything.
+
 7. Run both rollback dry-runs in §3. Record counts and run id only. The worker
    never executes live undo; it requires a later orchestrator ruling.
 

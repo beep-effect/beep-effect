@@ -156,6 +156,12 @@ New-ManagementRoleAssignment -App "<outbox-enterprise-app-object-id>" -Role "App
 New-ManagementRoleAssignment -App "<outbox-enterprise-app-object-id>" -Role "Application Calendars.ReadWrite" -CustomResourceScope "beep-docket-intake-mailbox"
 ```
 
+The outbox service principal also holds `Application Contacts.ReadWrite` on
+attorney-only scope `beep-practice-contacts-mailbox` for the practice contacts
+seeding job. This grant is separate from the three shared-scope assignments
+above. Removal is documented in [the contacts seeding runbook, section 4](./practice-m365-contacts-seeding.md#4-remove-the-grant);
+remove only the contacts assignment and scope, preserving the outbox grants.
+
 ## 5. Verify the scope (same PowerShell session)
 
 This check does not wait for the permission cache.

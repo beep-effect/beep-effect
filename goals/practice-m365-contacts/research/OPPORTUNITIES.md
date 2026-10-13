@@ -146,3 +146,82 @@
   scoped root rule directly, then requalify affected packages and one push wave.
 - Prevention: include scoped root oxlint in the package handoff contract, and
   inspect every named failure before acknowledging an aggregate hosted red.
+
+## 2026-10-10: grant handback wait after merged delivery
+
+- Work: advance the merged contact driver/job into the read-only grant probe
+  and pre-seed export, preserving the authorization and export ordering.
+- Evidence: PR 1 #1591 merged at 22:56:39 UTC; repair follow-up #1595 merged
+  at 00:19:46 UTC. The S13 final gate was consumed. At 00:50 UTC the required
+  scoped grant handback remained absent. No mailbox call or write had run.
+- Friction: merge completion does not provide a visible grant execution state;
+  the worker can only poll for the final authorization handback until the
+  brief's three-hour deadline. The cause of the delay is unknown.
+- Prevention: give the grant owner an explicit queued/running/failed receipt
+  beside the final InScope proof, so the worker can distinguish scheduling
+  delay from a failed grant without querying or modifying the tenant.
+
+## 2026-10-13 — heavy wrapper user-bus environment
+
+- Doing: read-only grant probe through `beep-heavy` after workstation reboot.
+- Evidence: the initial wrapper failed before admission with user scope bus
+  unavailable; the env verification itself passed. Providing the standard
+  user-bus environment let the wrapper admit and Graph return HTTP 403.
+- Prevention: initialize the user runtime directory and bus address in the
+  lane launcher so every heavy job has the same user-systemd context.
+- Outcome: wrapper repaired for this invocation only; no home config changed.
+  HTTP 403 is a separate grant-propagation observation, not a wrapper failure.
+- Reversal: remove the invocation-local environment once the launcher supplies it.
+
+## 2026-10-13 — read-only propagation probe queues behind heavy work
+
+- Doing: scheduled retry of the credential-gated folder-list smoke.
+- Evidence: retry 8 reached `beep-heavy` around 20:28 UTC and reported all
+  five slots busy; still unadmitted at 20:33 UTC. This is not a Graph result.
+- Prevention: a governed admission weight for short live read probes could
+  keep safety checks from waiting behind multi-package builds. This needs
+  a later owner decision; this lane does not bypass the required wrapper.
+- Outcome: keep the existing waiter and poll its result every minute.
+
+## 2026-10-13 — zero-create first run has no receipt
+
+- Doing: online planning before the authorized smoke/apply.
+- Evidence: plan has Create 0, SkipExistsInMailbox 480, SkipUnidentifiable 7.
+  `ContactSeeding.apply` returns before folder discovery and journal save
+  when creates is empty; per-run undo rejects absent journal state.
+- Prevention: fixture the first online apply against an already populated
+  mailbox and define a no-op receipt/undo contract before live verification.
+- Outcome: stop before writes; reviewed fix or scope ruling required.
+
+
+## 2026-10-13 — zero-create qualification blocked upstream
+
+- Task: qualify the bounded empty-journal repair before the authorized live sequence.
+- Evidence: full driver package proof passes; full app package proof stops in
+  `@beep/box:build` with `TS2589: Type instantiation is excessively deep` before
+  the app audit starts. Box source matches origin/main; no contacts driver edit.
+- Prevention: make direct package qualification distinguish dependency-build
+  failures from failures in the touched package, retaining both receipts.
+- Response: acknowledged inherited failure under S11; qualify app audit,
+  test typecheck and scoped coverage directly through beep-heavy. Do not edit Box.
+
+
+## 2026-10-13 — live-smoke admission delay
+
+- Task: run the already-qualified contacts-only smoke after the clean online plan.
+- Evidence: beep-heavy reports all five shared slots busy; the live batch remains
+  queued while repository-wide inventory generation runs in the parity batch.
+  Polls find no smoke result yet, so no write or smoke pass is claimed.
+- Prevention: expose durable queue position and admission time in result receipts.
+- Response: retain the waiter and poll every minute; do not cancel it for timeout
+  or bypass the shared budget. At most two lane heavy units remain active.
+
+
+## PR 2 review qualification admission (2026-10-13)
+
+While qualifying the two PR #1623 journal-safety review fixes,
+`beep-heavy bun run beep quality package-verify @beep/practice-m365-contacts`
+remained queued for more than ten minutes with `all 5 slots busy, waiting`.
+No gate had started and no pass was claimed. The waiter was retained under the
+brief's admission ruling. A fair admission queue with a durable position and
+wait estimate would make review-wave completion easier to coordinate.

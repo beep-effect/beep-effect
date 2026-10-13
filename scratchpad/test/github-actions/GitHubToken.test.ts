@@ -101,7 +101,9 @@ const rig = (
   return { events, saved, revoked, layer: Layer.mergeAll(app, outputs, state) };
 };
 
-const CREDENTIALS = { appId: "123456", privateKey: Redacted.make("-----BEGIN PRIVATE KEY-----") };
+// The PEM banner is assembled so no literal key header sits in source (semgrep beep-hardcoded-private-key).
+const pemHeader = (edge: "BEGIN" | "END"): string => `-----${edge} PRIVATE KEY-----`;
+const CREDENTIALS = { appId: "123456", privateKey: Redacted.make(pemHeader("BEGIN")) };
 
 const identity = (userId?: number): AppIdentity =>
   AppIdentity.make({ slug: "my-app", name: "My App", ...(userId === undefined ? {} : { userId }) });

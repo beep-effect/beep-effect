@@ -12,11 +12,12 @@ import {
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -111,7 +112,8 @@ const overJob = Effect.fn("overJob")(function* <A, E>(
   root: string,
   initial: MailboxInventory,
   program: Effect.Effect<A, E, ContactSeeding>,
-  ambiguous = false
+  ambiguous = false,
+  folderCreationFails = false
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -122,6 +124,7 @@ const overJob = Effect.fn("overJob")(function* <A, E>(
   const fake = ContactsMailbox.of({
     inventory: Ref.get(inventory),
     createFolder: Effect.gen(function* () {
+      if (folderCreationFails) return yield* M365Error.fromReason("response status", { status: 403 });
       const folder = GraphContactFolder.make({ id: "seed-folder", displayName: O.some(seedFolderName) });
       yield* Ref.update(inventory, (snapshot) =>
         MailboxInventory.make({ ...snapshot, folders: A.append(snapshot.folders, folder) })
@@ -167,7 +170,7 @@ const overJob = Effect.fn("overJob")(function* <A, E>(
     }),
   });
   const checkout = path.join(root, "checkout");
-  yield* fs.makeDirectory(checkout);
+  yield* fs.makeDirectory(checkout, { recursive: true });
   const context = yield* Layer.build(
     contactSeedingLayer(checkout).pipe(
       Layer.provide(Layer.succeed(ContactsMailbox, fake)),
@@ -315,7 +318,190 @@ describe("contact seeding", () => {
           expect(run.deleted).toHaveLength(1);
           expect(run.inventory.contacts).toHaveLength(0);
           expect(run.inventory.folders).toHaveLength(0);
-          expect(run.journals[0]?.contacts).toHaveLength(1);
+          expect(
+            O.getOrThrow(A.findFirst(run.journals, (journal) => journal.runId === run.result.runId)).contacts
+          ).toHaveLength(1);
+        })
+      )
+    );
+    it.effect("journals an already-present run without creating a folder and persists no-op undo", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const input = path.join(root, "fixture.csv");
+          yield* fs.writeFileString(input, csv);
+          const initial = inventoryOf([stored("existing", "Hand edited name", "person@example.test")]);
+          const run = yield* overJob(
+            root,
+            initial,
+            ContactSeeding.use(
+              Effect.fnUntraced(function* (job) {
+                const applied = yield* job.apply(ContactInputs.make({ csv: [input], vcf: [] }), true);
+                expect(applied).toMatchObject({ created: 0, SkipExistsInMailbox: 1, failed: 0 });
+                expect(yield* job.undo(O.some(applied.runId), false, true, false)).toMatchObject({ deleted: 0 });
+                expect(yield* job.undo(O.some(applied.runId), false, false, true)).toMatchObject({ deleted: 0 });
+                expect(yield* Effect.flip(job.undo(O.some("missing-run"), false, true, false))).toMatchObject({
+                  reason: "missing-journal",
+                });
+                return applied;
+              })
+            )
+          );
+          expect(run.created).toBe(0);
+          expect(run.deleted).toHaveLength(0);
+          expect(run.inventory).toEqual(initial);
+          expect(run.journals).toHaveLength(1);
+          const journal = O.getOrThrow(A.head(run.journals));
+          expect(journal.contacts).toHaveLength(0);
+          assertNone(journal.folderId);
+          expect(journal.folderCreated).toBe(false);
+          expect(O.getOrThrow(journal.receipt)).toEqual(run.result);
+          expect(O.getOrThrow(journal.undoReceipt)).toMatchObject({ runId: run.result.runId, deleted: 0 });
+        })
+      )
+    );
+    it.effect("discovers a dedicated folder on a zero-create run and never deletes it during no-op undo", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const input = path.join(root, "fixture.csv");
+          yield* fs.writeFileString(input, csv);
+          const initial = MailboxInventory.make({
+            ...inventoryOf([stored("existing", "Fixture Person", "person@example.test")]),
+            folders: [GraphContactFolder.make({ id: "existing-folder", displayName: O.some(seedFolderName) })],
+          });
+          const run = yield* overJob(
+            root,
+            initial,
+            ContactSeeding.use(
+              Effect.fnUntraced(function* (job) {
+                const applied = yield* job.apply(ContactInputs.make({ csv: [input], vcf: [] }), true);
+                yield* job.undo(O.some(applied.runId), false, false, true);
+                return applied;
+              })
+            )
+          );
+          expect(run.inventory).toEqual(initial);
+          expect(run.created).toBe(0);
+          expect(run.deleted).toHaveLength(0);
+          const journal = O.getOrThrow(A.head(run.journals));
+          expect(O.getOrThrow(journal.folderId)).toBe("existing-folder");
+          expect(journal.folderCreated).toBe(false);
+        })
+      )
+    );
+    it.effect("does not treat an unfinished ambiguous create as a completed empty run", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const path = yield* Path.Path;
+          const state = yield* makeContactsState(path.join(root, "state"));
+          yield* state.save(
+            RunJournal.make({
+              runId: "unfinished-run",
+              folderCreated: false,
+              contacts: [],
+              pendingSourceKey: O.some("fixture-source"),
+            })
+          );
+          const run = yield* overJob(
+            root,
+            empty,
+            ContactSeeding.use((job) => Effect.flip(job.undo(O.some("unfinished-run"), false, false, true)))
+          );
+          expect(run.result).toMatchObject({ reason: "ambiguous-write" });
+          expect(run.deleted).toHaveLength(0);
+          assertNone(O.getOrThrow(A.head(run.journals)).undoReceipt);
+        })
+      )
+    );
+    it.effect("rejects incomplete empty journals in dry-run and live undo without writing receipts", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const path = yield* Path.Path;
+          const state = yield* makeContactsState(path.join(root, "state"));
+          const journal = RunJournal.make({ runId: "crashed-run", folderCreated: false, contacts: [] });
+          yield* state.save(journal);
+          const run = yield* overJob(
+            root,
+            empty,
+            ContactSeeding.use(
+              Effect.fnUntraced(function* (job) {
+                expect(yield* Effect.flip(job.undo(O.some(journal.runId), false, true, false))).toMatchObject({
+                  reason: "ambiguous-write",
+                });
+                expect(yield* Effect.flip(job.undo(O.some(journal.runId), false, false, true))).toMatchObject({
+                  reason: "ambiguous-write",
+                });
+              })
+            )
+          );
+          expect(run.created).toBe(0);
+          expect(run.deleted).toHaveLength(0);
+          expect(run.inventory).toEqual(empty);
+          expect(run.journals).toEqual([journal]);
+        })
+      )
+    );
+    it.effect("rejects ambiguous seed folders before saving a journal even with zero creates", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const input = path.join(root, "fixture.csv");
+          yield* fs.writeFileString(input, csv);
+          const initial = MailboxInventory.make({
+            ...inventoryOf([stored("existing", "Fixture Person", "person@example.test")]),
+            folders: A.map(["first-folder", "second-folder"], (id) =>
+              GraphContactFolder.make({ id, displayName: O.some(seedFolderName) })
+            ),
+          });
+          const run = yield* overJob(
+            root,
+            initial,
+            ContactSeeding.use((job) => Effect.flip(job.apply(ContactInputs.make({ csv: [input], vcf: [] }), true)))
+          );
+          expect(run.result).toMatchObject({ reason: "folder-ambiguous" });
+          expect(run.journals).toHaveLength(0);
+          expect(run.created).toBe(0);
+          expect(run.deleted).toHaveLength(0);
+          expect(run.inventory).toEqual(initial);
+        })
+      )
+    );
+    it.effect("persists an incomplete initial journal before folder creation can fail", () =>
+      withFiles(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const input = path.join(root, "fixture.csv");
+          yield* fs.writeFileString(input, csv);
+          const run = yield* overJob(
+            root,
+            empty,
+            ContactSeeding.use((job) => Effect.flip(job.apply(ContactInputs.make({ csv: [input], vcf: [] }), true))),
+            false,
+            true
+          );
+          const failure = yield* pipe(run.result, O.liftPredicate(S.is(M365Error)), Effect.fromOption);
+          expect(failure.reason).toBe("response status");
+          assertSome(failure.status, 403);
+          expect(run.journals).toHaveLength(1);
+          const journal = O.getOrThrow(A.head(run.journals));
+          assertNone(journal.receipt);
+          assertNone(journal.folderId);
+          expect(journal.contacts).toHaveLength(0);
+          expect(run.created).toBe(0);
+          expect(run.inventory).toEqual(empty);
+          const rollback = yield* overJob(
+            root,
+            empty,
+            ContactSeeding.use((job) => Effect.flip(job.undo(O.some(journal.runId), false, false, true)))
+          );
+          expect(rollback.result).toMatchObject({ reason: "ambiguous-write" });
+          expect(rollback.journals).toEqual([journal]);
+          expect(rollback.deleted).toHaveLength(0);
         })
       )
     );

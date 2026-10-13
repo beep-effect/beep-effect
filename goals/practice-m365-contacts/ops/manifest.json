@@ -4,15 +4,15 @@
     "id": "practice-m365-contacts",
     "packetId": "goal-packet/v1:1b1de9f7d27be1108a8aee793d571f6130298f41784b813a88cccc2f03be1d76",
     "title": "Practice M365 Contacts",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-30",
-    "updated": "2026-10-09",
+    "updated": "2026-10-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/practice-m365-contacts",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Add the confidential-client auth lane and contacts write verbs to @beep/m365, then seed the attorney's contact folder from the salvaged CSVs with dedup and rollback tags",
-  "statusNote": "PR 1 implementation and offline evidence qualified: all edited-package checks, test-tsgo, driver docgen, JSDoc ratchet, knowledge refs, fallow and scoped coverage pass. Inherited identity-dependent infra/Pulumi docgen red recorded under S11. Publication and live prerequisites remain.",
+  "statusNote": "All 480 identifiable CSV contacts resolve mailbox-wide; zero creates, seven unidentifiable skips. Scoped grant/read and 536-contact export proved; contacts-only smoke cleaned up. Empty apply journal and no-op undo receipts persisted; both undo dry-runs passed. PR 2 carries the bounded repair, receipts, reflection and completed-retained flip; Yeet closes the readiness gate. Grant removal is a separate orchestrator action after merge.",
   "blockedBy": [],
   "executionCapable": true,
   "reflectionRequired": true,
@@ -52,7 +52,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
@@ -62,17 +62,17 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

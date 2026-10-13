@@ -91,6 +91,8 @@ const unsupportedRestPullField = (args: ReadonlyArray<string>): O.Option<string>
   );
 const isRestPullRead = (args: ReadonlyArray<string>): boolean =>
   args[0] === "api" && /^repos\/\{owner\}\/\{repo\}\/pulls\/\d+$/.test(args[1] ?? "");
+const isDefaultBranchRead = (args: ReadonlyArray<string>): boolean =>
+  args[0] === "api" && args[1] === "repos/{owner}/{repo}" && A.contains(args, ".default_branch");
 const bodyFileOf = (args: ReadonlyArray<string>): string =>
   Str.replace(/^body=@/, "")(O.getOrElse(A.last(args), () => ""));
 interface GhCaptureResult {
@@ -259,6 +261,7 @@ const makePublishGhRunner = Effect.fn("test.makePublishGhRunner")(function* (fs:
     _cwd: string,
     _env: Record<string, string | undefined> | undefined = undefined
   ) {
+    if (isDefaultBranchRead(args)) return { exitCode: 0, output: "main\n", truncated: false };
     if (args[1] === "create") {
       const bodyPath = O.getOrElse(A.last(args), () => "");
       yield* Ref.set(createBody, yield* fs.readFileString(bodyPath).pipe(Effect.orDie));
@@ -824,7 +827,12 @@ describe("Yeet provenance footer splice", () => {
         expect(yield* Ref.get(recorder)).toHaveLength(2);
         const failure = yield* ensurePullRequest(context(root), recorder, O.some(prCreateStep), O.none(), {
           findOpen: () => Effect.succeedNone,
-          capture: () => Effect.succeed({ exitCode: 1, output: "creation denied", truncated: false }),
+          capture: (_command, args) =>
+            Effect.succeed(
+              isDefaultBranchRead(args)
+                ? { exitCode: 0, output: "main\n", truncated: false }
+                : { exitCode: 1, output: "creation denied", truncated: false }
+            ),
         }).pipe(Effect.flip);
         expect(failure).toMatchObject({ exitCode: 1, message: "gh pr create failed:\ncreation denied" });
       })
@@ -846,7 +854,7 @@ describe("Yeet provenance footer splice", () => {
             findOpen: () => Effect.succeedNone,
             capture: (_command, args) =>
               (args[1] === "create" ? Ref.set(argsSeen, args) : Effect.void).pipe(
-                Effect.as({ exitCode: 0, output: "", truncated: false })
+                Effect.as({ exitCode: 0, output: isDefaultBranchRead(args) ? "main\n" : "", truncated: false })
               ),
             view: () =>
               Effect.succeed(
@@ -862,6 +870,7 @@ describe("Yeet provenance footer splice", () => {
           Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ HOME: root, PWD: root }))
         );
         expect(yield* Ref.get(argsSeen)).toContain("--draft");
+        expect(yield* Ref.get(argsSeen)).toContain("--base");
         expect(result.created).toBe(true);
         assertSome(result.url, "https://github.com/beep-effect/beep-effect/pull/42");
       })

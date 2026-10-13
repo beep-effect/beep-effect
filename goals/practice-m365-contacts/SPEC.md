@@ -211,6 +211,65 @@ This spec binds to them without restating.
   This preserves their wire and runtime behavior. Reversal: revert only the
   schema-hoisting commit; no public model or permission change is involved.
 
+- **2026-10-13 queued grant probe:** the final read retry was submitted
+  before the two-hour deadline, then admitted at 21:17:50 UTC after shared
+  heavy-slot queueing. It passed. This supersedes the provisional stop
+  assessment while the result was unknown: no failed read was received at
+  or after the deadline, and no additional retry was submitted. Continue
+  from the proven read into export and online planning. Reason: the
+  already-authorized attempt resolved the dependency after an admission
+  delay; no permission or credential was widened. Reversal: stop on a
+  subsequent safety trip and retain every receipt.
+
+- **(h) Pre-seed export (2026-10-13, R3a).** Exported 536 existing
+  contacts from every folder before any write. SHA-256:
+  `7942bb0ee8345eb074421399c48fdf221d1467a6b0b6d01807adebfd93b0a0f9`. Private location:
+  `<corpus-home>/ops/practice-contacts/2026-10-13/export.jsonl`.
+  Reason: backs up the mailbox's prior contacts before the authorized seed.
+  Directory mode 0700 and file mode 0600 were verified. Reversal: none;
+  preserve the backup outside this repository.
+
+- **2026-10-13 zero-create live verification:** all 480 identifiable CSV
+  contacts already match existing mailbox contacts. The planner correctly
+  avoids duplicates and writes no PATCH. Main's zero-create apply returns
+  before folder discovery or journal persistence, blocking this run's
+  dedicated-folder and per-run undo proof. Stop before smoke/apply under the
+  live-defect rule. Reason: required live verification is unavailable in
+  the actual mailbox state. Reversal: a reviewed zero-create receipt/undo
+  change or later scope ruling; never duplicate or tag existing contacts
+  merely to satisfy evidence.
+
+### Zero-create acceptance and rollback (2026-10-13, Run 4 ruling)
+
+The orchestrator accepts mailbox-wide resolution as the seeding outcome: every
+identifiable CSV contact must resolve after the run. All 480 already exist;
+never duplicate or tag them to manufacture dedicated-folder evidence. A
+zero-create run discovers a dedicated folder if present, creates no folder,
+and persists an empty journal with its counts-only apply receipt. Per-run undo
+of that journal succeeds without mailbox mutations and persists its own receipt;
+a genuinely missing journal is a distinct typed failure. This bounded repair
+and its tests are authorized on PR 2 before repeating the contacts-only live
+sequence, superseding the prior live-defect stop and main-only restriction for
+this repair. Reason: duplicate avoidance and rollback proof must both hold for
+a no-op run. Reversal: revert the isolated journal/receipt repair; existing
+contacts are unchanged. The contacts grant remains until PR 2 merges; the
+orchestrator removes it separately using runbook section 4.
+
+All touched workspaces are private. Under #1566 and the standing private-package
+ruling, record this repair in the handoff release table without a changeset.
+Its optional receipt fields decode existing journals unchanged; no published
+major release is needed. Reversal: revert the repair as a unit.
+
+### PR 2 review safety (2026-10-13)
+
+Validate folder ambiguity before saving the initial journal, then persist it
+before a folder POST. An empty per-run undo requires a completed apply receipt;
+a crashed or incomplete empty journal fails with `ambiguous-write`. Nonempty
+legacy journals retain their guarded rollback behavior. Reason: a durable
+initial journal is not a successful apply receipt. Synthetic tests cover
+refusal without writes. Reversal: revert the bounded review wave. The private
+app remains exempt from changesets under #1566.
+
 ## Acceptance Criteria
 
 - [x] Either auth lane injects into the unchanged REST service boundary in
@@ -219,10 +278,11 @@ This spec binds to them without restating.
 - [x] Contact and contact-folder create/list verbs are fixture-proven for
       both lanes (method, URL, content type, body, decoded response,
       non-retry behavior).
-- [ ] The seeding job dry-runs against the CSVs (report: creates, dedup
-      skips, conflicts) before any write; the executed run
-      discovers-or-creates the dedicated folder and seeds it with tagged
-      contacts and a recorded rollback path.
+- [x] The seeding job dry-runs against the CSVs before any write. The executed
+      run resolves all 480 identifiable contacts mailbox-wide, preserves existing
+      contacts and records a rollback path. Under the Run 4 ruling, zero-create
+      apply discovers an existing dedicated folder but creates none when absent;
+      its empty journal and no-op undo receipts are persisted and proven.
 - [x] `bun run beep quality package-verify @beep/m365` passes.
 - [x] No unrelated refactors or formatting churn.
 

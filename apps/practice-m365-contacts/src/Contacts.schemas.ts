@@ -179,14 +179,20 @@ export class RunJournal extends S.Class<RunJournal>($I`RunJournal`)(
     folderCreated: S.Boolean,
     contacts: S.Array(CreatedContact),
     pendingSourceKey: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    receipt: S.OptionFromOptionalKey(ContactReport).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    undoReceipt: S.OptionFromOptionalKey(ContactReport).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
-  $I.annote("RunJournal", { description: "Durable run id, folder ownership and contact receipts." })
+  $I.annote("RunJournal", {
+    description:
+      "Durable folder ownership, contact entries and counts-only apply/undo receipts, including zero-create runs.",
+  })
 ) {}
 
 /** Technical failure codes; no private contact value is a failure message. */
 const ContactsFailureReason = LiteralKit([
   "input",
   "state",
+  "missing-journal",
   "locked",
   "untracked-tagged",
   "unsafe-export",

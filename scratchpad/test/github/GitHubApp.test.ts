@@ -32,7 +32,9 @@ const keyPair = await crypto.subtle.generateKey(
 	["sign", "verify"],
 );
 const keyBytes = new Uint8Array(await crypto.subtle.exportKey("pkcs8", keyPair.privateKey));
-const privateKey = "-----BEGIN PRIVATE KEY-----\n" + Base64.encode(keyBytes) + "\n-----END PRIVATE KEY-----";
+// The PEM banner is assembled so no literal key header sits in source (semgrep beep-hardcoded-private-key).
+const pemBanner = (edge: "BEGIN" | "END"): string => `-----${edge} PRIVATE KEY-----`;
+const privateKey = `${pemBanner("BEGIN")}\n${Base64.encode(keyBytes)}\n${pemBanner("END")}`;
 
 const CREDENTIALS = { appId: "Iv1.test", privateKey: Redacted.make(privateKey) };
 

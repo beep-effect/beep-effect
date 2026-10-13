@@ -49,6 +49,7 @@ import {
   readmeTitle,
   TEMPLATE_SLUG,
 } from "./Inventory.ts";
+import { materializeExpectFlag, materializeWriteFlag, requireOneMode, writeReviewedPlan } from "./Materialize.ts";
 import { canonicalJsonText, sha256Hex, sha256HexBytes } from "./PacketCore/PacketDigest.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
@@ -264,6 +265,12 @@ const ADOPT_BASE_VALIDATIONS: ReadonlyArray<ValidationRequirement> = [
   "goal-md-within-budget",
 ];
 
+// Template files a conforming packet need not carry (ruled 2026-10-13,
+// research/p1-fp-eyeball-verdicts.md, Workstream E): the reflection template is
+// authoring convenience in goals/_template, never a packet artifact.
+const isOptionalTemplateConvention = (relativePath: string): boolean =>
+  Str.Equivalence(relativePath, `history/reflections/${REFLECTION_TEMPLATE_BASENAME}`);
+
 const isReflectionArtifact = (relativePath: string): boolean =>
   Str.startsWith("history/reflections/")(relativePath) &&
   Str.endsWith(".md")(relativePath) &&
@@ -351,7 +358,11 @@ export const compileAdoptionPlan: {
     const present = A.map(snapshot.files, (file) => presentFileRow(snapshot.packetPath, file, parsedManifest));
     const packetPaths = A.map(snapshot.files, (file) => file.path);
     const missing = yield* Effect.forEach(
-      A.filter(snapshot.templateFiles, (templateFile) => !A.contains(packetPaths, templateFile.path)),
+      A.filter(
+        snapshot.templateFiles,
+        (templateFile) =>
+          !A.contains(packetPaths, templateFile.path) && !isOptionalTemplateConvention(templateFile.path)
+      ),
       (templateFile) => missingTemplateRow(snapshot, archetype, templateFile)
     );
 
@@ -530,7 +541,7 @@ const towardFlag = Flag.Literals("toward", PhaseArchetype.literals).pipe(
 );
 const planFlag = Flag.Boolean("plan").pipe(
   Flag.withDefault(false),
-  Flag.withDescription("Compile and print the adoption plan (the only mode this slice ships)")
+  Flag.withDescription("Compile and print the adoption plan for review")
 );
 const jsonFlag = Flag.Boolean("json").pipe(
   Flag.withDefault(false),
@@ -542,12 +553,10 @@ const runAdoptPlan = Effect.fn("Goals.runAdoptPlan")(function* (options: {
   readonly toward: O.Option<PhaseArchetype>;
   readonly plan: boolean;
   readonly json: boolean;
+  readonly write: boolean;
+  readonly expect: O.Option<string>;
 }) {
-  if (!options.plan) {
-    return yield* GoalPlanInputError.new(
-      "Phase 0 ships plan-only commands; pass --plan (no writer exists to omit it for)."
-    );
-  }
+  yield* requireOneMode(options);
   const slug = yield* decodeGoalSlug(options.slug).pipe(
     Effect.mapError((issue) => GoalPlanInputError.new(`slug "${options.slug}" is invalid: ${issue.message}`))
   );
@@ -555,6 +564,10 @@ const runAdoptPlan = Effect.fn("Goals.runAdoptPlan")(function* (options: {
   const plan = yield* compileAdoptionPlan(snapshot, options.toward).pipe(
     Effect.mapError(GoalPlanOperationalError.new("Failed to digest the adoption plan."))
   );
+  if (options.write) {
+    yield* writeReviewedPlan(plan, options.expect);
+    return;
+  }
   yield* reportMaterializationPlan(plan, options.json);
 });
 
@@ -574,7 +587,14 @@ const runAdoptPlan = Effect.fn("Goals.runAdoptPlan")(function* (options: {
  */
 export const goalsAdoptCommand = Command.make(
   "adopt",
-  { slug: slugArgument, toward: towardFlag, plan: planFlag, json: jsonFlag },
+  {
+    slug: slugArgument,
+    toward: towardFlag,
+    plan: planFlag,
+    json: jsonFlag,
+    write: materializeWriteFlag,
+    expect: materializeExpectFlag,
+  },
   Effect.fn(function* (options) {
     return yield* runAdoptPlan(options).pipe(
       Effect.catchTags({
@@ -589,4 +609,6 @@ export const goalsAdoptCommand = Command.make(
       })
     );
   })
-).pipe(Command.withDescription("Compile the read-only packet adoption plan (--plan --json); no writer exists"));
+).pipe(
+  Command.withDescription("Compile a packet adoption plan (--plan --json), or apply a reviewed one (--write --expect)")
+);

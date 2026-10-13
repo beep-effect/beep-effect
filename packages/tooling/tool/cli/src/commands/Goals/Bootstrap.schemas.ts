@@ -790,3 +790,60 @@ const VALIDATION_REQUIREMENTS_BY_FINDING_KIND: Readonly<
 export const validationRequirementsForGoalDoctorFinding = (
   kind: GoalDoctorFindingKind
 ): ReadonlyArray<ValidationRequirement> => VALIDATION_REQUIREMENTS_BY_FINDING_KIND[kind];
+
+/**
+ * One file a materialization write created, with the digest of its bytes.
+ *
+ * **Example** (Record a written file)
+ *
+ * ```ts
+ * import { MaterializedFile } from "@beep/repo-cli/commands/Goals/Bootstrap.schemas"
+ *
+ * const file = MaterializedFile.make({ path: "goals/example/README.md", digest: "0".repeat(64) })
+ * console.log(file.path)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MaterializedFile extends S.Class<MaterializedFile>($I`MaterializedFile`)(
+  {
+    path: S.String,
+    digest: PlanDigest,
+  },
+  $I.annote("MaterializedFile", { description: "One file a materialization write created, with its byte digest." })
+) {}
+
+/**
+ * `goal-materialization-receipt/v1`: what a `--write` replay of a reviewed plan did.
+ *
+ * **Details**
+ *
+ * Printed after a successful write. `planId` is the reviewed plan that was
+ * replayed; `written` lists exactly the files created; `validations` are the
+ * requirements checked against the staged tree before publish.
+ *
+ * **Example** (Construct an empty receipt)
+ *
+ * ```ts
+ * import { MaterializationReceipt } from "@beep/repo-cli/commands/Goals/Bootstrap.schemas"
+ *
+ * console.log(typeof MaterializationReceipt.make) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MaterializationReceipt extends S.Class<MaterializationReceipt>($I`MaterializationReceipt`)(
+  {
+    schemaVersion: S.tag("goal-materialization-receipt/v1"),
+    planId: MaterializationPlanId,
+    mode: PlanMode,
+    slug: S.String,
+    written: S.Array(MaterializedFile),
+    validations: S.Array(ValidationRequirement),
+  },
+  $I.annote("MaterializationReceipt", {
+    description: "What a --write replay of a reviewed materialization plan created and validated.",
+  })
+) {}

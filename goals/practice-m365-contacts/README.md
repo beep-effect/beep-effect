@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -35,15 +35,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 implementation is done; P0 and P2 remain in progress. Route A consumes the
-existing certificate registration. The orchestrator adds the attorney-only RBAC
-contacts grant after PR 1 merges. All three edited-package verifications and test
-typechecks pass. Driver docgen and knowledge references pass; identity-dependent
-infra docgen has an attributed inherited third-party failure under S11. JSDoc
-ratchet, fallow and scoped coverage passed before publication. PR 1 #1591 has
-merged; follow-up #1595 repairs manifest ordering and contacts JSON schema
-hoisting found by hosted checks. The scoped grant handback remains pending.
-No live mailbox call or write has run.
+P0–P4 closeout content is complete. PR 1 #1591 and reviewed follow-up #1595
+are merged; PR 2 carries the bounded zero-create repair, live receipts and
+reflection. All 480 identifiable CSV contacts already resolve mailbox-wide;
+apply created zero contacts and skipped seven unidentifiable cards. Existing
+contacts were never duplicated, patched or tagged.
+
+The scoped grant and runtime read passed. The pre-seed export contains 536
+contacts; SPEC records its full hash. Contacts-only smoke created and deleted
+one synthetic contact. A durable empty journal records apply and no-op undo;
+per-run and category undo dry-runs both plan zero deletions. The final handoff
+records Yeet readiness separately from the live proof. The orchestrator merges
+and removes the contacts grant afterward using runbook section 4.
 
 ## Latest Evidence
 
@@ -51,8 +54,15 @@ No live mailbox call or write has run.
   487 normalized contacts; four inputs share one byte hash. VCF is census-only.
 - [Offline dry run](./history/2026-10-09-seeding-dry-run.md): 480 creates, seven
   unidentifiable skips, zero conflicts and zero untracked tags.
-- [Lane handoff](./history/handoffs/m365-contacts-2026-10-09.md): setup, decisions
-  and current verification evidence.
+- [Earlier lane handoff](./history/handoffs/m365-contacts-2026-10-09.md): setup, decisions
+  and historical qualification evidence.
+- [Grant observations](./history/2026-10-13-p0-grant-proof.md): scoped
+  administrative handback and passing runtime read after admission queueing.
+- [Resume handoff](./history/handoffs/m365-contacts-2026-10-13.md): deadline
+  boundary, terminal unit evidence and remaining live steps.
+
+- [Online plan](./history/2026-10-13-seeding-dry-run-online.md): zero creates,
+  480 existing skips; the later Run 4 ruling accepts mailbox-wide resolution.
 
 ## Notes
 
@@ -64,3 +74,8 @@ No live mailbox call or write has run.
   HTTP-executor design only; those verbs are out of scope.
 - Contact content, real mailbox addresses, and machine-local salvage paths
   never enter this public repo — evidence uses counts, headers, and tags.
+
+- [Live receipt and rollback proof](./history/2026-10-13-seeding-receipt.md):
+  480 matched existing, zero creates, empty-run undo persisted, smoke self-cleaned.
+- [Closeout reflection](./history/reflections/2026-10-13-codex.md): no-op
+  receipt semantics, acceptance clarification and qualification friction.

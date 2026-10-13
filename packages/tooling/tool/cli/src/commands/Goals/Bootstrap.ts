@@ -35,6 +35,7 @@ import {
 import { GoalPlanInputError, GoalPlanOperationalError } from "./Goals.errors.ts";
 import { isCapabilitySlug } from "./Goals.schemas.ts";
 import { listGoalPackets } from "./Inventory.ts";
+import { materializeExpectFlag, materializeWriteFlag, requireOneMode, writeReviewedPlan } from "./Materialize.ts";
 import { canonicalJsonText, canonicalJsonTextPretty, sha256Hex } from "./PacketCore/PacketDigest.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
@@ -853,7 +854,7 @@ const todayFlag = Flag.String("today").pipe(
 );
 const planFlag = Flag.Boolean("plan").pipe(
   Flag.withDefault(false),
-  Flag.withDescription("Compile and print the materialization plan (the only mode this slice ships)")
+  Flag.withDescription("Compile and print the materialization plan for review")
 );
 const jsonFlag = Flag.Boolean("json").pipe(
   Flag.withDefault(false),
@@ -939,12 +940,10 @@ const runBootstrapPlan = Effect.fn("Goals.runBootstrapPlan")(function* (options:
   readonly today: O.Option<string>;
   readonly plan: boolean;
   readonly json: boolean;
+  readonly write: boolean;
+  readonly expect: O.Option<string>;
 }) {
-  if (!options.plan) {
-    return yield* GoalPlanInputError.new(
-      "Phase 0 ships plan-only commands; pass --plan (no writer exists to omit it for)."
-    );
-  }
+  yield* requireOneMode(options);
   const slug = yield* decodeSlug(options.slug);
   const provides = yield* parseCapabilityList("provides", options.provides);
   const requires = yield* parseCapabilityList("requires", options.requires);
@@ -972,6 +971,10 @@ const runBootstrapPlan = Effect.fn("Goals.runBootstrapPlan")(function* (options:
     input,
     A.map(records, (record) => record.slug)
   ).pipe(Effect.mapError(GoalPlanOperationalError.new("Failed to digest the materialization plan.")));
+  if (options.write) {
+    yield* writeReviewedPlan(plan, options.expect);
+    return;
+  }
   yield* reportMaterializationPlan(plan, options.json);
 });
 
@@ -1002,6 +1005,8 @@ export const goalsBootstrapCommand = Command.make(
     today: todayFlag,
     plan: planFlag,
     json: jsonFlag,
+    write: materializeWriteFlag,
+    expect: materializeExpectFlag,
   },
   Effect.fn(function* (options) {
     return yield* runBootstrapPlan(options).pipe(
@@ -1017,4 +1022,8 @@ export const goalsBootstrapCommand = Command.make(
       })
     );
   })
-).pipe(Command.withDescription("Compile the read-only packet materialization plan (--plan --json); no writer exists"));
+).pipe(
+  Command.withDescription(
+    "Compile a packet materialization plan (--plan --json), or publish a reviewed one (--write --expect)"
+  )
+);
