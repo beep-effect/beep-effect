@@ -83,6 +83,7 @@ export * from "../commands/Quality/internal/PackageVerify.ts";
 export {
   fencedLineState,
   jsdocCommentsFromSource,
+  listSourceFiles,
   tagsFromComment,
 } from "../commands/Quality/internal/QualityArtifactSupport.ts";
 export * from "../commands/Quality/internal/TurboConfigProof.ts";

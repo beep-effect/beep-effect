@@ -980,6 +980,28 @@ upstream dist declarations; rebuilding the dependency closure and replaying
 all three checks passed. Record proof prerequisite scope with each result so
 an environment-only first attempt is not mistaken for a source regression.
 
+## 2026-10-13: shared CI failures exposed after fixture repair
+
+PR #1571 job 115461073078 reaches a technical-drawing assertion with page count
+1 instead of 2 because its fake backend stores one count across render outputs.
+PR #1612 job 115466055746 finally identifies the previously opaque inventory
+failure: `Failed to stat` a broken `yaml-test-suite/name` fixture link. Job
+115466055306 gets past dependency alignment and finds unsorted schema-package
+devDependencies. Artifact-specific fake state, broken-link traversal tests, and
+complete bounded diagnostics would have prevented repeated uninformative runs.
+The follow-up fixes these shared causes once on main, without changing quality
+floors or treating earlier interrupted scans as complete measurements.
+
+## 2026-10-13: inventory completion separates source debt from scanner errors
+
+The repaired full scan reports eight metric increases, but its per-export rows
+show `BlobStore` misclassified by a nested schema example and seven infrastructure
+exports entering the documentation surface through two missing umbrella-config
+exclusions. This makes real source repair appear larger than it is. Classify
+declarations from their own AST heritage and keep explicit test/canary scope
+aligned with package docgen configuration. Preserve the actual remaining source
+findings and baseline instead of annotating the wrong service or teaching
+intentionally invalid canaries to pass.
 ## 2026-10-13: arbitrary-test diagnostic and generation friction
 
 A newly written journal property initially exhausted generation at size zero:
@@ -1029,6 +1051,18 @@ The run-3 `beep-heavy bun run beep lint policy --full` retry reached 32G and was
 
 Coverage job 114132486598 and the local full coverage attempt both fail the two practice-kg startup assertions at `apps/practice-kg-mcp/test/Host.test.ts:462`: expected the sanitized refusal, received an empty string. The root `vitest.setup.ts` Node shim returns only `exited` from `Bun.spawn`; its absent stderr becomes an empty Response body. Return both piped Web streams, preserve the exit promise, and pin the contract with `vitest-bun-spawn.test.ts`. The focused startup rerun passes both cases. This repairs the measurement precondition; it does not establish a successful full coverage rerun or authorize lowering a floor.
 
+## 2026-10-13: quick package checks missed strict test diagnostics
+
+- Work: publish the shared inventory and drawing repairs in PR #1617.
+- Evidence: hosted Check job `115506076889` reported TS377047 at
+  `quality-artifact-generators.test.ts:206`; the new filesystem stat callback
+  requires the reusable `Effect.fn` form. Focused execution and quick package
+  lint/check had passed without exercising this strict test compiler gate.
+- Prevention: run `bun run beep quality test-tsgo` on test repairs and inspect
+  the actual compiler result before declaring the source final.
+- Action: return the PR to draft, correct the callback idiom, run focused and
+  strict compiler proof, and publish one corrective wave. Keep the inherited
+  JSDoc source findings in #1618 separate; do not adjust any baseline.
 #1612 merged while the published parity replay was generating JSDoc, causing
 a new base-conflict inbox row. Stop that owned admitted replay because its
 base is superseded, not because of elapsed time; keep its completed stages

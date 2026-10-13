@@ -1,5 +1,6 @@
 import {
   buildJSDocDocumentationInventory,
+  listSourceFiles,
   summarizeTurboDryRunOutput,
   summarizeTurboQueryAffectedOutput,
   writeJSDocDocumentationInventory,
@@ -162,6 +163,63 @@ const acquireLabsFixtureRepo = Effect.fnUntraced(function* () {
 });
 
 it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("quality artifact generators", (it) => {
+  it.effect("skips broken symlinks while containing targets and terminating cycles", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const parent = yield* fs.makeTempDirectoryScoped({ prefix: "beep-quality-source-files-" });
+      const root = path.join(parent, "src");
+      const external = path.join(parent, "external");
+      const source = path.join(root, "index.ts");
+      yield* fs.makeDirectory(root);
+      yield* fs.makeDirectory(external);
+      yield* fs.writeFileString(source, "export const value = true;\n");
+      yield* fs.writeFileString(path.join(external, "escape.ts"), "export const escaped = true;\n");
+      yield* fs.symlink("missing-target", path.join(root, "missing-comma-in-flow"));
+      yield* fs.symlink("missing-target.ts", path.join(root, "broken.ts"));
+      yield* fs.symlink(source, path.join(root, "alias.ts"));
+      yield* fs.symlink(root, path.join(root, "loop"));
+      yield* fs.symlink(external, path.join(root, "escape"));
+      yield* fs.symlink(path.join(external, "escape.ts"), path.join(root, "escape.ts"));
+
+      expect(yield* listSourceFiles(root, path)).toEqual([source, source]);
+    })
+  );
+
+  for (const reason of S.Literals(["PermissionDenied", "Unknown"]).literals) {
+    it.effect(`preserves ${reason} stat failures`, () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-quality-stat-error-" });
+        const source = path.join(root, "index.ts");
+        yield* fs.writeFileString(source, "export const value = true;\n");
+        const failure = PlatformError.systemError({
+          _tag: reason,
+          module: "FileSystem",
+          method: "stat",
+          pathOrDescriptor: source,
+          description: "injected stat failure",
+        });
+        const failingFs = FileSystem.FileSystem.of({
+          ...fs,
+          stat: Effect.fn("FileSystem.FileSystem.stat")((target) =>
+            target === source ? Effect.fail(failure) : fs.stat(target)
+          ),
+        });
+        const error = yield* listSourceFiles(root, path).pipe(
+          Effect.provideService(FileSystem.FileSystem, failingFs),
+          Effect.flip
+        );
+
+        expect(error._tag).toBe("QualityArtifactGeneratorError");
+        expect(error.message).toBe(`Failed to stat ${source}.`);
+        expect(error.filePath).toBe(source);
+        expect(error.cause).toBe(failure);
+      })
+    );
+  }
+
   // The old bracket acquired the whole fixture before registering cleanup.
   // Inject into the real setup seam, then observe removal outside that shorter scope.
   for (const [labs, interrupted] of A.cartesian([false, true], [false, true])) {
@@ -233,6 +291,57 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("quality a
   }
 
   describe("inline schema annotations", () => {
+    it.effect(
+      "classifies schema classes by heritage rather than member examples or initializers",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = yield* acquireFixtureRepo();
+        yield* fs.writeFileString(
+          path.join(repoRoot, "packages", "demo", "src", "index.ts"),
+          `import * as Context from "effect/Context";
+import * as S from "effect/Schema";
+export class DemoService extends Context.Service<DemoService>()("DemoService") {
+  /**
+   * Builds a service layer with schema-backed metadata.
+   *
+   * **Example** (Construct metadata)
+   *
+   * \`\`\`ts
+   * import * as S from "effect/Schema";
+   * class Meta extends S.Class<Meta>("Meta")({ tag: S.String }) {}
+   * console.log(Meta.make({ tag: "demo" }).tag);
+   * \`\`\`
+   */
+  static readonly layerMemory = "fixture";
+}
+export class PlainClass {
+  static readonly metadata = S.Class("Meta")({ tag: S.String });
+}
+export class SchemaClass extends S.Class<SchemaClass>("SchemaClass")({}) {}
+export class SchemaError extends S.TaggedError<SchemaError>()("SchemaError", {}) {}
+export class ModelClass extends Model.Class<ModelClass>("ModelClass")({}) {}
+export class DomainEntity extends PartEntity.Entity<DomainEntity>("DomainEntity")({}) {}
+`
+        );
+        const inventory = yield* buildJSDocDocumentationInventory({ rootDir: repoRoot, generatedAt: fixedGeneratedAt });
+        const gaps = A.flatMap(inventory.packages, (pkg) =>
+          A.map(pkg.exports, (entry) => ({
+            name: entry.symbolName,
+            rules: A.map(entry.schemaAnnotationGaps, (gap) => gap.rule),
+          }))
+        );
+        expect(gaps).toEqual([
+          { name: "DemoService", rules: [] },
+          { name: "PlainClass", rules: [] },
+          { name: "SchemaClass", rules: ["missing-schema-annotation"] },
+          { name: "SchemaError", rules: ["missing-schema-annotation"] },
+          { name: "ModelClass", rules: ["missing-schema-annotation"] },
+          { name: "DomainEntity", rules: ["missing-schema-annotation"] },
+        ]);
+      })
+    );
+
     it.effect(
       "recognizes annotations without accepting field metadata or empty annotations",
       Effect.fnUntraced(function* () {

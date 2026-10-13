@@ -582,9 +582,21 @@ export const listSourceFiles = Effect.fn("QualityArtifactSupport.listSourceFiles
         continue;
       }
       const absolutePath = safeEntry.value;
-      const stat = yield* fs
-        .stat(absolutePath)
-        .pipe(QualityArtifactGeneratorError.mapError(`Failed to stat ${absolutePath}.`, { filePath: absolutePath }));
+      // The containment guard also accepts not-yet-created write targets by
+      // canonicalizing their existing ancestors. Broken symlinks (or entries
+      // removed after enumeration) can therefore pass it but have no stat.
+      const maybeStat = yield* fs.stat(absolutePath).pipe(
+        Effect.asSome,
+        Effect.catchIf(
+          (error) => P.isTagged("NotFound")(error.reason),
+          () => Effect.succeedNone
+        ),
+        QualityArtifactGeneratorError.mapError(`Failed to stat ${absolutePath}.`, { filePath: absolutePath })
+      );
+      if (O.isNone(maybeStat)) {
+        continue;
+      }
+      const stat = maybeStat.value;
 
       if (stat.type === "Directory") {
         if (entry === "node_modules" || entry === "dist" || entry === "build" || entry === ".turbo") {

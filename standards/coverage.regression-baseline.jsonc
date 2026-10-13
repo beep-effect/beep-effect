@@ -517,15 +517,15 @@
           }
         },
         "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts": {
-          "lines": 100,
-          "statements": 100,
+          "lines": 94.73,
+          "statements": 95,
           "branches": 100,
-          "functions": 100,
+          "functions": 75,
           "uncovered": {
-            "lines": 0,
-            "statements": 0,
+            "lines": 1,
+            "statements": 1,
             "branches": 0,
-            "functions": 0
+            "functions": 1
           }
         },
         "packages/agents/domain/src/values/AssistantContent/index.ts": {
@@ -21297,15 +21297,27 @@
       "path": "packages/foundation/modeling/rdf",
       "lines": 98.41,
       "statements": 98.47,
-      "branches": 100,
+      "branches": 99.73,
       "functions": 95.72,
       "uncovered": {
         "lines": 15,
         "statements": 15,
-        "branches": 0,
+        "branches": 1,
         "functions": 15
       },
       "files": {
+        "packages/foundation/modeling/rdf/src/Adapters/MdSections.ts": {
+          "lines": 100,
+          "statements": 97.5,
+          "branches": 90,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 1,
+            "functions": 0
+          }
+        },
         "packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts": {
           "lines": 87.09,
           "statements": 87.5,
@@ -22264,14 +22276,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Accounts/Accounts.command.ts": {
-          "lines": 96.36,
+          "lines": 85.71,
           "statements": 92.06,
-          "branches": 100,
+          "branches": 75,
           "functions": 84.37,
           "uncovered": {
-            "lines": 2,
+            "lines": 3,
             "statements": 5,
-            "branches": 0,
+            "branches": 1,
             "functions": 5
           }
         },
@@ -22299,6 +22311,30 @@
             "functions": 2
           }
         },
+        "packages/tooling/tool/cli/src/commands/Accounts/Accounts.tui.ts": {
+          "lines": 98.48,
+          "statements": 98.57,
+          "branches": 100,
+          "functions": 96.15,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Accounts/Accounts.view.ts": {
+          "lines": 97.53,
+          "statements": 96.77,
+          "branches": 96.34,
+          "functions": 93.18,
+          "uncovered": {
+            "lines": 4,
+            "statements": 6,
+            "branches": 3,
+            "functions": 6
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts": {
           "lines": 99.07,
           "statements": 98.3,
@@ -22309,6 +22345,18 @@
             "statements": 2,
             "branches": 8,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Accounts/AccountsSecretsLayout.service.ts": {
+          "lines": 50.74,
+          "statements": 53.42,
+          "branches": 17.39,
+          "functions": 61.29,
+          "uncovered": {
+            "lines": 33,
+            "statements": 34,
+            "branches": 19,
+            "functions": 12
           }
         },
         "packages/tooling/tool/cli/src/commands/Accounts/AccountsUsage.service.ts": {
@@ -22588,13 +22636,13 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts": {
-          "lines": 80.76,
-          "statements": 79.91,
+          "lines": 79.35,
+          "statements": 79.26,
           "branches": 72.52,
           "functions": 70.32,
           "uncovered": {
-            "lines": 45,
-            "statements": 50,
+            "lines": 58,
+            "statements": 62,
             "branches": 25,
             "functions": 27
           }
@@ -22792,15 +22840,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts": {
-          "lines": 83.33,
-          "statements": 84.78,
-          "branches": 51.35,
-          "functions": 80.76,
+          "lines": 74.5,
+          "statements": 73.04,
+          "branches": 46.34,
+          "functions": 56.75,
           "uncovered": {
-            "lines": 14,
-            "statements": 14,
-            "branches": 18,
-            "functions": 5
+            "lines": 26,
+            "statements": 31,
+            "branches": 22,
+            "functions": 16
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts": {
@@ -22813,6 +22861,18 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts": {
+          "lines": 54.6,
+          "statements": 56,
+          "branches": 69.23,
+          "functions": 52.38,
+          "uncovered": {
+            "lines": 74,
+            "statements": 77,
+            "branches": 32,
+            "functions": 30
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts": {
@@ -22836,6 +22896,30 @@
             "lines": 0,
             "statements": 0,
             "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts": {
+          "lines": 9.16,
+          "statements": 8.21,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 119,
+            "statements": 134,
+            "branches": 51,
+            "functions": 35
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 94.11,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 2,
             "functions": 0
           }
         },
@@ -23440,14 +23524,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Corpus/internal/RestorationTransformations.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
+          "lines": 99.93,
+          "statements": 99.94,
+          "branches": 99.87,
           "functions": 100,
           "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
             "functions": 0
           }
         },
@@ -23836,12 +23920,12 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts": {
-          "lines": 76.48,
+          "lines": 76.47,
           "statements": 77.15,
           "branches": 56.41,
           "functions": 75.75,
           "uncovered": {
-            "lines": 75,
+            "lines": 76,
             "statements": 77,
             "branches": 51,
             "functions": 24
@@ -25096,14 +25180,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command.ts": {
-          "lines": 78.88,
-          "statements": 76.59,
-          "branches": 70,
+          "lines": 78.37,
+          "statements": 76.27,
+          "branches": 61.53,
           "functions": 76.31,
           "uncovered": {
-            "lines": 19,
-            "statements": 22,
-            "branches": 6,
+            "lines": 24,
+            "statements": 28,
+            "branches": 10,
             "functions": 9
           }
         },
@@ -25147,12 +25231,12 @@
           "lines": 90.27,
           "statements": 90.78,
           "branches": 84.84,
-          "functions": 88.63,
+          "functions": 88.19,
           "uncovered": {
             "lines": 39,
             "statements": 39,
             "branches": 15,
-            "functions": 15
+            "functions": 17
           }
         },
         "packages/tooling/tool/cli/src/commands/Knowledge/index.ts": {
@@ -25216,15 +25300,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts": {
-          "lines": 92.52,
-          "statements": 92.13,
+          "lines": 92.42,
+          "statements": 92.09,
           "branches": 80.19,
-          "functions": 90.17,
+          "functions": 89.51,
           "uncovered": {
-            "lines": 40,
-            "statements": 43,
+            "lines": 43,
+            "statements": 46,
             "branches": 61,
-            "functions": 11
+            "functions": 13
           }
         },
         "packages/tooling/tool/cli/src/commands/Laws/FrozenGrantSet.ts": {
@@ -26512,13 +26596,13 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Refs/Refs.command.ts": {
-          "lines": 16.21,
-          "statements": 15.78,
+          "lines": 14.89,
+          "statements": 14.58,
           "branches": 0,
           "functions": 0,
           "uncovered": {
-            "lines": 31,
-            "statements": 32,
+            "lines": 40,
+            "statements": 41,
             "branches": 14,
             "functions": 8
           }
@@ -27363,6 +27447,18 @@
             "functions": 4
           }
         },
+        "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/SparTerms.ts": {
+          "lines": 36.11,
+          "statements": 36.58,
+          "branches": 10,
+          "functions": 33.33,
+          "uncovered": {
+            "lines": 23,
+            "statements": 26,
+            "branches": 9,
+            "functions": 8
+          }
+        },
         "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/VocabTerms.ts": {
           "lines": 42.3,
           "statements": 40.74,
@@ -27808,15 +27904,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts": {
-          "lines": 77.57,
-          "statements": 76.25,
+          "lines": 74.89,
+          "statements": 73.79,
           "branches": 70.96,
-          "functions": 71.6,
+          "functions": 69.04,
           "uncovered": {
-            "lines": 50,
-            "statements": 57,
+            "lines": 58,
+            "statements": 65,
             "branches": 9,
-            "functions": 23
+            "functions": 26
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/Worktree.constants.ts": {
@@ -27858,12 +27954,12 @@
         "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts": {
           "lines": 92.97,
           "statements": 92.95,
-          "branches": 90.9,
+          "branches": 89.87,
           "functions": 84.25,
           "uncovered": {
             "lines": 25,
             "statements": 26,
-            "branches": 7,
+            "branches": 8,
             "functions": 20
           }
         },
@@ -28624,15 +28720,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts": {
-          "lines": 88.33,
-          "statements": 88.33,
+          "lines": 86.66,
+          "statements": 86.66,
           "branches": 60,
-          "functions": 78.26,
+          "functions": 73.91,
           "uncovered": {
-            "lines": 7,
-            "statements": 7,
+            "lines": 8,
+            "statements": 8,
             "branches": 4,
-            "functions": 5
+            "functions": 6
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts": {
@@ -29488,14 +29584,14 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/DirectoryHandle.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
+          "lines": 97.8,
+          "statements": 94.69,
+          "branches": 81.25,
           "functions": 100,
           "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
+            "lines": 2,
+            "statements": 6,
+            "branches": 6,
             "functions": 0
           }
         },
@@ -31393,15 +31489,15 @@
           }
         },
         "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts": {
-          "lines": 88.57,
-          "statements": 87.17,
+          "lines": 86.48,
+          "statements": 85.36,
           "branches": 50,
-          "functions": 89.47,
+          "functions": 85.71,
           "uncovered": {
-            "lines": 4,
-            "statements": 5,
+            "lines": 5,
+            "statements": 6,
             "branches": 3,
-            "functions": 2
+            "functions": 3
           }
         },
         "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts": {
@@ -31987,6 +32083,18 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/CredentialPatternBank/CredentialPatternBank.policy.ts": {
+          "lines": 91.97,
+          "statements": 91.27,
+          "branches": 80.43,
+          "functions": 82.92,
+          "uncovered": {
+            "lines": 11,
+            "statements": 13,
+            "branches": 9,
+            "functions": 7
           }
         },
         "packages/foundation/modeling/schema/src/CrossOriginEmbedderPolicy/CrossOriginEmbedderPolicy.schema.ts": {
