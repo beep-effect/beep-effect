@@ -260,3 +260,72 @@ export class GoalPlanOperationalError extends S.TaggedError<GoalPlanOperationalE
     (cause: unknown) =>
       GoalPlanOperationalError.make({ message, cause });
 }
+
+/**
+ * Invalid input for `beep goals next|explain|catalog`.
+ *
+ * **Details**
+ *
+ * An unknown `explain` slug carries the bootstrap command in its message: the
+ * graph never invents a packet, it points at the one command that creates one.
+ *
+ * **Example** (Create graph-input error)
+ *
+ * ```ts
+ * import { GoalGraphInputError } from "@beep/repo-cli/commands/Goals/Goals.errors"
+ *
+ * const error = GoalGraphInputError.new('No goal packet "nope".')
+ * console.log(error.message)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class GoalGraphInputError extends S.TaggedError<GoalGraphInputError>($I`GoalGraphInputError`)(
+  "GoalGraphInputError",
+  {
+    message: S.String,
+  },
+  $I.annoteError<GoalGraphInputError>("GoalGraphInputError", {
+    description: "Invalid input for the read-only goals capability-graph commands.",
+  })
+) {
+  static readonly new = (message: string): GoalGraphInputError => GoalGraphInputError.make({ message });
+}
+
+/**
+ * Failure that refuses the whole capability-graph projection.
+ *
+ * **Details**
+ *
+ * Raised when a manifest cannot be read or decoded, when a manifest id does not
+ * match its directory, or when the in-memory SQLite engine fails. The graph is
+ * fail-closed: a broken census never renders as a silently smaller graph.
+ *
+ * **Example** (Create graph-operational error)
+ *
+ * ```ts
+ * import { GoalGraphOperationalError } from "@beep/repo-cli/commands/Goals/Goals.errors"
+ *
+ * const error = GoalGraphOperationalError.new('Manifest "goals/x/ops/manifest.json" does not decode.')(new Error("bad"))
+ * console.log(error.message)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class GoalGraphOperationalError extends S.TaggedError<GoalGraphOperationalError>($I`GoalGraphOperationalError`)(
+  "GoalGraphOperationalError",
+  {
+    message: S.String,
+    cause: S.optionalKey(OpaqueDefect),
+  },
+  $I.annoteError<GoalGraphOperationalError>("GoalGraphOperationalError", {
+    description: "A census or engine failure that refuses the capability-graph projection.",
+  })
+) {
+  static readonly new =
+    (message: string): ((cause: unknown) => GoalGraphOperationalError) =>
+    (cause: unknown) =>
+      GoalGraphOperationalError.make({ message, cause });
+}

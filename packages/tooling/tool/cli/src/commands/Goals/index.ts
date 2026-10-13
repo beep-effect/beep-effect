@@ -55,6 +55,34 @@ export * from "./Goals.errors.ts";
  */
 export * from "./Goals.schemas.ts";
 /**
+ * Pure capability projection compiler, reference evaluator, and reports.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./Graph.projection.ts";
+/**
+ * Capability-graph projection, answer, and report schemas.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./Graph.schemas.ts";
+/**
+ * In-memory bun:sqlite capability-graph engine.
+ *
+ * @category engines
+ * @since 0.0.0
+ */
+export * from "./Graph.sqlite.ts";
+/**
+ * Read-only capability-graph commands and census loader.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Graph.ts";
+/**
  * Packet inventory scan and README/manifest text helpers.
  *
  * @category utilities

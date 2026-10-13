@@ -40,16 +40,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 in progress — Workstream D's projection slice. The design
-([`research/p4-goals-projection-design.md`](./research/p4-goals-projection-design.md))
-and its mini-grill outcomes
-([`research/p4-goals-projection-decisions.md`](./research/p4-goals-projection-decisions.md),
-2026-10-09) are settled; next is PR 1: `beep goals next|explain|catalog` over a
-`bun:sqlite` projection, differential-tested against a pure-TS evaluator, plus the
-committed catalog FP-eyeball report. P1-P3 outcomes stay as recorded: all 24 P2
-decisions in [`research/p2-grill-decisions.md`](./research/p2-grill-decisions.md),
-A/B/C/D Phase-0 verdicts in
-[`research/p1-fp-eyeball-verdicts.md`](./research/p1-fp-eyeball-verdicts.md).
+P4 in progress — Workstream D's projection slice. `beep goals next|explain|catalog`
+ship as read-only commands over an in-memory SQLite projection, differential-tested
+against a pure-TS evaluator. The live-census FP-eyeball report is
+[`research/p4-report-goals-projection.md`](./research/p4-report-goals-projection.md);
+its verdict gates the Mermaid INDEX block (design PR 2), the D5/D8 doctor findings
+(PR 3), and a manifest-only PR that declares four missing `provides`. Design and
+mini-grill outcomes:
+[`research/p4-goals-projection-design.md`](./research/p4-goals-projection-design.md),
+[`research/p4-goals-projection-decisions.md`](./research/p4-goals-projection-decisions.md).
+P1-P3 outcomes stay as recorded: all 24 P2 decisions in
+[`research/p2-grill-decisions.md`](./research/p2-grill-decisions.md), A/B/C/D Phase-0
+verdicts in [`research/p1-fp-eyeball-verdicts.md`](./research/p1-fp-eyeball-verdicts.md).
 Workstream E's pure-plan report still awaits its eyeball verdict before any
 materializer exists.
 

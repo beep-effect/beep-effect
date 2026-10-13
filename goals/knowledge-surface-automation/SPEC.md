@@ -308,3 +308,8 @@ Each entry names its record, which carries the reason and the reversal path.
 - 2026-10-09 — P4 projection mini-grill G1–G6 (`catalog` subcommand, top-level
   `cycles`, unbounded closure unlock walk, relic collapse from the first Mermaid
   render, slug-only `explain`, D8-consistent fog): `research/p4-goals-projection-decisions.md`.
+- 2026-10-09 — P4 projection engine targets the Effect `SqlClient` service, with a
+  runtime-selected in-memory SQLite layer (`bun:sqlite` on Bun, `node:sqlite` only
+  for the Node coverage workers), instead of a raw `bun:sqlite` handle: a static
+  `bun:sqlite` import breaks module load on the hosted Node coverage lane. Reason
+  and reversal: `research/p4-report-goals-projection.md` ("Engine deviation").
