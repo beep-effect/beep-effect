@@ -1076,3 +1076,27 @@ Hosted Repo Sanity job 115502999707 fails old-head Syncpack on minimatch
 repairs both; acknowledge with the actual main merge commit, not a waiver.
 The separately reported Sherif ordering issue still requires live attribution
 on the new head if it appears.
+
+### 2026-10-13 — temporary runtime fixtures leak into concurrent discovery
+
+- Work: qualify the dependency update with root test, coverage, and audit runs.
+- Evidence: coverage shard 7 discovered a sibling run's temporary
+  `test/fixtures/vitest-instrumentation/.runtime-*/runtime.test.ts`; its owner
+  removed the file before import, producing `Cannot find module` and one failed
+  suite. The other nine shards, including CLI coverage, passed.
+- Prevention: make parent discovery exclude these child-owned runtime fixtures,
+  while the existing fixture-mode environment admits them in the child process.
+  A live-file discovery check and all 15 runtime harness tests passed after the fix.
+- Proof boundary: the failed full coverage attempt remains failed; a fresh full
+  root coverage command must pass before publication.
+
+### 2026-10-13 — source-line drift replaces reviewed inventory metadata
+
+- Work: refresh the schema-first inventory after an acquisition regression test
+  import shifted an existing codec finding from line 89 to line 90.
+- Evidence: `schema-first --write` refreshed the anchor but replaced the existing
+  exception and golden-suite rationale with an advisory. Restore the reviewed
+  status and rationale, retain only the one-line anchor delta, and recheck.
+- Prevention: separate stable finding identity from display-line anchors so a
+  line shift preserves reviewed inventory decisions. No new exception or relaxed
+  quality threshold belongs in this repair.
