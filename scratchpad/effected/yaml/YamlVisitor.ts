@@ -94,7 +94,6 @@ export type YamlVisitorEvent = typeof visitorEvent.Type;
  * `YamlVisitorEvent.Scalar({ path, depth, value, style })`,
  * `YamlVisitorEvent.$is("MapStart")`).
  *
-
  * **Example** (Construct and identify a scalar event)
  *
  * ```ts

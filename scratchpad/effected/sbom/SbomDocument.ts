@@ -19,7 +19,6 @@ const $I = $ScratchpadId.create("effected/sbom/SbomDocument");
 /**
  * The BOM format discriminator. CycloneDX requires this exact string.
  *
-
  * **Example** (Inspect the BOM format)
  *
  * ```ts
@@ -36,7 +35,6 @@ export const BOM_FORMAT = "CycloneDX" as const;
 /**
  * The only specification version this package emits.
  *
-
  * **Example** (Inspect the emitted specification version)
  *
  * ```ts
@@ -59,7 +57,6 @@ export const SPEC_VERSION = "1.6" as const;
  * libraries and applications. The full enum is available in the schema; adding
  * a member here is a one-line change when something needs one.
  *
-
  * **Example** (Decode a library component type)
  *
  * ```ts
@@ -93,7 +90,6 @@ export type ComponentType = typeof ComponentType.Type;
  * corresponds to a `package.json` field: `vcs` ← `repository`,
  * `issue-tracker` ← `bugs`, `website` and `documentation` ← `homepage`.
  *
-
  * **Example** (Decode a source repository reference kind)
  *
  * ```ts
@@ -121,7 +117,6 @@ export type ExternalReferenceType = typeof ExternalReferenceType.Type;
 /**
  * A link from a component to something outside the BOM.
  *
-
  * **Example** (Preserve an external reference URL)
  *
  * ```ts
@@ -148,7 +143,6 @@ export class ExternalReference extends S.Class<ExternalReference>($I`ExternalRef
 /**
  * A point of contact — a person at a supplier, or an author of the BOM.
  *
-
  * **Example** (Construct an author contact)
  *
  * ```ts
@@ -179,7 +173,6 @@ export class Contact extends S.Class<Contact>($I`Contact`)({
  * `name` is required because `metadata.supplier.name` is **NTIA minimum
  * element 1**; a supplier without one satisfies nothing.
  *
-
  * **Example** (Identify the supplying organization)
  *
  * ```ts
@@ -211,7 +204,6 @@ export class Supplier extends S.Class<Supplier>($I`Supplier`)({
  * `Sbom.toJson`. Emitting `bomRef` produces a document that looks
  * correct and validates wrong.
  *
-
  * **Example** (Identify a library component)
  *
  * ```ts
@@ -259,7 +251,6 @@ export class Component extends S.Class<Component>($I`Component`)({
 /**
  * Document-level metadata: who made the BOM, when, and about what.
  *
-
  * **Example** (Record the BOM assembly time)
  *
  * ```ts
@@ -293,7 +284,6 @@ export class SbomMetadata extends S.Class<SbomMetadata>($I`SbomMetadata`)({
  * total functions, because an owned model over validated values has nothing to
  * fail at.
  *
-
  * **Example** (Construct an empty CycloneDX document)
  *
  * ```ts
@@ -389,7 +379,6 @@ const componentJson = (component: Component): Record<string, unknown> =>
 /**
  * The document as a plain JSON value, in CycloneDX's key shapes.
  *
-
  * **Example** (Emit the CycloneDX component reference key)
  *
  * ```ts

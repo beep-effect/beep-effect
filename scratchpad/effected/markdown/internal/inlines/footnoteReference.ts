@@ -61,7 +61,6 @@ const looksLikeFootnote = (subject: string, openerIndex: number, bracketPos: num
  * cmark-gfm's footnote branch: form a reference, or leave the whole span as
  * the literal text upstream's post-pass would have rewritten it to.
  *
- *
  * **Example** (Prepare a footnote close fallback)
  *
  * ```ts
@@ -136,7 +135,6 @@ export const footnoteReferenceFallback: {
 /**
  * The `]` construct for the `gfm` dialect: CommonMark's, with the footnote
  * branch wired into its no-match seam.
- *
  *
  * **Example** (Register GFM closing brackets)
  *

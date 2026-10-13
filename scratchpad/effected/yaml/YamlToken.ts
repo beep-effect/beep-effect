@@ -22,7 +22,6 @@ const $I = $ScratchpadId.create("effected/yaml/YamlToken");
 /**
  * The 22 lexical token kinds produced by the YAML tokenizer.
  *
-
  * **Example** (Recognize lexical token categories)
  *
  * ```ts
@@ -59,7 +58,6 @@ export type YamlTokenKind = typeof YamlTokenKind.Type;
  * - `line` / `character` — the zero-based position of the token's start,
  *   matching the `YamlDiagnostic` position vocabulary.
  *
-
  * **Example** (Construct a positioned scalar token)
  *
  * ```ts
@@ -135,7 +133,6 @@ const promoteAll = (text: string, tokens: ReadonlyArray<InternalToken>): Readonl
  * `Stream`, for lint- and editor-class consumers. Never fails on malformed
  * input: lexical errors arrive as `"error"`-kind tokens. Not instantiable.
  *
-
  * **Example** (Tokenize malformed YAML without failing)
  *
  * ```ts
@@ -199,7 +196,7 @@ export class YamlTokens {
  * errors arrive as `"error"`-kind tokens in the stream, never as a stream
  * failure. (The primitive's reserved failure channel would surface as a
  * defect here; it never fires today.)
-
+ *
  * **Example** (Collect token text from a stream)
  *
  * ```ts

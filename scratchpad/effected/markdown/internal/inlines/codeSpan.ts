@@ -19,7 +19,6 @@ const reNonSpace = /[^ ]/;
 /**
  * Parses a code span enclosed by backtick runs of equal length.
  *
- *
  * **Example** (Register the backtick trigger)
  *
  * ```ts

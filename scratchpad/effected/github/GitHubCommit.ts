@@ -22,7 +22,6 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 /**
  * A commit, projected to what callers read.
  *
-
  * **Example** (Read a commit subject)
  *
  * ```ts
@@ -67,7 +66,6 @@ export class CommitSummary extends S.Class<CommitSummary>($I`CommitSummary`)({
 	/**
  * The message's first line.
  *
-
  * **Example** (Extract the first message line)
  *
  * ```ts
@@ -94,7 +92,6 @@ export class CommitSummary extends S.Class<CommitSummary>($I`CommitSummary`)({
 /**
  * How a file changed in a commit or a comparison.
  *
-
  * **Example** (Validate a renamed file status)
  *
  * ```ts
@@ -130,7 +127,6 @@ export type FileStatus = typeof FileStatus.Type;
 /**
  * One changed file.
  *
-
  * **Example** (Inspect the path before a rename)
  *
  * ```ts
@@ -166,7 +162,6 @@ export class CommitFile extends S.Class<CommitFile>($I`CommitFile`)({
 /**
  * The result of comparing two refs.
  *
-
  * **Example** (Inspect commits ahead of base)
  *
  * ```ts
@@ -267,7 +262,6 @@ export class GitHubCommit extends Context.Service<GitHubCommit, GitHubCommitShap
 	/**
  * The live service, built over a `GitHubClient`.
  *
-
  * **Example** (Construct a commit read with the live layer)
  *
  * ```ts
@@ -291,7 +285,6 @@ export class GitHubCommit extends Context.Service<GitHubCommit, GitHubCommitShap
 	/**
  * An in-memory double; unstubbed members die naming themselves.
  *
-
  * **Example** (Override the commit listing)
  *
  * ```ts
@@ -315,7 +308,6 @@ export class GitHubCommit extends Context.Service<GitHubCommit, GitHubCommitShap
 	/**
  * {@link GitHubCommit.makeTest} behind a `Layer`.
  *
-
  * **Example** (Provide a commit test layer)
  *
  * ```ts
@@ -387,7 +379,6 @@ export interface RawFile {
  * Project a `diff-entry` to a {@link CommitFile}. Shared with
  * `PullRequest.listFiles`; not re-exported from the package entrypoint.
  *
-
  * **Example** (Project a GitHub diff entry)
  *
  * ```ts

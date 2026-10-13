@@ -18,7 +18,6 @@ const reEntityHere = new RegExp(`^${ENTITY}`, "i");
 /**
  * Decodes a named, decimal or hexadecimal character reference.
  *
- *
  * **Example** (Register the character reference trigger)
  *
  * ```ts
