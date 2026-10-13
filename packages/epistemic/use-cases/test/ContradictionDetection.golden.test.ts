@@ -213,3 +213,4 @@ describe("Contradiction detection golden vectors", () => {
     });
   });
 });
+const DetectedContradictions = S.Array(DetectedContradiction);

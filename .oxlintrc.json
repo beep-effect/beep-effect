@@ -20,6 +20,8 @@
   },
   "jsPlugins": ["./packages/tooling/policy-pack/lint-rules/src/rules/index.ts"],
   "ignorePatterns": [
+    // Unshipped scratchpad lab experiments have their own package lint lane.
+    "scratchpad/**",
     "**/dist/**",
     "**/build/**",
     "**/node_modules/**",

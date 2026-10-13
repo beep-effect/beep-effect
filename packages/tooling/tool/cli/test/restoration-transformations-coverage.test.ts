@@ -2693,6 +2693,18 @@ else exit 92; fi
         assertNone
       );
 
+      const nestedRestored = path.join(recycleRoot, "restored/nested/item.txt");
+      yield* fs.makeDirectory(path.dirname(nestedRestored), { recursive: true });
+      yield* fs.writeFileString(nestedRestored, "item");
+      const nestedMapping = { ...mapping, restoredRelativePath: "nested/item.txt" };
+      yield* RT.requireRecyclePhysicalEntriesOwned(recycleContext, [mapping, nestedMapping], []);
+      const nestedRogue = path.join(recycleRoot, "restored/nested/rogue.txt");
+      yield* fs.writeFileString(nestedRogue, "rogue");
+      (yield* RT.requireRecyclePhysicalEntriesOwned(recycleContext, [mapping, nestedMapping], []).pipe(
+        Effect.option
+      )).pipe(assertNone);
+      yield* fs.remove(nestedRogue);
+
       const legacyRoot = path.join(root, "legacy");
       const originalSha256 = sha("legacy-original");
       const convertedPath = path.join(legacyRoot, `converted/${originalSha256}.docx`);

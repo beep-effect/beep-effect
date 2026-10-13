@@ -564,7 +564,16 @@ export const lint = Effect.fn("Gates.lint")(function* (config: RunnerConfig, tar
 
   const oxlint = yield* captureExit({
     command: "bunx",
-    args: ["--no-install", "oxlint", "--quiet", "--disable-nested-config", LAW_CANARY, ...directories],
+    args: [
+      "--no-install",
+      "oxlint",
+      "--quiet",
+      "--disable-nested-config",
+      "--config",
+      ".oxlintrc.effected.json",
+      LAW_CANARY,
+      ...directories,
+    ],
     cwd: config.repoRoot,
   });
   yield* judged(target, "oxlint", oxlint.output, judgeReport(oxlint.output, { canaryPath: LAW_CANARY, targets: files }));

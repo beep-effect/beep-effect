@@ -979,3 +979,18 @@ repo-cli audit/docgen passed. Manifest-only quick checks initially lacked
 upstream dist declarations; rebuilding the dependency closure and replaying
 all three checks passed. Record proof prerequisite scope with each result so
 an environment-only first attempt is not mistaken for a source regression.
+
+
+### 2026-10-13 — inherited-red diagnostics and unsupported fixture filtering
+
+RSC burndown run 3: main JSDoc job 115443432078 reports only `Failed to generate JSDoc documentation inventory.` The boundary discarded the nested cause; print the typed cause before wrapping it so the next failure identifies the source. Dependency-review v5.0.0 exposes no manifest-path exclusion in its action inputs or configuration schema; adding a fictional input would leave fixture lockfiles scanned. Preserve the gate and track fixture filtering separately. AMI receipt freshness is a separate warning; Repo Sanity job 115443432221 actually fails Syncpack (minimatch override and scratchpad smol-toml). Preserve the baked-image receipt until a real refresh.
+
+
+### 2026-10-13 — full lint policy ignores the lane concurrency envelope
+
+The run-3 `beep-heavy bun run beep lint policy --full` retry reached 32G and was killed with `oom-kill` before its medium-tier verdict. The wrapper still launches Turbo with `--concurrency=4` while the lane specifies `TURBO_CONCURRENCY=2`. The initial main run peaked at 23.9G and completed red. Retry under the same admission route with the lane maximum of 40G; do not count the killed attempt as a code result. A command-level concurrency setting that honors the lane envelope would prevent the mismatch.
+
+
+### 2026-10-13 — Node/V8 Bun.spawn shim drops output streams
+
+Coverage job 114132486598 and the local full coverage attempt both fail the two practice-kg startup assertions at `apps/practice-kg-mcp/test/Host.test.ts:462`: expected the sanitized refusal, received an empty string. The root `vitest.setup.ts` Node shim returns only `exited` from `Bun.spawn`; its absent stderr becomes an empty Response body. Return both piped Web streams, preserve the exit promise, and pin the contract with `vitest-bun-spawn.test.ts`. The focused startup rerun passes both cases. This repairs the measurement precondition; it does not establish a successful full coverage rerun or authorize lowering a floor.

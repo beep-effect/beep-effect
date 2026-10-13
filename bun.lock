@@ -317,8 +317,8 @@
       "bin": {
         "practice-kg-build": "./src/build.ts",
         "practice-kg-claims": "./src/claims.ts",
-        "practice-kg-mcp": "./src/bin.ts",
         "practice-kg-verify": "./src/verify.ts",
+        "practice-kg-mcp": "./src/bin.ts",
       },
       "dependencies": {
         "@beep/anthropic": "workspace:^",
@@ -3497,7 +3497,7 @@
         "drizzle-kit": "catalog:",
         "minimatch": "10.2.6",
         "oxc-parser": "^0.152.0",
-        "smol-toml": "1.9.0",
+        "smol-toml": "^1.9.0",
         "spdx-exceptions": "2.5.0",
         "spdx-expression-parse": "5.0.0",
         "spdx-license-ids": "3.0.24",
@@ -3552,7 +3552,7 @@
     "js-yaml": "5.4.1",
     "katex": "^0.18.2",
     "lodash-es": "^4.18.1",
-    "minimatch": "10.2.5",
+    "minimatch": "10.2.6",
     "nanoid": "^3.3.18",
     "next": "catalog:",
     "onnxruntime-node@1.30.0": {
@@ -7784,7 +7784,7 @@
 
     "minimalistic-assert": ["minimalistic-assert@1.0.1", "", {}, "sha512-UtJcAD4yEaGtjPezWuO9wC4nwUnVH/8/Im3yEHQP4b67cXlD/Qr9hdITCU1xDbSEXg2XKNaP8jsReV7vQd00/A=="],
 
-    "minimatch": ["minimatch@10.2.5", "", { "dependencies": { "brace-expansion": "^5.0.5" } }, "sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg=="],
+    "minimatch": ["minimatch@10.2.6", "", { "dependencies": { "brace-expansion": "^5.0.8" } }, "sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A=="],
 
     "minimist": ["minimist@1.2.8", "", {}, "sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA=="],
 

@@ -97,7 +97,7 @@
     "drizzle-kit": "catalog:",
     "minimatch": "10.2.6",
     "oxc-parser": "^0.152.0",
-    "smol-toml": "1.9.0",
+    "smol-toml": "^1.9.0",
     "spdx-exceptions": "2.5.0",
     "spdx-expression-parse": "5.0.0",
     "spdx-license-ids": "3.0.24",

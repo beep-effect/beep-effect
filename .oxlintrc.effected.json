@@ -1,0 +1,6 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "extends": ["./.oxlintrc.json"],
+  // Keep the root rules and plugins while admitting the effected lane's lab targets and canary.
+  "ignorePatterns": ["!scratchpad/**"]
+}

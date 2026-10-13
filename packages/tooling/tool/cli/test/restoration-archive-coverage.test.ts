@@ -77,6 +77,21 @@ const preserveOptions = (
 describe("restoration archive boundary helpers", () => {
   it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
     it.effect(
+      "compares source identities when the filesystem omits inode metadata",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "restoration-missing-inode-" });
+        const source = path.join(root, "source.txt");
+        yield* fs.writeFileString(source, "source");
+        const info = yield* fs.stat(source);
+        const identity = RA.sourceIdentity({ ...info, ino: O.none() });
+        expect(RA.sameSourceIdentityExceptMtime(identity, { ...identity })).toBe(true);
+        expect(RA.sameSourceIdentityExceptMtime(identity, { ...identity, mode: identity.mode + 1 })).toBe(false);
+        expect(RA.sameSourceIdentityExceptMtime(identity, { ...identity, inode: O.some(1) })).toBe(false);
+      })
+    );
+    it.effect(
       "fails closed for canonical type, containment, crash, and prefix mismatches",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;

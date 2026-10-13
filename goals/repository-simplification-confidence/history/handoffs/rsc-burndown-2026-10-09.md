@@ -145,3 +145,96 @@ follow-ups are RSC-BD-REVIEW-01 and RSC-BD-REVIEW-02 in
 `history/receipts/stage-6-rsc-burndown-review-followups.md`; replies explain the
 current mandate, risk, reversible setting and acceptance for the follow-up.
 No source or policy boundary is silently changed during this review wave.
+
+
+## Run 3 — 2026-10-13 inherited-main repair wave
+
+Lane `rsc-burndown`, branch `fix/rsc-burndown-2026-10-13`, base
+`6e390049cae8ece9b6c694dd6f672825401b157f`. Prior runs and #1605 remain retained.
+The worker never merges or retires this lane. All heavy proof uses beep-heavy
+and TURBO_CONCURRENCY=2; the lane unit retains MemoryHigh 36G / MemoryMax 40G.
+
+- Item 12 remains open: dependency-review v5.0.0 supports no manifest-path
+  exclusion. Its pinned action.yml and src/schemas.ts expose neither a path
+  filter nor a dependency-comparison input. Preserve the action until a
+  manifest-aware comparison integration is qualified.
+- Item 15: repaired the Node test shim's missing Bun.spawn output streams,
+  which caused two practice-kg startup tests to read empty stderr. The stream
+  witness passes; both startup cases pass; app coverage passes 31/31 tests.
+  The full pre-repair coverage run and the current ratchet result are recorded
+  separately in the worker report. No coverage floor is lowered.
+- Item 16 is already fixed on main: the full effect-vitest scan is green after
+  re-anchoring the hoisted CLI fixture occurrence; the inherited PracticeKg
+  occurrence does not recur. Inventory refresh preserves admissions and changes
+  only identities/line anchors, including stale main anchors in Host and Corpus.
+- Item 17 is already correct on main: renaming shared-domain's deletedAt column
+  in a disposable dirty probe changes law-practice-tables test dry-run hash
+  adb33a6bd107efa3 to 03713802b97245f8. Original bytes restored. No Turbo edit.
+- Item 18: hoist the 16 non-lab codec-schema call sites reported by main's
+  Oxlint log; exclude unshipped scratchpad from Oxlint and diagnostic-directive
+  scanning per the brief; inherit the canonical root compiler plugin profile;
+  admit the three fixed-contract test advisories with exact reasons; include
+  the two office-action fixture files in ESLint's default project.
+- Item 19: local inventory generation succeeds and reproduces eight real
+  source metric increases. Emit the nested typed cause at the generation
+  boundary so a hosted-only failure is diagnosable. Source documentation
+  remediation remains open; the totals baseline is preserved.
+- Item 2: knowledge refs passes with zero live gated observations. Repo Sanity
+  failed Syncpack at base `6e390049ca` before the root minimatch override and
+  scratchpad smol-toml range alignment. Syncpack passes at head `b85d072730`
+  after those repairs and lockfile generation. Image staleness is a separate advisory:
+  preserve the baked receipt until a real image/canary refresh.
+
+Attribution: main job 115443989798 names the current lint failures. #1592 owns
+the scratchpad/profile drift; #1595 owns both M365 test advisories; #1583 owns
+the CI golden advisory; #1572 owns the epistemic inline schemas; #1573 owns
+the office-action inline schemas and fixture project gap; #1598 owns the
+ontology inline schemas. The remaining CLI codec sites belong to #1583 and
+the retained residue/Yeet source. The Bun spawn shim was last changed in #1435;
+#1604 exposed its incomplete stream contract in startup tests.
+
+JSDoc attribution matches domain-kernel D24: scratchpad (#1592) accounts for
+canary tags, schema companions/annotations and whitespace/example findings.
+The three CLI Corpus examples, four infra examples and one Freshbooks example
+are retained source gaps. No baseline is regenerated to hide these findings.
+Coverage job 114072726532 on 45f334e3c2 reached the ratchet; its RDF new-file
+row belongs to #1588, CredentialPatternBank new-file rows to #1570, and the
+operational CLI changes principally to #1583 plus the retained source owners.
+The newer job 114132486598 stops on the two startup tests before the ratchet,
+so its failure is not evidence of measured baseline rows.
+
+Qualification and final publication state are in the worker report at
+`~/.cache/beep/orchestrator/gates/rsc-burndown.codex.last.md`. Full lint's first
+repair retry was killed at the 32G cap; the 40G retry completes its medium tier
+with 167/168 tasks passing and only the eight inherited JSDoc metrics red.
+The generic generation failure does not reproduce locally. All commands and
+raw local logs are retained under `.beep/rsc-burndown/` (ignored).
+
+Reverse this wave by reverting its PR. No packet lifecycle state, image pin,
+coverage/JSDoc baseline, paid service, merge or retirement changes.
+
+## Run 4 review wave (2026-10-13)
+
+PR #1612 round 1 had three Minor threads. The effected lint gate now passes
+`.oxlintrc.effected.json` explicitly. It extends the root rules and plugin and
+admits scratchpad paths. Before this change, `lint:effected jsonl` reported no
+files and failed its missing-canary check; afterward its Oxlint step reports
+`oxlint clean (canary flagged)`. The Syncpack receipt now names failing base
+`6e390049ca` and passing head `b85d072730`. The Bun.spawn decision row remains
+inside its table after removing the intervening blank line.
+
+The hosted JSDoc job 115466055746 exposes a broken YAML fixture symlink during
+`FileSystem.stat`. Run 4 retains that inherited red under S11; the shared CI
+repair lane owns the traversal repair. Its P0 inbox row is acknowledged with
+that attribution; the interrupted proof job result is acknowledged as observed.
+No JSDoc or coverage baseline changed. Qualification and publication results
+are in the worker report; raw run-4 logs are under `.beep/rsc-burndown/run4/`.
+Reverse this review wave by reverting its commit. No merge or retirement.
+
+Run-4 local proof: `bun run --cwd scratchpad lint:effected jsonl` exits 0,
+including Oxlint and all four law checks. `package-verify @beep/scratchpad
+--quick` exits 0 but skips both standard steps because this lab package has no
+`beep:lint` or `beep:check` script. The explicit runner check and collected
+cheap-gate outcomes are recorded separately in the final worker report.
+The explicit `check:effected runner` also exits 0, including live Effect
+canary diagnostics, editor tsgo 0.51.1 and the workspace tsgo check.

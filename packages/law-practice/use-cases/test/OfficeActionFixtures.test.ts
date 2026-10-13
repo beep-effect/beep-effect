@@ -26,3 +26,4 @@ describe("office-action fixture truth", () => {
     })
   );
 });
+const FixtureJson = S.fromJsonString(Fixture);
