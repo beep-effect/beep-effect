@@ -20,6 +20,12 @@ export default mergeConfig(
   shared,
   defineConfig({
     test: {
+      // Runtime fixtures belong to their child Vitest invocation. A concurrent parent run must
+      // not discover files that the owning fixture scope can remove before they are imported.
+      exclude:
+        process.env.BEEP_INSTRUMENTED_IT_FIXTURE === undefined
+          ? ["test/fixtures/vitest-instrumentation/.runtime-*/**"]
+          : [],
       // Tests here mock modules, stub globals, or change the working directory; keep every file in
       // its own worker even under coverage (vitest.shared.ts shares the graph there by default).
       isolate: true,
