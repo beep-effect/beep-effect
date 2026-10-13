@@ -28,16 +28,6 @@
       "reason": "Stage runtime test decodes the files each stage wrote to prove the private output contract (0600, explicit paths, no overwrite); schema-derived round-trip property coverage for IdentificationIndex, EvaluationReport and Resolution lives with the use-case schemas in packages/law-practice/use-cases/test/DocumentIdentification/Identification.test.ts."
     },
     {
-      "file": "apps/practice-m365-contacts/test/Contacts.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 107,
-      "owner": "repository-simplification-confidence",
-      "reason": "Contacts seeding regression suite decodes fixed journals and export rows to verify filesystem permissions, recovery and lock behavior; random codec roundtrips do not exercise those state transitions. Introduced in #1595; reconsider with the B census."
-    },
-    {
       "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
       "symbol": "DocumentIntakeSurface",
       "kind": "exported-interface",
@@ -210,16 +200,6 @@
       "line": 204,
       "owner": "@beep/hubspot",
       "reason": "Diagnostic error options intentionally preserve raw submitted email text from request-encoding failures, including values rejected before contact email normalization."
-    },
-    {
-      "file": "packages/drivers/m365/test/M365.contacts.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 84,
-      "owner": "repository-simplification-confidence",
-      "reason": "Graph contact transport regression suite uses fixed response and captured request codecs to verify URL, authentication and retry contracts; arbitrary codec roundtrips do not test the HTTP boundary. Introduced in #1595; reconsider with the B census."
     },
     {
       "file": "packages/drivers/obs/src/ObsProtocol.service.ts",
@@ -998,16 +978,6 @@
       "line": 57,
       "owner": "@beep/repo-cli",
       "reason": "CI lane regression writes fixed JSON fixture documents through the compact S.fromJsonString(S.Unknown) codec; the codec calls serialize fixtures and assert no schema law, so schema-derived arbitrary coverage does not apply."
-    },
-    {
-      "file": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 79,
-      "owner": "repository-simplification-confidence",
-      "reason": "CI security golden suite decodes actual workflow projections to verify runner isolation and secret wiring; random workflow generation does not prove the committed CI contract. Introduced in #1583; reconsider with the B census."
     },
     {
       "file": "packages/tooling/tool/cli/test/corpus-preservation.test.ts",

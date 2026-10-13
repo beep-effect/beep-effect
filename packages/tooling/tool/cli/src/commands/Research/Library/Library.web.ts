@@ -7,6 +7,8 @@
  */
 import { Firecrawl, FirecrawlScrapePayload } from "@beep/firecrawl";
 import { $RepoCliId } from "@beep/identity/packages";
+import { thunkEmptyStr } from "@beep/utils/thunk";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import * as Layer from "effect/Layer";
@@ -53,7 +55,11 @@ const isPdf = (value: Uint8Array) => new TextDecoder().decode(value.subarray(0, 
 const successfulPdf = (status: number, bytes: Uint8Array) =>
   status >= 200 && status < 300 && bytes.byteLength <= 50_000_000 && isPdf(bytes);
 const observedPaperMatches = (arxiv: O.Option<RegExpMatchArray>, actual: O.Option<RegExpMatchArray>) =>
-  O.isNone(arxiv) || (O.isSome(actual) && Str.startsWith(actual.value[1] ?? "")(arxiv.value[1] ?? ""));
+  O.isNone(arxiv) ||
+  (O.isSome(actual) &&
+    Str.startsWith(O.getOrElse(A.get(actual.value, 1), thunkEmptyStr))(
+      O.getOrElse(A.get(arxiv.value, 1), thunkEmptyStr)
+    ));
 
 const publisherCandidateAllowed = (candidate: URL | undefined, fetchedUrl: string) =>
   candidate !== undefined &&

@@ -18,7 +18,8 @@ import {
 } from "@beep/m365";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
@@ -144,6 +145,16 @@ const failed = <A>(effect: Effect.Effect<A, M365Error>) =>
   );
 
 describe("contact verbs", () => {
+  it.effect.prop(
+    "preserves arbitrary contact drafts across the Graph wire codec",
+    [Arbitrary.schema(M365ContactDraft)],
+    Effect.fnUntraced(function* ([contact]) {
+      const encoded = yield* S.encodeEffect(M365ContactDraft)(contact);
+      const decoded = yield* S.decodeEffect(M365ContactDraft)(encoded);
+      assertTrue(S.toEquivalence(M365ContactDraft)(contact, decoded));
+    }),
+    { arbitrary: { runs: 25 } }
+  );
   it.effect(
     "accepts only approved delegated read scopes",
     Effect.fnUntraced(function* () {

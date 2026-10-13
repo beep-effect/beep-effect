@@ -12,7 +12,8 @@ import {
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -184,6 +185,20 @@ const overJob = Effect.fn("overJob")(function* <A, E>(
 }, Effect.scoped);
 
 describe("contact seeding", () => {
+  // GraphPathSegment is a custom non-empty filter without generation bounds.
+  // Single-run properties use the stated size, avoiding zero-size exhaustion.
+  for (const seed of A.range(1, 25)) {
+    it.effect.prop(
+      `preserves arbitrary rollback journals through persisted JSON (seed ${seed})`,
+      [Arbitrary.schema(RunJournal)],
+      Effect.fnUntraced(function* ([journal]) {
+        const encoded = yield* S.encodeEffect(JournalJson)(journal);
+        const decoded = yield* S.decodeEffect(JournalJson)(encoded);
+        assertTrue(S.toEquivalence(RunJournal)(journal, decoded));
+      }),
+      { arbitrary: { runs: 1, size: seed, seed } }
+    );
+  }
   it("plans each skip and preserves unrelated hand-edited contacts", () => {
     const source = [
       contactOf(),

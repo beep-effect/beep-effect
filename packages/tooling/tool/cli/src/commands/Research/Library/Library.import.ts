@@ -369,7 +369,7 @@ const importCapture = Effect.fn("Library.importCapture")(function* (
         { concurrency: 1 }
       );
       yield* validateProviderQualification("grok-x-import", A.flatten(events));
-      const returned = A.getSomes(A.map(events, (event) => S.decodeUnknownOption(ReturnedPosts)(event)));
+      const returned = A.getSomes(A.map(A.flatten(events), (event) => S.decodeUnknownOption(ReturnedPosts)(event)));
       xReturnedBody = A.some(returned, (response) =>
         A.some(response.posts, (post) => post.url === source.value.canonicalUrl && Str.isNonEmpty(Str.trim(post.text)))
       );

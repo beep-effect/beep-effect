@@ -35,7 +35,6 @@ import vectors from "./fixtures/contradiction-detection/snapshots.json" with { t
 const detect = Effect.fnUntraced(function* (snapshot: ContradictionDetectionSnapshot) {
   return yield* ContradictionDetectionService.use((service) => service.detect(snapshot));
 });
-const DetectedContradictions = S.Array(DetectedContradiction);
 
 const encodedOutput = Effect.fnUntraced(function* (candidates: ReadonlyArray<DetectedContradiction>) {
   return canonicalDetectionJson(yield* S.encodeEffect(DetectedContradictions)(candidates));

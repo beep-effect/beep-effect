@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { thunkEmptyStr } from "@beep/utils/thunk";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -287,10 +288,7 @@ export const extractLibraryReferences: {
           A.join(A.takeRight(Str.split(before, "\n"), 1), "") + O.getOrElse(A.get(Str.split(after, "\n"), 0), () => "");
         if (
           !numericLinkLabel &&
-          (A.contains(
-            knownPaperIds,
-            O.getOrElse(O.fromNullishOr(match[1]), () => "")
-          ) ||
+          (A.contains(knownPaperIds, O.getOrElse(O.fromNullishOr(match[1]), thunkEmptyStr)) ||
             /\barxiv\b/i.test(context))
         )
           add(match[0], match.index, "arxiv-id");

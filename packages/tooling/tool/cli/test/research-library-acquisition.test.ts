@@ -38,6 +38,7 @@ import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const LibraryImportPayloadJson = S.fromJsonString(LibraryImportPayload);
 const UnknownJson = S.fromJsonString(S.Unknown);
@@ -209,6 +210,109 @@ it.layer(
         { ...receipt, arguments: { ...receipt.arguments, fullText: false } },
       ]).pipe(Effect.flip);
       expect(error.message).toContain("does not prove operational qualification: alphaxiv");
+    })
+  );
+  it.effect("binds imported alphaXiv text to the inventoried version and its matching paper header", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      const url = "https://arxiv.org/abs/2608.23992v3";
+      const paper = LibrarySource.make({
+        ...source,
+        kind: "paper",
+        canonicalUrl: "https://arxiv.org/abs/2608.23992",
+        identity: "arxiv:2608.23992",
+        revision: "v3",
+        versions: [{ revision: "v3", canonicalUrl: url, locators: [] }],
+      });
+      yield* withCatalog(fixture.root, (catalog) =>
+        Effect.succeed(LibraryCatalog.make({ ...catalog, sources: [paper] }))
+      );
+      for (const paperId of ["2608.23992", "2608.00000"]) {
+        const events = [
+          {
+            provider: "alphaxiv",
+            operation: "get_paper_content",
+            arguments: { url, fullText: true },
+            result: {
+              content: [
+                { type: "text", text: "Metadata-only block." },
+                { type: "text", text: `arXiv:${paperId}v3\n${Str.repeat(50)("Actual retained source body. ")}` },
+              ],
+            },
+          },
+        ];
+        const evidence = yield* saveLibraryText(
+          fixture.root,
+          `fixtures/alpha-${paperId}.json`,
+          yield* S.encodeEffect(UnknownJson)(events),
+          "application/json",
+          "raw-provider-events"
+        );
+        const payload = LibraryImportPayload.make({
+          ...fixture.payload,
+          canonicalUrl: url,
+          method: "alphaxiv",
+          provider: "alphaxiv",
+          capturedRevision: "v3",
+          artifacts: [evidence],
+        });
+        const resultPath = fixture.path.join(fixture.root, `alpha-${paperId}.json`);
+        yield* writePayload(resultPath, payload);
+        const catalog = yield* importLibraryResult(fixture.root, resultPath);
+        const capture = A.getUnsafe(catalog.captures, A.length(catalog.captures) - 1);
+        expect(capture.requestedRevision).toBe("v3");
+        expect(yield* librarySourceEvidenceValid(fixture.root, paper, capture)).toBe(paperId === "2608.23992");
+      }
+    })
+  );
+
+  it.effect("admits returned native X post bodies only when they match the inventoried target", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      const url = "https://x.com/fixture/status/123";
+      const post = LibrarySource.make({ ...source, kind: "x", canonicalUrl: url, identity: url });
+      yield* withCatalog(fixture.root, (catalog) =>
+        Effect.succeed(LibraryCatalog.make({ ...catalog, sources: [post] }))
+      );
+      const body = "Observed original source post body.";
+      const events = [
+        { type: "tool_use", id: "x-call", name: "x_keyword_search", input: {} },
+        { type: "tool_result", tool_use_id: "x-call", content: { execution: "completed" } },
+        {
+          posts: [
+            { url: "https://x.com/fixture/status/456", text: "Unrelated post.", author: "fixture" },
+            { url, text: body, author: "fixture" },
+          ],
+        },
+      ];
+      const evidence = yield* saveLibraryText(
+        fixture.root,
+        "fixtures/x-events.json",
+        yield* S.encodeEffect(UnknownJson)(events),
+        "application/json",
+        "raw-provider-events"
+      );
+      const extracted = yield* saveLibraryText(
+        fixture.root,
+        "fixtures/x-body.txt",
+        body,
+        "text/plain",
+        "extracted-full-text"
+      );
+      const payload = LibraryImportPayload.make({
+        ...fixture.payload,
+        canonicalUrl: url,
+        method: "grok-x-import",
+        provider: "grok",
+        artifacts: [evidence, extracted],
+      });
+      const resultPath = fixture.path.join(fixture.root, "x-import.json");
+      yield* writePayload(resultPath, payload);
+      const catalog = yield* importLibraryResult(fixture.root, resultPath);
+      const capture = A.getUnsafe(catalog.captures, 0);
+      expect(capture.complete).toBe(true);
+      expect(capture.status).toBe("readable");
+      expect(yield* librarySourceEvidenceValid(fixture.root, post, capture)).toBe(true);
     })
   );
   it.effect("resolves legitimate quoted and unquoted publisher attributes without accepting lookalike names", () =>

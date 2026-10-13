@@ -61,6 +61,17 @@ nothing was adopted or discarded. P0 Research is complete.
 
 ## Latest Evidence
 
+B's October 13 bounded baseline repair is published in
+[PR #1616](https://github.com/beep-effect/beep-effect/pull/1616). It adds
+codec properties for the three inherited arbitrary-test findings. After
+integrating #1612, the schema-first owner removes their three superseded
+exception rows; the fresh check passes. Integrated local verification is
+settled, with eight inherited JSDoc ratchet increases; hosted requalification
+remains pending.
+[Current B handoff](history/handoffs/rsc-b-standards-2026-10-13.md) records
+terminal package and parity results. The original refresh, guidance, and
+detector/provenance waves remain open.
+
 Lane V [PR #1575](https://github.com/beep-effect/beep-effect/pull/1575) is published and ready. [Stage 4 reconciliation](./history/receipts/stage-4-vitest-reconciliation.md) preserves all 46 source worktrees, records every disposition, and ties the generated 1,853 / 716 open / 1,137 exceptions inventory to final code. Full repo-cli verification and every local parity stage pass; independent source review is terminal zero and both actionable hosted threads are resolved. The R105 repair preview, 716-row R102 frontier, hosted merge gate and retirement remain separate open work.
 
 H1 OSV wave [PR #1562](https://github.com/beep-effect/beep-effect/pull/1562) ready for review;

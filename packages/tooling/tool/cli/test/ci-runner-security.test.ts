@@ -12,6 +12,8 @@ import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -299,6 +301,26 @@ const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: bool
 };
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (it) => {
+  it.effect.prop(
+    "preserves arbitrary workflow permissions and step inputs through their codec",
+    [Arbitrary.schema(WorkflowJobs)],
+    Effect.fnUntraced(function* ([jobs]) {
+      const encoded = yield* S.encodeEffect(WorkflowJobs)(jobs);
+      const decoded = yield* decodeWorkflowJobs(encoded);
+      assertTrue(S.toEquivalence(WorkflowJobs)(jobs, decoded));
+    }),
+    { arbitrary: { runs: 25 } }
+  );
+  it.effect.prop(
+    "round-trips arbitrary operational patterns through the pre-runtime JSON codec",
+    [Arbitrary.schema(CiOperationalPatterns)],
+    Effect.fnUntraced(function* ([patterns]) {
+      const encoded = yield* S.encodeEffect(CiOperationalPatternsJson)(patterns);
+      const decoded = yield* S.decodeEffect(CiOperationalPatternsJson)(encoded);
+      assertTrue(S.toEquivalence(CiOperationalPatterns)(patterns, decoded));
+    }),
+    { arbitrary: { runs: 25 } }
+  );
   it.effect(
     "keeps the pre-runtime pattern projection synchronized with its schema owner",
     Effect.fnUntraced(function* () {
