@@ -344,4 +344,3 @@ const load = Effect.fn("ClassificationRegistry.load")(function* (
   yield* validateSnapshot(snapshot, pin);
   return snapshot;
 });
-const ClassificationAssetJson = S.fromJsonString(ClassificationAsset);

@@ -410,4 +410,3 @@ export const parseNice = Effect.fnUntraced(function* (
     )
   );
 });
-const NiceNumber = S.Union([NiceClassNumber, NiceBasicNumber]);
