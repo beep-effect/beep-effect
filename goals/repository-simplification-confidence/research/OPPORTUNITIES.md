@@ -1100,3 +1100,18 @@ on the new head if it appears.
 - Prevention: separate stable finding identity from display-line anchors so a
   line shift preserves reviewed inventory decisions. No new exception or relaxed
   quality threshold belongs in this repair.
+
+### 2026-10-13 — policy capture deadline interrupts full inventory
+
+- Work: run root lint alongside the explicitly requested test, coverage, and
+  audit proofs after integrating the goals projection feature.
+- Evidence: `lint:policy:medium` hit its fixed `900000ms` captured-command
+  deadline while `jsdoc:inventory:check` was generating the full inventory.
+  The child reported interruption, not a source finding. Cheap policy tasks and
+  the separate strict test compiler passed; the full lint attempt still failed.
+- Action: retain the failed attempt and rerun lint after the concurrent heavy
+  workload settles. Keep full docgen serialized after lint so its temporary
+  example files cannot disappear during the compiler-rule scan.
+- Prevention: a resource-aware inventory schedule and partial timeout output
+  would distinguish code failures from interrupted scans sooner. Preserve every
+  lint rule and quality threshold.
