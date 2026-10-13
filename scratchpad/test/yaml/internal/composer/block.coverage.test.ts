@@ -347,6 +347,13 @@ describe("block composer edge coverage", () => {
     assert.strictEqual(state.errors.some((error) => error.message === "Mapping key after multiline plain scalar value"), false);
   }));
 
+  it.effect("two tags split across lines on a scalar report duplicate declarations", () => Effect.sync(() => {
+    const { text, children } = tokens([["tag", "!!str"], ["newline", "\n"], ["tag", "!!str "], ["flow-scalar", "value"]]);
+    const state = createState(text, flow);
+    flattenBlockMapChildren(children, state);
+    assert.strictEqual(state.errors.some((error) => error.message === "Scalar cannot have two tag declarations"), true);
+  }));
+
   it.effect("two anchors on a mapping key are split across its containing map", () => Effect.sync(() => {
     const { text, children } = tokens([["anchor", "&outer "], ["newline", "\n"], ["anchor", "&inner "], ["flow-scalar", "k"], ["whitespace", ":"], ["flow-scalar", "v"]]);
     const state = createState(text, flow);

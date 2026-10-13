@@ -1,0 +1,222 @@
+[
+  {
+    "id": "EV010:scratchpad/test/workspaces/ConfigDependencyFetch.test.ts:10:node:fs@0#1",
+    "reason": "The fetch subject deliberately uses native disk for scratch lockfiles, store verification, symlinks and cleanup; memfs cannot exercise that contract."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/ConfigDependencyFetch.test.ts:11:node:os@0#1",
+    "reason": "Real temporary directories are required by the native-disk fetch subject."
+  },
+  {
+    "id": "EV015:scratchpad/test/workspaces/ConfigDependencyHooksSubprocess.test.ts:331:TestClock.adjust@12#1",
+    "reason": "This layer block contains exactly one non-concurrent test, which exclusively owns its TestClock; advancing it preserves the thirty-second timeout assertion."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/ConfigDependencyHooksSubprocess.test.ts:18:node:fs@0#1",
+    "reason": "The parent-side resolution subject deliberately reads native disk before spawning; its installed-package fixtures must exist there."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/ConfigDependencyHooksSubprocess.test.ts:19:node:os@0#1",
+    "reason": "Real temporary directories are required by the native-disk resolution subject."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/DuplicateCheck.test.ts:13:node:fs@0#1",
+    "reason": "The synchronous read only loads immutable checked-in fixture text; DuplicateCheck is a pure value operation with no FileSystem service to replace."
+  },
+  {
+    "id": "EV002:scratchpad/test/workspaces/PackageManagerDetectorDouble.test.ts:94:provide@3#1",
+    "reason": "PackageManagerDetector.layerTest resolves directly to Layer.succeed; this is a pure service double permitted by D14."
+  },
+  {
+    "id": "EV002:scratchpad/test/workspaces/PackageManagerDetectorDouble.test.ts:121:provide@10#1",
+    "reason": "PackageManagerDetector.layerTest resolves directly to Layer.succeed; the unstubbed member's defect occurs when called, not during layer acquisition."
+  },
+  {
+    "id": "EV014:scratchpad/test/workspaces/PackedInstall.test.ts:1013:it.layer@1#1",
+    "reason": "ScriptedSpawner.make constructs its layer with Layer.succeed; this hook acquires no scoped or effectful resource."
+  },
+  {
+    "id": "EV014:scratchpad/test/workspaces/PackedInstall.test.ts:1107:it.layer@1#1",
+    "reason": "ScriptedSpawner.make constructs its layer with Layer.succeed; this hook acquires no scoped or effectful resource."
+  },
+  {
+    "id": "EV014:scratchpad/test/workspaces/PackedInstallPreflight.test.ts:119:it.layer@1#1",
+    "reason": "ScriptedSpawner.layer is a pure Layer.succeed stub with no resource acquisition or release."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/PeerCheck.test.ts:13:node:fs@0#1",
+    "reason": "readFileSync loads committed pnpm lockfiles and differential-oracle fixtures; PeerCheck consumes parsed values and has no FileSystem dependency. A memfs substitute would still need to load those exact committed fixtures."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/SourceBoundary.test.ts:3:node:fs@0#1",
+    "reason": "The real-tree regression reads the actual ConfigDependencyHooks.ts source and its embedded REPLAY_SCRIPT; that checked-out source is the subject of the assertions."
+  },
+  {
+    "id": "EV014:scratchpad/test/workspaces/VersioningStrategy.test.ts:178:it.layer@1#1",
+    "reason": "Both WorkspaceDiscovery.layerTest and publishes resolve to Layer.succeed; their merged layer has no scoped or effectful acquisition."
+  },
+  {
+    "id": "EV014:scratchpad/test/workspaces/VersioningStrategy.test.ts:200:it.layer@1#1",
+    "reason": "Both WorkspaceDiscovery.layerTest and publishes resolve to Layer.succeed; their merged layer has no scoped or effectful acquisition."
+  },
+  {
+    "id": "EV014:scratchpad/test/workspaces/VersioningStrategy.test.ts:225:it.layer@1#1",
+    "reason": "Both WorkspaceDiscovery.layerTest and publishes resolve to Layer.succeed; their merged layer has no scoped or effectful acquisition."
+  },
+  {
+    "id": "EV002:scratchpad/test/workspaces/VersioningStrategy.test.ts:267:provide@4#1",
+    "reason": "The merged discovery and publishing doubles are Layer.succeed stubs. The per-test Refs track body execution; layer construction performs no effects, so D14 permits per-test provide."
+  },
+  {
+    "id": "EV014:scratchpad/test/workspaces/WorkspaceLayering.test.ts:183:it.layer@1#1",
+    "reason": "WorkspaceDiscovery.layerTest uses pure Layer.succeed; it acquires no scoped resource and needs no resource hook timeout."
+  },
+  {
+    "id": "EV014:scratchpad/test/workspaces/WorkspaceLayering.test.ts:215:it.layer@1#1",
+    "reason": "WorkspaceDiscovery.layerTest uses pure Layer.succeed; it acquires no scoped resource and needs no resource hook timeout."
+  },
+  {
+    "id": "EV014:scratchpad/test/workspaces/WorkspaceSnapshots.test.ts:364:it.layer@1#1",
+    "reason": "The snapshot workspaceResolver is a pure Layer.succeed value: acquisition has no effects or scoped resources, so there is no resource hook to time out."
+  },
+  {
+    "id": "EV014:scratchpad/test/workspaces/WorkspaceSnapshots.test.ts:428:it.layer@1#1",
+    "reason": "The snapshot resolvers merge pure Layer.succeed values: acquisition has no effects or scoped resources, so there is no resource hook to time out."
+  },
+  {
+    "id": "EV014:scratchpad/test/workspaces/WorkspaceSnapshots.test.ts:864:it.layer@2#1",
+    "reason": "The own-name regression uses only Layer.succeed service doubles. The filesystem-independent snapshot construction occurs in the test body, not a resource-acquiring layer hook."
+  },
+  {
+    "id": "EV014:scratchpad/test/workspaces/WorkspaceStateSnapshotSeed.test.ts:127:it.layer@1#1",
+    "reason": "The seeded snapshot catalogResolver is a pure Layer.succeed value: acquisition has no effects or scoped resources, so there is no resource hook to time out."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/WorkspacesSync.test.ts:17:node:fs@0#1",
+    "reason": "The fast-path suite checks real Node readdirSync({ withFileTypes: true }) Dirent behavior over symlinked package directories. The memfs sync port lacks this operation; replacing it would remove the platform behavior under test."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/WorkspacesSync.test.ts:28:node:os@0#1",
+    "reason": "tmpdir supplies the real temporary-directory fixture for that Node Dirent/symlink test, with cleanup through the existing afterAll hook."
+  },
+  {
+    "id": "EV004:scratchpad/test/workspaces/e2e/PackedInstall.e2e.test.ts:372:scoped@25#1",
+    "reason": "The shorter scope must close before asserting that the packed-install scratch directory was removed."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/e2e/PackedInstall.e2e.test.ts:23:node:fs@0#1",
+    "reason": "Real package managers, tarballs, installed bins, and physical directory cleanup are the E2E subject."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/e2e/PackedInstall.e2e.test.ts:24:node:os@0#1",
+    "reason": "Native temporary directories must be visible to the real package managers and spawned binaries."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/e2e/PackedInstall.e2e.test.ts:26:@effect/platform-node@0#1",
+    "reason": "NodeServices supplies the real filesystem and process execution exercised by this E2E suite."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/e2e/RunBinStdin.e2e.test.ts:5:node:fs@0#1",
+    "reason": "The test executes physical bin files and verifies real stdin transport and EOF behavior."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/e2e/RunBinStdin.e2e.test.ts:6:node:os@0#1",
+    "reason": "The spawned Node binaries require an OS-visible temporary consumer directory."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/e2e/RunBinStdin.e2e.test.ts:8:@effect/platform-node@0#1",
+    "reason": "Real process spawning and stdin piping are the subject."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/entrypoints.test.ts:2:node:fs@0#1",
+    "reason": "The boundary walker must inspect actual checkout source files; a seeded memory volume would not verify the current repository boundary."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/ConfigDependencyFetch.int.test.ts:18:node:fs@0#1",
+    "reason": "Real Git and Node subprocesses consume the physical repository, store, and fake-pnpm executable."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/ConfigDependencyFetch.int.test.ts:19:node:os@0#1",
+    "reason": "Fixture directories must be OS-visible to Git and Node."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/ConfigDependencyFetch.int.test.ts:21:@effect/platform-node@0#1",
+    "reason": "Native Git snapshots and config-hook subprocess execution are the integration subject."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/ConfigDependencyHooks.int.test.ts:4:@effect/platform-node@0#1",
+    "reason": "Native import() must load the real pnpmfile fixtures and write observable disk markers; the fixture uses scoped NodeFileSystem resources."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/ConfigDependencyHooksSubprocess.int.test.ts:18:@effect/platform-node@0#1",
+    "reason": "Real child-process transport and native pnpmfile loading are the integration subject; memory filesystem or scripted transport would remove the behavior being tested."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/ConfigDependencyResolution.int.test.ts:12:node:fs@0#1",
+    "reason": "Real installed modules, store directories, symlinks, native module loading and subprocess replay are the subject; memfs cannot replace that fixture."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/ConfigDependencyResolution.int.test.ts:13:node:os@0#1",
+    "reason": "Native temporary directories hold the real module-loading and subprocess resolution fixtures."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/ConfigDependencyResolution.int.test.ts:16:@effect/platform-node@0#1",
+    "reason": "The subprocess replay subject requires the real Node child-process spawner and its filesystem/path dependencies."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/SourceBoundarySelf.int.test.ts:8:@effect/platform-node@0#1",
+    "reason": "The test scans the package's actual on-disk source and verifies its exact source-boundary allowlist."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/WorkspaceSnapshotsHookReplay.int.test.ts:16:node:fs@0#1",
+    "reason": "Real Git commits, native hook loading, installed/store resolution and observable marker writes are the subject."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/WorkspaceSnapshotsHookReplay.int.test.ts:17:node:os@0#1",
+    "reason": "Native temporary directories hold the real Git repository, pnpm store and hook marker."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/WorkspaceSnapshotsHookReplay.int.test.ts:19:@effect/platform-node@0#1",
+    "reason": "The composites exercise real Git subprocesses and native hook replay; platform resource provenance is intentional."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/WorkspaceSnapshotsNested.int.test.ts:23:node:fs@0#1",
+    "reason": "Real files are required for the real-Git regression distinguishing ls-tree cwd-relative paths from git-show repository-relative paths."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/WorkspaceSnapshotsNested.int.test.ts:24:node:os@0#1",
+    "reason": "The real-Git fixture needs an isolated on-disk temporary repository."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/WorkspaceSnapshotsNested.int.test.ts:26:@effect/platform-node@0#1",
+    "reason": "Real Node filesystem and subprocess services are required to exercise actual Git path semantics."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/layering.int.test.ts:4:node:fs@0#1",
+    "reason": "Disk reads inspect the actual module imports, test dependency edges, and policy; replacing those inputs with a synthetic graph would remove the regression oracle."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/layering.int.test.ts:7:@effect/platform-node@0#1",
+    "reason": "BunLive checks acyclicity of the actual repository workspace. Generated graph manifests now use memfs; the repository control retains Node services."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/node-sync.int.test.ts:11:node:fs@0#1",
+    "reason": "The shipped Node sync preset is the subject; hand-wired node:fs operations against the real repository are its parity oracle."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/peerClosure.int.test.ts:8:@effect/platform-node@0#1",
+    "reason": "The test audits peer closure of the actual published repository packages; a virtual manifest tree would stop checking those packages."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/self.int.test.ts:13:node:fs@0#1",
+    "reason": "Real Node sync operations are the oracle for parity with Effect discovery of this repository."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/self.int.test.ts:16:@effect/platform-node@0#1",
+    "reason": "The suite verifies actual repository discovery, file ownership, catalogs, bun.lock, and sync parity."
+  },
+  {
+    "id": "EV010:scratchpad/test/workspaces/integration/utils/configDependencyFixtures.ts:10:node:fs@0#1",
+    "reason": "Config-resolution fixtures must be visible to Node filesystem reads, dynamic imports, symlinks, and the fake-pnpm subprocess; an Effect FileSystem double cannot supply those consumers."
+  }
+]

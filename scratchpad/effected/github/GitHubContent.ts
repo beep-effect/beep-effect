@@ -15,7 +15,7 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 	message: S.String,
 }, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
-const JsonValue = S.fromJsonString(S.String);
+const JsonValue = S.String.pipe(S.NullOr, S.fromJsonString);
 
 /**
  * Read a text file out of a repository at a ref.
@@ -180,7 +180,7 @@ const make = (client: GitHubClient["Service"]): GitHubContentShape => {
 				GitHubError.rejected(
 					"GitHubContent.getFile",
 					422,
-					`${path} came back with encoding ${(yield* S.encodeEffect(JsonValue)(content.encoding).pipe(Effect.orDie))} — it is probably too large for the contents API`,
+					`${path} came back with encoding ${O.getOrElse(S.encodeUnknownOption(JsonValue)(content.encoding), () => "undefined")} — it is probably too large for the contents API`,
 				);
 		}
 		return Buffer.from(content.content.replace(/\s/g, ""), "base64").toString("utf8");
@@ -194,7 +194,7 @@ const make = (client: GitHubClient["Service"]): GitHubContentShape => {
 		) {
 			return yield* getFile(path, options).pipe(
 				Effect.asSome,
-				Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeed(O.none<string>())),
+				Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeedNone),
 			);
 		}),
 	};

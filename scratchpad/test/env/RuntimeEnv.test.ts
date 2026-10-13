@@ -8,6 +8,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CurrentRuntimeEnv, RuntimeEnv } from "../../effected/env/RuntimeEnv.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 const runtimeEnvJson = S.fromJsonString(RuntimeEnv);
 
@@ -195,7 +196,13 @@ describe("RuntimeEnv", () => {
 		const rejectsUnknownCi: "jenkins" extends O.Option.Value<RuntimeEnv["ci"]> ? false : true = true;
 		assert.isTrue(rejectsUnknownCi);
 		const unknown = () =>
-			Reflect.apply(RuntimeEnv.make, RuntimeEnv, [{ agent: O.none(), ci: O.some("jenkins"), terminal: O.none() }]);
+			RuntimeEnv.make(
+				deliberatelyInvalid<Parameters<typeof RuntimeEnv.make>[0]>({
+					agent: O.none(),
+					ci: O.some("jenkins"),
+					terminal: O.none(),
+				}),
+			);
 		assert.throws(unknown);
 	});
 

@@ -303,18 +303,19 @@ const unstubbed = (member: string): never => {
   throw UnstubbedError.make({ message: `WorkflowDispatch.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
-const statusOf = (raw: {
+const statusOf = Effect.fn("WorkflowDispatch.statusOf")(function* (operation: string, raw: {
   id: number | bigint;
   status?: string | null;
   conclusion?: string | null;
   html_url: string;
-}): WorkflowRunStatus =>
-  WorkflowRunStatus.make({
+}) {
+  return yield* S.decodeEffect(WorkflowRunStatus)({
     id: numericId(raw.id),
     status: raw.status ?? "unknown",
     ...(raw.conclusion != null ? { conclusion: raw.conclusion } : {}),
     url: raw.html_url,
-  });
+  }).pipe(Effect.mapError((error) => GitHubError.decode(operation, "GitHub returned an unexpected workflow run", error)));
+});
 
 const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
   const dispatch = Effect.fn("WorkflowDispatch.dispatch")(function* (
@@ -341,7 +342,7 @@ const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
       repo,
       run_id: runId,
     });
-    return statusOf(raw);
+    return yield* statusOf("WorkflowDispatch.runStatus", raw);
   });
 
   const list = Effect.fn("WorkflowDispatch.list")(function* () {
@@ -354,13 +355,12 @@ const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
       owner,
       repo,
     });
-    return A.map(workflows,
-      (workflow): WorkflowInfo => ({
+    return yield* Effect.forEach(workflows, (workflow) => S.decodeEffect(WorkflowInfo)({
         id: workflow.id,
         name: workflow.name,
         path: workflow.path,
         state: workflow.state,
-      }),
+      }).pipe(Effect.mapError((error) => GitHubError.decode("WorkflowDispatch.list", "GitHub returned an unexpected workflow", error))),
     );
   });
 
@@ -415,7 +415,8 @@ const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
             { owner, repo, workflow_id: workflow, event: "workflow_dispatch", created: `>=${dispatchedAt}`, branch: ref },
             PageOptions.make({ perPage: 10, maxPages: 1 }),
           );
-          const found = O.map(A.head(runs), statusOf);
+          const first = A.head(runs);
+          const found = O.isNone(first) ? O.none() : O.some(yield* statusOf("WorkflowDispatch.dispatchAndWait", first.value));
           selectedId = O.map(found, (run) => run.id);
           return found;
         });
@@ -423,7 +424,8 @@ const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
           while: (found) => O.isNone(found) || found.value.isDone === false,
           schedule: Schedule.spaced(interval),
         });
-        return yield* Effect.fromOption(settled).pipe(Effect.mapError(() => expired));
+        // The repeat predicate stops only for a present, completed run.
+        return O.getOrThrow(settled);
       }).pipe(Effect.timeoutOrElse({ duration: timeout, orElse: () => Effect.fail(expired) }));
     }),
   };

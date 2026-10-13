@@ -1,0 +1,23 @@
+{
+  "module": "github-commands",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [],
+      "tests": [
+        "scratchpad/test/github-commands/CommandNeutralizer.coverage.test.ts",
+        "scratchpad/test/github-commands/WorkflowCommand.coverage.test.ts",
+        "scratchpad/test/github-commands/deliberatelyInvalid.ts"
+      ],
+      "findings": ["fable-2-1"]
+    }
+  ],
+  "findings": {
+    "fable-2-1": {
+      "file": "scratchpad/test/github-commands/CommandNeutralizer.coverage.test.ts",
+      "class": "type-safety",
+      "summary": "Both private-constructor coverage tests infer any from Reflect.construct; the D15 syntax gate misses the library-returned any. Merges fable-2-1 and fable-2-2.",
+      "fix": "Add one scratchpad/test/github-commands/deliberatelyInvalid.ts exporting deliberatelyInvalid = <T>(value: unknown): T => value as T in the sanctioned shape. Import it into both coverage tests and replace Reflect.construct with new (deliberatelyInvalid<new () => CommandNeutralizer>(CommandNeutralizer))() and new (deliberatelyInvalid<new () => WorkflowCommand>(WorkflowCommand))(), respectively. Preserve both upstream private constructors and every existing assertion; do not delete tests or edit README Port notes, PORT_LEDGER.json, or repository configuration."
+    }
+  }
+}

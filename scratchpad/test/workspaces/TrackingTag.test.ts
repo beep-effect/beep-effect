@@ -99,6 +99,34 @@ describe("TrackingTag.forVersion — the prerelease guard", () => {
 });
 
 describe("TrackingTag.forVersion — non-derivable input", () => {
+	it("an empty supplied package name derives nothing without throwing", () => {
+		assert.deepStrictEqual(TrackingTag.forVersion("1.2.3", { packageName: "" }), []);
+		assert.deepStrictEqual(TrackingTag.forVersion("1.2.3", { packageName: "", precision: "major" }), []);
+		assert.deepStrictEqual(
+			TrackingTag.forVersion("1.2.3-beta.1", { packageName: "", includePrerelease: true }),
+			[],
+		);
+	});
+
+	it("omitted and valid package names still derive the requested aliases", () => {
+		assert.deepStrictEqual(
+			TrackingTag.forVersion("1.2.3", {}).map((tag) => tag.value),
+			["v1", "v1.2"],
+		);
+		assert.deepStrictEqual(
+			TrackingTag.forVersion("1.2.3", { precision: "major" }).map((tag) => tag.value),
+			["v1"],
+		);
+		assert.deepStrictEqual(
+			TrackingTag.forVersion("1.2.3", { packageName: "pkg", precision: "major" }).map((tag) => tag.value),
+			["pkg@v1"],
+		);
+		assert.deepStrictEqual(
+			TrackingTag.forVersion("1.2.3", { packageName: "@scope/pkg" }).map((tag) => tag.value),
+			["@scope/pkg@v1", "@scope/pkg@v1.2"],
+		);
+	});
+
 	it("a version that is not X.Y.Z derives nothing, and does not throw", () => {
 		// Total by construction: derivation is a query, not a validation, so junk
 		// yields an empty set rather than an error channel nobody wants.

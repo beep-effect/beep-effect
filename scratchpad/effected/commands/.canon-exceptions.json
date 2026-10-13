@@ -1,0 +1,22 @@
+[
+  {
+    "id": "EV009:scratchpad/test/commands/e2e/Run.e2e.test.ts:156:it.live@1#1",
+    "reason": "The test needs a real 250 ms delay after scope closure to verify that an unreferenced OS child survives. Left unchanged."
+  },
+  {
+    "id": "EV009:scratchpad/test/commands/e2e/Run.e2e.test.ts:179:it.live@1#1",
+    "reason": "The test needs a real 250 ms delay after scope closure to verify that an unreferenced OS child survives. Left unchanged."
+  },
+  {
+    "id": "EV004:scratchpad/test/commands/e2e/Run.e2e.test.ts:190:scoped@12#1",
+    "reason": "The inner scope must close before the PID-liveness assertion. Using only the runner\u2019s scope would defer cleanup until after that assertion and change the behavior being tested. Left unchanged."
+  },
+  {
+    "id": "EV010:scratchpad/test/commands/e2e/Run.e2e.test.ts:8:@effect/platform-node@0#1",
+    "reason": "Real Node process behavior is the subject: OS pipe backpressure, native ENOENT mapping, environment propagation, and child-process scope/unref lifecycle require the real platform backend. Left unchanged."
+  },
+  {
+    "id": "EV013:scratchpad/test/commands/Retry.test.ts:18:retry-loop@2#1",
+    "reason": "This loop checks five distinct transient-error classification examples; it does not retry a test or mask failures. Left unchanged."
+  }
+]

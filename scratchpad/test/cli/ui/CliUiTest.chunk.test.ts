@@ -5,7 +5,7 @@ import * as Layer from "effect/Layer";
 import { Text } from "ink";
 import type { ReactElement } from "react";
 import { createElement, useState } from "react";
-import { CliUi, Confirm, KeyTable, Select, TextInput, useKeys } from "../../../effected/cli/ui.ts";
+import { CliUi, Confirm, KeyTable, MultiSelect, Select, TextInput, useKeys } from "../../../effected/cli/ui.ts";
 import { CliUiTest, type CliUiTestSession } from "../../../effected/cli/ui-testing.ts";
 
 class TestSession extends Context.Service<TestSession, CliUiTestSession>()(
@@ -48,6 +48,34 @@ const counted = (
 	);
 
 describe("chunk: several keys in one stdin write", () => {
+	it.effect("Select keeps the submitted choice when down follows Enter in one chunk", () =>
+		Effect.gen(function* () {
+			const handle = yield* CliUiTest.render(Select.screen({ message: "Pick", choices: [
+				{ label: "first", value: "first" }, { label: "second", value: "second" },
+			] }));
+			yield* handle.chunk("enter", "down");
+			assert.strictEqual(yield* handle.result, "first");
+		}),
+	);
+
+	it.effect("Confirm keeps No when y follows Enter in one chunk", () =>
+		Effect.gen(function* () {
+			const handle = yield* CliUiTest.render(Confirm.screen({ message: "Go?", initial: false }));
+			yield* handle.chunk("enter", { char: "y" });
+			assert.isFalse((yield* handle.result).confirmed);
+		}),
+	);
+
+	it.effect("MultiSelect keeps an empty submission when space follows Enter in one chunk", () =>
+		Effect.gen(function* () {
+			const handle = yield* CliUiTest.render(MultiSelect.screen({ message: "Pick", sections: [
+				{ title: "Items", items: [{ key: "first", label: "first", value: "first" }] },
+			] }));
+			yield* handle.chunk("enter", "space");
+			assert.deepStrictEqual(yield* handle.result, []);
+		}),
+	);
+
 	it.effect("a render-closure handler steps once for two keys in one chunk, but twice when pressed one by one", () =>
 		Effect.gen(function* () {
 			assert.strictEqual(yield* counted(ClosureStepper, (handle) => handle.chunk("right", "right")), "count=1");

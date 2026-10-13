@@ -45,6 +45,39 @@ describe("Yaml", () => {
 			}),
 		);
 
+		it.effect("rejects repeated block-scalar header indicators in strict parsing", () =>
+			Effect.gen(function* () {
+				for (const indicator of ["|", ">"]) {
+					for (const modifiers of ["++", "--", "+-", "-+", "22", "23"]) {
+						const source = `${indicator}${modifiers}\n  a\n`;
+						const error = yield* Effect.matchEffect(Yaml.parse(source, { strict: true }), {
+							onFailure: Effect.succeed, onSuccess: Effect.die,
+						});
+						assert.instanceOf(error, YamlParseError);
+						assertFailure(Yaml.parseResult(source, { strict: true }), error);
+					}
+					for (const modifiers of ["2+", "+2", "2-", "-2"]) {
+						assert.strictEqual(yield* Yaml.parse(`${indicator}${modifiers}\n  a\n`, { strict: true }),
+							modifiers.includes("-") ? "a" : "a\n");
+					}
+				}
+			}),
+		);
+
+		it.effect("rejects unterminated quotes before CR-separated document markers", () =>
+			Effect.gen(function* () {
+				for (const quote of ['"', "'"]) {
+					for (const marker of ["---", "..."]) {
+						const error = yield* Effect.matchEffect(Yaml.parse(`${quote}a\r${marker}\n`, { strict: true }), {
+							onFailure: Effect.succeed, onSuccess: Effect.die,
+						});
+						assert.instanceOf(error, YamlParseError);
+						assert.isAbove(error.diagnostics.length, 0);
+					}
+				}
+			}),
+		);
+
 		it.effect("fails with an aggregate YamlParseError carrying positioned diagnostics", () =>
 			Effect.gen(function* () {
 				const error = yield* Effect.matchEffect(Yaml.parse("a: *missing"), { onFailure: Effect.succeed, onSuccess: Effect.die });
@@ -1323,6 +1356,16 @@ describe("Yaml", () => {
 				assert.strictEqual(encoded, "a: 1\n---\nb: 2\n");
 				const roundTripped = yield* S.decodeEffect(codec)(encoded);
 				assert.deepStrictEqual(roundTripped, [{ a: 1 }, { b: 2 }]);
+			}),
+		);
+
+		it.effect("allFromString preserves empty-stream parser parity and empty-array encoding", () =>
+			Effect.gen(function* () {
+				const codec = Yaml.allFromString();
+				const parsed = yield* Yaml.parseAll("");
+				assert.deepStrictEqual(parsed, [null]);
+				assert.deepStrictEqual(yield* S.decodeEffect(codec)(""), parsed);
+				assert.strictEqual(yield* S.encodeEffect(codec)([]), "");
 			}),
 		);
 

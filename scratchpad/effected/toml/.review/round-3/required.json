@@ -1,0 +1,23 @@
+{
+  "module": "toml",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/toml/internal/limits.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "r-guard-reason"
+      ]
+    }
+  ],
+  "findings": {
+    "r-guard-reason": {
+      "file": "scratchpad/effected/toml/internal/limits.ts",
+      "class": "schema",
+      "summary": "GuardReason is a handwritten named literal domain duplicated by GuardExceeded.reason instead of a schema-derived type with identity metadata.",
+      "fix": "Import LiteralKit from @beep/schema; define module-local GuardReason = LiteralKit([\"NestingDepthExceeded\"]) with $I.annoteSchema metadata; derive the existing exported type as typeof GuardReason.Type; use GuardReason for the error reason field while retaining its field description. Preserve the literal, GuardExceeded.new signature and message, forced tagged error carrier, and all upstream test lines. Do not export the schema value or add a barrel export."
+    }
+  }
+}

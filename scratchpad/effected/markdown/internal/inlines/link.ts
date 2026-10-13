@@ -23,6 +23,7 @@
 
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
+import type { ReferenceType } from "../../MarkdownNode.ts";
 import type { InlineNode } from "../inlineNode.ts";
 import { appendChild, childrenOf, insertAfter, makeInlineNode, unlink } from "../inlineNode.ts";
 import type { Bracket, InlineConstruct, InlineScanner } from "../inlineTypes.ts";
@@ -294,7 +295,7 @@ export const makeLinkCloseConstruct = (onNoMatch?: LinkCloseFallback): InlineCon
 
 		let identifier: string | undefined;
 		let rawLabel = "";
-		let referenceType: "shortcut" | "collapsed" | "full" = "shortcut";
+		let referenceType: ReferenceType = "shortcut";
 
 		if (!matched) {
 			// A reference: `][label]`, `][]` or bare `]`.

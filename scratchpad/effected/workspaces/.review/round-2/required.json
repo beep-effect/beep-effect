@@ -1,0 +1,355 @@
+{
+  "module": "workspaces",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/workspaces/ConfigDependencyHooks.ts",
+        "scratchpad/effected/workspaces/internal/configDependencyFetch.ts",
+        "scratchpad/effected/workspaces/internal/configDependencyResolution.ts",
+        "scratchpad/effected/workspaces/internal/configDependencySpecGrammar.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/ConfigDependencyHooksSubprocess.test.ts",
+        "scratchpad/test/workspaces/ConfigDependencyHooks.property.test.ts",
+        "scratchpad/test/workspaces/internal/configDependencyFetch.property.test.ts",
+        "scratchpad/test/workspaces/internal/configDependencyResolution.property.test.ts",
+        "scratchpad/test/workspaces/internal/configDependencySpecGrammar.property.test.ts"
+      ],
+      "findings": [
+        "r02",
+        "r05",
+        "r26"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/workspaces/DuplicateCheck.ts",
+        "scratchpad/effected/workspaces/internal/roots.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/DuplicateCheck.test.ts",
+        "scratchpad/test/workspaces/internal/roots.coverage.test.ts"
+      ],
+      "findings": [
+        "r04",
+        "r28"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/workspaces/LockfileReader.ts",
+        "scratchpad/effected/workspaces/PackageManagerName.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/LockfileReader.test.ts",
+        "scratchpad/test/workspaces/PackageManagerDetector.test.ts"
+      ],
+      "findings": [
+        "r01",
+        "r03"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/workspaces/PackedInstall.ts",
+        "scratchpad/effected/workspaces/internal/packedInstallPlan.ts",
+        "scratchpad/effected/workspaces/WorkspaceDiscovery.ts",
+        "scratchpad/effected/workspaces/WorkspacePackage.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/PackedInstall.test.ts",
+        "scratchpad/test/workspaces/PackedInstallPreflight.test.ts",
+        "scratchpad/test/workspaces/PackedInstallPlan.test.ts",
+        "scratchpad/test/workspaces/WorkspaceDiscovery.test.ts",
+        "scratchpad/test/workspaces/WorkspacePackage.test.ts"
+      ],
+      "findings": [
+        "r06",
+        "r09",
+        "r15",
+        "r17",
+        "r19",
+        "r21"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/workspaces/PeerCheck.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/PeerCheck.test.ts",
+        "scratchpad/test/workspaces/PeerCheck.property.test.ts"
+      ],
+      "findings": [
+        "r07",
+        "r10"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/workspaces/ReleaseTag.ts",
+        "scratchpad/effected/workspaces/VersioningStrategy.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/TrackingTag.test.ts",
+        "scratchpad/test/workspaces/ReleaseTag.property.test.ts",
+        "scratchpad/test/workspaces/VersioningStrategy.property.test.ts"
+      ],
+      "findings": [
+        "r08",
+        "r11",
+        "r13",
+        "r14"
+      ]
+    },
+    {
+      "id": "g7",
+      "files": [
+        "scratchpad/effected/workspaces/SourceBoundary.ts",
+        "scratchpad/effected/workspaces/internal/sourceText.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/sourceText.test.ts",
+        "scratchpad/test/workspaces/SourceBoundary.test.ts",
+        "scratchpad/test/workspaces/SourceBoundary.property.test.ts"
+      ],
+      "findings": [
+        "r12",
+        "r23",
+        "r24"
+      ]
+    },
+    {
+      "id": "g8",
+      "files": [
+        "scratchpad/effected/workspaces/WorkspaceRoot.ts",
+        "scratchpad/effected/workspaces/WorkspaceSnapshots.ts",
+        "scratchpad/effected/workspaces/WorkspaceCatalogs.ts",
+        "scratchpad/effected/workspaces/WorkspaceStateSnapshot.ts",
+        "scratchpad/effected/workspaces/WorkspaceLayering.ts",
+        "scratchpad/effected/workspaces/Workspaces.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/WorkspaceSnapshots.test.ts",
+        "scratchpad/test/workspaces/WorkspaceSnapshots.property.test.ts",
+        "scratchpad/test/workspaces/WorkspaceRoot.property.test.ts",
+        "scratchpad/test/workspaces/WorkspaceCatalogs.property.test.ts",
+        "scratchpad/test/workspaces/WorkspaceStateSnapshot.property.test.ts",
+        "scratchpad/test/workspaces/WorkspaceLayering.property.test.ts",
+        "scratchpad/test/workspaces/Workspaces.test.ts"
+      ],
+      "findings": [
+        "r16",
+        "r18",
+        "r20",
+        "r22",
+        "r29"
+      ]
+    },
+    {
+      "id": "g9",
+      "files": [
+        "scratchpad/effected/workspaces/WorkspacesSync.ts",
+        "scratchpad/effected/workspaces/internal/enumerate.ts",
+        "scratchpad/effected/workspaces/internal/traverse.ts",
+        "scratchpad/effected/workspaces/internal/layerRoot.ts",
+        "scratchpad/effected/workspaces/internal/patterns.ts",
+        "scratchpad/effected/workspaces/internal/catalogs.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/WorkspacesSync.property.test.ts",
+        "scratchpad/test/workspaces/internal/enumerate.property.test.ts",
+        "scratchpad/test/workspaces/internal/traverse.property.test.ts",
+        "scratchpad/test/workspaces/internal/layerRoot.coverage.test.ts",
+        "scratchpad/test/workspaces/internal/patterns.property.test.ts",
+        "scratchpad/test/workspaces/internal/catalogs.property.test.ts"
+      ],
+      "findings": [
+        "r25",
+        "r27"
+      ]
+    }
+  ],
+  "findings": {
+    "r01": {
+      "file": "scratchpad/effected/workspaces/LockfileReader.ts",
+      "class": "law",
+      "summary": "Remove the remaining native Map backing escape at the lockfile boundary.",
+      "fix": "Build the importer-name table as HashMap (or convert the iterable MutableHashMap with HashMap.fromIterable) and pass that Effect collection. Remove .backing and its compatibility comment; preserve empty-name fallback and importer/name order. Use the live sibling HashMap boundary; do not edit lockfiles or any repo configuration."
+    },
+    "r02": {
+      "file": "scratchpad/effected/workspaces/ConfigDependencyHooks.ts",
+      "class": "bug",
+      "summary": "Preserve an own __proto__ catalog in subprocess hook replay.",
+      "fix": "Construct the child catalog record with an own-key-safe entries operation such as Object.fromEntries inside the standalone script, retaining per-catalog copies and declaration order. Add a regression through the actual subprocess with an own __proto__ seed and a normal-name control. Supply upstream-bug evidence to central bookkeeping; no ledger or Port-notes writes in this group."
+    },
+    "r03": {
+      "file": "scratchpad/effected/workspaces/PackageManagerName.ts",
+      "class": "schema",
+      "summary": "Derive declared manager membership from PackageManagerName.",
+      "fix": "Use S.is(PackageManagerName)(name) in this branch; preserve the runtime ternary, devEngines-first evidence selection and current accepted/rejected names."
+    },
+    "r04": {
+      "file": "scratchpad/effected/workspaces/DuplicateCheck.ts",
+      "class": "perf",
+      "summary": "Make importer provenance construction linear in relationships.",
+      "fix": "Record importer-to-instance pairs during root resolution, or retain importer-keyed roots and walk only the matching list. Reduce the provenance pass to O(I + R) while preserving importer order, existing record deduplication and every report value. Add a sparse-input regression for provenance and ordering."
+    },
+    "r05": {
+      "file": "scratchpad/effected/workspaces/ConfigDependencyHooks.ts",
+      "class": "schema",
+      "summary": "Give ReplayPayload canonical schema and field identity metadata.",
+      "fix": "Annotate ReplayPayload with $I.annoteSchema(\"ReplayPayload\", ...) and annotate ok, config, name, message and stack fields with identity/meaning metadata. Preserve wire shapes, optionality, strict envelope behavior and tolerant config decoding."
+    },
+    "r06": {
+      "file": "scratchpad/effected/workspaces/PackedInstall.ts",
+      "class": "schema",
+      "summary": "Preserve cause stacks in all three remaining error schemas.",
+      "fix": "Pass { includeStack: true } to all three Defect schemas, retaining each annotation and optionality. Add an encode assertion for each schema that compares the encoded cause stack with the originating Error stack. This is a correction to the schemas themselves, not a bookkeeping-only finding."
+    },
+    "r07": {
+      "file": "scratchpad/effected/workspaces/PeerCheck.ts",
+      "class": "bug",
+      "summary": "Keep absolute link targets distinct from workspace-relative paths.",
+      "fix": "Preserve absolute-path identity during normalization so it cannot match a relative manifest key; unmatched absolute targets remain uncovered with unresolvedEdge. Add the absolute-target regression and retain the existing leading-.. controls; central bookkeeping records the verified upstream-bug."
+    },
+    "r08": {
+      "file": "scratchpad/effected/workspaces/ReleaseTag.ts",
+      "class": "bug",
+      "summary": "Keep TrackingTag.forVersion total for an invalid supplied package name.",
+      "fix": "Check a supplied packageName with the existing field schema before constructing aliases and return [] if it is unrepresentable. Add empty-name, omitted-name and valid-name controls; preserve the existing numeric checks and route upstream-bug bookkeeping centrally."
+    },
+    "r09": {
+      "file": "scratchpad/effected/workspaces/PackedInstall.ts",
+      "class": "schema",
+      "summary": "Schema-own packed-install configuration, preflight and plan payloads.",
+      "fix": "Define IdentityComposer-annotated structural schemas and derive the existing type names from .Type. Preserve plain-object representations, existing tags, mutability, optional keys versus explicit undefined, accepted inputs, tolerant handling, ordering and lazy defaults. Do not add runtime rejection or eagerly resolve defaults; keep service/operation contracts and complex type utilities as TypeScript types. Use a named LiteralKit for gate actions and preserve PackSource's string-or-directory shape. Keep stream-bearing/operation-bearing contracts outside this finding. This combines the packed-plan portion of part-4/sol-2-4 with part-2/sol-2-4."
+    },
+    "r10": {
+      "file": "scratchpad/effected/workspaces/PeerCheck.ts",
+      "class": "schema",
+      "summary": "Schema-own peer options, traversal payloads and verdict variants.",
+      "fix": "Define IdentityComposer-annotated structural schemas and derive the existing type names from .Type. Preserve plain-object representations, existing tags, mutability, optional keys versus explicit undefined, accepted inputs, tolerant handling, ordering and lazy defaults. Do not add runtime rejection or eagerly resolve defaults; keep service/operation contracts and complex type utilities as TypeScript types. Define schema-backed verdict variants reusing component schemas; keep discriminator strings, null fields, unresolved-link coverage and all peer-judgment behavior."
+    },
+    "r11": {
+      "file": "scratchpad/effected/workspaces/ReleaseTag.ts",
+      "class": "schema",
+      "summary": "Schema-own tag formatting, tracking options and VersionCore.",
+      "fix": "Define IdentityComposer-annotated structural schemas and derive the existing type names from .Type. Preserve plain-object representations, existing tags, mutability, optional keys versus explicit undefined, accepted inputs, tolerant handling, ordering and lazy defaults. Do not add runtime rejection or eagerly resolve defaults; keep service/operation contracts and complex type utilities as TypeScript types. Keep VersionCore module-local and preserve version parsing and alias construction."
+    },
+    "r12": {
+      "file": "scratchpad/effected/workspaces/SourceBoundary.ts",
+      "class": "schema",
+      "summary": "Schema-own scanner options and lexical source payloads.",
+      "fix": "Define IdentityComposer-annotated structural schemas and derive the existing type names from .Type. Preserve plain-object representations, existing tags, mutability, optional keys versus explicit undefined, accepted inputs, tolerant handling, ordering and lazy defaults. Do not add runtime rejection or eagerly resolve defaults; keep service/operation contracts and complex type utilities as TypeScript types. Reuse BoundaryRule and OffenceRule; preserve optional waiver keys, raw source text, original UTF-16 offsets, code-view lengths and defaults. This includes the lexer-model portion of part-4/sol-2-4."
+    },
+    "r13": {
+      "file": "scratchpad/effected/workspaces/VersioningStrategy.ts",
+      "class": "schema",
+      "summary": "Derive detection options from the shared fixedGroups schema.",
+      "fix": "Derive an annotated VersioningDetectOptions schema by picking fixedGroups from ClassifyOptions, derive its same-name type and preserve optionality and detect behavior. Reuse the existing contract without new defaults or rejection."
+    },
+    "r14": {
+      "file": "scratchpad/effected/workspaces/ReleaseTag.ts",
+      "class": "schema",
+      "summary": "Annotate the reusable SemVer pattern check itself.",
+      "fix": "Pass check metadata with identifier $I`VersionTextPattern`, title \"SemVer text\", and a description of complete SemVer prerelease/build validity to S.isPattern. Preserve the regex and accepted inputs."
+    },
+    "r15": {
+      "file": "scratchpad/effected/workspaces/PackedInstall.ts",
+      "class": "bug",
+      "summary": "Preserve own __proto__ environment variables during scrubbing and layering.",
+      "fix": "Use R.assignProperty in both copy loops, preserving undefined removal and scrub precedence. Add an own __proto__ scrubEnv assertion and a command environment layering/removal regression alongside existing scrub controls. Route verified upstream-bug bookkeeping centrally."
+    },
+    "r16": {
+      "file": "scratchpad/effected/workspaces/WorkspaceSnapshots.ts",
+      "class": "bug",
+      "summary": "Keep own replay names in snapshot hook-version projection.",
+      "fix": "Return R.fromEntries of name/replay.version pairs. Add a snapshot regression preserving an own __proto__ replay name and normal names; retain ordering and all replay values. Central bookkeeping records the own-key upstream-bug change. Do not introduce or test the unsupported throwing claim."
+    },
+    "r17": {
+      "file": "scratchpad/effected/workspaces/WorkspaceDiscovery.ts",
+      "class": "schema",
+      "summary": "Derive discovery's dependency-map guard from the owning schema.",
+      "fix": "Use S.is of the existing dependency-field schema (or its underlying record schema when needed for equivalent missing-value handling). Preserve all-or-nothing omission on malformed maps and omitted-map defaults."
+    },
+    "r18": {
+      "file": "scratchpad/effected/workspaces/WorkspaceSnapshots.ts",
+      "class": "bug",
+      "summary": "Match historical and live Bun top-level catalog assembly.",
+      "fix": "Tolerantly normalize top-level catalog/catalogs through CatalogSet.fromBunBlocks, then merge the workspaces-object blocks with workspaces winning. Preserve malformed-input degradation; do not substitute the stricter fromManifestWorkspaces path. Add no-lockfile top-level ref/worktree parity and precedence controls; central bookkeeping owns the deviation."
+    },
+    "r19": {
+      "file": "scratchpad/effected/workspaces/WorkspaceDiscovery.ts",
+      "class": "schema",
+      "summary": "Schema-own WorkspaceDiscoveryOptions.",
+      "fix": "Define IdentityComposer-annotated structural schemas and derive the existing type names from .Type. Preserve plain-object representations, existing tags, mutability, optional keys versus explicit undefined, accepted inputs, tolerant handling, ordering and lazy defaults. Do not add runtime rejection or eagerly resolve defaults; keep service/operation contracts and complex type utilities as TypeScript types. This is the discovery-owned portion of the four-options seat finding; preserve lazy cwd and existing discovery/root validation."
+    },
+    "r20": {
+      "file": "scratchpad/effected/workspaces/WorkspaceRoot.ts",
+      "class": "schema",
+      "summary": "Schema-own root, catalog and snapshot options.",
+      "fix": "Define IdentityComposer-annotated structural schemas and derive the existing type names from .Type. Preserve plain-object representations, existing tags, mutability, optional keys versus explicit undefined, accepted inputs, tolerant handling, ordering and lazy defaults. Do not add runtime rejection or eagerly resolve defaults; keep service/operation contracts and complex type utilities as TypeScript types. Preserve root validation, inclusive stopAt, seeded-catalog behavior and lazy cwd. This is the non-discovery portion of part-3/sol-2-4, kept in the group owning all three files."
+    },
+    "r21": {
+      "file": "scratchpad/effected/workspaces/WorkspacePackage.ts",
+      "class": "schema",
+      "summary": "Schema-own DependencyDiff and its changed-version payload.",
+      "fix": "Define IdentityComposer-annotated structural schemas and derive the existing type names from .Type. Preserve plain-object representations, existing tags, mutability, optional keys versus explicit undefined, accepted inputs, tolerant handling, ordering and lazy defaults. Do not add runtime rejection or eagerly resolve defaults; keep service/operation contracts and complex type utilities as TypeScript types. Preserve mutable plain-record results and from/to meanings; this is the package-owned portion of part-3/sol-2-5."
+    },
+    "r22": {
+      "file": "scratchpad/effected/workspaces/WorkspaceLayering.ts",
+      "class": "schema",
+      "summary": "Schema-own layering/assembly payloads and share ImporterVersions.",
+      "fix": "Define IdentityComposer-annotated structural schemas and derive the existing type names from .Type. Preserve plain-object representations, existing tags, mutability, optional keys versus explicit undefined, accepted inputs, tolerant handling, ordering and lazy defaults. Do not add runtime rejection or eagerly resolve defaults; keep service/operation contracts and complex type utilities as TypeScript types. Define a schema-backed Place union; share the annotated ImporterVersions schema with WorkspaceStateSnapshot while preserving its field optionality and decode defaults. This is the remaining four-file portion of part-3/sol-2-5."
+    },
+    "r23": {
+      "file": "scratchpad/effected/workspaces/internal/sourceText.ts",
+      "class": "bug",
+      "summary": "Match cooked Unicode-escaped identifiers without losing source offsets.",
+      "fix": "Recognize Unicode escapes within identifier tokens and compare cooked whole names in references and callee matching. Retain original UTF-16 offsets and raw source views. Add escaped-process, escaped-suffix/longer-identifier and escaped-require regressions, with member-call and invalid-escape controls."
+    },
+    "r24": {
+      "file": "scratchpad/effected/workspaces/internal/sourceText.ts",
+      "class": "bug",
+      "summary": "Recognize optional standalone require calls.",
+      "fix": "Recognize ?. immediately before the argument parenthesis, then apply existing standalone-callee and whole-literal-argument checks (including the cooked-identifier repair). Add require?.(\"node:process\") regression and preserve exclusion of unrelated member calls/computed arguments."
+    },
+    "r25": {
+      "file": "scratchpad/effected/workspaces/internal/traverse.ts",
+      "class": "schema",
+      "summary": "Annotate MaxDepth's reusable lower-bound check.",
+      "fix": "Pass distinct $I.annote metadata with identifier/title/description to S.isGreaterThanOrEqualTo(1); preserve the predicate, numeric range and failure wording. Do not restore the law-forced schema conversion."
+    },
+    "r26": {
+      "file": "scratchpad/effected/workspaces/internal/configDependencyFetch.ts",
+      "class": "schema",
+      "summary": "Schema-own config-dependency fetch, resolution and grammar payloads.",
+      "fix": "Define IdentityComposer-annotated structural schemas and derive the existing type names from .Type. Preserve plain-object representations, existing tags, mutability, optional keys versus explicit undefined, accepted inputs, tolerant handling, ordering and lazy defaults. Do not add runtime rejection or eagerly resolve defaults; keep service/operation contracts and complex type utilities as TypeScript types. Use LiteralKit for FetchFailureReason and reuse HookReplaySource. Preserve required path/integrity keys that permit undefined and the intentionally lenient spec split. This is the three-file config-dependency portion of part-4/sol-2-4."
+    },
+    "r27": {
+      "file": "scratchpad/effected/workspaces/WorkspacesSync.ts",
+      "class": "schema",
+      "summary": "Schema-own sync discovery, enumeration and supporting traversal payloads.",
+      "fix": "Define IdentityComposer-annotated structural schemas and derive the existing type names from .Type. Preserve plain-object representations, existing tags, mutability, optional keys versus explicit undefined, accepted inputs, tolerant handling, ordering and lazy defaults. Do not add runtime rejection or eagerly resolve defaults; keep service/operation contracts and complex type utilities as TypeScript types. Represent existing result cases with schema unions without adding wire discriminants, reuse existing literal domains, and keep arbitrary cause values as unknown. This is the six-file sync/traversal portion of part-4/sol-2-4."
+    },
+    "r28": {
+      "file": "scratchpad/effected/workspaces/internal/roots.ts",
+      "class": "schema",
+      "summary": "Schema-own the ImporterRoots variants.",
+      "fix": "Define IdentityComposer-annotated structural schemas and derive the existing type names from .Type. Preserve plain-object representations, existing tags, mutability, optional keys versus explicit undefined, accepted inputs, tolerant handling, ordering and lazy defaults. Do not add runtime rejection or eagerly resolve defaults; keep service/operation contracts and complex type utilities as TypeScript types. Reuse ResolvedPackage and preserve own/dependencies tags, undefined-for-unresolved semantics and importer order. This is the roots portion of part-4/sol-2-4."
+    },
+    "r29": {
+      "file": "scratchpad/effected/workspaces/Workspaces.ts",
+      "class": "schema",
+      "summary": "Schema-own composite workspace options.",
+      "fix": "Define IdentityComposer-annotated structural schemas and derive the existing type names from .Type. Preserve plain-object representations, existing tags, mutability, optional keys versus explicit undefined, accepted inputs, tolerant handling, ordering and lazy defaults. Do not add runtime rejection or eagerly resolve defaults; keep service/operation contracts and complex type utilities as TypeScript types. Compose/reuse the owning option schemas; preserve one uniformly forwarded cwd/stopAt concern and snapshot seedCatalogs. This is the facade-options portion of part-4/sol-2-4; imports may depend on sibling groups' schema additions, but edits stay in Workspaces.ts."
+    }
+  }
+}

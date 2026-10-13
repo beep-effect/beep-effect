@@ -59,12 +59,16 @@
 // `MAX_NESTING_DEPTH` cap applies (a decoded hostile tree must trip a typed
 // guard, never a RangeError). Blocks and inlines share one counter.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as S from "effect/Schema";
 import * as Match from "effect/Match";
 import * as HashSet from "effect/HashSet";
 import * as A from "effect/Array";
 import type {
 	Code,
 	Definition,
+	EmphasisChar,
 	FlowContent,
 	FootnoteDefinition,
 	Frontmatter,
@@ -79,6 +83,7 @@ import type {
 	PhrasingContent,
 	Root,
 	Table,
+	TableAlign,
 } from "../MarkdownNode.ts";
 import { GuardExceeded } from "./carriers.ts";
 import { MAX_NESTING_DEPTH } from "./limits.ts";
@@ -376,20 +381,21 @@ const reDelimiterRowShaped = /^[-:| \t\v\f]+$/;
  * it reaches the end of `line`. Every test errs toward escaping: an extra
  * backslash is inert, a missing one changes the document.
  */
-const literalLineOpensBlock = (line: string, open: boolean): boolean => {
-	const char = line[0];
-	if (char === ">" || char === "<" || char === "[" || char === "|" || char === ":") {
-		return true;
-	} else if (char === "#") {
-		const run = /^#{1,6}/.exec(line)?.[0] ?? "";
-		return run.length > 0 && (run.length === line.length || isSpaceOrTab(line[run.length]));
-	} else if (char === "`" || char === "~") {
-		// A fence is 3+ of either; an open line of only 1-2 could be completed.
-		return line.startsWith(char.repeat(3)) || (open && [...line].every((each) => each === char));
-	} else if (char === "=") {
-		// A setext underline, kept escaped even on a paragraph's first line.
-		return /^=+[ \t]*$/.test(line);
-	} else if (char === "+" || char === "-" || char === "*" || char === "_") {
+const literalLineOpensBlockDispatch = Match.type<{ char: string | undefined; line: string; open: boolean }>().pipe(
+	Match.when({ char: Match.is(">", "<", "[", "|", ":") }, () => true),
+	Match.when({ char: "#" }, ({ line }) => {
+		let length = 1;
+		while (length < 6 && line[length] === "#") length += 1;
+		return length === line.length || isSpaceOrTab(line[length]);
+	}),
+	// A fence is 3+ of either; an open line of only 1-2 could be completed.
+	Match.when(
+		{ char: Match.is("`", "~") },
+		({ char, line, open }) => line.startsWith(char.repeat(3)) || (open && [...line].every((each) => each === char)),
+	),
+	// A setext underline, kept escaped even on a paragraph's first line.
+	Match.when({ char: "=" }, ({ line }) => /^=+[ \t]*$/.test(line)),
+	Match.when({ char: Match.is("+", "-", "*", "_") }, ({ char, line, open }) => {
 		const bullet = char !== "_" && (line.length === 1 || isSpaceOrTab(line[1]));
 		const breakRun = char !== "+" && isRunOf(line, char);
 		const thematic = breakRun && (open || [...line].filter((each) => each === char).length >= 3);
@@ -399,10 +405,12 @@ const literalLineOpensBlock = (line: string, open: boolean): boolean => {
 		const frontmatter = (char === "-" || char === "+") && line.startsWith(char.repeat(3));
 		const dashLine = char === "-" && reDelimiterRowShaped.test(line);
 		return bullet || thematic || frontmatter || dashLine;
-	} else {
-		return false;
-	}
-};
+	}),
+	Match.orElse(() => false),
+);
+
+const literalLineOpensBlock = (line: string, open: boolean): boolean =>
+	literalLineOpensBlockDispatch({ char: line[0], line, open });
 
 /**
  * ASCII punctuation: what a backslash escapes, so `\x` is one cell character.
@@ -508,7 +516,7 @@ const literalText = (
 /**
  * Pick the effective emphasis marker, flipping away from a forbidden char.
  */
-const emphasisMarker = (fidelity: "*" | "_" | undefined, forbidden: string | undefined): "*" | "_" => {
+const emphasisMarker = (fidelity: EmphasisChar | undefined, forbidden: string | undefined): EmphasisChar => {
 	const chosen = fidelity ?? "*";
 	return chosen === forbidden ? (chosen === "*" ? "_" : "*") : chosen;
 };
@@ -547,15 +555,18 @@ const forcesPointy = (char: string): boolean => {
  */
 const destination = (url: string): string => {
 	if (url === "" || A.some([...url], forcesPointy) || !balancedParens(url)) {
-		return `<${url.replace(/[<>\\]/g, (char) => `\\${char}`)}>`;
+		return `<${url.replace(/&/g, "&amp;").replace(/[<>\\]/g, (char) => `\\${char}`)}>`;
 	}
-	return url;
+	return url.replace(/&/g, "&amp;");
 };
 
 const balancedParens = (url: string): boolean => {
 	let open = 0;
 	for (const char of url) {
-		if (char === "(") open += 1;
+		if (char === "(") {
+			open += 1;
+			if (open > 32) return false;
+		}
 		if (char === ")") {
 			open -= 1;
 			if (open < 0) return false;
@@ -565,7 +576,7 @@ const balancedParens = (url: string): boolean => {
 };
 
 const titleSuffix = (title: string | undefined): string =>
-	title === undefined ? "" : ` "${title.replace(/[\\"]/g, (char) => `\\${char}`)}"`;
+	title === undefined ? "" : ` "${title.replace(/&/g, "&amp;").replace(/[\\"]/g, (char) => `\\${char}`)}"`;
 
 /**
  * Serialize an inline-code span with a fence run longer than any interior run.
@@ -602,19 +613,19 @@ const inlineCode = (value: string): string => {
  */
 interface JunctionGuard {
 	readonly parent: "emphasis" | "strong";
-	readonly marker: "*" | "_";
+	readonly marker: EmphasisChar;
 }
 
-const flipMarker = (marker: "*" | "_"): "*" | "_" => (marker === "*" ? "_" : "*");
+const flipMarker = (marker: EmphasisChar): EmphasisChar => (marker === "*" ? "_" : "*");
 
 /**
  * The edge-marker choice for a nested emphasis-family child.
  */
 const nestedMarker = (
 	child: "emphasis" | "strong",
-	fidelity: "*" | "_" | undefined,
+	fidelity: EmphasisChar | undefined,
 	guard: JunctionGuard,
-): "*" | "_" => {
+): EmphasisChar => {
 	if (guard.parent === "emphasis") {
 		return child === "strong" ? guard.marker : flipMarker(guard.marker);
 	}
@@ -627,6 +638,146 @@ const nestedMarker = (
  * child flips away from it; mid-run children only flip away from an actual
  * adjacent marker char.
  */
+interface InlineRun {
+	out: string;
+	atLineStart: boolean;
+	index: number;
+	textRunEnd: number;
+	textRun: string;
+	textRunOffset: number;
+	readonly children: ReadonlyArray<PhrasingContent>;
+	readonly context: InlineContext;
+	readonly state: StringifyState;
+	readonly junctionGuard: JunctionGuard | undefined;
+	lastChar: string | undefined;
+	atEdge: boolean;
+	adjacentMarker: EmphasisChar | undefined;
+}
+
+const bangGuard = (run: InlineRun): void => {
+	if (run.out.endsWith("!") && !run.out.endsWith("\\!")) {
+		run.out = `${run.out.slice(0, -1)}\\!`;
+	}
+};
+
+const serializeInline = Match.type<PhrasingContent>().pipe(
+	Match.discriminator("type")("text", (child) => (run: InlineRun) => {
+		if (run.index >= run.textRunEnd) {
+			const values: string[] = [];
+			run.textRunEnd = run.index;
+			while (run.textRunEnd < run.children.length) {
+				const following = run.children[run.textRunEnd];
+				if (following?.type !== "text") break;
+				values.push(following.value);
+				run.textRunEnd += 1;
+			}
+			run.textRun = A.join(values, "");
+			run.textRunOffset = 0;
+		}
+		run.textRunOffset += child.value.length;
+		const escaped = (child.escapeStyle === "literal" ? literalText : escapeText)(
+			child.value,
+			run.context,
+			run.atLineStart,
+			run.state.mdx,
+			run.textRun.slice(run.textRunOffset),
+			run.textRunEnd < run.children.length,
+		);
+		run.out += escaped.text;
+		run.atLineStart = escaped.atLineStart;
+	}),
+	Match.discriminator("type")("inlineCode", (child) => (run: InlineRun) => {
+		run.out += inlineCode(child.value);
+		run.atLineStart = false;
+	}),
+	Match.discriminator("type")("html", (child) => (run: InlineRun) => {
+		run.out += child.value;
+		run.atLineStart = false;
+	}),
+	Match.discriminator("type")("break", (child) => (run: InlineRun) => {
+		if (run.context.singleLine) {
+			run.out += " ";
+			run.atLineStart = false;
+		} else {
+			run.out += child.breakStyle === "spaces" ? "  \n" : "\\\n";
+			run.atLineStart = true;
+		}
+	}),
+	Match.discriminator("type")("emphasis", "strong", (child) => (run: InlineRun) => {
+		const kind = child.type;
+		let marker: EmphasisChar;
+		if (run.atEdge && run.junctionGuard !== undefined) {
+			marker = nestedMarker(kind, child.markerChar, run.junctionGuard);
+		} else {
+			marker = emphasisMarker(child.markerChar, run.adjacentMarker);
+		}
+		// The intraword-underscore restriction: `_` against an
+		// alphanumeric cannot open.
+		if (marker === "_" && run.lastChar !== undefined && /[\p{L}\p{N}]/u.test(run.lastChar)) {
+			marker = "*";
+		}
+		const markers = kind === "strong" ? marker.repeat(2) : marker;
+		const inner = serializeInlines(child.children, run.context, run.state, false, { parent: kind, marker });
+		run.out += `${markers}${inner}${markers}`;
+		run.atLineStart = false;
+	}),
+	Match.discriminator("type")("delete", (child) => (run: InlineRun) => {
+		run.out += `~~${serializeInlines(child.children, run.context, run.state, false)}~~`;
+		run.atLineStart = false;
+	}),
+	Match.discriminator("type")("link", (child) => (run: InlineRun) => {
+		bangGuard(run);
+		run.out += `[${serializeInlines(child.children, run.context, run.state, false)}](${destination(child.url)}${titleSuffix(child.title)})`;
+		run.atLineStart = false;
+	}),
+	Match.discriminator("type")("image", (child) => (run: InlineRun) => {
+		const alt = escapeText(child.alt ?? "", run.context, false, run.state.mdx, "", false).text;
+		run.out += `![${alt}](${destination(child.url)}${titleSuffix(child.title)})`;
+		run.atLineStart = false;
+	}),
+	Match.discriminator("type")("linkReference", (child) => (run: InlineRun) => {
+		// The bracket of a shortcut or collapsed reference IS its
+		// label; only a full reference carries free content. Labels go
+		// through escapeLabel so definitions agree — see escapeLabel.
+		bangGuard(run);
+		const label = escapeLabel(child.label ?? child.identifier);
+		if (child.referenceType === "full") {
+			const content = serializeInlines(child.children, run.context, run.state, false);
+			run.out += `[${content}][${label}]`;
+		} else if (child.referenceType === "collapsed") {
+			run.out += `[${label}][]`;
+		} else {
+			run.out += `[${label}]`;
+		}
+		run.atLineStart = false;
+	}),
+	Match.discriminator("type")("imageReference", (child) => (run: InlineRun) => {
+		const label = escapeLabel(child.label ?? child.identifier);
+		if (child.referenceType === "full") {
+			const alt = escapeText(child.alt ?? "", run.context, false, run.state.mdx, "", false).text;
+			run.out += `![${alt}][${label}]`;
+		} else if (child.referenceType === "collapsed") {
+			run.out += `![${label}][]`;
+		} else {
+			run.out += `![${label}]`;
+		}
+		run.atLineStart = false;
+	}),
+	Match.discriminator("type")("footnoteReference", (child) => (run: InlineRun) => {
+		run.out += `[^${escapeLabel(child.label ?? child.identifier)}]`;
+		run.atLineStart = false;
+	}),
+	Match.discriminator("type")("mdxJsxTextElement", (child) => (run: InlineRun) => {
+		run.out += serializeMdxJsxText(child, run.context, run.state);
+		run.atLineStart = false;
+	}),
+	Match.discriminator("type")("mdxTextExpression", (child) => (run: InlineRun) => {
+		run.out += mdxExpression(child.value);
+		run.atLineStart = false;
+	}),
+	Match.exhaustive,
+);
+
 const serializeInlines = (
 	children: ReadonlyArray<PhrasingContent>,
 	context: InlineContext,
@@ -634,147 +785,32 @@ const serializeInlines = (
 	startsLine: boolean,
 	junctionGuard?: JunctionGuard,
 ): string => {
-	let out = "";
-	let atLineStart = startsLine;
-	let index = 0;
-	let textRunEnd = 0;
-	let textRun = "";
-	let textRunOffset = 0;
+	const run: InlineRun = {
+		out: "",
+		atLineStart: startsLine,
+		index: 0,
+		textRunEnd: 0,
+		textRun: "",
+		textRunOffset: 0,
+		children,
+		context,
+		state,
+		junctionGuard,
+		lastChar: undefined,
+		atEdge: true,
+		adjacentMarker: undefined,
+	};
 	for (const child of children) {
 		guard(state, child);
-		const lastChar = out === "" ? undefined : out[out.length - 1];
-		const atEdge = out === "" || index === children.length - 1;
-		const adjacentMarker = lastChar === "*" || lastChar === "_" ? lastChar : undefined;
-		// A literal `!` right before a link's bracket would turn it into an
-		// image; escape it at the junction.
-		const bangGuard = (): void => {
-			if (out.endsWith("!") && !out.endsWith("\\!")) {
-				out = `${out.slice(0, -1)}\\!`;
-			}
-		};
-		Match.value(child).pipe(
-			Match.discriminator("type")("text", (child) => {
-				if (index >= textRunEnd) {
-					const values: string[] = [];
-					textRunEnd = index;
-					while (textRunEnd < children.length) {
-						const following = children[textRunEnd];
-						if (following?.type !== "text") break;
-						values.push(following.value);
-						textRunEnd += 1;
-					}
-					textRun = A.join(values, "");
-					textRunOffset = 0;
-				}
-				textRunOffset += child.value.length;
-				const escaped = (child.escapeStyle === "literal" ? literalText : escapeText)(
-					child.value,
-					context,
-					atLineStart,
-					state.mdx,
-					textRun.slice(textRunOffset),
-					textRunEnd < children.length,
-				);
-				out += escaped.text;
-				atLineStart = escaped.atLineStart;
-			}),
-			Match.discriminator("type")("inlineCode", (child) => {
-				out += inlineCode(child.value);
-				atLineStart = false;
-			}),
-			Match.discriminator("type")("html", (child) => {
-				out += child.value;
-				atLineStart = false;
-			}),
-			Match.discriminator("type")("break", (child) => {
-				if (context.singleLine) {
-					out += " ";
-					atLineStart = false;
-				} else {
-					out += child.breakStyle === "spaces" ? "  \n" : "\\\n";
-					atLineStart = true;
-				}
-			}),
-			Match.discriminator("type")("emphasis", "strong", (child) => {
-				const kind = child.type;
-				let marker: "*" | "_";
-				if (atEdge && junctionGuard !== undefined) {
-					marker = nestedMarker(kind, child.markerChar, junctionGuard);
-				} else {
-					marker = emphasisMarker(child.markerChar, adjacentMarker);
-				}
-				// The intraword-underscore restriction: `_` against an
-				// alphanumeric cannot open.
-				if (marker === "_" && lastChar !== undefined && /[\p{L}\p{N}]/u.test(lastChar)) {
-					marker = "*";
-				}
-				const run = kind === "strong" ? marker.repeat(2) : marker;
-				const inner = serializeInlines(child.children, context, state, false, { parent: kind, marker });
-				out += `${run}${inner}${run}`;
-				atLineStart = false;
-			}),
-			Match.discriminator("type")("delete", (child) => {
-				out += `~~${serializeInlines(child.children, context, state, false)}~~`;
-				atLineStart = false;
-			}),
-			Match.discriminator("type")("link", (child) => {
-				bangGuard();
-				out += `[${serializeInlines(child.children, context, state, false)}](${destination(child.url)}${titleSuffix(child.title)})`;
-				atLineStart = false;
-			}),
-			Match.discriminator("type")("image", (child) => {
-				const alt = (child.alt ?? "").replace(/[\\[\]]/g, (char) => `\\${char}`);
-				out += `![${alt}](${destination(child.url)}${titleSuffix(child.title)})`;
-				atLineStart = false;
-			}),
-			Match.discriminator("type")("linkReference", (child) => {
-				// The bracket of a shortcut or collapsed reference IS its
-				// label; only a full reference carries free content. Labels go
-				// through escapeLabel so definitions agree — see escapeLabel.
-				bangGuard();
-				const label = escapeLabel(child.label ?? child.identifier);
-				if (child.referenceType === "full") {
-					const content = serializeInlines(child.children, context, state, false);
-					out += `[${content}][${label}]`;
-				} else if (child.referenceType === "collapsed") {
-					out += `[${label}][]`;
-				} else {
-					out += `[${label}]`;
-				}
-				atLineStart = false;
-			}),
-			Match.discriminator("type")("imageReference", (child) => {
-				const label = escapeLabel(child.label ?? child.identifier);
-				if (child.referenceType === "full") {
-					const alt = (child.alt ?? "").replace(/[\\[\]]/g, (char) => `\\${char}`);
-					out += `![${alt}][${label}]`;
-				} else if (child.referenceType === "collapsed") {
-					out += `![${label}][]`;
-				} else {
-					out += `![${label}]`;
-				}
-				atLineStart = false;
-			}),
-			Match.discriminator("type")("footnoteReference", (child) => {
-				out += `[^${escapeLabel(child.label ?? child.identifier)}]`;
-				atLineStart = false;
-			}),
-			Match.discriminator("type")("mdxJsxTextElement", (child) => {
-				out += serializeMdxJsxText(child, context, state);
-				atLineStart = false;
-			}),
-			Match.discriminator("type")("mdxTextExpression", (child) => {
-				out += mdxExpression(child.value);
-				atLineStart = false;
-			}),
-			Match.exhaustive,
-		);
-		index += 1;
+		run.lastChar = run.out === "" ? undefined : run.out[run.out.length - 1];
+		run.atEdge = run.out === "" || run.index === children.length - 1;
+		run.adjacentMarker = run.lastChar === "*" || run.lastChar === "_" ? run.lastChar : undefined;
+		serializeInline(child)(run);
+		run.index += 1;
 		unguard(state);
 	}
-	return out;
+	return run.out;
 };
-
 // --- MDX serialization ------------------------------------------------------
 //
 // Oracle parity: mdast-util-mdx-jsx@3.2.0's `mdxJsxToMarkdown` with its
@@ -790,13 +826,15 @@ const serializeInlines = (
 /**
  * The tag string of every MDX node type.
  */
-const MDX_NODE_TYPES = HashSet.fromIterable<string>([
+const $I = $ScratchpadId.create("effected/markdown/internal/stringify");
+const MdxNodeType = LiteralKit([
 	"mdxJsxFlowElement",
 	"mdxJsxTextElement",
 	"mdxFlowExpression",
 	"mdxTextExpression",
 	"mdxjsEsm",
-]);
+]).annotate($I.annote("MdxNodeType", { description: "Node kinds that enable MDX text escaping." }));
+const isMdxNodeType = S.is(MdxNodeType);
 
 /**
  * The minimal structural shape the MDX presence scan needs.
@@ -811,10 +849,8 @@ interface WalkableNode {
  */
 const treeContainsMdx = (root: WalkableNode): boolean => {
 	const stack: WalkableNode[] = [root];
-	while (stack.length > 0) {
-		const node = stack.pop();
-		if (node === undefined) break;
-		if (HashSet.has(MDX_NODE_TYPES, node.type)) {
+	for (let node = stack.pop(); node !== undefined; node = stack.pop()) {
+		if (isMdxNodeType(node.type)) {
 			return true;
 		}
 		if (node.children !== undefined) {
@@ -973,6 +1009,14 @@ const hangingIndent = (content: string, marker: string): string => {
 		.join("\n");
 };
 
+/** Encode decoded info without introducing fence syntax or token boundaries. */
+const encodeCodeInfo = (value: string, language: boolean): string =>
+	value
+		.replace(/&/g, "&amp;")
+		.replace(/\\/g, "&#92;")
+		.replace(/`/g, "&#96;")
+		.replace(language ? /\s/g : /[\t\r\n\v\f]|^\s|\s$/g, (char) => `&#${char.charCodeAt(0)};`);
+
 const serializeCode = (node: Code, forceFence: boolean): string => {
 	// The parser's code values end with the block's final line terminator;
 	// it belongs to block structure, not content, on the way back out.
@@ -995,13 +1039,13 @@ const serializeCode = (node: Code, forceFence: boolean): string => {
 	for (const run of runs) longest = Math.max(longest, run.length);
 	const length = Math.max(3, node.fenceLength ?? 0, longest + 1);
 	const fence = char.repeat(length);
-	const info = `${node.lang ?? ""}${node.meta !== undefined ? ` ${node.meta}` : ""}`;
+	const info = `${encodeCodeInfo(node.lang ?? "", true)}${node.meta !== undefined ? ` ${encodeCodeInfo(node.meta, false)}` : ""}`;
 	const body = value === "" ? "" : `${value}\n`;
 	return `${fence}${info}\n${body}${fence}`;
 };
 
 const setextUnderline = (heading: Heading, content: string): string => {
-	const lastLine = content.split("\n").at(-1) ?? "";
+	const lastLine = content.slice(content.lastIndexOf("\n") + 1);
 	const char = heading.depth === 1 ? "=" : "-";
 	return char.repeat(Math.max(1, lastLine.length));
 };
@@ -1044,7 +1088,7 @@ const serializeFootnoteDefinition = (node: FootnoteDefinition, state: StringifyS
 		.join("\n");
 };
 
-const alignCell = (align: "left" | "right" | "center" | null | undefined): string =>
+const alignCell = (align: TableAlign | null | undefined): string =>
 	Match.value(align).pipe(
 		Match.when("left", (_) => ":--"),
 		Match.when("right", (_) => "--:"),
@@ -1141,138 +1185,146 @@ type Block = FlowContent | Frontmatter | MdxjsEsm | Paragraph;
 /**
  * Whether `next` interrupts a paragraph without a blank line before it.
  */
-const interruptsParagraph = (next: Block): boolean =>
-	Match.value(next).pipe(
-		Match.discriminator("type")("list", (next) => next.ordered !== true || (next.start ?? 1) === 1),
-		Match.discriminator("type")("blockquote", "thematicBreak", () => true),
-		Match.discriminator("type")("heading", (next) => next.headingStyle !== "setext"),
-		Match.discriminator("type")("code", (next) => next.fenceChar !== undefined || next.lang !== undefined),
-		Match.orElse(() => false),
-	);
+const interruptsParagraph = Match.type<Block>().pipe(
+	Match.discriminator("type")("list", (next) => next.ordered !== true || (next.start ?? 1) === 1),
+	Match.discriminator("type")("blockquote", "thematicBreak", () => true),
+	Match.discriminator("type")("heading", (next) => next.headingStyle !== "setext"),
+	Match.discriminator("type")("code", (next) => next.fenceChar !== undefined || next.lang !== undefined),
+	Match.orElse(() => false),
+);
 
 /**
  * Whether `prev` and `next` may sit on adjacent lines with no blank line
  * between them without either absorbing the other on re-parse. Drives tight
  * list items; anything not provably safe takes the blank line.
  */
-const canJoinWithoutBlank = (prev: Block, next: Block): boolean =>
-	Match.value(prev).pipe(
-		Match.discriminator("type")("heading", () => true),
-		Match.discriminator("type")("thematicBreak", () => true),
-		Match.discriminator("type")("code", (prev) => {
-			// A closed fence self-terminates. Indented code ends at the first
-			// insufficiently indented line — but another indented block would
-			// merge into it.
-			if (prev.fenceChar !== undefined || prev.lang !== undefined) return true;
-			return !(next.type === "code" && next.fenceChar === undefined && next.lang === undefined);
-		}),
-		Match.discriminator("type")("paragraph", () => interruptsParagraph(next)),
-		Match.discriminator("type")(
-			"blockquote",
-			() => next.type !== "blockquote" && next.type !== "paragraph" && interruptsParagraph(next),
-		),
-		Match.orElse(() => false),
-	);
+const canJoinWithoutBlankDispatch = Match.type<{ prev: Block; next: Block }>().pipe(
+	Match.when({ prev: { type: "heading" } }, () => true),
+	Match.when({ prev: { type: "thematicBreak" } }, () => true),
+	Match.when({ prev: { type: "code" } }, ({ prev, next }) => {
+		// A closed fence self-terminates. Indented code ends at the first
+		// insufficiently indented line — but another indented block would
+		// merge into it.
+		if (prev.fenceChar !== undefined || prev.lang !== undefined) return true;
+		return !(next.type === "code" && next.fenceChar === undefined && next.lang === undefined);
+	}),
+	Match.when({ prev: { type: "paragraph" } }, ({ next }) => interruptsParagraph(next)),
+	Match.when(
+		{ prev: { type: "blockquote" } },
+		({ next }) => next.type !== "blockquote" && next.type !== "paragraph" && interruptsParagraph(next),
+	),
+	Match.orElse(() => false),
+);
+
+const canJoinWithoutBlank = (prev: Block, next: Block): boolean => canJoinWithoutBlankDispatch({ prev, next });
 
 /**
  * Serialize a sequence of flow blocks, handling sibling adjacency. With
  * `tight`, safe pairs join with a bare newline (tight-list items).
  */
+interface BlockRun {
+	readonly parts: string[];
+	readonly state: StringifyState;
+	previous: Block | undefined;
+	previousListMarker: string | undefined;
+}
+
+const serializeBlock = Match.type<Block>().pipe(
+	Match.discriminator("type")("paragraph", (child) => (run: BlockRun) => {
+		run.parts.push(serializeInlines(child.children, FLOW_CONTEXT, run.state, true));
+		run.previousListMarker = undefined;
+	}),
+	Match.discriminator("type")("heading", (child) => (run: BlockRun) => {
+		run.parts.push(serializeHeading(child, run.state));
+		run.previousListMarker = undefined;
+	}),
+	Match.discriminator("type")("thematicBreak", (child) => (run: BlockRun) => {
+		run.parts.push((child.markerChar ?? "*").repeat(3));
+		run.previousListMarker = undefined;
+	}),
+	Match.discriminator("type")("code", (child) => (run: BlockRun) => {
+		// An indented block right after a list would be absorbed into
+		// its last item on re-parse; force a fence there.
+		run.parts.push(serializeCode(child, run.previous?.type === "list"));
+		run.previousListMarker = undefined;
+	}),
+	Match.discriminator("type")("html", (child) => (run: BlockRun) => {
+		run.parts.push(child.value);
+		run.previousListMarker = undefined;
+	}),
+	Match.discriminator("type")("blockquote", (child) => (run: BlockRun) => {
+		// A blockquote's `> ` prefix owns indentation from here in, so
+		// the JSX indent counter restarts (the oracle's inferDepth
+		// break at blockquote/listItem).
+		const savedJsxDepth = run.state.jsxDepth;
+		run.state.jsxDepth = 0;
+		const inner = serializeBlocks(child.children, run.state);
+		run.state.jsxDepth = savedJsxDepth;
+		run.parts.push(prefixLines(inner, "> ", ">"));
+		run.previousListMarker = undefined;
+	}),
+	Match.discriminator("type")("list", (child) => (run: BlockRun) => {
+		const flipped =
+			run.previousListMarker !== undefined && run.previousListMarker === effectiveListMarker(child, false);
+		run.parts.push(serializeList(child, run.state, flipped));
+		run.previousListMarker = effectiveListMarker(child, flipped);
+	}),
+	Match.discriminator("type")("definition", (child) => (run: BlockRun) => {
+		run.parts.push(serializeDefinition(child));
+		run.previousListMarker = undefined;
+	}),
+	Match.discriminator("type")("footnoteDefinition", (child) => (run: BlockRun) => {
+		run.parts.push(serializeFootnoteDefinition(child, run.state));
+		run.previousListMarker = undefined;
+	}),
+	Match.discriminator("type")("table", (child) => (run: BlockRun) => {
+		run.parts.push(serializeTable(child, run.state));
+		run.previousListMarker = undefined;
+	}),
+	Match.discriminator("type")("frontmatter", (child) => (run: BlockRun) => {
+		const open = child.format === "toml" ? "+++" : child.format === "json" ? "---json" : "---";
+		const close = child.format === "toml" ? "+++" : "---";
+		run.parts.push(child.value === "" ? `${open}\n${close}` : `${open}\n${child.value}\n${close}`);
+		run.previousListMarker = undefined;
+	}),
+	Match.discriminator("type")("mdxJsxFlowElement", (child) => (run: BlockRun) => {
+		run.parts.push(serializeMdxJsxFlow(child, run.state));
+		run.previousListMarker = undefined;
+	}),
+	Match.discriminator("type")("mdxFlowExpression", (child) => (run: BlockRun) => {
+		run.parts.push(mdxExpression(child.value));
+		run.previousListMarker = undefined;
+	}),
+	Match.discriminator("type")("mdxjsEsm", (child) => (run: BlockRun) => {
+		// Verbatim, the oracle's handler: the value IS the emitted
+		// block, statement terminators included as written.
+		run.parts.push(child.value);
+		run.previousListMarker = undefined;
+	}),
+	Match.exhaustive,
+);
+
 const serializeBlocks = (children: ReadonlyArray<Block>, state: StringifyState, tight = false): string => {
 	const parts: string[] = [];
 	const nodes: Block[] = [];
 	let previous: Block | undefined;
-	let previousListMarker: string | undefined;
+	const run: BlockRun = { parts, state, previous: undefined, previousListMarker: undefined };
 	for (const child of children) {
 		guard(state, child);
-		Match.value(child).pipe(
-			Match.discriminator("type")("paragraph", (child) => {
-				parts.push(serializeInlines(child.children, FLOW_CONTEXT, state, true));
-				previousListMarker = undefined;
-			}),
-			Match.discriminator("type")("heading", (child) => {
-				parts.push(serializeHeading(child, state));
-				previousListMarker = undefined;
-			}),
-			Match.discriminator("type")("thematicBreak", (child) => {
-				parts.push((child.markerChar ?? "*").repeat(3));
-				previousListMarker = undefined;
-			}),
-			Match.discriminator("type")("code", (child) => {
-				// An indented block right after a list would be absorbed into
-				// its last item on re-parse; force a fence there.
-				parts.push(serializeCode(child, previous?.type === "list"));
-				previousListMarker = undefined;
-			}),
-			Match.discriminator("type")("html", (child) => {
-				parts.push(child.value);
-				previousListMarker = undefined;
-			}),
-			Match.discriminator("type")("blockquote", (child) => {
-				// A blockquote's `> ` prefix owns indentation from here in, so
-				// the JSX indent counter restarts (the oracle's inferDepth
-				// break at blockquote/listItem).
-				const savedJsxDepth = state.jsxDepth;
-				state.jsxDepth = 0;
-				const inner = serializeBlocks(child.children, state);
-				state.jsxDepth = savedJsxDepth;
-				parts.push(prefixLines(inner, "> ", ">"));
-				previousListMarker = undefined;
-			}),
-			Match.discriminator("type")("list", (child) => {
-				const flipped = previousListMarker !== undefined && previousListMarker === effectiveListMarker(child, false);
-				parts.push(serializeList(child, state, flipped));
-				previousListMarker = effectiveListMarker(child, flipped);
-			}),
-			Match.discriminator("type")("definition", (child) => {
-				parts.push(serializeDefinition(child));
-				previousListMarker = undefined;
-			}),
-			Match.discriminator("type")("footnoteDefinition", (child) => {
-				parts.push(serializeFootnoteDefinition(child, state));
-				previousListMarker = undefined;
-			}),
-			Match.discriminator("type")("table", (child) => {
-				parts.push(serializeTable(child, state));
-				previousListMarker = undefined;
-			}),
-			Match.discriminator("type")("frontmatter", (child) => {
-				const open = child.format === "toml" ? "+++" : child.format === "json" ? "---json" : "---";
-				const close = child.format === "toml" ? "+++" : "---";
-				parts.push(child.value === "" ? `${open}\n${close}` : `${open}\n${child.value}\n${close}`);
-				previousListMarker = undefined;
-			}),
-			Match.discriminator("type")("mdxJsxFlowElement", (child) => {
-				parts.push(serializeMdxJsxFlow(child, state));
-				previousListMarker = undefined;
-			}),
-			Match.discriminator("type")("mdxFlowExpression", (child) => {
-				parts.push(mdxExpression(child.value));
-				previousListMarker = undefined;
-			}),
-			Match.discriminator("type")("mdxjsEsm", (child) => {
-				// Verbatim, the oracle's handler: the value IS the emitted
-				// block, statement terminators included as written.
-				parts.push(child.value);
-				previousListMarker = undefined;
-			}),
-			Match.exhaustive,
-		);
-		previous = child;
+		serializeBlock(child)(run);
+		run.previous = child;
 		nodes.push(child);
 		unguard(state);
 	}
 	if (!tight) return parts.join("\n\n");
 	let out = "";
-	for (let index = 0; index < parts.length; index += 1) {
-		if (index > 0) {
-			const prev = nodes[index - 1];
-			const next = nodes[index];
-			if (prev !== undefined && next !== undefined) {
-				out += canJoinWithoutBlank(prev, next) ? "\n" : "\n\n";
-			}
+	previous = undefined;
+	for (const [node, part] of A.zip(nodes, parts)) {
+		if (previous !== undefined) {
+			out += canJoinWithoutBlank(previous, node) ? "\n" : "\n\n";
 		}
-		out += parts[index] ?? "";
+		out += part;
+		previous = node;
 	}
 	return out;
 };

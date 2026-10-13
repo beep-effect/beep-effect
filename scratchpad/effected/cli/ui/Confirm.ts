@@ -1,8 +1,11 @@
 import * as Match from "effect/Match";
+import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as S from "effect/Schema";
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as R from "effect/Record";
 import type { ReactElement } from "react";
 import { Fmt } from "../Fmt.ts";
 import type { Screen } from "./CliUi.ts";
@@ -19,11 +22,29 @@ import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/cli/ui/Confirm");
 
-class DuplicateToggleKeyError extends S.TaggedError<DuplicateToggleKeyError>($I`DuplicateToggleKeyError`)(
+/**
+ * Reports a repeated confirmation toggle key that would make the result ambiguous.
+ *
+ * **Example** (Describe the failure)
+ *
+ * ```ts
+ * import { DuplicateToggleKeyError } from "./Confirm.ts"
+ * const error = DuplicateToggleKeyError.make({ message: "Toggle key extra repeats." })
+ * console.log(error._tag) // DuplicateToggleKeyError
+ * ```
+ *
+ * @internal
+ * @category errors
+ * @since 0.0.0
+ */
+export class DuplicateToggleKeyError extends S.TaggedError<DuplicateToggleKeyError>($I`DuplicateToggleKeyError`)(
 	"DuplicateToggleKeyError",
 	{
-		message: S.String,
+		message: S.String.annotate($I.annote("DuplicateToggleKeyError.message", {
+			description: "Identifies the repeated toggle key that makes the confirmation result ambiguous.",
+		})),
 	},
+	$I.annote("DuplicateToggleKeyError", { description: "Confirmation toggles must have unique result keys." }),
 ) {}
 
 /**
@@ -96,11 +117,30 @@ export interface ConfirmState<K extends string> {
 /**
  * What a key does in a {@link Confirm}.
  *
+ * **Example** (Recognize a submission action)
+ *
+ * ```ts
+ * import { ConfirmAction } from "@beep/scratchpad/effected/cli/ui/Confirm"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(ConfirmAction)("submit")) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ConfirmAction = LiteralKit(["up", "down", "toggle", "yes", "no", "flip", "submit", "cancel"]).annotate(
+	$I.annote("ConfirmAction", { description: "The row, answer, toggle and submission actions of a confirmation." }),
+);
+
+/**
+ * A viewport or interaction action accepted by {@link ConfirmAction}.
+ *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export type ConfirmAction = "up" | "down" | "toggle" | "yes" | "no" | "flip" | "submit" | "cancel";
+export type ConfirmAction = typeof ConfirmAction.Type;
 
 /**
  * Configures the starting answer and extra toggle rows for {@link Confirm.init}.
@@ -166,8 +206,9 @@ const init = <K extends string>(options: ConfirmInitOptions<K> = {}): ConfirmSta
 	return { confirmed: options.initial ?? false, row: 0, toggles, submitted: false };
 };
 
-const step = <K extends string>(state: ConfirmState<K>, action: ConfirmAction): ConfirmState<K> =>
-	Match.value(action).pipe(
+const step = <K extends string>(state: ConfirmState<K>, action: ConfirmAction): ConfirmState<K> => {
+	if (state.submitted) return state;
+	return Match.value(action).pipe(
 		Match.when("up", (): ConfirmState<K> => ({ ...state, row: Math.max(0, state.row - 1) })),
 		Match.when(
 			"down",
@@ -193,19 +234,15 @@ const step = <K extends string>(state: ConfirmState<K>, action: ConfirmAction): 
 		Match.when("cancel", (): ConfirmState<K> => state),
 		Match.exhaustive,
 	);
-
-const result = <K extends string>(state: ConfirmState<K>): ConfirmResult<K> => {
-	const toggles: Partial<Record<K, boolean>> = {};
-	for (const toggle of state.toggles) {
-		Object.defineProperty(toggles, toggle.key, {
-			value: toggle.value,
-			enumerable: true,
-			configurable: true,
-			writable: true,
-		});
-	}
-	return { confirmed: state.confirmed, toggles };
 };
+
+function result<K extends string>(state: ConfirmState<K>): ConfirmResult<K>;
+function result(state: ConfirmState<string>): ConfirmResult<string> {
+	const toggles: Partial<Record<string, boolean>> = R.fromEntries(
+		A.map(state.toggles, (toggle): readonly [string, boolean] => [toggle.key, toggle.value]),
+	);
+	return { confirmed: state.confirmed, toggles };
+}
 
 /**
  * The bindings; with no toggles the row and toggle keys stay bound (they do nothing) but leave the help line.
@@ -395,7 +432,7 @@ export class Confirm {
 			key: toggle.key,
 		}));
 		const numberOf = MutableHashMap.fromIterable(
-			state.toggles.map((toggle, index) => [toggle.key, index] as const),
+			toggleRows.map((row, index) => [row, index] as const),
 		);
 		const ellipsis = { ellipsis: glyphs.ellipsis };
 		const lead = state.row === 0 ? glyphs.arrow : " ".repeat(Fmt.width(glyphs.arrow));
@@ -429,12 +466,12 @@ export class Confirm {
 						state: Viewport.init(state.toggles.length, state.toggles.length, Math.max(0, state.row - 1)),
 						reserved: RESERVED,
 						renderRow: (row: ViewportRow) => {
-							const index =
-								row._tag === "Item" ? O.getOrElse(MutableHashMap.get(numberOf, row.key), () => 0) : 0;
-							const toggle = state.toggles[index];
+							// Viewport returns the Item objects built from these validated toggles.
+							const index = O.getOrThrow(MutableHashMap.get(numberOf, row));
+							const toggle = A.getUnsafe(state.toggles, index);
 							return react.createElement(Toggle.View, {
-								label: toggle?.label ?? "",
-								value: toggle?.value ?? false,
+								label: toggle.label,
+								value: toggle.value,
 								highlighted: state.row === index + 1,
 							});
 						},

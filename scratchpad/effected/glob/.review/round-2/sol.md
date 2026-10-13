@@ -1,0 +1,9 @@
+### sol-2-1
+- file: scratchpad/effected/glob/internal/braceExpansion.ts:272
+- class: bug   severity: required
+- standard: D11; D9 and section 14 (`upstream-bug` supported by reproduction); `GlobPattern.compileResult`’s documented totality; `scratchpad/test/glob/hostility.test.ts:1–4` requires hostile input to complete without a hang or OOM.   evidence: Separate read-only subprocess probes against the lab and pinned oracle called `expand("{9007199254740992..9007199254740992}", { max: 1 })`. Both printed the start marker, remained in expansion after 50 ms, and were killed by the parent watchdog. The arithmetic establishes non-termination: the budget calculation at line 265 yields `total = 1`, but JavaScript evaluates `9007199254740992 + 1 === 9007199254740992`. Consequently, `i += incr` never advances, `test(i, y)` stays true, and `N.push(c)` runs indefinitely. Neither the round-1 inventory nor the recorded deviations covers this case.
+- failure: A 36-character numeric-range pattern bypasses the expansion budget and causes unbounded CPU and memory growth. The affected engine also runs during facade compilation and schema validation, so `GlobPattern.compileResult`, `GlobSet.compileResult`, and schema construction can hang on this input. This is an inherited upstream bug, distinct from the closed round-1 finding about preserving an overflowing expansion count in the typed failure channel.
+- fix: Bound numeric-sequence generation by the validated member count instead of relying solely on repeated floating-point addition. Reject non-finite member counts through the existing typed guard before entering the loop. Preserve ordinary range ordering and padding, and add regressions for the singleton above and overflowing endpoints. Record the verified upstream-bug deviation in the ledger and README under section 14.
+
+REQUIRED: 1
+BACKLOG: 0

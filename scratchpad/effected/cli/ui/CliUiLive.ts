@@ -295,9 +295,26 @@ interface Run<S> {
 
 const $I = $ScratchpadId.create("effected/cli/ui/CliUiLive");
 
-class LiveTickError extends S.TaggedError<LiveTickError>($I`LiveTickError`)("LiveTickError", {
-	message: S.String,
-}) {}
+/**
+ * Reports a live-view tick interval that is not positive and finite.
+ *
+ * **Example** (Describe the failure)
+ *
+ * ```ts
+ * import { LiveTickError } from "./CliUiLive.ts"
+ * const error = LiveTickError.make({ message: "tickMillis must be positive and finite." })
+ * console.log(error._tag) // LiveTickError
+ * ```
+ *
+ * @internal
+ * @category errors
+ * @since 0.0.0
+ */
+export class LiveTickError extends S.TaggedError<LiveTickError>($I`LiveTickError`)("LiveTickError", {
+	message: S.String.annotate($I.annote("LiveTickError.message", {
+		description: "Identifies the invalid tick interval and its positive, finite millisecond requirement.",
+	})),
+}, $I.annote("LiveTickError", { description: "A live view tick interval must be positive and finite." })) {}
 
 const TICK_INVALID = (tickMillis: number): string =>
 	`@effected/cli/ui: CliUi.live's tickMillis must be a positive, finite number of milliseconds, not ${tickMillis}`;
@@ -629,7 +646,8 @@ export const live = Effect.fn("live")(function* <E, S>(
 						? Effect.void
 						: Effect.andThen(
 								Effect.sync(() => {
-									if (current.mounted?.scope === scope) current.mounted = undefined;
+									// Only this controller acquires the run; its finalizer interrupts it before taking it.
+									current.mounted = undefined;
 								}),
 								Scope.close(scope, exit),
 							),
@@ -675,22 +693,9 @@ export const live = Effect.fn("live")(function* <E, S>(
 			if (options.mode === "hosted") return Effect.void;
 			return options.final === undefined ? printFrame(current) : printFinal(current, options.final);
 		}
-		return Effect.suspend(() => {
-			// A frame that threw as the run ended is said here, once, after the unmount, as any other degrade is.
-			const failed = current.failed;
-			const warned =
-				failed === undefined || current.degraded
-					? Effect.void
-					: Effect.suspend(() => {
-							current.degraded = true;
-							return Effect.logWarning(DEGRADED(failed.error));
-						});
-			// Read after the unmount, which is what settles whether anything of the run is left on the terminal.
-			return Effect.andThen(
-				warned,
-				Effect.suspend(() => (current.painted ? Effect.void : printFrame(current))),
-			);
-		});
+		// Mount and draw check every boundary report before the controller ends a run. Unmount removes the
+		// boundaries synchronously, so it cannot introduce another render failure for this run.
+		return Effect.suspend(() => (current.painted ? Effect.void : printFrame(current)));
 	});
 
 	const beginRun: Effect.Effect<void> = Effect.suspend(() => {
@@ -821,7 +826,7 @@ export const live = Effect.fn("live")(function* <E, S>(
 	// A stream's pull is made in the caller's scope, as the stream's resources are.
 	const streamPull = stream === undefined ? undefined : yield* Stream.toPull(stream);
 	const offerEvents = (chunk: ReadonlyArray<E>): Effect.Effect<void> =>
-		chunk.length === 0 ? Effect.void : Queue.offer(inbox, { _tag: "Events", chunk });
+		Queue.offer(inbox, { _tag: "Events", chunk });
 
 	/**
 	 * One take from a subscription, taken directly (no stream machinery), true once its events have ended: its
@@ -851,7 +856,7 @@ export const live = Effect.fn("live")(function* <E, S>(
 							O.isSome(ended) &&
 							chunk.length === 1 &&
 							chunk[0] === ended.value &&
-							O.getOrElse(PubSub.remainingUnsafe(sub), () => 0) === 0;
+							sub.pipe(PubSub.remainingUnsafe, O.getOrThrow) === 0;
 						if (final) finalTaken = true;
 						return Effect.as(offerEvents(chunk), final);
 					}),
@@ -870,9 +875,11 @@ export const live = Effect.fn("live")(function* <E, S>(
 					// A stream that dies tells the controller, which would otherwise wait for an event that never comes.
 					Effect.catchCauseIf((cause) => !Cause.hasInterruptsOnly(cause), (cause) => Queue.offer(inbox, { _tag: "Died", cause })),
 				)
-			: subscription === undefined ? Effect.void : Effect.gen(function* () {
+			: Effect.gen(function* () {
+					// The input union has exactly one of a stream pull and a subscription.
+					const sub = O.getOrThrow(O.fromUndefinedOr(subscription));
 					let ended = false;
-					while (!ended) ended = yield* subscriptionStep(subscription);
+					while (!ended) ended = yield* subscriptionStep(sub);
 					yield* Queue.offer(inbox, { _tag: "Ended" });
 				});
 	// Started at once, so its first pull (which subscribes a PubSub-backed stream) happens before `live` returns.

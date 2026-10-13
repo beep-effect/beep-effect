@@ -36,6 +36,7 @@
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
+import * as S from "effect/Schema";
 import { balanced } from "./balancedMatch.ts";
 import { EXPANSION_MAX, GuardExceeded, MAX_NESTING_DEPTH, assertCap } from "./limits.ts";
 
@@ -100,7 +101,7 @@ const parseCommaParts = (str: string, depth: number): Array<string> => {
 	p[p.length - 1] += `{${body}}`;
 	const postParts = parseCommaParts(post, depth + 1);
 	if (post.length !== 0) {
-		p[p.length - 1] += postParts.shift() ?? "";
+		p[p.length - 1] += postParts.splice(0, 1).join("");
 		p.push(...postParts);
 	}
 
@@ -198,9 +199,6 @@ const expand_ = (str: string, max: number, isTopInput: boolean, depth: number): 
 
 		if (/\$$/.test(m.pre)) {
 			const post: Array<string> = m.post.length !== 0 ? expand_(m.post, max, false, depth + 1) : [""];
-			if (post.length > max) {
-				throw GuardExceeded.fromReason("ExpansionBudgetExceeded", max, post.length);
-			}
 			for (const p of post) {
 				expansions.push(`${pre}{${m.body}}${p}`);
 			}
@@ -262,17 +260,19 @@ const expand_ = (str: string, max: number, isTopInput: boolean, depth: number): 
 			}
 			const pad = n.some(isPadded);
 
-			// Budget check up front: the member count is exactly computable, so an
-			// over-budget sequence trips before any work is done (upstream
-			// truncated the loop at max instead).
-			const total = Math.floor(Math.abs(y - x) / Math.abs(incr)) + 1;
+			// Validate the count before generating members. Overflow can produce
+			// Infinity or NaN; both exceed the budget, measured as positive infinity.
+			const count = Math.floor(Math.abs(y - x) / Math.abs(incr)) + 1;
+			const total = S.is(S.Finite)(count) ? count : Infinity;
 			if (total > max) {
 				throw GuardExceeded.fromReason("ExpansionBudgetExceeded", max, total);
 			}
 
 			N = [];
 
-			for (let i = x; test(i, y); i += incr) {
+			// Floating-point addition can stop advancing, even at a singleton's
+			// endpoint. The validated count bounds work independently of progress.
+			for (let i = x, member = 0; member < total && test(i, y); i += incr, member++) {
 				let c: string;
 				if (isAlphaSequence) {
 					c = String.fromCharCode(i);

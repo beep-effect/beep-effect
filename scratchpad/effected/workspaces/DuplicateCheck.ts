@@ -359,10 +359,10 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 		const index = indexInstances(lockfile);
 		const { byId } = index;
 
-		// Roots taken directly by an importer entry (no workspace row), keyed by
-		// the instance they resolved to. A workspace row's edges are attributed
-		// below, when the walk leaves the row.
-		const importerRoots = MutableHashMap.empty<string, Array<string>>();
+		// Roots taken directly by importer entries (no workspace row), recorded
+		// in importer order so provenance visits each relationship only once.
+		// A workspace row's edges are attributed below, when the walk leaves it.
+		const importerRoots: Array<readonly [instanceId: string, importerPath: string]> = [];
 		const unresolved: Array<string> = [];
 		const queue: Array<ResolvedPackage> = [];
 
@@ -377,9 +377,7 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 				continue;
 			}
 			for (const instance of roots.instances) {
-				const paths = O.getOrElse(MutableHashMap.get(importerRoots, instance.instanceId), (): Array<string> => []);
-				paths.push(importer.path);
-				MutableHashMap.set(importerRoots, instance.instanceId, paths);
+				importerRoots.push([instance.instanceId, importer.path]);
 				queue.push(instance);
 			}
 		}
@@ -387,9 +385,7 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 		// One global walk: reachability is a property of the graph, not of any
 		// single importer, and every reached edge is a dependent to record.
 		const reached = MutableHashSet.empty<string>();
-		while (queue.length > 0) {
-			const current = queue.shift();
-			if (current === undefined) break;
+		for (const current of queue) {
 			if (MutableHashSet.has(reached, current.instanceId)) continue;
 			MutableHashSet.add(reached, current.instanceId);
 			for (const targetId of R.values(current.resolved)) {
@@ -412,10 +408,8 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 			list.push(dependent);
 			MutableHashMap.set(dependents, targetId, list);
 		};
-		for (const importer of lockfile.importers) {
-			for (const [instanceId, paths] of importerRoots) {
-				if (paths.includes(importer.path)) record(instanceId, { _tag: "importer", path: importer.path });
-			}
+		for (const [instanceId, path] of importerRoots) {
+			record(instanceId, { _tag: "importer", path });
 		}
 		for (const pkg of lockfile.packages) {
 			if (!MutableHashSet.has(reached, pkg.instanceId)) continue;

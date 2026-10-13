@@ -1,0 +1,56 @@
+{
+  "module": "memfs",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/memfs/internal/volume.ts"
+      ],
+      "tests": [
+        "scratchpad/test/memfs/internal/volume.coverage.test.ts",
+        "scratchpad/test/memfs/VolumePathsOrder.test.ts"
+      ],
+      "findings": [
+        "grok-2-1",
+        "sol-2-2",
+        "fable-2-1"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [],
+      "tests": [
+        "scratchpad/test/memfs/FileSystemContract.ts"
+      ],
+      "findings": [
+        "sol-2-1"
+      ]
+    }
+  ],
+  "findings": {
+    "grok-2-1": {
+      "file": "scratchpad/effected/memfs/internal/volume.ts",
+      "class": "bug",
+      "summary": "withSystemErrorPath defects on reachable typed errors whose causes are not ErrnoException.",
+      "fix": "Restore conditional non-errno cause passthrough, retaining S.is(ErrnoException) and ErrnoException.from for errno causes. Add a typed InvalidData/no-defect regression for writeFile(\"/missing/.\", bytes) in internal/volume.coverage.test.ts; cover deterministic non-errno allocation failure without a huge allocation if a local seam permits it."
+    },
+    "sol-2-1": {
+      "file": "scratchpad/test/memfs/FileSystemContract.ts",
+      "class": "test",
+      "summary": "An unforced S3 rewrite removed the upstream assertion that an unscoped temporary directory survives an inner scope closing.",
+      "fix": "Restore the upstream inner Effect.scoped around makeTempDirectory, the first stat assertion and the returned path; leave the second stat assertion outside the scope. Preserve imports and independent law-forced assertion migrations."
+    },
+    "sol-2-2": {
+      "file": "scratchpad/effected/memfs/internal/volume.ts",
+      "class": "schema",
+      "summary": "The named isOpenFlag runtime constraint is a handwritten literal predicate without an executable schema.",
+      "fix": "Define an identity-annotated internal OpenFlag LiteralKit with exactly r, r+, w, wx, w+, wx+, a, ax, a+ and ax+; derive isOpenFlag with S.is(OpenFlag). Preserve accepted flags and BadArgument behavior; extend internal/volume.coverage.test.ts open-flag regressions using the sanctioned deliberatelyInvalid helper for invalid input."
+    },
+    "fable-2-1": {
+      "file": "scratchpad/effected/memfs/internal/volume.ts",
+      "class": "perf",
+      "summary": "Full inode schema guards introduce linear validation of unrelated directory entries into constant-time inode-kind checks.",
+      "fix": "Replace kind-only S.is(DirectoryInode)/S.is(FileInode) uses at lines 403, 515, 696, 1057, 1634, 1643 and 2947 with existing InodeEntry.isAnyOf discriminant guards. Preserve typed narrowing, invariant checks, inode construction and unknown-error S.is(ErrnoException) checks. Add high-fanout descriptor/namespace and inspection-order regressions in internal/volume.coverage.test.ts and VolumePathsOrder.test.ts without machine-sensitive timing thresholds."
+    }
+  }
+}

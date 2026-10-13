@@ -3,7 +3,8 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as S from "effect/Schema";
-import { BoundaryFixture, BoundaryRule as BoundaryRuleModel, OffenceRule as OffenceRuleModel } from "../../effected/workspaces/SourceBoundary.ts";
+import * as Effect from "effect/Effect";
+import { ReferenceOptions, ScanOptions, BoundaryFixture, BoundaryRule as BoundaryRuleModel, OffenceRule as OffenceRuleModel } from "../../effected/workspaces/SourceBoundary.ts";
 import { assert, describe, it } from "@effect/vitest";
 import type { BoundaryRule, OffenceRule } from "../../effected/workspaces/testing.ts";
 import { SourceBoundary } from "../../effected/workspaces/testing.ts";
@@ -396,4 +397,66 @@ describe("SourceBoundary review regressions", () => {
 			assert.deepStrictEqual(SourceBoundary.check("f.ts", text, ["process"]).map((o) => o.label), ["f.ts:2:1 process process"]);
 		});
 	}
+});
+
+
+describe("SourceBoundary round-2 scanner contracts", () => {
+	it.effect("keeps option payloads plain, optional and free of eager defaults", () =>
+		Effect.gen(function* () {
+			const options: ScanOptions = { root: "/repo/src", rules: ["process"] };
+			assert.deepStrictEqual(yield* S.decodeEffect(ScanOptions)(options), options);
+			assert.deepStrictEqual(yield* S.decodeEffect(ReferenceOptions)({}), {});
+			const explicit: ScanOptions = {
+				...options,
+				ignoreTokens: undefined,
+				allow: undefined,
+				extensions: undefined,
+				allowRules: { process: undefined, forbidImports: ["allowed.ts"] },
+			};
+			assert.deepStrictEqual(yield* S.decodeEffect(ScanOptions)(explicit), explicit);
+			assert.isTrue(S.is(ScanOptions)({ ...options, allowRules: undefined }));
+		}));
+
+	it("flags escaped process reads and spares longer cooked identifiers", () => {
+		assert.isTrue(SourceBoundary.referencesProcess("const p = \\u0070rocess;"));
+		assert.isFalse(SourceBoundary.referencesProcess("const process\\u0078 = 1; process\\u0078;"));
+		assert.isFalse(SourceBoundary.referencesProcess("child.\\u0070rocess;"));
+		assert.isFalse(SourceBoundary.referencesProcess("process\\u00ZZ;"));
+		assert.deepStrictEqual(
+			SourceBoundary.check("src/a.ts", 'const label = "😀";\r\n\tconst p = \\u{70}rocess;', ["process"]).map((offence) => offence.label),
+			["src/a.ts:2:12 process process"],
+		);
+	});
+
+	it("uses the raw escaped console width when sparing stderr methods", () => {
+		assert.deepStrictEqual(SourceBoundary.check("f.ts", '\\u0063onsole.warn("x");', ["console-stdout"]), []);
+		assert.deepStrictEqual(
+			SourceBoundary.check("f.ts", '\\u{63}onsole.log("x");', ["console-stdout"]).map((offence) => offence.label),
+			["f.ts:1:1 console-stdout console.log"],
+		);
+	});
+
+	it("flags escaped and optional standalone require imports at the raw quote locations", () => {
+		const text = '\\u0072equire("node:process");\r\nrequire?.("node:process");';
+		assert.deepStrictEqual(SourceBoundary.importSpecifiers(text), ["node:process", "node:process"]);
+		assert.isTrue(SourceBoundary.importsNode(text, "process"));
+		assert.deepStrictEqual(
+			SourceBoundary.check("src/a.ts", text, ["node:process"]).map((offence) => offence.label),
+			["src/a.ts:1:14 node:process node:process", "src/a.ts:2:11 node:process node:process"],
+		);
+		assert.deepStrictEqual(SourceBoundary.check("f.ts", text, [{ forbidImports: ["node:*"] }]).map((offence) => offence.detail), ["node:process", "node:process"]);
+	});
+
+	it("spares escaped member and computed optional require calls", () => {
+		const text = [
+			'obj.\\u0072equire("node:process");',
+			'obj?.require?.("node:process");',
+			'require?.("node:process" + suffix);',
+			'require\\u0078?.("node:process");',
+			'\\u00ZZrequire?.("node:process");',
+		].join("\n");
+		assert.deepStrictEqual(SourceBoundary.importSpecifiers(text), []);
+		assert.isFalse(SourceBoundary.importsNode(text, "process"));
+		assert.deepStrictEqual(SourceBoundary.check("f.ts", text, ["node:process"]), []);
+	});
 });

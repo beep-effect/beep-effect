@@ -90,8 +90,9 @@ function resolveTaggedScalar(rawValue: string, tag: string): unknown {
 	return Match.value(tag).pipe(
 		Match.when(Match.is("!!str", "tag:yaml.org,2002:str"), () => rawValue),
 		Match.when(Match.is("!!int", "tag:yaml.org,2002:int"), () => {
-			if (OCT_RE.test(rawValue)) return Number.parseInt(rawValue.slice(2), 8);
-			if (HEX_RE.test(rawValue)) return Number.parseInt(rawValue.slice(2), 16);
+			if (OCT_RE.test(rawValue)) return safeParseInt(rawValue.slice(2), 8);
+			if (HEX_RE.test(rawValue)) return safeParseInt(rawValue.slice(2), 16);
+			if (INT_RE.test(rawValue)) return safeParseInt(rawValue, 10);
 			const n = Number.parseInt(rawValue, 10);
 			return Number.isNaN(n) ? rawValue : n;
 		}),
@@ -111,7 +112,7 @@ function resolveTaggedScalar(rawValue: string, tag: string): unknown {
 	);
 }
 
-type ResolveScalarContext = readonly [style: ScalarStyle, tag?: string | undefined, state?: ComposerState | undefined];
+type ResolveScalarContext = readonly [style: ScalarStyle, tag?: string | undefined, state?: ComposerState | undefined, tagSpan?: NodeMeta["tagSpan"]];
 
 /**
  * Resolves scalar text using an explicit YAML tag or the plain-style Core Schema rules.
@@ -134,11 +135,11 @@ type ResolveScalarContext = readonly [style: ScalarStyle, tag?: string | undefin
  * @since 0.0.0
  */
 export const resolveScalar: {
-	([style, tag, state]: ResolveScalarContext): (rawValue: string) => unknown;
-	(rawValue: string, [style, tag, state]: ResolveScalarContext): unknown;
-} = dual(2, (rawValue: string, [style, tag, state]: ResolveScalarContext): unknown => {
+	([style, tag, state, tagSpan]: ResolveScalarContext): (rawValue: string) => unknown;
+	(rawValue: string, [style, tag, state, tagSpan]: ResolveScalarContext): unknown;
+} = dual(2, (rawValue: string, [style, tag, state, tagSpan]: ResolveScalarContext): unknown => {
 	if (tag !== undefined && tag !== "") {
-		const resolvedTag = state !== undefined ? resolveTagHandle(tag, state) : tag;
+		const resolvedTag = state !== undefined ? resolveTagHandle(tag, state, tagSpan) : tag;
 		return resolveTaggedScalar(rawValue, resolvedTag);
 	}
 	if (style !== "plain") return rawValue;
@@ -548,7 +549,7 @@ export const collectMultilineKey: {
 function extractLineContent(text: string, offset: number): { lineText: string; lineEndOffset: number } {
 	// Find start of line
 	let lineStart = offset;
-	while (lineStart > 0 && text[lineStart - 1] !== "\n") {
+	while (lineStart > 0 && text[lineStart - 1] !== "\n" && text[lineStart - 1] !== "\r") {
 		lineStart--;
 	}
 	// Find end of line
@@ -1222,7 +1223,31 @@ export const hasValueSepAfter: {
  */
 function findParentIndent(fullText: string, indicatorOffset: number): number {
 	let scanBack = indicatorOffset - 1;
+	let lineStart = indicatorOffset;
 	while (scanBack >= 0) {
+		if (scanBack < lineStart) {
+			lineStart = scanBack;
+			while (lineStart > 0 && fullText[lineStart - 1] !== "\n" && fullText[lineStart - 1] !== "\r") lineStart--;
+			let quote: string | undefined;
+			let tokenStart = true;
+			for (let i = lineStart; i <= scanBack; i++) {
+				const c = fullText[i];
+				if (quote !== undefined) {
+					if (quote === '"' && c === "\\") i++;
+					else if (c === quote) {
+						if (quote === "'" && fullText[i + 1] === "'") i++;
+						else quote = undefined;
+					}
+				} else if (c === "#" && (i === lineStart || /[ \t]/.test(fullText[i - 1] ?? ""))) {
+					scanBack = i - 1;
+					break;
+				} else if (tokenStart && (c === "'" || c === '"')) {
+					quote = c;
+				}
+				tokenStart = c === " " || c === "\t" || c === "[" || c === "{" || c === ",";
+			}
+			if (scanBack < lineStart) continue;
+		}
 		const ch = fullText[scanBack];
 		if (ch === " " || ch === "\t" || ch === "\n" || ch === "\r") {
 			scanBack--;
@@ -1577,7 +1602,7 @@ export const makeScalar: {
 		validateBlockScalarLeadingEmpties(cst, state);
 	}
 	const rawValue = getScalarValue(cst, state.text);
-	const value = resolveScalar(rawValue, [style, meta?.tag, state]);
+	const value = resolveScalar(rawValue, [style, meta?.tag, state, meta?.tagSpan]);
 	const chomp = getBlockChomp(cst);
 	const blockIndent = getBlockIndent(cst);
 	// A block scalar's header-line comment (`| # c`) lives inside the

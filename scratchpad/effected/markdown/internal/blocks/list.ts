@@ -17,8 +17,9 @@
 //    `markerOffset + padding`; the offset form of that is the item's start
 //    plus its padding, which is what the fallback below uses.
 
-import type { BulletChar, ListDelimiter } from "../../MarkdownNode.ts";
-import { List, ListItem } from "../../MarkdownNode.ts";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import { BulletChar, List, ListDelimiter, ListItem } from "../../MarkdownNode.ts";
 import type { BlockConstruct, BlockNode, BlockScanner, BlockStart, ListData } from "../blockTypes.ts";
 import { flowChildren, listItemChildren } from "../blockTypes.ts";
 import { isSpaceOrTab, peekCode } from "../preprocess.ts";
@@ -28,10 +29,8 @@ const reBulletListMarker = /^[*+-]/;
 const reOrderedListMarker = /^(\d{1,9})([.)])/;
 const reNonSpace = /[^ \t\f\v\r\n]/;
 
-const bulletCharOf = (char: string): BulletChar | undefined =>
-	char === "-" || char === "*" || char === "+" ? char : undefined;
-
-const delimiterOf = (char: string): ListDelimiter | undefined => (char === "." || char === ")" ? char : undefined);
+const decodeBulletChar = S.decodeUnknownResult(BulletChar);
+const decodeListDelimiter = S.decodeUnknownResult(ListDelimiter);
 
 /**
  * Parse a list marker at the scanner's next non-whitespace position,
@@ -52,7 +51,7 @@ const parseListMarker = (scanner: BlockScanner, container: BlockNode): ListData 
 	const ordered = bullet === null ? reOrderedListMarker.exec(rest) : null;
 
 	if (bullet !== null) {
-		const bulletChar = bulletCharOf(bullet[0].charAt(0));
+		const bulletChar = Result.getOrThrow(decodeBulletChar(bullet[0].charAt(0)));
 		data = {
 			type: "bullet",
 			tight: true,
@@ -61,14 +60,14 @@ const parseListMarker = (scanner: BlockScanner, container: BlockNode): ListData 
 			...O.getSomesStruct({ bulletChar: O.fromUndefinedOr(bulletChar) }),
 		};
 		markerLength = bullet[0].length;
-	} else if (ordered !== null && (container.type !== "paragraph" || Number.parseInt(ordered[1] ?? "", 10) === 1)) {
-		const delimiter = delimiterOf(ordered[2] ?? "");
+	} else if (ordered !== null && (container.type !== "paragraph" || Number.parseInt(ordered[0].slice(0, -1), 10) === 1)) {
+		const delimiter = Result.getOrThrow(decodeListDelimiter(ordered[0].slice(-1)));
 		data = {
 			type: "ordered",
 			tight: true,
 			padding: 0,
 			markerOffset,
-			start: Number.parseInt(ordered[1] ?? "1", 10),
+			start: Number.parseInt(ordered[0].slice(0, -1), 10),
 			...O.getSomesStruct({ delimiter: O.fromUndefinedOr(delimiter) }),
 		};
 		markerLength = ordered[0].length;
@@ -186,7 +185,7 @@ export const listConstruct: BlockConstruct = {
 			spread: block.data.spread ?? false,
 			children: listItemChildren(children),
 			position: context.position(block.startOffset, block.endOffset),
-			...(ordered && listData?.start !== undefined ? { start: listData.start } : {}),
+			...(ordered && listData.start !== undefined ? { start: listData.start } : {}),
 			...O.getSomesStruct({
 				bulletChar: O.fromUndefinedOr(listData?.bulletChar),
 				delimiter: O.fromUndefinedOr(listData?.delimiter),

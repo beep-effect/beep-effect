@@ -1,36 +1,60 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/cli/Glyphs");
+
 /**
  * The symbols a theme draws with.
  *
+ * **Example** (Validate a built-in glyph set)
+ *
+ * ```ts
+ * import { GlyphSet, Glyphs } from "@beep/scratchpad/effected/cli/Glyphs"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(GlyphSet)(Glyphs.ascii)) // true
+ * ```
+ *
  * @public
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
-export interface GlyphSet {
+export const GlyphSet = S.Struct({
 	/** Which set this is. */
-	readonly kind: "unicode" | "ascii";
+	kind: S.Literals(["unicode", "ascii"]).annotate($I.annote("GlyphSet.kind", { description: "The kind field of the glyph set." })),
 	/** The truncation marker. */
-	readonly ellipsis: string;
+	ellipsis: S.String.annotate($I.annote("GlyphSet.ellipsis", { description: "The ellipsis field of the glyph set." })),
 	/** The frames of a spinner, in order. */
-	readonly spinner: ReadonlyArray<string>;
+	spinner: S.Array(S.String).annotate($I.annote("GlyphSet.spinner", { description: "The spinner field of the glyph set." })),
 	/** A list bullet. */
-	readonly bullet: string;
+	bullet: S.String.annotate($I.annote("GlyphSet.bullet", { description: "The bullet field of the glyph set." })),
 	/** A directional arrow. */
-	readonly arrow: string;
+	arrow: S.String.annotate($I.annote("GlyphSet.arrow", { description: "The arrow field of the glyph set." })),
 	/** The separator between the segments of a breadcrumb or path: one for people, one for agents. */
-	readonly pathSeparator: { readonly human: string; readonly agent: string };
+	pathSeparator: S.Struct({
+		human: S.String.annotate($I.annote("GlyphSet.pathSeparator.human", { description: "The path separator shown to people." })),
+		agent: S.String.annotate($I.annote("GlyphSet.pathSeparator.agent", { description: "The path separator shown to agents." })),
+	}).annotate($I.annote("GlyphSet.pathSeparator", { description: "Audience-specific path separators." })),
 	/** How long a spinner frame is shown, in milliseconds. */
-	readonly spinnerIntervalMs: number;
+	spinnerIntervalMs: S.Finite.annotate($I.annote("GlyphSet.spinnerIntervalMs", { description: "The spinnerIntervalMs field of the glyph set." })),
 	/**
 	 * The segments a tree is drawn with: `branch` before a child that has later siblings, `last` before the final
 	 * child, and `pipe` and `blank` as the indent under each. All four are one width so branches align.
 	 */
-	readonly tree: {
-		readonly branch: string;
-		readonly last: string;
-		readonly pipe: string;
-		readonly blank: string;
-	};
-}
+	tree: S.Struct({
+		branch: S.String.annotate($I.annote("GlyphSet.tree.branch", { description: "The branch segment of a tree." })),
+		last: S.String.annotate($I.annote("GlyphSet.tree.last", { description: "The last segment of a tree." })),
+		pipe: S.String.annotate($I.annote("GlyphSet.tree.pipe", { description: "The pipe segment of a tree." })),
+		blank: S.String.annotate($I.annote("GlyphSet.tree.blank", { description: "The blank segment of a tree." })),
+	}).annotate($I.annote("GlyphSet.tree", { description: "Equal-width segments used to draw trees." })),
+}).annotate($I.annote("GlyphSet", { description: "The symbols and spinner timing a CLI theme draws with." }));
+/**
+ * The plain readonly symbols and timing of a CLI theme.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GlyphSet = typeof GlyphSet.Type;
 
 /**
  * Options for {@link Glyphs.select}.

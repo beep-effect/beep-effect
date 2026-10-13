@@ -24,6 +24,7 @@ import type { BlockConstruct, BlockNode } from "../blockTypes.ts";
 import { makeBlockNode } from "../blockTypes.ts";
 import { parseReference } from "../references.ts";
 import { sliceWithSegments, sourceOffsetAt } from "../segments.ts";
+import * as A from "effect/Array";
 import * as O from "@beep/utils/Option";
 
 const C_OPEN_BRACKET = 0x5b;
@@ -67,14 +68,18 @@ export const extractDefinitions = (block: BlockNode): void => {
 		return;
 	}
 
-	while (block.stringContent.charCodeAt(0) === C_OPEN_BRACKET) {
-		const reference = parseReference(block.stringContent);
+	const text = block.stringContent;
+	let consumedLength = 0;
+	let insertionIndex = 0;
+	let endOffset = block.startOffset;
+	while (text.charCodeAt(consumedLength) === C_OPEN_BRACKET) {
+		const reference = parseReference(text.slice(consumedLength));
 		if (reference === undefined) {
-			return;
+			break;
 		}
 
-		const consumed = block.stringContent.slice(0, reference.length);
-		const startOffset = sourceOffsetAt(block.segments, 0, block.startOffset);
+		const consumed = text.slice(consumedLength, consumedLength + reference.length);
+		const startOffset = sourceOffsetAt(block.segments, consumedLength, block.startOffset);
 		const linesConsumed = (consumed.match(/\n/g) ?? []).length;
 		// The node ends at the definition's last content character. The parse
 		// consumes trailing whitespace and the line ending to validate the
@@ -82,7 +87,7 @@ export const extractDefinitions = (block: BlockNode): void => {
 		// mdast-util ends definitions at content end, pinned by the interop
 		// corpus.
 		const contentLength = consumed.replace(/[ \t\r\n]+$/, "").length;
-		const endOffset = sourceOffsetAt(block.segments, contentLength, startOffset);
+		endOffset = sourceOffsetAt(block.segments, consumedLength + contentLength, startOffset);
 		const contentLines = (consumed.slice(0, contentLength).match(/\n/g) ?? []).length;
 
 		const node = makeBlockNode("definition", startOffset, block.startLine, block.depth);
@@ -98,16 +103,30 @@ export const extractDefinitions = (block: BlockNode): void => {
 			...O.getSomesStruct({ title: O.fromUndefinedOr(reference.title) }),
 		};
 
-		const at = parent.children.indexOf(block);
-		parent.children.splice(at === -1 ? parent.children.length : at, 0, node);
+		if (consumedLength === 0) {
+			// Streaming finalization visits the last child. Avoid rescanning all
+			// preceding siblings for every definition-bearing paragraph, while
+			// retaining first-match insertion for callers extracting an older child.
+			const lastIndex = parent.children.length - 1;
+			insertionIndex = parent.children[lastIndex] === block
+				? lastIndex
+				: O.getOrElse(A.findFirstIndex(parent.children, (child) => child === block), () => parent.children.length);
+		}
+		parent.children.splice(insertionIndex, 0, node);
+		insertionIndex += 1;
 
-		// Advance the paragraph past what the definition took with it.
-		const remaining = sliceWithSegments(block.segments, reference.length, block.stringContent.length);
-		block.stringContent = block.stringContent.slice(reference.length);
-		block.segments.splice(0, block.segments.length, ...remaining);
+		consumedLength += reference.length;
 		block.startLine += linesConsumed;
-		block.startOffset = remaining[0]?.sourceOffset ?? endOffset;
 	}
+	if (consumedLength === 0) return;
+
+	// Keep original coordinates throughout extraction, then rebase the suffix
+	// once. Retain the segment array without expanding it into call arguments.
+	const remaining = sliceWithSegments(block.segments, consumedLength, text.length);
+	block.stringContent = text.slice(consumedLength);
+	block.segments.length = 0;
+	for (const segment of remaining) block.segments.push(segment);
+	block.startOffset = remaining[0]?.sourceOffset ?? endOffset;
 };
 
 /**

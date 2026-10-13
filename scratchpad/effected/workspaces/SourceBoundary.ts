@@ -86,11 +86,20 @@ export type BoundaryRule = typeof BoundaryRule.Type;
 /**
  * Controls which exact tokens are exempt from the `process` rule.
  *
+ * **Example** (Keep process exemptions optional)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { ReferenceOptions } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+ *
+ * console.log(S.is(ReferenceOptions)({ ignoreTokens: undefined })) // true
+ * ```
+ *
  * @public
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
-export interface ReferenceOptions {
+export const ReferenceOptions = S.Struct({
 	/**
 	 * Exact tokens exempt from the `process` rule, each starting at the
 	 * reference (`"process.env.MY_CONSTANT"`). `process.env.__PACKAGE_VERSION__`
@@ -98,8 +107,15 @@ export interface ReferenceOptions {
 	 * token to named files, forbid it with a `{ forbidTokens }` rule as well (see
 	 * {@link BoundaryRule}).
 	 */
-	readonly ignoreTokens?: ReadonlyArray<string> | undefined;
-}
+	ignoreTokens: S.String.pipe(S.Array, S.optional).annotateKey({ description: "Exact process-reference tokens to exempt, in addition to the build-time version token." }),
+}).pipe($I.annoteSchema("ReferenceOptions", { description: "Optional exact-token exemptions for the process rule, resolved only when checking references." }));
+/**
+ * Configuration accepted by {@link ReferenceOptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ReferenceOptions = typeof ReferenceOptions.Type;
 
 /**
  * A snippet with the verdict one rule must reach on it.
@@ -263,17 +279,27 @@ export class SourceScan extends S.Class<SourceScan>($I`SourceScan`)({
 /**
  * Configures source selection and rule waivers for {@link SourceBoundary.scan}.
  *
+ * **Example** (Configure a plain-object scanner input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { ScanOptions } from "@beep/scratchpad/effected/workspaces/SourceBoundary";
+ *
+ * console.log(S.is(ScanOptions)({ root: "/repo/src", rules: ["process"], allowRules: { process: undefined } })) // true
+ * ```
+ *
  * @public
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
-export interface ScanOptions extends ReferenceOptions {
+export const ScanOptions = S.Struct({
+	...ReferenceOptions.fields,
 	/** The directory to scan. */
-	readonly root: string;
+	root: S.String.annotateKey({ description: "The directory to scan." }),
 	/** The rules every non-allowed file must keep. */
-	readonly rules: ReadonlyArray<BoundaryRule>;
+	rules: S.Array(BoundaryRule).annotateKey({ description: "The rules every non-allowed file must keep, in evaluation order." }),
 	/** Globs, relative to `root` with `/` separators, naming files exempt from every rule. */
-	readonly allow?: ReadonlyArray<string> | undefined;
+	allow: S.String.pipe(S.Array, S.optional).annotateKey({ description: "Root-relative globs exempting files from every rule; omitted means no exemptions." }),
 	/**
 	 * Globs per rule, matched like `allow`, naming files exempt from that one
 	 * rule. A matching file is still checked against every other rule, and
@@ -284,13 +310,20 @@ export interface ScanOptions extends ReferenceOptions {
 	 * A file `allow` matches is exempt from every rule, so nothing in it is
 	 * waived.
 	 */
-	readonly allowRules?: { readonly [R in OffenceRule]?: ReadonlyArray<string> | undefined } | undefined;
+	allowRules: S.Record(OffenceRule, S.String.pipe(S.Array, S.optional)).pipe(S.optional).annotateKey({ description: "Optional per-rule root-relative waiver globs; absent and explicitly undefined entries waive nothing." }),
 	/**
 	 * File extensions to scan. Defaults to `.ts`, `.mts`, `.cts`, `.js`,
 	 * `.mjs` and `.cjs`; declaration files are always skipped.
 	 */
-	readonly extensions?: ReadonlyArray<string> | undefined;
-}
+	extensions: S.String.pipe(S.Array, S.optional).annotateKey({ description: "Source extensions to scan; omitted uses the scanner defaults and declaration files are always skipped." }),
+}).pipe($I.annoteSchema("ScanOptions", { description: "Plain-object source selection, rules and waivers whose defaults are resolved lazily by the scan." }));
+/**
+ * Configuration accepted by {@link ScanOptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ScanOptions = typeof ScanOptions.Type;
 
 const DEFAULT_EXTENSIONS: ReadonlyArray<string> = [".ts", ".mts", ".cts", ".js", ".mjs", ".cjs"];
 const DECLARATION = /\.d\.[cm]?ts$/;
@@ -318,7 +351,7 @@ const END_WITH_CHUNK = /^\s*\(\s*[^\s)]/u;
 /** Whether the reference at `at` is itself a member access (`globalThis.process`), which no ignore token exempts. */
 const isMemberAccess = (code: string, at: number): boolean => {
 	let j = at - 1;
-	while (j >= 0 && /\s/.test(code[j] ?? "")) j--;
+	while (j >= 0 && /\s/.test(code.charAt(j))) j--;
 	return code[j] === ".";
 };
 
@@ -332,24 +365,29 @@ const processReads = (code: string, ignoreTokens: ReadonlyArray<string>): Readon
 const stdoutWrites = (code: string): ReadonlyArray<{ readonly at: number; readonly method: string }> =>
 	[...code.matchAll(STDOUT_WRITE)]
 		.map((match) => ({
-			at: match.index ?? 0,
-			end: (match.index ?? 0) + match[0].length,
-			method: match[1] ?? "write",
+			at: match.index,
+			end: match.index + match[0].length,
+			method: match[0].endsWith("write") ? "write" : "end",
 		}))
 		.filter(({ at, end }) => !isIdentifierChar(codePointBefore(code, at)) && code[at - 1] !== "#" && !isIdentifierChar(codePointAt(code, end)))
 		.filter(({ end, method }) => method === "write" || END_WITH_CHUNK.test(code.slice(end)))
 		.map(({ at, method }) => ({ at, method }));
 
 /** The member name directly after the reference at `at` (`console.log` → `"log"`, `console?.log` too), or `undefined` when it is not a named member access. */
-const memberAfter = (code: string, at: number, name: string): string | undefined => {
-	let j = at + name.length;
-	while (j < code.length && /\s/.test(code[j] ?? "")) j++;
+const memberAfter = (code: string, at: number): string | undefined => {
+	// references() supplies the start of a validated, cooked console identifier.
+	const rawName = O.getOrThrow(Str.match(/^(?:[\p{ID_Continue}$\u200c\u200d]|\\u(?:[\dA-Fa-f]{4}|\{[\dA-Fa-f]+\}))+/u)(code.slice(at)));
+	let j = at + rawName[0].length;
+	while (j < code.length && /\s/.test(code.charAt(j))) j++;
 	if (code[j] === "?" && code[j + 1] === ".") j++;
 	if (code[j] !== ".") return undefined;
 	j++;
-	while (j < code.length && /\s/.test(code[j] ?? "")) j++;
+	while (j < code.length && /\s/.test(code.charAt(j))) j++;
 	let end = j;
-	while (isIdentifierChar(codePointAt(code, end))) end += codePointAt(code, end)?.length ?? 1;
+	for (const point of code.slice(j)) {
+		if (!isIdentifierChar(point)) break;
+		end += point.length;
+	}
 	return end > j ? code.slice(j, end) : undefined;
 };
 
@@ -777,7 +815,7 @@ export class SourceBoundary {
 				for (const offset of references(lexed.code, "console")) found.push({ offset, rule, detail: "console" });
 			} else if (rule === "console-stdout") {
 				for (const offset of references(lexed.code, "console")) {
-					const member = memberAfter(lexed.code, offset, "console");
+					const member = memberAfter(lexed.code, offset);
 					if (member !== undefined && MutableHashSet.has(STDERR_METHODS, member)) continue;
 					found.push({ offset, rule, detail: member === undefined ? "console" : `console.${member}` });
 				}
@@ -845,10 +883,9 @@ export class SourceBoundary {
 		const pending: Array<{ readonly directory: string; readonly ancestors: ReadonlyArray<string> }> = [
 			{ directory: options.root, ancestors: [] },
 		];
-		while (pending.length > 0) {
-			const next = pending.pop();
-			if (next === undefined) break;
-			const { directory, ancestors } = next;
+		while (A.isArrayNonEmpty(pending)) {
+			const { directory, ancestors } = A.lastNonEmpty(pending);
+			pending.pop();
 			const real = yield* fs.realPath(directory);
 			if (A.some(ancestors, (ancestor) => ancestor === real)) continue;
 			const ancestry = A.append(ancestors, real);

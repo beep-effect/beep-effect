@@ -239,3 +239,23 @@ describe("reconciliation anchor review regressions", () => {
 		assert.isFalse(S.is(ReconcileOutput)({ ...result.success, outcomes: [{ _tag: "Created" }] }));
 	});
 });
+
+
+describe("blank-prefix insertion regressions", () => {
+  it("preserves empty, BOM-only, BOM-plus-whitespace and whitespace-only prefixes and reaches a fixed point", () => {
+    for (const prefix of ["", "\uFEFF", "\uFEFF\n", "\uFEFF \t\n", "\uFEFF\r\n\r\n", " \t", " \t\n", "\n\n\n", " \t\r\n", "\uFEFF\r\n \t\n", "\r\n\n"]) {
+      const doc = parse(prefix);
+      const eol = doc.eol;
+      const separator = prefix === "" || /(?:\r?\n){2}$/.test(prefix) ? "" : prefix.endsWith("\n") ? eol : eol + eol;
+      const rendered = Result.getOrThrow(Dialect.default.render(A, eol));
+      const first = run(prefix, [A]);
+      assert.strictEqual(first.text, prefix + separator + rendered + eol);
+      assert.isTrue(first.text.startsWith(prefix));
+      assert.deepStrictEqual(tags(first), ["Created"]);
+      const second = run(first.text, [A]);
+      assert.strictEqual(second.text, first.text);
+      assert.isFalse(second.changed);
+      assert.deepStrictEqual(tags(second), ["Unchanged"]);
+    }
+  });
+});

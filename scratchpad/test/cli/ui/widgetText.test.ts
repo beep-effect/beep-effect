@@ -5,6 +5,7 @@ import { createElement } from "react";
 import { Fmt } from "../../../effected/cli/index.ts";
 import type { Screen } from "../../../effected/cli/ui.ts";
 import { Confirm, KeyHelp, KeyTable, MultiSelect, Select, Tabs, TextInput } from "../../../effected/cli/ui.ts";
+import { lineText, lineTextAround } from "../../../effected/cli/ui/internal/lineText.ts";
 import { CliUiTest } from "../../../effected/cli/ui-testing.ts";
 
 const ESC = String.fromCharCode(0x1b);
@@ -144,4 +145,32 @@ describe("widget text from data is sanitised and drawn on one line", () => {
 			assertFolded(frame);
 		}),
 	);
+});
+
+describe("TextInput maps a raw cursor through whole-value sanitization", () => {
+	for (const [name, initial, positions, expected] of [
+		["CSI", `a${ESC}[31mRED`, [2, 4, 5], "a▏RED"],
+		["OSC", `a${OSC8};;https://evil.example${BEL}link`, [2, 5, 15], "a▏link"],
+	] as const) {
+		it.effect(`a cursor inside ${name} never exposes its payload`, () => Effect.gen(function* () {
+			const handle = yield* CliUiTest.render(TextInput.screen({ message: "Name", initial }), { color: "none", columns: 120 });
+			for (const cursor of positions) {
+				yield* handle.press("home");
+				for (let index = 0; index < cursor; index++) yield* handle.press("right");
+				const frame = yield* handle.rawFrame;
+				assert.include(frame, expected);
+				assert.notInclude(frame, "https://evil.example");
+				assert.notInclude(frame, "[31m");
+				assert.lengthOf(frame.split("\n"), 3);
+			}
+			yield* handle.press("enter");
+			assert.strictEqual(yield* handle.result, initial, "submission still receives raw text");
+		}));
+	}
+	it("a raw cursor between CR and LF folds the pair only once", () => {
+		assert.deepStrictEqual(lineTextAround("a\r\nb", 2), ["a ", "b"]);
+		assert.deepStrictEqual(lineTextAround(2)("a\r\nb"), ["a ", "b"]);
+		const separated = `a\r${ESC}[31m\nb`;
+		assert.strictEqual(lineTextAround(separated, 4).join(""), lineText(separated), "escape removal precedes CRLF folding");
+	});
 });

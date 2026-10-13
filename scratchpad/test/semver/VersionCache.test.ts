@@ -105,6 +105,56 @@ layer(VersionCache.layer, { timeout: "30 seconds" })("VersionCache", (it) => {
 	});
 
 	describe("resolution", () => {
+		it.effect("resolveString rejects partial upper boundary prereleases despite lower tuple permission", () =>
+			Effect.gen(function* () {
+				const cache = yield* VersionCache;
+				for (const [upper, tuple] of [["1.x", "1.0.0"], ["1", "1.0.0"], ["1.2.x", "1.2.0"], ["1.2", "1.2.0"]] as const) {
+					const versions = yield* Effect.forEach(["0.9.9", `${tuple}-0`, `${tuple}-alpha`, `${tuple}-beta`, tuple, "2.0.0"], SemVer.parse);
+					yield* cache.load(versions);
+					const error = yield* Effect.flip(cache.resolveString(`>=${tuple}-alpha <${upper}`));
+					assert.instanceOf(error, UnsatisfiedRangeError);
+					assert.strictEqual(error.range.toString(), `>=${tuple}-alpha <${tuple}-0`);
+					assert.deepStrictEqual(error.available, versions);
+					assert.strictEqual((yield* cache.resolveString(`>=${tuple}-alpha <${tuple}`)).toString(), `${tuple}-beta`);
+				}
+			}),
+		);
+
+		it.effect("resolveString treats wildcard-major tilde and caret as stable wildcards", () =>
+			Effect.gen(function* () {
+				const cache = yield* VersionCache;
+				yield* cache.load([
+					SemVer.of(0, 5, 0), SemVer.of(1, 0, 0), SemVer.of(2, 0, 0), SemVer.of(9, 0, 0),
+					SemVer.of(10, 0, 0, ["beta"]),
+				]);
+				for (const input of ["~*", "~x", "^*", "^x"]) {
+					assert.strictEqual((yield* cache.resolveString(input)).toString(), "9.0.0");
+				}
+				yield* cache.load([SemVer.of(0, 0, 0, [0]), SemVer.of(10, 0, 0, ["beta"])]);
+				for (const input of ["~*", "~x", "^*", "^x"]) {
+					const error = yield* Effect.flip(cache.resolveString(input));
+					assert.instanceOf(error, UnsatisfiedRangeError);
+					assert.strictEqual(error._tag, "UnsatisfiedRangeError");
+					assert.strictEqual(error.range.toString(), ">=0.0.0");
+				}
+			}),
+		);
+
+		it.effect("resolveString rejects strict comparisons against full wildcards", () =>
+			Effect.gen(function* () {
+				const cache = yield* VersionCache;
+				const versions = [SemVer.of(0, 0, 0, [0]), SemVer.of(0, 0, 0), SemVer.of(1, 0, 0, ["beta"]), SemVer.of(2, 0, 0)];
+				yield* cache.load(versions);
+				for (const input of [">*", ">x", "<*", "<x"]) {
+					const error = yield* Effect.flip(cache.resolveString(input));
+					assert.instanceOf(error, UnsatisfiedRangeError);
+					assert.strictEqual(error._tag, "UnsatisfiedRangeError");
+					assert.strictEqual(error.range.toString(), "<0.0.0-0");
+					assert.deepStrictEqual(error.available, versions);
+				}
+			}),
+		);
+
 		it.effect("resolve returns the highest satisfying version", () =>
 			Effect.gen(function* () {
 				const cache = yield* VersionCache;

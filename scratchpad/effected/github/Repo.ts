@@ -5,6 +5,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/github/Repo");
 
@@ -73,13 +74,13 @@ export class RepoRef extends S.Class<RepoRef>($I`RepoRef`)({
 	 *
 	 * @since 0.0.0
 	 */
-	owner: S.NonEmptyString.annotateKey({ description: "The user or organization." }),
+	owner: S.NonEmptyString.check(S.isPattern(/^[^/]+$/u)).annotateKey({ description: "The user or organization." }),
 	/**
 	 * The repository name, without the owner.
 	 *
 	 * @since 0.0.0
 	 */
-	repo: S.NonEmptyString.annotateKey({ description: "The repository name, without the owner." }),
+	repo: S.NonEmptyString.check(S.isPattern(/^[^/]+$/u)).annotateKey({ description: "The repository name, without the owner." }),
 }, $I.annote("RepoRef", { description: "Which repository an operation acts on." })) {
 	/**
 	 * Validates an `"owner/repo"` slug synchronously without throwing for invalid input.
@@ -103,9 +104,8 @@ export class RepoRef extends S.Class<RepoRef>($I`RepoRef`)({
 	 * @since 0.0.0
 	 */
 	static parseResult(slug: string): Result.Result<RepoRef, InvalidRepoRefError> {
-		const parts = slug.split("/");
-		const [owner, repo] = parts;
-		if (parts.length !== 2 || owner === undefined || repo === undefined || owner === "" || repo === "") {
+		const [owner, repo, ...extra] = Str.split(slug, "/");
+		if (owner === "" || repo === undefined || repo === "" || extra.length !== 0) {
 			return Result.fail(InvalidRepoRefError.make({ input: slug }));
 		}
 		return Result.succeed(RepoRef.make({ owner, repo }));

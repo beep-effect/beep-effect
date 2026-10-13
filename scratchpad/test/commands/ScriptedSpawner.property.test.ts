@@ -10,10 +10,7 @@ import { ScriptResult, ScriptedSpawner, SpawnRecord } from "../../effected/comma
 const runs = { arbitrary: fcRuns(100) };
 const ScriptResultSample = S.Union([
   ScriptResult.members[0].annotate({ toCodecArbitrary: () => S.link<ScriptResult>()(S.String, { decode: SchemaGetter.transform(ScriptedSpawner.notFound), encode: SchemaGetter.forbiddenEncoding }) }),
-  ScriptResult.members[1].mapFields((fields) => ({
-    ...fields,
-    exit: fields.exit.schema.members[0].annotate({ toCodecArbitrary: () => S.link<number>()(S.Finite, { decode: SchemaGetter.transform((value) => value), encode: SchemaGetter.forbiddenEncoding }) }).pipe(S.optional),
-  })),
+  ScriptResult.members[1],
 ]);
 const OptionsSample = S.Struct({
   cwd: S.optional(S.String), env: S.optional(S.Record(S.String, S.UndefinedOr(S.String))),

@@ -520,7 +520,9 @@ const make = Effect.fn("make")(function* (
 							.stat(packed)
 							.pipe(Effect.mapError((cause) => ArtifactError.make({ reason: "archiveFailed", artifact: name, cause })));
 						const digest = yield* digestOf(packed, name);
-						const now = options?.retentionDays === undefined ? undefined : yield* Clock.currentTimeMillis;
+						const expiresAt = options?.retentionDays === undefined
+							? O.none<number>()
+							: O.some((yield* Clock.currentTimeMillis) + options.retentionDays * 86_400_000);
 						const finalized = yield* call(
 							"FinalizeArtifact",
 							() => ({
@@ -528,9 +530,7 @@ const make = Effect.fn("make")(function* (
 								size: String(size.size),
 								hash: `sha256:${digest}`,
 								...O.getSomesStruct({
-									expiresAt: O.map(O.fromUndefinedOr(options?.retentionDays), (retentionDays) =>
-										DateTime.formatIso(DateTime.makeUnsafe((now ?? 0) + retentionDays * 86_400_000)),
-									),
+									expiresAt: O.map(expiresAt, (timestamp) => DateTime.formatIso(DateTime.makeUnsafe(timestamp))),
 								}),
 							}),
 							name,

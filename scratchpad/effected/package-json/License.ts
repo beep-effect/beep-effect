@@ -9,6 +9,7 @@ import type * as Brand from "effect/Brand";
 import type * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/package-json/License");
 
@@ -89,7 +90,7 @@ export class InvalidSpdxLicenseError extends S.TaggedError<InvalidSpdxLicenseErr
  */
 export const isValidSpdx = (value: string): boolean => {
 	if (value === "UNLICENSED") return true;
-	if (value.startsWith("SEE LICENSE IN ") && value.length > "SEE LICENSE IN ".length) return true;
+	if (Str.startsWith("SEE LICENSE IN ")(value) && value.length > "SEE LICENSE IN ".length) return true;
 	return isValidExpression(value);
 };
 

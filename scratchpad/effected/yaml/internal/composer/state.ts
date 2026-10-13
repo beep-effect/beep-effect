@@ -8,6 +8,8 @@ import type { RawDiagnostic } from "../diagnostics.ts";
 import type { ParseOptionsInput } from "../options.ts";
 import type { EscapedComment } from "./comments.ts";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as A from "effect/Array";
 import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -49,7 +51,10 @@ export function getLineStarts(text: string): ReadonlyArray<number> {
 	if (lineStartsText === text) return lineStartsCache;
 	const starts = [0];
 	for (let i = 0; i < text.length; i++) {
-		if (text[i] === "\n") starts.push(i + 1);
+		if (text[i] === "\r") {
+			if (text[i + 1] === "\n") i++;
+			starts.push(i + 1);
+		} else if (text[i] === "\n") starts.push(i + 1);
 	}
 	lineStartsText = text;
 	lineStartsCache = starts;
@@ -93,7 +98,7 @@ export function lineCol(...[text, offset]: [text: string, offset: number]): { li
 			hi = mid - 1;
 		}
 	}
-	const lineStart = starts[lo] ?? 0;
+	const lineStart = A.getUnsafe(starts, lo);
 	const bom = text[lineStart] === "\uFEFF" && pos > lineStart ? 1 : 0;
 	return { line: lo, column: pos - lineStart - bom };
 }
@@ -117,7 +122,7 @@ export function sameLine(...[text, offsetA, offsetB]: [text: string, offsetA: nu
 	const lo = Math.min(offsetA, offsetB);
 	const hi = Math.max(offsetA, offsetB);
 	for (let i = lo; i < hi && i < text.length; i++) {
-		if (text[i] === "\n") return false;
+		if (text[i] === "\n" || text[i] === "\r") return false;
 	}
 	return true;
 }
@@ -173,7 +178,7 @@ export function hasNonWhitespaceBeforeOnLine(...[text, offset]: [text: string, o
  */
 export function lineIndentColumn(...[text, offset]: [text: string, offset: number]): number {
 	let lineStart = offset;
-	while (lineStart > 0 && text[lineStart - 1] !== "\n") lineStart--;
+	while (lineStart > 0 && text[lineStart - 1] !== "\n" && text[lineStart - 1] !== "\r") lineStart--;
 	let i = lineStart;
 	while (i < text.length && (text[i] === " " || text[i] === "\t")) i++;
 	return i - lineStart;
@@ -205,6 +210,10 @@ export function lineIndentColumn(...[text, offset]: [text: string, offset: numbe
  */
 export const NodeMeta = S.Struct({
 	anchor: S.String.pipe(S.optionalKey, S.mutableKey).annotateKey({ description: "Pending anchor name to attach to the next node." }),
+	tagSpan: S.Struct({
+		offset: S.Finite.annotateKey({ description: "Offset of the explicit tag CST token." }),
+		length: S.Finite.annotateKey({ description: "Length of the explicit tag CST token." }),
+	}).annotate($I.annote("TagSpan", { description: "Exact source span of a pending explicit tag token." })).pipe(S.optionalKey, S.mutableKey).annotateKey({ description: "Source provenance retained while the tag is pending." }),
 	tag: S.String.pipe(S.optionalKey, S.mutableKey).annotateKey({ description: "Pending explicit tag to attach to the next node." }),
 	comment: S.String.pipe(S.optionalKey, S.mutableKey).annotateKey({ description: "Pending comment text to attach to the next node." }),
 }).pipe($I.annoteSchema("NodeMeta", { description: "Writable pending composer metadata with absent keys omitted." }));
@@ -259,6 +268,7 @@ export function hasMeta(m: NodeMeta): boolean {
 export function clearMeta(m: NodeMeta): void {
 	delete m.anchor;
 	delete m.tag;
+	delete m.tagSpan;
 	delete m.comment;
 }
 
@@ -346,6 +356,10 @@ export interface ComposerState {
 	};
 	/** Tag handle to prefix map from %TAG directives (e.g. "!!" maps to "tag:yaml.org,2002:") */
 	tagMap: MutableHashMap.MutableHashMap<string, string>;
+	/** Offsets consumed as node properties rather than folded plain-scalar content. */
+	readonly tagOffsets: MutableHashSet.MutableHashSet<number>;
+	/** CST tag provenance cached for standalone resolver calls without pending node metadata. */
+	tagCstCache?: ReadonlyArray<CstNode>;
 	/** Flow-composer dispatch — see {@link FlowComposers}. */
 	readonly flow: FlowComposers;
 	/** Current collection-nesting depth — see {@link enterNesting}. */
@@ -394,6 +408,7 @@ export function createState(...[text, flow, options]: [text: string, flow: FlowC
 			uniqueKeys: options?.uniqueKeys ?? true,
 		},
 		tagMap: MutableHashMap.empty<string, string>(),
+		tagOffsets: MutableHashSet.empty<number>(),
 		flow,
 		depth: 0,
 		escapedComments: [],

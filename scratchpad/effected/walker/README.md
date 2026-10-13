@@ -107,6 +107,8 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **effect-first** — The lab uses Effect.fn, Option probe results, Effect-native sorting and orElseSucceed where upstream uses bare generators, undefined, native sort and catch/succeed. (scratchpad/test/walker/Walker.test.ts:16,223,242,278,421,451; scratchpad/test/walker/Descend.test.ts:76,85,135,295,320,346,374,420)
 - **effect-imports** — The lab imports Effect modules through effect/<Module> paths in code, tests and source examples where upstream imports the root effect barrel. (module suite scratchpad/test/walker/**)
 - **identity-annotations** — The lab derives schema/error identities and annotations from @beep/identity, including namespaced error names, where upstream omits identifiers and uses tag/native Error names. (module suite scratchpad/test/walker/**; scratchpad/test/walker/Walker.test.ts:76; scratchpad/test/walker/Expand.test.ts:120)
+- **schema-first** — Lab adds DepthCap and OnUnreadableArray schema/type subpath exports absent upstream, keeping the root barrel unchanged. (scratchpad/test/walker/Walker.test.ts:16; scratchpad/test/walker/Descend.test.ts:65; scratchpad/effected/walker/Descend.ts:51)
+- **numeric-domains** — Lab option decoding enforces the positive-integer depth constraint that upstream checks at traversal time, retaining acceptance above the safe-integer range. (scratchpad/test/walker/Walker.test.ts:16; scratchpad/test/walker/Descend.test.ts:65; scratchpad/test/walker/Expand.test.ts:49)
 
 ### Dependency backlog
 

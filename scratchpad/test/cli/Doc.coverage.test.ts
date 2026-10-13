@@ -1,4 +1,5 @@
 import { assert, it } from "@effect/vitest";
+import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import * as A from "effect/Array";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
@@ -6,8 +7,29 @@ import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import * as O from "effect/Option";
 import { assertDefined } from "@effect/vitest/utils";
-import { Block, type Counter, Doc } from "../../effected/cli/Doc.ts";
+import { Block, type Counter, Doc, Inline } from "../../effected/cli/Doc.ts";
 import { Status } from "../../effected/cli/Status.ts";
+
+// Target the optional callback directly so union-member selection cannot omit it.
+const blockAst = SchemaAST.isSuspend(Block.ast) ? Block.ast.thunk() : Block.ast;
+const overflowField = O.getOrUndefined(SchemaAST.isUnion(blockAst)
+  ? A.findFirst(A.flatMap(blockAst.types, (member) => SchemaAST.isObjects(member) ? member.propertySignatures : []), (property) => property.name === "overflow")
+  : O.none());
+assertDefined(overflowField);
+const overflowSchema = S.make<S.Codec<(hidden: number) => ReadonlyArray<Inline>>>(overflowField.type);
+const InlineContent = S.Array(Inline);
+
+it.effect.prop("generated overflow callbacks retain valid inline content through a Block round trip", [Arbitrary.schema(overflowSchema)], ([overflow]) => Effect.gen(function* () {
+  const block = Doc.list([], { overflow });
+  const decoded = yield* S.decodeEffect(Block)(yield* S.encodeEffect(Block)(block));
+  if (decoded._tag !== "List") return yield* Effect.die("List must retain its tag");
+  assertDefined(decoded.overflow);
+  for (const hidden of [0, 3]) {
+    const expected = overflow(hidden);
+    yield* S.decodeEffect(InlineContent)(expected);
+    assert.deepStrictEqual(decoded.overflow(hidden), expected);
+  }
+}), { arbitrary: fcRuns(50) });
 
 it.effect("an absent link target preserves an existing inline label", () => Effect.sync(() => {
   const label = Doc.code("a.ts");

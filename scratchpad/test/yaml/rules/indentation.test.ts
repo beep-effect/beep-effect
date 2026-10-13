@@ -3,6 +3,7 @@
 // parse-validity's business.
 
 import { builtin, testRule, testRuleInference } from "./harness.ts";
+import type { InferenceFixture, RuleFixture } from "./harness.ts";
 
 testRule(builtin("indentation"), [
 	{
@@ -168,3 +169,144 @@ testRuleInference(builtin("indentation"), [
 		strict: { kind: "options", options: { spaces: 2, indentSequences: true } },
 	},
 ]);
+
+// Round-2 regressions: compact columns are stack context, not unit votes.
+testRule(builtin("indentation"), [
+	{
+		name: "a compact mapping has no four-space unit check on its separator",
+		input: "- two: 1\n",
+		setting: { spaces: 4 },
+		expected: [],
+	},
+	{
+		name: "a nested compact mapping checks only its four-space line indent",
+		input: "outer:\n    - two: 1\n",
+		setting: { spaces: 4 },
+		expected: [],
+	},
+	{
+		name: "a one-space nested compact mapping reports only the line-unit mismatch",
+		input: "outer:\n - two: 1\n",
+		setting: { spaces: 4 },
+		expected: [{ line: 1, length: 1, messageIncludes: "Indent of 1 spaces, expected 4" }],
+	},
+	{
+		name: "a compact sequence has no four-space unit check on its inner hyphen",
+		input: "- - item\n",
+		setting: { spaces: 4 },
+		expected: [],
+	},
+	{
+		name: "a sibling stays at the compact key column with a four-space unit",
+		input: "- two: 1\n  sibling: 2\n",
+		setting: { spaces: 4 },
+		expected: [],
+	},
+	{
+		name: "a child advances four spaces from the compact key column",
+		input: "- two:\n      child: 1\n",
+		setting: { spaces: 4 },
+		expected: [],
+	},
+	{
+		name: "an indented sequence under a compact key uses key plus four spaces",
+		input: "- two:\n      - child\n",
+		setting: { spaces: 4, indentSequences: false },
+		expected: [{ line: 1, messageIncludes: "should not be indented" }],
+	},
+	{
+		name: "a sequence at the compact key column remains unindented",
+		input: "- two:\n  - child\n",
+		setting: { spaces: 4, indentSequences: true },
+		expected: [{ line: 1, messageIncludes: "should be indented" }],
+	},
+]);
+
+testRuleInference(builtin("indentation"), [
+	{
+		name: "compact mappings and sequences do not vote their separator width",
+		inputs: ["- two: 1\n", "- - item\n", "- two: 1\n  sibling: 2\n"],
+		strict: { kind: "none" },
+	},
+	{
+		name: "nested compact mappings vote only the four-space line indentation",
+		inputs: ["outer:\n    - two: 1\n"],
+		strict: { kind: "options", options: { spaces: 4, indentSequences: true } },
+	},
+	{
+		name: "a one-space nested compact mapping votes its line unit without a two-space separator vote",
+		inputs: ["outer:\n - two: 1\n"],
+		strict: { kind: "options", options: { spaces: 1, indentSequences: true } },
+	},
+	{
+		name: "compact children vote four spaces from the key column",
+		inputs: ["- two:\n      child: 1\n"],
+		strict: { kind: "options", options: { spaces: 4 } },
+	},
+]);
+
+for (const properties of ["&ref", "!!seq", "!!seq &ref"]) {
+	testRule(builtin("indentation"), [
+		{
+			name: `${properties} after a mapping colon preserves the explicit unindented policy`,
+			input: `a: ${properties} # properties only\n  - x\n`,
+			setting: { spaces: 2, indentSequences: false },
+			expected: [{ line: 1, messageIncludes: "should not be indented" }],
+		},
+		{
+			name: `${properties} after a mapping colon preserves the explicit indented policy`,
+			input: `a: ${properties}\n- x\n`,
+			setting: { spaces: 2, indentSequences: true },
+			expected: [{ line: 1, messageIncludes: "should be indented" }],
+		},
+		{
+			name: `${properties} cannot hide sequence-placement drift in consistent checking`,
+			input: `a:\n  - x\nb: ${properties}\n- y\n`,
+			expected: [{ line: 3, messageIncludes: "should be indented" }],
+		},
+		{
+			name: `${properties} with same-line sequence content does not open a mapping key`,
+			input: `a: ${properties} [x]\nb:\n- y\n`,
+			setting: { spaces: 2, indentSequences: false },
+			expected: [],
+		},
+	]);
+	testRuleInference(builtin("indentation"), [
+		{
+			name: `${properties} retains the indented sequence vote`,
+			inputs: [`a: ${properties}\n  - x\n`],
+			strict: { kind: "options", options: { spaces: 2, indentSequences: true } },
+		},
+		{
+			name: `${properties} cannot hide conflicting sequence placement from strict inference`,
+			inputs: [`a:\n  - x\nb: ${properties}\n- y\n`],
+			strict: { kind: "conflict", dimension: "indentSequences", values: [true, false] },
+		},
+	]);
+}
+
+for (const [name, input, strict] of [
+	["mapping value", "a: first\n    second\nb:\n  child: value\n", { kind: "options", options: { spaces: 2 } }],
+	["compact sequence item", "- first\n    second\n- next\n", { kind: "none" }],
+	["expanded sequence item", "-\n  first\n     second\n", { kind: "options", options: { spaces: 2 } }],
+	["compact explicit key", "- ? a long\n    key\n  : value\n", { kind: "none" }],
+	["compact explicit key with non-unit continuation", "- ? a long\n     key\n  : value\n", { kind: "none" }],
+	["expanded explicit key", "-\n  ? a long\n     key\n  : value\n", { kind: "options", options: { spaces: 2 } }],
+	["root explicit key", "? a\n   true\n: value\n", { kind: "none" }],
+	["explicit key with a block value", "? a long\n    key\n:\n  child: value\n", { kind: "options", options: { spaces: 2 } }],
+] satisfies ReadonlyArray<readonly [string, string, InferenceFixture["strict"]]>) {
+	const check: RuleFixture = { name: `${name} continuations are scalar content`, input, setting: { spaces: 2 }, expected: [] };
+	testRule(builtin("indentation"), [check, {
+		name: `${name} keeps structural indentation checks after the scalar`,
+		input: "? a long\n    key\n:\n    child: value\n",
+		setting: { spaces: 2 },
+		expected: [{ line: 3, messageIncludes: "expected 2" }],
+	}]);
+	testRuleInference(builtin("indentation"), [{
+		name: `${name} continuations contribute no indentation votes`, inputs: [input], strict,
+	}, {
+		name: `${name} retains a real unit vote from a separate structural document`,
+		inputs: [input, "tail:\n  child: value\n"],
+		strict: { kind: "options", options: { spaces: 2 } },
+	}]);
+}

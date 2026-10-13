@@ -5,6 +5,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ResolvedTsconfig } from "../../effected/tsconfig-json/ResolvedTsconfig.ts";
 import type { TsconfigJson } from "../../effected/tsconfig-json/TsconfigJson.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 // The injected path resolver mirrors `Path.Path.resolve` (absolute `b` wins;
 // relative `b` resolves against `a`, collapsing `.`/`..`). POSIX for
@@ -232,6 +233,22 @@ describe("ResolvedTsconfig.merge — E4 merge per field", () => {
 });
 
 describe("ResolvedTsconfig.absolutize — E5 parse-time absolutization", () => {
+	it("E5 transforms string path-list entries and preserves invalid entries and paths values", () => {
+		const marker = { future: true };
+		const doc = deliberatelyInvalid<TsconfigJson.Type>({
+			compilerOptions: {
+				typeRoots: ["./types", 1, null, marker],
+				rootDirs: ["./src", false, cd("/shared")],
+				paths: { mixed: ["./src/*", 2, marker], scalar: "./raw/*", absent: null },
+			},
+		});
+		const out = absolutize(doc, "/proj/base", join);
+		assert.deepStrictEqual<unknown>(out.compilerOptions?.typeRoots, ["/proj/base/types", 1, null, marker]);
+		assert.deepStrictEqual<unknown>(out.compilerOptions?.rootDirs, ["/proj/base/src", false, cd("/shared")]);
+		assert.strictEqual(out.compilerOptions?.paths, doc.compilerOptions?.paths);
+		assert.deepStrictEqual<unknown>(doc.compilerOptions?.typeRoots, ["./types", 1, null, marker]);
+	});
+
 	it("E5 path options absolutized against the declaring config's directory", () => {
 		const out = absolutize(
 			{ compilerOptions: { outDir: "./dist", rootDir: "src", typeRoots: ["./types", "node_modules/@types"] } },
@@ -271,6 +288,57 @@ describe("ResolvedTsconfig.absolutize — E5 parse-time absolutization", () => {
 });
 
 describe("ResolvedTsconfig.substituteConfigDir — E5 final phase", () => {
+	it("E5 substitutes string compiler paths and preserves invalid entries and non-array paths values", () => {
+		const marker = { future: true };
+		const resolved = deliberatelyInvalid<ResolvedTsconfig>({
+			configPath: "/proj/tsconfig.json",
+			extendedPaths: [],
+			compilerOptions: {
+				typeRoots: [cd("/types"), 1, null, marker],
+				rootDirs: [cd("/src"), false, "plain"],
+				paths: {
+					mixed: [cd("/src/*"), 2, null, marker, "plain/*"],
+					scalar: cd("/raw/*"),
+					absent: null,
+					object: marker,
+				},
+			},
+		});
+		const out = substituteConfigDir(resolved, "/final");
+		assert.deepStrictEqual<unknown>(out.compilerOptions.typeRoots, ["/final/types", 1, null, marker]);
+		assert.deepStrictEqual<unknown>(out.compilerOptions.rootDirs, ["/final/src", false, "plain"]);
+		assert.deepStrictEqual<unknown>(out.compilerOptions.paths, {
+			mixed: ["/final/src/*", 2, null, marker, "plain/*"],
+			scalar: cd("/raw/*"),
+			absent: null,
+			object: marker,
+		});
+		assert.deepStrictEqual<unknown>(resolved.compilerOptions.typeRoots, [cd("/types"), 1, null, marker]);
+		assert.deepStrictEqual<unknown>(resolved.compilerOptions.paths?.mixed, [cd("/src/*"), 2, null, marker, "plain/*"]);
+	});
+
+	it("E5 watch excludes substitute strings and preserve non-string entries in both lists", () => {
+		const marker = { future: true };
+		const resolved = deliberatelyInvalid<ResolvedTsconfig>({
+			configPath: "/proj/tsconfig.json",
+			extendedPaths: [],
+			compilerOptions: {},
+			watchOptions: {
+				excludeDirectories: [cd("/generated"), 1, null, marker, "plain"],
+				excludeFiles: [cd("/gen.ts"), false, marker, "plain.ts"],
+			},
+		});
+		const out = substituteConfigDir(resolved, "/final");
+		assert.deepStrictEqual<unknown>(out.watchOptions, {
+			excludeDirectories: ["/final/generated", 1, null, marker, "plain"],
+			excludeFiles: ["/final/gen.ts", false, marker, "plain.ts"],
+		});
+		assert.deepStrictEqual<unknown>(resolved.watchOptions, {
+			excludeDirectories: [cd("/generated"), 1, null, marker, "plain"],
+			excludeFiles: [cd("/gen.ts"), false, marker, "plain.ts"],
+		});
+	});
+
 	it(`E5 leading \${configDir} replaced against the final dir across options, files/include/exclude, watchOptions excludes`, () => {
 		const resolved: ResolvedTsconfig = {
 			configPath: "/proj/tsconfig.json",

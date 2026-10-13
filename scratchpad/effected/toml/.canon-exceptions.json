@@ -1,0 +1,22 @@
+[
+  {
+    "id": "EV010:scratchpad/test/toml/TomlDocument.test.ts:8:node:fs@0#1",
+    "reason": "\u2014 Filesystem calls enumerate and read the vendored corpus for byte-exact document round-trip assertions. The subject receives strings and has no FileSystem dependency; these calls load fixtures rather than provide a filesystem to the subject."
+  },
+  {
+    "id": "EV010:scratchpad/test/toml/e2e/toml-test.e2e.test.ts:12:node:fs@0#1",
+    "reason": "\u2014 Filesystem calls load the complete vendored compliance corpus and its expected JSON values. Raw UTF-8 reads preserve CRLF and lone-CR cases, while discovery assertions guard corpus completeness. The parser has no FileSystem dependency."
+  },
+  {
+    "id": "EV010:scratchpad/test/toml/oracle.property.test.ts:37:node:fs@0#1",
+    "reason": "\u2014 Filesystem calls supply the vendored corpus and expected JSON values for exhaustive differential checks. Both parsers receive strings; neither uses a FileSystem service. The reads are fixture loading outside EV010\u2019s filesystem-double replacement condition."
+  },
+  {
+    "id": "EV012:scratchpad/test/toml/TomlFormat.coverage.test.ts:18:vi.mock@0#1",
+    "reason": "The spy-only effect/Array mock permits fault injection of a missing last element at the formatter's private resolution-tree boundary. Array.last is a pure utility with no Effect service or Layer to replace; native ESM exports are non-configurable. All other Array behavior remains real, and the one-shot override is restored in finally."
+  },
+  {
+    "id": "EV011:scratchpad/test/toml/TomlFormat.coverage.test.ts:2:vitest-import@0#1",
+    "reason": "Only vi is imported from vitest because Vitest's hoisted module-mock transform rejects vi re-exported from @effect/vitest. Tests, assertions and Effect execution use @effect/vitest; the direct import enables the pure Array utility fault-injection mock, which has no service or Layer equivalent."
+  }
+]

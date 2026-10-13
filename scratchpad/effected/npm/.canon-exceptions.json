@@ -1,0 +1,14 @@
+[
+  {
+    "id": "EV009:scratchpad/test/npm/RegistryKind.test.ts:63:it.live@1#1",
+    "reason": "The migrated test measures actual elapsed time around synchronous registryHost work to detect regex backtracking. TestClock would not measure that work. The required one-line live-clock reason comment is present."
+  },
+  {
+    "id": "EV010:scratchpad/test/npm/reachability.test.ts:18:node:fs@0#1",
+    "reason": "The subject is the actual on-disk source graph: tests must read real modules and directory entries to detect forbidden imports, missing files, and missing exports. A seeded memory filesystem would not verify those facts. Left unchanged."
+  },
+  {
+    "id": "EV010:scratchpad/test/npm/NpmRegistry.test.ts:1:@effect/platform-node/NodeFileSystem@0#1",
+    "reason": "The test must read the actual NpmRegistry.ts source to verify the deprecated token?: never compile-time tripwire, which erases at runtime. A seeded memory filesystem would verify only its fixture. The real filesystem layer is already scoped through it.layer."
+  }
+]

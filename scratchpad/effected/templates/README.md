@@ -114,6 +114,10 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **upstream-bug** — Lab reads and reconciles a block immediately after a leading BOM while upstream rejects it as orphanedEnd. (scratchpad/test/templates/SectionDocument.test.ts:264,283,289)
 - **upstream-bug** — Lab normalizes CRLF content before EOL conversion and checks its render UpToDate while upstream doubles carriage returns and reports Drifted. (scratchpad/test/templates/SectionDialect.test.ts:163; scratchpad/test/templates/SectionDocument.test.ts:294)
 - **upstream-bug** — Lab precomputes missing-section anchors in linear passes while upstream repeatedly searches them quadratically, preserving the insertion and byte contracts. (scratchpad/test/templates/SectionDocument.reconcile.test.ts:201,217)
+- **upstream-bug** — The lab preserves nonempty prefixes and excess separators on first insertion, while upstream discards blank prefixes and rebuilds trailing separators. (scratchpad/test/templates/SectionDocument.reconcile.test.ts:245; scratchpad/test/templates/SectionDocument.property.test.ts:57)
+- **upstream-bug** — The lab refuses LF rendering of trailing bare CR with a typed error and preserves CRLF fidelity, while upstream succeeds and loses the CR on parsing. (scratchpad/test/templates/SectionDialect.test.ts:268; scratchpad/test/templates/SectionDialect.property.test.ts:54; scratchpad/test/templates/SectionDocument.test.ts:451)
+- **upstream-bug** — The lab exposes prefix matchers plus shared full-marker recognition with a linear boundary sweep, while upstream exposes complete regex matchers whose malformed whitespace tails backtrack quadratically. (scratchpad/test/templates/SectionDialect.test.ts:298,322,357; scratchpad/test/templates/internal/scan.coverage.test.ts:32,67)
+- **schema-first** — The lab exposes identified attribute schema checks with explicit decode messages and unchanged grammar, while upstream uses grammar predicates and the pre-round lab checks report generic regex failures. (scratchpad/test/templates/SectionAttributes.test.ts:369,378,387,397)
 
 ### Dependency backlog
 

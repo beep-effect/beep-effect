@@ -467,12 +467,15 @@ export interface FrontmatterSchemaResolver<E = never> {
 // at every size: "02.1.00" and "2.1.0" carry the same segments, without
 // rounding adjacent large integers. Leading zeros are legal; npm-style
 // prerelease/build/range syntax is not.
-const parseVersionSegments = (version: string): ReadonlyArray<string> | undefined => {
-	if (!/^\d+(\.\d+){0,2}$/.test(version)) {
-		return undefined;
-	}
-	return A.map(Str.split(version, "."), Str.replace(/^0+(?=\d)/, ""));
-};
+const VersionString = S.String.check(S.isPattern(/^\d+(\.\d+){0,2}$/)).annotate(
+	$I.annote("VersionString", {
+		title: "Schema declaration version",
+		description: "One to three dot-separated non-negative integer segments, with leading zeros allowed.",
+	}),
+);
+const isVersionString = S.is(VersionString);
+const canonicalSegments = (version: string): ReadonlyArray<string> =>
+	A.map(Str.split(version, "."), Str.replace(/^0+(?=\d)/, ""));
 
 const isMapping = (value: unknown): value is Record<string, unknown> =>
 	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
@@ -541,7 +544,7 @@ export class SchemaResolver {
 			}
 			const name = value.slice(0, separator);
 			const version = value.slice(separator + 1);
-			if (parseVersionSegments(version) === undefined) {
+			if (!isVersionString(version)) {
 				return Result.fail(
 					SchemaDeclarationInvalidError.make({
 						reason: `version "${version}" is outside the X[.Y[.Z]] integer grammar`,
@@ -656,20 +659,10 @@ export class SchemaResolver {
 				versions: MutableHashMap.empty<string, S.Top>(),
 			};
 			if (declaration.version === undefined) {
-				if (entry.versionless !== undefined) {
-					throw SchemaRegistryError.make({
-						message: `SchemaResolver.fromRegistry: duplicate versionless registration for "${declaration.name}"`,
-					});
-				}
 				entry.versionless = schema;
 			} else {
-				const segments = parseVersionSegments(declaration.version);
-				if (segments === undefined) {
-					throw SchemaRegistryError.make({
-						message: `SchemaResolver.fromRegistry: registration key "${key}" carries an illegal version`,
-					});
-				}
-				const canonical = A.join(segments, ".");
+				// Classification already validated the version grammar.
+				const canonical = A.join(canonicalSegments(declaration.version), ".");
 				if (MutableHashMap.has(entry.versions, canonical)) {
 					throw SchemaRegistryError.make({
 						message: `SchemaResolver.fromRegistry: registrations for "${declaration.name}" collide on version ${canonical}`,
@@ -697,11 +690,9 @@ export class SchemaResolver {
 							? Effect.fail(SchemaVersionUnresolvableError.make({ name: declaration.name }))
 							: Effect.succeed(entry.versionless);
 					}
-					const segments = parseVersionSegments(declaration.version);
-					const match =
-						segments === undefined
-							? undefined
-							: O.getOrUndefined(MutableHashMap.get(entry.versions, A.join(segments, ".")));
+					const match = isVersionString(declaration.version)
+						? O.getOrUndefined(MutableHashMap.get(entry.versions, A.join(canonicalSegments(declaration.version), ".")))
+						: undefined;
 					return match === undefined
 						? Effect.fail(SchemaVersionUnresolvableError.make({ name: declaration.name, version: declaration.version }))
 						: Effect.succeed(match);

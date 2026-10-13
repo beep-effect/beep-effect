@@ -75,8 +75,7 @@ const findNearest = Effect.fn("findNearest")(function* (
  * @category utilities
  * @since 0.0.0
  */
-export class TsconfigDiscovery {
-	private constructor() {}
+export abstract class TsconfigDiscovery {
 
 	/**
 	 * Find the nearest `tsconfig.json` (or `options.filename`) at or above

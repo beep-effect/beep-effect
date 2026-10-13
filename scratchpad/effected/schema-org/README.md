@@ -141,6 +141,7 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **upstream-bug** — The lab rejects malformed catch-all reference ids during graph construction where upstream silently accepted them. (scratchpad/test/schema-org/JsonLdDocument.test.ts:332,342)
 - **upstream-bug** — The lab reports unresolved catch-all references alongside typed references where upstream omitted them from danglingReferences. (scratchpad/test/schema-org/JsonLdDocument.test.ts:321,342)
 - **upstream-bug** — The lab reports catch-all dangling-reference issues and enforces the enabled closure gate where upstream accepted the same open graph. (scratchpad/test/schema-org/Conformance.test.ts:310,324,336,63)
+- **native-runtime** — Lab toJsonLd normalizes nested negative zero to zero through a schema JSON round trip, whereas upstream retains negative zero in the plain value (scratchpad/test/schema-org/JsonLdDocument.coverage.test.ts:9).
 
 ### Dependency backlog
 

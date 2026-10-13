@@ -169,6 +169,11 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **identity-annotations** — Lab gives public and internal schemas composer identities and descriptive field/schema annotations where upstream uses bare identifiers and unannotated fields. (module suite scratchpad/test/lockfiles/**)
 - **upstream-bug** — Lab rejects incomplete or wrongly formatted unsupported-version causes where the upstream guard accepts records whose promised fields cannot safely be accessed. (scratchpad/test/lockfiles/Lockfile.test.ts:1600,1638,1656)
 - **upstream-bug** — Lab preserves recursive and version-scoped Bun override records and rejects malformed leaves where upstream rejects every nested override. (scratchpad/test/lockfiles/Lockfile.test.ts:272,286)
+- **native-runtime** — The lab accepts an Effect HashMap for withImporterNames where upstream accepts a native ReadonlyMap, preserving name-rewrite behavior (scratchpad/test/lockfiles/Lockfile.test.ts:395; scratchpad/test/lockfiles/Lockfile.coverage.test.ts:40).
+- **upstream-bug** — The lab uses fallback workspace metadata for absent npm constructor targets where upstream fabricates Object metadata, while retaining own-target metadata (scratchpad/test/lockfiles/internal/npm.coverage.test.ts:27,34).
+- **upstream-bug** — The lab skips unmodeled npm targets and continues ancestor resolution where upstream can emit dangling resolved edges (scratchpad/test/lockfiles/internal/npm.coverage.test.ts:41).
+- **upstream-bug** — The lab marks unmodeled root and skipped pnpm targets unresolved where upstream emits dangling resolved edges, retaining valid alias and workspace targets (scratchpad/test/lockfiles/internal/pnpm.coverage.test.ts:20; scratchpad/test/lockfiles/Lockfile.test.ts:1066).
+- **upstream-bug** — The lab resolves bun edges only to emitted identities where upstream can select malformed or suppressed tuple rows, retaining ancestor precedence and workspace identities (scratchpad/test/lockfiles/internal/bun.coverage.test.ts:23).
 
 ### Dependency backlog
 

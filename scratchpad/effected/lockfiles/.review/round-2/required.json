@@ -1,0 +1,58 @@
+{
+  "module": "lockfiles",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/lockfiles/Lockfile.ts",
+        "scratchpad/effected/lockfiles/README.md"
+      ],
+      "tests": [
+        "scratchpad/test/lockfiles/Lockfile.test.ts",
+        "scratchpad/test/lockfiles/Lockfile.coverage.test.ts",
+        "scratchpad/test/lockfiles/Lockfile.property.test.ts"
+      ],
+      "findings": ["sol-2-3", "fable-2-2"]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/lockfiles/internal/npm.ts",
+        "scratchpad/effected/lockfiles/internal/pnpm.ts",
+        "scratchpad/effected/lockfiles/internal/bun.ts"
+      ],
+      "tests": [
+        "scratchpad/test/lockfiles/internal/npm.coverage.test.ts",
+        "scratchpad/test/lockfiles/internal/pnpm.coverage.test.ts",
+        "scratchpad/test/lockfiles/internal/bun.coverage.test.ts"
+      ],
+      "findings": ["sol-2-1", "sol-2-2"]
+    }
+  ],
+  "findings": {
+    "sol-2-1": {
+      "file": "scratchpad/effected/lockfiles/internal/npm.ts",
+      "class": "bug",
+      "summary": "Unchecked workspace-target indexing accepts inherited constructor metadata for an absent npm package entry.",
+      "fix": "Use R.get with Option handling in both workspace-target passes; preserve absent-target fallbacks and own entries. Add absent and own constructor-target regressions in internal/npm.coverage.test.ts. Supply upstream-bug evidence for central D9 bookkeeping; do not edit the ledger or README Port notes."
+    },
+    "sol-2-2": {
+      "file": "scratchpad/effected/lockfiles/internal/pnpm.ts",
+      "class": "bug",
+      "summary": "npm, pnpm and bun resolution indexes include raw identities that produce no normalized package row, yielding dangling resolved edges.",
+      "fix": "Restrict resolution membership to identities actually emitted by all three parsers, preserving precedence and workspace identities. Exclude pnpm root publish-directory targets and malformed package/snapshot keys; report recorded pnpm misses as unresolved. Continue npm/bun positional search past skipped rows and omit edges with no modeled target. Add counterexample regressions and the emitted-target lookup invariant in internal/npm.coverage.test.ts, internal/pnpm.coverage.test.ts and internal/bun.coverage.test.ts. Supply upstream-bug evidence for central bookkeeping; do not edit the ledger or Port notes."
+    },
+    "sol-2-3": {
+      "file": "scratchpad/effected/lockfiles/Lockfile.ts",
+      "class": "law",
+      "summary": "withImporterNames still accepts and consumes a native ReadonlyMap; all three seats report the same native-runtime gate miss.",
+      "fix": "Accept HashMap.HashMap<string, string> and use HashMap.get with Option handling, preserving missing, empty and unchanged names and all retained fields. Update the source example, README quick start and affected Map call sites in Lockfile.test.ts and Lockfile.coverage.test.ts. Leave test-local byId Maps alone. Deviation recording is central; do not edit README Port notes or the shared ledger."
+    },
+    "fable-2-2": {
+      "file": "scratchpad/effected/lockfiles/Lockfile.ts",
+      "class": "schema",
+      "summary": "LockfileFramingError repeats the named FramingReason domain instead of consuming its existing LiteralKit schema.",
+      "fix": "Import FramingReason from internal/shared.ts and reuse it for LockfileFramingError.reason while retaining the field description and accepted values. Retain and extend framing assertions in Lockfile.coverage.test.ts and round-trip checks in Lockfile.property.test.ts as needed. No shared.ts edit or new export is required."
+    }
+  }
+}

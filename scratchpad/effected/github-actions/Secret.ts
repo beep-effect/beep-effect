@@ -63,8 +63,7 @@ import * as R from "effect/Record";
  * @category utilities
  * @since 0.0.0
  */
-export class Secret {
-	private constructor() {}
+export abstract class Secret {
 
 	/**
 	 * Declassify a set of secrets for a child process's environment.

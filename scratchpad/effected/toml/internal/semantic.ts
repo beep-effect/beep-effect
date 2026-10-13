@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as Match from "effect/Match";
@@ -65,14 +66,16 @@ export interface SemanticVisitor {
 }
 
 /** How a defined name came to exist. */
-type Provenance =
-	| "value"
-	| "inline"
-	| "static-array"
-	| "table-explicit"
-	| "table-implicit"
-	| "table-dotted"
-	| "array-tables";
+const Provenance = LiteralKit([
+	"value",
+	"inline",
+	"static-array",
+	"table-explicit",
+	"table-implicit",
+	"table-dotted",
+	"array-tables",
+]).pipe($I.annoteSchema("Provenance", { description: "How a defined name came to exist in the TOML semantic provenance tree." }));
+type Provenance = typeof Provenance.Type;
 
 /** One name in the provenance tree. `elements` is used by `array-tables` only; `sectionId` by `table-dotted` only. */
 interface SemNode {
@@ -120,13 +123,8 @@ const navigateHeaderPrefix = (root: SemNode, keyPath: ReadonlyArray<TomlKey>): S
 		}
 		current = Match.value(existing.kind).pipe(
 			Match.whenOr("table-explicit", "table-implicit", "table-dotted", () => existing),
-			Match.when("array-tables", () => {
-				const element = existing.elements[existing.elements.length - 1];
-				if (element === undefined) {
-					throw TomlSemanticInvariantError.make({ message: "missing array-table element" });
-				}
-				return element;
-			}),
+			// openArrayTable inserts before publishing; later headers only append.
+			Match.when("array-tables", () => A.getUnsafe(existing.elements, existing.elements.length - 1)),
 			Match.when("inline", () => raise("InlineTableExtended", `inline table "${key.value}" cannot be extended`, key)),
 			Match.when("static-array", () => raise("ArrayOfTablesConflict", `"${key.value}" is a static array, not an array of tables`, key)),
 			Match.when("value", () => raise("TableRedefined", `"${key.value}" is already defined as a value`, key)),

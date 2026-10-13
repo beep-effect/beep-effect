@@ -35,10 +35,26 @@ import { UiStreams } from "./UiStreams.ts";
 
 const $I = $ScratchpadId.create("effected/cli/ui/CliUi");
 
-/** Ink exited before the screen produced an answer. */
-class ScreenExited extends S.TaggedError<ScreenExited>($I`ScreenExited`)(
+/**
+ * Ink exited before the screen produced an answer.
+ *
+ * **Example** (Describe the failure)
+ *
+ * ```ts
+ * import { ScreenExited } from "./CliUi.ts"
+ * const error = ScreenExited.make({ message: "The screen ended without an answer." })
+ * console.log(error._tag) // ScreenExited
+ * ```
+ *
+ * @internal
+ * @category errors
+ * @since 0.0.0
+ */
+export class ScreenExited extends S.TaggedError<ScreenExited>($I`ScreenExited`)(
 	"ScreenExited",
-	{ message: S.String },
+	{ message: S.String.annotate($I.annote("ScreenExited.message", {
+		description: "Reports that Ink exited before the screen produced an answer or cancellation.",
+	})) },
 	$I.annote("ScreenExited", { description: "Ink exited without resolving or cancelling the screen." }),
 ) {
 	override readonly name = "Error";
@@ -227,12 +243,9 @@ const mount = Effect.fn("mount")(function* <A>(
 				return exited.then(() => undefined, () => undefined);
 			}),
 	);
-	const exited: Effect.Effect<A, Cli.Cancelled> = Effect.promise(() => instance.waitUntilExit()).pipe(
-		Effect.flatMap(() =>
-			Effect.flatMap(Deferred.isDone(result), (done) =>
-				done ? Deferred.await(result) : Effect.die(ScreenExited.make({ message: SCREEN_EXITED })),
-			),
-		),
+	// Completing the Deferred wakes its side of the race synchronously. Ink's exit can win only before an answer.
+	const exited = Effect.promise(() => instance.waitUntilExit()).pipe(
+		Effect.flatMap(() => Effect.die(ScreenExited.make({ message: SCREEN_EXITED }))),
 	);
 	return yield* Effect.raceFirst(Deferred.await(result), exited);
 });

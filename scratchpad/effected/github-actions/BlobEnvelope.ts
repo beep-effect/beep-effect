@@ -375,7 +375,7 @@ export class BlobEnvelope {
 		if (bytes.length < HEADER_BYTES) {
 			return Result.fail(TruncatedBlobEnvelopeError.make({}));
 		}
-		const version = bytes[MAGIC.length] ?? 0;
+		const version = new DataView(bytes.buffer, bytes.byteOffset).getUint8(MAGIC.length);
 		if (version !== VERSION) {
 			return Result.fail(UnsupportedBlobEnvelopeVersionError.make({ version }));
 		}

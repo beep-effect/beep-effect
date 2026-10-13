@@ -22,7 +22,7 @@ const $I = $ScratchpadId.create("effected/templates/CommentStyle");
  * @since 0.0.0
  */
 const Delimiter = S.String.check(
-	S.isPattern(/^\P{Cc}+$/u, {
+	S.isPattern(/^[^\u0000-\u001f\u007f-\u009f]+$/u, {
 		identifier: $I`DelimiterCheck`,
 		title: "Comment delimiter grammar",
 		description: "A comment delimiter is non-empty and contains no control characters.",

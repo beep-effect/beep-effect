@@ -1,0 +1,80 @@
+{
+  "module": "engine",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/engine/LaunchContext.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "sol-2-3"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/engine/ProcessGuard.ts"
+      ],
+      "tests": [
+        "scratchpad/test/engine/ProcessGuard.coverage.test.ts",
+        "scratchpad/test/engine/ProcessGuard.test.ts"
+      ],
+      "findings": [
+        "fable-2-1",
+        "fable-2-4",
+        "fable-2-5"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [],
+      "tests": [
+        "scratchpad/test/engine/purity.test.ts",
+        "scratchpad/test/engine/entrypoints.test.ts"
+      ],
+      "findings": [
+        "fable-2-2",
+        "fable-2-10"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-2-3": {
+      "file": "scratchpad/effected/engine/LaunchContext.ts",
+      "class": "effect-idiom",
+      "summary": "LaunchContext retains direct native string helpers in domain logic despite EF-5.",
+      "fix": "Import `effect/String` as `Str` and `effect/Option` as `O`. Replace trimming with `Str.trim(value)`, and implement placeholder detection with `O.match(Str.indexOf(\"${\")(value), { onNone: () => false, onSome: (open) => Str.includes(\"}\", open + 2)(value) })`. Retain the existing oracle behavior and linear scan."
+    },
+    "fable-2-1": {
+      "file": "scratchpad/effected/engine/ProcessGuard.ts",
+      "class": "bug",
+      "summary": "A synchronous load failure can make ProcessGuard.run return undefined for a returning-exit host instead of the upstream Promise.",
+      "fix": "Restore an always-Promise synchronous-load-failure path while retaining the step-2 diagnostic-forced explicit promise chain: return Promise.resolve(startupFailed(error)) from the catch (or an equivalent promise boundary). Preserve reporting, exit code, and rejection behavior when exit throws. Add a ProcessGuard.coverage.test.ts regression using the existing deliberatelyInvalid<ProcessGuardHost> helper for a returning-exit double, asserting the result is a Promise and the startup report/exit behavior. Restore any upstream test lines changed solely for this regression; leave central ledger/deviation wording to the orchestrator/codemod, outside this group."
+    },
+    "fable-2-2": {
+      "file": "scratchpad/test/engine/purity.test.ts",
+      "class": "test",
+      "summary": "The purity suite hook timeout was increased without a diagnostic, law or operator cause.",
+      "fix": "Restore exactly the upstream registration layer(NodeServices.layer)((it) => { by deleting the timeout options object. Keep the diagnostic-forced header, lab source path, existing test bodies and assertions. Restore the upstream registration line rather than recording the unforced increase as a deviation."
+    },
+    "fable-2-4": {
+      "file": "scratchpad/effected/engine/ProcessGuard.ts",
+      "class": "schema",
+      "summary": "Guard schema/error identity annotations omit canonical schemaId, iri and curie metadata.",
+      "fix": "Using only primitives and effect/* in ProcessGuard.ts, complete the identity metadata for ProcessGuardPolicy, ProcessGuardInjection and InjectedCrash to match the canonical $ScratchpadId.create(\"effected/engine/ProcessGuard\").annote(name, { description }) result, including schemaId = Symbol.for(fullIdentifier), iri and curie and the canonical title. Keep schema shapes and guard import boundaries intact; do not import @beep/identity into the guard. In ProcessGuard.test.ts (not the entrypoint import-boundary tests), compare the public schemas' annotations with the composer output; check injected error identity through its schema/instance as appropriate. Central deviation recording remains outside this group."
+    },
+    "fable-2-5": {
+      "file": "scratchpad/effected/engine/ProcessGuard.ts",
+      "class": "schema",
+      "summary": "Guard Struct field descriptions annotate types rather than property keys.",
+      "fix": "Replace .annotate({ description }) with .annotateKey({ description }) on the four guard Struct field schemas (onUncaught, onRejection, at, kind). Preserve optionality, literal domains and schema-level identity annotations. Add ProcessGuard.test.ts assertions that all four property signatures carry their intended key-level descriptions. This repairs the field-annotation implementation; it is not a general S2 documentation conversion or a central bookkeeping task."
+    },
+    "fable-2-10": {
+      "file": "scratchpad/test/engine/entrypoints.test.ts",
+      "class": "test",
+      "summary": "The import-graph oracle regex helper was replaced by a stricter AST walker without a forcing cause.",
+      "fix": "Restore runtimeImportsOf from the pinned oracle __test__/entrypoints.test.ts:15-20 (readFileSync text plus the upstream matchAll/filter/map lines), and remove the A, Result and TS imports added solely for the AST walker. Restore any upstream test lines rewritten solely for that walker swap. Retain the diagnostic-forced nodeBuiltinImport header, module-local SRC/BUILT paths, per-module effect/Schema positive control, and operator-mandated effect/*-only source/built guard assertions; those were forced separately in steps 2/3 and S1. Do not record the unforced AST rewrite as an accepted deviation."
+    }
+  }
+}

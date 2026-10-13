@@ -7,10 +7,9 @@ import { dual } from "effect/Function";
 import type { Env } from "../types.ts";
 import { envIsTruthy } from "./env.ts";
 import { compareSemver } from "./semver.ts";
-import type { KnownTerminal, Osc8Capabilities, TerminalMatch } from "./terminals.ts";
-import { NO_CAPS, lookupTerminal } from "./terminals.ts";
-import type { WrapperInfo } from "./wrappers.ts";
-import { detectWrapper } from "./wrappers.ts";
+import type { TerminalMatch } from "./terminals.ts";
+import { KnownTerminal, Osc8Capabilities, NO_CAPS, lookupTerminal } from "./terminals.ts";
+import { WrapperInfo, detectWrapper } from "./wrappers.ts";
 
 const $I = $ScratchpadId.create("effected/env/internal/osc8/detect");
 
@@ -49,85 +48,128 @@ export const Osc8Reason = LiteralKit([
 export type Osc8Reason = typeof Osc8Reason.Type;
 
 /**
- * Carries the full diagnostic record {@link detect} produces.
+ * Environment override that produced an OSC8 verdict.
  *
- * @category models
+ * **Example** (Validate a hyperlink override)
+ *
+ * ```ts
+ * import { Osc8Override } from "@beep/scratchpad/effected/env/internal/osc8/detect";
+ * import * as S from "effect/Schema";
+ * console.log(S.is(Osc8Override)("force-hyperlink")) // true
+ * console.log(S.is(Osc8Override)("unknown")) // false
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
-export interface Osc8Info {
+export const Osc8Override = LiteralKit(["force-hyperlink", "no-hyperlink", "no-color"]).annotate(
+	$I.annote("Osc8Override", { description: "Environment override that produced an OSC8 verdict." }),
+);
+/**
+ * Override literal accepted by the {@link Osc8Override} schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type Osc8Override = typeof Osc8Override.Type;
+
+/**
+ * Carries the full diagnostic record {@link detect} produces.
+ *
+ * **Example** (Validate a detected terminal snapshot)
+ *
+ * ```ts
+ * import { detect, Osc8Info } from "@beep/scratchpad/effected/env/internal/osc8/detect";
+ * import * as S from "effect/Schema";
+ * const info = detect({ env: {}, isStdoutTTY: false, isStderrTTY: false });
+ * console.log(S.is(Osc8Info)(info)) // true
+ * console.log(info.reason) // not-a-tty
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Osc8Info = S.Struct({
 	/**
 	 * Final boolean verdict for stdout.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly supported: boolean;
+	supported: S.Boolean.pipe($I.annoteKey("Osc8Info.supported", { description: "Final boolean verdict for stdout." })),
 	/**
 	 * Final boolean verdict for stderr.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly supportedForStderr: boolean;
+	supportedForStderr: S.Boolean.pipe($I.annoteKey("Osc8Info.supportedForStderr", { description: "Final boolean verdict for stderr." })),
 	/**
 	 * Discriminated reason for the stdout verdict.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly reason: Osc8Reason;
+	reason: Osc8Reason.pipe($I.annoteKey("Osc8Info.reason", { description: "Discriminated reason for the stdout verdict." })),
 	/**
 	 * Human-readable summary, useful for logging.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly explanation: string;
+	explanation: S.String.pipe($I.annoteKey("Osc8Info.explanation", { description: "Human-readable summary, useful for logging." })),
 	/**
 	 * Detected terminal program, if matched against the allowlist.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly terminal: KnownTerminal | null;
+	terminal: S.NullOr(KnownTerminal).pipe($I.annoteKey("Osc8Info.terminal", { description: "Detected terminal program, if matched against the allowlist." })),
 	/**
 	 * Raw env value used to identify the terminal.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly terminalRaw: string | null;
+	terminalRaw: S.NullOr(S.String).pipe($I.annoteKey("Osc8Info.terminalRaw", { description: "Raw env value used to identify the terminal." })),
 	/**
 	 * Detected terminal version, if available.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly terminalVersion: string | null;
+	terminalVersion: S.NullOr(S.String).pipe($I.annoteKey("Osc8Info.terminalVersion", { description: "Detected terminal version, if available." })),
 	/**
 	 * Multiplexer info, if inside one.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly wrapper: WrapperInfo | null;
+	wrapper: S.NullOr(WrapperInfo).pipe($I.annoteKey("Osc8Info.wrapper", { description: "Multiplexer info, if inside one." })),
 	/**
 	 * Whether stdout is a TTY at detection time.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly isStdoutTTY: boolean;
+	isStdoutTTY: S.Boolean.pipe($I.annoteKey("Osc8Info.isStdoutTTY", { description: "Whether stdout is a TTY at detection time." })),
 	/**
 	 * Whether stderr is a TTY at detection time.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly isStderrTTY: boolean;
+	isStderrTTY: S.Boolean.pipe($I.annoteKey("Osc8Info.isStderrTTY", { description: "Whether stderr is a TTY at detection time." })),
 	/**
 	 * Which override produced the verdict, if any.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly override: "force-hyperlink" | "no-hyperlink" | "no-color" | null;
+	override: S.NullOr(Osc8Override).pipe($I.annoteKey("Osc8Info.override", { description: "Which override produced the verdict, if any." })),
 	/**
 	 * Sub-feature capabilities of the detected terminal.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly capabilities: Osc8Capabilities;
-}
+	capabilities: Osc8Capabilities.pipe($I.annoteKey("Osc8Info.capabilities", { description: "Sub-feature capabilities of the detected terminal." })),
+}).annotate($I.annote("Osc8Info", { description: "The full diagnostic record produced by detect." }));
+/**
+ * Diagnostic record represented by the {@link Osc8Info} schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type Osc8Info = typeof Osc8Info.Type;
 
 /**
  * Input to the pure {@link detect} function. Snapshot of the relevant slice of
@@ -176,11 +218,7 @@ const explanationFor = (
 });
 
 /** Outcome of running the precedence gate for a single stream's TTY state. */
-interface Gate {
-	readonly supported: boolean;
-	readonly reason: Osc8Reason;
-	readonly override: Osc8Info["override"];
-}
+type Gate = Pick<Osc8Info, "supported" | "reason" | "override">;
 
 /**
  * Run the 7-rule precedence ladder for a single stream's TTY state.

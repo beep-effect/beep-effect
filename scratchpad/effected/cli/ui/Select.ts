@@ -1,6 +1,6 @@
 import * as S from "effect/Schema";
-import * as A from "effect/Array";
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as O from "@beep/utils/Option";
 import type { ReactElement } from "react";
 import { Fmt } from "../Fmt.ts";
@@ -11,16 +11,34 @@ import { useScreenCancel } from "./internal/ScreenContext.ts";
 import { KeyHelp } from "./KeyHelp.ts";
 import { KeyTable, useKeys } from "./KeyTable.ts";
 import { Styled, useGlyphs, useTerminalSize, useTheme } from "./UiTheme.ts";
-import type { ViewportMove, ViewportRow, ViewportState } from "./Viewport.ts";
+import type { ViewportRow, ViewportState } from "./Viewport.ts";
 import { Viewport } from "./Viewport.ts";
 
 const $I = $ScratchpadId.create("effected/cli/ui/Select");
 
-class NoEnabledChoiceError extends S.TaggedError<NoEnabledChoiceError>($I`NoEnabledChoiceError`)(
+/**
+ * Reports a selection with no enabled choice to highlight or submit.
+ *
+ * **Example** (Describe the failure)
+ *
+ * ```ts
+ * import { NoEnabledChoiceError } from "./Select.ts"
+ * const error = NoEnabledChoiceError.make({ message: "Select needs at least one enabled choice." })
+ * console.log(error._tag) // NoEnabledChoiceError
+ * ```
+ *
+ * @internal
+ * @category errors
+ * @since 0.0.0
+ */
+export class NoEnabledChoiceError extends S.TaggedError<NoEnabledChoiceError>($I`NoEnabledChoiceError`)(
 	"NoEnabledChoiceError",
 	{
-		message: S.String,
+		message: S.String.annotate($I.annote("NoEnabledChoiceError.message", {
+			description: "Explains that the selection requires at least one enabled choice.",
+		})),
 	},
+	$I.annote("NoEnabledChoiceError", { description: "A selection cannot start without an enabled choice." }),
 ) {}
 
 /**
@@ -60,11 +78,30 @@ export interface SelectState<A> {
 /**
  * What a key does in a {@link Select}: a viewport move, submit, or cancel.
  *
+ * **Example** (Recognize a submission action)
+ *
+ * ```ts
+ * import { SelectAction } from "@beep/scratchpad/effected/cli/ui/Select"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(SelectAction)("submit")) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SelectAction = LiteralKit(["up", "down", "home", "end", "pageup", "pagedown", "submit", "cancel"]).annotate(
+	$I.annote("SelectAction", { description: "The viewport, submission and cancellation actions of a selection." }),
+);
+
+/**
+ * A viewport or interaction action accepted by {@link SelectAction}.
+ *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export type SelectAction = ViewportMove | "submit" | "cancel";
+export type SelectAction = typeof SelectAction.Type;
 
 /**
  * Options for {@link Select.init}.
@@ -121,8 +158,10 @@ export interface SelectScreenOptions<A> {
 	readonly height?: number;
 }
 
-const enabled = <A>(choices: ReadonlyArray<SelectChoice<A>>, index: number): boolean =>
-	index >= 0 && index < choices.length && choices[index]?.disabled !== true;
+const enabled = <A>(choices: ReadonlyArray<SelectChoice<A>>, index: number): boolean => {
+	const choice = choices[index];
+	return index >= 0 && index < choices.length && choice !== undefined && choice.disabled !== true;
+};
 
 /** The nearest enabled index from `from` in `direction`, or `undefined`. */
 const nearest = <A>(
@@ -153,12 +192,14 @@ const init = <A>(
 	if (!choices.some((choice) => choice.disabled !== true))
 		throw NoEnabledChoiceError.make({ message: NO_ENABLED_CHOICE });
 	const height = options.height ?? 10;
-	const start = Math.min(Math.max(options.initial ?? 0, 0), choices.length - 1);
+	const initial = Math.trunc(options.initial ?? 0);
+	const start = Math.min(Math.max(Number.isNaN(initial) ? 0 : initial, 0), choices.length - 1);
 	const first = nearest(choices, start, 1) ?? nearest(choices, start, -1) ?? 0;
 	return { choices, viewport: moveTo(Viewport.init(choices.length, height), first), submitted: false };
 };
 
 const step = <A>(state: SelectState<A>, action: SelectAction): SelectState<A> => {
+	if (state.submitted) return state;
 	const { choices, viewport } = state;
 	if (action === "cancel") return state;
 	if (action === "submit") return enabled(choices, viewport.cursor) ? { ...state, submitted: true } : state;
@@ -366,24 +407,24 @@ export abstract class Select {
 			if (action === "cancel") cancel("escape");
 			else setState((current) => step(current, action));
 		});
-		const rows: ReadonlyArray<ViewportRow> = props.choices.map((_, index) => ({
+		const rows: ReadonlyArray<ViewportRow> = state.choices.map((_, index) => ({
 			_tag: "Item",
 			key: String(index),
 		}));
 		const blank = " ".repeat(Fmt.width(glyphs.arrow));
 		const renderRow = (row: ViewportRow, highlighted: boolean): ReactElement => {
-			const choice = A.getUnsafe(props.choices, rows.indexOf(row));
-			const line = `${highlighted ? glyphs.arrow : blank} ${lineText(choice.label)}`;
+			const choice = row._tag === "Item" ? state.choices[Number(row.key)] : undefined;
+			const line = `${highlighted ? glyphs.arrow : blank} ${lineText(choice?.label ?? "")}`;
 			// At colour none the muted token paints nothing, so a disabled row says so in text; the label is cut, never the mark.
-			const marked = choice.disabled === true && theme.color === "none";
+			const marked = choice?.disabled === true && theme.color === "none";
 			const text = marked
 				? `${Fmt.truncate(line, Math.max(0, columns - Fmt.width(DISABLED)), { ellipsis: glyphs.ellipsis })}${DISABLED}`
 				: Fmt.truncate(line, columns, { ellipsis: glyphs.ellipsis });
 			if (highlighted) return react.createElement(Styled, { token: "accent" }, text);
-			if (choice.disabled === true) return react.createElement(Styled, { token: "muted" }, text);
+			if (choice?.disabled === true) return react.createElement(Styled, { token: "muted" }, text);
 			return react.createElement(ink.Text, null, text);
 		};
-		const detail = props.choices[state.viewport.cursor]?.detail;
+		const detail = state.choices[state.viewport.cursor]?.detail;
 		return react.createElement(
 			ink.Box,
 			{ flexDirection: "column" },

@@ -111,12 +111,12 @@ const isAbsolutePath = (p: string): boolean => p.startsWith("/") || p.startsWith
  */
 const rebuildRecord = <Value>(
 	source: Record<string, Value>,
-	mapValue: (key: string, value: Value | undefined) => Value | undefined,
+	mapValue: (key: string, value: Value) => Value,
 ): Record<string, Value> => {
 	const out: Record<string, Value> = {};
-	for (const key of R.keys(source)) {
+	for (const [key, value] of R.toEntries(source)) {
 		Object.defineProperty(out, key, {
-			value: mapValue(key, source[key]),
+			value: mapValue(key, value),
 			enumerable: true,
 			writable: true,
 			configurable: true,
@@ -160,13 +160,13 @@ const transformCompilerOptionPaths = (
 	}
 	for (const key of PATH_LIST_KEYS) {
 		const value = out[key];
-		if (A.isArray(value)) out[key] = value.map((entry) => (P.isString(entry) ? transform(entry) : entry));
+		if (A.isArray(value)) out[key] = value.map((entry) => P.isString(entry) ? transform(entry) : entry);
 	}
 	if (includePathsValues) {
 		const paths = out.paths;
 		if (P.isObjectKeyword(paths) && !P.isFunction(paths)) {
 			out.paths = rebuildRecord(paths, (_key, arr) =>
-				A.isArray(arr) ? arr.map((entry) => (P.isString(entry) ? transform(entry) : entry)) : arr,
+				A.isArray(arr) ? arr.map((entry) => P.isString(entry) ? transform(entry) : entry) : arr,
 			);
 		}
 	}
@@ -329,7 +329,7 @@ const substituteWatchExcludes = (
 	for (const key of ["excludeDirectories", "excludeFiles"] as const) {
 		const value = out[key];
 		if (A.isArray(value)) {
-			out[key] = value.map((entry) => (P.isString(entry) ? substitute(entry) : entry));
+			out[key] = value.map((entry) => P.isString(entry) ? substitute(entry) : entry);
 		}
 	}
 	return out;

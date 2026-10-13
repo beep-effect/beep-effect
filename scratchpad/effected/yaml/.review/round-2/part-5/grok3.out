@@ -1,0 +1,18 @@
+I'll review only the listed yaml rule files against the pinned upstream oracle and the round-1 inventory, then report numbered findings.Round 1 already recorded many of these rules. I'll compare the current commit with the pinned oracle and only raise what is still open or new.The round-1 option and compact-indent fixes are in the tree. I'll probe the hyphen and indentation rules for value changes the tests don't cover.### fable-2-1
+- file: scratchpad/effected/yaml/internal/rules/hyphen-spacing.ts:112
+- class: bug   severity: required
+- standard: D9; D11; section 14 value preservation (same class as the compact-collection hyphen fix)
+- evidence: `relocatesCollection` is set only for a later-line token. An explicit-indent block scalar is one `scalar` token whose `line` is the header line, so the body is never inspected. In the lexer, `|2` / `>2` set `contentIndent` to the column of the preceding `-` plus the digit (`lexer.ts` parent-indent branch, then `extra = " ".repeat(spaces - contentIndent)`). For `-   - |2\n      hello\n` the inner `-` is a same-line `block-seq-entry` (`compact` becomes true) and no later-line token exists, so a fix is still attached. Deleting the two extra spaces moves that `-` from column 4 to column 2, `contentIndent` falls from 6 to 4, and the unchanged content line is re-stripped as `"  hello\n"` instead of `"hello\n"`. Folded `>2` takes the same header path. Upstream always attaches this fix, so both sides corrupt the value.
+- failure: A successful hyphen-spacing fix changes an explicit-indent block scalar's text. The parsed sequence value gains leading spaces (and folded style can also change break folding).
+- fix: On the same-line scan, if a `block-seq-entry` at or after `j` will move and a later same-line scalar's source span is an explicit-indent block header (`|` or `>` with a `1`–`9` digit, optional chomp), omit the fix the same way `relocatesCollection` does. Keep the diagnostic. Add a `|2` and `>2` value-fidelity regression, and leave the central upstream-bug record to the deviation codemod.
+
+### fable-2-2
+- file: scratchpad/effected/yaml/internal/rules/indentation.ts:141
+- class: bug   severity: required
+- standard: D11; section 14; the parser's explicit-key rule (continuation column strictly greater than the `?` column, not a new block level)
+- evidence: `compactKeyIndent` is committed only when a same-line `block-map-value` is seen. A compact explicit key has `block-map-key` on the `-` line and `:` on a later line, so the `?` column is dropped. `scanPlainScalar` ends at the newline, so `isScalarContinuationLine` does not skip the next plain line. For `- ? a long\n    key\n  : value\n` with `spaces: 2`, the continuation's indent is 4 against a stack top of 0, which reports `Indent of 4 spaces, expected 2` and inference votes `4`. The expanded form (`-\n  ? a long\n    key\n  : value\n`) only produces unit-2 steps. The composer merges that continuation when its column is greater than the `?` column (`? a\n  true\n:`), including indents that are not exactly one `spaces` unit.
+- failure: A well-formed compact explicit key gets a false indentation diagnostic, and inference records the wrong `spaces` unit. Any continuation deeper than the `?` column is legal key text, not a block level.
+- fix: While an explicit key is open, skip later plain-scalar lines whose column is greater than the `?` column until the value indicator, and do not vote them. With the normal one-space form, the `:` line then carries the single unit step from the hyphen. Add a `spaces: 2` check and infer regression for the compact input above and its expanded twin.
+
+REQUIRED: 2
+BACKLOG: 0

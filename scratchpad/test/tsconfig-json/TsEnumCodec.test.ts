@@ -193,6 +193,20 @@ describe("TsEnumCodec", () => {
 			assert.deepStrictEqual(encoded, { strict: true, outDir: "./dist", types: ["node"] });
 		});
 
+		it("passes an unmappable enum string through while encoding known enum strings", () => {
+			const encoded = TsEnumCodec.encodeCompilerOptions(
+				deliberatelyInvalid<CompilerOptions.Type>({ target: "es9999", module: "nodenext", strict: true }),
+			);
+			assert.deepStrictEqual<unknown>(encoded, { target: "es9999", module: 199, strict: true });
+		});
+
+		it("normalizes string lib entries and passes non-string entries through unchanged", () => {
+			const encoded = TsEnumCodec.encodeCompilerOptions(
+				deliberatelyInvalid<CompilerOptions.Type>({ lib: ["ESNext", 1, "/x/typescript/lib/lib.dom.iterable.d.ts"] }),
+			);
+			assert.deepStrictEqual<unknown>(encoded, { lib: ["lib.esnext.d.ts", 1, "lib.dom.iterable.d.ts"] });
+		});
+
 		it("normalizes a mixed-case lib entry before re-encoding to file-name form", () => {
 			// `lib`'s decoded type is the canonical-lowercase literal union, so a
 			// mixed-case entry can only reach this function by bypassing the

@@ -1,0 +1,30 @@
+I'll review the composer and rules files against the pinned upstream oracle and the round-1 inventory, without repeating closed items or recorded deviations.Round 1 already recorded the known composer and rule defects. I’ll look for residual divergences in the current commit that those items do not cover.The separator change dropped upstream’s comment rule. I’ll probe that path and a few nearby composer cases against the lab and the `yaml` reference parser.### fable-2-1
+- file: scratchpad/effected/yaml/internal/composer/flow.ts:79
+- class: bug   severity: required
+- standard: D9; D11   evidence: The pinned oracle `validateFlowSeparators` arms the missing-comma check when a comment follows content (`colonCount = 1`, `contentAfterColon = 1`). The lab continues past every comment and leaves that state unchanged. `collectMultilinePlainScalar` stops at a comment, so the next token is a new entry. `[1 # c\n2]` and `{1 # c\n2}` therefore never see `colonCount > 0`, while `{ "foo" # comment\n :bar }` still has no second content token after a colon. `MalformedFlowCollection` is fatal (`diagnostics.ts` `FATAL_CODES`).
+- failure: A comment between flow entries suppresses the missing-comma diagnostic the oracle emits. The sequence composer then keeps both scalars, so the parse succeeds with two items.
+- fix: After the collector-aware content count, restore the oracle comment arm so a comment that follows content arms the next-token check. Keep the plain-scalar collector for `{foo: multi\n  line}`.
+
+### fable-2-2
+- file: scratchpad/effected/yaml/internal/composer/flow.ts:124
+- class: bug   severity: required
+- standard: D9; D11   evidence: For `{foo: 1 bar: 2}`, the `:` arm at line 87 pushes `MalformedFlowCollection` at the second colon (offset 11, the offset `composer-regressions.test.ts` asserts). The same key is then visited as plain content: `collectMultilineKey` stops on that colon, `contentAfterColon` becomes 2, and the arm at line 128 pushes a second fatal diagnostic at `bar` (offset 8). The regression test uses `.some`, so the extra diagnostic stays green.
+- failure: One missing comma is reported as two fatal composer errors.
+- fix: Do not increment `contentAfterColon` for a plain scalar that the collector classified as the next key. Keep the colon-arm diagnostic at the second structural `:`.
+
+### fable-2-3
+- file: scratchpad/effected/yaml/internal/composer/tags.ts:85
+- class: bug   severity: required
+- standard: D9; D11; ledger upstream-bug for malformed tag suffixes   evidence: `decodeTagSuffix` pushes `UnresolvedTag` while resolving a scalar tag. `validateTagHandlesInDocument` (line 191) pushes the same code, message, and span for every CST tag. `composeAllDocuments` (`document.ts:1275`) runs that validator on a separate state for every document after the first, and `parseAllResultImpl` (`Yaml.ts:476`) concatenates fatal `streamErrors` with each document's fatal errors. `UnresolvedTag` is fatal. A one-document `parseResult` only hits the resolver, which is why `core-regressions.test.ts:197` stays green.
+- failure: `b: !!% 2` in a later document produces two identical fatal `UnresolvedTag` diagnostics for one tag.
+- fix: Dedup by offset and code before the second push, or skip the percent-encoding push in `validateTagHandlesInDocument` when the document resolver has already recorded that span. Keep a single positioned diagnostic for both the first document and later documents.
+
+### fable-2-4
+- file: scratchpad/effected/yaml/internal/composer/scalars.ts:1238
+- class: bug   severity: required
+- standard: D11; section 14 upstream-bug   evidence: `findParentIndent` now skips `!` and `&` tokens, then still treats a separated `:` or a token-initial `-` as structure. In `key:\n  # note: x\n  |2\n  hello\n`, the backward scan hits the colon in the comment first. `findKeyIndent` returns that comment line's indent (2), so `contentIndent` becomes 4. The body line has only 2 spaces, and `decodeBlockScalar` stops at `spaces < contentIndent` (line 1403), returning the empty string. The same scan is in the pinned oracle; the verbatim-tag fix did not cover comments. YAML comments are not mapping or sequence indicators.
+- failure: A colon or sequence dash inside a comment between a key and an explicit-indent block scalar drops the block body.
+- fix: While scanning backward, skip a line comment (an unquoted `#` through the line end) before classifying `:` or `-`. Add the comment-colon `|2` case next to the verbatim-tag regression.
+
+REQUIRED: 4
+BACKLOG: 0

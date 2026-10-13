@@ -11,6 +11,9 @@ import type { YamlNode, YamlScalar } from "../../YamlNode.ts";
 import { YamlScalar as Scalar, YamlMap, YamlSeq } from "../../YamlNode.ts";
 import type { YamlToken } from "../../YamlToken.ts";
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/util");
+const isScalar = S.is(Scalar);
+const isMap = S.is(YamlMap);
+const isSeq = S.is(YamlSeq);
 
 /**
  * Validates non-negative integer options used by numeric lint rules.
@@ -166,18 +169,18 @@ export const walkScalars: {
 	(node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): void;
 } = dual(3, (node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): void => {
 	if (node === null) return;
-	if (S.is(Scalar)(node)) {
+	if (isScalar(node)) {
 		visit(node, role);
 		return;
 	}
-	if (S.is(YamlMap)(node)) {
+	if (isMap(node)) {
 		for (const pair of node.items) {
 			walkScalars(pair.key, "key", visit);
 			walkScalars(pair.value, "value", visit);
 		}
 		return;
 	}
-	if (S.is(YamlSeq)(node)) {
+	if (isSeq(node)) {
 		for (const item of node.items) walkScalars(item, "item", visit);
 	}
 });

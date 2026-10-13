@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { Section, SectionReconciliation } from "../../effected/templates/index.ts";
@@ -29,15 +30,15 @@ const Declared = S.Array(S.Tuple([Key, StyleIndex, Content])).check(S.isBetweenL
 /** Declared sets must be unique by identity, or reconciliation refuses by design. */
 const declaredArb = Arbitrary.schema(Declared).pipe(
 	Arbitrary.map((sections) => {
-		const seen = new Set<string>();
+		const seen = MutableHashSet.empty<string>();
 		const declared: Array<Section> = [];
 		for (const [key, styleIndex, content] of sections) {
 			const commentStyle = styles[styleIndex];
 			const identity = `${key}|${commentStyle.id}`;
-			if (seen.has(identity)) {
+			if (MutableHashSet.has(seen, identity)) {
 				continue;
 			}
-			seen.add(identity);
+			MutableHashSet.add(seen, identity);
 			declared.push(SectionId.make({ key, commentStyle }).section(content.join("\n")));
 		}
 		return declared;

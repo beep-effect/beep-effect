@@ -64,8 +64,9 @@ export abstract class Toggle {
 		const check = props.value ? (glyphs.kind === "unicode" ? "◉" : "[x]") : glyphs.kind === "unicode" ? "◯" : "[ ]";
 		const lead = props.highlighted ? glyphs.arrow : " ".repeat(Fmt.width(glyphs.arrow));
 		const text = Fmt.truncate(`${lead} ${check} ${lineText(props.label)}`, columns, { ellipsis: glyphs.ellipsis });
-		return props.highlighted
-			? react.createElement(Styled, { token: "accent" }, text)
-			: react.createElement(ink.Text, null, text);
+		return react.createElement(ink.Box, { height: 1, overflow: "hidden", marginRight: 1 },
+			props.highlighted
+				? react.createElement(Styled, { token: "accent" }, text)
+				: react.createElement(ink.Text, { wrap: "truncate-end" }, text));
 	};
 }

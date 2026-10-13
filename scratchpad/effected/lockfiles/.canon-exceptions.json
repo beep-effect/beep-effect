@@ -1,0 +1,18 @@
+[
+  {
+    "id": "EV010:scratchpad/test/lockfiles/Lockfile.test.ts:8:node:fs@0#1",
+    "reason": "Host I/O loads checked-in fixture bytes and enumerates the actual corpus so newly added fixtures enter the version-gate check. A seeded memory volume would weaken that check; the parser itself consumes strings."
+  },
+  {
+    "id": "EV010:scratchpad/test/lockfiles/PnpmEnvLockfile.test.ts:23:node:fs@0#1",
+    "reason": "Host I/O reads checked-in captures of actual pnpm output. It supplies fixture strings rather than a filesystem service to the subject; a memory layer would still need those original bytes."
+  },
+  {
+    "id": "EV010:scratchpad/test/lockfiles/documents.test.ts:20:node:fs@0#1",
+    "reason": "Host I/O reads checked-in document-framing captures, including the byte-identical interrupted-install and config-only fixtures. The subject consumes strings and has no filesystem dependency to replace."
+  },
+  {
+    "id": "EV010:scratchpad/test/lockfiles/importers.test.ts:9:node:fs@0#1",
+    "reason": "Host I/O loads checked-in importer fixtures as strings. The parser has no filesystem service dependency; retaining the original fixture bytes preserves corpus provenance."
+  }
+]

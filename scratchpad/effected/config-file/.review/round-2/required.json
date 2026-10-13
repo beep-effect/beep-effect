@@ -1,0 +1,35 @@
+{
+  "module": "config-file",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/config-file/internal/deepMerge.ts",
+        "scratchpad/effected/config-file/MergeStrategy.ts"
+      ],
+      "tests": [
+        "scratchpad/test/config-file/MergeStrategy.test.ts",
+        "scratchpad/test/config-file/MergeStrategy.property.test.ts",
+        "scratchpad/test/config-file/internal/deepMerge.property.test.ts"
+      ],
+      "findings": [
+        "sol-2-1",
+        "sol-2-2"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-2-1": {
+      "file": "scratchpad/effected/config-file/internal/deepMerge.ts:112",
+      "class": "type-safety",
+      "summary": "Prototype-only merge results pass instanceof but lack class private-field brands, so valid typed getters fail in both lab and upstream.",
+      "fix": "Treat non-plain class instances as atomic highest-priority values in canMerge/layeredMerge and direct deepMerge; recursively merge only compatible plain records. Add decoded-schema-class private-field getter and identity regressions in MergeStrategy.test.ts and internal/deepMerge.property.test.ts; strengthen the class identity property in MergeStrategy.property.test.ts. Retarget the class-field-copy expectation at MergeStrategy.test.ts:95 while retaining inherited-accessor safety coverage for mergeable records, and update the affected source contract prose/examples in deepMerge.ts and MergeStrategy.ts. Retaining field-wise class merging instead requires an explicit constructor-aware reconstruction path passing the same regressions. The orchestrator handles the verified upstream-bug deviation and adjusted upstream test bookkeeping centrally; do not edit shared ledger or README Port notes."
+    },
+    "sol-2-2": {
+      "file": "scratchpad/effected/config-file/internal/deepMerge.ts:119",
+      "class": "type-safety",
+      "summary": "String-only copy loops discard required enumerable symbol properties from valid schema-decoded records in both lab and upstream.",
+      "fix": "Copy own enumerable symbol keys as well as strings in both loops, widen the copy helper and internal record access to a type-safe PropertyKey domain, and preserve own-property checks, inert data-property definitions, target priority, plain-record recursion, the string __proto__ filter, non-enumerable exclusion and input immutability. Add symbol-schema validity, both-source, priority and nested-record regressions in MergeStrategy.test.ts and direct-helper coverage in internal/deepMerge.property.test.ts. Retain the law-forced Effect adaptations and round-1 constructor/prototype protections. The orchestrator handles the separately verified upstream-bug deviation bookkeeping centrally; do not edit shared ledger or README Port notes."
+    }
+  }
+}

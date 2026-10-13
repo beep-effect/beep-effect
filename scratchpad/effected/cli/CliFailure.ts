@@ -210,9 +210,6 @@ const parseFrame = (raw: string): Frame => {
 /** The file a frame ran in, as a path, or `undefined` for a frame with none: `node:`, `<anonymous>`, `native`, `eval`. */
 const frameFile = (raw: string): string | undefined => asPath(splitPosition(splitFrame(raw).location).where);
 
-/** A frame under `node_modules`: a dependency's, or an installed program's own. Decided by its file alone. */
-const isDependency = (raw: string): boolean => /[\\/]node_modules[\\/]/.test(frameFile(raw) ?? "");
-
 /**
  * A frame that is the runtime's or Effect's, never the program's, wherever the program is installed: one with no file
  * (every `node:` frame, `<anonymous>`, native), or one in Effect's own files. Decided by the file alone, never by the
@@ -234,7 +231,10 @@ const cleanStack = (
 ): { readonly frames: ReadonlyArray<Frame>; readonly hidden: number } => {
 	if (!P.isString(stack)) return { frames: [], hidden: 0 };
 	const lines = stack.split(/\r\n|\r|\n/).filter((line) => /^\s*at\s/.test(line));
-	const app = lines.filter((line) => !isRuntime(line) && !isDependency(line));
+	const app = lines.filter((line) => {
+		const file = frameFile(line);
+		return file !== undefined && !/[\\/]node_modules[\\/]/.test(file) && !isRuntime(line);
+	});
 	// An installed program (a global install, `npx`, a pnpm store) has every frame of its own under `node_modules`:
 	// when dropping dependencies leaves nothing, keep everything but the runtime's and Effect's.
 	const kept = mode === "all" ? lines : app.length > 0 ? app : lines.filter((line) => !isRuntime(line));
@@ -277,12 +277,15 @@ const causeTree = (defect: Error): Block | undefined => {
 		chain.push(firstLine(describe(current)));
 		current = current instanceof Error ? current.cause : undefined;
 	}
-	if (chain.length === 0) return undefined;
-	const nest = (index: number): TreeInput =>
-		index === chain.length - 1
-			? { label: A.getUnsafe(chain, index) }
-			: { label: A.getUnsafe(chain, index), children: [nest(index + 1)] };
-	return Doc.tree({ label: firstLine(describe(defect)), children: [nest(0)] });
+	if (chain.length === 0) {
+		return undefined;
+	} else {
+		const nest = (index: number): TreeInput =>
+			index === chain.length - 1
+				? { label: A.getUnsafe(chain, index) }
+				: { label: A.getUnsafe(chain, index), children: [nest(index + 1)] };
+		return Doc.tree({ label: firstLine(describe(defect)), children: [nest(0)] });
+	}
 };
 
 const dieBlocks = (

@@ -61,7 +61,17 @@ it.effect("stat preserves a non-Error conversion failure description", () => Eff
   try {
     const error = yield* Effect.flip(fs.stat("/virtual"));
     assert.strictEqual(error.reason._tag, "BadArgument");
-    if (error.reason._tag === "BadArgument") assert.strictEqual(error.reason.description, "conversion failed");
+    if (error.reason._tag === "BadArgument") assert.strictEqual(error.reason.description, undefined);
+  } finally { spy.mockRestore(); }
+}));
+
+it.effect("stat preserves a message-bearing non-Error conversion failure description", () => Effect.gen(function* () {
+  const stat = node.statSync(import.meta.filename, { bigint: true });
+  const spy = vi.spyOn(node, "statSync").mockReturnValue(deliberatelyInvalid<ReturnType<typeof node.statSync>>({ ...stat, isFile: () => { throw { message: "busy" }; } }));
+  try {
+    const error = yield* Effect.flip(fs.stat("/virtual"));
+    assert.strictEqual(error.reason._tag, "BadArgument");
+    if (error.reason._tag === "BadArgument") assert.strictEqual(error.reason.description, "busy");
   } finally { spy.mockRestore(); }
 }));
 

@@ -68,6 +68,24 @@ const isYamlScalar = S.is(YamlScalar);
 
 const $I = $ScratchpadId.create("effected/yaml/internal/composer/block");
 
+const PendingComment = S.Struct({
+	text: S.mutableKey(S.String).annotateKey({ description: "Raw comment text awaiting attribution." }),
+	offset: S.mutableKey(S.Finite).annotateKey({ description: "Source offset of the pending comment." }),
+	blankAbove: S.mutableKey(S.Boolean).annotateKey({ description: "Whether a blank line precedes this comment." }),
+}).annotate($I.annote("PendingComment", { description: "Pending block comment shared by mapping and sequence attribution." }));
+type PendingComment = typeof PendingComment.Type;
+
+function validatePendingProperty(child: CstNode, meta: NodeMeta, state: ComposerState): void {
+	if ((child.type === "anchor" && meta.anchor !== undefined) || (child.type === "tag" && meta.tag !== undefined)) {
+		state.errors.push({
+			code: "UnexpectedToken",
+			message: `Node cannot have two ${child.type} declarations`,
+			offset: child.offset,
+			length: child.length,
+		});
+	}
+}
+
 /**
  * Compose a block map from its CST children, with an optional external first key.
  *
@@ -480,7 +498,7 @@ export const flattenBlockMapChildren: {
 				// represented (otherwise outer-context anchors would be lost).
 				const flushMeta = combinedPending();
 				if (hasMeta(flushMeta)) {
-					const value = resolveScalar("", ["plain", flushMeta.tag, state]);
+					const value = resolveScalar("", ["plain", flushMeta.tag, state, flushMeta.tagSpan]);
 					const scalar = YamlScalar.make({
 						value,
 						style: "plain",
@@ -551,13 +569,17 @@ export const flattenBlockMapChildren: {
 			// same line as the value indicator). Move it to outerMeta so the new
 			// anchor can attach to the inner content as its own pending meta.
 			commitOuterIfNewlineSeen();
+			validatePendingProperty(child, pendingMeta, state);
 			pendingMeta.anchor = getAnchorName(child, state.text);
 			continue;
 		}
 		if (child.type === "tag") {
 			validatePropertyContinuationColumn(child, state, afterValueSep, lastValueSepOffset, lastKeyColumn);
 			commitOuterIfNewlineSeen();
+			validatePendingProperty(child, pendingMeta, state);
 			pendingMeta.tag = child.source;
+			pendingMeta.tagSpan = { offset: child.offset, length: child.length };
+			MutableHashSet.add(state.tagOffsets, child.offset);
 			continue;
 		}
 		if (child.type === "flow-scalar" || child.type === "block-scalar") {
@@ -583,7 +605,7 @@ export const flattenBlockMapChildren: {
 			if (afterValueSep && sepOnSameLine) {
 				const flushMeta = combinedPending();
 				if (hasMeta(flushMeta)) {
-					const value = resolveScalar("", ["plain", flushMeta.tag, state]);
+					const value = resolveScalar("", ["plain", flushMeta.tag, state, flushMeta.tagSpan]);
 					const scalar = YamlScalar.make({
 						value,
 						style: "plain",
@@ -702,7 +724,7 @@ export const flattenBlockMapChildren: {
 				if (isExplicitKey) {
 					const { value: keyValue, nextIdx: keyNextIdx } = collectMultilineKey(children, i);
 					const keyMeta = combinedPending();
-					const resolved = resolveScalar(keyValue, ["plain", keyMeta.tag, state]);
+					const resolved = resolveScalar(keyValue, ["plain", keyMeta.tag, state, keyMeta.tagSpan]);
 					const scalar = YamlScalar.make({
 						value: resolved,
 						style: "plain",
@@ -737,7 +759,7 @@ export const flattenBlockMapChildren: {
 					let isLineStart = true;
 					for (let k = child.offset - 1; k >= 0; k--) {
 						const ch = state.text[k];
-						if (ch === "\n") break;
+						if (ch === "\n" || ch === "\r") break;
 						if (ch === " " || ch === "\t") continue;
 						isLineStart = false;
 						break;
@@ -782,7 +804,7 @@ export const flattenBlockMapChildren: {
 					minContCol !== undefined ? state.text : undefined,
 				);
 				const plainMeta = combinedPending();
-				const resolved = resolveScalar(value, ["plain", plainMeta.tag, state]);
+				const resolved = resolveScalar(value, ["plain", plainMeta.tag, state, plainMeta.tagSpan]);
 				const needsRaw = !P.isString(resolved) && resolved !== undefined && shouldPreserveRaw(value, resolved);
 				const scalar = YamlScalar.make({
 					value: resolved,
@@ -968,7 +990,7 @@ export const flattenBlockMapChildren: {
 	// Flush trailing pending tag/anchor as empty scalar
 	const trailingMeta = combinedPending();
 	if (hasMeta(trailingMeta)) {
-		const value = resolveScalar("", ["plain", trailingMeta.tag, state]);
+		const value = resolveScalar("", ["plain", trailingMeta.tag, state, trailingMeta.tagSpan]);
 		const scalar = YamlScalar.make({
 			value,
 			style: "plain",
@@ -1025,11 +1047,7 @@ export const buildPairs: {
 	// Forward-attribution state: own-line comment parts and blank-line flag
 	// pending for the NEXT pair. Parts keep their offsets so the terminal
 	// leftovers can be column-partitioned (kept vs escaped to the outer scope).
-	interface PendingComment {
-		text: string;
-		offset: number;
-		blankAbove: boolean;
-	}
+
 	let pending: PendingComment[] = [];
 	let pendingSpace = false;
 	// End offset of the last completed pair's content (-1 before the first),
@@ -1297,14 +1315,13 @@ function keyIsSimple(keyNode: YamlNode | undefined): boolean {
 	return keyNode.style !== "block-literal" && keyNode.style !== "block-folded";
 }
 
-interface ConsumedValue {
-	node: YamlNode | null;
-	nextIdx: number;
-	/** Comments on the value-sep's line, before the value. */
-	sameLineComments: string[];
-	/** Own-line comments between the value-sep and the value. */
-	leadingComments: string[];
-}
+const ConsumedValue = S.Struct({
+	node: YamlNode.pipe(S.NullOr, S.mutableKey).annotateKey({ description: "Consumed value node, or null for an absent value." }),
+	nextIdx: S.mutableKey(S.Finite).annotateKey({ description: "Cursor immediately after the consumed value." }),
+	sameLineComments: S.String.pipe(S.Array, S.mutable, S.mutableKey).annotateKey({ description: "Comments on the value separator's line before the value." }),
+	leadingComments: S.String.pipe(S.Array, S.mutable, S.mutableKey).annotateKey({ description: "Own-line comments between the separator and value." }),
+}).annotate($I.annote("ConsumedValue", { description: "Structural value-consumption result with writable comment arrays." }));
+type ConsumedValue = typeof ConsumedValue.Type;
 
 function consumeValueNode(
 	items: SemanticItem[],
@@ -1328,7 +1345,7 @@ function consumeValueNode(
 		candidate?.kind === "node" &&
 		peek + 1 < items.length &&
 		items[peek + 1]?.kind === "value-sep" &&
-		text.slice(sepOffset, candidate.node.offset).includes("\n")
+		!sameLine(text, sepOffset, candidate.node.offset)
 	) {
 		return null;
 	}
@@ -1411,7 +1428,7 @@ function consumeValueNodeForNullKey(
 				// Check if the candidate node is on a different line from the
 				// null key's value-sep. Only refuse to consume cross-line nodes.
 				const nodeOffset = item.node.offset;
-				const hasNewline = text.slice(valueSepOffset, nodeOffset).includes("\n");
+				const hasNewline = !sameLine(text, valueSepOffset, nodeOffset);
 				if (hasNewline) {
 					// Cross-line: this node is a key for the next pair, not our value.
 					break;
@@ -1814,7 +1831,9 @@ function validateNoDoubleAnchorOnScalar(
 	pendingMeta: NodeMeta,
 	state: ComposerState,
 ): void {
-	if (outerMeta.anchor === undefined || pendingMeta.anchor === undefined) return;
+	const duplicateAnchor = outerMeta.anchor !== undefined && pendingMeta.anchor !== undefined;
+	const duplicateTag = outerMeta.tag !== undefined && pendingMeta.tag !== undefined;
+	if (!duplicateAnchor && !duplicateTag) return;
 	// Skip when the scalar is a key (followed by `:` or by a block-map sibling).
 	if (hasValueSepAfterInList(children, idx + 1)) return;
 	const nextContent = findNextContentInList(children, idx + 1);
@@ -1823,7 +1842,7 @@ function validateNoDoubleAnchorOnScalar(
 	}
 	state.errors.push({
 		code: "UnexpectedToken",
-		message: "Scalar cannot have two anchor declarations",
+		message: duplicateAnchor ? "Scalar cannot have two anchor declarations" : "Scalar cannot have two tag declarations",
 		offset: scalar.offset,
 		length: scalar.length,
 	});
@@ -1966,6 +1985,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 	const children = cst.children ?? [];
 	const rawItems: YamlNode[] = [];
 	let pendingMeta: NodeMeta = {};
+	let outerMeta: NodeMeta = {};
 	let sawEntry = false;
 	const seqIndent = lineIndentColumn(state.text, cst.offset);
 	// Track whether a newline appeared between the most-recent pending tag/anchor
@@ -1980,18 +2000,14 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 	// `comment`; a blank line before an item sets `spaceBefore`; terminal
 	// leftovers at (or beyond) the sequence's indent become its trailing
 	// comment, SHALLOWER ones escape to the outer scope.
-	interface PendingSeqComment {
-		text: string;
-		offset: number;
-		blankAbove: boolean;
-	}
-	let pending: PendingSeqComment[] = [];
+
+	let pending: PendingComment[] = [];
 	let pendingSpace = false;
 	let lastItemEnd = -1;
 	// The last pushed item node — the anchor for the keep-chomp blank-line
 	// gate (a blank inside a `|+` item's span is VALUE, not style).
 	let lastItemNode: YamlNode | undefined;
-	const joinPending = (parts: ReadonlyArray<PendingSeqComment>): string | undefined => {
+	const joinPending = (parts: ReadonlyArray<PendingComment>): string | undefined => {
 		const [first, ...rest] = parts;
 		if (first === undefined) return undefined;
 		let out = first.text;
@@ -2077,6 +2093,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 					if (pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")
 						registerAnchor(emptyScalar, pendingMeta.anchor, state, child.offset);
 					pendingMeta = {};
+					outerMeta = {};
 					items.push(emptyScalar);
 				}
 				sawEntry = true;
@@ -2093,11 +2110,25 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 			continue;
 		}
 		if (child.type === "anchor") {
+			if (sawNewlineSincePending && hasMeta(pendingMeta)) {
+				outerMeta = { ...outerMeta, ...pendingMeta };
+				pendingMeta = {};
+			}
+			sawNewlineSincePending = false;
+			validatePendingProperty(child, pendingMeta, state);
 			pendingMeta.anchor = getAnchorName(child, state.text);
 			continue;
 		}
 		if (child.type === "tag") {
+			if (sawNewlineSincePending && hasMeta(pendingMeta)) {
+				outerMeta = { ...outerMeta, ...pendingMeta };
+				pendingMeta = {};
+			}
+			sawNewlineSincePending = false;
+			validatePendingProperty(child, pendingMeta, state);
 			pendingMeta.tag = child.source;
+			pendingMeta.tagSpan = { offset: child.offset, length: child.length };
+			MutableHashSet.add(state.tagOffsets, child.offset);
 			continue;
 		}
 		if (child.type === "flow-scalar" || child.type === "block-scalar") {
@@ -2111,20 +2142,24 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 				// not to the inner key. Example: `- !!map\n  key: value` — `!!map`
 				// tags the map, while `key` keeps no meta.
 				let keyMeta: NodeMeta | undefined = hasMeta(pendingMeta) ? pendingMeta : undefined;
-				let mapMeta: NodeMeta | undefined;
+				let mapMeta: NodeMeta | undefined = hasMeta(outerMeta) ? outerMeta : undefined;
 				if (sawNewlineSincePending && hasMeta(pendingMeta)) {
-					mapMeta = pendingMeta;
+					mapMeta = { ...outerMeta, ...pendingMeta };
 					keyMeta = undefined;
 				}
 				const keyScalar = makeScalar(child, state, keyMeta);
 				const map = composeBlockMap(nextSigChild, state, keyScalar, mapMeta);
 				pendingMeta = {};
+				outerMeta = {};
 				sawNewlineSincePending = false;
 				sawEntry = false;
 				items.push(map);
 				ci = nextSig;
 				continue;
 			}
+			validateNoDoubleAnchorOnScalar(child, children, ci, outerMeta, pendingMeta, state);
+			pendingMeta = { ...outerMeta, ...pendingMeta };
+			outerMeta = {};
 			// Merge consecutive plain scalars in same entry (multi-line plain scalar)
 			// Uses collectMultilinePlainScalar to also handle continuation lines
 			// where the lexer mis-tokenized content as anchors, tags, block-seq, etc. (AB8U)
@@ -2136,7 +2171,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 					endOffset,
 				} = collectMultilinePlainScalar(children, ci, undefined, state.text);
 				if (partsCount > 1) {
-					const resolved = resolveScalar(merged, ["plain", pendingMeta.tag, state]);
+					const resolved = resolveScalar(merged, ["plain", pendingMeta.tag, state, pendingMeta.tagSpan]);
 					const scalar = YamlScalar.make({
 						value: resolved,
 						style: "plain",
@@ -2150,6 +2185,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 					if (pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")
 						registerAnchor(scalar, pendingMeta.anchor, state, child.offset);
 					pendingMeta = {};
+					outerMeta = {};
 					sawEntry = false;
 					items.push(scalar);
 					ci = mergeEnd - 1;
@@ -2158,15 +2194,18 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 			}
 			const scalar = makeScalar(child, state, hasMeta(pendingMeta) ? pendingMeta : undefined);
 			pendingMeta = {};
+			outerMeta = {};
 			sawNewlineSincePending = false;
 			sawEntry = false;
 			items.push(scalar);
 			continue;
 		}
 		if (child.type === "alias") {
+			pendingMeta = { ...outerMeta, ...pendingMeta };
 			checkAnchorOnAlias(pendingMeta, child, state);
 			const alias = makeAlias(child, state);
 			pendingMeta = {};
+			outerMeta = {};
 			sawNewlineSincePending = false;
 			sawEntry = false;
 			items.push(alias);
@@ -2189,29 +2228,36 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 					registerAnchor(emptyKey, pendingMeta.anchor, state, child.offset);
 				pendingMeta = {};
 				sawNewlineSincePending = false;
-				const map = composeBlockMap(child, state, emptyKey, undefined);
+				const map = composeBlockMap(child, state, emptyKey, hasMeta(outerMeta) ? outerMeta : undefined);
+				outerMeta = {};
 				sawEntry = false;
 				items.push(map);
 				continue;
 			}
+			pendingMeta = { ...outerMeta, ...pendingMeta };
 			const map = composeBlockMap(child, state, undefined, hasMeta(pendingMeta) ? pendingMeta : undefined);
 			pendingMeta = {};
+			outerMeta = {};
 			sawNewlineSincePending = false;
 			sawEntry = false;
 			items.push(map);
 			continue;
 		}
 		if (child.type === "block-seq") {
+			pendingMeta = { ...outerMeta, ...pendingMeta };
 			const seq = composeBlockSeq(child, state, hasMeta(pendingMeta) ? pendingMeta : undefined);
 			pendingMeta = {};
+			outerMeta = {};
 			sawNewlineSincePending = false;
 			sawEntry = false;
 			items.push(seq);
 			continue;
 		}
 		if (child.type === "flow-map") {
+			pendingMeta = { ...outerMeta, ...pendingMeta };
 			const map = state.flow.composeFlowMap(child, state, hasMeta(pendingMeta) ? pendingMeta : undefined, seqIndent);
 			pendingMeta = {};
+			outerMeta = {};
 			sawEntry = false;
 			items.push(map);
 			// In block-seq, flow collections are always entry values, check for trailing
@@ -2219,8 +2265,10 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 			continue;
 		}
 		if (child.type === "flow-seq") {
+			pendingMeta = { ...outerMeta, ...pendingMeta };
 			const seq = state.flow.composeFlowSeq(child, state, hasMeta(pendingMeta) ? pendingMeta : undefined, seqIndent);
 			pendingMeta = {};
+			outerMeta = {};
 			sawEntry = false;
 			items.push(seq);
 			// In block-seq, flow collections are always entry values, check for trailing
@@ -2240,7 +2288,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 	}
 	// Flush trailing pending tag/anchor as empty scalar (e.g., - !!str)
 	if (hasMeta(pendingMeta)) {
-		const value = resolveScalar("", ["plain", pendingMeta.tag, state]);
+		const value = resolveScalar("", ["plain", pendingMeta.tag, state, pendingMeta.tagSpan]);
 		const scalar = YamlScalar.make({
 			value,
 			style: "plain",
@@ -2259,7 +2307,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 	// escape to the outer scope (reference parity). A blank line between the
 	// last item and the terminal run embeds as a LEADING empty line —
 	// mirroring buildPairs.
-	const withLeadingBlank = (parts: ReadonlyArray<PendingSeqComment>): string | undefined => {
+	const withLeadingBlank = (parts: ReadonlyArray<PendingComment>): string | undefined => {
 		const joined = joinPending(parts);
 		const first = parts[0];
 		return joined !== undefined &&
@@ -2274,7 +2322,7 @@ function composeBlockSeqInner(cst: CstNode, state: ComposerState, meta?: NodeMet
 	let seqTrailing: string | undefined;
 	if (pending.length > 0) {
 		if (seqIndent > 0) {
-			const kept: PendingSeqComment[] = [];
+			const kept: PendingComment[] = [];
 			for (const part of pending) {
 				if (part.offset >= 0 && columnAt(state.text, part.offset) < seqIndent) {
 					state.escapedComments.push({ text: part.text, offset: part.offset });

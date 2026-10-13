@@ -438,11 +438,55 @@ describe("SemVer", () => {
 			const document = S.toJsonSchemaDocument(SemVer);
 			assert.nestedPropertyVal(
 				document,
-				"definitions.@beep/scratchpad/effected/semver/SemVer/SemVerEncoded.properties.prerelease.items.anyOf[0].pattern",
+				"definitions.@beep/scratchpad/effected/semver/SemVer/PrereleaseIdentifierPatternCheck.pattern",
 				"^[0-9]*[A-Za-z-][0-9A-Za-z-]*$",
 			);
-			assert.nestedPropertyVal(document, "definitions.@beep/scratchpad/effected/semver/SemVer/SemVerEncoded.properties.build.items.pattern", "^[0-9A-Za-z-]+$");
+			assert.nestedPropertyVal(document, "definitions.@beep/scratchpad/effected/semver/SemVer/buildIdentifier.allOf[0].allOf[0].pattern", "^[0-9A-Za-z-]+$");
 		});
+	});
+});
+
+describe("SemVer round-2 metadata regressions", () => {
+	it("annotates reusable component and identifier schemas", () => {
+		for (const [name, schema] of [
+			["nonNegativeInteger", SemVer.fields.major],
+			["nonNegativeInteger", SemVer.fields.minor],
+			["nonNegativeInteger", SemVer.fields.patch],
+			["nonNegativeInteger", SemVer.fields.prerelease.value.members[1]],
+			["prereleaseIdentifier", SemVer.fields.prerelease.value],
+			["buildIdentifier", SemVer.fields.build.value],
+		] as const) {
+			const annotations = S.resolveAnnotations(schema);
+			assert.strictEqual(annotations?.identifier, `@beep/scratchpad/effected/semver/SemVer/${name}`);
+			assert.isString(annotations?.title);
+			assert.isNotEmpty(annotations?.title);
+			assert.isString(annotations?.description);
+			assert.isNotEmpty(annotations?.description);
+		}
+	});
+
+	it("annotates integer, range and identifier-pattern checks while retaining the finite check", () => {
+		const numericChecks = SemVer.fields.major.ast.checks;
+		assert.strictEqual(numericChecks?.[0], S.Finite.ast.checks?.[0]);
+		const numericGroup = numericChecks?.[1];
+		if (numericGroup?._tag !== "FilterGroup") return assert.fail("expected a numeric check group");
+		assert.lengthOf(numericGroup.checks, 2);
+		const buildGroup = SemVer.fields.build.value.ast.checks?.[0];
+		if (buildGroup?._tag !== "FilterGroup") return assert.fail("expected a build identifier check group");
+		assert.lengthOf(buildGroup.checks, 1);
+		for (const [name, check] of [
+			["NonNegativeIntegerIntCheck", numericGroup.checks[0]],
+			["NonNegativeIntegerRangeCheck", numericGroup.checks[1]],
+			["PrereleaseIdentifierPatternCheck", SemVer.fields.prerelease.value.members[0].ast.checks?.[0]],
+			["BuildIdentifierPatternCheck", buildGroup.checks[0]],
+		] as const) {
+			assert.strictEqual(check?._tag, "Filter");
+			assert.strictEqual(check?.annotations?.identifier, `@beep/scratchpad/effected/semver/SemVer/${name}`);
+			assert.isString(check?.annotations?.title);
+			assert.isNotEmpty(check?.annotations?.title);
+			assert.isString(check?.annotations?.description);
+			assert.isNotEmpty(check?.annotations?.description);
+		}
 	});
 });
 

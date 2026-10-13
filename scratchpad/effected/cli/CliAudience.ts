@@ -1,6 +1,7 @@
 import * as S from "effect/Schema";
 import { $ScratchpadId } from "@beep/identity/packages";
-import type { AudienceKind, AudienceShape } from "../env/index.ts";
+import { AudienceKind } from "../env/Audience.ts";
+import type { AudienceShape } from "../env/index.ts";
 import { Audience, TerminalEnv } from "../env/index.ts";
 import type * as Terminal from "effect/Terminal";
 import * as Effect from "effect/Effect";
@@ -23,8 +24,6 @@ class AudienceConflictError extends S.TaggedError<AudienceConflictError>($I`Audi
 	},
 	$I.annote("AudienceConflictError", { description: "More than one audience flag occurrence was supplied to a CLI run." }),
 ) {}
-
-const KINDS: ReadonlyArray<AudienceKind> = ["human", "agent", "ci"];
 
 /**
  * Whether the run may prompt once a flag has named the audience.
@@ -196,7 +195,7 @@ export class CliAudience {
 		const maybeHide = <A>(flag: Flag.Flag<A>): Flag.Flag<A> => (hide ? Flag.withHidden(flag) : flag);
 		return {
 			audience: maybeHide(
-				Flag.Literals("audience", KINDS).pipe(
+				Flag.Literals("audience", AudienceKind.literals).pipe(
 					Flag.atLeast(0),
 					// No metavar of its own: core appends "(choices: human, agent, ci)" to the description, and a
 					// `<human|agent|ci>` placeholder would name the choices a second time.

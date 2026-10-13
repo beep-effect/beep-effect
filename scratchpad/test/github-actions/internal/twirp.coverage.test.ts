@@ -31,3 +31,22 @@ it.effect("Twirp maps malformed JSON and informational statuses without retry", 
     }
   }
 }));
+
+import { assertExitSuccess } from "@effect/vitest/utils";
+import { HttpClientError } from "effect/http";
+import * as TestClock from "effect/testing/TestClock";
+import { settle } from "../results.ts";
+it.effect("a transport failure retries and returns the recovered body", () => Effect.gen(function* () {
+  // This test exclusively owns its TestClock and advances only its retry fiber.
+  let calls = 0;
+  const http = HttpClient.make((request) => Effect.suspend(() => {
+    calls += 1;
+    return calls === 1
+      ? Effect.fail(new HttpClientError.HttpClientError({ reason: new HttpClientError.TransportError({ request, cause: "disconnected" }) }))
+      : Effect.succeed(HttpClientResponse.fromWeb(request, new Response('{"recovered":true}')));
+  }));
+  assert.isTrue(isRetryable({ method: "Read", kind: "transport" }));
+  const exit = yield* settle(twirpCall({ http, baseUrl: "https://example.test/", service: "Service", method: "Read", token: Redacted.make("test"), body: {} }), TestClock.adjust("3 seconds"));
+  assertExitSuccess(exit, { recovered: true });
+  assert.strictEqual(calls, 2);
+}));

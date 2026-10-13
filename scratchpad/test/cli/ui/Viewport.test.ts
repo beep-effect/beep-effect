@@ -376,3 +376,22 @@ describe("the production render path (Ink's own output, not debug frames)", () =
 		}),
 	);
 });
+
+it.effect("an End jump reads row tags linearly at a fixed viewport height", () => Effect.gen(function* () {
+	const count = 2000;
+	let reads = 0;
+	const rows: ReadonlyArray<ViewportRow> = Array.from({ length: count }, (_, index) => ({
+		get _tag(): "Item" { reads++; return "Item"; },
+		key: `item-${index}`,
+	}));
+	const List = (): ReactElement => {
+		const [state, setState] = useState(() => Viewport.init(count, 10));
+		useKeys(Viewport.keys, (move) => setState((current) => Viewport.step(current, move)));
+		return createElement(Viewport.View, { rows, state, renderRow: (row) => createElement(Text, null, row._tag === "Item" ? row.key : row.label) });
+	};
+	const handle = yield* CliUiTest.render(() => createElement(List), { color: "none", rows: 24 });
+	reads = 0;
+	yield* handle.press("end");
+	assert.include(yield* handle.plainFrame, "item-1999");
+	assert.isAtMost(reads, 3 * count, "row-tag reads do not scan every preceding prefix on an End jump");
+}));

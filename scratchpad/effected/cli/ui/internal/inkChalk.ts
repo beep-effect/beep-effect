@@ -1,6 +1,7 @@
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -79,7 +80,8 @@ export const resolveInkEntry = (resolve: ((specifier: string) => string) | undef
  * own could be a different copy, and setting its level would silently change nothing. Resolving `chalk` from Ink's
  * entry ({@link resolveInkEntry}) and importing its realpath yields the very module Ink imports, because Node keys ES
  * modules by realpath. A consumer that bundles Ink leaves nothing
- * to resolve, and the answer is `None`; it never fails. Realpaths are resolved by the ambient FileSystem service,
+ * to resolve, and the answer is `None`; resolution failures fall back while interruption propagates.
+ * Realpaths are resolved by the ambient FileSystem service,
  * or a scoped Node FileSystem layer when the caller has no platform layer.
  *
  * **Example** (Construct a chalk resolution effect)
@@ -106,7 +108,10 @@ export const inkChalk = Effect.fn("inkChalk")(function* (
 			import(/* @vite-ignore */ pathToFileURL(chalkPath).href),
 		);
 		return isInkChalk(chalk.default) ? O.some(chalk.default) : O.none();
-	}).pipe(Effect.catchCause(() => Effect.succeed(O.none<InkChalk>())));
+	}).pipe(
+		Effect.catchCauseIf(P.not(Cause.hasInterrupts), () => Effect.succeed(O.none<InkChalk>())),
+		Effect.orDie,
+	);
 	const fs = yield* Effect.serviceOption(FileSystem.FileSystem);
 	return yield* O.match(fs, {
 		onSome: (service) => Effect.provideService(resolve, FileSystem.FileSystem, service),

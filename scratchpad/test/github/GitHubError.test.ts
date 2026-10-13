@@ -20,6 +20,60 @@ const thrown = (options: {
 const NOW = 1_700_000_000_000;
 
 describe("GitHubError.fromOctokit", () => {
+	it("ignores array records at every throwable boundary", () => {
+		const headers = Object.assign([], { "retry-after": "2" });
+		const errors = [{ code: "already_exists" }];
+		const samples = [
+			{ input: Object.assign([], { status: 404, message: "missing" }), kind: "transport" },
+			{ input: { status: 403, response: Object.assign([], { headers: { "retry-after": "2" } }) }, kind: "unauthorized" },
+			{ input: { status: 403, response: { headers } }, kind: "unauthorized" },
+			{ input: { status: 422, response: { data: Object.assign([], { errors }) } }, kind: "rejected" },
+			{ input: { status: 422, response: { data: { errors: [Object.assign([], { code: "already_exists" })] } } }, kind: "rejected" },
+		];
+		for (const sample of samples) {
+			const error = GitHubError.fromOctokit("arrays", sample.input, NOW);
+			assert.strictEqual(error.kind, sample.kind);
+			assert.strictEqual(error.retryAfterMillis, undefined);
+			assert.strictEqual(error.validation, undefined);
+			assert.strictEqual(error.cause, sample.input);
+		}
+	});
+
+	it("retains ordinary object status, headers and structured validation", () => {
+		const original = thrown({ status: 422, message: "Validation Failed", headers: { "retry-after": "2" }, errors: [{ resource: "Release", code: "already_exists", field: "tag_name" }] });
+		const error = GitHubError.fromOctokit("objects", original, NOW);
+		assert.strictEqual(error.kind, "alreadyExists");
+		assert.strictEqual(error.status, 422);
+		assert.strictEqual(error.reason, "Validation Failed");
+		assert.strictEqual(error.retryAfterMillis, 2000);
+		assert.strictEqual(error.validation?.[0]?.code, "already_exists");
+		assert.strictEqual(error.cause, original);
+	});
+
+	for (const status of [NaN, Infinity, -Infinity, 404.5, Number.MAX_SAFE_INTEGER + 1]) {
+		it(`treats invalid numeric status ${status} as unavailable`, () => {
+			const original = thrown({ status, message: "failure" });
+			const error = GitHubError.fromOctokit("invalidStatus", original, NOW);
+			assert.strictEqual(error.kind, "transport");
+			assert.strictEqual(error.status, undefined);
+			assert.strictEqual(error.reason, "failure");
+			assert.isTrue(error.retryable);
+			assert.strictEqual(error.cause, original);
+		});
+	}
+
+	it("classifies duplicate prose beyond the displayed reason limit", () => {
+		const prefix = "x".repeat(501);
+		for (const status of [409, 422]) {
+			const original = thrown({ status, message: `${prefix} already exists`, errors: [{ code: "custom", message: "detail" }] });
+			const error = GitHubError.fromOctokit("duplicate", original, NOW);
+			assert.strictEqual(error.kind, "alreadyExists");
+			assert.strictEqual(error.reason, `${"x".repeat(500)}…`);
+			assert.strictEqual(error.validation?.[0]?.message, "detail");
+			assert.strictEqual(error.cause, original);
+		}
+	});
+
 	it("classifies a 404 as notFound", () => {
 		const error = GitHubError.fromOctokit("GitBranch.sha", thrown({ status: 404, message: "Not Found" }), NOW);
 		assert.strictEqual(error.kind, "notFound");

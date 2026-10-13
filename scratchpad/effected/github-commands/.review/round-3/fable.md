@@ -1,0 +1,5 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the github-commands port against the pinned upstream oracle and round-2 inventory, then report only new findings.Round 2 left one required `any` fix and two backlog notes. I'll compare the current sources and tests with the pinned oracle, starting with Effect string helpers that could change escaping.NO FINDINGS
+
+REQUIRED: 0
+BACKLOG: 0

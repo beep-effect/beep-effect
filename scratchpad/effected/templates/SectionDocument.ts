@@ -2,6 +2,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as O from "@beep/utils/Option";
+import * as Str from "effect/String";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ReconcileOutput, reconcile } from "./internal/reconcile.ts";
@@ -428,14 +429,15 @@ export class SectionDocument extends S.Class<SectionDocument>($I`SectionDocument
 			return O.none();
 		}
 		const eol: Eol = this.eol;
-		const before = this.text.slice(0, found.start).replace(/(?:\r?\n)+$/, "");
-		const after = this.text.slice(found.end).replace(/^(?:\r?\n)+/, "");
+		const bom = Str.startsWith("\uFEFF")(this.text) ? "\uFEFF" : "";
+		const before = Str.replace(/(?:\r?\n)+$/, "")(Str.slice(bom.length, found.start)(this.text));
+		const after = Str.replace(/^(?:\r?\n)+/, "")(Str.slice(found.end)(this.text));
 		if (before !== "" && after !== "") {
-			return O.some(`${before}${eol}${eol}${after}`);
+			return O.some(`${bom}${before}${eol}${eol}${after}`);
 		}
 		if (before !== "") {
-			return O.some(`${before}${eol}`);
+			return O.some(`${bom}${before}${eol}`);
 		}
-		return O.some(after);
+		return O.some(bom + after);
 	}
 }

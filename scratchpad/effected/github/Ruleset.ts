@@ -308,13 +308,11 @@ const make = (client: GitHubClient["Service"]): RulesetShape => {
       owner,
       repo,
     });
-    return rulesets.map(
-      (ruleset): RulesetInfo => ({
-        id: ruleset.id,
-        name: ruleset.name,
-        source_type: ruleset.source_type,
-      }),
-    );
+    return yield* Effect.forEach(rulesets, (ruleset) => S.decodeEffect(RulesetInfo)({
+      id: ruleset.id,
+      name: ruleset.name,
+      source_type: ruleset.source_type,
+    }).pipe(Effect.mapError((error) => GitHubError.decode("Ruleset.list", "GitHub returned an unexpected ruleset", error))));
   }));
 
   const delete_ = Effect.fn("Ruleset.delete")(function* (rulesetId: number) {

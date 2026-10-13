@@ -1,15 +1,19 @@
 // KIT EXTENSION (seeding). The seed applier and the `root` option, kept out of
 // the facade so every seeded constructor shares one path.
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import type * as FileSystem from "effect/FileSystem";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { badArgument } from "effect/PlatformError";
-import type { MemoryFileSystemOptions, MemoryFileSystemSeed, MemoryFileSystemSeedEntry } from "../MemoryFileSystem.ts";
+import { type MemoryFileSystemOptions, MemoryFileSystemSeed, type MemoryFileSystemSeedEntry } from "../MemoryFileSystem.ts";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+
+const $I = $ScratchpadId.create("effected/memfs/internal/seed");
 
 const encoder = new TextEncoder();
 
@@ -121,13 +125,65 @@ export const normalizeAbsolute = (path: string): string => {
 /**
  * Describes what was wrong with a seed's `root` or one of its keys, retaining the offending root or key.
  *
+ * **Example** (Describe a relative root)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { SeedRootError } from "@beep/scratchpad/effected/memfs/internal/seed";
+ *
+ * console.log(S.is(SeedRootError)({ description: 'root must be absolute, got "repo"', subject: "repo" })); // true
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
-export interface SeedRootError {
-	readonly description: string;
-	readonly subject: string;
-}
+export const SeedRootError = S.Struct({
+	description: S.String.pipe($I.annoteKey("SeedRootError.description", { description: "The root or seed-key validation failure." })),
+	subject: S.String.pipe($I.annoteKey("SeedRootError.subject", { description: "The offending root or seed key." })),
+}).pipe($I.annoteSchema("SeedRootError", { description: "The plain-object failure payload from applying a seed root." }));
+
+/**
+ * Decoded representation of {@link SeedRootError}.
+ *
+ * @see {@link SeedRootError} for the runtime payload contract.
+ * @category errors
+ * @since 0.0.0
+ */
+export type SeedRootError = typeof SeedRootError.Type;
+
+/**
+ * The seed and normalized join base returned after root application.
+ *
+ * **Details**
+ *
+ * The root key is required even when its value is undefined. Without a root, the seed retains its identity.
+ *
+ * **Example** (Validate an unrooted seed payload)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { AppliedSeed } from "@beep/scratchpad/effected/memfs/internal/seed";
+ *
+ * console.log(S.is(AppliedSeed)({ seed: { "/hello.txt": "hello" }, root: undefined })); // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AppliedSeed = S.Struct({
+	// The facade imports this module; defer its seed schema until that module has initialized.
+	seed: S.suspend(() => MemoryFileSystemSeed).pipe($I.annoteKey("AppliedSeed.seed", { description: "The original seed or its lexically rooted entries." })),
+	root: S.UndefinedOr(S.String).pipe($I.annoteKey("AppliedSeed.root", { description: "The normalized absolute join base, or undefined when no root was supplied." })),
+}).pipe($I.annoteSchema("AppliedSeed", { description: "The plain-object success payload from applying a seed root." }));
+
+/**
+ * Decoded representation of {@link AppliedSeed}.
+ *
+ * @see {@link AppliedSeed} for the runtime payload contract.
+ * @category models
+ * @since 0.0.0
+ */
+export type AppliedSeed = typeof AppliedSeed.Type;
 
 /**
  * Re-keys a seed under `root`.
@@ -154,12 +210,12 @@ export interface SeedRootError {
  * @since 0.0.0
  */
 export const applyRoot: {
- (root: string | undefined): (seed: MemoryFileSystemSeed) => Result.Result<{ readonly seed: MemoryFileSystemSeed; readonly root: string | undefined }, SeedRootError>;
- (seed: MemoryFileSystemSeed, root: string | undefined): Result.Result<{ readonly seed: MemoryFileSystemSeed; readonly root: string | undefined }, SeedRootError>;
+ (root: string | undefined): (seed: MemoryFileSystemSeed) => Result.Result<AppliedSeed, SeedRootError>;
+ (seed: MemoryFileSystemSeed, root: string | undefined): Result.Result<AppliedSeed, SeedRootError>;
 } = dual(2, (
 	seed: MemoryFileSystemSeed,
 	root: string | undefined,
-): Result.Result<{ readonly seed: MemoryFileSystemSeed; readonly root: string | undefined }, SeedRootError> => {
+): Result.Result<AppliedSeed, SeedRootError> => {
 	if (root === undefined) return Result.succeed({ seed, root: undefined });
 	if (!root.startsWith("/")) return Result.fail({ description: `root must be absolute, got "${root}"`, subject: root });
 	const base = normalizeAbsolute(root);

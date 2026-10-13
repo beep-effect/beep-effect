@@ -174,6 +174,8 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **effect-first** — Effect predicates and the synchronous Random service replace native type checks and Math.random without starting runtimes for module initialization. (scratchpad/test/glob/braceExpansion.test.ts:139,143; scratchpad/test/glob/compliance.test.ts:301; module suite scratchpad/test/glob/**)
 - **effect-imports** — Dedicated effect/* imports replace root-barrel imports in source, tests and source examples. (module suite scratchpad/test/glob/**)
 - **identity-annotations** — File-local $I identifiers and schema/field/check annotations replace plain identifiers and incomplete schema metadata. (module suite scratchpad/test/glob/**)
+- **upstream-bug** — Lab bounds numeric brace generation by the validated member count and terminates stalled ranges where upstream appends indefinitely (scratchpad/test/glob/braceExpansion.test.ts:162; scratchpad/test/glob/hostility.test.ts:48; scratchpad/test/glob/GlobPattern.test.ts:312; scratchpad/test/glob/GlobSet.test.ts:292).
+- **upstream-bug** — Lab rejects NaN-producing brace arithmetic as a typed expansion-budget failure with actual Infinity where upstream bypasses the count guard (scratchpad/test/glob/braceExpansion.test.ts:176; scratchpad/test/glob/hostility.test.ts:60; scratchpad/test/glob/GlobPattern.test.ts:326; scratchpad/test/glob/GlobSet.test.ts:309).
 
 ### Dependency backlog
 

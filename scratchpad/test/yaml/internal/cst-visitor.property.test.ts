@@ -35,4 +35,14 @@ describe("CST visitor property floor", () => {
     assert.deepStrictEqual(projection(rendered), projection(source));
     assert.deepStrictEqual([...cstEvents(rendered)], [...cstEvents(source)]);
   }), runs);
+  it.effect.prop("multiline block and flow values keep every raw fragment in value position", [
+    S.Literals(["one", "two", "three"]).pipe(Arbitrary.schema),
+    S.Literals(["four", "five", "six"]).pipe(Arbitrary.schema),
+  ], ([head, tail]) => Effect.sync(() => {
+    for (const source of [`a: ${head}\n ${tail}\nb: 2\n`, `{a: ${head}\n ${tail}, b: 2}`]) {
+      const events = [...cstEvents(source)];
+      assert.deepStrictEqual(A.map(A.filter(events, (event) => event._tag === "CstKeyEvent"), (event) => event.source), ["a", "b"]);
+      assert.deepStrictEqual(A.map(A.filter(events, (event) => event._tag === "CstValueEvent"), (event) => event.source), [head, tail, "2"]);
+    }
+  }), runs);
 });

@@ -1,0 +1,385 @@
+{
+  "module": "cli",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/cli/CliLinks.ts",
+        "scratchpad/effected/cli/CliAudience.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/CliLinks.test.ts",
+        "scratchpad/test/cli/CliLinks.property.test.ts",
+        "scratchpad/test/cli/CliAudience.test.ts"
+      ],
+      "findings": [
+        "cli-r2-1",
+        "cli-r2-2"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/cli/CliRuntime.ts",
+        "scratchpad/effected/cli/internal/isExitCode.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/CliRuntime.test.ts",
+        "scratchpad/test/cli/CliRuntime.coverage.test.ts",
+        "scratchpad/test/cli/internal/isExitCode.property.test.ts"
+      ],
+      "findings": [
+        "cli-r2-3",
+        "cli-r2-15"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/cli/CliTest.ts",
+        "scratchpad/effected/cli/CliLog.ts",
+        "scratchpad/effected/cli/CliPrompt.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/CliTest.test.ts",
+        "scratchpad/test/cli/CliTest.property.test.ts",
+        "scratchpad/test/cli/CliLog.property.test.ts",
+        "scratchpad/test/cli/CliPrompt.property.test.ts"
+      ],
+      "findings": [
+        "cli-r2-4",
+        "cli-r2-5",
+        "cli-r2-6"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/cli/Doc.ts",
+        "scratchpad/effected/cli/internal/layout.ts",
+        "scratchpad/effected/cli/GithubAnnotation.ts",
+        "scratchpad/effected/cli/Status.ts",
+        "scratchpad/effected/cli/Glyphs.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/Doc.test.ts",
+        "scratchpad/test/cli/Doc.property.test.ts",
+        "scratchpad/test/cli/layout.test.ts",
+        "scratchpad/test/cli/internal/layout.property.test.ts",
+        "scratchpad/test/cli/GithubAnnotation.property.test.ts",
+        "scratchpad/test/cli/Status.property.test.ts",
+        "scratchpad/test/cli/Glyphs.test.ts",
+        "scratchpad/test/cli/Glyphs.property.test.ts"
+      ],
+      "findings": [
+        "cli-r2-8",
+        "cli-r2-10",
+        "cli-r2-12",
+        "cli-r2-13",
+        "cli-r2-14"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/cli/internal/failureTarget.ts",
+        "scratchpad/effected/cli/internal/format.ts",
+        "scratchpad/effected/cli/internal/counts.ts",
+        "scratchpad/effected/cli/internal/renderMarkdown.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/internal/failureTarget.property.test.ts",
+        "scratchpad/test/cli/internal/failureTarget.coverage.test.ts",
+        "scratchpad/test/cli/internal/format.property.test.ts",
+        "scratchpad/test/cli/internal/counts.property.test.ts",
+        "scratchpad/test/cli/Render.markdown.oracle.test.ts"
+      ],
+      "findings": [
+        "cli-r2-7",
+        "cli-r2-9",
+        "cli-r2-11",
+        "cli-r2-17"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/cli/ui/Confirm.ts",
+        "scratchpad/effected/cli/ui/Select.ts",
+        "scratchpad/effected/cli/ui/MultiSelect.ts",
+        "scratchpad/effected/cli/ui/DocView.ts",
+        "scratchpad/effected/cli/ui/CliUi.ts",
+        "scratchpad/effected/cli/ui/CliUiLive.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/ui/Confirm.test.ts",
+        "scratchpad/test/cli/ui/Select.test.ts",
+        "scratchpad/test/cli/ui/Select.coverage.test.ts",
+        "scratchpad/test/cli/ui/MultiSelect.test.ts",
+        "scratchpad/test/cli/ui/CliUiTest.chunk.test.ts",
+        "scratchpad/test/cli/ui/Confirm.property.test.ts",
+        "scratchpad/test/cli/ui/Select.property.test.ts",
+        "scratchpad/test/cli/ui/MultiSelect.property.test.ts",
+        "scratchpad/test/cli/ui/reducer-error-metadata.test.ts"
+      ],
+      "findings": [
+        "cli-r2-16",
+        "cli-r2-18",
+        "cli-r2-19",
+        "cli-r2-20",
+        "cli-r2-21",
+        "cli-r2-22",
+        "cli-r2-23"
+      ]
+    },
+    {
+      "id": "g7",
+      "files": [
+        "scratchpad/effected/cli/ui/TextInput.ts",
+        "scratchpad/effected/cli/ui/Toggle.ts",
+        "scratchpad/effected/cli/ui/Tabs.ts",
+        "scratchpad/effected/cli/ui/Viewport.ts",
+        "scratchpad/effected/cli/ui/UiTheme.ts",
+        "scratchpad/effected/cli/ui/internal/lineText.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/ui/TextInput.test.ts",
+        "scratchpad/test/cli/ui/Tabs.test.ts",
+        "scratchpad/test/cli/ui/Viewport.test.ts",
+        "scratchpad/test/cli/ui/Viewport.property.test.ts",
+        "scratchpad/test/cli/ui/TextInput.property.test.ts",
+        "scratchpad/test/cli/ui/Tabs.property.test.ts",
+        "scratchpad/test/cli/ui/widgetText.test.ts",
+        "scratchpad/test/cli/ui/widget-resize.test.ts",
+        "scratchpad/test/cli/ui/widget-error-metadata.test.ts"
+      ],
+      "findings": [
+        "cli-r2-24",
+        "cli-r2-25",
+        "cli-r2-27",
+        "cli-r2-28",
+        "cli-r2-29"
+      ]
+    },
+    {
+      "id": "g8",
+      "files": [
+        "scratchpad/effected/cli/ui/internal/ink.ts",
+        "scratchpad/effected/cli/ui/internal/ScreenContext.ts",
+        "scratchpad/effected/cli/ui/internal/lazyView.ts",
+        "scratchpad/effected/cli/ui/internal/inkConsole.ts",
+        "scratchpad/effected/cli/ui/testing/CliUiTest.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/ui/bridge-error-metadata.test.ts"
+      ],
+      "findings": [
+        "cli-r2-31"
+      ]
+    },
+    {
+      "id": "g9",
+      "files": [
+        "scratchpad/effected/cli/ui/internal/inkChalk.ts",
+        "scratchpad/effected/cli/ui/testing/terminalModel.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/ui/internal/inkChalk.coverage.test.ts",
+        "scratchpad/test/cli/ui/testing/terminalModel.property.test.ts",
+        "scratchpad/test/cli/ui/testing/terminalModel.coverage.test.ts"
+      ],
+      "findings": [
+        "cli-r2-26",
+        "cli-r2-30"
+      ]
+    }
+  ],
+  "findings": {
+    "cli-r2-1": {
+      "file": "scratchpad/effected/cli/CliLinks.ts",
+      "class": "schema",
+      "summary": "EditorLinks duplicates its erased domain and runtime vocabulary.",
+      "fix": "Define an identity-annotated `EditorLinks` LiteralKit with the existing member order, derive the type from it, and derive enumeration and membership from the kit. Preserve the existing trim/case normalization, defaults, and warning text; list the added value export under D2."
+    },
+    "cli-r2-2": {
+      "file": "scratchpad/effected/cli/CliAudience.ts",
+      "class": "schema",
+      "summary": "The audience flag duplicates the existing AudienceKind kit.",
+      "fix": "Import the `AudienceKind` value from `../env/Audience.ts` and pass `AudienceKind.literals` to `Flag.Literals`. Delete `KINDS`. Leave `env/index.ts` unchanged."
+    },
+    "cli-r2-3": {
+      "file": "scratchpad/effected/cli/CliRuntime.ts",
+      "class": "bug",
+      "summary": "Hostile string conversion loses the selected exit code after reporting.",
+      "fix": "Guard conversion of non-Error values in `reported`; on conversion failure, construct the existing `CliRuntimeError` with a fixed fallback message, then apply both runtime marks. Retarget the existing regression to require a marked typed failure, `errorReported === false`, and the requested exit code. Record the verified upstream bug under \u00a714."
+    },
+    "cli-r2-4": {
+      "file": "scratchpad/effected/cli/CliTest.ts",
+      "class": "schema",
+      "summary": "CliTest subprocess data lacks executable schemas.",
+      "fix": "Define identity-annotated structural schemas for `Sandbox`, `RunOptions`, and `RunResult`, and derive the existing types. Preserve plain-object results, optional-key semantics, and subprocess behavior. Register the added value exports and add the D10 round-trip properties."
+    },
+    "cli-r2-5": {
+      "file": "scratchpad/effected/cli/CliLog.ts",
+      "class": "schema",
+      "summary": "CliLogFile lacks a schema for its configuration cases.",
+      "fix": "Define an identity-annotated union of structural schemas for the existing `envVar` and `path` forms and derive `CliLogFile` from it. Preserve the public object shapes, current branch precedence, and unset/empty-variable behavior. Register the added schema export and its D10 properties."
+    },
+    "cli-r2-6": {
+      "file": "scratchpad/effected/cli/CliPrompt.ts",
+      "class": "schema",
+      "summary": "CliPromptTarget lacks a schema for its payload cases.",
+      "fix": "Define an identity-annotated structural union for the existing flag and argument forms, derive `CliPromptTarget`, and retain the generic fallback-options composition. Preserve public keys and missing-parameter behavior; register the added value export and add the D10 target properties."
+    },
+    "cli-r2-7": {
+      "file": "scratchpad/effected/cli/internal/failureTarget.ts",
+      "class": "type-safety",
+      "summary": "The curried refreshFailureTarget overload promises the wrong result.",
+      "fix": "Require a non-undefined `FailureSettings` argument in the curried overload. Retain the existing zero-argument and `undefined` data-first calls. Add an overload-dispatch regression covering both forms."
+    },
+    "cli-r2-8": {
+      "file": "scratchpad/effected/cli/internal/layout.ts",
+      "class": "bug",
+      "summary": "A valid file link with url: undefined crashes rendering and default labels.",
+      "fix": "Select the URL branch using a string/schema-derived guard, preserving URL precedence when its value is valid. Normalize the file branch without an invalid `url` property, and use the same branch selection for `Doc.link`\u2019s default label. Add the regression and register the verified upstream-bug deviation centrally."
+    },
+    "cli-r2-9": {
+      "file": "scratchpad/effected/cli/internal/format.ts",
+      "class": "bug",
+      "summary": "Issue deduplication conflates dotted names and nested paths.",
+      "fix": "Deduplicate by the message and the complete path sequence, using an unambiguous structural key rather than the formatted display string. Preserve existing display formatting. Add a dotted-key-versus-nested-path regression and register the upstream-bug deviation centrally."
+    },
+    "cli-r2-10": {
+      "file": "scratchpad/effected/cli/internal/layout.ts",
+      "class": "bug",
+      "summary": "Document span boundaries split graphemes during layout.",
+      "fix": "Measure and segment the concatenated visible text across adjacent spans. Track source-span offsets so a grapheme remains one atomic layout unit while retaining its original style/link fragments. Add split-versus-joined emoji and combining-sequence regressions, and register the upstream-bug deviation centrally."
+    },
+    "cli-r2-11": {
+      "file": "scratchpad/effected/cli/internal/counts.ts",
+      "class": "perf",
+      "summary": "Counts-table discovery and lookup require quadratic work.",
+      "fix": "Keep the ordered first-seen counter array, add an Effect hash set/map for key discovery, and index each row once by key. Retain the first counter for duplicate keys so labels, tokens and totals preserve current behavior. This reduces conversion to expected linear work in the input plus the emitted table cells."
+    },
+    "cli-r2-12": {
+      "file": "scratchpad/effected/cli/GithubAnnotation.ts",
+      "class": "schema",
+      "summary": "GitHub annotation metadata and levels have parallel owners.",
+      "fix": "Define an identity-annotated `AnnotationLevel` LiteralKit and one structural annotation-metadata schema; derive the existing types and reuse the schema fields/domain in `Doc.AnnotationOptions`. Preserve field optionality, literal order and formatted bytes."
+    },
+    "cli-r2-13": {
+      "file": "scratchpad/effected/cli/Glyphs.ts",
+      "class": "schema",
+      "summary": "GlyphSet remains an erased shared configuration model.",
+      "fix": "Define an identity-annotated structural `GlyphSet` schema and derive the existing type from it. Preserve the plain readonly representation, optionality and exact built-in glyph/frame values; add a schema round-trip property."
+    },
+    "cli-r2-14": {
+      "file": "scratchpad/effected/cli/Status.ts",
+      "class": "schema",
+      "summary": "StatusDef and Doc.StatusDefinition independently author one contract.",
+      "fix": "Move the existing annotated structural shape to `Status.ts` as the `StatusDef` schema, derive its same-name type, and have Doc reuse that schema. Preserve plain-object definitions and existing vocabulary behavior; add its round-trip property."
+    },
+    "cli-r2-15": {
+      "file": "scratchpad/effected/cli/internal/isExitCode.ts",
+      "class": "schema",
+      "summary": "POSIX exit-code validation uses an ad-hoc predicate.",
+      "fix": "Define an identity-annotated integer schema bounded to `0..255`, and derive `isExitCode` with `S.is(...)`. Preserve the existing number-input predicate signature and all current acceptance/rejection behavior."
+    },
+    "cli-r2-16": {
+      "file": "scratchpad/effected/cli/ui/Select.ts",
+      "class": "bug",
+      "summary": "Actions after Enter change an already submitted answer.",
+      "fix": "Make submitted reducer states terminal by returning the existing state for subsequent actions. Add the three Enter-then-action chunk regressions and record the verified upstream-bug deviation."
+    },
+    "cli-r2-17": {
+      "file": "scratchpad/effected/cli/internal/renderMarkdown.ts",
+      "class": "bug",
+      "summary": "Text immediately before a Markdown link turns it into an image.",
+      "fix": "Include `!` in `escapeText`\u2019s escaped punctuation. Add a parser-backed regression for text immediately preceding a link and record the verified upstream-bug deviation."
+    },
+    "cli-r2-18": {
+      "file": "scratchpad/effected/cli/ui/Select.ts",
+      "class": "bug",
+      "summary": "Rerendered choices disagree with mount-time submitted values.",
+      "fix": "Derive Select\u2019s rows, rendered choices and detail from `state.choices`, and MultiSelect\u2019s items and rows from `state.sections`. This preserves the documented mount-time snapshot. Add rerender-and-submit regressions and record the verified upstream-bug deviation."
+    },
+    "cli-r2-19": {
+      "file": "scratchpad/effected/cli/ui/Select.ts",
+      "class": "bug",
+      "summary": "Fractional and NaN initial indices can select a disabled choice.",
+      "fix": "Normalize initial to an integer (use zero for NaN), preserve the finite clamp and boundary behavior for infinities, then search. Require an existing choice in enabled. Add fractional/NaN cases with a disabled first row; extend upstream-bug bookkeeping centrally."
+    },
+    "cli-r2-20": {
+      "file": "scratchpad/effected/cli/ui/Select.ts",
+      "class": "perf",
+      "summary": "An unforced S3 row lookup introduces quadratic repaint work.",
+      "fix": "Restore upstream row._tag === \"Item\" lookup using Number(row.key), its undefined/optional fallbacks, and any upstream test lines this rewrite altered. Remove the added Array import if unused. Apply the independently required mount-time snapshot fix to the indexed collection. Retain upstream tests and add a lookup-work regression; do not preserve the unforced rewrite through a new map."
+    },
+    "cli-r2-21": {
+      "file": "scratchpad/effected/cli/ui/Confirm.ts",
+      "class": "schema",
+      "summary": "Confirm, Select and MultiSelect actions lack LiteralKit ownership.",
+      "fix": "Define identity-annotated `LiteralKit` action domains and derive the existing action types from them, preserving every current member. Record any added runtime exports under D2."
+    },
+    "cli-r2-22": {
+      "file": "scratchpad/effected/cli/ui/Confirm.ts",
+      "class": "schema",
+      "summary": "Six reducer/runtime errors lack schema or message metadata.",
+      "fix": "Add meaningful $I.annote schema and message metadata to DuplicateToggleKeyError, NoEnabledChoiceError, MissingDocViewThemeError and LiveTickError; add missing message descriptions to ScreenExited and DuplicateItemKey. Preserve tags, names, messages and construction. Assert metadata in the reducer group\u2019s dedicated test."
+    },
+    "cli-r2-23": {
+      "file": "scratchpad/effected/cli/ui/Confirm.ts",
+      "class": "law",
+      "summary": "Confirm.result evades the native-runtime scanner with defineProperty.",
+      "fix": "Construct the toggle record with `R.fromEntries` over typed key/value tuples, retaining the `Partial<Record<K, boolean>>` result type. Keep regressions for special property names."
+    },
+    "cli-r2-24": {
+      "file": "scratchpad/effected/cli/ui/TextInput.ts",
+      "class": "bug",
+      "summary": "TextInput, Toggle and column Tabs wrap during immediate resize.",
+      "fix": "Clip each intended single-row element against Ink\u2019s current layout: use `wrap: \"truncate-end\"` for direct text and a one-row, overflow-hidden wrapper for styled/composite rows, reserving the one-column margin through layout. Apply this to TextInput\u2019s value and other single-row children, both Toggle branches, and column Tabs rows. Add production-path resize assertions covering every intermediate frame and record the correction under \u00a714."
+    },
+    "cli-r2-25": {
+      "file": "scratchpad/effected/cli/ui/Viewport.ts",
+      "class": "perf",
+      "summary": "Viewport End-key jumps repeatedly scan prefixes.",
+      "fix": "Compute the nearest preceding header for each item during the existing item-index pass and pass that lookup into `linesFrom`. This removes repeated prefix scans and makes this path linear in list length for a fixed viewport height, while preserving the current window-selection behavior. Add a scaling or operation-count regression."
+    },
+    "cli-r2-26": {
+      "file": "scratchpad/effected/cli/ui/testing/terminalModel.ts",
+      "class": "bug",
+      "summary": "Terminal overwrites operate on code units instead of display cells.",
+      "fix": "Represent printable content by graphemes and terminal cells, including continuation cells for wide graphemes. Apply carriage return and cursor coordinates to cell positions and replace whole affected graphemes. Add emoji and CJK overwrite regressions and record the verified upstream bug."
+    },
+    "cli-r2-27": {
+      "file": "scratchpad/effected/cli/ui/Viewport.ts",
+      "class": "schema",
+      "summary": "Viewport and UiTheme errors lack schema and field metadata.",
+      "fix": "Add meaningful $I.annote schema metadata and message descriptions to DuplicateViewportKeyError and MissingUiThemeError. Preserve tags, payloads and behavior; assert metadata in the widget group\u2019s dedicated test."
+    },
+    "cli-r2-28": {
+      "file": "scratchpad/effected/cli/ui/Viewport.ts",
+      "class": "schema",
+      "summary": "Viewport, TextInput state and Tabs actions lack schemas.",
+      "fix": "Define identity-annotated structural schemas for the states and payloads, a schema-backed tagged union for `ViewportRow`, and a `LiteralKit` for `ViewportMove`; represent `TabsAction` with a schema union preserving its existing literals and `{ jump }` shape. Derive the existing types, retain plain reducer results and current input behavior, and add schema-derived round-trip properties."
+    },
+    "cli-r2-29": {
+      "file": "scratchpad/effected/cli/ui/TextInput.ts",
+      "class": "bug",
+      "summary": "Split sanitization exposes escape payloads and double-folds CRLF.",
+      "fix": "Sanitize and fold the whole value once, map the raw cursor through the same pass, and split the sanitized result. A cursor inside a removed ANSI/OSC span maps to its output position; CRLF folds once. Preserve raw editing/submission. Add mid-CSI, mid-OSC and between-CR/LF regressions to widgetText.test.ts; lineText.ts is reserved for shared mapping if needed."
+    },
+    "cli-r2-30": {
+      "file": "scratchpad/effected/cli/ui/internal/inkChalk.ts",
+      "class": "effect-idiom",
+      "summary": "Chalk resolution recovers an injected filesystem interrupt.",
+      "fix": "Recover only non-interrupt causes to None with catchCauseIf and a Cause predicate or equivalent typed recovery; propagate interrupt causes. Add an injected realPath self-interruption regression and retain missing-chalk fallback. Do not restore the law-forced native filesystem implementation."
+    },
+    "cli-r2-31": {
+      "file": "scratchpad/effected/cli/ui/internal/ink.ts",
+      "class": "schema",
+      "summary": "Five bridge/test-runtime errors lack schema or message metadata.",
+      "fix": "Add $I.annote schema and message metadata to InkNotLoaded, ScreenContextError and LazyViewStateError; add message descriptions to ConsoleTrace and CliUiTestError. Preserve tags, name overrides, messages and construction; assert metadata in the bridge group\u2019s dedicated test."
+    }
+  }
+}

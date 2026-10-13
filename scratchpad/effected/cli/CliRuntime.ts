@@ -10,6 +10,7 @@ import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as MutableRef from "effect/MutableRef";
 import * as Runtime from "effect/Runtime";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CliError } from "effect/cli";
 import { Cancelled } from "./Cancelled.ts";
@@ -738,7 +739,9 @@ export abstract class CliRuntime {
 	static reported<E extends Error>(error: E, exitCode?: number): E;
 	static reported(error: unknown, exitCode?: number): Error;
 	static reported(error: unknown, exitCode = 1): Error {
-		const marked = error instanceof Error ? error : CliRuntimeError.make({ message: String(error) });
+		const marked = error instanceof Error ? error : CliRuntimeError.make({
+			message: Result.getOrElse(Result.try(() => String(error)), () => "[unprintable failure]"),
+		});
 		// defineProperty, not assignment: a class may carry the exit code as a prototype getter, which a plain
 		// assignment cannot overwrite.
 		for (const [key, value] of [

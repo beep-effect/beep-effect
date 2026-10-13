@@ -12,6 +12,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { Package } from "./Package.ts";
 
 const $I = $ScratchpadId.create("effected/package-json/PackageValidator");
@@ -175,7 +176,7 @@ const notPrivate: ValidationRule = {
 
 const anyDependencyMatches = (pkg: Package, predicate: (specifier: string) => boolean): boolean =>
 	A.some([pkg.dependencies, pkg.devDependencies, pkg.peerDependencies, pkg.optionalDependencies], (map) =>
-		map.pipe(HashMap.values, A.fromIterable, A.some(predicate)),
+		HashMap.some(map, predicate),
 	);
 
 /**
@@ -205,7 +206,7 @@ const anyDependencyMatches = (pkg: Package, predicate: (specifier: string) => bo
 export const noUnresolvedDepsRule: ValidationRule = {
 	name: "no-unresolved-deps",
 	validate: (pkg) =>
-		anyDependencyMatches(pkg, (specifier) => specifier.startsWith("workspace:") || specifier.startsWith("catalog:"))
+		anyDependencyMatches(pkg, (specifier) => Str.startsWith("workspace:")(specifier) || Str.startsWith("catalog:")(specifier))
 			? Effect.fail({ message: "Unresolved workspace:/catalog: dependency", path: O.none() })
 			: Effect.void,
 };
@@ -239,7 +240,7 @@ export const noLocalDepsRule: ValidationRule = {
 	validate: (pkg) =>
 		anyDependencyMatches(
 			pkg,
-			(specifier) => specifier.startsWith("file:") || specifier.startsWith("link:") || specifier.startsWith("portal:"),
+			(specifier) => Str.startsWith("file:")(specifier) || Str.startsWith("link:")(specifier) || Str.startsWith("portal:")(specifier),
 		)
 			? Effect.fail({ message: "Local file:/link:/portal: dependency", path: O.none() })
 			: Effect.void,

@@ -11,11 +11,29 @@ import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effected/cli/ui/DocView");
 
-class MissingDocViewThemeError extends S.TaggedError<MissingDocViewThemeError>($I`MissingDocViewThemeError`)(
+/**
+ * Reports a document view with neither a render context nor a theme provider.
+ *
+ * **Example** (Describe the failure)
+ *
+ * ```ts
+ * import { MissingDocViewThemeError } from "./DocView.ts"
+ * const error = MissingDocViewThemeError.make({ message: "Provide a render context or theme." })
+ * console.log(error._tag) // MissingDocViewThemeError
+ * ```
+ *
+ * @internal
+ * @category errors
+ * @since 0.0.0
+ */
+export class MissingDocViewThemeError extends S.TaggedError<MissingDocViewThemeError>($I`MissingDocViewThemeError`)(
 	"MissingDocViewThemeError",
 	{
-		message: S.String,
+		message: S.String.annotate($I.annote("MissingDocViewThemeError.message", {
+			description: "Explains how to provide a render context or theme for the document view.",
+		})),
 	},
+	$I.annote("MissingDocViewThemeError", { description: "A document view needs an explicit render context or a theme provider." }),
 ) {}
 
 /**
@@ -78,7 +96,6 @@ const docView: () => FunctionComponent<DocViewProps> = fromReact((react) => {
 		const given = props.ctx;
 		const theme = screen?.theme;
 		const neutralize = screen?.neutralizeWorkflowCommands === true;
-		if (given === undefined && theme === undefined) throw MissingDocViewThemeError.make({ message: OUTSIDE });
 		const ctx = react.useMemo(() => {
 			if (given !== undefined) return given;
 			if (theme === undefined) throw MissingDocViewThemeError.make({ message: OUTSIDE });

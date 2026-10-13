@@ -371,7 +371,7 @@ export class GitHubError extends S.TaggedError<GitHubError>($I`GitHubError`)("Gi
 		return GitHubError.make({
     kind,
     operation,
-    reason: facts.reason,
+    reason: P.isObject(error) ? sanitizeReason(facts.reason) : facts.reason,
     ...O.getSomesStruct({ status: O.fromUndefinedOr(facts.status) }),
     ...O.getSomesStruct({ retryAfterMillis: O.fromUndefinedOr(retryAfterMillis) }),
     ...(facts.validation.length > 0 ? { validation: facts.validation } : {}),
@@ -460,7 +460,7 @@ interface Throwable {
  * stable and public.
  */
 const readThrowable = (error: unknown): Throwable => {
-	if (!isRecord(error)) {
+	if (!P.isObject(error)) {
 		return { status: undefined, headers: undefined, reason: String(error), validation: [] };
 	}
 	const record = error;
@@ -468,17 +468,17 @@ const readThrowable = (error: unknown): Throwable => {
 	const headers = asRecord(response?.headers);
 	const data = asRecord(response?.data);
 	return {
-		status: P.isNumber(record.status) ? record.status : undefined,
+		status: isStatus(record.status) ? record.status : undefined,
 		headers,
-		reason: sanitizeReason(P.isString(record.message) ? record.message : String(error)),
+		reason: P.isString(record.message) ? record.message : String(error),
 		validation: readValidation(data),
 	};
 };
 
-const isRecord = (value: unknown): value is Record<string, unknown> => P.isObjectOrArray(value);
+const isStatus = S.is(S.Int);
 
 const asRecord = (value: unknown): Record<string, unknown> | undefined =>
-	isRecord(value) ? value : undefined;
+	P.isObject(value) ? value : undefined;
 
 /**
  * GitHub answers some requests with an HTML error page whose body becomes a

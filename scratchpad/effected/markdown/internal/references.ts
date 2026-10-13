@@ -25,6 +25,10 @@
 import { stickyOf } from "./patterns.ts";
 import { unescapeString } from "./unescape.ts";
 import * as O from "@beep/utils/Option";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/markdown/internal/references");
 
 const ESCAPABLE = "[!\"#$%&'()*+,./:;<=>?@[\\\\\\]^_`{|}~-]";
 const ESCAPED_CHAR = `\\\\${ESCAPABLE}`;
@@ -263,10 +267,7 @@ export class ReferenceScanner {
 
 		while (code !== -1) {
 			if (code === C_BACKSLASH && reEscapable.test(this.subject.charAt(this.pos + 1))) {
-				this.pos += 1;
-				if (this.peek() !== -1) {
-					this.pos += 1;
-				}
+				this.pos += 2;
 			} else if (code === C_OPEN_PAREN) {
 				this.pos += 1;
 				openParens += 1;
@@ -370,35 +371,36 @@ export const normalizeReference = (rawLabel: string): string =>
 /**
  * A link reference definition, parsed but not yet placed in the tree.
  *
+ * **Example** (Validate ParsedReference data)
+ *
+ * ```ts
+ * import { ParsedReference } from "@beep/scratchpad/effected/markdown/internal/references";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ParsedReference)({ key: "GUIDE", identifier: "guide", label: "Guide", url: "/guide", length: 15 })); // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface ParsedReference {
-	/**
-	 * The case-folded lookup key (`normalizeReference` of the raw label).
-	 */
-	readonly key: string;
-	/**
-	 * mdast's `identifier`: the normalized label, lowercased.
-	 */
-	readonly identifier: string;
-	/**
-	 * mdast's `label`: the raw label text, brackets stripped.
-	 */
-	readonly label: string;
-	/**
-	 * The decoded destination.
-	 */
-	readonly url: string;
-	/**
-	 * The decoded title, absent when the definition carries none.
-	 */
-	readonly title?: string;
-	/**
-	 * How many characters of `text` the definition consumed.
-	 */
-	readonly length: number;
-}
+export const ParsedReference = S.Struct({
+	key: S.String.annotateKey({ description: "Case-folded lookup key obtained by normalizing the raw label." }),
+	identifier: S.String.annotateKey({ description: "Normalized label in lowercase for mdast's identifier." }),
+	label: S.String.annotateKey({ description: "Raw label text with its enclosing brackets stripped." }),
+	url: S.String.annotateKey({ description: "Decoded link destination before renderer URI encoding." }),
+	title: S.optionalKey(S.String).annotateKey({ description: "Decoded link title, omitted when the definition carries none." }),
+	length: S.Finite.annotateKey({ description: "Number of UTF-16 code units consumed from the definition source." }),
+}).annotate($I.annote("ParsedReference", {
+	description: "A parsed link reference definition before its placement in the markdown tree.",
+}));
+
+/**
+ * The plain reference-definition payload described by {@link ParsedReference}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ParsedReference = typeof ParsedReference.Type;
 
 /**
  * Parse a link reference definition at the start of `text`.

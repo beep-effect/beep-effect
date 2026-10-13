@@ -11,28 +11,14 @@ import type { CliTheme } from "./CliTheme.ts";
 import { autoFormat } from "./internal/autoFormat.ts";
 import { totalOf, visibleCountersOf } from "./internal/counts.ts";
 import { Render } from "./Render.ts";
-import type { Status, StatusDef } from "./Status.ts";
+import { type Status, StatusDef } from "./Status.ts";
+import { GithubAnnotationProperties } from "./GithubAnnotation.ts";
 import { Style, TokenName } from "./Token.ts";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/cli/Doc");
-
-const StatusDefinition = S.Struct({
-	glyph: S.String.annotate(
-		$I.annote("StatusDefinition.glyph", { description: "The glyph field of StatusDefinition." }),
-	),
-	ascii: S.String.annotate(
-		$I.annote("StatusDefinition.ascii", { description: "The ascii field of StatusDefinition." }),
-	),
-	token: S.Union([TokenName, Style]).annotate(
-		$I.annote("StatusDefinition.token", { description: "The token field of StatusDefinition." }),
-	),
-	rank: S.Finite.annotate($I.annote("StatusDefinition.rank", { description: "The rank field of StatusDefinition." })),
-}).annotate(
-	$I.annote("StatusDefinition", { description: "The resolved appearance and rank of a status." }),
-) satisfies S.Codec<StatusDef>;
 
 /**
  * A status as a document stores it: its name and its resolved definition.
@@ -59,7 +45,7 @@ export const StatusRef = S.Struct({
 	/** The name in the vocabulary it was resolved from. */
 	name: S.String.annotate($I.annote("StatusRef.name", { description: "The name field of StatusRef." })),
 	/** The resolved definition. */
-	def: StatusDefinition.annotate($I.annote("StatusRef.def", { description: "The def field of StatusRef." })),
+	def: StatusDef.annotate($I.annote("StatusRef.def", { description: "The def field of StatusRef." })),
 }).annotate($I.annote("StatusRef", { description: "A status name and its resolved definition." }));
 /**
  * A resolved status name and definition stored in a document.
@@ -577,36 +563,7 @@ export const Block: S.Codec<Block> = S.suspend(() => S.suspend((): S.Codec<Block
  * @category schemas
  * @since 0.0.0
  */
-export const AnnotationOptions = S.Struct({
-	/** `error`, `warning` or `notice`. */
-	level: S.Literals(["error", "warning", "notice"]).annotate(
-		$I.annote("AnnotationOptions.level", { description: "The level field of AnnotationOptions." }),
-	),
-	/** The file it points at, as the runner should show it (relative to the workspace). */
-	file: S.optionalKey(S.String).annotate(
-		$I.annote("AnnotationOptions.file", { description: "The file field of AnnotationOptions." }),
-	),
-	/** The line it starts on. */
-	line: S.optionalKey(S.Finite).annotate(
-		$I.annote("AnnotationOptions.line", { description: "The line field of AnnotationOptions." }),
-	),
-	/** The column it starts at. */
-	col: S.optionalKey(S.Finite).annotate(
-		$I.annote("AnnotationOptions.col", { description: "The col field of AnnotationOptions." }),
-	),
-	/** The line it ends on. */
-	endLine: S.optionalKey(S.Finite).annotate(
-		$I.annote("AnnotationOptions.endLine", { description: "The endLine field of AnnotationOptions." }),
-	),
-	/** The column it ends at. */
-	endColumn: S.optionalKey(S.Finite).annotate(
-		$I.annote("AnnotationOptions.endColumn", { description: "The endColumn field of AnnotationOptions." }),
-	),
-	/** Its title. */
-	title: S.optionalKey(S.String).annotate(
-		$I.annote("AnnotationOptions.title", { description: "The title field of AnnotationOptions." }),
-	),
-}).annotate(
+export const AnnotationOptions = S.Struct(GithubAnnotationProperties.fields).annotate(
 	$I.annote("AnnotationOptions", { description: "A GitHub Actions annotation level and optional position and title." }),
 );
 /**
@@ -980,7 +937,7 @@ export abstract class Doc {
 	static link(target: LinkTarget | undefined, label: string | Inline, options?: LinkOptions): Inline;
 	static link(target: LinkTarget | undefined, label?: InlineInput, options?: LinkOptions): InlineInput | undefined {
 		if (target === undefined) return P.isString(label) ? text(label) : label;
-		const fallback = "url" in target ? target.url : target.file;
+		const fallback = S.is(LinkTarget.members[0])(target) ? target.url : target.file;
 		return {
 			_tag: "Link",
 			target: { ...target },

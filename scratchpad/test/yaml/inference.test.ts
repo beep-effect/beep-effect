@@ -8,6 +8,10 @@ import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
+import * as P from "effect/Predicate";
+import { YamlLintInference } from "../../effected/yaml/YamlLint.ts";
 import type { YamlRule } from "../../effected/yaml/index.ts";
 import {
 	StyleEvidence,
@@ -23,6 +27,65 @@ const observations = S.Array(observation);
 
 const combineAll = (evidences: ReadonlyArray<StyleEvidence>): StyleEvidence =>
 	evidences.reduce((acc, e) => StyleEvidence.combine(acc, e), StyleEvidence.empty);
+
+describe("inference identity regressions", () => {
+	it("NUL-containing rule and dimension tuples retain separate votes and first positions", () => {
+		const vote = (dimension: string, offset: number) => StyleVote.make({
+			dimension, value: "double", offset, length: 1, line: 0, character: offset,
+		});
+		const left = StyleEvidence.fromObservations("a\u0000b", [vote("c", 7), vote("c", 9)]);
+		const right = StyleEvidence.fromObservations("a", [vote("b\u0000c", 3)]);
+		const combined = StyleEvidence.combine(left, right);
+		assert.deepStrictEqual(combined.votes.map((tally) => [tally.rule, tally.dimension, tally.count, tally.offset]), [
+			["a", "b\u0000c", 1, 3],
+			["a\u0000b", "c", 2, 7],
+		]);
+		const config = Result.getOrThrow(YamlLint.resolveStrict(combined, YamlLintConfig.make({ rules: {} })));
+		assert.deepStrictEqual(config.rules, { a: { ["b\u0000c"]: "double" }, ["a\u0000b"]: { c: "double" } });
+	});
+
+	it("NUL-containing rule and dimension tuples retain separate maximum floors", () => {
+		const left = StyleEvidence.fromObservations("a\u0000b", [
+			StyleFloor.make({ dimension: "c", value: 10 }),
+			StyleFloor.make({ dimension: "c", value: 40 }),
+		]);
+		const right = StyleEvidence.fromObservations("a", [StyleFloor.make({ dimension: "b\u0000c", value: 80 })]);
+		const combined = StyleEvidence.combine(left, right);
+		assert.deepStrictEqual(combined.floors.map((tally) => [tally.rule, tally.dimension, tally.value]), [
+			["a", "b\u0000c", 80],
+			["a\u0000b", "c", 40],
+		]);
+	});
+
+	it("inference preserves own __proto__ rule and dimension keys and base severities", () => {
+		const evidence = StyleEvidence.fromObservations("__proto__", [StyleVote.make({
+			dimension: "__proto__", value: "double", offset: 0, length: 1, line: 0, character: 0,
+		})]);
+		for (const base of [YamlLintConfig.make({ rules: {} }), YamlLintConfig.make({
+			rules: R.fromEntries([["__proto__", "warning"] as const]),
+		})]) {
+			for (const config of [Result.getOrThrow(YamlLint.resolveStrict(evidence, base)), YamlLint.resolveLenient(evidence, base)]) {
+				assert.deepStrictEqual(R.keys(config.rules), ["__proto__"]);
+				const entry = O.getOrThrow(R.get(config.rules, "__proto__"));
+				assert.isTrue(P.isObjectOrArray(entry));
+				if (P.isObjectOrArray(entry)) {
+					assert.strictEqual(O.getOrThrow(R.get(entry, "__proto__")), "double");
+					assert.deepStrictEqual(R.get(entry, "severity"), R.get(base.rules, "__proto__"));
+				}
+			}
+		}
+		const off = YamlLintConfig.make({ rules: R.fromEntries([["__proto__", "off"] as const]) });
+		assert.deepStrictEqual(YamlLint.resolveLenient(evidence, off), off);
+		assert.deepStrictEqual(Result.getOrThrow(YamlLint.resolveStrict(evidence, off)), off);
+	});
+
+	it("the plain inference report validates and round-trips through its schema", () => {
+		const report = YamlLint.inferLenient("a: 1\n", YamlLint.builtins);
+		assert.isTrue(S.is(YamlLintInference)(report));
+		const encoded = Result.getOrThrow(S.encodeResult(YamlLintInference)(report));
+		assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(YamlLintInference)(encoded)), report);
+	});
+});
 
 describe("StyleEvidence — the monoid", () => {
 	it.effect.prop(

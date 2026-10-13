@@ -11,10 +11,9 @@
 // failure. The dependency edge runs facade -> engine only, so
 // `noImportCycles` stays satisfied.
 
-import { LiteralKit } from "@beep/schema/LiteralKit";
 import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
-import { isString } from "effect/Predicate";
+import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -22,6 +21,7 @@ import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import type { BlockPassResult } from "./internal/blockParser.ts";
 import { parseBlocks } from "./internal/blockParser.ts";
+import { MarkdownDialect as RawMarkdownDialect } from "./internal/blockRegistry.ts";
 import { isGuardExceeded, isRawMarkdownError } from "./internal/carriers.ts";
 import { parsePhrasingText } from "./internal/phrasing.ts";
 import { stringifyTree } from "./internal/stringify.ts";
@@ -53,7 +53,7 @@ const $I = $ScratchpadId.create("effected/markdown/Markdown");
  * @category schemas
  * @since 0.0.0
  */
-export const MarkdownDialect = LiteralKit(["commonmark", "gfm"]).pipe($I.annoteSchema("MarkdownDialect", { description: "The markdown dialects the parser can be pointed at. `\"gfm\"` — CommonMark 0.31.2 plus the GitHub extensions (tables, strikethrough, autolink literals, task-list items, footnotes, and the tagfilter's output contract) — is the default; `\"commonmark\"` opts out of every extension. A dialect is a registry composition in the engine, so widening this union is additive and never changes an existing dialect's behavior." }));
+export const MarkdownDialect = RawMarkdownDialect.annotate($I.annote("MarkdownDialect", { description: "The markdown dialects the parser can be pointed at. `\"gfm\"` — CommonMark 0.31.2 plus the GitHub extensions (tables, strikethrough, autolink literals, task-list items, footnotes, and the tagfilter's output contract) — is the default; `\"commonmark\"` opts out of every extension. A dialect is a registry composition in the engine, so widening this union is additive and never changes an existing dialect's behavior." }));
 
 /**
  * The union of all markdown dialect string literals.
@@ -272,7 +272,7 @@ const frontmatterOf = (options?: MarkdownParseOptions): boolean => options?.fron
 export const parsePassResult: {
 	(text: string, options?: MarkdownParseOptions): Result.Result<BlockPassResult, MarkdownParseError>;
 	(options?: MarkdownParseOptions): (text: string) => Result.Result<BlockPassResult, MarkdownParseError>;
-} = dual((args) => isString(args[0]), (
+} = dual((args) => P.isString(args[0]), (
 	text: string,
 	options?: MarkdownParseOptions,
 ): Result.Result<BlockPassResult, MarkdownParseError> => {

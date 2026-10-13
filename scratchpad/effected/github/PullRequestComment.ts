@@ -1,11 +1,12 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
-import type { GitHubError } from "./GitHubError.ts";
+import { GitHubError } from "./GitHubError.ts";
 import { numericId } from "./internal/ids.ts";
 import { Repo } from "./Repo.ts";
 import type { PageOptions } from "./Rest.ts";
@@ -264,8 +265,14 @@ const unstubbed = (member: string): never => {
 	throw UnstubbedError.make({ message: `PullRequestComment.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
-const recordOf = (raw: { id: number | bigint; body?: string | null; html_url: string }): CommentRecord =>
-	CommentRecord.make({ id: numericId(raw.id), body: raw.body ?? "", url: raw.html_url });
+const recordOf = Effect.fn("PullRequestComment.recordOf")(function* (
+	operation: string,
+	raw: { id: number | bigint; body?: string | null; html_url: string },
+) {
+	return yield* S.decodeEffect(CommentRecord)({ id: numericId(raw.id), body: raw.body ?? "", url: raw.html_url }).pipe(
+		Effect.mapError((error) => GitHubError.decode(operation, "GitHub returned an unexpected comment", error)),
+	);
+});
 
 const make = (client: GitHubClient["Service"]): PullRequestCommentShape => {
 	const create = Effect.fn("PullRequestComment.create")(function* (issueNumber: number, body: string) {
@@ -277,7 +284,7 @@ const make = (client: GitHubClient["Service"]): PullRequestCommentShape => {
 			issue_number: issueNumber,
 			body,
 		});
-		return recordOf(created);
+		return yield* recordOf("PullRequestComment.create", created);
 	});
 
 	const find = Effect.fn("PullRequestComment.find")(function* (
@@ -292,8 +299,8 @@ const make = (client: GitHubClient["Service"]): PullRequestCommentShape => {
 			{ owner, repo, issue_number: issueNumber },
 			options?.page,
 		);
-		const found = comments.find((comment) => marker.matches(comment.body ?? ""));
-		return found === undefined ? O.none() : O.some(recordOf(found));
+		const records = yield* Effect.forEach(comments, (comment) => recordOf("PullRequestComment.find", comment));
+		return A.findFirst(records, (comment) => marker.matches(comment.body));
 	});
 
 	return {
@@ -317,7 +324,7 @@ const make = (client: GitHubClient["Service"]): PullRequestCommentShape => {
 				comment_id: existing.value.id,
 				body: marked,
 			});
-			return recordOf(updated);
+			return yield* recordOf("PullRequestComment.upsert", updated);
 		}),
 
 		delete: Effect.fn("PullRequestComment.delete")(function* (commentId: number) {

@@ -1,0 +1,4 @@
+I'll review the memfs port at that commit against the upstream oracle and the round-2 inventory, and report only new findings. First I'm loading the binding decisions, the prior inventory, and the port notes.Round 2 left four required fixes. I'll check whether this commit closed them, then look only for new divergences the gates would miss.The four required round-2 items are the baseline. I'll confirm this commit's diff against that seat, then check the fixes and any new behaviour drift.`withSystemErrorPath` now keeps non-errno causes. One mkdir site still throws if the cause is not an errno — I'll check whether that path is reachable.The copy-validation walk is the open candidate. I will check whether HashMap order can change the error code, then look for any other divergence the ledger does not already record.The oracle loop is unsorted too. I need the entry-map type on both sides before treating order as a behavior bug.NO FINDINGS
+
+REQUIRED: 0
+BACKLOG: 0

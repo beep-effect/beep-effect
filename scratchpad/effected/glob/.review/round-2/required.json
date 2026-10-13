@@ -1,0 +1,28 @@
+{
+  "module": "glob",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/glob/internal/braceExpansion.ts"
+      ],
+      "tests": [
+        "scratchpad/test/glob/braceExpansion.test.ts",
+        "scratchpad/test/glob/hostility.test.ts",
+        "scratchpad/test/glob/GlobPattern.test.ts",
+        "scratchpad/test/glob/GlobSet.test.ts"
+      ],
+      "findings": [
+        "sol-2-1"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-2-1": {
+      "file": "scratchpad/effected/glob/internal/braceExpansion.ts",
+      "class": "bug",
+      "summary": "Numeric brace-range expansion can append forever when floating-point addition does not advance, despite a member count within the expansion budget.",
+      "fix": "Bound sequence generation by the validated member count; reject non-finite computed counts through the typed expansion-budget guard before entering the loop, retaining positive-Infinity measurements and avoiding NaN schema defects. Preserve ordinary sequence order, increments and padding. Add large-singleton, non-advancing-endpoint and overflowing-arithmetic regressions in braceExpansion.test.ts and hostility.test.ts, and verify typed termination through both facade test files. Central deviation bookkeeping remains outside this group's write surface."
+    }
+  }
+}

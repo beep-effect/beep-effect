@@ -55,6 +55,12 @@ const fileMap = (files: ReadonlyArray<{ readonly file: string; readonly content:
 	Object.fromEntries(files.map(({ file, content }) => [file, content]));
 
 describe("scrubEnv", () => {
+	it("keeps an own __proto__ environment variable while removing traps and undefined values", () => {
+		const env = scrubEnv({ ["__proto__"]: "own variable", CI: "true", EMPTY: undefined });
+		assert.deepStrictEqual(env, { ["__proto__"]: "own variable" });
+		assert.isTrue(R.has(env, "__proto__"));
+	});
+
 	it("drops the parent package manager's context and undefined values, keeps the rest", () => {
 		assert.deepStrictEqual(
 			scrubEnv({

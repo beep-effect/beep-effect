@@ -2,6 +2,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as P from "effect/Predicate";
 // The ONE workspace traversal.
 //
 // Both entry points drive this state machine: the Effect enumerator
@@ -26,20 +27,39 @@ const MaxDepth = S.Finite.check(
 	S.makeFilter(Number.isInteger, $I.annote("IntegerDepth", {
 		description: "An integer depth bound, with the same accepted range as Number.isInteger.",
 	})),
-	S.isGreaterThanOrEqualTo(1),
+	S.isGreaterThanOrEqualTo(1, $I.annote("MinimumDepth", {
+		title: "Minimum workspace traversal depth",
+		description: "A workspace traversal depth bound greater than or equal to one.",
+	})),
 ).annotate($I.annote("MaxDepth", { description: "A positive integer workspace traversal depth bound." }));
 
 /**
  * A directory queued for reading: its root-relative POSIX path, its absolute path, and its depth below the base.
  *
+ * **Example** (Recognize a queued directory frame)
+ *
+ * ```ts
+ * import { TraversalFrame } from "@beep/scratchpad/effected/workspaces/internal/traverse";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(TraversalFrame)({ relative: "packages", absolute: "/repo/packages", depth: 0 })); // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface TraversalFrame {
-	readonly relative: string;
-	readonly absolute: string;
-	readonly depth: number;
-}
+export const TraversalFrame = S.Struct({
+	relative: S.String.annotateKey($I.annote("TraversalFrame.relative", { description: "The root-relative POSIX directory path." })),
+	absolute: S.String.annotateKey($I.annote("TraversalFrame.absolute", { description: "The absolute directory path passed to IO." })),
+	depth: S.declare(P.isNumber).annotateKey($I.annote("TraversalFrame.depth", { description: "The directory depth below the traversal base." })),
+}).annotate($I.annote("TraversalFrame", { description: "A plain directory frame queued by workspace traversal." }));
+/**
+ * The readonly directory frame described by {@link TraversalFrame}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TraversalFrame = typeof TraversalFrame.Type;
 
 /**
  * Describes why a traversal stopped early.
@@ -48,13 +68,35 @@ export interface TraversalFrame {
  *
  * Both bounds are caller-visible conditions, never defects.
  *
+ * **Example** (Recognize an existing traversal stop)
+ *
+ * ```ts
+ * import { TraversalStop } from "@beep/scratchpad/effected/workspaces/internal/traverse";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(TraversalStop)({ kind: "budgetExceeded", detail: "visited more than 1 directories" })); // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface TraversalStop {
-	readonly kind: "depthExceeded" | "budgetExceeded";
-	readonly detail: string;
-}
+export const TraversalStop = S.Union([
+	S.Struct({
+		kind: S.Literal("depthExceeded").annotateKey($I.annote("TraversalStop.depthExceeded", { description: "The traversal exhausted its depth bound." })),
+		detail: S.String.annotateKey($I.annote("TraversalStop.depthDetail", { description: "The caller-visible depth-limit diagnostic." })),
+	}).annotate($I.annote("DepthStop", { description: "A traversal stopped at its depth bound." })),
+	S.Struct({
+		kind: S.Literal("budgetExceeded").annotateKey($I.annote("TraversalStop.budgetExceeded", { description: "The traversal exhausted its directory-read budget." })),
+		detail: S.String.annotateKey($I.annote("TraversalStop.budgetDetail", { description: "The caller-visible visit-budget diagnostic." })),
+	}).annotate($I.annote("BudgetStop", { description: "A traversal stopped at its directory-read budget." })),
+]).pipe(S.toTaggedUnion("kind")).annotate($I.annote("TraversalStop", { description: "The existing plain-record reasons a workspace traversal stops early." }));
+/**
+ * The readonly bound failure described by {@link TraversalStop}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TraversalStop = typeof TraversalStop.Type;
 
 /**
  * Identifies directory names never descended into.

@@ -4,11 +4,13 @@ import type * as Redacted from "effect/Redacted";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Fn from "effect/Function";
+import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
+import * as Str from "effect/String";
 import * as Stream from "effect/Stream";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -55,23 +57,58 @@ const JsonOutput = S.fromJsonString(S.Unknown);
 /** Numeric policy inputs preserve the upstream number domain, including infinity. */
 const PolicyNumber = S.declare(P.isNumber).pipe($I.annoteSchema("PolicyNumber", { description: "An upstream numeric policy value without additional refinement." }));
 
+/** Existing numeric spelling with trailing whitespace allowed by Duration.Input's numeric template. */
+const DurationNumberText = S.String.check(
+ S.isPattern(/^[+-]?\d*\.?\d+(?:[Ee][+-]?\d+)?\s*$/),
+ S.makeFilter(Fn.flow(Str.trim, S.decodeOption(S.FiniteFromString), O.isSome), $I.annote("FiniteDurationNumberText", {
+  title: "Finite duration number", description: "The duration numeric component retains the finite-number constraint after trimming whitespace.",
+ })),
+).pipe(
+ $I.annoteSchema("DurationNumberText", { description: "A duration number with optional whitespace before the unit separator." }),
+);
+
 /** All input representations accepted by Effect Duration, without normalization. */
 const DurationInput = S.Union([
  S.Duration,
  PolicyNumber,
  S.BigInt,
  S.Tuple([PolicyNumber, PolicyNumber]),
- S.TemplateLiteral([S.Finite, " ", S.Literals(["nano", "nanos", "micro", "micros", "milli", "millis", "second", "seconds", "minute", "minutes", "hour", "hours", "day", "days", "week", "weeks"])]),
+ S.TemplateLiteral([DurationNumberText, " ", S.Literals(["nano", "nanos", "micro", "micros", "milli", "millis", "second", "seconds", "minute", "minutes", "hour", "hours", "day", "days", "week", "weeks"])]),
  S.Literals(["Infinity", "-Infinity"]),
  S.Struct({
   weeks: S.optional(PolicyNumber), days: S.optional(PolicyNumber), hours: S.optional(PolicyNumber),
   minutes: S.optional(PolicyNumber), seconds: S.optional(PolicyNumber), milliseconds: S.optional(PolicyNumber),
   microseconds: S.optional(PolicyNumber), nanoseconds: S.optional(PolicyNumber),
  }),
-]).pipe(S.is, S.declare<Duration.Input>, $I.annoteSchema("DurationInput", { description: "Opaque Effect duration input preserving its original representation." }));
+]).pipe(
+ (schema) => S.declare<Duration.Input>((input): input is Duration.Input => S.is(schema)(input)),
+ $I.annoteSchema("DurationInput", { description: "Opaque Effect duration input preserving its original representation." }),
+);
 
-/** Integer process status reused by output and both errors. */
-const ExitCode = S.Int.pipe($I.annoteSchema("ExitCode", { description: "An integer process exit code." }));
+/**
+ * Integer process status shared by scripted outcomes, output and command errors.
+ *
+ * **Example** (Validate a process exit status)
+ *
+ * ```ts
+ * import { ExitCode } from "@beep/scratchpad/effected/commands/Run";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ExitCode)(42)) // true
+ * console.log(S.is(ExitCode)(1.5)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ExitCode = S.Int.pipe($I.annoteSchema("ExitCode", { description: "An integer process exit code." }));
+/**
+ * Decoded integer process exit status.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ExitCode = typeof ExitCode.Type;
 
 /**
  * Policy for one run.

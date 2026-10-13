@@ -13,16 +13,46 @@
 // string round-trips as that exact string.
 
 import { assert, describe, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import { Bugs, Person, Repository } from "../../effected/package-json/index.ts";
 
 const Json = S.fromJsonString(S.Unknown);
 
 const decode = <A, I>(schema: S.Codec<A, I>, input: I) => S.decodeUnknownEffect(schema)(input);
 const encode = <A, I>(schema: S.Codec<A, I>, value: A) => S.encodeUnknownEffect(schema)(value);
+
+describe("Repository and Bugs — own __proto__ extension fidelity", () => {
+	for (const codec of [Repository.FromValue, Bugs.FromValue]) {
+		it.effect(`${codec === Repository.FromValue ? "Repository" : "Bugs"}: an own data key survives a URL edit`, () =>
+			Effect.gen(function* () {
+				const json = S.fromJsonString(S.Record(S.String, S.Unknown));
+				const text = '{"url":"https://old.example","__proto__":{"keep":1},"tracker":"linear"}';
+				const input = yield* S.decodeEffect(json)(text);
+				assert.isTrue(R.has(input, "__proto__"));
+				const value = yield* S.decodeEffect(codec)(input);
+				const rest = value.rest;
+				assertDefined(rest);
+				assert.isTrue(R.has(rest, "__proto__"));
+				assert.deepStrictEqual(R.get(rest, "__proto__"), O.some({ keep: 1 }));
+				assert.strictEqual(Object.getPrototypeOf(rest), Object.prototype);
+				assert.deepStrictEqual(R.keys(rest), ["__proto__", "tracker"]);
+				assert.strictEqual(yield* S.encodeUnknownEffect(json)(yield* S.encodeUnknownEffect(codec)(value)), text);
+				Object.assign(value, { url: "https://new.example" });
+				const encoded = yield* S.encodeUnknownEffect(codec)(value);
+				assertTrue(P.isObject(encoded));
+				assert.isTrue(R.has(encoded, "__proto__"));
+				assert.deepStrictEqual(R.get(encoded, "__proto__"), O.some({ keep: 1 }));
+				assert.strictEqual(Object.getPrototypeOf(encoded), Object.prototype);
+				assert.deepStrictEqual(encoded, { ...input, url: "https://new.example" });
+			}),
+		);
+	}
+});
 
 describe("Repository — the npm shorthands", () => {
 	it.effect("a bare `user/repo` browses to GitHub", () =>
@@ -58,6 +88,7 @@ describe("Repository — git URL normalization", () => {
 				"git+https://github.com/effected/kit.git",
 				"git://github.com/effected/kit.git",
 				"git@github.com:effected/kit.git",
+				"github.com:effected/kit.git",
 				"https://github.com/effected/kit.git",
 				"https://github.com/effected/kit",
 			] as const;

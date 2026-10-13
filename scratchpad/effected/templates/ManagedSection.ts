@@ -1,5 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import type * as O from "effect/Option";
+import * as O from "effect/Option";
 import type * as PlatformError from "effect/PlatformError";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -285,10 +285,7 @@ const make: (options?: ManagedSectionOptions) => Effect.Effect<ManagedSectionSha
 				yield* Effect.annotateCurrentSpan({ path, key: section.key });
 				const outcomes = yield* syncAll(path, [section]);
 				// syncAll returns one outcome per declared section.
-				if (!A.isReadonlyArrayNonEmpty(outcomes)) {
-					return yield* Effect.die("ManagedSection.sync: expected one outcome for the declared section");
-				}
-				return A.headNonEmpty(outcomes);
+				return O.getOrThrow(A.head(outcomes));
 			}),
 
 			syncAll,

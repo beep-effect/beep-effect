@@ -25,11 +25,13 @@
 // their Node globals when `types` was left unclassified.)
 
 import * as P from "effect/Predicate";
-import type { CompilerOptions } from "./CompilerOptions.ts";
+import { CompilerOptions } from "./CompilerOptions.ts";
 import type { ResolvedTsconfig } from "./ResolvedTsconfig.ts";
 import * as A from "effect/Array";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
+import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/tsconfig-json/PortableTsconfig");
 
@@ -137,11 +139,13 @@ const PRESERVED_ENUM_OPTIONS = [
  */
 const PRESERVED_STRING_OPTIONS = ["jsxFactory", "jsxFragmentFactory", "jsxImportSource", "reactNamespace"] as const;
 
-const PRESERVED_OPTIONS: ReadonlyArray<string> = [
+const PRESERVED_OPTIONS = [
 	...PRESERVED_BOOLEAN_OPTIONS,
 	...PRESERVED_ENUM_OPTIONS,
 	...PRESERVED_STRING_OPTIONS,
-];
+] as const;
+
+type PreservedCompilerOptions = Pick<CompilerOptions.Type, typeof PRESERVED_OPTIONS[number]>;
 
 // ── The opt-in tier: portable, but resolution-dependent ────────────────────
 //
@@ -189,6 +193,15 @@ const isResolvedTsconfig = (input: ResolvedTsconfig | CompilerOptions.Type): inp
 
 // ── The filter ────────────────────────────────────────────────────────────
 
+const PortableCompilerOptions = S.toType(S.Struct({
+	...Struct.pick(CompilerOptions.schema.fields, PRESERVED_OPTIONS),
+	types: CompilerOptions.schema.fields.types,
+	noEmit: S.Literal(true).annotateKey({ description: "Portable environments control emission externally." }),
+	composite: S.Literal(false).annotateKey({ description: "Portable configs do not orchestrate project-reference builds." }),
+})).annotate($I.annote("PortableCompilerOptions", {
+	description: "Only portable compiler options, with optional type packages and required non-emitting, non-composite flags.",
+}));
+
 /**
  * A portable, JSON-serializable tsconfig.json (compilerOptions-only), for
  * virtual TypeScript environments that control their own file paths and emit
@@ -201,7 +214,7 @@ const PortableTsconfigData = S.Struct({
 	/** The tsconfig JSON Schema URL, stamped for IDE support. */
 	$schema: S.Literal(TSCONFIG_SCHEMA_URL).annotateKey({ description: "The tsconfig JSON Schema URL." }),
 	/** The allow-listed, forced-flag-applied compiler options. */
-	compilerOptions: S.Record(S.String, S.Unknown).annotateKey({ description: "Allow-listed options with forced portable flags." }),
+	compilerOptions: PortableCompilerOptions.annotateKey({ description: "Allow-listed options with forced portable flags." }),
 }).annotate($I.annote("PortableTsconfig", {
 	description: "A portable compiler-options-only tsconfig for virtual TypeScript environments.",
 }));
@@ -258,19 +271,23 @@ const make = (
 	input: ResolvedTsconfig | CompilerOptions.Type,
 	options?: PortableTsconfigOptions & S.MakeOptions,
 ): PortableTsconfig => {
-	const source: Record<string, unknown> = isResolvedTsconfig(input) ? input.compilerOptions : input;
-	const compilerOptions: Record<string, unknown> = {};
-	for (const key of PRESERVED_OPTIONS) {
+	const source = isResolvedTsconfig(input) ? input.compilerOptions : input;
+	const compilerOptions: { -readonly [Key in keyof PreservedCompilerOptions]: PreservedCompilerOptions[Key] } = {};
+	const copyOption = <Key extends typeof PRESERVED_OPTIONS[number]>(key: Key): void => {
 		const value = source[key];
 		if (value !== undefined) compilerOptions[key] = value;
-	}
-	if (options?.includeTypes === true) {
-		const types = source[OPT_IN_TYPES_OPTION];
-		if (types !== undefined) compilerOptions[OPT_IN_TYPES_OPTION] = types;
-	}
-	compilerOptions.composite = false;
-	compilerOptions.noEmit = true;
-	return { $schema: TSCONFIG_SCHEMA_URL, compilerOptions };
+	};
+	for (const key of PRESERVED_OPTIONS) copyOption(key);
+	const types = options?.includeTypes === true ? source[OPT_IN_TYPES_OPTION] : undefined;
+	return {
+		$schema: TSCONFIG_SCHEMA_URL,
+		compilerOptions: {
+			...compilerOptions,
+			...O.getSomesStruct({ types: O.fromUndefinedOr(types) }),
+			composite: false,
+			noEmit: true,
+		},
+	};
 };
 
 /**
@@ -285,7 +302,7 @@ const make = (
  *
  * const portable = PortableTsconfig.make({ strict: true, outDir: "/project/dist" });
  * console.log(portable.compilerOptions.strict) // true
- * console.log(portable.compilerOptions.outDir) // undefined
+ * console.log("outDir" in portable.compilerOptions) // false
  * ```
  *
  * @public
@@ -327,7 +344,7 @@ export class PortableTsconfig extends S.Opaque<PortableTsconfig>()(PortableTscon
 	 * );
 	 * console.log(portable.compilerOptions.composite) // false
 	 * console.log(portable.compilerOptions.noEmit) // true
-	 * console.log(portable.compilerOptions.typeRoots) // undefined
+	 * console.log("typeRoots" in portable.compilerOptions) // false
 	 * console.log(JSON.stringify(portable.compilerOptions.types)) // ["node"]
 	 * ```
 	 *

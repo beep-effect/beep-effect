@@ -10,7 +10,6 @@ import { JsoncCodec } from "../../effected/config-file/JsoncCodec.ts";
 const equivalent = S.toEquivalence(S.Json);
 const JsonText = S.fromJsonString(S.Json);
 
-
 describe("JsoncCodec properties", () => {
   it.effect.prop("parse(stringify(x)) recovers every JSON value without failure", [Arbitrary.schema(S.Json)], ([value]) =>
     Effect.gen(function* () {

@@ -41,18 +41,21 @@
 // table spans from its header row to the end of its last row.
 
 import * as Str from "effect/String";
+import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity/packages";
 import { Table, type TableAlign, TableCell, TableRow } from "../../MarkdownNode.ts";
 import type {
 	BlockConstruct,
 	BlockNode,
 	BlockScanner,
 	BlockStart,
-	RawInlineSegment,
 	TableData,
 } from "../blockTypes.ts";
-import { tableCellChildren, tableRowChildren } from "../blockTypes.ts";
+import { RawInlineSegment, tableCellChildren, tableRowChildren } from "../blockTypes.ts";
 import { sliceWithSegments } from "../segments.ts";
 import { ESCAPABLE } from "../unescape.ts";
+
+const $I = $ScratchpadId.create("effected/markdown/internal/blocks/table");
 
 /**
  * Upstream's `MAX_AUTOCOMPLETED_CELLS`: the ceiling on cells the parser
@@ -74,32 +77,88 @@ const isSpaceChar = (char: string): boolean => char === " " || char === "\t" || 
  *
  * For a delimiter or body row that is one source line; for a header row it is
  * a paragraph's whole accumulated content, which may be several.
+
+ *
+ * **Example** (Validate RowSource data)
+ *
+ * ```ts
+ * import { RowSource } from "@beep/scratchpad/effected/markdown/internal/blocks/table";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(RowSource)({ text: "| guide |\n", segments: [] })); // true
+ * ```
+ *
+
+ * @category schemas
+ * @since 0.0.0
  */
-interface RowSource {
-	/** Always newline-terminated, which is the form upstream's scanners expect. */
-	readonly text: string;
-	readonly segments: ReadonlyArray<RawInlineSegment>;
-}
+export const RowSource = S.Struct({
+	text: S.String.annotateKey({ description: "Newline-terminated row text, as expected by the scanner." }),
+	segments: S.Array(RawInlineSegment).annotateKey({ description: "Source provenance for the surviving characters of the row text." }),
+}).annotate($I.annote("RowSource", { description: "Row text and its source provenance, including paragraph text reclaimed as a header." }));
+/**
+ * The schema-derived RowSource value type.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RowSource = typeof RowSource.Type;
 
-/** One cell's span in a {@link RowSource}, before unescaping and trimming. */
-interface RawCell {
-	/** Where the cell's content begins — just past the pipe that opened it. */
-	readonly start: number;
-	/** Where the scanner found content (`start` plus its leading whitespace). */
-	readonly contentStart: number;
-	/** One past the cell's last character. */
-	readonly end: number;
-}
+/** One cell's span in a {@link RowSource}, before unescaping and trimming.
+ *
+ * **Example** (Validate RawCell data)
+ *
+ * ```ts
+ * import { RawCell } from "@beep/scratchpad/effected/markdown/internal/blocks/table";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(RawCell)({ start: 0, contentStart: 2, end: 8 })); // true
+ * ```
+ *
 
-/** A scanned row: its cells, and where in the source its line began. */
-interface ScannedRow {
-	readonly cells: ReadonlyArray<RawCell>;
-	/**
-	 * Index into the row source where the row's own line starts. Non-zero only
-	 * for a header row reclaimed from a multi-line paragraph.
-	 */
-	readonly paragraphOffset: number;
-}
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RawCell = S.Struct({
+	start: S.Finite.annotateKey({ description: "Cell start in the row source, just past its opening pipe." }),
+	contentStart: S.Finite.annotateKey({ description: "First content offset after the cell's leading whitespace." }),
+	end: S.Finite.annotateKey({ description: "Exclusive end of the cell in the row source." }),
+}).annotate($I.annote("RawCell", { description: "A cell's source boundaries before unescaping and trimming." }));
+/**
+ * The schema-derived RawCell value type.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RawCell = typeof RawCell.Type;
+
+/** A scanned row: its cells, and where in the source its line began.
+ *
+ * **Example** (Validate ScannedRow data)
+ *
+ * ```ts
+ * import { ScannedRow } from "@beep/scratchpad/effected/markdown/internal/blocks/table";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ScannedRow)({ cells: [], paragraphOffset: 0, complete: true })); // true
+ * ```
+ *
+
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ScannedRow = S.Struct({
+	cells: S.Array(RawCell).annotateKey({ description: "Cell boundaries in source order." }),
+	paragraphOffset: S.Finite.annotateKey({ description: "Row start within the source; nonzero for a reclaimed paragraph header." }),
+	complete: S.optionalKey(S.Boolean).annotateKey({ description: "When present, whether the scan consumed the entire row source." }),
+}).annotate($I.annote("ScannedRow", { description: "Scanned cell boundaries and the row's paragraph-relative start." }));
+/**
+ * The schema-derived ScannedRow value type.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ScannedRow = typeof ScannedRow.Type;
 
 // --- upstream's scanners --------------------------------------------------
 
@@ -142,10 +201,8 @@ const scanCell = (text: string, from: number): number => {
 
 /** `_scan_table_row_end`: `spacechar* newline`. */
 const scanRowEnd = (text: string, from: number): number => {
+	// scanCell and scanCellEnd already consumed all whitespace before this offset.
 	let index = from;
-	while (isSpaceChar(text.charAt(index))) {
-		index += 1;
-	}
 	if (text.charAt(index) === "\r") {
 		index += 1;
 	}
@@ -218,11 +275,11 @@ const scanDelimiterRowLine = (line: string, from: number): boolean => {
  *
  * **Details**
  *
- * Returns `undefined` unless the WHOLE text is consumed and at least one cell
- * came out of it — which is what makes a line either a row or not a row, with
- * no partial verdict in between.
+ * Records whether the whole text was consumed, alongside the scanned cells.
+ * Delimiter rows already satisfy the grammar; other callers validate this
+ * result through `rowFromSource`.
  */
-const rowFromSource = (source: RowSource): ScannedRow | undefined => {
+const scanRowSource = (source: RowSource) => {
 	const { text } = source;
 	const length = text.length;
 	let cells: RawCell[] = [];
@@ -268,19 +325,42 @@ const rowFromSource = (source: RowSource): ScannedRow | undefined => {
 		}
 	}
 
-	if (offset !== length || cells.length === 0) {
-		return undefined;
-	}
-	return { cells, paragraphOffset };
+	return { cells, paragraphOffset, complete: offset === length };
+};
+
+const rowFromSource = (source: RowSource): ScannedRow | undefined => {
+	const row = scanRowSource(source);
+	return row.complete && row.cells.length > 0 ? row : undefined;
 };
 
 // --- cell content ---------------------------------------------------------
 
-/** Text and provenance for a run of a {@link RowSource}, escapes dropped. */
-interface CellContent {
-	readonly text: string;
-	readonly segments: ReadonlyArray<RawInlineSegment>;
-}
+/** Text and provenance for a run of a {@link RowSource}, escapes dropped.
+ *
+ * **Example** (Validate CellContent data)
+ *
+ * ```ts
+ * import { CellContent } from "@beep/scratchpad/effected/markdown/internal/blocks/table";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(CellContent)({ text: "guide", segments: [] })); // true
+ * ```
+ *
+
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CellContent = S.Struct({
+	text: S.String.annotateKey({ description: "Cell text after dropping backslashes that escape delimiter pipes." }),
+	segments: S.Array(RawInlineSegment).annotateKey({ description: "Source provenance rebased to the unescaped cell text." }),
+}).annotate($I.annote("CellContent", { description: "Unescaped cell text with provenance for every surviving character." }));
+/**
+ * The schema-derived CellContent value type.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CellContent = typeof CellContent.Type;
 
 /**
  * Cut `[from, to)` out of `source`, dropping the backslash of every `\|` in
@@ -424,11 +504,7 @@ const addRow = (
 	rowBlock.startOffset = rowStartOffset;
 
 	const used = Math.min(row.cells.length, data.columns);
-	for (let index = 0; index < used; index += 1) {
-		const cell = row.cells[index];
-		if (cell === undefined) {
-			continue;
-		}
+	for (const cell of row.cells.slice(0, used)) {
 		const start = offsetAt(source, cell.start, rowStartOffset);
 		const cellBlock = scanner.addChild("tableCell", start - scanner.lineStart);
 		cellBlock.startOffset = start;
@@ -483,10 +559,8 @@ export const tableHeaderStart: BlockStart = {
 		}
 
 		const delimiterSource = lineSource(scanner);
-		const delimiterRow = rowFromSource(delimiterSource);
-		if (delimiterRow === undefined) {
-			return 0;
-		}
+		// The delimiter grammar guarantees a complete row with at least one cell.
+		const delimiterRow = scanRowSource(delimiterSource);
 
 		const headerSource = paragraphSource(container);
 		const headerRow = rowFromSource(headerSource);

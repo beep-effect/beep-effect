@@ -3,6 +3,8 @@ import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { parse } from "yaml";
+import * as Effect from "effect/Effect";
+import { Yaml } from "../../effected/yaml/Yaml.ts";
 import { YamlMap, YamlPair, YamlScalar, YamlSeq, type YamlNode } from "../../effected/yaml/YamlNode.ts";
 import { composeFirstDocument } from "../../effected/yaml/internal/composer/document.ts";
 import { MAX_NESTING_DEPTH } from "../../effected/yaml/internal/composer/state.ts";
@@ -194,4 +196,111 @@ describe("stable key ordering", () => {
 		);
 		assert.strictEqual(node.items[0], items[0]);
 	});
+});
+
+
+describe("scalar rendering fidelity", () => {
+	it.effect("round-trips newline-only values through public block-style options", () => Effect.gen(function* () {
+		for (const defaultScalarStyle of ["block-literal", "block-folded"] as const) {
+			for (const value of ["\n", "\n\n", "\n\n\n"]) {
+				for (const forceDefaultStyles of [false, true]) {
+					const text = yield* Yaml.stringify(value, { defaultScalarStyle, forceDefaultStyles });
+					assert.strictEqual(parse(text), value);
+					assert.strictEqual(yield* Yaml.parse(text), value);
+				}
+			}
+		}
+	}));
+	it.effect("round-trips interior trailing and continuation-leading whitespace canonically", () => Effect.gen(function* () {
+		for (const defaultScalarStyle of ["plain", "single-quoted"] as const) {
+			for (const value of ["a \nb", "a\t\nb", "a\n b", "a\n\tb", "a \n\nb", "a\n \tb"]) {
+				const text = yield* Yaml.stringify(value, { defaultScalarStyle, forceDefaultStyles: true });
+				assert.strictEqual(text, `${renderDoubleQuoted(value, true)}\n`);
+				assert.strictEqual(parse(text), value);
+				assert.strictEqual(yield* Yaml.parse(text), value);
+			}
+		}
+	}));
+	it.effect("escapes required block indentation outside the single-digit range", () => Effect.gen(function* () {
+		for (const defaultScalarStyle of ["block-literal", "block-folded"] as const) {
+			for (const indent of [0, 10]) {
+				for (const value of [" x", " x\ny", "\n\nx"]) {
+					for (const forceDefaultStyles of [false, true]) {
+						const text = yield* Yaml.stringify(value, { defaultScalarStyle, indent, forceDefaultStyles });
+						assert.strictEqual(text, `${renderDoubleQuoted(value, forceDefaultStyles)}\n`);
+						assert.strictEqual(parse(text), value);
+						assert.strictEqual(yield* Yaml.parse(text), value);
+					}
+				}
+			}
+		}
+	}));
+	it("matches af7566a9 oracle bytes for representable canonical trailing-newline strings", () => {
+		// Pinned upstream stringifier.ts returns renderSingleQuotedMultiline unchanged.
+		const value = "first\nsecond\n";
+		const oracleBytes = "'first\n\n  second\n\n'\n";
+		for (const style of ["plain", "single-quoted"] as const) {
+			assert.strictEqual(stringifyValue(value, { defaultScalarStyle: style, forceDefaultStyles: true }), oracleBytes);
+			const node = YamlScalar.make({ value, style, offset: 0, length: value.length });
+			assert.strictEqual(stringifyDocument(document(node), { forceDefaultStyles: true }), oracleBytes);
+		}
+		assert.strictEqual(parse(oracleBytes), value);
+	});
+	it.effect("uses escaped quotes for nested trailing-newline canonical scalars", () => Effect.gen(function* () {
+		// af7566a9 emits an unindented closing quote here, rejected by yaml@2.9.0.
+		for (const style of ["plain", "single-quoted"] as const) {
+			const value = "first\nsecond\n";
+			const leaf = YamlScalar.make({ value, style, offset: 0, length: value.length });
+			const key = YamlScalar.make({ value: "key", style: "plain", offset: 0, length: 3 });
+			const sequence = YamlSeq.make({ items: [leaf], style: "block", offset: 0, length: 1 });
+			const mapping = YamlMap.make({ items: [YamlPair.make({ key, value: leaf })], style: "block", offset: 0, length: 1 });
+			for (const input of [[value], { key: value }]) {
+				const text = stringifyValue(input, { defaultScalarStyle: style, forceDefaultStyles: true });
+				assert.deepStrictEqual(parse(text), input);
+				assert.deepStrictEqual(yield* Yaml.parse(text), input);
+			}
+			for (const node of [sequence, mapping]) {
+				const text = stringifyDocument(document(node), { forceDefaultStyles: true });
+				assert.deepStrictEqual(parse(text), node.toValue());
+				assert.deepStrictEqual(yield* Yaml.parse(text), node.toValue());
+			}
+		}
+	}));
+	it.effect("escapes multiline and block-style scalars in flow values and keys", () => Effect.gen(function* () {
+		for (const defaultScalarStyle of ["plain", "single-quoted", "double-quoted", "block-literal", "block-folded"] as const) {
+			for (const forceDefaultStyles of [false, true]) {
+				for (const value of ["a\nb", "a \n b", "one line"]) {
+					for (const input of [[value], { [value]: value }]) {
+						const text = yield* Yaml.stringify(input, { defaultCollectionStyle: "flow", defaultScalarStyle, forceDefaultStyles, lineWidth: 8 });
+						assert.deepStrictEqual(parse(text), input);
+						assert.deepStrictEqual(yield* Yaml.parse(text), input);
+					}
+					const leaf = YamlScalar.make({ value, style: defaultScalarStyle, offset: 0, length: value.length });
+					const sequence = YamlSeq.make({ items: [leaf], style: "flow", offset: 0, length: 1 });
+					const mapping = YamlMap.make({ items: [YamlPair.make({ key: leaf, value: leaf })], style: "flow", offset: 0, length: 1 });
+					for (const node of [sequence, mapping]) {
+						const text = stringifyDocument(document(node), { defaultCollectionStyle: "flow", forceDefaultStyles, lineWidth: 8 });
+						assert.deepStrictEqual(parse(text), node.toValue());
+						assert.deepStrictEqual(yield* Yaml.parse(text), node.toValue());
+					}
+				}
+			}
+		}
+	}));
+	it.effect("escapes controls and lone CR before explicit style dispatch", () => Effect.gen(function* () {
+		for (const defaultScalarStyle of ["single-quoted", "block-literal", "block-folded"] as const) {
+			for (const value of ["a\u0000b", "a\u001bb", "a\rb", "a\u0000b\nc"]) {
+				for (const forceDefaultStyles of [false, true]) {
+					const text = yield* Yaml.stringify(value, { defaultScalarStyle, forceDefaultStyles });
+					assert.strictEqual(text, `${renderDoubleQuoted(value, forceDefaultStyles)}\n`);
+					assert.strictEqual(parse(text), value);
+					assert.strictEqual(yield* Yaml.parse(text), value);
+					const node = YamlScalar.make({ value, style: defaultScalarStyle, offset: 0, length: value.length });
+					const astText = stringifyDocument(document(node), { forceDefaultStyles });
+					assert.strictEqual(astText, text);
+					assert.strictEqual(yield* Yaml.parse(astText), value);
+				}
+			}
+		}
+	}));
 });

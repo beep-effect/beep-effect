@@ -6,6 +6,7 @@ import type { OctokitResponse } from "@octokit/types";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
+import { constVoid } from "effect/Function";
 import * as O from "@beep/utils/Option";
 import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
@@ -88,10 +89,10 @@ class TransportFailure extends S.TaggedError<TransportFailure>($I`TransportFailu
 }, $I.annote("TransportFailure", { description: "Carries an Octokit throwable until it is classified." })) {}
 
 const SILENT_LOG = {
-	debug: () => {},
-	info: () => {},
-	warn: () => {},
-	error: () => {},
+	debug: constVoid,
+	info: constVoid,
+	warn: constVoid,
+	error: constVoid,
 };
 
 /**
@@ -279,9 +280,10 @@ const withSignal = (params: Record<string, unknown>, signal: AbortSignal): Recor
 
 /** Response headers off a throwable, when it carried any. */
 const readThrownHeaders = (error: unknown): Record<string, unknown> | undefined => {
-	if (!P.isObjectOrArray(error) || !P.hasProperty(error, "response")) return undefined;
+	if (!P.isObject(error)) return undefined;
 	const response = error.response;
-	if (!P.isObjectOrArray(response) || !P.hasProperty(response, "headers")) return undefined;
-	const headers = response.headers;
-	return P.isObjectOrArray(headers) && !A.isArray(headers) ? headers : undefined;
+	const headers = P.isObject(response) ? response.headers : undefined;
+	if (A.isArray(headers)) return undefined;
+	if (P.isObject(headers)) return headers;
+	return P.isObject(error.headers) ? error.headers : undefined;
 };

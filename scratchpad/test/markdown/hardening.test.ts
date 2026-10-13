@@ -55,6 +55,12 @@
 // defect) belongs with the facade and lands in Task 11.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess } from "@effect/vitest/utils";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as Stream from "effect/Stream";
+import { Markdown } from "../../effected/markdown/Markdown.ts";
+import { MarkdownVisitor } from "../../effected/markdown/MarkdownVisitor.ts";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import { parseBlocks } from "../../effected/markdown/internal/blockParser.ts";
@@ -123,6 +129,49 @@ describe("recursion surfaces", () => {
 			const source = `${">".repeat(10)} ${"*".repeat(20)}a${"*".repeat(20)}\n`;
 			assert.doesNotThrow(() => parseBlocks(source));
 		});
+	});
+
+	describe("combined materialized tree depth", () => {
+		it("accepts the whole-tree boundary and rejects one deeper with a typed facade failure", () => {
+			const atLimit = `${"> ".repeat(MAX_NESTING_DEPTH - 4)}***x***\n`;
+			assert.doesNotThrow(() => parseBlocks(atLimit));
+			for (const quotes of [MAX_NESTING_DEPTH - 3, MAX_NESTING_DEPTH - 2]) {
+				const source = `${"> ".repeat(quotes)}***x***\n`;
+				let caught: unknown;
+				try { parseBlocks(source); } catch (error) { caught = error; }
+				assert.isTrue(isGuardExceeded(caught));
+				if (isGuardExceeded(caught)) {
+					assert.strictEqual(caught.limit, MAX_NESTING_DEPTH);
+					assert.strictEqual(caught.actual, MAX_NESTING_DEPTH + 1);
+					assert.strictEqual(caught.message, `NestingDepthExceeded: limit ${MAX_NESTING_DEPTH}, actual ${MAX_NESTING_DEPTH + 1}`);
+				}
+				const parsed = Markdown.parseResult(source);
+				assertSuccess(
+					Result.map(Result.flip(parsed), (failure) => [failure._tag, failure.diagnostic.code]),
+					["MarkdownParseError", "NestingDepthExceeded"],
+				);
+			}
+		});
+
+		it.effect("visits and stringifies parsed boundary trees without tripping either guard", Effect.fnUntraced(function* () {
+			const sources = [
+				`${"> ".repeat(MAX_NESTING_DEPTH - 2)}x\n`,
+				`${"> ".repeat(MAX_NESTING_DEPTH - 3)}*x*\n`,
+				`${"> ".repeat(MAX_NESTING_DEPTH - 4)}***x***\n`,
+				`${"> ".repeat(200)}${"*".repeat(108)}x${"*".repeat(108)}\n`,
+			];
+			for (const source of sources) {
+				const root = yield* Markdown.parse(source);
+				const events = yield* MarkdownVisitor.visit(root).pipe(Stream.runCollect);
+				assert.isFalse(events.some((event) => event._tag === "Error"));
+				assert.isTrue(events.some((event) => event.depth === MAX_NESTING_DEPTH));
+				const serialized = yield* Markdown.stringify(root);
+				assertSuccess(Markdown.stringifyResult(root), serialized);
+				const reparsed = yield* Markdown.parse(serialized);
+				const repeated = yield* Markdown.stringify(reparsed);
+				assert.strictEqual(repeated, serialized);
+			}
+		}));
 	});
 
 	describe("image alt flattening (surface 9)", () => {

@@ -118,12 +118,12 @@ export const retryAfterMillisFrom: {
 ): number | undefined => {
 	const retryAfterSeconds = headerNumber(headers, "retry-after");
 	if (retryAfterSeconds !== undefined && retryAfterSeconds >= 0) {
-		return retryAfterSeconds * 1000;
+		return Math.min(Number.MAX_SAFE_INTEGER, retryAfterSeconds * 1000);
 	}
 	const remaining = headerNumber(headers, "x-ratelimit-remaining");
 	const reset = headerNumber(headers, "x-ratelimit-reset");
 	if (remaining !== undefined && remaining <= 0 && reset !== undefined) {
-		return Math.max(0, reset * 1000 - nowMillis);
+		return Math.min(Number.MAX_SAFE_INTEGER, Math.max(0, reset * 1000 - nowMillis));
 	}
 	return undefined;
 });

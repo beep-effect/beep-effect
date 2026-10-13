@@ -92,7 +92,7 @@ describe("MergeStrategy.layeredMerge", () => {
 		}),
 	);
 
-	it.effect("copies own data fields without invoking inherited getters or setters", () =>
+	it.effect("keeps the highest-priority class intact without invoking inherited getters or setters", () =>
 		Effect.gen(function* () {
 			class Document {
 				get prototype(): string {
@@ -108,8 +108,102 @@ describe("MergeStrategy.layeredMerge", () => {
 			const strategy = MergeStrategy.layeredMerge<Document>();
 			const value = yield* strategy.resolve([src("/a", "walk", higher), src("/etc", "system", lower)]);
 			assert.instanceOf(value, Document);
-			assert.isTrue(R.has(value, "prototype"));
-			assert.strictEqual(value.prototype, "own data");
+			assert.strictEqual(value, higher);
+			assert.isFalse(R.has(value, "prototype"));
+			assert.isTrue(R.has(lower, "prototype"));
+			assert.strictEqual(lower.prototype, "own data");
+		}),
+	);
+
+	it.effect("copies plain-record own data without reading or invoking inherited accessors", () =>
+		Effect.gen(function* () {
+			const inherited = Symbol("inherited accessor");
+			Object.defineProperty(Object.prototype, inherited, {
+				get() { return assert.fail("must not read an inherited getter"); },
+				set(_value: unknown) { assert.fail("must not invoke an inherited setter"); },
+				configurable: true,
+			});
+			try {
+				const higher = { port: 1 };
+				const lower = { [inherited]: "own data", port: 2 };
+				const value = yield* MergeStrategy.layeredMerge<Record<PropertyKey, unknown>>().resolve([
+					src("/a", "walk", higher), src("/etc", "system", lower),
+				]);
+				assert.isTrue(R.has(value, inherited));
+				assert.strictEqual(value[inherited], "own data");
+				assert.deepStrictEqual(Object.getOwnPropertyDescriptor(value, inherited), {
+					value: "own data", writable: true, enumerable: true, configurable: true,
+				});
+				assert.isFalse(Object.hasOwn(higher, inherited));
+				assert.strictEqual(lower[inherited], "own data");
+			} finally {
+				Reflect.deleteProperty(Object.prototype, inherited);
+			}
+		}),
+	);
+
+	it.effect("preserves schema-decoded symbols from both sources, priority and nested plain records", () =>
+		Effect.gen(function* () {
+			const required = Symbol("required");
+			const higherOnly = Symbol("higher only");
+			const lowerOnly = Symbol("lower only");
+			const nested = Symbol("nested");
+			const Document = S.Struct({
+				[required]: S.String,
+				[higherOnly]: S.optionalKey(S.String),
+				[lowerOnly]: S.optionalKey(S.String),
+				port: S.Int,
+				section: S.Struct({ [nested]: S.Struct({
+					priority: S.String, local: S.optionalKey(S.String), fallback: S.optionalKey(S.String),
+				}) }),
+			});
+			const higher = yield* S.decodeEffect(Document)({
+				[required]: "higher", [higherOnly]: "local", port: 1,
+				section: { [nested]: { priority: "higher", local: "local" } },
+			});
+			const lower = yield* S.decodeEffect(Document)({
+				[required]: "lower", [lowerOnly]: "base", port: 2,
+				section: { [nested]: { priority: "lower", fallback: "base" } },
+			});
+			const value = yield* MergeStrategy.layeredMerge<typeof Document.Type>().resolve([
+				src("/a", "walk", higher), src("/etc", "system", lower),
+			]);
+			assert.isTrue(S.is(Document)(value));
+			assert.deepStrictEqual(value, {
+				[required]: "higher", [higherOnly]: "local", [lowerOnly]: "base", port: 1,
+				section: { [nested]: { priority: "higher", local: "local", fallback: "base" } },
+			});
+			assert.deepStrictEqual(higher, {
+				[required]: "higher", [higherOnly]: "local", port: 1,
+				section: { [nested]: { priority: "higher", local: "local" } },
+			});
+			assert.deepStrictEqual(lower, {
+				[required]: "lower", [lowerOnly]: "base", port: 2,
+				section: { [nested]: { priority: "lower", fallback: "base" } },
+			});
+		}),
+	);
+
+	it.effect("excludes non-enumerable string and symbol keys without reading them", () =>
+		Effect.gen(function* () {
+			const hidden = Symbol("hidden");
+			const higher = { port: 1 };
+			const lower = { port: 2, host: "base" };
+			for (const record of [higher, lower]) {
+				for (const key of ["hidden", hidden]) {
+					Object.defineProperty(record, key, {
+						get() { return assert.fail("must not read a non-enumerable getter"); },
+					});
+				}
+			}
+			const value = yield* MergeStrategy.layeredMerge<Record<PropertyKey, unknown>>().resolve([
+				src("/a", "walk", higher), src("/etc", "system", lower),
+			]);
+			assert.deepStrictEqual(value, { port: 1, host: "base" });
+			assert.isFalse(R.has(value, hidden));
+			assert.isFalse(R.has(value, "hidden"));
+			assert.isTrue(Object.hasOwn(higher, hidden));
+			assert.isTrue(Object.hasOwn(lower, hidden));
 		}),
 	);
 
@@ -150,6 +244,8 @@ describe("MergeStrategy.layeredMerge", () => {
 
 describe("MergeStrategy.layeredMerge — value identity", () => {
 	class Doc extends S.Class<Doc>("Doc")({ port: S.Finite, host: S.String }) {
+		#secret = "ready";
+		get secret(): string { return this.#secret; }
 		get origin(): string {
 			return `http://${this.host}:${this.port}`;
 		}
@@ -158,13 +254,33 @@ describe("MergeStrategy.layeredMerge — value identity", () => {
 	it.effect("preserves the document's class instance and its prototype getters", () =>
 		Effect.gen(function* () {
 			const strategy = MergeStrategy.layeredMerge<Doc>();
+			const higher = yield* S.decodeEffect(Doc)({ port: 1, host: "a" });
+			const lower = yield* S.decodeEffect(Doc)({ port: 2, host: "b" });
 			const value = yield* strategy.resolve([
-				src("/a", "walk", Doc.make({ port: 1, host: "a" })),
-				src("/etc", "system", Doc.make({ port: 2, host: "b" })),
+				src("/a", "walk", higher),
+				src("/etc", "system", lower),
 			]);
 			// `load` declares Effect<A>. Returning a structurally-equal POJO would be a lie.
 			assert.instanceOf(value, Doc);
+			assert.strictEqual(value, higher);
+			assert.strictEqual(value.secret, "ready");
 			assert.strictEqual(value.origin, "http://a:1");
+			assert.strictEqual(lower.secret, "ready");
+		}),
+	);
+
+	it.effect("keeps decoded private-field brands and identity for a single source and nested instances", () =>
+		Effect.gen(function* () {
+			const higher = yield* S.decodeEffect(Doc)({ port: 1, host: "a" });
+			const lower = yield* S.decodeEffect(Doc)({ port: 2, host: "b" });
+			const single = yield* MergeStrategy.layeredMerge<Doc>().resolve([src("/a", "walk", higher)]);
+			assert.strictEqual(single, higher);
+			assert.strictEqual(single.secret, "ready");
+			const nested = yield* MergeStrategy.layeredMerge<{ section: Doc }>().resolve([
+				src("/a", "walk", { section: higher }), src("/etc", "system", { section: lower }),
+			]);
+			assert.strictEqual(nested.section, higher);
+			assert.strictEqual(nested.section.secret, "ready");
 		}),
 	);
 

@@ -172,8 +172,9 @@ const build = Effect.fn("build")(function* (
  * @since 0.0.0
  */
 export const refreshFailureTarget: {
-	(audience?: AudienceShape, settings?: FailureSettings): Effect.Effect<void>;
-	(settings?: FailureSettings): (audience?: AudienceShape) => Effect.Effect<void>;
+	(audience?: AudienceShape): Effect.Effect<void>;
+	(audience: AudienceShape | undefined, settings: FailureSettings): Effect.Effect<void>;
+	(settings: FailureSettings): (audience?: AudienceShape) => Effect.Effect<void>;
 } = dual(
 	(args) => args.length === 0 || args.length >= 2 || args[0] === undefined || "kind" in args[0],
 	Effect.fnUntraced(function* (audience?: AudienceShape, settings?: FailureSettings) {

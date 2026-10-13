@@ -14,6 +14,20 @@ const promote = (drafts: number): ReadonlyArray<ConfirmToggle<"promote">> =>
 	drafts > 0 ? [{ key: "promote", label: `promote ${drafts} drafts to stable`, value: true }] : [];
 
 describe("Confirm reducer", () => {
+	it("result retains special keys as own boolean properties", () => {
+		const toggles = Confirm.result(Confirm.init<"__proto__" | "constructor" | "toString">({ toggles: [
+			{ key: "__proto__", label: "Prototype", value: true },
+			{ key: "constructor", label: "Constructor", value: false },
+			{ key: "toString", label: "String", value: true },
+		] })).toggles;
+		assert.isTrue(Object.hasOwn(toggles, "__proto__"));
+		assert.isTrue(Object.hasOwn(toggles, "constructor"));
+		assert.isTrue(Object.hasOwn(toggles, "toString"));
+		assert.strictEqual(toggles.__proto__, true);
+		assert.strictEqual(toggles.constructor, false);
+		assert.strictEqual(toggles.toString, true);
+	});
+
 	it("y and n set the answer, and left or right flip it", () => {
 		const start = Confirm.init({ initial: false });
 		assert.isTrue(Confirm.step(start, "yes").confirmed);

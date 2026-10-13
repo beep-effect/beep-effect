@@ -24,6 +24,10 @@ import * as P from "effect/Predicate";
 import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/yaml/YamlVisitor");
+const isScalar = S.is(YamlScalar);
+const isAlias = S.is(YamlAlias);
+const isMap = S.is(YamlMap);
+const isFiniteNumber = S.is(S.Finite);
 
 const eventContext = {
 	path: S.Array(S.Union([S.String, S.Finite])).annotateKey({ description: "Ordered mapping keys and sequence indices from the document root." }),
@@ -231,7 +235,7 @@ function* walkDocument(doc: RawYamlDocument, text: string): Generator<YamlVisito
 }
 
 function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<YamlVisitorEvent> {
-	if (S.is(YamlScalar)(node)) {
+	if (isScalar(node)) {
 		if (node.commentBefore !== undefined) {
 			yield YamlVisitorEvent.Comment({ path, depth, text: node.commentBefore, placement: "leading" });
 		}
@@ -246,7 +250,7 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 			...O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag) }),
 			...O.getSomesStruct({ anchor: O.fromUndefinedOr(node.anchor) }),
 		});
-	} else if (S.is(YamlAlias)(node)) {
+	} else if (isAlias(node)) {
 		if (node.commentBefore !== undefined) {
 			yield YamlVisitorEvent.Comment({ path, depth, text: node.commentBefore, placement: "leading" });
 		}
@@ -254,7 +258,7 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 			yield YamlVisitorEvent.Comment({ path, depth, text: node.comment, placement: "trailing" });
 		}
 		yield YamlVisitorEvent.Alias({ path, depth, name: node.name });
-	} else if (S.is(YamlMap)(node)) {
+	} else if (isMap(node)) {
 		if (node.commentBefore !== undefined) {
 			yield YamlVisitorEvent.Comment({ path, depth, text: node.commentBefore, placement: "leading" });
 		}
@@ -294,11 +298,11 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
 }
 
 function* walkPair(pair: YamlPair, parentPath: YamlPath, depth: number): Generator<YamlVisitorEvent> {
-	const resolvedKey = S.is(YamlScalar)(pair.key) ? pair.key.value : null;
-	const resolvedValue = S.is(YamlScalar)(pair.value) ? pair.value.value : null;
+	const resolvedKey = isScalar(pair.key) ? pair.key.value : null;
+	const resolvedValue = isScalar(pair.value) ? pair.value.value : null;
 
 	const keySegment: string | number =
-		P.isString(resolvedKey) ? resolvedKey : P.isNumber(resolvedKey) ? resolvedKey : String(resolvedKey);
+		P.isString(resolvedKey) ? resolvedKey : isFiniteNumber(resolvedKey) ? resolvedKey : String(resolvedKey);
 
 	const pairPath: YamlPath = [...parentPath, keySegment];
 

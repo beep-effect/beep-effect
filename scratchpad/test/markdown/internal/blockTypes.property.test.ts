@@ -4,7 +4,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { ListItem, Paragraph, Root, TableCell, TableRow } from "../../../effected/markdown/MarkdownNode.ts";
-import { flowChildren, listItemChildren, makeBlockNode, tableCellChildren, tableRowChildren } from "../../../effected/markdown/internal/blockTypes.ts";
+import { BlockType, RawInlineSegment, flowChildren, listItemChildren, makeBlockNode, tableCellChildren, tableRowChildren } from "../../../effected/markdown/internal/blockTypes.ts";
 import type { MaterializedBlock } from "../../../effected/markdown/internal/blockTypes.ts";
 
 const runs = { arbitrary: fcRuns(100) };
@@ -42,4 +42,23 @@ describe("blockTypes properties", () => {
     direct.children.push(makeBlockNode("heading", 0, 1));
     assert.deepStrictEqual(curried.children, []);
   }), runs);
+});
+
+
+it.effect.prop("RawInlineSegment decodes finite plain source runs", [Arbitrary.schema(RawInlineSegment)], ([segment]) => Effect.gen(function* () {
+  const decoded = yield* S.decodeEffect(RawInlineSegment)(segment);
+  assert.deepStrictEqual(decoded, segment);
+  assert.isFalse("_tag" in decoded);
+}), runs);
+
+it("source-run and block-kind schemas reject invalid domain values", () => {
+  const valid = { textOffset: 1.5, sourceOffset: -2, length: 0 };
+  assert.isTrue(S.is(RawInlineSegment)(valid));
+  for (const field of ["textOffset", "sourceOffset", "length"] as const) {
+    for (const value of [NaN, Infinity, -Infinity, "1", undefined]) {
+      assert.isFalse(S.is(RawInlineSegment)({ ...valid, [field]: value }));
+    }
+  }
+  for (const type of BlockType.literals) assert.isTrue(S.is(BlockType)(type));
+  assert.isFalse(S.is(BlockType)("root"));
 });

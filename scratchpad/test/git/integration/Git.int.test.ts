@@ -23,29 +23,71 @@
 // surface) and the real Git service itself for checkout, which IS part of
 // the surface this package owns.
 
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { $ScratchpadId } from "@beep/identity/packages";
 import { NodeServices } from "@effect/platform-node";
 import { afterAll, assert, beforeAll, describe, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
+import * as Scope from "effect/Scope";
+import * as Str from "effect/String";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import type { ChildProcessSpawner } from "effect/process";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { Git, NotARepositoryError } from "../../../effected/git/Git.ts";
 import { runCollected } from "../../../effected/git/internal/run.ts";
 
-/** Resolves both `Git` and every Node platform service (including the real `ChildProcessSpawner`). */
-const TestLayer = Git.layer.pipe(Layer.provideMerge(NodeServices.layer));
-const encodeSshArgvJson = S.encodeEffect(S.fromJsonString(S.Array(S.String)));
+const $I = $ScratchpadId.create("effected/git/Git.int.test");
 
-const run = <A, E>(effect: Effect.Effect<A, E, Git | ChildProcessSpawner.ChildProcessSpawner>) =>
-	effect.pipe(Effect.provide(TestLayer));
+class FixtureSetupError extends S.TaggedError<FixtureSetupError>($I`FixtureSetupError`)(
+	"FixtureSetupError",
+	{ message: S.String.annotate({ description: "The failing Git invocation, exit code and stderr." }) },
+	$I.annote("FixtureSetupError", { description: "A real Git fixture command exited unsuccessfully." }),
+) {}
+
+/** Pins fixture configuration at the real spawner boundary without changing the host environment. */
+const FixtureServices = Layer.effect(
+	ChildProcessSpawner.ChildProcessSpawner,
+	Effect.gen(function* () {
+		const real = yield* ChildProcessSpawner.ChildProcessSpawner;
+		return ChildProcessSpawner.make((command) =>
+			real.spawn(ChildProcess.setEnv(command, { GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_SYSTEM: "/dev/null" })),
+		);
+	}),
+).pipe(Layer.provideMerge(NodeServices.layer));
+
+/** One scoped context serves the fixture hooks and the real Git tests throughout this file. */
+const TestLayer = Git.layer.pipe(Layer.provideMerge(FixtureServices));
+let testScope: Scope.Closeable;
+let testContext: Context.Context<Git | NodeServices.NodeServices>;
+let fs: FileSystem.FileSystem;
+let path: Path.Path;
+let tempDir = "";
+const join = (...parts: ReadonlyArray<string>) => path.join(...parts);
+const run = <A, E>(effect: Effect.Effect<A, E, Git | NodeServices.NodeServices>) =>
+	Effect.provideContext(effect, testContext);
+const SharedTestLayer = Layer.unwrap(Effect.sync(() => Layer.succeedContext(testContext)));
+
+beforeAll(() =>
+	Effect.gen(function* () {
+		testScope = yield* Scope.make();
+		testContext = yield* Layer.buildWithScope(TestLayer, testScope);
+		fs = Context.get(testContext, FileSystem.FileSystem);
+		path = Context.get(testContext, Path.Path);
+		tempDir = yield* fs.makeTempDirectory({ prefix: "effected-git-suite-" });
+		yield* Scope.addFinalizer(testScope, fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.orDie));
+	}).pipe(Effect.runPromise),
+);
+afterAll(() => Scope.close(testScope, Exit.void).pipe(Effect.runPromise));
+
+const encodeSshArgvJson = S.encodeEffect(S.fromJsonString(S.Array(S.String)));
 
 /** The locale and prompt pins the `Git` service applies to its own spawns (#670). */
 const FIXTURE_ENV = { LC_ALL: "C", GIT_TERMINAL_PROMPT: "0" } as const;
@@ -66,9 +108,9 @@ const runFixtureGit = (
 			result.exitCode === 0
 				? Effect.succeed(result.stdout)
 				: Effect.die(
-						new Error(
-							`fixture setup failed: git ${args.join(" ")} in ${cwd} (exit ${result.exitCode}): ${result.stderr}`,
-						),
+						FixtureSetupError.make({
+							message: `fixture setup failed: git ${A.join(args, " ")} in ${cwd} (exit ${result.exitCode}): ${result.stderr}`,
+						}),
 					),
 		),
 	);
@@ -102,92 +144,68 @@ const generateBigText = (size: number): string => {
  * changed file, a space-containing path, and an oversized file — everything
  * the assertion list needs from a single fixture.
  */
-const buildFixture = (dir: string): Effect.Effect<RepoFixture, never, Git | ChildProcessSpawner.ChildProcessSpawner> =>
-	Effect.gen(function* () {
-		const raw = (args: ReadonlyArray<string>) => runFixtureGit(dir, args);
-		const git = yield* Git;
+const buildFixture = Effect.fnUntraced(function* (dir: string) {
+	const raw = (args: ReadonlyArray<string>) => runFixtureGit(dir, args);
+	const git = yield* Git;
 
-		yield* raw(["-c", "init.defaultBranch=main", "init"]);
-		yield* raw(["config", "user.email", "git-integration@example.com"]);
-		yield* raw(["config", "user.name", "Git Integration"]);
+	yield* raw(["-c", "init.defaultBranch=main", "init"]);
+	yield* raw(["config", "user.email", "git-integration@example.com"]);
+	yield* raw(["config", "user.name", "Git Integration"]);
 
-		yield* Effect.promise(() => writeFile(join(dir, "a.txt"), "one\n"));
-		yield* Effect.promise(() => writeFile(join(dir, "file with space.txt"), "space content\n"));
-		yield* Effect.promise(() => writeFile(join(dir, "deleted.txt"), "will be deleted\n"));
-		yield* raw(["add", "-A"]);
-		yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit1"]);
-		const commit1 = (yield* raw(["rev-parse", "HEAD"])).trim();
+	yield* fs.writeFileString(join(dir, "a.txt"), "one\n");
+	yield* fs.writeFileString(join(dir, "file with space.txt"), "space content\n");
+	yield* fs.writeFileString(join(dir, "deleted.txt"), "will be deleted\n");
+	yield* raw(["add", "-A"]);
+	yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit1"]);
+	const commit1 = (yield* raw(["rev-parse", "HEAD"])).trim();
 
-		yield* raw(["branch", "feature/git"]);
-		// checkout IS Git surface — dogfood the real service for the fixture's
-		// own branch switches, not a raw invocation.
-		yield* git.checkout(dir, "feature/git").pipe(Effect.orDie);
-		yield* Effect.promise(() => writeFile(join(dir, "feature.txt"), "feature content\n"));
-		yield* raw(["add", "-A"]);
-		yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "branch commit"]);
-		const branchCommit = (yield* raw(["rev-parse", "HEAD"])).trim();
+	yield* raw(["branch", "feature/git"]);
+	// checkout IS Git surface — dogfood the real service for the fixture's
+	// own branch switches, not a raw invocation.
+	yield* git.checkout(dir, "feature/git").pipe(Effect.orDie);
+	yield* fs.writeFileString(join(dir, "feature.txt"), "feature content\n");
+	yield* raw(["add", "-A"]);
+	yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "branch commit"]);
+	const branchCommit = (yield* raw(["rev-parse", "HEAD"])).trim();
 
-		yield* git.checkout(dir, "main").pipe(Effect.orDie);
-		yield* Effect.promise(() => writeFile(join(dir, "a.txt"), "two\n"));
-		yield* Effect.promise(() => rm(join(dir, "deleted.txt")));
-		yield* raw(["add", "-A"]);
-		yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit2"]);
-		const commit2 = (yield* raw(["rev-parse", "HEAD"])).trim();
+	yield* git.checkout(dir, "main").pipe(Effect.orDie);
+	yield* fs.writeFileString(join(dir, "a.txt"), "two\n");
+	yield* fs.remove(join(dir, "deleted.txt"));
+	yield* raw(["add", "-A"]);
+	yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit2"]);
+	const commit2 = (yield* raw(["rev-parse", "HEAD"])).trim();
 
-		yield* raw(["tag", "v1.0.0", commit2]);
+	yield* raw(["tag", "v1.0.0", commit2]);
 
-		const bigContent = generateBigText(BIG_FILE_SIZE);
-		yield* Effect.promise(() => writeFile(join(dir, "big.txt"), bigContent));
-		yield* raw(["add", "-A"]);
-		yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit3: add big file"]);
-		const commit3 = (yield* raw(["rev-parse", "HEAD"])).trim();
+	const bigContent = generateBigText(BIG_FILE_SIZE);
+	yield* fs.writeFileString(join(dir, "big.txt"), bigContent);
+	yield* raw(["add", "-A"]);
+	yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit3: add big file"]);
+	const commit3 = (yield* raw(["rev-parse", "HEAD"])).trim();
 
-		const forkPoint = (yield* raw(["merge-base", "main", "feature/git"])).trim();
+	const forkPoint = (yield* raw(["merge-base", "main", "feature/git"])).trim();
 
-		return { dir, commit1, commit2, commit3, branchCommit, forkPoint, tag: "v1.0.0", bigContent };
-	});
-
-// The `Git` service probes `ssh.variant` before every network-touching member,
-// and that read is a MERGED config read — so without this it reaches the
-// developer's or runner's own global git config. A machine with a global
-// `ssh.variant` outside `auto`/`ssh` would decline the ssh pin and fail the
-// assertions below with a message that says nothing about why. Pointing both
-// config scopes at /dev/null makes every git spawn in this file see only the
-// repository config its fixture wrote. Safe here because the fixtures pin
-// everything they depend on locally, including `init.defaultBranch`.
-const HOST_CONFIG_KEYS = ["GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM"] as const;
-const hostConfig = new Map<string, string | undefined>();
-
-beforeAll(() => {
-	for (const key of HOST_CONFIG_KEYS) {
-		hostConfig.set(key, process.env[key]);
-		process.env[key] = "/dev/null";
-	}
+	return { dir, commit1, commit2, commit3, branchCommit, forkPoint, tag: "v1.0.0", bigContent };
 });
 
-afterAll(() => {
-	for (const key of HOST_CONFIG_KEYS) {
-		const previous = hostConfig.get(key);
-		if (previous === undefined) {
-			delete process.env[key];
-		} else {
-			process.env[key] = previous;
-		}
-	}
-});
-
-it.layer(TestLayer, { timeout: "30 seconds" })("Git — real repository integration", (it) => {
-	let fixtureDir: string;
+it.layer(SharedTestLayer, { timeout: "30 seconds" })("Git — real repository integration", (it) => {
+	let fixtureDir = "";
 	let fixture: RepoFixture;
 
-	beforeAll(async () => {
-		fixtureDir = await mkdtemp(join(tmpdir(), "effected-git-int-"));
-		fixture = await buildFixture(fixtureDir).pipe(run, Effect.runPromise);
-	}, 30_000);
+	beforeAll(
+		() =>
+			Effect.gen(function* () {
+				fixtureDir = yield* fs.makeTempDirectory({ directory: tempDir, prefix: "effected-git-int-" });
+				fixture = yield* buildFixture(fixtureDir);
+			}).pipe(run, Effect.runPromise),
+		30_000,
+	);
 
-	afterAll(async () => {
-		if (fixtureDir !== "") await rm(fixtureDir, { recursive: true, force: true });
-	});
+	afterAll(() =>
+		Effect.gen(function* () {
+			if (fixtureDir !== "") yield* fs.remove(fixtureDir, { recursive: true, force: true });
+		}).pipe(run, Effect.runPromise),
+	);
 
 	it.effect("show at both commits: changed content differs", () =>
 		Effect.gen(function* () {
@@ -314,39 +332,44 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git — real repository integrat
 	);
 
 	describe("workingChanges, in its own dirty repository", () => {
-		let dirtyDir: string;
+		let dirtyDir = "";
 
-		beforeAll(async () => {
-			dirtyDir = await mkdtemp(join(tmpdir(), "effected-git-int-dirty-"));
-			await Effect.gen(function* () {
-				const raw = (args: ReadonlyArray<string>) => runFixtureGit(dirtyDir, args);
-				yield* raw(["-c", "init.defaultBranch=main", "init"]);
-				yield* raw(["config", "user.email", "git-integration@example.com"]);
-				yield* raw(["config", "user.name", "Git Integration"]);
-				// Pin diff.relative=true on this repo: this is the adverse config Fix 1
-				// guards against. Without the explicit --relative/--no-relative flags the
-				// diffs would silently follow this config and desync from ls-files'
-				// repo-root base — proven by the nested-cwd case below.
-				yield* raw(["config", "diff.relative", "true"]);
-				yield* Effect.promise(() => writeFile(join(dirtyDir, "tracked.txt"), "one\n"));
-				// A tracked file in a NESTED subdirectory, so a cwd nested under the
-				// repo root discriminates repo-root-relative from cwd-relative output.
-				yield* Effect.promise(() => mkdir(join(dirtyDir, "pkg"), { recursive: true }));
-				yield* Effect.promise(() => writeFile(join(dirtyDir, "pkg", "mod.txt"), "one\n"));
-				yield* raw(["add", "-A"]);
-				yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "base"]);
-				// Dirty the tree three distinct ways so the union covers each source.
-				yield* Effect.promise(() => writeFile(join(dirtyDir, "tracked.txt"), "two\n")); // unstaged
-				yield* Effect.promise(() => writeFile(join(dirtyDir, "pkg", "mod.txt"), "two\n")); // unstaged, nested
-				yield* Effect.promise(() => writeFile(join(dirtyDir, "staged.txt"), "new\n"));
-				yield* raw(["add", "staged.txt"]); // staged
-				yield* Effect.promise(() => writeFile(join(dirtyDir, "untracked.txt"), "loose\n")); // untracked
-			}).pipe(run, Effect.runPromise);
-		}, 30_000);
+		beforeAll(
+			() =>
+				Effect.gen(function* () {
+					dirtyDir = yield* fs.makeTempDirectory({ directory: tempDir, prefix: "effected-git-int-dirty-" });
 
-		afterAll(async () => {
-			if (dirtyDir !== "") await rm(dirtyDir, { recursive: true, force: true });
-		});
+					const raw = (args: ReadonlyArray<string>) => runFixtureGit(dirtyDir, args);
+					yield* raw(["-c", "init.defaultBranch=main", "init"]);
+					yield* raw(["config", "user.email", "git-integration@example.com"]);
+					yield* raw(["config", "user.name", "Git Integration"]);
+					// Pin diff.relative=true on this repo: this is the adverse config Fix 1
+					// guards against. Without the explicit --relative/--no-relative flags the
+					// diffs would silently follow this config and desync from ls-files'
+					// repo-root base — proven by the nested-cwd case below.
+					yield* raw(["config", "diff.relative", "true"]);
+					yield* fs.writeFileString(join(dirtyDir, "tracked.txt"), "one\n");
+					// A tracked file in a NESTED subdirectory, so a cwd nested under the
+					// repo root discriminates repo-root-relative from cwd-relative output.
+					yield* fs.makeDirectory(join(dirtyDir, "pkg"), { recursive: true });
+					yield* fs.writeFileString(join(dirtyDir, "pkg", "mod.txt"), "one\n");
+					yield* raw(["add", "-A"]);
+					yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "base"]);
+					// Dirty the tree three distinct ways so the union covers each source.
+					yield* fs.writeFileString(join(dirtyDir, "tracked.txt"), "two\n"); // unstaged
+					yield* fs.writeFileString(join(dirtyDir, "pkg", "mod.txt"), "two\n"); // unstaged, nested
+					yield* fs.writeFileString(join(dirtyDir, "staged.txt"), "new\n");
+					yield* raw(["add", "staged.txt"]); // staged
+					yield* fs.writeFileString(join(dirtyDir, "untracked.txt"), "loose\n"); // untracked
+				}).pipe(run, Effect.runPromise),
+			30_000,
+		);
+
+		afterAll(() =>
+			Effect.gen(function* () {
+				if (dirtyDir !== "") yield* fs.remove(dirtyDir, { recursive: true, force: true });
+			}).pipe(run, Effect.runPromise),
+		);
 
 		it.effect("relative:true reports cwd-relative paths from the repo root (--relative honored)", () =>
 			Effect.gen(function* () {
@@ -378,16 +401,22 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git — real repository integrat
 	});
 
 	describe("checkout, in its own clone", () => {
-		let cloneDir: string;
+		let cloneDir = "";
 
-		beforeAll(async () => {
-			cloneDir = await mkdtemp(join(tmpdir(), "effected-git-int-clone-"));
-			await runFixtureGit(tmpdir(), ["clone", fixture.dir, cloneDir]).pipe(run, Effect.runPromise);
-		}, 30_000);
+		beforeAll(
+			() =>
+				Effect.gen(function* () {
+					cloneDir = yield* fs.makeTempDirectory({ directory: tempDir, prefix: "effected-git-int-clone-" });
+					yield* runFixtureGit(tempDir, ["clone", fixture.dir, cloneDir]);
+				}).pipe(run, Effect.runPromise),
+			30_000,
+		);
 
-		afterAll(async () => {
-			if (cloneDir !== "") await rm(cloneDir, { recursive: true, force: true });
-		});
+		afterAll(() =>
+			Effect.gen(function* () {
+				if (cloneDir !== "") yield* fs.remove(cloneDir, { recursive: true, force: true });
+			}).pipe(run, Effect.runPromise),
+		);
 
 		it.effect("checkout moves HEAD, verified via revParse", () =>
 			Effect.gen(function* () {
@@ -406,15 +435,19 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git — real repository integrat
 	});
 
 	describe("an empty directory is not a repository", () => {
-		let emptyDir: string;
+		let emptyDir = "";
 
-		beforeAll(async () => {
-			emptyDir = await mkdtemp(join(tmpdir(), "effected-git-int-empty-"));
-		});
+		beforeAll(() =>
+			Effect.gen(function* () {
+				emptyDir = yield* fs.makeTempDirectory({ directory: tempDir, prefix: "effected-git-int-empty-" });
+			}).pipe(run, Effect.runPromise),
+		);
 
-		afterAll(async () => {
-			if (emptyDir !== "") await rm(emptyDir, { recursive: true, force: true });
-		});
+		afterAll(() =>
+			Effect.gen(function* () {
+				if (emptyDir !== "") yield* fs.remove(emptyDir, { recursive: true, force: true });
+			}).pipe(run, Effect.runPromise),
+		);
 
 		it.effect("revParse fails with NotARepositoryError", () =>
 			Effect.gen(function* () {
@@ -437,31 +470,38 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git — real repository integrat
 	// proves they REACH git. A stand-in ssh records the argv git handed it, so
 	// the appended `-o BatchMode=yes` is observable without a network remote.
 	describe("ssh pins reach a real git invocation (#670)", () => {
-		let sshDir: string;
-		let argvLog: string;
-		let fakeSsh: string;
+		let sshDir = "";
+		let argvLog = "";
+		let fakeSsh = "";
 
-		beforeAll(async () => {
-			sshDir = await mkdtemp(join(tmpdir(), "effected-git-ssh-"));
-			argvLog = join(sshDir, "argv.txt");
-			// The basename MUST be `ssh`: the service only appends `-o` to a command it
-			// recognizes as OpenSSH, mirroring git's own basename-driven variant
-			// detection. A stand-in named anything else is correctly left untouched.
-			fakeSsh = join(sshDir, "ssh");
-			await writeFile(fakeSsh, `#!/bin/sh\nprintf '%s\\n' "$@" >> "${argvLog}"\nexit 1\n`, { mode: 0o755 });
-		});
+		beforeAll(() =>
+			Effect.gen(function* () {
+				sshDir = yield* fs.makeTempDirectory({ directory: tempDir, prefix: "effected-git-ssh-" });
+				argvLog = join(sshDir, "argv.txt");
+				// The basename MUST be `ssh`: the service only appends `-o` to a command it
+				// recognizes as OpenSSH, mirroring git's own basename-driven variant
+				// detection. A stand-in named anything else is correctly left untouched.
+				fakeSsh = join(sshDir, "ssh");
+				yield* fs.writeFileString(fakeSsh, `#!/bin/sh\nprintf '%s\\n' "$@" >> "${argvLog}"\nexit 1\n`, { mode: 0o755 });
+			}).pipe(run, Effect.runPromise),
+		);
 
-		afterAll(async () => {
-			await rm(sshDir, { recursive: true, force: true });
-		});
+		afterAll(() => fs.remove(sshDir, { recursive: true, force: true }).pipe(run, Effect.runPromise));
 
 		it.layer(
-			Layer.unwrap(
-				Effect.sync(() =>
-					Layer.fresh(TestLayer).pipe(
-						Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnvRecord({ GIT_SSH_COMMAND: fakeSsh }))),
-					),
-				),
+			Layer.effectContext(
+				Effect.gen(function* () {
+					const scope = yield* Scope.Scope;
+					return yield* Layer.buildWithScope(Layer.fresh(Git.layer), scope).pipe(
+						Effect.provideContext(
+							Context.add(
+								testContext,
+								ConfigProvider.ConfigProvider,
+								ConfigProvider.fromEnvRecord({ GIT_SSH_COMMAND: fakeSsh }),
+							),
+						),
+					);
+				}),
 			),
 			{ timeout: "30 seconds" },
 		)((it) => {
@@ -477,8 +517,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git — real repository integrat
 						}),
 					);
 					assertExitFailure(outcome, outcome.pipe(Exit.getCause, O.getOrThrow));
-					const recorded = yield* Effect.promise(() => readFile(argvLog, "utf8"));
-					const argv = recorded.split("\n").filter((line) => line !== "");
+					const recorded = yield* fs.readFileString(argvLog, "utf8");
+					const argv = Str.split(recorded, "\n").filter((line) => line !== "");
 					// The pin arrived at a REAL git, which passed it through to ssh.
 					assert.isTrue(
 						argv.some((token, index) => token === "-o" && argv[index + 1] === "BatchMode=yes"),

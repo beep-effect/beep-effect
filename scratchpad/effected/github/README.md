@@ -341,6 +341,14 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **upstream-bug** — Interrupted pagination aborts the pending fetch instead of leaving it running. (scratchpad/test/github/transport.test.ts:176 (pagination case))
 - **upstream-bug** — Interrupted GraphQL requests abort the pending fetch instead of leaving it running. (scratchpad/test/github/transport.test.ts:176 (graphql case))
 - **upstream-bug** — Bodyless Rest.Data routes expose their actual empty-string success type while resource void methods retain undefined results. (scratchpad/test/github/Rest.test.ts:9; scratchpad/test/github/GitHubApp.test.ts:177; scratchpad/test/github/GitTag.test.ts:8)
+- **upstream-bug** — Lab drops invalid numeric HTTP statuses and returns a typed transport error where upstream throws during error construction. (scratchpad/test/github/GitHubError.test.ts:54)
+- **upstream-bug** — Lab recognizes duplicate-resource prose before display truncation where upstream can misclassify the same long message. (scratchpad/test/github/GitHubError.test.ts:65)
+- **upstream-bug** — Lab saturates oversized retry delays and preserves typed rate-limit failures where upstream can construct unsafe or infinite milliseconds and defect. (scratchpad/test/github/internal/headers.coverage.test.ts:15; scratchpad/test/github/transport.test.ts:92)
+- **upstream-bug** — Lab supplies a stable GraphQL description for failed string coercion where upstream throws TypeError. (scratchpad/test/github/GraphQL.coverage.test.ts:148)
+- **upstream-bug** — Lab refreshes rate-limit snapshots from top-level GraphQL failure headers where upstream reads only nested response headers. (scratchpad/test/github/transport.test.ts:123; scratchpad/test/github/internal/octokit.coverage.test.ts:21)
+- **upstream-bug** — Lab rejects slash-containing repository coordinates where upstream accepts colliding, unparseable slugs. (scratchpad/test/github/Repo.coverage.test.ts:15; scratchpad/test/github/Repo.property.test.ts:21)
+- **type-safety** — Lab excludes arrays at newly repaired record boundaries where upstream casts accept them, changing malformed-array classification. (scratchpad/test/github/GitHubError.test.ts:23; scratchpad/test/github/GraphQL.coverage.test.ts:25; scratchpad/test/github/internal/octokit.coverage.test.ts:21)
+- **effect-first** — Lab decodes the newly repaired external projections into typed failures and preserves interruptible token refresh with explicit ownership, while upstream uses throwing or unchecked projections and lacks serialized ownership. (scratchpad/test/github/GitHubApp.test.ts:304; scratchpad/test/github/PullRequestComment.test.ts:27; scratchpad/test/github/WorkflowDispatch.test.ts:214; scratchpad/test/github/GitTag.test.ts:28; scratchpad/test/github/RepositoryVariable.test.ts:241; scratchpad/test/github/RepositorySecret.test.ts:238; scratchpad/test/github/Ruleset.test.ts:266)
 
 ### Dependency backlog
 

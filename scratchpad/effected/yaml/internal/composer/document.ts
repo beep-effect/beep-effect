@@ -1,3 +1,4 @@
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -302,6 +303,7 @@ export const composeDocument: {
 	const commitMetaAcrossNewline = () => {
 		if (sawNewlineSinceMeta && hasMeta(meta)) {
 			if (meta.tag !== undefined) outerMeta.tag = meta.tag;
+			if (meta.tagSpan !== undefined) outerMeta.tagSpan = meta.tagSpan;
 			if (meta.anchor !== undefined) outerMeta.anchor = meta.anchor;
 			clearMeta(meta);
 		}
@@ -418,6 +420,8 @@ export const composeDocument: {
 			validateAnchorTagNotFollowedBySeqDashOnSameLine(child, children, i, state);
 			commitMetaAcrossNewline();
 			meta.tag = child.source;
+			meta.tagSpan = { offset: child.offset, length: child.length };
+			MutableHashSet.add(state.tagOffsets, child.offset);
 			i++;
 			continue;
 		}
@@ -496,8 +500,9 @@ export const composeDocument: {
 				// Combine outer + inner meta — for a scalar root, both apply to it.
 				const combined: NodeMeta = { ...outerMeta };
 				if (meta.tag !== undefined) combined.tag = meta.tag;
+				if (meta.tagSpan !== undefined) combined.tagSpan = meta.tagSpan;
 				if (meta.anchor !== undefined) combined.anchor = meta.anchor;
-				const resolved = resolveScalar(value, ["plain", combined.tag, state]);
+				const resolved = resolveScalar(value, ["plain", combined.tag, state, combined.tagSpan]);
 				// Span the full source range when multi-line plain folding merged
 				// multiple children — `endOffset` is the end of the last consumed
 				// fragment, including directives and other non-scalar
@@ -551,6 +556,7 @@ export const composeDocument: {
 			// Combine outer + inner meta for scalar root.
 			const combined: NodeMeta = { ...outerMeta };
 			if (meta.tag !== undefined) combined.tag = meta.tag;
+			if (meta.tagSpan !== undefined) combined.tagSpan = meta.tagSpan;
 			if (meta.anchor !== undefined) combined.anchor = meta.anchor;
 			contents = makeScalar(child, state, hasMeta(combined) ? combined : undefined);
 			clearMeta(meta);
@@ -565,6 +571,7 @@ export const composeDocument: {
 			// first key inside, but block-map's own children carry that context.
 			const combined: NodeMeta = { ...outerMeta };
 			if (meta.tag !== undefined) combined.tag = meta.tag;
+			if (meta.tagSpan !== undefined) combined.tagSpan = meta.tagSpan;
 			if (meta.anchor !== undefined) combined.anchor = meta.anchor;
 			contents = composeBlockMap(child, state, undefined, hasMeta(combined) ? combined : undefined);
 			clearMeta(meta);
@@ -578,6 +585,7 @@ export const composeDocument: {
 			const isRootSeq = contents === null;
 			const combined: NodeMeta = { ...outerMeta };
 			if (meta.tag !== undefined) combined.tag = meta.tag;
+			if (meta.tagSpan !== undefined) combined.tagSpan = meta.tagSpan;
 			if (meta.anchor !== undefined) combined.anchor = meta.anchor;
 			contents = composeBlockSeq(child, state, hasMeta(combined) ? combined : undefined);
 			clearMeta(meta);
@@ -604,6 +612,7 @@ export const composeDocument: {
 			} else {
 				const combined: NodeMeta = { ...outerMeta };
 				if (meta.tag !== undefined) combined.tag = meta.tag;
+				if (meta.tagSpan !== undefined) combined.tagSpan = meta.tagSpan;
 				if (meta.anchor !== undefined) combined.anchor = meta.anchor;
 				flowMeta = hasMeta(combined) ? combined : undefined;
 			}
@@ -635,6 +644,7 @@ export const composeDocument: {
 			} else {
 				const combined: NodeMeta = { ...outerMeta };
 				if (meta.tag !== undefined) combined.tag = meta.tag;
+				if (meta.tagSpan !== undefined) combined.tagSpan = meta.tagSpan;
 				if (meta.anchor !== undefined) combined.anchor = meta.anchor;
 				flowMeta = hasMeta(combined) ? combined : undefined;
 			}
@@ -754,6 +764,7 @@ export const composeDocument: {
 			headerForDocument === undefined ? afterMarkerComment : `${headerForDocument}\n${afterMarkerComment}`;
 	}
 
+	validateTagHandlesInDocument(cst, state, "percent");
 	return {
 		contents: decorated,
 		errors: [...state.errors],
@@ -815,7 +826,7 @@ function validateDirectives(
 
 		// Check for comment without preceding whitespace (e.g., %YAML 1.1#...)
 		// The lexer consumes the entire line, so we check the raw source
-		const hashIdx = src.indexOf("#");
+		const hashIdx = directiveName === "%TAG" ? src.search(/[ \t]#/) + 1 : src.indexOf("#");
 		if (hashIdx > 0) {
 			const before = src[hashIdx - 1];
 			if (before !== " " && before !== "\t") {
@@ -991,7 +1002,7 @@ export const validateCrossDocumentDirectives: {
 		// so a `!handle!` reference here without a local %TAG is unresolved.
 		// Run this for every doc >= 1 — even docs that DO declare directives
 		// can reference handles those directives didn't define.
-		validateTagHandlesInDocument(cst, state);
+		validateTagHandlesInDocument(cst, state, "handles");
 
 		// Check if this document has directives
 		const hasDirectives = children.some((c) => c.type === "directive");

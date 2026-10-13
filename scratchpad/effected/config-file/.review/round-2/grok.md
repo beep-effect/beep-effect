@@ -1,0 +1,16 @@
+I'll review the config-file port at that commit against the upstream oracle and the binding decisions, and I'll only report findings the gates missed. First I'm loading the prior round, the port notes, and the decision log so I don't re-raise closed items.Round 1 closed seven required items. I'll check this commit against the oracle and the decision log, and only raise what those fixes and the green gates still miss.The review commit sits just after the config-file S3 work. I'll compare the port to the pinned oracle and check whether the round-1 fixes and the S2/S3 pass actually closed those gaps.I'll finish the round-2 read of the config-file surface against the pinned oracle and the round-1 inventory, then report only findings the gates missed.Sol’s round-2 notes flag deep-merge type holes. I’ll verify those against the oracle and keep looking for anything that seat did not cover. The seat id for this report is `fable`.### grok-2-1
+- file: scratchpad/effected/config-file/internal/crypto.ts:1
+- class: jsdoc   severity: required
+- standard: D4; section 10.1; section 10.2 (`@remarks` → `**Details**`, `@internal` stays).   evidence: The pinned oracle `src/internal/crypto.ts:1–14` is a file lead: AES-GCM over WebCrypto, no imports from the rest of the package, a back-import of `ConfigEncryptionError` would close a cycle, and failures stay a `CryptoFailure` record until `EncryptedCodec` lifts them. The lab file begins at `import * as A from "effect/Array"`. Those sentences are not on any export in that file. Docgen with `enforceDescriptions` stays green because this block is not an exported symbol, so the S2 gate did not see the drop. S2 has already run (ledger row `w3-config-file` is stage 3). Round 1 left this as `fable-1-13` only until S2.
+- failure: The cycle constraint and the failure-lifting contract are gone from the module a later edit would change. Importing `ConfigEncryptionError` here closes the cycle the lead existed to forbid.
+- fix: Restore the oracle lead above the imports. Convert `@remarks` to `**Details**` and keep `@internal`. Do not drop a sentence.
+
+### grok-2-2
+- file: scratchpad/effected/config-file/ConfigEvent.ts:70
+- class: schema   severity: backlog
+- standard: Operator identity step 4; `standards/schema-first-development-prompt.md` (field descriptions are useful, not a hard decode rule); D11.   evidence: `ConfigSourceRef` and `ConfigEvent` fields use `annotateKey`. The twelve `ConfigEventPayload` `S.TaggedStruct` members at lines 70–99 still carry only the upstream variant comments, and `CiphertextTooShortError.message` at `EncryptedCodec.ts:15` is a bare `S.String`. `ConfigEventPayload` itself has `$I.annoteSchema`, so `enforceDescriptions` stays green and never looks at these inline fields. S2 was the assigned pass (`fable-1-12`) and did not add them.
+- failure: Generated schema docs omit the variant and short-ciphertext field descriptions. Decoding and encoding are unchanged, so this is outside D11.
+- fix: Add `annotateKey` descriptions from the variant comments already on those structs, and one on `CiphertextTooShortError.message`. Leave the comments in place until the annotations carry the same sentences.
+
+REQUIRED: 1
+BACKLOG: 1

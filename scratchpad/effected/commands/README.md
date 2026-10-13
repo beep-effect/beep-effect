@@ -97,6 +97,9 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **effect-first** — Effect.fn/fnUntraced and native Effect/Option helpers replace equivalent generator wrappers, re-failing catch handlers, Option constructors and conditional spreads. (module suite scratchpad/test/commands/**; scratchpad/test/commands/Run.test.ts:666; scratchpad/test/commands/ToolDiscovery.test.ts:58; scratchpad/test/commands/Retry.test.ts:67)
 - **effect-imports** — Executable Effect imports use dedicated effect/Module paths instead of root/process/testing barrels, with remaining process imports in examples deferred to S2. (module suite scratchpad/test/commands/**)
 - **identity-annotations** — Commands schemas and service keys use $ScratchpadId-derived identities, descriptions and field annotations instead of upstream short identifiers and unannotated fields. (module suite scratchpad/test/commands/**)
+- **numeric-domains** — The lab restricts scripted exits to the shared integer ExitCode domain, while upstream permits fractional and non-finite numbers (scratchpad/test/commands/ScriptedSpawner.test.ts:156).
+- **schema-first** — The lab permits Tool.make to omit three schema-defaulted fields while upstream requires them, retaining required decoded and encoded fields (scratchpad/test/commands/Tool.property.test.ts:32; scratchpad/test/commands/Tool.property.test.ts:79).
+- **added-exports** — The lab newly exports the ExitCode schema and derived type from Run.ts, while upstream exposes neither (scratchpad/effected/commands/Run.ts:104; scratchpad/test/commands/ScriptedSpawner.test.ts:156).
 
 ### Dependency backlog
 

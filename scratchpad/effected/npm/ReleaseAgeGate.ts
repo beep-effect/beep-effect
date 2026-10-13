@@ -99,7 +99,7 @@ const AgeMinutes = S.Number.check(S.isGreaterThanOrEqualTo(0), S.isFinite());
 // is the only wildcard. See the divergence note on `matchesExclude`.
 const matchesPattern = (name: string, pattern: string): boolean => {
 	if (pattern === name) return true;
-	if (!pattern.includes("*")) return false;
+	if (!Str.includes("*")(pattern)) return false;
 	// Linear two-pointer wildcard scan (greedy `*` with backtrack-to-star):
 	// `*` matches any run of characters including `/` (crosses `/`, unlike
 	// minimatch); every other character matches literally. No RegExp is built

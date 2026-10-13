@@ -13,7 +13,9 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
 import { Lockfile } from "../../effected/lockfiles/index.ts";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import type { Dependent, DuplicatedPackage } from "../../effected/workspaces/DuplicateCheck.ts";
 import { DuplicateCheck } from "../../effected/workspaces/DuplicateCheck.ts";
 
@@ -38,6 +40,62 @@ const byName = (report: DuplicateCheck, name: string): DuplicatedPackage | undef
 	report.duplicates.find((row) => row.name === name);
 
 describe("DuplicateCheck.run", () => {
+	it.effect("preserves provenance, deduplication and importer order on sparse roots", () =>
+		Effect.gen(function* () {
+			const packages = A.makeBy(160, (i) => ({
+				name: `isolated-${i}`, version: "1.0.0", instanceId: `isolated-${i}@1.0.0`, isWorkspace: false,
+			}));
+			const importers = A.makeBy(160, (i) => ({
+				path: `packages/isolated-${i}`,
+				dependencies: [{ name: `isolated-${i}`, specifier: "1.0.0", version: "1.0.0", depType: "dependencies" }],
+			}));
+			const sparse = yield* S.decodeUnknownEffect(Lockfile)({
+				format: "pnpm", lockfileVersion: "9", workspaceDependencies: [], packages, importers,
+			});
+			const clean = DuplicateCheck.run(sparse);
+			assert.deepStrictEqual(clean.duplicates, []);
+			assert.deepStrictEqual(clean.unresolvedImporters, []);
+			assert.isTrue(clean.isClean);
+
+			const first = { name: "shared", specifier: "1.0.0", version: "1.0.0", depType: "dependencies" };
+			const second = { name: "shared", specifier: "2.0.0", version: "2.0.0", depType: "dependencies" };
+			const variant = { ...first, peerSuffix: "(peer@1.0.0)" };
+			const lockfile = yield* S.decodeUnknownEffect(Lockfile)({
+				format: "pnpm", lockfileVersion: "9", workspaceDependencies: [],
+				packages: [
+					...packages,
+					{ name: "shared", version: "2.0.0", instanceId: "shared@2.0.0", isWorkspace: false },
+					{ name: "shared", version: "1.0.0", instanceId: "shared@1.0.0", isWorkspace: false },
+					{ name: "shared", version: "1.0.0", instanceId: "shared@1.0.0(peer@1.0.0)", isWorkspace: false },
+					{ name: "holder", version: "1.0.0", instanceId: "holder@1.0.0", isWorkspace: false,
+						resolved: { shared: "shared@1.0.0", alias: "shared@1.0.0" } },
+				],
+				importers: [
+					{ path: "packages/z", dependencies: [first, first, variant] },
+					...importers,
+					{ path: "packages/a", dependencies: [second, first,
+						{ name: "holder", specifier: "1.0.0", version: "1.0.0", depType: "dependencies" }] },
+					{ path: "packages/m", dependencies: [variant, second, first] },
+					{ path: "packages/unresolved", dependencies: [{ ...first, version: "3.0.0" }] },
+				],
+			});
+			const report = DuplicateCheck.run(lockfile);
+			assert.deepStrictEqual(A.map(report.duplicates, (row) => row.name), ["shared"]);
+			assert.deepStrictEqual(report.unresolvedImporters, ["packages/unresolved"]);
+			assert.isFalse(report.isClean);
+			const shared = byName(report, "shared");
+			if (shared === undefined) return assert.fail("expected shared in sparse duplicate report");
+			assert.deepStrictEqual(A.map(shared.versions, (version) => version.version), ["2.0.0", "1.0.0"]);
+			assert.deepStrictEqual(flatten(shared), {
+				"2.0.0": { "shared@2.0.0": ["importer:packages/a", "importer:packages/m"] },
+				"1.0.0": {
+					"shared@1.0.0": ["importer:packages/z", "importer:packages/a", "importer:packages/m", "package:holder@1.0.0"],
+					"shared@1.0.0(peer@1.0.0)": ["importer:packages/z", "importer:packages/m"],
+				},
+			});
+		}),
+	);
+
 	it.effect("reproduces issue #298: two copies of @effected/commands, each naming the package that pulls it", () =>
 		Effect.gen(function* () {
 			const report = DuplicateCheck.run(yield* parse("kit-skew"));

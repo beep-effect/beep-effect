@@ -2,6 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import { Audience } from "../../effected/env/Audience.ts";
@@ -11,11 +12,19 @@ const withEnv = (env: Record<string, string>) =>
 	Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env));
 
 const capture = (lines: Array<string>) =>
-	new Set([
+	Logger.layer([
 		Logger.make(({ message }) => {
 			lines.push(Array.isArray(message) ? message.join(" ") : String(message));
 		}),
 	]);
+
+const withCapture = (lines: Array<string>) => {
+	const loggerLayer = capture(lines);
+	return <A, E, R>(self: Effect.Effect<A, E, R>) =>
+		Effect.scopedWith((scope) =>
+			Effect.flatMap(Layer.buildWithScope(loggerLayer, scope), (context) => Effect.provideContext(self, context)),
+		);
+};
 
 // vitest-agent's console-mode literal sets, the fixture the brief names.
 const accepts = {
@@ -27,8 +36,8 @@ const accepts = {
 const read = (env: Record<string, string>, kind: "human" | "agent" | "ci", lines: Array<string> = []) =>
 	EnvOverride.read({ envVar: "VITEST_AGENT_CONSOLE", accepts }).pipe(
 		Effect.provideService(Audience, { kind: kind, source: "override" }),
-		Effect.provideService(Logger.CurrentLoggers, capture(lines)),
 		withEnv(env),
+		withCapture(lines),
 	);
 
 describe("EnvOverride.read", () => {
@@ -58,11 +67,11 @@ describe("EnvOverride.read", () => {
 		const lines: Array<string> = [];
 		return EnvOverride.read({ envVar: "VITEST_AGENT_CONSOLE", accepts }).pipe(
 			Effect.provideService(Audience, { kind: "human", source: "override" }),
-			Effect.provideService(Logger.CurrentLoggers, capture(lines)),
 			Effect.provideService(
 				ConfigProvider.ConfigProvider,
 				ConfigProvider.fromUnknown({ VITEST_AGENT_CONSOLE: "" }, { preserveEmptyStrings: true }),
 			),
+			withCapture(lines),
 			Effect.tap((value) =>
 				Effect.sync(() => {
 					assertNone(value);
@@ -92,8 +101,8 @@ describe("EnvOverride.readResult", () => {
 	const result = (env: Record<string, string>, kind: "human" | "agent" | "ci", lines: Array<string> = []) =>
 		EnvOverride.readResult({ envVar: "VITEST_AGENT_CONSOLE", accepts }).pipe(
 			Effect.provideService(Audience, { kind: kind, source: "override" }),
-			Effect.provideService(Logger.CurrentLoggers, capture(lines)),
 			withEnv(env),
+			withCapture(lines),
 		);
 
 	it.effect("an accepted value is accepted, with the audience, and nothing is rejected", () =>

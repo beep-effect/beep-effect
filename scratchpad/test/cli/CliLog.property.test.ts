@@ -9,10 +9,27 @@ import * as Logger from "effect/Logger";
 import { CliEnv } from "../../effected/cli/CliEnv.ts";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { CliLog } from "../../effected/cli/CliLog.ts";
+import { CliLog, CliLogFile } from "../../effected/cli/CliLog.ts";
 import { Fmt } from "../../effected/cli/Fmt.ts";
 
 const runs = { arbitrary: fcRuns(100) };
+
+it.effect.prop("CliLogFile round-trips both plain file-sink cases", [Arbitrary.schema(CliLogFile)], ([value]) =>
+  Effect.gen(function* () {
+    const encoded = yield* S.encodeEffect(CliLogFile)(value);
+    const decoded = yield* S.decodeEffect(CliLogFile)(encoded);
+    assert.deepStrictEqual(decoded, value);
+    assert.deepStrictEqual(yield* S.encodeEffect(CliLogFile)(decoded), encoded);
+  }), runs);
+
+it.effect("CliLogFile keeps empty paths and variable names without adding a discriminator", () =>
+  Effect.gen(function* () {
+    for (const value of [{ path: "" }, { envVar: "" }]) {
+      const encoded = yield* S.encodeEffect(CliLogFile)(value);
+      assert.deepStrictEqual(yield* S.decodeEffect(CliLogFile)(encoded), value);
+    }
+  }));
+
 const Record = S.fromJsonString(S.Struct({ message: S.String }));
 it.layer(CliLog.layer({ format: "json", level: "Info", plainLogger: false, neutralize: true }), { timeout: "30 seconds" })((it) => {
   it.effect.prop("NDJSON diagnostics preserve arbitrary messages through parse/stringify and Actions neutralization", [Arbitrary.schema(S.String)], ([text]) => Effect.gen(function* () {

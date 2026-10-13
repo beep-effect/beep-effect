@@ -192,8 +192,9 @@ needed only for the escalation list below.
   instead of pushing again.
 - Inherited reds: attribute first, fix them once on `main` (one small PR) and
   tell dependent lanes to merge `main` once; do not copy the fix into each
-  lane. Cancel queued CI on PRs that must re-run anyway so the unblocking PR
-  gets runners.
+  lane. The orchestrator declares one consolidated unblocker per red episode
+  (`unblocks-main` label) and cancels runs, running ones included, on PRs
+  that must re-run anyway so the unblocker gets runners and merges first.
 - One orchestrator session coordinates the rest: it routes threads, reds and
   conflicts to the owning session, merges at the gate, and relays the
   operator's answers. Sessions report blockers to it, not to the operator.
@@ -261,6 +262,12 @@ needed only for the escalation list below.
     since the later of the latest "marked ready for review" event and the
     latest push to the head. No reviewer has to post (review bots never gate);
     a window that cannot be read is unknown, never elapsed.
+
+  S11 exception (operator 2026-10-09, standing repo-wide since 2026-10-13):
+  a PR whose owner called final may merge over failing jobs, required ones
+  included, when the thread and window conditions hold and it has no base
+  conflict; record each red with its attribution. Every required red that
+  reaches `main` gets a named owner and a fix PR the same working day.
 - PR closeout: flip the PR ready at content-final, then, from the checkout you
   are working in, run
   `bun run beep yeet monitor --until-ready --detach` and block on

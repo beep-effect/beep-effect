@@ -114,3 +114,65 @@ describe("double quoted escape dispatch", () => {
 		}
 	});
 });
+
+describe("block-scalar header recovery", () => {
+	it("rejects repeated indicators and retains both valid orderings", () => {
+		for (const indicator of ["|", ">"]) {
+			for (const modifiers of ["++", "--", "+-", "-+", "22", "23"]) {
+				const header = `${indicator}${modifiers}`;
+				assert.deepStrictEqual(lexAll(`${header}\n  a\n`)[0], {
+					kind: "error", value: header, offset: 0, length: 3, line: 0, column: 0,
+				});
+			}
+			for (const modifiers of ["2+", "+2", "2-", "-2"]) {
+				const tokens = lexAll(`${indicator}${modifiers}\n  a\n`);
+				assert.strictEqual(tokens[0]?.kind, "scalar");
+				assert.strictEqual(tokens[0]?.value, modifiers.includes("-") ? "a" : "a\n");
+				assert.isFalse(tokens.some((token) => token.kind === "error"));
+			}
+		}
+	});
+
+	it("emits separated comments after invalid headers with exact spans", () => {
+		for (const header of ["> hello ", "| invalid\t", "|++ ", "|22\t"]) {
+			for (const newline of ["\n", "\r", "\r\n"]) {
+				const tokens = lexAll(`${header}# comment${newline}`);
+				assert.deepStrictEqual(tokens.slice(0, 2), [
+					{ kind: "error", value: header, offset: 0, length: header.length, line: 0, column: 0 },
+					{ kind: "comment", value: "# comment", offset: header.length, length: 9, line: 0, column: header.length },
+				]);
+				assert.strictEqual(tokens[2]?.kind, "newline");
+				assert.strictEqual(tokens[2]?.offset, header.length + 9);
+				assert.strictEqual(tokens[2]?.value, newline);
+			}
+		}
+	});
+});
+
+describe("quoted physical line breaks", () => {
+	it("folds lone CR and preserves the following token's physical position", () => {
+		for (const quote of ['"', "'"]) {
+			const source = `${quote}a\rb${quote}\rc`;
+			const scalars = lexAll(source).filter((token) => token.kind === "scalar");
+			assert.deepStrictEqual(scalars, [
+				{ kind: "scalar", value: "a b", offset: 0, length: 5, line: 0, column: 0 },
+				{ kind: "scalar", value: "c", offset: 6, length: 1, line: 2, column: 0 },
+			]);
+		}
+	});
+
+	it("terminates either quoted scalar at a column-zero marker after lone CR", () => {
+		for (const quote of ['"', "'"]) {
+			for (const marker of ["---", "..."]) {
+				const tokens = lexAll(`${quote}a\r${marker}\n`);
+				assert.deepStrictEqual(tokens[0], {
+					kind: "error", value: `${quote}a\r`, offset: 0, length: 3, line: 0, column: 0,
+				});
+				assert.deepStrictEqual(tokens[1], {
+					kind: marker === "---" ? "document-start" : "document-end",
+					value: marker, offset: 3, length: 3, line: 1, column: 0,
+				});
+			}
+		}
+	});
+});

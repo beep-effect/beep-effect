@@ -105,6 +105,11 @@ describe("hyphen spacing preserves collection values", () => {
 		["CRLF sequence continuation", "-   - one\r\n    - two\r\n", [["one", "two"]]],
 		["comments before continuation", "-   - one\n    # keep\n\n    - two\n", [["one", "two"]]],
 		["flow value in a compact mapping", "-   a: {first: one}\n    b: two\n", [{ a: { first: "one" }, b: "two" }]],
+		["explicit-indent literal scalar", "-   - |2\n      hello\n", [["hello\n"]]],
+		["explicit-indent folded scalar", "-   - >2\n      hello\n      world\n", [["hello world\n"]]],
+		["explicit-indent scalar with trailing chomp", "-   - |2-\n      hello\n", [["hello"]]],
+		["explicit-indent scalar with leading chomp", "-   - >-2\n      hello\n", [["hello"]]],
+		["explicit-indent scalar after node properties", "-   - !!str &ref |2\n      hello\n", [["hello\n"]]],
 	] satisfies ReadonlyArray<readonly [string, string, unknown]>) {
 		it(`retains the diagnostic without a destructive fix for ${name}`, () => {
 			const diagnostics = YamlLint.run(input, [rule], config);
@@ -124,6 +129,7 @@ describe("hyphen spacing preserves collection values", () => {
 		["flow sequence", "-   [one, two]\n", "- [one, two]\n", [["one", "two"]]],
 		["compact sequence without continuation", "-   - one\n- two\n", "- - one\n- two\n", [["one"], "two"]],
 		["compact mapping without continuation", "-   a: one\n- two\n", "- a: one\n- two\n", [{ a: "one" }, "two"]],
+		["explicit-indent scalar with an unmoved parent hyphen", "-   |2\n  hello\n", "- |2\n  hello\n", ["hello\n"]],
 	] satisfies ReadonlyArray<readonly [string, string, string, unknown]>) {
 		it(`keeps a safe ${name} fix and its parsed value`, () => {
 			const diagnostics = YamlLint.run(input, [rule], config);

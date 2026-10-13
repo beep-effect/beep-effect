@@ -493,28 +493,29 @@ const toFields = Effect.fn("toFields")(function* (raw: PnpmLockfileRawType): Eff
 	// snapshot rows. Importer paths join the id space because a `link:` edge
 	// names one.
 	const snapshots = raw.snapshots;
-	const instanceIds = MutableHashSet.fromIterable<string>([
-		...(snapshots !== undefined ? R.keys(snapshots) : []),
-		...(raw.packages !== undefined ? R.keys(raw.packages) : []),
-		...R.keys(raw.importers),
-	]);
-	// Importer paths alone — the ancestor walk that resolves a `linkDirectory`
-	// target must not match a `name@version` key, and must not treat the root
-	// importer as every path's owner.
-	const importerPaths = MutableHashSet.fromIterable<string>(R.keys(raw.importers).filter((path) => path !== "." && path !== ""));
-	// Normalized `<importerPath>/<publishDirectory>` → importer instance id,
-	// for every importer that declares one. This is the exact evidence that
-	// names a `link:` into a publish directory: the importer itself declared
-	// which build directory its links point at, so consulting the map is a
-	// lookup of the lockfile's own claim, not a guess — which is why even the
-	// root importer "." participates (its key is the normalized
-	// publishDirectory alone), despite being excluded from the ancestor walk.
+	const importerPaths = MutableHashSet.fromIterable<string>(A.filter(R.keys(raw.importers), (path) => path !== "." && path !== ""));
+	const instanceIds = MutableHashSet.fromIterable(importerPaths);
+	const snapshotVersions = MutableHashSet.empty<string>();
+	if (snapshots !== undefined) {
+		for (const key of R.keys(snapshots)) {
+			const plain = splitPeerSuffix(key).plain;
+			if (splitNameVersion(plain) === undefined) continue;
+			MutableHashSet.add(instanceIds, key);
+			MutableHashSet.add(snapshotVersions, plain);
+		}
+	}
+	if (raw.packages !== undefined) {
+		for (const key of R.keys(raw.packages)) {
+			if (MutableHashSet.has(snapshotVersions, key)) continue;
+			if (splitNameVersion(splitPeerSuffix(key).plain) !== undefined) MutableHashSet.add(instanceIds, key);
+		}
+	}
+	// Only modeled workspace importers can own a publish-directory target.
+	// The root importer has no package row, so its recorded links stay unresolved.
 	const publishDirTargets = MutableHashMap.empty<string, string>();
 	for (const [importerPath, importer] of R.toEntries(raw.importers)) {
-		if (importerPath === "") continue;
+		if (MutableHashSet.has(importerPaths, importerPath) === false) continue;
 		if (importer.publishDirectory === undefined) continue;
-		// The root importer's path is "." — resolveLinkTarget skips "." segments,
-		// so passing it through normalizes both shapes identically.
 		const key = resolveLinkTarget(importerPath, importer.publishDirectory);
 		if (key !== undefined) MutableHashMap.set(publishDirTargets, key, importerPath);
 	}

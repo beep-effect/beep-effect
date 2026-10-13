@@ -2,8 +2,12 @@
 // primitive comparator sets, matching node-semver semantics. Operates on
 // structural parts; the `Range` schema materializes classes from the result.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
-import type { ComparatorOperator, ComparatorParts, VersionParts } from "./order.ts";
+import * as S from "effect/Schema";
+import { type ComparatorOperator, type ComparatorParts, VersionParts } from "./order.ts";
+
+const $I = $ScratchpadId.create("effected/semver/internal/desugar");
 
 /**
  * A partially specified version as written in range sugar (`1.x`, `1.2`,
@@ -11,16 +15,32 @@ import type { ComparatorOperator, ComparatorParts, VersionParts } from "./order.
  * component; `prerelease`/`build` are only populated when the fully
  * specified suffix of a partial version carries them.
  *
- * @category models
+ * **Example** (Recognize a wildcard component)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { PartialParts } from "@beep/scratchpad/effected/semver/internal/desugar";
+ *
+ * S.is(PartialParts)({ major: 1, minor: null, patch: null, prerelease: [], build: [] }); // true
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
-export interface PartialParts {
-	readonly major: number | null;
-	readonly minor: number | null;
-	readonly patch: number | null;
-	readonly prerelease: ReadonlyArray<string | number>;
-	readonly build: ReadonlyArray<string>;
-}
+export const PartialParts = S.Struct({
+	...VersionParts.fields,
+	major: S.NullOr(S.Finite).annotateKey({ description: "The numeric major component, or null for a wildcard or omission." }),
+	minor: S.NullOr(S.Finite).annotateKey({ description: "The numeric minor component, or null for a wildcard or omission." }),
+	patch: S.NullOr(S.Finite).annotateKey({ description: "The numeric patch component, or null for a wildcard or omission." }),
+}).annotate($I.annote("PartialParts", { description: "Plain partial version parts preserving numeric and null intermediate components for range desugaring." }));
+
+/**
+ * The partial version data described by {@link PartialParts}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PartialParts = typeof PartialParts.Type;
 
 const sv = (
 	major: number,
@@ -53,7 +73,8 @@ const comp = (operator: ComparatorOperator, version: VersionParts): ComparatorPa
  * @since 0.0.0
  */
 export const desugarTilde = (p: PartialParts): ReadonlyArray<ComparatorParts> => {
-	const major = p.major ?? 0;
+	if (p.major === null) return [comp(">=", sv(0, 0, 0))];
+	const major = p.major;
 	const minor = p.minor;
 	const patch = p.patch ?? 0;
 
@@ -89,11 +110,12 @@ export const desugarTilde = (p: PartialParts): ReadonlyArray<ComparatorParts> =>
  * @since 0.0.0
  */
 export const desugarCaret = (p: PartialParts): ReadonlyArray<ComparatorParts> => {
-	const major = p.major ?? 0;
+	if (p.major === null) return [comp(">=", sv(0, 0, 0))];
+	const major = p.major;
 	const minor = p.minor;
 	const patch = p.patch;
 
-	const lower = sv(major, minor ?? 0, patch ?? 0, p.prerelease);
+	const lower = minor === null ? sv(major, 0, 0) : sv(major, minor, patch ?? 0, p.prerelease);
 
 	if (major !== 0) {
 		// ^1.2.3 -> >=1.2.3 <2.0.0-0
@@ -167,7 +189,8 @@ export const desugarXRange: {
 
 	// Has wildcards
 	if (major === null) {
-		// * -> >=0.0.0; >* or >=* etc. still resolve to >=0.0.0
+		// Strict comparisons against * admit no version.
+		if (operator === "<" || operator === ">") return [comp("<", sv(0, 0, 0, [0]))];
 		return [comp(">=", sv(0, 0, 0))];
 	}
 
@@ -185,8 +208,8 @@ export const desugarXRange: {
 			return [comp(">=", sv(major, 0, 0))];
 		}
 		if (operator === "<") {
-			// <1.x -> <1.0.0
-			return [comp("<", sv(major, 0, 0))];
+			// <1.x -> <1.0.0-0
+			return [comp("<", sv(major, 0, 0, [0]))];
 		}
 		// <=1.x -> <2.0.0-0
 		return [comp("<", sv(major + 1, 0, 0, [0]))];
@@ -205,8 +228,8 @@ export const desugarXRange: {
 		return [comp(">=", sv(major, minor, 0))];
 	}
 	if (operator === "<") {
-		// <1.2.x -> <1.2.0
-		return [comp("<", sv(major, minor, 0))];
+		// <1.2.x -> <1.2.0-0
+		return [comp("<", sv(major, minor, 0, [0]))];
 	}
 	// <=1.2.x -> <1.3.0-0
 	return [comp("<", sv(major, minor + 1, 0, [0]))];
@@ -240,25 +263,28 @@ export const desugarHyphen: {
 	(upper: PartialParts): (lower: PartialParts) => ReadonlyArray<ComparatorParts>;
 	(lower: PartialParts, upper: PartialParts): ReadonlyArray<ComparatorParts>;
 } = dual(2, (lower: PartialParts, upper: PartialParts): ReadonlyArray<ComparatorParts> => {
-	const lowerVersion = sv(lower.major ?? 0, lower.minor ?? 0, lower.patch ?? 0, lower.prerelease);
+	const lowerComparators = lower.major === null ? [] : [comp(">=",
+		lower.minor === null ? sv(lower.major, 0, 0) :
+		lower.patch === null ? sv(lower.major, lower.minor, 0) :
+		sv(lower.major, lower.minor, lower.patch, lower.prerelease))];
 
 	if (upper.major !== null && upper.minor !== null && upper.patch !== null) {
 		// Full upper: >=lower <=upper
 		const upperVersion = sv(upper.major, upper.minor, upper.patch, upper.prerelease);
-		return [comp(">=", lowerVersion), comp("<=", upperVersion)];
+		return [...lowerComparators, comp("<=", upperVersion)];
 	}
 
 	// Partial upper
 	if (upper.major !== null && upper.minor !== null) {
 		// 1.2.3 - 2.3 -> >=1.2.3 <2.4.0-0
-		return [comp(">=", lowerVersion), comp("<", sv(upper.major, upper.minor + 1, 0, [0]))];
+		return [...lowerComparators, comp("<", sv(upper.major, upper.minor + 1, 0, [0]))];
 	}
 
 	if (upper.major !== null) {
 		// 1.2.3 - 2 -> >=1.2.3 <3.0.0-0
-		return [comp(">=", lowerVersion), comp("<", sv(upper.major + 1, 0, 0, [0]))];
+		return [...lowerComparators, comp("<", sv(upper.major + 1, 0, 0, [0]))];
 	}
 
 	// upper is * -> >=lower
-	return [comp(">=", lowerVersion)];
+	return lower.major === null ? [comp(">=", sv(0, 0, 0))] : lowerComparators;
 });

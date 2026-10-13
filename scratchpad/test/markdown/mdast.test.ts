@@ -127,7 +127,7 @@ describe("Mdast.fromMdast", () => {
 		for (const [value, carried] of [
 			["", ""], ["body", "body\n"], ["body\n", "body\n\n"],
 			["body\r\n", "body\r\n\n"], ["body\n\n", "body\n\n\n"],
-			["body\r\n\r\n", "body\r\n\r\n\n"], ["body\r", "body\r\r\n"],
+			["body\r\n\r\n", "body\r\n\r\n\n"], ["body\r", "body\r\n"],
 		] as const) {
 			const back = Mdast.fromMdastResult({ type: "root", children: [{ type: "code", value }] });
 			if (Result.isFailure(back)) assert.fail("expected code admission to succeed");
@@ -135,6 +135,59 @@ describe("Mdast.fromMdast", () => {
 			assert.strictEqual(code?.type === "code" ? code.value : undefined, carried);
 			assert.strictEqual(first(Mdast.toMdast(back.success)).value, value);
 		}
+	});
+
+	it.effect("stringifies admitted content-final CR without adding another CR", () => Effect.gen(function* () {
+		const root = yield* Mdast.fromMdast({ type: "root", children: [{ type: "code", value: "body\r" }] });
+		assert.strictEqual(first(Mdast.toMdast(root)).value, "body\r");
+		assert.strictEqual(yield* Markdown.stringify(root), "    body\r\n");
+	}));
+
+	it.effect("rejects ancestor back-edges through both typed admission channels", () => Effect.gen(function* () {
+		const children: unknown[] = [];
+		const root = { type: "root", children };
+		children[0] = root;
+		const nestedChildren: unknown[] = [];
+		const element = { type: "mdxJsxFlowElement", name: "x", attributes: [], children: nestedChildren };
+		const nestedRoot = { type: "root", children: [element] };
+		nestedChildren[0] = nestedRoot;
+		for (const input of [root, nestedRoot]) {
+			const result = Mdast.fromMdastResult(input);
+			assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
+			assert.instanceOf(result.failure, MdastDecodeError);
+			assert.ok(isRecord(result.failure.issue));
+			assert.strictEqual(result.failure.issue._tag, "InvalidValue");
+			assertExitSuccess(yield* Effect.exit(Mdast.fromMdast(input).pipe(Effect.flip)), result.failure);
+		}
+	}));
+
+	it.effect("admits shared acyclic subtrees through both admission channels", () => Effect.gen(function* () {
+		const shared = { type: "paragraph", children: [{ type: "text", value: "shared" }] };
+		const input = { type: "root", children: [shared, shared] };
+		const result = Mdast.fromMdastResult(input);
+		assertSuccess(result, Result.getOrThrow(result));
+		const root = yield* Mdast.fromMdast(input);
+		assert.deepStrictEqual(root, result.success);
+		assert.strictEqual(root.children.length, 2);
+		assert.deepStrictEqual(root.children[0], root.children[1]);
+		assert.strictEqual(first(first(Mdast.toMdast(root))).value, "shared");
+	}));
+
+	it("preserves explicit spread on a positionless foreign list", () => {
+		const result = Mdast.fromMdastResult({
+			type: "root",
+			children: [{ type: "list", ordered: false, spread: true, children: [
+				{ type: "listItem", spread: false, children: [{ type: "paragraph", children: [{ type: "text", value: "a" }] }] },
+				{ type: "listItem", spread: false, children: [{ type: "paragraph", children: [{ type: "text", value: "b" }] }] },
+			] }],
+		});
+		assertSuccess(result, Result.getOrThrow(result));
+		const projected = Mdast.toMdast(result.success);
+		assert.strictEqual(first(projected).spread, true);
+		assert.strictEqual(first(first(projected)).spread, false);
+		const readmitted = Mdast.fromMdastResult(projected);
+		assertSuccess(readmitted, Result.getOrThrow(readmitted));
+		assert.deepStrictEqual(Mdast.toMdast(readmitted.success), projected);
 	});
 
 	it("round-trips parsed code blocks with trailing blank content lines", () => {

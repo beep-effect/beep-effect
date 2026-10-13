@@ -258,8 +258,7 @@ const compilerOptions = Effect.fn("TsconfigLoader.compilerOptions")(function* (c
  * @category services
  * @since 0.0.0
  */
-export class TsconfigLoader {
-	private constructor() {}
+export abstract class TsconfigLoader {
 
 	/**
 	 * Read one config file and decode it through {@link TsconfigJsonFromString}.

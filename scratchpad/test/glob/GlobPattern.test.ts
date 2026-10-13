@@ -309,6 +309,38 @@ describe("GlobPattern oracle (public seam)", () => {
 });
 
 describe("GlobPattern.compileResult", () => {
+	it.effect("terminates large singletons and non-advancing ranges in both compile forms", () =>
+		Effect.gen(function* () {
+			for (const source of ["{9007199254740992..9007199254740992}", "{9007199254740991..9007199254740992}", "{9007199254740992..9007199254740994}"]) {
+				const sync = GlobPattern.compileResult(source);
+				const compiled = yield* GlobPattern.compile(source);
+				assertSuccess(sync, Result.getOrThrow(sync));
+				assert.isTrue(sync.success.matches("9007199254740992"));
+				assert.isTrue(compiled.matches("9007199254740992"));
+				assert.isFalse(sync.success.matches("other"));
+				assert.isFalse(compiled.matches("other"));
+			}
+		}),
+	);
+
+	it.effect("returns typed failures for non-finite member arithmetic in both compile forms", () =>
+		Effect.gen(function* () {
+			const huge = "9".repeat(310);
+			const finite = `1${"0".repeat(308)}`;
+			for (const source of [`{${huge}..${huge}}`, `{1..${huge}..${huge}}`, `{-${finite}..${finite}}`, `{-${finite}..${finite}..${huge}}`]) {
+				const sync = GlobPattern.compileResult(source);
+				const error = yield* Effect.flip(GlobPattern.compile(source));
+				assertFailure(sync, error);
+				assert.instanceOf(error, GlobPatternError);
+				assert.strictEqual(error._tag, "GlobPatternError");
+				assert.strictEqual(error.pattern, source);
+				assert.strictEqual(error.reason, "ExpansionBudgetExceeded");
+				assert.strictEqual(error.limit, 100_000);
+				assert.strictEqual(error.actual, Infinity);
+			}
+		}),
+	);
+
 	it("preserves an overflowing expansion count in a synchronous typed failure", () => {
 		const source = `{1..${"9".repeat(310)}}`;
 		const result = GlobPattern.compileResult(source);

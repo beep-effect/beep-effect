@@ -6,7 +6,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { GithubAnnotation } from "../../effected/cli/GithubAnnotation.ts";
+import { AnnotationLevel, GithubAnnotation, GithubAnnotationProperties } from "../../effected/cli/GithubAnnotation.ts";
 import { AnnotationOptions } from "../../effected/cli/Doc.ts";
 
 const runs = { arbitrary: fcRuns(100) };
@@ -42,3 +42,25 @@ it.effect.prop("annotation formatting preserves message and metadata through the
   assert.strictEqual(GithubAnnotation.format(reconstructed, decodedMessage), formatted);
   assert.strictEqual(A.join(Str.split(formatted, "\n"), ""), formatted);
 }), runs);
+
+const roundTrip = <T, E>(name: string, schema: S.Codec<T, E>): void => {
+  it.effect.prop(`${name} encodes and decodes without failure or loss`, [Arbitrary.schema(schema)], ([value]) =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(schema)(value);
+      const decoded = yield* S.decodeEffect(schema)(encoded);
+      assertTrue(S.toEquivalence(schema)(decoded, value));
+      assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+    }), runs);
+};
+roundTrip("AnnotationLevel", AnnotationLevel);
+roundTrip("GithubAnnotationProperties", GithubAnnotationProperties);
+
+it("annotation options reuse the metadata fields and preserve severity order and absent properties", () => {
+  assert.deepStrictEqual(AnnotationLevel.literals, ["error", "warning", "notice"]);
+  for (const key of ["level", "file", "line", "col", "endLine", "endColumn", "title"] as const) {
+    assert.strictEqual(AnnotationOptions.fields[key], GithubAnnotationProperties.fields[key]);
+  }
+  assert.strictEqual(GithubAnnotation.format({ level: "notice" }, "ready"), "::notice::ready");
+  assert.isTrue(S.is(GithubAnnotationProperties)({ level: "notice" }));
+  assert.isFalse(S.is(GithubAnnotationProperties)({ level: "notice", file: undefined }));
+});

@@ -8,10 +8,36 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as Ref from "effect/Ref";
-import { Walker } from "../../effected/walker/Walker.ts";
+import * as S from "effect/Schema";
+import { AscendOptions, DepthCap, Walker } from "../../effected/walker/Walker.ts";
 import { platform } from "./fixtures.ts";
 
 layer(Path.layer)("Walker.ascend", (it) => {
+	it.effect("the depth schema and ascent accept the same positive finite integers", () =>
+		Effect.gen(function* () {
+			for (const { maxDepth, valid } of [
+				{ maxDepth: 1, valid: true },
+				{ maxDepth: 256, valid: true },
+				{ maxDepth: 2 ** 53, valid: true },
+				{ maxDepth: Number.MAX_VALUE, valid: true },
+				{ maxDepth: 0, valid: false },
+				{ maxDepth: -1, valid: false },
+				{ maxDepth: -2.5, valid: false },
+				{ maxDepth: 2.5, valid: false },
+				{ maxDepth: Number.NaN, valid: false },
+				{ maxDepth: Number.POSITIVE_INFINITY, valid: false },
+				{ maxDepth: Number.NEGATIVE_INFINITY, valid: false },
+			]) {
+				assert.strictEqual(S.is(DepthCap)(maxDepth), valid);
+				const decoded = yield* Effect.option(S.decodeEffect(AscendOptions)({ maxDepth }));
+				assert.strictEqual(O.isSome(decoded), valid);
+				const exit = yield* Effect.exit(Walker.ascend("/", { maxDepth }));
+				assert.strictEqual(Exit.isSuccess(exit), valid);
+				if (Exit.isSuccess(exit)) assert.deepStrictEqual(exit.value, ["/"]);
+			}
+		}),
+	);
+
 	it.effect("yields each directory from start to the root, nearest first", () =>
 		Effect.gen(function* () {
 			const dirs = yield* Walker.ascend("/a/b/c");
@@ -313,7 +339,7 @@ const FsDenying = (denied: string, present: ReadonlyArray<string>) =>
 		},
 	});
 
-layer(FsWith(["/a/b/.apprc", "/a/.apprc"]), { timeout: "30 seconds" })("findUpward, config in both directories", (it) => {
+layer(FsWith(["/a/b/.apprc", "/a/.apprc"]), { timeout: "10 seconds" })("findUpward, config in both directories", (it) => {
 	it.effect("prefers the nearer directory", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.findUpward(["/a/b", "/a"], (dir) => [`${dir}/.apprc`]);
@@ -322,7 +348,7 @@ layer(FsWith(["/a/b/.apprc", "/a/.apprc"]), { timeout: "30 seconds" })("findUpwa
 	);
 });
 
-layer(FsWith(["/a/.apprc"]), { timeout: "30 seconds" })("findUpward, config only in the further directory", (it) => {
+layer(FsWith(["/a/.apprc"]), { timeout: "10 seconds" })("findUpward, config only in the further directory", (it) => {
 	it.effect("falls through to the further directory", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.findUpward(["/a/b", "/a"], (dir) => [`${dir}/.apprc`]);
@@ -331,7 +357,7 @@ layer(FsWith(["/a/.apprc"]), { timeout: "30 seconds" })("findUpward, config only
 	);
 });
 
-layer(FsWith(["/a/second.json"]), { timeout: "30 seconds" })("findUpward, only the second candidate exists", (it) => {
+layer(FsWith(["/a/second.json"]), { timeout: "10 seconds" })("findUpward, only the second candidate exists", (it) => {
 	it.effect("honours candidate order within a single directory", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.findUpward(["/a"], (dir) => [`${dir}/first.json`, `${dir}/second.json`]);
@@ -340,7 +366,7 @@ layer(FsWith(["/a/second.json"]), { timeout: "30 seconds" })("findUpward, only t
 	);
 });
 
-layer(FsWith([]), { timeout: "30 seconds" })("findUpward, empty filesystem", (it) => {
+layer(FsWith([]), { timeout: "10 seconds" })("findUpward, empty filesystem", (it) => {
 	it.effect("returns none when no candidate exists", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.findUpward(["/a/b", "/a"], (dir) => [`${dir}/.apprc`]);
@@ -354,7 +380,7 @@ layer(FsWith([]), { timeout: "30 seconds" })("findUpward, empty filesystem", (it
 // several candidates per directory, so an interleaving implementation passes all
 // of them while letting a distant ancestor's `.apprc` beat a nearer
 // `config/.apprc`. That is exactly the shape config-file's `subpaths` option uses.
-layer(FsWith(["/a/b/config/.apprc", "/a/.apprc"]), { timeout: "30 seconds" })("findUpward, near subpath vs far root file", (it) => {
+layer(FsWith(["/a/b/config/.apprc", "/a/.apprc"]), { timeout: "10 seconds" })("findUpward, near subpath vs far root file", (it) => {
 	it.effect("exhausts the nearer directory's candidates before ascending", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.findUpward(["/a/b", "/a"], (dir) => [`${dir}/.apprc`, `${dir}/config/.apprc`]);
@@ -369,7 +395,7 @@ layer(FsWith(["/a/b/config/.apprc", "/a/.apprc"]), { timeout: "30 seconds" })("f
 // unreadable directory must not hide a config above it. The denied candidate
 // is genuinely present, so only the fault stands between the walk and
 // `/a/b/.apprc`: disarm it and the answer moves to the nearer file.
-layer(FsDenying("/a/b/.apprc", ["/a/b/.apprc", "/a/.apprc"]), { timeout: "30 seconds" })("findUpward, unreadable nearer candidate", (it) => {
+layer(FsDenying("/a/b/.apprc", ["/a/b/.apprc", "/a/.apprc"]), { timeout: "10 seconds" })("findUpward, unreadable nearer candidate", (it) => {
 	it.effect("absorbs a denied probe and keeps ascending", () =>
 		Effect.gen(function* () {
 			const found = yield* Walker.findUpward(["/a/b", "/a"], (dir) => [`${dir}/.apprc`]);
@@ -437,7 +463,7 @@ describe("Walker.findRoot", () => {
 // through `/link -> /real` ascends a lexical chain that never spells it.
 const linkedRepo = platform({ "/real/repo/packages/foo/x.txt": "x" }, { symlinks: { "/link": "/real" } });
 
-layer(linkedRepo, { timeout: "30 seconds" })("Walker.ascendWithin", (it) => {
+layer(linkedRepo, { timeout: "10 seconds" })("Walker.ascendWithin", (it) => {
 	// The control: this fixture really does make `ascend`'s lexical ceiling fail
 	// open, so the assertions below fail for the right reason.
 	it.effect("ascend's lexical stopAt misses the physical ceiling behind a symlink", () =>
@@ -510,9 +536,7 @@ layer(
 	platform(
 		{ "/real/repo/packages/foo/x.txt": "x" },
 		{ symlinks: { "/link": "/real" }, unresolvable: { "/link/repo/packages": "PermissionDenied" } },
-	),
-	{ timeout: "30 seconds" },
-)("Walker.ascendWithin, an ancestor that cannot be resolved", (it) => {
+	), { timeout: "10 seconds" })("Walker.ascendWithin, an ancestor that cannot be resolved", (it) => {
 	it.effect("absorbs the failed probe and still stops at the ceiling above it", () =>
 		Effect.gen(function* () {
 			const dirs = yield* Walker.ascendWithin("/link/repo/packages/foo", O.some("/real/repo"));

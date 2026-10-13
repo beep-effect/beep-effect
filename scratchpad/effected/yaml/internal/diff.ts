@@ -2,17 +2,40 @@
 // (original, modified) into minimal raw edit records. The facade
 // materializes public `YamlEdit` instances from these.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+import * as A from "effect/Array";
+
+const $I = $ScratchpadId.create("effected/yaml/internal/diff");
+
 /**
  * A raw text-edit record: replace `[offset, offset + length)` with `content`.
+ *
+ * **Example** (Validate a source replacement)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { RawEdit } from "@beep/scratchpad/effected/yaml/internal/diff"
+ *
+ * console.log(S.is(RawEdit)({ offset: 0, length: 3, content: "new" })) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
-export interface RawEdit {
-	readonly offset: number;
-	readonly length: number;
-	readonly content: string;
-}
+export const RawEdit = S.Struct({
+	offset: S.Finite.annotate({ description: "The source offset where replacement begins." }),
+	length: S.Finite.annotate({ description: "The number of source characters to replace." }),
+	content: S.String.annotate({ description: "The replacement text." }),
+}).pipe($I.annoteSchema("RawEdit", { description: "A plain text edit replacing a source span before facade materialization." }));
+
+/**
+ * The structural edit type described by {@link RawEdit}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RawEdit = typeof RawEdit.Type;
 
 /**
  * Compute edits by diffing two strings character by character.
@@ -67,10 +90,6 @@ export function computeEdits(original: string, ...[modified]: [modified: string]
 	const modStart = prefixLen;
 	const modEnd = modified.length - suffixLen;
 
-	if (origStart >= origEnd && modStart >= modEnd) {
-		return [];
-	}
-
 	// Try to split into line-level edits for better granularity
 	const origMiddle = original.substring(origStart, origEnd);
 	const modMiddle = modified.substring(modStart, modEnd);
@@ -81,9 +100,7 @@ export function computeEdits(original: string, ...[modified]: [modified: string]
 		// Same number of lines — emit per-line edits for changed lines only
 		const edits: RawEdit[] = [];
 		let offset = origStart;
-		for (let i = 0; i < origLines.length; i++) {
-			const origLine = origLines[i] ?? "";
-			const modLine = modLines[i] ?? "";
+		for (const [origLine, modLine] of A.zip(origLines, modLines)) {
 			if (origLine !== modLine) {
 				edits.push({
 					offset,

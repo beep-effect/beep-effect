@@ -110,6 +110,14 @@ Launch, from a `claude` session in `~/YeeBois/projects/beep-effect` on branch
 > `bun run beep yeet publish` and merged into `main` at the gate (the 2026-10-09 merge-with-reds
 > ruling applies). Supersedes "local commits only; never push, never open a PR, never touch `main`"
 > for this and later progress PRs; the remaining stages continue on a branch and land the same way.
+>
+> **Seat fallback, 2026-10-09 (agent decision, delegation policy 2026-10-01).** Round 2 hit the
+> Fable weekly limit (100 percent) and the Cursor Opus usage limit (until 2026-10-11) while the
+> Anthropic weekly pool stood at 92 percent, so direct Opus seats would starve every Claude session.
+> The third seat therefore runs on the chain's final route, `grok -m grok-4.7 --reasoning-effort
+> medium`, as a session separate from the grok xhigh seat, with the same brief, merge and gates.
+> Seat files keep the name `fable.md` with a route header. Reverse: rerun the `fable` seat once its
+> limit resets (2026-10-16) and re-merge.
 
 This file is the whole contract. The `/goal` evaluator only reads the
 transcript, so section 0 defines what you print and when. Everything else is

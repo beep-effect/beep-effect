@@ -90,3 +90,112 @@ describe("sourceText review regressions", () => {
 		});
 	}
 });
+
+
+describe("sourceText cooked identifier regressions", () => {
+	const reads = [
+		"\\u0070rocess",
+		"\\u{70}rocess",
+		"pr\\u006fcess",
+		"pr\\u006Fcess",
+		"proce\\u0073\\u0073",
+	] as const;
+	for (const raw of reads) {
+		it(`matches the whole cooked identifier ${raw} at its original UTF-16 offset`, () => {
+			const text = `const label = "😀"; /* comment */\r\nconst p = ${raw};`;
+			const lexed = lex(text);
+			const at = text.indexOf(raw);
+			assert.strictEqual(lexed.withoutComments.length, text.length);
+			assert.strictEqual(lexed.code.length, text.length);
+			assert.strictEqual(lexed.code.slice(at, at + raw.length), raw);
+			assert.deepStrictEqual(references(lexed.code, "process"), [at]);
+			assert.deepStrictEqual(locate(text)(at), { line: 2, column: 11 });
+		});
+	}
+
+	const nonReads = [
+		"process\\u0078",
+		"\\u0078process",
+		"process\\u{1d499}",
+		"\\u{1d499}process",
+		"process\\uD835\\uDC99",
+		"child.\\u0070rocess",
+		"child?.\\u{70}rocess",
+		"this.#\\u0070rocess",
+		"({ \\u0070rocess: 1 })",
+		"interface I { \\u{70}rocess?: string }",
+		"\\u007Zprocess",
+		"process\\u00ZZ",
+		"\\u{110000}process",
+		"process\\u0020",
+		"process\\u{D800}",
+		"\\U0070rocess",
+		"\\u{70rocess",
+	] as const;
+	for (const text of nonReads) {
+		it(`excludes longer names, members, keys and invalid escapes in ${text}`, () => {
+			assert.deepStrictEqual(references(lex(text).code, "process"), []);
+		});
+	}
+
+	it("cooks the global receiver without changing the reference offset", () => {
+		const text = "globalTh\\u0069s?.\\u0070rocess; global\\u{54}his.process;";
+		assert.deepStrictEqual(references(lex(text).code, "process"), [17, 47]);
+	});
+
+	const calls = [
+		"\\u0072equire",
+		"re\\u0071uire",
+		"requir\\u{65}",
+		"require?.",
+		"\\u0072equire?.",
+		"requir\\u{65}?.",
+		"require /* comment */ ?. /* comment */",
+	] as const;
+	for (const callee of calls) {
+		it(`reads the whole literal argument of standalone ${callee}`, () => {
+			const text = `const label = "😀"; ${callee}("node:process");`;
+			const lexed = lex(text);
+			const start = text.indexOf('"node:process"');
+			assert.deepStrictEqual(specifierLiterals(lexed), [{ start, value: "node:process" }]);
+			assert.strictEqual(lexed.withoutComments.length, text.length);
+			assert.strictEqual(lexed.code.length, text.length);
+			assert.deepStrictEqual(lexed.literals, [{ start: 14, value: "😀" }, { start, value: "node:process" }]);
+		});
+	}
+
+	const nonCalls = [
+		'obj.\\u0072equire("node:process")',
+		'obj?.\\u0072equire?.("node:process")',
+		'obj. /* comment */ require?.("node:process")',
+		'obj.#\\u0072equire?.("node:process")',
+		'\\u0078require("node:process")',
+		'require\\u0078?.("node:process")',
+		'requir\\u{110000}("node:process")',
+		'\\u00ZZrequire?.("node:process")',
+		'\\u0020require("node:process")',
+		'\\u{require("node:process")',
+		'\\U0072equire("node:process")',
+		'require?.("node:process" + name)',
+		'\\u0072equire?.(`node:${name}`)',
+		'require?.(name)',
+		'import?.("node:process")',
+	] as const;
+	for (const text of nonCalls) {
+		it(`excludes member calls, longer names, invalid escapes and computed arguments in ${text}`, () => {
+			assert.deepStrictEqual(specifierLiterals(lex(text)), []);
+		});
+	}
+});
+
+it("rejects an incomplete Unicode escape used as a global receiver", () => {
+  const source = "\\u{.process";
+  assert.deepStrictEqual(references(lex(source).code, "process"), []);
+  assert.deepStrictEqual(references(lex("globalThis.process").code, "process"), [11]);
+});
+
+it("rejects closing-brace receivers outside a complete contiguous Unicode escape", () => {
+  assert.deepStrictEqual(references(lex("{}.process").code, "process"), []);
+  assert.deepStrictEqual(references(lex("\\u{ 70}.process").code, "process"), []);
+  assert.deepStrictEqual(references(lex("global\\u{54}his.process").code, "process"), [16]);
+});

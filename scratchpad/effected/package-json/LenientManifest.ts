@@ -81,8 +81,7 @@ const StringOrRecord = S.Union([S.String, UnknownRecord]);
 
 const isString = P.isString;
 const isBoolean = P.isBoolean;
-const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
-	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
+const isPlainRecord: (value: unknown) => value is Record<string, unknown> = P.isObject;
 const isStringRecord = (value: unknown): value is Record<string, string> =>
 	isPlainRecord(value) && A.every(R.values(value), isString);
 const isStringArray = (value: unknown): value is ReadonlyArray<string> => A.isArray(value) && A.every(value, isString);

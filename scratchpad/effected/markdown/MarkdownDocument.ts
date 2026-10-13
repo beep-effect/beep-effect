@@ -8,6 +8,7 @@
 
 import * as Match from "effect/Match";
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
@@ -718,9 +719,8 @@ export class MarkdownDocument extends S.Class<MarkdownDocument>($I`MarkdownDocum
 			undefined,
 		];
 		const boundaryByHeading = new Array<number | undefined>(headings.length);
-		for (let index = headings.length - 1; index >= 0; index -= 1) {
-			const current = headings[index]?.node;
-			if (current === undefined) continue;
+		for (const [entry, index] of A.reverse(A.map(headings, (entry, index) => [entry, index] as const))) {
+			const current = entry.node;
 			let boundary: number | undefined;
 			for (let depth = 1; depth <= current.depth; depth += 1) {
 				const candidate = nextByDepth[depth];
@@ -731,14 +731,12 @@ export class MarkdownDocument extends S.Class<MarkdownDocument>($I`MarkdownDocum
 			boundaryByHeading[index] = boundary;
 			nextByDepth[current.depth] = index;
 		}
-		for (let index = 0; index < headings.length; index += 1) {
-			const current = headings[index];
-			if (current === undefined) continue;
+		for (const [current, index] of A.map(headings, (entry, index) => [entry, index] as const)) {
 			const block = current.node;
 			const boundaryHeading = boundaryByHeading[index];
-			const boundaryNode = boundaryHeading === undefined ? undefined : headings[boundaryHeading]?.node;
+			const boundaryNode = boundaryHeading === undefined ? undefined : A.getUnsafe(headings, boundaryHeading).node;
 			const boundary = boundaryNode === undefined ? this.source.length : boundaryNode.position.start.offset;
-			const end = boundaryHeading === undefined ? blocks.length : (headings[boundaryHeading]?.index ?? blocks.length);
+			const end = boundaryHeading === undefined ? blocks.length : A.getUnsafe(headings, boundaryHeading).index;
 			const start = block.position.start.offset;
 			const bodyStart = block.position.end.offset;
 			sections.push(
@@ -1005,7 +1003,7 @@ export class MarkdownDocument extends S.Class<MarkdownDocument>($I`MarkdownDocum
 			MarkdownDocument.make({
 				source: text,
 				root: pass.root,
-				diagnostics: pass.carriers.map((carrier) => MarkdownDiagnostic.fromRaw(text, carrier)),
+				diagnostics: [],
 				definitions: pass.refmap,
 				definitionOrder: pass.definitionOrder,
 			}),

@@ -31,13 +31,29 @@ class EnumerationOptionsError extends S.TaggedError<EnumerationOptionsError>($I`
 /**
  * A directory the enumerator accepted: its root-relative POSIX path and its absolute path.
  *
+ * **Example** (Recognize an accepted package directory)
+ *
+ * ```ts
+ * import { EnumeratedDirectory } from "@beep/scratchpad/effected/workspaces/internal/enumerate";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(EnumeratedDirectory)({ relativePath: "packages/core", path: "/repo/packages/core" })); // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface EnumeratedDirectory {
-	readonly relativePath: string;
-	readonly path: string;
-}
+export const EnumeratedDirectory = S.Struct({
+	relativePath: S.String.annotateKey($I.annote("EnumeratedDirectory.relativePath", { description: "The root-relative POSIX package directory." })),
+	path: S.String.annotateKey($I.annote("EnumeratedDirectory.path", { description: "The absolute package directory." })),
+}).annotate($I.annote("EnumeratedDirectory", { description: "A plain package directory accepted by workspace enumeration." }));
+/**
+ * The readonly directory result described by {@link EnumeratedDirectory}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EnumeratedDirectory = typeof EnumeratedDirectory.Type;
 
 /**
  * Classifies why an enumeration failed.
@@ -70,28 +86,71 @@ export const EnumerationFailureKind = LiteralKit(["missingBaseDir", "depthExceed
  */
 export type EnumerationFailureKind = typeof EnumerationFailureKind.Type;
 
+/** Builds one existing plain failure case without a constructor default. */
+const enumerationFailureCase = <const Kind extends EnumerationFailureKind>(kind: S.Literal<Kind>) => {
+	const identifier: string = `EnumerationFailure.${kind.literal}`;
+	return S.Struct({
+		kind: kind.annotateKey($I.annote("EnumerationFailure.kind", { description: "The existing caller-visible failure reason." })),
+		pattern: S.String.annotateKey($I.annote("EnumerationFailure.pattern", { description: "The workspace pattern that could not be enumerated." })),
+		detail: S.String.annotateKey($I.annote("EnumerationFailure.detail", { description: "The caller-visible enumeration diagnostic." })),
+	}).annotate($I.annote(identifier, { description: `The existing ${kind.literal} failure record.` }));
+};
+
 /**
  * The enumerator's raw failure record; the facade materializes the typed error.
+ *
+ * **Example** (Recognize an enumeration failure)
+ *
+ * ```ts
+ * import { EnumerationFailure } from "@beep/scratchpad/effected/workspaces/internal/enumerate";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(EnumerationFailure)({ kind: "missingBaseDir", pattern: "packages/*", detail: "missing packages" })); // true
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
-export interface EnumerationFailure {
-	readonly kind: EnumerationFailureKind;
-	readonly pattern: string;
-	readonly detail: string;
-}
+export const EnumerationFailure = EnumerationFailureKind.mapMembers(([missingBaseDir, depthExceeded, budgetExceeded, unreadableDirectory]) => [
+	enumerationFailureCase(missingBaseDir),
+	enumerationFailureCase(depthExceeded),
+	enumerationFailureCase(budgetExceeded),
+	enumerationFailureCase(unreadableDirectory),
+]).pipe(S.toTaggedUnion("kind")).annotate($I.annote("EnumerationFailure", { description: "A plain enumeration failure record materialized by the facade." }));
+/**
+ * The readonly enumeration failure described by {@link EnumerationFailure}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EnumerationFailure = typeof EnumerationFailure.Type;
 
 /**
  * Controls the descent bound for {@link enumerate}.
  *
+ * **Example** (Leave enumeration defaults unresolved)
+ *
+ * ```ts
+ * import { EnumerateOptions } from "@beep/scratchpad/effected/workspaces/internal/enumerate";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(EnumerateOptions)({})); // true
+ * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
-export interface EnumerateOptions {
-	/** Descent cap below a wildcard's enumeration prefix. Defaults to 32. */
-	readonly maxDepth?: number;
-}
+export const EnumerateOptions = S.Struct({
+	/** Descent cap below a wildcard's enumeration prefix. Defaults to 32 at use. */
+	maxDepth: S.optionalKey(S.declare(P.isNumber)).annotateKey($I.annote("EnumerateOptions.maxDepth", { description: "An optional numeric descent cap, validated and defaulted only by enumeration." })),
+}).annotate($I.annote("EnumerateOptions", { description: "Plain enumeration options retaining the lazy depth default." }));
+/**
+ * The optional descent cap described by {@link EnumerateOptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EnumerateOptions = typeof EnumerateOptions.Type;
 
 /** Strip a trailing slash from `GlobPattern.enumerationPrefix` to get a relative directory. */
 const baseOf = (pattern: GlobPattern): string => pattern.enumerationPrefix.replace(/\/$/, "");

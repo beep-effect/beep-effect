@@ -200,9 +200,8 @@ const make = Effect.gen(function* () {
 		saveSecret: Effect.fnUntraced(function* (key: string, secret: string) {
 			// Mask first, then persist. The ordering is the guarantee.
 			yield* outputs.setSecret(secret);
-			const serialized = yield* S.encodeEffect(Json)(secret).pipe(
-				Effect.mapError((cause) => ActionStateError.make({ reason: "writeFailed", key, cause })),
-			);
+			// A string always has a JSON representation; there is no typed encode failure.
+			const serialized = yield* S.encodeEffect(Json)(secret).pipe(Effect.orDie);
 			yield* write(key, serialized);
 		}),
 	} satisfies ActionStateShape;

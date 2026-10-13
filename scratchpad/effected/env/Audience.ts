@@ -71,20 +71,38 @@ const isAudienceKind = S.is(AudienceKind);
 /**
  * The shape of the {@link Audience} service: one immutable value.
  *
+ * **Example** (Validate an audience snapshot)
+ *
+ * ```ts
+ * import { AudienceShape } from "@beep/scratchpad/effected/env/Audience";
+ * import * as S from "effect/Schema";
+ * console.log(S.is(AudienceShape)({ kind: "agent", source: "detected" })) // true
+ * ```
+ *
  * @public
- * @category models
+ * @category schemas
  * @since 0.0.0
  */
-export interface AudienceShape {
+export const AudienceShape = S.Struct({
 	/** Who the output is for. */
-	readonly kind: AudienceKind;
+	kind: AudienceKind.pipe($I.annoteKey("AudienceShape.kind", { description: "Who the output is for." })),
 	/**
 	 * What decided the kind: the override environment variable, detection, or a flag. `Audience.layer` produces
 	 * `override` or `detected`; `flag` is for a layer stacked on top (a CLI's `--audience` flag re-provides
 	 * `Audience`), which lets its own consumers tell what spoke last.
 	 */
-	readonly source: AudienceSource;
-}
+	source: AudienceSource.pipe($I.annoteKey("AudienceShape.source", {
+		description: "What decided the kind: the override environment variable, detection, or a flag.",
+	})),
+}).annotate($I.annote("AudienceShape", { description: "The immutable audience snapshot provided by the Audience service." }));
+
+/**
+ * The audience kind and the source that selected it.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type AudienceShape = typeof AudienceShape.Type;
 
 /**
  * The options {@link Audience.layer} takes.
@@ -204,7 +222,7 @@ export class Audience extends Context.Service<Audience, AudienceShape>()($I`Audi
 	 */
 	static readonly layerTest = (
 		kind: AudienceKind,
-		source: AudienceShape["source"] = "override",
+		source: AudienceSource = "override",
 	): Layer.Layer<Audience> => Layer.succeed(Audience, { kind, source });
 
 	/**

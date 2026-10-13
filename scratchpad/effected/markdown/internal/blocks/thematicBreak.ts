@@ -5,15 +5,15 @@
 // Port notes: `markerChar` is a fidelity extra with no upstream counterpart —
 // upstream renders `<hr />` and forgets which character drew it.
 
-import type { ThematicBreakChar } from "../../MarkdownNode.ts";
-import { ThematicBreak } from "../../MarkdownNode.ts";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import { ThematicBreak, ThematicBreakChar } from "../../MarkdownNode.ts";
 import type { BlockConstruct, BlockStart } from "../blockTypes.ts";
 import * as O from "@beep/utils/Option";
 
 const reThematicBreak = /^(?:\*[ \t]*){3,}$|^(?:_[ \t]*){3,}$|^(?:-[ \t]*){3,}$/;
 
-const markerCharOf = (char: string): ThematicBreakChar =>
-	char === "-" ? "-" : char === "_" ? "_" : "*";
+const decodeThematicBreakChar = S.decodeUnknownResult(ThematicBreakChar);
 
 /**
  * Represents a thematic break occupying one line with no children.
@@ -70,7 +70,7 @@ export const thematicBreakStart: BlockStart = {
 
 		scanner.closeUnmatchedBlocks();
 		const container = scanner.addChild("thematicBreak", scanner.nextNonspace);
-		const marker = markerCharOf(scanner.currentLine.charAt(scanner.nextNonspace));
+		const marker = Result.getOrThrow(decodeThematicBreakChar(scanner.currentLine.charAt(scanner.nextNonspace)));
 		container.data.markerChar = marker;
 		scanner.advanceOffset(scanner.currentLine.length - scanner.offset, false);
 		return 2;

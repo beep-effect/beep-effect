@@ -32,10 +32,12 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import type * as Brand from "effect/Brand";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/npm/IntegrityHash");
 
@@ -124,12 +126,15 @@ export const isValidIntegrityHash = S.is(IntegrityString);
 // The algorithm is the prefix before the first `-` (SRI) or `.` (corepack). The
 // yarn form does not name its algorithm, so it has none to read.
 const algorithmOf = (value: string): O.Option<IntegrityAlgorithm> => {
-	const prefix = isSri(value)
-		? value.slice(0, value.indexOf("-"))
+	const separatorIndex = isSri(value)
+		? Str.indexOf("-")(value)
 		: isCorepack(value)
-			? value.slice(0, value.indexOf("."))
-			: undefined;
-	return O.liftPredicate(isIntegrityAlgorithm)(prefix);
+			? Str.indexOf(".")(value)
+			: O.none();
+	return separatorIndex.pipe(
+		O.map((index) => Str.slice(0, index)(value)),
+		O.flatMap(O.liftPredicate(isIntegrityAlgorithm)),
+	);
 };
 
 /**
@@ -440,9 +445,9 @@ const BASE64_INDEX = (() => {
 // outside the alphabet, an interior `=`, or non-zero trailing bits (a second
 // spelling of the same bytes; npm emits only the canonical one).
 const decodeBase64 = (value: string): ReadonlyArray<number> | undefined => {
-	const firstPad = value.indexOf("=");
-	const body = firstPad === -1 ? value : value.slice(0, firstPad);
-	const padding = firstPad === -1 ? "" : value.slice(firstPad);
+	const firstPad = O.getOrElse(Str.indexOf("=")(value), () => -1);
+	const body = firstPad === -1 ? value : Str.slice(0, firstPad)(value);
+	const padding = firstPad === -1 ? "" : Str.slice(firstPad)(value);
 	if (padding !== "" && padding !== "=" && padding !== "==") return undefined;
 	const remainder = body.length % 4;
 	if (body.length === 0 || remainder === 1) return undefined;
@@ -484,12 +489,12 @@ const encodeBase64 = (bytes: ReadonlyArray<number>): string => {
 };
 
 const hexOfBytes = (bytes: ReadonlyArray<number>): string =>
-	bytes.map((byte) => byte.toString(16).padStart(2, "0")).join("");
+	Hex.encode(new Uint8Array(bytes));
 
 const bytesOfHex = (hex: string): ReadonlyArray<number> => {
 	const bytes: Array<number> = [];
 	for (let index = 0; index < hex.length; index += 2) {
-		bytes.push(Number.parseInt(hex.slice(index, index + 2), 16));
+		bytes.push(Number.parseInt(Str.slice(index, index + 2)(hex), 16));
 	}
 	return bytes;
 };
@@ -509,7 +514,7 @@ const isCorepackSha512 = S.is(CorepackSha512String);
 // registry-adjacent tooling sometimes hands over the raw JSON token
 // (`"sha512-…"`) rather than the decoded string.
 const unwrapJsonQuotes = (value: string): string =>
-	value.length >= 2 && value.startsWith('"') && value.endsWith('"') ? value.slice(1, -1) : value;
+	value.length >= 2 && Str.startsWith('"')(value) && Str.endsWith('"')(value) ? Str.slice(1, -1)(value) : value;
 
 // SRI `sha512-<base64>` → corepack `sha512.<hex>`; `undefined` when the input
 // is not a canonical sha512 SRI hash carrying a 64-byte digest. Deliberately
@@ -517,8 +522,8 @@ const unwrapJsonQuotes = (value: string): string =>
 // accepting it would let a caller feed pins back in and mask a wiring bug.
 const corepackOfSri = (input: string): string | undefined => {
 	const value = unwrapJsonQuotes(input);
-	if (!value.startsWith(SHA512_SRI_PREFIX)) return undefined;
-	const bytes = decodeBase64(value.slice(SHA512_SRI_PREFIX.length));
+	if (!Str.startsWith(SHA512_SRI_PREFIX)(value)) return undefined;
+	const bytes = decodeBase64(Str.slice(SHA512_SRI_PREFIX.length)(value));
 	if (bytes === undefined || bytes.length !== SHA512_DIGEST_BYTES) return undefined;
 	return `${SHA512_COREPACK_PREFIX}${hexOfBytes(bytes)}`;
 };
@@ -527,7 +532,7 @@ const corepackOfSri = (input: string): string | undefined => {
 // for the corepack forms SRI cannot carry (sha224, a truncated digest).
 const sriOfCorepack = (value: string): string | undefined =>
 	isCorepackSha512(value)
-		? `${SHA512_SRI_PREFIX}${encodeBase64(bytesOfHex(value.slice(SHA512_COREPACK_PREFIX.length)))}`
+		? `${SHA512_SRI_PREFIX}${encodeBase64(bytesOfHex(Str.slice(SHA512_COREPACK_PREFIX.length)(value)))}`
 		: undefined;
 
 // The codec: decode converts and then validates through the corepack-restricted

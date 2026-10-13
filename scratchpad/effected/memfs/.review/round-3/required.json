@@ -1,0 +1,58 @@
+{
+  "module": "memfs",
+  "groups": [
+    {
+      "id": "g1",
+      "files": ["scratchpad/effected/memfs/internal/volume.ts"],
+      "tests": [
+        "scratchpad/test/memfs/internal/volume.property.test.ts",
+        "scratchpad/test/memfs/internal/volume.coverage.test.ts"
+      ],
+      "findings": ["sol-3-1", "sol-3-2", "sol-3-4"]
+    },
+    {
+      "id": "g2",
+      "files": ["scratchpad/effected/memfs/internal/seed.ts"],
+      "tests": ["scratchpad/test/memfs/internal/seed.property.test.ts"],
+      "findings": ["sol-3-3"]
+    },
+    {
+      "id": "g3",
+      "files": ["scratchpad/effected/memfs/NodeSyncFileSystem.ts"],
+      "tests": ["scratchpad/test/memfs/NodeSyncFileSystem.coverage.test.ts"],
+      "findings": ["fable-3-1"]
+    }
+  ],
+  "findings": {
+    "sol-3-1": {
+      "file": "scratchpad/test/memfs/internal/volume.property.test.ts",
+      "class": "test",
+      "summary": "Generated names dir and tmp collide with fixture directories, causing valid property inputs to fail before assertions.",
+      "fix": "Use a navigation directory outside Name's alphabet and prefix the second property's generated filenames. Update traversal, symlink, glob, copy/link paths and expected spelling consistently, preserving all property assertions. This repairs a concrete fixture bug rather than expanding coverage."
+    },
+    "sol-3-2": {
+      "file": "scratchpad/effected/memfs/internal/volume.ts",
+      "class": "schema",
+      "summary": "EngineOptions and VolumeEntrySnapshot remain handwritten exported data interfaces without owning executable schemas.",
+      "fix": "Define identity- and field-annotated structural schemas and derive the existing types. Preserve plain-object payloads, required undefined-valued keys, field domains and live byte references; avoid decoding every snapshot read. Add focused schema-contract and reference assertions in internal/volume.coverage.test.ts. Deviation and added-export bookkeeping stays central."
+    },
+    "sol-3-3": {
+      "file": "scratchpad/effected/memfs/internal/seed.ts",
+      "class": "schema",
+      "summary": "SeedRootError and applyRoot's duplicated success payload lack owning schemas.",
+      "fix": "Define identity- and field-annotated structural schemas for SeedRootError and the applied-seed payload, derive their types, and reuse the success type across signatures. Preserve Result variants, exact fields and validation behavior, required root accepting undefined, and seed identity without a root. Add focused contract and applyRoot assertions in internal/seed.property.test.ts. Added-export bookkeeping stays central."
+    },
+    "sol-3-4": {
+      "file": "scratchpad/effected/memfs/internal/volume.ts",
+      "class": "schema",
+      "summary": "Mode and owner validation duplicate a reused unsigned 32-bit integer constraint outside a schema.",
+      "fix": "Define one internal identity-annotated unsigned 32-bit integer schema with built-in integer and inclusive-range checks; derive an S.is guard and use it in validateMode and validateOwner. Preserve optional-mode acceptance and exact typed BadArgument messages. Add focused boundary and rejected-input regressions in internal/volume.coverage.test.ts using the existing deliberatelyInvalid helper when needed."
+    },
+    "fable-3-1": {
+      "file": "scratchpad/effected/memfs/NodeSyncFileSystem.ts",
+      "class": "bug",
+      "summary": "The step-2 stat cast replacement unnecessarily changes descriptions for thrown strings and message-bearing non-Error objects.",
+      "fix": "In the stat conversion catch use P.hasProperty(err, message) and P.isString(err.message) to return its string message, otherwise undefined. Retarget the lab-added string-throw assertion in NodeSyncFileSystem.coverage.test.ts to undefined and add a message-bearing object regression expecting busy. Keep safe narrowing, tagged errors and the separate fail helper unchanged. The step-2 diff shows the fallback is unnecessary to satisfy D15, so recording a deviation is insufficient."
+    }
+  }
+}

@@ -6,9 +6,11 @@ import { fromReact, inkModules } from "./ink.ts";
 
 const $I = $ScratchpadId.create("effected/cli/ui/internal/ScreenContext");
 
-class ScreenContextError extends S.TaggedError<ScreenContextError>($I`ScreenContextError`)("ScreenContextError", {
-	message: S.String,
-}) {}
+class ScreenContextError extends S.TaggedError<ScreenContextError>($I`ScreenContextError`)(
+	"ScreenContextError",
+	{ message: S.String.annotate({ description: "The required screen or UiProvider surrounding a widget." }) },
+	$I.annote("ScreenContextError", { description: "A widget read its screen context outside a screen or UiProvider." }),
+) {}
 
 /**
  * What every kit widget reads from its screen.

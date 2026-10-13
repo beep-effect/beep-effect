@@ -88,7 +88,7 @@ export class YamlDirective extends S.Class<YamlDirective>($I`YamlDirective`)({
  * @since 0.0.0
  */
 export class YamlDocument extends S.Class<YamlDocument>($I`YamlDocument`)({
-	contents: S.NullOr(S.suspend((): S.Schema<YamlNodeType> => YamlNode)).annotateKey({ description: "Root YAML syntax node, or `null` for an empty document" }),
+	contents: S.NullOr(S.suspend((): typeof YamlNode => YamlNode)).annotateKey({ description: "Root YAML syntax node, or `null` for an empty document" }),
 	errors: S.Array(YamlDiagnostic).annotateKey({ description: "Error diagnostics retained during document composition; successful parsing retains only non-fatal errors" }),
 	warnings: S.Array(YamlDiagnostic).annotateKey({ description: "Warning diagnostics retained during document composition" }),
 	directives: S.Array(YamlDirective).annotateKey({ description: "Ordered directives preceding the document, including YAML version, tag declarations, and reserved directives" }),

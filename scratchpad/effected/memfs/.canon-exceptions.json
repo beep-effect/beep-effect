@@ -36,15 +36,19 @@
     "reason": "The second independent build proves the factory runs twice and creates fresh faults; shared acquisition would invalidate that assertion."
   },
   {
-    "id": "EV004:scratchpad/test/memfs/FileSystemContract.ts:413:scoped@36#1",
+    "id": "EV004:scratchpad/test/memfs/FileSystemContract.ts:400:scoped@30#1",
+    "reason": "The test closes an inner scope mid-body to show that a non-scoped temporary directory created inside it survives the close; the scope boundary is the subject, so it cannot move to the test's own scope."
+  },
+  {
+    "id": "EV004:scratchpad/test/memfs/FileSystemContract.ts:418:scoped@36#1",
     "reason": "The shorter scope must close before stat verifies that the scoped directory and its children were removed."
   },
   {
-    "id": "EV004:scratchpad/test/memfs/FileSystemContract.ts:429:scoped@31#1",
+    "id": "EV004:scratchpad/test/memfs/FileSystemContract.ts:434:scoped@31#1",
     "reason": "The shorter scope must close before stat verifies that the scoped temporary file was removed."
   },
   {
-    "id": "EV004:scratchpad/test/memfs/FileSystemContract.ts:954:scoped@27#1",
+    "id": "EV004:scratchpad/test/memfs/FileSystemContract.ts:959:scoped@27#1",
     "reason": "The failing inner scope must finish cleanup before the outer test verifies that its temporary directory is absent."
   },
   {

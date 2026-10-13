@@ -1,0 +1,76 @@
+{
+  "module": "tsconfig-json",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/tsconfig-json/PortableTsconfig.ts"
+      ],
+      "tests": [
+        "scratchpad/test/tsconfig-json/PortableTsconfig.test.ts",
+        "scratchpad/test/tsconfig-json/PortableTsconfig.property.test.ts"
+      ],
+      "findings": [
+        "sol-2-1"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/tsconfig-json/TsEnumCodec.ts"
+      ],
+      "tests": [
+        "scratchpad/test/tsconfig-json/TsEnumCodec.test.ts"
+      ],
+      "findings": [
+        "fable-2-1",
+        "fable-2-2"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/tsconfig-json/ResolvedTsconfig.ts"
+      ],
+      "tests": [
+        "scratchpad/test/tsconfig-json/ResolvedTsconfig.test.ts"
+      ],
+      "findings": [
+        "fable-2-3",
+        "fable-2-4"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-2-1": {
+      "file": "scratchpad/effected/tsconfig-json/PortableTsconfig.ts",
+      "class": "schema",
+      "summary": "PortableTsconfig accepts compiler options that violate its portable invariants.",
+      "fix": "Define an identity-annotated nested options schema from the preserved CompilerOptions fields, optional types, and required noEmit: S.Literal(true) / composite: S.Literal(false). Exclude nonportable fields from decoded and encoded output while retaining make as the upstream projection. Add boundary assertions for missing/reversed flags and exclusion of outDir/typeRoots; adapt the schema-derived round-trip and projection properties to the precise shape without weakening them."
+    },
+    "fable-2-1": {
+      "file": "scratchpad/effected/tsconfig-json/TsEnumCodec.ts",
+      "class": "bug",
+      "summary": "Encoding an unmappable enum string now throws instead of preserving the upstream value.",
+      "fix": "Restore const encoded = encode(family, value) and update result[key] only when O.isSome(encoded), preserving the original copied string on None. Retain the diagnostic/law-forced schema-derived types, Effect imports, and lookup collections. Restore any upstream test lines rewritten for this unforced change and add a passthrough regression using the existing deliberatelyInvalid helper; this S3 diff did not rewrite the upstream TsEnumCodec.test.ts."
+    },
+    "fable-2-2": {
+      "file": "scratchpad/effected/tsconfig-json/TsEnumCodec.ts",
+      "class": "bug",
+      "summary": "Encoding a non-string lib entry now throws instead of passing it through.",
+      "fix": "Restore the upstream source.lib read and guarded mapping: normalize and wrap only P.isString entries, passing other entries through unchanged. Keep the cast-free result construction and law-forced public types. Restore any upstream test lines rewritten for this unforced change and add a mixed string/non-string regression through deliberatelyInvalid in TsEnumCodec.test.ts; the S3 diff did not rewrite that upstream test file."
+    },
+    "fable-2-3": {
+      "file": "scratchpad/effected/tsconfig-json/ResolvedTsconfig.ts",
+      "class": "bug",
+      "summary": "Compiler-option path transformations lost upstream element and paths-value guards.",
+      "fix": "Restore the upstream per-entry P.isString checks for typeRoots/rootDirs and restore A.isArray plus per-entry P.isString inside the paths rebuildRecord callback. Preserve non-string/non-array values unchanged and retain law/diagnostic-forced cast-free copies and Effect helpers. Restore any rewritten upstream test lines and add focused regressions covering both public transforms in ResolvedTsconfig.test.ts using the existing deliberatelyInvalid helper; S3 did not rewrite that upstream test file."
+    },
+    "fable-2-4": {
+      "file": "scratchpad/effected/tsconfig-json/ResolvedTsconfig.ts",
+      "class": "bug",
+      "summary": "Watch-exclude substitution lost upstream non-string passthrough.",
+      "fix": "Restore value.map(entry => P.isString(entry) ? substitute(entry) : entry) for both watch exclude lists. Retain cast-free typed copies, current representation and Effect helpers. Restore any rewritten upstream test lines and add mixed string/non-string watch-exclude regressions in ResolvedTsconfig.test.ts via deliberatelyInvalid; S3 did not rewrite that upstream test file."
+    }
+  }
+}

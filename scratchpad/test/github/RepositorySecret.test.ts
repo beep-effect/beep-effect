@@ -1,5 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import { harness } from "./harness.ts";
+import * as Exit from "effect/Exit";
 import * as Result from "effect/Result";
 import { GitHubError } from "../../effected/github/GitHubError.ts";
 import { secretFixture } from "./fixtures.ts";
@@ -229,4 +232,41 @@ describe("SecretInfo boundary", () => {
 		assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(SecretInfo)(info)), info);
 		assert.strictEqual(Result.isFailure(S.decodeUnknownResult(SecretInfo)({ name: 7 })), true);
 	});
+});
+
+describe("RepositorySecret list response decoding", () => {
+  for (const store of ["actions", "dependabot", "codespaces", "environment"] as const) {
+    for (const name of [42, null]) {
+      it.effect(`${store} list rejects a ${name === null ? "null" : "numeric"} name in the typed channel`, () =>
+        Effect.scopedWith((scope) => Effect.gen(function* () {
+          const { base } = harness([{ status: 200, body: { total_count: 2, secrets: [{ name: "A" }, { name }] } }]);
+          const context = yield* Layer.buildWithScope(RepositorySecret.layer.pipe(Layer.provideMerge(base)), scope);
+          const exit = yield* Effect.flatMap(RepositorySecret, (secrets) =>
+            store === "environment" ? secrets.listForEnvironment("prod") : secrets.list(store))
+            .pipe(Effect.provideContext(context), Effect.exit);
+          assert.strictEqual(Exit.hasFails(exit), true);
+          assert.strictEqual(Exit.hasDies(exit), false);
+          const error = exit.pipe(Exit.findError, Result.getOrThrow);
+          assert.instanceOf(error, GitHubError);
+          assert.strictEqual(error.kind, "decode");
+          assert.strictEqual(error.operation, store === "environment" ? "RepositorySecret.listForEnvironment" : "RepositorySecret.list");
+        })),
+      );
+    }
+
+    it.effect(`${store} list returns selected plain names in API order`, () =>
+      Effect.scopedWith((scope) => Effect.gen(function* () {
+        const { script, base } = harness([{ status: 200, body: { total_count: 2, secrets: [
+          { name: "B", created_at: "ignored" }, { name: "A", updated_at: "ignored" },
+        ] } }]);
+        const context = yield* Layer.buildWithScope(RepositorySecret.layer.pipe(Layer.provideMerge(base)), scope);
+        const value = yield* Effect.flatMap(RepositorySecret, (secrets) =>
+          store === "environment" ? secrets.listForEnvironment("prod") : secrets.list(store)).pipe(Effect.provideContext(context));
+        assert.deepStrictEqual(Result.getOrThrow(decodeSecretInfos(value)), value);
+        assert.deepStrictEqual(value, [{ name: "B" }, { name: "A" }]);
+        assert.strictEqual(script.calls[0]?.path, store === "environment"
+          ? "/repos/acme/widget/environments/prod/secrets" : `/repos/acme/widget/${store}/secrets`);
+      })),
+    );
+  }
 });

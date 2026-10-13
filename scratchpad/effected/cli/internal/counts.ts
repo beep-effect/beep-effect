@@ -2,6 +2,10 @@ import { dual } from "effect/Function";
 import type { BlockOf, Counter, Inline } from "../Doc.ts";
 import { Fmt } from "../Fmt.ts";
 import * as P from "effect/Predicate";
+import * as A from "effect/Array";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
 
 /**
  * The label a counter shows for a count: its one label, or `one` when the count is exactly 1 and `other` otherwise.
@@ -133,9 +137,19 @@ export const visibleCountersOf = (block: BlockOf<"Counts">): ReadonlyArray<Count
  */
 export const countsTableOf = (block: BlockOf<"CountsTable">): BlockOf<"Table"> => {
 	const keys: Array<Counter> = [];
-	for (const row of block.rows) {
-		for (const counter of row.counters) if (!keys.some((known) => known.key === counter.key)) keys.push(counter);
-	}
+	const seen = MutableHashSet.empty<string>();
+	const indexed = A.map(block.rows, (row) => {
+		const counters = MutableHashMap.empty<string, Counter>();
+		for (const counter of row.counters) {
+			const key = counter.key;
+			if (!MutableHashSet.has(seen, key)) {
+				MutableHashSet.add(seen, key);
+				keys.push(counter);
+			}
+			if (!MutableHashMap.has(counters, key)) MutableHashMap.set(counters, key, counter);
+		}
+		return { row, counters };
+	});
 	const text = (value: string, token?: Counter["status"]["def"]["token"]): Inline =>
 		token === undefined ? { _tag: "Text", value } : { _tag: "Text", value, token };
 	const countCell = (counter: Counter | undefined): ReadonlyArray<Inline> =>
@@ -143,9 +157,9 @@ export const countsTableOf = (block: BlockOf<"CountsTable">): BlockOf<"Table"> =
 	const timed = block.rows.some((row) => row.durationMs !== undefined);
 	const durationCell = (ms: number | undefined): ReadonlyArray<ReadonlyArray<Inline>> =>
 		timed ? [ms === undefined ? [] : [text(Fmt.duration(ms))]] : [];
-	const rows = block.rows.map((row) => [
+	const rows = A.map(indexed, ({ row, counters }) => [
 		row.label,
-		...keys.map((key) => countCell(row.counters.find((counter) => counter.key === key.key))),
+		...A.map(keys, (key) => countCell(counters.pipe(MutableHashMap.get(key.key), O.getOrUndefined))),
 		...durationCell(row.durationMs),
 	]);
 	const totalLabel =
@@ -163,9 +177,9 @@ export const countsTableOf = (block: BlockOf<"CountsTable">): BlockOf<"Table"> =
 						...keys.map((key) => [
 							text(
 								String(
-									block.rows.reduce(
-										(sum, row) => sum + (row.counters.find((counter) => counter.key === key.key)?.n ?? 0),
+									A.reduce(indexed,
 										0,
+										(sum, { counters }) => sum + (O.getOrUndefined(MutableHashMap.get(counters, key.key))?.n ?? 0),
 									),
 								),
 							),

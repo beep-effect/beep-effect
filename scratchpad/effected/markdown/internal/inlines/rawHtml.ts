@@ -8,18 +8,19 @@
 // mdast has one `html` node for both, which is what this emits — a renderer
 // tells them apart by where the node sits, as the test writer does.
 
+import * as Str from "effect/String";
 import { reHtmlTag } from "../htmlTags.ts";
 import { makeInlineNode } from "../inlineNode.ts";
 import type { InlineConstruct } from "../inlineTypes.ts";
 
 const C_LESSTHAN = 0x3c;
+const reDeclarationPrefix = /^<![A-Za-z]/;
 
 /** The raw-HTML forms that scan forward for a fixed closing sequence. */
 const UNTERMINATED_FORMS: ReadonlyArray<readonly [opener: string, closer: string]> = [
 	["<!--", "-->"],
 	["<?", "?>"],
 	["<![CDATA[", "]]>"],
-	["<!", ">"],
 ];
 
 /**
@@ -60,6 +61,10 @@ export const rawHtmlConstruct: InlineConstruct = {
 			if (scanner.subject.startsWith(opener, from) && !scanner.hasAhead(closer)) {
 				return false;
 			}
+		}
+		// Invalid declaration prefixes must not scan the remaining suffix for `>`.
+		if (reDeclarationPrefix.test(Str.slice(from, from + 3)(scanner.subject)) && !scanner.hasAhead(">")) {
+			return false;
 		}
 
 		const matched = scanner.match(reHtmlTag);

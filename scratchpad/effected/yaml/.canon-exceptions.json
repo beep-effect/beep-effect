@@ -1,0 +1,22 @@
+[
+  {
+    "id": "EV010:scratchpad/test/yaml/Yaml.test.ts:2:node:fs@0#1",
+    "reason": "Reads immutable checked-in explicit-key fixtures; the YAML subject consumes strings and has no FileSystem dependency to replace with memfs."
+  },
+  {
+    "id": "EV010:scratchpad/test/yaml/YamlFormat.test.ts:2:node:fs@0#1",
+    "reason": "Reads the checked-in pnpm-lock-shape fixture; the formatter consumes fixture text and has no FileSystem dependency to replace with memfs."
+  },
+  {
+    "id": "EV010:scratchpad/test/yaml/comment-fidelity.test.ts:11:node:fs@0#1",
+    "reason": "Reads immutable workflow and Dependabot fixtures for byte-fidelity assertions; the YAML subject receives strings and has no FileSystem dependency to replace with memfs."
+  },
+  {
+    "id": "EV010:scratchpad/test/yaml/e2e/support/suite.ts:10:node:fs@0#1",
+    "reason": "Loads and enumerates the immutable vendored yaml-test-suite corpus before test registration; this is fixture discovery, not a FileSystem service used by the YAML subject."
+  },
+  {
+    "id": "EV010:scratchpad/test/yaml/YamlLint.test.ts:8:node:fs@0#1",
+    "reason": "The structural-pin test must read the actual checked-out facade and rule source files to detect forbidden YamlFormat imports. A seeded memfs would check copied fixtures and weaken that regression. Filesystem reads remain unchanged."
+  }
+]

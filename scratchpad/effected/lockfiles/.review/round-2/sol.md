@@ -1,0 +1,23 @@
+### sol-2-1
+- file: scratchpad/effected/lockfiles/internal/npm.ts:218
+- class: bug   severity: required
+- standard: D11; D9 and section 14’s verified upstream-bug exception; the module’s hostile-key and missing-workspace-entry behavior.   evidence: Read-only `bun --no-install -e` probes against both commit `60fcfb5ebcdc26765a66cc1f13afc88adcb05d11` and the pinned oracle parsed `{"lockfileVersion":3,"packages":{"node_modules/foo":{"link":true,"resolved":"constructor"}}}` successfully and returned a workspace package with `name: "Object"` and `instanceId: "node_modules/foo"`. There is no own `"constructor"` package entry. The unchecked indexed reads here and at line 237 retrieve the inherited `Object` constructor, whose `.name` supplies the fabricated package name.
+- failure: An absent workspace target whose path matches a prototype member is treated as recorded package metadata. This silently changes package identity and the workspace-name set, which can also change inter-workspace dependency extraction. The existing hostile-key tests exercise own entries and do not cover this missing-target lookup.
+- fix: Use an own-property lookup, such as `R.get` followed by Option handling, for the resolved workspace entry in both passes. Preserve the existing name fallback when the entry is absent. Add a regression for an absent `"constructor"` target and a corresponding own target, and record the verified upstream-bug deviation under D9.
+
+### sol-2-2
+- file: scratchpad/effected/lockfiles/internal/pnpm.ts:496
+- class: bug   severity: required
+- standard: D11; D9 and section 14’s verified upstream-bug exception; `ResolvedPackage.ts`’s explicit contract that every `resolved` target names a real package instance in the normalized lockfile.   evidence: Read-only probes against both the port and pinned oracle used a pnpm document with root importer `"."` declaring `publishDirectory: dist`, and importer `packages/app` declaring dependency `root` with `specifier: workspace:*` and `version: link:../../dist`. Both returned `[{"id":"packages/app","resolved":{"root":"."},"unresolved":[]}]`, while `packageByInstanceId(".")` returned `None`. Lines 513–519 register the root as a publish-directory target, although line 524 deliberately skips its package row. The same index-versus-emission mismatch is reproducible in npm with a versionless target entry, bun with a skipped malformed tuple, and pnpm with a skipped malformed snapshot key: all emit edges whose target lookup returns `None`.
+- failure: Resolution verifies membership in raw key indexes rather than membership in the package instances actually emitted. Consumers receive an apparently resolved edge that cannot be traversed, with no unresolved-edge signal in pnpm.
+- fix: Restrict resolution indexes and publish-directory targets to identities that will produce normalized package rows. Exclude the unmodeled pnpm root from publish-directory targets; treat that recorded pnpm edge as unresolved. For npm and bun, continue positional resolution past skipped entries or omit the edge when no modeled target exists. Add the invariant that every emitted `resolved` value is found by `packageByInstanceId`, covering these counterexamples, and record the upstream-bug deviation.
+
+### sol-2-3
+- file: scratchpad/effected/lockfiles/Lockfile.ts:395
+- class: law   severity: required
+- standard: `standards/effect-laws-v1.md` law 6; `standards/effect-first-development.md` EF-5; D5 and the operator ruling requiring removal of public native collections.   evidence: `withImporterNames` still accepts native `ReadonlyMap<string, string>` and calls its native `.get` at lines 398, 418, and 419. Its JSDoc example and README quick start construct `new Map`. This surface is absent from the round-1 inventory’s native-map findings, which addressed `extractWorkspaceDeps` and config dependencies. The green native-runtime gate misses it: `NoNativeRuntime.ts` detects Map constructors in `NewExpression` nodes, while its call detector does not identify these typed `names.get(...)` calls.
+- failure: A public domain operation still requires and consumes a native Map, leaving the mandated Effect-collection migration incomplete. An Effect HashMap cannot satisfy this API.
+- fix: Accept `HashMap.HashMap<string, string>` and use `HashMap.get` with Option handling, preserving absent, empty, and unchanged-name behavior. Update the affected tests, JSDoc example, and README quick start to construct Effect HashMaps, and extend the existing native-runtime deviation record with this API change.
+
+REQUIRED: 3
+BACKLOG: 0

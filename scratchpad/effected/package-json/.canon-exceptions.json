@@ -1,0 +1,10 @@
+[
+  {
+    "id": "EV010:scratchpad/test/package-json/Format.test.ts:7:node:fs@0#1",
+    "reason": "Native reads load frozen input and expected-output fixtures for byte-parity checks. The formatter receives text or values and has no FileSystem dependency; a seeded filesystem would not replace the fixture-loading requirement."
+  },
+  {
+    "id": "EV010:scratchpad/test/package-json/Funding.test.ts:19:node:fs@0#1",
+    "reason": "The module-level native read loads an existing real-manifest fixture. Tests pass its parsed value to codecs; no subject requires FileSystem, so a filesystem double would not replace fixture loading."
+  }
+]

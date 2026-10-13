@@ -64,11 +64,32 @@ const JsonValue = S.fromJsonString(S.Unknown);
  * `PackedInstall.run` reports as a `PackFailed` error naming the missing
  * install.
  *
+ * **Example** (Validate a publish-ready pack directory)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { PackSource } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+ *
+ * console.log(S.is(PackSource)({ directory: "dist/prod/npm/pkg" })) // true
+ * console.log(S.is(PackSource)(null)) // false
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PackSource = S.Union([
+	S.Literal("source"),
+	S.Struct({ directory: S.String.annotateKey({ description: "The publish-ready subdirectory to pack." }) }),
+]).annotate($I.annote("PackSource", { description: "Pack from source or a publish-ready package subdirectory." }));
+
+/**
+ * Selects a workspace source directory or publish-ready package subdirectory for packing.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export type PackSource = "source" | { readonly directory: string };
+export type PackSource = typeof PackSource.Type;
 
 /**
  * What decides the set of packages a packed install packs: the options
@@ -80,18 +101,28 @@ export type PackSource = "source" | { readonly directory: string };
  * `PackedInstall.closure(options.carrier, options)` answers for exactly the
  * run those options describe.
  *
+ * **Example** (Validate explicit closure selection)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { PackedInstallClosureOptions } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+ *
+ * console.log(S.is(PackedInstallClosureOptions)({ closure: ["@x/member"], workspaceOverrides: false })) // true
+ * console.log(S.is(PackedInstallClosureOptions)(null)) // false
+ * ```
+ *
  * @public
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
-export interface PackedInstallClosureOptions {
+export const PackedInstallClosureOptions = S.Struct({
 	/**
 	 * The other workspace packages to pack and override; `"auto"` is the
 	 * carrier's transitive runtime workspace dependencies (`dependencies`,
 	 * `optionalDependencies`, `peerDependencies`). `PackedInstall.closure`
 	 * defaults it to `"auto"`.
 	 */
-	readonly closure?: ReadonlyArray<string> | "auto" | undefined;
+	closure: S.optional(S.Union([S.Array(S.String), S.Literal("auto")])).annotateKey($I.annote("closure", { description: "Other packages to pack, or automatic runtime dependency closure." })),
 	/**
   * Packages from outside the workspace that replace registry resolution in
   * every scratch consumer: package name to a local package directory or a
@@ -116,7 +147,7 @@ export interface PackedInstallClosureOptions {
   * `package.json` nor a `.tgz` file, or a manifest named otherwise fails
   * `InvalidOverride`. Entries here win over `workspaceOverrides` ones.
   */
-	readonly overrides?: Readonly<Record<string, string>> | undefined;
+	overrides: S.optional(S.Record(S.String, S.String)).annotateKey($I.annote("overrides", { description: "External replacements keyed by package name." })),
 	/**
 	 * Also read the workspace root's `pnpm-workspace.yaml` and take every
 	 * `overrides:` entry of the link shape `"@scope/name": "file:<dir>"` as if
@@ -126,8 +157,16 @@ export interface PackedInstallClosureOptions {
 	 * no readable `pnpm-workspace.yaml`, or one that is not YAML, fails
 	 * `InvalidOverride`.
 	 */
-	readonly workspaceOverrides?: boolean | undefined;
-}
+	workspaceOverrides: S.optional(S.Boolean).annotateKey($I.annote("workspaceOverrides", { description: "Whether to read file overrides from the workspace configuration." })),
+}).annotate($I.annote("PackedInstallClosureOptions", { description: "The workspace closure and external replacements a packed proof uses." }));
+
+/**
+ * Specifies the workspace closure and external package replacements included in a packed proof.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PackedInstallClosureOptions = typeof PackedInstallClosureOptions.Type;
 
 /**
  * Configures which artifacts, managers, bins and environment a packed-install
@@ -283,18 +322,28 @@ export class PackedInstallError extends S.TaggedError<PackedInstallError>($I`Pac
 	/** The tail of the failing command's output. */
 	output: S.optionalKey(S.String).annotateKey({ description: "The tail of the failing command's output." }),
 	/** The originating failure. */
-	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The originating failure." }),
+	cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({ description: "The originating failure." }),
 }, $I.annote("PackedInstallError", { description: "Why a packed install could not be proven." })) {}
 
 /**
  * Options for {@link InstalledConsumer.command}: how the bin's environment
  * and working directory are built.
  *
+ * **Example** (Validate an executable environment)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { BinCommandOptions } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+ *
+ * console.log(S.is(BinCommandOptions)({ cwd: "/consumer", env: { CI: "true", DEBUG: undefined } })) // true
+ * console.log(S.is(BinCommandOptions)(null)) // false
+ * ```
+ *
  * @public
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
-export interface BinCommandOptions {
+export const BinCommandOptions = S.Struct({
 	/**
 	 * Variables layered over the environment the install ran under, such as an
 	 * `XDG_DATA_HOME` inside `PackedInstallResult.scratch`. A key set to
@@ -302,10 +351,18 @@ export interface BinCommandOptions {
 	 * manager's context is stripped, so an explicit entry always wins: pass
 	 * `CI: "true"` to run a bin as if under CI.
 	 */
-	readonly env?: Readonly<Record<string, string | undefined>> | undefined;
+	env: S.optional(S.Record(S.String, S.UndefinedOr(S.String))).annotateKey($I.annote("env", { description: "Explicit environment entries; undefined removes a variable." })),
 	/** The working directory. Defaults to the consumer's `directory`. */
-	readonly cwd?: string | undefined;
-}
+	cwd: S.optional(S.String).annotateKey($I.annote("cwd", { description: "Optional working directory, resolved lazily." })),
+}).annotate($I.annote("BinCommandOptions", { description: "Environment entries and working directory layered onto an installed bin command." }));
+
+/**
+ * Supplies the environment and working directory for an installed executable.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BinCommandOptions = typeof BinCommandOptions.Type;
 
 /**
  * Configures the execution ceiling and input supplied to
@@ -354,16 +411,34 @@ const isNotALink = (error: PlatformError.PlatformError): boolean =>
 /**
  * Which installed package a `node_modules/.bin` symlink resolves into.
  *
+ * **Example** (Validate an installed executable owner)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { BinProvenance } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+ *
+ * console.log(S.is(BinProvenance)({ package: "@x/cli", target: "/consumer/node_modules/@x/cli/bin.js" })) // true
+ * console.log(S.is(BinProvenance)(null)) // false
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BinProvenance = S.Struct({
+	/** The `name` from the nearest `package.json` above the link's target. */
+	package: S.String.annotateKey($I.annote("package", { description: "The name of the installed package owning the bin." })),
+	/** The link's target, realpath'd. */
+	target: S.String.annotateKey($I.annote("target", { description: "The resolved bin link target." })),
+}).annotate($I.annote("BinProvenance", { description: "The installed package owning a bin and its resolved link target." }));
+
+/**
+ * Identifies the installed package that owns an executable and its resolved link target.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export interface BinProvenance {
-	/** The `name` from the nearest `package.json` above the link's target. */
-	readonly package: string;
-	/** The link's target, realpath'd. */
-	readonly target: string;
-}
+export type BinProvenance = typeof BinProvenance.Type;
 
 /**
  * One scratch project, outside the workspace, with the carrier installed.
@@ -707,7 +782,7 @@ const layeredEnv = (consumer: InstalledConsumer, options: BinCommandOptions): Re
 	const env = scrubEnv(consumer.env === undefined ? {} : Redacted.value(consumer.env));
 	for (const [key, value] of R.toEntries(options.env ?? {})) {
 		if (value === undefined) delete env[key];
-		else env[key] = value;
+		else R.assignProperty(env, key, value);
 	}
 	return env;
 };
@@ -815,47 +890,106 @@ export interface PackedInstallBudget {
  * Options for {@link PackedInstall.preflight}: the run's closure and pack
  * source, so the check answers for exactly the run those options describe.
  *
+ * **Example** (Validate a source preflight request)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { PackedInstallPreflightOptions } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+ *
+ * console.log(S.is(PackedInstallPreflightOptions)({ carrier: "@x/cli", packFrom: "source" })) // true
+ * console.log(S.is(PackedInstallPreflightOptions)(null)) // false
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PackedInstallPreflightOptions = S.Struct({
+	...PackedInstallClosureOptions.fields,
+	/** The carrier, as the run's `carrier`. */
+	carrier: S.String.annotateKey($I.annote("carrier", { description: "The carrier package to install directly." })),
+	/** Where the run packs from; defaults as the run's does, to `{ directory: "dist/prod/npm/pkg" }`. */
+	packFrom: S.optional(PackSource).annotateKey($I.annote("packFrom", { description: "Optional pack source, defaulted by the operation." })),
+}).annotate($I.annote("PackedInstallPreflightOptions", { description: "The carrier, closure and pack source checked before a packed proof." }));
+
+/**
+ * Selects the carrier, closure, and pack source checked before a packed proof.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export interface PackedInstallPreflightOptions extends PackedInstallClosureOptions {
-	/** The carrier, as the run's `carrier`. */
-	readonly carrier: string;
-	/** Where the run packs from; defaults as the run's does, to `{ directory: "dist/prod/npm/pkg" }`. */
-	readonly packFrom?: PackSource | undefined;
-}
+export type PackedInstallPreflightOptions = typeof PackedInstallPreflightOptions.Type;
 
 /**
  * Whether the pack source a run needs is on disk.
  *
+ * **Example** (Validate a missing pack manifest)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { PackedInstallPreflight } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+ *
+ * console.log(S.is(PackedInstallPreflight)({ ready: false, missing: ["/repo/packages/cli/dist/package.json"] })) // true
+ * console.log(S.is(PackedInstallPreflight)(null)) // false
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PackedInstallPreflight = S.Struct({
+	/** `true` when every package the run packs has its pack source in place. */
+	ready: S.Boolean.annotateKey($I.annote("ready", { description: "Whether all pack sources are present." })),
+	/** The absolute `package.json` paths that do not exist, in pack order; empty exactly when `ready`. */
+	missing: S.Array(S.String).annotateKey($I.annote("missing", { description: "Missing package manifests in pack order." })),
+}).annotate($I.annote("PackedInstallPreflight", { description: "Readiness and ordered missing manifest paths for a packed proof." }));
+
+/**
+ * Reports readiness and the ordered manifest paths missing from a packed proof.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export interface PackedInstallPreflight {
-	/** `true` when every package the run packs has its pack source in place. */
-	readonly ready: boolean;
-	/** The absolute `package.json` paths that do not exist, in pack order; empty exactly when `ready`. */
-	readonly missing: ReadonlyArray<string>;
-}
+export type PackedInstallPreflight = typeof PackedInstallPreflight.Type;
+
+const PackedInstallGateAction = LiteralKit(["run", "skip", "fail"]).annotate(
+	$I.annote("PackedInstallGateAction", { description: "Run a ready proof, skip locally, or fail under CI." }),
+);
 
 /**
  * What a test suite should do about a {@link PackedInstallPreflight}.
  *
+ * **Example** (Validate a local skip decision)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { PackedInstallGate } from "@beep/scratchpad/effected/workspaces/PackedInstall";
+ *
+ * console.log(S.is(PackedInstallGate)({ action: "skip", message: "Build the missing pack source before running." })) // true
+ * console.log(S.is(PackedInstallGate)(null)) // false
+ * ```
+ *
  * @public
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
-export interface PackedInstallGate {
+export const PackedInstallGate = S.Struct({
 	/**
 	 * `"run"` when the pack source is there; `"skip"` when it is missing and
 	 * the run is not under CI; `"fail"` when it is missing under CI.
 	 */
-	readonly action: "run" | "skip" | "fail";
+	action: PackedInstallGateAction.annotateKey($I.annote("action", { description: "Run, skip locally, or fail under CI." })),
 	/** Why, naming the missing paths and the build to run. Empty when `action` is `"run"`. */
-	readonly message: string;
-}
+	message: S.String.annotateKey($I.annote("message", { description: "The explanation of the preflight action." })),
+}).annotate($I.annote("PackedInstallGate", { description: "The action and explanation for a packed proof preflight." }));
+
+/**
+ * Carries the run, skip, or fail decision and its preflight explanation.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PackedInstallGate = typeof PackedInstallGate.Type;
 
 // npm-packing the prod output is byte-identical to the published tarball;
 // pnpm-packing the source packs the dev build.
@@ -875,9 +1009,9 @@ const UNTIMED_SLACK: Duration.Input = "30 seconds";
  * child after its ceiling interrupts it.
  */
 const CLEANUP_ALLOWANCE: Duration.Input = "1 minute";
-/** A ceiling as a person reads it: `"4m"` for `"4 minutes"`, the raw input if it does not decode. */
+/** A fired ceiling as a person reads it: `"4m"` for `"4 minutes"`; the timeout already decoded it. */
 const describeDuration = (input: Duration.Input): string =>
-	O.match(Duration.fromInput(input), { onNone: () => String(input), onSome: Duration.format });
+	Duration.format(Duration.fromInputUnsafe(input));
 
 const failure = (
 	reason: PackedInstallError["reason"],
@@ -964,7 +1098,7 @@ const planClosure = Effect.fn("planClosure")(function* (carrier: string, options
 					`${name === carrier ? "the carrier" : "a closure member"} is always packed from the workspace; overrides replace only packages outside it`,
 				);
 			}
-			const spec = O.getOrElse(MutableHashMap.get(wanted, name), () => "");
+			const spec = O.getOrThrow(MutableHashMap.get(wanted, name));
 			const absolute = path.isAbsolute(spec) ? spec : path.resolve(root, spec);
 			const source = yield* fs
 				.realPath(absolute)
@@ -1528,9 +1662,8 @@ export class PackedInstall {
 			}
 			packed.push({ name: replacement.name, tarball, manifest });
 		}
-		const [carrier, ...rest] = packed;
-		if (carrier === undefined)
-			return yield* failure("UnknownPackage", `${options.carrier} was not packed`, { package: options.carrier });
+		const carrier = O.getOrThrow(A.head(packed));
+		const rest = A.drop(packed, 1);
 		const conflict =
 			options.allowSharedBins === true
 				? undefined

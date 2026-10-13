@@ -413,3 +413,11 @@ describe("Doc: the reporter blocks are readonly schema-valid plain data", () => 
 		assert.notProperty(Doc.line("a"), "truncate");
 	});
 });
+
+it("a schema-valid file target with url undefined uses its file as the default label", () => {
+  const target = { url: undefined, file: "src/a.ts", line: 3, col: 4 };
+  assert.isTrue(S.is(DocModel.LinkTarget)(target));
+  assert.deepStrictEqual(Doc.link(target).label, [Doc.text("src/a.ts")]);
+  const both = { url: "https://example.test", file: "src/a.ts" };
+  assert.deepStrictEqual(Doc.link(both).label, [Doc.text("https://example.test")]);
+});

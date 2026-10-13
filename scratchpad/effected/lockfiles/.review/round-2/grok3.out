@@ -1,0 +1,30 @@
+I'll review the lockfiles port read-only against the pinned upstream oracle, round-1 inventory, and the binding decisions. First I'll load the review surfaces and the graft routing rules.Round 1 is inventoried. Next I’ll read the binding decisions and the current lockfiles tree so I only raise defects the gates and the ledger do not already cover.The ledger already records the round-1 deviations. I’ll search the port for law misses and behavior that those records do not cover.I'll finish the round-2 review by checking the remaining lockfiles sites against D11 and the recorded deviations, then report only new findings.### fable-2-1
+- file: scratchpad/effected/lockfiles/Lockfile.ts:395
+- class: law   severity: required
+- standard: effect-laws-v1 law 6; D5; 2026-10-09 grilling (public collection changes are allowed; `standards/effect-laws.allowlist.jsonc` has no `scratchpad/effected` entry). evidence: `withImporterNames` is typed `ReadonlyMap<string, string>` and calls `names.get` at lines 398, 418 and 419. The JSDoc example (line 386) and `README.md:26` construct `new Map`. The native-runtime ledger row records the `configDependencies` return migration and claims `Lockfile.ts` now uses Effect collections; it does not accept this parameter. Round 1 closed `fable-1-5` (`extractWorkspaceDeps`) and `fable-1-15` (`configDependencies`) on the same constructor-only scan miss. `rg` over `scratchpad/effected/lockfiles/**/*.ts` finds no other `ReadonlyMap`/`new Map` in production code.
+- failure: Domain logic still consumes a native `Map`. The beep-laws native-runtime check flags constructors, so a typed `ReadonlyMap` parameter stays green with no allowlist entry.
+- fix: Take `HashMap.HashMap<string, string>`, look up with `HashMap.get` plus `Option`, and retarget the method example, `README.md` example, `Lockfile.test.ts` (`:394`, `:460`, `:476`) and `Lockfile.coverage.test.ts` (`:38`, `:43`). Keep empty-string and missing-key behaviour. Leave test-local `byId` maps alone; law scope excludes tests.
+
+### fable-2-2
+- file: scratchpad/effected/lockfiles/Lockfile.ts:141
+- class: schema   severity: required
+- standard: effect-laws-v1 law 19; EF-12b. evidence: `FramingReason` is already `LiteralKit(["noLockfileDocument", "noImporters", "unexpectedDocuments"])` at `internal/shared.ts:497`, and `FramingFailure.reason` uses it (`shared.ts:558`). `LockfileFramingError.reason` repeats those three literals with `S.Literals`. `shared.ts` does not import `Lockfile.ts`. Round-1 `sol-1-5` records that the kit law is not enforced by the green gates. `LockfileParseError.stage` (`Lockfile.ts:58`) is a different anonymous pair and is not this finding.
+- failure: One framing-reason domain has two schemas. `materializeFailure` copies an internal `FramingReason` into the public error, which validates the copy independently. Editing either literal list changes accepted reasons without a type error.
+- fix: Import `FramingReason` and use it as `LockfileFramingError.reason`. The literal set is already identical, so accepted reasons stay the same.
+
+### fable-2-3
+- file: scratchpad/effected/lockfiles/LockfileIntegrity.ts:84
+- class: schema   severity: backlog
+- standard: Operator revision step 4 (annotations on fields); EF-12. evidence: Parent fields are annotated. These nested fields are not: `unsatisfiedConstraints` members at `LockfileIntegrity.ts:85-89`; `settings.autoInstallPeers` and `settings.excludeLinksFromLockfile` at `PnpmExtension.ts:81-82` (the raw twin at `internal/pnpm.ts:54-55` annotates both); `peerDependenciesMeta`'s inner `optional` at `ResolvedPackage.ts:114` (the internal peer struct at `internal/shared.ts:275` annotates it). The identity-annotations deviation claims field annotations and the gates are green; the same pass annotated top-level keys and missed these leaves.
+- failure: Schema AST descriptions exist for the parent keys and not for these nested fields, so the public structs are thinner than their internal twins. Decode is unchanged.
+- fix: Add `annotateKey` descriptions on those nested fields only. Do not change types or defaults.
+
+### fable-2-4
+- file: scratchpad/effected/lockfiles/internal/yarn.ts:49
+- class: docs   severity: backlog
+- standard: numeric-domains ledger row (do not revert `S.Finite`); annotations should describe this schema. evidence: `YarnMetadata` is annotated "preserved without a finite-number restriction" while `version` is `S.optionalKey(S.Union([S.String, S.Finite]))`. `internal/bun.ts:73` comments that the ungated format preserves non-finite versions by stringifying them, on a `lockfileVersion: S.Finite` field. The numeric-domains deviation already records that non-finite input fails with `SchemaError`.
+- failure: The published Yarn metadata description, and the bun comment beside the schema, state the upstream acceptance rule. This schema rejects non-finite numbers.
+- fix: Describe string-or-finite preservation and non-finite rejection. Leave `S.Finite` in place.
+
+REQUIRED: 2
+BACKLOG: 2

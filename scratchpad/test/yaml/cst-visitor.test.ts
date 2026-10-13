@@ -58,3 +58,23 @@ describe("CST key/value projections", () => {
 		}));
 	}
 });
+
+const rawRoleRegressions = [
+	{ name: "empty block key after a value", source: "a: 1\n: 2", keys: ["a", ""], values: ["1", "2"] },
+	{ name: "empty block key after an omitted value", source: "a:\n: 2", keys: ["a", ""], values: ["2"] },
+	{ name: "empty flow key after a value", source: "{a: 1, : 2}", keys: ["a", ""], values: ["1", "2"] },
+	{ name: "multiline block value fragments", source: "a: one\n two\nb: 2\n", keys: ["a", "b"], values: ["one", "two", "2"] },
+	{ name: "multiline explicit block key fragments", source: "? one\n two\n: value\n", keys: ["one", "two"], values: ["value"] },
+	{ name: "multiline flow key and value fragments", source: "{one\n two: value\n more, b: 2}", keys: ["one", "two", "b"], values: ["value", "more", "2"] },
+];
+
+describe("CST raw mapping role regressions", () => {
+	for (const { name, source, keys, values } of rawRoleRegressions) {
+		it.effect(name, () => Effect.sync(() => {
+			const events = [...cstEvents(source)];
+			assert.deepStrictEqual(events.filter((event) => event._tag === "CstKeyEvent").map((event) => event.source), keys);
+			assert.deepStrictEqual(events.filter((event) => event._tag === "CstValueEvent").map((event) => event.source), values);
+			assert.deepStrictEqual(parseDocument(source).errors, []);
+		}));
+	}
+});

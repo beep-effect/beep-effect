@@ -64,6 +64,18 @@ const upTo = (alphabet: ReadonlyArray<string>, length: number): ReadonlyArray<st
 };
 
 describe("Render.markdown: headings and paragraphs", () => {
+	it.effect("literal exclamation text immediately before a link stays text and the destination stays a link", () =>
+		Effect.gen(function* () {
+			const url = "https://example.test/image.png";
+			const root = yield* treeOf([Doc.paragraph("!", Doc.link({ url }, "guide"))]);
+			const children = kids(kids(root)[0]);
+			assert.deepStrictEqual(A.map(children, (node) => node.type), ["text", "link"]);
+			assert.strictEqual(children[0]?.value, "!");
+			assert.strictEqual(children[1]?.url, url);
+			assert.strictEqual(textOf(root), "!guide");
+			assert.notInclude(descendantTypes(root), "image");
+		}),
+	);
 	it.effect("a heading or section title ending in # keeps it, whatever backslashes come before it", () =>
 		Effect.gen(function* () {
 			const titles = ["C#", "a #", "a ##", "a\\#", "a\\\\#", "a\\ #", "#", "\\##", "x `#`#"];

@@ -11,6 +11,7 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 import { ALL_DEPENDENCY_FIELDS } from "./internal/dependencyFields.ts";
 import type { LayerPolicy } from "./LayerPolicy.ts";
 import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
@@ -66,16 +67,32 @@ export class LayerEdge extends S.Class<LayerEdge>($I`LayerEdge`)({
 /**
  * The input to {@link WorkspaceLayering.check}: package names, and per-field edges between them.
  *
+ * **Example** (Read an empty layering graph)
+ *
+ * ```ts
+ * import { LayeringGraph } from "@beep/scratchpad/effected/workspaces/WorkspaceLayering";
+ * import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
+ *
+ * console.log(S.is(LayeringGraph)({ names: [], edges: [] })) // true
+ * ```
+ *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface LayeringGraph {
+export const LayeringGraph = S.Struct({
 	/** Every workspace package name, the root included. */
-	readonly names: ReadonlyArray<string>;
+	names: S.Array(S.String).annotateKey($I.annote("names", { description: "Workspace package names in input order, including the root." })),
 	/** One edge per declaring field. */
-	readonly edges: ReadonlyArray<LayerEdge>;
-}
+	edges: S.Array(LayerEdge).annotateKey($I.annote("edges", { description: "Dependency edges in input order, one per declaring field." })),
+}).annotate($I.annote("LayeringGraph", { description: "The plain-object input package names and dependency edges for a layering check." }));
+
+/** The readonly graph input described by {@link LayeringGraph}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LayeringGraph = typeof LayeringGraph.Type;
 
 const OffenceReason = LiteralKit(["upward", "sameLayer", "toolingReachesLayer", "intoUnconstrained", "intoUnclassified"]);
 type OffenceReason = typeof OffenceReason.Type;
@@ -156,11 +173,16 @@ export class LayeringReport extends S.Class<LayeringReport>($I`LayeringReport`)(
 	}
 }
 
-type Place =
-	| { readonly kind: "layer"; readonly index: number }
-	| { readonly kind: "tooling" }
-	| { readonly kind: "unconstrained" }
-	| { readonly kind: "unclassified" };
+const PlaceKind = LiteralKit(["layer", "tooling", "unconstrained", "unclassified"]).annotate(
+	$I.annote("PlaceKind", { description: "A package classification under a layering policy." }),
+);
+const Place = PlaceKind.toTaggedUnion("kind")({
+	layer: { index: S.declare(P.isNumber).annotateKey($I.annote("index", { description: "The declared layer index." })) },
+	tooling: {},
+	unconstrained: {},
+	unclassified: {},
+}).annotate($I.annote("Place", { description: "A plain-object policy classification retaining its kind discriminator." }));
+type Place = typeof Place.Type;
 
 const offence = (from: Place, to: Place): OffenceReason | undefined => {
 	if (from.kind === "unconstrained" || from.kind === "unclassified") return undefined;
@@ -181,17 +203,16 @@ const cycleOf = (
 		const index = MutableHashMap.empty<string, Graph.NodeIndex>();
 		for (const name of sorted) MutableHashMap.set(index, name, Graph.addNode(mutable, name));
 		for (const e of edges) {
-			const from = O.getOrUndefined(MutableHashMap.get(index, e.from));
-			const to = O.getOrUndefined(MutableHashMap.get(index, e.to));
-			if (from !== undefined && to !== undefined && from !== to) Graph.addEdge(mutable, from, to, e.field);
+			const from = O.getOrThrow(MutableHashMap.get(index, e.from));
+			const to = O.getOrThrow(MutableHashMap.get(index, e.to));
+			if (from !== to) Graph.addEdge(mutable, from, to, e.field);
 		}
 	});
 	const members = MutableHashSet.empty<string>();
 	for (const component of Graph.stronglyConnectedComponents(graph)) {
 		if (component.length < 2) continue;
 		for (const index of component) {
-			const name = sorted[index];
-			if (name !== undefined) MutableHashSet.add(members, name);
+			MutableHashSet.add(members, A.getUnsafe(sorted, index));
 		}
 	}
 	return MutableHashSet.size(members) === 0 ? O.none() : O.some(A.sort(A.fromIterable(members), Order.String));
@@ -227,8 +248,7 @@ const cycleOf = (
  * @category utilities
  * @since 0.0.0
  */
-export class WorkspaceLayering {
-	private constructor() {}
+export abstract class WorkspaceLayering {
 
 	/**
 	 * Check `graph` against `policy`, reading only the policy's fields. Pure.

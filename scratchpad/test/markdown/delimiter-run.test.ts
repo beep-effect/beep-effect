@@ -65,6 +65,9 @@ describe("delimiter measurements", () => {
 		assert.isFalse(isRun({ numdelims: "2", canOpen: true, canClose: false }));
 		assert.isFalse(isRun({ numdelims: 2, canOpen: 1, canClose: false }));
 		assert.isFalse(isRun({ numdelims: Number.POSITIVE_INFINITY, canOpen: true, canClose: false }));
+		assert.isFalse(isRun({ numdelims: 0, canOpen: true, canClose: false }));
+		assert.isFalse(isRun({ numdelims: -3, canOpen: true, canClose: false }));
+		assert.isFalse(isRun({ numdelims: 2.5, canOpen: true, canClose: false }));
 	});
 
 	it("counts delimiters and cursor offsets in UTF-16 units beside astral characters", () => {

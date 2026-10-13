@@ -11,14 +11,25 @@ import { CurrentRuntimeEnv, RuntimeEnv } from "../../effected/env/RuntimeEnv.ts"
 
 /** A pure logger stub that replaces the defaults, so TestConsole is never involved. */
 const capture = (lines: Array<{ readonly level: string; readonly text: string }>) =>
-	Layer.succeed(
-		Logger.CurrentLoggers,
-		new Set([
-			Logger.make(({ logLevel, message }) => {
-				lines.push({ level: logLevel, text: Array.isArray(message) ? message.join(" ") : String(message) });
-			}),
-		]),
+	Logger.layer([
+		Logger.make(({ logLevel, message }) => {
+			lines.push({ level: logLevel, text: Array.isArray(message) ? message.join(" ") : String(message) });
+		}),
+	]);
+
+const capturedAudience = (
+	self: Layer.Layer<Audience>,
+	lines: Array<{ readonly level: string; readonly text: string }>,
+) => {
+	const loggerLayer = capture(lines);
+	return Layer.effectContext(
+		Effect.scopedWith((scope) =>
+			Effect.flatMap(Layer.buildWithScope(loggerLayer, scope), (context) =>
+				Effect.provideContext(Layer.buildWithScope(self, scope), context),
+			),
+		),
 	);
+};
 
 const runtime = (fields: { agent?: string; ci?: "github-actions" | "generic" }) =>
 	RuntimeEnv.make({
@@ -81,7 +92,7 @@ describe("Audience.layer", () => {
 
 	{
 		const lines: Array<{ readonly level: string; readonly text: string }> = [];
-		it.layer(audienceLayer({ OKFIT_AUDIENCE: "robot", CLAUDECODE: "1" }).pipe(Layer.provide(capture(lines))), {
+		it.layer(capturedAudience(audienceLayer({ OKFIT_AUDIENCE: "robot", CLAUDECODE: "1" }), lines), {
 			timeout: "30 seconds",
 		})((it) => {
 			it.effect("an invalid override falls back to detection and logs exactly one warning", () =>
@@ -105,12 +116,10 @@ describe("Audience.layer", () => {
 		it.layer(
 			Layer.mergeAll(
 				Layer.effect(Valid, Audience).pipe(
-					Layer.provide(audienceLayer({ OKFIT_AUDIENCE: "ci" })),
-					Layer.provide(capture(valid)),
+					Layer.provide(capturedAudience(audienceLayer({ OKFIT_AUDIENCE: "ci" }), valid)),
 				),
 				Layer.effect(Invalid, Audience).pipe(
-					Layer.provide(audienceLayer({ OKFIT_AUDIENCE: "nope" })),
-					Layer.provide(capture(invalid)),
+					Layer.provide(capturedAudience(audienceLayer({ OKFIT_AUDIENCE: "nope" }), invalid)),
 				),
 			),
 			{ timeout: "30 seconds" },
@@ -128,7 +137,7 @@ describe("Audience.layer", () => {
 
 	{
 		const lines: Array<{ readonly level: string; readonly text: string }> = [];
-		it.layer(audienceLayer({ OKFIT_AUDIENCE: "", GITHUB_ACTIONS: "true" }).pipe(Layer.provide(capture(lines))), {
+		it.layer(capturedAudience(audienceLayer({ OKFIT_AUDIENCE: "", GITHUB_ACTIONS: "true" }), lines), {
 			timeout: "30 seconds",
 		})((it) => {
 			it.effect("an empty override is unset: detected, with no warning", () =>
@@ -147,13 +156,15 @@ describe("Audience.layer", () => {
 	{
 		const lines: Array<{ readonly level: string; readonly text: string }> = [];
 		it.layer(
-			Layer.provide(Audience.layer({ envVar: "OKFIT_AUDIENCE" }), CurrentRuntimeEnv.layer).pipe(
-				Layer.provide(
-					ConfigProvider.layer(
-						ConfigProvider.fromUnknown({ OKFIT_AUDIENCE: "", GITHUB_ACTIONS: "true" }, { preserveEmptyStrings: true }),
+			capturedAudience(
+				Layer.provide(Audience.layer({ envVar: "OKFIT_AUDIENCE" }), CurrentRuntimeEnv.layer).pipe(
+					Layer.provide(
+						ConfigProvider.layer(
+							ConfigProvider.fromUnknown({ OKFIT_AUDIENCE: "", GITHUB_ACTIONS: "true" }, { preserveEmptyStrings: true }),
+						),
 					),
 				),
-				Layer.provide(capture(lines)),
+				lines,
 			),
 			{ timeout: "30 seconds" },
 		)((it) => {

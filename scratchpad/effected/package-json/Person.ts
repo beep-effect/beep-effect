@@ -13,6 +13,7 @@
 // silently dropped.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as Result from "effect/Result";
@@ -22,20 +23,21 @@ import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/package-json/Person");
 
 const parsePersonString = (input: string): Person => {
-	const emailMatch = input.match(/<([^>]+)>/);
-	const urlMatch = input.match(/\(([^)]+)\)/);
+	const emailMatch = Str.match(/<([^>]+)>/)(input);
+	const urlMatch = Str.match(/\(([^)]+)\)/)(input);
 	let name = input;
-	if (emailMatch !== null) name = name.replace(emailMatch[0], "");
-	if (urlMatch !== null) name = name.replace(urlMatch[0], "");
-	name = name.trim();
+	if (O.isSome(emailMatch)) name = Str.replace(emailMatch.value[0], "")(name);
+	if (O.isSome(urlMatch)) name = Str.replace(urlMatch.value[0], "")(name);
+	name = Str.trim(name);
 	return Person.make({
 		name,
-		...(emailMatch !== null ? { email: emailMatch[1] } : {}),
-		...(urlMatch !== null ? { url: urlMatch[1] } : {}),
+		...(O.isSome(emailMatch) ? { email: emailMatch.value[1] } : {}),
+		...(O.isSome(urlMatch) ? { url: urlMatch.value[1] } : {}),
 	});
 };
 
@@ -75,7 +77,7 @@ const sameRest = (a: unknown, b: unknown): boolean => restJsonOf(a) === restJson
 // fits). Splitting them would let a person be refused the replay yet handed back
 // as shorthand, dropping the very keys the refusal detected.
 const isShorthandExpressible = (person: Person): boolean =>
-	person.rest === undefined || R.keys(person.rest).length === 0;
+	person.rest === undefined || R.isEmptyRecord(person.rest);
 
 const isFaithful = (wire: PersonWire, person: Person): boolean => {
 	if (P.isString(wire)) {
@@ -112,13 +114,8 @@ const PersonFields = S.Struct({
 
 const decodePersonFields = S.decodeUnknownEffect(PersonFields);
 
-const restOf = (raw: { readonly [k: string]: unknown }): Record<string, unknown> => {
-	const rest: Record<string, unknown> = {};
-	for (const [key, value] of R.toEntries(raw)) {
-		if (!HashSet.has(KNOWN_KEYS, key)) rest[key] = value;
-	}
-	return rest;
-};
+const restOf = (raw: { readonly [k: string]: unknown }): Record<string, unknown> =>
+	R.fromEntries(A.filter(R.toEntries(raw), ([key]) => !HashSet.has(KNOWN_KEYS, key)));
 
 // Replay the remembered object verbatim (key order included) while it still
 // matches the person; otherwise rebuild it, typed fields winning on collision.
@@ -254,7 +251,7 @@ export class Person extends S.Class<Person>($I`Person`)({
 						Effect.mapError((error) => error.issue),
 						Effect.map((fields) => {
 							const rest = restOf(raw);
-							return rememberWire(Person.make({ ...fields, ...(R.keys(rest).length > 0 ? { rest } : {}) }), raw);
+							return rememberWire(Person.make({ ...fields, ...(!R.isEmptyRecord(rest) ? { rest } : {}) }), raw);
 						}),
 					),
 				encode: (person: Person) => Effect.succeed(encodePersonObject(person)),

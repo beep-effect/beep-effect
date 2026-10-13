@@ -7,6 +7,20 @@ const runs = { arbitrary: fcRuns(100) };
 import { formatIssue, issueEntries, issueTreeChildren } from "../../../effected/cli/internal/format.ts";
 import type { IssueEntry, IssueTreeNode } from "../../../effected/cli/internal/format.ts";
 const sample = S.Struct({ key: S.String, value: S.Json });
+it.effect("issue deduplication distinguishes a dotted key from the same displayed nested path", () => Effect.gen(function* () {
+  const schema = S.Struct({ "a.b": S.String, a: S.Struct({ b: S.String }) });
+  const error = yield* S.decodeUnknownEffect(schema)({ "a.b": 1, a: { b: 2 } }, { errors: "all" }).pipe(Effect.flip);
+  const parsed = issueEntries(error.issue);
+  assert.deepStrictEqual(parsed, [
+    { message: "Expected string", path: ["a.b"] },
+    { message: "Expected string", path: ["a", "b"] },
+  ]);
+  assert.deepStrictEqual(formatIssue(error.issue), ["Expected string at a.b", "Expected string at a.b"]);
+  assert.deepStrictEqual(issueTreeChildren(parsed), [
+    { label: "a.b: Expected string" },
+    { label: "a", children: [{ label: "b: Expected string" }] },
+  ]);
+}));
 it.effect.prop("issue parsing and formatting preserve the rejected key, deduplicate, and are stable across repeated strict decoding", [Arbitrary.schema(sample)], ([input]) => Effect.gen(function* () {
   const schema = S.Struct({ accepted: S.String });
   const raw = { accepted: "ok", [`extra_${input.key}`]: input.value };

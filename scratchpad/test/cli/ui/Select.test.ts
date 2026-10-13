@@ -4,6 +4,7 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
+import { createElement } from "react";
 import { Cancelled, Fmt } from "../../../effected/cli/index.ts";
 import type { SelectChoice } from "../../../effected/cli/ui.ts";
 import { Select } from "../../../effected/cli/ui.ts";
@@ -17,6 +18,19 @@ const choices: ReadonlyArray<SelectChoice<string>> = [
 ];
 
 describe("Select reducer", () => {
+	it("fractional and NaN initial indices seek an existing enabled choice", () => {
+		const bounded = [
+			{ label: "disabled first", value: "first", disabled: true },
+			{ label: "enabled", value: "enabled" },
+			{ label: "disabled last", value: "last", disabled: true },
+		];
+		for (const initial of [0.5, -0.5, 1.9, 2.9, Number.NaN, Infinity, -Infinity]) {
+			const state = Select.init(bounded, { initial });
+			assert.strictEqual(state.viewport.cursor, 1);
+			assertSome(Select.chosen(Select.step(state, "submit")), "enabled");
+		}
+	});
+
 	it("clamps an out-of-range initial index before searching for an enabled choice", () => {
 		const bounded: ReadonlyArray<SelectChoice<string>> = [
 			{ label: "disabled first", value: "first", disabled: true },
@@ -70,6 +84,28 @@ describe("Select reducer", () => {
 });
 
 describe("Select.screen under CliUiTest", () => {
+	it.effect("rerender keeps mount-time rows, labels, details and submitted values", () =>
+		Effect.gen(function* () {
+			const submitted: Array<string> = [];
+			const onSubmit = (value: string): void => { submitted.push(value); };
+			const view = yield* CliUiTest.view(createElement(Select.View<string>, {
+				message: "Pick", choices: [{ label: "original", value: "original", detail: "original detail" }], onSubmit,
+			}));
+			yield* view.rerender(createElement(Select.View<string>, {
+				message: "Pick", choices: [
+					{ label: "replacement", value: "replacement", detail: "replacement detail" },
+					{ label: "extra replacement", value: "extra" },
+				], onSubmit,
+			}));
+			const frame = yield* view.plainFrame;
+			assert.include(frame, "→ original");
+			assert.include(frame, "original detail");
+			assert.notInclude(frame, "replacement");
+			yield* view.press("enter");
+			assert.deepStrictEqual(submitted, ["original"]);
+		}),
+	);
+
 	it.effect("down, down, enter returns the value two enabled choices down", () =>
 		Effect.gen(function* () {
 			const handle = yield* CliUiTest.render(Select.screen({ message: "Pick one", choices }));

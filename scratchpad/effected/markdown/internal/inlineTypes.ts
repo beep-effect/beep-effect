@@ -11,11 +11,15 @@
 // is what lets the GFM constructs (autolink literals, strikethrough) register
 // without touching the parser.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import type * as HashMap from "effect/HashMap";
 import type * as HashSet from "effect/HashSet";
 import type { Definition } from "../MarkdownNode.ts";
-import type { RawInlineSegment } from "./blockTypes.ts";
+import { RawInlineSegment } from "./blockTypes.ts";
 import type { InlineNode } from "./inlineNode.ts";
+
+const $I = $ScratchpadId.create("effected/markdown/internal/inlineTypes");
 
 /**
  * A leaf block's raw text with the provenance needed to position what the
@@ -26,14 +30,29 @@ import type { InlineNode } from "./inlineNode.ts";
  * `RawInlineSlice` widens this with the node that will own the children;
  * a slice is therefore usable wherever a source is.
  *
- * @category models
+ * **Example** (Validate InlineSource)
+ *
+ * ```ts
+ * import { InlineSource } from "@beep/scratchpad/effected/markdown/internal/inlineTypes"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(InlineSource)({ text: "hello", startOffset: 0, segments: [] }) // => true
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
-export interface InlineSource {
-	readonly text: string;
-	readonly startOffset: number;
-	readonly segments: ReadonlyArray<RawInlineSegment>;
-}
+export const InlineSource = S.Struct({
+	text: S.String.annotateKey({ description: "Raw inline text accumulated by a leaf block." }),
+	startOffset: S.Finite.annotateKey({ description: "Absolute source offset where the raw text starts." }),
+	segments: S.Array(RawInlineSegment).annotateKey({ description: "Contiguous source runs locating the accumulated text." }),
+}).annotate($I.annote("InlineSource", { description: "Plain inline parser input with source provenance for absolute positions." }));
+
+/** The inline input payload derived from its executable schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type InlineSource = typeof InlineSource.Type;
 
 /**
  * One entry of the delimiter stack: a run of `*` or `_` that might open or

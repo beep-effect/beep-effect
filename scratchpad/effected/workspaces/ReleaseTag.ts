@@ -51,11 +51,20 @@ export type TagStyle = typeof TagStyle.Type;
 /**
  * Formatting knobs for {@link ReleaseTag.single} and {@link ReleaseTag.scoped}.
  *
+ * **Example** (Check a version prefix override)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { TagFormatOptions } from "@beep/scratchpad/effected/workspaces/ReleaseTag";
+ *
+ * S.is(TagFormatOptions)({ versionPrefix: "v" }) // => true
+ * ```
+ *
  * @public
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
-export interface TagFormatOptions {
+export const TagFormatOptions = S.Struct({
 	/**
 	 * The prefix on the version segment.
 	 *
@@ -67,8 +76,17 @@ export interface TagFormatOptions {
 	 * as `actions/checkout`'s ref resolution and third-party changelog
 	 * generators expect.
 	 */
-	readonly versionPrefix?: string;
-}
+	versionPrefix: S.optionalKey(S.String).annotateKey({ description: "The version segment prefix; defaults to an empty string when formatting." }),
+}).pipe($I.annoteSchema("TagFormatOptions", { description: "Optional version prefix overrides for release tag formatting." }));
+
+/**
+ * Structural formatting options accepted by release tag constructors.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TagFormatOptions = typeof TagFormatOptions.Type;
 
 // The numeric core of a SemVer version, plus whether it carries a prerelease.
 //
@@ -77,11 +95,12 @@ export interface TagFormatOptions {
 // version at all), and the only facts the derivation needs are the major and
 // minor segments and the presence of a prerelease. A dependency edge for that
 // is disproportionate; real semver *comparison* would justify one.
-interface VersionCore {
-	readonly major: number;
-	readonly minor: number;
-	readonly prerelease: boolean;
-}
+const VersionCore = S.Struct({
+	major: S.Finite.annotateKey({ description: "The parsed major version segment." }),
+	minor: S.Finite.annotateKey({ description: "The parsed minor version segment." }),
+	prerelease: S.Boolean.annotateKey({ description: "Whether the version carries a prerelease suffix." }),
+}).pipe($I.annoteSchema("VersionCore", { description: "The numeric segments and prerelease presence needed to derive tracking aliases." }));
+type VersionCore = typeof VersionCore.Type;
 
 /**
  * Digits only, and no leading zeros beyond `0` itself — SemVer's numeric identifier.
@@ -92,7 +111,11 @@ const NUMERIC_IDENTIFIER = /^(?:0|[1-9]\d*)$/;
  * Complete SemVer grammar, including non-empty prerelease and build identifiers.
  */
 const VersionText = S.String.check(
-	S.isPattern(/^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$(?![\s\S])/),
+	S.isPattern(/^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$(?![\s\S])/, {
+		identifier: $I`VersionTextPattern`,
+		title: "SemVer text",
+		description: "A complete SemVer version with no leading zeros in numeric identifiers and valid non-empty prerelease and build identifiers.",
+	}),
 ).pipe($I.annoteSchema("VersionText", { description: "A complete SemVer version with valid prerelease and build identifiers." }));
 const isVersionText = S.is(VersionText);
 
@@ -108,14 +131,12 @@ const isVersionText = S.is(VersionText);
  */
 const versionCore = (version: string): VersionCore | undefined => {
 	if (!isVersionText(version)) return undefined;
-	const withoutBuild = version.split("+", 1)[0] ?? "";
+	const withoutBuild = version.slice(0, version.indexOf("+") === -1 ? version.length : version.indexOf("+"));
 	const dash = withoutBuild.indexOf("-");
 	const prerelease = dash !== -1;
 	const core = prerelease ? withoutBuild.slice(0, dash) : withoutBuild;
 
 	const segments = core.split(".");
-	if (segments.length !== 3) return undefined;
-	if (!segments.every((segment) => NUMERIC_IDENTIFIER.test(segment))) return undefined;
 
 	return { major: Number(segments[0]), minor: Number(segments[1]), prerelease };
 };
@@ -123,27 +144,45 @@ const versionCore = (version: string): VersionCore | undefined => {
 /**
  * Options for {@link TrackingTag.forVersion}.
  *
+ * **Example** (Check package-prefixed alias options)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { TrackingTagOptions } from "@beep/scratchpad/effected/workspaces/ReleaseTag";
+ *
+ * S.is(TrackingTagOptions)({ packageName: "@scope/pkg", precision: "major" }) // => true
+ * ```
+ *
  * @public
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
-export interface TrackingTagOptions {
+export const TrackingTagOptions = S.Struct({
 	/**
 	 * Prefix the alias with a package name, for a monorepo that namespaces its
 	 * tags: `@scope/pkg@v1`. Omit it for a single-package repo's bare `v1`.
 	 */
-	readonly packageName?: string;
+	packageName: S.optionalKey(S.String).annotateKey({ description: "An optional package name prefix for tracking aliases." }),
 	/**
 	 * Which aliases to derive. `"both"` (the default) gives `v1` and `v1.2`;
 	 * `"major"` gives only the broad `v1`.
 	 */
-	readonly precision?: "major" | "both";
+	precision: S.optionalKey(S.Literals(["major", "both"])).annotateKey({ description: "Derive only the major alias or both major and minor aliases; defaults to both during derivation." }),
 	/**
 	 * Derive aliases for a prerelease version too. **Off by default, and you
 	 * almost certainly want it off** — see {@link TrackingTag.forVersion}.
 	 */
-	readonly includePrerelease?: boolean;
-}
+	includePrerelease: S.optionalKey(S.Boolean).annotateKey({ description: "Whether to derive aliases for prereleases; disabled by default during derivation." }),
+}).pipe($I.annoteSchema("TrackingTagOptions", { description: "Optional package prefix, precision and prerelease policy for tracking alias derivation." }));
+
+/**
+ * Structural options accepted by tracking alias derivation.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TrackingTagOptions = typeof TrackingTagOptions.Type;
 
 /**
  * A floating alias tag — `v1`, `v1.2` — that a repo re-points at its newest
@@ -254,6 +293,7 @@ export class TrackingTag extends S.Class<TrackingTag>($I`TrackingTag`)({
 		if (core.prerelease && options?.includePrerelease !== true) return [];
 
 		const packageName = options?.packageName;
+		if (packageName !== undefined && !S.is(TrackingTag.fields.packageName)(packageName)) return [];
 		const prefix = packageName === undefined ? "" : `${packageName}@`;
 		const named = (suffix: string, fields: { readonly major: number; readonly minor?: number }): TrackingTag =>
 			TrackingTag.make({

@@ -14,7 +14,7 @@
 // `.pnpm-config/<name>` entries are installed at `1.0.0` with a pnpmfile the
 // scripted spawner never actually loads.
 
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, mkdirSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -26,9 +26,19 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
 import { ConfigDependencyHooks } from "../../effected/workspaces/index.ts";
+
+const ManifestText = S.fromJsonString(S.Struct({ name: S.String, version: S.String }));
+const ReplayText = S.fromJsonString(S.Struct({
+	ok: S.Literal(true),
+	config: S.Struct({
+		catalog: S.Record(S.String, S.String),
+		catalogs: S.Record(S.String, S.Record(S.String, S.String)),
+	}),
+}));
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
@@ -118,6 +128,52 @@ describe("ConfigDependencyHooks.layerSubprocess — no-spawn fast paths", () => 
 });
 
 describe("ConfigDependencyHooks.layerSubprocess — the argv contract", () => {
+	{
+		const { spawner, layer } = harness(() => ({ stdout: emitted({ ok: true, config: {} }) }));
+		it.layer(layer, { timeout: "30 seconds" })((it) => {
+			it.effect("the actual child preserves an own __proto__ catalog beside a normal named catalog", () =>
+				Effect.gen(function* () {
+					const name = "identity-catalogs";
+					const dir = join(ROOT, "node_modules", ".pnpm-config", name);
+					mkdirSync(dir, { recursive: true });
+					const manifest = yield* S.encodeEffect(ManifestText)({ name, version: "1.0.0" });
+					writeFileSync(join(dir, "package.json"), manifest);
+					writeFileSync(join(dir, "pnpmfile.mjs"), "export const hooks = { updateConfig: (config) => config };\n");
+					const named = R.fromEntries([
+						["__proto__", { effect: "^4.0.0" }],
+						["named", { foo: "^1" }],
+					]);
+					const seed = { default: { typescript: "^6" }, ...named };
+					const hooks = yield* ConfigDependencyHooks;
+					yield* hooks.inject(ROOT, { [name]: "1.0.0" }, seed);
+					const command = spawner.spawns[0];
+					assert.isDefined(command);
+					const output = join(ROOT, "own-catalog-replay.json");
+					// A real node child executes the exact script and argv the layer emitted.
+					// File-backed stdout also works where the sandbox cannot capture child pipes.
+					const code = yield* Effect.acquireUseRelease(
+						Effect.sync(() => openSync(output, "w")),
+						(fd) => Effect.callback<number | null, Error>((resume) => {
+							const child = process.getBuiltinModule("node:child_process").spawn(process.execPath, command.args, {
+								stdio: ["ignore", fd, "inherit"],
+							});
+							child.once("error", (cause) => resume(Effect.fail(cause)));
+							child.once("close", (status) => resume(Effect.succeed(status)));
+							return Effect.sync(() => { child.kill(); });
+						}),
+						(fd) => Effect.sync(() => closeSync(fd)),
+					);
+					assert.strictEqual(code, 0);
+					const payload = yield* S.decodeEffect(ReplayText)(readFileSync(output, "utf8").trim());
+					assert.deepStrictEqual(payload.config.catalog, seed.default);
+					assert.deepStrictEqual(payload.config.catalogs, named);
+					assert.isTrue(Object.hasOwn(payload.config.catalogs, "__proto__"));
+					assert.deepStrictEqual(Object.keys(payload.config.catalogs), ["__proto__", "named"]);
+				}),
+			);
+		});
+	}
+
 	{
 		const { spawner, layer } = harness(() => ({ stdout: emitted({ ok: true, config: {} }) }));
 		it.layer(layer, { timeout: "30 seconds" })((it) => {

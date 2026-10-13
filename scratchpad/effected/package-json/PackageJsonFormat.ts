@@ -25,6 +25,7 @@ import * as S from "effect/Schema";
 import { detectIndent, renderJson, resolveIndent, sortKeys } from "./internal/format.ts";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/package-json/PackageJsonFormat");
 
@@ -137,8 +138,7 @@ export interface PackageFormatTextOptions {
 	readonly newline?: boolean;
 }
 
-const isJsonObject = (value: unknown): value is Record<string, unknown> =>
-	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
+const isJsonObject: (value: unknown) => value is Record<string, unknown> = P.isObject;
 
 /**
  * Indicates that a surgical modification could not be applied: the value on
@@ -195,7 +195,7 @@ export class PackageJsonModifyError extends S.TaggedError<PackageJsonModifyError
 	 * @since 0.0.0
 	 */
 	override get message(): string {
-		return `Failed to modify package.json at path [${this.path.join(", ")}]`;
+		return `Failed to modify package.json at path [${A.join(A.map(this.path, (segment) => `${segment}`), ", ")}]`;
 	}
 }
 
@@ -398,7 +398,7 @@ export class PackageJsonFormat {
 		const formattingOptions = {
 			insertSpaces: indent !== "\t",
 			tabSize: indent === undefined || indent === "\t" ? 2 : indent.length,
-			eol: source.includes("\r\n") ? "\r\n" : "\n",
+			eol: Str.includes("\r\n")(source) ? "\r\n" : "\n",
 		};
 		return yield* JsoncModifier.modify(source, path, value, { formattingOptions }).pipe(
 			Effect.catchTag("JsoncModificationError", (cause) => PackageJsonModifyError.make({ path, cause })),

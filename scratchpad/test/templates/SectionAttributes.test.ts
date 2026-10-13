@@ -2,6 +2,7 @@
 // identity — they participate in equality (an attribute change is real drift)
 // but never in which block a marker names.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { assert, describe, it } from "@effect/vitest";
 import { assertSome, assertSuccess, assertFailure } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -365,6 +366,43 @@ describe("marker attributes", () => {
 });
 
 describe("attribute constraint review regressions", () => {
+  it("identifies the reusable name check and documents its grammar", () => {
+    assert.deepInclude(AttributeName.ast.checks?.[0]?.annotations, {
+      identifier: $ScratchpadId.create("effected/templates/internal/attributes")`AttributeNameCheck`,
+      title: "Attribute name",
+      description: "An ASCII letter followed by ASCII letters, digits, underscores or hyphens, with JavaScript dollar-anchor semantics.",
+      message: "Expected an attribute name starting with an ASCII letter, followed by ASCII letters, digits, underscores or hyphens",
+    });
+  });
+
+  it("identifies the reusable value check and documents its exclusions", () => {
+    assert.deepInclude(AttributeValue.ast.checks?.[0]?.annotations, {
+      identifier: $ScratchpadId.create("effected/templates/internal/attributes")`AttributeValueCheck`,
+      title: "Attribute value",
+      description: "Text rendered verbatim inside double quotes, excluding double quotes, carriage returns and line feeds.",
+      message: "Expected an attribute value without double quotes, carriage returns or line feeds",
+    });
+  });
+
+  it.effect("explains an invalid attribute name when decoding", () =>
+    Effect.gen(function* () {
+      const error = yield* S.decodeEffect(AttributeName)("0name").pipe(Effect.flip);
+      assert.strictEqual(
+        error.message,
+        "Expected an attribute name starting with an ASCII letter, followed by ASCII letters, digits, underscores or hyphens"
+      );
+    })
+  );
+
+  it.effect("explains every forbidden attribute value character when decoding", () =>
+    Effect.gen(function* () {
+      for (const value of ['say "hi"', "one\rtwo", "one\ntwo", "one\r\ntwo"]) {
+        const error = yield* S.decodeEffect(AttributeValue)(value).pipe(Effect.flip);
+        assert.strictEqual(error.message, "Expected an attribute value without double quotes, carriage returns or line feeds");
+      }
+    })
+  );
+
   it("matches the original name regex including its final-line-terminator acceptance", () => {
     for (const name of [
       "name",

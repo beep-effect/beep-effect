@@ -121,12 +121,7 @@ export class TomlEdit extends S.Class<TomlEdit>($I`TomlEdit`)({
 	 */
 	static applyAll(text: string, edits: ReadonlyArray<TomlEdit>): string {
 		const sorted = A.sort(edits, Order.mapInput(Order.flip(Order.Number), (edit: TomlEdit) => edit.offset));
-		for (let i = 0; i + 1 < sorted.length; i++) {
-			const upper = sorted[i];
-			const lower = sorted[i + 1];
-			if (upper === undefined || lower === undefined) {
-				throw TomlEditInvariantError.make({ message: "missing edit" });
-			}
+		for (const [upper, lower] of A.zip(sorted, A.drop(sorted, 1))) {
 			if (lower.offset + lower.length > upper.offset) {
 				throw TomlEditInvariantError.make({
 					message: `TomlEdit.applyAll received overlapping edits at offsets ${lower.offset} and ${upper.offset} — overlapping edits are a programmer error`,

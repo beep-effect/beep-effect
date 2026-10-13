@@ -1,9 +1,13 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { Yaml, YamlParseOptions } from "../../effected/yaml/Yaml.ts";
 import { YamlVisitor, YamlVisitorEvent } from "../../effected/yaml/YamlVisitor.ts";
+
+const Path = S.Array(S.Union([S.String, S.Finite]));
+const isPath = S.is(Path);
 
 describe("YamlVisitor", () => {
 	describe("visit", () => {
@@ -39,6 +43,31 @@ describe("YamlVisitor", () => {
 				assert.isDefined(pair);
 				assert.strictEqual(pair?.key, "name");
 				assert.strictEqual(pair?.value, "Alice");
+			}),
+		);
+
+		it.effect("normalizes non-finite mapping paths while retaining numeric scalar values", () =>
+			Effect.gen(function* () {
+				const text = "outer:\n  .nan: .nan\n  .inf: .inf\n  +.inf: +.inf\n  -.inf: -.inf\n  42: 42\n";
+				const events = yield* Stream.runCollect(YamlVisitor.visit(text, YamlParseOptions.make({ uniqueKeys: false })));
+				const pairs = events.filter(YamlVisitorEvent.$is("Pair"));
+				assert.deepStrictEqual(pairs.map((event) => event.path), [
+					["outer"], ["outer", "NaN"], ["outer", "Infinity"],
+					["outer", "Infinity"], ["outer", "-Infinity"], ["outer", 42],
+				]);
+				assert.deepStrictEqual(pairs.slice(1).map((event) => [event.key, event.value]), [
+					[NaN, NaN], [Infinity, Infinity], [Infinity, Infinity], [-Infinity, -Infinity], [42, 42],
+				]);
+				const scalars = events.filter(YamlVisitorEvent.$is("Scalar"));
+				assert.deepStrictEqual(scalars.slice(1).map((event) => [event.path, event.value]), [
+					[["outer", "NaN"], NaN], [["outer", "NaN"], NaN],
+					[["outer", "Infinity"], Infinity], [["outer", "Infinity"], Infinity],
+					[["outer", "Infinity"], Infinity], [["outer", "Infinity"], Infinity],
+					[["outer", "-Infinity"], -Infinity], [["outer", "-Infinity"], -Infinity],
+					[["outer", 42], 42], [["outer", 42], 42],
+				]);
+				assert.isTrue(events.every((event) => isPath(event.path)));
+				assert.deepStrictEqual(events.filter(YamlVisitorEvent.$is("Error")), []);
 			}),
 		);
 

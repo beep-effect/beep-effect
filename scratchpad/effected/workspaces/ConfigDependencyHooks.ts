@@ -538,8 +538,8 @@ const configToEntries = (config: HookConfig): CatalogEntries => {
 type UpdateConfig = (config: HookConfig) => unknown;
 
 /** Locate the `updateConfig` hook across the CJS/ESM export shapes a `pnpmfile.cjs` can present. */
-const updateConfigOf = (mod: unknown): UpdateConfig | undefined => {
-	for (const candidate of [mod, P.isObject(mod) ? mod.default : undefined]) {
+const updateConfigOf = (mod: Readonly<Record<string, unknown>>): UpdateConfig | undefined => {
+	for (const candidate of [mod, mod.default]) {
 		if (!P.isObject(candidate)) continue;
 		const hooks = candidate.hooks;
 		if (P.isObject(hooks) && P.isFunction(hooks.updateConfig)) {
@@ -614,7 +614,7 @@ const replayInProcess = Effect.fn("replayInProcess")(function* (
 			// Critical-dependency warning it cannot silence — even one composing
 			// `layerSubprocess`, because this module stays in its import graph
 			// either way.
-			try: (): Promise<unknown> => import(/* webpackIgnore: true */ url),
+			try: (): Promise<Readonly<Record<string, unknown>>> => import(/* webpackIgnore: true */ url),
 			catch: (cause) => CatalogAssemblyError.make({ source: "hooks", path: name, cause }),
 		});
 		const updateConfig = updateConfigOf(loaded);
@@ -691,11 +691,12 @@ const failure = (name, cause) => ({
 });
 const replay = async () => {
 	let catalog = {};
-	const catalogs = {};
+	const catalogEntries = [];
 	for (const [name, entries] of Object.entries(JSON.parse(seedJson))) {
 		if (name === "default") catalog = { ...entries };
-		else catalogs[name] = { ...entries };
+		else catalogEntries.push([name, { ...entries }]);
 	}
+	const catalogs = Object.fromEntries(catalogEntries);
 	let config = {
 		catalog,
 		catalogs,
@@ -758,14 +759,17 @@ const REPLAY_TIMEOUT = Duration.seconds(30);
  * threaded (`configOf`), never fatal.
  */
 const ReplayPayload = S.Union([
-	S.Struct({ ok: S.Literal(true), config: S.Unknown }),
 	S.Struct({
-		ok: S.Literal(false),
-		name: S.optionalKey(S.String),
-		message: S.optionalKey(S.String),
-		stack: S.optionalKey(S.String),
+		ok: S.Literal(true).pipe($I.annoteKey("ReplayPayload.ok", { description: "The child completed hook replay successfully." })),
+		config: S.Unknown.pipe($I.annoteKey("ReplayPayload.config", { description: "Hook-returned config data, normalized tolerantly by the parent." })),
 	}),
-]);
+	S.Struct({
+		ok: S.Literal(false).pipe($I.annoteKey("ReplayPayload.ok", { description: "The child failed to load or replay a hook." })),
+		name: S.optionalKey(S.String).pipe($I.annoteKey("ReplayPayload.name", { description: "The config dependency whose hook failed, when identified." })),
+		message: S.optionalKey(S.String).pipe($I.annoteKey("ReplayPayload.message", { description: "The child-side failure message, when available." })),
+		stack: S.optionalKey(S.String).pipe($I.annoteKey("ReplayPayload.stack", { description: "The child-side failure stack, when available." })),
+	}),
+]).pipe($I.annoteSchema("ReplayPayload", { description: "The subprocess hook replay success or failure envelope, with tolerant success config data." }));
 
 /** Rebuild the subprocess's serialized failure as an `Error`, preserving the child-side stack when it carried one. */
 const replayFailureCause = (payload: { readonly message?: string; readonly stack?: string }): Error => {

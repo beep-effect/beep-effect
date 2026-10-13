@@ -1,0 +1,18 @@
+[
+  {
+    "id": "EV014:scratchpad/test/engine/purity.test.ts:12:it.layer@1#1",
+    "reason": "The round-2 review requires restoring the upstream NodeServices layer without a raised hook timeout. This real-source purity test needs the resource layer; adding the canon timeout would violate that restoration and the no-raised-timeouts gate repair rule."
+  },
+  {
+    "id": "EV010:scratchpad/test/engine/purity.test.ts:4:@effect/platform-node@0#1",
+    "reason": "The suite scans the actual engine source tree and asserts that real source files satisfy the purity boundary. A memory filesystem would substitute fixtures for the source under test. Retained the platform layer."
+  },
+  {
+    "id": "EV010:scratchpad/test/engine/entrypoints.test.ts:2:node:fs@0#1",
+    "reason": "The suite verifies the actual source and emitted distribution dependency graphs, including whether the compiler emitted `guard.js`. Real filesystem reads are part of the subject. Retained `node:fs`."
+  },
+  {
+    "id": "EV010:scratchpad/test/engine/build.setup.ts:7:@effect/platform-node@0#1",
+    "reason": "Global setup launches the real `tsgo` compiler and emits the distribution inspected by the entrypoint tests. It requires native process spawning and disk output. Retained the platform layer and setup-owned scope."
+  }
+]

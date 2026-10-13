@@ -9,6 +9,9 @@
 // import cycle (`noImportCycles` is an error here).
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { flow } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
@@ -20,6 +23,85 @@ const causeMessage = (cause: unknown): string | undefined => {
 	const text = cause instanceof Error ? cause.message : P.isString(cause) ? cause : undefined;
 	return text === undefined || Str.trim(text) === "" ? undefined : text;
 };
+
+const CatalogAssemblySource = LiteralKit(["manifest", "catalog", "hooks"]).annotate(
+	$I.annote("CatalogAssemblySource", { description: "The inputs that can fail catalog assembly." }),
+);
+
+const CatalogHooksReason = LiteralKit(["notInstalled", "ambiguous", "fetchFailed", "integrityMismatch", "integrityUnavailable"]).annotate(
+	$I.annote("CatalogHooksReason", { description: "Why a config dependency could not be resolved." }),
+);
+
+const CatalogAssemblyErrorPayload = S.Struct({
+	/**
+	 * Which input failed: `manifest` for a file-level or top-level shape problem,
+	 * `catalog` for a malformed catalog block or the double-default duplication,
+	 * `hooks` for a config-dependency `pnpmfile.cjs` load or replay failure.
+	 */
+	source: CatalogAssemblySource.annotateKey({ description: "Which input failed: `manifest` for a file-level or top-level shape problem, `catalog` for a malformed catalog block or the double-default duplication, `hooks` for a config-dependency `pnpmfile.cjs` load or replay failure." }),
+	/** The file, the catalog name, or the config dependency name. */
+	path: S.String.annotateKey({ description: "The file, the catalog name, or the config dependency name." }),
+	/** The originating failure. */
+	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The originating failure." }),
+	/**
+	 * Why a `hooks`-source failure could not resolve a config dependency at its
+	 * declared version, when that is what failed. Absent for every other
+	 * failure, including a pnpmfile that resolved but failed to load or replay.
+	 *
+	 * **Details**
+	 *
+	 * - `notInstalled` — the declared version is in neither
+	 *   `node_modules/.pnpm-config` nor any pnpm store, and the replaying layer
+	 *   does not fetch. Typical of the base side of a diff across a
+	 *   config-dependency bump: that side declares a version this checkout never
+	 *   installed.
+	 * - `ambiguous` — one store holds the declared version more than once, and
+	 *   nothing records which copy the declaration pinned.
+	 * - `fetchFailed` — the replaying layer tried to fetch the declared version
+	 *   into the store and the fetch failed. The package manager's own integrity
+	 *   check rejecting the download lands here too.
+	 * - `integrityMismatch` — the inline `configDependencies` integrity and the
+	 *   lockfile's recorded integrity disagree, so nothing was fetched.
+	 * - `integrityUnavailable` — a fetch was needed but the declaring side records
+	 *   no integrity to verify it against (no inline integrity, and no lockfile
+	 *   entry, or a lockfile that could not be read), so nothing was fetched.
+	 */
+	reason: S.optionalKey(
+		CatalogHooksReason,
+	).annotateKey({ description: "Why a `hooks`-source failure could not resolve a config dependency at its declared version, when that is what failed. Absent for every other failure, including a pnpmfile that resolved but failed to load or replay." }),
+}).annotate(
+	$I.annote("CatalogAssemblyErrorPayload", { description: "The compatible public catalog assembly error payload." }),
+);
+
+const CatalogAssemblyFailure = CatalogAssemblySource.mapMembers(([manifest, catalog, hooks]) => [
+	S.Struct({
+		source: manifest.annotateKey({ description: "A catalog declaration file or its top-level shape failed." }),
+		path: CatalogAssemblyErrorPayload.fields.path,
+		cause: CatalogAssemblyErrorPayload.fields.cause,
+	}).annotate($I.annote("CatalogManifestFailure", { description: "A catalog declaration file or its top-level shape failed." })),
+	S.Struct({
+		source: catalog.annotateKey({ description: "A catalog block or duplicated default catalog failed." }),
+		path: CatalogAssemblyErrorPayload.fields.path,
+		cause: CatalogAssemblyErrorPayload.fields.cause,
+	}).annotate($I.annote("CatalogBlockFailure", { description: "A catalog block or duplicated default catalog failed." })),
+	S.Struct({
+		source: hooks.annotateKey({ description: "A config dependency could not be resolved, loaded, or replayed." }),
+		path: CatalogAssemblyErrorPayload.fields.path,
+		cause: CatalogAssemblyErrorPayload.fields.cause,
+		reason: CatalogAssemblyErrorPayload.fields.reason,
+	}).annotate($I.annote("CatalogHooksFailure", { description: "A config dependency could not be resolved, loaded, or replayed." })),
+] as const).pipe(
+	S.annotate($I.annote("CatalogAssemblyFailure", { description: "Source-specific catalog assembly failures; only hooks have a resolution reason." })),
+	S.toTaggedUnion("source"),
+);
+
+const CatalogAssemblyFailureFromPayload = CatalogAssemblyErrorPayload.pipe(
+	S.toType,
+	S.decodeTo(CatalogAssemblyFailure.pipe(S.toType)),
+	S.annotate($I.annote("CatalogAssemblyFailureFromPayload", { description: "Project the compatible payload into its source-specific case without encoding its cause." })),
+);
+
+const catalogAssemblyFailure = flow(S.decodeUnknownResult(CatalogAssemblyFailureFromPayload), Result.getOrThrow);
 
 /**
  * Raised when a workspace's catalogs cannot be assembled — a `pnpm-workspace.yaml`
@@ -59,44 +141,33 @@ const causeMessage = (cause: unknown): string | undefined => {
  * @category errors
  * @since 0.0.0
  */
-export class CatalogAssemblyError extends S.TaggedError<CatalogAssemblyError>($I`CatalogAssemblyError`)("CatalogAssemblyError", {
+export class CatalogAssemblyError extends S.TaggedError<CatalogAssemblyError>($I`CatalogAssemblyError`)("CatalogAssemblyError", CatalogAssemblyErrorPayload, $I.annote("CatalogAssemblyError", { description: "Raised when a workspace's catalogs cannot be assembled — a `pnpm-workspace.yaml` that is unreadable or not valid YAML, a root `package.json` `workspaces` field whose shape or catalog blocks are malformed in a way pnpm itself rejects (including the default catalog declared twice), or a config dependency whose `pnpmfile.cjs` cannot be loaded or replayed." })) {
 	/**
-	 * Which input failed: `manifest` for a file-level or top-level shape problem,
-	 * `catalog` for a malformed catalog block or the double-default duplication,
-	 * `hooks` for a config-dependency `pnpmfile.cjs` load or replay failure.
-	 */
-	source: S.Literals(["manifest", "catalog", "hooks"]).annotateKey({ description: "Which input failed: `manifest` for a file-level or top-level shape problem, `catalog` for a malformed catalog block or the double-default duplication, `hooks` for a config-dependency `pnpmfile.cjs` load or replay failure." }),
-	/** The file, the catalog name, or the config dependency name. */
-	path: S.String.annotateKey({ description: "The file, the catalog name, or the config dependency name." }),
-	/** The originating failure. */
-	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The originating failure." }),
-	/**
-	 * Why a `hooks`-source failure could not resolve a config dependency at its
-	 * declared version, when that is what failed. Absent for every other
-	 * failure, including a pnpmfile that resolved but failed to load or replay.
+	 * Projects the compatible public fields into the source-specific internal failure.
 	 *
 	 * **Details**
 	 *
-	 * - `notInstalled` — the declared version is in neither
-	 *   `node_modules/.pnpm-config` nor any pnpm store, and the replaying layer
-	 *   does not fetch. Typical of the base side of a diff across a
-	 *   config-dependency bump: that side declares a version this checkout never
-	 *   installed.
-	 * - `ambiguous` — one store holds the declared version more than once, and
-	 *   nothing records which copy the declaration pinned.
-	 * - `fetchFailed` — the replaying layer tried to fetch the declared version
-	 *   into the store and the fetch failed. The package manager's own integrity
-	 *   check rejecting the download lands here too.
-	 * - `integrityMismatch` — the inline `configDependencies` integrity and the
-	 *   lockfile's recorded integrity disagree, so nothing was fetched.
-	 * - `integrityUnavailable` — a fetch was needed but the declaring side records
-	 *   no integrity to verify it against (no inline integrity, and no lockfile
-	 *   entry, or a lockfile that could not be read), so nothing was fetched.
+	 * Manifest and catalog failures omit hooks-only reasons. The public payload
+	 * keeps those fields for compatibility, and the projection preserves the cause.
+	 *
+	 * **Example** (Normalize a manifest failure)
+	 *
+	 * ```ts
+	 * import { CatalogAssemblyError } from "@beep/scratchpad/effected/npm/CatalogAssemblyError";
+	 *
+	 * const error = CatalogAssemblyError.make({ source: "manifest", path: "pnpm-workspace.yaml", cause: "invalid YAML", reason: "fetchFailed" });
+	 * error.failure.source // => "manifest"
+	 * error.reason // => "fetchFailed"
+	 * ```
+	 *
+	 * @internal
+	 * @category getters
+	 * @since 0.0.0
 	 */
-	reason: S.optionalKey(
-		S.Literals(["notInstalled", "ambiguous", "fetchFailed", "integrityMismatch", "integrityUnavailable"]),
-	).annotateKey({ description: "Why a `hooks`-source failure could not resolve a config dependency at its declared version, when that is what failed. Absent for every other failure, including a pnpmfile that resolved but failed to load or replay." }),
-}, $I.annote("CatalogAssemblyError", { description: "Raised when a workspace's catalogs cannot be assembled — a `pnpm-workspace.yaml` that is unreadable or not valid YAML, a root `package.json` `workspaces` field whose shape or catalog blocks are malformed in a way pnpm itself rejects (including the default catalog declared twice), or a config dependency whose `pnpmfile.cjs` cannot be loaded or replayed." })) {
+	get failure(): typeof CatalogAssemblyFailure.Type {
+		return catalogAssemblyFailure(this);
+	}
+
 	/**
   * Renders the failing source into a one-line summary, followed by the
   * cause's own message when the cause carries one.
@@ -126,9 +197,10 @@ export class CatalogAssemblyError extends S.TaggedError<CatalogAssemblyError>($I
   * @since 0.0.0
   */
 	override get message(): string {
-		if (S.is(CatalogAssemblyError)(this.cause)) return this.cause.message;
-		const summary = `Failed to assemble catalogs from ${this.source} ${this.path}`;
-		const detail = causeMessage(this.cause);
+		const failure = this.failure;
+		if (S.is(CatalogAssemblyError)(failure.cause)) return failure.cause.message;
+		const summary = `Failed to assemble catalogs from ${failure.source} ${failure.path}`;
+		const detail = causeMessage(failure.cause);
 		return detail === undefined ? summary : `${summary}: ${detail}`;
 	}
 }

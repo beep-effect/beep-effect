@@ -33,7 +33,6 @@ export interface ScanResult<T> {
  * @since 0.0.0
  */
 export type ScalarValue =
-	| string
 	| number
 	| bigint
 	| boolean
@@ -366,7 +365,7 @@ export const scanBasicString: {
 				out += String.fromCodePoint(decoded.codePoint);
 				i = decoded.end;
 			} else {
-				return raise("InvalidEscape", `invalid escape sequence \\${source[i + 1] ?? ""}`, i, 2);
+				return raise("InvalidEscape", `invalid escape sequence \\${source[i + 1]}`, i, 2);
 			}
 			chunkStart = i;
 			continue;
@@ -533,7 +532,7 @@ export const scanMultilineBasicString: {
 				chunkStart = i;
 				continue;
 			}
-			return raise("InvalidEscape", `invalid escape sequence \\${source[i + 1] ?? ""}`, i, probe - i + 1);
+			return raise("InvalidEscape", `invalid escape sequence \\${source[i + 1]}`, i, probe - i + 1);
 		}
 		if (code === LF) {
 			i += 1;
@@ -724,15 +723,14 @@ const decodeDecimalInteger = (token: string, offset: number): number | bigint =>
 const decodePrefixedInteger = (token: string, offset: number): number | bigint =>
 	narrowInteger(BigInt(token.replace(/_/g, "")), token, offset);
 
-const MONTH_LENGTHS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-
 const isLeapYear = (year: number): boolean => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 
 const validateDate = (year: number, month: number, day: number, offset: number, length: number): void => {
 	if (month < 1 || month > 12) {
 		raise("InvalidDateTime", `month ${month} is out of range 1-12`, offset, length);
 	}
-	const max = month === 2 && isLeapYear(year) ? 29 : (MONTH_LENGTHS[month - 1] ?? 0);
+	// Validated months alternate 31/30 days, with the parity switching at August.
+	const max = month === 2 ? (isLeapYear(year) ? 29 : 28) : 30 + ((month + Math.floor(month / 8)) % 2);
 	if (day < 1 || day > max) {
 		raise("InvalidDateTime", `day ${day} does not exist in month ${month} of ${year}`, offset, length);
 	}

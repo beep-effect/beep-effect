@@ -1,11 +1,15 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
+import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { GitHubIssue, IssueInfo, LinkedIssue, CommentOnceResult } from "../../effected/github/GitHubIssue.ts";
 import { CommentMarker, CommentRecord } from "../../effected/github/PullRequestComment.ts";
 import { PageOptions } from "../../effected/github/Rest.ts";
+import type * as Rest from "../../effected/github/Rest.ts";
 import { Repo } from "../../effected/github/Repo.ts";
 import { REPO, harness } from "./harness.ts";
+import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 const marker = CommentMarker.make({ namespace: "test", key: "coverage" });
 const issue = IssueInfo.make({ number: 1, title: "Bug", state: "open", labels: [], url: "web", nodeId: "node" });
@@ -14,6 +18,45 @@ const comment = CommentRecord.make({ id: 2, body: "", url: "web" });
 const once = CommentOnceResult.make({ wrote: true, comment });
 
 describe("GitHubIssue coverage", () => {
+  for (const selectedBody of [marker.html, undefined]) {
+    const reads: Array<string> = [];
+    let selectedReads = 0;
+    const metadata = {
+      id: 2, node_id: "comment", url: "api", html_url: "web", user: null,
+      created_at: "2026-10-09T00:00:00Z", updated_at: "2026-10-09T00:00:00Z", issue_url: "issue",
+    };
+    const first = deliberatelyInvalid<Rest.Item<"GET /repos/{owner}/{repo}/issues/{issue_number}/comments">>({
+      ...metadata,
+      get body() {
+        reads.push("selected");
+        selectedReads += 1;
+        return selectedReads === 1 ? marker.html : selectedBody;
+      },
+    });
+    const tail = {
+      ...metadata,
+      id: 3,
+      get body() {
+        reads.push("tail");
+        return marker.html;
+      },
+    };
+    const base = Layer.mergeAll(Repo.layer(REPO), GitHubClient.layerFixture({
+      paginate: { "GET /repos/{owner}/{repo}/issues/{issue_number}/comments": Result.succeed([first, tail]) },
+    }));
+    it.layer(GitHubIssue.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
+      it.effect(`stops at the first matching comment and rereads its ${selectedBody === undefined ? "absent" : "present"} body`, () => Effect.gen(function* () {
+        const service = yield* GitHubIssue;
+        const result = yield* service.commentOnce(1, marker, "text");
+        assert.deepStrictEqual(result, CommentOnceResult.make({
+          wrote: false,
+          comment: CommentRecord.make({ id: 2, body: selectedBody ?? "", url: "web" }),
+        }));
+        assert.deepStrictEqual(reads, ["selected", "selected"]);
+      }));
+    });
+  }
+
   it.layer(Layer.mergeAll(GitHubIssue.layerTest(), Repo.layer(REPO)), { timeout: "30 seconds" })((it) => {
   it.effect("every missing test-double member names itself and every override is honored", () => Effect.gen(function* () {
     const service = GitHubIssue.makeTest();

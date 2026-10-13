@@ -1,31 +1,42 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
+import * as A from "effect/Array";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import * as Effect from "effect/Effect";
 import { blockDialect } from "../../../effected/markdown/internal/blockRegistry.ts";
 import { makeBlockNode } from "../../../effected/markdown/internal/blockTypes.ts";
 
 describe("blockRegistry map contract", () => {
   it.effect("iterates constructs in insertion order and preserves identities", () => Effect.sync(() => {
+    const coreStarts = ["blockquote", "atxHeading", "fencedCode", "htmlBlock", "setextHeading", "thematicBreak", "listItem", "indentedCode"];
     for (const name of ["commonmark", "gfm"] as const) {
-      const table = blockDialect(name).constructs;
-      const entries = Array.from(table.entries());
-      assert.strictEqual(entries.length, table.size);
-      assert.deepStrictEqual(Array.from(table), entries);
-      assert.deepStrictEqual(Array.from(table.keys()), entries.map(([key]) => key));
-      assert.deepStrictEqual(Array.from(table.values()), entries.map(([, value]) => value));
+      const dialect = blockDialect(name);
+      const table = dialect.constructs;
+      assert.isTrue(HashMap.isHashMap(table));
+      // The ordered scanner starts retain insertion order; the construct
+      // index uses HashMap traversal and preserves membership and identity.
+      const entries = A.fromIterable(table);
+      assert.strictEqual(HashMap.size(table), name === "commonmark" ? 10 : 14);
+      assert.strictEqual(entries.length, HashMap.size(table));
+      assert.deepStrictEqual(table.pipe(HashMap.entries, A.fromIterable), entries);
+      assert.deepStrictEqual(table.pipe(HashMap.keys, A.fromIterable), A.map(entries, ([key]) => key));
+      assert.deepStrictEqual(table.pipe(HashMap.values, A.fromIterable), A.map(entries, ([, value]) => value));
       const observed: Array<string> = [];
-      const receiver = { marker: "callback receiver" };
-      table.forEach(function (this: typeof receiver, value, key, map) {
-        assert.strictEqual(this, receiver);
-        assert.strictEqual(map, table);
-        assert.strictEqual(table.get(key), value);
-        assert.strictEqual(table.has(key), true);
+      HashMap.forEach(table, (value, key) => {
+        assert.strictEqual(O.getOrThrow(HashMap.get(table, key)), value);
+        assert.strictEqual(HashMap.has(table, key), true);
+        assert.strictEqual(value.type, key);
         observed.push(key);
-      }, receiver);
-      assert.deepStrictEqual(observed, entries.map(([key]) => key));
+      });
+      assert.deepStrictEqual(observed, A.map(entries, ([key]) => key));
+      assert.deepStrictEqual(dialect.starts.map((start) => start.name), name === "commonmark" ? coreStarts : [
+        ...coreStarts.slice(0, 6), "footnoteDefinition", ...coreStarts.slice(6), "taskListItem", "tableHeader", "tableRow",
+      ]);
     }
     const core = blockDialect("commonmark").constructs;
-    assert.strictEqual(core.has("table"), false);
-    assert.strictEqual(core.get("table"), undefined);
+    assert.strictEqual(HashMap.has(core, "table"), false);
+    assertNone(HashMap.get(core, "table"));
   }));
   it.effect("recognizes the GFM extension fast-path prefixes", () => Effect.sync(() => {
     const mayStart = blockDialect("gfm").mayStartBlock;

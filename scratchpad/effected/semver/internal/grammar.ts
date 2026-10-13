@@ -400,6 +400,10 @@ const parseSimple = (s: ParserState): ReadonlyArray<ComparatorParts> => {
 	// Primitive: optional operator + partial
 	const operator = parseOperator(s);
 	const partial = parsePartial(s);
+	if ((partial.major === null && (partial.minor !== null || partial.patch !== null)) ||
+		(partial.minor === null && partial.patch !== null)) {
+		return fail(s);
+	}
 	return desugarXRange(operator, partial);
 };
 

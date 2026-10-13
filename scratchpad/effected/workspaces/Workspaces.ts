@@ -1,3 +1,5 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 // The composite layers.
 //
 // The composites split on PLATFORM REQUIREMENTS, not on a feature flag:
@@ -22,17 +24,15 @@ import * as O from "effect/Option";
 import type { ChildProcessSpawner } from "effect/process";
 import { ChangeDetector } from "./ChangeDetector.ts";
 import { ConfigDependencyHooks } from "./ConfigDependencyHooks.ts";
-import type { LockfileReaderOptions } from "./LockfileReader.ts";
-import { LockfileReader } from "./LockfileReader.ts";
+import { LockfileReader, LockfileReaderOptions } from "./LockfileReader.ts";
 import type { DetectedPackageManager } from "./PackageManagerName.ts";
 import { PackageManagerDetector } from "./PackageManagerName.ts";
-import type { WorkspaceCatalogsOptions } from "./WorkspaceCatalogs.ts";
-import { WorkspaceCatalogs } from "./WorkspaceCatalogs.ts";
-import type { WorkspaceDiscoveryOptions } from "./WorkspaceDiscovery.ts";
-import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
+import { WorkspaceCatalogs, WorkspaceCatalogsOptions } from "./WorkspaceCatalogs.ts";
+import { WorkspaceDiscovery, WorkspaceDiscoveryOptions } from "./WorkspaceDiscovery.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
-import type { WorkspaceSnapshotsOptions } from "./WorkspaceSnapshots.ts";
-import { WorkspaceSnapshots } from "./WorkspaceSnapshots.ts";
+import { WorkspaceSnapshots, WorkspaceSnapshotsOptions } from "./WorkspaceSnapshots.ts";
+
+const $I = $ScratchpadId.create("effected/workspaces/Workspaces");
 
 /**
  * Options shared by the composite layers.
@@ -46,18 +46,30 @@ import { WorkspaceSnapshots } from "./WorkspaceSnapshots.ts";
  * composite. `cwd` and `stopAt` are re-declared here only to document them as
  * the one concern they are across the composite.
  *
+ * **Example** (Read composed workspace inputs)
+ *
+ * ```ts
+ * import { WorkspacesOptions } from "@beep/scratchpad/effected/workspaces/Workspaces";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(WorkspacesOptions)({ cwd: "/repo", stopAt: "/repo" })) // true
+ * ```
+ *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface WorkspacesOptions extends WorkspaceDiscoveryOptions, LockfileReaderOptions, WorkspaceCatalogsOptions {
+export const WorkspacesOptions = S.Struct({
+	...WorkspaceDiscoveryOptions.fields,
+	...LockfileReaderOptions.fields,
+	...WorkspaceCatalogsOptions.fields,
 	/**
 	 * The directory every root-consuming service resolves the workspace root
 	 * from — one explicit concern, applied uniformly.
 	 *
 	 * @defaultValue `process.cwd()`, read lazily on first use.
 	 */
-	readonly cwd?: string;
+	cwd: WorkspaceCatalogsOptions.fields.cwd.annotateKey($I.annote("cwd", { description: "One uniformly forwarded starting directory, defaulted lazily on use." })),
 	/**
 	 * A ceiling for the root ascent from `cwd`, forwarded to EVERY
 	 * root-resolving service the composite builds — {@link WorkspaceDiscovery},
@@ -75,8 +87,14 @@ export interface WorkspacesOptions extends WorkspaceDiscoveryOptions, LockfileRe
 	 *
 	 * @defaultValue no ceiling — the ascent runs to the filesystem root.
 	 */
-	readonly stopAt?: string | undefined;
-}
+	stopAt: WorkspaceCatalogsOptions.fields.stopAt.annotateKey($I.annote("stopAt", { description: "One inclusive ceiling uniformly forwarded to all root consumers." })),
+}).annotate($I.annote("WorkspacesOptions", { description: "Plain-object composite options composed from the owning service schemas." }));
+
+/** The composite options described by {@link WorkspacesOptions}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type WorkspacesOptions = typeof WorkspacesOptions.Type;
 
 /**
  * Options for the composites that additionally provide {@link WorkspaceSnapshots}
@@ -87,14 +105,32 @@ export interface WorkspacesOptions extends WorkspaceDiscoveryOptions, LockfileRe
  * {@link WorkspacesOptions} plus whatever {@link WorkspaceSnapshotsOptions}
  * adds, so `seedCatalogs` reaches `at(ref)` through the composite instead of
  * forcing a consumer to hand-compose the graph just to pass one option. The
- * two interfaces agree on `cwd`, which stays one explicit concern applied
+ * two schemas agree on `cwd`, which stays one explicit concern applied
  * uniformly.
+ *
+ * **Example** (Read composed snapshot inputs)
+ *
+ * ```ts
+ * import { WorkspacesGitOptions } from "@beep/scratchpad/effected/workspaces/Workspaces";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(WorkspacesGitOptions)({})) // true
+ * ```
  *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface WorkspacesGitOptions extends WorkspacesOptions, WorkspaceSnapshotsOptions {}
+export const WorkspacesGitOptions = S.Struct({
+	...WorkspacesOptions.fields,
+	...WorkspaceSnapshotsOptions.fields,
+}).annotate($I.annote("WorkspacesGitOptions", { description: "Composite root, discovery, lockfile and snapshot options, including fallback seed catalogs." }));
+
+/** The git composite options described by {@link WorkspacesGitOptions}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type WorkspacesGitOptions = typeof WorkspacesGitOptions.Type;
 
 /**
  * Every service the git-free composite layer provides.

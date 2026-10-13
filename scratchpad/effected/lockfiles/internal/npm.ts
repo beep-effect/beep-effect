@@ -116,7 +116,7 @@ const packageNameIndex = (key: string): number => {
 const resolveNpmEdges = (
 	start: string,
 	sections: ReadonlyArray<Readonly<Record<string, string>> | undefined>,
-	packages: Readonly<Record<string, unknown>>,
+	instanceIds: MutableHashSet.MutableHashSet<string>,
 ): Record<string, string> => {
 	const names = MutableHashSet.empty<string>();
 	for (const section of sections) {
@@ -137,7 +137,7 @@ const resolveNpmEdges = (
 	for (const name of names) {
 		for (const prefix of prefixes) {
 			const candidate = prefix === "" ? `${NODE_MODULES_PREFIX}${name}` : `${prefix}${NESTED_NODE_MODULES}${name}`;
-			if (R.has(packages, candidate)) {
+			if (MutableHashSet.has(instanceIds, candidate)) {
 				MutableHashMap.set(edges, name, candidate);
 				break;
 			}
@@ -195,6 +195,7 @@ export const parseNpm = Effect.fn("parseNpm")(function* (content: string): Effec
 
 const toFields = Effect.fn("toFields")(function* (raw: NpmLockfileRawType): Effect.fn.Return<LockfileFields, ParseFailure> {
 	const packages: Array<ResolvedPackage> = [];
+	const instanceIds = MutableHashSet.empty<string>();
 	let workspaceNames = HashSet.fromIterable<string>([]);
 	const workspaceEntries = MutableHashMap.empty<string, WorkspaceEntry>();
 	const importers: Array<LockfileImporter> = [];
@@ -215,9 +216,14 @@ const toFields = Effect.fn("toFields")(function* (raw: NpmLockfileRawType): Effe
 	for (const [key, entry] of R.toEntries(raw.packages)) {
 		const nameIndex = packageNameIndex(key);
 		if (nameIndex !== -1 && entry.link === true) {
-			const wsEntry = entry.resolved !== undefined ? raw.packages[entry.resolved] : undefined;
+			const wsEntry = O.getOrUndefined(O.flatMap(O.fromUndefinedOr(entry.resolved), (resolved) => R.get(raw.packages, resolved)));
 			const name = wsEntry?.name ?? entry.name ?? key.slice(nameIndex);
-			if (name !== "") workspaceNames = HashSet.add(workspaceNames, name);
+			if (name !== "") {
+				workspaceNames = HashSet.add(workspaceNames, name);
+				MutableHashSet.add(instanceIds, key);
+			}
+		} else if (nameIndex !== -1 && key.slice(nameIndex) !== "" && entry.version !== undefined) {
+			MutableHashSet.add(instanceIds, key);
 		}
 	}
 
@@ -234,7 +240,7 @@ const toFields = Effect.fn("toFields")(function* (raw: NpmLockfileRawType): Effe
 		if (entry.link === true) {
 			// Workspace link — actual package data lives at the resolved path entry.
 			const resolved = entry.resolved;
-			const wsEntry = resolved !== undefined ? raw.packages[resolved] : undefined;
+			const wsEntry = O.getOrUndefined(O.flatMap(O.fromUndefinedOr(resolved), (target) => R.get(raw.packages, target)));
 			const name = wsEntry?.name ?? entry.name ?? key.slice(nameIndex);
 			if (name === "") continue; // a nameless entry cannot be modeled; skip, never throw
 			packages.push(
@@ -252,7 +258,7 @@ const toFields = Effect.fn("toFields")(function* (raw: NpmLockfileRawType): Effe
 					resolved: resolveNpmEdges(
 						resolved !== undefined && resolved !== "" ? resolved : key,
 						entrySections(wsEntry),
-						raw.packages,
+						instanceIds,
 					),
 				}),
 			);
@@ -289,7 +295,7 @@ const toFields = Effect.fn("toFields")(function* (raw: NpmLockfileRawType): Effe
 						isWorkspace: false,
 						dependencies: entry.dependencies ?? {},
 						...peerDeclarations(entry.peerDependencies, entry.peerDependenciesMeta, undefined),
-						resolved: resolveNpmEdges(key, entrySections(entry), raw.packages),
+						resolved: resolveNpmEdges(key, entrySections(entry), instanceIds),
 					}),
 				);
 			}

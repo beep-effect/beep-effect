@@ -1,37 +1,89 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as S from "effect/Schema";
 import { WorkflowCommand } from "../github-commands/index.ts";
+
+const $I = $ScratchpadId.create("effected/cli/GithubAnnotation");
 
 /**
  * The severity of a GitHub annotation.
  *
+ * **Example** (Read the annotation severity vocabulary)
+ *
+ * ```ts
+ * import { AnnotationLevel } from "@beep/scratchpad/effected/cli/GithubAnnotation"
+ *
+ * console.log(AnnotationLevel.literals) // ["error", "warning", "notice"]
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AnnotationLevel = LiteralKit(["error", "warning", "notice"]).annotate(
+	$I.annote("AnnotationLevel", { description: "The severity of a GitHub annotation." }),
+);
+/**
+ * A severity accepted by GitHub Actions annotations.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export type AnnotationLevel = "error" | "warning" | "notice";
+export type AnnotationLevel = typeof AnnotationLevel.Type;
 
 /**
  * What an annotation says about where it points and what it is called.
  *
+ * **Example** (Validate annotation properties)
+ *
+ * ```ts
+ * import { GithubAnnotationProperties } from "@beep/scratchpad/effected/cli/GithubAnnotation"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(GithubAnnotationProperties)({ level: "notice", title: "Build" })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GithubAnnotationProperties = S.Struct({
+	/** `error`, `warning` or `notice`. */
+	level: AnnotationLevel.annotate(
+		$I.annote("GithubAnnotationProperties.level", { description: "The level field of a GitHub annotation." }),
+	),
+	/** The repository-relative path of the annotated file. */
+	file: S.optionalKey(S.String).annotate(
+		$I.annote("GithubAnnotationProperties.file", { description: "The file field of a GitHub annotation." }),
+	),
+	/** The first annotated line, 1-based. */
+	line: S.optionalKey(S.Finite).annotate(
+		$I.annote("GithubAnnotationProperties.line", { description: "The line field of a GitHub annotation." }),
+	),
+	/** The first annotated column, 1-based. */
+	col: S.optionalKey(S.Finite).annotate(
+		$I.annote("GithubAnnotationProperties.col", { description: "The col field of a GitHub annotation." }),
+	),
+	/** The last annotated line. */
+	endLine: S.optionalKey(S.Finite).annotate(
+		$I.annote("GithubAnnotationProperties.endLine", { description: "The endLine field of a GitHub annotation." }),
+	),
+	/** The last annotated column. */
+	endColumn: S.optionalKey(S.Finite).annotate(
+		$I.annote("GithubAnnotationProperties.endColumn", { description: "The endColumn field of a GitHub annotation." }),
+	),
+	/** A short title shown above the annotation. */
+	title: S.optionalKey(S.String).annotate(
+		$I.annote("GithubAnnotationProperties.title", { description: "The title field of a GitHub annotation." }),
+	),
+}).annotate($I.annote("GithubAnnotationProperties", { description: "A GitHub annotation level and optional source position and title." }));
+/**
+ * The plain metadata of a GitHub Actions annotation.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export interface GithubAnnotationProperties {
-	/** `error`, `warning` or `notice`. */
-	readonly level: AnnotationLevel;
-	/** The repository-relative path of the annotated file. */
-	readonly file?: string;
-	/** The first annotated line, 1-based. */
-	readonly line?: number;
-	/** The first annotated column, 1-based. */
-	readonly col?: number;
-	/** The last annotated line. */
-	readonly endLine?: number;
-	/** The last annotated column. */
-	readonly endColumn?: number;
-	/** A short title shown above the annotation. */
-	readonly title?: string;
-}
+export type GithubAnnotationProperties = typeof GithubAnnotationProperties.Type;
 
 /**
  * GitHub Actions annotations, as workflow commands.

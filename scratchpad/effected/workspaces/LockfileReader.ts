@@ -15,6 +15,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
@@ -318,9 +319,7 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
 			for (const [relativePath, name] of resolved) {
 				if (O.isSome(name)) MutableHashMap.set(names, relativePath, name.value);
 			}
-			// String keys live in the documented native backing map, which keeps
-			// the lockfile's ReadonlyMap boundary unchanged.
-			return lockfile.withImporterNames(names.backing);
+			return lockfile.withImporterNames(HashMap.fromIterable(names));
 		});
 
 		/** A workspace member's name, or none — an unreadable manifest is a miss, not a failure. */

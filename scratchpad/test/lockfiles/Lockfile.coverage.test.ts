@@ -1,6 +1,8 @@
 import { assert, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import { Lockfile, LockfileFramingError, LockfileParseError, materializeFailure } from "../../effected/lockfiles/Lockfile.ts";
 import { ResolvedPackage } from "../../effected/lockfiles/ResolvedPackage.ts";
 import { LockfileImporter } from "../../effected/lockfiles/LockfileImporter.ts";
@@ -35,15 +37,15 @@ it.effect("name rewrites preserve metadata and handle absent, empty, identical a
   const importer = LockfileImporter.make({ path: "core", dependencies: [] });
   const extension = PnpmExtension.make({ overrides: { react: "18" } });
   const model = Lockfile.make({ format: "pnpm", lockfileVersion: "9", packages: [workspace, noPath, external], workspaceDependencies: [edge], importers: [importer], extension });
-  for (const names of [new Map<string, string>(), new Map([["core", ""], ["util", ""]]), new Map([["core", "core"], ["util", "util"]])]) {
+  for (const names of [HashMap.empty<string, string>(), HashMap.fromIterable([["core", ""], ["util", ""]]), HashMap.fromIterable([["core", "core"], ["util", "util"]])]) {
     const same = model.withImporterNames(names);
     assert.strictEqual(same.packages[0], workspace);
     assert.strictEqual(same.workspaceDependencies[0], edge);
   }
-  for (const names of [new Map([["core", "@app/core"]]), new Map([["util", "@app/util"]]), new Map([["core", "@app/core"], ["util", "@app/util"]])]) {
+  for (const names of [HashMap.fromIterable([["core", "@app/core"]]), HashMap.fromIterable([["util", "@app/util"]]), HashMap.fromIterable([["core", "@app/core"], ["util", "@app/util"]])]) {
     const rewritten = model.withImporterNames(names);
-    assert.deepStrictEqual(rewritten.workspaceDependencies, [WorkspaceDependency.make({ ...edge, from: names.get("core") ?? "core", to: names.get("util") ?? "util" })]);
-    assert.deepStrictEqual(rewritten.packages[0], ResolvedPackage.make({ ...workspace, name: names.get("core") ?? "core" }));
+    assert.deepStrictEqual(rewritten.workspaceDependencies, [WorkspaceDependency.make({ ...edge, from: HashMap.get(names, "core").pipe(O.getOrElse(() => "core")), to: HashMap.get(names, "util").pipe(O.getOrElse(() => "util")) })]);
+    assert.deepStrictEqual(rewritten.packages[0], ResolvedPackage.make({ ...workspace, name: HashMap.get(names, "core").pipe(O.getOrElse(() => "core")) }));
     assert.strictEqual(rewritten.packages[1], noPath);
     assert.strictEqual(rewritten.packages[2], external);
     assert.deepStrictEqual(rewritten.importers, model.importers);

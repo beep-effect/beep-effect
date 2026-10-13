@@ -59,7 +59,7 @@ const detectPlatform = (): XdgPlatform => {
 	const platform = globalThis.process?.platform;
 	// A platform Node does not report — or no `process` at all, as in a browser
 	// or a worker — behaves as Linux: XDG is the convention, no native override.
-	return S.is(XdgPlatform)(platform) ? platform : "linux";
+	return O.getOrElse(S.decodeOption(XdgPlatform)(platform), () => "linux");
 };
 
 /**

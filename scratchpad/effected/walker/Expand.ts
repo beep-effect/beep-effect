@@ -12,17 +12,32 @@
 // only.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { GlobPattern, GlobPatternError, GlobPatternOptions } from "../glob/index.ts";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { dual, identity } from "effect/Function";
 import type { DescendOptions } from "./Descend.ts";
-import { DescendError, descend } from "./Descend.ts";
+import { DescendError, OnUnreadableArray, descend } from "./Descend.ts";
+
+import { DepthCap } from "./Walker.ts";
 
 const $I = $ScratchpadId.create("effected/walker/Expand");
+
+const ExpansionStage = LiteralKit(["compile", "descend"]).annotate(
+	$I.annote("ExpansionStage", { description: "The phase in which glob expansion failed." }),
+);
+type ExpansionStage = typeof ExpansionStage.Type;
+const expansionStage = Match.type<GlobPatternError | DescendError>().pipe(
+	Match.tagsExhaustive({
+		GlobPatternError: () => ExpansionStage.Enum.compile,
+		DescendError: () => ExpansionStage.Enum.descend,
+	}),
+);
 
 const JsonString = S.fromJsonString(S.String);
 const encodeJsonString = S.encodeResult(JsonString);
@@ -47,9 +62,9 @@ const encodeJsonString = S.encodeResult(JsonString);
 */
 export const CompileAndExpandOptions = S.Struct({
 	cwd: S.String.annotateKey({ description: "Absolute directory the pattern is resolved against." }),
-	maxDepth: S.optionalKey(S.Finite).annotateKey({ description: "Hard cap on directory depth below the literal prefix." }),
+	maxDepth: S.optionalKey(DepthCap).annotateKey({ description: "Hard cap on directory depth below the literal prefix." }),
 	prune: S.Array(S.String).pipe(S.optionalKey).annotateKey({ description: "Directory names never descended into." }),
-	onUnreadable: S.optionalKey(S.Literals(["fail", "skip"])).annotateKey({ description: "Whether unreadable directories fail or are skipped; record mode is excluded." }),
+	onUnreadable: S.optionalKey(OnUnreadableArray).annotateKey({ description: "Whether unreadable directories fail or are skipped; record mode is excluded." }),
 	followSymlinks: S.optionalKey(S.Boolean).annotateKey({ description: "Whether symlinked directories are followed with per-branch cycle safety." }),
 /**
 * The options the pattern compiles under — **required, deliberately**.
@@ -132,8 +147,8 @@ export class GlobExpansionError extends S.TaggedError<GlobExpansionError>($I`Glo
 	* @category getters
 	* @since 0.0.0
 	*/
-	get stage(): "compile" | "descend" {
-		return this.cause._tag === "GlobPatternError" ? "compile" : "descend";
+	get stage(): ExpansionStage {
+		return expansionStage(this.cause);
 	}
 
 	/**
@@ -215,11 +230,8 @@ export const compileAndExpand: {
 } = dual(2, Effect.fn("Walker.compileAndExpand")(function* (pattern: string, options: CompileAndExpandOptions) {
 	// compileResult is the pure primitive; there is no reason to cross an Effect
 	// boundary twice just to reach it.
-	const compiled = GlobPattern.compileResult(pattern, options.glob);
-	if (Result.isFailure(compiled)) {
-		return yield* GlobExpansionError.make({ pattern, cause: compiled.failure });
-	}
-	return yield* descend(compiled.success, options).pipe(
+	return yield* Effect.fromResult(GlobPattern.compileResult(pattern, options.glob)).pipe(
+		Effect.flatMap((compiled) => descend(compiled, options)),
 		Effect.mapError((cause) => GlobExpansionError.make({ pattern, cause })),
 	);
 }));

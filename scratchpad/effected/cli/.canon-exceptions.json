@@ -1,0 +1,530 @@
+[
+  {
+    "id": "EV002:scratchpad/test/cli/CliHelpRouting.test.ts:175:provide@5#1",
+    "reason": "CliOutput.layer is a pure Layer.succeed formatter stub; its inner override is the documented routing-bypass behavior under test, which an outer it.layer would not exercise."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/CliInteractive.test.ts:69:provide@10#1",
+    "reason": "CliInteractive.layerTest(true) is a pure Layer.succeed stub, permitted by D14."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/CliInteractive.test.ts:75:provide@10#1",
+    "reason": "CliInteractive.layerTest(true) is a pure Layer.succeed stub, permitted by D14."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/CliInteractive.test.ts:82:provide@10#1",
+    "reason": "CliInteractive.layerTest(true) is a pure Layer.succeed stub, permitted by D14."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/CliInteractive.test.ts:91:provide@10#1",
+    "reason": "CliInteractive.layerTest(true) is a pure Layer.succeed stub, permitted by D14."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/CliInteractive.test.ts:97:provide@10#1",
+    "reason": "CliInteractive.layerTest(true) is a pure Layer.succeed stub, permitted by D14."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/CliInteractive.test.ts:104:provide@10#1",
+    "reason": "CliInteractive.layerTest(true) is a pure Layer.succeed stub, permitted by D14."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/CliInteractive.test.ts:113:provide@10#1",
+    "reason": "CliInteractive.layerTest(true) is a pure Layer.succeed stub, permitted by D14."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/CliLinks.test.ts:272:provide@37#1",
+    "reason": "CliLinks.layerTest is a pure Layer.succeed stub; this test explicitly verifies operation without filesystem or Path services."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/CliLinks.test.ts:282:provide@35#1",
+    "reason": "CliLinks.layerTest is a pure Layer.succeed stub; each loop iteration intentionally selects a different fixed mode."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/CliLinks.test.ts:285:provide@34#1",
+    "reason": "CliLinks.layerTest is a pure Layer.succeed stub, permitted by D14."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/CliLinks.test.ts:372:provide@35#1",
+    "reason": "CliLinks.layerTest is a pure Layer.succeed stub; each loop iteration intentionally selects a different fixed mode."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/CliLog.status.test.ts:53:provide@11#1",
+    "reason": "CliTheme.layerTest is a pure Layer.succeed stub, permitted by D14."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/CliMain.test.ts:89:scoped@12#1",
+    "reason": "The program-local scope must finalize before main returns and before the finalized assertion; the enclosing test scope closes after those assertions."
+  },
+  {
+    "id": "EV010:scratchpad/test/cli/CliStdin.test.ts:14:@effect/platform-node@0#1",
+    "reason": "Real Node processes, piped stdin, and terminal behavior are the regression subject; a memory filesystem cannot replace this platform fixture."
+  },
+  {
+    "id": "EV010:scratchpad/test/cli/CliTest.test.ts:3:@effect/platform-node/NodeServices@0#1",
+    "reason": "The subject creates native sandbox paths and runs real child processes against them; Node filesystem and process services are required."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUi.live.close.test.ts:184:scoped@103#1",
+    "reason": "The child scope must close before joining the fiber and checking that another view can acquire the released mount permit."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUi.live.close.test.ts:267:scoped@14#1",
+    "reason": "Each loop iteration needs its own scope to release the hosted view, subscription, and mount permit before the next iteration."
+  },
+  {
+    "id": "EV010:scratchpad/test/cli/ui/CliUi.live.exit.test.ts:5:@effect/platform-node@0#1",
+    "reason": "The subject is real child-process exit and timer cleanup; a filesystem double cannot verify that platform lifecycle."
+  },
+  {
+    "id": "EV015:scratchpad/test/cli/ui/CliUi.live.lazy.test.ts:166:TestClock.adjust@10#1",
+    "reason": "The layer suite is sequential; only its final test advances the shared clock, with no concurrent clock users or later tests affected."
+  },
+  {
+    "id": "EV011:scratchpad/test/cli/ui/CliUi.live.lazy.test.ts:2:vitest-import@0#1",
+    "reason": "Direct vi import is required by Vitest's mock hoister. Importing vi through @effect/vitest caused the suite to fail before collecting tests. Current detector ID: EV011:scratchpad/test/cli/ui/CliUi.live.lazy.test.ts:2:vitest-import@0#1."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUi.live.reach.test.ts:56:scoped@4#1",
+    "reason": "Retained the command-handler scope: it bounds the live handle to command execution, closing it before Command.runWith returns rather than at test teardown. Current detector ID: EV004:scratchpad/test/cli/ui/CliUi.live.reach.test.ts:56:scoped@4#1."
+  },
+  {
+    "id": "EV011:scratchpad/test/cli/ui/CliUi.live.reach.test.ts:2:vitest-import@0#1",
+    "reason": "Direct vi import is required by Vitest's mock hoister. Importing vi through @effect/vitest caused the suite to fail before collecting tests. Current detector ID: EV011:scratchpad/test/cli/ui/CliUi.live.reach.test.ts:2:vitest-import@0#1."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUi.live.test.ts:162:it.live@1#1",
+    "reason": "Live clock is needed to poll Ink rendering and observe that writes remain stopped after scope closure; added a reason comment."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUi.live.test.ts:168:scoped@10#1",
+    "reason": "Inner scope must close before assertions about cursor, colour, drain shutdown, and permit restoration."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUi.live.test.ts:246:it.live@2#1",
+    "reason": "Both mode cases use timed polling of Ink's real Node/React scheduler; added a reason comment."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUi.live.test.ts:266:it.live@1#1",
+    "reason": "Live clock is needed to poll Ink rendering and observe that writes remain stopped after scope closure; added a reason comment."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUi.live.test.ts:271:scoped@25#1",
+    "reason": "Inner scope must close before checking that queued events are neither folded nor drawn."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUi.live.test.ts:303:scoped@11#1",
+    "reason": "Contender scope closes while the mount permit is held."
+  },
+  {
+    "id": "EV008:scratchpad/test/cli/ui/CliUi.live.test.ts:308:sleep@13#1",
+    "reason": "The enclosing it.layer explicitly sets excludeTestServices: true; this sleep uses the live clock and cannot stall on TestClock."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUi.live.test.ts:338:it.live@1#1",
+    "reason": "Live clock is needed to poll Ink rendering and observe that writes remain stopped after scope closure; added a reason comment."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUi.live.test.ts:366:it.live@1#1",
+    "reason": "Live clock is needed to poll Ink rendering and observe that writes remain stopped after scope closure; added a reason comment."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUi.live.test.ts:494:it.live@1#1",
+    "reason": "Live clock is needed to poll Ink rendering and observe that writes remain stopped after scope closure; added a reason comment."
+  },
+  {
+    "id": "EV013:scratchpad/test/cli/ui/CliUi.live.test.ts:502:retry-loop@4#1",
+    "reason": "The loop exercises 80 interruption schedules and stops at the first leak; it never retries a failure to obtain a pass."
+  },
+  {
+    "id": "EV013:scratchpad/test/cli/ui/CliUi.live.test.ts:514:retry-loop@5#1",
+    "reason": "The loop varies scheduler yields before closing the scope, covering distinct interruption points."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUi.map.test.ts:119:scoped@24#1",
+    "reason": "Retained shorter scope to unmount the first Ink screen before rendering the second."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUi.map.test.ts:126:scoped@25#1",
+    "reason": "Retained shorter scope so the second render closes before the combined result assertion."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUiTest.chunk.test.ts:42:scoped@1#1",
+    "reason": "Retained helper scope so each counted render unmounts before the next render, preserving separate chunk-versus-press comparisons."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUiTest.crash.test.ts:76:it.live@2#1",
+    "reason": "Live clock is required for the existing 2-second deadline around Ink rendering and real-timer settling; added a reason comment."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUiTest.crash.test.ts:151:it.live@1#1",
+    "reason": "Live clock preserves the existing 2-second deadline while Ink processes the key-handler crash and settles; added a reason comment."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUiTest.crash.test.ts:164:it.live@1#1",
+    "reason": "Live clock preserves the existing 2-second deadline while Ink processes the key-handler crash and settles; added a reason comment."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUiTest.crash.test.ts:191:it.live@1#1",
+    "reason": "Live clock preserves the existing 2-second deadline while Ink processes the key-handler crash and settles; added a reason comment."
+  },
+  {
+    "id": "EV001:scratchpad/test/cli/ui/CliUiTest.crash.test.ts:339:runFork@16#1",
+    "reason": "React useEffect is a runtime boundary: it starts the 30 ms Effect timer and interrupts it on component unmount."
+  },
+  {
+    "id": "EV001:scratchpad/test/cli/ui/CliUiTest.crash.test.ts:348:runPromise@1#1",
+    "reason": "The Screen thunk requires an element or Promise; this documented boundary converts the 150 ms Effect delay into its required Promise."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUiTest.crash.test.ts:352:it.live@1#1",
+    "reason": "Live clock preserves the existing 2-second deadline while Ink processes the key-handler crash and settles; added a reason comment."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUiTest.live.test.ts:176:scoped@23#1",
+    "reason": "Inner scope must close the view before assertions verify committed teardown output and stopped ticks."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUiTest.live.test.ts:204:scoped@12#1",
+    "reason": "Inner scope closes the view while the stdout spy remains installed, before acquireUseRelease restores it."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUiTest.live.test.ts:251:it.live@1#1",
+    "reason": "Test explicitly verifies advance dies without TestClock under the real clock; retained it.live and added a one-line reason."
+  },
+  {
+    "id": "EV011:scratchpad/test/cli/ui/CliUiTest.live.test.ts:7:vitest-import@0#1",
+    "reason": "vi.hoisted requires vi imported directly from vitest; importing through @effect/vitest failed suite collection with \u201cproblems in resolving the mocks API\u201d."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUiTest.session.transcript.test.ts:44:scoped@1#1",
+    "reason": "syncing owns a handler-local subscription scope that closes when the handler completes, before Fiber.join returns; preserve that lifetime."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUiTest.session.transcript.test.ts:115:scoped@1#1",
+    "reason": "syncing owns a handler-local subscription scope that closes when the handler completes, before Fiber.join returns; preserve that lifetime."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUiTest.test.ts:65:scoped@25#1",
+    "reason": "The narrow render must unmount before the wide render can mount on the shared terminal."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUiTest.test.ts:74:scoped@23#1",
+    "reason": "The wide comparison render has a deliberate bounded lifetime matching the narrow render."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUiTest.test.ts:92:scoped@23#1",
+    "reason": "The wide comparison render has a deliberate bounded lifetime matching the narrow render."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUiTest.test.ts:100:scoped@28#1",
+    "reason": "The truecolor comparison render retains its deliberate bounded lifetime."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUiTest.test.ts:113:scoped@26#1",
+    "reason": "The escape-cancelled screen must release its terminal before the interrupt comparison mounts."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUiTest.test.ts:122:scoped@30#1",
+    "reason": "The interrupt comparison retains its separate bounded screen lifetime."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUiTest.test.ts:223:it.live@1#1",
+    "reason": "The test measures real elapsed time while `setImmediate` continuously redraws the screen; the live clock also drives the existing two-second timeout. Added the required one-line reason comment."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUiTest.test.ts:326:scoped@86#1",
+    "reason": "Scope closure is the behavior under test: the subsequent assertion must observe that the component has unmounted."
+  },
+  {
+    "id": "EV003:scratchpad/test/cli/ui/CliUiTest.throttle.test.ts:33:sessions@28#1",
+    "reason": "Newly detected fixture acquisition runs exclusively through `Layer.effect` inside `it.layer`. `Layer.build` acquires both session contexts in the runner-owned layer scope; the fixture supplies already-acquired contexts to the unchanged test."
+  },
+  {
+    "id": "EV011:scratchpad/test/cli/ui/CliUiTest.throttle.test.ts:8:vitest-import@0#1",
+    "reason": "Vitest\u2019s hoisted mock transformation requires `vi` imported directly from `vitest`. Importing it through `@effect/vitest` failed suite initialization with \u201cThere are some problems in resolving the mocks API.\u201d Restored the original direct import."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUiTest.view.test.ts:71:scoped@10#1",
+    "reason": "The first view must close before the second view mounts; early scope closure is the test\u2019s subject."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/CliUiTest.view.test.ts:72:scoped@25#1",
+    "reason": "The second view retains its deliberate bounded lifetime in the sequential unmount-and-remount test."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Confirm.test.ts:192:scoped@24#1",
+    "reason": "Closes the ASCII Ink render before mounting the highlighted render, preserving separate render lifetimes."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Confirm.test.ts:199:scoped@30#1",
+    "reason": "Closes the highlighted Ink render before mounting the narrow render, preserving separate render lifetimes."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Confirm.test.ts:207:scoped@25#1",
+    "reason": "Keeps the narrow render in its own acquisition/release scope, matching the other independent render cases."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Confirm.test.ts:255:scoped@22#1",
+    "reason": "Unmounts the off Toggle render before mounting the on Toggle render."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Confirm.test.ts:262:scoped@21#1",
+    "reason": "Keeps the on Toggle render in its own acquisition/release scope, matching the independent off render."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/Holder.test.ts:40:it.live@1#1",
+    "reason": "Schedule.spaced polling needs the live clock while waiting for an external React/Ink commit; an unadvanced TestClock would suspend the poll."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/Holder.test.ts:50:it.live@1#1",
+    "reason": "Schedule.spaced polling needs the live clock while waiting for an external React/Ink commit; an unadvanced TestClock would suspend the poll."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/Holder.test.ts:61:it.live@1#1",
+    "reason": "Schedule.spaced polling needs the live clock while waiting for an external React/Ink commit; an unadvanced TestClock would suspend the poll."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/MultiSelect.test.ts:180:scoped@24#1",
+    "reason": "Retained the shorter scope to unmount the first screen before rendering the ASCII screen; process-wide mount serialization requires this release."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/MultiSelect.test.ts:191:scoped@24#1",
+    "reason": "Retained the shorter scope to unmount the first screen before rendering the ASCII screen; process-wide mount serialization requires this release."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Select.test.ts:148:scoped@23#1",
+    "reason": "Retained the shorter scope to unmount the wide screen before rendering the narrow screen; process-wide mount serialization requires this release."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Select.test.ts:157:scoped@25#1",
+    "reason": "Retained the paired narrow render\u2019s shorter scope, preserving independent mount and cleanup lifetimes."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Select.test.ts:214:scoped@25#1",
+    "reason": "Retained the paired narrow render\u2019s shorter scope, preserving independent mount and cleanup lifetimes."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Select.test.ts:229:scoped@30#1",
+    "reason": "Retained the paired narrow render\u2019s shorter scope, preserving independent mount and cleanup lifetimes."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Tabs.test.ts:190:scoped@27#1",
+    "reason": "The Unicode render must unmount before the ASCII render opens; CliUi permits only one mounted screen process-wide."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Tabs.test.ts:201:scoped@25#1",
+    "reason": "Preserves the separate ASCII render lifetime following the Unicode render."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Tabs.test.ts:245:scoped@26#1",
+    "reason": "The focused render must unmount before the unfocused render opens."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Tabs.test.ts:256:scoped@28#1",
+    "reason": "Preserves the separate unfocused render lifetime following the focused render."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Tabs.test.ts:283:scoped@10#1",
+    "reason": "The multi-tab overflow render must unmount before the lone-tab render opens."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Tabs.test.ts:299:scoped@23#1",
+    "reason": "Preserves the separate lone-tab render lifetime following the multi-tab render."
+  },
+  {
+    "id": "EV008:scratchpad/test/cli/ui/Tabs.test.ts:325:spaced@17#1",
+    "reason": "Newly surfaced judgment finding: oneChunk polls native Ink readiness using the live clock supplied by the enclosing layer's excludeTestServices: true."
+  },
+  {
+    "id": "EV008:scratchpad/test/cli/ui/Tabs.test.ts:384:spaced@20#1",
+    "reason": "Newly surfaced judgment finding: listener readiness polls native Ink startup using the live clock supplied by the enclosing layer's excludeTestServices: true."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/TextInput.mask.test.ts:91:scoped@25#1",
+    "reason": "The custom-mask render must unmount before the ASCII-mask render opens."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/TextInput.mask.test.ts:98:scoped@24#1",
+    "reason": "Preserves the separate ASCII-mask render lifetime following the custom-mask render."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/Viewport.test.ts:184:it.live@1#1",
+    "reason": "The test observes the real console.error and uses a live timeout while React crashes; retained it.live with a one-line reason comment."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Viewport.test.ts:254:scoped@27#1",
+    "reason": "The Unicode render must unmount before the ASCII render; CliUi permits only one mounted screen process-wide."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Viewport.test.ts:264:scoped@25#1",
+    "reason": "The ASCII render needs its separate mount lifetime after the Unicode render has released."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/Viewport.test.ts:285:scoped@6#1",
+    "reason": "Each helper invocation must unmount before the next terminal-width or glyph render can mount."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/Viewport.test.ts:361:it.live@1#1",
+    "reason": "The test observes the real console.error and uses a live timeout while React crashes; retained it.live with a one-line reason comment."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/Viewport.test.ts:370:it.live@1#1",
+    "reason": "The test observes the real console.error and uses a live timeout while React crashes; retained it.live with a one-line reason comment."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/beforeExit.test.ts:21:scoped@11#1",
+    "reason": "Each of the 12 screens must unmount before the next mounts and before the listener-count assertion."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/beforeExit.test.ts:30:scoped@10#1",
+    "reason": "The live-view scope must release before asserting that beforeExit listeners returned to their initial count."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/inkBridge.test.ts:68:scoped@11#1",
+    "reason": "The inner colour hold must release before asserting restoration to level 3 and restored SGR rendering."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/inkBridge.test.ts:86:scoped@10#1",
+    "reason": "The truecolor hold must release before asserting restoration to level 0."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/inkBridge.test.ts:105:scoped@11#1",
+    "reason": "The inner colour hold must release before asserting restoration to level 3 and restored SGR rendering."
+  },
+  {
+    "id": "EV010:scratchpad/test/cli/ui/inkChalk.test.ts:1:@effect/platform-node@0#1",
+    "reason": "These tests verify actual installed Ink/CommonJS resolution, filesystem realpaths, and the shared imported Chalk instance; a memory filesystem would replace the platform behavior being tested."
+  },
+  {
+    "id": "EV011:scratchpad/test/cli/ui/inkLoad.test.ts:4:vitest-import@0#1",
+    "reason": "Vitest requires vi imported directly from vitest for mock hoisting; importing it through @effect/vitest produced a mock-API resolution failure."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/ui/inkMissing.test.ts:65:provide@11#1",
+    "reason": "CliTheme.layerTest is a pure Layer.succeed stub permitted by D14, with no scoped or effectful per-test layer construction."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/ui/inkMissing.test.ts:65:provide@49#1",
+    "reason": "CliInteractive.layerTest(true) is a pure Layer.succeed stub permitted by D14, with no scoped or effectful per-test layer construction."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/ui/inkMissing.test.ts:71:provide@3#1",
+    "reason": "CliTheme.layerTest constructs a pure Layer.succeed stub, allowed by D14."
+  },
+  {
+    "id": "EV002:scratchpad/test/cli/ui/inkMissing.test.ts:72:provide@3#1",
+    "reason": "CliTheme.layerTest constructs a pure Layer.succeed stub, allowed by D14."
+  },
+  {
+    "id": "EV011:scratchpad/test/cli/ui/inkMissing.test.ts:9:vitest-import@0#1",
+    "reason": "Vitest requires the direct vi import to hoist the missing-package mock; the @effect/vitest re-export fails at suite loading."
+  },
+  {
+    "id": "EV010:scratchpad/test/cli/ui/inkMissing.test.ts:2:@effect/platform-node@0#1",
+    "reason": "The fallback's Prompt/Effect environment requires ChildProcessSpawner, FileSystem, Path, Stdio and Terminal; a filesystem-only memory double is insufficient. The platform layer is now runner-owned through it.layer."
+  },
+  {
+    "id": "EV004:scratchpad/test/cli/ui/keys.test.ts:86:scoped@11#1",
+    "reason": "The shorter scope closes each Esc/Ctrl-C render before the next loop iteration, preserving input-listener and terminal-resource isolation."
+  },
+  {
+    "id": "EV011:scratchpad/test/cli/ui/perfDrain.test.ts:6:vitest-import@0#1",
+    "reason": "vi.hoisted must use Vitest's direct import to install console.timeStamp before React loads; the @effect/vitest re-export fails at suite loading."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/zeroSize.test.ts:42:it.live@1#1",
+    "reason": "The production Ink renderer runs asynchronously outside TestClock; Schedule.spaced polling needs the live clock to observe its frame."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/zeroSize.test.ts:53:it.live@1#1",
+    "reason": "The production Ink renderer runs asynchronously outside TestClock; Schedule.spaced polling needs the live clock to observe its frame."
+  },
+  {
+    "id": "EV010:scratchpad/test/cli/ui/tsdocLinks.test.ts:2:node:fs@0#1",
+    "reason": "The test scans the actual CLI source tree and its current exports/TSDoc links; replacing it with seeded memory files would stop detecting source documentation regressions."
+  },
+  {
+    "id": "EV008:scratchpad/test/cli/ui/CliUi.run.test.ts:73:spaced@15#1",
+    "reason": "Polling observes Ink's native asynchronous rendering; explicitly provides the live Clock and retains the original 5 ms interval and two-second failure deadline."
+  },
+  {
+    "id": "EV008:scratchpad/test/cli/ui/CliUi.run.test.ts:83:sleep@2#1",
+    "reason": "React fixture callbacks require cancellable real delays alongside Ink's native rendering; explicitly provides the live Clock and preserves the original 80/30/40 ms delays and unmount cancellation."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUi.run.test.ts:166:it.live@1#1",
+    "reason": "Measures Ink's native 20 ms ESC flush against elapsed real time; retained it.live with a one-line reason comment. Current scanner ID: EV009:scratchpad/test/cli/ui/CliUi.run.test.ts:166:it.live@1#1."
+  },
+  {
+    "id": "EV011:scratchpad/test/cli/ui/CliUi.run.test.ts:12:vitest-import@0#1",
+    "reason": "Vitest requires vi to be imported directly from \"vitest\" for this hoisted loader mock; importing vi through @effect/vitest caused suite initialization to fail. Current scanner ID: EV011:scratchpad/test/cli/ui/CliUi.run.test.ts:12:vitest-import@0#1."
+  },
+  {
+    "id": "EV011:scratchpad/test/cli/ui/CliUi.fallback.test.ts:3:vitest-import@0#1",
+    "reason": "Retained the direct `vi` import from `vitest`, with a reason comment. Importing `vi` through `@effect/vitest` causes Vitest to reject the hoisted mock before collecting tests: \u201cThere are some problems in resolving the mocks API.\u201d The remaining detector identity is EV011:scratchpad/test/cli/ui/CliUi.fallback.test.ts:3:vitest-import@0#1."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUi.live.modes.test.ts:118:it.live@1#1",
+    "reason": "Real-time until polling must observe Ink/React commits and render-failure warnings before subsequent events."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUi.live.modes.test.ts:194:it.live@1#1",
+    "reason": "Real-time until polling must observe Ink/React commits and render-failure warnings before subsequent events."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUi.live.modes.test.ts:219:it.live@1#1",
+    "reason": "Real-time until polling must observe Ink/React commits and render-failure warnings before subsequent events."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUi.live.modes.test.ts:280:it.live@1#1",
+    "reason": "Real-time until polling must observe Ink/React commits and render-failure warnings before subsequent events."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUi.live.modes.test.ts:309:it.live@1#1",
+    "reason": "Real-time until polling must observe Ink/React commits and render-failure warnings before subsequent events."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUi.live.modes.test.ts:433:it.live@1#1",
+    "reason": "Real-time until polling must observe Ink/React commits and render-failure warnings before subsequent events."
+  },
+  {
+    "id": "EV009:scratchpad/test/cli/ui/CliUi.live.modes.test.ts:482:it.live@1#1",
+    "reason": "Real-time until polling must observe Ink/React commits and render-failure warnings before subsequent events."
+  },
+  {
+    "id": "EV011:scratchpad/test/cli/ui/CliUi.live.modes.test.ts:15:vitest-import@0#1",
+    "reason": "Vitest rejects vi.hoisted through the @effect/vitest re-export with \u201cproblems in resolving the mocks API\u201d; direct vi import restores all 24 passing tests."
+  },
+  {
+    "id": "EV011:scratchpad/test/cli/ui/wizard.test.ts:17:vitest-import@0#1",
+    "reason": "Retained the direct `vi` import from `vitest`. Importing it through `@effect/vitest` caused Vitest\u2019s hoisted mock transform to fail with \u201cThere are some problems in resolving the mocks API.\u201d The mock counts real Ink-loader calls while preserving the loader\u2019s behavior; restoring the original import restored all five wizard tests."
+  },
+  {
+    "id": "EV010:scratchpad/test/cli/ui/wizard.test.ts:4:@effect/platform-node@0#1",
+    "reason": "Retained `NodeServices.layer`: these tests exercise `CliRuntime.main` and its production platform wiring, including terminal interactivity decisions and session overrides. A filesystem-only memory double would not preserve that subject."
+  },
+  {
+    "id": "EV012:scratchpad/test/cli/ui/bridge-error-metadata.test.ts:18:vi.mock@0#1",
+    "reason": "The subject is metadata on private, unexported error schemas. No service layer exposes those definitions. This partial observer delegates to the actual Schema.TaggedError constructor and returns its unchanged class; assertions inspect the actual schema and message annotations rather than substitute behavior."
+  },
+  {
+    "id": "EV011:scratchpad/test/cli/ui/bridge-error-metadata.test.ts:5:vitest-import@0#1",
+    "reason": "Vitest requires the direct vi import for vi.hoisted and the hoisted Schema observer; the @effect/vitest re-export cannot supply Vitest's hoisted mock API."
+  },
+  {
+    "id": "EV010:scratchpad/test/cli/erasableSyntax.test.ts:4:node:fs@0#1",
+    "reason": "Retained real filesystem reads: the test verifies that every actual CLI source file supports Node\u2019s strip-only TypeScript mode. A seeded memory tree would change what it verifies."
+  },
+  {
+    "id": "EV010:scratchpad/test/cli/entrypoints.test.ts:2:node:fs@0#1",
+    "reason": "Retained real filesystem reads: the tests walk the actual CLI entrypoint import graph and verify its source boundaries, with positive controls proving that real modules are reached."
+  },
+  {
+    "id": "EV010:scratchpad/test/cli/boundary.test.ts:2:node:fs@0#1",
+    "reason": "Retained real filesystem reads: the reachability and import-license assertions inspect the actual CLI source tree. The mutation controls already use an in-memory graph."
+  },
+  {
+    "id": "EV010:scratchpad/test/cli/boundary.test.ts:5:@effect/platform-node@0#1",
+    "reason": "Retained the platform layer: `SourceBoundary.scan` must inspect the actual CLI source tree, and assertions explicitly verify that the real tree was read."
+  }
+]

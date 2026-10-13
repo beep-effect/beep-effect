@@ -6,6 +6,8 @@ import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/schema-org/NodeRef");
 
+const JsonString = S.fromJsonString(S.String);
+
 /**
  * Indicates that a string is not usable as a JSON-LD node identifier: it is
  * empty, contains whitespace, or contains a control character.
@@ -58,7 +60,7 @@ export class InvalidNodeIdError extends S.TaggedError<InvalidNodeIdError>($I`Inv
 	 * @since 0.0.0
 	 */
 	override get message(): string {
-		return `Invalid JSON-LD node id: ${JSON.stringify(this.input)}`;
+		return `Invalid JSON-LD node id: ${Result.getOrThrow(S.encodeResult(JsonString)(this.input))}`;
 	}
 }
 

@@ -1,0 +1,18 @@
+[
+  {
+    "id": "EV015:scratchpad/test/github/GitHubApp.test.ts:384:TestClock.adjust@12#1",
+    "reason": "This isolated one-test layer owns its TestClock; no sibling test shares or observes the adjustment. An inline comment records that ownership."
+  },
+  {
+    "id": "EV015:scratchpad/test/github/resources2.test.ts:1165:TestClock.adjust@12#1",
+    "reason": "This layer block contains exactly one test and owns its TestClock; advancing it cannot affect a sibling test."
+  },
+  {
+    "id": "EV015:scratchpad/test/github/resources2.test.ts:1193:TestClock.adjust@12#1",
+    "reason": "This layer block contains exactly one test and owns its TestClock; advancing it cannot affect a sibling test."
+  },
+  {
+    "id": "EV010:scratchpad/test/github/reachability.test.ts:2:node:fs@0#1",
+    "reason": "The subject is the actual on-disk source import graph and package manifest. A memfs fixture would replace the artifacts whose reachability these tests verify; the file remains unchanged."
+  }
+]

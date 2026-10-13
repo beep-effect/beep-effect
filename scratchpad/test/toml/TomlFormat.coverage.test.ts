@@ -1,13 +1,21 @@
 import { assert, describe, it } from "@effect/vitest";
+import { vi } from "vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { dual } from "effect/Function";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import { Toml } from "../../effected/toml/Toml.ts";
 import type { TomlPath } from "../../effected/toml/TomlEdit.ts";
 import { TomlFormat, TomlFormattingOptions, TomlModificationError } from "../../effected/toml/TomlFormat.ts";
+import type { TomlExpression } from "../../effected/toml/TomlNode.ts";
+import * as Semantic from "../../effected/toml/internal/semantic.ts";
+
+vi.mock("effect/Array", { spy: true });
 
 const rejection = Effect.fn("TomlFormat.coverage.rejection")(function* (source: string, path: TomlPath, value: unknown, message: string) {
   const result = yield* Effect.result(TomlFormat.modify(source, path, value));
@@ -19,6 +27,38 @@ const rejection = Effect.fn("TomlFormat.coverage.rejection")(function* (source: 
 });
 
 describe("TomlFormat remaining observable paths", () => {
+  it.effect("retains the typed defect when the current array-table element is missing", () => Effect.gen(function* () {
+    const last = vi.spyOn(A, "last").mockReturnValueOnce(O.none());
+    try {
+      const exit = yield* Effect.exit(TomlFormat.modify("[[a]]\nx = 1\n", ["a", 0, "x"], 2));
+      if (Exit.isSuccess(exit)) return assert.fail("expected a missing-element defect");
+      exit.cause.pipe(Cause.hasDies, assertTrue);
+      assert.include(Cause.pretty(exit.cause), "TomlFormatInvariantError");
+      assert.include(Cause.pretty(exit.cause), "missing TOML element");
+    } finally { last.mockRestore(); }
+  }));
+
+  it.effect("retains the typed defect when the semantic visitor navigates an absent table", () => Effect.gen(function* () {
+    // Inject an invalid visitor path to exercise the formatter's defensive boundary.
+    const analyzer = vi.spyOn(Semantic, "analyze").mockImplementation(dual<
+      (visitor?: Semantic.SemanticVisitor) => (expressions: ReadonlyArray<TomlExpression>) => void,
+      (expressions: ReadonlyArray<TomlExpression>, visitor?: Semantic.SemanticVisitor) => void
+    >((args) => A.isArray(args[0]), (expressions, visitor) => {
+      for (const expr of expressions) {
+        if (P.isTagged(expr, "TomlKeyValue")) {
+          visitor?.onKeyValue?.(["missing", ...expr.keyPath.map((key) => key.value)], expr);
+        }
+      }
+    }));
+    try {
+      const exit = yield* Effect.exit(TomlFormat.modify("x = 1\n", ["x"], 2));
+      if (Exit.isSuccess(exit)) return assert.fail("expected a navigation defect");
+      exit.cause.pipe(Cause.hasDies, assertTrue);
+      assert.include(Cause.pretty(exit.cause), "TomlFormatInvariantError");
+      assert.include(Cause.pretty(exit.cause), "invariant: semantic pass admitted a value where a table was navigated");
+    } finally { analyzer.mockRestore(); }
+  }));
+
   it.effect("constructs the static facade and reads typed error messages", () => Effect.sync(() => {
     assert.strictEqual(Reflect.getPrototypeOf(Reflect.construct(TomlFormat, [])), TomlFormat.prototype);
   }));

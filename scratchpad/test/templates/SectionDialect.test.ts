@@ -1,9 +1,11 @@
-import { assert, describe, it } from "@effect/vitest";
+import { assert, describe, it, vi } from "@effect/vitest";
 import { assertSuccess } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { Immer } from "immer";
+import * as AttributeParsing from "../../effected/templates/internal/attributes.ts";
 import type { SectionRenderError } from "../../effected/templates/index.ts";
 import { CommentStyle, SectionDialect, SectionDocument, SectionId } from "../../effected/templates/index.ts";
 
@@ -235,4 +237,169 @@ describe("SectionDialect review regressions", () => {
       if (Result.isFailure(result)) assert.strictEqual(result.failure.reason, "invalidAttribute");
     }
   });
+});
+
+
+describe("SectionDialect round-2 regressions", () => {
+  it("renders BOM-prefixed marker-shaped content without treating it as a document-leading marker", () => {
+    for (const style of CommentStyle.presets) {
+      const id = SectionId.make({ key: "tool", commentStyle: style });
+      for (const marker of [SectionDialect.default.beginMarker(id), SectionDialect.default.endMarker(id)]) {
+        const section = id.section("\uFEFF" + marker);
+        assert.isFalse(SectionDialect.default.containsMarker(section.content));
+        assert.isTrue(SectionDialect.default.containsMarker(marker));
+        for (const eol of Eol.literals) {
+          const rendered = expectSuccess(SectionDialect.default.render(section, eol));
+          const parsed = Result.getOrThrow(SectionDocument.parseResult(rendered));
+          assert.strictEqual(parsed.sections[0]?.section.content, section.content);
+          assert.strictEqual(parsed.check(section)._tag, "UpToDate");
+          const repeated = Result.getOrThrow(parsed.reconcile([section]));
+          assert.strictEqual(repeated.text, rendered);
+          assert.isFalse(repeated.changed);
+          const bomDocument = Result.getOrThrow(SectionDocument.parseResult("\uFEFF" + rendered));
+          assert.strictEqual(bomDocument.sections[0]?.start, 1);
+          assert.strictEqual(bomDocument.sections[0]?.section.content, section.content);
+        }
+      }
+    }
+  });
+
+  it("refuses a trailing bare CR under LF but preserves it faithfully under CRLF", () => {
+    for (const content of ["\r", "a\r", "a\r\nb\r", "a\r\r"]) {
+      const section = hashId.section(content);
+      const error = expectFailure(SectionDialect.default.render(section, "\n"));
+      assert.strictEqual(error.reason, "trailingCarriageReturn");
+      assert.strictEqual(error.key, hashId.key);
+      assert.strictEqual(error.message, 'Section "example-tool" ends in a bare carriage return that LF rendering cannot preserve');
+      const rendered = expectSuccess(SectionDialect.default.render(section, "\r\n"));
+      const parsed = Result.getOrThrow(SectionDocument.parseResult(rendered));
+      assert.strictEqual(parsed.sections[0]?.section.content, content.replace(/\r\n/g, "\n"));
+      assert.strictEqual(parsed.check(section)._tag, "UpToDate");
+      assert.strictEqual(expectSuccess(SectionDialect.default.render(parsed.sections[0]?.section ?? section, "\r\n")), rendered);
+    }
+  });
+
+  it("supports prototype-preserving dialect copies without borrowing the owner's cache", () => {
+    const owner = SectionDialect.make({ phrase: "MANAGED SECTION", styles: [CommentStyle.hash] });
+    const copy = new Immer({ autoFreeze: false }).produce(owner, (draft) => {
+      draft.phrase = "CUSTOM BLOCK";
+    });
+    assert.instanceOf(copy, SectionDialect);
+    assert.notStrictEqual(copy, owner);
+    assert.strictEqual(owner.matchers(), owner.matchers());
+    const rendered = expectSuccess(copy.render(hashId.section("body")));
+    assert.include(rendered, "CUSTOM BLOCK");
+    assert.isTrue(copy.containsMarker(rendered));
+    assert.isFalse(owner.containsMarker(rendered));
+    assert.strictEqual(Result.getOrThrow(SectionDocument.parseResult(rendered, copy)).sections[0]?.section.content, "body");
+  });
+
+  it("bounds adversarial whitespace work and parses each extracted attribute run only once", () => {
+    const parseRun = vi.spyOn(AttributeParsing, "parseAttributeRun");
+    try {
+      for (const size of [4096, 16384, 65536, 262144]) {
+        const gap = " ".repeat(size);
+        for (const style of [CommentStyle.hash, CommentStyle.html]) {
+          const id = SectionId.make({ key: "tool", commentStyle: style });
+          const prefix = `${style.prefix} --- BEGIN tool MANAGED SECTION`;
+          const suffix = style.suffix === undefined ? "" : ` ${style.suffix}`;
+          parseRun.mockClear();
+          assert.isFalse(SectionDialect.default.containsMarker(`${prefix} x${gap}!`));
+          assert.strictEqual(parseRun.mock.calls.length, 0);
+          assert.isTrue(SectionDialect.default.containsMarker(`${prefix} note="--- quoted ---"${gap}---${suffix}${gap}`));
+          assert.strictEqual(parseRun.mock.calls.length, 1);
+          assert.deepStrictEqual(parseRun.mock.calls[0], ['note="--- quoted ---"']);
+          assert.isFalse(SectionDialect.default.containsMarker(`${prefix} note="unterminated${gap}---${suffix}`));
+          assert.isFalse(SectionDialect.default.containsMarker(`${style.prefix} --- END ${id.key} MANAGED SECTION note="x" ---${suffix}`));
+        }
+      }
+    } finally {
+      parseRun.mockRestore();
+    }
+  });
+
+  it("recognizes exact closing rules and custom suffix whitespace while keeping malformed markers as content", () => {
+    for (const suffix of [undefined, "-->", " --- ", "  "]) {
+      const style = CommentStyle.make({ prefix: "%", ...(suffix === undefined ? {} : { suffix }) });
+      const dialect = SectionDialect.make({ phrase: "CUSTOM BLOCK", styles: [style] });
+      const id = SectionId.make({ key: "tool", commentStyle: style });
+      const section = id.section("body", { note: "--- quoted ---" });
+      const rendered = expectSuccess(dialect.render(section));
+      assert.isTrue(dialect.containsMarker(rendered));
+      const parsed = Result.getOrThrow(SectionDocument.parseResult(rendered, dialect));
+      assert.deepStrictEqual(parsed.sections[0]?.section.attributes, section.attributes);
+      assert.strictEqual(parsed.sections[0]?.section.content, "body");
+      assert.isFalse(dialect.containsMarker(dialect.beginMarker(id) + "!"));
+    }
+    for (const tail of [' ---!', ' x ---', ' note="unterminated ---', ' note="ok"note="bad" ---', ' note="a" note="b" ---', '---']) {
+      assert.isFalse(SectionDialect.default.containsMarker("# --- BEGIN tool MANAGED SECTION" + tail));
+    }
+  });
+});
+
+
+it("reserves the marker separator after phrases with trailing whitespace", () => {
+  for (const phrase of ["CUSTOM ", "CUSTOM   ", "CUSTOM  BLOCK  "]) {
+    const dialect = SectionDialect.make({ phrase, styles: [CommentStyle.hash] });
+    for (const attributes of [{}, { note: "--- quoted ---" }]) {
+      const section = hashId.section("body", attributes);
+      const rendered = expectSuccess(dialect.render(section));
+      assert.isTrue(dialect.containsMarker(rendered));
+      const parsed = Result.getOrThrow(SectionDocument.parseResult(rendered, dialect));
+      assert.strictEqual(parsed.sections[0]?.section.content, "body");
+      assert.deepStrictEqual(parsed.sections[0]?.section.attributes, attributes);
+    }
+  }
+});
+
+
+it("preserves Unicode multiline boundaries and Unicode inside quoted attribute captures", () => {
+  const dialect = SectionDialect.default;
+  for (const separator of ["\u2028", "\u2029"]) {
+    const begin = dialect.beginMarker(hashId);
+    const end = dialect.endMarker(hashId);
+    assert.isTrue(dialect.containsMarker(begin + separator + "ordinary content"));
+    const text = begin + separator + "body" + separator + end;
+    const markers = [...dialect.markerMatches(text)];
+    assert.strictEqual(markers[0]?.[1][0], begin);
+    assert.strictEqual(markers[0]?.[1][1], "BEGIN");
+    assert.strictEqual(markers[0]?.[1][2], hashId.key);
+    assert.strictEqual(markers[0]?.[1][3], undefined);
+    assert.strictEqual(markers[1]?.[1].index, begin.length + separator.length + "body".length + separator.length);
+    const doc = Result.getOrThrow(SectionDocument.parseResult(text));
+    assert.strictEqual(doc.sections[0]?.section.content, separator + "body" + separator);
+    const expected = hashId.section("body", { note: "a" + separator + "b --- quoted ---" });
+    const rendered = expectSuccess(dialect.render(expected));
+    const captured = [...dialect.markerMatches(rendered)];
+    assert.strictEqual(captured[0]?.[1][3], `note="a${separator}b --- quoted ---"`);
+    const parsed = Result.getOrThrow(SectionDocument.parseResult(rendered));
+    assert.deepStrictEqual(parsed.sections[0]?.section.attributes, expected.attributes);
+    assert.strictEqual(parsed.check(expected)._tag, "UpToDate");
+    const invalid = '# --- BEGIN invalid MANAGED SECTION note="unterminated ---' + separator + begin;
+    const recovered = [...dialect.markerMatches(invalid)];
+    assert.strictEqual(recovered.length, 1);
+    assert.strictEqual(recovered[0]?.[1][2], hashId.key);
+  }
+});
+
+it("rejects a wrapped closing rule without whitespace before its suffix", () => {
+  const malformed = "<!-- --- BEGIN example-tool MANAGED SECTION ----->";
+  assert.isFalse(SectionDialect.default.containsMarker(malformed));
+  assert.deepStrictEqual([...SectionDialect.default.markerMatches(malformed)], []);
+});
+
+it("keeps marker-shaped Unicode attribute text inside its owning marker span", () => {
+  const section = hashId.section("body", {
+    note: "before\u2028# --- BEGIN nested MANAGED SECTION text\u2029after",
+  });
+  const rendered = expectSuccess(SectionDialect.default.render(section));
+  const markers = [...SectionDialect.default.markerMatches(rendered)];
+  assert.strictEqual(markers.length, 2);
+  assert.deepStrictEqual(markers.map(([, match]) => [match[1], match[2]]), [
+    ["BEGIN", hashId.key],
+    ["END", hashId.key],
+  ]);
+  const parsed = Result.getOrThrow(SectionDocument.parseResult(rendered));
+  assert.deepStrictEqual(parsed.sections[0]?.section.attributes, section.attributes);
+  assert.strictEqual(parsed.check(section)._tag, "UpToDate");
 });

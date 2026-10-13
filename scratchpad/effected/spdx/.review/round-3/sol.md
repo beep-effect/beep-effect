@@ -1,0 +1,9 @@
+### sol-3-1
+- file: scratchpad/effected/spdx/internal/parser.ts:48
+- class: schema   severity: required
+- standard: `standards/effect-first-development.md` EF-12b and EF-33; D5 and D11.   evidence: `RawSimpleLicense` at lines 48–50 and `RawExpression` at lines 66–70 are handwritten pure-data unions with no corresponding schema. They represent named SPDX domain concepts: the simple-expression used by the `WITH` operand and the expression tree returned by `parse`. `SpdxExpression.ts:311–334` consumes and matches these models. The parser imports only `License` and `LicenseException`; neither raw model has a schema from which its fields or variants are derived. The public AST schemas use different discriminator and field representations, so they do not supply the missing raw-model schemas. These legal TypeScript declarations pass compilation, while the green gates leave this schema-first obligation unmet. No accepted deviation or prior inventory item covers it.
+- failure: The parser-to-materializer domain contract remains defined independently of Schema, contrary to the requirement that named, reused internal domain models be schema-first. Its raw variants and the restriction that `WITH` takes a simple expression cannot be obtained as schema-derived guards or arbitraries. This is a modeling-law violation; no runtime divergence is alleged.
+- fix: Define annotated plain-object schemas for the raw simple-expression variants and derive `RawSimpleLicense` from them. Compose the remaining raw expression variants into a recursive schema using `S.suspend`, retaining only the explicit recursive type anchor needed by TypeScript. Keep these definitions independent of the facade and preserve the existing `kind` tags, plain-object output, required `documentRef: string | undefined` field, accepted inputs and parser control flow. No per-node decoding or class construction is needed.
+
+REQUIRED: 1
+BACKLOG: 0

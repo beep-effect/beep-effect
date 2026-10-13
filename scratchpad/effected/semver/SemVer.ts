@@ -72,21 +72,36 @@ export class InvalidVersionError extends S.TaggedError<InvalidVersionError>($I`I
 // Non-negative safe integer schema shared by the `major`/`minor`/`patch`
 // fields.
 const nonNegativeInteger = S.Finite.check(
-	S.isInt(),
-	S.isBetween({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER }),
-);
+	S.makeFilterGroup([
+		S.isInt($I.annote("NonNegativeIntegerIntCheck", { description: "A safe integer version component or numeric prerelease identifier." })),
+		S.isBetween(
+			{ minimum: 0, maximum: Number.MAX_SAFE_INTEGER },
+			$I.annote("NonNegativeIntegerRangeCheck", { description: "A version number between zero and the maximum safe integer, inclusive." }),
+		),
+	]),
+).annotate($I.annote("nonNegativeInteger", { description: "A finite, non-negative safe integer used for version components and numeric prerelease identifiers." }));
 
 // String prerelease identifiers must contain at least one non-digit:
 // all-numeric identifiers are numbers (the grammar parses them as such), so
 // requiring a non-digit keeps decode/encode round-trips canonical. Written
 // without lookahead so `Arbitrary.schema` can derive a generator.
 const prereleaseIdentifier = S.Union([
-	S.String.check(S.isPattern(/^[0-9]*[A-Za-z-][0-9A-Za-z-]*$/u)),
+	S.String.check(S.isPattern(
+		/^[0-9]*[A-Za-z-][0-9A-Za-z-]*$/u,
+		$I.annote("PrereleaseIdentifierPatternCheck", { description: "An ASCII alphanumeric or hyphen prerelease identifier containing at least one non-digit." }),
+	)),
 	nonNegativeInteger,
-]);
+]).annotate($I.annote("prereleaseIdentifier", { description: "A canonical prerelease identifier: a non-negative safe integer or an ASCII alphanumeric or hyphen string containing a non-digit." }));
 
 // Build identifiers allow leading zeros and all-digit tokens (SemVer §10).
-const buildIdentifier = S.String.check(S.isPattern(/^[0-9A-Za-z-]+$/u));
+const buildIdentifier = S.String.check(
+	S.makeFilterGroup([
+		S.isPattern(
+			/^[0-9A-Za-z-]+$/u,
+			$I.annote("BuildIdentifierPatternCheck", { description: "A non-empty ASCII alphanumeric or hyphen build metadata identifier." }),
+		),
+	]),
+).annotate($I.annote("buildIdentifier", { description: "A build metadata identifier that allows leading zeros and all-digit strings." }));
 
 /**
  * A parsed SemVer 2.0.0 version: an Effect `Schema.Class` whose fields are

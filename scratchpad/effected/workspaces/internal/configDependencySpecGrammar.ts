@@ -17,18 +17,41 @@
 // `<version>+<sri>`, and pnpm's SRI alphabet contains `+` itself, so only the
 // first `+` can be the separator.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/workspaces/internal/configDependencySpecGrammar");
+
 /**
  * A `configDependencies` spec split into its two textual halves, neither validated.
+ *
+ * **Example** (Validate a version without an integrity suffix)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { ConfigDependencySpecParts } from "@beep/scratchpad/effected/workspaces/internal/configDependencySpecGrammar";
+ *
+ * console.log(S.is(ConfigDependencySpecParts)({ version: "1.0.0", integrity: undefined })) // true
+ * console.log(S.is(ConfigDependencySpecParts)(null)) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
-export interface ConfigDependencySpecParts {
+export const ConfigDependencySpecParts = S.Struct({
 	/** The text before the first `+` (the whole spec when there is none). */
-	readonly version: string;
+	version: S.String.pipe($I.annoteKey("ConfigDependencySpecParts.version", { description: "The unvalidated text before the first plus sign, or the entire bare spec." })),
 	/** The text after the first `+`, or `undefined` when the spec has no `+`. */
-	readonly integrity: string | undefined;
-}
+	integrity: S.UndefinedOr(S.String).pipe($I.annoteKey("ConfigDependencySpecParts.integrity", { description: "The unvalidated remaining text, explicitly undefined for a bare spec." })),
+}).pipe($I.annoteSchema("ConfigDependencySpecParts", { description: "The plain textual halves of a lenient config-dependency spec split." }));
+
+/**
+ * Contains the lenient version spelling and optional integrity suffix split at the first plus sign.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConfigDependencySpecParts = typeof ConfigDependencySpecParts.Type;
 
 /**
  * Splits a spec on its first `+`: `0.9.0+sha512-…` → `{ version: "0.9.0", integrity: "sha512-…" }`.

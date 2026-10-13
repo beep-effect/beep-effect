@@ -1,0 +1,5 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the spdx port read-only against the pinned upstream oracle, skipping closed round-2 items and recorded deviations. First I'm loading the review inventory, port notes, and the binding decisions.The round-2 encoded-type narrowing is already in this commit. Next I’ll compare the parser and expression walkers with the pinned upstream oracle for behaviour the gates would miss.NO FINDINGS
+
+REQUIRED: 0
+BACKLOG: 0

@@ -5,13 +5,14 @@
 // The fenced-code block start. The construct both code spellings share lives
 // in `code.ts`, which branches on the `isFenced` flag this start sets.
 
-import type { FenceChar } from "../../MarkdownNode.ts";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import { FenceChar } from "../../MarkdownNode.ts";
 import type { BlockStart } from "../blockTypes.ts";
 
 const reCodeFence = /^`{3,}(?!.*`)|^~{3,}/;
 
-// A successful fence match begins with one of these two characters.
-const fenceCharOf = (char: string): FenceChar => (char === "`" ? "`" : "~");
+const decodeFenceChar = S.decodeUnknownResult(FenceChar);
 
 /**
  * Opens a fenced code block with three or more backticks or tildes.
@@ -39,7 +40,7 @@ export const fencedCodeStart: BlockStart = {
 			return 0;
 		}
 
-		const fenceChar = fenceCharOf(match[0].charAt(0));
+		const fenceChar = Result.getOrThrow(decodeFenceChar(match[0].charAt(0)));
 
 		scanner.closeUnmatchedBlocks();
 		const container = scanner.addChild("code", scanner.nextNonspace);

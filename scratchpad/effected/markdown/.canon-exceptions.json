@@ -1,0 +1,22 @@
+[
+  {
+    "id": "EV010:scratchpad/test/markdown/e2e/support/corpus.ts:15:node:fs@0#1",
+    "reason": "This support module synchronously loads and enumerates checked-in conformance fixtures for test registration. The real fixture files supply the oracle data; a memory filesystem would require seeding from those same files or changing sibling callers outside this lane. Left unchanged."
+  },
+  {
+    "id": "EV010:scratchpad/test/markdown/tools/generate-entities.ts:7:node:fs@0#1",
+    "reason": "This maintenance generator writes a real source artifact to disk. Replacing its filesystem with memfs would prevent its intended output from being persisted; left unchanged."
+  },
+  {
+    "id": "EV012:scratchpad/test/markdown/stringify-scalability.test.ts:13:vi.mock@0#1",
+    "reason": "The spy-only module mock preserves real effect/Match implementations and measures dispatcher construction calls. This regression requires observing Match.type and Match.value inside the serializer; service injection or a replacement implementation cannot prove the real dispatcher is compiled once."
+  },
+  {
+    "id": "EV011:scratchpad/test/markdown/stringify-scalability.test.ts:5:vitest-import@0#1",
+    "reason": "Only vi is imported from vitest; test registration and assertions use @effect/vitest. Importing vi from the @effect/vitest re-export was tested and fails mock hoisting with \"There are some problems in resolving the mocks API\". The real Match dispatcher call-count regression requires Vitest spy instrumentation and a direct vi import."
+  },
+  {
+    "id": "EV010:scratchpad/test/markdown/internal/blocks/linkReferenceDefinition.property.test.ts:3:@effect/platform-node/NodeServices@0#1",
+    "reason": "This regression launches the real Node runtime with type stripping to verify extraction of a definition before 150000 shallow paragraph lines without stack overflow. A memory filesystem or fake child process cannot exercise the Node stack or runtime module loading; NodeServices supplies the real process spawner."
+  }
+]

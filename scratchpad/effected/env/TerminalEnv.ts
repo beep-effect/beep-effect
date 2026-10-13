@@ -5,7 +5,6 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import * as Terminal from "effect/Terminal";
@@ -25,6 +24,9 @@ const $I = $ScratchpadId.create("effected/env/TerminalEnv");
  * ```ts
  * import { StreamEnv } from "@beep/scratchpad/effected/env/TerminalEnv";
  * import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
+import * as SchemaGetter from "effect/SchemaGetter";
+import { identity } from "effect/Function";
  * import * as O from "effect/Option";
  * console.log(S.is(StreamEnv)({
  *   isTerminal: false, color: "none", hyperlinks: false, columns: O.none(),
@@ -60,9 +62,8 @@ export const StreamEnv = S.Struct({
   *
   * Core's `Terminal` exposes one width, so `stderr.columns` reports stdout's width.
   */
-	columns: S.Option(S.declare(P.isNumber, $I.annote("StreamColumns", {
-		description: "A stream column number, retaining the full JavaScript number domain accepted by stream snapshots.",
-	}))).pipe($I.annoteKey("StreamEnv.columns", { description: "The terminal width in columns, or None when it is unknown." })),
+	// @effect-diagnostics-next-line schemaNumber:off -- Upstream Option<number> accepts NaN and infinities; S.Finite would narrow its domain.
+	columns: S.Option(S.Number).pipe($I.annoteKey("StreamEnv.columns", { description: "The terminal width in columns, or None when it is unknown." })),
 }).annotate($I.annote("StreamEnv", { description: "What one output stream can do: terminal attachment, colour, hyperlinks and optional columns." }));
 
 /**

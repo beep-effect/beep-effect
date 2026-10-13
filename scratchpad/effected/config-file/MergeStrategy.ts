@@ -73,19 +73,15 @@ const firstMatch = <A>(): MergeStrategy<A> => ({
  *
  * **Details**
  *
- * Two values merge only when both are record-like and share a prototype, so a
- * document decoded through `Schema.Class` merges with another of the same class
- * and **survives as a real instance** — `instanceof` holds and its getters
- * still work. Everything else is atomic: a nested `Date`, `Map`, `Set`,
- * `RegExp`, array, or class instance is taken whole from the highest-priority
- * source that defines it, never reshaped field-by-field.
+ * Two values merge only when both are plain records and share a prototype.
+ * A document decoded through `Schema.Class` is atomic: the highest-priority
+ * instance is returned intact, preserving its identity and private state.
+ * `Date`, `Map`, `Set`, `RegExp`, arrays and nested class instances are also
+ * taken whole from the highest-priority source that defines them.
  *
- * The alternative — spreading each value into a fresh object — would make
- * `load`'s declared `Effect<A>` a lie, handing back a structurally-equal plain
- * object whose class methods are gone and whose `Date` fields have decayed to
- * `{}`.
- *
- * Nested *plain* objects (a `Schema.Struct` section) still merge field-wise.
+ * Compatible nested plain records (a `Schema.Struct` section) merge field-wise.
+ * Own enumerable string and symbol keys participate; inherited fields,
+ * non-enumerable fields and the string `__proto__` are excluded.
  */
 const layeredMerge = <A>(): MergeStrategy<A> => ({
 	name: "layered-merge",

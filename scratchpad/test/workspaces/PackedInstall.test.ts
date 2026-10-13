@@ -10,10 +10,12 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as Redacted from "effect/Redacted";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
 import { WorkspaceDiscovery, WorkspaceInfo, WorkspacePackage } from "../../effected/workspaces/index.ts";
+import { PackedInstallError } from "../../effected/workspaces/PackedInstall.ts";
 import { InstalledConsumer, PackedInstall } from "../../effected/workspaces/testing.ts";
 
 const JsonValue = S.fromJsonString(S.Unknown);
@@ -1049,6 +1051,24 @@ describe("InstalledConsumer.runBin", () => {
 			assert.strictEqual(consumer.command("tool").options.cwd, BIN_DIR, "the cwd defaults to the consumer");
 		});
 
+		it("command preserves own __proto__ variables through scrubbing, layering and removal", () => {
+			const ownConsumer = InstalledConsumer.make({
+				manager: "npm", managerVersion: "11.19.1", directory: BIN_DIR,
+				env: Redacted.make({ ["__proto__"]: "base", PATH: "/usr/bin", CI: "true", INIT_CWD: "/repo" }),
+			});
+			const base = ownConsumer.command("tool").options.env ?? {};
+			assert.isTrue(R.has(base, "__proto__"));
+			assert.deepStrictEqual(base, { ["__proto__"]: "base", PATH: "/usr/bin" });
+			const layered = ownConsumer.command("tool", [], {
+				env: { ["__proto__"]: "override", PATH: undefined, CI: "explicit", INIT_CWD: "/kept" },
+			}).options.env ?? {};
+			assert.isTrue(R.has(layered, "__proto__"));
+			assert.deepStrictEqual(layered, { ["__proto__"]: "override", CI: "explicit", INIT_CWD: "/kept" });
+			const removed = ownConsumer.command("tool", [], { env: { ["__proto__"]: undefined } }).options.env ?? {};
+			assert.isFalse(R.has(removed, "__proto__"));
+			assert.deepStrictEqual(removed, { PATH: "/usr/bin" });
+		});
+
 		it.effect("runBin spawns command's bin, arguments, cwd and environment, with stdin ignored", () =>
 			Effect.gen(function* () {
 				const options = { env: { XDG_DATA_HOME: "/scratch/xdg", INIT_CWD: "/kept" }, cwd: "/work" };
@@ -1476,4 +1496,18 @@ describe("InstalledConsumer.carrierCommand and runCarrierBin", () => {
 			}),
 		);
 	});
+});
+
+
+describe("PackedInstallError encoding", () => {
+	it.effect("preserves the originating cause stack", () =>
+		Effect.gen(function* () {
+			const cause = new Error("original pack failure");
+			const encoded = yield* S.encodeEffect(PackedInstallError)(PackedInstallError.make({
+				reason: "PackFailed", message: "pack failed", cause,
+			}));
+			if (!P.isObject(encoded.cause)) return assert.fail("expected an encoded Error cause");
+			assert.strictEqual(encoded.cause.stack, cause.stack);
+		}),
+	);
 });

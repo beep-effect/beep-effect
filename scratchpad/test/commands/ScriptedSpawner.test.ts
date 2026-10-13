@@ -5,7 +5,7 @@
 // path, hang, unref observation, and the loud pipeline refusal.
 
 import { assert, describe, it } from "@effect/vitest";
-import { assertExitFailure } from "@effect/vitest/utils";
+import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -156,11 +156,15 @@ describe("ScriptedSpawner.make", () => {
 it("ScriptResult retains optional fields, platform errors and the upstream numeric domain", () => {
  assert.isTrue(S.is(ScriptResult)({}));
  assert.isTrue(S.is(ScriptResult)({ stdout: undefined, stderr: undefined, exit: undefined, hang: undefined }));
- assert.isTrue(S.is(ScriptResult)({ stdout: "ok", exit: 1.5, hang: true }));
- assert.isTrue(S.is(ScriptResult)({ exit: Number.POSITIVE_INFINITY }));
+ assert.isFalse(S.is(ScriptResult)({ stdout: "ok", exit: 1.5, hang: true }));
+ assert.isFalse(S.is(ScriptResult)({ exit: Number.POSITIVE_INFINITY }));
+ assert.isTrue(S.is(ScriptResult)({ stdout: "ok", exit: 42, hang: true }));
  const platformError = ScriptedSpawner.notFound("tool");
  assert.isTrue(S.is(ScriptResult)(platformError));
  const decode = (input: unknown) => S.decodeUnknownOption(ScriptResult)(input);
+ assertNone(decode({ exit: 1.5 }));
+ assertNone(decode({ exit: Number.POSITIVE_INFINITY }));
+ assertSome(decode({ exit: 42 }), { exit: 42 });
  const decoded = decode(platformError);
  if (decoded._tag !== "Some") assert.fail("expected the platform error carrier");
  assert.strictEqual(decoded.value, platformError);
@@ -188,3 +192,14 @@ it("SpawnRecord retains complete options, opaque objects and writable unref stat
  assert.isFalse(S.is(SpawnRecord)({ ...record, options: { stdin: { stream: {} } } }));
  assert.isFalse(S.is(SpawnRecord)({ ...record, options: { killSignal: "INVALID" } }));
 });
+
+it.effect("SpawnRecord accepts whitespace in forceKillAfter and preserves the original options", () => Effect.gen(function* () {
+ for (const forceKillAfter of ["1  seconds", "-1  seconds"] as const) {
+  const options: ChildProcess.CommandOptions = { forceKillAfter };
+  const record = { command: "tool", args: [], cwd: undefined, env: undefined, extendEnv: undefined, options, unrefed: false };
+  assert.isTrue(S.is(SpawnRecord)(record));
+  const decoded = yield* S.decodeEffect(SpawnRecord)(record);
+  assert.strictEqual(decoded.options, options);
+  assert.strictEqual(decoded.options.forceKillAfter, forceKillAfter);
+ }
+}));

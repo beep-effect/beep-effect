@@ -505,14 +505,11 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 		const reconciled = parsed.success.reconcile(declared);
 		if (Result.isFailure(reconciled)) {
 			const failure = reconciled.failure;
-			if (failure.reason === "unknownCommentStyle") {
-				// Structurally unreachable: every declared section above is built
-				// with the one style the module's own dialect recognizes.
-				throw RejectedRegionDialectError.make({ message: "ManagedDocument: the region dialect rejected its own comment style" });
-			}
 			return Result.fail(
 				ManagedDocumentError.make({
-					kind: failure.reason,
+					// Every declaration uses REGION_DIALECT's own HTML style; decode
+					// the remaining upstream reasons into the public error vocabulary.
+					kind: Result.getOrThrow(S.decodeUnknownResult(ManagedDocumentError.fields.kind)(failure.reason)),
 					key: this.regionKeyOf(failure.key),
 					...O.getSomesStruct({ attribute: O.fromUndefinedOr(failure.attribute) }),
 				}),
@@ -652,7 +649,9 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 	 * @since 0.0.0
 	 */
 	private regionKeyOf(wireKey: string): string {
-		return wireKey.startsWith(this.wirePrefix) ? wireKey.slice(this.wirePrefix.length) : wireKey;
+		// Reconciliation failures name a declaration made by withRegionsResult,
+		// and every declaration is constructed with this prefix.
+		return wireKey.slice(this.wirePrefix.length);
 	}
 
 	/**

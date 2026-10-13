@@ -361,23 +361,25 @@ describe('WorkspaceStateSnapshot — a version-less member is absent, never `""`
 		}),
 	);
 
-	it.effect("the snapshot's WorkspaceResolver fails typed for a version-less member, like discovery's", () =>
-		Effect.gen(function* () {
-			const workspace = yield* WorkspaceResolver;
-			// A known member with nothing to resolve: the contract reserves `none`
-			// for a NON-member, so this is the typed-failure outcome.
-			const error = yield* Effect.flip(workspace.versionOf("@x/bare"));
-			assert.strictEqual(error._tag, "DependencyResolutionError");
-			assert.strictEqual(error.specifier, "workspace:@x/bare");
-			// The branch a `_tag` check cannot pin: this is the version-less case,
-			// raised from structured data with no foreign failure to wrap.
-			assert.strictEqual(error.reason, "no-version");
-			assert.isUndefined(error.cause);
-			// Positive and negative controls on the same layer.
-			assertSome(yield* workspace.versionOf("@x/alpha"), "1.2.3");
-			assertNone(yield* workspace.versionOf("nope"));
-		}).pipe(Effect.provide(bareVersionSnapshot.workspaceResolver)),
-	);
+	it.layer(bareVersionSnapshot.workspaceResolver)((it) => {
+		it.effect("the snapshot's WorkspaceResolver fails typed for a version-less member, like discovery's", () =>
+			Effect.gen(function* () {
+				const workspace = yield* WorkspaceResolver;
+				// A known member with nothing to resolve: the contract reserves `none`
+				// for a NON-member, so this is the typed-failure outcome.
+				const error = yield* Effect.flip(workspace.versionOf("@x/bare"));
+				assert.strictEqual(error._tag, "DependencyResolutionError");
+				assert.strictEqual(error.specifier, "workspace:@x/bare");
+				// The branch a `_tag` check cannot pin: this is the version-less case,
+				// raised from structured data with no foreign failure to wrap.
+				assert.strictEqual(error.reason, "no-version");
+				assert.isUndefined(error.cause);
+				// Positive and negative controls on the same layer.
+				assertSome(yield* workspace.versionOf("@x/alpha"), "1.2.3");
+				assertNone(yield* workspace.versionOf("nope"));
+			}),
+		);
+	});
 });
 
 // ── a version-less member at a ref AND in the worktree (#613) ──────────────
@@ -423,24 +425,26 @@ describe("WorkspaceSnapshots — version-less manifests at a ref and in the work
 });
 
 describe("WorkspaceStateSnapshot — snapshot-scoped resolver layers", () => {
-	it.effect("CatalogResolver and WorkspaceResolver resolve against the snapshot", () =>
-		Effect.gen(function* () {
-			const catalog = yield* CatalogResolver;
-			const workspace = yield* WorkspaceResolver;
-			assertSome(yield* catalog.rangeOf("effect", O.none()), "^4.0.0");
-			assertSome(yield* catalog.rangeOf("vitest", O.some("build")), "^3.0.0");
-			assertSome(yield* workspace.versionOf("@x/beta"), "4.5.6");
-		}).pipe(Effect.provide(resolveSnapshot.resolvers)),
-	);
+	it.layer(resolveSnapshot.resolvers)((it) => {
+		it.effect("CatalogResolver and WorkspaceResolver resolve against the snapshot", () =>
+			Effect.gen(function* () {
+				const catalog = yield* CatalogResolver;
+				const workspace = yield* WorkspaceResolver;
+				assertSome(yield* catalog.rangeOf("effect", O.none()), "^4.0.0");
+				assertSome(yield* catalog.rangeOf("vitest", O.some("build")), "^3.0.0");
+				assertSome(yield* workspace.versionOf("@x/beta"), "4.5.6");
+			}),
+		);
 
-	it.effect("an unmatched name resolves to Option.none() on both layers", () =>
-		Effect.gen(function* () {
-			const catalog = yield* CatalogResolver;
-			const workspace = yield* WorkspaceResolver;
-			assertNone(yield* catalog.rangeOf("nope", O.none()));
-			assertNone(yield* workspace.versionOf("nope"));
-		}).pipe(Effect.provide(resolveSnapshot.resolvers)),
-	);
+		it.effect("an unmatched name resolves to Option.none() on both layers", () =>
+			Effect.gen(function* () {
+				const catalog = yield* CatalogResolver;
+				const workspace = yield* WorkspaceResolver;
+				assertNone(yield* catalog.rangeOf("nope", O.none()));
+				assertNone(yield* workspace.versionOf("nope"));
+			}),
+		);
+	});
 });
 
 // ── at(ref) and worktree() must answer a hook-injected catalog IDENTICALLY ───
@@ -816,4 +820,131 @@ describe("WorkspaceSnapshots.at — tolerant JSON schema decoding", () => {
 			}),
 		);
 	});
+});
+
+
+import * as A from "effect/Array";
+import * as R from "effect/Record";
+import { WorkspaceCatalogs } from "../../effected/workspaces/WorkspaceCatalogs.ts";
+import { WorkspaceDiscovery } from "../../effected/workspaces/WorkspaceDiscovery.ts";
+import { WorkspaceRoot } from "../../effected/workspaces/WorkspaceRoot.ts";
+
+const ownNameReplayEntries: ReadonlyArray<readonly [string, HookReplay]> = [
+  ["first", { version: "1.0.0", source: "supplied" }],
+  ["__proto__", { version: "2.0.0", source: "installed" }],
+  ["constructor", { version: "3.0.0", source: "store" }],
+  ["last", { version: "4.0.0", source: "fetched" }],
+];
+const ownNameReplays = R.fromEntries(ownNameReplayEntries);
+const ownNameHooks = Layer.succeed(ConfigDependencyHooks, {
+  inject: Effect.fn("OwnNameHooks.inject")((_root, _dependencies, seed, rules) => Effect.succeed({
+    catalogs: seed,
+    releaseAge: {},
+    peerDependencyRules: rules ?? { allowedVersions: {}, ignoreMissing: [], allowAny: [] },
+    replays: ownNameReplays,
+  })),
+});
+const ownNameTree: Tree = {
+  "/repo/package.json": rootManifest([]),
+  "/repo/pnpm-workspace.yaml": "packages: []\n",
+};
+const ownNameDependencies = Layer.mergeAll(
+  scriptGit(refFromTree(ownNameTree)),
+  WorkspaceRoot.layerTest("/repo"),
+  WorkspaceDiscovery.layerTest({ listPackages: Effect.succeed([]) }),
+  WorkspaceCatalogs.layerTest({
+    set: Effect.succeed(CatalogSet.empty()),
+    importerVersions: Effect.succeed({}),
+    hookReplays: Effect.succeed(ownNameReplays),
+  }),
+  ownNameHooks,
+);
+
+describe("snapshot hook-version projection preserves own replay names", () => {
+  it.layer(ownNameDependencies)((it) => {
+    it.effect("both historical and live projections keep every version in replay order", () => Effect.gen(function* () {
+      const snapshots = yield* WorkspaceSnapshots.make({ cwd: "/repo" });
+      const expected = [["first", "1.0.0"], ["__proto__", "2.0.0"], ["constructor", "3.0.0"], ["last", "4.0.0"]];
+      const atRef = yield* snapshots.at("HEAD");
+      const live = yield* snapshots.worktree;
+      for (const snapshot of [atRef, live]) {
+        assert.deepStrictEqual(R.toEntries(snapshot.hookReplays ?? {}), expected);
+        assertSome(R.get(snapshot.hookReplays ?? {}, "__proto__"), "2.0.0");
+        const codec = S.fromJsonString(WorkspaceStateSnapshot);
+        const stored = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(snapshot));
+        assert.deepStrictEqual(R.toEntries(stored.hookReplays ?? {}), expected);
+      }
+      assert.deepStrictEqual(A.map(R.toEntries(ownNameReplays), ([name, replay]) => [name, replay.version]), expected);
+      assert.deepStrictEqual(A.map(R.values(ownNameReplays), (replay) => replay.source), ["supplied", "installed", "store", "fetched"]);
+    }));
+  });
+});
+
+const bunCatalogCases = [
+  {
+    name: "array workspaces retain top-level default and named catalogs without a lockfile",
+    root: {
+      name: "root", version: "0.0.0", private: true, packageManager: "bun@1.2.0",
+      workspaces: ["packages/*"],
+      catalog: { effect: "^4.0.0" },
+      catalogs: { build: { typescript: "^6.0.0" } },
+    },
+    expected: { default: { effect: "^4.0.0" }, build: { typescript: "^6.0.0" } },
+  },
+  {
+    name: "workspaces-object catalogs win overlaps and retain top-level-only entries",
+    root: {
+      name: "root", version: "0.0.0", private: true, packageManager: "bun@1.2.0",
+      catalog: { effect: "^3.0.0", react: "^19.0.0" },
+      catalogs: { build: { typescript: "^5.0.0", vitest: "^3.0.0" }, topOnly: { eslint: "^9.0.0" } },
+      workspaces: { packages: ["packages/*"], catalog: { effect: "^4.0.0" }, catalogs: { build: { typescript: "^6.0.0" } } },
+    },
+    expected: { default: { effect: "^4.0.0", react: "^19.0.0" }, build: { typescript: "^6.0.0", vitest: "^3.0.0" }, topOnly: { eslint: "^9.0.0" } },
+  },
+];
+
+for (const control of bunCatalogCases) {
+  const tree: Tree = {
+    "/repo/package.json": Result.getOrThrow(S.encodeResult(S.fromJsonString(S.Unknown))(control.root)),
+    "/repo/packages/member/package.json": manifest("member", { dependencies: { effect: "catalog:", typescript: "catalog:build" } }),
+  };
+  describe("Bun top-level snapshot catalogs", () => {
+    it.layer(snapshotsLayer(scriptGit(refFromTree(tree)), tree), { timeout: "30 seconds" })((it) => {
+      it.effect(control.name, () => Effect.gen(function* () {
+        const snapshots = yield* WorkspaceSnapshots;
+        const atRef = yield* snapshots.at("HEAD");
+        const live = yield* snapshots.worktree;
+        assert.deepStrictEqual(atRef.catalogs.entries, control.expected);
+        assert.deepStrictEqual(live.catalogs.entries, control.expected);
+        assert.deepStrictEqual(projected(atRef), projected(live));
+        assertSome(atRef.resolve("effect", "catalog:"), "^4.0.0");
+        assertSome(live.resolve("effect", "catalog:"), "^4.0.0");
+        assertSome(atRef.resolve("typescript", "catalog:build"), "^6.0.0");
+        assertSome(live.resolve("typescript", "catalog:build"), "^6.0.0");
+      }));
+    });
+  });
+}
+
+const malformedBunTrees: RefTrees = {
+  badNested: {
+    "package.json": '{"name":"root","workspaces":{"packages":[],"catalog":42,"catalogs":["bad"]},"catalog":{"effect":"^4.0.0","bad":42},"catalogs":{"build":{"typescript":"^6.0.0","bad":false},"bad":42}}',
+  },
+  badTopLevel: {
+    "package.json": '{"name":"root","catalog":42,"catalogs":["bad"],"workspaces":{"packages":[],"catalog":{"effect":"^4.0.0"},"catalogs":{"build":{"typescript":"^6.0.0"}}}}',
+  },
+  badWorkspaces: {
+    "package.json": '{"name":"root","workspaces":42,"catalog":{"effect":"^4.0.0"},"catalogs":{"build":{"typescript":"^6.0.0"}}}',
+  },
+};
+describe("historical Bun catalogs retain tolerant malformed-input degradation", () => {
+  it.layer(snapshotsLayer(scriptGit(malformedBunTrees), npmMarkerOnly), { timeout: "30 seconds" })((it) => {
+    it.effect("malformed blocks and entries do not hide usable top-level or nested catalogs", () => Effect.gen(function* () {
+      const snapshots = yield* WorkspaceSnapshots;
+      for (const ref of ["badNested", "badTopLevel", "badWorkspaces"]) {
+        const snapshot = yield* snapshots.at(ref);
+        assert.deepStrictEqual(snapshot.catalogs.entries, { default: { effect: "^4.0.0" }, build: { typescript: "^6.0.0" } });
+      }
+    }));
+  });
 });

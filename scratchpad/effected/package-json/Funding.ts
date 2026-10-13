@@ -29,6 +29,7 @@ import type * as SchemaIssue from "effect/SchemaIssue";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as P from "effect/Predicate";
@@ -51,13 +52,8 @@ const FundingFields = S.Struct({
 
 const decodeFundingFields = S.decodeUnknownEffect(FundingFields);
 
-const restOf = (raw: { readonly [k: string]: unknown }): Record<string, unknown> => {
-	const rest: Record<string, unknown> = {};
-	for (const [key, value] of R.toEntries(raw)) {
-		if (!HashSet.has(KNOWN_FUNDING_KEYS, key)) rest[key] = value;
-	}
-	return rest;
-};
+const restOf = (raw: { readonly [k: string]: unknown }): Record<string, unknown> =>
+	R.fromEntries(A.filter(R.toEntries(raw), ([key]) => !HashSet.has(KNOWN_FUNDING_KEYS, key)));
 
 /**
  * Whether the remembered object still describes this entry. Guarding the
@@ -69,16 +65,20 @@ const restOf = (raw: { readonly [k: string]: unknown }): Record<string, unknown>
 const isFaithfulObject = (wire: { readonly [k: string]: unknown }, funding: Funding): boolean => {
 	if (wire.url !== funding.url) return false;
 	if ((P.isString(wire.type) ? wire.type : undefined) !== funding.type) return false;
-	// Keys added to `rest` after the decode are not in the remembered object.
-	for (const [key, value] of R.toEntries(funding.rest ?? {})) {
-		if (wire[key] !== value) return false;
+	const originalRest = restOf(wire);
+	const currentRest = funding.rest ?? {};
+	// Replay only if no extension was added, deleted or changed.
+	if (R.keys(originalRest).length !== R.keys(currentRest).length) return false;
+	for (const [key, value] of R.toEntries(currentRest)) {
+		const original = R.get(originalRest, key);
+		if (O.isNone(original) || original.value !== value) return false;
 	}
 	return true;
 };
 
 /** Whether the bare string form can still carry everything this entry holds. */
 const isStringExpressible = (funding: Funding): boolean =>
-	funding.type === undefined && R.keys(funding.rest ?? {}).length === 0;
+	funding.type === undefined && R.isEmptyRecord(funding.rest ?? {});
 
 const encodeEntry = (funding: Funding): EntryWire => {
 	const wire = Funding.wireOf(funding);
@@ -107,7 +107,7 @@ const decodeEntry = (input: EntryWire): Effect.Effect<Funding, SchemaIssue.Issue
 		Effect.mapError((error) => error.issue),
 		Effect.map((fields) => {
 			const rest = restOf(input);
-			const funding = Funding.make({ ...fields, ...(R.keys(rest).length > 0 ? { rest } : {}) });
+			const funding = Funding.make({ ...fields, ...(!R.isEmptyRecord(rest) ? { rest } : {}) });
 			Funding.rememberWire(funding, input);
 			return funding;
 		}),

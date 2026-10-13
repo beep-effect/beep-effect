@@ -173,6 +173,14 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **upstream-bug** — Both submodule boolean fields accept Git integer syntax upstream rejects while retaining word, bare-key and on-demand semantics. (scratchpad/test/git/Gitmodules.test.ts:365,384)
 - **upstream-bug** — Nonterminal CR suffixes are diagnosed instead of upstream silent truncation, including a review-required header rejection stricter than Git itself. (scratchpad/test/git/GitConfig.test.ts:523,531)
 - **upstream-bug** — Initial BOM-prefixed configuration parses and retains byte/offset fidelity where upstream rejects it. (scratchpad/test/git/GitConfig.test.ts:537)
+- **upstream-bug** — Lab commonDir removes only the final LF and preserves pathname CR/LF where upstream strips CR or rejects embedded LF (scratchpad/test/git/Git.test.ts:978)
+- **upstream-bug** — Lab requires space or tab before quoted subsections where upstream accepts unseparated headers (scratchpad/test/git/GitConfig.test.ts:199; scratchpad/test/git/Gitmodules.test.ts:49)
+- **upstream-bug** — Lab accepts and preserves empty dotted subsections where upstream rejects them (scratchpad/test/git/GitConfig.test.ts:213; scratchpad/test/git/internal/config.coverage.test.ts:77)
+- **upstream-bug** — Lab drops an EOF backslash outside open quotes and includes it in the edit span where upstream reports invalidEscape (scratchpad/test/git/GitConfig.test.ts:225,235; scratchpad/test/git/internal/config.coverage.test.ts:35)
+- **upstream-bug** — Lab keeps terminal CR as a line ending outside decoded values and edit spans where upstream includes it in the value (scratchpad/test/git/GitConfig.test.ts:240,252; scratchpad/test/git/Gitmodules.test.ts:64)
+- **schema-first** — Lab uses Schema JSON codecs and schema-owned numeric and private argv domains where upstream uses native JSON serialization, an imperative predicate and handwritten types, preserving diagnostic bytes and argv behavior (scratchpad/test/git/Git.test.ts:601,947; scratchpad/test/git/GitConfig.test.ts:191; scratchpad/test/git/Gitmodules.test.ts:40; scratchpad/test/git/GitCommand.test.ts:208,825)
+- **tsgo-diagnostics** — Lab integration tests share scoped contexts, pin child environments and use Effect platform fixtures where upstream helpers reacquire layers, mutate the host environment and use native filesystem/path hooks (scratchpad/test/git/integration/Git.int.test.ts:78,147; scratchpad/test/git/integration/GitSurface.int.test.ts:81,136)
+- **tagged-errors** — Lab integration setup failures carry FixtureSetupError tagged defects where upstream fixture helpers die with native Error, preserving their messages (scratchpad/test/git/integration/Git.int.test.ts:101; scratchpad/test/git/integration/GitSurface.int.test.ts:106)
 
 ### Dependency backlog
 

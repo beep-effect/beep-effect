@@ -41,13 +41,32 @@ export class InvalidLineTableError extends S.TaggedError<InvalidLineTableError>(
 /**
  * A 1-based line/column pair, unist's `Point` shape minus the `offset` field.
  *
+ * **Example** (Validate LineColumn data)
+ *
+ * ```ts
+ * import { LineColumn } from "@beep/scratchpad/effected/markdown/internal/lineIndex";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(LineColumn)({ line: 1, column: 1 })); // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface LineColumn {
-	readonly line: number;
-	readonly column: number;
-}
+export const LineColumn = S.Struct({
+	line: S.Finite.annotateKey({ description: "One-based source line containing the queried offset." }),
+	column: S.Finite.annotateKey({ description: "One-based UTF-16 column within the source line." }),
+}).annotate($I.annote("LineColumn", {
+	description: "A source position returned by the line index without an absolute offset field.",
+}));
+
+/**
+ * The plain source-position payload described by {@link LineColumn}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LineColumn = typeof LineColumn.Type;
 
 /**
  * A precomputed index of line-start offsets over a fixed source text,

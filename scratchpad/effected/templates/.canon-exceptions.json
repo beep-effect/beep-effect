@@ -1,0 +1,6 @@
+[
+  {
+    "id": "EV010:scratchpad/test/templates/integration/ManagedSection.int.test.ts:10:@effect/platform-node@0#1",
+    "reason": "The suite verifies actual Node filesystem errors, bytes, timestamps, and lifecycle behavior; a memory double cannot establish those platform contracts. Retained the platform import and composed its layers through it.layer."
+  }
+]

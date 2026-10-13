@@ -10,8 +10,8 @@ import * as R from "effect/Record";
  *
  * This is deliberately narrower than `typeof v === "object"`. A `Date` spread
  * into a fresh object loses every internal slot and yields `{}`; a class
- * instance loses its prototype, so `instanceof` fails and its getters vanish.
- * Recursion is gated on this predicate so nested values of those kinds stay
+ * instance also needs its constructor-created private state, which a copied
+ * prototype cannot supply. Merging is gated on this predicate so values of those kinds stay
  * atomic — the higher-priority source wins them whole.
 
  * **Example** (Distinguish mergeable nested objects from dates)
@@ -25,30 +25,21 @@ import * as R from "effect/Record";
  * @category predicates
  * @since 0.0.0
  */
-export const isPlainObject = (value: unknown): value is Record<string, unknown> => {
+export const isPlainObject = (value: unknown): value is Record<PropertyKey, unknown> => {
 	if (!P.isObjectKeyword(value) || P.isFunction(value) || A.isArray(value)) return false;
 	const proto = Object.getPrototypeOf(value);
 	return proto === Object.prototype || proto === null;
 };
 
 /**
- * Record-like: a `[object Object]` whose fields can be merged. Admits plain
- * objects and class instances (a decoded `Schema.Class` document), but not
- * `Date` / `Map` / `Set` / `RegExp` / arrays, whose behaviour lives in internal
- * slots that a field-wise merge would destroy.
- */
-const isRecordLike = (value: unknown): value is Record<string, unknown> =>
-	P.isObjectKeyword(value) && !P.isFunction(value) && Object.prototype.toString.call(value) === "[object Object]";
-
-/**
- * Two values may be merged only if both are record-like and share a prototype.
- * Same-prototype instances merge field-wise; anything else is atomic.
+ * Two values may be merged only if both are plain records and share a prototype.
+ * Class instances are atomic, even when their prototypes match.
  *
  * **Details**
  *
- * Requiring an identical prototype is what keeps the merge honest: a document
- * decoded through `Schema.Class` merges with another of the same class and
- * keeps its identity, and nothing else is ever silently reshaped.
+ * Plain records merge field-wise without changing their prototype kind.
+ * A document decoded through `Schema.Class` keeps its identity and private
+ * state because the higher-priority instance is returned intact.
 
  * **Example** (Check top-level prototype compatibility)
  *
@@ -56,7 +47,8 @@ const isRecordLike = (value: unknown): value is Record<string, unknown> =>
  * import { canMerge } from "@beep/scratchpad/effected/config-file/internal/deepMerge";
  *
  * class Settings { port = 8080; }
- * console.log(canMerge(new Settings(), new Settings())); // true
+ * console.log(canMerge({ port: 8080 }, { port: 3000 })); // true
+ * console.log(canMerge(new Settings(), new Settings())); // false
  * console.log(canMerge(new Settings(), { port: 3000 })); // false
  * ```
  *
@@ -67,22 +59,22 @@ export const canMerge: {
 	(b: unknown): (a: unknown) => boolean;
 	(a: unknown, b: unknown): boolean;
 } = dual(2, (a: unknown, b: unknown): boolean =>
-	isRecordLike(a) && isRecordLike(b) && Object.getPrototypeOf(a) === Object.getPrototypeOf(b));
+	isPlainObject(a) && isPlainObject(b) && Object.getPrototypeOf(a) === Object.getPrototypeOf(b));
 
 /**
  * Recursively merge `source` into `target`; keys already present on `target`
- * win. Nested plain objects merge; every other value is atomic.
+ * win. Compatible plain records merge; every other value is atomic.
  *
  * **Details**
  *
- * The result is built on `target`'s prototype rather than spread into `{}`, so
- * a decoded `Schema.Class` document survives the merge as a real instance —
- * `instanceof` holds and its getters still work. Without this, `load` would
- * declare `Effect<A>` and hand back a structurally-equal plain object, and a
- * consumer calling a class method would get a `TypeError` that typechecked.
+ * When either input is not a plain record or their prototypes differ, `target`
+ * is returned intact. This preserves class identity, private-field brands and
+ * internal slots. Otherwise the result keeps `target`'s plain-record prototype.
  *
- * Only own enumerable keys are consulted (`Object.hasOwn`), so a prototype
- * getter on `target` never shadows a real key on `source`.
+ * Only own enumerable string and symbol keys are copied as inert data
+ * properties. Inherited and non-enumerable fields are excluded, and the string
+ * `__proto__` is filtered. An inherited getter on `target` never shadows an
+ * own key on `source`; neither input is mutated.
 
  * **Example** (Keep higher priority keys and merge nested sections)
  *
@@ -100,28 +92,29 @@ export const canMerge: {
  * @since 0.0.0
  */
 export const deepMerge: {
-	(source: Record<string, unknown>): <T extends Record<string, unknown>>(target: T) => T;
-	<T extends Record<string, unknown>>(target: T, source: Record<string, unknown>): T;
+	(source: object): <T extends object>(target: T) => T;
+	<T extends object>(target: T, source: object): T;
 } = dual(2, mergeRecords);
 
-function mergeRecords<T extends Record<string, unknown>>(target: T, source: Record<string, unknown>): T;
+function mergeRecords<T extends object>(target: T, source: object): T;
 function mergeRecords(
-	target: Record<string, unknown>,
-	source: Record<string, unknown>,
-): Record<string, unknown> {
-	const result: Record<string, unknown> = { __proto__: Object.getPrototypeOf(target) };
+	target: object,
+	source: object,
+): object {
+	if (!isPlainObject(target) || !isPlainObject(source) || !canMerge(target, source)) return target;
+	const result: Record<PropertyKey, unknown> = { __proto__: Object.getPrototypeOf(target) };
 	// Own keys are copied as data properties, including constructor/prototype.
 	// A bare assignment uses [[Set]] semantics, so an own `__proto__` key on the
 	// higher-priority document would reach `Object.prototype`'s inherited accessor
 	// and reassign `result`'s prototype to attacker-controlled data — defeating
 	// the prototype we just installed. `Object.assign` and `result[k] = v`
 	// both do this; `defineProperty` does not.
-	for (const key of R.keys(target)) {
-		if (key === "__proto__") continue;
+	for (const key of Reflect.ownKeys(target)) {
+		if (key === "__proto__" || !Object.prototype.propertyIsEnumerable.call(target, key)) continue;
 		define(result, key, target[key]);
 	}
-	for (const key of R.keys(source)) {
-		if (key === "__proto__") continue;
+	for (const key of Reflect.ownKeys(source)) {
+		if (key === "__proto__" || !Object.prototype.propertyIsEnumerable.call(source, key)) continue;
 		const sourceValue = source[key];
 		if (!R.has(result, key)) {
 			define(result, key, sourceValue);
@@ -136,6 +129,6 @@ function mergeRecords(
 }
 
 /** Create an own data property, never invoking a setter inherited from the prototype chain. */
-const define = (target: Record<string, unknown>, key: string, value: unknown): void => {
+const define = (target: Record<PropertyKey, unknown>, key: PropertyKey, value: unknown): void => {
 	Object.defineProperty(target, key, { value, writable: true, enumerable: true, configurable: true });
 };

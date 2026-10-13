@@ -718,6 +718,26 @@ describe("YamlFormat", () => {
 				assert.strictEqual(error.diagnostics[0]?.code, "NestingDepthExceeded");
 			}),
 		);
+
+		it.effect("fails typed when document and replacement exceed the depth cap together", () =>
+			Effect.gen(function* () {
+				const text = "[".repeat(160) + "0" + "]".repeat(160) + "\n";
+				const path: number[] = [];
+				let replacement: unknown = "x";
+				for (let i = 0; i < 160; i++) {
+					path.push(0);
+					replacement = [replacement];
+				}
+				// Each input is admissible on its own; only insertion exceeds the cap.
+				yield* Yaml.parse(text);
+				yield* YamlFormat.modify("0\n", [], replacement);
+				const error = yield* Effect.flip(YamlFormat.modify(text, path, replacement));
+				assert.instanceOf(error, YamlModificationError);
+				assert.deepStrictEqual(error.path, path);
+				assert.strictEqual(error.diagnostics[0]?.code, "NestingDepthExceeded");
+				assert.strictEqual(error.diagnostics[0]?.message, "Nesting depth exceeded maximum of 256");
+			}),
+		);
 	});
 
 	describe("modify — delete via undefined", () => {

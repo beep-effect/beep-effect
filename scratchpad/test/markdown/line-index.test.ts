@@ -1,7 +1,23 @@
 import { assert, describe, it } from "@effect/vitest";
-import { LineIndex } from "../../effected/markdown/internal/lineIndex.ts";
+import * as S from "effect/Schema";
+import { LineColumn, LineIndex } from "../../effected/markdown/internal/lineIndex.ts";
 
 describe("LineIndex", () => {
+	it("validates plain positions from a supplied line table and rejects non-finite coordinates", () => {
+		const index = LineIndex.fromLineStarts("a\rb", [0, 2]);
+		const position = index.positionAt(2);
+		assert.deepStrictEqual(position, { line: 2, column: 1 });
+		assert.isTrue(S.is(LineColumn)(position));
+		assert.isTrue(S.is(LineColumn)(index.positionAt(-1)));
+		assert.isTrue(S.is(LineColumn)(index.positionAt(99)));
+		assert.isFalse(S.is(LineColumn)({ line: "1", column: 1 }));
+		assert.isFalse(S.is(LineColumn)({ line: 1 }));
+		for (const coordinate of [NaN, Infinity, -Infinity]) {
+			assert.isFalse(S.is(LineColumn)({ line: coordinate, column: 1 }));
+			assert.isFalse(S.is(LineColumn)({ line: 1, column: coordinate }));
+		}
+	});
+
 	it("positions the only offset of an empty string at line 1 column 1", () => {
 		const index = LineIndex.make("");
 		assert.deepStrictEqual(index.positionAt(0), { line: 1, column: 1 });

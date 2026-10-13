@@ -1,0 +1,26 @@
+### sol-3-1
+
+- file: scratchpad/effected/semver/internal/desugar.ts:192
+- class: bug   severity: required
+- standard: D9, D11, section 14 (`upstream-bug`); `Range` documents node-semver range semantics.   evidence: Read-only `bun --no-install -e` differential probes against the lab, the pinned oracle, and installed node-semver show that `>=1.0.0-alpha <1.x` normalizes to `>=1.0.0-alpha <1.0.0` in both lab and oracle and accepts `1.0.0-beta`. Node-semver normalizes it to `>=1.0.0-alpha <1.0.0-0` and rejects that version. The same failure occurs for `>=1.2.0-alpha <1.2.x` with `1.2.0-beta`, through the second affected branch at line 212. The installed `semver/classes/range.js` implementation of `replaceXRange` explicitly adds `-0` to strict wildcard upper bounds. The green coverage test at `scratchpad/test/semver/internal/desugar.coverage.test.ts:36` explicitly expects the incorrect `<1.0.0` and `<1.2.0` bounds.
+- failure: Strict comparisons against partial versions admit prereleases below the stable boundary when another comparator grants permission for that tuple. Matching, filtering, and cache resolution can therefore select versions excluded by the advertised dialect. These ranges should be unsatisfiable in the demonstrated examples.
+- fix: Add `[0]` to the versions constructed by the two partial-version `<` branches: `sv(major, 0, 0, [0])` and `sv(major, minor, 0, [0])`. Correct the existing coverage expectations and add public membership and cache-resolution regressions for wildcard and omitted-component spellings (`<1.x`, `<1`, `<1.2.x`, `<1.2`). Record the verified upstream-bug deviation under section 14.
+
+### sol-3-2
+
+- file: scratchpad/effected/semver/internal/desugar.ts:98
+- class: bug   severity: required
+- standard: D9, D11, section 14 (`upstream-bug`); node-semver caret and hyphen wildcard semantics.   evidence: Read-only differential probes reproduce these results in both lab and the pinned oracle: `^1.x.3` becomes `>=1.0.3 <2.0.0-0` and rejects `1.0.0`, whereas node-semver produces `>=1.0.0 <2.0.0-0` and accepts it; `^1.x.0-alpha` admits `1.0.0-alpha`, whereas node-semver rejects it. The same lower-bound construction defect exists in `desugarHyphen` at line 246: `1.x.3 - 2` rejects `1.0.0`, and `*.1.3 - 2` rejects `0.0.0`, although node-semver accepts both. Its `replaceCaret` and `hyphenReplace` implementations discard less-significant components and prerelease suffixes once a more-significant component is a wildcard. The property generator at `scratchpad/test/semver/internal/desugar.property.test.ts:13` generates only trailing omitted components and empty suffixes, so it cannot expose these counterexamples.
+- failure: Numeric components and prerelease suffixes following a wildcard incorrectly constrain the lower bound. This excludes valid stable versions and can admit prereleases that the wildcard range excludes. The defect is distinct from the closed round-2 wildcard-major caret finding.
+- fix: In caret lower-bound construction, use patch zero and an empty prerelease when the minor is a wildcard. In hyphen lower-bound construction, discard all components following the first wildcard and retain prerelease identifiers only for a fully specified lower endpoint. Add regressions for the demonstrated stable exclusions and prerelease admissions, including `x` and `*` spellings, and record the verified upstream-bug deviation.
+
+### sol-3-3
+
+- file: scratchpad/effected/semver/internal/order.ts:27
+- class: schema   severity: required
+- standard: AGENTS.md, Code Laws (“Use schema-first domain models”); `standards/effect-first-development.md` EF-12b; `standards/schema-first-development-prompt.md`, Core Modeling Contract; schema-first-development skill, Repository Laws §1.   evidence: `VersionParts` at line 27 and `ComparatorParts` at line 74 are exported pure-data interfaces shared throughout the parsing, comparison, normalization, and desugaring pipeline. `PartialParts` at `scratchpad/effected/semver/internal/desugar.ts:18` is another exported pure-data interface. None is a service contract, overload surface, or generic type-level operation. A read-only runtime export probe confirms that all three names lack runtime schema values. The README and ledger’s schema-first deviation describe operator/component LiteralKits and equality narrowing; they contain no exception for these models. The four reported Beep law gates do not establish schema-first model compliance.
+- failure: Three named, reused domain models remain authored as TypeScript interfaces instead of schema-derived types. Their structural definitions have no shared schema source of truth; property tests consequently declare separate version/comparator schemas rather than deriving these shapes from the implementation.
+- fix: Define annotated structural schemas for `VersionParts`, `ComparatorParts`, and `PartialParts`, and derive their same-name types from those schemas. Preserve the parser’s plain-object representation and existing intermediate numeric/null semantics; keep final SemVer validation at its current boundary so this modeling repair does not introduce earlier throws or change overflow behavior. Reuse the shared shapes in the corresponding property generators.
+
+REQUIRED: 3
+BACKLOG: 0

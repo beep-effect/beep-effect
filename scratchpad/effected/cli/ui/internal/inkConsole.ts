@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
@@ -18,7 +19,7 @@ const $I = $ScratchpadId.create("effected/cli/ui/internal/inkConsole");
 /** Captures the caller stack for console.trace. */
 class ConsoleTrace extends S.TaggedError<ConsoleTrace>($I`ConsoleTrace`)(
 	"ConsoleTrace",
-	{ message: S.String },
+	{ message: S.String.annotate({ description: "The trace message used to capture the caller stack, empty before formatting." }) },
 	$I.annote("ConsoleTrace", { description: "The caller stack rendered by console.trace." }),
 ) {
 	override readonly name = "Error";
@@ -80,10 +81,10 @@ const tableOf = (data: unknown, properties?: ReadonlyArray<string>): string => {
 		...(scalars ? [isRecord(value) ? "" : cell(value)] : []),
 	]);
 	const widths = header.map((title, column) =>
-		Math.max(title.length, ...body.map((row) => (row[column] ?? "").length)),
+		Math.max(title.length, ...body.map((row) => A.getUnsafe(row, column).length)),
 	);
 	const line = (cells: ReadonlyArray<string>): string =>
-		`| ${cells.map((text, column) => text.padEnd(widths[column] ?? 0)).join(" | ")} |`;
+		`| ${cells.map((text, column) => text.padEnd(A.getUnsafe(widths, column))).join(" | ")} |`;
 	return [line(header), ...body.map(line)].join("\n");
 };
 

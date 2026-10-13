@@ -1,7 +1,8 @@
 import * as A from "effect/Array";
 import * as Match from "effect/Match";
 import { dual } from "effect/Function";
-import type { Inline, LinkTarget } from "../Doc.ts";
+import { type Inline, LinkTarget } from "../Doc.ts";
+import * as S from "effect/Schema";
 import { sanitize } from "../Fmt.ts";
 import type { RenderContext } from "../Render.ts";
 import type { Style, TokenName } from "../Token.ts";
@@ -54,7 +55,12 @@ const pathSeparator = (ctx: RenderContext): string =>
 const safeTargetText = (text: string): string => sanitize(text).replace(/[\r\n]/g, "");
 
 const safeTarget = (target: LinkTarget): LinkTarget =>
-	"url" in target ? { url: safeTargetText(target.url) } : { ...target, file: safeTargetText(target.file) };
+	S.is(LinkTarget.members[0])(target)
+		? { url: safeTargetText(target.url) }
+		: {
+			file: safeTargetText(target.file),
+			...O.getSomesStruct({ line: O.fromUndefinedOr(target.line), col: O.fromUndefinedOr(target.col) }),
+		};
 
 const spansOf = (inline: Inline, ctx: RenderContext): ReadonlyArray<Span> =>
 	Match.valueTags(inline, {

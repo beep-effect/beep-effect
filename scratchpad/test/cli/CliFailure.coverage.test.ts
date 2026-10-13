@@ -40,6 +40,14 @@ it.effect("unknown span stacks fail open, and a non-stack location is accepted",
     assert.include(plain(Cause.annotate(Cause.fail("failed"), Context.make(Cause.StackTrace, frame))), "in: operation");
   }
 }));
+it.effect("a non-file app module leaves application spans visible", () => Effect.sync(() => {
+  const frame = { name: "operation", parent: undefined, stack: () => "/repo/main.ts:1:2" };
+  const cause = Cause.annotate(Cause.fail("failed"), Context.make(Cause.StackTrace, frame));
+  const rendered = plain(cause, { appModule: "node:internal" });
+  assert.include(rendered, "failed");
+  assert.include(rendered, "in: operation");
+  assert.strictEqual(rendered, plain(cause));
+}));
 
 import { Cancelled } from "../../effected/cli/Cancelled.ts";
 it.effect("cancellation failures keep the fixed line and empty failures retain a status", () => Effect.sync(() => {

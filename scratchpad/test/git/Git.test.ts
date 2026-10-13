@@ -598,6 +598,32 @@ describe("Git", () => {
 			throw new Error("spawned — the option-injection guard did not fire");
 		};
 
+		it.effect("refusal diagnostics preserve JSON escaping and redact sensitive values before spawning", () =>
+			Effect.gen(function* () {
+				const value = '-"quoted"\\slash\ttab\nline\r\b';
+				const refused = yield* Effect.flip(run(Effect.gen(function* () {
+					const git = yield* Git;
+					return yield* git.checkout(cwd, value);
+				}), neverSpawn));
+				assert.instanceOf(refused, GitCommandError);
+				if (S.is(GitCommandError)(refused)) {
+					assert.strictEqual(refused.kind, "refused");
+					assert.deepStrictEqual(refused.args, [value]);
+					assert.strictEqual(refused.detail, 'refused a ref argument git would parse as an option: "-\\"quoted\\"\\\\slash\\ttab\\nline\\r\\b"');
+				}
+				const sensitive = yield* Effect.flip(run(Effect.gen(function* () {
+					const git = yield* Git;
+					return yield* git.configSet(cwd, "core.key", value);
+				}), neverSpawn));
+				assert.instanceOf(sensitive, GitCommandError);
+				if (S.is(GitCommandError)(sensitive)) {
+					assert.strictEqual(sensitive.kind, "refused");
+					assert.deepStrictEqual(sensitive.args, ["<redacted>"]);
+					assert.strictEqual(sensitive.detail, "refused a sensitive argument git would parse as an option (value redacted)");
+				}
+			}),
+		);
+
 		it.effect("checkout refuses a ref git would parse as an option, before spawning", () =>
 			Effect.gen(function* () {
 				const program = Effect.gen(function* () {
@@ -918,7 +944,50 @@ describe("Git", () => {
 		);
 	});
 
+	it.effect("numeric guards retain omitted, signed-zero and large integral depths and refuse every invalid boundary", () =>
+		Effect.gen(function* () {
+			for (const depth of [undefined, -0, 0, 1, 9007199254740992, 1e30]) {
+				const program = Effect.gen(function* () {
+					const git = yield* Git;
+					return yield* git.fetch(cwd, { ref: "main", ...(depth === undefined ? {} : { depth }) });
+				});
+				yield* run(program, (args) => {
+					assert.deepStrictEqual(args, depth === undefined ? ["fetch", "origin", "main"] : ["fetch", "--depth", String(depth), "origin", "main"]);
+					return { exit: 0 };
+				});
+			}
+			for (const depth of [-1, -Number.MIN_VALUE, 0.5, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+				const program = Effect.gen(function* () {
+					const git = yield* Git;
+					return yield* git.fetch(cwd, { ref: "main", depth });
+				});
+				const failure = yield* Effect.flip(run(program, () => assert.fail("invalid depth spawned")));
+				assert.instanceOf(failure, GitCommandError);
+				if (S.is(GitCommandError)(failure)) {
+					assert.strictEqual(failure.kind, "refused");
+					assert.deepStrictEqual(failure.args, [String(depth)]);
+					assert.strictEqual(failure.cwd, cwd);
+					assert.strictEqual(failure.stderr, "");
+					assert.strictEqual(failure.detail, `refused a fetch depth: expected a non-negative integer, received ${depth}`);
+				}
+			}
+		}),
+	);
+
 	describe("commonDir", () => {
+		it.effect("removes exactly the final LF while preserving pathname CR and embedded LF", () =>
+			Effect.gen(function* () {
+				for (const path of ["/repo/.git\r", "/repo\npart/.git", "/repo/.git\n", "/repo\rpart/.git"]) {
+					const program = Effect.gen(function* () {
+						const git = yield* Git;
+						return yield* git.commonDir(cwd);
+					});
+					assert.strictEqual(yield* run(program, () => ({ stdout: `${path}\n`, exit: 0 })), path);
+					assert.strictEqual(yield* run(program, () => ({ stdout: path.endsWith("\n") ? `${path}\n` : path, exit: 0 })), path);
+				}
+			}),
+		);
+
 		it.effect("returns the trimmed absolute common directory", () =>
 			Effect.gen(function* () {
 				const program = Effect.gen(function* () {

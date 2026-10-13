@@ -44,17 +44,43 @@ export type PatternReadFailureKind = typeof PatternReadFailureKind.Type;
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
+/** Builds one existing plain failure case without a constructor default. */
+const patternReadFailureCase = <const Kind extends PatternReadFailureKind>(kind: S.Literal<Kind>) => {
+	const identifier: string = `PatternReadFailure.${kind.literal}`;
+	return S.Struct({
+		kind: kind.annotateKey($I.annote("PatternReadFailure.kind", { description: "The existing caller-visible failure reason." })),
+		path: S.String.annotateKey($I.annote("PatternReadFailure.path", { description: "The workspace configuration file whose read failed." })),
+		cause: S.Unknown.annotateKey($I.annote("PatternReadFailure.cause", { description: "The original arbitrary failure value, including undefined." })),
+	}).annotate($I.annote(identifier, { description: `The existing ${kind.literal} failure record.` }));
+};
+
 /**
  * The reason a pattern read failed, with the file it failed on.
+ *
+ * **Example** (Retain an arbitrary pattern-read cause)
+ *
+ * ```ts
+ * import { PatternReadFailure } from "@beep/scratchpad/effected/workspaces/internal/patterns";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(PatternReadFailure)({ path: "/repo/pnpm-workspace.yaml", kind: "read", cause: undefined })); // true
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
-export interface PatternReadFailure {
-	readonly path: string;
-	readonly kind: PatternReadFailureKind;
-	readonly cause: unknown;
-}
+export const PatternReadFailure = PatternReadFailureKind.mapMembers(([read, invalidYaml, invalidJson]) => [
+	patternReadFailureCase(read),
+	patternReadFailureCase(invalidYaml),
+	patternReadFailureCase(invalidJson),
+]).pipe(S.toTaggedUnion("kind")).annotate($I.annote("PatternReadFailure", { description: "A plain pattern-read failure retaining its arbitrary cause." }));
+/**
+ * The readonly read failure described by {@link PatternReadFailure}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PatternReadFailure = typeof PatternReadFailure.Type;
 
 /**
  * The string entries of `value` when it is an array, else `undefined`.

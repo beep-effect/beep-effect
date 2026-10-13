@@ -20,4 +20,14 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
 
 describe("CatalogAssemblyError property floor", () => {
   roundTrips("CatalogAssemblyError", CatalogAssemblyError);
+
+  it.effect.prop("source projection preserves path and cause and retains reasons only for hooks", [Arbitrary.schema(CatalogAssemblyError)], ([error]) =>
+    Effect.sync(() => {
+      const failure = error.failure;
+      assert.strictEqual(failure.source, error.source);
+      assert.strictEqual(failure.path, error.path);
+      assert.strictEqual(failure.cause, error.cause);
+      if (failure.source === "hooks") assert.strictEqual(failure.reason, error.reason);
+      else assert.notProperty(failure, "reason");
+    }), runs);
 });

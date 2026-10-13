@@ -1,4 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -7,6 +9,8 @@ import type * as LayerType from "effect/Layer";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { AudienceKind } from "../env/index.ts";
 import { CurrentRuntimeEnv } from "../env/index.ts";
 import { Walker } from "../walker/index.ts";
@@ -25,11 +29,30 @@ const $I = $ScratchpadId.create("effected/cli/CliLinks");
  * `vscode` writes `vscode://file/<path>:<line>:<col>`, `file` writes `file://<path>`, `off` writes no file link, and
  * `auto` picks `vscode` when it finds a signal of VS Code and `file` otherwise.
  *
+ * **Example** (Validate an editor link setting)
+ *
+ * ```ts
+ * import { EditorLinks } from "@beep/scratchpad/effected/cli/CliLinks";
+ * import * as S from "effect/Schema";
+ * console.log(S.is(EditorLinks)("vscode")) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const EditorLinks = LiteralKit(["auto", "vscode", "file", "off"]).annotate(
+	$I.annote("EditorLinks", { description: "Whether file links open in an editor." }),
+);
+
+/**
+ * The editor link setting accepted by {@link CliLinks}.
+ *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export type EditorLinks = "auto" | "vscode" | "file" | "off";
+export type EditorLinks = typeof EditorLinks.Type;
 
 /**
  * The shape of the {@link CliLinks} service: the mode decided, and the URL a link target becomes.
@@ -88,10 +111,12 @@ export interface CliLinksLinkerOptions {
 /** The most directories the ascent climbs above the working directory, so it looks at most at 65. */
 const MAX_ASCENT = 64;
 
-const MODES: ReadonlyArray<EditorLinks> = ["auto", "vscode", "file", "off"];
+const isEditorLinks = S.is(EditorLinks);
 
-const parseSetting = (raw: string): EditorLinks | undefined =>
-	MODES.find((mode) => mode === raw.trim().toLowerCase());
+const parseSetting = (raw: string): EditorLinks | undefined => {
+	const normalized = Str.toLowerCase(Str.trim(raw));
+	return isEditorLinks(normalized) ? normalized : undefined;
+};
 
 /** A URL with its control characters and line breaks removed: none is legal in one, and each could end an OSC 8 early. */
 const cleanUrl = (url: string): string => sanitize(url).replace(/[\r\n]/g, "");
@@ -170,7 +195,7 @@ const build = Effect.fn("build")(function* (
 	const fromEnv = parseSetting(raw);
 	// A value that is not a mode warns once, as the audience override does, and the option is used.
 	if (options.envVar !== undefined && raw !== "" && fromEnv === undefined) {
-		yield* Effect.logWarning(`${options.envVar}=${raw} is not one of ${MODES.join("|")}; ignoring it`);
+		yield* Effect.logWarning(`${options.envVar}=${raw} is not one of ${A.join(EditorLinks.literals, "|")}; ignoring it`);
 	}
 	const setting = fromEnv ?? options.editorLinks ?? "auto";
 

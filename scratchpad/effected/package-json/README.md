@@ -302,6 +302,8 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **identity-annotations** — The lab adds owning Beep identity keys and annotations where upstream used short or @effected identifiers without that metadata. (scratchpad/test/package-json/PackageName.test.ts:45,114; scratchpad/test/package-json/License.test.ts:24; scratchpad/test/package-json/PackageFields.test.ts:9; scratchpad/test/package-json/PackageManagerRange.test.ts:25)
 - **upstream-bug** — The lab preserves nested sorted-map __proto__ data that upstream sorting dropped. (scratchpad/test/package-json/Format.test.ts:185)
 - **upstream-bug** — The lab preserves top-level __proto__ data in default rendering that upstream sorting dropped. (scratchpad/test/package-json/Package.test.ts:174,199)
+- **upstream-bug** — The lab preserves own __proto__ data fields and ordinary rest prototypes through nested Person, Funding, Repository and Bugs edits, where upstream loses the fields. (scratchpad/test/package-json/Person.test.ts:11; scratchpad/test/package-json/Funding.test.ts:39; scratchpad/test/package-json/Repository.test.ts:31)
+- **upstream-bug** — The lab honors funding-extension deletions, clearing and own-key replacements while preserving bare/array representation, where upstream can replay stale extensions. (scratchpad/test/package-json/Funding.test.ts:87; scratchpad/test/package-json/Funding.test.ts:114)
 
 ### Dependency backlog
 

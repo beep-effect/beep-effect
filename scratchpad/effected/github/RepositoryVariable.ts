@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
-import type { GitHubError } from "./GitHubError.ts";
+import { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
 import type * as Rest from "./Rest.ts";
 
@@ -291,10 +291,10 @@ const make = (client: GitHubClient["Service"]): RepositoryVariableShape => {
       owner,
       repo,
     });
-    return variables.map((variable): VariableInfo => ({
+    return yield* Effect.forEach(variables, (variable) => S.decodeEffect(VariableInfo)({
       name: variable.name,
       value: variable.value,
-    }));
+    }).pipe(Effect.mapError((error) => GitHubError.decode("RepositoryVariable.list", "GitHub returned an unexpected variable", error))));
   }));
 
   const delete_ = Effect.fn("RepositoryVariable.delete")(function* (name: string) {
@@ -367,10 +367,10 @@ const make = (client: GitHubClient["Service"]): RepositoryVariableShape => {
       repo,
       environment_name: environment,
     });
-    return variables.map((variable): VariableInfo => ({
+    return yield* Effect.forEach(variables, (variable) => S.decodeEffect(VariableInfo)({
       name: variable.name,
       value: variable.value,
-    }));
+    }).pipe(Effect.mapError((error) => GitHubError.decode("RepositoryVariable.listForEnvironment", "GitHub returned an unexpected variable", error))));
   });
 
   const deleteForEnvironment = Effect.fn("RepositoryVariable.deleteForEnvironment")(function* (

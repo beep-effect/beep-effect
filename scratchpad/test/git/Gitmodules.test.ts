@@ -37,6 +37,38 @@ const REAL_WORLD = `# vendored reference repos
 
 describe("Gitmodules", () => {
 	describe("decode", () => {
+		it("invalid field diagnostics preserve JSON quoting and control-character escaping", () => {
+			const error = decodeFailure('[submodule "a"]\npath=p\nurl=u\nignore="bad\\"\\\\\\t\\n\\b"\n');
+			if (error._tag !== "GitmodulesDecodeError") assert.fail("expected GitmodulesDecodeError");
+			assert.strictEqual(error.reason, "invalidValue");
+			assert.strictEqual(error.field, "ignore");
+			assert.strictEqual(error.value, 'bad"\\\t\n\b');
+			assert.strictEqual(error.message, 'submodule "a": invalid value "bad\\"\\\\\\t\\n\\b" for ignore');
+		});
+
+		it("quoted submodule headers require separators and accept space, tab and empty names", () => {
+			for (const separator of [" ", "\t"]) {
+				for (const name of ["a", ""]) {
+					const modules = ok(Gitmodules.parseResult(`[submodule${separator}"${name}"]\npath=p\nurl=u\n`));
+					assert.strictEqual(modules.entries[0]?.name, name);
+					assert.strictEqual(modules.entries[0]?.path, "p");
+				}
+			}
+			for (const name of ["a", ""]) {
+				const error = decodeFailure(`[submodule"${name}"]\npath=p\nurl=u\n`);
+				if (error._tag !== "GitConfigParseError") assert.fail("expected GitConfigParseError");
+				assert.strictEqual(error.diagnostics[0]?.code, "invalidSectionHeader");
+			}
+		});
+
+		it("terminal CR shallow values decode as booleans and retain the config line ending", () => {
+			for (const [value, expected] of [["0", false], ["1", true]] as const) {
+				const text = `[submodule "a"]\npath=p\nurl=u\nshallow=${value}\r`;
+				assert.strictEqual(ok(Gitmodules.parseResult(text)).entries[0]?.shallow, expected);
+				assert.strictEqual(ok(GitConfig.parseResult(text)).stringify(), text);
+			}
+		});
+
 		it("decodes a real-world document into typed entries, in order", () => {
 			const modules = ok(Gitmodules.parseResult(REAL_WORLD));
 			assert.strictEqual(modules.entries.length, 2);

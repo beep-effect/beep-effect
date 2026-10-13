@@ -1,0 +1,56 @@
+{
+  "module": "semver",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/semver/internal/desugar.ts",
+        "scratchpad/effected/semver/internal/grammar.ts",
+        "scratchpad/effected/semver/internal/order.ts"
+      ],
+      "tests": [
+        "scratchpad/test/semver/Range.test.ts",
+        "scratchpad/test/semver/VersionCache.test.ts",
+        "scratchpad/test/semver/internal/desugar.coverage.test.ts",
+        "scratchpad/test/semver/internal/grammar.coverage.test.ts",
+        "scratchpad/test/semver/internal/order.coverage.test.ts",
+        "scratchpad/test/semver/internal/desugar.property.test.ts",
+        "scratchpad/test/semver/internal/grammar.property.test.ts",
+        "scratchpad/test/semver/internal/normalize.property.test.ts",
+        "scratchpad/test/semver/internal/order.property.test.ts"
+      ],
+      "findings": [
+        "grok-3-1",
+        "grok-3-2",
+        "grok-3-3",
+        "sol-3-3"
+      ]
+    }
+  ],
+  "findings": {
+    "grok-3-1": {
+      "file": "scratchpad/effected/semver/internal/desugar.ts",
+      "class": "bug",
+      "summary": "Strict partial-version upper bounds omit -0 and admit boundary prereleases when another comparator grants tuple permission.",
+      "fix": "Add [0] in both partial < branches: sv(major, 0, 0, [0]) and sv(major, minor, 0, [0]). Correct the existing desugar coverage expectations and add Range membership/filter/maxSatisfying and VersionCache.resolveString regressions for <1.x, <1, <1.2.x and <1.2 combined with a lower prerelease comparator. Preserve concrete-version semantics and diagnostic-forced overloads. The orchestrator owns the verified upstream-bug record; do not edit ledger or README Port notes."
+    },
+    "grok-3-2": {
+      "file": "scratchpad/effected/semver/internal/desugar.ts",
+      "class": "bug",
+      "summary": "Caret and hyphen lower bounds retain numeric components and prerelease suffixes after a wildcard, excluding valid stable versions and admitting invalid prereleases.",
+      "fix": "For caret with null minor use major.0.0 with empty prerelease; retain current upper-bound rules. For hyphen discard all components after the first wildcard and retain prerelease only on a fully specified lower endpoint. Null major imposes no lower restriction: omit the lower comparator when an upper bound exists, preserving stable-wildcard normalization for fully unbounded ranges. Keep partial-upper behavior. Add internal expansion and public Range parse/membership regressions for ^1.x.3, ^1.x.0-alpha, ^0.x.5, ^1.*.2, ^0.*.2, 1.x.3 - 2, *.1.3 - 2, x.2 - 1.0.0, x.2.3 - 2.0.0 and 1.x.2 - 2.0.0, including x/* equivalents. Preserve overloads. The orchestrator owns deviation recording."
+    },
+    "grok-3-3": {
+      "file": "scratchpad/effected/semver/internal/grammar.ts",
+      "class": "bug",
+      "summary": "Primitive X-ranges accept concrete components after a wildcard although node-semver rejects them.",
+      "fix": "Only in parseSimple's primitive optional-operator arm, fail before desugarXRange if (major === null && (minor !== null || patch !== null)) || (minor === null && patch !== null), using the existing parser failure path. Add internal grammar and public Range.parse rejection regressions for 1.x.2, 1.*.0, 1.*.2, *.1, *.1.2, x.1, x.1.2, >1.x.2, >=*.1 and >*.1. Keep 1.x, 1.x.x, 1.2.x and * valid. Keep tilde/caret/hyphen on their separate discard semantics and test ~1.x.2 and ^1.x.2 controls. The orchestrator owns deviation recording."
+    },
+    "sol-3-3": {
+      "file": "scratchpad/effected/semver/internal/order.ts",
+      "class": "schema",
+      "summary": "VersionParts, ComparatorParts and PartialParts are reusable pure-data interfaces rather than schema-derived domain models.",
+      "fix": "Define annotated structural schemas and derive same-name types for VersionParts and ComparatorParts in internal/order.ts and PartialParts in internal/desugar.ts. Use composer identities and field metadata. Preserve plain-object output, numeric/null intermediate semantics, cycle-free imports and the existing final SemVer validation boundary; add no earlier decoding/throws. Reuse the shapes in existing internal order/grammar/normalize/desugar property generators while retaining bounded valid-input constraints and assertions. Add focused structural-schema/metadata regressions to internal order/desugar tests. Do not broaden coverage or canon work. Added-export/deviation bookkeeping remains central; do not edit manifests, config, ledger or README Port notes."
+    }
+  }
+}

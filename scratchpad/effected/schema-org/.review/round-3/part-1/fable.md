@@ -1,0 +1,7 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the schema-org slice read-only against the pinned upstream oracle, the port decisions, and the round-2 inventory so I only report new findings.Round 2 left a known list/set gap and five required fixes. I'll diff this commit against that review and read the focus files against the pinned oracle.NO FINDINGS
+
+Round-2 required fixes for schema JSON encoding, script escaping, and conformance policy defaults are present in this commit. The list/set reference gap and the other round-2 backlog items stay recorded, with no new evidence.
+
+REQUIRED: 0
+BACKLOG: 0

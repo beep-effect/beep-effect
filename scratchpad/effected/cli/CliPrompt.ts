@@ -1,8 +1,10 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Queue from "effect/Queue";
+import * as S from "effect/Schema";
 import * as Terminal from "effect/Terminal";
 import type { Param } from "effect/cli";
 import { CliConfig, GlobalFlag, Prompt } from "effect/cli";
@@ -11,14 +13,39 @@ import { CliInteractive } from "./CliInteractive.ts";
 import { answerWithoutPerson } from "./internal/fallbackAnswer.ts";
 import { WizardDropped } from "./internal/wizardGate.ts";
 
+const $I = $ScratchpadId.create("effected/cli/CliPrompt");
+
 /**
  * Which missing parameter a fallback stands in for, so a non-interactive run can fail with core's own error.
+ *
+ * **Example** (Validate the parameter named by a fallback)
+ *
+ * ```ts
+ * import { CliPromptTarget } from "@beep/scratchpad/effected/cli/CliPrompt"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(CliPromptTarget)({ flag: "name" })) // true
+ * console.log(S.is(CliPromptTarget)({ argument: "file" })) // true
+ * ```
  *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export type CliPromptTarget = { readonly flag: string } | { readonly argument: string };
+export const CliPromptTarget = S.Union([
+	S.Struct({
+		flag: S.String.annotate($I.annote("CliPromptTarget.Flag.flag", { description: "The missing flag's name without leading dashes." })),
+	}).annotate($I.annote("CliPromptTarget.Flag", { description: "A fallback target naming a missing flag." })),
+	S.Struct({
+		argument: S.String.annotate($I.annote("CliPromptTarget.Argument.argument", { description: "The missing positional argument's name." })),
+	}).annotate($I.annote("CliPromptTarget.Argument", { description: "A fallback target naming a missing positional argument." })),
+]).annotate($I.annote("CliPromptTarget", { description: "A plain flag or argument target for a prompt fallback." }));
+
+/**
+ * The plain missing-parameter cases validated by {@link CliPromptTarget}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CliPromptTarget = typeof CliPromptTarget.Type;
 
 /**
  * Options for {@link CliPrompt.fallback}.

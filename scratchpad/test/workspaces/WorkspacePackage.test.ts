@@ -4,7 +4,9 @@ import { GlobPattern } from "../../effected/glob/index.ts";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
-import { PublishConfig, WorkspacePackage } from "../../effected/workspaces/index.ts";
+import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
+import { PublishConfig, WorkspaceManifestError, WorkspacePackage } from "../../effected/workspaces/index.ts";
 
 const base = {
 	version: "1.0.0",
@@ -336,4 +338,18 @@ describe("WorkspacePackage — own-key records", () => {
 			assertSome(pkg.dependencyVersion(name), "1.0.0");
 		}
 	});
+});
+
+
+describe("WorkspaceManifestError encoding", () => {
+	it.effect("preserves the originating cause stack", () =>
+		Effect.gen(function* () {
+			const cause = new Error("original manifest failure");
+			const encoded = yield* S.encodeEffect(WorkspaceManifestError)(WorkspaceManifestError.make({
+				packageJsonPath: "/repo/package.json", kind: "read", cause,
+			}));
+			if (!P.isObject(encoded.cause)) return assert.fail("expected an encoded Error cause");
+			assert.strictEqual(encoded.cause.stack, cause.stack);
+		}),
+	);
 });

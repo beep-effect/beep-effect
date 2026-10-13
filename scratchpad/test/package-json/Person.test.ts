@@ -1,10 +1,39 @@
 import { assert, describe, it } from "@effect/vitest";
-import { assertExitSuccess, assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertExitSuccess, assertNone, assertTrue } from "@effect/vitest/utils";
 import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as R from "effect/Record";
 import { Person } from "../../effected/package-json/Person.ts";
+
+describe("Person — own __proto__ extension fidelity", () => {
+	it.effect("both object codecs preserve an own data key through a modeled-field edit", () =>
+		Effect.gen(function* () {
+			const json = S.fromJsonString(S.Record(S.String, S.Unknown));
+			const text = '{"name":"Ada","__proto__":{"keep":1},"team":"docs"}';
+			const input = yield* S.decodeEffect(json)(text);
+			assert.isTrue(R.has(input, "__proto__"));
+			for (const codec of [Person.schema, Person.FromValue]) {
+				const person = yield* S.decodeEffect(codec)(input);
+				const rest = person.rest;
+				assertDefined(rest);
+				assert.isTrue(R.has(rest, "__proto__"));
+				assert.deepStrictEqual(R.get(rest, "__proto__"), O.some({ keep: 1 }));
+				assert.strictEqual(Object.getPrototypeOf(rest), Object.prototype);
+				assert.deepStrictEqual(R.keys(rest), ["__proto__", "team"]);
+				assert.strictEqual(yield* S.encodeUnknownEffect(json)(yield* S.encodeEffect(codec)(person)), text);
+				Object.assign(person, { name: "Grace" } satisfies Partial<Person>);
+				const encoded = yield* S.encodeEffect(codec)(person);
+				assertTrue(P.isObject(encoded));
+				assert.isTrue(R.has(encoded, "__proto__"));
+				assert.deepStrictEqual(R.get(encoded, "__proto__"), O.some({ keep: 1 }));
+				assert.strictEqual(Object.getPrototypeOf(encoded), Object.prototype);
+				assert.deepStrictEqual(encoded, { ...input, name: "Grace" });
+			}
+		}),
+	);
+});
 
 describe("Person.FromString", () => {
 	it.effect("parses the Name <email> (url) shorthand", () =>

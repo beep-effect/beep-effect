@@ -1,0 +1,102 @@
+{
+  "module": "templates",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/templates/SectionDialect.ts",
+        "scratchpad/effected/templates/SectionDocument.ts",
+        "scratchpad/effected/templates/internal/reconcile.ts",
+        "scratchpad/effected/templates/internal/scan.ts"
+      ],
+      "tests": [
+        "scratchpad/test/templates/SectionDialect.test.ts",
+        "scratchpad/test/templates/SectionDocument.test.ts",
+        "scratchpad/test/templates/SectionDocument.reconcile.test.ts",
+        "scratchpad/test/templates/SectionDialect.property.test.ts",
+        "scratchpad/test/templates/SectionDocument.property.test.ts",
+        "scratchpad/test/templates/internal/scan.coverage.test.ts"
+      ],
+      "findings": [
+        "grok-2-1",
+        "sol-2-1",
+        "sol-2-2",
+        "sol-2-3",
+        "fable-2-2",
+        "fable-2-3"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/templates/internal/attributes.ts"
+      ],
+      "tests": [
+        "scratchpad/test/templates/SectionAttributes.test.ts"
+      ],
+      "findings": [
+        "grok-2-2"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [],
+      "tests": [
+        "scratchpad/test/templates/SectionDocument.prop.test.ts"
+      ],
+      "findings": [
+        "fable-2-13"
+      ]
+    }
+  ],
+  "findings": {
+    "grok-2-1": {
+      "file": "scratchpad/effected/templates/SectionDialect.ts",
+      "class": "bug",
+      "summary": "Document-leading BOM recognition incorrectly rejects BOM-prefixed section content.",
+      "fix": "In containsMarker, match against \"\\n\" + text so the absolute-document-offset BOM alternative cannot fire; retain multiline ^ matching for real marker lines and keep scan/compileMatchers document-leading BOM support. Add render/parse/reconcile regressions for BOM-prefixed content and retain the document-leading BOM cases in SectionDialect.test.ts and SectionDocument.test.ts."
+    },
+    "grok-2-2": {
+      "file": "scratchpad/effected/templates/internal/attributes.ts",
+      "class": "schema",
+      "summary": "Reusable attribute checks omit required check metadata and user-facing messages.",
+      "fix": "Supply composer-derived identifier, title, description and a user-facing message to each S.isPattern check. Preserve both regexes exactly, including AttributeName JavaScript dollar-anchor acceptance; do not add the u flag. Keep SectionAttributes.test.ts acceptance assertions and add focused check-metadata/decode-message assertions there."
+    },
+    "sol-2-1": {
+      "file": "scratchpad/effected/templates/internal/reconcile.ts",
+      "class": "bug",
+      "summary": "First insertion discards BOM and whitespace in a nonempty blank document.",
+      "fix": "Use the empty-document branch only for the actually empty string. When any original bytes exist, preserve the complete prefix, including BOM and whitespace, and add only the necessary separators before the appended block. Do not use the Fable trim-and-rebuild variant, which still discards whitespace. Add BOM-only, BOM-plus-whitespace and whitespace-only insertion/fixed-point regressions in SectionDocument.reconcile.test.ts; broaden SectionDocument.property.test.ts to exercise empty/blank prefixes. Integration records the verified upstream bug centrally under section 14."
+    },
+    "sol-2-2": {
+      "file": "scratchpad/effected/templates/SectionDialect.ts",
+      "class": "bug",
+      "summary": "LF rendering loses a trailing bare carriage return and never reaches a fixed point.",
+      "fix": "Refuse LF rendering when normalized content ends in a bare CR, with a dedicated typed SectionRenderError reason and exhaustive message handling. Retain faithful CRLF rendering. Add LF-refusal, CRLF-fidelity and reconcile-no-write regressions in SectionDialect.test.ts and SectionDocument.test.ts; extend SectionDialect.property.test.ts to cover the bare-CR boundary without weakening existing fidelity assertions. Integration records the demonstrated upstream-bug deviation centrally."
+    },
+    "sol-2-3": {
+      "file": "scratchpad/effected/templates/SectionDialect.ts",
+      "class": "perf",
+      "summary": "Lazy attribute matching and trailing whitespace backtracking cause quadratic scanning.",
+      "fix": "Recognize closing-rule and optional-comment-suffix boundaries with a deterministic linear scan, then send the single extracted attribute run through parseAttributeRun. Share the recognition behavior between containsMarker and internal/scan collectHits, preserving quoted --- values, trailing whitespace, capture/offset behavior, first-style priority and malformed-marker handling. Keep helper changes in the existing owned SectionDialect.ts/internal/scan.ts surface. Add adversarial scaling/work-bound and grammar regressions in SectionDialect.test.ts and internal/scan.coverage.test.ts. Integration records the algorithmic upstream-bug repair centrally."
+    },
+    "fable-2-2": {
+      "file": "scratchpad/effected/templates/SectionDocument.ts",
+      "class": "bug",
+      "summary": "Removing the first BOM-prefixed section introduces a persistent leading gap.",
+      "fix": "Treat the leading BOM separately from the surrounding textual prefix. Strip only separator line breaks around the removed span, then prepend the preserved BOM to every return branch. A BOM by itself must not select the two-sided separator branch. Add BOM-plus-footer, BOM-only remainder and repeated sync/remove regressions in SectionDocument.test.ts, preserving the existing non-BOM behavior."
+    },
+    "fable-2-3": {
+      "file": "scratchpad/effected/templates/SectionDialect.ts",
+      "class": "bug",
+      "summary": "Prototype-preserving SectionDialect copies throw on the owner private cache.",
+      "fix": "In matchers(), use the ergonomic private-brand check: return #compiledMatchers in this ? this.#compiledMatchers : this.compileMatchers(). Genuine owners retain their cached arrays; unbranded copies compile with their own fields without a global/native cache. Add a prototype-preserving-copy regression to SectionDialect.test.ts that proves render and containsMarker work, while retaining owner reuse, isolation and wire-form tests. Use existing available copy machinery; do not require a root dependency/config edit."
+    },
+    "fable-2-13": {
+      "file": "scratchpad/test/templates/SectionDocument.prop.test.ts",
+      "class": "law",
+      "summary": "A retained property test still deduplicates identities with a forbidden native Set.",
+      "fix": "Import effect/MutableHashSet and replace allocation/has/add with MutableHashSet.empty<string>(), MutableHashSet.has and MutableHashSet.add. Preserve string-key uniqueness, generated declaration order and every upstream property assertion. Record the native-runtime class update centrally; no source-file or configuration change is needed."
+    }
+  }
+}

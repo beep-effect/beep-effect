@@ -1,6 +1,8 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { retryAfterMillisFrom } from "./internal/headers.ts";
 import * as A from "effect/Array";
@@ -182,7 +184,7 @@ export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>($I`Git
         ? entries.map((entry) => entry.message).join("; ")
         : P.isString(record?.message)
           ? record.message
-          : String(error);
+          : describeThrowable(error);
     const retryAfterMillis = retryAfterMillisFrom(headers, nowMillis);
     return GitHubGraphQLError.make({
     kind: classify(status, entries, reason, retryAfterMillis),
@@ -195,10 +197,11 @@ export class GitHubGraphQLError extends S.TaggedError<GitHubGraphQLError>($I`Git
   }
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> => P.isObjectOrArray(value);
-
 const asRecord = (value: unknown): Record<string, unknown> | undefined =>
-  isRecord(value) ? value : undefined;
+  P.isObject(value) ? value : undefined;
+
+const describeThrowable = (value: unknown): string =>
+  Result.getOrElse(Result.try(() => String(value)), () => "Unable to describe GitHub GraphQL failure");
 
 const readEntries = (value: unknown): ReadonlyArray<GraphQLErrorEntry> => {
   if (!A.isArray(value)) return [];
@@ -206,7 +209,7 @@ const readEntries = (value: unknown): ReadonlyArray<GraphQLErrorEntry> => {
   for (const raw of value) {
     const record = asRecord(raw);
     if (record === undefined) continue;
-    const message = P.isString(record.message) ? record.message : String(raw);
+    const message = P.isString(record.message) ? record.message : describeThrowable(raw);
     const type = P.isString(record.type) ? record.type : undefined;
     entries.push(GraphQLErrorEntry.make({ message, ...O.getSomesStruct({ type: O.fromUndefinedOr(type) }) }));
   }
@@ -220,10 +223,7 @@ const classify = (
   retryAfterMillis: number | undefined,
 ): GitHubGraphQLError["kind"] => {
   const lowered = reason.toLowerCase();
-  if (
-    lowered.includes("already exists") ||
-    entries.some((entry) => entry.message.toLowerCase().includes("already exists"))
-  ) {
+  if (lowered.includes("already exists")) {
     return "alreadyExists";
   }
   if (entries.some((entry) => entry.type === "NOT_FOUND")) return "notFound";
@@ -436,7 +436,7 @@ export class GraphQLDocument<A, V extends Record<string, unknown>> {
         options.name,
         options.document,
         decode,
-        encodeVariables ?? ((variables) => variables),
+        encodeVariables ?? identity,
       );
   }
 }

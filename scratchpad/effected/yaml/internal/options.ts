@@ -3,7 +3,11 @@
 // `YamlFormattingOptions`); the engine takes these plain records so it never
 // imports the facade. Defaults are applied where consumed (`?? default`).
 
-import type { CollectionStyle, QuoteCompat, QuoteStyle, ScalarStyle } from "../YamlNode.ts";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+import { CollectionStyle, QuoteCompat, QuoteStyle, ScalarStyle } from "../YamlNode.ts";
+
+const $I = $ScratchpadId.create("effected/yaml/internal/options");
 
 /**
  * Configures parse recovery, alias limits, and duplicate-key handling in the composer.
@@ -20,29 +24,37 @@ import type { CollectionStyle, QuoteCompat, QuoteStyle, ScalarStyle } from "../Y
  * console.log(options.maxAliasCount) // 10
  * ```
  *
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
-export interface ParseOptionsInput {
+export const ParseOptionsInput = S.Struct({
 	/**
 	 * Treat parse errors as failures rather than recovering. Default `true`.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly strict?: boolean | undefined;
+	strict: S.optional(S.Boolean).annotate({ description: "Treat parse errors as failures rather than recovering. Default `true`." }),
 	/**
 	 * Max alias nodes per document (DoS guard). Default `100`.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly maxAliasCount?: number | undefined;
+	maxAliasCount: S.optional(S.Finite).annotate({ description: "Max alias nodes per document (DoS guard). Default `100`." }),
 	/**
 	 * Treat duplicate mapping keys as errors. Default `true`.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly uniqueKeys?: boolean | undefined;
-}
+	uniqueKeys: S.optional(S.Boolean).annotate({ description: "Treat duplicate mapping keys as errors. Default `true`." }),
+}).pipe($I.annoteSchema("ParseOptionsInput", { description: "Plain parse options consumed by the composer; absent values retain consumption-site defaults." }));
+
+/**
+ * The structural type described by {@link ParseOptionsInput}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ParseOptionsInput = typeof ParseOptionsInput.Type;
 
 /**
  * Configures scalar presentation and collection layout in the stringifier.
@@ -59,16 +71,16 @@ export interface ParseOptionsInput {
  * console.log(options.lineWidth) // 80
  * ```
  *
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
-export interface StringifyOptionsInput {
+export const StringifyOptionsInput = S.Struct({
 	/**
 	 * Spaces per indentation level. Default `2`.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly indent?: number | undefined;
+	indent: S.optional(S.Finite).annotate({ description: "Spaces per indentation level. Default `2`." }),
 	/**
 	 * Column at which to fold long flow and block-folded scalars. Default `0`
 	 * (and a value `<= 0`) means never wrap — byte-identical, no-fold output.
@@ -77,57 +89,57 @@ export interface StringifyOptionsInput {
 	 *
 	 * @since 0.0.0
 	 */
-	readonly lineWidth?: number | undefined;
+	lineWidth: S.optional(S.Finite).annotate({ description: "Column at which to fold long flow and block-folded scalars. Default `0` (and a value `<= 0`) means never wrap \u2014 byte-identical, no-fold output. A positive value folds plain, double-quoted and block-folded (`>`) scalars at approximately that column; block-literal (`|`) is never folded." }),
 	/**
 	 * Scalar output style when none is requested. Default `"plain"`.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly defaultScalarStyle?: ScalarStyle | undefined;
+	defaultScalarStyle: S.optional(ScalarStyle).annotate({ description: "Scalar output style when none is requested. Default `\"plain\"`." }),
 	/**
 	 * Collection output style when none is requested. Default `"block"`.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly defaultCollectionStyle?: CollectionStyle | undefined;
+	defaultCollectionStyle: S.optional(CollectionStyle).annotate({ description: "Collection output style when none is requested. Default `\"block\"`." }),
 	/**
 	 * Sort mapping keys alphabetically. Default `false`.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly sortKeys?: boolean | undefined;
+	sortKeys: S.optional(S.Boolean).annotate({ description: "Sort mapping keys alphabetically. Default `false`." }),
 	/**
 	 * Indent block sequences one level under a mapping key. Default `false`.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly indentSequences?: boolean | undefined;
+	indentSequences: S.optional(S.Boolean).annotate({ description: "Indent block sequences one level under a mapping key. Default `false`." }),
 	/**
 	 * Quote style for a `plain`-styled scalar that requires quoting. Default
 	 * `"single"`. Values needing YAML escapes still render double-quoted.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly quoteStyle?: QuoteStyle | undefined;
+	quoteStyle: S.optional(QuoteStyle).annotate({ description: "Quote style for a `plain`-styled scalar that requires quoting. Default `\"single\"`. Values needing YAML escapes still render double-quoted." }),
 	/**
 	 * Additionally quote plain scalars a foreign resolution dialect would
 	 * coerce to a non-string. Default absent — no extra quoting.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly quoteCompat?: QuoteCompat | undefined;
+	quoteCompat: S.optional(QuoteCompat).annotate({ description: "Additionally quote plain scalars a foreign resolution dialect would coerce to a non-string. Default absent \u2014 no extra quoting." }),
 	/**
 	 * End output with a trailing newline. Default `true`.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly finalNewline?: boolean | undefined;
+	finalNewline: S.optional(S.Boolean).annotate({ description: "End output with a trailing newline. Default `true`." }),
 	/**
 	 * Ignore per-node styles and force the defaults. Default `false`.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly forceDefaultStyles?: boolean | undefined;
+	forceDefaultStyles: S.optional(S.Boolean).annotate({ description: "Ignore per-node styles and force the defaults. Default `false`." }),
 	/**
 	 * Engine-internal, never surfaced on the public option classes: render
 	 * the ROOT value as if it already sat inside a flow collection, so a
@@ -137,5 +149,13 @@ export interface StringifyOptionsInput {
 	 *
 	 * @since 0.0.0
 	 */
-	readonly inFlow?: boolean | undefined;
-}
+	inFlow: S.optional(S.Boolean).annotate({ description: "Engine-internal, never surfaced on the public option classes: render the ROOT value as if it already sat inside a flow collection, so a plain scalar carrying a flow indicator (`,[]{}`) is quoted. Used by the region-confined `modify` splice when the target's parent is flow-styled. Default `false`." }),
+}).pipe($I.annoteSchema("StringifyOptionsInput", { description: "Plain stringify options consumed by the stringifier; absent values retain consumption-site defaults." }));
+
+/**
+ * The structural type described by {@link StringifyOptionsInput}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type StringifyOptionsInput = typeof StringifyOptionsInput.Type;

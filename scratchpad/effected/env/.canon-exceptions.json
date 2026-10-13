@@ -1,0 +1,18 @@
+[
+  {
+    "id": "EV010:scratchpad/test/env/purity.test.ts:4:@effect/platform-node@0#1",
+    "reason": "The purity test scans the actual env source tree and asserts real file discovery and absence of forbidden code. A memory filesystem fixture would replace the subject being verified."
+  },
+  {
+    "id": "EV010:scratchpad/test/env/agentCi.test.ts:2:node:fs@0#1",
+    "reason": "Reads the actual `agentCi.ts` source to verify that `agentCiKeys` covers detector reads and contains no unread keys. Seeded source text would weaken drift detection."
+  },
+  {
+    "id": "EV010:scratchpad/test/env/colorDepth.test.ts:2:node:fs@0#1",
+    "reason": "Reads the actual `colorDepth.ts` source to verify that `colorKeys` covers every detector read. Seeded source text would weaken drift detection."
+  },
+  {
+    "id": "EV010:scratchpad/test/env/osc8.terminals.test.ts:2:node:fs@0#1",
+    "reason": "Reads the actual OSC8 detector source files to verify that `terminalKeys` covers their reads. Seeded source text would weaken drift detection."
+  }
+]

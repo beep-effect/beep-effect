@@ -400,7 +400,7 @@ const collectInodePaths = (state: State, inode: Inode, directory: DirectoryInode
 };
 
 const inodeUpdateEvents = (state: State, inode: Inode): ReadonlyArray<FileSystem.WatchEvent.Update> => {
-	const root = O.getOrThrow(O.filter(HashMap.get(state.inodes, RootInode), S.is(DirectoryInode)));
+	const root = O.getOrThrow(O.filter(HashMap.get(state.inodes, RootInode), InodeEntry.isAnyOf(["Directory"])));
 	if (inode === RootInode) return [{ _tag: "Update", path: "/" }];
 	// NOTE: An inode may be reachable through multiple hard-link aliases, each of
 	// which must receive an update event.
@@ -512,7 +512,7 @@ const attachDirectory = Effect.fnUntraced(function* (
 	yield* validateEntryName(method, name);
 	const parentEntry = yield* getDirectory(state, parent, method, name);
 	// Callers attach only fresh clones or newly created directories to an absent name.
-	const entry = O.getOrThrow(O.filter(HashMap.get(state.inodes, inode), S.is(DirectoryInode)));
+	const entry = O.getOrThrow(O.filter(HashMap.get(state.inodes, inode), InodeEntry.isAnyOf(["Directory"])));
 	const now = yield* DateTime.now;
 	const nextParent = {
 		...parentEntry,
@@ -641,17 +641,10 @@ interface OpenOptions {
 // descriptors
 // =============================================================================
 
-const isOpenFlag = (flag: unknown): flag is FileSystem.OpenFlag =>
-	flag === "r" ||
-	flag === "r+" ||
-	flag === "w" ||
-	flag === "wx" ||
-	flag === "w+" ||
-	flag === "wx+" ||
-	flag === "a" ||
-	flag === "ax" ||
-	flag === "a+" ||
-	flag === "ax+";
+const OpenFlag = LiteralKit(["r", "r+", "w", "wx", "w+", "wx+", "a", "ax", "a+", "ax+"]).pipe(
+ $I.annoteSchema("OpenFlag", { description: "The supported file-open flags." }),
+);
+const isOpenFlag = S.is(OpenFlag);
 
 const openMode = (flag: FileSystem.OpenFlag): OpenMode => ({
 	readable: flag === "r" || flag.endsWith("+"),
@@ -693,7 +686,7 @@ const getOpenFile = (
 			const code = method === "truncate" ? "EINVAL" : "EBADF";
 			return Effect.fail(descriptorError(fd, method, code, `File descriptor is not ${access}`));
 		}
-		const entry = O.getOrThrow(O.filter(HashMap.get(state.inodes, descriptor.inode), S.is(FileInode)));
+		const entry = O.getOrThrow(O.filter(HashMap.get(state.inodes, descriptor.inode), InodeEntry.isAnyOf(["File"])));
 		return Effect.succeed([descriptor, entry]);
 	});
 
@@ -706,10 +699,9 @@ const withSystemErrorPath = (error: PlatformError, method: string, path: string)
 				pathOrDescriptor: path,
 				description: error.reason.description,
 				syscall: error.reason.syscall,
-				cause: ErrnoException.from(
-					O.getOrThrow(O.filter(O.some(error.reason.cause), S.is(ErrnoException))).code,
-					path,
-				),
+				cause: S.is(ErrnoException)(error.reason.cause)
+					? ErrnoException.from(error.reason.cause.code, path)
+					: error.reason.cause,
 			});
 
 const withOperationError = (error: PlatformError, method: string, path: string): PlatformError =>
@@ -804,8 +796,24 @@ const resolveEntry = Effect.fnUntraced(function* (state: State, path: string, me
 	} satisfies ResolvedEntry & { readonly requestedName: string };
 });
 
+const Unsigned32BitInteger = S.Number.check(
+	S.isInt({
+		identifier: $I`Unsigned32BitIntegerInteger`,
+		title: "Integer",
+		description: "An integer filesystem mode or owner id.",
+	}),
+	S.isBetween({ minimum: 0, maximum: 0xffff_ffff }, {
+		identifier: $I`Unsigned32BitIntegerRange`,
+		title: "Unsigned 32-bit range",
+		description: "A number from zero through 2^32 - 1, inclusive.",
+	}),
+).pipe($I.annoteSchema("Unsigned32BitInteger", {
+	description: "The unsigned 32-bit integer domain shared by modes and owner ids.",
+}));
+const isUnsigned32BitInteger = S.is(Unsigned32BitInteger);
+
 const validateMode = (method: string, mode: number | undefined) =>
-	mode === undefined || (Number.isInteger(mode) && mode >= 0 && mode <= 0xffff_ffff)
+	mode === undefined || isUnsigned32BitInteger(mode)
 		? Effect.void
 		: Effect.fail(argumentError(method, "mode must be an unsigned 32-bit integer"));
 
@@ -1054,7 +1062,7 @@ const containsDirectory = (state: State, ancestor: Inode, candidate: Inode): boo
 	while (pending.length > 0) {
 		const current = O.getOrThrow(O.fromUndefinedOr(pending.pop()));
 		if (current === candidate) return true;
-		const entry = O.getOrThrow(O.filter(HashMap.get(state.inodes, current), S.is(DirectoryInode)));
+		const entry = O.getOrThrow(O.filter(HashMap.get(state.inodes, current), InodeEntry.isAnyOf(["Directory"])));
 		for (const inode of HashMap.values(entry.entries)) {
 			if (findInode(state, inode)?._tag === "Directory") {
 				pending.push(inode);
@@ -1631,7 +1639,7 @@ const openDescriptorUnlocked: (
 			const parent = yield* resolveParent(nextState, candidatePath, "open", path, "EISDIR");
 			const [createdState, inode] = yield* createFile(nextState);
 			nextState = createdState;
-			let created = O.getOrThrow(O.filter(HashMap.get(nextState.inodes, inode), S.is(FileInode)));
+			let created = O.getOrThrow(O.filter(HashMap.get(nextState.inodes, inode), InodeEntry.isAnyOf(["File"])));
 			if (options?.mode !== undefined) {
 				created = {
 					...created,
@@ -1640,7 +1648,7 @@ const openDescriptorUnlocked: (
 				nextState = setInode(nextState, created);
 			}
 			nextState = yield* linkInode(nextState, parent.inode, parent.name, inode, "open");
-			entry = O.getOrThrow(O.filter(HashMap.get(nextState.inodes, inode), S.is(FileInode)));
+			entry = O.getOrThrow(O.filter(HashMap.get(nextState.inodes, inode), InodeEntry.isAnyOf(["File"])));
 		}
 
 		const fd = FileDescriptor.make(nextState.nextDescriptor);
@@ -2116,7 +2124,7 @@ const chmod = (volume: Volume) =>
 	});
 
 const validateOwner = (method: string, name: string, value: number) =>
-	Number.isInteger(value) && value >= 0 && value <= 0xffff_ffff
+	isUnsigned32BitInteger(value)
 		? Effect.void
 		: Effect.fail(argumentError(method, `${name} must be an unsigned 32-bit integer`));
 
@@ -2701,13 +2709,35 @@ const glob = (volume: Volume) =>
  * `caseSensitive: false` folds path components during lookup while retaining
  * stored entry spellings. The policy remains fixed for the volume's lifetime.
  *
+ * **Example** (Decode a case-folding policy)
+ *
+ * ```ts
+ * import { EngineOptions } from "@beep/scratchpad/effected/memfs/internal/volume"
+ * import * as S from "effect/Schema"
+ *
+ * const options = S.decodeUnknownSync(EngineOptions)({ caseSensitive: false })
+ * console.log(options.caseSensitive) // false
+ * ```
+ *
  * @internal
  * @category configuration
  * @since 0.0.0
  */
-export interface EngineOptions {
-	readonly caseSensitive: boolean;
-}
+export const EngineOptions = S.Struct({
+	caseSensitive: S.Boolean.pipe($I.annoteKey("EngineOptions.caseSensitive", {
+		description: "Whether path lookups distinguish letter case.",
+	})),
+}).pipe($I.annoteSchema("EngineOptions", {
+	description: "The engine's fixed path-matching policy, supplied as a plain object.",
+}));
+/**
+ * The plain-object build options accepted by the volume engine.
+ *
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+export type EngineOptions = typeof EngineOptions.Type;
 const defaultEngineOptions: EngineOptions = { caseSensitive: true };
 
 const makeVolume = Effect.fn("makeVolume")(function* (options: EngineOptions) {
@@ -2886,6 +2916,10 @@ export const make: Effect.Effect<FileSystem.FileSystem> = Effect.map(
 // followed); hard links surface once per directory entry, each path carrying
 // the same underlying data reference.
 
+const SnapshotEntryType = LiteralKit(["File", "Directory", "SymbolicLink"]).pipe(
+	$I.annoteSchema("SnapshotEntryType", { description: "The literal entry kind reported by volume inspection." }),
+);
+
 /**
  * Describes a literal directory entry and its current metadata for inspection.
  *
@@ -2901,34 +2935,45 @@ export const make: Effect.Effect<FileSystem.FileSystem> = Effect.map(
  * File data is a live reference; callers must copy it before exposing or
  * modifying bytes outside the engine.
  *
+ * **Example** (Decode a directory entry)
+ *
+ * ```ts
+ * import { VolumeEntrySnapshot } from "@beep/scratchpad/effected/memfs/internal/volume"
+ * import * as S from "effect/Schema"
+ *
+ * const entry = S.decodeUnknownSync(VolumeEntrySnapshot)({
+ *   path: "/docs",
+ *   type: "Directory",
+ *   data: undefined,
+ *   mtime: 0,
+ *   target: undefined,
+ *   size: 0
+ * })
+ * console.log(entry.type) // "Directory"
+ * ```
+ *
  * @internal
  * @category models
  * @since 0.0.0
  */
-export interface VolumeEntrySnapshot {
-	readonly path: string;
-	readonly type: "File" | "Directory" | "SymbolicLink";
-	/**
-	 * The live data reference for a `File` entry (callers must copy), `undefined` otherwise.
-	 *
-	 * @since 0.0.0
-	 */
-	readonly data: Uint8Array | undefined;
-	/**
-	 * The entry's modification time as epoch milliseconds — the same clock `stat` reports.
-	 *
-	 * @since 0.0.0
-	 */
-	readonly mtime: number;
-	/**
-	 * The stored target of a `SymbolicLink` entry (never resolved), `undefined` otherwise.
-	 *
-	 * @since 0.0.0
-	 */
-	readonly target: string | undefined;
-	// KIT EXTENSION (entry size): file byte length, symlink target UTF-8 length, 0 for a directory.
-	readonly size: number;
-}
+export const VolumeEntrySnapshot = S.Struct({
+	path: S.String.pipe($I.annoteKey("VolumeEntrySnapshot.path", { description: "The literal entry path." })),
+	type: SnapshotEntryType.pipe($I.annoteKey("VolumeEntrySnapshot.type", { description: "The entry kind, without following symbolic links." })),
+	data: S.UndefinedOr(S.Uint8Array).pipe($I.annoteKey("VolumeEntrySnapshot.data", { description: "The live file bytes (callers must copy), or undefined for other entries; the key is required." })),
+	mtime: S.Finite.pipe($I.annoteKey("VolumeEntrySnapshot.mtime", { description: "The modification time in epoch milliseconds, using the same clock as stat." })),
+	target: S.UndefinedOr(S.String).pipe($I.annoteKey("VolumeEntrySnapshot.target", { description: "The stored symbolic-link target, never resolved, or undefined for other entries; the key is required." })),
+	size: S.Finite.pipe($I.annoteKey("VolumeEntrySnapshot.size", { description: "The file byte length, link target UTF-8 byte length, or zero for a directory." })),
+}).pipe($I.annoteSchema("VolumeEntrySnapshot", {
+	description: "A plain-object inspection payload retaining required undefined-valued keys and live file bytes.",
+}));
+/**
+ * A literal entry inspection payload with a live file-data reference.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export type VolumeEntrySnapshot = typeof VolumeEntrySnapshot.Type;
 
 const encoder = new TextEncoder();
 
@@ -2944,7 +2989,7 @@ const snapshotOf = (path: string, entry: InodeEntry): VolumeEntrySnapshot => ({
 
 const collectEntrySnapshots = (state: State): Array<VolumeEntrySnapshot> => {
 	const output: Array<VolumeEntrySnapshot> = [];
-	const root = O.getOrThrow(O.filter(HashMap.get(state.inodes, RootInode), S.is(DirectoryInode)));
+	const root = O.getOrThrow(O.filter(HashMap.get(state.inodes, RootInode), InodeEntry.isAnyOf(["Directory"])));
 	// The root itself, which the walk below never reaches — it starts FROM the
 	// root and reports descendants. Emitting it lets the inspection view answer
 	// `has`/`isDirectory`/`mtime` for "/" from real state rather than a

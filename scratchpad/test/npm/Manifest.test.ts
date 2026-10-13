@@ -7,6 +7,7 @@ import * as S from "effect/Schema";
 import {
 	CatalogAssemblyError,
 	CatalogResolver,
+	DependencyField,
 	DependencyResolutionError,
 	Manifest,
 	ManifestDecodeError,
@@ -168,6 +169,42 @@ const StubResolvers = Layer.mergeAll(
 );
 
 describe("Manifest.resolve", () => {
+	layer(Layer.mergeAll(
+		Layer.succeed(CatalogResolver, {
+			rangeOf: Effect.fn("CatalogResolver.rangeOf")(() => Effect.succeedSome("^4.0.0")),
+		}),
+		Layer.succeed(WorkspaceResolver, {
+			versionOf: Effect.fn("WorkspaceResolver.versionOf")(() => Effect.succeedSome("1.2.3")),
+		}),
+	))((it) => {
+		for (const [specifier, expected] of [
+			["1.0.0", "1.0.0"],
+			["catalog:", "^4.0.0"],
+			["catalog:build", "^4.0.0"],
+			["workspace:^", "^1.2.3"],
+			["workspace:@x/a@*", "npm:@x/a@1.2.3"],
+		] as const) {
+			it.effect(`preserves every own dependency key, including __proto__, for ${specifier}`, () =>
+				Effect.gen(function* () {
+					for (const field of DependencyField.literals) {
+						const section = { ["__proto__"]: specifier, constructor: specifier, toString: specifier, p: specifier };
+						const manifest = yield* Manifest.decode({ [field]: section });
+						assert.deepStrictEqual(manifest[field], section);
+						const resolved = yield* manifest.resolve();
+						const output = resolved[field];
+						assert.isDefined(output);
+						if (output === undefined) return;
+						assert.deepStrictEqual(R.keys(output), ["__proto__", "constructor", "toString", "p"]);
+						assert.deepStrictEqual(R.get(output, "__proto__"), O.some(expected));
+						assert.deepStrictEqual(output, { ["__proto__"]: expected, constructor: expected, toString: expected, p: expected });
+						assert.deepStrictEqual(resolved.toRecord(), { [field]: output });
+						assert.deepStrictEqual(manifest.toRecord(), { [field]: section });
+					}
+				}),
+			);
+		}
+	});
+
 	layer(StubResolvers)((it) => {
 		it.effect("projects a mixed manifest and preserves everything else", () =>
 			Effect.gen(function* () {

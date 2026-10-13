@@ -1,0 +1,17 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the four yaml files against the pinned upstream oracle and the round-1 inventory, and report only new findings.Round 1 already closed the known defects on these files. I'll compare the current sources with the pinned oracle and look for new divergences.I'll verify the remaining stringifier divergence against the pinned oracle and the recorded deviations, then report only what is still open.The ledger calls the single-quoted branch a no-behavior simplification. I'll check whether the extra canonical rewrite still changes bytes.### fable-2-1
+- file: scratchpad/effected/yaml/internal/stringifier.ts:572
+- class: bug   severity: required
+- standard: D9 / EFFECTED_PORT_GOAL.md §14 (a different formatted byte is a deviation; allowed only for `law:<id>` or a verified upstream bug)   evidence: Pinned oracle `packages/yaml/src/internal/stringifier.ts:408-412` returns `renderSingleQuotedMultiline` unchanged. For `s = "first\nsecond\n"` and `indent = "  "` (default `ctx.indent` from `stringifyLines` / `stringifyScalarNodeLines`) that is `'first\n\n  second\n\n'`. Line 572 rewrites a final `\n'` to `\n${indent}'`, producing `'first\n\n  second\n\n  '`. `foldFlowLines` (`internal/composer/scalars.ts:447-480`) trims that closing line and drops it when the previous line already ended in `\n`, so both decode to `"first\nsecond\n"`. No `out.yaml` under `scratchpad/test/yaml/fixtures/yaml-test-suite` matches an indented closer (`^  +'$` is empty). `stringifier.coverage.test.ts:109` only asserts `parse(text)` equals the value. `PORT_LEDGER.json` for `stringifier.ts:583` calls this edit behaviour-neutral and describes only the removed null rejection.
+- failure: Canonical plain and single-quoted strings that end in a newline are emitted with indent spaces inside the closing quote. Bytes differ from the pinned oracle and from the libyaml single-quoted form this branch says it matches. The value is unchanged, so the green parse round-trip does not see it.
+- fix: Return `sq` with no `replace`.
+
+### fable-2-2
+- file: scratchpad/effected/yaml/internal/stringifier.ts:569
+- class: law   severity: backlog
+- standard: D9 / §14 (`upstream-bug` must be recorded on the ledger and in README Port notes)   evidence: The same oracle block does not special-case `/\n[ \t]/`. For `"first\n second"` and indent `"  "`, `renderSingleQuotedMultiline` yields `'first\n\n   second'`. `foldFlowLines` `trimStart`s the continuation, so the content space is lost and the value becomes `"first\nsecond"`. `renderDoubleQuoted` (`stringifier.ts:388`) escapes the newline, and `"first\n second"` decodes back to `"first\n second"`. `stringifier.coverage.test.ts:109` round-trips `"first\n \tsecond"` only through the lab. README Port notes list stringifier upstream bugs for bigint spelling and canonical depth only. The ledger’s `stringifier.ts:583` entry still says the edit did not change behaviour.
+- failure: Canonical plain and single-quoted values that contain a newline followed by a space or tab are double-quoted instead of single-quoted. That preserves the value, and it is a formatted-byte divergence from the pinned oracle that is recorded as if it were not one.
+- fix: Keep the branch. Add one `upstream-bug` ledger row and a matching Port notes bullet that cite `foldFlowLines` and `stringifier.coverage.test.ts:109`. Do not revert the branch.
+
+REQUIRED: 1
+BACKLOG: 1

@@ -51,3 +51,36 @@ describe("folded scalar more-indented transitions", () => {
 		assert.strictEqual(renderBlockFolded(" a\nb", "  "), ">2-\n   a\n  b");
 	});
 });
+
+
+describe("block and single-quoted representability regressions", () => {
+	it("preserves every nonempty newline-only body with omitted chomp arguments", () => {
+		for (const render of [renderBlockLiteral, renderBlockFolded]) {
+			for (const value of ["\n", "\n\n", "\n\n\n"]) {
+				const rendered = render(value, "  ");
+				assert.isNotNull(rendered);
+				assert.strictEqual(parse(`${rendered}\n`), value);
+			}
+		}
+	});
+	it("rejects whitespace that single-quoted flow folding would discard", () => {
+		for (const value of ["a \nb", "a\t\nb", "a\n b", "a\n\tb", "a \n\nb"]) {
+			assert.strictEqual(renderSingleQuotedMultiline(value, "  "), null);
+		}
+		// Whitespace on the last content line survives when no interior break follows it.
+		assert.strictEqual(parse(`${renderSingleQuotedMultiline("a\nb ", "  ")}\n`), "a\nb ");
+	});
+	it("rejects out-of-range required indicators and preserves every valid width", () => {
+		for (const render of [renderBlockLiteral, renderBlockFolded]) {
+			for (const indent of ["", "          "]) {
+				assert.strictEqual(render(" x", indent), null);
+				assert.strictEqual(render("\n\nx", indent), null);
+			}
+			for (let width = 1; width <= 9; width++) {
+				assert.strictEqual(parse(`${render(" x", " ".repeat(width))}\n`), " x");
+			}
+		}
+		assert.strictEqual(renderBlockLiteral("x", "", undefined, undefined, false, 0), null);
+		assert.strictEqual(renderBlockFolded("x", "          ", undefined, 10), null);
+	});
+});

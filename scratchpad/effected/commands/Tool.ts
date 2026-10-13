@@ -1,5 +1,7 @@
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as O from "@beep/utils/Option";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/commands/Tool");
@@ -208,11 +210,13 @@ export class Tool extends S.Class<Tool>($I`Tool`)({
 	/** The executable name, e.g. `"biome"`. */
 	name: S.String.annotateKey({ description: "The executable name, e.g. `\"biome\"`." }),
 	/** How to learn its version. */
-	version: VersionProbe.annotateKey({ description: "How to learn its version." }),
+	version: VersionProbe.pipe(
+		S.withConstructorDefault(Effect.sync(() => VersionFlag.make({ flag: "--version" }))),
+	).annotateKey({ description: "How to learn its version." }),
 	/** Where it must be found. */
-	source: ToolSource.annotateKey({ description: "Where it must be found." }),
+	source: ToolSource.pipe(S.withConstructorDefault(Effect.succeed("any"))).annotateKey({ description: "Where it must be found." }),
 	/** What to do when the two locations disagree on the version. */
-	onMismatch: MismatchPolicy.annotateKey({ description: "What to do when the two locations disagree on the version." }),
+	onMismatch: MismatchPolicy.pipe(S.withConstructorDefault(Effect.succeed("preferLocal"))).annotateKey({ description: "What to do when the two locations disagree on the version." }),
 }, $I.annote("Tool", { description: "A CLI tool to resolve, and the constraints resolution must satisfy." })) {
 	/**
   * Builds a `Tool` from a name, with defaults for everything else
@@ -243,8 +247,10 @@ export class Tool extends S.Class<Tool>($I`Tool`)({
 	): Tool =>
 		Tool.make({
 			name,
-			version: overrides?.version ?? VersionFlag.make({ flag: "--version" }),
-			source: overrides?.source ?? "any",
-			onMismatch: overrides?.onMismatch ?? "preferLocal",
+			...O.getSomesStruct({
+				version: O.fromNullishOr(overrides?.version),
+				source: O.fromNullishOr(overrides?.source),
+				onMismatch: O.fromNullishOr(overrides?.onMismatch),
+			}),
 		});
 }

@@ -1,0 +1,33 @@
+{
+  "module": "github-references",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/github-references/ClosingList.ts",
+        "scratchpad/effected/github-references/IssueReferences.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-references/ClosingList.test.ts",
+        "scratchpad/test/github-references/IssueReferences.test.ts",
+        "scratchpad/test/github-references/ClosingList.property.test.ts",
+        "scratchpad/test/github-references/IssueReferences.property.test.ts"
+      ],
+      "findings": ["sol-3-1", "sol-3-2"]
+    }
+  ],
+  "findings": {
+    "sol-3-1": {
+      "file": "scratchpad/effected/github-references/ClosingList.ts",
+      "class": "schema",
+      "summary": "ReferenceList and HarvestedReferenceList accept closing flags that contradict their keywords; merged seats sol-3-1 and fable-3-1.",
+      "fix": "Add a shared annotated schema check equating closing with ClosingKeyword membership and apply it explicitly to ReferenceList and HarvestedReferenceList; field spreading alone does not inherit whole-object checks. Preserve field annotations, encoded shape and parser outputs. Reject both crossed keyword/flag combinations for both schemas and retain valid/parser cases in ClosingList.test.ts. Keep schema-derived round-trip properties in ClosingList.property.test.ts with arbitrary support for consistent pairs. Central codemod owns deviation recording; do not edit Port notes, ledger or repository configuration."
+    },
+    "sol-3-2": {
+      "file": "scratchpad/effected/github-references/IssueReferences.ts",
+      "class": "schema",
+      "summary": "IssueReference and HarvestedReferenceList accept equal or reversed start/end offsets that cannot identify a harvested match.",
+      "fix": "Add annotated whole-object end > start checks to IssueReference in IssueReferences.ts and HarvestedReferenceList in ClosingList.ts. Preserve fields, annotations, encoded shape and parser outputs. Add equal/reversed rejection cases and real-harvest acceptance cases in IssueReferences.test.ts and ClosingList.test.ts. Retain both schema round-trip property suites with schema-derived arbitrary support for ordered spans and consistent harvested-list flags. Do not weaken schemas or unrelated upstream assertions. Central codemod owns deviation recording; do not edit Port notes, ledger or repository configuration."
+    }
+  }
+}

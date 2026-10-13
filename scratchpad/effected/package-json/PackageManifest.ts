@@ -23,6 +23,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SemVer } from "../semver/index.ts";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { renderJson, resolveFormatOptions } from "./internal/format.ts";
@@ -174,7 +175,7 @@ export class PackageManifest extends S.Class<PackageManifest>($I`PackageManifest
 	 * @since 0.0.0
 	 */
 	toJsonString(options?: PackageFormatOptions): string {
-		const raw = Result.getOrThrowWith(S.encodeUnknownResult(PackageManifest.schema)(this), (error) => error);
+		const raw = Result.getOrThrowWith(S.encodeUnknownResult(PackageManifest.schema)(this), identity);
 		return renderJson(raw, resolveFormatOptions(options));
 	}
 }

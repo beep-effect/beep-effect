@@ -1,6 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import * as HashMap from "effect/HashMap";
+import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
@@ -41,7 +42,7 @@ const $I = $ScratchpadId.create("effected/cli/ui/testing/CliUiTest");
 
 class CliUiTestError extends S.TaggedError<CliUiTestError>($I`CliUiTestError`)(
 	"CliUiTestError",
-	{ message: S.String },
+	{ message: S.String.annotate({ description: "The invalid test interaction or failed screen wait and its context." }) },
 	$I.annote("CliUiTestError", { description: "Invalid test interaction with a CLI screen." }),
 ) {}
 
@@ -440,9 +441,11 @@ const decodeSgr = (params: string, open: Array<{ readonly kind: Kind; readonly c
 	};
 	const codes = params === "" ? [0] : params.split(";").map(Number);
 	for (let at = 0; at < codes.length; at++) {
-		const code = codes[at] ?? 0;
-		if (code === 0) while (open.length > 0) close(open[open.length - 1]?.kind ?? "fg");
-		else if (code === 1) push("b", "[b]", "[/b]");
+		const code = Number(codes[at]);
+		if (code === 0) {
+			for (const entry of A.reverse(open)) out += entry.close;
+			open.length = 0;
+		} else if (code === 1) push("b", "[b]", "[/b]");
 		else if (code === 2) push("dim", "[dim]", "[/dim]");
 		else if (code === 22) {
 			close("dim");
@@ -477,7 +480,7 @@ const styled = (ansi: string): string => {
 		if (match[1] !== undefined) out += decodeSgr(match[1], open);
 	}
 	out += ansi.slice(last);
-	for (let index = open.length - 1; index >= 0; index--) out += open[index]?.close ?? "";
+	for (const entry of A.reverse(open)) out += entry.close;
 	return out;
 };
 
@@ -1095,7 +1098,7 @@ export class CliUiTest {
 				const index = taken++;
 				const { contains } = nextOptions;
 				const capture = () => terminal.captures[index];
-				const { handle, raws, after, surfaced } = terminal.screen(capture, () => capture()?.ended ?? false);
+				const { handle, raws, after, surfaced } = terminal.screen(capture, () => capture()?.ended === true);
 				const shows = (): boolean =>
 					contains === undefined
 						? raws().length > 0

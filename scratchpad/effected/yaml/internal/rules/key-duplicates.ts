@@ -16,6 +16,9 @@ import { keyIdentity } from "../composer/block.ts";
 import { positionAt } from "./util.ts";
 
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/key-duplicates");
+const isMap = S.is(YamlMap);
+const isScalar = S.is(YamlScalar);
+const isSeq = S.is(YamlSeq);
 
 /**
  * Configure the reporting severity for duplicate mapping keys.
@@ -50,10 +53,10 @@ export type keyDuplicatesOptions = typeof keyDuplicatesOptions.Type;
 
 const walk = (node: YamlNode | null, text: string, out: Array<YamlLintDiagnostic>, ctx: LintContext): void => {
 	if (node === null) return;
-	if (S.is(YamlMap)(node)) {
+	if (isMap(node)) {
 		const seen = MutableHashSet.empty<string>();
 		for (const pair of node.items) {
-			if (S.is(YamlScalar)(pair.key)) {
+			if (isScalar(pair.key)) {
 				const id = keyIdentity(pair.key, text);
 				if (MutableHashSet.has(seen, id)) {
 					const pos = positionAt(ctx.lines, pair.key.offset);
@@ -76,7 +79,7 @@ const walk = (node: YamlNode | null, text: string, out: Array<YamlLintDiagnostic
 		}
 		return;
 	}
-	if (S.is(YamlSeq)(node)) {
+	if (isSeq(node)) {
 		for (const item of node.items) walk(item, text, out, ctx);
 	}
 };

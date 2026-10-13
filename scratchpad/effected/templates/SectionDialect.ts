@@ -1,5 +1,8 @@
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as Str from "effect/String";
+import * as O from "effect/Option";
 import * as Equal from "effect/Equal";
 import * as Match from "effect/Match";
 import * as Result from "effect/Result";
@@ -76,10 +79,12 @@ export class SectionRenderError extends S.TaggedError<SectionRenderError>($I`Sec
 	 * `[A-Za-z][A-Za-z0-9_-]*` grammar, or its value contains `"` or a line
 	 * break; either would render a marker the scanner could not read back
 	 * verbatim, and there is no escaping mechanism by design.
+	 * `trailingCarriageReturn` — LF rendering would absorb the final bare CR
+	 * into the boundary line ending and lose a byte on the next parse.
 	 *
 	 * @since 0.0.0
 	 */
-	reason: S.Literals(["markerInContent", "unknownCommentStyle", "duplicateDeclaration", "invalidAttribute"]).annotateKey({ description: "`markerInContent` — the content carries a line the scanner would read as a marker, which would move the block boundary and let the next sync consume user text. `unknownCommentStyle` — the section's comment style is not in the dialect's set, so the block would be written into a document where the scanner could never find it again, growing a duplicate on every run. `duplicateDeclaration` — the same identity was declared twice in one call, so the caller stated two intentions for one block and any choice between them would be a guess; this is the caller-side twin of the document-side `duplicateSection`. `invalidAttribute` — an attribute's name is outside the `[A-Za-z][A-Za-z0-9_-]*` grammar, or its value contains `\"` or a line break; either would render a marker the scanner could not read back verbatim, and there is no escaping mechanism by design." }),
+	reason: S.Literals(["markerInContent", "unknownCommentStyle", "duplicateDeclaration", "invalidAttribute", "trailingCarriageReturn"]).annotateKey({ description: "`markerInContent` — the content carries a line the scanner would read as a marker, which would move the block boundary and let the next sync consume user text. `unknownCommentStyle` — the section's comment style is not in the dialect's set, so the block would be written into a document where the scanner could never find it again, growing a duplicate on every run. `duplicateDeclaration` — the same identity was declared twice in one call, so the caller stated two intentions for one block and any choice between them would be a guess; this is the caller-side twin of the document-side `duplicateSection`. `invalidAttribute` — an attribute's name is outside the `[A-Za-z][A-Za-z0-9_-]*` grammar, or its value contains `\"` or a line break; either would render a marker the scanner could not read back verbatim, and there is no escaping mechanism by design. `trailingCarriageReturn` — LF rendering would absorb the final bare CR into the boundary line ending and lose a byte on the next parse." }),
 	/**
 	 * The key of the section that could not be rendered.
 	 *
@@ -117,6 +122,7 @@ export class SectionRenderError extends S.TaggedError<SectionRenderError>($I`Sec
 					? `Section "${this.key}" declares an attribute with an invalid name or value`
 					: `Section "${this.key}" declares attribute "${this.attribute}" with an invalid name or value`,
 			),
+			Match.when("trailingCarriageReturn", () => `Section "${this.key}" ends in a bare carriage return that LF rendering cannot preserve`),
 			Match.when("duplicateDeclaration", () => `Section "${this.key}" was declared twice in one call`),
 			Match.exhaustive,
 		);
@@ -126,10 +132,40 @@ export class SectionRenderError extends S.TaggedError<SectionRenderError>($I`Sec
 /** The key grammar, mirrored from `SectionKey` for the scanner's capture group. */
 const KEY_CAPTURE = "([A-Za-z0-9][A-Za-z0-9._-]*)";
 
-const escapeRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeRegex = (value: string): string => Str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")(value);
 
 /** Inter-token whitespace is tolerated on read, normalized on write. */
 const GAP = "[ \\t]+";
+
+/** The first offset of a trailing horizontal separator run. */
+const markerGapStart = (text: string, end: number): number => {
+	let index = end;
+	while (index > 0 && (text[index - 1] === " " || text[index - 1] === "\t")) index -= 1;
+	return index;
+};
+
+/** Recognize a closing rule at one multiline boundary without parsing attributes. */
+const closingRule = (text: string, boundary: number, style: CommentStyle): readonly [number, number] | undefined => {
+	let end = markerGapStart(text, boundary);
+	if (style.suffix !== undefined) {
+		const suffix = style.suffix;
+		const suffixEnd = markerGapStart(suffix, suffix.length);
+		if (suffixEnd === 0) {
+			// A whitespace-only suffix still requires a separate preceding gap.
+			if (!Str.includes(suffix)(Str.slice(end + 1, boundary)(text))) return undefined;
+		} else {
+			const suffixStart = end - suffixEnd;
+			if (suffixStart < 0 || end + suffix.length - suffixEnd > boundary ||
+				Str.slice(suffixStart, end + suffix.length - suffixEnd)(text) !== suffix) return undefined;
+			end = markerGapStart(text, suffixStart);
+			if (end === suffixStart) return undefined;
+		}
+	}
+	if (end < 3 || Str.slice(end - 3, end)(text) !== "---") return undefined;
+	const ruleStart = end - 3;
+	const runEnd = markerGapStart(text, ruleStart);
+	return runEnd === ruleStart ? undefined : [ruleStart, runEnd];
+};
 
 /**
  * The marker vocabulary: what phrase delimits a managed section, and which
@@ -237,7 +273,7 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 	 * @since 0.0.0
 	 */
 	recognizes(style: CommentStyle): boolean {
-		return this.styles.some((candidate) => Equal.equals(candidate, style));
+		return A.some(this.styles, (candidate) => Equal.equals(candidate, style));
 	}
 
 	/**
@@ -324,8 +360,11 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 		if (this.containsMarker(section.content)) {
 			return Result.fail(SectionRenderError.make({ reason: "markerInContent", key: section.key }));
 		}
-		const normalized = section.content.replace(/\r\n/g, "\n");
-		const body = eol === "\n" ? normalized : normalized.replace(/\n/g, eol);
+		const normalized = Str.replace(/\r\n/g, "\n")(section.content);
+		if (eol === "\n" && Str.endsWith("\r")(normalized)) {
+			return Result.fail(SectionRenderError.make({ reason: "trailingCarriageReturn", key: section.key }));
+		}
+		const body = eol === "\n" ? normalized : Str.replace(/\n/g, eol)(normalized);
 		const begin = this.marker("BEGIN", section.id, section.attributes);
 		return Result.succeed(`${begin}${eol}${body}${eol}${this.endMarker(section.id)}`);
 	}
@@ -347,25 +386,82 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 	 * @since 0.0.0
 	 */
 	containsMarker(text: string): boolean {
-		// `matchAll` clones the regex internally; `regex.test` would advance the
-		// shared `lastIndex` and make a second call on the same text answer
-		// differently from the first.
+		// Content is embedded after an opening marker, so its BOM is never at
+		// absolute document offset zero. Real line anchors still apply.
+		for (const _marker of this.markerMatches(`\n${text}`)) return true;
+		return false;
+	}
+
+	/**
+	 * Yields recognized markers with their captures, source spans and attributes.
+	 *
+	 * **Details**
+	 *
+	 * Closing boundaries are recognized once per multiline boundary and style.
+	 * A forward cursor associates each candidate prefix with the first closing
+	 * boundary before CR or LF, then parses its single extracted attribute run.
+	 * Unicode multiline boundaries may end a marker or occur inside a quoted
+	 * value, preserving the regex grammar without repeated tail backtracking.
+	 *
+	 * **Example** (Read marker captures and source offsets)
+	 *
+	 * ```ts
+	 * import { SectionDialect } from "@beep/scratchpad/effected/templates/SectionDialect";
+	 *
+	 * for (const [style, match, attributes] of SectionDialect.default.markerMatches("# --- BEGIN tool MANAGED SECTION ---")) {
+	 *   console.log(style.prefix, match[1], match[2], match.index, attributes) // # BEGIN tool 0 {}
+	 * }
+	 * ```
+	 *
+	 * @internal
+	 * @category parsing
+	 * @since 0.0.0
+	 */
+	*markerMatches(text: string): Iterable<readonly [CommentStyle, RegExpMatchArray, Record<string, string>]> {
+		const endings: Array<number> = [];
+		const breaks: Array<number> = [];
+		for (const match of Str.matchAll(/[\r\n\u2028\u2029]|$/g)(text)) {
+			const offset = O.getOrThrow(O.fromUndefinedOr(match.index));
+			endings.push(offset);
+			if (text[offset] === "\r" || text[offset] === "\n") breaks.push(offset);
+		}
 		for (const matcher of this.matchers()) {
-			for (const match of text.matchAll(matcher.regex)) {
-				const run = match[3];
-				if (run === undefined) {
-					return true;
+			const boundaries: Array<readonly [number, number, number]> = [];
+			for (const end of endings) {
+				const boundary = closingRule(text, end, matcher.style);
+				if (boundary !== undefined) boundaries.push([end, boundary[0], boundary[1]]);
+			}
+			let boundaryCursor = 0;
+			let breakCursor = 0;
+			let consumed = 0;
+			for (const match of Str.matchAll(matcher.regex)(text)) {
+				const start = O.getOrThrow(O.fromUndefinedOr(match.index));
+				if (start < consumed) continue;
+				const headEnd = start + match[0].length;
+				while (breakCursor < breaks.length && A.getUnsafe(breaks, breakCursor) < headEnd) breakCursor += 1;
+				while (boundaryCursor < boundaries.length && A.getUnsafe(boundaries, boundaryCursor)[1] <= headEnd) boundaryCursor += 1;
+				if (boundaryCursor === boundaries.length) break;
+				const [end, ruleStart, runEnd] = A.getUnsafe(boundaries, boundaryCursor);
+				const lineEnd = breakCursor < breaks.length ? A.getUnsafe(breaks, breakCursor) : text.length;
+				if (end > lineEnd || ruleStart <= headEnd) continue;
+				// A syntactically matched marker consumes its span even when its
+				// attribute grammar subsequently rejects it, just as matchAll did.
+				consumed = end;
+				let runStart = headEnd;
+				while (runStart < runEnd && (text[runStart] === " " || text[runStart] === "\t")) runStart += 1;
+				let attributes: Record<string, string> = {};
+				if (runStart < runEnd) {
+					if (match[1] === "END") continue;
+					const run = Str.slice(runStart, runEnd)(text);
+					const parsed = parseAttributeRun(run);
+					if (parsed === undefined) continue;
+					attributes = parsed;
+					match[3] = run;
 				}
-				// The scanner's rule, mirrored exactly: an END never carries
-				// attributes, and a run that does not parse cleanly makes the line
-				// ordinary content rather than a marker. Refusing more than the
-				// scanner reads back would reject content that round-trips fine.
-				if (match[1] !== "END" && parseAttributeRun(run) !== undefined) {
-					return true;
-				}
+				match[0] = Str.slice(start, end)(text);
+				yield [matcher.style, match, attributes] as const;
 			}
 		}
-		return false;
 	}
 
 	/**
@@ -373,10 +469,10 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 	 *
 	 * **Details**
 	 *
-	 * Each pattern is anchored per line, bounds the key with an explicit
-	 * character class, and carries no nested quantifier, so scanning is linear
-	 * in document length. Every caller-supplied fragment — prefix, suffix,
-	 * phrase — is regex-escaped before interpolation.
+	 * Each candidate pattern is anchored per line and bounds the key with an
+	 * explicit character class. {@link markerMatches} recognizes the closing
+	 * boundaries in linear time before parsing the attribute run. Prefix and phrase
+	 * fragments are regex-escaped; suffixes are compared literally.
 	 *
 	 * **Example** (Inspect the memoized scanner set)
 	 *
@@ -393,7 +489,8 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 	 * @since 0.0.0
   */
 	matchers(): ReadonlyArray<{ readonly style: CommentStyle; readonly regex: RegExp }> {
-		return this.#compiledMatchers;
+		const compile = () => this.compileMatchers();
+		return #compiledMatchers in this ? this.#compiledMatchers : compile();
 	}
 
 	/**
@@ -415,38 +512,16 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 	private compileMatchers(): ReadonlyArray<{ readonly style: CommentStyle; readonly regex: RegExp }> {
 		// A phrase's internal spaces read as "some whitespace" so a hand-edited
 		// file with a double space still matches.
-		const phrase = escapeRegex(this.phrase).replace(/ +/g, GAP);
-		const compiled = this.styles.map((style) => {
-			const tail = style.suffix === undefined ? "" : `${GAP}${escapeRegex(style.suffix)}`;
-			return {
-				style,
-				// The zero-width BOM alternative only matches after a BOM at absolute
-				// offset zero; the marker span starts after that preserved byte.
-				// Three further subtleties, the first two load-bearing for CRLF documents.
-				//
-				// The `\r?` is what makes them match at all: under `m`, `$` matches
-				// before the LF and leaves the CR sitting in the line.
-				//
-				// It is a LOOKAHEAD rather than a consumed character so the match —
-				// and therefore the section's span — stops before the CR. A match
-				// that consumed it would put the CR inside the span while the
-				// canonical render emits none, so every reconciliation would strip
-				// one CR and the document would never reach a fixed point.
-				//
-				// The optional group between the phrase and the closing rule is the
-				// attribute run, captured LOOSELY as one group — a repeated capture
-				// group would keep only its last pair — and validated by the
-				// anchored grammar in internal/attributes.ts afterwards. It is a
-				// single lazy quantifier under a once-only `(?:…)?`, so the pattern
-				// still carries no nested quantifier and backtracking stays bounded
-				// by the line. The lazy interior is also what lets a quoted value
-				// contain `---` without being mistaken for the closing rule.
-				regex: new RegExp(
-					`(?:^|(?<=(?<![\\s\\S])\\uFEFF))${escapeRegex(style.prefix)}${GAP}---${GAP}(BEGIN|END)${GAP}${KEY_CAPTURE}${GAP}${phrase}(?:${GAP}([^ \\t\\r\\n][^\\r\\n]*?))?${GAP}---${tail}[ \\t]*(?=\r?$)`,
-					"gm",
-				),
-			};
-		});
+		const phrase = Str.replace(/ +/g, GAP)(escapeRegex(this.phrase));
+		const compiled = A.map(this.styles, (style) => ({
+			style,
+			// Prefix candidates preserve multiline and absolute-leading-BOM anchors.
+			// Closing spans and attribute captures are filled by markerMatches.
+			regex: new RegExp(
+				`(?:^|(?<=(?<![\\s\\S])\\uFEFF))${escapeRegex(style.prefix)}${GAP}---${GAP}(BEGIN|END)${GAP}${KEY_CAPTURE}${GAP}${phrase}(?=[ \\t])`,
+				"gm",
+			),
+		}));
 		return compiled;
 	}
 
@@ -478,9 +553,7 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 		const run =
 			attributes === undefined
 				? ""
-				: R.toEntries(attributes)
-						.map(([name, value]) => ` ${name}="${value}"`)
-						.join("");
+				: A.join(A.map(R.toEntries(attributes), ([name, value]) => ` ${name}="${value}"`), "");
 		return `${id.commentStyle.prefix} --- ${kind} ${id.key} ${this.phrase}${run} ---${tail}`;
 	}
 }

@@ -492,3 +492,20 @@ describe("wrapSpans", () => {
 		assert.deepStrictEqual(lines([{ text: "a b c" }], Number.POSITIVE_INFINITY), ["a b c"]);
 	});
 });
+
+it.effect("schema-valid file links with url undefined normalize to a file target and render safely", () =>
+  Effect.gen(function* () {
+    const ctx = yield* contextOf();
+    const target = { url: undefined, file: "src/a.ts", line: 3, col: 4 };
+    for (const [inline, label] of [[Doc.link(target, "source"), "source"], [Doc.link(target), "src/a.ts"]] as const) {
+      const spans = flatten([inline], ctx);
+      assert.deepStrictEqual(spans[0]?.link, { file: "src/a.ts", line: 3, col: 4 });
+      assert.notProperty(spans[0]?.link ?? {}, "url");
+      const painted = paintSpans(spans, ctx);
+      assert.isTrue(linksOf(painted).balanced);
+      assert.strictEqual(linksOf(painted).pairs, 1);
+      assert.strictEqual(stripAnsi(painted), label);
+    }
+    const url = "https://example.test";
+    assert.deepStrictEqual(flatten([Doc.link({ url, file: "src/a.ts" })], ctx)[0]?.link, { url });
+  }));

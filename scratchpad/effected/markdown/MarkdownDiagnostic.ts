@@ -7,10 +7,9 @@
 // against the source text. The dependency edge runs public modules ->
 // engine only (toml src/TomlDiagnostic.ts precedent).
 
-import { LiteralKit } from "@beep/schema/LiteralKit";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { MARKDOWN_PARSE_ERROR_CODES } from "./internal/carriers.ts";
+import { MarkdownParseErrorCodeRaw, type RawDiagnostic } from "./internal/carriers.ts";
 
 const $I = $ScratchpadId.create("effected/markdown/MarkdownDiagnostic");
 
@@ -36,7 +35,7 @@ const $I = $ScratchpadId.create("effected/markdown/MarkdownDiagnostic");
  * @category schemas
  * @since 0.0.0
  */
-export const MarkdownParseErrorCode = LiteralKit(MARKDOWN_PARSE_ERROR_CODES).pipe($I.annoteSchema("MarkdownParseErrorCode", { description: "Error codes `Markdown.parse`/`MarkdownDocument.parse` can fail with. Currently exactly one, `\"NestingDepthExceeded\"`, the hardening-guard trip; the union may widen as new fatal conditions are identified." }));
+export const MarkdownParseErrorCode = MarkdownParseErrorCodeRaw.pipe($I.annoteSchema("MarkdownParseErrorCode", { description: "Error codes `Markdown.parse`/`MarkdownDocument.parse` can fail with. Currently exactly one, `\"NestingDepthExceeded\"`, the hardening-guard trip; the union may widen as new fatal conditions are identified." }));
 
 /**
  * The union of all markdown parse-error code string literals.
@@ -123,12 +122,7 @@ export class MarkdownDiagnostic extends S.Class<MarkdownDiagnostic>($I`MarkdownD
 	 */
 	static fromRaw(
 		source: string,
-		raw: {
-			readonly code: MarkdownParseErrorCode;
-			readonly message: string;
-			readonly offset: number;
-			readonly length: number;
-		},
+		raw: RawDiagnostic,
 	): MarkdownDiagnostic {
 		const { line, character } = lineChar(source, raw.offset);
 		return MarkdownDiagnostic.make({

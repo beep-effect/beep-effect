@@ -45,6 +45,34 @@ describe("hostility: pattern length", () => {
 });
 
 describe("hostility: brace expansion", () => {
+	it("terminates large singletons and non-advancing numeric ranges through Minimatch", () => {
+		for (const source of ["{9007199254740992..9007199254740992}", "{9007199254740991..9007199254740992}", "{9007199254740992..9007199254740994}"]) {
+			const matcher = new Minimatch(source);
+			assert.isTrue(matcher.match("9007199254740992"));
+			assert.isFalse(matcher.match("other"));
+		}
+		assert.strictEqual(
+			reasonOf(() => new Minimatch("{9007199254740992..9007199254740994}", { braceExpandMax: 2 })),
+			"ExpansionBudgetExceeded",
+		);
+	});
+
+	it("rejects overflowing endpoint and count arithmetic typed without hanging", () => {
+		const huge = "9".repeat(310);
+		const finite = `1${"0".repeat(308)}`;
+		for (const source of [`{${huge}..${huge}}`, `{1..${huge}..${huge}}`, `{-${finite}..${finite}}`, `{-${finite}..${finite}..${huge}}`]) {
+			try {
+				new Minimatch(source);
+				assert.fail("expected a GuardExceeded throw");
+			} catch (error) {
+				assertInstanceOf(error, GuardExceeded);
+				assert.strictEqual(error.reason, "ExpansionBudgetExceeded");
+				assert.strictEqual(error.limit, 100_000);
+				assert.strictEqual(error.actual, Infinity);
+			}
+		}
+	});
+
 	it("fails typed on an expansion bomb, never truncating silently", () => {
 		// 2^17 = 131_072 > 100_000
 		assert.strictEqual(

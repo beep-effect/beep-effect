@@ -1,0 +1,106 @@
+[
+  {
+    "id": "EV010:scratchpad/test/github-actions/ActionCache.test.ts:1:@effect/platform-node@0#1",
+    "reason": "Real Node filesystem and process services are required to prove tar round trips, corrupt-archive stderr, manifest transport beyond argv limits, and native glob traversal."
+  },
+  {
+    "id": "EV010:scratchpad/test/github-actions/Artifact.test.ts:2:@effect/platform-node@0#1",
+    "reason": "Retained the real Node platform for tests asserting actual zip bytes, subprocess extraction, and manifest IO at spawn time. Protocol-only and filesystem-only validation fixtures use memfs."
+  },
+  {
+    "id": "EV015:scratchpad/test/github-actions/BlobStore.githubCache.test.ts:298:TestClock.adjust@53#1",
+    "reason": "The retry test requires advancing TestClock. Its layer contains exactly one test and owns a fresh clock, so the adjustment cannot affect another test. An ownership comment documents this judgment; the exception ledger was left untouched."
+  },
+  {
+    "id": "EV009:scratchpad/test/github-actions/DetachedProcess.test.ts:455:it.live@2#1",
+    "reason": "The test polls actual child stdout and process exit through real timers; retained it.live and added a one-line live-clock reason."
+  },
+  {
+    "id": "EV009:scratchpad/test/github-actions/DetachedProcess.test.ts:487:it.live@2#1",
+    "reason": "The test polls actual child stdout and process exit through real timers; retained it.live and added a one-line live-clock reason."
+  },
+  {
+    "id": "EV009:scratchpad/test/github-actions/DetachedProcess.test.ts:541:it.live@2#1",
+    "reason": "The test polls actual child stdout and process exit through real timers; retained it.live and added a one-line live-clock reason."
+  },
+  {
+    "id": "EV010:scratchpad/test/github-actions/DetachedProcess.test.ts:2:node:fs@0#1",
+    "reason": "Native detached-process spawning and descriptor-backed child logs are the subject; a memory filesystem would not exercise those behaviors."
+  },
+  {
+    "id": "EV010:scratchpad/test/github-actions/DetachedProcess.test.ts:5:node:os@0#1",
+    "reason": "Native child-process tests require actual temporary directories for their log files; retained tmpdir."
+  },
+  {
+    "id": "EV010:scratchpad/test/github-actions/PackageManagerInstaller.test.ts:4:node:fs@0#1",
+    "reason": "Real filesystem verifies archive layout, executable permissions, shim bytes, and fail-closed cache writes."
+  },
+  {
+    "id": "EV010:scratchpad/test/github-actions/PackageManagerInstaller.test.ts:5:node:os@0#1",
+    "reason": "Real temporary directories isolate platform archive and executable fixtures; it.layer owns their cleanup."
+  },
+  {
+    "id": "EV010:scratchpad/test/github-actions/PackageManagerInstaller.test.ts:7:@effect/platform-node@0#1",
+    "reason": "Real platform services execute tar/unzip and installed shims; replacing them with memfs would remove the platform behavior being tested."
+  },
+  {
+    "id": "EV015:scratchpad/test/github-actions/ToolInstaller.test.ts:713:TestClock.adjust@7#1",
+    "reason": "The layer block contains only the stalled-download test, which exclusively owns and advances its TestClock; a reason comment records that ownership."
+  },
+  {
+    "id": "EV010:scratchpad/test/github-actions/ToolInstaller.test.ts:1:@effect/platform-node@0#1",
+    "reason": "Retained NodeServices: these integration tests verify real filesystem swaps, executable permissions, and actual tar/unzip behavior."
+  },
+  {
+    "id": "EV010:scratchpad/test/github-actions/ambientReads.test.ts:2:node:fs@0#1",
+    "reason": "Reads the actual module source tree to detect unsanctioned ambient process reads; memfs would disconnect the assertions from the source under test."
+  },
+  {
+    "id": "EV002:scratchpad/test/github-actions/Secret.test.ts:48:provide@11#1",
+    "reason": "ActionOutputs.layerTest resolves to a pure Layer.succeed stub; D14 permits per-test provision."
+  },
+  {
+    "id": "EV002:scratchpad/test/github-actions/Secret.test.ts:57:provide@11#1",
+    "reason": "ActionOutputs.layerTest resolves to a pure Layer.succeed stub; D14 permits per-test provision."
+  },
+  {
+    "id": "EV002:scratchpad/test/github-actions/Secret.test.ts:75:provide@11#1",
+    "reason": "ActionOutputs.layerTest resolves to a pure Layer.succeed stub; D14 permits per-test provision."
+  },
+  {
+    "id": "EV002:scratchpad/test/github-actions/Secret.test.ts:83:provide@11#1",
+    "reason": "ActionOutputs.layerTest resolves to a pure Layer.succeed stub; D14 permits per-test provision."
+  },
+  {
+    "id": "EV002:scratchpad/test/github-actions/Secret.test.ts:93:provide@11#1",
+    "reason": "ActionOutputs.layerTest resolves to a pure Layer.succeed stub; D14 permits per-test provision."
+  },
+  {
+    "id": "EV002:scratchpad/test/github-actions/Secret.test.ts:103:provide@11#1",
+    "reason": "ActionOutputs.layerTest resolves to a pure Layer.succeed stub; D14 permits per-test provision."
+  },
+  {
+    "id": "EV002:scratchpad/test/github-actions/Secret.test.ts:122:provide@11#1",
+    "reason": "ActionOutputs.layerTest resolves to a pure Layer.succeed stub; D14 permits per-test provision."
+  },
+  {
+    "id": "EV002:scratchpad/test/github-actions/Secret.test.ts:132:provide@11#1",
+    "reason": "ActionOutputs.layerTest resolves to a pure Layer.succeed stub; D14 permits per-test provision."
+  },
+  {
+    "id": "EV002:scratchpad/test/github-actions/Secret.test.ts:143:provide@11#1",
+    "reason": "ActionOutputs.layerTest resolves to a pure Layer.succeed stub; D14 permits per-test provision."
+  },
+  {
+    "id": "EV002:scratchpad/test/github-actions/Secret.test.ts:152:provide@11#1",
+    "reason": "ActionOutputs.layerTest resolves to a pure Layer.succeed stub; D14 permits per-test provision."
+  },
+  {
+    "id": "EV010:scratchpad/test/github-actions/Secret.test.ts:2:node:fs@0#1",
+    "reason": "Reads the actual module source tree to enforce that only Secret.ts unwraps Redacted values; memfs would remove detection of source regressions."
+  },
+  {
+    "id": "EV010:scratchpad/test/github-actions/reachability.test.ts:17:node:fs@0#1",
+    "reason": "Reads actual source imports and package.json to enforce dependency reachability, confinement, and manifest declarations; memfs would replace the subject being verified."
+  }
+]

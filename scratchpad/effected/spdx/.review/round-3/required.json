@@ -1,0 +1,23 @@
+{
+  "module": "spdx",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/spdx/internal/parser.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "sol-3-1"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-3-1": {
+      "file": "scratchpad/effected/spdx/internal/parser.ts",
+      "class": "schema",
+      "summary": "RawSimpleLicense and RawExpression are named, reused parser domain unions with no schema backing, violating EF-12b and EF-33 despite passing compilation.",
+      "fix": "Define IdentityComposer-annotated plain-object schemas for the existing raw license and license-reference variants and derive RawSimpleLicense from them. Compose WITH, AND and OR into a recursive schema with S.suspend, retaining only the explicit recursive type anchor TypeScript requires and deriving nonrecursive shapes from schemas. Preserve kind tags, all fields, required documentRef: string | undefined, WITH's simple-expression operand restriction, plain-object output, accepted inputs, undefined-on-failure behavior, recursion limits and parser control flow. Keep schemas independent of the facade; add no per-node decoding or class construction, barrel exports, upstream-test rewrites or consumer edits. No test-file edits are required; validate existing parser, expression and oracle suites with --maxWorkers=2 for every Vitest run. Central bookkeeping owns any deviation/export recording; do not edit the ledger or README Port notes."
+    }
+  }
+}

@@ -1,3 +1,5 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import * as A from "effect/Array";
 import type { ReactElement } from "react";
 import { Fmt } from "../Fmt.ts";
@@ -7,14 +9,36 @@ import type { Binding } from "./KeyTable.ts";
 import { KeyTable, useKeys } from "./KeyTable.ts";
 import { Styled, useGlyphs, useTerminalSize, useTheme } from "./UiTheme.ts";
 
+const $I = $ScratchpadId.create("effected/cli/ui/Tabs");
+
+const Jump = S.Struct({
+	jump: S.Finite.annotateKey($I.annote("Jump.jump", { description: "The zero-based tab index requested by a digit key." })),
+}).annotate($I.annote("Jump", { description: "A plain request to jump to a tab index." }));
 /**
  * What a key does to a {@link Tabs} row: move to the previous or next tab (wrapping), or jump to one by index.
  *
+ * **Example** (Validate a TabsAction payload)
+ *
+ * ```ts
+ * import { TabsAction } from "@beep/scratchpad/effected/cli/ui/Tabs"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(TabsAction)({ jump: 2 })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TabsAction = S.Union([S.Literals(["prev", "next"]), Jump])
+	.annotate($I.annote("TabsAction", { description: "A wrapping tab move or an indexed jump, preserving the key-table payload." }));
+/**
+ * Plain payload accepted by {@link TabsAction}; reducers retain this structural representation.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export type TabsAction = "prev" | "next" | { readonly jump: number };
+export type TabsAction = typeof TabsAction.Type;
 
 /**
  * One tab.
@@ -284,11 +308,11 @@ export abstract class Tabs {
 		if (column) {
 			return react.createElement(
 				ink.Box,
-				{ flexDirection: "column" },
+				{ flexDirection: "column", marginRight: 1 },
 				...props.tabs.map((_, position) =>
 					react.createElement(
 						ink.Box,
-						{ key: position },
+						{ key: position, height: 1, overflow: "hidden" },
 						draw(
 							position,
 							marked(

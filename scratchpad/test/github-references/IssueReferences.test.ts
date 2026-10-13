@@ -90,6 +90,21 @@ describe("IssueReferences.harvestIssueReferences", () => {
 });
 
 describe("IssueReferences.review regressions", () => {
+	it("accepts natural-number boundaries and rejects negative or unsafe issue numbers and offsets", () => {
+		for (const issueNumber of [0, Number.MAX_SAFE_INTEGER]) {
+			assert.isTrue(S.is(BareLineReference)({ keyword: "fixes", issueNumber }));
+			assert.isTrue(S.is(IssueReference)({ keyword: "fixes", issueNumber, start: 0, end: Number.MAX_SAFE_INTEGER }));
+		}
+		for (const issueNumber of [-1, Number.MAX_SAFE_INTEGER + 1]) {
+			assert.isFalse(S.is(BareLineReference)({ keyword: "fixes", issueNumber }));
+			assert.isFalse(S.is(IssueReference)({ keyword: "fixes", issueNumber, start: 0, end: 8 }));
+		}
+		for (const offset of [-1, Number.MAX_SAFE_INTEGER + 1]) {
+			assert.isFalse(S.is(IssueReference)({ keyword: "fixes", issueNumber: 0, start: offset, end: 8 }));
+			assert.isFalse(S.is(IssueReference)({ keyword: "fixes", issueNumber: 0, start: 0, end: offset }));
+		}
+	});
+
 	it("keeps the closing kit, tuple and Enum in the same literal order", () => {
 		assert.strictEqual(CLOSING_KEYWORDS, ClosingKeyword.literals);
 		assert.deepStrictEqual(R.values(ClosingKeyword.Enum), [...CLOSING_KEYWORDS]);
@@ -113,6 +128,24 @@ describe("IssueReferences.review regressions", () => {
 		assert.isFalse(S.is(IssueReference)({ issueNumber: 12, keyword: "fixes", start: 0.5, end: 9 }));
 		assert.isFalse(S.is(IssueReference)({ issueNumber: 12, keyword: "fixes", start: 0, end: Number.POSITIVE_INFINITY }));
 		assert.isFalse(S.is(BareLineReference)({ ...bare, keyword: "refs" }));
+	});
+
+	it("requires nonempty ordered spans and accepts real harvests", () => {
+		const text = "see fixes #12 and closes #3";
+		const harvested = harvestIssueReferences(text);
+		assert.deepStrictEqual(harvested, [
+			{ keyword: "fixes", issueNumber: 12, start: 4, end: 13 },
+			{ keyword: "closes", issueNumber: 3, start: 18, end: 27 },
+		]);
+		for (const reference of harvested) {
+			assert.isTrue(S.is(IssueReference)(reference));
+			assertSome(S.decodeOption(IssueReference)(reference), reference);
+			for (const [start, end] of [[0, 0], [10, 10], [10, 0]] as const) {
+				const invalid = { ...reference, start, end };
+				assert.isFalse(S.is(IssueReference)(invalid));
+				assertNone(S.decodeOption(IssueReference)(invalid));
+			}
+		}
 	});
 
 	it("rejects invalid keywords and prototype names in both parser dialects", () => {

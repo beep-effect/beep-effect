@@ -540,7 +540,7 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 				hint.name === name ? hint.version : O.none<string>(),
 			);
 			return O.orElse(fromCorepack, () =>
-				O.flatMap(hints.devEngines, (hint) => (hint.name === name ? hint.version : O.none<string>())),
+				O.flatMap(hints.devEngines, (hint) => hint.version),
 			);
 		};
 
@@ -620,15 +620,6 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 				});
 			}
 
-			if (O.isSome(bunLock) && namesManager(hints, "bun")) {
-				return DetectedPackageManager.make({
-					name: "bun",
-					version: versionFor(hints, "bun"),
-					runtime: "bun",
-					evidence: bunLock.value,
-				});
-			}
-
 			if ((yield* has(root, "yarn.lock")) && namesManager(hints, "yarn")) {
 				return DetectedPackageManager.make({
 					name: "yarn",
@@ -656,7 +647,7 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 			const declared = declaredName(hints);
 			if (O.isSome(declared)) {
 				const name = declared.value;
-				if (name === "pnpm" || name === "npm" || name === "yarn" || name === "bun") {
+				if (S.is(PackageManagerName)(name)) {
 					return DetectedPackageManager.make({
 						name,
 						version: versionFor(hints, name),

@@ -12,7 +12,7 @@ import { CatalogResolver, Manifest, UnresolvedDependencyError, WorkspaceResolver
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { PublishTarget, PublishabilityDetector, WorkspacePackage, Workspaces } from "../../effected/workspaces/index.ts";
+import { CatalogSet, PublishTarget, PublishabilityDetector, WorkspacePackage, Workspaces } from "../../effected/workspaces/index.ts";
 import type { Tree } from "./fixtures.ts";
 import { platform } from "./fixtures.ts";
 
@@ -231,4 +231,46 @@ describe("Workspaces.layer — the publishability seam", () => {
 			assert.strictEqual(targets[0]?.registry, "https://registry.npmjs.org/");
 		}),
 	);
+});
+
+
+import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
+import * as Arbitrary from "effect/Arbitrary";
+import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+import { identity } from "effect/Function";
+import { WorkspacesOptions, WorkspacesGitOptions } from "../../effected/workspaces/Workspaces.ts";
+
+describe("composite workspace option schemas", () => {
+  const roundTrip = <T, E>(name: string, schema: S.Codec<T, E>, generated: S.Schema<T>): void => {
+    it.effect.prop(name, [Arbitrary.schema(generated)], ([value]) => Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(schema)(value);
+      const decoded = yield* S.decodeEffect(schema)(encoded);
+      assert.isTrue(S.toEquivalence(schema)(decoded, value));
+      assert.deepStrictEqual(yield* S.encodeEffect(schema)(decoded), encoded);
+    }), { arbitrary: fcRuns(100) });
+  };
+  // The owning depth declaration accepts all numbers but has no generation link.
+  // Add one only to the generator; codecs under test remain the actual composites.
+  const depth = WorkspacesOptions.fields.maxDepth.annotate({
+    toCodecArbitrary: () => S.link<number>()(
+      S.Finite,
+      SchemaTransformation.transform({ decode: identity, encode: identity }),
+    ),
+  });
+  roundTrip("WorkspacesOptions retains all owning-service fields", WorkspacesOptions, S.Struct({ ...WorkspacesOptions.fields, maxDepth: depth }));
+  roundTrip("WorkspacesGitOptions retains all snapshot fields", WorkspacesGitOptions, S.Struct({ ...WorkspacesGitOptions.fields, maxDepth: depth }));
+  it.effect("omitted options stay omitted and explicit undefined stopAt stays present", () => Effect.gen(function* () {
+    assert.deepStrictEqual(yield* S.decodeEffect(WorkspacesOptions)({}), {});
+    assert.deepStrictEqual(yield* S.decodeEffect(WorkspacesGitOptions)({}), {});
+    assert.deepStrictEqual(yield* S.decodeEffect(WorkspacesGitOptions)({ stopAt: undefined }), { stopAt: undefined });
+    for (const maxDepth of [NaN, Infinity, -Infinity]) {
+      const options = { maxDepth };
+      assert.deepStrictEqual(yield* S.decodeEffect(WorkspacesOptions)(yield* S.encodeEffect(WorkspacesOptions)(options)), options);
+      assert.deepStrictEqual(yield* S.decodeEffect(WorkspacesGitOptions)(yield* S.encodeEffect(WorkspacesGitOptions)(options)), options);
+    }
+    const seedCatalogs = CatalogSet.fromBunBlocks({ catalog: { effect: "^4.0.0" } });
+    const value = { cwd: "/repo", stopAt: "/repo", maxDepth: 8, seedCatalogs };
+    assert.deepStrictEqual(yield* S.decodeEffect(WorkspacesGitOptions)(value), value);
+  }));
 });

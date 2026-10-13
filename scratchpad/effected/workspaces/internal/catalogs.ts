@@ -1,4 +1,6 @@
 import { dual } from "effect/Function";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -17,6 +19,8 @@ import type { Catalogs } from "@pnpm/catalogs.types";
 
 export type { Catalogs };
 
+const $I = $ScratchpadId.create("effected/workspaces/internal/catalogs");
+
 /**
  * The normalized entries shape: catalog name → dependency → range.
  * @category type-level
@@ -26,13 +30,29 @@ export type CatalogEntries = Record<string, Record<string, string>>;
 
 /**
  * Why a catalog specifier could not be resolved. Raw record; the facade types it.
+ * **Example** (Recognize a catalog resolution failure)
+ *
+ * ```ts
+ * import { CatalogMisconfiguration } from "@beep/scratchpad/effected/workspaces/internal/catalogs";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(CatalogMisconfiguration)({ catalogName: "default", detail: "missing dependency" })); // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CatalogMisconfiguration = S.Struct({
+	catalogName: S.String.annotateKey($I.annote("CatalogMisconfiguration.catalogName", { description: "The catalog containing the unresolved dependency." })),
+	detail: S.String.annotateKey($I.annote("CatalogMisconfiguration.detail", { description: "The catalog resolver's original diagnostic." })),
+}).annotate($I.annote("CatalogMisconfiguration", { description: "A plain catalog misconfiguration record reported by the resolver." }));
+/**
+ * The readonly catalog failure described by {@link CatalogMisconfiguration}.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export interface CatalogMisconfiguration {
-	readonly catalogName: string;
-	readonly detail: string;
-}
+export type CatalogMisconfiguration = typeof CatalogMisconfiguration.Type;
 
 /**
  * Project a pnpm-workspace manifest's `catalog` / `catalogs` fields into a `Catalogs` map.

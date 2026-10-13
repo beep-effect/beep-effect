@@ -15,29 +15,50 @@
 //
 // Leaf module: imports only node-shape types.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { dual } from "effect/Function";
-import { isString } from "effect/Predicate";
+import * as P from "effect/Predicate";
 import type { BreakStyle, EmphasisChar, ReferenceType } from "../MarkdownNode.ts";
+
+const $I = $ScratchpadId.create("effected/markdown/internal/inlineNode");
 
 /**
  * The node kinds the inline pass builds.
  *
+ * **Example** (Validate InlineNodeType)
+ *
+ * ```ts
+ * import { InlineNodeType } from "@beep/scratchpad/effected/markdown/internal/inlineNode"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(InlineNodeType)("strong") // => true
+ * S.is(InlineNodeType)("paragraph") // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const InlineNodeType = LiteralKit([
+	"text",
+	"inlineCode",
+	"html",
+	"break",
+	"emphasis",
+	"strong",
+	"delete",
+	"link",
+	"image",
+	"linkReference",
+	"imageReference",
+	"footnoteReference",
+]).annotate($I.annote("InlineNodeType", { description: "Inline node kinds built by the engine." }));
+
+/** The engine kind domain derived from its schema.
  * @category type-level
  * @since 0.0.0
  */
-export type InlineNodeType =
-	| "text"
-	| "inlineCode"
-	| "html"
-	| "break"
-	| "emphasis"
-	| "strong"
-	| "delete"
-	| "link"
-	| "image"
-	| "linkReference"
-	| "imageReference"
-	| "footnoteReference";
+export type InlineNodeType = typeof InlineNodeType.Type;
 
 /**
  * Per-kind fields, all optional and never explicitly `undefined`.
@@ -100,7 +121,7 @@ export interface InlineNode {
 export const makeInlineNode: {
 	(type: InlineNodeType, start: number, end: number, value?: string): InlineNode;
 	(start: number, end: number, value?: string): (type: InlineNodeType) => InlineNode;
-} = dual((args) => isString(args[0]), (type: InlineNodeType, start: number, end: number, value = ""): InlineNode => ({
+} = dual((args) => P.isString(args[0]), (type: InlineNodeType, start: number, end: number, value = ""): InlineNode => ({
 	type,
 	value,
 	start,

@@ -13,7 +13,6 @@
 // one-off. Leaf module: imports only Effect codecs.
 
 import * as HashMap from "effect/HashMap";
-import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -22,34 +21,25 @@ const DATA =
 
 const decodeEntities = S.Tuple([S.String, S.String]).pipe(S.Array, S.fromJsonString, S.decodeResult);
 
-const entries = Result.getOrThrow(decodeEntities(DATA));
-const entities = HashMap.fromIterable(entries);
-
 /**
  * The HTML5 named character references, keyed without `&` or `;`.
  *
  * **Example** (Look up a named character reference)
  *
  * ```ts
+ * import * as HashMap from "effect/HashMap"
+ * import * as O from "effect/Option"
  * import { ENTITY_MAP } from "@beep/scratchpad/effected/markdown/internal/entityMap"
  *
- * console.log(ENTITY_MAP.get("amp")) // &
- * console.log(ENTITY_MAP.has("&amp;")) // false
- * console.log(ENTITY_MAP.get("unknown")) // undefined
+ * console.log(O.getOrElse(HashMap.get(ENTITY_MAP, "amp"), () => "missing")) // &
+ * console.log(HashMap.has(ENTITY_MAP, "&amp;")) // false
+ * console.log(O.isNone(HashMap.get(ENTITY_MAP, "unknown"))) // true
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const ENTITY_MAP: ReadonlyMap<string, string> = {
-	size: HashMap.size(entities),
-	get: (key) => O.getOrUndefined(HashMap.get(entities, key)),
-	has: (key) => HashMap.has(entities, key),
-	*keys() { for (const [key] of entries) yield key; return undefined; },
-	*values() { for (const [, value] of entries) yield value; return undefined; },
-	*entries() { for (const [key, value] of entries) yield [key, value]; return undefined; },
-	[Symbol.iterator]() { return this.entries(); },
-	forEach(callback, thisArg) {
-		for (const [key, value] of entries) callback.call(thisArg, value, key, this);
-	},
-};
+export const ENTITY_MAP: HashMap.HashMap<string, string> = decodeEntities(DATA).pipe(
+	Result.getOrThrow,
+	HashMap.fromIterable,
+);

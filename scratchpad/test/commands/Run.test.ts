@@ -124,6 +124,41 @@ describe("Run.collect", () => {
 		}),
 	);
 
+	it.effect("negative-infinity budget fails typed after spawning and consuming output", () =>
+		Effect.gen(function* () {
+			for (const script of [{ stdout: "x" }, { stderr: "x" }]) {
+				const spawner = ScriptedSpawner.make(() => script);
+				const error = yield* Effect.flip(Run.collect(cmd(), { maxOutputBytes: Number.NEGATIVE_INFINITY }).pipe(withLayer(spawner.layer)));
+				assert.lengthOf(spawner.spawns, 1);
+				if (!S.is(CommandOutputError)(error)) return assert.fail("expected a typed output error");
+				assert.strictEqual(error.kind, "tooLarge");
+				if (!S.is(OutputTooLarge)(error.cause)) return assert.fail("expected a typed capture error");
+				assert.strictEqual(error.cause.limit, Number.NEGATIVE_INFINITY);
+			}
+		}),
+	);
+
+	it.effect("negative-infinity budget allows empty streams and preserves spawn failures", () =>
+		Effect.gen(function* () {
+			const output = yield* withScript(() => Run.collect(cmd(), { maxOutputBytes: Number.NEGATIVE_INFINITY }), () => ({}));
+			assert.strictEqual(output.stdout, "");
+			assert.strictEqual(output.stderr, "");
+			const error = yield* Effect.flip(withScript(() => Run.collect(cmd(), { maxOutputBytes: Number.NEGATIVE_INFINITY }), () => ScriptedSpawner.notFound("tool")));
+			if (!S.is(CommandFailedError)(error)) return assert.fail("expected the spawn failure");
+			assert.strictEqual(error.kind, "spawn");
+		}),
+	);
+
+	it.effect("Infinity and NaN budgets retain captured output", () =>
+		Effect.gen(function* () {
+			for (const maxOutputBytes of [Number.POSITIVE_INFINITY, Number.NaN]) {
+				const output = yield* withScript(() => Run.collect(cmd(), { maxOutputBytes }), () => ({ stdout: "out", stderr: "err" }));
+				assert.strictEqual(output.stdout, "out");
+				assert.strictEqual(output.stderr, "err");
+			}
+		}),
+	);
+
 	it.effect("with no timeout option, a hanging command does NOT fail on its own", () =>
 		Effect.gen(function* () {
 			// The design's "no default ceiling" decision, pinned: a forked hang is
@@ -535,6 +570,15 @@ describe("Run.exitCode", () => {
 });
 
 describe("Run.succeeds", () => {
+	it.effect("negative-infinity overflow is false while empty streams still succeed", () =>
+		Effect.gen(function* () {
+			for (const script of [{ stdout: "x" }, { stderr: "x" }]) {
+				assert.isFalse(yield* withScript(() => Run.succeeds(cmd(), { maxOutputBytes: Number.NEGATIVE_INFINITY }), () => script));
+			}
+			assert.isTrue(yield* withScript(() => Run.succeeds(cmd(), { maxOutputBytes: Number.NEGATIVE_INFINITY }), () => ({})));
+		}),
+	);
+
 	it.effect("true for a zero exit", () =>
 		Effect.gen(function* () {
 			assert.isTrue(
@@ -790,6 +834,17 @@ describe("Run over core Command combinators", () => {
 
 
 describe("Run schema shapes", () => {
+ it.effect("accepts whitespace before duration units without normalizing the input", () => Effect.gen(function* () {
+  for (const timeout of ["1  seconds", "-1  seconds"] as const) {
+   const options: RunOptions = { timeout };
+   assert.isTrue(S.is(RunOptions)(options));
+   assert.strictEqual((yield* S.decodeEffect(RunOptions)(options)).timeout, timeout);
+  }
+  for (const timeout of ["1e999 seconds", "1e999  seconds", "1 fortnight", "1seconds", "1  Seconds"]) {
+   assert.isFalse(S.is(RunOptions)({ timeout }));
+  }
+ }));
+
  it("owns an integer exit-code domain across output and both errors", () => {
   for (const exitCode of [0, 42, -1]) {
    assert.strictEqual(CommandOutput.make({ stdout: "", stderr: "", exitCode }).exitCode, exitCode);

@@ -20,14 +20,14 @@ type Mode = "flow" | "cell" | "line";
 const BREAK = "\u0000";
 
 /**
- * Escape what markdown would read as syntax: backslash, backtick, `*`, `_`, brackets, angle brackets, `&`, `~` and
+ * Escape what markdown would read as syntax: backslash, backtick, `!`, `*`, `_`, brackets, angle brackets, `&`, `~` and
  * `|` (so text can never form a table), and the start of an autolink literal (any scheme before `://`, or `www.`), which a GFM
  * reader would otherwise turn into a link. An email address is left alone: the `mailto:` link a reader makes of it
  * is harmless, and escaping its `@` does not stop every reader.
  */
 const escapeText = (text: string): string =>
 	text
-		.replace(/[\\`*_[\]<>&~|]/g, "\\$&")
+		.replace(/[\\`!*_[\]<>&~|]/g, "\\$&")
 		.replace(/(?<=[a-z0-9+.-]):(?=\/\/)/gi, "\\:")
 		.replace(/\b(www)\./gi, "$1\\.");
 
@@ -512,9 +512,9 @@ const blockMd = (walk: Walk, block: Block, depth: number, compact = false): Line
  * **Example** (Render a paragraph)
  *
  * ```ts
- * import { renderMarkdown } from "@beep/scratchpad/effected/cli/internal/renderMarkdown"
- * import { Doc } from "@beep/scratchpad/effected/cli/Doc"
- * import { Render } from "@beep/scratchpad/effected/cli/Render"
+ * import { renderMarkdown } from "./renderMarkdown.ts"
+ * import { Doc } from "../Doc.ts"
+ * import { Render } from "../Render.ts"
  * const ctx = Render.contextOf({ audience: "human", color: "none" })
  * console.log(renderMarkdown([Doc.paragraph("Ready")], ctx)) // Ready
  * ```

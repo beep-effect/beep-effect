@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
@@ -13,6 +14,43 @@ class WalkerDefect extends S.TaggedError<WalkerDefect>($I`WalkerDefect`)(
 	{ message: S.String },
 	$I.annote("WalkerDefect", { description: "Invalid upward traversal wiring." }),
 ) {}
+
+/**
+ * Positive finite integer cap shared by upward and downward traversal.
+ *
+ * **Details**
+ *
+ * Accepts integers above the safe-integer range, matching the traversal guards.
+ *
+ * **Example** (Validate a traversal cap)
+ *
+ * ```ts
+ * import { DepthCap } from "@beep/scratchpad/effected/walker/Walker";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(DepthCap)(256)) // true
+ * console.log(S.is(DepthCap)(0)) // false
+ * console.log(S.is(DepthCap)(2 ** 53)) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DepthCap = S.Finite.check(
+	S.isGreaterThanOrEqualTo(1),
+	S.makeFilter(Number.isInteger, {
+		identifier: $I`DepthCapInteger`,
+		title: "Integer traversal depth",
+		description: "A traversal depth must be an integer, including integers above the safe-integer range.",
+	}),
+).annotate($I.annote("DepthCap", { description: "A positive finite integer traversal cap." }));
+/**
+ * Positive finite integer accepted as a traversal depth cap.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DepthCap = typeof DepthCap.Type;
 
 const JsonString = S.fromJsonString(S.String);
 
@@ -83,7 +121,7 @@ export const AscendOptions = S.Struct({
 */
 	stopAt: S.optionalKey(S.String).annotateKey({ description: "Absolute inclusive ceiling, normalized before comparison." }),
 /** Hard cap on chain length. Defaults to 256. */
-	maxDepth: S.optionalKey(S.Finite).annotateKey({ description: "Hard cap on chain length; invalid supplied depths remain defects." }),
+	maxDepth: S.optionalKey(DepthCap).annotateKey({ description: "Hard cap on chain length; invalid supplied depths remain defects." }),
 }).annotate($I.annote("AscendOptions", { description: "An optional lexical ceiling and cap for upward traversal." }));
 /**
 * Decoded options controlling the lexical ceiling and chain-length cap of upward traversal.
@@ -98,7 +136,7 @@ const ascend: (start: string, options?: AscendOptions) => Effect.Effect<Readonly
 	Effect.fn("ascend")(function* (start: string, options?: AscendOptions) {
 		const path = yield* Path.Path;
 		const maxDepth = options?.maxDepth ?? 256;
-		if (!Number.isInteger(maxDepth) || maxDepth < 1) {
+		if (!S.is(DepthCap)(maxDepth)) {
 			return yield* Effect.die(
 				WalkerDefect.make({ message: `Walker.ascend: maxDepth must be a positive integer, received ${maxDepth}` }),
 			);
@@ -121,12 +159,12 @@ const ascend: (start: string, options?: AscendOptions) => Effect.Effect<Readonly
 		// equality check stays as a fast path for the overwhelmingly common
 		// already-resolved ceiling; it is an optimization, never the only
 		// comparison.
-		const ceiling = options?.stopAt === undefined ? undefined : path.resolve(options.stopAt);
+		const ceiling = O.map(O.fromNullishOr(options?.stopAt), path.resolve);
 		const dirs: Array<string> = [];
 		let current = start;
 		for (let depth = 0; depth < maxDepth; depth++) {
 			dirs.push(current);
-			if (ceiling !== undefined && (current === ceiling || path.resolve(current) === ceiling)) break;
+			if (O.exists(ceiling, (ceiling) => current === ceiling || path.resolve(current) === ceiling)) break;
 			const parent = path.dirname(current);
 			if (parent === current) break;
 			current = parent;
@@ -175,14 +213,17 @@ const ascendToPhysical: (
 		}
 		// The lexical pass first: a ceiling the chain already spells needs no I/O.
 		const dirs = yield* ascend(start, { ...options, stopAt: ceiling });
-		const last = dirs.at(-1);
-		if (last !== undefined && path.resolve(last) === path.resolve(ceiling)) return dirs;
+		if (O.exists(A.last(dirs), (last) => path.resolve(last) === path.resolve(ceiling))) return dirs;
 		// A ceiling that cannot be resolved names nothing physical to match; the
 		// lexical answer stands, exactly as `ascend` would give it.
 		const physical = yield* Effect.option(fs.realPath(ceiling));
 		if (O.isNone(physical)) return dirs;
 		const hit = yield* findRoot(dirs, (dir) => Effect.map(fs.realPath(dir), (real) => real === physical.value));
-		return O.isSome(hit) ? dirs.slice(0, dirs.indexOf(hit.value) + 1) : dirs;
+		return hit.pipe(
+			O.flatMap((hit) => A.findFirstIndex(dirs, (dir) => dir === hit)),
+			O.map((index) => A.take(dirs, index + 1)),
+			O.getOrElse(() => dirs),
+		);
 	});
 
 // Implementation of Walker.firstMatch; the public contract lives on the static.
@@ -207,8 +248,7 @@ const findUpward: (
 			candidatesFor: (dir: string) => ReadonlyArray<string>,
 		) {
 		const fs = yield* FileSystem.FileSystem;
-		const candidates: Array<string> = [];
-		for (const dir of dirs) candidates.push(...candidatesFor(dir));
+		const candidates = A.flatMap(dirs, candidatesFor);
 		return yield* firstMatch(candidates, (candidate) => fs.exists(candidate));
 	});
 

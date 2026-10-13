@@ -1,0 +1,69 @@
+{
+  "module": "toml",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/toml/internal/semantic.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "r-provenance"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/toml/TomlFormat.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "r-table-origin",
+        "r-format-invariant"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/toml/TomlDateTime.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "r-offset-metadata",
+        "r-range-check-metadata"
+      ]
+    }
+  ],
+  "findings": {
+    "r-provenance": {
+      "file": "scratchpad/effected/toml/internal/semantic.ts",
+      "class": "schema",
+      "summary": "Named semantic provenance domain is a handwritten union rather than an annotated LiteralKit.",
+      "fix": "Define a module-local $I-annotated Provenance = LiteralKit with the seven existing strings and derive type Provenance = typeof Provenance.Type; preserve node construction and exhaustive dispatch."
+    },
+    "r-table-origin": {
+      "file": "scratchpad/effected/toml/TomlFormat.ts",
+      "class": "schema",
+      "summary": "Reused resolution-table origin domain has no schema authority.",
+      "fix": "Define a module-local $I-annotated LiteralKit for root, explicit, implicit, dotted and element; derive ResTable.origin from its Type and preserve every assignment, insertion rule and rendered byte."
+    },
+    "r-format-invariant": {
+      "file": "scratchpad/effected/toml/TomlFormat.ts",
+      "class": "law",
+      "summary": "S3 replaced the law-forced tagged intoTable invariant error with a native Error from Option.getOrThrow and changed its message.",
+      "fix": "Restore intoTable to the upstream branch structure with the S1 diagnostic/law adaptations: array-tables yield their last element with the missing-element TomlFormatInvariantError guard; table nodes pass through; other inputs throw TomlFormatInvariantError.make with the exact upstream invariant message. Preserve forced Effect collections and tagged carriers. Restore any upstream test lines rewritten specifically for this simplification; the inspected intoTable hunk rewrote no tests."
+    },
+    "r-offset-metadata": {
+      "file": "scratchpad/effected/toml/TomlDateTime.ts",
+      "class": "schema",
+      "summary": "TomlOffsetDateTime.offsetMinutes lacks the field annotation required by operator step 4.",
+      "fix": "Add annotateKey with a meaningful description of the signed UTC offset in minutes, bounds -1439 through 1439, and zero rendering as Z; retain S.Int and the current range check."
+    },
+    "r-range-check-metadata": {
+      "file": "scratchpad/effected/toml/TomlDateTime.ts",
+      "class": "schema",
+      "summary": "The seven reused calendar/time range checks lack required identifier, title and description annotations.",
+      "fix": "Pass meaningful identifier, title and description annotations to each S.isBetween check in dateFields and timeFields, deriving identifiers from $I; preserve all numeric bounds, annotateKey descriptions and the calendar filter."
+    }
+  }
+}

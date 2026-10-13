@@ -1,0 +1,5 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the config-file port against the pinned upstream oracle and the round-1 inventory, without changing any files. First I'm loading the binding decisions, the prior inventory, and the port surface.Round 1 left seven required fixes and deferred S2/S3 work. I'll compare the current tree to the pinned oracle and check those fixes without repeating closed items.S2 and S3 are recorded green, and the ledger already lists the accepted deviations. Next I’ll diff the port against the pinned oracle and look for divergences those records do not cover.The migration setter and deep-merge loops are the round-1 hot spots. I’ll compare their runtime behavior with the oracle and scan the rest of the module for unrecorded divergences.Round 1’s required fixes are the likely place a new bug would land. I’ll diff that commit against this one and review only the logic that changed.I'll finish the round-2 read against the pinned oracle and only report defects the green gates and the recorded deviations do not already cover.NO FINDINGS
+
+REQUIRED: 0
+BACKLOG: 0

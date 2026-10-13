@@ -147,7 +147,7 @@ const KEY_INDEX = HashMap.fromIterable(A.map(KEY_ORDER, (k, i) => [k, i] as cons
  * `localeCompare` sorts differently across ICU builds/locales; package.json key
  * order must be stable everywhere.
  */
-const byCodePoint = Order.make<string>((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+const byCodePoint = Order.String;
 const byKnownIndex = Order.mapInput(Order.Number, (entry: [string, unknown, number]) => entry[2]);
 const byEntryKey = Order.mapInput(byCodePoint, (entry: [string, unknown]) => entry[0]);
 
@@ -175,8 +175,7 @@ const SORTED_MAP_KEYS = HashSet.make(
 const sortMapEntries = (value: Record<string, unknown>): Record<string, unknown> =>
 	R.fromEntries(A.map(A.sort(R.keys(value), byCodePoint), (key) => [key, value[key]] as const));
 
-const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
+const isPlainObject: (value: unknown) => value is Record<string, unknown> = P.isObject;
 
 /**
  * Order top-level keys canonically (known keys by {@link KEY_ORDER}, then
@@ -242,7 +241,7 @@ export const stripEmptyDependencyMaps = (raw: Record<string, unknown>): Record<s
 	const result = { ...raw };
 	for (const key of STRIP_EMPTY_KEYS) {
 		const value = result[key];
-		if (isPlainObject(value) && R.keys(value).length === 0) {
+		if (isPlainObject(value) && R.isEmptyRecord(value)) {
 			delete result[key];
 		}
 	}

@@ -1,13 +1,16 @@
 import { assert, describe, it, vi } from "@effect/vitest";
-import { assertSuccess } from "@effect/vitest/utils";
+import { assertSome, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import type * as FileSystem from "effect/FileSystem";
 import * as Scheduler from "effect/Scheduler";
 import * as Stream from "effect/Stream";
 import * as Scope from "effect/Scope";
-import { make, makeInspectableWith } from "../../../effected/memfs/internal/volume.ts";
+import * as S from "effect/Schema";
+import { ErrnoException } from "../../../effected/memfs/internal/errno.ts";
+import { EngineOptions, VolumeEntrySnapshot, make, makeInspectableWith } from "../../../effected/memfs/internal/volume.ts";
 import { deliberatelyInvalid } from "../deliberatelyInvalid.ts";
 import { collectWatch } from "../helpers.ts";
 
@@ -19,6 +22,227 @@ const fails = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effect<A, E, 
 });
 
 describe("volume uncovered contracts", () => {
+  it.effect("owns plain engine options and required inspection keys with executable schemas", () => Effect.gen(function* () {
+    const isOptions = S.is(EngineOptions);
+    assert.strictEqual(isOptions({ caseSensitive: true }), true);
+    assert.strictEqual(isOptions({ caseSensitive: false }), true);
+    for (const options of [{}, { caseSensitive: undefined }, { caseSensitive: "false" }, { caseSensitive: 0 }]) {
+      assert.strictEqual(isOptions(options), false);
+    }
+    assert.deepStrictEqual(yield* S.decodeEffect(EngineOptions)({ caseSensitive: false }), { caseSensitive: false });
+
+    const engine = yield* makeInspectableWith({ caseSensitive: true });
+    const root = engine.lookup("/");
+    assert(root !== undefined);
+    const isSnapshot = S.is(VolumeEntrySnapshot);
+    assert.strictEqual(isSnapshot(root), true);
+    assert.deepStrictEqual(root, { path: "/", type: "Directory", data: undefined, mtime: root.mtime, target: undefined, size: 0 });
+    const { data, target, ...metadata } = root;
+    assert.strictEqual(data, undefined);
+    assert.strictEqual(target, undefined);
+    assert.strictEqual(isSnapshot({ ...metadata, target }), false);
+    assert.strictEqual(isSnapshot({ ...metadata, data }), false);
+    for (const payload of [
+      { ...root, path: 0 }, { ...root, type: "Other" }, { ...root, data: [1] },
+      { ...root, mtime: "0" }, { ...root, target: null }, { ...root, size: "0" },
+      { ...root, mtime: NaN }, { ...root, mtime: Infinity }, { ...root, size: -Infinity },
+    ]) assert.strictEqual(isSnapshot(payload), false);
+    assert.strictEqual(isSnapshot({ ...root, mtime: -0.5, size: -0.5 }), true);
+  }));
+
+  it.effect("retains live file bytes across snapshots, hard links and schema validation", () => Effect.gen(function* () {
+    const engine = yield* makeInspectableWith({ caseSensitive: true });
+    const fs = engine.fileSystem;
+    yield* fs.writeFile("/file", new Uint8Array([1, 2]));
+    yield* fs.link("/file", "/alias");
+    yield* fs.symlink("file", "/symbolic");
+    const file = engine.lookup("/file");
+    const alias = engine.lookup("/alias");
+    const symbolic = engine.lookup("/symbolic");
+    assert(file !== undefined && file.data !== undefined && alias !== undefined && symbolic !== undefined);
+    assert.strictEqual(alias.data, file.data);
+    assert.strictEqual(engine.lookup("/file")?.data, file.data);
+    assert.deepStrictEqual(symbolic, { path: "/symbolic", type: "SymbolicLink", data: undefined, mtime: symbolic.mtime, target: "file", size: 4 });
+    for (const entry of engine.entries()) {
+      assert.strictEqual(S.is(VolumeEntrySnapshot)(entry), true);
+      if (entry.type === "File") assert.strictEqual(entry.data, file.data);
+    }
+    const decoded = yield* S.decodeEffect(VolumeEntrySnapshot)(file);
+    assert.strictEqual(decoded.data, file.data);
+    file.data[0] = 9;
+    assert.deepStrictEqual(yield* fs.readFile("/alias"), new Uint8Array([9, 2]));
+    assert.strictEqual(engine.lookup("/file")?.data, file.data);
+  }));
+
+  it.effect("accepts unsigned 32-bit mode and owner boundaries and omitted modes", () => Effect.gen(function* () {
+    const fs = yield* make;
+    yield* fs.makeDirectory("/default-mode", { mode: undefined });
+    assert.strictEqual((yield* fs.stat("/default-mode")).mode & 0o7777, 0o755);
+    const defaultFile = yield* fs.open("/default-mode/file", { flag: "w", mode: undefined });
+    assert.strictEqual((yield* defaultFile.stat).mode & 0o7777, 0o644);
+    for (const value of [0, 0xffff_ffff]) {
+      const path = `/mode-${value}`;
+      yield* fs.makeDirectory(path, { mode: value });
+      assert.strictEqual((yield* fs.stat(path)).mode & 0o7777, value & 0o7777);
+      const file = yield* fs.open(`${path}/file`, { flag: "w", mode: value });
+      assert.strictEqual((yield* file.stat).mode & 0o7777, value & 0o7777);
+      yield* fs.chmod(`${path}/file`, value);
+      assert.strictEqual((yield* file.stat).mode & 0o7777, value & 0o7777);
+      yield* fs.chown(`${path}/file`, value, value);
+      const info = yield* file.stat;
+      assertSome(info.uid, value);
+      assertSome(info.gid, value);
+    }
+  }));
+
+  it.effect("rejects invalid modes and owners with exact BadArgument descriptions without mutation", () => Effect.gen(function* () {
+    const fs = yield* make;
+    yield* fs.writeFile("/file", new Uint8Array([1, 2]));
+    const before = yield* fs.stat("/file");
+    const invalid = [-1, 0.5, 0x1_0000_0000, NaN, Infinity, -Infinity, null, "0", false, {}];
+    for (const value of invalid) {
+      const mode = deliberatelyInvalid<number>(value);
+      for (const [method, operation] of [
+        ["makeDirectory", fs.makeDirectory("/invalid-mode", { mode })],
+        ["open", fs.open("/invalid-mode", { flag: "w", mode })],
+        ["chmod", fs.chmod("/file", mode)],
+      ] as const) {
+        const error = yield* fails(operation);
+        assert.strictEqual(error.reason._tag, "BadArgument");
+        assert.strictEqual(error.reason.method, method);
+        assert.strictEqual(error.reason.description, "mode must be an unsigned 32-bit integer");
+      }
+      assert.strictEqual(yield* fs.exists("/invalid-mode"), false);
+    }
+    for (const value of [...invalid, undefined]) {
+      const owner = deliberatelyInvalid<number>(value);
+      for (const [name, operation] of [["uid", fs.chown("/file", owner, 0)], ["gid", fs.chown("/file", 0, owner)]] as const) {
+        const error = yield* fails(operation);
+        assert.strictEqual(error.reason._tag, "BadArgument");
+        assert.strictEqual(error.reason.method, "chown");
+        assert.strictEqual(error.reason.description, `${name} must be an unsigned 32-bit integer`);
+      }
+    }
+    assert.deepStrictEqual(yield* fs.stat("/file"), before);
+    assert.deepStrictEqual(yield* fs.readFile("/file"), new Uint8Array([1, 2]));
+  }));
+
+  it.effect("keeps invalid entry-name errors in the typed channel with the caller path", () => Effect.gen(function* () {
+    const fs = yield* make;
+    const error = yield* fails(fs.writeFile("/missing/.", new Uint8Array([1])));
+    assert.strictEqual(error.reason._tag, "InvalidData");
+    assert.strictEqual(error.reason.method, "writeFile");
+    assert.strictEqual(error.reason.description, "Invalid directory entry name");
+    assert.strictEqual(error.reason.cause, undefined);
+    if (error.reason._tag === "BadArgument") assert.fail("Expected a system error");
+    assert.strictEqual(error.reason.pathOrDescriptor, "/missing/.");
+    assert.strictEqual(yield* fs.exists("/missing"), false);
+  }));
+
+  it.effect("keeps allocation failures typed and leaves existing bytes unchanged", () => Effect.gen(function* () {
+    const fs = yield* make;
+    const original = new Uint8Array([1]);
+    const replacement = new Uint8Array([2, 3]);
+    yield* fs.writeFile("/allocation", original);
+    const error = yield* Effect.acquireUseRelease(
+      Effect.sync(() => vi.spyOn(globalThis, "Uint8Array").mockImplementation(() => { throw new RangeError("allocation"); })),
+      (spy) => Effect.gen(function* () {
+        const failure = yield* fails(fs.writeFile("/allocation", replacement, { flag: "r+" }));
+        assert.strictEqual(spy.mock.calls.length, 1);
+        assert.deepStrictEqual(spy.mock.calls[0], [2]);
+        return failure;
+      }),
+      (spy) => Effect.sync(() => spy.mockRestore()),
+    );
+    assert.strictEqual(error.reason._tag, "BadResource");
+    assert.strictEqual(error.reason.method, "writeFile");
+    assert.strictEqual(error.reason.description, "Unable to allocate file bytes");
+    assert.strictEqual(error.reason.cause, undefined);
+    if (error.reason._tag === "BadArgument") assert.fail("Expected a system error");
+    assert.strictEqual(error.reason.pathOrDescriptor, "/allocation");
+    assert.deepStrictEqual(yield* fs.readFile("/allocation"), original);
+  }));
+
+  it.effect("accepts all ten open flags and rejects unsupported runtime flags without mutation", () => Effect.gen(function* () {
+    const fs = yield* make;
+    const flags: ReadonlyArray<FileSystem.OpenFlag> = ["r", "r+", "w", "wx", "w+", "wx+", "a", "ax", "a+", "ax+"];
+    for (const flag of flags) {
+      const path = `/flag-${flag}`;
+      const exclusive = flag.includes("x");
+      if (!exclusive) yield* fs.writeFile(path, new Uint8Array([1, 2]));
+      const file = yield* fs.open(path, { flag });
+      const initialSize = exclusive || flag.startsWith("w") ? 0 : 2;
+      assert.strictEqual(Number((yield* file.stat).size), initialSize);
+      if (flag === "r" || flag.endsWith("+")) {
+        const buffer = new Uint8Array(2);
+        assert.strictEqual(yield* file.read(buffer), initialSize);
+      } else {
+        const error = yield* fails(file.read(new Uint8Array(1)));
+        assert.strictEqual(error.reason._tag, "Unknown");
+        const cause = error.reason.cause;
+        assert(S.is(ErrnoException)(cause));
+        assert.strictEqual(cause.code, "EBADF");
+      }
+      yield* file.seek(0n, "start");
+      if (flag === "r") {
+        const error = yield* fails(file.writeAll(new Uint8Array([3])));
+        assert.strictEqual(error.reason._tag, "Unknown");
+        const cause = error.reason.cause;
+        assert(S.is(ErrnoException)(cause));
+        assert.strictEqual(cause.code, "EBADF");
+      } else {
+        yield* file.writeAll(new Uint8Array([3]));
+        assert.deepStrictEqual(yield* fs.readFile(path), flag.startsWith("a") && !exclusive
+          ? new Uint8Array([1, 2, 3])
+          : initialSize === 2 ? new Uint8Array([3, 2]) : new Uint8Array([3]));
+      }
+      if (exclusive) assert.strictEqual((yield* fails(fs.open(path, { flag }))).reason._tag, "AlreadyExists");
+    }
+    for (const flag of ["", "rs", "as", "wxx", "R", 0, false, {}]) {
+      const error = yield* fails(fs.open("/invalid-flag", { flag: deliberatelyInvalid(flag) }));
+      assert.strictEqual(error.reason._tag, "BadArgument");
+      assert.strictEqual(error.reason.method, "open");
+      assert.strictEqual(error.reason.description, "flag must be a supported file-open flag");
+      assert.strictEqual(yield* fs.exists("/invalid-flag"), false);
+    }
+  }));
+
+  it.effect("preserves descriptor and namespace operations across high-fanout directories", () => Effect.gen(function* () {
+    const engine = yield* makeInspectableWith({ caseSensitive: true });
+    const fs = engine.fileSystem;
+    yield* fs.makeDirectory("/wide/nested", { recursive: true });
+    const names: Array<string> = [];
+    for (let index = 255; index >= 0; index--) {
+      const name = `entry-${String(index).padStart(3, "0")}`;
+      names.unshift(name);
+      yield* fs.writeFile(`/wide/${name}`, new Uint8Array([index]));
+    }
+    const target = "/wide/entry-128";
+    const file = yield* fs.open(target, { flag: "r+" });
+    yield* fs.chmod(target, 0o600);
+    yield* fs.link(target, "/wide/nested/link");
+    yield* fs.rename(target, "/wide/nested/moved");
+    yield* fs.remove("/wide/nested/moved");
+    assertSome((yield* file.stat).nlink, 1);
+    const buffer = new Uint8Array(1);
+    assert.strictEqual(yield* file.read(buffer), 1);
+    assert.deepStrictEqual(buffer, new Uint8Array([128]));
+    yield* file.seek(0n, "start");
+    yield* file.writeAll(new Uint8Array([9, 8]));
+    assert.deepStrictEqual(yield* fs.readFile("/wide/nested/link"), new Uint8Array([9, 8]));
+    assert.deepStrictEqual(engine.list("/wide"), [...names.filter((name) => name !== "entry-128"), "nested"]);
+    yield* fails(fs.rename("/wide", "/wide/nested/descendant"));
+    yield* fs.rename("/wide/nested", "/moved");
+    assert.deepStrictEqual(yield* fs.readDirectory("/moved"), ["link"]);
+    assert.deepStrictEqual(yield* fs.readDirectory("/wide"), names.filter((name) => name !== "entry-128"));
+    assert.deepStrictEqual(yield* fs.readFile("/wide/entry-255"), new Uint8Array([255]));
+    assert.deepStrictEqual(engine.lookup("/moved/link")?.data, new Uint8Array([9, 8]));
+    assert.deepStrictEqual(engine.entries().map((entry) => entry.path), [
+      "/", "/moved", "/moved/link", "/tmp", "/wide",
+      ...names.filter((name) => name !== "entry-128").map((name) => `/wide/${name}`),
+    ]);
+  }));
+
   it.effect("rejects malformed namespace operations without mutation", () => Effect.gen(function* () {
     const fs = yield* make;
     for (const path of ["", "/bad\0name", "/missing/../x"]) {

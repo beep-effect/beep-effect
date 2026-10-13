@@ -40,12 +40,6 @@ import type { TomlTrivia } from "./TomlNode.ts";
 
 const $I = $ScratchpadId.create("effected/toml/TomlVisitor");
 
-class TomlVisitorInvariantError extends S.TaggedError<TomlVisitorInvariantError>($I`TomlVisitorInvariantError`)(
-	"TomlVisitorInvariantError",
-	{ message: S.String.annotateKey({ description: "Explanation of the missing key span required to position a trailing comment." }) },
-	$I.annote("TomlVisitorInvariantError", { description: "A programmer defect encountered while positioning TOML visitor events." }),
-) {}
-
 const visitorVariants = S.TaggedUnion({
 	TableStart: {
 		path: S.Array(S.String).annotateKey({ description: "Semantic table path, empty for the root table." }),
@@ -138,11 +132,8 @@ const trailingCommentOffset = (
 	if (P.isTagged(expression, "TomlKeyValue")) {
 		return source.indexOf("#", expression.value.offset + expression.value.length);
 	}
-	const lastKey = expression.keyPath[expression.keyPath.length - 1];
-	if (lastKey === undefined) {
-		throw TomlVisitorInvariantError.make({ message: "missing TOML key" });
-	}
-	return source.indexOf("#", lastKey.offset + lastKey.length);
+	const keyEnd = A.reduce(expression.keyPath, expression.offset, (_, key) => key.offset + key.length);
+	return source.indexOf("#", keyEnd);
 };
 
 /** Standalone comments inside a trivia run, each positioned by its `#`'s absolute offset. */

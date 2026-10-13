@@ -287,6 +287,8 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **test-environment** — The lab token-contract test reads the copied NpmRegistry source path where upstream read its package-local src path. (scratchpad/test/npm/NpmRegistry.test.ts:210 (the registry token source-contract assertion))
 - **reachability** — The lab reachability guard scans copied TypeScript modules and their relative commands edge where upstream scanned package src and published import specifiers. (scratchpad/test/npm/reachability.test.ts:23,40,64,104,115,128)
 - **upstream-bug** — The lab preserves an own __proto__ unknown field during Manifest round-trip where upstream loses that field through ordinary-object assignment. (scratchpad/test/npm/Manifest.test.ts:52; scratchpad/test/npm/Manifest.test.ts:64)
+- **upstream-bug** — The lab preserves own __proto__ dependency keys during concrete, catalog and workspace resolution, whereas upstream ordinary-object assignment drops them (scratchpad/test/npm/Manifest.test.ts:187).
+- **schema-first** — The lab adds a validated CatalogAssemblyError.failure projection that omits hooks-only reasons from manifest/catalog cases while preserving compatible public fields and causes, whereas upstream exposes only the independent source/reason payload (scratchpad/test/npm/CatalogAssemblyError.test.ts:108; scratchpad/test/npm/CatalogAssemblyError.property.test.ts:24).
 
 ### Dependency backlog
 

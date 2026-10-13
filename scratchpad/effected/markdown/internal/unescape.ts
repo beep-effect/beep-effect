@@ -6,6 +6,7 @@
 // references into the literal characters they stand for. Used by link
 // destinations, link titles and fenced-code info strings.
 
+import * as O from "effect/Option";
 import { decodeEntity } from "./entities.ts";
 
 /**
@@ -64,7 +65,7 @@ const unescapeChar = (source: string): string => {
 		return source.charAt(1);
 	}
 	// An entity this engine cannot decode yet stays literal (see entities.ts).
-	return decodeEntity(source) ?? source;
+	return O.getOrElse(decodeEntity(source), () => source);
 };
 
 /**

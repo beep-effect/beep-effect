@@ -60,3 +60,49 @@ machine or session identifiers.
 - **Would have prevented it:** cheap gates that scope repo-law lints to the
   branch diff for docs-only changes, or a main-red flag that marks such
   failures inherited automatically.
+
+## 2026-10-13 — A repo-wide merge law lived only in an out-of-repo rulings file
+
+- **Doing:** weighing the main-red hold during align. Its value depends on
+  whether PRs may merge over required reds.
+- **Evidence:**
+  - S11 (2026-10-09, merge over failing jobs) was recorded verbatim only in
+    the orchestrator's rulings brief under `~/.cache/beep/`. In the repo it
+    was referenced, never defined, and only inside the
+    repository-simplification-confidence packet.
+  - It contradicted the AGENTS.md "Mergeable" law ("no failing CI jobs")
+    and `yeet merge-gate`'s required-red hold. In practice, 30 of 36 merges
+    after it bypassed required checks.
+  - Finding its text and scope took a dedicated fact-finding agent.
+- **Would have prevented it:** writing any operator ruling that changes a
+  repo law into AGENTS.md (or the owning skill) in the same session it is
+  given. This packet now does that for S11.
+
+## 2026-10-13 — The 10-05 recommendation never reached the skills, so behaviour did not change
+
+- **Doing:** checking whether "stack, don't copy" changed lane behaviour
+  after 10-05.
+- **Evidence:**
+  - After 2026-10-06T00:00Z, 17 more PRs built on another PR's unlanded
+    branch, and nobody used a native stack.
+  - `rg` over the Yeet and orchestrate skills and AGENTS.md finds no
+    dependent-lane rule. The recommendation lived only in this packet's
+    RESEARCH.md, which is not doctrine (`explorations/README.md`).
+- **Would have prevented it:** reaching align promptly, or landing a
+  recommendation that needs no ruling (skill text) as a one-line skill
+  edit right after research, marked provisional.
+
+## 2026-10-13 — Sweep report contradicts itself after a retire
+
+- **Doing:** retiring this packet's 10-05 lane with `yeet sweep --retire`.
+  It had been blocked for a week by a desktop terminal panel left at an
+  interactive `gh pr merge` prompt inside the lane.
+- **Evidence:**
+  - The retire step printed `branch docs/stacked-pr-adoption: deleted`.
+  - The sweep that followed printed
+    `delete-local-branch: skipped: blocked: local branch docs/stacked-pr-adoption exists; local tip <absent> ...`.
+    It printed the same for the remote branch, although neither branch
+    existed any more.
+- **Would have prevented it:** the sweep reporting `already deleted (by
+  retire)` when the tip is absent, instead of a "blocked ... exists"
+  reason.

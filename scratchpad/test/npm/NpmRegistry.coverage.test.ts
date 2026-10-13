@@ -18,12 +18,12 @@ it.effect("registry error messages identify transport, decoding and status failu
   assert.strictEqual(RegistryReadError.make({ ...base, kind: "status" }).message,
     `Registry read for pkg on ${DEFAULT_REGISTRY} failed with status unknown`);
 }));
-const UnknownJson = S.fromJsonString(S.Unknown);
 
+const JsonBody = S.fromJsonString(S.Unknown);
 
 const client = (body: unknown, status = 200) => Layer.succeed(HttpClient.HttpClient,
   HttpClient.make((request) => Effect.succeed(HttpClientResponse.fromWeb(request, new Response(
-    Result.getOrThrow(S.encodeResult(UnknownJson)(body)), { status })))));
+    Result.getOrThrow(S.encodeResult(JsonBody)(body)), { status })))));
 
 for (const body of [{}, { time: { bad: "not a date" } }]) {
   it.layer(NpmRegistry.layer.pipe(Layer.provide(client(body))), { timeout: "30 seconds" })((it) => {

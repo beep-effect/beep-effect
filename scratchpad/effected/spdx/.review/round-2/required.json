@@ -1,0 +1,23 @@
+{
+  "module": "spdx",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/spdx/SpdxExpression.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "sol-2-1"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-2-1": {
+      "file": "scratchpad/effected/spdx/SpdxExpression.ts",
+      "class": "type-safety",
+      "summary": "Recursive AndNode/OrNode encoded types admit compound expressions as WithException.license even though the runtime schema accepts only LicenseNode or LicenseRefNode.",
+      "fix": "Narrow only SpdxNode's WithException.license field to typeof LicenseNode.Encoded | typeof LicenseRefNode.Encoded. Keep all recursive suspension annotations, runtime schemas, serialization and upstream test assertions unchanged; no test-file edits are required."
+    }
+  }
+}

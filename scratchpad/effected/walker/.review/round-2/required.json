@@ -1,0 +1,80 @@
+{
+  "module": "walker",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/walker/Descend.ts",
+        "scratchpad/effected/walker/Expand.ts",
+        "scratchpad/effected/walker/Walker.ts"
+      ],
+      "tests": [
+        "scratchpad/test/walker/Descend.test.ts",
+        "scratchpad/test/walker/Expand.test.ts",
+        "scratchpad/test/walker/Walker.test.ts",
+        "scratchpad/test/walker/Walker.property.test.ts",
+        "scratchpad/test/walker/Expand.property.test.ts"
+      ],
+      "findings": [
+        "req-1",
+        "req-2",
+        "req-3",
+        "req-4",
+        "req-5",
+        "req-6",
+        "req-7",
+        "req-8"
+      ]
+    }
+  ],
+  "findings": {
+    "req-1": {
+      "file": "scratchpad/test/walker/Descend.test.ts",
+      "class": "test",
+      "summary": "Restore the upstream layer-hook timeout limits",
+      "fix": "Remove all 26 added { timeout: \"30 seconds\" } layer options from Descend.test.ts, Expand.test.ts and Walker.test.ts, restoring upstream registration arguments and hook limits. Retain law-forced import and API changes and the assertions. Repair any exposed fixture failure within the original limit; do not raise another timeout."
+    },
+    "req-2": {
+      "file": "scratchpad/effected/walker/Expand.ts",
+      "class": "schema",
+      "summary": "Reuse the unreadable-mode LiteralKit",
+      "fix": "Export OnUnreadableArray from Descend.ts with the required export documentation, import it in Expand.ts, and use S.optionalKey(OnUnreadableArray) with the existing field annotation. Keep the root barrel unchanged. Any added subpath export bookkeeping belongs to the central codemod."
+    },
+    "req-3": {
+      "file": "scratchpad/effected/walker/Walker.ts",
+      "class": "schema",
+      "summary": "Model the reused positive-integer depth constraint once",
+      "fix": "Define an identity-annotated DepthCap schema in Walker.ts using S.Finite, a >= 1 check and an annotated Number.isInteger check (identifier/title/description); expose it to Descend.ts and Expand.ts. Use it for both maxDepth schema fields and S.is(DepthCap) for both operation guards, preserving existing defect messages and default 256. Retain acceptance of integers above the safe-integer range; do not silently substitute S.Int. Keep DescendError.limit as S.Finite, since limit 0 is supported. Retain invalid-depth operation tests and add schema/domain parity checks in the existing test files. Export/deviation records are central."
+    },
+    "req-4": {
+      "file": "scratchpad/effected/walker/Walker.ts",
+      "class": "effect-idiom",
+      "summary": "Use Option for internal traversal absence",
+      "fix": "Convert stopAt with O.fromNullishOr and O.map(path.resolve), and consume the normalized ceiling with O.exists. Import effect/Array and use O.exists(A.last(dirs), ...) for the physical-ceiling fast path. Preserve lexical results, normalized comparison and failure/defect behavior; retain the existing Walker oracle assertions."
+    },
+    "req-5": {
+      "file": "scratchpad/effected/walker/Expand.ts",
+      "class": "effect-idiom",
+      "summary": "Lift the compile Result into the Effect error channel",
+      "fix": "Lift GlobPattern.compileResult(pattern, options.glob) through Effect.fromResult, flatMap to descend, and mapError once to GlobExpansionError.make({ pattern, cause }). Preserve the current Effect.fn span, stage values and original causes. Retain all compile/descent failure assertions in Expand.test.ts."
+    },
+    "req-6": {
+      "file": "scratchpad/effected/walker/Descend.ts",
+      "class": "effect-idiom",
+      "summary": "Use equivalent Effect collection and optional-effect helpers",
+      "fix": "Use Effect.option over the mapped fs.stat type, A.contains/A.append for branch-local ancestors, A.flatMap(dirs, candidatesFor) for candidate enumeration, and Option-aware A.findFirstIndex plus A.take for the physical-hit prefix. Preserve === string membership, per-branch cycle safety, insertion order and inclusive prefix length. Do not apply a global visited set or change the upstream parentReal fallback restored by req-8. Retain the existing cycle, sibling-link, candidate-order and physical-ceiling tests."
+    },
+    "req-7": {
+      "file": "scratchpad/effected/walker/Expand.ts",
+      "class": "schema",
+      "summary": "Model and exhaustively match the expansion-stage domain",
+      "fix": "Define an identity-annotated internal ExpansionStage LiteralKit([\"compile\", \"descend\"]), derive the getter type from it, and compute the stage with an exhaustive tagged matcher (Match.tagsExhaustive or schema-derived match). Keep the exact returned strings and current public barrel; retain both stage assertions in Expand.test.ts."
+    },
+    "req-8": {
+      "file": "scratchpad/effected/walker/Descend.ts",
+      "class": "law",
+      "summary": "Restore the unforced S3 queue and ancestor-fallback rewrites",
+      "fix": "Restore the oracle head-index worklist loop, frame lookup/undefined guard and accompanying queue comment, plus frame.ancestors[frame.ancestors.length - 1] ?? frame.absolute. Keep the surrounding forced schema, Option probe, sorted-result and collection changes. Restore any upstream test lines altered specifically to accommodate these two rewrites; the inspected S3 diff shows none, so no test weakening or deletion is authorized. Do not replace the fallback with another structural refactor or add coverage-ignore comments. Treat any resulting coverage-policy conflict as deferred coverage work."
+    }
+  }
+}

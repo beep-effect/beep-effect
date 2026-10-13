@@ -1,5 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import { GitHubError } from "../../effected/github/GitHubError.ts";
+import { harness } from "./harness.ts";
+import * as Exit from "effect/Exit";
 import * as Result from "effect/Result";
 import { listedRulesetFixture, rulesetFixture, teamFixture } from "./fixtures.ts";
 import * as S from "effect/Schema";
@@ -256,4 +260,41 @@ describe("RulesetInfo boundary", () => {
 			assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(RulesetInfo)(info)), info);
 		}
 	});
+});
+
+describe("Ruleset.list response decoding", () => {
+  const valid = { id: 1, name: "main", source_type: "Repository" };
+  for (const [field, malformed] of [
+    ["id", { ...valid, id: null }],
+    ["name", { ...valid, name: 42 }],
+    ["source_type", { ...valid, source_type: 42 }],
+  ] as const) {
+    it.effect(`rejects malformed ${field} in the typed channel`, () =>
+      Effect.scopedWith((scope) => Effect.gen(function* () {
+        const { base } = harness([{ status: 200, body: [valid, malformed] }]);
+        const context = yield* Layer.buildWithScope(Ruleset.layer.pipe(Layer.provideMerge(base)), scope);
+        const exit = yield* Effect.flatMap(Ruleset, (rulesets) => rulesets.list)
+          .pipe(Effect.provideContext(context), Effect.exit);
+        assert.strictEqual(Exit.hasFails(exit), true);
+        assert.strictEqual(Exit.hasDies(exit), false);
+        const error = exit.pipe(Exit.findError, Result.getOrThrow);
+        assert.instanceOf(error, GitHubError);
+        assert.strictEqual(error.kind, "decode");
+        assert.strictEqual(error.operation, "Ruleset.list");
+      })),
+    );
+  }
+
+  it.effect("preserves order, plain fields and an explicit undefined source_type when GitHub omits it", () =>
+    Effect.scopedWith((scope) => Effect.gen(function* () {
+      const { base } = harness([{ status: 200, body: [
+        { id: 2, name: "unspecified", ignored: "metadata" },
+        { ...valid, ignored: "metadata" },
+      ] }]);
+      const context = yield* Layer.buildWithScope(Ruleset.layer.pipe(Layer.provideMerge(base)), scope);
+      const value = yield* Effect.flatMap(Ruleset, (rulesets) => rulesets.list).pipe(Effect.provideContext(context));
+      assert.deepStrictEqual(Result.getOrThrow(decodeRulesetInfos(value)), value);
+      assert.deepStrictEqual(value, [{ id: 2, name: "unspecified", source_type: undefined }, valid]);
+    })),
+  );
 });

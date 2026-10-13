@@ -1,4 +1,5 @@
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as HashMap from "effect/HashMap";
 import * as Match from "effect/Match";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
@@ -9,7 +10,7 @@ import { BunExtension } from "./BunExtension.ts";
 import { parseBun } from "./internal/bun.ts";
 import { parseNpm } from "./internal/npm.ts";
 import { parsePnpm } from "./internal/pnpm.ts";
-import type { LockfileFields, ParseFailure } from "./internal/shared.ts";
+import { FramingReason, type LockfileFields, type ParseFailure } from "./internal/shared.ts";
 import { parseYarn } from "./internal/yarn.ts";
 import { LockfileFormat } from "./LockfileFormat.ts";
 import { LockfileImporter } from "./LockfileImporter.ts";
@@ -138,7 +139,7 @@ export class LockfileFramingError extends S.TaggedError<LockfileFramingError>($I
 	/** The lockfile format that was being parsed. */
 	format: LockfileFormat.annotateKey({ description: "The lockfile format that was being parsed." }),
 	/** Which framing check failed; see the class remarks for each. */
-	reason: S.Literals(["noLockfileDocument", "noImporters", "unexpectedDocuments"]).annotateKey({ description: "Which framing check failed; see the class remarks for each." }),
+	reason: FramingReason.annotateKey({ description: "Which framing check failed; see the class remarks for each." }),
 	/** How many YAML documents the stream carried. */
 	documents: S.Int.annotateKey({ description: "How many YAML documents the stream carried." }),
 }, $I.annote("LockfileFramingError", { description: "Failure of `Lockfile.parse`: the content parsed as text, but no single lockfile document could be located in it." })) {
@@ -381,9 +382,10 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 	 * ```ts
 	 * import { Lockfile } from "@beep/scratchpad/effected/lockfiles/Lockfile";
 	 * import * as Effect from "effect/Effect";
+	 * import * as HashMap from "effect/HashMap";
 	 *
 	 * const lockfile = Effect.runSync(Lockfile.parse("lockfileVersion: '9.0'\nimporters:\n  packages/core: {}", { format: "pnpm" }));
-	 * const named = lockfile.withImporterNames(new Map([["packages/core", "@acme/core"]]));
+	 * const named = lockfile.withImporterNames(HashMap.fromIterable([["packages/core", "@acme/core"]]));
 	 * console.log(named.workspacePackages[0]?.name); // @acme/core
 	 * ```
 	 *
@@ -392,11 +394,11 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 	 * @category mapping
 	 * @since 0.0.0
 	 */
-	withImporterNames(names: ReadonlyMap<string, string>): Lockfile {
+	withImporterNames(names: HashMap.HashMap<string, string>): Lockfile {
 		const packages = this.packages.map((pkg) => {
 			if (!pkg.isWorkspace || pkg.relativePath === undefined) return pkg;
-			const realName = names.get(pkg.relativePath);
-			if (realName === undefined || realName === "" || realName === pkg.name) return pkg;
+			const realName = HashMap.get(names, pkg.relativePath).pipe(O.getOrElse(() => pkg.name));
+			if (realName === "" || realName === pkg.name) return pkg;
 			// Every field carries over: this rewrites the *name*, and dropping any
 			// other field here would be silent data loss (the peer and resolved
 			// maps in particular are what a peer check reads).
@@ -415,10 +417,10 @@ export class Lockfile extends S.Class<Lockfile>($I`Lockfile`)({
 			});
 		});
 		const workspaceDependencies = this.workspaceDependencies.map((dep) => {
-			const mappedFrom = names.get(dep.from);
-			const mappedTo = names.get(dep.to);
-			const from = mappedFrom === undefined || mappedFrom === "" ? dep.from : mappedFrom;
-			const to = mappedTo === undefined || mappedTo === "" ? dep.to : mappedTo;
+			const mappedFrom = HashMap.get(names, dep.from).pipe(O.getOrElse(() => dep.from));
+			const mappedTo = HashMap.get(names, dep.to).pipe(O.getOrElse(() => dep.to));
+			const from = mappedFrom === "" ? dep.from : mappedFrom;
+			const to = mappedTo === "" ? dep.to : mappedTo;
 			if (from === dep.from && to === dep.to) return dep;
 			return WorkspaceDependency.make({ from, to, depType: dep.depType, constraint: dep.constraint });
 		});

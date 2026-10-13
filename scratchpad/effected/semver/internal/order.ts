@@ -11,6 +11,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/semver/internal/order");
 
@@ -21,16 +22,33 @@ const $I = $ScratchpadId.create("effected/semver/internal/order");
  *
  * Numeric prerelease identifiers are numbers; alphanumeric prerelease identifiers and all build identifiers are strings. Empty arrays represent absent prerelease or build suffixes.
  *
+ * **Example** (Recognize structural parser output)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { VersionParts } from "@beep/scratchpad/effected/semver/internal/order";
+ *
+ * S.is(VersionParts)({ major: 1, minor: 2, patch: 3, prerelease: [], build: [] }); // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const VersionParts = S.Struct({
+	major: S.Finite.annotateKey({ description: "The numeric major component before final SemVer validation." }),
+	minor: S.Finite.annotateKey({ description: "The numeric minor component before final SemVer validation." }),
+	patch: S.Finite.annotateKey({ description: "The numeric patch component before final SemVer validation." }),
+	prerelease: S.Array(S.Union([S.String, S.Finite])).annotateKey({ description: "Ordered numeric or text prerelease identifiers; empty for a stable release." }),
+	build: S.Array(S.String).annotateKey({ description: "Ordered build identifiers, ignored by version precedence." }),
+}).annotate($I.annote("VersionParts", { description: "Plain structural version parts shared by the parser and comparison pipeline before final SemVer validation." }));
+
+/**
+ * The structural version data described by {@link VersionParts}.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export interface VersionParts {
-	readonly major: number;
-	readonly minor: number;
-	readonly patch: number;
-	readonly prerelease: ReadonlyArray<string | number>;
-	readonly build: ReadonlyArray<string>;
-}
+export type VersionParts = typeof VersionParts.Type;
 
 /**
  * Defines the relational operator prefix of a comparator (`=`, `>`, `>=`, `<`, `<=`).
@@ -68,13 +86,30 @@ export type ComparatorOperator = typeof ComparatorOperator.Type;
  *
  * Pairs a relational operator with the complete structural version used as its comparison bound.
  *
+ * **Example** (Recognize a structural comparator)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { ComparatorParts } from "@beep/scratchpad/effected/semver/internal/order";
+ *
+ * S.is(ComparatorParts)({ operator: ">=", version: { major: 1, minor: 0, patch: 0, prerelease: [], build: [] } }); // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ComparatorParts = S.Struct({
+	operator: ComparatorOperator.annotateKey({ description: "The relational operator applied to the version bound." }),
+	version: VersionParts.annotateKey({ description: "The structural comparison bound before final SemVer validation." }),
+}).annotate($I.annote("ComparatorParts", { description: "A plain structural comparator pairing an operator with its version bound." }));
+
+/**
+ * The structural comparator data described by {@link ComparatorParts}.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export interface ComparatorParts {
-	readonly operator: ComparatorOperator;
-	readonly version: VersionParts;
-}
+export type ComparatorParts = typeof ComparatorParts.Type;
 
 /**
  * Compares two prerelease identifiers per SemVer 2.0.0 §11.

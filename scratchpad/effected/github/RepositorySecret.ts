@@ -308,7 +308,9 @@ const make = (client: GitHubClient["Service"]): RepositorySecretShape => {
     // with more secrets than a page holds would otherwise report a truncated
     // list that looks complete.
     const secrets = yield* client.paginate(ROUTES[scope].list, { owner, repo });
-    return secrets.map((secret): SecretInfo => ({ name: secret.name }));
+    return yield* Effect.forEach(secrets, (secret) => S.decodeEffect(SecretInfo)({
+      name: secret.name,
+    }).pipe(Effect.mapError((error) => GitHubError.decode("RepositorySecret.list", "GitHub returned an unexpected secret", error))));
   });
 
   const delete_ = Effect.fn("RepositorySecret.delete")(function* (name: string, scope: SecretScope = "actions") {
@@ -363,7 +365,9 @@ const make = (client: GitHubClient["Service"]): RepositorySecretShape => {
       repo,
       environment_name: environment,
     });
-    return secrets.map((secret): SecretInfo => ({ name: secret.name }));
+    return yield* Effect.forEach(secrets, (secret) => S.decodeEffect(SecretInfo)({
+      name: secret.name,
+    }).pipe(Effect.mapError((error) => GitHubError.decode("RepositorySecret.listForEnvironment", "GitHub returned an unexpected secret", error))));
   });
 
   const deleteForEnvironment = Effect.fn("RepositorySecret.deleteForEnvironment")(function* (

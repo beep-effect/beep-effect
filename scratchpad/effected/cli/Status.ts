@@ -5,7 +5,7 @@ import * as Arr from "effect/Array";
 import * as O from "effect/Option";
 import { sanitize } from "./Fmt.ts";
 import type { GlyphSet } from "./Glyphs.ts";
-import type { Style, TokenName } from "./Token.ts";
+import { Style, TokenName } from "./Token.ts";
 import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/cli/Status");
@@ -21,36 +21,60 @@ class UnknownStatusError extends S.TaggedError<UnknownStatusError>($I`UnknownSta
 /**
  * How one status looks: a Unicode glyph, an ASCII fallback, a token and a rank.
  *
+ * **Example** (Validate a status definition)
+ *
+ * ```ts
+ * import { StatusDef, Status } from "@beep/scratchpad/effected/cli/Status"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(StatusDef)(Status.core.def("success"))) // true
+ * ```
+ *
  * @public
- * @category models
+ * @category schemas
  * @since 0.0.0
  */
-export interface StatusDef {
+export const StatusDef = S.Struct({
 	/**
 	 * The Unicode glyph.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly glyph: string;
+	glyph: S.String.annotate(
+		$I.annote("StatusDef.glyph", { description: "The glyph field of StatusDef." }),
+	),
 	/**
 	 * The ASCII fallback, used when the theme's glyphs are ASCII.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly ascii: string;
+	ascii: S.String.annotate(
+		$I.annote("StatusDef.ascii", { description: "The ascii field of StatusDef." }),
+	),
 	/**
 	 * The semantic token, or an explicit style, the glyph is painted with.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly token: TokenName | Style;
+	token: S.Union([TokenName, Style]).annotate(
+		$I.annote("StatusDef.token", { description: "The token field of StatusDef." }),
+	),
 	/**
 	 * Severity for {@link Status.worst}: the highest rank wins.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly rank: number;
-}
+	rank: S.Finite.annotate($I.annote("StatusDef.rank", { description: "The rank field of StatusDef." })),
+}).annotate(
+	$I.annote("StatusDef", { description: "The resolved appearance and rank of a status." }),
+);
+/**
+ * The plain resolved appearance and severity of a status.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type StatusDef = typeof StatusDef.Type;
 
 /**
  * The names of the core vocabulary.

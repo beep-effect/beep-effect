@@ -78,6 +78,11 @@ const DependencyMap = S.Record(S.String, S.String).pipe(
 	S.withConstructorDefault(Effect.succeed(EMPTY)),
 );
 
+const ChangedDependencyVersion = S.Struct({
+	from: S.String.annotateKey({ description: "The other package's dependency specifier." }),
+	to: S.String.annotateKey({ description: "The receiver's dependency specifier." }),
+}).annotate($I.annote("ChangedDependencyVersion", { description: "The previous and current dependency specifiers." }));
+
 /**
  * The result of comparing two {@link WorkspacePackage} dependency snapshots.
  *
@@ -86,18 +91,36 @@ const DependencyMap = S.Record(S.String, S.String).pipe(
  * Comparison runs across all four dependency kinds combined, so a dependency
  * that moves between kinds at the same version does not appear in the diff.
  *
+ * **Example** (Validate dependency changes between packages)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { DependencyDiff } from "@beep/scratchpad/effected/workspaces/WorkspacePackage";
+ *
+ * console.log(S.is(DependencyDiff)({ added: { effect: "^4" }, removed: {}, changed: { vitest: { from: "^3", to: "^4" } } })) // true
+ * console.log(S.is(DependencyDiff)(null)) // false
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DependencyDiff = S.Struct({
+	/** Present in the receiver, absent from the other. */
+	added: S.Record(S.String, S.mutableKey(S.String)).annotateKey($I.annote("added", { description: "Dependencies present only in the receiver." })),
+	/** Present in the other, absent from the receiver. */
+	removed: S.Record(S.String, S.mutableKey(S.String)).annotateKey($I.annote("removed", { description: "Dependencies present only in the other package." })),
+	/** Present in both at different specifiers: `from` is the other package's, `to` the receiver's. */
+	changed: S.Record(S.String, S.mutableKey(ChangedDependencyVersion)).annotateKey($I.annote("changed", { description: "Other-to-receiver dependency specifier changes." })),
+}).annotate($I.annote("DependencyDiff", { description: "Mutable added, removed and changed dependency records comparing two snapshots." }));
+
+/**
+ * Contains added, removed, and changed dependency specifiers from another package to the receiver.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export interface DependencyDiff {
-	/** Present in the receiver, absent from the other. */
-	readonly added: Record<string, string>;
-	/** Present in the other, absent from the receiver. */
-	readonly removed: Record<string, string>;
-	/** Present in both at different specifiers: `from` is the other package's, `to` the receiver's. */
-	readonly changed: Record<string, { readonly from: string; readonly to: string }>;
-}
+export type DependencyDiff = typeof DependencyDiff.Type;
 
 /**
  * Raised when a workspace member's `package.json` cannot be read or decoded
@@ -132,7 +155,7 @@ export class WorkspaceManifestError extends S.TaggedError<WorkspaceManifestError
 	/** Whether the file could not be read, or read but not decoded. */
 	kind: S.Literals(["read", "decode"]).annotateKey({ description: "Whether the file could not be read, or read but not decoded." }),
 	/** The originating failure, preserved rather than flattened to a string. */
-	cause: S.Defect().annotateKey({ description: "The originating failure, preserved rather than flattened to a string." }),
+	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The originating failure, preserved rather than flattened to a string." }),
 }, $I.annote("WorkspaceManifestError", { description: "Raised when a workspace member's `package.json` cannot be read or decoded into the strict `@effected/package-json` `Package` model." })) {
 	/**
 	 * Renders the path and failure kind into a one-line message.

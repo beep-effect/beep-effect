@@ -11,6 +11,7 @@ import { Markdown } from "../../../effected/markdown/Markdown.ts";
 import { MarkdownFormat, MarkdownFormattingOptions } from "../../../effected/markdown/MarkdownFormat.ts";
 import { Mdast } from "../../../effected/markdown/Mdast.ts";
 import { Paragraph, Position, Root } from "../../../effected/markdown/MarkdownNode.ts";
+import { InlineSource } from "../../../effected/markdown/internal/inlineTypes.ts";
 import { parseInlines } from "../../../effected/markdown/internal/inlineParser.ts";
 
 const runs = { arbitrary: fcRuns(100) };
@@ -43,3 +44,25 @@ it.effect.prop("marker formatting is idempotent and preserves parsed inline cont
   const after = yield* Markdown.parse(formatted);
   assert.deepStrictEqual(semantic(Mdast.toMdast(after)), semantic(Mdast.toMdast(before)));
 }), runs);
+
+
+it.effect.prop("InlineSource decodes plain text with shared source provenance", [Arbitrary.schema(InlineSource)], ([source]) => Effect.gen(function* () {
+  const decoded = yield* S.decodeEffect(InlineSource)(source);
+  assert.deepStrictEqual(decoded, source);
+  assert.isFalse("_tag" in decoded);
+}), runs);
+
+it("InlineSource validates finite offsets and every shared source run", () => {
+  const segment = { textOffset: 0, sourceOffset: 12, length: 4 };
+  const source = { text: "text", startOffset: 12, segments: [segment] };
+  assert.isTrue(S.is(InlineSource)(source));
+  assert.isTrue(S.is(InlineSource)({ text: "", startOffset: 0, segments: [] }));
+  assert.isFalse(S.is(InlineSource)({ ...source, text: 42 }));
+  for (const value of [NaN, Infinity, -Infinity, "12", undefined]) {
+    assert.isFalse(S.is(InlineSource)({ ...source, startOffset: value }));
+  }
+  for (const field of ["textOffset", "sourceOffset", "length"] as const) {
+    assert.isFalse(S.is(InlineSource)({ ...source, segments: [{ ...segment, [field]: Infinity }] }));
+  }
+  assert.isFalse(S.is(InlineSource)({ ...source, segments: segment }));
+});

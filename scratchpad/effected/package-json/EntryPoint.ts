@@ -124,8 +124,7 @@ export interface EntryPointManifest {
 const DEFAULT_CONDITIONS: ReadonlyArray<string> = ["import", "default"];
 
 /** A plain object — not an array, not `null`. */
-const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
+const isPlainObject: (value: unknown) => value is Record<string, unknown> = P.isObject;
 
 /**
  * Is this `exports` object a conditions map rather than a subpath map?

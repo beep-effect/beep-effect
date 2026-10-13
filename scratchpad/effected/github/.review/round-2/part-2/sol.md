@@ -1,0 +1,37 @@
+### codex-2-1
+- file: scratchpad/effected/github/internal/headers.ts:121
+- class: bug   severity: required
+- standard: `standards/effect-first-development.md` EF-3 and EF-31; D9, D11, and §14’s verified upstream-bug allowance.   evidence: A read-only probe of `retryAfterMillisFrom({ "retry-after": "9007199254741" }, 0)` returned `9007199254741000`, which fails `S.is(S.Int)`. A larger decimal header returned `Infinity`. Both the lab and pinned oracle’s `GitHubGraphQLError.fromThrowable` threw `Error: Schema validation failed` when given these delays. Through the lab’s real scripted HTTP client, an HTTP 429 with the first header produced `Cause.hasFails = false` and `Cause.hasDies = true`.
+- failure: Checking the parsed seconds for finiteness does not ensure that the converted milliseconds fit the error schema’s safe-integer domain. A malformed or oversized server delay turns a recoverable rate-limit response into a defect, bypassing `GitHubGraphQLError` handling and the retry policy’s existing excessive-delay refusal. The reset-header calculation at line 126 has the same unchecked conversion.
+- fix: Bound both nonnegative millisecond calculations to `Number.MAX_SAFE_INTEGER` before returning them. This preserves rate-limit classification and lets the existing retry ceiling decline excessive delays. Add regressions for unsafe-integer and overflowing results, including the typed HTTP failure channel, and record the upstream-bug deviation.
+
+### codex-2-2
+- file: scratchpad/effected/github/GraphQL.ts:185
+- class: bug   severity: required
+- standard: `standards/effect-first-development.md` EF-31; `standards/schema-first-development-prompt.md`, “Keep functions immutable and total where the domain permits”; the documented `fromThrowable` contract, “Classify anything the GraphQL transport threw”; D9, D11, and §14.   evidence: Read-only probes against both the lab and pinned oracle called `GitHubGraphQLError.fromThrowable("probe", { toString: null }, 0)` and `GitHubGraphQLError.fromThrowable("probe", { errors: [{ message: 42, toString: null }] }, 0)`. Both calls threw `TypeError: No default value`. These are ordinary object inputs; the second reaches the corresponding `String(raw)` fallback at line 209.
+- failure: JavaScript string coercion can throw. The classifier therefore fails to return its advertised error value for some inputs in its `unknown` domain. Used during transport error translation, this creates a new defect instead of preserving the original failure in the typed channel.
+- fix: Protect both fallback coercions with a nonthrowing conversion and a stable fallback description, retaining the original throwable as `cause`. Preserve existing descriptions for successfully coercible inputs. Add the two regression cases and record the verified upstream-bug deviation.
+
+### codex-2-3
+- file: scratchpad/effected/github/PullRequestComment.ts:267
+- class: effect-idiom   severity: required
+- standard: `standards/effect-first-development.md` EF-3; `standards/schema-first-development-prompt.md`, “Effect owns fallibility and runtime boundaries”; Effect `SCHEMA.md`, “Constructors” documents that `.make` throws on validation failure.   evidence: Read-only probes through the real scripted HTTP client supplied HTTP 200 responses containing a comment with `body: {}`, a workflow run with `id: 1.5`, and a tag with `name: ""`. `PullRequestComment.create`, `WorkflowDispatch.runStatus`, and `GitTag.list` each produced `Cause.hasFails = false`, `Cause.hasDies = true`, and `Error: Schema validation failed`. The other throwing projections are `WorkflowDispatch.ts:312` and `GitTag.ts:336`. The pinned oracle contains the same constructor-based projections; these sites are separate from round-1 req-04’s repaired commit-file decoder.
+- failure: Expected external-data validation failures escape as defects from APIs advertising `GitHubError`. Comment create/find/upsert, workflow status/discovery, and tag listing cannot consistently recover through their declared error channel. The green gates miss the distinction between trusted construction and fallible response projection.
+- fix: Make these projections effectful and map validation failures to operation-specific `GitHubError.decode`, following the existing `PullRequest.project` pattern. Use effectful traversal for tag lists and validate comment data before marker matching can invoke string methods on malformed bodies. Preserve current defaults and valid results; add malformed-response regressions and record the EF-3-forced deviation.
+
+### codex-2-4
+- file: scratchpad/effected/github/RepositoryVariable.ts:294
+- class: schema   severity: required
+- standard: `standards/effect-first-development.md` EF-3; `standards/ARCHITECTURE.md` principle 5, “Schemas Are Executable Contracts”; `standards/schema-first-development-prompt.md`, “Decode unknown input with Schema at the edge.”   evidence: Read-only scripted HTTP probes returned successful list results containing `{ name: "MODE", value: null }` from `RepositoryVariable.list`, `{ name: 42 }` from `RepositorySecret.list`, `{ id: null, name: "protect", source_type: undefined }` from `Ruleset.list`, and a workflow with `id: null` from `WorkflowDispatch.list`. Every result failed `S.is(S.Array(theExportedInfoSchema))`. Corresponding unchecked projections occur at `RepositoryVariable.ts:370`, `RepositorySecret.ts:311,366`, `Ruleset.ts:311`, and `WorkflowDispatch.ts:357`.
+- failure: The newly introduced return schemas are not used at these external boundaries. Services successfully return values outside their advertised models, including values violating the recorded finite-ID domains. Schema round-trip properties exercise independently generated valid models and do not establish that HTTP-derived service results satisfy them.
+- fix: Decode the list data through the existing info schemas before returning it, mapping schema failures to the owning operation’s `GitHubError.decode`. Preserve field selection, ordering, optional-field representation, and plain-object results. Add malformed-response regressions asserting typed failure and record the EF-3-forced behavior change.
+
+### codex-2-5
+- file: scratchpad/effected/github/Repo.ts:77
+- class: schema   severity: required
+- standard: `standards/effect-first-development.md` EF-35; `standards/schema-first-development-prompt.md`, “Precision carries invariants”; D10’s formatter fidelity requirement; D9 and §14.   evidence: A read-only probe against both the lab and pinned oracle constructed `RepoRef.make({ owner: "acme/extra", repo: "widget" })`. Its `slug` was `"acme/extra/widget"`, and `RepoRef.parseResult(ref.slug)` failed. Both fields accept arbitrary nonempty strings, so `{ owner: "acme/extra", repo: "widget" }` and `{ owner: "acme", repo: "extra/widget" }` also format to the same slug. `Repo.property.test.ts` generates a separate slash-free `Coordinates` schema, which excludes these counterexamples.
+- failure: A schema-valid repository coordinate can format into a slug that its own parser rejects, and distinct schema-valid coordinates can produce identical slugs. The constructor’s domain does not encode the segment invariant already required by the parser.
+- fix: Add slash-excluding checks to both nonempty coordinate fields, retaining all other currently accepted characters. Test formatter/parser fidelity using `Arbitrary.schema(RepoRef)` and add explicit slash rejection cases. Record the schema-law-forced tightening of constructor and decoder acceptance.
+
+REQUIRED: 5
+BACKLOG: 0

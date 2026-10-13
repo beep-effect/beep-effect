@@ -5,7 +5,30 @@
 // runs public modules -> engine only (toml src/internal/diagnostics.ts and
 // src/internal/limits.ts precedent, collapsed into one file).
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Data from "effect/Data";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/markdown/internal/carriers");
+
+/**
+ * Defines the raw parse-condition vocabulary shared by the engine and public diagnostics.
+ *
+ * **Example** (Recognize the nesting guard code)
+ *
+ * ```ts
+ * import { MarkdownParseErrorCodeRaw } from "@beep/scratchpad/effected/markdown/internal/carriers"
+ *
+ * MarkdownParseErrorCodeRaw.is.NestingDepthExceeded("NestingDepthExceeded") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MarkdownParseErrorCodeRaw = LiteralKit(["NestingDepthExceeded"]).pipe(
+	$I.annoteSchema("MarkdownParseErrorCodeRaw", { description: "Raw parse-condition codes emitted by the markdown engine." }),
+);
 
 /**
  * The engine's error-code vocabulary identifies parse conditions reported by the engine.
@@ -26,7 +49,7 @@ import * as Data from "effect/Data";
  * @category constants
  * @since 0.0.0
  */
-export const MARKDOWN_PARSE_ERROR_CODES = ["NestingDepthExceeded"] as const;
+export const MARKDOWN_PARSE_ERROR_CODES = MarkdownParseErrorCodeRaw.literals;
 
 /**
  * The union of all raw parse-error code string literals the engine emits.
@@ -34,7 +57,7 @@ export const MARKDOWN_PARSE_ERROR_CODES = ["NestingDepthExceeded"] as const;
  * @category type-level
  * @since 0.0.0
  */
-export type MarkdownParseErrorCodeRaw = (typeof MARKDOWN_PARSE_ERROR_CODES)[number];
+export type MarkdownParseErrorCodeRaw = typeof MarkdownParseErrorCodeRaw.Type;
 
 /**
  * The engine's diagnostic record preserves a parse condition and its source span.
@@ -43,15 +66,32 @@ export type MarkdownParseErrorCodeRaw = (typeof MARKDOWN_PARSE_ERROR_CODES)[numb
  *
  * Public modules derive `line`/`character` from `offset`.
  *
+ * **Example** (Build an engine diagnostic record)
+ *
+ * ```ts
+ * import { RawDiagnostic } from "@beep/scratchpad/effected/markdown/internal/carriers"
+ *
+ * const diagnostic = RawDiagnostic.make({ code: "NestingDepthExceeded", message: "too deep", offset: 7, length: 2 })
+ * diagnostic.offset // => 7
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface RawDiagnostic {
-	readonly code: MarkdownParseErrorCodeRaw;
-	readonly message: string;
-	readonly offset: number;
-	readonly length: number;
-}
+export const RawDiagnostic = S.Struct({
+	code: MarkdownParseErrorCodeRaw.annotateKey({ description: "Parse condition reported by the engine." }),
+	message: S.String.annotateKey({ description: "Human-readable explanation of the parse condition." }),
+	offset: S.Finite.annotateKey({ description: "Zero-based UTF-16 source offset of the parse condition." }),
+	length: S.Finite.annotateKey({ description: "Extent of the source span in UTF-16 code units." }),
+}).pipe($I.annoteSchema("RawDiagnostic", { description: "An engine diagnostic record before public source coordinates are materialized." }));
+
+/**
+ * The schema-derived engine diagnostic payload, retaining its plain-record representation.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RawDiagnostic = typeof RawDiagnostic.Type;
 
 /**
  * The engine's carrier for a recoverable-turned-fatal parse condition.
@@ -133,7 +173,7 @@ export const isRawMarkdownError = (u: unknown): u is RawMarkdownError => u insta
  * @category type-level
  * @since 0.0.0
  */
-export type GuardReason = "NestingDepthExceeded";
+export type GuardReason = MarkdownParseErrorCodeRaw;
 
 /**
  * Signals that the engine exceeded a hardening cap.

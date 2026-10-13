@@ -175,7 +175,7 @@ const make: FileSystem.FileSystem = FileSystem.make({
 						PlatformError.badArgument({
 							module: "FileSystem",
 							method: "stat",
-							description: err instanceof Error ? err.message : String(err),
+							description: P.hasProperty(err, "message") && P.isString(err.message) ? err.message : undefined,
 						}),
 				}),
 		),

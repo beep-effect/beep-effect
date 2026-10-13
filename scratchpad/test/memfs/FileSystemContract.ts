@@ -397,8 +397,13 @@ export const suite: {
 			it.effect("should clean up scoped temporary resources when their scope closes", () =>
 				Effect.gen(function* () {
 					const { fs, path } = yield* makeTestContext;
-					const directory = yield* fs.makeTempDirectory({ directory: path() });
-					assert.strictEqual((yield* fs.stat(directory)).type, "Directory");
+					const directory = yield* Effect.scoped(
+						Effect.gen(function* () {
+							const directory = yield* fs.makeTempDirectory({ directory: path() });
+							assert.strictEqual((yield* fs.stat(directory)).type, "Directory");
+							return directory;
+						}),
+					);
 					assert.strictEqual((yield* fs.stat(directory)).type, "Directory");
 					yield* fs.remove(directory, { recursive: true });
 

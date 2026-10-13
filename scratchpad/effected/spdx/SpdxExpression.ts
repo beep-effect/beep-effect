@@ -22,7 +22,7 @@ const $I = $ScratchpadId.create("effected/spdx/SpdxExpression");
 type SpdxNode =
 	| { readonly _tag: "License"; readonly id: string; readonly plus: boolean }
 	| { readonly _tag: "LicenseRef"; readonly documentRef?: string; readonly ref: string }
-	| { readonly _tag: "WithException"; readonly license: SpdxNode; readonly exception: string }
+	| { readonly _tag: "WithException"; readonly license: typeof LicenseNode.Encoded | typeof LicenseRefNode.Encoded; readonly exception: string }
 	| { readonly _tag: "And"; readonly left: SpdxNode; readonly right: SpdxNode }
 	| { readonly _tag: "Or"; readonly left: SpdxNode; readonly right: SpdxNode };
 

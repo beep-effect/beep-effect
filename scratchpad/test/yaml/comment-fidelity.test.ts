@@ -23,6 +23,25 @@ const firstMap = (doc: YamlDocument): YamlMap => {
 
 const JsonString = S.fromJsonString(S.String);
 
+describe("invalid block-scalar header comments", () => {
+	it("strips separated comments while preserving header bytes and line endings", () => {
+		for (const header of ["> hello ", "| invalid\t", "|++ ", "|22\t"]) {
+			for (const newline of ["\n", "\r", "\r\n"]) {
+				const source = `${header}# comment${newline}`;
+				assert.strictEqual(Yaml.stripComments(source), `${header}${newline}`);
+				assert.strictEqual(Yaml.stripComments(source, "_"), `${header}_________${newline}`);
+			}
+		}
+	});
+
+	it("preserves unseparated hashes, block-scalar body hashes and other error content", () => {
+		for (const source of ["> hello#content\n", "|#content\n", "|\n  # body\n", '"unterminated # content', "'unterminated # content"]) {
+			assert.strictEqual(Yaml.stripComments(source), source);
+			assert.strictEqual(Yaml.stripComments(source, "_"), source);
+		}
+	});
+});
+
 describe("comment fidelity (#127)", () => {
 	describe("composer attribution", () => {
 		it.effect("attributes an own-line comment FORWARD to the following pair", () =>

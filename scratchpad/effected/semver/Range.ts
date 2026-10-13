@@ -414,7 +414,7 @@ export class Range extends S.Class<Range>($I`Range`)({
 	 * const a = Result.getOrThrow(Range.parseResult("^1.0.0"));
 	 * const b = Result.getOrThrow(Range.parseResult(">=1.5.0"));
 	 * const merged = Result.getOrThrow(Range.intersectResult(a, b));
-	 * console.log(merged.toString()); // >=1.0.0 <2.0.0 >=1.5.0
+	 * console.log(merged.toString()); // >=1.0.0 <2.0.0-0 >=1.5.0
 	 * ```
 	 *
 	 * @category utilities
@@ -747,7 +747,7 @@ const sameTuple = (a: SemVer, b: SemVer): boolean =>
 	a.major === b.major && a.minor === b.minor && a.patch === b.patch;
 
 const admitsTuple = (set: ComparatorSet, tuple: SemVer): boolean =>
-	set.length === 0 || A.some(set, (c) => c.version.isPrerelease && sameTuple(c.version, tuple));
+	A.some(set, (c) => c.version.isPrerelease && sameTuple(c.version, tuple));
 
 const prereleaseTuples = (set: ComparatorSet): Array<SemVer> =>
 	A.dedupeWith(A.map(A.filter(set, (c) => c.version.isPrerelease), (c) => c.version), sameTuple);
@@ -817,8 +817,9 @@ const intersectSets = (a: ComparatorSet, b: ComparatorSet): ReadonlyArray<Compar
 	if (b.length === 0) return [a];
 	const merged = [...a, ...b];
 	const tuples = prereleaseTuples(merged);
+	if (A.every(tuples, (tuple) =>
+		(admitsTuple(a, tuple) && admitsTuple(b, tuple)) || O.isNone(prereleaseWitness(merged, tuple)))) return [merged];
 	const permitted = A.filter(tuples, (tuple) => admitsTuple(a, tuple) && admitsTuple(b, tuple));
-	if (permitted.length === tuples.length) return [merged];
 	const stable = stableSet(merged);
 	return [
 		...O.getOrElse(O.map(stable, A.of), () => []),

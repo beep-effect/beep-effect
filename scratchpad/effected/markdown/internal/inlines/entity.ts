@@ -7,6 +7,7 @@
 // as the literal source text, which is upstream's behavior too — its
 // `decodeHTMLStrict` returns the input unchanged for an unknown name.
 
+import * as O from "effect/Option";
 import { decodeEntity } from "../entities.ts";
 import type { InlineConstruct } from "../inlineTypes.ts";
 import { ENTITY } from "../unescape.ts";
@@ -38,7 +39,7 @@ export const entityConstruct: InlineConstruct = {
 		if (matched === undefined) {
 			return false;
 		}
-		scanner.appendText(decodeEntity(matched) ?? matched, from, scanner.pos);
+		scanner.appendText(O.getOrElse(decodeEntity(matched), () => matched), from, scanner.pos);
 		return true;
 	},
 };

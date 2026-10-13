@@ -29,6 +29,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/package-json/PackageManager");
 
@@ -150,43 +151,49 @@ export class PackageManager extends S.Class<PackageManager>($I`PackageManager`)(
 		S.decodeTo(
 			S.instanceOf(PackageManager),
 			SchemaTransformation.transformEffect({
-				decode: (input: string): Effect.Effect<PackageManager, SchemaIssue.Issue> => {
-					const at = input.indexOf("@");
-					if (at === -1) {
-						return invalid(input, `Invalid packageManager format: "${input}"`);
-					}
-					const name = input.slice(0, at);
-					if (!PACKAGE_MANAGER_NAME_RE.test(name)) {
-						return invalid(input, `Invalid packageManager name: "${name}"`);
-					}
-					const rest = input.slice(at + 1);
-					// The first `+` begins the integrity component, unconditionally —
-					// the version position of this field never carries build metadata.
-					const plus = rest.indexOf("+");
-					const version = plus === -1 ? rest : rest.slice(0, plus);
-					// Strict semver, matching corepack's own `semver.valid` check: a
-					// leading-zero component (`01.2.3`), a leading-zero numeric
-					// prerelease (`1.2.3-01`) or an empty prerelease identifier
-					// (`1.2.3-a..b`) is malformed, not merely unusual. Stricter than
-					// the trimming parse on one axis — a padded version substring
-					// (`pnpm@ 10.33.0`) fails typed rather than being canonicalized.
-					if (!SemVer.isPinnable(version)) {
-						return invalid(input, `Invalid packageManager version: "${version}"`);
-					}
-					if (plus === -1) {
-						return Effect.succeed(PackageManager.make({ name, version, integrity: O.none() }));
-					}
-					// Validate the integrity through the corepack-restricted schema so a
-					// malformed hash — or a valid SRI/yarn form the `packageManager`
-					// field never legitimately carries — is a typed failure, not the
-					// defect `make` would throw on a value the field schema rejects.
-					const rawIntegrity = rest.slice(plus + 1);
-					const decoded = S.decodeExit(CorepackIntegrityHash)(rawIntegrity);
-					if (Exit.isFailure(decoded)) {
-						return invalid(input, `Invalid packageManager integrity: "${rawIntegrity}"`);
-					}
-					return Effect.succeed(PackageManager.make({ name, version, integrity: O.some(decoded.value) }));
-				},
+				decode: (input: string): Effect.Effect<PackageManager, SchemaIssue.Issue> =>
+					Effect.flatMap(
+						O.match(Str.indexOf("@")(input), {
+							onNone: () => invalid(input, `Invalid packageManager format: "${input}"`),
+							onSome: (at) => Effect.succeed({ name: Str.slice(0, at)(input), rest: Str.slice(at + 1)(input) }),
+						}),
+						({ name, rest }) => {
+							if (!PACKAGE_MANAGER_NAME_RE.test(name)) {
+								return invalid(input, `Invalid packageManager name: "${name}"`);
+							}
+							// The first `+` begins the integrity component, unconditionally —
+							// the version position of this field never carries build metadata.
+							const plus = Str.indexOf("+")(rest);
+							const version = O.match(plus, {
+								onNone: () => rest,
+								onSome: (at) => Str.slice(0, at)(rest),
+							});
+							// Strict semver, matching corepack's own `semver.valid` check: a
+							// leading-zero component (`01.2.3`), a leading-zero numeric
+							// prerelease (`1.2.3-01`) or an empty prerelease identifier
+							// (`1.2.3-a..b`) is malformed, not merely unusual. Stricter than
+							// the trimming parse on one axis — a padded version substring
+							// (`pnpm@ 10.33.0`) fails typed rather than being canonicalized.
+							if (!SemVer.isPinnable(version)) {
+								return invalid(input, `Invalid packageManager version: "${version}"`);
+							}
+							return O.match(plus, {
+								onNone: () => Effect.succeed(PackageManager.make({ name, version, integrity: O.none() })),
+								onSome: (at): Effect.Effect<PackageManager, SchemaIssue.Issue> => {
+									// Validate the integrity through the corepack-restricted schema so a
+									// malformed hash — or a valid SRI/yarn form the `packageManager`
+									// field never legitimately carries — is a typed failure, not the
+									// defect `make` would throw on a value the field schema rejects.
+									const rawIntegrity = Str.slice(at + 1)(rest);
+									const decoded = S.decodeExit(CorepackIntegrityHash)(rawIntegrity);
+									if (Exit.isFailure(decoded)) {
+										return invalid(input, `Invalid packageManager integrity: "${rawIntegrity}"`);
+									}
+									return Effect.succeed(PackageManager.make({ name, version, integrity: O.some(decoded.value) }));
+								},
+							});
+						},
+					),
 				encode: (pm: PackageManager) =>
 					Effect.succeed(
 						O.match(pm.integrity, {

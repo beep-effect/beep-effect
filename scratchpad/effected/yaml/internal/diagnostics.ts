@@ -7,7 +7,12 @@
 // against the source text). This keeps the import arrow pointing facade →
 // engine, never back (`noImportCycles` is error-level).
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as S from "effect/Schema";
 import * as HashSet from "effect/HashSet";
+
+const $I = $ScratchpadId.create("effected/yaml/internal/diagnostics");
 
 /**
  * Error codes emitted by the lexer stage.
@@ -195,15 +200,33 @@ export type YamlModifyStageErrorCode = (typeof YAML_MODIFY_ERROR_CODES)[number];
 /**
  * Union of all error codes across all pipeline stages.
  *
+ * **Example** (Validate a pipeline error code)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { YamlErrorCode } from "@beep/scratchpad/effected/yaml/internal/diagnostics"
+ *
+ * console.log(S.is(YamlErrorCode)("UnexpectedToken")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const YamlErrorCode = LiteralKit([
+	...YAML_LEX_ERROR_CODES,
+	...YAML_PARSE_ERROR_CODES,
+	...YAML_COMPOSE_ERROR_CODES,
+	...YAML_STRINGIFY_ERROR_CODES,
+	...YAML_MODIFY_ERROR_CODES,
+]).pipe($I.annoteSchema("YamlErrorCode", { description: "All raw diagnostic codes emitted by YAML pipeline stages." }));
+
+/**
+ * The error-code union described by {@link YamlErrorCode}.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export type YamlErrorCode =
-	| YamlLexErrorCode
-	| YamlParseStageErrorCode
-	| YamlComposeErrorCode
-	| YamlStringifyStageErrorCode
-	| YamlModifyStageErrorCode;
+export type YamlErrorCode = typeof YamlErrorCode.Type;
 
 /**
  * A raw diagnostic record emitted by the engine.
@@ -213,15 +236,32 @@ export type YamlErrorCode =
  * Position is offset-based only; the facade computes `line`/`character`
  * when materializing the public `YamlDiagnostic`.
  *
+ * **Example** (Validate an offset-based diagnostic)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { RawDiagnostic } from "@beep/scratchpad/effected/yaml/internal/diagnostics"
+ *
+ * console.log(S.is(RawDiagnostic)({ code: "UnexpectedToken", message: "Unexpected token", offset: 0, length: 1 })) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface RawDiagnostic {
-	readonly code: YamlErrorCode;
-	readonly message: string;
-	readonly offset: number;
-	readonly length: number;
-}
+export const RawDiagnostic = S.Struct({
+	code: YamlErrorCode.annotate({ description: "The pipeline error or warning code." }),
+	message: S.String.annotate({ description: "The human-readable diagnostic message." }),
+	offset: S.Finite.annotate({ description: "The source offset at which the diagnostic starts." }),
+	length: S.Finite.annotate({ description: "The length of the diagnostic's source span." }),
+}).pipe($I.annoteSchema("RawDiagnostic", { description: "A plain, offset-based diagnostic emitted by the engine before facade materialization." }));
+
+/**
+ * The structural diagnostic type described by {@link RawDiagnostic}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RawDiagnostic = typeof RawDiagnostic.Type;
 
 /**
  * The single source of truth for which diagnostic codes are fatal to a parse

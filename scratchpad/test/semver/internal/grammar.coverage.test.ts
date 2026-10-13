@@ -76,3 +76,26 @@ describe("grammar coverage", () => {
     }
   }));
 });
+
+
+describe("primitive wildcard ordering regressions", () => {
+  it.effect("rejects concrete components following a primitive wildcard through the existing failure path", () => Effect.sync(() => {
+    for (const input of ["1.x.2", "1.*.0", "1.*.2", "*.1", "*.1.2", "x.1", "x.1.2", ">1.x.2", ">=*.1", ">*.1"]) {
+      assert.deepStrictEqual(parseRange(input), { ok: false, input, position: input.length });
+    }
+  }));
+
+  it.effect("keeps trailing primitive wildcards valid and preserves separate sugar discard semantics", () => Effect.sync(() => {
+    const cases: ReadonlyArray<readonly [string, string]> = [
+      ["1.x", ">=1.0.0 <2.0.0-0"], ["1.x.x", ">=1.0.0 <2.0.0-0"],
+      ["1.2.x", ">=1.2.0 <1.3.0-0"], ["*", ">=0.0.0"],
+      ["~1.x.2", ">=1.0.0 <2.0.0-0"], ["^1.x.2", ">=1.0.0 <2.0.0-0"],
+      ["1.x.2 - 2.0.0", ">=1.0.0 <=2.0.0"], ["x.2.3 - 2.0.0", "<=2.0.0"],
+    ];
+    for (const [input, expected] of cases) {
+      const result = parseRange(input);
+      assert.strictEqual(result.ok, true, input);
+      if (result.ok) assert.strictEqual(formatRange(result.value), expected, input);
+    }
+  }));
+});

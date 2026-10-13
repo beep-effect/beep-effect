@@ -4,6 +4,8 @@ import * as Effect from "effect/Effect";
 import * as Cause from "effect/Cause";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
+import * as P from "effect/Predicate";
+import * as Runtime from "effect/Runtime";
 import { CliDoc } from "../../effected/cli/CliFailure.ts";
 import { CliRuntime } from "../../effected/cli/CliRuntime.ts";
 
@@ -18,11 +20,15 @@ it.effect("an unprintable failure still produces a safe last-resort diagnostic",
   const exit = yield* Effect.scopedWith((scope) => Effect.flatMap(
     Layer.buildWithScope(Logger.layer([logger]), scope),
     (context) => Effect.fail(error).pipe(
-      CliRuntime.reportFailures({ render: (_error, details) => details.defaultLines }),
+      CliRuntime.reportFailures({ exitCode: 23, render: (_error, details) => details.defaultLines }),
       Effect.exit,
       Effect.provideContext(context),
     ),
   ));
-  assertExitFailure(exit, Cause.die(unprintable));
+  assertExitFailure(exit, Cause.fail(CliRuntime.reported("[unprintable failure]", 23)));
+  const failure = Cause.squash(exit.cause);
+  assert.isTrue(P.isTagged("CliRuntimeError")(failure));
+  assert.strictEqual(Runtime.getErrorReported(failure), false);
+  assert.strictEqual(Runtime.getErrorExitCode(failure), 23);
   assert.deepStrictEqual(lines, [["[unprintable failure]"]]);
 }));

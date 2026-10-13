@@ -1,5 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import { harness } from "./harness.ts";
+import * as Exit from "effect/Exit";
 import * as Result from "effect/Result";
 import { variableFixture } from "./fixtures.ts";
 import type { GitHubFixtures, RecordedCall } from "../../effected/github/GitHubClient.ts";
@@ -232,4 +235,41 @@ describe("VariableInfo boundary", () => {
 		assert.strictEqual(Result.isFailure(S.decodeUnknownResult(VariableInfo)({ name: "LEVEL" })), true);
 		assert.strictEqual(Result.isFailure(S.decodeUnknownResult(VariableInfo)({ name: "LEVEL", value: 7 })), true);
 	});
+});
+
+describe("RepositoryVariable list response decoding", () => {
+  for (const environment of [false, true]) {
+    for (const [field, malformed] of [["name", { name: 42, value: "ok" }], ["value", { name: "B", value: null }]] as const) {
+      it.effect(`${environment ? "environment" : "repository"} list rejects malformed ${field} in the typed channel`, () =>
+        Effect.scopedWith((scope) => Effect.gen(function* () {
+          const { base } = harness([{ status: 200, body: { total_count: 2, variables: [{ name: "A", value: "ok" }, malformed] } }]);
+          const context = yield* Layer.buildWithScope(RepositoryVariable.layer.pipe(Layer.provideMerge(base)), scope);
+          const exit = yield* Effect.flatMap(RepositoryVariable, (variables) =>
+            environment ? variables.listForEnvironment("prod") : variables.list)
+            .pipe(Effect.provideContext(context), Effect.exit);
+          assert.strictEqual(Exit.hasFails(exit), true);
+          assert.strictEqual(Exit.hasDies(exit), false);
+          const error = exit.pipe(Exit.findError, Result.getOrThrow);
+          assert.instanceOf(error, GitHubError);
+          assert.strictEqual(error.kind, "decode");
+          assert.strictEqual(error.operation, environment ? "RepositoryVariable.listForEnvironment" : "RepositoryVariable.list");
+        })),
+      );
+    }
+
+    it.effect(`${environment ? "environment" : "repository"} list selects plain name/value objects in API order`, () =>
+      Effect.scopedWith((scope) => Effect.gen(function* () {
+        const { script, base } = harness([{ status: 200, body: { total_count: 2, variables: [
+          { name: "B", value: "two", created_at: "ignored" }, { name: "A", value: "one", updated_at: "ignored" },
+        ] } }]);
+        const context = yield* Layer.buildWithScope(RepositoryVariable.layer.pipe(Layer.provideMerge(base)), scope);
+        const value = yield* Effect.flatMap(RepositoryVariable, (variables) =>
+          environment ? variables.listForEnvironment("prod") : variables.list).pipe(Effect.provideContext(context));
+        assert.deepStrictEqual(Result.getOrThrow(decodeVariableInfos(value)), value);
+        assert.deepStrictEqual(value, [{ name: "B", value: "two" }, { name: "A", value: "one" }]);
+        assert.strictEqual(script.calls[0]?.path, environment
+          ? "/repos/acme/widget/environments/prod/variables" : "/repos/acme/widget/actions/variables");
+      })),
+    );
+  }
 });

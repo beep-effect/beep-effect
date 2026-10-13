@@ -131,7 +131,8 @@ export const parseBun = Effect.fn("parseBun")(function* (content: string): Effec
 const resolveBunEdges = (
 	key: string,
 	sections: ReadonlyArray<Readonly<Record<string, string>> | undefined>,
-	keys: MutableHashSet.MutableHashSet<string>,
+	positionKeys: MutableHashSet.MutableHashSet<string>,
+	instanceIds: MutableHashSet.MutableHashSet<string>,
 ): Record<string, string> => {
 	const names = MutableHashSet.empty<string>();
 	for (const section of sections) {
@@ -144,7 +145,7 @@ const resolveBunEdges = (
 	const prefixes: Array<string> = [key];
 	for (let i = key.indexOf("/"); i !== -1; i = key.indexOf("/", i + 1)) {
 		const candidate = key.slice(0, i);
-		if (MutableHashSet.has(keys, candidate)) prefixes.push(candidate);
+		if (MutableHashSet.has(positionKeys, candidate)) prefixes.push(candidate);
 	}
 	const orderedPrefixes = A.append(A.sort(prefixes, Order.mapInput(Order.flip(Order.Number), (prefix: string) => prefix.length)), "");
 
@@ -152,7 +153,7 @@ const resolveBunEdges = (
 	for (const name of names) {
 		for (const prefix of orderedPrefixes) {
 			const candidate = prefix === "" ? name : `${prefix}/${name}`;
-			if (MutableHashSet.has(keys, candidate)) {
+			if (MutableHashSet.has(instanceIds, candidate)) {
 				MutableHashMap.set(edges, name, candidate);
 				break;
 			}
@@ -176,6 +177,30 @@ const toFields = Effect.fn("toFields")(function* (raw: BunLockfileRawType): Effe
 	let workspaceNames = HashSet.fromIterable<string>([]);
 	const workspaceEntries = MutableHashMap.empty<string, WorkspaceEntry>();
 	const importers: Array<LockfileImporter> = [];
+	const instanceIds = MutableHashSet.empty<string>();
+
+	// Preserve workspace identities from the raw position keys, even when the
+	// corresponding tuple is malformed: the workspace itself emits that row.
+	if (raw.workspaces !== undefined) {
+		for (const [wsPath, wsEntry] of R.toEntries(raw.workspaces)) {
+			if (wsPath === "") continue;
+			const name = wsEntry.name === undefined || wsEntry.name === "" ? wsPath : wsEntry.name;
+			workspaceNames = HashSet.add(workspaceNames, name);
+			MutableHashSet.add(instanceIds, MutableHashSet.has(keys, name) ? name : wsPath);
+		}
+	}
+	if (raw.packages !== undefined) {
+		for (const [key, tuple] of R.toEntries(raw.packages)) {
+			if (key === "") continue;
+			const first = tuple[0];
+			if (P.isString(first)) {
+				const split = splitNameVersion(first);
+				if (split !== undefined && HashSet.has(workspaceNames, split.name) === false) {
+					MutableHashSet.add(instanceIds, key);
+				}
+			}
+		}
+	}
 
 	if (raw.workspaces !== undefined) {
 		// Bun records concrete versions on the package tuples, not per importer,
@@ -193,12 +218,10 @@ const toFields = Effect.fn("toFields")(function* (raw: BunLockfileRawType): Effe
 		for (const [wsPath, wsEntry] of R.toEntries(raw.workspaces)) {
 			if (wsPath === "") continue; // root entry
 			const name = wsEntry.name === undefined || wsEntry.name === "" ? wsPath : wsEntry.name;
-			workspaceNames = HashSet.add(workspaceNames, name);
 			// A workspace package's identity is its `packages` key — the bare
 			// name — because that is what nested keys prefix themselves with. The
 			// path is the fallback for a lockfile that records no such entry.
 			const instanceId = MutableHashSet.has(keys, name) ? name : wsPath;
-			if (instanceId === "") continue; // no identity, no row; skip, never throw
 			packages.push(
 				ResolvedPackage.make({
 					name,
@@ -207,7 +230,7 @@ const toFields = Effect.fn("toFields")(function* (raw: BunLockfileRawType): Effe
 					isWorkspace: true,
 					relativePath: wsPath,
 					...peerDeclarations(wsEntry.peerDependencies, undefined, wsEntry.optionalPeers),
-					resolved: resolveBunEdges(instanceId, workspaceSections(wsEntry), keys),
+					resolved: resolveBunEdges(instanceId, workspaceSections(wsEntry), keys, instanceIds),
 				}),
 			);
 			MutableHashMap.set(workspaceEntries, name, {
@@ -248,7 +271,7 @@ const toFields = Effect.fn("toFields")(function* (raw: BunLockfileRawType): Effe
 					...O.getSomesStruct({ integrity: O.fromUndefinedOr(integrity) }),
 					isWorkspace: false,
 					...peerDeclarations(info?.peerDependencies, undefined, info?.optionalPeers),
-					resolved: resolveBunEdges(key, infoSections(info), keys),
+					resolved: resolveBunEdges(key, infoSections(info), keys, instanceIds),
 				}),
 			);
 		}

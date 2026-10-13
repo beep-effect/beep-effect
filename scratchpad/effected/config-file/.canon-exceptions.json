@@ -1,0 +1,6 @@
+[
+  {
+    "id": "EV010:scratchpad/test/config-file/integration/ConfigFileTest.int.test.ts:1:@effect/platform-node@0#1",
+    "reason": "Retained NodeFileSystem because the suite verifies real temporary-file creation and removal after the subject scope closes."
+  }
+]

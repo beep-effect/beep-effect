@@ -1,0 +1,27 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review those CLI render and UI files read-only against the port laws, the round-1 inventory, and the pinned upstream oracle.Round-1 already closed the known issues on this slice. I’ll compare the current files with the pinned oracle and look for regressions the gates would miss.### fable-2-1
+- file: scratchpad/effected/cli/ui/Confirm.ts:23; scratchpad/effected/cli/ui/DocView.ts:14; scratchpad/effected/cli/ui/Select.ts:19; scratchpad/effected/cli/ui/CliUiLive.ts:298; scratchpad/effected/cli/ui/CliUi.ts:41; scratchpad/effected/cli/ui/MultiSelect.ts:26
+- class: schema   severity: required
+- standard: EFFECTED_PORT_GOAL.md operator step 4 (annotations on fields and schemas); standards/effect-first-development.md EF-12; round-1 cli-3 (the four beep laws and tsgo do not read schema AST metadata)
+- evidence: `DuplicateToggleKeyError`, `MissingDocViewThemeError`, `NoEnabledChoiceError`, and `LiveTickError` pass only the identity tag into `S.TaggedError` and leave `message: S.String` bare. `ScreenExited` and `DuplicateItemKey` pass `$I.annote` on the schema and still leave `message` bare. The completed shape in `CliExit.ts` annotates both the schema and `message`.
+- failure: Tooling that reads these schemas gets an identifier without a description, and gets no field description for `message`. These are the same metadata gaps cli-3 required on the other new CLI errors.
+- fix: Match `InvalidExitCodeError`: `$I.annote` on each schema and `S.String.annotate({ description })` on each `message`. Keep tags, messages, `name` overrides, and constructors.
+
+### fable-2-2
+- file: scratchpad/effected/cli/ui/Select.ts:156
+- class: bug   severity: required
+- standard: D11 bug; `Select.init` documents the first enabled choice at or after `initial`, else the nearest enabled choice before it (Select.ts:237-238); section 14 upstream-bug exception. cli-12 clamped only finite out-of-range indices.
+- evidence: `start` is `Math.min(Math.max(options.initial ?? 0, 0), choices.length - 1)`. `Math.max(NaN, 0)` is `NaN`. `nearest` (line 133) loops while `index >= 0 && index < choices.length`; `NaN >= 0` is false, so both directions return `undefined` and `first` becomes `0` through `?? 0` with no enabled-choice search. Choices `[{ disabled: true }, { disabled: false }]` and `initial: NaN` therefore highlight index 0, and `submit` leaves `submitted` false because `enabled` rejects that row. `-Infinity` clamps to 0 and searches; `NaN` does not.
+- failure: A non-finite `initial` can highlight a disabled choice while an enabled choice exists. Submit does nothing. Finite out-of-range values are already clamped.
+- fix: If `options.initial` is not finite, start the existing forward search at 0. Keep the finite clamp. Add a `NaN` initial regression next to the cli-12 cases, and register it with the existing Select upstream-bug deviation.
+
+### fable-2-3
+- file: scratchpad/effected/cli/ui/Confirm.ts:201
+- class: law   severity: required
+- standard: standards/effect-laws-v1.md short law 6 (no native `Object` in domain logic) and Allowlist Contract (scanner misses are remediated, not allowlisted). `NoNativeRuntime.ts` `OBJECT_METHODS` lists `fromEntries` and omits `defineProperty`, so the green native-runtime gate never sees this call. `effect/Record.fromEntries` is the replacement already used in this module (`CliUiTest.ts`).
+- evidence: `result` builds `toggles` with `Object.defineProperty` for each toggle key. Upstream was `Object.fromEntries`, which the checker rejects. `defineProperty` is the same object-mutation surface with a callee the checker does not name.
+- failure: The confirm result is still built by a native `Object` method. The law gate stays green because the method name is absent from `OBJECT_METHODS`.
+- fix: Build `toggles` with `R.fromEntries` from `effect/Record`, preserving enumerable own properties and key order. Adjust the `ConfirmResult` annotation only if the helper's return type requires it. Do not add an allowlist entry and do not add a cast.
+
+REQUIRED: 3
+BACKLOG: 0

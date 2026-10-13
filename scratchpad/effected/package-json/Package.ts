@@ -1159,7 +1159,7 @@ export class Package extends S.Class<Package>($I`Package`)({
 	 * @since 0.0.0
 	 */
 	toJsonString(options?: PackageFormatOptions): string {
-		const raw = Result.getOrThrowWith(S.encodeUnknownResult(Package.schema)(this), (error) => error);
+		const raw = Result.getOrThrowWith(S.encodeUnknownResult(Package.schema)(this), Fn.identity);
 		return renderJson(raw, resolveFormatOptions(options));
 	}
 }

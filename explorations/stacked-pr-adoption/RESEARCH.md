@@ -6,6 +6,88 @@ repo (cited), and what exists inside it (so we compose bricks instead of
 rebuilding them). Date sections; research goes stale.
 -->
 
+## 2026-10-13 — Refresh for align (read this first)
+
+This section was re-measured for the align session. It supersedes the 10-05
+headline that a main-red admission hold is the biggest lever. The 10-05
+sections below stay as written.
+
+- **Native stacks are GA.** They were declared generally available on
+  2026-10-06 for all github.com plans
+  (<https://github.blog/changelog/2026-10-06-stacked-pull-requests-generally-available/>).
+  - GA also brings signed rebase commits, and a stack enters the merge
+    queue as one merge group.
+  - A bypass-capable user can merge only the lowest unmerged layer, never
+    the whole stack.
+  - The synchronous `PUT pulls/<n>/merge` endpoint does not support stacks.
+  - The latest `gh stack` is v0.2.1, which adds worktree support.
+- **The E7 deferral was read too broadly on 10-05.** The trial deferred only
+  `yeet publish --stack` integration; it said manual use is acceptable for
+  experiments (`goals/ship-velocity/research/stacked-pr-trial.md:44-54`).
+- **Stack demand is small.** Window 2026-10-05..10-13, 190 PRs. Source:
+  `pulls/<n>/commits` and second-parent merge classification.
+  - Only 3 linear chains had the child PR open while its parent was
+    unlanded: #1440→#1444, #1483→#1488 and #1475→#1502.
+  - Counting the goal-branch layers on #1427, about 6 of 190 PRs fit a
+    stack.
+  - The stack-addressable Heavy saving is at most ~50 runner-min on
+    copy-merge heads, plus ≤58 for one top merge, out of 21,122.
+  - In 10 of 13 linear chains the child was built on the parent's branch
+    and published only after the parent landed.
+  - The 10 fan-out episodes (26 waiting PRs) cannot be modelled by a linear
+    stack.
+  - Correction to 10-05: #1443 also merged #1436's branch, so the copy
+    fan-out was 3 wide.
+- **Main got redder.** Window 2026-09-29..10-13. Sources:
+  `actions/workflows/check.yml/runs` and `runs/<id>/jobs`.
+  - Whole-run, non-cancelled success: 26/112 = 23.2%. For 10-06..10-13
+    alone it was 6/50 = 12.0%.
+  - Runs with all 16 required checks green: 71/112 = 63.4%.
+  - Main was required-red 54.7% of wall-clock time. Excluding an 81.4 h
+    quiet gap with no runs (10-10T08:10Z..10-13T17:35Z), it was 41.3%.
+  - Every completed main run since 2026-10-09T23:36Z fails the required
+    JSDoc Ratchet and Repo Sanity checks. This was still true after the
+    #1612 burn-down (`af42e6ff5d`, 10-13T19:45Z).
+  - For 68.4 h (10-06T19:35Z..10-09T16:01Z), one main run whose jobs never
+    got a runner held the `Check-refs/heads/main` concurrency group, so
+    main produced no verdict.
+- **Most merges now bypass required checks.**
+  - The ruleset gained a repository-role bypass actor on 2026-10-06T17:22Z
+    and required review-thread resolution on 10-09.
+  - 67 of 153 merges since 10-06 bypassed `required_status_checks`, and
+    30 of 36 after the S11 ruling did. Source: `rulesets/rule-suites`
+    joined on merge commits.
+- **The waste sits in two non-required lanes.** Window 09-29..10-13, PR
+  heads only.
+  - PR Heavy totalled 31,347 runner-min.
+  - Heavy / Coverage Regression and Heavy / Lint Policy took 19,838 of them
+    (63%), and neither is a required check.
+  - Of the 86 failing main runs, 68 failed Coverage Regression, 57 failed
+    Lint Policy, and only 41 had a required check failing.
+  - A hold keyed on required-red main would have touched 40.6% of PR Heavy
+    minutes.
+  - Heavy queue wait does not depend on main's state: p90 60–68 min red or
+    green.
+- **Yeet facts the decisions depend on** (`packages/tooling/tool/cli/src/commands/Yeet/internal/`):
+  - `PullRequest.ts:591` runs `gh pr create` without `--base`, while the
+    GraphQL-rate-limit REST fallback posts `base=<--base>`
+    (`PullRequest.ts:532,546`). The two paths disagree whenever `--base`
+    is not `main`.
+  - `yeet merge-gate` reads the ruleset of the PR's own base and holds when
+    it is empty (`MergeGate.ts:754-757`), so it would hold every
+    non-bottom layer. It merges through the synchronous endpoint
+    (`MergeGate.ts:820-826`).
+  - `yeet publish` applies `ready-for-heavy` to every new code PR, so the
+    10-05 "hold, don't label" rule cannot be followed on the default path.
+- **Unverified items from 10-05, now partly answered** (docs plus a
+  third-party probe; still unverified on this repo):
+  - A stack layer's `GITHUB_BASE_REF` is its direct parent; the trunk
+    appears only in `pull_request.stack.base.ref`.
+  - The post-merge cascade fires `synchronize`.
+  - On #860, REST files and `.diff` return only the layer's diff.
+  - Correction to 10-05 Q3: `gh stack sync` rebases and force-pushes; it is
+    not a re-sync primitive.
+
 ## 2026-10-05 — Recommendation (read this first)
 
 **Short answer.** Adopt native stacks only for real dependency chains, and

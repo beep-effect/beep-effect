@@ -188,6 +188,77 @@ const corpus: ReadonlyArray<CorpusCase> = [
 ];
 
 describe("GitConfig", () => {
+	it("invalid-line diagnostics retain JSON quoting for quotes, backslashes and control characters", () => {
+		for (const [character, quoted] of [['"', '"\\""'], ["\\", '"\\\\"'], ["\b", '"\\b"'], ["\r", '"\\r"']] as const) {
+			const error = failure(`[core]\nkey${character}junk\n`);
+			assert.strictEqual(error.diagnostics[0]?.code, "invalidLine");
+			assert.strictEqual(error.diagnostics[0]?.message, `unexpected character ${quoted} after variable name "key"`);
+		}
+	});
+
+	it("quoted subsection headers require a space or tab separator, including empty subsections", () => {
+		for (const separator of [" ", "\t"]) {
+			for (const subsection of ["origin", ""]) {
+				const text = `[remote${separator}"${subsection}"]\nurl=u\n`;
+				const doc = parse(text);
+				assert.deepStrictEqual(doc.get("remote", subsection, "url"), O.some("u"));
+				assert.strictEqual(doc.stringify(), text);
+			}
+		}
+		for (const text of ['[remote"origin"]\nurl=u\n', '[remote""]\nurl=u\n']) {
+			assert.strictEqual(failure(text).diagnostics[0]?.code, "invalidSectionHeader");
+		}
+	});
+
+	it("empty dotted subsections share the quoted-empty address and retain lookup boundaries", () => {
+		const text = '[remote.]\nurl=one\n[remote ""]\nurl=two\n[remote]\nurl=plain\n';
+		const doc = parse(text);
+		assert.strictEqual(doc.sections[0]?.subsection, "");
+		assert.deepStrictEqual(doc.getAll("REMOTE", "", "URL"), ["one", "two"]);
+		assert.deepStrictEqual(doc.get("remote", "", "url"), O.some("two"));
+		assert.deepStrictEqual(doc.getAll("remote", undefined, "url"), ["plain"]);
+		assert.deepStrictEqual(doc.getAll("remote", "origin", "url"), []);
+		assert.strictEqual(doc.stringify(), text);
+		assert.strictEqual(ok(doc.set("remote", "", "url", "new")).stringify(), text.replace("url=two", "url=new"));
+	});
+
+	it("an EOF backslash outside quotes is dropped from the value and included in the replaced span", () => {
+		for (const raw of ["first\\", '"first"\\', "\\", "first \t\\"]) {
+			const text = `[core]\nkey = ${raw}`;
+			const doc = parse(text);
+			assert.deepStrictEqual(doc.get("core", undefined, "key"), O.some(raw === "\\" ? "" : "first"));
+			assert.strictEqual(doc.stringify(), text);
+			assert.strictEqual(ok(doc.set("core", undefined, "key", "new")).stringify(), "[core]\nkey = new");
+		}
+	});
+
+	it("EOF backslashes still reject open quotes and a following terminal CR", () => {
+		assert.include(failure('[core]\nkey="first\\').diagnostics.map((diagnostic) => diagnostic.code), "unterminatedQuote");
+		assert.strictEqual(failure("[core]\nkey=first\\\r").diagnostics[0]?.code, "invalidEscape");
+	});
+
+	it("terminal CR ends empty and nonempty values without entering the edit span", () => {
+		for (const value of ["", "a"]) {
+			const text = `[core]\nkey=${value}\r`;
+			const doc = parse(text);
+			assert.deepStrictEqual(doc.get("core", undefined, "key"), O.some(value));
+			assert.strictEqual(doc.stringify(), text);
+			const edited = ok(doc.set("core", undefined, "key", "new"));
+			assert.strictEqual(edited.stringify(), "[core]\nkey=new\r");
+			assert.deepStrictEqual(parse(edited.stringify()).get("core", undefined, "key"), O.some("new"));
+		}
+	});
+
+	it("embedded CR and CRLF retain decoded values and surgical line endings", () => {
+		for (const [raw, value, ending] of [["a\rb", "a\rb", "\n"], ['"a\rb"', "a\rb", "\n"], ["a", "a", "\r\n"]] as const) {
+			const text = `[core]\nkey=${raw}${ending}`;
+			const doc = parse(text);
+			assert.deepStrictEqual(doc.get("core", undefined, "key"), O.some(value));
+			assert.strictEqual(doc.stringify(), text);
+			assert.strictEqual(ok(doc.set("core", undefined, "key", "new")).stringify(), `[core]\nkey=new${ending}`);
+		}
+	});
+
 	describe("conformance corpus", () => {
 		it("the corpus walk found the expected number of cases", () => {
 			// A silently-empty (or silently-shrunk) corpus would green every loop

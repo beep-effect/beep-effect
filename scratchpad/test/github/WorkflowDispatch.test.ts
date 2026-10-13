@@ -2,6 +2,8 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Result from "effect/Result";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
@@ -12,10 +14,12 @@ import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { GitHubError } from "../../effected/github/GitHubError.ts";
 import { Repo } from "../../effected/github/Repo.ts";
 import { RetryPolicy } from "../../effected/github/Resilience.ts";
-import { WorkflowDispatch, WorkflowInfo } from "../../effected/github/WorkflowDispatch.ts";
+import { WorkflowDispatch, WorkflowInfo, WorkflowRunStatus } from "../../effected/github/WorkflowDispatch.ts";
 import type { Reply } from "./fixtures.ts";
 import { scriptedFetch } from "./fixtures.ts";
 import { harness, REPO } from "./harness.ts";
+
+const isWorkflowInfos = S.is(S.Array(WorkflowInfo));
 
 const runReply = (id: number, status: string, path = ".github/workflows/ci.yml") => ({
   id, status, path, workflow_id: 123, event: "workflow_dispatch", head_branch: "main",
@@ -203,6 +207,78 @@ describe("WorkflowInfo return-model compatibility", () => {
       assert.deepStrictEqual(yield* S.encodeEffect(WorkflowInfo)(workflow), workflow);
       assert.isTrue(S.is(WorkflowInfo)(value[0]));
       assert.isFalse(S.is(WorkflowInfo)({ id: 123, name: "CI", path: ".github/workflows/ci.yml" }));
+    }),
+  );
+});
+
+describe("WorkflowDispatch response decoding", () => {
+  const valid = runReply(42, "completed");
+  for (const [field, malformed] of [
+    ["id", { ...valid, id: 1.5 }],
+    ["status", { ...valid, status: {} }],
+    ["conclusion", { ...valid, conclusion: 7 }],
+    ["url", { ...valid, html_url: null }],
+  ] as const) {
+    for (const discovery of [false, true]) {
+      it.effect(`reports malformed run ${field} in ${discovery ? "discovery" : "direct reads"} as a typed failure`, () =>
+        Effect.gen(function* () {
+          const replies = discovery
+            ? [{ status: 204 }, { status: 200, body: { total_count: 1, workflow_runs: [malformed] } }]
+            : [{ status: 200, body: malformed }];
+          const { value: exit, script } = yield* execute(replies, (workflows) =>
+            (discovery ? workflows.dispatchAndWait("ci.yml", "main", { poll }) : workflows.runStatus(42)).pipe(Effect.exit));
+          assert.strictEqual(Exit.hasFails(exit), true);
+          assert.strictEqual(Exit.hasDies(exit), false);
+          const error = exit.pipe(Exit.findError, Result.getOrThrow);
+          assert.instanceOf(error, GitHubError);
+          assert.strictEqual(error.kind, "decode");
+          assert.strictEqual(error.operation, discovery ? "WorkflowDispatch.dispatchAndWait" : "WorkflowDispatch.runStatus");
+          assert.strictEqual(script.count(), discovery ? 2 : 1);
+        }),
+      );
+    }
+  }
+
+  it.effect("preserves unknown status and omitted conclusion defaults", () =>
+    Effect.gen(function* () {
+      const { value } = yield* execute([{ status: 200, body: { id: 42, status: null, conclusion: null, html_url: "run" } }],
+        (workflows) => workflows.runStatus(42));
+      assert.strictEqual(S.is(WorkflowRunStatus)(value), true);
+      assert.strictEqual(value.status, "unknown");
+      assert.strictEqual(value.conclusion, undefined);
+      assert.deepStrictEqual(value, WorkflowRunStatus.make({ id: 42, status: "unknown", url: "run" }));
+    }),
+  );
+
+  const workflow = { id: 1, name: "CI", path: ".github/workflows/ci.yml", state: "active" };
+  for (const [field, malformed] of [
+    ["id", { ...workflow, id: null }],
+    ["name", { ...workflow, name: 42 }],
+    ["path", { ...workflow, path: null }],
+    ["state", { ...workflow, state: {} }],
+  ] as const) {
+    it.effect(`list reports malformed workflow ${field} as a typed decode failure`, () =>
+      Effect.gen(function* () {
+        const { value: exit } = yield* execute([{ status: 200, body: { total_count: 2, workflows: [workflow, malformed] } }],
+          (workflows) => workflows.list.pipe(Effect.exit));
+        assert.strictEqual(Exit.hasFails(exit), true);
+        assert.strictEqual(Exit.hasDies(exit), false);
+        const error = exit.pipe(Exit.findError, Result.getOrThrow);
+        assert.instanceOf(error, GitHubError);
+        assert.strictEqual(error.kind, "decode");
+        assert.strictEqual(error.operation, "WorkflowDispatch.list");
+      }),
+    );
+  }
+
+  it.effect("list preserves order and selects plain workflow fields", () =>
+    Effect.gen(function* () {
+      const second = { ...workflow, id: 2, state: "disabled_manually" };
+      const { value } = yield* execute([{ status: 200, body: { total_count: 2, workflows: [
+        { ...second, ignored: "metadata" }, { ...workflow, ignored: "metadata" },
+      ] } }], (workflows) => workflows.list);
+      assert.strictEqual(isWorkflowInfos(value), true);
+      assert.deepStrictEqual(value, [second, workflow]);
     }),
   );
 });

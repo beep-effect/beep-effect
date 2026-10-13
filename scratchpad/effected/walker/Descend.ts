@@ -24,13 +24,38 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { dual, identity } from "effect/Function";
 
+import { DepthCap } from "./Walker.ts";
+
 const $I = $ScratchpadId.create("effected/walker/Descend");
 
 const OnUnreadable = LiteralKit(["fail", "skip", "record"]).annotate(
 	$I.annote("OnUnreadable", { description: "How unreadable traversal directories are handled." }),
 );
 type OnUnreadable = typeof OnUnreadable.Type;
-const OnUnreadableArray = OnUnreadable.pick(["fail", "skip"]);
+/**
+ * Unreadable-directory modes that return a plain array of matches.
+ *
+ * **Example** (Validate an array-returning mode)
+ *
+ * ```ts
+ * import { OnUnreadableArray } from "@beep/scratchpad/effected/walker/Descend";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(OnUnreadableArray)("skip")) // true
+ * console.log(S.is(OnUnreadableArray)("record")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OnUnreadableArray = OnUnreadable.pick(["fail", "skip"]);
+/**
+ * Unreadable-directory policy for a traversal returning a match array.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OnUnreadableArray = typeof OnUnreadableArray.Type;
 const OnUnreadableRecord = OnUnreadable.pick(["record"]);
 
 const DescendErrorReason = LiteralKit(["unreadableDirectory", "depthExceeded"]).annotate(
@@ -80,7 +105,7 @@ export interface DescendOptions {
 * here, because this type is the options contract of the overload that
 * returns a bare match array.
 */
-	readonly onUnreadable?: typeof OnUnreadableArray.Type;
+	readonly onUnreadable?: OnUnreadableArray;
 /**
 * Whether to descend into symlinked directories. Defaults to `false`: a
 * symlinked directory is never entered (cycle safety). Under `true` links
@@ -331,7 +356,7 @@ const descendImpl: (
 	const path = yield* Path.Path;
 
 	const maxDepth = options.maxDepth ?? 256;
-	if (!Number.isInteger(maxDepth) || maxDepth < 1) {
+	if (!S.is(DepthCap)(maxDepth)) {
 		return yield* Effect.die(
 			DescendDefect.make({ message: `Walker.descend: maxDepth must be a positive integer, received ${maxDepth}` }),
 		);
@@ -345,8 +370,8 @@ const descendImpl: (
 /** The stat-resolved type of `absolute`, or None when missing, dangling or unstatable. */
 	const typeOf = (absolute: string): Effect.Effect<O.Option<FileSystem.File.Info["type"]>> =>
 		fs.stat(absolute).pipe(
-			Effect.map((info) => O.some(info.type)),
-			Effect.orElseSucceed(O.none),
+			Effect.map((info) => info.type),
+			Effect.option,
 		);
 
 /** Whether `absolute` is itself a symlink. `readLink` succeeds only on links; any failure means "not one". */
@@ -426,11 +451,9 @@ const descendImpl: (
 
 	const results: Array<string> = [];
 	const frames: Array<DescendFrame> = [{ relative: base, absolute: absoluteBase, depth: 0, ancestors: baseAncestors }];
-	// A head index, never Array.shift(): shift() re-indexes the whole array on
-	// every dequeue, turning a large walk quadratic.
-	for (let head = 0; head < frames.length; head += 1) {
-		const frame = frames[head];
-		if (frame === undefined) break;
+	// Array iteration visits frames appended during traversal without shifting
+	// or re-indexing the queue, keeping the walk linear in its frame count.
+	for (const frame of frames) {
 
 		// A directory that vanished between its parent's listing and this read is
 		// a benign race — treat it as empty, and never record it as unreadable:
@@ -485,12 +508,14 @@ const descendImpl: (
 			// `realPathOf` reports or fails that per `onUnreadable`.
 			let ancestors = frame.ancestors;
 			if (followSymlinks) {
-				const parentReal = frame.ancestors[frame.ancestors.length - 1] ?? frame.absolute;
+				// Following seeds the base chain and appends every queued child's
+				// real path, so each frame here has a final ancestor.
+				const parentReal = O.getOrThrow(A.last(frame.ancestors));
 				const real = (yield* isSymbolicLink(absolute))
 					? yield* realPathOf(absolute, relative)
 					: O.some(path.join(parentReal, entry));
-				if (O.isNone(real) || frame.ancestors.includes(real.value)) continue;
-				ancestors = [...frame.ancestors, real.value];
+				if (O.isNone(real) || A.contains(frame.ancestors, real.value)) continue;
+				ancestors = A.append(frame.ancestors, real.value);
 			} else if (yield* isSymbolicLink(absolute)) {
 				continue;
 			}

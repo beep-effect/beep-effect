@@ -1,7 +1,9 @@
 import { assert, describe, it, vi } from "@effect/vitest";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import type { ProcessGuardHost, ProcessGuardOptions } from "../../effected/engine/guard.ts";
-import { ProcessGuard, ProcessGuardPolicy } from "../../effected/engine/guard.ts";
+import { ProcessGuard, ProcessGuardInjection, ProcessGuardPolicy } from "../../effected/engine/guard.ts";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 // Compile-time: Node's own `process` satisfies the guard's structural host.
@@ -104,6 +106,35 @@ describe("ProcessGuardPolicy", () => {
 	});
 });
 
+describe("ProcessGuard schema annotations", () => {
+	it("matches the canonical identity composer for both public schemas", () => {
+		const $I = $ScratchpadId.create("effected/engine/ProcessGuard");
+		assert.deepStrictEqual(S.resolveAnnotations(ProcessGuardPolicy), $I.annote("ProcessGuardPolicy", {
+			description: "When a stray exception or rejection ends the process.",
+		}));
+		assert.deepStrictEqual(S.resolveAnnotations(ProcessGuardInjection), $I.annote("ProcessGuardInjection", {
+			description: "Which crash event to inject and when to raise it.",
+		}));
+	});
+
+	it("describes all four Struct property keys", () => {
+		assert.deepStrictEqual(
+			A.map(ProcessGuardPolicy.ast.propertySignatures, (property) => [property.name, property.type.context?.annotations?.description]),
+			[
+				["onUncaught", "The uncaught-exception exit policy."],
+				["onRejection", "The rejection policy; defaults to exit."],
+			],
+		);
+		assert.deepStrictEqual(
+			A.map(ProcessGuardInjection.ast.propertySignatures, (property) => [property.name, property.type.context?.annotations?.description]),
+			[
+				["at", "Before load or after the first markConnected call."],
+				["kind", "The host event to raise."],
+			],
+		);
+	});
+});
+
 describe("ProcessGuard.run", () => {
 	it("connected injection preserves the next check callback before the timers-phase report", async () => {
 		vi.useFakeTimers({ toFake: ["setImmediate", "setTimeout"] });
@@ -187,6 +218,14 @@ describe("ProcessGuard.run", () => {
 				message: S.Literal(`[injected] ${kind}`),
 			}))(error));
 			assert.instanceOf(error, Error);
+			if (!(error instanceof Error)) assert.fail("injected crash must be an Error");
+			if (!S.isSchema(error.constructor)) assert.fail("injected crash constructor must be a schema");
+			const annotations = S.resolveAnnotations(error.constructor);
+			const identity = $ScratchpadId.create("effected/engine/ProcessGuard").annote("InjectedCrash", {
+				description: "A test-only crash delivered through the host event listeners.",
+			});
+			for (const key of ["schemaId", "identifier", "iri", "curie", "title", "description"] as const)
+				assert.strictEqual(annotations?.[key], identity[key], key);
 			if (kind === "uncaughtException") assert.strictEqual(origin, "uncaughtException");
 			else {
 				assert.instanceOf(rejected, Promise);

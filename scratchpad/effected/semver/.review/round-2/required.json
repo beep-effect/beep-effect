@@ -1,0 +1,50 @@
+{
+  "module": "semver",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/semver/Range.ts",
+        "scratchpad/effected/semver/internal/desugar.ts"
+      ],
+      "tests": [
+        "scratchpad/test/semver/Range.test.ts",
+        "scratchpad/test/semver/VersionCache.test.ts",
+        "scratchpad/test/semver/internal/desugar.coverage.test.ts"
+      ],
+      "findings": ["sol-2-1", "sol-2-2", "fable-2-1"]
+    },
+    {
+      "id": "g2",
+      "files": ["scratchpad/effected/semver/SemVer.ts"],
+      "tests": ["scratchpad/test/semver/SemVer.test.ts"],
+      "findings": ["sol-2-3"]
+    }
+  ],
+  "findings": {
+    "sol-2-1": {
+      "file": "scratchpad/effected/semver/internal/desugar.ts",
+      "class": "bug",
+      "summary": "Wildcard-major tilde and caret ranges incorrectly acquire a <1.0.0-0 ceiling (sol-2-1; fable-2-2).",
+      "fix": "Handle p.major === null before numeric substitution in desugarTilde and desugarCaret; return >=0.0.0 with normal prerelease exclusion. Correct the two existing desugar.coverage.test.ts expectations; add Range.test.ts parsing/membership/filter regressions for ~*, ~x, ^*, ^x and stable/prerelease inputs, plus VersionCache.test.ts resolveString regressions. Preserve diagnostic-forced signatures and unaffected upstream assertions. Ledger and README Port-notes recording is central and outside this assignment."
+    },
+    "sol-2-2": {
+      "file": "scratchpad/effected/semver/internal/desugar.ts",
+      "class": "bug",
+      "summary": "Strict < or > comparisons against a full wildcard incorrectly match stable versions (sol-2-2; fable-2-3).",
+      "fix": "For a null major, return <0.0.0-0 for < and >, retaining >=0.0.0 for null, =, >= and <=. Split the existing desugar.coverage.test.ts expectation by operator; add Range.test.ts matching/filter regressions for >*, >x, <*, <x and VersionCache.test.ts resolution failures. Preserve the diagnostic-forced dual overloads and safe operator domain; do not restore upstream casts. Ledger and README Port-notes recording is central and outside this assignment."
+    },
+    "sol-2-3": {
+      "file": "scratchpad/effected/semver/SemVer.ts",
+      "class": "schema",
+      "summary": "Reusable numeric and identifier schemas/checks lack composer-derived identifier, title and description metadata (sol-2-3; fable-2-4).",
+      "fix": "Annotate nonNegativeInteger, prereleaseIdentifier and buildIdentifier and their reused integer/range/identifier-pattern check blocks with composer-derived identifier/title/description using the installed Effect API. Preserve S.Finite, validation predicates and accepted inputs. Add SemVer.test.ts schema/check AST assertions; preserve validation assertions and retarget existing JSON Schema definition lookups only where the new identities require it. Identity-deviation and export bookkeeping is central; do not edit README Port notes or PORT_LEDGER.json."
+    },
+    "fable-2-1": {
+      "file": "scratchpad/effected/semver/Range.ts",
+      "class": "bug",
+      "summary": "Intersection unnecessarily projects already-correct prerelease bounds, changing upstream formatting and comparator shape beyond the verified membership fix.",
+      "fix": "In intersectSets, return [merged] when every mentioned tuple is either admitted by both operands or has no prereleaseWitness in merged; split stable/permitted branches only when a disallowed tuple has a witness. Restore the upstream comparator shape and the Range.ts example >=1.0.0 <2.0.0-0 >=1.5.0. Add Range.test.ts exact caret/tilde formatting and [0] upper-bound regressions while retaining the 1.0.0-beta rejection and existing membership-conjunction tests. No upstream Range.test.ts assertion was rewritten by the round-1 commit. Central bookkeeping must narrow the existing bug record; it is outside this assignment."
+    }
+  }
+}

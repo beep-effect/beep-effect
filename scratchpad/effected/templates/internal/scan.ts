@@ -19,7 +19,6 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import type { CommentStyle } from "../CommentStyle.ts";
 import { PlacedSection, Section } from "../Section.ts";
 import type { Eol, SectionDialect } from "../SectionDialect.ts";
-import { parseAttributeRun } from "./attributes.ts";
 import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/templates/internal/scan");
@@ -195,7 +194,7 @@ const lineAt = (starts: ReadonlyArray<number>, offset: number): number => {
 	let high = starts.length - 1;
 	while (low < high) {
 		const mid = (low + high + 1) >> 1;
-		if ((starts[mid] ?? 0) <= offset) {
+		if (A.getUnsafe(starts, mid) <= offset) {
 			low = mid;
 		} else {
 			high = mid - 1;
@@ -243,42 +242,20 @@ export const identityOf: {
 const collectHits = (text: string, dialect: SectionDialect): ReadonlyArray<MarkerHit> => {
 	const hits: Array<MarkerHit> = [];
 	const seen = MutableHashSet.empty<number>();
-	for (const matcher of dialect.matchers()) {
-		for (const match of text.matchAll(matcher.regex)) {
-			const start = match.index;
-			// Two styles could in principle match one line; the first wins so a
-			// marker is never counted twice.
-			if (start === undefined || MutableHashSet.has(seen, start)) {
-				continue;
-			}
-			// The loosely-captured attribute run decides whether this line is a
-			// marker at all. An END never carries attributes, and a run that does
-			// not parse cleanly is not a marker — the line is ordinary content,
-			// and any structural ambiguity that creates (an END now orphaned, a
-			// BEGIN now unterminated) fails typed downstream rather than being
-			// resolved by a guess here.
-			const run = match[3];
-			let attributes: Record<string, string> | undefined;
-			if (run !== undefined) {
-				if (match[1] === "END") {
-					continue;
-				}
-				attributes = parseAttributeRun(run);
-				if (attributes === undefined) {
-					continue;
-				}
-			}
-			MutableHashSet.add(seen, start);
-			hits.push({
-				kind: match[1] === "BEGIN" ? "BEGIN" : "END",
-				key: match[2] ?? "",
-				style: matcher.style,
-				start,
-				end: start + match[0].length,
-				// An absent optional field must be OMITTED, not set to undefined.
-				...O.getSomesStruct({ attributes: O.fromUndefinedOr(attributes) }),
-			});
-		}
+	for (const [style, match, attributes] of dialect.markerMatches(text)) {
+		const start = O.getOrThrow(O.fromUndefinedOr(match.index));
+		// Two styles could in principle match one line; the first wins so a
+		// marker is never counted twice.
+		if (MutableHashSet.has(seen, start)) continue;
+		MutableHashSet.add(seen, start);
+		hits.push({
+			kind: match[1] === "BEGIN" ? "BEGIN" : "END",
+			key: A.getUnsafe(match, 2),
+			style,
+			start,
+			end: start + match[0].length,
+			attributes,
+		});
 	}
 	return A.sort(hits, Order.mapInput(Order.Number, (hit: MarkerHit) => hit.start));
 };

@@ -1,0 +1,221 @@
+{
+  "module": "github",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/github/GitHubError.ts",
+        "scratchpad/effected/github/GraphQL.ts",
+        "scratchpad/effected/github/internal/headers.ts",
+        "scratchpad/effected/github/internal/octokit.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/GitHubError.test.ts",
+        "scratchpad/test/github/GraphQL.coverage.test.ts",
+        "scratchpad/test/github/internal/headers.coverage.test.ts",
+        "scratchpad/test/github/transport.test.ts",
+        "scratchpad/test/github/internal/octokit.coverage.test.ts"
+      ],
+      "findings": [
+        "req-01",
+        "req-04",
+        "req-05",
+        "req-10",
+        "req-11",
+        "req-12",
+        "req-16"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/github/GitHubCommit.ts",
+        "scratchpad/effected/github/GitBranch.ts",
+        "scratchpad/effected/github/GitHubContent.ts",
+        "scratchpad/effected/github/GitHubRelease.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/GitHubCommit.coverage.test.ts",
+        "scratchpad/test/github/GitBranch.coverage.test.ts",
+        "scratchpad/test/github/GitHubContent.coverage.test.ts",
+        "scratchpad/test/github/GitHubRelease.coverage.test.ts"
+      ],
+      "findings": [
+        "req-06",
+        "req-08",
+        "req-09"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/github/PullRequestComment.ts",
+        "scratchpad/effected/github/WorkflowDispatch.ts",
+        "scratchpad/effected/github/GitTag.ts",
+        "scratchpad/effected/github/RepositoryVariable.ts",
+        "scratchpad/effected/github/RepositorySecret.ts",
+        "scratchpad/effected/github/Ruleset.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/PullRequestComment.test.ts",
+        "scratchpad/test/github/WorkflowDispatch.test.ts",
+        "scratchpad/test/github/GitTag.test.ts",
+        "scratchpad/test/github/RepositoryVariable.test.ts",
+        "scratchpad/test/github/RepositorySecret.test.ts",
+        "scratchpad/test/github/Ruleset.test.ts"
+      ],
+      "findings": [
+        "req-13",
+        "req-14"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/github/GitHubApp.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/GitHubApp.test.ts"
+      ],
+      "findings": [
+        "req-02"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/github/Attestation.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/Attestation.coverage.test.ts"
+      ],
+      "findings": [
+        "req-03"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/github/GitHubIssue.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/GitHubIssue.coverage.test.ts"
+      ],
+      "findings": [
+        "req-07"
+      ]
+    },
+    {
+      "id": "g7",
+      "files": [
+        "scratchpad/effected/github/Repo.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/Repo.property.test.ts",
+        "scratchpad/test/github/Repo.coverage.test.ts"
+      ],
+      "findings": [
+        "req-15"
+      ]
+    }
+  ],
+  "findings": {
+    "req-01": {
+      "file": "scratchpad/effected/github/GitHubError.ts",
+      "class": "type-safety",
+      "summary": "Remove array-to-record predicates from both throwable classifiers",
+      "fix": "Delete both ad-hoc isRecord predicates. Narrow with P.isObject before record reads, retaining correctly inferred record types and normal-object classification. Add array and ordinary-object regressions to both classifier suites; send law-17-forced array exclusion to central deviation recording. Do not restore the oracle casts."
+    },
+    "req-02": {
+      "file": "scratchpad/effected/github/GitHubApp.ts",
+      "class": "bug",
+      "summary": "Make blocking installation-token refresh interruptible without losing ownership",
+      "fix": "Retain serialization and atomic ownership transfer, but mask only ownership state updates/finalizer registration. Restore interruption around blocking revoke/sign/mint work and retain or finalize any acquired replacement before interruption can discard it. Add a blocked-refresh regression in GitHubApp.test.ts proving HTTP abort, requesting-fiber termination and correct token cleanup."
+    },
+    "req-03": {
+      "file": "scratchpad/effected/github/Attestation.ts",
+      "class": "bug",
+      "summary": "List all cursor-paginated attestations",
+      "fix": "Reuse existing pagination machinery to traverse cursor pages and decode collected entries through the owned schema. Preserve API-version headers, predicate filter, order and existing notFound/422 empty-result handling. Add a two-page Link/cursor regression in Attestation.coverage.test.ts; central recording receives the verified upstream-bug evidence."
+    },
+    "req-04": {
+      "file": "scratchpad/effected/github/GitHubError.ts",
+      "class": "bug",
+      "summary": "Reject invalid numeric HTTP statuses before constructing GitHubError",
+      "fix": "Use a schema-derived S.Int guard before retaining a status. Treat invalid statuses as unavailable, classify as transport failure and preserve the original cause. Add non-finite/fractional-status regressions in GitHubError.test.ts and supply the upstream-bug evidence centrally."
+    },
+    "req-05": {
+      "file": "scratchpad/effected/github/GitHubError.ts",
+      "class": "bug",
+      "summary": "Classify duplicate-resource prose before truncating the displayed reason",
+      "fix": "Retain the complete original message for classification with structured validation entries; sanitize only the emitted reason after selecting the error kind. Add a long-message duplicate-resource regression in GitHubError.test.ts and provide upstream-bug evidence for central recording."
+    },
+    "req-06": {
+      "file": "scratchpad/effected/github/GitHubCommit.ts",
+      "class": "perf",
+      "summary": "Restore bounded upstream commit-subject extraction",
+      "fix": "Restore the upstream bounded message.split('\\n', 1)[0] ?? '' getter and any upstream test lines rewritten for this change. Add empty/no-newline/multiline and long-body regression cases in GitHubCommit.coverage.test.ts. The inspected S3 diff adds test files rather than rewriting upstream tests, so no concrete upstream test-line restoration was identified. Do not retain full splitting as a recorded deviation."
+    },
+    "req-07": {
+      "file": "scratchpad/effected/github/GitHubIssue.ts",
+      "class": "perf",
+      "summary": "Restore upstream short-circuit comment marker search",
+      "fix": "Restore comments.find(comment => marker.matches(comment.body ?? '')) and the selected CommentRecord body fallback existing.body ?? '', preserving upstream short-circuit order. Restore any upstream test lines rewritten for this divergence; the inspected commit identifies none. Add an early-match/body-read regression in GitHubIssue.coverage.test.ts. Do not keep eager normalization as a recorded deviation."
+    },
+    "req-08": {
+      "file": "scratchpad/effected/github/GitHubContent.ts",
+      "class": "bug",
+      "summary": "Render absent/null content encodings without creating a defect",
+      "fix": "Keep the law-forced schema JSON codec, but make rendering total for the rejection path: undefined renders as 'undefined', null as 'null', and strings remain JSON-quoted via a nonthrowing codec. Preserve the typed rejected/422 result and add omitted/null/string encoding regressions in GitHubContent.coverage.test.ts. The faulty change itself is required; recording its forced provenance belongs to the central codemod. Do not restore JSON.stringify."
+    },
+    "req-09": {
+      "file": "scratchpad/effected/github/GitHubCommit.ts",
+      "class": "tsgo",
+      "summary": "Use succeedNone at five explicit-generic gate misses",
+      "fix": "Replace these five Effect.succeed(O.none<...>()) expressions with Effect.succeedNone, preserving surrounding catchIf, pagination completion and declared types. Keep existing notFound/completion tests in the owned GitBranch/GitHubCommit/GitHubContent/GitHubRelease coverage suites green; no docs-example sweep is assigned here."
+    },
+    "req-10": {
+      "file": "scratchpad/effected/github/GraphQL.ts",
+      "class": "law",
+      "summary": "Use identity for the GraphQL passthrough variable encoder",
+      "fix": "Import identity from effect/Function and use encodeVariables ?? identity. Preserve reference identity and both default/custom encoder behavior in GraphQL.coverage.test.ts."
+    },
+    "req-11": {
+      "file": "scratchpad/effected/github/internal/headers.ts",
+      "class": "bug",
+      "summary": "Bound retry-delay milliseconds to the error schema's integer domain",
+      "fix": "Bound both nonnegative millisecond calculations to Number.MAX_SAFE_INTEGER before returning them, ensuring the computed delay remains in S.Int and oversized values still exceed the retry ceiling. Add unsafe-integer/overflow/reset regressions in internal/headers.coverage.test.ts and a typed HTTP-failure regression in transport.test.ts; provide upstream-bug evidence centrally."
+    },
+    "req-12": {
+      "file": "scratchpad/effected/github/GraphQL.ts",
+      "class": "bug",
+      "summary": "Make GraphQL throwable string fallbacks nonthrowing",
+      "fix": "Protect both coercions with a nonthrowing conversion and stable fallback description; retain the original throwable as cause and preserve descriptions for successful coercions. Add both counterexamples to GraphQL.coverage.test.ts and send verified upstream-bug evidence for central recording."
+    },
+    "req-13": {
+      "file": "scratchpad/effected/github/PullRequestComment.ts",
+      "class": "effect-idiom",
+      "summary": "Decode fallible comment, workflow-run and tag projections in the typed channel",
+      "fix": "Decode projected values effectfully using the owning schemas and map failures to operation-specific GitHubError.decode, following PullRequest.project. Validate comments before marker matching, use effectful traversal for tags, and apply workflow status projection to both direct reads and discovery. Preserve valid defaults/order/results. Add malformed-response typed-channel regressions in PullRequestComment.test.ts, WorkflowDispatch.test.ts and GitTag.test.ts; supply EF-3 deviation details centrally."
+    },
+    "req-14": {
+      "file": "scratchpad/effected/github/RepositoryVariable.ts",
+      "class": "schema",
+      "summary": "Decode secret, variable, ruleset and workflow list return models",
+      "fix": "Decode the selected list fields through VariableInfo, SecretInfo, RulesetInfo and WorkflowInfo before returning, mapping failures to each operation's GitHubError.decode. Preserve ordering, field selection, optional-field representation and plain-object results. Cover repository/environment paths and malformed responses in the owning RepositoryVariable.test.ts, RepositorySecret.test.ts, Ruleset.test.ts and WorkflowDispatch.test.ts. Supply law-forced deviation sites centrally."
+    },
+    "req-15": {
+      "file": "scratchpad/effected/github/Repo.ts",
+      "class": "schema",
+      "summary": "Encode slash-free repository coordinate segments in RepoRef",
+      "fix": "Add slash-excluding schema checks to both nonempty fields while retaining every other accepted character. Use Arbitrary.schema(RepoRef) for formatter/parser fidelity and add explicit slash rejection in Repo.property.test.ts/Repo.coverage.test.ts. This is an evidenced model/formatter defect, not a standalone coverage request; central recording receives the acceptance-tightening cause."
+    },
+    "req-16": {
+      "file": "scratchpad/effected/github/internal/octokit.ts",
+      "class": "bug",
+      "summary": "Read top-level GraphQL response-error headers into the transport snapshot",
+      "fix": "Fall back to a non-array error.headers record when response.headers is absent or otherwise unusable, while preserving the existing explicit rejection of array response.headers without fallback. Reuse correctly typed object guards. Add an HTTP-200 GraphQL-error-shape snapshot regression in transport.test.ts and keep malformed nested-header behavior covered in internal/octokit.coverage.test.ts; supply upstream-bug evidence centrally."
+    }
+  }
+}
+

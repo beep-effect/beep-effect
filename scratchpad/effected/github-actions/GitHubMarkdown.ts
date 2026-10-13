@@ -270,8 +270,7 @@ const block = (node: Root["children"][number]): string => render(Root.make({ chi
  * @category formatting
  * @since 0.0.0
  */
-export class GitHubMarkdown {
-	private constructor() {}
+export abstract class GitHubMarkdown {
 
 	/**
 	 * A GFM table.

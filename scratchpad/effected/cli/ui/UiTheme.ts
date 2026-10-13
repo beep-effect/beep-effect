@@ -12,11 +12,27 @@ import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/cli/ui/UiTheme");
 
-class MissingUiThemeError extends S.TaggedError<MissingUiThemeError>($I`MissingUiThemeError`)(
+/**
+ * Reports a theme hook invoked without a mounted screen or UiProvider context.
+ *
+ * **Example** (Describe an absent theme context)
+ *
+ * ```ts
+ * import { MissingUiThemeError } from "@beep/scratchpad/effected/cli/ui/UiTheme"
+ * console.log(MissingUiThemeError.make({ message: "A screen context is required" })._tag)
+ * // MissingUiThemeError
+ * ```
+ *
+ * @internal
+ * @category errors
+ * @since 0.0.0
+ */
+export class MissingUiThemeError extends S.TaggedError<MissingUiThemeError>($I`MissingUiThemeError`)(
 	"MissingUiThemeError",
 	{
-		message: S.String,
+		message: S.String.annotate($I.annote("MissingUiThemeError.message", { description: "The missing screen or UiProvider context required by a theme hook." })),
 	},
+	$I.annote("MissingUiThemeError", { description: "A theme hook was invoked outside its mounted screen context." }),
 ) {}
 
 /**

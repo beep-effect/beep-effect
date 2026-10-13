@@ -399,9 +399,6 @@ const make = Effect.fn("make")(function* (
 				const roots: Array<string> = [];
 				const wildcardRoots: Array<string> = [];
 				const addRoot = (root: string, fromWildcard: boolean) => {
-					if (root === "") {
-						return;
-					}
 					if (!roots.includes(root)) {
 						roots.push(root);
 					}
@@ -413,12 +410,10 @@ const make = Effect.fn("make")(function* (
 					addRoot(literal, false);
 				}
 				for (const wildcard of set.wildcards) {
-					// A whole-pattern negation only filters; it contributes no root.
-					if (wildcard.negated) {
-						continue;
-					}
+					// GlobSet classifies whole-pattern negations as excludes, not wildcards.
 					const prefix = wildcard.enumerationPrefix;
-					addRoot(prefix === "" ? base : prefix === "/" ? "/" : prefix.slice(0, -1), true);
+					// Every include was rooted above, so its literal prefix contains at least "/".
+					addRoot(prefix === "/" ? "/" : prefix.slice(0, -1), true);
 				}
 				const under = (child: string, parent: string) =>
 					parent === "/" ? child !== "/" : child.startsWith(`${parent}/`);

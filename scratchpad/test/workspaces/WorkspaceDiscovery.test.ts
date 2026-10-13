@@ -1,3 +1,5 @@
+import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { assertExitFailure, assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import { identity } from "effect/Function";
@@ -911,4 +913,18 @@ describe("WorkspaceDiscovery — duplicate package names", () => {
 			);
 		});
 	});
+});
+
+
+describe("WorkspaceDiscoveryError encoding", () => {
+	it.effect("preserves the originating cause stack", () =>
+		Effect.gen(function* () {
+			const cause = new Error("original discovery failure");
+			const encoded = yield* S.encodeEffect(WorkspaceDiscoveryError)(WorkspaceDiscoveryError.make({
+				root: "/repo", path: "/repo/package.json", kind: "read", cause,
+			}));
+			if (!P.isObject(encoded.cause)) return assert.fail("expected an encoded Error cause");
+			assert.strictEqual(encoded.cause.stack, cause.stack);
+		}),
+	);
 });

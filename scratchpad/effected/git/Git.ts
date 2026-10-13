@@ -25,6 +25,10 @@ const $I = $ScratchpadId.create("effected/git/Git");
 /** git's own ceiling: a run that has not answered in 30s is not going to. */
 const GIT_TIMEOUT = Duration.seconds(30);
 const encodeJsonString = S.encodeEffect(S.fromJsonString(S.String));
+const NonNegativeInteger = S.Finite.check(S.isMultipleOf(1), S.isGreaterThanOrEqualTo(0)).annotate(
+  $I.annote("NonNegativeInteger", { description: "A finite non-negative integer, including values beyond the safe-integer range." }),
+);
+const isNonNegativeInteger = S.is(NonNegativeInteger);
 
 /**
  * The environment EVERY `Git` invocation is spawned with. A network-touching
@@ -1777,14 +1781,17 @@ const rejectOptionLikeRefs = (
 ): Effect.Effect<void, GitCommandError> => {
   const offending = refs.find((ref) => ref.startsWith("-"));
   if (offending !== undefined) {
-    return Effect.fail(
-      GitCommandError.make({
-        kind: "refused",
-        args: [offending],
-        cwd,
-        stderr: "",
-        detail: `refused a ref argument git would parse as an option: ${JSON.stringify(offending)}`,
-      }),
+    return encodeJsonString(offending).pipe(
+      Effect.orDie,
+      Effect.flatMap((encoded) => Effect.fail(
+        GitCommandError.make({
+          kind: "refused",
+          args: [offending],
+          cwd,
+          stderr: "",
+          detail: `refused a ref argument git would parse as an option: ${encoded}`,
+        }),
+      )),
     );
   }
   const offendingSensitive = sensitive.find((value) => value.startsWith("-"));
@@ -1818,7 +1825,7 @@ const rejectNonNaturalNumber = (
   label: string,
   value: number | undefined,
 ): Effect.Effect<void, GitCommandError> =>
-  value === undefined || (Number.isInteger(value) && value >= 0)
+  value === undefined || isNonNegativeInteger(value)
     ? Effect.void
     : Effect.fail(
       GitCommandError.make({
@@ -2629,10 +2636,10 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
       success: Effect.fnUntraced(function* (classified) {
         // Strip only git's terminating newline, never `trim`: the answer is an
         // identity, and a directory name may end in whitespace.
-        const answer = classified.output.replace(/\r?\n$/, "");
+        const answer = Str.replace(/\n$/, "")(classified.output);
         // git before 2.31 does not know --path-format: rev-parse echoes the flag
         // to stdout, answers the relative form on the next line, and exits 0.
-        if (answer.startsWith("-") || answer.includes("\n")) {
+        if (answer.startsWith("-")) {
           return yield* GitCommandError.make({
             kind: "failed",
             args: invocation.redactedArgs,

@@ -3,9 +3,12 @@
 import { assert, describe, it, layer } from "@effect/vitest";
 import { GlobPatternError, GlobPatternOptions } from "../../effected/glob/index.ts";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as HashSet from "effect/HashSet";
 import { DescendError } from "../../effected/walker/Descend.ts";
-import { GlobExpansionError, compileAndExpand } from "../../effected/walker/Expand.ts";
+import { CompileAndExpandOptions, GlobExpansionError, compileAndExpand } from "../../effected/walker/Expand.ts";
 import { platform } from "./fixtures.ts";
 
 /** The defaults, spelled out — what a caller passes to mean "no option refinements". */
@@ -43,7 +46,32 @@ const tree = {
 	"/proj/src/lib/util.ts": "",
 };
 
-layer(platform(tree), { timeout: "30 seconds" })("compileAndExpand, expansion", (it) => {
+layer(platform(tree), { timeout: "10 seconds" })("compileAndExpand, expansion", (it) => {
+	it.effect("the options schema and expansion accept the same positive finite integer depth caps", () =>
+		Effect.gen(function* () {
+			for (const { maxDepth, valid } of [
+				{ maxDepth: 1, valid: true },
+				{ maxDepth: 256, valid: true },
+				{ maxDepth: 2 ** 53, valid: true },
+				{ maxDepth: Number.MAX_VALUE, valid: true },
+				{ maxDepth: 0, valid: false },
+				{ maxDepth: -1, valid: false },
+				{ maxDepth: -2.5, valid: false },
+				{ maxDepth: 2.5, valid: false },
+				{ maxDepth: Number.NaN, valid: false },
+				{ maxDepth: Number.POSITIVE_INFINITY, valid: false },
+				{ maxDepth: Number.NEGATIVE_INFINITY, valid: false },
+			]) {
+				const options = { cwd: "/proj", glob: defaults, maxDepth };
+				const decoded = yield* Effect.option(S.decodeEffect(CompileAndExpandOptions)(options));
+				assert.strictEqual(O.isSome(decoded), valid);
+				const exit = yield* Effect.exit(compileAndExpand("readme.md", options));
+				assert.strictEqual(Exit.isSuccess(exit), valid);
+				if (Exit.isSuccess(exit)) assert.deepStrictEqual(exit.value, ["readme.md"]);
+			}
+		}),
+	);
+
 	it.effect("compiles a pattern source and expands it in one call", () =>
 		Effect.gen(function* () {
 			const files = yield* compileAndExpand("src/**/*.ts", { cwd: "/proj", glob: defaults });
@@ -95,7 +123,7 @@ layer(platform(tree), { timeout: "30 seconds" })("compileAndExpand, expansion", 
 	);
 });
 
-layer(platform(tree), { timeout: "30 seconds" })("compileAndExpand, compile failure", (it) => {
+layer(platform(tree), { timeout: "10 seconds" })("compileAndExpand, compile failure", (it) => {
 	it.effect("an uncompilable pattern fails as GlobExpansionError at the compile stage", () =>
 		Effect.gen(function* () {
 			const error = yield* Effect.flip(compileAndExpand("a".repeat(65_537), { cwd: "/proj", glob: defaults }));
@@ -143,7 +171,7 @@ const unreadableTree = {
 	"/proj/src/locked/b.ts": "",
 };
 
-layer(platform(unreadableTree, { unreadable: HashSet.make("/proj/src/locked") }), { timeout: "30 seconds" })(
+layer(platform(unreadableTree, { unreadable: HashSet.make("/proj/src/locked") }), { timeout: "10 seconds" })(
 	"compileAndExpand, descend failure",
 	(it) => {
 		it.effect("an unreadable directory fails as GlobExpansionError at the descend stage", () =>

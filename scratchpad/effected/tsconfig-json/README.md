@@ -170,6 +170,7 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **effect-first** — Lab uses Effect functions and helpers and adds pipeable static combinators while retaining upstream internal tracing behavior and existing data-first results (scratchpad/test/tsconfig-json/TsEnumCodec.test.ts:114; scratchpad/test/tsconfig-json/ResolvedTsconfig.test.ts:40; scratchpad/test/tsconfig-json/ResolvedTsconfig.test.ts:49; scratchpad/test/tsconfig-json/ResolvedTsconfig.test.ts:59; scratchpad/test/tsconfig-json/TsconfigLoader.test.ts:22; scratchpad/test/tsconfig-json/JsxConfig.test.ts:15).
 - **effect-imports** — Lab uses individual effect/* imports throughout source, tests and examples where upstream used the root Effect barrel (module suite scratchpad/test/tsconfig-json/**).
 - **identity-annotations** — Lab attaches canonical file-local identity annotations and field metadata to upstream unannotated schema and codec surfaces (module suite scratchpad/test/tsconfig-json/**).
+- **schema-first** — The lab uses a precise portable-options schema and public type that enforce flag and field constraints and strip nonportable codec keys, while upstream exposes Record<string, unknown> and enforces portability only through make (scratchpad/test/tsconfig-json/PortableTsconfig.test.ts:22; scratchpad/test/tsconfig-json/PortableTsconfig.test.ts:38; scratchpad/test/tsconfig-json/PortableTsconfig.test.ts:53; scratchpad/test/tsconfig-json/PortableTsconfig.property.test.ts:43).
 
 ### Dependency backlog
 

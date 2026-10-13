@@ -213,13 +213,13 @@ const buildLines = (text: string): ReadonlyArray<LintLine> => {
 	let offset = 0;
 	let number = 0;
 	while (offset <= text.length) {
-		const nl = text.indexOf("\n", offset);
-		const end = nl === -1 ? text.length : nl > offset && text[nl - 1] === "\r" ? nl - 1 : nl;
+		let end = offset;
+		while (end < text.length && text[end] !== "\r" && text[end] !== "\n") end++;
 		// The final empty segment after a trailing newline is not a line.
 		if (offset === text.length && number > 0) break;
 		lines.push({ text: text.slice(offset, end), offset, number });
-		if (nl === -1) break;
-		offset = nl + 1;
+		if (end === text.length) break;
+		offset = end + (text[end] === "\r" && text[end + 1] === "\n" ? 2 : 1);
 		number++;
 	}
 	return lines;
@@ -231,13 +231,8 @@ const buildLines = (text: string): ReadonlyArray<LintLine> => {
  * `parse-validity` rule reports what went wrong).
  */
 const buildContext = (text: string): LintContext => {
-	const tokens = Result.match(YamlTokens.tokenize(text), {
-		onSuccess: (value) => value,
-		onFailure: (error) => {
-			// The tokenize failure channel is reserved and never fires today.
-			throw error;
-		},
-	});
+	// Tokenization always succeeds; malformed syntax is composer diagnostics.
+	const tokens = Result.getOrThrow(YamlTokens.tokenize(text));
 	return {
 		text,
 		lines: buildLines(text),
@@ -314,7 +309,52 @@ export class StyleFloorTally extends S.Class<StyleFloorTally>($I`StyleFloorTally
 }, $I.annote("StyleFloorTally", { description: "An accumulated StyleFloor for a `(rule, dimension)` pair: the largest value the observed sources prove the limit is AT LEAST. Merging takes the maximum. Floors are informational — never resolved into config options (see StyleFloor)." })) {}
 
 /** Canonical histogram key for a vote value — type-discriminating (`"2"` ≠ `2`, `"true"` ≠ `true`). */
-const valueKey = (value: string | number | boolean): string => `${typeof value}:${String(value)}`;
+const valueKey = (value: string | number | boolean): string =>
+	`${P.isString(value) ? "string" : P.isNumber(value) ? "number" : "boolean"}:${value}`;
+
+// JSON tuples are injective even when unrestricted rule/dimension strings contain NUL.
+const encodeVoteKey = S.encodeResult(S.fromJsonString(S.Tuple([S.String, S.String, S.String])));
+const encodeFloorKey = S.encodeResult(S.fromJsonString(S.Tuple([S.String, S.String])));
+
+const accumulateVote = (votes: MutableHashMap.MutableHashMap<string, StyleVoteTally>, tally: StyleVoteTally): void => {
+	const key = Result.getOrThrow(encodeVoteKey([tally.rule, tally.dimension, valueKey(tally.value)]));
+	const seen = MutableHashMap.get(votes, key);
+	MutableHashMap.set(votes, key, O.isSome(seen)
+		? StyleVoteTally.make({ ...seen.value, count: seen.value.count + tally.count })
+		: tally);
+};
+
+const accumulateFloor = (floors: MutableHashMap.MutableHashMap<string, StyleFloorTally>, floor: StyleFloorTally): void => {
+	const key = Result.getOrThrow(encodeFloorKey([floor.rule, floor.dimension]));
+	const seen = MutableHashMap.get(floors, key);
+	MutableHashMap.set(floors, key, O.isSome(seen) && seen.value.value >= floor.value ? seen.value : floor);
+};
+
+const accumulateObservations = (
+	votes: MutableHashMap.MutableHashMap<string, StyleVoteTally>,
+	floors: MutableHashMap.MutableHashMap<string, StyleFloorTally>,
+	rule: string,
+	observations: Iterable<StyleObservation>,
+): void => {
+	for (const observation of observations) {
+		if (observation._tag === "StyleVote") {
+			accumulateVote(votes, StyleVoteTally.make({
+				rule, count: 1, dimension: observation.dimension, value: observation.value,
+				offset: observation.offset, length: observation.length, line: observation.line, character: observation.character,
+			}));
+		} else {
+			accumulateFloor(floors, StyleFloorTally.make({ rule, dimension: observation.dimension, value: observation.value }));
+		}
+	}
+};
+
+const materializeEvidence = (
+	votes: MutableHashMap.MutableHashMap<string, StyleVoteTally>,
+	floors: MutableHashMap.MutableHashMap<string, StyleFloorTally>,
+): StyleEvidence => StyleEvidence.make({
+	votes: A.sort(MutableHashMap.values(votes), byVoteOrder),
+	floors: A.sort(MutableHashMap.values(floors), byTallyOrder),
+});
 
 const byTallyOrder = Order.make<{ readonly rule: string; readonly dimension: string }>(
 	(a, b) => Order.String(a.rule, b.rule) || Order.String(a.dimension, b.dimension),
@@ -397,21 +437,12 @@ export class StyleEvidence extends S.Class<StyleEvidence>($I`StyleEvidence`)({
 	 */
 	static combine(a: StyleEvidence, b: StyleEvidence): StyleEvidence {
 		const votes = MutableHashMap.empty<string, StyleVoteTally>();
-		for (const tally of [...a.votes, ...b.votes]) {
-			const key = `${tally.rule}\0${tally.dimension}\0${valueKey(tally.value)}`;
-			const seen = O.getOrUndefined(MutableHashMap.get(votes, key));
-			MutableHashMap.set(votes, key, seen === undefined ? tally : StyleVoteTally.make({ ...seen, count: seen.count + tally.count }));
-		}
 		const floors = MutableHashMap.empty<string, StyleFloorTally>();
-		for (const floor of [...a.floors, ...b.floors]) {
-			const key = `${floor.rule}\0${floor.dimension}`;
-			const seen = O.getOrUndefined(MutableHashMap.get(floors, key));
-			MutableHashMap.set(floors, key, seen === undefined || floor.value > seen.value ? floor : seen);
-		}
-		return StyleEvidence.make({
-			votes: A.sort(MutableHashMap.values(votes), byVoteOrder),
-			floors: A.sort(MutableHashMap.values(floors), byTallyOrder),
-		});
+		for (const tally of a.votes) accumulateVote(votes, tally);
+		for (const tally of b.votes) accumulateVote(votes, tally);
+		for (const floor of a.floors) accumulateFloor(floors, floor);
+		for (const floor of b.floors) accumulateFloor(floors, floor);
+		return materializeEvidence(votes, floors);
 	}
 
 	/**
@@ -437,36 +468,10 @@ export class StyleEvidence extends S.Class<StyleEvidence>($I`StyleEvidence`)({
 	 * @since 0.0.0
 	 */
 	static fromObservations(rule: string, observations: Iterable<StyleObservation>): StyleEvidence {
-		let acc = StyleEvidence.empty;
-		for (const observation of observations) {
-			// Branch on the `_tag` discriminator, never `instanceof`: class
-			// instances are structurally assignable, so a custom rule may yield a
-			// PLAIN OBJECT shaped like a vote, and it must still tally as one.
-			acc = StyleEvidence.combine(
-				acc,
-				observation._tag === "StyleVote"
-					? StyleEvidence.make({
-							votes: [
-								StyleVoteTally.make({
-									rule,
-									count: 1,
-									dimension: observation.dimension,
-									value: observation.value,
-									offset: observation.offset,
-									length: observation.length,
-									line: observation.line,
-									character: observation.character,
-								}),
-							],
-							floors: [],
-						})
-					: StyleEvidence.make({
-							votes: [],
-							floors: [StyleFloorTally.make({ rule, dimension: observation.dimension, value: observation.value })],
-						}),
-			);
-		}
-		return acc;
+		const votes = MutableHashMap.empty<string, StyleVoteTally>();
+		const floors = MutableHashMap.empty<string, StyleFloorTally>();
+		accumulateObservations(votes, floors, rule, observations);
+		return materializeEvidence(votes, floors);
 	}
 }
 
@@ -554,7 +559,7 @@ export class YamlStyleConflictError extends S.TaggedError<YamlStyleConflictError
 			.map(
 				(conflict) =>
 					`Conflicting style for ${conflict.rule}.${conflict.dimension}: ${conflict.candidates
-						.map((c) => `${Result.getOrElse(encodeStyleCandidateJson(c.value), () => "<invalid style value>")} (${c.count}×, first at ${c.line + 1}:${c.character + 1})`)
+						.map((c) => `${Result.getOrThrow(encodeStyleCandidateJson(c.value))} (${c.count}×, first at ${c.line + 1}:${c.character + 1})`)
 						.join(" vs ")}`,
 			)
 			.join("; ");
@@ -584,26 +589,27 @@ const overlayConfig = (
 	base: YamlLintConfig,
 	picks: MutableHashMap.MutableHashMap<string, MutableHashMap.MutableHashMap<string, string | number | boolean>>,
 ): YamlLintConfig => {
-	const rules: Record<string, YamlLintRuleSetting> = { ...base.rules };
+	const rules = R.fromEntries(R.toEntries(base.rules));
 	for (const [ruleId, dims] of picks) {
-		const entry = rules[ruleId];
+		const entry = O.getOrUndefined(R.get(rules, ruleId));
 		if (entry === "off") continue;
-		const merged: Record<string, unknown> = P.isObjectOrArray(entry) ? { ...entry } : {};
-		if (entry === "warning") merged.severity = "warning";
-		for (const [dimension, value] of dims) merged[dimension] = value;
-		rules[ruleId] = merged;
+		const merged: Record<string, unknown> = R.fromEntries(P.isObjectOrArray(entry) ? R.toEntries(entry) : []);
+		if (entry === "warning") R.assignProperty(merged, "severity", "warning");
+		for (const [dimension, value] of dims) R.assignProperty(merged, dimension, value);
+		R.assignProperty(rules, ruleId, merged);
 	}
 	return YamlLintConfig.make({ rules });
 };
 
 /** The observation loop shared by `observe` and the infer conveniences. */
 const observeContext = (ctx: LintContext, rules: ReadonlyArray<YamlRule>): StyleEvidence => {
-	let evidence = StyleEvidence.empty;
+	const votes = MutableHashMap.empty<string, StyleVoteTally>();
+	const floors = MutableHashMap.empty<string, StyleFloorTally>();
 	for (const rule of rules) {
 		if (rule.infer === undefined) continue;
-		evidence = StyleEvidence.combine(evidence, StyleEvidence.fromObservations(rule.id, rule.infer(ctx)));
+		accumulateObservations(votes, floors, rule.id, rule.infer(ctx));
 	}
-	return evidence;
+	return materializeEvidence(votes, floors);
 };
 
 const resolveStrictEvidence = (
@@ -624,8 +630,8 @@ const resolveStrictEvidence = (
 				);
 				continue;
 			}
-			const only = tallies[0];
-			if (only === undefined) continue;
+			// groupVotes creates each group by inserting its first tally.
+			const only = A.getUnsafe(tallies, 0);
 			const dimPicks = O.getOrUndefined(MutableHashMap.get(picks, ruleId)) ?? MutableHashMap.empty<string, string | number | boolean>();
 			MutableHashMap.set(dimPicks, dimension, only.value);
 			MutableHashMap.set(picks, ruleId, dimPicks);
@@ -641,8 +647,7 @@ const resolveLenientEvidence = (evidence: StyleEvidence, base: YamlLintConfig): 
 		for (const [dimension, tallies] of dims) {
 			// Dominant = plurality: highest count wins; a tie breaks to the first
 			// tally in canonical (value-key) order, so the pick is deterministic.
-			let dominant = tallies[0];
-			if (dominant === undefined) continue;
+			let dominant = A.getUnsafe(tallies, 0);
 			for (const tally of tallies) {
 				if (tally.count > dominant.count) dominant = tally;
 			}
@@ -659,23 +664,41 @@ const resolveLenientEvidence = (evidence: StyleEvidence, base: YamlLintConfig): 
  * diagnostics that config still produces on the observed text ("here is your
  * config, and the places that do not match it").
  *
+ * **Example** (Validate a plain inference report)
+ *
+ * ```ts
+ * import { YamlLint, YamlLintInference } from "@beep/scratchpad/effected/yaml/YamlLint";
+ * import * as S from "effect/Schema";
+ *
+ * const report = YamlLint.inferLenient("a: 1\n", YamlLint.builtins);
+ * console.log(S.is(YamlLintInference)(report)); // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const YamlLintInference = S.Struct({
+	config: YamlLintConfig.annotateKey({ description: "Lint configuration inferred from observed source style and the base settings" }),
+	residual: S.Array(YamlLintDiagnostic).annotateKey({ description: "Diagnostics that remain when the inferred configuration is applied to the observed text" }),
+}).pipe($I.annoteSchema("YamlLintInference", { description: "Plain lenient inference report containing inferred configuration and remaining diagnostics" }));
+
+/**
+ * The plain lenient inference report derived from {@link YamlLintInference}.
+ *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface YamlLintInference {
-	readonly config: YamlLintConfig;
-	readonly residual: ReadonlyArray<YamlLintDiagnostic>;
-}
+export type YamlLintInference = typeof YamlLintInference.Type;
 
 // ── Facade ──────────────────────────────────────────────────────────────────
 
 /** Resolve the effective severity of a configured entry. */
-const resolveSeverity = (entry: YamlLintRuleSetting): YamlLintSeverity => {
+const resolveSeverity = (entry: Exclude<YamlLintRuleSetting, "off">): YamlLintSeverity => {
 	if (entry === "error" || entry === "warning") return entry;
-	if (P.isObjectOrArray(entry) && (entry.severity === "error" || entry.severity === "warning")) {
-		return entry.severity;
-	}
+	const severity = O.getOrUndefined(R.get(entry, "severity"));
+	if (severity === "error" || severity === "warning") return severity;
 	return "error";
 };
 
@@ -695,7 +718,7 @@ const runRules = (
 	const out: Array<YamlLintDiagnostic> = [];
 	for (const rule of rules) {
 		const alwaysOn = rule.id === "parse-validity";
-		const entry = alwaysOn ? "error" : config.rules[rule.id];
+		const entry = alwaysOn ? "error" : O.getOrUndefined(R.get(config.rules, rule.id));
 		if (entry === undefined || entry === "off") continue;
 		const severity = resolveSeverity(entry);
 		const options = P.isObjectOrArray(entry) ? entry : undefined;

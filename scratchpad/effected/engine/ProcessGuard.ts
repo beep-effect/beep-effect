@@ -61,10 +61,13 @@ export interface ProcessGuardHost {
  * @since 0.0.0
  */
 export const ProcessGuardPolicy = S.Struct({
-	onUncaught: UncaughtMode.annotate({ description: "The uncaught-exception exit policy." }),
-	onRejection: S.optional(RejectionMode).annotate({ description: "The rejection policy; defaults to exit." }),
+	onUncaught: UncaughtMode.annotateKey({ description: "The uncaught-exception exit policy." }),
+	onRejection: S.optional(RejectionMode).annotateKey({ description: "The rejection policy; defaults to exit." }),
 }).annotate({
+	schemaId: Symbol.for("@beep/scratchpad/effected/engine/ProcessGuard/ProcessGuardPolicy"),
 	identifier: "@beep/scratchpad/effected/engine/ProcessGuard/ProcessGuardPolicy",
+	iri: "https://ns.beep.sh/scratchpad/effected/engine/ProcessGuard/ProcessGuardPolicy",
+	curie: "beep:scratchpad/effected/engine/ProcessGuard/ProcessGuardPolicy",
 	title: "ProcessGuardPolicy",
 	description: "When a stray exception or rejection ends the process.",
 });
@@ -94,10 +97,13 @@ export type ProcessGuardPolicy = typeof ProcessGuardPolicy.Type;
  * @since 0.0.0
  */
 export const ProcessGuardInjection = S.Struct({
-	at: InjectAt.annotate({ description: "Before load or after the first markConnected call." }),
-	kind: InjectKind.annotate({ description: "The host event to raise." }),
+	at: InjectAt.annotateKey({ description: "Before load or after the first markConnected call." }),
+	kind: InjectKind.annotateKey({ description: "The host event to raise." }),
 }).annotate({
+	schemaId: Symbol.for("@beep/scratchpad/effected/engine/ProcessGuard/ProcessGuardInjection"),
 	identifier: "@beep/scratchpad/effected/engine/ProcessGuard/ProcessGuardInjection",
+	iri: "https://ns.beep.sh/scratchpad/effected/engine/ProcessGuard/ProcessGuardInjection",
+	curie: "beep:scratchpad/effected/engine/ProcessGuard/ProcessGuardInjection",
 	title: "ProcessGuardInjection",
 	description: "Which crash event to inject and when to raise it.",
 });
@@ -216,7 +222,11 @@ class InjectedCrash extends S.TaggedError<InjectedCrash>()("InjectedCrash", {
 	kind: InjectKind,
 	message: S.String,
 }, {
+	schemaId: Symbol.for("@beep/scratchpad/effected/engine/ProcessGuard/InjectedCrash"),
 	identifier: "@beep/scratchpad/effected/engine/ProcessGuard/InjectedCrash",
+	iri: "https://ns.beep.sh/scratchpad/effected/engine/ProcessGuard/InjectedCrash",
+	curie: "beep:scratchpad/effected/engine/ProcessGuard/InjectedCrash",
+	title: "InjectedCrash",
 	description: "A test-only crash delivered through the host event listeners.",
 }) {}
 
@@ -291,8 +301,7 @@ const fallbackFormat = (error: unknown): string =>
  * @category utilities
  * @since 0.0.0
  */
-export class ProcessGuard {
-	private constructor() {}
+export abstract class ProcessGuard {
 
 	/**
 	 * Parse a test-only crash-injection setting into {@link ProcessGuardOptions.injectCrash}: `<at>:<kind>`, where `at`
@@ -407,17 +416,16 @@ export class ProcessGuard {
 				},
 			};
 
-			const startupFailed = (error: unknown): void => {
+			const startupFailed = (error: unknown): never => {
 				host.stderr.write(`${label}: startup failed: ${describe(error)}\n`);
-				host.exit(1);
+				return host.exit(1);
 			};
 			const start = (): Promise<void> => {
 				let loading: Promise<unknown>;
 				try {
 					loading = Promise.resolve(options.load(control));
 				} catch (error) {
-					startupFailed(error);
-					return Promise.resolve();
+					return Promise.resolve(startupFailed(error));
 				}
 				return loading.then(() => undefined, startupFailed);
 			};

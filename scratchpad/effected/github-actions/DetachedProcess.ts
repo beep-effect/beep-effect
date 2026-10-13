@@ -557,8 +557,7 @@ const dies = unstubbed("DetachedProcess.makeTestOps");
  * @category processes
  * @since 0.0.0
  */
-export class DetachedProcess {
-	private constructor() {}
+export abstract class DetachedProcess {
 
 	/**
 	 * Start a detached child with its output routed to a log file.

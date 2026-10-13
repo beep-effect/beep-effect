@@ -32,8 +32,7 @@ import { ConfigDependencyHooks } from "./ConfigDependencyHooks.ts";
 import { importerVersionsOf } from "./internal/importerVersions.ts";
 import { findLayerRoot } from "./internal/layerRoot.ts";
 import { manifestPatternsOf, pnpmPatternsOf } from "./internal/patterns.ts";
-import type { ImporterVersions } from "./WorkspaceCatalogs.ts";
-import { CatalogSet, WorkspaceCatalogs, injectFromDocument } from "./WorkspaceCatalogs.ts";
+import { CatalogSet, ImporterVersions, WorkspaceCatalogs, injectFromDocument } from "./WorkspaceCatalogs.ts";
 import type { WorkspaceDiscoveryFailure } from "./WorkspaceDiscovery.ts";
 import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
@@ -97,11 +96,20 @@ export type WorkspaceSnapshotWorktreeFailure = WorkspaceDiscoveryFailure | Catal
 /**
  * Configures root resolution and fallback catalogs for the {@link WorkspaceSnapshots} layer.
  *
+ * **Example** (Read optional snapshot inputs)
+ *
+ * ```ts
+ * import { WorkspaceSnapshotsOptions } from "@beep/scratchpad/effected/workspaces/WorkspaceSnapshots";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(WorkspaceSnapshotsOptions)({})) // true
+ * ```
+ *
  * @public
  * @category configuration
  * @since 0.0.0
  */
-export interface WorkspaceSnapshotsOptions {
+export const WorkspaceSnapshotsOptions = S.Struct({
 	/**
 	 * The directory `at(ref)` resolves the workspace root from.
 	 *
@@ -111,7 +119,7 @@ export interface WorkspaceSnapshotsOptions {
 	 *
 	 * @since 0.0.0
 	 */
-	readonly cwd?: string;
+	cwd: S.optionalKey(S.String).annotateKey($I.annote("cwd", { description: "Starting directory, defaulted lazily on use." })),
 	/**
 	 * A ceiling for the root ascent from `cwd`, passed straight through to the
 	 * `stopAt` of {@link WorkspaceRoot}'s `find`.
@@ -129,7 +137,7 @@ export interface WorkspaceSnapshotsOptions {
 	 *
 	 * @since 0.0.0
 	 */
-	readonly stopAt?: string | undefined;
+	stopAt: S.optional(S.String).annotateKey($I.annote("stopAt", { description: "Inclusive ceiling; absent or undefined leaves ascent unbounded." })),
 	/**
 	 * Catalogs every snapshot this service produces carries as its
 	 * `seededCatalogs` — consulted only where the snapshot's own catalogs cannot
@@ -160,8 +168,14 @@ export interface WorkspaceSnapshotsOptions {
 	 *
 	 * @since 0.0.0
 	 */
-	readonly seedCatalogs?: CatalogSet;
-}
+	seedCatalogs: S.optionalKey(CatalogSet).annotateKey($I.annote("seedCatalogs", { description: "Fallback catalogs consulted after the snapshot own catalogs." })),
+}).annotate($I.annote("WorkspaceSnapshotsOptions", { description: "Plain-object snapshot root and seed options with defaults applied on use." }));
+
+/** The plain-object options described by {@link WorkspaceSnapshotsOptions}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type WorkspaceSnapshotsOptions = typeof WorkspaceSnapshotsOptions.Type;
 
 /**
  * Defines the git-ref and live-worktree reads a {@link WorkspaceSnapshots} service must provide.
@@ -201,11 +215,8 @@ export interface WorkspaceSnapshotsShape {
  * found each pnpmfile is machine-local provenance that does not belong on a
  * serializable value.
  */
-const hookVersionsOf = (replays: Readonly<Record<string, HookReplay>>): Record<string, string> => {
-	const versions: Record<string, string> = {};
-	for (const [name, replay] of R.toEntries(replays)) versions[name] = replay.version;
-	return versions;
-};
+const hookVersionsOf = (replays: Readonly<Record<string, HookReplay>>): Record<string, string> =>
+	R.fromEntries(A.map(R.toEntries(replays), ([name, replay]) => [name, replay.version]));
 
 /** Whether `value` is a non-null, non-array object. */
 const isObject = S.is(JsonObject);
@@ -248,16 +259,17 @@ const snapshotOf = (content: O.Option<string>, relativePath: string): O.Option<P
 };
 
 /**
- * bun's inline catalogs from the root manifest's `workspaces.catalog` /
- * `.catalogs`, read **tolerantly** — at-ref content is not ours to fix, so a
+ * bun's inline catalogs from the root manifest's top-level and
+ * `workspaces.catalog` / `.catalogs` blocks, read **tolerantly** — at-ref content is not ours to fix, so a
  * malformed block degrades rather than failing the snapshot. (The live
  * {@link WorkspaceCatalogs} reader hard-fails the same shape; the difference is
  * deliberate.) Normalization is the shared {@link CatalogSet.fromBunBlocks}.
  */
 const bunInlineCatalogs = (manifest: Record<string, unknown>): CatalogSet => {
+	const topLevel = CatalogSet.fromBunBlocks({ catalog: manifest.catalog, catalogs: manifest.catalogs });
 	const workspaces = manifest.workspaces;
-	if (!isObject(workspaces)) return CatalogSet.empty();
-	return CatalogSet.fromBunBlocks({ catalog: workspaces.catalog, catalogs: workspaces.catalogs });
+	if (!isObject(workspaces)) return topLevel;
+	return CatalogSet.merge(topLevel, CatalogSet.fromBunBlocks({ catalog: workspaces.catalog, catalogs: workspaces.catalogs }));
 };
 
 /**
@@ -271,10 +283,11 @@ const bunInlineCatalogs = (manifest: Record<string, unknown>): CatalogSet => {
  * if the file changed between reads, and would double the git object reads
  * `at(ref)` performs per snapshot.
  */
-interface LockfileRecord {
-	readonly catalogs: CatalogSet;
-	readonly importerVersions: ImporterVersions;
-}
+const LockfileRecord = S.Struct({
+	catalogs: CatalogSet.annotateKey($I.annote("catalogs", { description: "Catalogs recorded by the lockfile." })),
+	importerVersions: ImporterVersions.annotateKey($I.annote("importerVersions", { description: "Resolved importer versions from the same lockfile parse." })),
+}).annotate($I.annote("LockfileRecord", { description: "The plain-object contribution of a single lockfile parse." }));
+type LockfileRecord = typeof LockfileRecord.Type;
 
 /** The contribution of an absent or malformed lockfile: nothing, on both counts. */
 const EMPTY_LOCKFILE_RECORD: LockfileRecord = { catalogs: CatalogSet.empty(), importerVersions: {} };
@@ -467,7 +480,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 				// `bun.lock` at the ref still has catalogs, and gating them on the
 				// lockfile would make `at(ref)` and `worktree()` (which reads inline
 				// via `fromManifestWorkspaces` regardless of any lockfile) disagree. `bunInlineCatalogs` is
-				// tolerant: an npm/yarn array-form `workspaces` yields empty. The
+				// tolerant: an array-form `workspaces` contributes only top-level catalogs. The
 				// lockfile half degrades the absent `bun.lock` to empty on `Option.none`.
 				inline = bunInlineCatalogs(rootManifest);
 				// Config dependencies are a pnpm feature; there are none on this path.

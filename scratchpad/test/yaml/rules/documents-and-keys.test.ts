@@ -3,8 +3,19 @@
 // harness (which carries the mutation proofs).
 
 import { builtin, testRule } from "./harness.ts";
+import { assert, describe, it } from "@effect/vitest";
+import * as Result from "effect/Result";
+import * as YAML from "yaml";
+import { Yaml, YamlLint, YamlLintConfig } from "../../../effected/yaml/index.ts";
 
 testRule(builtin("document-start"), [
+	{
+		name: "lone CR lines agree with the marker's token position and removal span",
+		input: "\r---\na: 1\n",
+		setting: { present: false },
+		expected: [{ line: 1, character: 0, messageIncludes: "Forbidden" }],
+		fixed: "\ra: 1\n",
+	},
 	{
 		name: "a marked stream passes the default (require) posture",
 		input: "---\na: 1\n",
@@ -59,6 +70,58 @@ testRule(builtin("document-start"), [
 		expected: [],
 	},
 ]);
+
+describe("document-start semantic fidelity", () => {
+	it("consecutive start markers preserve the empty first document, including a header comment", () => {
+		const rule = builtin("document-start");
+		const config = YamlLintConfig.make({ rules: { "document-start": { present: false } } });
+		for (const header of ["", "# header\n"]) {
+			const input = `${header}---\n---\na: 1\n`;
+			const diagnostics = YamlLint.run(input, [rule], config);
+			assert.strictEqual(diagnostics.length, 1);
+			assert.include(diagnostics[0]?.message ?? "", "Forbidden");
+			assert.isUndefined(diagnostics[0]?.fix);
+			const fixed = Result.getOrThrow(YamlLint.fix(input, [rule], config));
+			assert.strictEqual(fixed, input);
+			assert.deepStrictEqual(Result.getOrThrow(Yaml.parseAllResult(fixed)), [null, { a: 1 }]);
+			const before = YAML.parseAllDocuments(input);
+			const after = YAML.parseAllDocuments(fixed);
+			assert.strictEqual(after.length, 2);
+			assert.deepStrictEqual(before.map((document) => document.errors), [[], []]);
+			assert.deepStrictEqual(after.map((document) => document.errors), [[], []]);
+			assert.deepStrictEqual(after.map((document) => document.toJS()), [null, { a: 1 }]);
+			assert.deepStrictEqual(after.map((document) => document.toJS()), before.map((document) => document.toJS()));
+		}
+	});
+
+	it("a sole empty document keeps its start marker while an explicit end preserves it independently", () => {
+		const rule = builtin("document-start");
+		const config = YamlLintConfig.make({ rules: { "document-start": { present: false } } });
+		for (const input of ["---\n", "# header\n---\n# trailing\n"]) {
+			assert.isUndefined(YamlLint.run(input, [rule], config)[0]?.fix);
+			assert.strictEqual(Result.getOrThrow(YamlLint.fix(input, [rule], config)), input);
+		}
+		const input = "---\n...\n---\na: 1\n";
+		const fixed = Result.getOrThrow(YamlLint.fix(input, [rule], config));
+		assert.strictEqual(fixed, "...\n---\na: 1\n");
+		assert.deepStrictEqual(YAML.parseAllDocuments(fixed).map((document) => document.toJS()), [null, { a: 1 }]);
+	});
+
+	it("insertion after the stream BOM preserves independent-parser mapping keys and values", () => {
+		const input = "\uFEFFa: 1\n";
+		const rule = builtin("document-start");
+		const config = YamlLintConfig.make({ rules: { "document-start": "error" } });
+		assert.strictEqual(YamlLint.run(input, [rule], config)[0]?.fix?.offset, 1);
+		const fixed = Result.getOrThrow(YamlLint.fix(input, [rule], config));
+		assert.strictEqual(fixed, "\uFEFF---\na: 1\n");
+		const before = YAML.parseDocument(input);
+		const after = YAML.parseDocument(fixed);
+		assert.deepStrictEqual(before.errors, []);
+		assert.deepStrictEqual(after.errors, []);
+		assert.deepStrictEqual(before.toJS(), { a: 1 });
+		assert.deepStrictEqual(after.toJS(), before.toJS());
+	});
+});
 
 testRule(builtin("document-end"), [
 	{

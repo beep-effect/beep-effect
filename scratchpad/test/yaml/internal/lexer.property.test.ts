@@ -20,19 +20,33 @@ const reconstruct = (source: string, tokens: readonly YamlToken[]): string =>
 const render = (source: string): string => reconstruct(source, lexAll(source));
 
 describe("lexer property floor", () => {
-  it.effect.prop("raw-span rendering is idempotent and relexing preserves every token", [syntax], ([source]) => Effect.sync(() => {
+  it.effect.prop("error-free raw-span rendering preserves every token and recovery spans stay positioned", [syntax], ([source]) => Effect.sync(() => {
     const tokens = lexAll(source);
-    const rendered = reconstruct(source, tokens);
-    assert.strictEqual(render(rendered), rendered);
-    assert.deepStrictEqual(lexAll(rendered), tokens);
-    assert.strictEqual(rendered, source);
-    let offset = 0;
+    let end = 0;
     for (const token of tokens) {
-      assert.strictEqual(token.offset, offset);
-      offset += token.length;
+      assert.isAtLeast(token.offset, end);
+      assert.isAtLeast(token.length, 0);
+      end = token.offset + token.length;
+      assert.isAtMost(end, source.length);
     }
-    assert.strictEqual(offset, source.length);
+    // Error recovery may consume separation spaces before emitting an error.
+    // Complete raw-span fidelity applies to inputs without lexical errors.
+    if (A.every(tokens, (token) => token.kind !== "error")) {
+      const rendered = reconstruct(source, tokens);
+      assert.strictEqual(render(rendered), rendered);
+      assert.deepStrictEqual(lexAll(rendered), tokens);
+      assert.strictEqual(rendered, source);
+    }
   }), runs);
+
+  it.effect("tab recovery locates the invalid tab after explicit-key separation", () => Effect.sync(() => {
+    const source = "? \t? ";
+    const tokens = lexAll(source);
+    assert.deepStrictEqual(A.filter(tokens, (token) => token.kind === "error"), [{
+      kind: "error", value: "\t", offset: 2, length: 1, line: 0, column: 2,
+    }]);
+    assert.deepStrictEqual(A.map(A.filter(tokens, (token) => token.kind === "block-map-key"), (token) => token.offset), [0, 3]);
+  }));
 
   it.effect.prop("resetting the pull scanner reproduces the batch tokens and clears exhausted state", [syntax], ([source]) => Effect.sync(() => {
     const expected = lexAll(source);

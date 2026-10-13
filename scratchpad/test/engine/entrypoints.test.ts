@@ -2,9 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
-import * as A from "effect/Array";
-import * as Result from "effect/Result";
-import * as TS from "typescript";
+import * as HashSet from "effect/HashSet";
 
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../../effected/engine");
 const BUILT = resolve(SRC, "dist", "dev", "pkg");
@@ -14,49 +12,51 @@ const BUILT = resolve(SRC, "dist", "dev", "pkg");
  * `export type` declarations are erased at build time and skipped, a dynamic
  * `import()` is not a static import, and a bare package counts.
  */
-const runtimeImportsOf = (file: string): ReadonlyArray<string> => {
-	const source = TS.createSourceFile(file, readFileSync(file, "utf8"), TS.ScriptTarget.Latest);
-	return A.filterMap(source.statements, (statement) => {
-		if (
-			TS.isImportDeclaration(statement) &&
-			statement.importClause?.isTypeOnly !== true &&
-			TS.isStringLiteral(statement.moduleSpecifier)
-		) {
-			return Result.succeed(statement.moduleSpecifier.text);
-		}
-		if (
-			TS.isExportDeclaration(statement) &&
-			statement.isTypeOnly === false &&
-			statement.moduleSpecifier !== undefined &&
-			TS.isStringLiteral(statement.moduleSpecifier)
-		) {
-			return Result.succeed(statement.moduleSpecifier.text);
-		}
-		return Result.failVoid;
-	});
-};
+const runtimeImportsIn = (source: string): ReadonlyArray<string> =>
+	[...source.matchAll(/^\s*(import|export)\s+(type\s+)?(?:\{[^}]*\}|\*(?:\s+as\s+[\w$]+)?|[\w$]+)\s+from\s+"([^"]+)"/gm)]
+		.filter((match) => match[2] === undefined)
+		.map((match) => match[3] ?? "");
+
+const runtimeImportsOf = (file: string): ReadonlyArray<string> => runtimeImportsIn(readFileSync(file, "utf8"));
 
 /** Every module reachable from an entrypoint through static runtime imports, with the bare packages it loads. */
 const runtimeGraphOf = (entry: string, extension: ".ts" | ".js") => {
-	const modules = new Set<string>();
-	const packages = new Set<string>();
+	let modules = HashSet.empty<string>();
+	let packages = HashSet.empty<string>();
 	const queue = [entry];
 	while (queue.length > 0) {
 		const file = queue.pop();
-		if (file === undefined || modules.has(file)) continue;
-		modules.add(file);
+		if (file === undefined || HashSet.has(modules, file)) continue;
+		modules = HashSet.add(modules, file);
 		for (const specifier of runtimeImportsOf(file)) {
 			if (specifier.startsWith(".")) queue.push(resolve(dirname(file), specifier.replace(/\.js$/, extension)));
-			else packages.add(specifier);
+			else packages = HashSet.add(packages, specifier);
 		}
 	}
 	return { modules, packages };
 };
 
-const relative = (root: string, modules: ReadonlySet<string>) =>
+const relative = (root: string, modules: HashSet.HashSet<string>) =>
 	[...modules].map((file) => file.slice(root.length + 1)).sort();
 
 describe("./guard reaches only its local modules and effect/* before its guards listen", () => {
+	it("ignores from clauses inside exported class documentation", () => {
+		assert.deepStrictEqual(runtimeImportsIn(`export abstract class Guard {
+  /** Example: import { Guard } from "unexpected-package" */
+  static readonly label = "guard";
+}`), []);
+	});
+
+	it("walks multiline runtime clauses and skips type-only clauses", () => {
+		assert.deepStrictEqual(runtimeImportsIn(`import * as S from "effect/Schema";
+import type { Host } from "type-only";
+export type { Policy } from "type-export";
+export {
+  Guard,
+  type Host,
+} from "./Guard.ts";`), ["effect/Schema", "./Guard.ts"]);
+	});
+
 	it("./guard statically reaches only ProcessGuard, and only effect/* packages", () => {
 		const { modules, packages } = runtimeGraphOf(resolve(SRC, "guard.ts"), ".ts");
 		assert.deepStrictEqual(relative(SRC, modules), ["ProcessGuard.ts", "guard.ts"]);

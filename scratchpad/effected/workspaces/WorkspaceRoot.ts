@@ -14,6 +14,8 @@ import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as P from "effect/Predicate";
 
@@ -49,11 +51,22 @@ const PACKAGE_JSON_MARKER_PROSE = 'package.json with a "workspaces" field';
  * Both bounds are passed straight through to `@effected/walker`'s
  * `Walker.ascend`; this package does not re-decide either.
  *
+ * **Example** (Read optional ascent bounds)
+ *
+ * ```ts
+ * import { FindWorkspaceRootOptions } from "@beep/scratchpad/effected/workspaces/WorkspaceRoot";
+ * import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+import { identity } from "effect/Function";
+ *
+ * console.log(S.is(FindWorkspaceRootOptions)({ stopAt: "/repo", maxDepth: 4 })) // true
+ * ```
+ *
  * @public
  * @category configuration
  * @since 0.0.0
  */
-export interface FindWorkspaceRootOptions {
+export const FindWorkspaceRootOptions = S.Struct({
 	/**
 	 * A ceiling directory. The ascent stops after probing it, so an unmarked
 	 * `stopAt` fails typed as {@link WorkspaceRootNotFoundError} rather than
@@ -67,7 +80,7 @@ export interface FindWorkspaceRootOptions {
 	 *
 	 * @since 0.0.0
 	 */
-	readonly stopAt?: string;
+	stopAt: S.optionalKey(S.String).annotateKey($I.annote("stopAt", { description: "Inclusive ceiling for the root ascent." })),
 	/**
 	 * Hard cap on the number of directories probed.
 	 *
@@ -80,8 +93,17 @@ export interface FindWorkspaceRootOptions {
 	 *
 	 * @since 0.0.0
 	 */
-	readonly maxDepth?: number;
-}
+	maxDepth: S.optionalKey(S.declare(P.isNumber).annotate($I.annote("ProbeDepth", {
+		description: "The existing numeric probe cap, validated by the walker on use.",
+		toCodecArbitrary: () => S.link<number>()(S.Finite, SchemaTransformation.transform({ decode: identity, encode: identity })),
+	}))).annotateKey($I.annote("maxDepth", { description: "Probe depth cap, validated by the walker on use." })),
+}).annotate($I.annote("FindWorkspaceRootOptions", { description: "Plain-object ascent bounds with walker defaults applied on use." }));
+
+/** The plain-object options described by {@link FindWorkspaceRootOptions}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type FindWorkspaceRootOptions = typeof FindWorkspaceRootOptions.Type;
 
 /**
  * Raised when no workspace root can be found by ascending from a directory.

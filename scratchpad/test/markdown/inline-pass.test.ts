@@ -1,4 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as HashMap from "effect/HashMap";
 import { parseBlocks } from "../../effected/markdown/internal/blockParser.ts";
 import { GuardExceeded } from "../../effected/markdown/internal/carriers.ts";
 import { decodeEntity } from "../../effected/markdown/internal/entities.ts";
@@ -26,48 +28,48 @@ describe("entities", () => {
 		it("holds every semicolon-terminated HTML5 name", () => {
 			// 2125 of the 2231 WHATWG names; the rest are the legacy forms
 			// without a semicolon, which CommonMark's grammar cannot match.
-			assert.strictEqual(ENTITY_MAP.size, 2125);
+			assert.strictEqual(HashMap.size(ENTITY_MAP), 2125);
 		});
 
 		it("decodes the multi-codepoint names", () => {
-			assert.strictEqual(ENTITY_MAP.get("nvap"), "≍⃒");
+			assertSome(HashMap.get(ENTITY_MAP, "nvap"), "≍⃒");
 		});
 
 		it("decodes names whose value is itself a control character", () => {
-			assert.strictEqual(ENTITY_MAP.get("NewLine"), "\n");
-			assert.strictEqual(ENTITY_MAP.get("Tab"), "\t");
+			assertSome(HashMap.get(ENTITY_MAP, "NewLine"), "\n");
+			assertSome(HashMap.get(ENTITY_MAP, "Tab"), "\t");
 		});
 	});
 
 	describe("decodeEntity", () => {
 		it("decodes a named reference", () => {
-			assert.strictEqual(decodeEntity("&amp;"), "&");
-			assert.strictEqual(decodeEntity("&ouml;"), "ö");
+			assertSome(decodeEntity("&amp;"), "&");
+			assertSome(decodeEntity("&ouml;"), "ö");
 		});
 
 		it("decodes decimal and hexadecimal references", () => {
-			assert.strictEqual(decodeEntity("&#35;"), "#");
-			assert.strictEqual(decodeEntity("&#x22;"), '"');
-			assert.strictEqual(decodeEntity("&#X22;"), '"');
+			assertSome(decodeEntity("&#35;"), "#");
+			assertSome(decodeEntity("&#x22;"), '"');
+			assertSome(decodeEntity("&#X22;"), '"');
 		});
 
 		it("maps U+0000 to the replacement character", () => {
-			assert.strictEqual(decodeEntity("&#0;"), "�");
+			assertSome(decodeEntity("&#0;"), "�");
 		});
 
 		it("maps an out-of-range code point to the replacement character", () => {
-			assert.strictEqual(decodeEntity("&#1114112;"), "�");
-			assert.strictEqual(decodeEntity("&#x110000;"), "�");
+			assertSome(decodeEntity("&#1114112;"), "�");
+			assertSome(decodeEntity("&#x110000;"), "�");
 		});
 
 		it("maps a lone surrogate to the replacement character", () => {
-			assert.strictEqual(decodeEntity("&#xD800;"), "�");
+			assertSome(decodeEntity("&#xD800;"), "�");
 		});
 
 		it("returns undefined for a name it does not know", () => {
-			assert.isUndefined(decodeEntity("&MissingHorseTermMark;"));
-			assert.isUndefined(decodeEntity("&#;"));
-			assert.isUndefined(decodeEntity("not an entity"));
+			assertNone(decodeEntity("&MissingHorseTermMark;"));
+			assertNone(decodeEntity("&#;"));
+			assertNone(decodeEntity("not an entity"));
 		});
 	});
 

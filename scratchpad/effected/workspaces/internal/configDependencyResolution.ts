@@ -40,7 +40,7 @@ import * as O from "@beep/utils/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
-import type { HookReplayContext, HookReplaySource } from "../ConfigDependencyHooks.ts";
+import { HookReplaySource, type HookReplayContext } from "../ConfigDependencyHooks.ts";
 import type { FetchConfigDependency, FetchFailure, RecordedLocks } from "./configDependencyFetch.ts";
 import type { ManifestVersion } from "./configDependencyShared.ts";
 import { carries, hooksError, ioOrNone, manifestVersion, sideLabel } from "./configDependencyShared.ts";
@@ -65,19 +65,38 @@ const { basename, dirname, join } = process.getBuiltinModule("node:path");
  * found, and the pnpmfile to load — `undefined` when that version ships
  * none (resolved, but contributing nothing).
  *
+ * **Example** (Validate a resolved package without a pnpmfile)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { ResolvedPnpmfile } from "@beep/scratchpad/effected/workspaces/internal/configDependencyResolution";
+ *
+ * console.log(S.is(ResolvedPnpmfile)({ name: "cfg", version: "1.0.0", source: "installed", path: undefined })) // true
+ * console.log(S.is(ResolvedPnpmfile)(null)) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ResolvedPnpmfile = S.Struct({
+	/** The config dependency's name, as declared. */
+	name: S.String.pipe($I.annoteKey("ResolvedPnpmfile.name", { description: "The config dependency name as declared." })),
+	/** The declared version that was resolved. */
+	version: S.String.pipe($I.annoteKey("ResolvedPnpmfile.version", { description: "The declared version text resolved by the ladder." })),
+	/** Which rung answered: the installed `.pnpm-config` copy, the pnpm store, the fetch rung, or a caller-supplied map. */
+	// The hook service imports this resolver; defer the shared schema across that cycle.
+	source: S.suspend(() => HookReplaySource).pipe($I.annoteKey("ResolvedPnpmfile.source", { description: "The resolution rung that supplied this version." })),
+	/** The absolute path of the pnpmfile to load, or `undefined` when the dependency ships none. */
+	path: S.UndefinedOr(S.String).pipe($I.annoteKey("ResolvedPnpmfile.path", { description: "The pnpmfile path, explicitly undefined when this version ships none." })),
+}).pipe($I.annoteSchema("ResolvedPnpmfile", { description: "A plain resolved config dependency and its optional pnpmfile contribution." }));
+
+/**
+ * Records the config dependency version, resolution rung, and optional pnpmfile path.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export interface ResolvedPnpmfile {
-	/** The config dependency's name, as declared. */
-	readonly name: string;
-	/** The declared version that was resolved. */
-	readonly version: string;
-	/** Which rung answered: the installed `.pnpm-config` copy, the pnpm store, the fetch rung, or a caller-supplied map. */
-	readonly source: HookReplaySource;
-	/** The absolute path of the pnpmfile to load, or `undefined` when the dependency ships none. */
-	readonly path: string | undefined;
-}
+export type ResolvedPnpmfile = typeof ResolvedPnpmfile.Type;
 
 /** The pnpmfile filenames a config dependency may ship, in the order pnpm tries them. */
 const PNPMFILE_CANDIDATES = ["pnpmfile.mjs", "pnpmfile.cjs", "pnpmfile.js"] as const;
@@ -104,12 +123,15 @@ const declaredVersionOf = (spec: string): string => splitConfigDependencySpec(sp
 const hasTraversalSegment = (name: string): boolean => name.split(/[/\\]/).includes("..");
 
 /** A declared `(name, version)` pair, validated, with the spec it came from. */
-interface DeclaredEntry {
-	readonly name: string;
-	readonly version: string;
+const DeclaredEntry = S.Struct({
+	name: S.String.pipe($I.annoteKey("DeclaredEntry.name", { description: "The declared config dependency name, checked for traversal by the ladder." })),
+	version: S.String.pipe($I.annoteKey("DeclaredEntry.version", { description: "The unvalidated version text before the first plus sign." })),
 	/** The declared spec verbatim; the fetch rung reads its inline integrity. */
-	readonly spec: string;
-}
+	spec: S.String.pipe($I.annoteKey("DeclaredEntry.spec", { description: "The complete declared spec, retained for fetch integrity verification." })),
+}).pipe($I.annoteSchema("DeclaredEntry", { description: "A plain declared config dependency in declaration order, without strict spec validation." }));
+
+/** A plain declared config dependency retained for resolution. */
+type DeclaredEntry = typeof DeclaredEntry.Type;
 
 /**
  * The declared `(name, version)` pairs of a `configDependencies` map, in

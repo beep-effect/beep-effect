@@ -21,7 +21,7 @@ import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { unanimousVersionOf } from "./internal/importerVersions.ts";
-import { CatalogSet } from "./WorkspaceCatalogs.ts";
+import { CatalogSet, ImporterVersions } from "./WorkspaceCatalogs.ts";
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspaceStateSnapshot");
 
@@ -199,7 +199,7 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
   * `catalog:` fallback in {@link WorkspaceStateSnapshot.resolve} inert. Only
   * pnpm records importer versions; bun and npm yield an empty index.
   */
-	importerVersions: S.optionalKey(S.Record(S.String, S.Record(S.String, S.String))).annotateKey({ description: "Each importer's dependency-name → resolved-version map, as the manager's lockfile recorded it at this moment." }),
+	importerVersions: S.optionalKey(ImporterVersions).annotateKey({ description: "Each importer's dependency-name → resolved-version map, as the manager's lockfile recorded it at this moment." }),
 	/**
   * Which version each declared config dependency's hook was replayed from at
   * this moment, keyed by name.
@@ -275,7 +275,7 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
  *
  * @since 0.0.0
  */
-	#versionNames: ReadonlyArray<string> | undefined;
+	#versionNames: ReadonlyArray<string> = [];
 	/**
  * Caches captured members by name outside the serializable schema.
  *
@@ -439,7 +439,7 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
  */
 	get versionNames(): ReadonlyArray<string> {
 		this.#versions();
-		return this.#versionNames ?? [];
+		return this.#versionNames;
 	}
 
 	/**

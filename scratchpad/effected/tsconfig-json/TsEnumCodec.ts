@@ -227,7 +227,7 @@ const decode: {
 
 // Implementation of TsEnumCodec.normalizeLibReference; the public contract lives on the static.
 const normalizeLibReference = (lib: string): string => {
-	const base = (lib.split("/").pop() ?? lib).toLowerCase();
+	const base = lib.slice(lib.lastIndexOf("/") + 1).toLowerCase();
 	const withoutPrefix = base.startsWith("lib.") ? base.slice(4) : base;
 	return withoutPrefix.endsWith(".d.ts") ? withoutPrefix.slice(0, -5) : withoutPrefix;
 };
@@ -407,8 +407,7 @@ const decodeCompilerOptions = (numeric: Readonly<Record<string, unknown>>): Reco
  * @category codecs
  * @since 0.0.0
  */
-export class TsEnumCodec {
-	private constructor() {}
+export abstract class TsEnumCodec {
 
 	/**
 	 * Encodes a family's canonical (or alias) string spelling to its numeric

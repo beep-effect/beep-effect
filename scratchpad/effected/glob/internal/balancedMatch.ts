@@ -133,8 +133,8 @@ export const range: {
 				begs.push(i);
 				ai = str.indexOf(a, i + 1);
 			} else if (begs.length === 1) {
-				const r = begs.pop();
-				if (r !== undefined) result = [r, bi];
+				// This branch has exactly one opening offset.
+				for (const r of begs.splice(-1)) result = [r, bi];
 			} else {
 				beg = begs.pop();
 				if (beg !== undefined && beg < left) {

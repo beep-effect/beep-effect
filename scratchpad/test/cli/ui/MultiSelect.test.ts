@@ -4,6 +4,7 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
+import { createElement } from "react";
 import { Cancelled, Fmt } from "../../../effected/cli/index.ts";
 import type { MultiSelectSection } from "../../../effected/cli/ui.ts";
 import { MultiSelect } from "../../../effected/cli/ui.ts";
@@ -93,6 +94,32 @@ describe("MultiSelect reducer", () => {
 });
 
 describe("MultiSelect.screen under CliUiTest", () => {
+	it.effect("rerender keeps mount-time sections, items, details and submitted values", () =>
+		Effect.gen(function* () {
+			const submitted: Array<ReadonlyArray<string>> = [];
+			const onSubmit = (values: ReadonlyArray<string>): void => { submitted.push(values); };
+			const view = yield* CliUiTest.view(createElement(MultiSelect.View<string>, {
+				message: "Pick", sections: [{ title: "Original section", items: [
+					{ key: "original", label: "original", value: "original", detail: "original detail", selected: true },
+				] }], onSubmit,
+			}));
+			yield* view.rerender(createElement(MultiSelect.View<string>, {
+				message: "Pick", sections: [{ title: "Replacement section", items: [
+					{ key: "replacement", label: "replacement", value: "replacement", detail: "replacement detail" },
+					{ key: "extra", label: "extra replacement", value: "extra" },
+				] }], onSubmit,
+			}));
+			const frame = yield* view.plainFrame;
+			assert.include(frame, "Original section");
+			assert.include(frame, "→ ◉ original");
+			assert.include(frame, "original detail");
+			assert.notInclude(frame, "Replacement");
+			assert.notInclude(frame, "replacement");
+			yield* view.press("enter");
+			assert.deepStrictEqual(submitted, [["original"]]);
+		}),
+	);
+
 	it.effect("space, down, a, enter returns the selection in section and item order", () =>
 		Effect.gen(function* () {
 			const handle = yield* CliUiTest.render(MultiSelect.screen({ message: "Promote which?", sections }));

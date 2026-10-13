@@ -9,9 +9,14 @@
 // Everything else (the NUL replacement, the trailing-newline rule, the
 // tab-stop arithmetic) is upstream's behavior verbatim.
 //
-// Leaf module: imports nothing.
+// Leaf module: imports no public markdown modules.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/markdown/internal/preprocess");
+
 /**
  * Columns of indentation that open an indented code block.
  *
@@ -54,13 +59,34 @@ export const TAB_STOP = 4;
  * character substitution — every index into `text` is still a valid
  * `start + index` offset into the original source.
  *
+ *
+ * **Example** (Validate SourceLine data)
+ *
+ * ```ts
+ * import { SourceLine } from "@beep/scratchpad/effected/markdown/internal/preprocess";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(SourceLine)({ text: "heading", start: 0 })); // true
+ * ```
+ *
+
  * @category models
  * @since 0.0.0
  */
-export interface SourceLine {
-	readonly text: string;
-	readonly start: number;
-}
+export const SourceLine = S.Struct({
+	text: S.String.annotateKey({ description: "Line text without its terminator, with NUL replaced by U+FFFD." }),
+	start: S.Finite.annotateKey({ description: "Absolute UTF-16 offset of the line's first character in the original source." }),
+}).annotate($I.annote("SourceLine", {
+	description: "A preprocessed source line retaining its original offset after length-preserving NUL normalization.",
+}));
+
+/**
+ * The plain source-line payload described by {@link SourceLine}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SourceLine = typeof SourceLine.Type;
 
 /**
  * Split `text` into lines, preserving each line's absolute start offset.

@@ -2,6 +2,7 @@
 // ports. The engine is pure sync — no Effect in this file.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertInstanceOf } from "@effect/vitest/utils";
 import * as S from "effect/Schema";
 import { balanced } from "../../effected/glob/internal/balancedMatch.ts";
 import { expand } from "../../effected/glob/internal/braceExpansion.ts";
@@ -158,6 +159,41 @@ describe("braceExpansion", () => {
 });
 
 describe("braceExpansion hardening", () => {
+	it("bounds large singletons and non-advancing endpoints by their member count", () => {
+		assert.deepStrictEqual(expand("{9007199254740992..9007199254740992}", { max: 1 }), ["9007199254740992"]);
+		assert.deepStrictEqual(expand("{9007199254740991..9007199254740992}", { max: 2 }), [
+			"9007199254740991", "9007199254740992",
+		]);
+		assert.deepStrictEqual(expand("{9007199254740992..9007199254740994}", { max: 3 }), [
+			"9007199254740992", "9007199254740992", "9007199254740992",
+		]);
+		assert.deepStrictEqual(expand("{-9007199254740992..-9007199254740994}", { max: 3 }), [
+			"-9007199254740992", "-9007199254740992", "-9007199254740992",
+		]);
+		assert.strictEqual(reasonOf(() => expand("{9007199254740992..9007199254740994}", { max: 2 })), "ExpansionBudgetExceeded");
+	});
+
+	it("rejects non-finite member counts with an Infinity measurement instead of a schema defect", () => {
+		const huge = "9".repeat(310);
+		const finite = `1${"0".repeat(308)}`;
+		for (const source of [`{${huge}..${huge}}`, `{1..${huge}..${huge}}`, `{-${finite}..${finite}}`, `{-${finite}..${finite}..${huge}}`]) {
+			try {
+				expand(source, { max: 1 });
+				assert.fail("expected a GuardExceeded throw");
+			} catch (error) {
+				assertInstanceOf(error, GuardExceeded);
+				assert.strictEqual(error.reason, "ExpansionBudgetExceeded");
+				assert.strictEqual(error.limit, 1);
+				assert.strictEqual(error.actual, Infinity);
+			}
+		}
+	});
+
+	it("preserves finite counts, increments and padding when a step overflows", () => {
+		assert.deepStrictEqual(expand(`{01..03..${"9".repeat(310)}}`, { max: 1 }), ["01"]);
+		assert.deepStrictEqual(expand("{03..-03..2}"), ["003", "001", "-01", "-03"]);
+	});
+
 	it("fails typed on nesting past the cap, never a stack overflow", () => {
 		// The comma is load-bearing: a comma-free {{{...}}} never recurses upstream
 		// (returned unexpanded); comma-bearing nesting descends one expand_ frame

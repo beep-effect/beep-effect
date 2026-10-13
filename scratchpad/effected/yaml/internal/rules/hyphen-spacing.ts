@@ -102,6 +102,7 @@ export const hyphenSpacing: YamlRule = {
 				// continuation entries changes their relative indentation. Flow
 				// collections' colons do not introduce a compact block mapping.
 				let compact = false;
+				let movesSequenceEntry = false;
 				let flowDepth = 0;
 				let relocatesCollection = false;
 				for (let followingIndex = tokenIndex + 1; followingIndex < ctx.tokens.length; followingIndex++) {
@@ -110,6 +111,13 @@ export const hyphenSpacing: YamlRule = {
 					if (following.line > token.line) {
 						if (following.kind === "whitespace" || following.kind === "newline" || following.kind === "comment") continue;
 						relocatesCollection = compact && following.character > token.character;
+						break;
+					}
+					if (following.kind === "block-seq-entry") movesSequenceEntry = true;
+					if (movesSequenceEntry && following.kind === "scalar" && /^[|>](?:[1-9][+-]?|[+-][1-9])(?:[ \t\r\n]|$)/.test(ctx.text.slice(following.offset, following.offset + following.length))) {
+						// The explicit block indent is relative to the preceding '-'.
+						// Moving that entry would strip different bytes from its body.
+						relocatesCollection = true;
 						break;
 					}
 					if (following.kind === "flow-map-start" || following.kind === "flow-seq-start") {

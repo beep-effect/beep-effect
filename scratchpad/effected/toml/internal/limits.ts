@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 // The zero-dependency leaf every guard imports — no import cycle is possible
@@ -26,13 +27,17 @@ class TomlCapError extends S.TaggedError<TomlCapError>($I`TomlCapError`)("TomlCa
  */
 export const MAX_NESTING_DEPTH = 256;
 
+const GuardReason = LiteralKit(["NestingDepthExceeded"]).pipe(
+	$I.annoteSchema("GuardReason", { description: "The engine guard reason mirrored by parse and stringify diagnostics." }),
+);
+
 /**
  * Identifies why a guard trips; mirrors the NestingDepthExceeded parse/stringify codes.
  *
  * @category type-level
  * @since 0.0.0
  */
-export type GuardReason = "NestingDepthExceeded";
+export type GuardReason = typeof GuardReason.Type;
 
 /**
  * Signals a raw guard trip from the engine.
@@ -60,7 +65,7 @@ export type GuardReason = "NestingDepthExceeded";
  */
 export class GuardExceeded extends S.TaggedError<GuardExceeded>($I`GuardExceeded`)("GuardExceeded", {
 	message: S.String.annotateKey({ description: "The reason, configured limit and observed depth." }),
-	reason: S.Literal("NestingDepthExceeded").annotateKey({ description: "The engine guard that exceeded its limit." }),
+	reason: GuardReason.annotateKey({ description: "The engine guard that exceeded its limit." }),
 	limit: S.Finite.annotateKey({ description: "The configured nesting limit." }),
 	actual: S.Finite.annotateKey({ description: "The observed nesting depth." }),
 	offset: S.Finite.annotateKey({ description: "Source offset where the guard tripped." }),

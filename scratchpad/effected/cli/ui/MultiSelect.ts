@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
@@ -15,15 +16,31 @@ import { useScreenCancel } from "./internal/ScreenContext.ts";
 import { KeyHelp } from "./KeyHelp.ts";
 import { KeyTable, useKeys } from "./KeyTable.ts";
 import { Styled, useGlyphs, useTerminalSize } from "./UiTheme.ts";
-import type { ViewportMove, ViewportRow, ViewportState } from "./Viewport.ts";
+import type { ViewportRow, ViewportState } from "./Viewport.ts";
 import { Viewport } from "./Viewport.ts";
 
 const $I = $ScratchpadId.create("effected/cli/ui/MultiSelect");
 
-/** Duplicate keys make a multi-select row ambiguous. */
-class DuplicateItemKey extends S.TaggedError<DuplicateItemKey>($I`DuplicateItemKey`)(
+/**
+ * Reports an item key repeated across multi-select sections.
+ *
+ * **Example** (Describe the failure)
+ *
+ * ```ts
+ * import { DuplicateItemKey } from "./MultiSelect.ts"
+ * const error = DuplicateItemKey.make({ message: "Item key alpha repeats." })
+ * console.log(error._tag) // DuplicateItemKey
+ * ```
+ *
+ * @internal
+ * @category errors
+ * @since 0.0.0
+ */
+export class DuplicateItemKey extends S.TaggedError<DuplicateItemKey>($I`DuplicateItemKey`)(
 	"DuplicateItemKey",
-	{ message: S.String },
+	{ message: S.String.annotate($I.annote("DuplicateItemKey.message", {
+		description: "Identifies the item key repeated across multi-select sections.",
+	})) },
 	$I.annote("DuplicateItemKey", { description: "Two multi-select items share a row key." }),
 ) {
 	override readonly name = "Error";
@@ -89,11 +106,32 @@ export interface MultiSelectState<A> {
 /**
  * What a key does in a {@link MultiSelect}.
  *
+ * **Example** (Recognize a submission action)
+ *
+ * ```ts
+ * import { MultiSelectAction } from "@beep/scratchpad/effected/cli/ui/MultiSelect"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(MultiSelectAction)("submit")) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MultiSelectAction = LiteralKit([
+	"up", "down", "home", "end", "pageup", "pagedown", "toggle", "toggleSection", "submit", "cancel",
+]).annotate(
+	$I.annote("MultiSelectAction", { description: "The viewport, item, section and submission actions of a multi-selection." }),
+);
+
+/**
+ * A viewport or interaction action accepted by {@link MultiSelectAction}.
+ *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export type MultiSelectAction = ViewportMove | "toggle" | "toggleSection" | "submit" | "cancel";
+export type MultiSelectAction = typeof MultiSelectAction.Type;
 
 /**
  * Options for {@link MultiSelect.init}.
@@ -163,6 +201,7 @@ const init = <A>(
 };
 
 const step = <A>(state: MultiSelectState<A>, action: MultiSelectAction): MultiSelectState<A> => {
+	if (state.submitted) return state;
 	const items = flatten(state.sections);
 	const cursor = state.viewport.cursor;
 	return Match.value(action).pipe(
@@ -369,10 +408,10 @@ export abstract class MultiSelect {
 			if (action === "cancel") cancel("escape");
 			else setState((current) => step(current, action));
 		});
-		const items = flatten(props.sections);
+		const items = flatten(state.sections);
 		// Rows are keyed by the item's own key (unique, checked at init), which is also the React key of the row.
 		const numberOf = MutableHashMap.fromIterable(items.map((entry, index) => [entry.item.key, index] as const));
-		const rows: ReadonlyArray<ViewportRow> = props.sections.flatMap((section) => [
+		const rows: ReadonlyArray<ViewportRow> = state.sections.flatMap((section) => [
 			{ _tag: "Header" as const, label: section.title },
 			...section.items.map((item) => ({ _tag: "Item" as const, key: item.key })),
 		]);

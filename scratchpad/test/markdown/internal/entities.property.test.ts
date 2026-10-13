@@ -1,5 +1,8 @@
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
-import { assert, it } from "@effect/vitest";
+import { it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as O from "effect/Option";
+import * as HashMap from "effect/HashMap";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -11,15 +14,16 @@ const scalar = S.Int.check(S.isBetween({ minimum: 1, maximum: 0x10ffff })).check
 
 it.effect.prop("decimal and hexadecimal references decode identically and retain their scalar under re-encoding", [Arbitrary.schema(scalar)], ([code]) => Effect.sync(() => {
   const value = String.fromCodePoint(code);
-  assert.strictEqual(decodeEntity(`&#${code};`), value);
-  assert.strictEqual(decodeEntity(`&#x${code.toString(16)};`), value);
-  assert.strictEqual(decodeEntity(`&#X${code.toString(16)};`), value);
+  assertSome(decodeEntity(`&#${code};`), value);
+  assertSome(decodeEntity(`&#x${code.toString(16)};`), value);
+  assertSome(decodeEntity(`&#X${code.toString(16)};`), value);
   const decoded = decodeEntity(`&#${code};`);
-  assert.strictEqual(decodeEntity(`&#${decoded?.codePointAt(0)};`), value);
+  assertSome(decoded, value);
+  assertSome(decodeEntity(`&#${decoded.value.codePointAt(0)};`), value);
 }), runs);
 
-it.effect.prop("named references agree with the HTML5 table and preserve multi-codepoint values", [Arbitrary.schema(S.Literals([...ENTITY_MAP.keys()]))], ([name]) => Effect.sync(() => {
-  const value = ENTITY_MAP.get(name);
-  assert.strictEqual(decodeEntity(`&${name};`), value);
-  assert.strictEqual(decodeEntity(`&${name}`), undefined);
+it.effect.prop("named references agree with the HTML5 table and preserve multi-codepoint values", [Arbitrary.schema(S.Literals([...HashMap.keys(ENTITY_MAP)]))], ([name]) => Effect.sync(() => {
+  const value = HashMap.get(ENTITY_MAP, name).pipe(O.getOrThrow);
+  assertSome(decodeEntity(`&${name};`), value);
+  assertNone(decodeEntity(`&${name}`));
 }), runs);

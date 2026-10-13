@@ -1,0 +1,39 @@
+{
+  "module": "github-references",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/github-references/IssueReferences.ts",
+        "scratchpad/effected/github-references/ClosingList.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-references/IssueReferences.test.ts",
+        "scratchpad/test/github-references/ClosingList.test.ts",
+        "scratchpad/test/github-references/IssueReferences.property.test.ts",
+        "scratchpad/test/github-references/ClosingList.property.test.ts"
+      ],
+      "findings": ["grok-2-1", "fable-2-1", "fable-2-2"]
+    }
+  ],
+  "findings": {
+    "grok-2-1": {
+      "file": "scratchpad/test/github-references/IssueReferences.property.test.ts:57",
+      "class": "test",
+      "summary": "The inline fidelity property incorrectly requires every original harvested span to be a valid bare-line reference, despite their distinct whitespace grammars.",
+      "fix": "Assert parseBareLineReference(stringifyBare(hit)) against the projected keyword and issue number instead of parsing the original slice. Retain normalization and exact-offset checks, add structured inline-only opening whitespace including newline, and preserve both parser grammars and upstream cases."
+    },
+    "fable-2-1": {
+      "file": "scratchpad/effected/github-references/ClosingList.ts:609",
+      "class": "perf",
+      "summary": "Measured equivalent-output parser paths remain about 1.3–1.9x slower than upstream after the round-1 fix.",
+      "fix": "Measure behavior-preserving lookup and allocation improvements in ClosingList.ts and IssueReferences.ts against the pinned oracle with alternating benchmark repetitions. Evaluate widened Enum records, miss-path R.has/hit-path R.get, capture-based extraction and reduced Option/map allocation; if necessary use a schema-backed item/unsafe/miss scanner union with a shared miss value, retaining public Option boundaries. Preserve grammar, offsets, order, unsafe-number handling and existing regression tests; introduce no native collections, nullish domain sentinels or unsafe casts. Deliver measured improvement and output-equivalence evidence to the orchestrator; do not edit the ledger or Port notes."
+    },
+    "fable-2-2": {
+      "file": "scratchpad/effected/github-references/ClosingList.ts:148",
+      "class": "schema",
+      "summary": "Five result schemas admit negative issue numbers/offsets or empty issue lists that their parser grammar excludes.",
+      "fix": "Use S.Natural for issue numbers and offsets in IssueReferences.ts and ClosingList.ts and S.NonEmptyArray(S.Natural) for the three list models, preserving annotations. Read the first valid item before creating non-empty parser accumulators and carry that invariant without casts. Add schema boundary acceptance/rejection cases in both existing parser test files and retain refined-schema round trips in both property files. Preserve parser outputs and every upstream case; leave numeric-domain deviation bookkeeping to the central codemod."
+    }
+  }
+}

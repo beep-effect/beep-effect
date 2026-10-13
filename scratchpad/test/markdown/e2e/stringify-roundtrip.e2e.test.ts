@@ -106,3 +106,29 @@ describe("stringify cost", () => {
 		);
 	});
 });
+
+
+describe("decoded syntax round-trip regressions", () => {
+	const examples = [
+		["link entities", '[x](a&amp;amp;b "t&amp;amp;")'],
+		["image entities", '![x](a&amp;amp;b "t&amp;amp;")'],
+		["definition entities", '[x][r]\n\n[r]: a&amp;amp;b "t&amp;amp;"'],
+		["pointy destination entities", '[x](<a&amp;amp;b c> "t&amp;amp;")'],
+		["backtick language", "```&#96;\nx\n```\n"],
+		["entity-shaped language", "```a&amp;amp;\nx\n```\n"],
+		["language whitespace", "```a&#32;b\nx\n```\n"],
+		["info escapes and line endings", "```a&#92;b&#9;c m&#96;n&amp;amp;&#13;&#10;z\nx\n```\n"],
+		["direct image alt syntax", "![\\*x\\* \\_y\\_ \\`z\\` \\<b> &amp;amp;](u)"],
+		["full reference alt syntax", "![\\*x\\* \\_y\\_ \\`z\\` \\<b> &amp;amp;][r]\n\n[r]: u"],
+		["32 parenthesis destination", `[x](<${"(".repeat(32)}x${")".repeat(32)}>)`],
+		["33 parenthesis destination", `[x](<${"(".repeat(33)}x${")".repeat(33)}>)`],
+	] as const;
+	for (const dialect of ["commonmark", "gfm"] as const) {
+		for (const [name, source] of examples) {
+			it(`${name} under ${dialect}`, () => {
+				const { before, after } = roundTrip(source, dialect);
+				assert.strictEqual(after, before);
+			});
+		}
+	}
+});

@@ -35,7 +35,7 @@ export const configDependenciesOf = (document: unknown): Record<string, string> 
 	if (!P.isObject(document) || !P.isObject(document.configDependencies)) return {};
 	const out: Record<string, string> = {};
 	for (const [name, spec] of R.toEntries(document.configDependencies)) {
-		if (P.isString(spec)) out[name] = spec;
+		if (P.isString(spec)) R.assignProperty(out, name, spec);
 	}
 	return out;
 };
@@ -78,7 +78,7 @@ export const inlinePeerDependencyRules = (document: unknown): PeerDependencyRule
 	const allowedVersions: Record<string, string> = {};
 	if (P.isObject(block.allowedVersions)) {
 		for (const [key, value] of R.toEntries(block.allowedVersions)) {
-			if (P.isString(value)) allowedVersions[key] = value;
+			if (P.isString(value)) R.assignProperty(allowedVersions, key, value);
 		}
 	}
 	return {

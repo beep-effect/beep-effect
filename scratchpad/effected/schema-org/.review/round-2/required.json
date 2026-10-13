@@ -1,0 +1,58 @@
+{
+  "module": "schema-org",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/schema-org/JsonLdDocument.ts",
+        "scratchpad/effected/schema-org/NodeRef.ts",
+        "scratchpad/effected/schema-org/Conformance.ts"
+      ],
+      "tests": [
+        "scratchpad/test/schema-org/JsonLdDocument.test.ts",
+        "scratchpad/test/schema-org/Conformance.test.ts"
+      ],
+      "findings": ["req-1", "req-2", "req-3", "req-4"]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/schema-org/internal/vocabulary.ts"
+      ],
+      "tests": [],
+      "findings": ["req-5"]
+    }
+  ],
+  "findings": {
+    "req-1": {
+      "file": "scratchpad/effected/schema-org/JsonLdDocument.ts",
+      "class": "law",
+      "summary": "Native JSON encoding remains in toScriptBody and diagnostic getters in JsonLdDocument.ts, NodeRef.ts and Conformance.ts outside the diagnostic's Effect-context scope.",
+      "fix": "Use Result.getOrThrow with S.encodeResult(S.fromJsonString(S.Json)) for document JSON and S.fromJsonString(S.String) for quoted diagnostic fields in all three source files. Preserve diagnostic bytes and public types, combine document encoding with req-2 escapes, and retain upstream assertions; avoid sync codec APIs."
+    },
+    "req-2": {
+      "file": "scratchpad/effected/schema-org/JsonLdDocument.ts",
+      "class": "effect-idiom",
+      "summary": "toScriptBody uses three native string replacement calls outside native-runtime hotspot enforcement.",
+      "fix": "Import Str from effect/String and pipe from effect/Function. Pipe the req-1 JSON text through Str.replace for global less-than, greater-than and ampersand matches, retaining the literal backslash-u003c, backslash-u003e and backslash-u0026 bytes. Preserve existing serializer assertions; no test rewrite is required."
+    },
+    "req-3": {
+      "file": "scratchpad/effected/schema-org/Conformance.ts",
+      "class": "schema",
+      "summary": "validateResult duplicates schema policy defaults and named LiteralKit values with raw report/ignore/fail literals.",
+      "fix": "Hoist a constant for each default from the policy kit Enum and share it between withDecodingDefault and the per-field fallback. Use policy kit .is helpers or .Enum values for comparisons. Preserve tolerant out-of-union input behavior, explicit undefined handling and every upstream test line; do not decode the whole options object."
+    },
+    "req-4": {
+      "file": "scratchpad/effected/schema-org/JsonLdDocument.ts",
+      "class": "bug",
+      "summary": "Recognized JSON-LD @list and @set containers hide references from identifier validation and graph-closure checks in both lab and pinned upstream.",
+      "fix": "After the orchestrator supplies the section-14 upstream-bug receipt, extend the shared referencesOf collector for @list/@set reference contents while retaining property names, discovery order and deduplication. Exclude value objects including @json and unrelated nested objects. Add missing/present target, malformed-id, order and value-object regressions in JsonLdDocument.test.ts and Conformance.test.ts without weakening upstream assertions. Do not edit the ledger or README Port notes."
+    },
+    "req-5": {
+      "file": "scratchpad/effected/schema-org/internal/vocabulary.ts",
+      "class": "bug",
+      "summary": "The S3 decodePairs rewrite unconditionally coerces missing indices to NaN; prior law-compliant code retained upstream decodeRow and missing-index checks.",
+      "fix": "Restore the upstream decodePairs shape: destructure decodeRow(row), then MutableHashMap.set only when both indices are defined. Remove the generated-pairs comment and duplicated Str.split/Number coercion in decodePairs. Retain the forced Effect collection replacement and Str.split inside decodeRow. No upstream test lines were rewritten by this S3 change, so keep them unchanged; do not redesign the restore solely for coverage."
+    }
+  }
+}

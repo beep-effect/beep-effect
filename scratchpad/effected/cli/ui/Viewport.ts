@@ -1,3 +1,4 @@
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as S from "effect/Schema";
 import { $ScratchpadId } from "@beep/identity/packages";
@@ -9,11 +10,26 @@ import { useTerminalSize } from "./UiTheme.ts";
 
 const $I = $ScratchpadId.create("effected/cli/ui/Viewport");
 
-class DuplicateViewportKeyError extends S.TaggedError<DuplicateViewportKeyError>(
+/**
+ * Reports a repeated selectable item key before React receives the viewport rows.
+ *
+ * **Example** (Describe a repeated key)
+ *
+ * ```ts
+ * import { DuplicateViewportKeyError } from "@beep/scratchpad/effected/cli/ui/Viewport"
+ * console.log(DuplicateViewportKeyError.make({ message: "Item key alpha repeats" })._tag)
+ * // DuplicateViewportKeyError
+ * ```
+ *
+ * @internal
+ * @category errors
+ * @since 0.0.0
+ */
+export class DuplicateViewportKeyError extends S.TaggedError<DuplicateViewportKeyError>(
 	$I`DuplicateViewportKeyError`,
 )("DuplicateViewportKeyError", {
-	message: S.String,
-}) {}
+	message: S.String.annotate($I.annote("DuplicateViewportKeyError.message", { description: "The repeated item key and the unique-key invariant it violates." })),
+}, $I.annote("DuplicateViewportKeyError", { description: "A viewport contains more than one selectable item with the same key." })) {}
 
 /**
  * Where a viewport is: the selected item, the first item in view, how many items fit, and how many there are.
@@ -23,41 +39,93 @@ class DuplicateViewportKeyError extends S.TaggedError<DuplicateViewportKeyError>
  * Every number counts items, never section headers. The reducer keeps `0 <= cursor < count` (or both 0 when there
  * are no items) and `offset <= cursor < offset + height`, and never lets the window run past the last item.
  *
+ * **Example** (Validate a ViewportState payload)
+ *
+ * ```ts
+ * import { ViewportState } from "@beep/scratchpad/effected/cli/ui/Viewport"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ViewportState)({ cursor: 0, offset: 0, height: 3, count: 8 })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ViewportState = S.Struct({
+	cursor: S.Finite.annotateKey($I.annote("ViewportState.cursor", { description: "The selected item index." })),
+	offset: S.Finite.annotateKey($I.annote("ViewportState.offset", { description: "The first visible item index." })),
+	height: S.Finite.annotateKey($I.annote("ViewportState.height", { description: "The item capacity of the window." })),
+	count: S.Finite.annotateKey($I.annote("ViewportState.count", { description: "The total selectable item count." })),
+}).annotate($I.annote("ViewportState", { description: "The plain item-counting state of a scrolling viewport." }));
+/**
+ * Plain payload accepted by {@link ViewportState}; reducers retain this structural representation.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export interface ViewportState {
-	/** The selected item. */
-	readonly cursor: number;
-	/** The first item in view. */
-	readonly offset: number;
-	/** How many items the window holds. */
-	readonly height: number;
-	/** How many items there are. */
-	readonly count: number;
-}
+export type ViewportState = typeof ViewportState.Type;
 
+const Header = S.Struct({
+	_tag: S.tag("Header"),
+	label: S.String.annotateKey($I.annote("Header.label", { description: "The section heading shown above its items." })),
+}).annotate($I.annote("Header", { description: "A non-selectable section heading in a viewport." }));
+const Item = S.Struct({
+	_tag: S.tag("Item"),
+	key: S.String.annotateKey($I.annote("Item.key", { description: "The unique React key of a selectable item." })),
+}).annotate($I.annote("Item", { description: "A selectable viewport item identified by its key." }));
 /**
  * A row a viewport shows: a section header, or an item. Only items are selectable. An item's `key` is its React
  * key in the view, so keys must be unique within one list: `Viewport.View` dies on a repeat.
  *
+ * **Example** (Validate a ViewportRow payload)
+ *
+ * ```ts
+ * import { ViewportRow } from "@beep/scratchpad/effected/cli/ui/Viewport"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ViewportRow)({ _tag: "Item", key: "alpha" })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ViewportRow = S.Union([Header, Item]).pipe(S.toTaggedUnion("_tag"))
+	.annotate($I.annote("ViewportRow", { description: "A plain section header or selectable item in display order." }));
+/**
+ * Plain payload accepted by {@link ViewportRow}; reducers retain this structural representation.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export type ViewportRow =
-	| { readonly _tag: "Header"; readonly label: string }
-	| { readonly _tag: "Item"; readonly key: string };
+export type ViewportRow = typeof ViewportRow.Type;
 
 /**
  * A move through a viewport.
  *
+ * **Example** (Validate a ViewportMove payload)
+ *
+ * ```ts
+ * import { ViewportMove } from "@beep/scratchpad/effected/cli/ui/Viewport"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ViewportMove)("end")) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ViewportMove = LiteralKit(["up", "down", "home", "end", "pageup", "pagedown"])
+	.annotate($I.annote("ViewportMove", { description: "The six navigation moves understood by a viewport." }));
+/**
+ * Plain payload accepted by {@link ViewportMove}; reducers retain this structural representation.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export type ViewportMove = "up" | "down" | "home" | "end" | "pageup" | "pagedown";
+export type ViewportMove = typeof ViewportMove.Type;
 
 /**
  * Props of {@link Viewport.View}.
@@ -142,19 +210,14 @@ const resize = (state: ViewportState, height: number): ViewportState => {
 const linesFrom = (
 	rows: ReadonlyArray<ViewportRow>,
 	items: ReadonlyArray<number>,
+	headers: ReadonlyArray<number | undefined>,
 	start: number,
 	budget: number,
 ) => {
 	const first = items[start] ?? 0;
 	const lines: Array<number> = [];
-	if (budget > 1) {
-		for (let index = first - 1; index >= 0; index--) {
-			if (rows[index]?._tag === "Header") {
-				lines.push(index);
-				break;
-			}
-		}
-	}
+	const header = headers[start];
+	if (budget > 1 && header !== undefined) lines.push(header);
 	for (let index = first; index < rows.length && lines.length < budget; index++) lines.push(index);
 	return lines;
 };
@@ -178,21 +241,31 @@ const slice = (
 	budget: number,
 	previous: number | undefined,
 ): Slice => {
-	const items = rows.flatMap((row, index) => (row._tag === "Item" ? [index] : []));
+	const items: Array<number> = [];
+	const headers: Array<number | undefined> = [];
+	let header: number | undefined;
+	for (let index = 0; index < rows.length; index++) {
+		const row = A.getUnsafe(rows, index);
+		if (row._tag === "Header") header = index;
+		else {
+			items.push(index);
+			headers.push(header);
+		}
+	}
 	if (items.length === 0)
 		return { lines: rows.slice(0, budget).map((_, index) => index), start: 0, selected: -1 };
 	const cursor = clamp(state.cursor, 0, items.length - 1);
 	const selected = items[cursor] ?? 0;
 	let start = clamp(previous ?? state.offset, 0, cursor);
-	let lines = linesFrom(rows, items, start, budget);
+	let lines = linesFrom(rows, items, headers, start, budget);
 	while (!lines.includes(selected) && start < cursor) {
 		start++;
-		lines = linesFrom(rows, items, start, budget);
+		lines = linesFrom(rows, items, headers, start, budget);
 	}
 	// At the end of the list a window can come up short, after the terminal grew or the budget rose: pull the start
 	// back while that fills it and still draws the selected item.
 	while (lines.length < budget && start > 0) {
-		const earlier = linesFrom(rows, items, start - 1, budget);
+		const earlier = linesFrom(rows, items, headers, start - 1, budget);
 		if (!earlier.includes(selected)) break;
 		start--;
 		lines = earlier;
@@ -222,8 +295,7 @@ const slice = (
  * @category models
  * @since 0.0.0
  */
-export class Viewport {
-	private constructor() {}
+export abstract class Viewport {
 
 	/**
 	 * A viewport over `count` items, `height` of them in view, with `cursor` selected (clamped; 0 by default).

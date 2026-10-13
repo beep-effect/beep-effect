@@ -1,5 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SemVer } from "../semver/index.ts";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -331,9 +332,10 @@ const make = (client: GitHubClient["Service"]): GitTagShape => {
 		// filter is client-side by necessity — which is exactly why latestSemver
 		// exists rather than leaving callers to list-then-sort.
 		const prefix = options?.prefix;
-		return tags
-			.filter((entry) => prefix === undefined || entry.name.startsWith(prefix))
-			.map((entry) => TagRef.make({ tag: entry.name, sha: entry.commit.sha }));
+		const refs = yield* Effect.forEach(tags, (entry) => S.decodeEffect(TagRef)({ tag: entry.name, sha: entry.commit.sha }).pipe(
+			Effect.mapError((error) => GitHubError.decode("GitTag.list", "GitHub returned an unexpected tag", error)),
+		));
+		return A.filter(refs, (entry) => prefix === undefined || entry.tag.startsWith(prefix));
 	});
 
 	return {

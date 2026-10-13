@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "@beep/utils/Option";
 import * as Result from "effect/Result";
@@ -305,11 +306,11 @@ const positionOf = (
   let high = starts.length - 1;
   while (low < high) {
     const mid = (low + high + 1) >> 1;
-    const start = starts[mid];
-    if (start !== undefined && start <= offset) low = mid;
+    const start = A.getUnsafe(starts, mid);
+    if (start <= offset) low = mid;
     else high = mid - 1;
   }
-  return { line: low, character: offset - (starts[low] ?? starts[0]) };
+  return { line: low, character: offset - A.getUnsafe(starts, low) };
 };
 
 const toDiagnostic = (starts: readonly [number, ...Array<number>], raw: RawDiagnostic): GitConfigDiagnostic => {
@@ -695,7 +696,7 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
       const indent = sectionIndent(this.text, found.section);
       const offset = found.entry.offset + found.entry.length;
       const line = `${indent}${key} = ${serializeValue(value)}\n`;
-      const content = offset > 0 && this.text[offset - 1] !== "\n" ? `\n${line}` : line;
+      const content = this.text[offset - 1] !== "\n" ? `\n${line}` : line;
       return Result.succeed(rebuild(applySplice(this.text, {
         offset,
         length: 0,
@@ -961,7 +962,7 @@ const insertEntry = (
   const indent = sectionIndent(text, target);
   const offset = sectionInsertOffset(target);
   const line = `${indent}${key} = ${serializeValue(value)}\n`;
-  const content = offset > 0 && text[offset - 1] !== "\n" ? `\n${line}` : line;
+  const content = text[offset - 1] !== "\n" ? `\n${line}` : line;
   return rebuild(applySplice(text, { offset, length: 0, content }));
 };
 

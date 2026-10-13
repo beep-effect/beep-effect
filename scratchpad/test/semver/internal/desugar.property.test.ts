@@ -3,13 +3,13 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { desugarCaret, desugarHyphen, desugarTilde, desugarXRange, type PartialParts } from "../../../effected/semver/internal/desugar.ts";
+import { desugarCaret, desugarHyphen, desugarTilde, desugarXRange, PartialParts } from "../../../effected/semver/internal/desugar.ts";
 import { formatRange, parseRange } from "../../../effected/semver/internal/grammar.ts";
-import type { ComparatorParts } from "../../../effected/semver/internal/order.ts";
+import { ComparatorOperator, type ComparatorParts } from "../../../effected/semver/internal/order.ts";
 
 const runs = { arbitrary: fcRuns(100) };
 const Component = S.Int.check(S.isBetween({ minimum: 0, maximum: 1000000 }));
-const Sample = S.Struct({ major: Component, minor: Component, patch: Component, depth: S.Literals([0, 1, 2, 3]) });
+const Sample = PartialParts.mapFields((fields) => ({ ...fields, major: Component, minor: Component, patch: Component, prerelease: S.Array(S.Never), build: S.Array(S.Never), depth: S.Literals([0, 1, 2, 3]) }));
 const parts = (sample: typeof Sample.Type): PartialParts => ({
   major: sample.depth >= 1 ? sample.major : null,
   minor: sample.depth >= 2 ? sample.minor : null,
@@ -39,7 +39,7 @@ describe("desugar property floor", () => {
     const value = parts(sample);
     faithful(`^${spelling(value)}`, desugarCaret(value));
   }), runs);
-  it.effect.prop("X-range expansion agrees with the dialect for every operator", [Arbitrary.schema(Sample), S.Literals(["=", ">", ">=", "<", "<="]).pipe(S.NullOr, Arbitrary.schema)], ([sample, operator]) => Effect.sync(() => {
+  it.effect.prop("X-range expansion agrees with the dialect for every operator", [Arbitrary.schema(Sample), ComparatorOperator.pipe(S.NullOr, Arbitrary.schema)], ([sample, operator]) => Effect.sync(() => {
     const value = parts(sample);
     const expanded = desugarXRange(operator, value);
     faithful(`${operator ?? ""}${spelling(value)}`, expanded);

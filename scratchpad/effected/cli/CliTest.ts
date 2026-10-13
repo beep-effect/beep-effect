@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as PlatformError from "effect/PlatformError";
 import type * as Scope from "effect/Scope";
 import * as Effect from "effect/Effect";
@@ -6,68 +7,116 @@ import * as Path from "effect/Path";
 import * as Stream from "effect/Stream";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/cli/CliTest");
 
 /**
  * A hermetic temp directory minted by {@link CliTest.sandbox}, removed when its
  * scope closes.
  *
+ * **Example** (Validate a plain sandbox)
+ *
+ * ```ts
+ * import { Sandbox } from "@beep/scratchpad/effected/cli/CliTest"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(Sandbox)({ root: "/tmp/cli", home: "/tmp/cli/home", env: {} })) // true
+ * ```
+ *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface Sandbox {
+export const Sandbox = S.Struct({
 	/** The temp directory itself; the default working directory of {@link CliTest.run}. */
-	readonly root: string;
+	root: S.String.annotate($I.annote("Sandbox.root", { description: "The scoped temporary working directory." })),
 	/** The fresh `HOME` inside `root`; the XDG base directories live under it. */
-	readonly home: string;
+	home: S.String.annotate($I.annote("Sandbox.home", { description: "The fresh child HOME inside the sandbox root." })),
 	/**
 	 * The complete child environment: `HOME`, the four `XDG_*_HOME` variables,
 	 * the injected `PATH` and `NO_COLOR=1`. Nothing is inherited from the host.
 	 */
-	readonly env: Readonly<Record<string, string>>;
-}
+	env: S.Record(S.String, S.String).annotate($I.annote("Sandbox.env", { description: "The complete child environment, without inherited host variables." })),
+}).annotate($I.annote("Sandbox", { description: "A hermetic scoped directory and its child environment." }));
+
+/**
+ * The plain sandbox data validated by {@link Sandbox}.
+ * @category models
+ * @since 0.0.0
+ */
+export type Sandbox = typeof Sandbox.Type;
 
 /**
  * How {@link CliTest.run} spawns a bin.
  *
- * @public
- * @category models
- * @since 0.0.0
- */
-export interface RunOptions {
-	/** The sandbox whose environment and root the child runs in. */
-	readonly sandbox: Sandbox;
-	/** The node binary — pass `process.execPath` from the test file, never a PATH lookup. */
-	readonly execPath: string;
-	/** The child's working directory. Defaults to the sandbox `root`. */
-	readonly cwd?: string | undefined;
-	/**
-	 * Extra environment variables, merged over the sandbox environment — the
-	 * way to override `PATH` for one run.
-	 */
-	readonly env?: Readonly<Record<string, string>> | undefined;
-	/**
-	 * Text written to the child's stdin, which is then closed. Omitted or `""`,
-	 * the child gets an already-ended empty input, never an open pipe.
-	 */
-	readonly stdin?: string | undefined;
-}
-
-/**
- * What a spawned bin did, as data: a non-zero exit is a result, not a failure.
+ * **Example** (Validate spawn options with omitted overrides)
+ *
+ * ```ts
+ * import { RunOptions } from "@beep/scratchpad/effected/cli/CliTest"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(RunOptions)({ sandbox: { root: "/tmp/cli", home: "/tmp/cli/home", env: {} }, execPath: "/usr/bin/node" })) // true
+ * ```
  *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface RunResult {
+export const RunOptions = S.Struct({
+	/** The sandbox whose environment and root the child runs in. */
+	sandbox: Sandbox.annotate($I.annote("RunOptions.sandbox", { description: "The sandbox whose environment and root the child runs in." })),
+	/** The node binary — pass `process.execPath` from the test file, never a PATH lookup. */
+	execPath: S.String.annotate($I.annote("RunOptions.execPath", { description: "The explicitly selected runtime executable." })),
+	/** The child's working directory. Defaults to the sandbox `root`. */
+	cwd: S.optional(S.String).annotate($I.annote("RunOptions.cwd", { description: "An optional working-directory override; otherwise the sandbox root." })),
+	/**
+	 * Extra environment variables, merged over the sandbox environment — the
+	 * way to override `PATH` for one run.
+	 */
+	env: S.optional(S.Record(S.String, S.String)).annotate($I.annote("RunOptions.env", { description: "Optional environment overrides merged over the sandbox environment." })),
+	/**
+	 * Text written to the child's stdin, which is then closed. Omitted or `""`,
+	 * the child gets an already-ended empty input, never an open pipe.
+	 */
+	stdin: S.optional(S.String).annotate($I.annote("RunOptions.stdin", { description: "Optional child input; omitted, undefined or empty means an already-ended stream." })),
+}).annotate($I.annote("RunOptions", { description: "Plain subprocess spawn options with optional overrides." }));
+
+/**
+ * The subprocess options validated by {@link RunOptions}.
+ * @category models
+ * @since 0.0.0
+ */
+export type RunOptions = typeof RunOptions.Type;
+
+/**
+ * What a spawned bin did, as data: a non-zero exit is a result, not a failure.
+ *
+ * **Example** (Validate a non-zero exit as data)
+ *
+ * ```ts
+ * import { RunResult } from "@beep/scratchpad/effected/cli/CliTest"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(RunResult)({ exitCode: 3, stdout: "", stderr: "failed" })) // true
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export const RunResult = S.Struct({
 	/** The child's exit code. */
-	readonly exitCode: number;
+	exitCode: S.Finite.annotate($I.annote("RunResult.exitCode", { description: "The child's finite numeric exit code, including non-zero results." })),
 	/** Everything the child wrote to stdout, decoded as UTF-8. */
-	readonly stdout: string;
+	stdout: S.String.annotate($I.annote("RunResult.stdout", { description: "All child standard output decoded as UTF-8." })),
 	/** Everything the child wrote to stderr, decoded as UTF-8. */
-	readonly stderr: string;
-}
+	stderr: S.String.annotate($I.annote("RunResult.stderr", { description: "All child standard error decoded as UTF-8." })),
+}).annotate($I.annote("RunResult", { description: "A plain subprocess exit code and its captured output streams." }));
+
+/**
+ * The captured subprocess data validated by {@link RunResult}.
+ * @category models
+ * @since 0.0.0
+ */
+export type RunResult = typeof RunResult.Type;
 
 const text = <E, R>(stream: Stream.Stream<Uint8Array, E, R>): Effect.Effect<string, E, R> =>
 	stream.pipe(Stream.decodeText, Stream.mkString);

@@ -10,9 +10,9 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
-import type { YamlDocument } from "./YamlDocument.ts";
+import { YamlDocument } from "./YamlDocument.ts";
 import { YamlEdit } from "./YamlEdit.ts";
-import type { YamlToken } from "./YamlToken.ts";
+import { YamlToken } from "./YamlToken.ts";
 
 const $I = $ScratchpadId.create("effected/yaml/YamlLintRule");
 
@@ -91,18 +91,36 @@ export class YamlLintDiagnostic extends S.Class<YamlLintDiagnostic>($I`YamlLintD
 
 /**
  * One source line of the linted document: its text (without the line
- * terminator — the `\n`, and for CRLF input the `\r\n` pair), the offset of
+ * terminator — `\n`, lone `\r`, or the `\r\n` pair), the offset of
  * its first character, and its zero-based line number.
+ *
+ * **Example** (Validate a positioned source line)
+ *
+ * ```ts
+ * import { LintLine } from "@beep/scratchpad/effected/yaml/YamlLintRule";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(LintLine)({ text: "a: 1", offset: 0, number: 0 })); // true
+ * ```
  *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface LintLine {
-	readonly text: string;
-	readonly offset: number;
-	readonly number: number;
-}
+export const LintLine = S.Struct({
+	text: S.String.annotateKey({ description: "Source line text excluding its LF, CR, or CRLF terminator" }),
+	offset: S.Finite.annotateKey({ description: "Zero-based UTF-16 source offset of the line's first character" }),
+	number: S.Finite.annotateKey({ description: "Zero-based source line number" }),
+}).pipe($I.annoteSchema("LintLine", { description: "A positioned source line without its line terminator" }));
+
+/**
+ * A plain positioned source line derived from {@link LintLine}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LintLine = typeof LintLine.Type;
 
 /**
  * The context handed to every rule.
@@ -122,16 +140,38 @@ export interface LintLine {
  * recovered compose, and its `errors`/`warnings` carry what went wrong (the
  * `parse-validity` rule reports them).
  *
+ * **Example** (Validate the shared lint context)
+ *
+ * ```ts
+ * import { LintContext } from "@beep/scratchpad/effected/yaml/YamlLintRule";
+ * import { YamlLint, YamlLintConfig } from "@beep/scratchpad/effected/yaml/YamlLint";
+ * import * as S from "effect/Schema";
+ *
+ * YamlLint.run("a: 1\n", [{ id: "context", check: (ctx) => {
+ *   console.log(S.is(LintContext)(ctx)); // true
+ *   return [];
+ * } }], YamlLintConfig.make({ rules: { context: "error" } }));
+ * ```
+ *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface LintContext {
-	readonly text: string;
-	readonly lines: ReadonlyArray<LintLine>;
-	readonly tokens: ReadonlyArray<YamlToken>;
-	readonly document: YamlDocument;
-}
+export const LintContext = S.Struct({
+	text: S.String.annotateKey({ description: "Complete original YAML source text" }),
+	lines: S.Array(LintLine).annotateKey({ description: "Positioned source lines covering the complete stream" }),
+	tokens: S.Array(YamlToken).annotateKey({ description: "Materialized positioned tokens shared by every lint rule" }),
+	document: YamlDocument.annotateKey({ description: "Recovered first document, including parse errors and warnings" }),
+}).pipe($I.annoteSchema("LintContext", { description: "Shared eager lint input with source, positioned lines, tokens, and the recovered first document" }));
+
+/**
+ * A plain shared lint context derived from {@link LintContext}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LintContext = typeof LintContext.Type;
 
 /**
  * One categorical style observation: a single occurrence of a style

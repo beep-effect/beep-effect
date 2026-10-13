@@ -12,8 +12,6 @@
 
 import * as O from "@beep/utils/Option";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
-import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "../TomlDateTime.ts";
 import type { TomlExpression, TomlValueNode } from "../TomlNode.ts";
 import {
 	TomlArray,
@@ -47,7 +45,6 @@ import {
 	scanWhitespace,
 	skipBom,
 } from "./scanner.ts";
-const isTomlDateTime = S.is(S.Union([TomlOffsetDateTime, TomlLocalDateTime, TomlLocalDate, TomlLocalTime]));
 
 const LF = 0x0a;
 const CR = 0x0d;
@@ -258,9 +255,6 @@ const parseInlineTable = (source: string, openPos: number, depth: number): Parse
 /** Wrap a classified scalar token into its value node. */
 const scalarNode = (source: string, pos: number): Parsed<TomlValueNode> => {
 	const token = scanValueToken(source, pos);
-	if (token.value === "") {
-		return raise("ExpectedValue", "expected a value", pos, 1);
-	}
 	const scalar = classifyValueToken(token.value, pos);
 	const length = token.end - pos;
 	if (P.isBoolean(scalar)) {
@@ -275,11 +269,7 @@ const scalarNode = (source: string, pos: number): Parsed<TomlValueNode> => {
 			: TomlInteger.make({ value: scalar, offset: pos, length });
 		return { node, end: token.end };
 	}
-	if (isTomlDateTime(scalar)) {
-		return { node: TomlDateTimeLiteral.make({ value: scalar, offset: pos, length }), end: token.end };
-	}
-	// classifyValueToken never returns a plain string; unreachable backstop.
-	return raise("InvalidValue", `${String(scalar)} is not a valid TOML value`, pos, length);
+	return { node: TomlDateTimeLiteral.make({ value: scalar, offset: pos, length }), end: token.end };
 };
 
 /** A value at `pos`; `depth` is the number of containers already enclosing it. */

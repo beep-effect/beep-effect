@@ -17,7 +17,7 @@ import {
 	parseReferenceList,
 	parseReferenceLists,
 } from "../../effected/github-references/ClosingList.ts";
-import { CLOSING_KEYWORDS } from "../../effected/github-references/IssueReferences.ts";
+import { CLOSING_KEYWORDS, ClosingKeyword } from "../../effected/github-references/IssueReferences.ts";
 
 const isHarvestedReferenceLists = S.is(S.Array(HarvestedReferenceList));
 
@@ -138,6 +138,23 @@ describe("ClosingList.parseClosingList", () => {
 });
 
 describe("ClosingList.review regressions", () => {
+	it("requires non-empty natural-number lists and natural offsets while preserving duplicates", () => {
+		for (const issueNumbers of [[0], [Number.MAX_SAFE_INTEGER], [0, 0, Number.MAX_SAFE_INTEGER]]) {
+			assert.isTrue(S.is(ClosingList)({ keyword: "fixes", issueNumbers }));
+			assert.isTrue(S.is(ReferenceList)({ keyword: "refs", closing: false, issueNumbers }));
+			assert.isTrue(S.is(HarvestedReferenceList)({ keyword: "refs", closing: false, issueNumbers, start: 0, end: Number.MAX_SAFE_INTEGER }));
+		}
+		for (const issueNumbers of [[], [-1], [Number.MAX_SAFE_INTEGER + 1]]) {
+			assert.isFalse(S.is(ClosingList)({ keyword: "fixes", issueNumbers }));
+			assert.isFalse(S.is(ReferenceList)({ keyword: "refs", closing: false, issueNumbers }));
+			assert.isFalse(S.is(HarvestedReferenceList)({ keyword: "refs", closing: false, issueNumbers, start: 0, end: 8 }));
+		}
+		for (const offset of [-1, Number.MAX_SAFE_INTEGER + 1]) {
+			assert.isFalse(S.is(HarvestedReferenceList)({ keyword: "refs", closing: false, issueNumbers: [0], start: offset, end: 8 }));
+			assert.isFalse(S.is(HarvestedReferenceList)({ keyword: "refs", closing: false, issueNumbers: [0], start: 0, end: offset }));
+		}
+	});
+
 	it("keeps the reference and combined kits in tuple order", () => {
 		assert.strictEqual(REFERENCE_KEYWORDS, ReferenceKeyword.literals);
 		assert.deepStrictEqual(R.values(ReferenceKeyword.Enum), [...REFERENCE_KEYWORDS]);
@@ -173,6 +190,45 @@ describe("ClosingList.review regressions", () => {
 		assert.isFalse(S.is(ReferenceList)({ ...reference, closing: "false" }));
 		assert.isFalse(S.is(HarvestedReferenceList)({ ...reference, start: 0.5, end: 15 }));
 		assert.isFalse(S.is(HarvestedReferenceList)({ ...reference, start: 4, end: Number.POSITIVE_INFINITY }));
+	});
+
+	it("requires the closing flag to match the keyword in both list schemas", () => {
+		for (const keyword of ListKeyword.literals) {
+			const closing = S.is(ClosingKeyword)(keyword);
+			const reference: ReferenceList = { keyword, closing, issueNumbers: [1] };
+			const harvested = { ...reference, start: 4, end: 15 };
+			assert.isTrue(S.is(ReferenceList)(reference));
+			assertSome(S.decodeOption(ReferenceList)(reference), reference);
+			assert.isTrue(S.is(HarvestedReferenceList)(harvested));
+			assertSome(S.decodeOption(HarvestedReferenceList)(harvested), harvested);
+			const crossedReference = { ...reference, closing: closing === false };
+			const crossedHarvested = { ...harvested, closing: closing === false };
+			assert.isFalse(S.is(ReferenceList)(crossedReference));
+			assertNone(S.decodeOption(ReferenceList)(crossedReference));
+			assert.isFalse(S.is(HarvestedReferenceList)(crossedHarvested));
+			assertNone(S.decodeOption(HarvestedReferenceList)(crossedHarvested));
+			const parsed = O.getOrThrow(parseReferenceList(`${keyword} #1`));
+			assert.deepStrictEqual(parsed, reference);
+			assert.isTrue(S.is(ReferenceList)(parsed));
+		}
+	});
+
+	it("requires nonempty ordered harvested spans and accepts real harvests", () => {
+		const text = "see closes #1, #2 and refs #3";
+		const harvested = harvestReferenceLists(text);
+		assert.deepStrictEqual(harvested, [
+			{ keyword: "closes", closing: true, issueNumbers: [1, 2], start: 4, end: 17 },
+			{ keyword: "refs", closing: false, issueNumbers: [3], start: 22, end: 29 },
+		]);
+		for (const list of harvested) {
+			assert.isTrue(S.is(HarvestedReferenceList)(list));
+			assertSome(S.decodeOption(HarvestedReferenceList)(list), list);
+			for (const [start, end] of [[0, 0], [10, 10], [10, 0]] as const) {
+				const invalid = { ...list, start, end };
+				assert.isFalse(S.is(HarvestedReferenceList)(invalid));
+				assertNone(S.decodeOption(HarvestedReferenceList)(invalid));
+			}
+		}
 	});
 
 	it("rejects invalid keywords and prototype names without harvesting them", () => {

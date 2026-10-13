@@ -1,0 +1,107 @@
+{
+  "module": "git",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/git/Git.ts",
+        "scratchpad/effected/git/Gitmodules.ts",
+        "scratchpad/effected/git/internal/config.ts"
+      ],
+      "tests": [
+        "scratchpad/test/git/Git.test.ts",
+        "scratchpad/test/git/GitConfig.test.ts",
+        "scratchpad/test/git/Gitmodules.test.ts",
+        "scratchpad/test/git/internal/config.coverage.test.ts"
+      ],
+      "findings": [
+        "git-r1",
+        "git-r2",
+        "git-r3",
+        "git-r5",
+        "git-r6",
+        "git-r7",
+        "git-r8"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/git/GitCommand.ts"
+      ],
+      "tests": [
+        "scratchpad/test/git/GitCommand.test.ts"
+      ],
+      "findings": [
+        "git-r9"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [],
+      "tests": [
+        "scratchpad/test/git/integration/Git.int.test.ts",
+        "scratchpad/test/git/integration/GitSurface.int.test.ts"
+      ],
+      "findings": [
+        "git-r4"
+      ]
+    }
+  ],
+  "findings": {
+    "git-r1": {
+      "file": "scratchpad/effected/git/Git.ts",
+      "class": "law",
+      "summary": "Three production diagnostic paths use forbidden native JSON serialization.",
+      "fix": "Use the existing encodeJsonString effect in Git.ts, composing it into the typed refusal and preserving the sensitive-redaction branch. In internal/config.ts and Gitmodules.ts, use an identity-annotated module-local S.fromJsonString(S.String) codec with S.encodeResult and explicit Result handling for these deliberately synchronous paths. Preserve every diagnostic byte, escaping rule, error kind and pre-spawn behavior; add quoting/escaping regressions in Git.test.ts, GitConfig.test.ts and Gitmodules.test.ts. Do not change the already compliant commonDir codec."
+    },
+    "git-r2": {
+      "file": "scratchpad/effected/git/Git.ts",
+      "class": "bug",
+      "summary": "commonDir strips a pathname CR and rejects valid embedded LF.",
+      "fix": "On the Unix output path, remove exactly the final LF, preserving preceding pathname bytes. Remove the blanket embedded-LF rejection while retaining rejection of the older-Git echoed --path-format response. Add CR/LF pathname-fidelity regressions in Git.test.ts and retain the old-version refusal tests. Supply this verified upstream-bug evidence and adjusted test sites to central deviation bookkeeping before the behavior edit."
+    },
+    "git-r3": {
+      "file": "scratchpad/effected/git/Git.ts",
+      "class": "schema",
+      "summary": "The shared nonnegative-integer refusal domain has no schema-derived guard.",
+      "fix": "Define one identity-annotated module-local schema for the existing finite nonnegative-integer domain and derive its guard with S.is. Preserve omitted values, acceptance of large integral values, and the existing refusal payload. Do not substitute safe-integer S.Natural. Add boundary regressions in Git.test.ts."
+    },
+    "git-r4": {
+      "file": "scratchpad/test/git/integration/Git.int.test.ts",
+      "class": "tsgo",
+      "summary": "Two real-Git integration files suppress compiler diagnostics with unadmitted skip-file directives.",
+      "fix": "Remove both skip directives and repair every revealed diagnostic within these two integration test files: build one scoped TestLayer context/provisioning boundary, use Effect platform services and Effect composition for fixture operations, and pass protocol/SSH environment through the real spawner instead of mutating process.env. Preserve the real Git binary, real filesystem fixtures, assertions and existing EV010 exception records. Do not edit repo exemption configuration or the lab runner. This is diagnostic repair, not a vitest-canon migration or an unforced-upstream restoration."
+    },
+    "git-r5": {
+      "file": "scratchpad/effected/git/internal/config.ts",
+      "class": "bug",
+      "summary": "Quoted subsection headers incorrectly accept a missing whitespace separator.",
+      "fix": "Record the section-name end and require at least one space or tab before a quoted subsection. Preserve both separators and quoted-empty-subsection acceptance. Add public parse regressions in GitConfig.test.ts and Gitmodules.test.ts, including missing-separator rejection; supply upstream-bug evidence/test sites to central bookkeeping before the behavior edit."
+    },
+    "git-r6": {
+      "file": "scratchpad/effected/git/internal/config.ts",
+      "class": "bug",
+      "summary": "The scanner rejects valid empty dotted subsections.",
+      "fix": "Remove only the subsection === \"\" rejection from the dotted-header check; continue rejecting an empty section name. Retarget internal/config.coverage.test.ts to successful parsing and add empty-subsection lookup assertions in GitConfig.test.ts. Supply verified upstream-bug evidence and changed test sites to central bookkeeping before the behavior edit."
+    },
+    "git-r7": {
+      "file": "scratchpad/effected/git/internal/config.ts",
+      "class": "bug",
+      "summary": "A valid trailing backslash at EOF is incorrectly rejected.",
+      "fix": "When backslash is immediately followed by EOF outside an open quote, drop it from the decoded value, end scanning without an escape diagnostic, and include it in the raw value span so a later set replaces it. Preserve rejection of an open quote and backslash followed by terminal CR. Retarget internal/config.coverage.test.ts and add public parse/set regressions in GitConfig.test.ts; supply upstream-bug evidence/test sites to central bookkeeping before the behavior edit."
+    },
+    "git-r8": {
+      "file": "scratchpad/effected/git/internal/config.ts",
+      "class": "bug",
+      "summary": "A terminal CR becomes value data instead of remaining a line ending.",
+      "fix": "Stop value scanning before consuming a CR accepted by isLineEnd, preserving source text and value spans. Keep embedded CR (quoted and unquoted), CRLF and invalid backslash-plus-terminal-CR behavior. Add get/set regressions in GitConfig.test.ts for empty/nonempty terminal-CR values and Gitmodules.test.ts regressions for shallow=0\\r and shallow=1\\r; supply upstream-bug evidence/test sites to central bookkeeping before the behavior edit."
+    },
+    "git-r9": {
+      "file": "scratchpad/effected/git/GitCommand.ts",
+      "class": "schema",
+      "summary": "GitArg and its named redaction vocabulary lack schema-owned contracts.",
+      "fix": "Define an identity-annotated module-local redaction LiteralKit and a GitArg schema combining strings with the existing { redact, value } carrier. Derive the type from the schema and preserve the private carrier shape, raw argv and redacted argv. Retain/add sensitive-value and URL-userinfo regressions in GitCommand.test.ts. Keep these domains local; do not add public exports solely for bookkeeping."
+    }
+  }
+}

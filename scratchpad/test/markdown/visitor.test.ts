@@ -14,6 +14,7 @@
 
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure, assertSuccess } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Result from "effect/Result";
@@ -135,6 +136,37 @@ describe("MarkdownVisitor", () => {
 		const events = yield* MarkdownVisitor.visit(root).pipe(Stream.take(3), Stream.runCollect);
 		assert.strictEqual(events.length, 3);
 		assert.strictEqual(events[0]?._tag, "Enter");
+	}));
+
+	it.effect("bounds sibling reads for a fixed event prefix by stream chunking", Effect.fnUntraced(function* () {
+		let previousReads: number | undefined;
+		for (const size of [10_000, 50_000]) {
+			let reads = 0;
+			const paragraph = Paragraph.make({ children: [], position: syntheticPosition });
+			const root = Root.make({ children: A.makeBy(size, () => paragraph), position: syntheticPosition });
+			for (let index = 0; index < size; index++) {
+				Object.defineProperty(root.children, index, {
+					get() {
+						reads++;
+						return paragraph;
+					},
+				});
+			}
+			reads = 0;
+			const events = yield* MarkdownVisitor.visit(root).pipe(Stream.take(2), Stream.runCollect);
+			const consumed = reads;
+			assert.deepStrictEqual(events, [
+				MarkdownVisitorEvent.Enter({ node: root, path: [], depth: 0 }),
+				MarkdownVisitorEvent.Enter({ node: paragraph, path: [0], depth: 1 }),
+			]);
+			// fromIterable pulls a whole chunk even when take requests only two events.
+			assert.isAbove(consumed, 0);
+			assert.isAtMost(consumed, Stream.DefaultChunkSize);
+			if (previousReads !== undefined) {
+				assert.strictEqual(consumed, previousReads);
+			}
+			previousReads = consumed;
+		}
 	}));
 
 	it.effect("events are structurally equal for the same walk", Effect.fnUntraced(function* () {

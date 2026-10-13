@@ -69,7 +69,8 @@ const headToken = (ctx: LintContext): YamlToken | undefined => ctx.tokens.find((
  * Separators between documents are structure, not style: removing one
  * would merge two documents. Streams with directives require a start marker;
  * the rule does not synthesize or remove markers in those streams. Removal
- * fixes also require a marker alone on its line.
+ * fixes also require a marker alone on its line and must preserve an empty
+ * first document. A stream BOM stays before an inserted marker.
  *
  * **Example** (Report document-start violations)
  *
@@ -106,7 +107,7 @@ export const documentStart: YamlRule = {
 					character: 0,
 					// A stream with %directives cannot take a synthesized `---` at
 					// offset 0 (directives precede the marker); no fix there.
-					...(directives ? {} : { fix: YamlEdit.make({ offset: 0, length: 0, content: "---\n" }) }),
+					...(directives ? {} : { fix: YamlEdit.make({ offset: ctx.text.startsWith("\uFEFF") ? 1 : 0, length: 0, content: "---\n" }) }),
 				}),
 			];
 		}
@@ -115,7 +116,10 @@ export const documentStart: YamlRule = {
 			// splice the content line. A stream with %directives REQUIRES the
 			// marker, so removing it would invalidate the directives: no fix.
 			const lineText = ctx.lines[first.line]?.text ?? "";
-			const alone = !directives && lineText.trim() === "---";
+			// An empty first document needs its start marker unless an explicit
+			// end marker independently preserves it. Header comments alone do not.
+			const preservesDocument = ctx.document.contents !== null || ctx.document.hasDocumentEnd === true;
+			const alone = !directives && preservesDocument && lineText.trim() === "---";
 			// The fix removes the marker line whole: marker plus its terminator
 			// (two characters under CRLF, one under LF).
 			const terminator = ctx.text.startsWith("\r\n", first.offset + first.length) ? 2 : 1;

@@ -1562,6 +1562,7 @@ const readProvenanceRecords = Effect.fn("CorpusTest.readProvenanceRecords")(func
 
 const decodeArchiveMoveManifestRecordJson = S.decodeUnknownEffect(S.fromJsonString(CorpusArchiveMoveManifestRecord));
 const encodeMailOccurrenceMembershipJson = S.encodeEffect(S.fromJsonString(MailOccurrenceMembership));
+const unknownJson = S.fromJsonString(S.Unknown);
 
 const readArchiveMoveManifestRecords = Effect.fn("CorpusTest.readArchiveMoveManifestRecords")(function* (
   manifestPath: string
@@ -2838,7 +2839,6 @@ type PreservationDenominators = Pick<
   RestorationPreserveOptions,
   "expectedRootArchiveBytes" | "expectedSourceDirectoryCount" | "expectedSourceFileCount" | "expectedSourceTreeBytes"
 >;
-const UnknownJson = S.fromJsonString(S.Unknown);
 
 const measurePreservationDenominators = Effect.fn("CorpusTest.measurePreservationDenominators")(function* (
   sourceRoot: string,
@@ -4251,7 +4251,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       for (const text of [
         "invalid json",
         Str.replace(defaults.runLabel, "wrong-archive")(encoded),
-        yield* S.encodeEffect(UnknownJson)({ ...membership, members: [member, member] }),
+        yield* S.encodeEffect(unknownJson)({ ...membership, members: [member, member] }),
       ]) {
         yield* fs.writeFileString(membershipFile, text);
         yield* restoreMail(options).pipe(Effect.flip);
@@ -4302,7 +4302,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       };
       const decoded = yield* S.decodeEffect(MailOccurrenceMembership)(invalid).pipe(Effect.exit);
       decoded.pipe(Exit.isFailure, assertTrue);
-      yield* fs.writeFileString(membershipFile, yield* S.encodeEffect(UnknownJson)(invalid));
+      yield* fs.writeFileString(membershipFile, yield* S.encodeEffect(unknownJson)(invalid));
       const options = yield* S.decodeEffect(RestorationMailOptions)({
         ...(yield* S.encodeEffect(RestorationMailOptions)(defaults)),
         occurrence: member.objectId,

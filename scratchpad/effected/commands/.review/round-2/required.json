@@ -1,0 +1,62 @@
+{
+  "module": "commands",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/commands/Run.ts",
+        "scratchpad/effected/commands/ScriptedSpawner.ts",
+        "scratchpad/effected/commands/internal/capture.ts"
+      ],
+      "tests": [
+        "scratchpad/test/commands/Run.test.ts",
+        "scratchpad/test/commands/ScriptedSpawner.test.ts",
+        "scratchpad/test/commands/ScriptedSpawner.property.test.ts",
+        "scratchpad/test/commands/internal/capture.coverage.test.ts"
+      ],
+      "findings": [
+        "grok-2-1",
+        "sol-2-1",
+        "fable-2-2"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/commands/Tool.ts"
+      ],
+      "tests": [
+        "scratchpad/test/commands/Tool.property.test.ts"
+      ],
+      "findings": [
+        "fable-2-8"
+      ]
+    }
+  ],
+  "findings": {
+    "grok-2-1": {
+      "file": "scratchpad/effected/commands/Run.ts",
+      "class": "schema",
+      "summary": "DurationInput rejects legal Duration.Input spellings with whitespace before the unit, also rejecting SpawnRecord.forceKillAfter.",
+      "fix": "Keep the current numeric spelling and unit list, but let the numeric template component consume the whitespace that TypeScript permits before the literal space, preserving the original Duration.Input value. Add guard/decoder regressions for \"1  seconds\" and \"-1  seconds\" to Run.test.ts and for the reused forceKillAfter arm to ScriptedSpawner.test.ts; retain existing invalid-input and oracle tests."
+    },
+    "sol-2-1": {
+      "file": "scratchpad/effected/commands/internal/capture.ts",
+      "class": "bug",
+      "summary": "An accepted negative-infinity output budget throws during finite capture-error construction and turns typed overflow into a defect.",
+      "fix": "Keep the schema-tagged capture error and its S.Finite arm for ordinary budgets, but represent the intentional negative-infinity sentinel explicitly in its owning limit schema (S.Union([S.Finite, S.Literal(Number.NEGATIVE_INFINITY)])); retain Effect.fail at the existing overflow check and the existing CommandOutputError tooLarge mapping. This avoids throwing during OutputTooLarge.make without moving failure ahead of spawn or stream consumption. Add Run.collect/Run.succeeds regressions in Run.test.ts and direct capture checks in internal/capture.coverage.test.ts, including Stream.empty versus an emitted empty chunk, finite budgets, Infinity and NaN. The central codemod amends any affected numeric-domain deviation; no fix lane edits Port notes or the ledger."
+    },
+    "fable-2-2": {
+      "file": "scratchpad/effected/commands/ScriptedSpawner.ts",
+      "class": "schema",
+      "summary": "ScriptResult accepts fractional and infinite exits that the owning integer CommandOutput domain rejects with a defect.",
+      "fix": "Export the existing identity-annotated ExitCode from Run.ts and reuse it as S.optional(ExitCode) for ScriptResult.exit. Retain optional/undefined handling, platform-error identity, integer scripted results and oracle process cases. In ScriptedSpawner.test.ts change the fractional/infinite acceptance assertions to rejection assertions and add a valid integer case; in ScriptedSpawner.property.test.ts remove only the obsolete exit arbitrary hint and retain the platform-error hint. Added-export and numeric-domain records go to the central codemod, including the new ExitCode value/type export; do not edit README Port notes or PORT_LEDGER.json."
+    },
+    "fable-2-8": {
+      "file": "scratchpad/effected/commands/Tool.ts",
+      "class": "schema",
+      "summary": "Tool.named duplicates three domain defaults outside the Tool schema in violation of EF-34.",
+      "fix": "Put constructor-only defaults on Tool.version, Tool.source and Tool.onMismatch using the installed S.withConstructorDefault API with Effect-valued defaults (Effect.sync for VersionFlag.make({ flag: \"--version\" }) and Effect.succeed for the two literal defaults). Have Tool.named forward the name and defined overrides to Tool.make instead of rebuilding defaults. Preserve the required decoded/encoded fields and the existing explicit-undefined override semantics. Add focused constructor/default/override checks to Tool.property.test.ts and retain the existing Tool.named oracle assertions in ToolDiscovery.test.ts unchanged. Any law-forced constructor acceptance deviation is recorded centrally, not by this group."
+    }
+  }
+}

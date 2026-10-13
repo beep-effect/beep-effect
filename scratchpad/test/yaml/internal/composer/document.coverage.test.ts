@@ -69,6 +69,9 @@ describe("document composition coverage", () => {
     const tagged = composeFirstDocument("!!map &root {}\n");
     expect(S.is(YamlMap)(tagged.contents)).toBe(true);
     if (S.is(YamlMap)(tagged.contents)) expect(tagged.contents.anchor).toBe("root");
+    const taggedSequence = compose("!!seq []", [node("tag", "!!seq"), node("flow-seq", "[]", 6, [])]);
+    expect(S.is(YamlSeq)(taggedSequence.contents)).toBe(true);
+    if (S.is(YamlSeq)(taggedSequence.contents)) expect(taggedSequence.contents.tag).toBe("!!seq");
   }));
 
   it.effect("handles block sequence siblings, mapping-like trailing nodes and aliases", () => Effect.sync(() => {

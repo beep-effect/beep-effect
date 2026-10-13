@@ -1,11 +1,13 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { APIReference } from "./APIReference.ts";
 import { CreativeWork } from "./CreativeWork.ts";
 import { InvalidNodeIdError, NodeRef, isNodeRef } from "./NodeRef.ts";
@@ -15,6 +17,9 @@ import { SoftwareSourceCode } from "./SoftwareSourceCode.ts";
 import { TechArticle } from "./TechArticle.ts";
 
 const $I = $ScratchpadId.create("effected/schema-org/JsonLdDocument");
+
+const JsonString = S.fromJsonString(S.String);
+const JsonValue = S.fromJsonString(S.Json);
 
 /**
  * Indicates that two nodes in one graph claim the same `@id`.
@@ -57,7 +62,7 @@ export class DuplicateNodeIdError extends S.TaggedError<DuplicateNodeIdError>($I
 	 * @since 0.0.0
 	 */
 	override get message(): string {
-		return `Two nodes claim the same @id: ${JSON.stringify(this.id)}`;
+		return `Two nodes claim the same @id: ${Result.getOrThrow(S.encodeResult(JsonString)(this.id))}`;
 	}
 }
 
@@ -104,7 +109,7 @@ export class ConflictingTermError extends S.TaggedError<ConflictingTermError>($I
 	 * @since 0.0.0
 	 */
 	override get message(): string {
-		return `Node ${JSON.stringify(this.nodeId)} sets ${JSON.stringify(this.term)} in both a typed field and \`additional\``;
+		return `Node ${Result.getOrThrow(S.encodeResult(JsonString)(this.nodeId))} sets ${Result.getOrThrow(S.encodeResult(JsonString)(this.term))} in both a typed field and \`additional\``;
 	}
 }
 
@@ -444,7 +449,7 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	/**
 	 * The JSON-LD wire form of this graph as a plain value: every node's
 	 * catch-all flattened into the node object, and every `undefined`-valued
-	 * key dropped.
+	 * key dropped. Numbers use JSON wire semantics, including `-0` becoming `0`.
 	 *
 	 * **Details**
 	 *
@@ -480,7 +485,7 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	 */
 	toJsonLd(): S.Json {
 		const encoded = Result.getOrThrow(S.encodeResult(JsonLdDocument)(this));
-		return {
+		const wire = {
 			"@context": encoded["@context"],
 			"@graph": encoded["@graph"].map((node) => {
 				const { additional, "@id": id, "@type": type, ...rest } = node;
@@ -495,6 +500,11 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 				return flattened;
 			}),
 		};
+		return pipe(
+			S.encodeResult(JsonValue)(wire),
+			Result.flatMap(S.decodeResult(JsonValue)),
+			Result.getOrThrow,
+		);
 	}
 
 	/**
@@ -547,6 +557,11 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	 * @since 0.0.0
 	 */
 	toScriptBody(): string {
-		return JSON.stringify(this.toJsonLd()).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
+		return pipe(
+			Result.getOrThrow(S.encodeResult(JsonValue)(this.toJsonLd())),
+			Str.replace(/</g, "\\u003c"),
+			Str.replace(/>/g, "\\u003e"),
+			Str.replace(/&/g, "\\u0026"),
+		);
 	}
 }

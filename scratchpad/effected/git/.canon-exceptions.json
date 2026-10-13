@@ -1,0 +1,18 @@
+[
+  {
+    "id": "EV006:scratchpad/test/git/GitConfig.test.ts:373:isTrue@4#1",
+    "reason": "This test deliberately accepts either Result variant for hostile input and verifies that parsing returns a Result without throwing. Requiring success or failure would change its meaning."
+  },
+  {
+    "id": "EV013:scratchpad/test/git/GitConfig.test.ts:509:retry-loop@3#1",
+    "reason": "This is a table of four distinct config-edit operations, each checked once for rejection. It performs no retry or polling."
+  },
+  {
+    "id": "EV010:scratchpad/test/git/integration/Git.int.test.ts:27:@effect/platform-node@0#1",
+    "reason": "The suite tests real Git execution, concurrent OS-pipe collection, and environment propagation through NodeServices."
+  },
+  {
+    "id": "EV010:scratchpad/test/git/integration/GitSurface.int.test.ts:22:@effect/platform-node@0#1",
+    "reason": "The suite verifies the Git service against the real binary and filesystem; a memory filesystem would remove that integration proof."
+  }
+]

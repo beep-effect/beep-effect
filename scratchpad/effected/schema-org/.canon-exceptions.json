@@ -1,0 +1,18 @@
+[
+  {
+    "id": "EV010:scratchpad/test/schema-org/Vocabulary.test.ts:2:node:fs@0#1",
+    "reason": "The subject is the actual generated source file's byte size; a memfs fixture would not verify the repository artifact. Filesystem code remains unchanged."
+  },
+  {
+    "id": "EV010:scratchpad/test/schema-org/entrypoints.test.ts:2:node:fs@0#1",
+    "reason": "The subject is the actual source import graph and entrypoint boundary; a memfs fixture would not detect changes to repository imports. File remains unchanged."
+  },
+  {
+    "id": "EV012:scratchpad/test/schema-org/internal/vocabulary.malformed.test.ts:10:vi.mock@0#1",
+    "reason": "The private decoder runs at module initialization over immutable vendored complete pairs. A scoped tokenizer mock supplies absent and singleton token lists to prove the restored missing-index guard without changing those tables or exporting a test-only API. This pure decoder has no Effect service to substitute with a Layer; normal-table tests independently verify every real pair."
+  },
+  {
+    "id": "EV011:scratchpad/test/schema-org/internal/vocabulary.malformed.test.ts:3:vitest-import@0#1",
+    "reason": "Only vi is imported from vitest because its hoisted module-mock transform requires a direct vitest import; importing vi through @effect/vitest fails mock resolution. Tests and assertions use @effect/vitest and the test runs with it.effect."
+  }
+]

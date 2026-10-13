@@ -432,3 +432,62 @@ describe("SectionDocument review regressions", () => {
     assert.isFalse(S.is(CheckOutcome)({ _tag: "Drifted", onDisk: before }));
   });
 });
+
+
+describe("SectionDocument round-2 regressions", () => {
+  it("creates and reconciles sections containing BOM-prefixed marker-shaped content", () => {
+    for (const marker of [begin("tool"), end("tool")]) {
+      const expected = section("tool", "\uFEFF" + marker);
+      const first = Result.getOrThrow(parse("header\n").reconcile([expected]));
+      const doc = parse(first.text);
+      assert.strictEqual(O.getOrThrow(doc.read(expected.id)).content, expected.content);
+      assert.strictEqual(doc.check(expected)._tag, "UpToDate");
+      const second = Result.getOrThrow(doc.reconcile([expected]));
+      assert.strictEqual(second.text, first.text);
+      assert.isFalse(second.changed);
+    }
+  });
+
+  it("refuses the complete LF reconciliation batch on trailing bare CR without changing the document", () => {
+    const original = lines("header", block("tool", "old"), "footer", "");
+    const doc = parse(original);
+    const result = doc.reconcile([section("tool", "new"), section("later", "a\r")]);
+    if (!Result.isFailure(result)) assert.fail("trailing CR must refuse LF reconciliation");
+    assert.strictEqual(result.failure.reason, "trailingCarriageReturn");
+    assert.strictEqual(result.failure.key, "later");
+    assert.strictEqual(doc.text, original);
+    assert.strictEqual(O.getOrThrow(doc.read(id("tool"))).content, "old");
+    const expected = section("tool", "a\r");
+    const first = Result.getOrThrow(parse("header\r\n").reconcile([expected]));
+    const parsed = parse(first.text);
+    assert.strictEqual(O.getOrThrow(parsed.read(expected.id)).content, "a\r");
+    assert.strictEqual(parsed.check(expected)._tag, "UpToDate");
+    const second = Result.getOrThrow(parsed.reconcile([expected]));
+    assert.strictEqual(second.text, first.text);
+    assert.isFalse(second.changed);
+  });
+
+  it("preserves a leading BOM without introducing a gap when the first section is removed", () => {
+    for (const eol of Eol.literals) {
+      for (const footer of ["", `footer${eol}`]) {
+        const original = "\uFEFF" + [begin("tool"), "body", end("tool"), "", footer].join(eol);
+        const remainder = O.getOrThrow(parse(original).remove(id("tool")));
+        assert.strictEqual(remainder, "\uFEFF" + footer);
+        assertNone(parse(remainder).remove(id("tool")));
+        let text = remainder;
+        for (let count = 0; count < 3; count += 1) {
+          const synced = Result.getOrThrow(parse(text).reconcile([section("tool", "body")]));
+          const fixed = Result.getOrThrow(parse(synced.text).reconcile([section("tool", "body")]));
+          assert.strictEqual(fixed.text, synced.text);
+          assert.isFalse(fixed.changed);
+          text = O.getOrThrow(parse(fixed.text).remove(id("tool")));
+          assert.strictEqual(text, remainder);
+        }
+      }
+      const middle = "\uFEFF" + ["header", "", begin("tool"), "body", end("tool"), "", "footer", ""].join(eol);
+      assert.strictEqual(O.getOrThrow(parse(middle).remove(id("tool"))), "\uFEFF" + ["header", "", "footer", ""].join(eol));
+      const last = "\uFEFF" + ["header", "", begin("tool"), "body", end("tool"), ""].join(eol);
+      assert.strictEqual(O.getOrThrow(parse(last).remove(id("tool"))), "\uFEFFheader" + eol);
+    }
+  });
+});

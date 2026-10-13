@@ -35,16 +35,42 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
-import type { FrontmatterFormat } from "../../MarkdownNode.ts";
+import * as S from "effect/Schema";
 import type { SourceLine } from "../preprocess.ts";
 
 const $I = $ScratchpadId.create("effected/markdown/internal/blocks/frontmatter");
 
+/** The metadata formats selected by frontmatter opening fences.
+ *
+ * **Example** (Validate FrontmatterFormat data)
+ *
+ * ```ts
+ * import { FrontmatterFormat } from "@beep/scratchpad/effected/markdown/internal/blocks/frontmatter";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(FrontmatterFormat)("yaml")); // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FrontmatterFormat = LiteralKit(["yaml", "toml", "json"]).annotate(
+	$I.annote("FrontmatterFormat", { description: "The frontmatter formats selected by the YAML, TOML and JSON opening fences." }),
+);
+/**
+ * The schema-derived FrontmatterFormat value type.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type FrontmatterFormat = typeof FrontmatterFormat.Type;
+
 /** What the fence's opening line commits the scan to. */
-interface FenceRule {
-	readonly format: FrontmatterFormat;
-	readonly close: string;
-}
+const FenceRule = S.Struct({
+	format: FrontmatterFormat.annotateKey({ description: "The format selected by the opening fence." }),
+	close: S.String.annotateKey({ description: "The exact closing fence line." }),
+}).annotate($I.annote("FenceRule", { description: "The format and exact closing fence committed to by an opening line." }));
+type FenceRule = typeof FenceRule.Type;
 
 const FENCES = HashMap.fromIterable<string, FenceRule>([
 	["---", { format: "yaml", close: "---" }],
@@ -55,18 +81,31 @@ const FENCES = HashMap.fromIterable<string, FenceRule>([
 /**
  * A successful capture: everything the parser needs to skip and materialize.
  *
+ * **Example** (Validate FrontmatterCapture data)
+ *
+ * ```ts
+ * import { FrontmatterCapture } from "@beep/scratchpad/effected/markdown/internal/blocks/frontmatter";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(FrontmatterCapture)({ format: "yaml", value: "title: Guide", lineCount: 3, endOffset: 20 })); // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface FrontmatterCapture {
-	readonly format: FrontmatterFormat;
-	/** Raw text between the fences — original terminators, no fence lines. */
-	readonly value: string;
-	/** How many source lines the block spans, both fences included. */
-	readonly lineCount: number;
-	/** Absolute offset of the closing fence's last character, exclusive. */
-	readonly endOffset: number;
-}
+export const FrontmatterCapture = S.Struct({
+	format: FrontmatterFormat.annotateKey({ description: "The metadata format selected by the opening fence." }),
+	value: S.String.annotateKey({ description: "Raw text between fences with original interior terminators and no fence lines." }),
+	lineCount: S.Finite.annotateKey({ description: "Number of source lines spanned, including both fences." }),
+	endOffset: S.Finite.annotateKey({ description: "Exclusive absolute offset of the closing fence's last character." }),
+}).annotate($I.annote("FrontmatterCapture", { description: "A preprocessed frontmatter capture with raw interior terminators and source boundaries." }));
+/**
+ * The schema-derived FrontmatterCapture value type.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type FrontmatterCapture = typeof FrontmatterCapture.Type;
 
 /**
  * Scan the head of a preprocessed document for a frontmatter block.
@@ -176,27 +215,31 @@ export type RawNewline = typeof RawNewline.Type;
  * matching the preprocessed scan where the replacement character breaks the
  * exact match the same way).
  *
+ * **Example** (Validate RawFrontmatterCapture data)
+ *
+ * ```ts
+ * import { RawFrontmatterCapture } from "@beep/scratchpad/effected/markdown/internal/blocks/frontmatter";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(RawFrontmatterCapture)({ format: "yaml", value: "title: Guide\n", newline: "\n", bodyOffset: 21 })); // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface RawFrontmatterCapture {
-	readonly format: FrontmatterFormat;
-	/**
-	 * The exact bytes strictly between the opening fence line (terminator
-	 * included) and the closing fence line: every value line WITH its own
-	 * terminator, verbatim. Empty for a block with no value lines; `"\n"`
-	 * for a block whose value is one blank line — the two stay distinct.
-	 */
-	readonly value: string;
-	/** The line terminator following the opening fence line. */
-	readonly newline: RawNewline;
-	/**
-	 * Absolute offset of the first byte after the closing fence line and its
-	 * line terminator — where the body begins. Equal to the source length
-	 * when the closing fence ends the document.
-	 */
-	readonly bodyOffset: number;
-}
+export const RawFrontmatterCapture = S.Struct({
+	format: FrontmatterFormat.annotateKey({ description: "The metadata format selected by the opening fence." }),
+	value: S.String.annotateKey({ description: "Exact source between fences, including each value line's terminator; empty and a blank value line stay distinct." }),
+	newline: RawNewline.annotateKey({ description: "The line terminator following the opening fence." }),
+	bodyOffset: S.Finite.annotateKey({ description: "Absolute offset after the closing fence and its terminator, where the body begins." }),
+}).annotate($I.annote("RawFrontmatterCapture", { description: "An exact raw frontmatter capture retaining value bytes, opening newline and body boundary." }));
+/**
+ * The schema-derived RawFrontmatterCapture value type.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RawFrontmatterCapture = typeof RawFrontmatterCapture.Type;
 
 /** The terminator starting at `offset`, or null when none does. */
 const terminatorAt = (source: string, offset: number): RawNewline | null => {

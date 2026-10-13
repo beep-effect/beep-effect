@@ -143,6 +143,7 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **effect-imports** — The lab source, tests and JSDoc examples import dedicated effect/Module paths instead of the upstream effect barrel. (module suite scratchpad/test/spdx/**)
 - **identity-annotations** — The lab adds composer-derived identifiers, field descriptions and schema metadata to the upstream classes, AST union and string codec. (module suite scratchpad/test/spdx/**)
 - **test-environment** — The lab supplies the upstream oracle ambient declaration beside the lab tests instead of relying on the upstream types-directory layout. (scratchpad/test/spdx/oracle.int.test.ts:43; scratchpad/test/spdx/spdx-expression-parse.d.ts:1)
+- **schema-first** — Compared with upstream’s type-only raw parser contract, the lab adds an annotated runtime RawExpression schema with schema-derived leaf and WITH types while retaining plain-object parser output (scratchpad/test/spdx/internal/parser.coverage.test.ts:9; scratchpad/test/spdx/internal/parser.coverage.test.ts:22).
 
 ### Dependency backlog
 

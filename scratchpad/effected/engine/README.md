@@ -105,6 +105,7 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **identity-annotations** — The lab gives Distribution, DistributionField, Remediation and ProjectDirInput composed schema identities and field descriptions where upstream had none. (scratchpad/test/engine/Distribution.test.ts:21; scratchpad/test/engine/LaunchContext.test.ts:26; scratchpad/test/engine/Remediation.test.ts:7,13,18)
 - **test-environment** — The lab retargets upstream package-local source/build paths to engine's scratchpad directory and supplies compiler emission through Vitest global setup. (scratchpad/test/engine/entrypoints.test.ts:50; scratchpad/test/engine/purity.test.ts:17; scratchpad/test/engine/build.setup.ts:49)
 - **reachability** — The lab retargets upstream's package-free guard graph assertions to allow only effect/* while retaining the exact local-module lists and isolated subpath. (scratchpad/test/engine/entrypoints.test.ts:43,50,59,65)
+- **upstream-bug** — The lab import walker excludes exported-class JSDoc example imports that the pinned upstream regex falsely treats as runtime dependencies, while retaining multiline runtime clauses and type-only filtering (scratchpad/test/engine/entrypoints.test.ts:44; scratchpad/test/engine/entrypoints.test.ts:51).
 
 ### Dependency backlog
 

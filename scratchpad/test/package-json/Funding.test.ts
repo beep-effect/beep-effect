@@ -22,6 +22,8 @@ import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
 import { Funding, LenientManifest, Package, PackageManifest } from "../../effected/package-json/index.ts";
 
 const Json = S.fromJsonString(S.Unknown);
@@ -31,6 +33,102 @@ const decode = <A, I>(schema: S.Codec<A, I>, input: unknown) => S.decodeUnknownE
 const encode = <A, I>(schema: S.Codec<A, I>, value: A) => S.encodeUnknownEffect(schema)(value);
 
 const field = Funding.FromField;
+
+describe("Funding — own __proto__ extension fidelity", () => {
+	it.effect("FromValue and bare/array FromField preserve an own data key after a URL edit", () =>
+		Effect.gen(function* () {
+			const text = '{"url":"https://old.example","__proto__":{"keep":1},"platform":"ko-fi"}';
+			const input = yield* S.decodeEffect(JsonObject)(text);
+			assert.isTrue(R.has(input, "__proto__"));
+			const value = yield* decode(Funding.FromValue, input);
+			const bare = yield* decode(field, input);
+			const array = yield* decode(field, [input, "https://second.example"]);
+			const bareEntry = bare[0];
+			const arrayEntry = array[0];
+			assertDefined(bareEntry);
+			assertDefined(arrayEntry);
+			for (const entry of [value, bareEntry, arrayEntry]) {
+				const rest = entry.rest;
+				assertDefined(rest);
+				assert.isTrue(R.has(rest, "__proto__"));
+				assert.deepStrictEqual(R.get(rest, "__proto__"), O.some({ keep: 1 }));
+				assert.strictEqual(Object.getPrototypeOf(rest), Object.prototype);
+				assert.deepStrictEqual(R.keys(rest), ["__proto__", "platform"]);
+			}
+			assert.strictEqual(yield* S.encodeEffect(Json)(yield* encode(Funding.FromValue, value)), text);
+			assert.strictEqual(yield* S.encodeEffect(Json)(yield* encode(field, bare)), text);
+			assert.strictEqual(
+				yield* S.encodeEffect(Json)(yield* encode(field, array)),
+				`[${text},"https://second.example"]`,
+			);
+			for (const entry of [value, bareEntry, arrayEntry]) {
+				Object.assign(entry, { url: "https://new.example" } satisfies Partial<Funding>);
+			}
+			const encodedValue = yield* encode(Funding.FromValue, value);
+			const encodedBare = yield* encode(field, bare);
+			const encodedArray = yield* encode(field, array);
+			assertTrue(A.isArray(encodedArray));
+			for (const encoded of [encodedValue, encodedBare, encodedArray[0]]) {
+				assertTrue(P.isObject(encoded));
+				assert.isTrue(R.has(encoded, "__proto__"));
+				assert.deepStrictEqual(R.get(encoded, "__proto__"), O.some({ keep: 1 }));
+				assert.strictEqual(Object.getPrototypeOf(encoded), Object.prototype);
+				assert.deepStrictEqual(encoded, { ...input, url: "https://new.example" });
+			}
+			assert.strictEqual(encodedArray[1], "https://second.example");
+		}),
+	);
+});
+
+describe("Funding — extension deletions invalidate remembered-wire replay", () => {
+	for (const array of [false, true]) {
+		for (const clear of [false, true]) {
+			it.effect(`${array ? "array" : "bare object"}: ${clear ? "clearing rest" : "deleting one key"} persists`, () =>
+				Effect.gen(function* () {
+					const text = '{"remove":2,"url":"https://fund.example","keep":1}';
+					const input = yield* S.decodeEffect(JsonObject)(text);
+					const entries = yield* decode(field, array ? [input, "https://second.example"] : input);
+					assert.strictEqual(
+						yield* S.encodeEffect(Json)(yield* encode(field, entries)),
+						array ? `[${text},"https://second.example"]` : text,
+					);
+					const entry = entries[0];
+					assertDefined(entry);
+					const rest: Record<string, unknown> | undefined = entry.rest;
+					assertDefined(rest);
+					if (clear) Object.assign(entry, { rest: {} } satisfies Partial<Funding>);
+					else delete rest.remove;
+					const expected = { url: "https://fund.example", ...(clear ? {} : { keep: 1 }) };
+					const encoded = yield* encode(field, entries);
+					assert.deepStrictEqual<unknown>(encoded, array ? [expected, "https://second.example"] : expected);
+					assert.strictEqual(
+						yield* S.encodeEffect(Json)(encoded),
+						yield* S.encodeEffect(Json)(array ? [expected, "https://second.example"] : expected),
+					);
+				}),
+			);
+		}
+	}
+
+	it.effect("an inherited name and an undefined extension still count as additions", () =>
+		Effect.gen(function* () {
+			const additions: ReadonlyArray<Record<string, unknown>> = [
+				{ toString: Object.prototype.toString },
+				{ absent: undefined },
+			];
+			for (const rest of additions) {
+				const entries = yield* decode(field, { url: "https://fund.example", keep: 1 });
+				const entry = entries[0];
+				assertDefined(entry);
+				Object.assign(entry, { rest } satisfies Partial<Funding>);
+				const encoded = yield* encode(field, entries);
+				assertTrue(P.isObject(encoded));
+				assert.deepStrictEqual(encoded, { url: "https://fund.example", ...rest });
+				assert.deepStrictEqual(R.keys(encoded), ["url", ...R.keys(rest)]);
+			}
+		}),
+	);
+});
 
 describe("Funding.FromField — every encoding decodes to an array", () => {
 	it.effect("a bare URL string", () =>

@@ -397,8 +397,14 @@ function parseBlockMappingInner(state: ParserState, indent: number): CstNode {
 
 		// Nested block structures
 		if (token.kind === "block-map-start") {
-			// A map scope emits its start marker once; further markers are nested.
-			children.push(parseBlockMapping(state, token.column));
+			if (token.column > indent) {
+				children.push(parseBlockMapping(state, token.column));
+			} else if (token.column === indent) {
+				// Same-indent: lexer re-emitted scope marker; consume and continue.
+				advance(state);
+			} else {
+				break;
+			}
 			continue;
 		}
 

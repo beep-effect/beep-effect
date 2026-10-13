@@ -3,25 +3,23 @@
 // the exported `Mdast` class.
 
 import * as Match from "effect/Match";
-import * as HashMap from "effect/HashMap";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { unescapeString } from "./internal/unescape.ts";
 import type {
 	FlowContent,
 	Frontmatter,
-	FrontmatterFormat,
 	List,
 	MarkdownNode,
 	MdxJsxAttributeContent,
 	PhrasingContent,
-	Position,
 } from "./MarkdownNode.ts";
-import { Root } from "./MarkdownNode.ts";
+import { FrontmatterFormat, Position, Root } from "./MarkdownNode.ts";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as O from "@beep/utils/Option";
@@ -113,9 +111,10 @@ const projectChildren = (children: ReadonlyArray<AnyNode>): Array<Record<string,
 // This package's Code.value carries its final line terminator (the engine's
 // convention); mdast-util-from-markdown stores the value
 // without it and lets renderers re-add it. The projection translates: strip
-// one final line ending going out, restore it coming back in.
+// one carried LF going out, restore it coming back in. A preceding CR is
+// content and must survive both projection and stringify.
 const stripFinalLineEnding = (value: string): string =>
-	Str.endsWith("\r\n")(value) ? value.slice(0, -2) : Str.endsWith("\n")(value) ? value.slice(0, -1) : value;
+	Str.endsWith("\n")(value) ? Str.slice(0, -1)(value) : value;
 
 // mdast's Association rules that `label` is a *parsed* value — character
 // escapes and character references decoded — while this package's nodes keep
@@ -130,8 +129,13 @@ const projectLabel = (label: string | undefined): Record<string, unknown> =>
 // records CommonMark looseness (a blank line between items OR between the
 // blocks inside one item; the rendering contract). The between-items reading
 // is recomputable from item positions, so the projection derives it instead
-// of forwarding the looseness bit.
+// of forwarding the looseness bit. Synthetic item positions cannot encode
+// those gaps, so foreign positionless lists keep their admitted spread bit.
+const equivalentPosition = S.toEquivalence(Position);
 const listSpread = (node: List): boolean => {
+	if (A.some(node.children, (item) => equivalentPosition(item.position, Position.synthetic))) {
+		return node.spread ?? false;
+	}
 	for (const [current, next] of A.zip(node.children, node.children.slice(1))) {
 		if (next.position.start.line - current.position.end.line >= 2) {
 			return true;
@@ -296,12 +300,8 @@ const projectMdxAttribute = (attribute: MdxJsxAttributeContent): Record<string, 
 	};
 };
 
-/** The frontmatter literal node types foreign mdast spells per format. */
-const frontmatterTypes = HashMap.fromIterable<string, FrontmatterFormat>([
-	["yaml", "yaml"],
-	["toml", "toml"],
-	["json", "json"],
-]);
+/** Membership follows the format schema rather than a second vocabulary. */
+const isFrontmatterFormat = S.is(FrontmatterFormat);
 
 /**
  * Fields admitted per foreign node type, beyond `type`/`position`/`children`.
@@ -372,16 +372,21 @@ const normalizePosition = (value: unknown): Record<string, unknown> => {
 // types onto the Frontmatter capture shape, and recurse into children.
 // Unrecognized types pass through shallowly so schema decoding reports them
 // as typed failures rather than this walk throwing.
-const normalizeNode = (value: unknown): unknown => {
+const normalizeNode = (value: unknown, ancestors: ReadonlyArray<object> = []): Result.Result<unknown, MdastDecodeError> => Result.gen(function* () {
 	if (!isRecord(value) || !P.isString(value.type)) {
 		return value;
 	}
+	if (A.some(ancestors, (ancestor) => ancestor === value)) {
+		return yield* Result.fail(MdastDecodeError.make({
+			issue: new SchemaIssue.InvalidValue({ message: "A foreign mdast node cannot contain an ancestor as a child." }),
+		}));
+	}
+	const stack = A.append(ancestors, value);
 	const type = value.type;
-	const format = O.getOrUndefined(HashMap.get(frontmatterTypes, type));
-	if (format !== undefined) {
+	if (isFrontmatterFormat(type)) {
 		return {
 			type: "frontmatter",
-			format,
+			format: type,
 			value: value.value,
 			position: normalizePosition(value.position),
 		};
@@ -401,7 +406,9 @@ const normalizeNode = (value: unknown): unknown => {
 			type,
 			name: value.name,
 			attributes: A.isArray(value.attributes) ? value.attributes.map(normalizeMdxAttribute) : value.attributes,
-			children: A.isArray(value.children) ? value.children.map(normalizeNode) : value.children,
+			children: A.isArray(value.children)
+				? yield* Result.all(A.map(value.children, (child) => normalizeNode(child, stack)))
+				: value.children,
 			position: normalizePosition(value.position),
 		};
 	}
@@ -423,16 +430,14 @@ const normalizeNode = (value: unknown): unknown => {
 	// Restore the engine's carried-terminator convention on code values (the
 	// inverse of toMdast's strip).
 	if (type === "code" && P.isString(normalized.value) && normalized.value !== "") {
-		// Use CRLF after a content-final CR so stripping the carried line ending
-		// cannot consume that content character as half of a CRLF pair.
-		normalized.value = `${normalized.value}${Str.endsWith("\r")(normalized.value) ? "\r\n" : "\n"}`;
+		normalized.value = `${normalized.value}\n`;
 	}
 	if (A.isArray(value.children)) {
-		normalized.children = value.children.map(normalizeNode);
+		normalized.children = yield* Result.all(A.map(value.children, (child) => normalizeNode(child, stack)));
 	}
 	normalized.position = normalizePosition(value.position);
 	return normalized;
-};
+});
 
 // One foreign JSX attribute node: positions synthesized like tree nodes,
 // a string/null value passed through (both spellings are the contract), a
@@ -599,7 +604,9 @@ export class Mdast {
 	 * @since 0.0.0
 	 */
 	static fromMdastResult(input: unknown): Result.Result<Root, MdastDecodeError> {
-		return Result.mapError(decodeRoot(normalizeNode(input)), (error) => MdastDecodeError.make({ issue: error.issue }));
+		return Result.flatMap(normalizeNode(input), (normalized) =>
+			Result.mapError(decodeRoot(normalized), (error) => MdastDecodeError.make({ issue: error.issue })),
+		);
 	}
 
 	/**

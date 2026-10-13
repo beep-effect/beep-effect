@@ -1,0 +1,16 @@
+I'll review the eleven inline parsers against the pinned upstream oracle and the round-1 inventory, and report only new findings.Round 1 already covered these inlines. I'll compare the current commit to that inventory and the pinned oracle, and only report what is still open or newly wrong.Round-1 fixes are recorded. I'll read the eleven parsers and their upstream originals for new divergences the gates would not catch.I'll finish the inline review by checking the two raw-HTML traces against the pinned oracle, the spec, and the tests that the gates already passed.The abrupt-comment precheck does not reject `<!-->` — that string already contains `-->`. I'll compare the other inlines with the oracle and check whether the new `<!` scan is a real regression.### grok-2-1
+- file: scratchpad/effected/markdown/internal/inlines/rawHtml.ts:22
+- class: perf   severity: required
+- standard: D11 algorithmic-class rule; D9   evidence: `UNTERMINATED_FORMS` adds `["<!", ">"]` (line 22), and the loop at lines 59–62 calls `hasAhead` before `reHtmlTag`. `hasAhead` (`inlineParser.ts:307–316`) memoizes only misses. `reHtmlTag` accepts a declaration only as `<![A-Za-z]+[^>]*>` (`htmlTags.ts:59`). The pinned oracle’s `rawHtml.ts` has no `<!` opener and goes straight to that regex. `raw-html-pathological.test.ts` covers `<!A` with no `>` (memoized miss, zero regex calls) and `<!A` repeated plus one `>` (one successful declaration). It does not cover an invalid `<!` prefix.
+- failure: On `("<! ".repeat(n)) + ">"` — the same shape as `<!9` or `<!-` — each of the n `<` triggers starts with `<!`, `hasAhead(">")` finds the final `>`, and the regex then rejects the prefix. Each hit scans the remaining subject and is not cached, so the paragraph does Θ(n²) character visits. The same input is Θ(n) on the pinned oracle: the regex fails on the third character and the single-character fallback advances. Unterminated `<!A` with no `>` stays linear; this is the neighboring input the req-33 closer reopened.
+- fix: Apply the `<!` / `>` precheck only when the character after `<!` is `[A-Za-z]`. Leave the `<!--`, `<?`, and `<![CDATA[` entries as they are.
+
+### grok-2-2
+- file: scratchpad/effected/markdown/internal/inlines/emphasis.ts:64
+- class: jsdoc   severity: required
+- standard: `.patterns/jsdoc-documentation.md` (a present section is non-empty; do not add an empty section to fill the shape; forbidden list includes empty body sections)   evidence: Docgen being green does not cover this. A search of `packages/tooling` finds no emptiness check for `**Details**` / `**Gotchas**` bodies; `jsdoc-migrate.test.ts` only checks that a migrated Details section stays before Example. These headings have no prose before the next section or the TSDoc tags: `emphasis.ts:64`, `emphasis.ts:176`, `codeSpan.ts:22`, `entity.ts:21`, `escape.ts:20`, `footnoteReference.ts:64`, `footnoteReference.ts:141`, `lineBreak.ts:24`.
+- failure: Each of those exported blocks opens a `**Details**` section and then ends it immediately. The section grammar treats that as an empty body section, which the docgen example compile does not reject.
+- fix: Delete those empty `**Details**` headings. Details is optional; do not add filler prose.
+
+REQUIRED: 2
+BACKLOG: 0

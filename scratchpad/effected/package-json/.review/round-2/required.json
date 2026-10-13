@@ -1,0 +1,178 @@
+{
+  "module": "package-json",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/package-json/Person.ts",
+        "scratchpad/effected/package-json/Funding.ts",
+        "scratchpad/effected/package-json/Repository.ts",
+        "scratchpad/effected/package-json/internal/format.ts"
+      ],
+      "tests": [
+        "scratchpad/test/package-json/Person.test.ts",
+        "scratchpad/test/package-json/Funding.test.ts",
+        "scratchpad/test/package-json/Repository.test.ts"
+      ],
+      "findings": [
+        "grok-2-1",
+        "sol-2-4",
+        "fable-2-6-format",
+        "fable-2-7",
+        "fable-2-9",
+        "fable-2-10"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/package-json/EntryPoint.ts",
+        "scratchpad/effected/package-json/LenientManifest.ts",
+        "scratchpad/effected/package-json/PackageJsonFormat.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "fable-2-6-entrypoint",
+        "fable-2-6-package-json-format",
+        "fable-2-6-lenient",
+        "fable-2-15"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/package-json/Package.ts",
+        "scratchpad/effected/package-json/PackageManifest.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "fable-2-5"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/package-json/PackageValidator.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "fable-2-8"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/package-json/License.ts",
+        "scratchpad/effected/package-json/PackageName.ts",
+        "scratchpad/effected/package-json/PackageManager.ts",
+        "scratchpad/effected/package-json/PackageManagerRange.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "fable-2-11",
+        "fable-2-12",
+        "fable-2-13",
+        "fable-2-14"
+      ]
+    }
+  ],
+  "findings": {
+    "grok-2-1": {
+      "file": "scratchpad/effected/package-json/Person.ts",
+      "class": "bug",
+      "summary": "Nested Person/Funding/Repository/Bugs rest partitions lose an own __proto__ field after editing.",
+      "fix": "Construct all five filtered unknown-key records with R.fromEntries over ordered R.toEntries, excluding the appropriate known-key HashSet; reuse Repository.restOf in both decode branches where equivalent. Use the R.fromEntries remedy from Grok/Sol, not the alternative null-prototype accumulators proposed by Fable (later grilling replaces those). Add Person.test.ts, Funding.test.ts and Repository.test.ts regressions using JSON.parse or the schema JSON codec to supply an OWN __proto__ data field: assert own-key/value preservation, ordinary record prototype, and decode → modeled-field edit → encode fidelity, including Funding.FromField and both Repository/Bugs codecs. Keep existing wire order and replay assertions. Supply one verified upstream-bug receipt and test references to central bookkeeping; do not edit ledger or README Port notes."
+    },
+    "sol-2-4": {
+      "file": "scratchpad/effected/package-json/Funding.ts",
+      "class": "bug",
+      "summary": "Funding remembered-wire replay silently restores deleted extension fields.",
+      "fix": "Require equal unknown-key sets between restOf(wire) and funding.rest ?? {} before replay, checking both additions and deletions and retaining existing value comparisons with own-key-safe access. Add Funding.test.ts regressions for deleting one key and clearing rest, covering bare-object and array FromField encoding while retaining representation/order promises. Coordinate with grok-2-1's R.fromEntries partition fix. Supply the verified upstream-bug receipt and test references to central bookkeeping; do not edit ledger or README Port notes."
+    },
+    "fable-2-5": {
+      "file": "scratchpad/effected/package-json/Package.ts",
+      "class": "effect-idiom",
+      "summary": "Package and PackageManifest spell identity callbacks instead of using effect/Function.identity.",
+      "fix": "Package.ts:1106 → `Result.getOrThrowWith(..., Fn.identity)`; PackageManifest.ts:177 → import `identity` from effect/Function and pass it."
+    },
+    "fable-2-6-entrypoint": {
+      "file": "scratchpad/effected/package-json/EntryPoint.ts",
+      "class": "effect-idiom",
+      "summary": "EntryPoint duplicates the existing P.isObject record guard.",
+      "fix": "Replace this local guard with P.isObject directly, retaining the explicit (value: unknown) => value is Record<string, unknown> type where needed. Remove only imports made unused in this file; preserve array/function/null rejection and every current assertion. No cross-file helper or test rewrite is needed."
+    },
+    "fable-2-6-format": {
+      "file": "scratchpad/effected/package-json/internal/format.ts",
+      "class": "effect-idiom",
+      "summary": "Internal formatter duplicates the existing P.isObject record guard.",
+      "fix": "Replace this local guard with P.isObject directly, retaining the explicit (value: unknown) => value is Record<string, unknown> type where needed. Remove only imports made unused in this file; preserve array/function/null rejection and every current assertion. No cross-file helper or test rewrite is needed."
+    },
+    "fable-2-6-package-json-format": {
+      "file": "scratchpad/effected/package-json/PackageJsonFormat.ts",
+      "class": "effect-idiom",
+      "summary": "PackageJsonFormat duplicates the existing P.isObject record guard.",
+      "fix": "Replace this local guard with P.isObject directly, retaining the explicit (value: unknown) => value is Record<string, unknown> type where needed. Remove only imports made unused in this file; preserve array/function/null rejection and every current assertion. No cross-file helper or test rewrite is needed."
+    },
+    "fable-2-6-lenient": {
+      "file": "scratchpad/effected/package-json/LenientManifest.ts",
+      "class": "effect-idiom",
+      "summary": "LenientManifest duplicates the existing P.isObject record guard.",
+      "fix": "Replace this local guard with P.isObject directly, retaining the explicit (value: unknown) => value is Record<string, unknown> type where needed. Remove only imports made unused in this file; preserve array/function/null rejection and every current assertion. No cross-file helper or test rewrite is needed."
+    },
+    "fable-2-7": {
+      "file": "scratchpad/effected/package-json/internal/format.ts",
+      "class": "effect-idiom",
+      "summary": "Rest emptiness checks re-spell R.isEmptyRecord across four files.",
+      "fix": "`R.isEmptyRecord(x)` for the `=== 0` sites and `!R.isEmptyRecord(x)` for the `> 0` sites, behaviour unchanged."
+    },
+    "fable-2-8": {
+      "file": "scratchpad/effected/package-json/PackageValidator.ts",
+      "class": "effect-idiom",
+      "summary": "Dependency validation detours through an array instead of HashMap.some and uses native string predicates.",
+      "fix": "Replace map.pipe(HashMap.values, A.fromIterable, A.some(predicate)) with HashMap.some(map, predicate), preserving short-circuiting across the four dependency maps. Use Str.startsWith for workspace:/catalog: and file:/link:/portal: predicates; import effect/String. Keep all validation messages, rule order and upstream assertions unchanged."
+    },
+    "fable-2-9": {
+      "file": "scratchpad/effected/package-json/Repository.ts",
+      "class": "effect-idiom",
+      "summary": "Repository parsing and path rendering use native string helpers and trivial wrapper callbacks.",
+      "fix": "Replace with Str.endsWith/Str.slice/Str.trim/Str.indexOf (O.match)/Str.startsWith/Str.replace/Str.split; :104 becomes `Str.lastIndexOf(\"@\")(Str.slice(0, colon)(withoutGitPlus))` (same answer as the fromIndex form); :329 `A.map(Str.split(directory, \"/\"), Str.trim)`; :341 `A.map(segments, encodeURIComponent)`. Keep every existing assertion. Preserve first-colon/last-@ boundary behavior; Str.indexOf/lastIndexOf return Option, so handle missing delimiters explicitly without casts."
+    },
+    "fable-2-10": {
+      "file": "scratchpad/effected/package-json/Person.ts",
+      "class": "effect-idiom",
+      "summary": "Person shorthand parsing uses native match/replace/trim helpers.",
+      "fix": "`const emailMatch = Str.match(/<([^>]+)>/)(input)` (Option), `O.isSome` guards in place of `!== null`, `Str.replace(emailMatch.value[0], \"\")(name)`, `Str.trim(name)`; preserve the exact name/email/url extraction and the wire-fidelity tests."
+    },
+    "fable-2-11": {
+      "file": "scratchpad/effected/package-json/License.ts",
+      "class": "effect-idiom",
+      "summary": "SPDX validation uses native startsWith instead of effect/String.",
+      "fix": "`Str.startsWith(\"SEE LICENSE IN \")(value)` with `import * as Str from \"effect/String\"`; the length comparison stays."
+    },
+    "fable-2-12": {
+      "file": "scratchpad/effected/package-json/PackageName.ts",
+      "class": "effect-idiom",
+      "summary": "PackageName classification statics use native string helpers.",
+      "fix": "Use Str.startsWith(\"@\")(name); implement scope using O.map(Str.indexOf(\"/\")(name), (slash) => Str.slice(1, slash)(name)), and unscoped using O.getOrElse(O.map(Str.indexOf(\"/\")(name), (slash) => Str.slice(slash + 1)(name)), () => name). Import effect/String; preserve all current classification results and PackageName.test.ts assertions."
+    },
+    "fable-2-13": {
+      "file": "scratchpad/effected/package-json/PackageManager.ts",
+      "class": "effect-idiom",
+      "summary": "PackageManager parsing uses native indexOf/slice instead of effect/String.",
+      "fix": "Split on `Str.indexOf(\"@\")(input)` with O.match (none → the existing format failure), then `Str.slice(0, at)(input)` / `Str.slice(at + 1)(input)`; same for the first `+`; keep every decode message and PackageManager.test.ts assertion."
+    },
+    "fable-2-14": {
+      "file": "scratchpad/effected/package-json/PackageManagerRange.ts",
+      "class": "effect-idiom",
+      "summary": "PackageManagerRange parsing uses native string helpers.",
+      "fix": "Str.startsWith/Str.slice in singleComparator (or read the regex capture groups already matched), `Str.indexOf(\"+\")(tail)` with O.match in fromParts, `Str.indexOf(\"@\")(input)` with O.match in parseResult; preserve the reason literals and PackageManagerRange.test.ts assertions."
+    },
+    "fable-2-15": {
+      "file": "scratchpad/effected/package-json/PackageJsonFormat.ts",
+      "class": "effect-idiom",
+      "summary": "PackageJsonFormat uses native array join and string includes at the format boundary.",
+      "fix": ":198 → `A.join(A.map(this.path, (segment) => `${segment}`), \", \")` (path carries numbers, A.join takes strings); :401 → `Str.includes(\"\\r\\n\")(source) ? \"\\r\\n\" : \"\\n\"`; keep the message text and Modify tests byte-identical."
+    }
+  }
+}
+

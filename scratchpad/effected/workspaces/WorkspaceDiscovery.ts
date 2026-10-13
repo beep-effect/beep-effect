@@ -31,7 +31,6 @@ import { readPatterns } from "./internal/patterns.ts";
 import { WorkspacePackage } from "./WorkspacePackage.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
-import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspaceDiscovery");
 
@@ -92,7 +91,7 @@ export class WorkspaceDiscoveryError extends S.TaggedError<WorkspaceDiscoveryErr
 	/** What went wrong with it. */
 	kind: WorkspaceDiscoveryErrorKind.annotateKey({ description: "What went wrong with it." }),
 	/** The originating failure, if there was one. */
-	cause: S.Defect().annotateKey({ description: "The originating failure, if there was one." }),
+	cause: S.Defect({ includeStack: true }).annotateKey({ description: "The originating failure, if there was one." }),
 }, $I.annote("WorkspaceDiscoveryError", { description: "Raised when a workspace member's `package.json` cannot be read, parsed, or used — it is missing, malformed, or lacks a `name`." })) {
 	/**
 	 * Renders the failing file and kind into a one-line message.
@@ -257,14 +256,28 @@ export type WorkspaceLookupFailure =
  */
 export type WorkspaceDiscoveryFailure = Exclude<WorkspaceLookupFailure, PackageNotFoundError>;
 
+const DiscoveryDepth = S.declare(P.isNumber).annotate(
+	$I.annote("DiscoveryDepth", { description: "The existing numeric descent cap, without additional refinement." }),
+);
+
 /**
  * Options for the {@link WorkspaceDiscovery} layer.
+ *
+ * **Example** (Validate an optional discovery root)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { WorkspaceDiscoveryOptions } from "@beep/scratchpad/effected/workspaces/WorkspaceDiscovery";
+ *
+ * console.log(S.is(WorkspaceDiscoveryOptions)({ cwd: "/repo" })) // true
+ * console.log(S.is(WorkspaceDiscoveryOptions)(null)) // false
+ * ```
  *
  * @public
  * @category configuration
  * @since 0.0.0
  */
-export interface WorkspaceDiscoveryOptions {
+export const WorkspaceDiscoveryOptions = S.Struct({
 	/**
 	 * The directory the workspace root is resolved from.
 	 *
@@ -272,7 +285,7 @@ export interface WorkspaceDiscoveryOptions {
 	 *   `process.chdir` between providing the layer and the first call is
 	 *   honoured.
 	 */
-	readonly cwd?: string;
+	cwd: S.optionalKey(S.String).annotateKey($I.annote("cwd", { description: "Optional working directory, resolved lazily." })),
 	/**
   * A ceiling for the layer-bound root ascent from `cwd`, passed straight
   * through to the `stopAt` of {@link WorkspaceRoot}'s `find`.
@@ -299,10 +312,18 @@ export interface WorkspaceDiscoveryOptions {
   *
   * @defaultValue no ceiling — the ascent runs to the filesystem root.
   */
-	readonly stopAt?: string | undefined;
+	stopAt: S.optional(S.String).annotateKey($I.annote("stopAt", { description: "Inclusive ceiling for layer-bound root discovery." })),
 	/** Descent cap for segment-crossing patterns. Defaults to 32. */
-	readonly maxDepth?: number;
-}
+	maxDepth: S.optionalKey(DiscoveryDepth).annotateKey($I.annote("maxDepth", { description: "Optional pattern descent cap, defaulted on use." })),
+}).annotate($I.annote("WorkspaceDiscoveryOptions", { description: "Root resolution and pattern descent options, with defaults resolved lazily." }));
+
+/**
+ * Configures root resolution and pattern descent while leaving defaults to discovery.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type WorkspaceDiscoveryOptions = typeof WorkspaceDiscoveryOptions.Type;
 
 /**
  * The {@link WorkspaceDiscovery} service shape.
@@ -1075,5 +1096,4 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 	);
 }
 
-const isStringRecord = (value: unknown): value is Record<string, string> =>
-	P.isObject(value) && R.values(value).every(P.isString);
+const isStringRecord = S.is(WorkspacePackage.fields.dependencies);

@@ -111,6 +111,10 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **effect-imports** — The lab source, affected tests and source examples use dedicated effect/* imports and canonical aliases where upstream uses the root effect barrel (module suite scratchpad/test/env/**).
 - **identity-annotations** — The lab supplies composer-based service keys, schema and field identities and re-keyed test services where upstream uses @effected identifiers and unannotated payloads (module suite scratchpad/test/env/**; scratchpad/test/env/RuntimeEnv.test.ts:218,219,220).
 - **test-environment** — The lab source-scanning tests resolve scratchpad/effected/env paths where the inherited upstream paths target ../src (scratchpad/test/env/purity.test.ts:9; scratchpad/test/env/agentCi.test.ts:93,103; scratchpad/test/env/colorDepth.test.ts:175; scratchpad/test/env/osc8.terminals.test.ts:196).
+- **schema-first** — The lab adds schema values for the upstream AudienceShape/Osc8Info interfaces and override union, and reuses S.Number for upstream Option<number> columns while preserving plain values and non-finite numbers (scratchpad/test/env/Audience.test.ts; scratchpad/test/env/internal/osc8/detect.property.test.ts; scratchpad/test/env/TerminalEnv.coverage.test.ts:8).
+- **native-runtime** — The lab installs upstream Logger.layer captures through the ruled scoped context recipe while retaining the warning assertions (scratchpad/test/env/Audience.test.ts:20; scratchpad/test/env/EnvOverride.test.ts:21).
+- **type-safety** — The lab makes deliberately invalid test inputs explicit through one sanctioned helper while preserving upstream invalid-CI rejection (scratchpad/test/env/RuntimeEnv.test.ts:199; scratchpad/test/env/internal/osc8/detect.coverage.test.ts:10; scratchpad/test/env/deliberatelyInvalid.ts:1).
+- **identity-annotations** — The lab adds composer metadata to the newly schema-owned upstream payloads and override domain and removes the obsolete StreamColumns identity (scratchpad/effected/env/Audience.ts:86; scratchpad/effected/env/internal/osc8/detect.ts:64; scratchpad/effected/env/TerminalEnv.ts:66).
 
 ### Dependency backlog
 

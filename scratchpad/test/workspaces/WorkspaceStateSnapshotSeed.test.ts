@@ -121,19 +121,21 @@ describe("WorkspaceStateSnapshot.withSeededCatalogs — against the importerVers
 });
 
 describe("WorkspaceStateSnapshot — the seeded catalogResolver", () => {
-	it.effect("resolves through the same precedence as `resolve`", () =>
-		Effect.gen(function* () {
-			const seeded = snapshot({ catalogs: catalogs({ default: { effect: "^4.0.0" } }) }).withSeededCatalogs(
-				catalogs({ default: { effect: "^9.9.9", react: "^18.2.0" } }),
-			);
-			const resolver = yield* Effect.provide(CatalogResolver, seeded.catalogResolver);
-			// A resolver blind to the seed would answer differently from `resolve`
-			// on the very snapshot it is bound to.
-			assertSome(yield* resolver.rangeOf("effect", O.none()), "^4.0.0");
-			assertSome(yield* resolver.rangeOf("react", O.none()), "^18.2.0");
-			assertNone(yield* resolver.rangeOf("lodash", O.none()));
-		}),
+	const seeded = snapshot({ catalogs: catalogs({ default: { effect: "^4.0.0" } }) }).withSeededCatalogs(
+		catalogs({ default: { effect: "^9.9.9", react: "^18.2.0" } }),
 	);
+	it.layer(seeded.catalogResolver)((it) => {
+		it.effect("resolves through the same precedence as `resolve`", () =>
+			Effect.gen(function* () {
+				const resolver = yield* CatalogResolver;
+				// A resolver blind to the seed would answer differently from `resolve`
+				// on the very snapshot it is bound to.
+				assertSome(yield* resolver.rangeOf("effect", O.none()), "^4.0.0");
+				assertSome(yield* resolver.rangeOf("react", O.none()), "^18.2.0");
+				assertNone(yield* resolver.rangeOf("lodash", O.none()));
+			}),
+		);
+	});
 });
 
 describe("WorkspaceStateSnapshot.crossSeed", () => {

@@ -236,8 +236,7 @@ const identified = Effect.fn("identified")(function* (app: GitHubAppShape, optio
  * @category utilities
  * @since 0.0.0
  */
-export class GitHubToken {
-	private constructor() {}
+export abstract class GitHubToken {
 
 	/**
 	 * Mint a token, verify its scopes, mask it and persist it for later phases.

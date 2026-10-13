@@ -1,0 +1,24 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review `scratchpad/effected/git/Git.ts` against the pinned upstream oracle and the round-1 inventory, without changing any files.Round 1 already recorded twenty required Git findings. I'll read the binding decisions and compare `Git.ts` to the pinned oracle for anything new.### fable-2-1
+- file: scratchpad/effected/git/Git.ts:1786
+- class: law   severity: required
+- standard: standards/effect-first-development.md EF-3 and checklist item 16; D11. Evidence: `rejectOptionLikeRefs` still interpolates `JSON.stringify(offending)` into `GitCommandError.detail`. The same file already encodes the common-dir answer with `encodeJsonString` (`S.encodeEffect(S.fromJsonString(S.String))`) at line 27 and line 2641. Round 1 git-x1 rejected restoring `JSON.stringify` because EF-3 forbids it. `NoNativeRuntime.ts` flags string methods only inside hotspot scope and has no `JSON.stringify` rule, so a green native-runtime gate does not see this call.
+- failure: A refused option-like ref is still rendered with `JSON.stringify` on a domain error path. The scanner that keeps the beep laws green does not check that call.
+- fix: Build that detail with the existing `encodeJsonString` effect and keep `GitCommandError` as the typed failure. Preserve the quoted JSON text for a normal string ref.
+
+### fable-2-2
+- file: scratchpad/test/git/integration/Git.int.test.ts:1
+- class: tsgo   severity: required
+- standard: D11; the same directive rule as round 1 git-r6 (`Quality.command.ts` directive policy). Evidence: line 1 is `// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file nodeBuiltinImport:skip-file asyncFunction:skip-file processEnv:skip-file`. The pinned upstream file has no such comment. `run` at line 49 is `effect.pipe(Effect.provide(TestLayer))` with `TestLayer` built by `Layer.provideMerge`. `.canon-exceptions.json` admits the `node:fs`, `node:os`, and `@effect/platform-node` imports for EV010 only. It does not admit a file-wide tsgo skip. git-r6 removed this pattern from the unit files and did not cover this one.
+- failure: The per-module compiler stays green by hiding strict-provide, multiple-provide, async-function, and `process.env` diagnostics in the real-git suite.
+- fix: Delete the directive. Provision `TestLayer` once, the same way `Git.test.ts` was repaired. Keep the real git binary, the real filesystem, and the recorded EV010 import exceptions.
+
+### fable-2-3
+- file: scratchpad/test/git/integration/GitSurface.int.test.ts:1
+- class: tsgo   severity: required
+- standard: D11; git-r6 directive rule. Evidence: line 1 skips `strictEffectProvide`, `nodeBuiltinImport`, `asyncFunction`, and `processEnv`. Upstream has no skip. `run` at line 45 is `Effect.provide(TestLayer)`. The file also assigns `process.env.GIT_ALLOW_PROTOCOL` and other environment keys (line 62 and lines 104–115) and `await`s `Effect.gen` (line 132 and later). EV010 exceptions cover the node imports only.
+- failure: The expanded real-git surface compiles clean by suppressing the same provide, async, and environment diagnostics.
+- fix: Delete the directive. Use one scoped `Context` for `TestLayer`, and pass protocol and SSH environment through the spawner environment instead of mutating `process.env`. Keep the real-git fixtures and the EV010 exceptions.
+
+REQUIRED: 3
+BACKLOG: 0

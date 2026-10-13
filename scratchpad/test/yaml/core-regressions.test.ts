@@ -8,6 +8,7 @@ import * as Str from "effect/String";
 import { assertFailure, assertSome, assertSuccess } from "@effect/vitest/utils";
 import * as Result from "effect/Result";
 import { Yaml } from "../../effected/yaml/Yaml.ts";
+import { composeAllDocuments } from "../../effected/yaml/internal/composer/document.ts";
 import { YamlDocument } from "../../effected/yaml/YamlDocument.ts";
 import {
   AliasExpansionBudgetExceeded, CollectionStyle, QuoteCompat, QuoteStyle, ScalarChomp, ScalarStyle,
@@ -228,4 +229,47 @@ describe("g1 core regressions", () => {
     }
   });
 
+});
+
+
+describe("g8 tag diagnostic provenance", () => {
+  for (const [source, expected] of [
+    ["a: !!%GG 1\n---\nb: !!%GG 2\n", [[3, 5], [18, 5]]],
+    ["a: !!str 1\n---\nb: !!%GG 2\n", [[18, 5]]],
+    ["a: !!%GG [1]\n---\nb: !!%GG [2]\n", [[3, 5], [20, 5]]],
+    ["a: !!str [1]\n---\nb: !!%GG [2]\n", [[20, 5]]],
+    ["a: !!%GG 1\nb: !!%GG 2\n---\nc: !!%GG [3]\n", [[3, 5], [14, 5], [29, 5]]],
+  ] as const) {
+    it(`reports each malformed tag once at its own span: ${source}`, () => {
+      const composed = composeAllDocuments(source);
+      const errors = [...composed.streamErrors, ...composed.documents.flatMap((document) => document.errors)];
+      const malformed = errors.filter((error) => error.message.startsWith("Malformed percent encoding"));
+      assert.deepStrictEqual(malformed.map((error) => [error.offset, error.length]), expected.map((span) => [...span]));
+      assert.strictEqual(malformed.length, errors.length);
+      const result = Yaml.parseAllResult(source);
+      assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
+      assert.deepStrictEqual(result.failure.diagnostics.map((error) => [error.offset, error.length, error.code] as const), expected.map(([offset, length]) => [offset, length, "UnresolvedTag"] as const));
+    });
+  }
+
+  it("deduplicates a resolver and CST validator diagnostic without suppressing handle errors", () => {
+    const source = "!missing!bad%GG value";
+    const state = createState(source, flow);
+    MutableHashMap.set(state.tagMap, "!missing!", "urn:");
+    const tag: CstNode = { type: "tag", source: "!missing!bad%GG", offset: 0, length: 14 };
+    assert.strictEqual(resolveTagHandle(tag.source, state, tag), "urn:bad%GG");
+    assert.strictEqual(resolveTagHandle(tag.source, state, tag), "urn:bad%GG");
+    validateTagHandlesInDocument({ type: "document", source, offset: 0, length: source.length, children: [tag] }, state);
+    assert.strictEqual(state.errors.length, 2);
+    assert.deepStrictEqual(state.errors.map((error) => error.message), ["Malformed percent encoding in tag !missing!bad%GG", "Tag handle !missing! is not declared in this document"]);
+  });
+});
+
+
+describe("g8 effective tag validation", () => {
+  it("does not validate tag-shaped punctuation absorbed into a folded plain scalar", () => {
+    const source = "safe: text\n  !bad%GG continuation\n";
+    assertSuccess(Yaml.parseResult(source), { safe: "text !bad%GG continuation" });
+    assertSuccess(Yaml.parseAllResult(`${source}---\n${source}`), [{ safe: "text !bad%GG continuation" }, { safe: "text !bad%GG continuation" }]);
+  });
 });

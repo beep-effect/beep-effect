@@ -1,19 +1,23 @@
-import { assert, describe, it } from "@effect/vitest";
+import { assert, describe, it, vi } from "@effect/vitest";
+import * as HashMap from "effect/HashMap";
 import * as Effect from "effect/Effect";
 import { Definition, Paragraph } from "../../../effected/markdown/MarkdownNode.ts";
 import { parseBlocks } from "../../../effected/markdown/internal/blockParser.ts";
+import * as BlockRegistry from "../../../effected/markdown/internal/blockRegistry.ts";
 import { blockDialect } from "../../../effected/markdown/internal/blockRegistry.ts";
-import type { BlockScanner, BlockNode, BlockStart } from "../../../effected/markdown/internal/blockTypes.ts";
+import type { BlockDialect, BlockScanner, BlockNode, BlockStart } from "../../../effected/markdown/internal/blockTypes.ts";
 import { makeBlockNode } from "../../../effected/markdown/internal/blockTypes.ts";
 
-// A scoped registry composition exercises scanner boundary contracts through
-// the same injected dialect tables the production engine uses. Restore the
-// table even when an invariant throws; no state leaks to later parses.
-const withStart = (trigger: (scanner: BlockScanner, container: BlockNode) => void): void => {
-  const dialect = blockDialect("commonmark");
-  const starts = dialect.starts;
-  Object.assign(dialect, { starts: [{ name: "scanner-contract", trigger(scanner: BlockScanner, container: BlockNode) { trigger(scanner, container); return 0; } }, ...starts] });
-  try { parseBlocks("# heading\n"); } finally { Object.assign(dialect, { starts }); }
+// Each parse receives a fresh dialect composition. The shared registry's
+// construct table and ordered starts are never mutated by boundary tests.
+const withDialect = (dialect: BlockDialect, run: () => void): void => {
+  const lookup = vi.spyOn(BlockRegistry, "blockDialect").mockReturnValue(dialect);
+  try { run(); } finally { lookup.mockRestore(); }
+};
+const withStart = (trigger: (scanner: BlockScanner, container: BlockNode) => void, dialect = blockDialect("commonmark")): void => {
+  withDialect({ ...dialect, starts: [{ name: "scanner-contract", trigger(scanner: BlockScanner, container: BlockNode) { trigger(scanner, container); return 0; } }, ...dialect.starts] }, () => {
+    parseBlocks("# heading\n");
+  });
 };
 
 describe("blockParser scanner boundary", () => {
@@ -46,28 +50,24 @@ describe("blockParser scanner boundary", () => {
     });
   }));
   it.effect("reports missing constructs and invalid root materialization", () => Effect.sync(() => {
-    const table = blockDialect("commonmark").constructs;
-    const get = table.get;
-    try {
-      Object.assign(table, { get: () => undefined });
+    const dialect = blockDialect("commonmark");
+    withDialect({ ...dialect, constructs: HashMap.empty() }, () => {
       assert.throws(() => parseBlocks("text"), /no construct registered/);
-      for (const materialize of [() => undefined, () => Paragraph.make({ children: [] })]) {
-        Object.assign(table, { get: (key: Parameters<typeof get>[0]) => {
-          const construct = get(key);
-          return key === "document" && construct !== undefined ? { ...construct, materialize } : construct;
-        } });
+    });
+    for (const materialize of [() => undefined, () => Paragraph.make({ children: [] })]) {
+      const constructs = HashMap.modify(dialect.constructs, "document", (construct) => ({ ...construct, materialize }));
+      withDialect({ ...dialect, constructs }, () => {
         assert.throws(() => parseBlocks(""), /document construct did not materialize a root/);
-      }
-    } finally { Object.assign(table, { get }); }
+      });
+    }
+    assert.strictEqual(blockDialect("commonmark"), dialect);
   }));
   it.effect("skips an absent start-table entry and retains the core parse", () => Effect.sync(() => {
     const dialect = blockDialect("commonmark");
-    const starts = dialect.starts;
-    try {
-      const sparse = new Array<BlockStart>(1);
-      Object.assign(dialect, { starts: [...sparse, ...starts] });
+    const sparse = new Array<BlockStart>(1);
+    withDialect({ ...dialect, starts: [...sparse, ...dialect.starts] }, () => {
       assert.strictEqual(parseBlocks("# title").root.children[0]?.type, "heading");
-    } finally { Object.assign(dialect, { starts }); }
+    });
   }));
 });
 
@@ -79,20 +79,16 @@ it.effect("omits unmaterialized extension blocks and nested roots", () => Effect
     container.children.push(missing);
     assert.strictEqual(missing.open, false);
   });
-  const table = blockDialect("commonmark").constructs;
-  const get = table.get;
-  try {
-    Object.assign(table, { get: (key: Parameters<typeof get>[0]) => {
-      const construct = get(key);
-      return key === "heading" && construct !== undefined ? { ...construct, materialize: () => undefined } : construct;
-    } });
+  const dialect = blockDialect("commonmark");
+  const withoutHeading = HashMap.modify(dialect.constructs, "heading", (construct) => ({ ...construct, materialize: () => undefined }));
+  withDialect({ ...dialect, constructs: withoutHeading }, () => {
     assert.deepStrictEqual(parseBlocks("# dropped\n").root.children, []);
-    Object.assign(table, { get: (key: Parameters<typeof get>[0]) => {
-      const construct = get(key);
-      return key === "heading" && construct !== undefined ? { ...construct, materialize: () => parseBlocks("").root } : construct;
-    } });
+  });
+  const emptyRoot = parseBlocks("").root;
+  const nestedRoot = HashMap.modify(dialect.constructs, "heading", (construct) => ({ ...construct, materialize: () => emptyRoot }));
+  withDialect({ ...dialect, constructs: nestedRoot }, () => {
     assert.deepStrictEqual(parseBlocks("# nested root\n").root.children, []);
-  } finally { Object.assign(table, { get }); }
+  });
 }));
 
 it.effect("scanner whitespace and tab boundaries retain their documented state", () => Effect.sync(() => {
@@ -146,18 +142,14 @@ it.effect("parses tabs, lazy containers, HTML, references and frontmatter with a
 }));
 
 it.effect("does not index extension definitions without lookup keys", () => Effect.sync(() => {
-  const table = blockDialect("commonmark").constructs;
-  const get = table.get;
-  try {
-    Object.assign(table, { get: (key: Parameters<typeof get>[0]) => {
-      const construct = get(key);
-      return key === "definition" && construct !== undefined ? { ...construct, materialize: () => Definition.make({ identifier: "missing", url: "./target" }) } : construct;
-    } });
-    withStart((scanner, container) => {
-      const block = scanner.insertBefore(container, "definition");
-      container.children.push(block);
-    });
-  } finally { Object.assign(table, { get }); }
+  const dialect = blockDialect("commonmark");
+  const constructs = HashMap.modify(dialect.constructs, "definition", (construct) => ({
+    ...construct, materialize: () => Definition.make({ identifier: "missing", url: "./target" }),
+  }));
+  withStart((scanner, container) => {
+    const block = scanner.insertBefore(container, "definition");
+    container.children.push(block);
+  }, { ...dialect, constructs });
 }));
 
 it.effect("closes an incompatible leaf before adding a sibling", () => Effect.sync(() => {

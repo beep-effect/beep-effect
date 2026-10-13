@@ -289,6 +289,44 @@ describe("GlobSet: literals key on the effective unescaped path", () => {
 });
 
 describe("GlobSet.compileResult", () => {
+	it.effect("terminates large singletons and non-advancing include and exclude ranges", () =>
+		Effect.gen(function* () {
+			for (const source of ["{9007199254740992..9007199254740992}", "{9007199254740991..9007199254740992}", "{9007199254740992..9007199254740994}"]) {
+				for (const member of [source, `!${source}`]) {
+					const patterns = ["*", member];
+					const sync = GlobSet.compileResult(patterns);
+					const compiled = yield* GlobSet.compile(patterns);
+					assertSuccess(sync, Result.getOrThrow(sync));
+					assert.strictEqual(sync.success.isExcluded("9007199254740992"), member !== source);
+					assert.strictEqual(compiled.isExcluded("9007199254740992"), member !== source);
+					assert.strictEqual(sync.success.matches("9007199254740992"), member === source);
+					assert.strictEqual(compiled.matches("9007199254740992"), member === source);
+				}
+			}
+		}),
+	);
+
+	it.effect("returns typed failures for non-finite include and exclude arithmetic", () =>
+		Effect.gen(function* () {
+			const huge = "9".repeat(310);
+			const finite = `1${"0".repeat(308)}`;
+			for (const source of [`{${huge}..${huge}}`, `{1..${huge}..${huge}}`, `{-${finite}..${finite}}`, `{-${finite}..${finite}..${huge}}`]) {
+				for (const member of [source, `!${source}`]) {
+					const patterns = ["fine/*", member, "also-fine"];
+					const sync = GlobSet.compileResult(patterns);
+					const error = yield* Effect.flip(GlobSet.compile(patterns));
+					assertFailure(sync, error);
+					assert.instanceOf(error, GlobPatternError);
+					assert.strictEqual(error._tag, "GlobPatternError");
+					assert.strictEqual(error.pattern, member);
+					assert.strictEqual(error.reason, "ExpansionBudgetExceeded");
+					assert.strictEqual(error.limit, 100_000);
+					assert.strictEqual(error.actual, Infinity);
+				}
+			}
+		}),
+	);
+
 	it("preserves an overflowing expansion count in a synchronous typed failure", () => {
 		const source = `{1..${"9".repeat(310)}}`;
 		for (const member of [source, `!${source}`]) {

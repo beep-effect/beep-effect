@@ -37,10 +37,9 @@ import * as S from "effect/Schema";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import type { Definition } from "../MarkdownNode.ts";
+import type { Definition, MarkdownNode } from "../MarkdownNode.ts";
 import { Frontmatter, Point, Position, Root } from "../MarkdownNode.ts";
-import type { MarkdownDialect } from "./blockRegistry.ts";
-import { blockDialect } from "./blockRegistry.ts";
+import { blockDialect, MarkdownDialect } from "./blockRegistry.ts";
 import type { FrontmatterCapture } from "./blocks/frontmatter.ts";
 import { scanFrontmatter } from "./blocks/frontmatter.ts";
 import { isHtmlBlockEnd } from "./blocks/htmlBlock.ts";
@@ -71,7 +70,7 @@ const $I = $ScratchpadId.create("effected/markdown/internal/blockParser");
 class BlockParserError extends S.TaggedError<BlockParserError>($I`BlockParserError`)(
 	"BlockParserError",
 	{
-		message: S.String,
+		message: S.String.annotateKey({ description: "The block-parser invariant failure message." }),
 	},
 	$I.annote("BlockParserError", { description: "A block-parser invariant was violated." }),
 ) {}
@@ -196,11 +195,9 @@ class BlockParser implements BlockScanner {
 	}
 
 	private constructOf(type: BlockType): BlockConstruct {
-		const construct = this.dialect.constructs.get(type);
-		if (construct === undefined) {
-			throw BlockParserError.make({ message: `block parser: no construct registered for block type ${type}` });
-		}
-		return construct;
+		return O.getOrThrowWith(HashMap.get(this.dialect.constructs, type), () =>
+			BlockParserError.make({ message: `block parser: no construct registered for block type ${type}` }),
+		);
 	}
 
 	// --- scanner ------------------------------------------------------------
@@ -626,6 +623,15 @@ class BlockParser implements BlockScanner {
 		return footnoteLabels;
 	}
 
+	private validateDepth(node: MarkdownNode, depth: number): void {
+		if (depth > MAX_NESTING_DEPTH) {
+			throw new GuardExceeded("NestingDepthExceeded", MAX_NESTING_DEPTH, depth, node.position.start.offset);
+		}
+		if ("children" in node) {
+			for (const child of node.children) this.validateDepth(child, depth + 1);
+		}
+	}
+
 	parse(): BlockPassResult {
 		// A captured frontmatter block never enters the line loop: the pass
 		// starts on the line after the closing fence, with `lineNumber`
@@ -679,6 +685,7 @@ class BlockParser implements BlockScanner {
 		}
 
 		const root = this.withFrontmatter(materialized);
+		this.validateDepth(root, 0);
 
 		return { root, rawInlines, carriers: [], refmap, definitionOrder, footnoteLabels };
 	}
@@ -699,7 +706,7 @@ class BlockParser implements BlockScanner {
  * @since 0.0.0
  */
 export const BlockParseOptions = S.Struct({
-	dialect: S.optionalKey(S.Literals(["commonmark", "gfm"])).annotateKey({ description: "Registry dialect to apply; defaults to commonmark" }),
+	dialect: S.optionalKey(MarkdownDialect).annotateKey({ description: "Registry dialect to apply; defaults to commonmark" }),
 	frontmatter: S.optionalKey(S.Boolean).annotateKey({ description: "Whether to capture an opening frontmatter block; defaults to false" }),
 }).annotate($I.annote("BlockParseOptions", { description: "Engine parse options that distinguish curried configuration from document text." }));
 

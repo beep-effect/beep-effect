@@ -262,7 +262,8 @@ export const updateRow = Effect.fn("Ledger.updateRow")(function* <E, R>(
 const escapeRegex = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**
- * The newest commit whose subject names `module` as a whole word and carries
+ * The newest commit (on any ref, so squash-merged stages stay findable through a
+ * kept history tag) whose subject names `module` as a whole word and carries
  * the `(effected-port S<stage>)` suffix, or none.
  *
  * **Example** (Look up a stage commit)
@@ -287,6 +288,7 @@ export const findStageCommit = Effect.fn("Ledger.findStageCommit")(function* (
     command: "git",
     args: [
       "log",
+      "--all",
       "-E",
       "-n",
       "1",

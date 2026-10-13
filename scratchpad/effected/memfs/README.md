@@ -353,6 +353,9 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **effect-imports** — Per-module effect/* imports replace the root effect barrel in source, tests and examples (module suite scratchpad/test/memfs/**).
 - **identity-annotations** — IdentityComposer schema/field/error annotations and the Volume service key replace unannotated contracts and the literal upstream key (module suite scratchpad/test/memfs/**).
 - **test-environment** — Memfs host-oracle fixtures use TMPDIR=/tmp instead of the host default, preserving the upstream EISDIR assertion on tmpfs (scratchpad/test/memfs/ErrnoParityContract.ts:293; integration/node.int.test.ts (FileSystem errno parity (node), copyFile from a directory)).
+- **schema-first** — The lab adds four runtime payload schemas and an AppliedSeed type, plus schema-owned entry kinds and unsigned 32-bit validation, while upstream keeps handwritten contracts and predicates (scratchpad/test/memfs/internal/volume.coverage.test.ts:25,53,77,98; scratchpad/test/memfs/internal/seed.property.test.ts:14,21,29,39,53,62,80,90).
+- **numeric-domains** — The lab snapshot schema restricts mtime and size to finite numbers, while upstream declares unrestricted numbers (scratchpad/test/memfs/internal/volume.coverage.test.ts:25).
+- **identity-annotations** — The lab adds seed-module, schema and field identities and annotates the new volume contracts, while upstream has no such annotations (scratchpad/effected/memfs/internal/seed.ts:16,140,173; scratchpad/test/memfs/internal/seed.property.test.ts:14,21).
 
 ### Dependency backlog
 

@@ -446,7 +446,7 @@ const make = (client: GitHubClient["Service"]): GitBranchShape => {
     yield* Effect.annotateCurrentSpan({ branch });
     return yield* readRef("GitBranch.shaOption", branch).pipe(
       Effect.map((ref) => O.some(ref.object.sha)),
-      Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeed(O.none<string>())),
+      Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeedNone),
     );
   });
 

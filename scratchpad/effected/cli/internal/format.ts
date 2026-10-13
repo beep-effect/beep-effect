@@ -96,15 +96,15 @@ export interface IssueEntry {
  */
 export const issueEntries = (issue: unknown): ReadonlyArray<IssueEntry> => {
 	if (!SchemaIssue.isIssue(issue)) return [];
-	const seen = MutableHashSet.empty<string>();
+	const seen = MutableHashSet.empty<IssueEntry>();
 	const entries: Array<IssueEntry> = [];
 	for (const entry of formatter(issue).issues) {
 		// The core formatter always emits a path, including [] for a root issue.
 		const path = O.fromUndefinedOr(entry.path).pipe(O.getOrThrow, A.map(String));
-		const key = path.length === 0 ? entry.message : `${entry.message} at ${path.join(".")}`;
+		const key: IssueEntry = { message: entry.message, path };
 		if (MutableHashSet.has(seen, key)) continue;
 		MutableHashSet.add(seen, key);
-		entries.push({ message: entry.message, path });
+		entries.push(key);
 	}
 	return entries;
 };

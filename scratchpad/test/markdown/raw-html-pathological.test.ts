@@ -4,6 +4,39 @@ import { parseBlocks } from "../../effected/markdown/internal/blockParser.ts";
 import { rawHtmlConstruct } from "../../effected/markdown/internal/inlines/rawHtml.ts";
 
 describe("raw HTML declaration missing-closer protection", () => {
+	it("preserves invalid declaration prefixes with a distant closer without searching for it", () => {
+		const parse = rawHtmlConstruct.parse;
+		let declarationCloserSearches = 0;
+		const spy = vi.spyOn(rawHtmlConstruct, "parse").mockImplementation((scanner) => {
+			const hasAhead = scanner.hasAhead;
+			scanner.hasAhead = (closer) => {
+				if (closer === ">") declarationCloserSearches += 1;
+				return hasAhead.call(scanner, closer);
+			};
+			try {
+				return parse(scanner);
+			} finally {
+				scanner.hasAhead = hasAhead;
+			}
+		});
+		try {
+			const source = "x " + "<!0".repeat(8000) + ">";
+			const [paragraph] = parseBlocks(source).root.children;
+			assert.strictEqual(spy.mock.calls.length, 8000);
+			assert.strictEqual(declarationCloserSearches, 0);
+			assert.strictEqual(paragraph?.type, "paragraph");
+			if (paragraph?.type !== "paragraph") return;
+			assert.strictEqual(paragraph.children.length, 1);
+			const [text] = paragraph.children;
+			assert.strictEqual(text?.type, "text");
+			assert.strictEqual(text?.type === "text" ? text.value : "", source);
+			assert.strictEqual(text?.position.start.offset, 0);
+			assert.strictEqual(text?.position.end.offset, source.length);
+		} finally {
+			spy.mockRestore();
+		}
+	});
+
 	it("rejects repeated missing declaration closers before attempting the HTML regex", () => {
 		const parse = rawHtmlConstruct.parse;
 		let matches = 0;

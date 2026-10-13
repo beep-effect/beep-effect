@@ -1,0 +1,499 @@
+{
+  "module": "markdown",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/markdown/MarkdownFormat.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/format.test.ts",
+        "scratchpad/test/markdown/MarkdownFormat.coverage.test.ts"
+      ],
+      "findings": [
+        "req-1",
+        "req-2",
+        "req-3",
+        "req-4",
+        "req-5",
+        "req-6",
+        "req-7",
+        "req-8",
+        "req-9",
+        "req-10"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/markdown/FrontmatterResolver.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/frontmatter-resolver.test.ts"
+      ],
+      "findings": [
+        "req-11"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/markdown/Markdown.ts",
+        "scratchpad/effected/markdown/internal/blockParser.ts",
+        "scratchpad/effected/markdown/internal/blockRegistry.ts",
+        "scratchpad/effected/markdown/internal/blockTypes.ts",
+        "scratchpad/effected/markdown/internal/inlineNode.ts",
+        "scratchpad/effected/markdown/internal/inlineTypes.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/hardening.test.ts",
+        "scratchpad/test/markdown/block-pass.test.ts",
+        "scratchpad/test/markdown/internal/blockParser.coverage.test.ts",
+        "scratchpad/test/markdown/internal/blockRegistry.coverage.test.ts",
+        "scratchpad/test/markdown/internal/blockTypes.property.test.ts",
+        "scratchpad/test/markdown/internal/inlineNode.coverage.test.ts",
+        "scratchpad/test/markdown/internal/inlineParser.property.test.ts"
+      ],
+      "findings": [
+        "req-13",
+        "req-15",
+        "req-16",
+        "req-17",
+        "req-24",
+        "req-26",
+        "req-41"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/markdown/internal/carriers.ts",
+        "scratchpad/effected/markdown/MarkdownDiagnostic.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/internal/carriers.coverage.test.ts",
+        "scratchpad/test/markdown/diagnostic.test.ts",
+        "scratchpad/test/markdown/MarkdownDiagnostic.property.test.ts"
+      ],
+      "findings": [
+        "req-12"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/markdown/internal/entityMap.ts",
+        "scratchpad/effected/markdown/internal/entities.ts",
+        "scratchpad/effected/markdown/internal/unescape.ts",
+        "scratchpad/effected/markdown/internal/inlines/entity.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/internal/entityMap.coverage.test.ts",
+        "scratchpad/test/markdown/inline-pass.test.ts",
+        "scratchpad/test/markdown/internal/entities.coverage.test.ts",
+        "scratchpad/test/markdown/internal/entities.property.test.ts"
+      ],
+      "findings": [
+        "req-14",
+        "req-20"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/markdown/MarkdownNode.ts",
+        "scratchpad/effected/markdown/Mdast.ts",
+        "scratchpad/effected/markdown/internal/blocks/frontmatter.ts",
+        "scratchpad/effected/markdown/internal/blocks/table.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/mdx.test.ts",
+        "scratchpad/test/markdown/mdast.test.ts",
+        "scratchpad/test/markdown/internal/blocks/frontmatter.property.test.ts",
+        "scratchpad/test/markdown/internal/blocks/table.property.test.ts"
+      ],
+      "findings": [
+        "req-18",
+        "req-19",
+        "req-22",
+        "req-23",
+        "req-25",
+        "req-34",
+        "req-42"
+      ]
+    },
+    {
+      "id": "g7",
+      "files": [
+        "scratchpad/effected/markdown/MarkdownVisitor.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/visitor.test.ts"
+      ],
+      "findings": [
+        "req-21"
+      ]
+    },
+    {
+      "id": "g8",
+      "files": [
+        "scratchpad/effected/markdown/internal/stringify.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/stringify.test.ts",
+        "scratchpad/test/markdown/stringify-literal.test.ts",
+        "scratchpad/test/markdown/stringify-scalability.test.ts",
+        "scratchpad/test/markdown/e2e/stringify-roundtrip.e2e.test.ts"
+      ],
+      "findings": [
+        "req-27",
+        "req-28",
+        "req-29",
+        "req-36",
+        "req-37",
+        "req-38",
+        "req-39",
+        "req-43"
+      ]
+    },
+    {
+      "id": "g9",
+      "files": [
+        "scratchpad/effected/markdown/internal/blocks/list.ts",
+        "scratchpad/effected/markdown/internal/blocks/fencedCode.ts",
+        "scratchpad/effected/markdown/internal/blocks/thematicBreak.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "req-30"
+      ]
+    },
+    {
+      "id": "g10",
+      "files": [
+        "scratchpad/effected/markdown/internal/preprocess.ts",
+        "scratchpad/effected/markdown/internal/lineIndex.ts",
+        "scratchpad/effected/markdown/internal/references.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/internal/Preprocess.property.test.ts",
+        "scratchpad/test/markdown/line-index.test.ts",
+        "scratchpad/test/markdown/internal/references.property.test.ts"
+      ],
+      "findings": [
+        "req-31",
+        "req-32",
+        "req-33"
+      ]
+    },
+    {
+      "id": "g11",
+      "files": [
+        "scratchpad/effected/markdown/internal/blocks/linkReferenceDefinition.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/internal/blocks/linkReferenceDefinition.property.test.ts",
+        "scratchpad/test/markdown/source-offsets.test.ts"
+      ],
+      "findings": [
+        "req-35",
+        "req-40"
+      ]
+    },
+    {
+      "id": "g12",
+      "files": [
+        "scratchpad/effected/markdown/internal/inlines/rawHtml.ts",
+        "scratchpad/effected/markdown/internal/inlines/link.ts",
+        "scratchpad/effected/markdown/internal/inlines/emphasis.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/raw-html-pathological.test.ts",
+        "scratchpad/test/markdown/delimiter-run.test.ts"
+      ],
+      "findings": [
+        "req-44",
+        "req-45",
+        "req-46"
+      ]
+    }
+  ],
+  "findings": {
+    "req-1": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "ATX-to-setext conversion absorbs preceding blocks",
+      "fix": "Skip setext conversion unless the heading begins a physical line and its previous physical line is blank or absent. Use CR/LF/CRLF-aware boundaries. Add format.test.ts regressions for an interrupting heading after a paragraph, blockquote and list item."
+    },
+    "req-2": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "Setext-to-ATX conversion loses literal trailing hashes",
+      "fix": "Skip conversion when the composed content would introduce an unescaped ATX closing sequence, consistent with the formatter’s conservative policy. Add a render-equivalence regression for trailing literal hashes and record the verified upstream bug through section 14."
+    },
+    "req-3": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "Line-boundary helpers mishandle bare CR",
+      "fix": "Make the line-boundary helpers recognize LF, lone CR and CRLF, consuming a pair only for an actual CRLF terminator. Retain the skip-on-hazard behavior and add the lone-CR regression."
+    },
+    "req-4": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "Emphasis normalization classifies surrogate halves",
+      "fix": "Classify complete code points immediately before and after the source span, stepping backward over a valid surrogate pair while retaining UTF-16 offsets. Add left-side, right-side and two-sided astral-letter regressions."
+    },
+    "req-5": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "Fence normalization rewrites content of an unclosed block",
+      "fix": "Inspect the last physical line with CR-aware boundaries and actual container-prefix context; change a closing fence only if it is a genuine closing line of the fidelity character. Otherwise change the opening fence alone. Do not reinterpret trailing backticks inside code content as a fence. Add both unclosed foo``` regressions in format.test.ts."
+    },
+    "req-6": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "Combined bullet edits turn nested lists into thematic breaks",
+      "fix": "Project all unordered-list marker edits this pass plans on a physical line, respecting the requested range. If their combined result becomes a thematic break, suppress every bullet edit on that line. Add * - -, - * * and * + + regressions in format.test.ts; do not simulate one nested list in isolation."
+    },
+    "req-7": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "Bare CR bypasses multiline replacement protection",
+      "fix": "Detect both CR and LF in rendered replacement content before accepting a splice inside `NO_MULTILINE_ANCESTORS`. Add blockquote, heading and table regressions requiring the existing typed `UnsupportedTarget` failure."
+    },
+    "req-8": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "Heading text replacements lose a trailing literal hash",
+      "fix": "Apply the existing heading closing-sequence escaping when the replacement occupies the end of an ATX heading, accounting for the surrounding source. Add a replacement-fidelity regression for `\"after #\"` and record this separate upstream context-escaping defect."
+    },
+    "req-9": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "Nested link replacements invalidate the surrounding link",
+      "fix": "Before rendering, reject a replacement containing `Link` or `LinkReference` when its destination lies inside a `Link` or `LinkReference`, using the existing typed modification-error channel. Check nested replacement descendants as well as the replacement root, and add a regression proving the outer link survives or the operation fails typed."
+    },
+    "req-10": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "Flow replacements ignore the preceding block context",
+      "fix": "For flow slots, reject with UnsupportedTarget when a non-blank preceding line would absorb the replacement, using the actual interruption grammar. Render an indented code replacement following a list/footnote definition fenced with the existing representability policy, or reject typed. Add paragraph/heading, paragraph/list and list/code regressions to format.test.ts."
+    },
+    "req-11": {
+      "file": "scratchpad/effected/markdown/FrontmatterResolver.ts",
+      "class": "schema",
+      "summary": "Version classification repeats an unmodeled grammar and canonicalizer",
+      "fix": "Define an annotated version-string schema for the existing X[.Y[.Z]] grammar and derive S.is; share one total canonicalSegments helper at the three classification/registry sites. Preserve SchemaDeclarationByName.version as S.String, leading-zero semantics and accepted inputs. Verify frontmatter-resolver.test.ts."
+    },
+    "req-12": {
+      "file": "scratchpad/effected/markdown/internal/carriers.ts",
+      "class": "law",
+      "summary": "Raw cross-module errors and diagnostic payload lack schemas",
+      "fix": "In carriers.ts, define one annotated raw error-code LiteralKit, derive RawDiagnostic as an annotated schema/type, and derive RawMarkdownError and GuardExceeded directly from S.TaggedError with annotated payloads. Preserve tags, name = Error, messages, positional new constructors and guards. Reuse the raw kit from MarkdownDiagnostic.ts instead of defining a second domain. Retarget carrier assertions as needed; recording and added exports are central."
+    },
+    "req-13": {
+      "file": "scratchpad/effected/markdown/internal/inlineNode.ts",
+      "class": "law",
+      "summary": "Predicate imports still bypass the required namespace alias",
+      "fix": "Use import * as P from effect/Predicate in inlineNode.ts, blockTypes.ts and Markdown.ts; use P.isString in their dual discriminators. Preserve all direct and pipeable signatures."
+    },
+    "req-14": {
+      "file": "scratchpad/effected/markdown/internal/entityMap.ts",
+      "class": "effect-idiom",
+      "summary": "Entity lookup still imitates a native ReadonlyMap",
+      "fix": "Export ENTITY_MAP directly as HashMap.HashMap<string, string> and consume via HashMap.get in entities.ts. Retarget entityMap.coverage.test.ts, inline-pass.test.ts and entities.property.test.ts from facade methods to Effect operations. Coordinate with req-20 in this same group; do not restore native Map."
+    },
+    "req-15": {
+      "file": "scratchpad/effected/markdown/internal/blockRegistry.ts",
+      "class": "effect-idiom",
+      "summary": "Block registry still imitates a native ReadonlyMap",
+      "fix": "Type BlockDialect.constructs as HashMap.HashMap<BlockType, BlockConstruct>; constructTable returns the HashMap directly. blockParser uses HashMap.get and O.getOrThrowWith with BlockParserError. Retarget blockRegistry.coverage.test.ts and blockParser.coverage.test.ts to Effect collections and exercise missing constructs without shared-registry mutation. Preserve order/messages."
+    },
+    "req-16": {
+      "file": "scratchpad/effected/markdown/internal/blockRegistry.ts",
+      "class": "schema",
+      "summary": "Block registry and parser errors have missing schema/field metadata",
+      "fix": "Annotate message fields on UnknownBlockDialectError and BlockParserError, and supply the missing schema-level $I.annote for UnknownBlockDialectError. Preserve tags and message bytes."
+    },
+    "req-17": {
+      "file": "scratchpad/effected/markdown/internal/blockParser.ts",
+      "class": "schema",
+      "summary": "One dialect domain has three independent spellings",
+      "fix": "Define `export const MarkdownDialect = LiteralKit([\"commonmark\", \"gfm\"]).annotate($I.annote(\"MarkdownDialect\", ...))` and `export type MarkdownDialect = typeof MarkdownDialect.Type` in blockRegistry.ts (replacing :56); use `dialect: S.optionalKey(MarkdownDialect)` at blockParser.ts:702; make Markdown.ts:56 `MarkdownDialect = <internal kit>.annotate($I.annote(\"MarkdownDialect\", {...}))` exactly as FrontmatterNewline reuses RawNewline; members, defaults and tests unchanged."
+    },
+    "req-18": {
+      "file": "scratchpad/effected/markdown/Mdast.ts",
+      "class": "schema",
+      "summary": "Mdast frontmatter admission duplicates the schema vocabulary",
+      "fix": "Import the `FrontmatterFormat` value, hoist `const isFrontmatterFormat = S.is(FrontmatterFormat);`, and in normalizeNode write `if (isFrontmatterFormat(type)) { return { type: \"frontmatter\", format: type, value: value.value, position: normalizePosition(value.position) }; }`; delete frontmatterTypes and the now-unused HashMap import if nothing else uses it."
+    },
+    "req-19": {
+      "file": "scratchpad/effected/markdown/MarkdownNode.ts",
+      "class": "schema",
+      "summary": "JSX name constraints use three ad-hoc struct filters",
+      "fix": "Define one annotated MdxJsxName from S.NonEmptyString. Use it for attribute.name and S.NullOr(MdxJsxName) for both element names. Remove the attribute-level filter and retain only fragment-with-attributes checks on elements. Preserve rejection semantics and verify mdx.test.ts; central codemod records changed issue paths."
+    },
+    "req-20": {
+      "file": "scratchpad/effected/markdown/internal/entities.ts",
+      "class": "effect-idiom",
+      "summary": "Internal entity-decoder absence is a nullish union",
+      "fix": "Return O.Option<string> from decodeEntity: O.none for invalid forms, HashMap.get for names and O.some for numeric forms. Consumers in unescape.ts and inlines/entity.ts use O.getOrElse. Retarget inline-pass.test.ts and internal/entities.coverage.test.ts / entities.property.test.ts to Option assertions. Preserve undecodable source bytes."
+    },
+    "req-21": {
+      "file": "scratchpad/effected/markdown/MarkdownVisitor.ts",
+      "class": "perf",
+      "summary": "Visitor eagerly reads all siblings for a fixed event prefix",
+      "fix": "Use lazy Iterable.map from effect/Iterable or equivalent lazy indexed iteration in walkNode, preserving order/paths without pre-reading all siblings. Add a wide-tree fixed-prefix regression to visitor.test.ts proving bounded consumption relative to stream chunking."
+    },
+    "req-22": {
+      "file": "scratchpad/effected/markdown/Mdast.ts",
+      "class": "bug",
+      "summary": "Foreign code admission adds a content CR that stringify does not strip",
+      "fix": "Append one LF to nonempty admitted code values; projection strips only that carried LF and preserves preceding content CR. Retarget the mdast.test.ts body\\r row to body\\r\\n rather than body\\r\\r\\n, retaining its round-trip assertion and all other rows. Add an admission/stringify regression in mdast.test.ts. Central codemod updates the existing code-newline record; no stringify.ts edit is required."
+    },
+    "req-23": {
+      "file": "scratchpad/effected/markdown/Mdast.ts",
+      "class": "bug",
+      "summary": "Cyclic foreign input escapes the Mdast Result/error channel",
+      "fix": "Track the current ancestor stack by reference identity during normalization and return a structured MdastDecodeError on back-edges. Preserve shared acyclic subtrees. Keep both Result/Effect APIs in their typed failure channels; add both entry-point regressions and an acyclic-sharing control to mdast.test.ts. Do not use global by-reference marks or a native identity set."
+    },
+    "req-24": {
+      "file": "scratchpad/effected/markdown/internal/blockParser.ts",
+      "class": "bug",
+      "summary": "Independent parser depth budgets admit trees rejected by visitor/stringifier",
+      "fix": "Validate the complete materialized root against MAX_NESTING_DEPTH before blockParser returns, throwing the existing GuardExceeded carrier so the facade reports typed parse failure. Preserve the existing visitor/stringifier whole-tree budget. Add combined block/inline boundary and parse-to-visit/stringify regressions to hardening.test.ts. Do not relax stringify to separate budgets."
+    },
+    "req-25": {
+      "file": "scratchpad/effected/markdown/Mdast.ts",
+      "class": "bug",
+      "summary": "Positionless mdast lists lose their admitted spread flag",
+      "fix": "When item positions are synthetic, preserve the admitted list’s explicit `spread` value. Continue deriving between-item spread from real positions for parsed lists, preserving the existing distinction between item-internal looseness and blank lines between items. Add a positionless `spread: true` round-trip regression and record the verified upstream-bug deviation."
+    },
+    "req-26": {
+      "file": "scratchpad/effected/markdown/internal/blockTypes.ts",
+      "class": "schema",
+      "summary": "Engine node kinds remain named hand-written literal domains",
+      "fix": "Define annotated LiteralKit values for the existing BlockType members in blockTypes.ts and InlineNodeType members in inlineNode.ts; derive same-name types. Preserve discriminators and constructor signatures. No mutable engine-node schema migration is needed."
+    },
+    "req-27": {
+      "file": "scratchpad/effected/markdown/internal/stringify.ts",
+      "class": "perf",
+      "summary": "Serializer rebuilds full Match dispatchers per node",
+      "fix": "Hoist reusable Match.type dispatchers for inline/block serialization, interruptsParagraph and canJoinWithoutBlank, supplying explicit serializer state/context instead of rebuilding captured arms per call. Preserve arm order and output bytes; retain Match rather than switch. Add a bounded regression/benchmark in stringify-scalability.test.ts and recheck the recorded workloads."
+    },
+    "req-28": {
+      "file": "scratchpad/effected/markdown/internal/stringify.ts",
+      "class": "schema",
+      "summary": "Serializer restates TableAlign and EmphasisChar domains",
+      "fix": "Import existing TableAlign and EmphasisChar types from MarkdownNode.ts; use them in alignCell, emphasisMarker, JunctionGuard, flipMarker, nestedMarker and the local marker binding, retaining null/undefined unions where needed. No runtime or test rewrite."
+    },
+    "req-29": {
+      "file": "scratchpad/effected/markdown/internal/stringify.ts",
+      "class": "schema",
+      "summary": "MDX presence classification is an untyped membership table",
+      "fix": "Declare a module-local `const MdxNodeType = LiteralKit([\"mdxJsxFlowElement\", \"mdxJsxTextElement\", \"mdxFlowExpression\", \"mdxTextExpression\", \"mdxjsEsm\"])` (annotated with a `$ScratchpadId` composer for this file) and `const isMdxNodeType = S.is(MdxNodeType)`; in `treeContainsMdx` test `isMdxNodeType(node.type)`; delete the HashSet."
+    },
+    "req-30": {
+      "file": "scratchpad/effected/markdown/internal/blocks/list.ts",
+      "class": "schema",
+      "summary": "Marker decoders hand-maintain copies of existing literal schemas",
+      "fix": "Hoist S.decodeUnknownResult for BulletChar/ListDelimiter in list.ts, FenceChar in fencedCode.ts and ThematicBreakChar in thematicBreak.ts. Consume regex-guaranteed membership through Result.getOrThrow as atxHeading already does. Preserve grammar and output."
+    },
+    "req-31": {
+      "file": "scratchpad/effected/markdown/internal/preprocess.ts",
+      "class": "schema",
+      "summary": "SourceLine is a reusable pure-data interface without a schema",
+      "fix": "Define identity-annotated SourceLine S.Struct with described text and finite start fields; derive its type and retain literal preprocessing results, NUL normalization and offsets. Add focused schema assertions to internal/Preprocess.property.test.ts; defer broad coverage/canon work."
+    },
+    "req-32": {
+      "file": "scratchpad/effected/markdown/internal/lineIndex.ts",
+      "class": "schema",
+      "summary": "LineColumn result has no executable domain model",
+      "fix": "Define annotated LineColumn S.Struct with described finite line/column fields and derive the same-name type. Preserve positionAt objects/behavior and keep the leaf import direction. Add focused shape/position assertions to line-index.test.ts."
+    },
+    "req-33": {
+      "file": "scratchpad/effected/markdown/internal/references.ts",
+      "class": "schema",
+      "summary": "ParsedReference result has no executable domain model",
+      "fix": "Define annotated ParsedReference schema/type with the existing key/identifier/label/url strings, optional-key title and finite length; preserve plain parser results. Add focused result-shape assertions to internal/references.property.test.ts."
+    },
+    "req-34": {
+      "file": "scratchpad/effected/markdown/internal/blocks/frontmatter.ts",
+      "class": "schema",
+      "summary": "Frontmatter captures and fence rules lack schema ownership",
+      "fix": "Define annotated schemas and derived types for FrontmatterCapture, RawFrontmatterCapture and FenceRule, preserving optionality, format/newline domains, counts/offsets, object results and null-on-no-capture. Move the existing FrontmatterFormat kit into the internal frontmatter leaf and re-annotate from MarkdownNode.ts to preserve the public export and import direction. Reuse RawNewline. Add focused capture assertions to internal/blocks/frontmatter.property.test.ts."
+    },
+    "req-35": {
+      "file": "scratchpad/effected/markdown/internal/blocks/linkReferenceDefinition.ts",
+      "class": "bug",
+      "summary": "Definition extraction spreads an unbounded segment suffix into arguments",
+      "fix": "Clear the existing segment array and append remaining segments iteratively without unbounded spread, preserving array identity and order. Coordinate with req-40 so suffix rebasing happens once. Add a Node regression in internal/blocks/linkReferenceDefinition.property.test.ts with one definition then a long shallow paragraph."
+    },
+    "req-36": {
+      "file": "scratchpad/effected/markdown/internal/stringify.ts",
+      "class": "bug",
+      "summary": "Serializer double-decodes entity-shaped destinations and titles",
+      "fix": "Encode decoded destinations and titles back into source spelling before applying their surrounding syntax. Protect literal ampersands in both helpers, retain the existing quoting rules, and add link/image/definition regressions."
+    },
+    "req-37": {
+      "file": "scratchpad/effected/markdown/internal/stringify.ts",
+      "class": "bug",
+      "summary": "Decoded code info is interpolated as active fence syntax",
+      "fix": "Encode decoded language and metadata into valid info-string source, protecting ampersands, backslashes, backticks, line endings and whitespace inside the language token. Add the demonstrated round-trip regressions."
+    },
+    "req-38": {
+      "file": "scratchpad/effected/markdown/internal/stringify.ts",
+      "class": "bug",
+      "summary": "Image alt serialization activates literal inline markup/entities",
+      "fix": "Serialize decoded alt text with appropriate inline-text escaping in both image arms. Preserve literal markup and entity-shaped text, and add direct-image and full-reference regressions."
+    },
+    "req-39": {
+      "file": "scratchpad/effected/markdown/internal/stringify.ts",
+      "class": "bug",
+      "summary": "Balanced bare destinations can exceed the parser parenthesis cap",
+      "fix": "Keep the angle-bracket form when parenthesis nesting exceeds 32, even when balanced. Add round trips at the 32/33 boundary."
+    },
+    "req-40": {
+      "file": "scratchpad/effected/markdown/internal/blocks/linkReferenceDefinition.ts",
+      "class": "perf",
+      "summary": "Definition extraction repeatedly copies suffixes and rescans its prefix",
+      "fix": "Track consumed text and the insertion index during extraction; rebase the surviving segment suffix once and avoid repeated paragraph-index searches. Preserve definition order, precedence and positions. Add scaled extraction/position regressions in internal/blocks/linkReferenceDefinition.property.test.ts and source-offsets.test.ts; append iteratively without unbounded argument spreads."
+    },
+    "req-41": {
+      "file": "scratchpad/effected/markdown/internal/inlineTypes.ts",
+      "class": "schema",
+      "summary": "InlineSource remains a pure-data interface without an executable model",
+      "fix": "Define an annotated RawInlineSegment schema/type at its existing home in blockTypes.ts. Define InlineSource schema/type in inlineTypes.ts using described text, finite startOffset and an array of that shared schema. Preserve plain parser payloads. Add focused schema assertions in internal/blockTypes.property.test.ts and internal/inlineParser.property.test.ts. g6 reuses this schema without writing either shared file."
+    },
+    "req-42": {
+      "file": "scratchpad/effected/markdown/internal/blocks/table.ts",
+      "class": "schema",
+      "summary": "Named table-scanner intermediate models lack schemas",
+      "fix": "Define annotated schemas/types for RowSource, RawCell, ScannedRow and CellContent in table.ts; reuse the RawInlineSegment schema provided by g3. Preserve optional fields, scanner objects, text/segment provenance, offsets and cell boundaries. Add focused model assertions to internal/blocks/table.property.test.ts; no shared-file edits."
+    },
+    "req-43": {
+      "file": "scratchpad/effected/markdown/internal/stringify.ts",
+      "class": "effect-idiom",
+      "summary": "Literal block-opening grammar dispatch remains a conditional ladder",
+      "fix": "Express the marker cases with a reusable Match dispatcher and a false fallback. Preserve the current predicates and escaping behavior."
+    },
+    "req-44": {
+      "file": "scratchpad/effected/markdown/internal/inlines/rawHtml.ts",
+      "class": "perf",
+      "summary": "Invalid declaration prefixes trigger quadratic closer searches",
+      "fix": "Apply the declaration closer precheck only when the opener matches the declaration grammar’s `<![A-Za-z]` prefix. Retain the separate comment, processing-instruction, and CDATA checks. Add an invalid-prefix regression with a distant `>` that verifies no declaration closer searches occur and preserves the parsed text."
+    },
+    "req-45": {
+      "file": "scratchpad/effected/markdown/internal/inlines/link.ts",
+      "class": "schema",
+      "summary": "Link parser independently spells the ReferenceType domain",
+      "fix": "Add `import type { ReferenceType } from \"../../MarkdownNode.ts\";` next to the existing imports (mirrors emphasis.ts:19) and change :297 to `let referenceType: ReferenceType = \"shortcut\";`. No runtime change; no test adjustment."
+    },
+    "req-46": {
+      "file": "scratchpad/effected/markdown/internal/inlines/emphasis.ts",
+      "class": "schema",
+      "summary": "DelimiterRun admits impossible zero, fractional and negative lengths",
+      "fix": "Constrain numdelims to S.Int.check(S.isGreaterThanOrEqualTo(1)), preserving meaningful field metadata. Add zero, negative and fractional rejection cases to delimiter-run.test.ts. Preserve scanDelims behavior; existing Arbitrary-derived tests follow the new checks. Central codemod records numeric-domain tightening."
+    }
+  }
+}

@@ -1,5 +1,79 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import { License } from "../License.ts";
 import { LicenseException } from "../LicenseException.ts";
+
+const $I = $ScratchpadId.create("effected/spdx/internal/parser");
+
+const RawLicense = S.Struct({
+	kind: S.Literal("license").pipe($I.annoteKey("RawLicense.kind", { description: "Cataloged license variant." })),
+	id: S.String.pipe($I.annoteKey("RawLicense.id", { description: "The SPDX short identifier." })),
+	plus: S.Boolean.pipe($I.annoteKey("RawLicense.plus", { description: "Whether the trailing or-later marker is present." })),
+}).annotate($I.annote("RawLicense", { description: "A plain-object cataloged license leaf emitted by the parser." }));
+
+const RawLicenseRef = S.Struct({
+	kind: S.Literal("licenseRef").pipe($I.annoteKey("RawLicenseRef.kind", { description: "License reference variant." })),
+	documentRef: S.UndefinedOr(S.String).pipe(
+		$I.annoteKey("RawLicenseRef.documentRef", { description: "The document idstring, or undefined for a local reference; the key is required." }),
+	),
+	ref: S.String.pipe($I.annoteKey("RawLicenseRef.ref", { description: "The license reference idstring without its prefix." })),
+}).annotate($I.annote("RawLicenseRef", { description: "A plain-object local or document-scoped license reference emitted by the parser." }));
+
+const RawSimpleLicense = S.Union([RawLicense, RawLicenseRef]).annotate(
+	$I.annote("RawSimpleLicense", { description: "A simple SPDX expression to which a WITH clause may bind." }),
+);
+
+const RawWith = S.Struct({
+	kind: S.Literal("with").pipe($I.annoteKey("RawWith.kind", { description: "License exception variant." })),
+	license: RawSimpleLicense.pipe($I.annoteKey("RawWith.license", { description: "The simple expression qualified by the exception." })),
+	exception: S.String.pipe($I.annoteKey("RawWith.exception", { description: "The SPDX exception identifier." })),
+}).annotate($I.annote("RawWith", { description: "A plain-object WITH clause restricted to a simple license operand." }));
+
+const RawAnd = S.Struct({
+	kind: S.Literal("and").pipe($I.annoteKey("RawAnd.kind", { description: "Conjunction variant." })),
+	left: S.suspend((): S.Codec<RawExpression> => RawExpression).pipe(
+		$I.annoteKey("RawAnd.left", { description: "The left expression operand." }),
+	),
+	right: S.suspend((): S.Codec<RawExpression> => RawExpression).pipe(
+		$I.annoteKey("RawAnd.right", { description: "The right expression operand." }),
+	),
+}).annotate($I.annote("RawAnd", { description: "A plain-object conjunction of two raw expressions." }));
+
+const RawOr = S.Struct({
+	kind: S.Literal("or").pipe($I.annoteKey("RawOr.kind", { description: "Disjunction variant." })),
+	left: S.suspend((): S.Codec<RawExpression> => RawExpression).pipe(
+		$I.annoteKey("RawOr.left", { description: "The left expression operand." }),
+	),
+	right: S.suspend((): S.Codec<RawExpression> => RawExpression).pipe(
+		$I.annoteKey("RawOr.right", { description: "The right expression operand." }),
+	),
+}).annotate($I.annote("RawOr", { description: "A plain-object disjunction of two raw expressions." }));
+
+/**
+ * The schema for the parser's recursive plain-object expression tree.
+ *
+ * **Details**
+ *
+ * Describes the parser-to-facade contract without constructing public AST
+ * classes. A WITH operand must be simple; reference leaves require the
+ * documentRef key even when its value is undefined.
+ *
+ * **Example** (Validate a parsed raw tree)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { parse, RawExpression } from "@beep/scratchpad/effected/spdx/internal/parser"
+ *
+ * console.log(S.is(RawExpression)(parse("MIT AND Apache-2.0"))) // true
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RawExpression: S.Codec<RawExpression> = S.Union([RawSimpleLicense, RawWith, RawAnd, RawOr]).annotate(
+	$I.annote("RawExpression", { description: "The recursive plain-object expression tree emitted by the parser." }),
+);
 
 /**
  * The maximum expression nesting depth the recursive-descent parser will
@@ -45,9 +119,7 @@ export const MAX_NESTING_DEPTH = 256;
  * @category type-level
  * @since 0.0.0
  */
-export type RawSimpleLicense =
-	| { readonly kind: "license"; readonly id: string; readonly plus: boolean }
-	| { readonly kind: "licenseRef"; readonly documentRef: string | undefined; readonly ref: string };
+export type RawSimpleLicense = typeof RawSimpleLicense.Type;
 
 /**
  * The raw expression tree the parser emits.
@@ -58,6 +130,8 @@ export type RawSimpleLicense =
  * public {@link SpdxExpression} AST, deliberately free of any Schema class so
  * the engine module carries no edge back to the facade (the cycle firewall):
  * the parser produces these records, the facade materializes the typed classes.
+ * Only the recursive branches need an explicit type anchor; the leaf and WITH
+ * shapes are derived from their schemas.
  *
  * @internal
  * @category type-level
@@ -65,7 +139,7 @@ export type RawSimpleLicense =
  */
 export type RawExpression =
 	| RawSimpleLicense
-	| { readonly kind: "with"; readonly license: RawSimpleLicense; readonly exception: string }
+	| typeof RawWith.Type
 	| { readonly kind: "and"; readonly left: RawExpression; readonly right: RawExpression }
 	| { readonly kind: "or"; readonly left: RawExpression; readonly right: RawExpression };
 

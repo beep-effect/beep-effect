@@ -1,0 +1,23 @@
+{
+  "module": "sbom",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/sbom/InTotoStatement.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "sol-2-1"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-2-1": {
+      "file": "scratchpad/effected/sbom/InTotoStatement.ts",
+      "class": "schema",
+      "summary": "InTotoStatement.toJson duplicates the schema-backed JSON options shape in an anonymous configuration type, contrary to EF-33 and the schema-first configuration contract.",
+      "fix": "Add import type { SbomJsonOptions } from ./Sbom.ts and use toJson(options?: SbomJsonOptions): string. Preserve options?.space ?? 0, the existing codec/validation boundary, wire key order and upstream serializer assertions. Do not add options decoding or change the default. Only InTotoStatement.ts needs editing; the type-only import adds no runtime dependency and no test edits are necessary."
+    }
+  }
+}

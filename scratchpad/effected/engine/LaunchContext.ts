@@ -1,5 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/engine/LaunchContext");
 
@@ -71,8 +73,7 @@ export type ProjectDirInput = typeof ProjectDirInput.Type;
  * @category utilities
  * @since 0.0.0
  */
-export class LaunchContext {
-	private constructor() {}
+export abstract class LaunchContext {
 
 	/**
 	 * Whether a value still carries a literal `${VAR}` placeholder.
@@ -93,13 +94,14 @@ export class LaunchContext {
 	 *
 	 * @since 0.0.0
 	 */
-	static readonly isUnsubstituted = (value: string): boolean => {
-		// A `${` with any `}` after it. The first `${` has the most text after it,
-		// so it alone decides; two scans keep this linear, where the equivalent
-		// unanchored regex rescans from every `${` and goes quadratic.
-		const open = value.indexOf("${");
-		return open !== -1 && value.indexOf("}", open + 2) !== -1;
-	};
+	// A `${` with any `}` after it. The first `${` has the most text after it,
+	// so it alone decides; two scans keep this linear, where the equivalent
+	// unanchored regex rescans from every `${` and goes quadratic.
+	static readonly isUnsubstituted = (value: string): boolean =>
+		O.match(Str.indexOf("${")(value), {
+			onNone: () => false,
+			onSome: (open) => Str.includes("}", open + 2)(value),
+		});
 
 	/**
 	 * The first usable argv value, then the first usable env value in `keys`
@@ -125,7 +127,7 @@ export class LaunchContext {
 	static readonly projectDir = (input: ProjectDirInput): string => {
 		const usable = (value: string | undefined): string | undefined => {
 			if (value === undefined) return undefined;
-			const trimmed = value.trim();
+			const trimmed = Str.trim(value);
 			return trimmed === "" || LaunchContext.isUnsubstituted(trimmed) ? undefined : trimmed;
 		};
 		for (const value of input.argv ?? []) {

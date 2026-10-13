@@ -8,6 +8,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Brand from "effect/Brand";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/package-json/PackageName");
 
@@ -144,18 +145,16 @@ const isValid = (name: string): boolean =>
 	name.length > 0 && name.length <= MAX_LENGTH && (UNSCOPED_RE.test(name) || SCOPED_RE.test(name));
 
 const scope = (name: string): O.Option<string> => {
-	if (!name.startsWith("@")) return O.none();
-	const slash = name.indexOf("/");
-	return slash === -1 ? O.none() : O.some(name.slice(1, slash));
+	if (!Str.startsWith("@")(name)) return O.none();
+	return O.map(Str.indexOf("/")(name), (slash) => Str.slice(1, slash)(name));
 };
 
 const unscoped = (name: string): string => {
-	if (!name.startsWith("@")) return name;
-	const slash = name.indexOf("/");
-	return slash === -1 ? name : name.slice(slash + 1);
+	if (!Str.startsWith("@")(name)) return name;
+	return O.getOrElse(O.map(Str.indexOf("/")(name), (slash) => Str.slice(slash + 1)(name)), () => name);
 };
 
-const isScoped = (name: string): boolean => name.startsWith("@");
+const isScoped = Str.startsWith("@");
 
 const PackageNameUnion = S.Union([ScopedPackageName, UnscopedPackageName]).pipe(
 	$I.annoteSchema("PackageName", { description: "A valid npm package name, scoped or unscoped, with classification statics." }),

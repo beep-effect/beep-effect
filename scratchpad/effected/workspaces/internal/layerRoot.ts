@@ -1,4 +1,6 @@
 import { dual } from "effect/Function";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 // The layer-bound root lookup every root-consuming service shares.
 //
 // `WorkspaceDiscovery`, `LockfileReader`, `WorkspaceCatalogs` and
@@ -10,16 +12,34 @@ import { dual } from "effect/Function";
 import * as Effect from "effect/Effect";
 import type { WorkspaceRootNotFoundError, WorkspaceRootShape } from "../WorkspaceRoot.ts";
 
+const $I = $ScratchpadId.create("effected/workspaces/internal/layerRoot");
+
 /**
  * Shares the layer-level options every root-consuming service reads its root from.
+ *
+ * **Example** (Leave the ambient directory unresolved)
+ *
+ * ```ts
+ * import { LayerRootOptions } from "@beep/scratchpad/effected/workspaces/internal/layerRoot";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(LayerRootOptions)({})); // true
+ * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface LayerRootOptions {
-	readonly cwd?: string;
-	readonly stopAt?: string | undefined;
-}
+export const LayerRootOptions = S.Struct({
+	cwd: S.optionalKey(S.String).annotateKey($I.annote("LayerRootOptions.cwd", { description: "The starting directory, with ambient cwd read only on use when omitted." })),
+	stopAt: S.optional(S.String).annotateKey($I.annote("LayerRootOptions.stopAt", { description: "The inclusive root-search boundary, accepting absence or explicit undefined." })),
+}).annotate($I.annote("LayerRootOptions", { description: "Plain shared root options with an unresolved ambient cwd default." }));
+/**
+ * The root lookup configuration described by {@link LayerRootOptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LayerRootOptions = typeof LayerRootOptions.Type;
 
 /**
  * Resolves the workspace root a layer's options name.

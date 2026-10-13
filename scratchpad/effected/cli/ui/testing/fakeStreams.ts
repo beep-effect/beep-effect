@@ -20,11 +20,6 @@ abstract class MemorySocket extends Socket {
 		return this;
 	}
 
-	override _read(): void {
-		// Bytes arrive through receive rather than a native socket handle.
-		return undefined;
-	}
-
 	override _write(chunk: Buffer | string, _encoding: BufferEncoding, callback: WriteCallback): void {
 		this.receive(chunk);
 		callback();

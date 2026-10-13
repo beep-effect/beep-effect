@@ -7,10 +7,33 @@ import { dual } from "effect/Function";
 //
 // `instanceId` is OPAQUE here — composed and looked up, never parsed.
 
-import type { Lockfile, ResolvedPackage } from "../../lockfiles/index.ts";
+import { $ScratchpadId } from "@beep/identity/packages";
+import type { Lockfile } from "../../lockfiles/index.ts";
+import { ResolvedPackage } from "../../lockfiles/ResolvedPackage.ts";
 import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/workspaces/internal/roots");
+
+const OwnImporterRoots = S.Struct({
+	_tag: S.Literal("own").annotateKey($I.annote("OwnImporterRoots._tag", {
+		description: "The importer has its own workspace instance.",
+	})),
+	instance: ResolvedPackage.annotateKey($I.annote("OwnImporterRoots.instance", {
+		description: "The workspace instance whose edges are the importer's dependencies.",
+	})),
+}).pipe($I.annoteSchema("OwnImporterRoots", { description: "An importer's own workspace instance." }));
+
+const DependencyImporterRoots = S.Struct({
+	_tag: S.Literal("dependencies").annotateKey($I.annote("DependencyImporterRoots._tag", {
+		description: "The importer starts from its resolved dependency instances.",
+	})),
+	instances: S.Array(ResolvedPackage).annotateKey($I.annote("DependencyImporterRoots.instances", {
+		description: "Resolved dependency instances in importer dependency order.",
+	})),
+}).pipe($I.annoteSchema("DependencyImporterRoots", { description: "An importer's resolved dependency instances." }));
 
 /**
  * The two lookups every walk needs, built once per lockfile.
@@ -72,12 +95,31 @@ export const indexInstances = (lockfile: Lockfile): InstanceIndex => {
  *   whose row the lockfile omits); the instances are what the importer entry's
  *   own dependency records joined to.
  *
- * @category models
+ * **Example** (Check plain dependency roots)
+ *
+ * ```ts
+ * import { ImporterRoots } from "@beep/scratchpad/effected/workspaces/internal/roots";
+ * import * as S from "effect/Schema";
+ *
+ * const roots: ImporterRoots = { _tag: "dependencies", instances: [] };
+ * console.log(S.is(ImporterRoots)(roots)); // true
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
-export type ImporterRoots =
-	| { readonly _tag: "own"; readonly instance: ResolvedPackage }
-	| { readonly _tag: "dependencies"; readonly instances: ReadonlyArray<ResolvedPackage> };
+export const ImporterRoots = S.Union([OwnImporterRoots, DependencyImporterRoots]).pipe(
+	S.toTaggedUnion("_tag"),
+	$I.annoteSchema("ImporterRoots", { description: "Where an importer's lockfile walk starts." }),
+);
+
+/**
+ * The plain-object own/dependencies variants described by {@link ImporterRoots}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ImporterRoots = typeof ImporterRoots.Type;
 
 /**
  * The instances an importer's dependencies resolved to, or the importer's own

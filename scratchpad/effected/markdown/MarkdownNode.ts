@@ -29,6 +29,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { FrontmatterFormat as InternalFrontmatterFormat } from "./internal/blocks/frontmatter.ts";
 
 const $I = $ScratchpadId.create("effected/markdown/MarkdownNode");
 
@@ -1430,6 +1431,10 @@ export class MdxJsxAttributeValueExpression extends S.Class<MdxJsxAttributeValue
 	position: NodePosition.annotateKey({ description: "Source span of the attribute value expression, constructor-defaulted to the zero-width synthetic position" }),
 }, $I.annote("MdxJsxAttributeValueExpression", { description: "MdxJsxAttributeValueExpression — a JSX attribute value written as an expression (`<a b={c} />`); `value` holds the expression source text between the braces, never evaluated or parsed." })) {}
 
+const MdxJsxName = S.NonEmptyString.annotate(
+	$I.annote("MdxJsxName", { description: "A non-empty JSX element or attribute name, including namespace spelling." }),
+);
+
 /**
  * MdxJsxAttribute — a named JSX attribute (`<a b="c" />`). `value` is a
  * string literal, a {@link MdxJsxAttributeValueExpression}, or — for a
@@ -1459,16 +1464,10 @@ export class MdxJsxAttributeValueExpression extends S.Class<MdxJsxAttributeValue
 export class MdxJsxAttribute extends S.Class<MdxJsxAttribute>($I`MdxJsxAttribute`)(
 	S.Struct({
 		type: S.tag("mdxJsxAttribute").annotateKey({ description: "The `mdxJsxAttribute` discriminator identifying a named JSX attribute" }),
-		name: S.String.annotateKey({ description: "Non-empty JSX attribute name, including namespace spelling when present" }),
+		name: MdxJsxName.annotateKey({ description: "Non-empty JSX attribute name, including namespace spelling when present" }),
 		value: S.Union([MdxJsxAttributeValueExpression, S.String]).pipe(S.NullOr, S.optionalKey).annotateKey({ description: "Attribute string literal or unevaluated expression; absent or null denotes a boolean attribute" }),
 		position: NodePosition.annotateKey({ description: "Source span of the named attribute, constructor-defaulted to the synthetic position" }),
-	}).pipe(
-		S.check(
-			S.makeFilter((attribute) =>
-				attribute.name.length === 0 ? "an MDX JSX attribute requires a non-empty name" : undefined,
-			),
-		),
-	), $I.annote("MdxJsxAttribute", { description: "MdxJsxAttribute — a named JSX attribute (`<a b=\"c\" />`). `value` is a string literal, a MdxJsxAttributeValueExpression, or — for a boolean attribute (`<a b />`) — absent or `null`, both of which the mdast-util-mdx-jsx contract spells (its parser writes `null`; absence is the constructed-tree spelling). The serializer treats the two identically." }),
+	}), $I.annote("MdxJsxAttribute", { description: "MdxJsxAttribute — a named JSX attribute (`<a b=\"c\" />`). `value` is a string literal, a MdxJsxAttributeValueExpression, or — for a boolean attribute (`<a b />`) — absent or `null`, both of which the mdast-util-mdx-jsx contract spells (its parser writes `null`; absence is the constructed-tree spelling). The serializer treats the two identically." }),
 ) {}
 
 /**
@@ -1566,20 +1565,17 @@ export type MdxJsxAttributeContent = MdxJsxAttribute | MdxJsxExpressionAttribute
 export class MdxJsxFlowElement extends S.Class<MdxJsxFlowElement>($I`MdxJsxFlowElement`)(
 	S.Struct({
 		type: S.tag("mdxJsxFlowElement").annotateKey({ description: "The `mdxJsxFlowElement` discriminator identifying a JSX element in block position" }),
-		name: S.NullOr(S.String).annotateKey({ description: "Non-empty JSX element name, or null for a fragment that cannot carry attributes" }),
+		name: S.NullOr(MdxJsxName).annotateKey({ description: "Non-empty JSX element name, or null for a fragment that cannot carry attributes" }),
 		attributes: S.Array(MdxJsxAttributeContent).annotateKey({ description: "Named and expression attributes in source order; empty for a fragment" }),
 		children: S.Array(S.suspend((): S.Codec<FlowContent> => FlowContent)).annotateKey({ description: "Block content enclosed by the JSX element, in document order" }),
 		position: NodePosition.annotateKey({ description: "Source span of the block JSX element, constructor-defaulted to the synthetic position" }),
 	}).pipe(
 		S.check(
-			S.makeFilter((element) => {
-				if (element.name !== null && element.name.length === 0) {
-					return "an MDX JSX element requires a non-empty name (`null` is the fragment spelling)";
-				}
-				return element.name === null && element.attributes.length > 0
+			S.makeFilter((element) =>
+				element.name === null && element.attributes.length > 0
 					? "an MDX JSX fragment cannot carry attributes"
-					: undefined;
-			}),
+					: undefined,
+			),
 		),
 	), $I.annote("MdxJsxFlowElement", { description: "MdxJsxFlowElement — a JSX element in flow (block) position (`<Component />` on its own lines). `name` is `null` for a fragment (`<></>`); children are flow content, per the oracle's `BlockContent | DefinitionContent` model." }),
 ) {}
@@ -1606,20 +1602,17 @@ export class MdxJsxFlowElement extends S.Class<MdxJsxFlowElement>($I`MdxJsxFlowE
 export class MdxJsxTextElement extends S.Class<MdxJsxTextElement>($I`MdxJsxTextElement`)(
 	S.Struct({
 		type: S.tag("mdxJsxTextElement").annotateKey({ description: "The `mdxJsxTextElement` discriminator identifying a JSX element in inline position" }),
-		name: S.NullOr(S.String).annotateKey({ description: "Non-empty JSX element name, or null for a fragment that cannot carry attributes" }),
+		name: S.NullOr(MdxJsxName).annotateKey({ description: "Non-empty JSX element name, or null for a fragment that cannot carry attributes" }),
 		attributes: S.Array(MdxJsxAttributeContent).annotateKey({ description: "Named and expression attributes in source order; empty for a fragment" }),
 		children: S.Array(S.suspend((): S.Codec<PhrasingContent> => PhrasingContent)).annotateKey({ description: "Inline content enclosed by the JSX element, in document order" }),
 		position: NodePosition.annotateKey({ description: "Source span of the inline JSX element, constructor-defaulted to the synthetic position" }),
 	}).pipe(
 		S.check(
-			S.makeFilter((element) => {
-				if (element.name !== null && element.name.length === 0) {
-					return "an MDX JSX element requires a non-empty name (`null` is the fragment spelling)";
-				}
-				return element.name === null && element.attributes.length > 0
+			S.makeFilter((element) =>
+				element.name === null && element.attributes.length > 0
 					? "an MDX JSX fragment cannot carry attributes"
-					: undefined;
-			}),
+					: undefined,
+			),
 		),
 	), $I.annote("MdxJsxTextElement", { description: "MdxJsxTextElement — a JSX element in text (phrasing) position (`a <b>c</b> d`). `name` is `null` for a fragment; children are phrasing content. Refuses attributes on a fragment and an empty-string name, on the same terms as MdxJsxFlowElement." }),
 ) {}
@@ -1720,7 +1713,7 @@ export class MdxjsEsm extends S.Class<MdxjsEsm>($I`MdxjsEsm`)({
  * @category schemas
  * @since 0.0.0
  */
-export const FrontmatterFormat = LiteralKit(["yaml", "toml", "json"]).pipe($I.annoteSchema("FrontmatterFormat", { description: "The frontmatter formats the capture recognizes, keyed by their opening fence: `---` is yaml, `+++` is toml and `---json` is json." }));
+export const FrontmatterFormat = InternalFrontmatterFormat.pipe($I.annoteSchema("FrontmatterFormat", { description: "The frontmatter formats the capture recognizes, keyed by their opening fence: `---` is yaml, `+++` is toml and `---json` is json." }));
 
 /**
  * The union of all frontmatter format string literals.

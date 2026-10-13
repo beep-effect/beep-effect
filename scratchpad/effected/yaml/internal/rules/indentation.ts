@@ -16,9 +16,11 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import * as A from "effect/Array";
-import type { LintContext, LintLine, YamlRule } from "../../YamlLintRule.ts";
-import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
-import { coveringToken, isScalarContinuationLine, nonNegativeIntegerOption } from "./util.ts";
+import * as N from "effect/Number";
+import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
+import { LintLine, StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
+import type { YamlScalar } from "../../YamlNode.ts";
+import { coveringToken, isScalarContinuationLine, nonNegativeIntegerOption, walkScalars } from "./util.ts";
 import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/indentation");
@@ -72,13 +74,16 @@ export const indentationOptions = S.Struct({
  */
 export type indentationOptions = typeof indentationOptions.Type;
 
-interface ContentLine {
-	readonly line: LintLine;
-	readonly indent: number;
-	readonly firstChar: string;
-	readonly indents: ReadonlyArray<number>;
-	readonly opensKey: boolean;
-}
+const ContentLine = S.Struct({
+	line: LintLine.annotateKey({ description: "Positioned source line contributing block structure" }),
+	indent: nonNegativeIntegerOption.annotateKey({ description: "Leading indentation column of the line" }),
+	firstChar: S.String.annotateKey({ description: "First non-whitespace character on the line" }),
+	indents: S.NonEmptyArray(nonNegativeIntegerOption).annotateKey({
+		description: "Line indentation followed by the innermost same-line compact collection columns",
+	}),
+	opensKey: S.Boolean.annotateKey({ description: "Whether the mapping separator has no same-line value content" }),
+}).pipe($I.annoteSchema("ContentLine", { description: "A structural line with a nonempty progression of nonnegative indentation columns" }));
+type ContentLine = typeof ContentLine.Type;
 
 /** Flow-collection depth at each line start, from the token stream. */
 const flowDepthAtLineStarts = (ctx: LintContext): ReadonlyArray<number> => {
@@ -107,8 +112,15 @@ const flowDepthAtLineStarts = (ctx: LintContext): ReadonlyArray<number> => {
  */
 const contentLines = (ctx: LintContext): ReadonlyArray<ContentLine> => {
 	const flowDepths = flowDepthAtLineStarts(ctx);
+	const multilineScalars: Array<YamlScalar> = [];
+	walkScalars(ctx.document.contents, "root", (scalar) => {
+		if (scalar.sourceMultiline === true) multilineScalars.push(scalar);
+	});
+	const scalarSpans = A.sortWith(multilineScalars, (scalar) => scalar.offset, N.Order);
+	let scalarIdx = 0;
 	const content: Array<ContentLine> = [];
 	let tokenIdx = 0;
+	let explicitKeyColumn: number | undefined;
 	for (const line of ctx.lines) {
 		const indent = line.text.length - line.text.trimStart().length;
 		const firstChar = line.text[indent];
@@ -118,12 +130,22 @@ const contentLines = (ctx: LintContext): ReadonlyArray<ContentLine> => {
 		if (line.text.slice(0, indent).includes("\t")) continue; // tab indent is the parser's error
 		if (A.getUnsafe(flowDepths, line.number) > 0) continue; // inside a flow collection
 		if (isScalarContinuationLine(ctx.tokens, line.offset, line.offset + indent)) continue; // scalar content
+		while (scalarIdx < scalarSpans.length) {
+			const scalar = A.getUnsafe(scalarSpans, scalarIdx);
+			if (scalar.offset + scalar.length > line.offset + indent) break;
+			scalarIdx++;
+		}
+		const scalar = scalarSpans[scalarIdx];
+		if (scalar !== undefined && scalar.offset < line.offset && line.offset + indent < scalar.offset + scalar.length) continue;
 		const firstToken = coveringToken(ctx.tokens, line.offset + indent);
 		if (firstToken?.kind === "document-start" || firstToken?.kind === "document-end") continue;
+		const continuationKeyColumn = explicitKeyColumn;
+		if (explicitKeyColumn !== undefined && indent <= explicitKeyColumn) explicitKeyColumn = undefined;
 		// Read significant tokens, rather than treating quoted ` # ` as a comment.
 		while (tokenIdx < ctx.tokens.length && A.getUnsafe(ctx.tokens, tokenIdx).offset < line.offset) tokenIdx++;
-		const indents = [indent];
-		let lastKind: string | undefined;
+		const indents = A.of(indent);
+		let opensKey = false;
+		let hasBlockIndicator = false;
 		let afterEntry = false;
 		let compactKeyIndent: number | undefined;
 		let inlineFlowDepth = 0;
@@ -135,17 +157,27 @@ const contentLines = (ctx: LintContext): ReadonlyArray<ContentLine> => {
 			if (token.kind === "flow-map-start" || token.kind === "flow-seq-start") inlineFlowDepth++;
 			if (token.kind === "flow-map-end" || token.kind === "flow-seq-end") inlineFlowDepth--;
 			if (afterEntry) {
-				if (token.kind === "block-seq-entry") indents.push(token.character);
+				if (token.kind === "block-seq-entry" || token.kind === "block-map-key") indents.push(token.character);
 				else compactKeyIndent = token.character;
 			}
 			if (token.kind === "block-map-value" && inlineFlowDepth === 0 && compactKeyIndent !== undefined) {
 				indents.push(compactKeyIndent);
 				compactKeyIndent = undefined;
 			}
+			if (inlineFlowDepth === 0) {
+				if (token.kind === "block-map-key") explicitKeyColumn = token.character;
+				if (token.kind === "block-map-value") explicitKeyColumn = undefined;
+				if (token.kind === "block-map-key" || token.kind === "block-map-value" || token.kind === "block-seq-entry") hasBlockIndicator = true;
+			}
 			afterEntry = token.kind === "block-seq-entry";
-			lastKind = token.kind;
+			if (token.kind === "block-map-value" && inlineFlowDepth === 0) opensKey = true;
+			else if (token.kind !== "anchor" && token.kind !== "tag") opensKey = false;
 		}
-		content.push({ line, indent, firstChar, indents, opensKey: lastKind === "block-map-value" });
+		// Explicit plain keys can be composed from separate tokens while their
+		// AST span still covers only the first fragment. Keep the later ':'
+		// structural, but omit deeper scalar fragments until that indicator.
+		if (continuationKeyColumn !== undefined && indent > continuationKeyColumn && firstToken?.kind === "scalar" && !hasBlockIndicator) continue;
+		content.push({ line, indent, firstChar, indents, opensKey });
 	}
 	return content;
 };
@@ -224,7 +256,12 @@ export const indentation: YamlRule = {
 		let unit = P.isNumber(spacesOpt) ? spacesOpt : undefined;
 		const stack: Array<number> = [0];
 		for (const { line, indents } of content) {
-			for (const indent of indents) {
+			for (let columnIndex = 0; columnIndex < indents.length; columnIndex++) {
+				const indent = A.getUnsafe(indents, columnIndex);
+				if (columnIndex > 0) {
+					stack.push(indent);
+					continue;
+				}
 				const top = A.getUnsafe(stack, stack.length - 1);
 				if (indent > top) {
 					const delta = indent - top;
@@ -292,7 +329,12 @@ export const indentation: YamlRule = {
 		let unit: number | undefined;
 		const stack: Array<number> = [0];
 		for (const { line, indents } of content) {
-			for (const indent of indents) {
+			for (let columnIndex = 0; columnIndex < indents.length; columnIndex++) {
+				const indent = A.getUnsafe(indents, columnIndex);
+				if (columnIndex > 0) {
+					stack.push(indent);
+					continue;
+				}
 				const top = A.getUnsafe(stack, stack.length - 1);
 				if (indent > top) {
 					out.push(

@@ -16,6 +16,7 @@
 // only.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -414,10 +415,17 @@ interface Section {
 	insertAfter: number | undefined;
 }
 
+const ResTableOrigin = LiteralKit(["root", "explicit", "implicit", "dotted", "element"]).pipe(
+	$I.annoteSchema("ResTableOrigin", {
+		description: "How a resolution table came to exist, determining insertion acceptance and key-path rendering.",
+	}),
+);
+type ResTableOrigin = typeof ResTableOrigin.Type;
+
 /** A table in the resolution tree, tagged with how it came to exist and where inserts land. */
 interface ResTable {
 	readonly kind: "table";
-	origin: "root" | "explicit" | "implicit" | "dotted" | "element";
+	origin: ResTableOrigin;
 	readonly entries: MutableHashMap.MutableHashMap<string, ResNode>;
 	sectionIndex: number;
 	/** Dotted tables only: the key path relative to the defining section's header. */
@@ -449,12 +457,20 @@ const mkTable = (origin: ResTable["origin"], sectionIndex = 0, relPath: Readonly
 /** Descend into a navigable node: tables pass through, array-of-tables yield their last element.
  * The semantic pass guarantees the node exists, is navigable, and has an element.
  */
-const intoTable = (node: ResNode | undefined): ResTable =>
-	O.fromUndefinedOr(node).pipe(
-		O.filter((entry) => entry.kind !== "value"),
-		O.map((entry) => entry.kind === "table" ? entry : A.getUnsafe(entry.elements, entry.elements.length - 1)),
-		O.getOrThrow,
-	);
+const intoTable = (node: ResNode | undefined): ResTable => {
+	if (node !== undefined && node.kind === "array-tables") {
+		const element = O.getOrUndefined(A.last(node.elements));
+		if (element === undefined) {
+			throw TomlFormatInvariantError.make({ message: "missing TOML element" });
+		}
+		return element;
+	}
+	if (node !== undefined && node.kind === "table") {
+		return node;
+	}
+	// The semantic pass already validated every navigation; reaching a value here is an invariant violation.
+	throw TomlFormatInvariantError.make({ message: "invariant: semantic pass admitted a value where a table was navigated" });
+};
 
 /**
  * Build the resolution tree and section list by riding `analyze`'s visitor.

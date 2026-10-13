@@ -1,0 +1,37 @@
+I'll review the toml port read-only against the pinned upstream oracle and the round-1 inventory, then report only new findings.Round 1 is loaded. Next I’ll diff this commit against that inventory and the pinned oracle, and only raise issues the green gates missed.Round-1 repairs look applied. I’ll check Effect helpers the port now depends on, and compare the engine against the pinned oracle for behavior the gates do not prove.I'll confirm the two open sites against the current toml surface and the metadata law, then report only new findings.Another seat already flagged `offsetMinutes`. I'll check the ledger and the type-only domains so this seat's findings stay independent.### fable-2-1
+- file: scratchpad/effected/toml/internal/semantic.ts:68
+- class: schema   severity: required
+- standard: standards/effect-laws-v1.md law 17 and law 19; standards/effect-first-development.md EF-12b; D5   evidence: `Provenance` is a named seven-member string union reused by `SemNode.kind` and `makeNode`, and matched exhaustively in `navigateHeaderPrefix` (`semantic.ts:121-128`). Round-1 `r-match-provenance` fixed the dispatch. No schema owns the domain. The four green law gates do not require LiteralKit for a type alias.
+- failure: The semantic engine’s named provenance domain has no schema authority, identity metadata, or schema-derived type.
+- fix: Define a module-local `$I`-annotated `LiteralKit` with the same seven strings and derive the type with `typeof Provenance.Type`. Keep construction and matching behavior unchanged.
+
+### fable-2-2
+- file: scratchpad/effected/toml/TomlFormat.ts:420
+- class: schema   severity: required
+- standard: standards/effect-laws-v1.md law 17 and law 19; standards/effect-first-development.md EF-12b; D5   evidence: `ResTable.origin` is the inline union `"root" | "explicit" | "implicit" | "dotted" | "element"`, reused as `ResTable["origin"]` in `mkTable` (`TomlFormat.ts:441`) and read at `TomlFormat.ts:503`, `713`, and `719`. No schema defines it. The green gates do not flag a handwritten property union.
+- failure: The formatter’s reused table-origin domain has no schema source of truth.
+- fix: Add a module-local `$I`-annotated LiteralKit for those five origins and type `ResTable.origin` from its `.Type`. Keep the origin strings, assignments, and insertion rules.
+
+### fable-2-3
+- file: scratchpad/effected/toml/TomlDateTime.ts:238
+- class: schema   severity: required
+- standard: scratchpad/EFFECTED_PORT_GOAL.md operator step 4; D5; standards/effect-first-development.md EF-12   evidence: `offsetMinutes` is `S.Int.check(S.isBetween({ minimum: -1439, maximum: 1439 }))` with no `annotateKey`. The shared date and time fields repaired under round-1 `r-metadata-model` now have descriptions (`TomlDateTime.ts:50-60`). The ledger `identity-annotations` lab behaviour says those fields gained schema metadata; this field did not. Docgen and the four law gates do not check field-description completeness.
+- failure: Exported `TomlOffsetDateTime` omits field metadata for the signed combined UTC offset in minutes.
+- fix: Add `annotateKey({ description })` stating the signed UTC offset in minutes, range -1439 through 1439, and that zero renders as `Z`. Keep the integer check and bounds.
+
+### fable-2-4
+- file: scratchpad/effected/toml/TomlDateTime.ts:50
+- class: schema   severity: required
+- standard: standards/effect-laws-v1.md law 18; standards/effect-first-development.md EF-12c   evidence: `dateFields` and `timeFields` (`TomlDateTime.ts:49-61`) are reused by the date-time classes. Each `S.isBetween(...)` call passes no `Annotations.Filter`. Round-1 `r-calendar-check` added identifier, title, and description to `isRealCalendarDate`; `r-metadata-model` added field `annotateKey` text and left the check metadata empty. The green gates do not require filter annotations.
+- failure: The shared calendar and time bounds have no check identifier, title, or description, so filter issues carry only the built-in bound message.
+- fix: Pass `identifier`, `title`, and `description` into each shared `S.isBetween` call. Keep the numeric bounds and the existing field descriptions.
+
+### fable-2-5
+- file: scratchpad/effected/toml/TomlDiagnostic.ts:197
+- class: jsdoc   severity: backlog
+- standard: scratchpad/EFFECTED_PORT_GOAL.md section 10.2; round-1 `b-description-links`   evidence: The schema description still contains the literal `(TomlErrorCode:type)`. `TomlDocument.ts:94` still contains `(TomlExpression:type)`. The JSDoc bodies at `TomlDiagnostic.ts:163` and `TomlDocument.ts:54` already use `{@link (…:type)}`. Round 1 deferred this to S2. The toml ledger note `2026-10-09T16:17:43.109Z` records S2 green, and both schema strings remain. Docgen stays green because these are annotation strings.
+- failure: Generated schema descriptions show declaration-reference syntax as plain text.
+- fix: Replace those two parenthetical forms with the plain names `TomlErrorCode` and `TomlExpression`. Leave the JSDoc `{@link}` lines as they are.
+
+REQUIRED: 4
+BACKLOG: 1

@@ -3,20 +3,6 @@
 // scalars, plus the whitespace analyses that decide when block styles cannot
 // represent a value faithfully.
 
-import { $ScratchpadId } from "@beep/identity/packages";
-import * as S from "effect/Schema";
-
-const $I = $ScratchpadId.create("effected/yaml/internal/fold");
-
-/** A defect raised when a YAML helper invariant is violated. */
-class FoldFailure extends S.TaggedError<FoldFailure>($I`FoldFailure`)(
-	"FoldFailure",
-	{
-		message: S.String.annotateKey({ description: "The violated scalar-folding invariant." }),
-	},
-	$I.annote("FoldFailure", { description: "A violated invariant while rendering a YAML scalar." }),
-) {}
-
 /**
  * Folds a logical scalar line at safe spaces while preserving its YAML value.
  *
@@ -71,6 +57,14 @@ export function foldScalarLine(
 	let prev: string | undefined;
 	for (let i = 0; i < text.length; i++) {
 		const ch = text[i];
+		// An existing physical break already satisfies the previous line's
+		// budget. Never reuse its split candidate when folding rendered text.
+		if (ch === "\n") {
+			split = undefined;
+			end = i + 1 + lineWidth;
+			prev = undefined;
+			continue;
+		}
 		if (ch === " " && prev !== undefined && prev !== " ") {
 			const next = text[i + 1];
 			if (next !== undefined && next !== " ") split = i;
@@ -84,9 +78,7 @@ export function foldScalarLine(
 	}
 	if (folds.length === 0) return text;
 	let result = text.slice(0, folds[0]);
-	for (let f = 0; f < folds.length; f++) {
-		const fold = folds[f];
-		if (fold === undefined) throw FoldFailure.make({ message: "Missing fold" });
+	for (const [f, fold] of folds.entries()) {
 		const sliceEnd = folds[f + 1] ?? text.length;
 		// Drop the space at `fold`; the inserted break carries the join.
 		result += `\n${indent}${text.slice(fold + 1, sliceEnd)}`;
@@ -136,12 +128,8 @@ export function foldRenderedScalar(
 	if (first === "|" || first === "'") return rendered;
 	if (first === ">") {
 		const lines = rendered.split("\n");
-		const firstLine = lines[0];
-		if (firstLine === undefined) throw FoldFailure.make({ message: "Missing first line" });
-		const out: string[] = [firstLine];
-		for (let i = 1; i < lines.length; i++) {
-			const line = lines[i];
-			if (line === undefined) throw FoldFailure.make({ message: "Missing line" });
+		const out = lines.slice(0, 1);
+		for (const line of lines.slice(1)) {
 			// Fold only base-indent content lines: they start with exactly `indent`
 			// and the next char is content (not a further space/tab, which would
 			// make the line "more-indented" and its break literal to the reader).
@@ -268,14 +256,14 @@ export function hasNewlineSpacesTab(s: string): boolean {
  * source needs N+1 consecutive source newlines (i.e., one extra to account
  * for the bare newline that would otherwise fold to a space).
  *
- * Continuation lines are prefixed with the given indent. Leading whitespace
- * on continuation lines after the indent is preserved as part of the content
- * because empty lines precede them, suppressing the fold-to-space rule.
+ * Continuation lines are prefixed with the given indent. Whitespace adjacent
+ * to an interior line break cannot survive flow folding; those values must
+ * use escaped double quotes instead.
  *
  * **Gotchas**
  *
  * Returns null if the content cannot safely be represented as single-quoted
- * (carriage returns or non-tab control characters).
+ * (carriage returns, non-tab control characters, or folding whitespace).
  *
  * **Example** (Encode a literal newline in single quotes)
  *
@@ -294,6 +282,7 @@ export function renderSingleQuotedMultiline(s: string, ...[indent]: [indent: str
 		const code = s.charCodeAt(i);
 		if (code === 0x0d || isControlChar(code)) return null;
 	}
+	if (hasInteriorTrailingWhitespace(s) || /\n[ \t]/.test(s)) return null;
 	const escaped = s.replace(/'/g, "''");
 	let result = "";
 	let i = 0;
@@ -323,6 +312,12 @@ export function renderSingleQuotedMultiline(s: string, ...[indent]: [indent: str
 
 /**
  * Renders a string scalar using block literal style (pipe `|`).
+ *
+ * **Gotchas**
+ *
+ * Returns null when preserving indentation would require an indicator outside
+ * YAML's single-digit range 1–9. Callers must use escaped double quotes.
+ *
  * **Example** (Strip absent trailing newlines)
  *
  * ```ts
@@ -350,7 +345,7 @@ export function renderBlockLiteral(
 		preserveKeep?: boolean,
 		explicitIndent?: number,
 	]
-): string {
+): string | null {
 	// Compute chomp indicator from the value's trailing-newline structure.
 	// `+` (keep) is required when the value retains more than one trailing
 	// newline OR when the value consists solely of newlines (otherwise `|`
@@ -361,7 +356,7 @@ export function renderBlockLiteral(
 	// when clip would read identically (byte preservation).
 	let chomp = "";
 	const onlyNewlines = s.length > 0 && /^\n+$/.test(s);
-	if (s.endsWith("\n\n") || (onlyNewlines && explicitChomp === "keep")) {
+	if (s.endsWith("\n\n") || onlyNewlines) {
 		chomp = "+";
 	} else if (!s.endsWith("\n")) {
 		chomp = "-";
@@ -395,6 +390,7 @@ export function renderBlockLiteral(
 		// it matches the rendered indent, byte-preserving the header.
 		indentIndicator = String(explicitIndent);
 	}
+	if (indentIndicator !== "" && (indent.length < 1 || indent.length > 9)) return null;
 	return `|${indentIndicator}${chomp}\n${lines.map((l) => (l === "" ? "" : `${indent}${l}`)).join("\n")}`;
 }
 
@@ -407,6 +403,11 @@ export function renderBlockLiteral(
  * into a space by the reader. To preserve a literal newline in the value,
  * the output must contain an empty line (double newline). Each empty line
  * in the value already produces the correct number of blank lines.
+ *
+ * **Gotchas**
+ *
+ * Returns null when preserving indentation would require an indicator outside
+ * YAML's single-digit range 1–9. Callers must use escaped double quotes.
  *
  * **Example** (Preserve a newline in folded output)
  *
@@ -426,13 +427,13 @@ export function renderBlockFolded(
 		explicitChomp?: "strip" | "clip" | "keep",
 		explicitIndent?: number,
 	]
-): string {
+): string | null {
 	// Chomp derivation mirrors renderBlockLiteral; `explicitChomp` /
 	// `explicitIndent` are fidelity-path header preservation (a redundant
 	// explicit `+` or `>2` re-emits byte-intact) — canonical callers pass
 	// neither.
 	let chomp = "";
-	if (s.endsWith("\n\n")) {
+	if (s.endsWith("\n\n") || (s.length > 0 && /^\n+$/.test(s))) {
 		chomp = "+";
 	} else if (!s.endsWith("\n")) {
 		chomp = "-";
@@ -471,6 +472,8 @@ export function renderBlockFolded(
 		indentIndicator = String(explicitIndent);
 	}
 
+	if (indentIndicator !== "" && (indent.length < 1 || indent.length > 9)) return null;
+
 	// Build folded output from the resolved value lines.
 	//
 	// Folded scalar reading rules (YAML 1.2 §8.2.1):
@@ -505,9 +508,7 @@ export function renderBlockFolded(
 	// in a blank run is the identical `""`, so emitting the compensation line
 	// at the end of the run instead of its start is byte-identical output.
 	let pendingCompensation = false;
-	for (let i = 0; i < valueLines.length; i++) {
-		const line = valueLines[i];
-		if (line === undefined) throw FoldFailure.make({ message: "Missing line" });
+	for (const [i, line] of valueLines.entries()) {
 		if (line === "") {
 			// If the previous line was non-empty, non-more-indented content,
 			// the \n after it is preserved (not folded) because it's followed

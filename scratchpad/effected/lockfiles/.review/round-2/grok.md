@@ -1,0 +1,16 @@
+I'll review the lockfiles port at that commit against the oracle and round-1 inventory, and report only new findings. First I'm loading the binding decisions, the prior inventory, and the port surface.Round 1 closed a set of deviations in the ledger. I'll check that those fixes landed, then look for new behaviour or law gaps the gates would miss.The review is still open. I will confirm the lockfiles tree matches `60fcfb5e`, then probe the remaining behavior diffs against the pinned oracle before writing findings.### grok-2-1
+- file: scratchpad/effected/lockfiles/Lockfile.ts:395
+- class: law   severity: required
+- standard: standards/effect-laws-v1.md law 6; D5; 2026-10-09 grilling (public collection changes are allowed so the allowlist can go to zero). evidence: `withImporterNames` is typed `ReadonlyMap<string, string>` and calls `names.get` at lines 398, 418, and 419. The JSDoc example at line 386 and `README.md:26` construct `new Map`. `NoNativeRuntime.ts` flags only `new Map`/`new Set` (`mapSetCtor` on `NewExpression`, around line 396), so a parameter type and `.get` stay green. `standards/effect-laws.allowlist.jsonc` has no `scratchpad/effected/lockfiles` entry. The ledger native-runtime row records the `configDependencies` HashMap return and the internal index migration; it does not accept this parameter. Round 1 closed the same gate miss only for `extractWorkspaceDeps` (fable-1-5) and `configDependencies` (fable-1-15).
+- failure: Domain logic still consumes a native `Map`. For string keys the lookup matches `HashMap.get`, so parsed lockfiles do not change, but the public method cannot take an Effect `HashMap` and law 6 remains violated with no allowlist entry.
+- fix: Take `HashMap.HashMap<string, string>` and read it with `HashMap.get`. Retarget `Lockfile.ts:386`, `README.md:26`, `scratchpad/test/lockfiles/Lockfile.test.ts:394`, `:460`, `:476`, and `Lockfile.coverage.test.ts:38` and `:43`. Record the call-shape change on the existing native-runtime deviation as `law:effect-laws-v1#6`.
+
+### grok-2-2
+- file: scratchpad/effected/lockfiles/internal/npm.ts:61
+- class: docs   severity: backlog
+- standard: numeric-domains deviation (PORT_LEDGER.json `w3-lockfiles`; README Port notes). evidence: `NpmVersionProbe` and `NpmLockfileRaw.lockfileVersion` are `S.Union([S.Finite, S.String])`, so a non-finite number fails schema decode as `SchemaError` and never reaches `requireLockfileVersion`. The same false claim is at `npm.ts:68`, `pnpm.ts:50` ("the version gate owns non-finite rejection and preserves the recorded value in its typed cause"), `bun.ts:72`, and `yarn.ts:47` ("preserves non-finite version numbers by stringifying them"). `YarnMetadata`'s schema description at `yarn.ts:49` says the version is "preserved without a finite-number restriction" while the field is `S.Union([S.String, S.Finite])`. Docgen does not check comment truth.
+- failure: The comments describe the pre-`S.Finite` upstream path. A reader would expect `NaN` or `Infinity` to be stringified or stored on `UnsupportedLockfileVersion`; those inputs fail boundary validation instead.
+- fix: Rewrite those comments and the `YarnMetadata` description to say `S.Finite` rejects non-finite numbers at the boundary. Leave the schemas and the numeric-domains deviation as they are.
+
+REQUIRED: 1
+BACKLOG: 1

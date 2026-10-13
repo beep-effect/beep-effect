@@ -2,8 +2,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as P from "effect/Predicate";
-import { RunOptions } from "./Run.ts";
+import { ExitCode, RunOptions } from "./Run.ts";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
@@ -51,7 +50,7 @@ export const ScriptResult = S.Union([
  S.Struct({
   stdout: S.optional(S.String).annotateKey({ description: "Scripted standard output." }),
   stderr: S.optional(S.String).annotateKey({ description: "Scripted standard error." }),
-  exit: S.optional(S.declare(P.isNumber)).annotateKey({ description: "Scripted exit number, preserving the upstream domain." }),
+  exit: S.optional(ExitCode).annotateKey({ description: "Scripted integer process exit code." }),
   hang: S.optional(S.Boolean).annotateKey({ description: "Whether exitCode remains unresolved." }),
  }),
 ]).pipe($I.annoteSchema("ScriptResult", { description: "A scripted completed run or an opaque platform spawn failure." }));

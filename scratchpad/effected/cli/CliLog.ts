@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
@@ -15,6 +16,7 @@ import * as PathModule from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as References from "effect/References";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { AudienceKind, RuntimeEnv } from "../env/index.ts";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../env/index.ts";
@@ -30,6 +32,8 @@ import { TrustedLine, neutralizeJson } from "./internal/logSafety.ts";
 import { scanAudience } from "./internal/scanAudience.ts";
 import type { Status } from "./Status.ts";
 import type { Style } from "./Token.ts";
+
+const $I = $ScratchpadId.create("effected/cli/CliLog");
 
 /**
  * Options for `CliLog.status`.
@@ -175,11 +179,34 @@ export interface CliLogOptions {
 /**
  * Where the file sink writes: a literal path, or the environment variable that holds it.
  *
+ * **Example** (Validate either file-sink configuration)
+ *
+ * ```ts
+ * import { CliLogFile } from "@beep/scratchpad/effected/cli/CliLog"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(CliLogFile)({ path: "logs/run.ndjson" })) // true
+ * console.log(S.is(CliLogFile)({ envVar: "TOOL_LOG_FILE" })) // true
+ * ```
+ *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export type CliLogFile = { readonly envVar: string } | { readonly path: string };
+export const CliLogFile = S.Union([
+	S.Struct({
+		envVar: S.String.annotate($I.annote("CliLogFile.Environment.envVar", { description: "The variable holding the log path; unset or empty disables file logging." })),
+	}).annotate($I.annote("CliLogFile.Environment", { description: "A file-sink location read from an environment variable." })),
+	S.Struct({
+		path: S.String.annotate($I.annote("CliLogFile.Path.path", { description: "The literal log path; an empty path disables file logging." })),
+	}).annotate($I.annote("CliLogFile.Path", { description: "A directly supplied file-sink location." })),
+]).annotate($I.annote("CliLogFile", { description: "A plain file-sink configuration using a path or an environment variable." }));
+
+/**
+ * The plain configuration cases validated by {@link CliLogFile}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CliLogFile = typeof CliLogFile.Type;
 
 /**
  * {@link CliLogOptions} with a file sink, which is what makes the layer require `FileSystem` and `Path`.
@@ -619,12 +646,14 @@ export class CliLog {
 								...extras,
 							];
 							if (file !== undefined) {
-								const target =
-									"path" in file
-										? O.some(file.path)
-										: yield* Config.option(Config.String(file.envVar)).pipe(
-												Effect.orElseSucceed(O.none<string>),
-											);
+								let target: O.Option<string>;
+								if ("path" in file) {
+									target = O.some(file.path);
+								} else {
+									target = yield* Config.option(Config.String(file.envVar)).pipe(
+										Effect.orElseSucceed(O.none<string>),
+									);
+								}
 								if (O.isSome(target) && target.value !== "") {
 									const location = yield* PathModule.Path;
 									loggers.push(yield* makeFileSink(location.resolve(target.value), lowered, underActionsIn));

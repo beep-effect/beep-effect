@@ -53,6 +53,19 @@ git merge origin/main
    repository denies `git push --force*`. GitHub squash-merge erases
    feature-branch merge commits at land time anyway. `--allow-stale-base` is
    the explicit override when proceeding despite overlap is intended.
+2c. Dependent lanes (`explorations/stacked-pr-adoption`, ruled 2026-10-13).
+   When the change needs another open PR's code:
+   - fold it into that PR while it is still open, coordinating with its
+     owner;
+   - otherwise build on its branch locally, and after it lands replay only
+     your commits onto `origin/main`
+     (`git rebase --onto origin/main <parent-head-sha>`, allowed because
+     your branch is not published yet), then publish.
+
+   Never open a PR against a non-`main` base: no workflow fires on it.
+   Never merge an unlanded PR's branch into yours. A lane blocked by red
+   `main` waits for the declared `unblocks-main` PR, then merges `main`
+   once. Native stacks stay deferred until that packet's reopen gate fires.
 3. If the worktree contains unrelated changes, stage only the intended files.
    Never publish unrelated paths silently.
 4. Check for already-running heavyweight quality commands before starting a
@@ -161,6 +174,10 @@ bun run beep yeet publish --prove-first --message "type(scope): summary"
 ```bash
 bun run beep yeet ready
 ```
+
+  Under S11 (AGENTS.md "Mergeable"), when the refusing red is inherited from
+  `main`, call final, flip with `gh pr ready <n>`, and record each inherited
+  red with its attribution in the PR body.
 
 - Publish exactly the staged index from a dirty worktree (unstaged/untracked
   residue is parked in a marked stash after the commit, the clean tree is

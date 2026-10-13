@@ -33,6 +33,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Str from "effect/String";
 import type { DevEngine } from "./DevEngines.ts";
 
 const $I = $ScratchpadId.create("effected/package-json/PackageManagerRange");
@@ -63,9 +64,9 @@ const singleComparator = (
 ): O.Option<{ readonly operator: "" | "^" | "~"; readonly version: string }> => {
 	const match = SINGLE_COMPARATOR_RE.exec(range);
 	if (match === null) return O.none();
-	const operator = match[1];
-	const version = match[2];
-	if ((operator !== "" && operator !== "^" && operator !== "~") || version === undefined) return O.none();
+	const matched = match[0];
+	const operator = Str.startsWith("^")(matched) ? "^" : Str.startsWith("~")(matched) ? "~" : "";
+	const version = Str.slice(operator.length)(matched);
 	return SemVer.isPinnable(version) ? O.some({ operator, version }) : O.none();
 };
 
@@ -174,24 +175,29 @@ const fromParts = (
 	}
 	// The first `+` begins the integrity component, unconditionally — the
 	// version position of this field never carries build metadata.
-	const plus = tail.indexOf("+");
-	const range = plus === -1 ? tail : tail.slice(0, plus);
+	const plus = Str.indexOf("+")(tail);
+	const range = O.match(plus, {
+		onNone: () => tail,
+		onSome: (at) => Str.slice(0, at)(tail),
+	});
 	// An empty range (`pnpm@`) is a range error, not the `*` node-semver
 	// coerces an empty string to — coercion would be a silent edit.
 	if (range.length === 0 || Result.isFailure(Range.parseResult(range))) {
 		return Result.fail(InvalidPackageManagerRangeError.make({ input, reason: "range" }));
 	}
-	if (plus === -1) {
-		return Result.succeed(PackageManagerRange.make({ name, range, integrity: O.none() }));
-	}
-	// Validate the integrity through the corepack-restricted schema so a
-	// malformed hash is a typed failure, not the defect `make` would throw on
-	// a value the field schema rejects.
-	const decoded = S.decodeExit(CorepackIntegrityHash)(tail.slice(plus + 1));
-	if (Exit.isFailure(decoded)) {
-		return Result.fail(InvalidPackageManagerRangeError.make({ input, reason: "integrity" }));
-	}
-	return Result.succeed(PackageManagerRange.make({ name, range, integrity: O.some(decoded.value) }));
+	return O.match(plus, {
+		onNone: () => Result.succeed(PackageManagerRange.make({ name, range, integrity: O.none() })),
+		onSome: (at): Result.Result<PackageManagerRange, InvalidPackageManagerRangeError> => {
+			// Validate the integrity through the corepack-restricted schema so a
+			// malformed hash is a typed failure, not the defect `make` would throw on
+			// a value the field schema rejects.
+			const decoded = S.decodeExit(CorepackIntegrityHash)(Str.slice(at + 1)(tail));
+			if (Exit.isFailure(decoded)) {
+				return Result.fail(InvalidPackageManagerRangeError.make({ input, reason: "integrity" }));
+			}
+			return Result.succeed(PackageManagerRange.make({ name, range, integrity: O.some(decoded.value) }));
+		},
+	});
 };
 
 /**
@@ -323,10 +329,10 @@ export class PackageManagerRange extends S.Class<PackageManagerRange>($I`Package
 	 * @since 0.0.0
 	 */
 	static parseResult(input: string): Result.Result<PackageManagerRange, InvalidPackageManagerRangeError> {
-		const at = input.indexOf("@");
-		return at === -1
-			? Result.fail(InvalidPackageManagerRangeError.make({ input, reason: "format" }))
-			: fromParts(input, input.slice(0, at), input.slice(at + 1));
+		return O.match(Str.indexOf("@")(input), {
+			onNone: () => Result.fail(InvalidPackageManagerRangeError.make({ input, reason: "format" })),
+			onSome: (at) => fromParts(input, Str.slice(0, at)(input), Str.slice(at + 1)(input)),
+		});
 	}
 
 	/**

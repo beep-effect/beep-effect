@@ -264,7 +264,7 @@ const capBytes = (value: string): string => {
   const budget = CheckRunOutput.LIMIT_BYTES - Buffer.byteLength(CheckRunOutput.NOTICE, "utf8");
   const bytes = Buffer.from(value, "utf8");
   let end = budget;
-  while (end > 0 && ((bytes[end] ?? 0) & 0xc0) === 0x80) end -= 1;
+  while (end > 0 && (bytes.readUInt8(end) & 0xc0) === 0x80) end -= 1;
   const cut = bytes.subarray(0, end).toString("utf8");
   return `${cut}${CheckRunOutput.NOTICE}`;
 };

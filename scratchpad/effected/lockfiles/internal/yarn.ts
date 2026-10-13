@@ -6,6 +6,7 @@ import * as HashSet from "effect/HashSet";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { ResolvedPackage } from "../ResolvedPackage.ts";
 import { selectSoleDocument } from "./documents.ts";
 import type { LockfileFields, ParseFailure, WorkspaceEntry } from "./shared.ts";
@@ -105,9 +106,9 @@ const toFields = Effect.fn("toFields")(function* (lockfileVersion: string, decod
 	// to that entry. Building the index is therefore a read, not a guess.
 	const locators = MutableHashMap.empty<string, string>();
 	for (const [key, entry] of decoded) {
-		const descriptors = key.split(", ");
+		const descriptors = Str.split(key, ", ");
 		const locator = entry.resolution ?? descriptors[0];
-		if (locator === undefined || locator === "") continue;
+		if (locator === "") continue;
 		for (const descriptor of descriptors) {
 			if (descriptor !== "") MutableHashMap.set(locators, descriptor, locator);
 		}
@@ -132,7 +133,7 @@ const toFields = Effect.fn("toFields")(function* (lockfileVersion: string, decod
 		// (the yarn textual form), so they are preserved; a present but unparseable
 		// checksum fails typed at validation rather than being dropped.
 		const integrity = yield* toIntegrityHash(entry.checksum);
-		const instanceId = entry.resolution ?? key.split(", ")[0] ?? "";
+		const instanceId = entry.resolution ?? Str.split(key, ", ")[0];
 		if (instanceId === "") continue; // no identity, no row; skip, never throw
 
 		packages.push(

@@ -8,9 +8,11 @@ import type { ReactElement } from "react";
 
 const $I = $ScratchpadId.create("effected/cli/ui/internal/lazyView");
 
-class LazyViewStateError extends S.TaggedError<LazyViewStateError>($I`LazyViewStateError`)("LazyViewStateError", {
-	message: S.String,
-}) {}
+class LazyViewStateError extends S.TaggedError<LazyViewStateError>($I`LazyViewStateError`)(
+	"LazyViewStateError",
+	{ message: S.String.annotate({ description: "The unloaded view or invalid loader preventing a lazy render." }) },
+	$I.annote("LazyViewStateError", { description: "A lazy view was rendered before loading or carried an invalid loader." }),
+) {}
 
 /** Where a lazy view keeps its loader: a `Symbol.for` key, so two copies of the package agree on it. */
 const LOAD = Symbol.for("@effected/cli/ui/lazyView");
@@ -38,7 +40,7 @@ const EXPECTED = "a view, (state, frame) => ReactElement, or a module whose defa
 
 /** What a `load` resolved to that is no view: said with what was received and what is expected. */
 const NO_VIEW = (resolved: unknown): string => {
-	if (!P.isObjectKeyword(resolved) || P.isFunction(resolved)) {
+	if (!P.isObjectKeyword(resolved)) {
 		return `@effected/cli/ui: CliUi.lazyView's load resolved to ${kindOf(resolved)}. Expected ${EXPECTED}`;
 	}
 	const named = R.keys(resolved).filter((key) => key !== "default");
@@ -93,7 +95,7 @@ export class LazyViewShapeError extends S.TaggedError<LazyViewShapeError>($I`Laz
  * its `default` when that is a function; anything else throws, saying what it got. */
 const pick = <S>(resolved: LiveRender<S> | { readonly default: LiveRender<S> }): LiveRender<S> => {
 	if (P.isFunction(resolved)) return resolved;
-	if (P.isObjectKeyword(resolved) && !P.isFunction(resolved)) {
+	if (P.isObjectKeyword(resolved)) {
 		const fallback = resolved.default;
 		if (P.isFunction(fallback)) return fallback;
 	}

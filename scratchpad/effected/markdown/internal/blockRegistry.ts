@@ -11,6 +11,8 @@
 // THE ORDER OF `starts` IS THE ALGORITHM, and it is upstream's order exactly.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -40,8 +42,8 @@ import type { BlockConstruct, BlockDialect, BlockType } from "./blockTypes.ts";
 const $I = $ScratchpadId.create("effected/markdown/internal/blockRegistry");
 
 class UnknownBlockDialectError extends S.TaggedError<UnknownBlockDialectError>($I`UnknownBlockDialectError`)("UnknownBlockDialectError", {
-	message: S.String,
-}) {}
+	message: S.String.annotateKey({ description: "The unknown-dialect invariant failure message." }),
+}, $I.annote("UnknownBlockDialectError", { description: "An unrecognized block registry dialect was requested." })) {}
 
 /**
  * The dialects the block pass can be keyed by.
@@ -50,28 +52,31 @@ class UnknownBlockDialectError extends S.TaggedError<UnknownBlockDialectError>($
  *
  * The name doubles as the inline pass's dialect key (`InlineDialectName`), so
  * one string selects both registries.
+ * **Example** (Validate MarkdownDialect)
+ *
+ * ```ts
+ * import { MarkdownDialect } from "@beep/scratchpad/effected/markdown/internal/blockRegistry"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(MarkdownDialect)("gfm") // => true
+ * S.is(MarkdownDialect)("mdx") // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MarkdownDialect = LiteralKit(["commonmark", "gfm"]).annotate(
+	$I.annote("MarkdownDialect", { description: "The grammar names shared by the block and inline registries." }),
+);
+
+/** The supported grammar names derived from their schema.
  * @category type-level
  * @since 0.0.0
  */
-export type MarkdownDialect = "commonmark" | "gfm";
+export type MarkdownDialect = typeof MarkdownDialect.Type;
 
-const constructTable = (constructs: ReadonlyArray<BlockConstruct>): ReadonlyMap<BlockType, BlockConstruct> => {
-	const entries = constructs.map((construct): [BlockType, BlockConstruct] => [construct.type, construct]);
-	const table = HashMap.fromIterable(entries);
-	// Keep the scanner's ReadonlyMap boundary and registry insertion order.
-	return {
-		size: HashMap.size(table),
-		get: (key) => O.getOrUndefined(HashMap.get(table, key)),
-		has: (key) => HashMap.has(table, key),
-		*keys() { for (const [key] of entries) yield key; return undefined; },
-		*values() { for (const [, value] of entries) yield value; return undefined; },
-		*entries() { for (const [key, value] of entries) yield [key, value]; return undefined; },
-		[Symbol.iterator]() { return this.entries(); },
-		forEach(callback, thisArg) {
-			for (const [key, value] of entries) callback.call(thisArg, value, key, this);
-		},
-	};
-};
+const constructTable = (constructs: ReadonlyArray<BlockConstruct>): HashMap.HashMap<BlockType, BlockConstruct> =>
+	HashMap.fromIterable(A.map(constructs, (construct): readonly [BlockType, BlockConstruct] => [construct.type, construct]));
 
 const commonmarkDialect: BlockDialect = {
 	constructs: constructTable([
@@ -177,10 +182,7 @@ const dialects = HashMap.fromIterable<MarkdownDialect, BlockDialect>([
  * @category parsing
  * @since 0.0.0
  */
-export const blockDialect = (dialect: MarkdownDialect): BlockDialect => {
-	const found = O.getOrUndefined(HashMap.get(dialects, dialect));
-	if (found === undefined) {
-		throw UnknownBlockDialectError.make({ message: `unknown markdown dialect: ${String(dialect)}` });
-	}
-	return found;
-};
+export const blockDialect = (dialect: MarkdownDialect): BlockDialect =>
+	O.getOrThrowWith(HashMap.get(dialects, dialect), () =>
+		UnknownBlockDialectError.make({ message: `unknown markdown dialect: ${String(dialect)}` }),
+	);

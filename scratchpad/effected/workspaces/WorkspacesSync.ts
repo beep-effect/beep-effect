@@ -27,7 +27,7 @@ import * as P from "effect/Predicate";
 import { MAX_ENUMERATION_DEPTH } from "./internal/limits.ts";
 import { manifestPatternsOf, pnpmPatternsOf } from "./internal/patterns.ts";
 import { Traversal, badMaxDepthMessage, isPruned, isValidMaxDepth, joinRelative } from "./internal/traverse.ts";
-import type { WorkspaceDiscoveryError } from "./WorkspaceDiscovery.ts";
+import { WorkspaceDiscoveryError } from "./WorkspaceDiscovery.ts";
 import { PublishConfig, WorkspacePackage } from "./WorkspacePackage.ts";
 import * as O from "@beep/utils/Option";
 
@@ -158,24 +158,34 @@ export interface SyncFileSystem {
  * building its own walker on this shape wants `isDirectory` verbatim — there,
  * not following is the requirement, not the hazard.
  *
+ * **Example** (Recognize a typed filesystem entry)
+ *
+ * ```ts
+ * import { SyncDirectoryEntry } from "@beep/scratchpad/effected/workspaces/WorkspacesSync";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(SyncDirectoryEntry)({ name: "core", isDirectory: true, isSymbolicLink: false })); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SyncDirectoryEntry = S.Struct({
+	/** The entry's own name, not a path. */
+	name: S.String.annotateKey($I.annote("SyncDirectoryEntry.name", { description: "The entry's own name, not a path." })),
+	/** Whether the entry itself is a directory, without following links. */
+	isDirectory: S.Boolean.annotateKey($I.annote("SyncDirectoryEntry.isDirectory", { description: "Whether the entry itself is a directory, false for symbolic links." })),
+	/** Whether the entry itself is a symbolic link. */
+	isSymbolicLink: S.Boolean.annotateKey($I.annote("SyncDirectoryEntry.isSymbolicLink", { description: "Whether the entry itself is a symbolic link." })),
+}).annotate($I.annote("SyncDirectoryEntry", { description: "A plain typed directory entry supplied by synchronous filesystem operations." }));
+/**
+ * The readonly directory entry described by {@link SyncDirectoryEntry}.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export interface SyncDirectoryEntry {
-	/**
-	 * The entry's own name, not a path.
-	 */
-	readonly name: string;
-	/**
-	 * Whether the entry itself is a directory. `false` for a symbolic link, even one targeting a directory.
-	 */
-	readonly isDirectory: boolean;
-	/**
-	 * Whether the entry itself is a symbolic link.
-	 */
-	readonly isSymbolicLink: boolean;
-}
+export type SyncDirectoryEntry = typeof SyncDirectoryEntry.Type;
 
 /**
  * The synchronous path operations the sync entry points need, supplied by the
@@ -267,11 +277,40 @@ export interface WorkspacesSyncOptions {
  * drops the field and keeps the member. A consumer that must reject such a
  * manifest has to use the Effect surface.
  *
+ * **Example** (Recognize a manifest-only skip kind)
+ *
+ * ```ts
+ * import { WorkspaceDiscoverySkipKind } from "@beep/scratchpad/effected/workspaces/WorkspacesSync";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(WorkspaceDiscoverySkipKind)("missingName")); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const WorkspaceDiscoverySkipKind = WorkspaceDiscoveryError.fields.kind.pick(["read", "invalidJson", "invalidShape", "missingName"]).annotate(
+	$I.annote("WorkspaceDiscoverySkipKind", { description: "The existing manifest discovery failure kinds, excluding workspace YAML reads." }),
+);
+/**
+ * The manifest-only failure kinds described by {@link WorkspaceDiscoverySkipKind}.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export type WorkspaceDiscoverySkipKind = Exclude<WorkspaceDiscoveryError["kind"], "invalidYaml">;
+export type WorkspaceDiscoverySkipKind = typeof WorkspaceDiscoverySkipKind.Type;
+
+/** Builds one existing plain failure case without a constructor default. */
+const workspaceDiscoverySkipCase = <const Kind extends WorkspaceDiscoverySkipKind>(kind: S.Literal<Kind>) => {
+	const identifier: string = `WorkspaceDiscoverySkip.${kind.literal}`;
+	return S.Struct({
+		kind: kind.annotateKey($I.annote("WorkspaceDiscoverySkip.kind", { description: "The existing caller-visible failure reason." })),
+		root: S.String.annotateKey($I.annote("WorkspaceDiscoverySkip.root", { description: "The workspace root being enumerated." })),
+		path: S.String.annotateKey($I.annote("WorkspaceDiscoverySkip.path", { description: "The absolute path of the skipped package manifest." })),
+		cause: S.Unknown.annotateKey($I.annote("WorkspaceDiscoverySkip.cause", { description: "The original arbitrary failure value, undefined for a missing name." })),
+	}).annotate($I.annote(identifier, { description: `The existing ${kind.literal} failure record.` }));
+};
 
 /**
  * One manifest {@link getWorkspacePackagesSync} skipped, reported through
@@ -289,37 +328,47 @@ export type WorkspaceDiscoverySkipKind = Exclude<WorkspaceDiscoveryError["kind"]
  * sentence the Effect surface fails with (`invalidShape`). Only `missingName`
  * has `cause: undefined` — the field is simply absent, and nothing threw.
  *
+ * **Example** (Recognize a synchronous manifest skip)
+ *
+ * ```ts
+ * import { WorkspaceDiscoverySkip } from "@beep/scratchpad/effected/workspaces/WorkspacesSync";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(WorkspaceDiscoverySkip)({ root: "/repo", path: "/repo/package.json", kind: "missingName", cause: undefined })); // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const WorkspaceDiscoverySkip = WorkspaceDiscoverySkipKind.mapMembers(([read, invalidJson, invalidShape, missingName]) => [
+	workspaceDiscoverySkipCase(read),
+	workspaceDiscoverySkipCase(invalidJson),
+	workspaceDiscoverySkipCase(invalidShape),
+	workspaceDiscoverySkipCase(missingName),
+]).pipe(S.toTaggedUnion("kind")).annotate($I.annote("WorkspaceDiscoverySkip", { description: "A plain synchronous manifest skip report with its original cause." }));
+/**
+ * The readonly skip report described by {@link WorkspaceDiscoverySkip}.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export interface WorkspaceDiscoverySkip {
-	/**
-	 * The workspace root the enumeration ran against.
-	 */
-	readonly root: string;
-	/**
-	 * Absolute path to the `package.json` that was skipped.
-	 */
-	readonly path: string;
-	/**
-	 * Why it was skipped.
-	 */
-	readonly kind: WorkspaceDiscoverySkipKind;
-	/**
-	 * The thrown value for `read` and `invalidJson`, an `Error` whose message
-	 * matches the Effect surface's for `invalidShape`, and `undefined` for
-	 * `missingName` alone.
-	 */
-	readonly cause: unknown;
-}
+export type WorkspaceDiscoverySkip = typeof WorkspaceDiscoverySkip.Type;
 
 /**
  * A manifest read that either yields the parsed record or names why it cannot.
  */
-type ManifestRead =
-	| { readonly raw: Record<string, unknown> }
-	| { readonly kind: "read" | "invalidJson" | "invalidShape"; readonly cause: unknown };
+const ManifestRead = S.Union([
+	S.Struct({
+		raw: S.Record(S.String, S.mutableKey(S.Unknown)).annotateKey($I.annote("ManifestRead.raw", { description: "The parsed mutable manifest record, without additional validation." })),
+	}).annotate($I.annote("ManifestReadSuccess", { description: "A successful manifest read retaining the plain mutable record." })),
+	S.Struct({
+		kind: WorkspaceDiscoverySkipKind.pick(["read", "invalidJson", "invalidShape"]).annotateKey($I.annote("ManifestRead.kind", { description: "The existing read, JSON syntax, or manifest shape failure kind." })),
+		cause: S.Unknown.annotateKey($I.annote("ManifestRead.cause", { description: "The arbitrary caught or shape failure value." })),
+	}).annotate($I.annote("ManifestReadFailure", { description: "A failed manifest read with its original arbitrary cause." })),
+]).annotate($I.annote("ManifestRead", { description: "The existing untagged success or failure of a synchronous manifest read." }));
+/** The existing plain-record manifest read result. */
+type ManifestRead = typeof ManifestRead.Type;
 
 /**
  * Read one `package.json` into a plain record, or say why not. Never throws.
@@ -389,10 +438,12 @@ const isDirectory = (fileSystem: SyncFileSystem, dir: string): boolean => {
 /**
  * One enumerated child, with directory-ness resolved under `stat` semantics.
  */
-interface ResolvedEntry {
-	readonly name: string;
-	readonly directory: boolean;
-}
+const ResolvedEntry = S.Struct({
+	name: S.String.annotateKey($I.annote("ResolvedEntry.name", { description: "The enumerated child entry's own name." })),
+	directory: S.Boolean.annotateKey($I.annote("ResolvedEntry.directory", { description: "Whether the child is a directory after resolving symbolic links." })),
+}).annotate($I.annote("ResolvedEntry", { description: "A plain child entry with directory-ness resolved under stat semantics." }));
+/** The readonly resolved child entry. */
+type ResolvedEntry = typeof ResolvedEntry.Type;
 
 /**
  * The entries of `absoluteDir`, each carrying whether it is a directory, or

@@ -102,3 +102,57 @@ it.effect("CatalogAssemblyError encodes the originating cause stack", () =>
 		assert.deepStrictEqual(encoded.cause, { name: cause.name, message: cause.message, stack });
 	}),
 );
+
+
+describe("CatalogAssemblyError source projection", () => {
+	it("omits hooks-only reasons from manifest and catalog cases without changing public fields", () => {
+		for (const source of ["manifest", "catalog"] as const) {
+			const cause = new Error("invalid catalog");
+			const error = CatalogAssemblyError.make({ source, path: "default", cause, reason: "fetchFailed" });
+			const failure = error.failure;
+			assert.deepStrictEqual(failure, { source, path: "default", cause });
+			assert.notProperty(failure, "reason");
+			assert.strictEqual(failure.cause, cause);
+			assert.strictEqual(error.reason, "fetchFailed");
+			assert.strictEqual(error._tag, "CatalogAssemblyError");
+			assert.strictEqual(error.message, `Failed to assemble catalogs from ${source} default: invalid catalog`);
+		}
+	});
+
+	it("retains every hooks resolution reason and preserves its absence", () => {
+		for (const reason of ["notInstalled", "ambiguous", "fetchFailed", "integrityMismatch", "integrityUnavailable"] as const) {
+			const error = CatalogAssemblyError.make({ source: "hooks", path: NAME, cause: "failed", reason });
+			assert.deepStrictEqual(error.failure, { source: "hooks", path: NAME, cause: "failed", reason });
+			assert.strictEqual(error.message, `${SUMMARY}: failed`);
+		}
+		const error = CatalogAssemblyError.make({ source: "hooks", path: NAME, cause: "failed" });
+		assert.deepStrictEqual(error.failure, { source: "hooks", path: NAME, cause: "failed" });
+		assert.notProperty(error.failure, "reason");
+	});
+
+	it.effect("keeps compatible encoded reasons while projecting all sources", () =>
+		Effect.gen(function* () {
+			for (const source of ["manifest", "catalog", "hooks"] as const) {
+				const encoded = { _tag: "CatalogAssemblyError", source, path: "default", cause: "invalid catalog", reason: "fetchFailed" } as const;
+				const error = yield* S.decodeEffect(CatalogAssemblyError)(encoded);
+				assert.strictEqual(error.reason, "fetchFailed");
+				assert.strictEqual(error.failure.source, source);
+				if (source === "hooks") assert.propertyVal(error.failure, "reason", "fetchFailed");
+				else assert.notProperty(error.failure, "reason");
+				assert.deepStrictEqual(yield* S.encodeEffect(CatalogAssemblyError)(error), encoded);
+			}
+		}),
+	);
+
+	it("preserves cause identity and nested error rendering through projection", () => {
+		const inner = CatalogAssemblyError.make({ source: "catalog", path: "default", cause: "invalid catalog" });
+		for (const cause of [inner, new Error("failed"), { code: "EIO" }, undefined]) {
+			for (const source of ["manifest", "catalog", "hooks"] as const) {
+				const error = CatalogAssemblyError.make({ source, path: "outer", cause });
+				assert.strictEqual(error.failure.cause, cause);
+				assert.strictEqual(error.cause, cause);
+				if (cause === inner) assert.strictEqual(error.message, inner.message);
+			}
+		}
+	});
+});

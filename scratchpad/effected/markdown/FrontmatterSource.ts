@@ -156,8 +156,7 @@ const CLOSE_FENCE: Record<FrontmatterFormat, string> = {
  * @category utilities
  * @since 0.0.0
  */
-export class FrontmatterSource {
-	private constructor() {}
+export abstract class FrontmatterSource {
 
 	/**
 	 * Split raw source into its frontmatter block and body, at string level.

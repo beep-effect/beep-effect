@@ -16,8 +16,12 @@
 // `startOffset`/`endOffset`, and the `segments` that map accumulated string
 // content back to the source it was copied from.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import type * as HashMap from "effect/HashMap";
+import * as S from "effect/Schema";
 import { dual } from "effect/Function";
-import { isString } from "effect/Predicate";
+import * as P from "effect/Predicate";
 import type {
 	BulletChar,
 	FenceChar,
@@ -37,6 +41,8 @@ import type {
 	ThematicBreakChar,
 } from "../MarkdownNode.ts";
 
+const $I = $ScratchpadId.create("effected/markdown/internal/blockTypes");
+
 /**
  * The block constructs the engine knows. Keys of a dialect's construct table.
  *
@@ -46,24 +52,41 @@ import type {
  * split out of a paragraph's content when it closes, and spliced into the
  * tree ahead of what is left of that paragraph.
  *
+ * **Example** (Validate BlockType)
+ *
+ * ```ts
+ * import { BlockType } from "@beep/scratchpad/effected/markdown/internal/blockTypes"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(BlockType)("paragraph") // => true
+ * S.is(BlockType)("root") // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BlockType = LiteralKit([
+	"document",
+	"blockquote",
+	"list",
+	"listItem",
+	"paragraph",
+	"heading",
+	"thematicBreak",
+	"code",
+	"html",
+	"definition",
+	"footnoteDefinition",
+	"table",
+	"tableRow",
+	"tableCell",
+]).annotate($I.annote("BlockType", { description: "Block construct kinds recognized by the engine." }));
+
+/** The engine kind domain derived from its schema.
  * @category type-level
  * @since 0.0.0
  */
-export type BlockType =
-	| "document"
-	| "blockquote"
-	| "list"
-	| "listItem"
-	| "paragraph"
-	| "heading"
-	| "thematicBreak"
-	| "code"
-	| "html"
-	| "definition"
-	| "footnoteDefinition"
-	| "table"
-	| "tableRow"
-	| "tableCell";
+export type BlockType = typeof BlockType.Type;
 
 /**
  * A run of characters copied verbatim from the source into a leaf block's
@@ -78,17 +101,29 @@ export type BlockType =
  * injects — the `\n` between lines, the spaces a partially consumed tab
  * expands to — lie between segments and belong to no source range.
  *
- * @category models
+ * **Example** (Validate RawInlineSegment)
+ *
+ * ```ts
+ * import { RawInlineSegment } from "@beep/scratchpad/effected/markdown/internal/blockTypes"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(RawInlineSegment)({ textOffset: 0, sourceOffset: 12, length: 4 }) // => true
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
-export interface RawInlineSegment {
-	/** Index into the block's accumulated content where this run starts. */
-	readonly textOffset: number;
-	/** Absolute source offset of that same character. */
-	readonly sourceOffset: number;
-	/** Length of the run, in characters. */
-	readonly length: number;
-}
+export const RawInlineSegment = S.Struct({
+	textOffset: S.Finite.annotateKey({ description: "Index into the accumulated block content where this run starts." }),
+	sourceOffset: S.Finite.annotateKey({ description: "Absolute source offset of the run's first character." }),
+	length: S.Finite.annotateKey({ description: "Length of the verbatim source run in characters." }),
+}).annotate($I.annote("RawInlineSegment", { description: "A contiguous source run copied into a leaf block's inline text." }));
+
+/** The source-run payload derived from its executable schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RawInlineSegment = typeof RawInlineSegment.Type;
 
 /**
  * A node that owns parsed phrasing content — the parent side of a
@@ -589,7 +624,7 @@ export interface BlockStart {
  * @since 0.0.0
  */
 export interface BlockDialect {
-	readonly constructs: ReadonlyMap<BlockType, BlockConstruct>;
+	readonly constructs: HashMap.HashMap<BlockType, BlockConstruct>;
 	readonly starts: ReadonlyArray<BlockStart>;
 	/**
 	 * An escape hatch from the line loop's fast path.
@@ -631,7 +666,7 @@ export interface BlockDialect {
 export const makeBlockNode: {
 	(type: BlockType, startOffset: number, startLine: number, depth?: number): BlockNode;
 	(startOffset: number, startLine: number, depth?: number): (type: BlockType) => BlockNode;
-} = dual((args) => isString(args[0]), (type: BlockType, startOffset: number, startLine: number, depth = 0): BlockNode => ({
+} = dual((args) => P.isString(args[0]), (type: BlockType, startOffset: number, startLine: number, depth = 0): BlockNode => ({
 	type,
 	depth,
 	parent: undefined,

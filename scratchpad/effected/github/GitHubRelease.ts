@@ -317,7 +317,7 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
 		getByTagOption: Effect.fn("GitHubRelease.getByTagOption")(function* (tag: string) {
 			return yield* getByTag(tag).pipe(
 				Effect.asSome,
-				Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeed(O.none<ReleaseInfo>())),
+				Effect.catchIf(GitHubError.hasKind("notFound"), () => Effect.succeedNone),
 			);
 		}),
 

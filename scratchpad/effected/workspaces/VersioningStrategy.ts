@@ -15,6 +15,7 @@ import * as S from "effect/Schema";
 import * as A from "effect/Array";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import { PublishabilityDetector } from "./Publishability.ts";
 import type { TagFormatOptions, TagStyle } from "./ReleaseTag.ts";
 import { ReleaseTag } from "./ReleaseTag.ts";
@@ -103,14 +104,31 @@ export type ClassifyOptions = typeof ClassifyOptions.Type;
 /**
  * Supplies caller-defined lockstep groups to {@link VersioningStrategy.detect}.
  *
+ * **Example** (Check caller-defined lockstep groups)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { VersioningDetectOptions } from "@beep/scratchpad/effected/workspaces/VersioningStrategy";
+ *
+ * S.is(VersioningDetectOptions)({ fixedGroups: [["a", "b"]] }) // => true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const VersioningDetectOptions = ClassifyOptions.mapFields(Struct.pick(["fixedGroups"])).pipe(
+	$I.annoteSchema("VersioningDetectOptions", { description: "Optional caller-defined lockstep groups used during workspace versioning detection." }),
+);
+
+/**
+ * Structural detection options sharing classification's optional fixed groups.
+ *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface VersioningDetectOptions {
-	/** See {@link ClassifyOptions.fixedGroups}. Defaults to none. */
-	readonly fixedGroups?: ReadonlyArray<ReadonlyArray<string>>;
-}
+export type VersioningDetectOptions = typeof VersioningDetectOptions.Type;
 
 /**
  * One entry in a release batch: which package went out, at which version.
@@ -345,11 +363,11 @@ export class VersioningStrategy extends S.Class<VersioningStrategy>($I`Versionin
 	 * @since 0.0.0
 	 */
 	tagsFor(releases: ReadonlyArray<PackageRelease>, options?: TagFormatOptions): ReadonlyArray<ReleaseTag> {
-		if (releases.length === 0) return [];
+		if (!A.isReadonlyArrayNonEmpty(releases)) return [];
 		if (this.perPackageTags) {
 			return releases.map((release) => ReleaseTag.scoped(release.name, release.version, options));
 		}
 		const first = releases[0];
-		return first === undefined ? [] : [ReleaseTag.single(first.version, options)];
+		return [ReleaseTag.single(first.version, options)];
 	}
 }

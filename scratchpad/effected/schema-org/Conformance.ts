@@ -16,6 +16,8 @@ import { Vocabulary } from "./Vocabulary.ts";
 
 const $I = $ScratchpadId.create("effected/schema-org/Conformance");
 
+const JsonString = S.fromJsonString(S.String);
+
 /**
  * Which kind of term a {@link UnknownTerm} issue is about.
  *
@@ -98,7 +100,7 @@ export class UnknownTerm extends S.TaggedClass<UnknownTerm>($I`UnknownTerm`)("Un
 	 * @since 0.0.0
 	 */
 	get message(): string {
-		return `${this.nodeId}: schema.org ${Vocabulary.version} defines no ${this.kind} ${JSON.stringify(this.term)}`;
+		return `${this.nodeId}: schema.org ${Vocabulary.version} defines no ${this.kind} ${Result.getOrThrow(S.encodeResult(JsonString)(this.term))}`;
 	}
 }
 
@@ -153,7 +155,7 @@ export class PropertyNotOnType extends S.TaggedClass<PropertyNotOnType>($I`Prope
 	 * @since 0.0.0
 	 */
 	get message(): string {
-		return `${this.nodeId}: schema.org does not define ${JSON.stringify(this.property)} on ${this.nodeType}`;
+		return `${this.nodeId}: schema.org does not define ${Result.getOrThrow(S.encodeResult(JsonString)(this.property))} on ${this.nodeType}`;
 	}
 }
 
@@ -301,7 +303,7 @@ export class DanglingReference extends S.TaggedClass<DanglingReference>($I`Dangl
 	 * @since 0.0.0
 	 */
 	get message(): string {
-		return `${this.nodeId}: ${this.property} references ${JSON.stringify(this.reference)}, which this graph does not define`;
+		return `${this.nodeId}: ${this.property} references ${Result.getOrThrow(S.encodeResult(JsonString)(this.reference))}, which this graph does not define`;
 	}
 }
 
@@ -406,6 +408,9 @@ const DeprecationPolicy = LiteralKit(["ignore", "report"]).pipe(
 const DanglingReferencePolicy = LiteralKit(["ignore", "report"]).pipe(
 	$I.annoteSchema("DanglingReferencePolicy", { description: "Whether dangling references fail the gate." }),
 );
+const defaultUnknownTermPolicy = UnknownTermPolicy.Enum.report;
+const defaultDeprecationPolicy = DeprecationPolicy.Enum.ignore;
+const defaultDanglingReferencePolicy = DanglingReferencePolicy.Enum.ignore;
 
 /**
  * Which issue kinds fail {@link Conformance.validateResult}.
@@ -436,14 +441,14 @@ export const ConformanceOptions = S.Struct({
 	 * term in their graph and wants an invented one to break the build.
 	 */
 	unknownTerms: UnknownTermPolicy.pipe(
-		S.withDecodingDefault(Effect.succeed(UnknownTermPolicy.Enum.report)),
+		S.withDecodingDefault(Effect.succeed(defaultUnknownTermPolicy)),
 	).annotateKey({ description: "Unknown-term gate policy; defaults to report." }),
 	/**
 	 * `"ignore"` (the default) keeps {@link DeprecatedType} and
 	 * {@link DeprecatedProperty} out of the gate; `"report"` makes them fail it.
 	 */
 	deprecations: DeprecationPolicy.pipe(
-		S.withDecodingDefault(Effect.succeed(DeprecationPolicy.Enum.ignore)),
+		S.withDecodingDefault(Effect.succeed(defaultDeprecationPolicy)),
 	).annotateKey({ description: "Deprecation gate policy; defaults to ignore." }),
 	/**
 	 * `"ignore"` (the default) keeps {@link DanglingReference} out of the gate;
@@ -451,7 +456,7 @@ export const ConformanceOptions = S.Struct({
 	 * is meant to be closed wants.
 	 */
 	danglingReferences: DanglingReferencePolicy.pipe(
-		S.withDecodingDefault(Effect.succeed(DanglingReferencePolicy.Enum.ignore)),
+		S.withDecodingDefault(Effect.succeed(defaultDanglingReferencePolicy)),
 	).annotateKey({ description: "Graph-closure gate policy; defaults to ignore." }),
 }).pipe($I.annoteSchema("ConformanceOptions", { description: "Optional gate policies with safe defaults when decoded." }));
 
@@ -680,17 +685,17 @@ export class Conformance {
 		graph: JsonLdDocument,
 		options?: ConformanceOptions,
 	): Result.Result<JsonLdDocument, NonConformantGraphError> {
-		const unknownTerms = options?.unknownTerms ?? "report";
-		const deprecations = options?.deprecations ?? "ignore";
-		const danglingReferences = options?.danglingReferences ?? "ignore";
+		const unknownTerms = options?.unknownTerms ?? defaultUnknownTermPolicy;
+		const deprecations = options?.deprecations ?? defaultDeprecationPolicy;
+		const danglingReferences = options?.danglingReferences ?? defaultDanglingReferencePolicy;
 
 		const issues = Conformance.check(graph);
 		const fails = A.some(issues, (issue) => Match.valueTags(issue, {
 			PropertyNotOnType: () => true,
-			UnknownTerm: () => unknownTerms === "fail",
-			DeprecatedType: () => deprecations === "report",
-			DeprecatedProperty: () => deprecations === "report",
-			DanglingReference: () => danglingReferences === "report",
+			UnknownTerm: () => unknownTerms === UnknownTermPolicy.Enum.fail,
+			DeprecatedType: () => deprecations === DeprecationPolicy.Enum.report,
+			DeprecatedProperty: () => deprecations === DeprecationPolicy.Enum.report,
+			DanglingReference: () => danglingReferences === DanglingReferencePolicy.Enum.report,
 		}));
 
 		return fails ? Result.fail(NonConformantGraphError.make({ issues })) : Result.succeed(graph);

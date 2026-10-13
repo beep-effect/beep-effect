@@ -1,0 +1,91 @@
+{
+  "module": "env",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/env/Audience.ts"
+      ],
+      "tests": [
+        "scratchpad/test/env/Audience.test.ts",
+        "scratchpad/test/env/EnvOverride.test.ts"
+      ],
+      "findings": [
+        "env-r2-3",
+        "env-r2-5"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/env/internal/osc8/detect.ts",
+        "scratchpad/effected/env/internal/osc8/semver.ts",
+        "scratchpad/effected/env/EnvOverride.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "env-r2-1",
+        "env-r2-6"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/env/TerminalEnv.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "env-r2-2"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [],
+      "tests": [
+        "scratchpad/test/env/RuntimeEnv.test.ts",
+        "scratchpad/test/env/deliberatelyInvalid.ts"
+      ],
+      "findings": [
+        "env-r2-4"
+      ]
+    }
+  ],
+  "findings": {
+    "env-r2-1": {
+      "file": "scratchpad/effected/env/internal/osc8/detect.ts",
+      "class": "schema",
+      "summary": "Osc8Info and its named override domain lack schema ownership",
+      "fix": "Define identity-annotated Osc8Override = LiteralKit([\"force-hyperlink\", \"no-hyperlink\", \"no-color\"]) and Osc8Info = S.Struct composed from existing schemas, preserving all booleans, strings, nullable fields and plain-object results. Annotate fields, derive same-name types, import KnownTerminal/WrapperInfo/Osc8Capabilities as values, and derive Gate from the relevant Osc8Info fields. Preserve detect output and the type-only barrel surface. New D10 properties and JSDoc conversion are deferred to S3/S2; added-export bookkeeping is central."
+    },
+    "env-r2-2": {
+      "file": "scratchpad/effected/env/TerminalEnv.ts",
+      "class": "schema",
+      "summary": "StreamEnv.columns hand-declares the built-in number domain",
+      "fix": "Use S.Option(S.Number), retaining the StreamEnv.columns field identity and a reasoned @effect-diagnostics-next-line schemaNumber:off immediately on the affected line because the upstream Option<number> accepts non-finite numbers. Delete the implementation Predicate, SchemaGetter and identity imports and the custom arbitrary link. Retain existing non-finite assertions and property tests unchanged. Do not substitute S.Finite here or alter repository diagnostic configuration. Removal of StreamColumns from central identity bookkeeping belongs to the deviation codemod."
+    },
+    "env-r2-3": {
+      "file": "scratchpad/test/env/Audience.test.ts",
+      "class": "law",
+      "summary": "Logger capture introduces native Sets in two test files",
+      "fix": "Restore Logger.layer([Logger.make(...)]) capture in both files. Install the logger context using the operator recipe: Effect.scopedWith, Layer.buildWithScope(loggerLayer, scope), and Effect.provideContext for the effect being tested, with existing audience/config layers composed so no multipleEffectProvide diagnostic returns. Adapt all capture consumers in both files, retaining warning counts, messages, levels and the valid/invalid positive control. Do not retain a CurrentLoggers Set or use only a direct Effect.provide(loggerLayer) substitute for the ruled scoped recipe."
+    },
+    "env-r2-4": {
+      "file": "scratchpad/test/env/RuntimeEnv.test.ts",
+      "class": "type-safety",
+      "summary": "Reflect.apply hides deliberately invalid RuntimeEnv.make input",
+      "fix": "Add scratchpad/test/env/deliberatelyInvalid.ts using the sanctioned helper shape, export const deliberatelyInvalid = <T>(value: unknown): T => value as T. Replace Reflect.apply with RuntimeEnv.make(deliberatelyInvalid<Parameters<typeof RuntimeEnv.make>[0]>({ agent: O.none(), ci: O.some(\"jenkins\"), terminal: O.none() })). Retain the conditional-type proof and assert.throws. This is the ruling-authorized test cast, not a source assertion or diagnostic suppression."
+    },
+    "env-r2-5": {
+      "file": "scratchpad/effected/env/Audience.ts",
+      "class": "schema",
+      "summary": "AudienceShape remains an interface-only pure service snapshot",
+      "fix": "Define identity-annotated AudienceShape = S.Struct({ kind: AudienceKind, source: AudienceSource }) with field annotations and derive its existing type, preserving ordinary service objects and all literals. Use AudienceSource directly for layerTest source instead of AudienceShape[\"source\"]. Keep the barrel export type-only. Defer new round-trip properties to S3 and added-export bookkeeping to the central codemod."
+    },
+    "env-r2-6": {
+      "file": "scratchpad/effected/env/EnvOverride.ts",
+      "class": "bug",
+      "summary": "Coverage-only source rewrites diverge from the oracle without a qualifying force",
+      "fix": "Restore the oracle static EnvOverride class and private constructor, retaining the separately forced Effect.fn static readers, type narrowing and imports. Restore explanationFor wrapper: WrapperInfo | null, its wrapper?.name ?? \"wrapper\" expression and the call passing wrapper, retaining the law-forced Osc8Reason matcher and required schema additions. Restore semver major-capture zero fallback and the original indexed three-component loop with nullish fallbacks, retaining the step-2 diagnostic-forced dual signature and typed null checks. Restore any upstream test lines rewritten for these four source changes; ce9331673c changed no existing upstream test file for them, so no such test restoration is presently needed. Preserve existing upstream assertions and added edge tests. Central bookkeeping removes the obsolete coverage deviation claims; do not hand-edit README Port notes or PORT_LEDGER.json."
+    }
+  }
+}

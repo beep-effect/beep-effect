@@ -13,6 +13,24 @@ import { Status } from "../../../effected/cli/Status.ts";
 import { CliTheme } from "../../../effected/cli/CliTheme.ts";
 import { CliLinks } from "../../../effected/cli/CliLinks.ts";
 import { FailureTargetCell, currentTarget, fallbackTarget, refreshFailureTarget, linesOf, plainFailureLines, readSpans } from "../../../effected/cli/internal/failureTarget.ts";
+import type { FailureSettings } from "../../../effected/cli/internal/failureTarget.ts";
+import type { AudienceShape } from "../../../effected/env/index.ts";
+
+it.effect("refresh overloads dispatch omitted and undefined audiences to Effects and settings to a callable", () => Effect.gen(function* () {
+  const omitted: Effect.Effect<void> = refreshFailureTarget();
+  const explicitUndefined: Effect.Effect<void> = refreshFailureTarget(undefined);
+  const curry: (settings: FailureSettings) => (audience?: AudienceShape) => Effect.Effect<void> = refreshFailureTarget;
+  const curried = curry({ spans: "off" });
+  assert.isTrue(Effect.isEffect(omitted));
+  assert.isTrue(Effect.isEffect(explicitUndefined));
+  assert.isFunction(curried);
+  yield* omitted;
+  yield* explicitUndefined;
+  yield* curried();
+  yield* curried(undefined);
+  yield* curried({ kind: "agent", source: "flag" });
+  yield* refreshFailureTarget(undefined, { spans: "off" });
+}));
 
 const services = Layer.mergeAll(CliTheme.layerTest(), TerminalEnv.layerTest(), CliLinks.layerTest("off"));
 it.effect("refresh builds without an audience service when an explicit shape is supplied and keeps recorded settings", () => Effect.gen(function* () {
@@ -39,10 +57,9 @@ it.effect("refresh builds without an audience service when an explicit shape is 
   assert.strictEqual(fallbackTarget.ctx.paint("accent", "x"), "x");
   assert.strictEqual(fallbackTarget.ctx.link({ url: "/x" }, "x"), "x");
 }));
-const FailureName = S.Struct({ name: S.String });
-
+const NamedInput = S.Struct({ name: S.String });
 it.effect("status removal handles schema trees and empty reports", () => Effect.gen(function* () {
-  const error = yield* S.decodeUnknownEffect(FailureName)({ name: 1 }).pipe(Effect.flip);
+  const error = yield* S.decodeUnknownEffect(NamedInput)({ name: 1 }).pipe(Effect.flip);
   const cause = Cause.fail(error);
   const withStatus = linesOf(cause, fallbackTarget);
   const withoutStatus = linesOf(fallbackTarget, false)(cause);

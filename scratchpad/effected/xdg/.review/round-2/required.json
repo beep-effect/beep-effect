@@ -1,0 +1,23 @@
+{
+  "module": "xdg",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/xdg/Xdg.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "fable-2-2"
+      ]
+    }
+  ],
+  "findings": {
+    "fable-2-2": {
+      "file": "scratchpad/effected/xdg/Xdg.ts:62",
+      "class": "effect-idiom",
+      "summary": "detectPlatform uses a Boolean runtime ternary contrary to authoritative short law 12; the cited green gates do not enforce this branch.",
+      "fix": "Replace the return with O.getOrElse(S.decodeUnknownOption(XdgPlatform)(platform), () => \"linux\"). Keep the domain, CurrentPlatform default thunk, and existing behavior unchanged. O and S are already imported. Existing Xdg.coverage.test.ts platform cases validate the behavior and need no edit."
+    }
+  }
+}

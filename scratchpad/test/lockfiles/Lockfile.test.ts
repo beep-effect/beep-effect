@@ -9,6 +9,7 @@ import { join } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
 import { assertDefined, assertExitSuccess, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -390,7 +391,7 @@ describe("Lockfile instance surface", () => {
 });
 
 describe("Lockfile#withImporterNames (seam repair 1)", () => {
-	const names = new Map([
+	const names = HashMap.fromIterable([
 		["packages/core", "@test-monorepo/core"],
 		["packages/utils", "@test-monorepo/utils"],
 	]);
@@ -456,7 +457,7 @@ describe("Lockfile#withImporterNames (seam repair 1)", () => {
 	it.effect("leaves non-pnpm lockfiles unaffected", () =>
 		Effect.gen(function* () {
 			const parsed = yield* parseFixture("npm/v1/package-lock.json", "npm");
-			const lockfile = parsed.withImporterNames(new Map([["not-a-path", "renamed"]]));
+			const lockfile = parsed.withImporterNames(HashMap.fromIterable([["not-a-path", "renamed"]]));
 
 			assert.deepStrictEqual(
 				lockfile.workspacePackages.map((p) => p.name),
@@ -472,7 +473,7 @@ describe("Lockfile#withImporterNames (seam repair 1)", () => {
 	it.effect("is a no-op for an empty map", () =>
 		Effect.gen(function* () {
 			const parsed = yield* parseFixture("pnpm/v3/pnpm-lock.yaml", "pnpm");
-			const lockfile = parsed.withImporterNames(new Map());
+			const lockfile = parsed.withImporterNames(HashMap.empty());
 			assert.deepStrictEqual(
 				lockfile.workspacePackages.map((p) => p.name),
 				parsed.workspacePackages.map((p) => p.name),
@@ -1061,14 +1062,11 @@ describe("instance identity and resolved edges", () => {
 			}),
 		);
 
-		it.effect('resolves a link: into the ROOT importer\'s publishDirectory to "."', () =>
+		it.effect("reports a link: into the unmodeled ROOT importer's publishDirectory as unresolved", () =>
 			Effect.gen(function* () {
-				// The root importer may declare a publishDirectory of its own (a
-				// single-package repo publishing from a build directory). The declared
-				// directory is root-relative already, so the map key is the normalized
-				// publishDirectory itself and the owner is the root importer's id "." —
-				// exact evidence reaches the one importer the ancestor walk must
-				// exclude on principle.
+				// A declared publishDirectory identifies the root importer, but pnpm
+				// emits no root package instance. Keep the recorded dependency as an
+				// unresolved edge rather than a dangling reference to ".".
 				const content = [
 					"lockfileVersion: '9.0'",
 					"importers:",
@@ -1084,8 +1082,10 @@ describe("instance identity and resolved edges", () => {
 				const lockfile = yield* Lockfile.parse(content, { format: "pnpm" });
 				const host = lockfile.packagesNamed("host")[0];
 
-				assert.strictEqual(host?.resolved["@scope/root"], ".");
-				assert.deepStrictEqual(host?.unresolvedEdges, []);
+				assertDefined(host);
+				assert.deepStrictEqual(host.resolved, {});
+				assert.deepStrictEqual(host.unresolvedEdges, ["@scope/root"]);
+				assertNone(lockfile.packageByInstanceId("."));
 			}),
 		);
 

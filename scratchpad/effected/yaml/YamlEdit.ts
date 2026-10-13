@@ -19,9 +19,15 @@ import * as S from "effect/Schema";
 const $I = $ScratchpadId.create("effected/yaml/YamlEdit");
 
 /** A defect raised when a YAML helper invariant is violated. */
-class YamlEditFailure extends S.TaggedError<YamlEditFailure>($I`YamlEditFailure`)("YamlEditFailure", {
-	message: S.String,
-}) {}
+class YamlEditFailure extends S.TaggedError<YamlEditFailure>($I`YamlEditFailure`)(
+	"YamlEditFailure",
+	{
+		message: S.String.annotateKey({ description: "The overlapping edit ranges that prevent applying the YAML edits." }),
+	},
+	$I.annote("YamlEditFailure", {
+		description: "A defect raised when overlapping YAML text edits cannot be applied consistently.",
+	}),
+) {}
 
 /**
  * A single path segment: a `string` for mapping keys or a `number` for
@@ -129,11 +135,7 @@ export class YamlEdit extends S.Class<YamlEdit>($I`YamlEdit`)({
 	 */
 	static applyAll(text: string, edits: ReadonlyArray<YamlEdit>): string {
 		const sorted = A.sort(edits, Order.flip(Order.mapInput(Order.Number, (edit: YamlEdit) => edit.offset)));
-		for (let i = 0; i + 1 < sorted.length; i++) {
-			const upper = sorted[i];
-			if (upper === undefined) throw YamlEditFailure.make({ message: "Missing upper" });
-			const lower = sorted[i + 1];
-			if (lower === undefined) throw YamlEditFailure.make({ message: "Missing lower" });
+		for (const [upper, lower] of A.zip(sorted, A.drop(sorted, 1))) {
 			if (lower.offset + lower.length > upper.offset) {
 				throw YamlEditFailure.make({
 					message: `YamlEdit.applyAll received overlapping edits at offsets ${lower.offset} and ${upper.offset} — overlapping edits are a programmer error`,

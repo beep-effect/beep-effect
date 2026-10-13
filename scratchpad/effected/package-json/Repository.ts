@@ -24,6 +24,7 @@ import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effected/package-json/Repository");
 
@@ -56,7 +57,7 @@ const DIRECTORY_PATHS = HashMap.fromIterable([
 	["bitbucket.org", "src/HEAD"],
 ]);
 
-const stripGitSuffix = (value: string): string => (value.endsWith(".git") ? value.slice(0, -4) : value);
+const stripGitSuffix = (value: string): string => (Str.endsWith(".git")(value) ? Str.slice(0, -4)(value) : value);
 
 /**
  * The browsable `https://host/path` form of a repository reference, or none
@@ -68,7 +69,7 @@ const stripGitSuffix = (value: string): string => (value.endsWith(".git") ? valu
  * be interpreted is a missing answer rather than a failure.
  */
 const browseUrlOf = (raw: string): O.Option<string> => {
-	const url = raw.trim();
+	const url = Str.trim(raw);
 	if (url === "") return O.none();
 
 	// `owner/name` — GitHub is npm's default host for the bare form.
@@ -76,32 +77,48 @@ const browseUrlOf = (raw: string): O.Option<string> => {
 
 	const prefixed = PREFIXED_SHORTHAND.exec(url);
 	if (prefixed !== null) {
-		const [, scheme, rest] = prefixed;
-		// `gist:id` resolves to a different host than the code-forge shorthands.
-		if (scheme === "gist") return O.some(`https://gist.github.com/${stripGitSuffix(rest ?? "")}`);
-		const host = O.getOrUndefined(HashMap.get(SHORTHAND_HOSTS, scheme ?? ""));
-		if (host !== undefined) return O.some(`${host}/${stripGitSuffix(rest ?? "")}`);
+		const browseUrl = O.match(Str.indexOf(":")(url), {
+			onNone: O.none,
+			onSome: (colon) => {
+				const scheme = Str.slice(0, colon)(url);
+				const rest = Str.slice(colon + 1)(url);
+				// `gist:id` resolves to a different host than the code-forge shorthands.
+				if (scheme === "gist") return O.some(`https://gist.github.com/${stripGitSuffix(rest)}`);
+				return O.map(HashMap.get(SHORTHAND_HOSTS, scheme), (host) => `${host}/${stripGitSuffix(rest)}`);
+			},
+		});
+		if (O.isSome(browseUrl)) return browseUrl;
 	}
 
 	// Anything with a scheme: normalize the transport away and keep host + path.
 	// `git+ssh://git@github.com/o/n.git` and `git://github.com/o/n.git` both
 	// browse at `https://github.com/o/n`.
-	const withoutGitPlus = url.startsWith("git+") ? url.slice(4) : url;
+	const withoutGitPlus = Str.startsWith("git+")(url) ? Str.slice(4)(url) : url;
 	const schemeMatch = /^([a-z][a-z0-9+.-]*):\/\/(.*)$/i.exec(withoutGitPlus);
 	if (schemeMatch !== null) {
-		const authorityAndPath = schemeMatch[2] ?? "";
-		// Drop any `user@` credential prefix — it is transport, not identity.
-		const withoutCredentials = authorityAndPath.replace(/^[^/@]+@/, "");
-		return withoutCredentials === "" ? O.none() : O.some(`https://${stripGitSuffix(withoutCredentials)}`);
+		return O.match(Str.indexOf("://")(withoutGitPlus), {
+			onNone: O.none,
+			onSome: (colon) => {
+				const authorityAndPath = Str.slice(colon + 3)(withoutGitPlus);
+				// Drop any `user@` credential prefix — it is transport, not identity.
+				const withoutCredentials = Str.replace(/^[^/@]+@/, "")(authorityAndPath);
+				return withoutCredentials === "" ? O.none() : O.some(`https://${stripGitSuffix(withoutCredentials)}`);
+			},
+		});
 	}
 
 	// The scp-like form has no scheme: `git@github.com:owner/name.git`.
 	const scp = SCP_LIKE.exec(withoutGitPlus);
 	if (scp !== null) {
-		const [, , host, path] = scp;
-		if (host !== undefined && path !== undefined && path !== "") {
-			return O.some(`https://${host}/${stripGitSuffix(path)}`);
-		}
+		return O.match(Str.indexOf(":")(withoutGitPlus), {
+			onNone: O.none,
+			onSome: (colon) => {
+				const start = O.getOrElse(Str.lastIndexOf("@")(Str.slice(0, colon)(withoutGitPlus)), () => -1) + 1;
+				const host = Str.slice(start, colon)(withoutGitPlus);
+				const path = Str.slice(colon + 1)(withoutGitPlus);
+				return O.some(`https://${host}/${stripGitSuffix(path)}`);
+			},
+		});
 	}
 
 	return O.none();
@@ -124,13 +141,8 @@ const restJsonOf = (value: unknown): string => Result.getOrThrowWith(encodeRestJ
 const sameRest = (a: unknown, b: unknown): boolean => restJsonOf(a) === restJsonOf(b);
 
 /** The keys of `wire` outside the documented set, which is what `rest` holds. */
-const restOf = (wire: { readonly [k: string]: unknown }, known: HashSet.HashSet<string>): Record<string, unknown> => {
-	const rest: Record<string, unknown> = {};
-	for (const [key, value] of R.toEntries(wire)) {
-		if (!HashSet.has(known, key)) rest[key] = value;
-	}
-	return rest;
-};
+const restOf = (wire: { readonly [k: string]: unknown }, known: HashSet.HashSet<string>): Record<string, unknown> =>
+	R.fromEntries(A.filter(R.toEntries(wire), ([key]) => !HashSet.has(known, key)));
 
 /**
  * Whether the shorthand string can still carry everything this value holds.
@@ -152,11 +164,11 @@ const restOf = (wire: { readonly [k: string]: unknown }, known: HashSet.HashSet<
 const isStringExpressibleRepository = (repository: Repository): boolean =>
 	repository.type === undefined &&
 	repository.directory === undefined &&
-	R.keys(repository.rest ?? {}).length === 0;
+	R.isEmptyRecord(repository.rest ?? {});
 
 /** Whether the bare URL string can still carry everything this `bugs` entry holds. */
 const isStringExpressibleBugs = (bugs: Bugs): boolean =>
-	bugs.email === undefined && R.keys(bugs.rest ?? {}).length === 0;
+	bugs.email === undefined && R.isEmptyRecord(bugs.rest ?? {});
 
 const isFaithfulRepository = (wire: { readonly [k: string]: unknown }, repository: Repository): boolean =>
 	wire.url === repository.url &&
@@ -324,7 +336,7 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 		if (directory === undefined) return this.browseUrl;
 
 		const segments = A.filter(
-			A.map(directory.split("/"), (segment) => segment.trim()),
+			A.map(Str.split(directory, "/"), Str.trim),
 			(segment) => segment !== "" && segment !== ".",
 		);
 		// `..` would climb out of the repository the manifest names.
@@ -336,7 +348,7 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 			const host = /^https:\/\/([^/]+)/.exec(url)?.[1];
 			const path = host === undefined ? undefined : O.getOrUndefined(HashMap.get(DIRECTORY_PATHS, host));
 			if (path === undefined) return O.none();
-			return O.some(`${url}/${path}/${A.join(A.map(segments, (segment) => encodeURIComponent(segment)), "/")}`);
+			return O.some(`${url}/${path}/${A.join(A.map(segments, encodeURIComponent), "/")}`);
 		});
 	}
 
@@ -371,15 +383,12 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 						repository.#wire = input;
 						return repository;
 					}
-					const rest: Record<string, unknown> = {};
-					for (const [key, value] of R.toEntries(input)) {
-						if (!HashSet.has(KNOWN_REPOSITORY_KEYS, key)) rest[key] = value;
-					}
+					const rest = restOf(input, KNOWN_REPOSITORY_KEYS);
 					const repository = Repository.make({
 						url: P.isString(input.url) ? input.url : "",
 						...(P.isString(input.type) && { type: input.type }),
 						...(P.isString(input.directory) && { directory: input.directory }),
-						...(R.keys(rest).length > 0 && { rest }),
+						...(!R.isEmptyRecord(rest) && { rest }),
 					});
 					repository.#wire = input;
 					return repository;
@@ -481,14 +490,11 @@ export class Bugs extends S.Class<Bugs>($I`Bugs`)({
 						bugs.#wire = input;
 						return bugs;
 					}
-					const rest: Record<string, unknown> = {};
-					for (const [key, value] of R.toEntries(input)) {
-						if (!HashSet.has(KNOWN_BUGS_KEYS, key)) rest[key] = value;
-					}
+					const rest = restOf(input, KNOWN_BUGS_KEYS);
 					const bugs = Bugs.make({
 						...(P.isString(input.url) && { url: input.url }),
 						...(P.isString(input.email) && { email: input.email }),
-						...(R.keys(rest).length > 0 && { rest }),
+						...(!R.isEmptyRecord(rest) && { rest }),
 					});
 					bugs.#wire = input;
 					return bugs;

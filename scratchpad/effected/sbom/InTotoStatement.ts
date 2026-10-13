@@ -11,6 +11,7 @@ import type * as Brand from "effect/Brand";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import type { SbomJsonOptions } from "./Sbom.ts";
 
 const $I = $ScratchpadId.create("effected/sbom/InTotoStatement");
 
@@ -517,7 +518,7 @@ export class InTotoStatement extends S.Class<InTotoStatement>($I`InTotoStatement
 	 *
 	 * @since 0.0.0
 	 */
-	toJson(options?: { readonly space?: number | undefined }): string {
+	toJson(options?: SbomJsonOptions): string {
 		return Result.getOrThrow(
 			S.encodeResult(S.fromJsonString(S.Unknown, { space: options?.space ?? 0 }))({
 				_type: this._type,

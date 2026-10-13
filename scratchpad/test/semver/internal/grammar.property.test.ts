@@ -5,14 +5,17 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { formatComparator, formatRange, formatVersion, parseComparator, parseRange, parseVersion } from "../../../effected/semver/internal/grammar.ts";
 
+import { ComparatorParts, VersionParts } from "../../../effected/semver/internal/order.ts";
+
 const runs = { arbitrary: fcRuns(100) };
 const Component = S.Int.check(S.isBetween({ minimum: 0, maximum: 1000000 }));
-const Version = S.Struct({
+const Version = VersionParts.mapFields((fields) => ({
+  ...fields,
   major: Component, minor: Component, patch: Component,
   prerelease: S.Array(S.Union([Component, S.Literals(["alpha", "RC", "01a", "-", "beta-2"])])),
   build: S.Array(S.Literals(["001", "Build", "sha-1", "-"])),
-});
-const Comparator = S.Struct({ operator: S.Literals(["=", ">", ">=", "<", "<="]), version: Version });
+}));
+const Comparator = ComparatorParts.mapFields((fields) => ({ ...fields, version: Version }));
 const Comparators = S.NonEmptyArray(Comparator);
 const Sets = S.NonEmptyArray(Comparators);
 

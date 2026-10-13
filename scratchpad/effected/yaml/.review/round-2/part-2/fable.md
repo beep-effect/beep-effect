@@ -1,0 +1,17 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the yaml visitor, public index, and the listed internal files against the pinned upstream oracle and round-1 inventory, without changing anything.Round 1 already closed several fold, equal, and requote items. I'll read the rest of that inventory and the binding decisions, then review only this slice for new issues.Round 1 already recorded the visitor, CST, lexer, fold, and diagnostic items. I'll compare this commit to the pinned oracle and look only for new defects the gates would miss.### fable-2-1
+- file: scratchpad/effected/yaml/internal/cst-visitor.ts:469
+- class: bug   severity: required
+- standard: D9 behaviour-preserving; D11 bug. The round-1 `cst-empty-values` repair is still open on this input. evidence: In `walkBlockMapChildren`, a scalar whose next `:` survives `findMapContent` is forced to a key before the value test. `findMapContent` skips newlines, so for `a: 1\n: 2` the block-map children are `:`, `1`, newline, `:`, `2`. At `1`, lookahead still sees `:`, sets `expectingKey`, and emits `CstKeyEvent` `"1"`; `2` is then the only value. The same `:` arm at line 448 runs while a key is already expected and only clears `expectingKey`, so the empty key is never emitted. `walkFlowMapChildren` line 557 does the same: `{a: 1, : 2}` emits key `"a"` and values `"1"`, `"2"`, with no key for the second entry. `{a: , b: 2}` still works because the comma, not this lookahead, restores key position.
+- failure: A value placed before an empty-key entry is reported as a key, and the empty key itself disappears. `a: 1\n: 2` projects keys `a`, `1` and value `2`. `a:\nb: 2` must stay keys `a`, `b` and value `2`.
+- fix: Keep the same-line omitted-value promotion, and do not treat a `:` after a newline as this scalar's indicator. When a `:` is reached while a key is expected, emit the empty key before the value, in both `walkBlockMapChildren` and `walkFlowMapChildren`. Pin `a: 1\n: 2`, `a:\n: 2`, `{a: 1, : 2}`, and the existing omitted-value cases.
+
+### fable-2-2
+- file: scratchpad/effected/yaml/internal/lexer.ts:584
+- class: bug   severity: required
+- standard: D11; section 14 upstream-bug. YAML 1.2.2 §5.4 `b-char` (`#xA` | `#xD`) and §7.3 line folding. evidence: `scanSingleQuotedScalar` (line 584) and `scanDoubleQuotedScalar` (line 674) fold only `\n` and `\r\n`. A raw CR falls through to `value += ch`. `advance` now treats that same CR as a line break, so the value keeps U+000D while the line counter moves on. Outside quotes, `isNewline` already breaks on a lone CR. The pinned oracle's quoted scanners have the same value branch; `token-cr-positions` only fixed unquoted line and column counting.
+- failure: `"a\rb"` and `'a\rb'` parse as a value containing a carriage return. The folded quoted value is `a b`, and a following token is positioned as if the break were both content and a new line.
+- fix: In both quoted scanners, treat a lone CR like a line break: fold it to a space, consume it, and run the same column-0 document-marker check used for `\n`. Pin `"a\rb"`, `'a\rb'`, and a token on the next physical line. Record the upstream-bug deviation at the central ledger.
+
+REQUIRED: 2
+BACKLOG: 0
