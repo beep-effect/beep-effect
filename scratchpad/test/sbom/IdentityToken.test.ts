@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 // The inverted OIDC contract.
 //
 // The whole point of declaring this here rather than importing an issuer is

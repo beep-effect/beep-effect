@@ -1,5 +1,5 @@
 // Exact declaration excerpts from packages/effect/src/Effect.ts at
-// @effect/vitest@4.0.2 (MIT; see ../LICENSE).
+// @effect/vitest@4.0.3 (MIT; see ../LICENSE).
 // Pinned full-file SHA-256: 63c616372b464de80ceb0f49824b647f76c2137ef4434903f819bb8c04b34c3d
 
 // @effect-vitest-anchor Effect.timeoutOrElse 4744 4756

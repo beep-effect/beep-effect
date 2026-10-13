@@ -59,13 +59,14 @@ const decodeActiveAdmissionWorkload = S.decodeEffect(ActiveAdmissionWorkload);
 // random-UUID source is unavailable.
 const uuidlessCrypto: Crypto.Crypto = {
   ...NodeCrypto.make,
-  randomUUIDv4: Effect.fail(
-    PlatformError.badArgument({
-      module: "Crypto",
-      method: "randomUUIDv4",
-      description: "admission workload identity refusal",
-    })
-  ),
+  randomUUIDv4: () =>
+    Effect.fail(
+      PlatformError.badArgument({
+        module: "Crypto",
+        method: "randomUUIDv4",
+        description: "admission workload identity refusal",
+      })
+    ),
 };
 
 const processGroupFromStat = (text: string): number | undefined => {

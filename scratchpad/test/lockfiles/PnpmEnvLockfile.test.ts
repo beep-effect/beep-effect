@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 // PnpmEnvLockfile.packageManager: the package manager a pnpm-lock.yaml pins,
 // read out of the env preamble (the FIRST of two YAML documents), and
 // PnpmEnvLockfile.configDependencies: the config dependencies it records.

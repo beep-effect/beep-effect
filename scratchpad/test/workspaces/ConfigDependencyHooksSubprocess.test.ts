@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 // Parent-side plumbing of `ConfigDependencyHooks.layerSubprocess`, over the
 // public `ScriptedSpawner` double from `@effected/commands`.
 //

@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 // The lab's real source module graph, held to the upstream layer ordering.
 // The whole-workspace acyclicity control uses the containing Bun workspace.
 import { readFileSync, readdirSync } from "node:fs";

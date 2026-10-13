@@ -140,3 +140,9 @@ export const DevEnginesSchema: S.Struct<{
  * @since 0.0.0
  */
 export type DevEngines = typeof DevEnginesSchema.Type;
+
+/** Decoded runtime value of {@link DevEnginesSchema}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DevEnginesSchema = typeof DevEnginesSchema.Type;

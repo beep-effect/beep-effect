@@ -208,6 +208,7 @@ const narrower = Effect.fn("ClassificationRegistry.narrower")(function* (
   const concept = yield* resolve(snapshot, pin, notation);
   return A.filter(snapshot.concepts, (candidate) => A.contains(candidate.broader, concept.iri));
 });
+const ClassificationAssetJson = S.fromJsonString(ClassificationAsset);
 
 const decodeAssets = Effect.fnUntraced(function* (manifestPath: string, content: string) {
   const lines = A.filter(A.map(Str.split(content, "\n"), Str.trim), Str.isNonEmpty);
@@ -221,7 +222,7 @@ const decodeAssets = Effect.fnUntraced(function* (manifestPath: string, content:
         );
         if (!O.contains(route.loadKind, "classification-scheme")) return O.none<ClassificationAsset>();
         return O.some(
-          yield* S.decodeEffect(S.fromJsonString(ClassificationAsset))(line).pipe(
+          yield* S.decodeEffect(ClassificationAssetJson)(line).pipe(
             Effect.mapError(() => failure("manifest-invalid", `Classification row ${index + 1}`))
           )
         );

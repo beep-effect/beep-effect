@@ -34,7 +34,8 @@
     "docs/generated/**",
     "**/scripts/**",
     "goals/**",
-    "explorations/**"
+    "explorations/**",
+    "scratchpad/effected/.canary/**"
   ],
   "rules": {
     "beep/no-js-extension-imports": "error",

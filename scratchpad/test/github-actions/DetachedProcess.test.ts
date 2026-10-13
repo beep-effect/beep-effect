@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file asyncFunction:skip-file processEnv:skip-file processEnvInEffect:skip-file globalTimers:skip-file newPromise:skip-file globalRandom:skip-file
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import type { Server, ServerResponse } from "node:http";
 import { createServer } from "node:http";

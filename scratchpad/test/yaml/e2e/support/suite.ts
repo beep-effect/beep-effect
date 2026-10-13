@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 /**
  * Test data loader for the official yaml-test-suite.
  *

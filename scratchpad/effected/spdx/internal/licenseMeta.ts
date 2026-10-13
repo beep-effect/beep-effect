@@ -817,7 +817,6 @@ export const LICENSE_META_ROWS: readonly string[] = [
  * by identifier. A `LicenseRef`/`DocumentRef` reference is not a catalog
  * member and has no entry.
  *
- *
  * **Example** (Look up a license title)
  *
  * ```ts

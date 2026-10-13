@@ -712,3 +712,9 @@ export const sectionInsertOffset = (section: RawSection): number => {
 	const last = section.entries[section.entries.length - 1];
 	return last === undefined ? section.bodyStart : last.offset + last.length;
 };
+
+/** Decoded runtime value of {@link GitConfigDiagnosticCode}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GitConfigDiagnosticCode = typeof GitConfigDiagnosticCode.Type;

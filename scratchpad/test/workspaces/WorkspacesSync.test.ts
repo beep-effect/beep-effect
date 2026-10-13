@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file
 // The synchronous escape hatch takes CONSUMER-SUPPLIED operations. These tests
 // drive it over `@effected/memfs`' node-shaped sync port (`handle.sync`), which
 // throws node's exact errno on a miss — so nothing below exists on disk, and a

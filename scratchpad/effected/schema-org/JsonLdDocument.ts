@@ -356,7 +356,6 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	/**
 	 * The `@id` of every node in the graph.
 	 *
-	 *
 	 * **Example** (Test whether a graph defines an identifier)
 	 *
 	 * ```ts
@@ -379,7 +378,6 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 
 	/**
 	 * Node identifiers in graph insertion order, with duplicates removed.
-	 *
 	 *
 	 * **Example** (Read the first inserted node identifier)
 	 *
@@ -464,7 +462,6 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
 	 * closes the JSON-LD block early and injects markup into the document. That
 	 * is the failure this package exists to prevent, and it is reintroduced the
 	 * moment this value is serialized by hand.
-	 *
 	 *
 	 * **Example** (Produce a plain JSON-LD value for a framework)
 	 *

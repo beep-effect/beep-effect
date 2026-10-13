@@ -66,7 +66,7 @@ const proxyRuntime = ManagedRuntime.make(NodeCrypto.layer);
 
 const nextNonce = Effect.gen(function* () {
   const crypto = yield* Crypto.Crypto;
-  return btoa(yield* crypto.randomUUIDv4);
+  return btoa(yield* crypto.randomUUIDv4());
 });
 
 const respondWithNonce = (request: NextRequest, nonce: string): NextResponse => {

@@ -559,7 +559,7 @@ const writeAdmissionWorkload = Effect.fn("StepExec.writeAdmissionWorkload")(func
     )
   );
   const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto.randomUUIDv4.pipe(
+  const token = yield* crypto.randomUUIDv4().pipe(
     Effect.mapError((cause) =>
       AdmissionWorkloadRegistrationError.make({
         message: `Failed to create admission workload identity ${leaseId}: ${cause.message}`,

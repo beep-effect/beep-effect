@@ -69,6 +69,7 @@ const WorkflowStep = S.Struct({
   env: S.optionalKey(S.Record(S.String, S.Unknown)),
 });
 type WorkflowStep = typeof WorkflowStep.Type;
+const WorkflowSteps = S.Array(WorkflowStep);
 const WorkflowJobs = S.Record(
   S.String,
   S.Struct({
@@ -77,7 +78,7 @@ const WorkflowJobs = S.Record(
   })
 );
 type WorkflowJobs = typeof WorkflowJobs.Type;
-const decodeWorkflowSteps = S.decodeUnknownEffect(S.Array(WorkflowStep));
+const decodeWorkflowSteps = S.decodeUnknownEffect(WorkflowSteps);
 const decodeWorkflowJobs = S.decodeUnknownEffect(WorkflowJobs);
 
 it.effect.prop(
@@ -85,8 +86,8 @@ it.effect.prop(
   { value: S.Array(WorkflowStep) },
   ({ value }) =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeEffect(S.Array(WorkflowStep))(value);
-      const decoded = yield* S.decodeUnknownEffect(S.Array(WorkflowStep))(encoded);
+      const encoded = yield* S.encodeEffect(WorkflowSteps)(value);
+      const decoded = yield* S.decodeEffect(WorkflowSteps)(encoded);
       expect(S.toEquivalence(S.Array(WorkflowStep))(decoded, value)).toBe(true);
     }),
   { arbitrary: fcRuns(20) }
@@ -142,6 +143,7 @@ const setupMonorepoStep = (jobs: WorkflowJobs, jobId: string): WorkflowStep =>
   );
 
 const stepInputs = (step: WorkflowStep): Readonly<Record<string, unknown>> => step.with ?? {};
+const CiOperationalPatternsJson = S.fromJsonString(CiOperationalPatterns);
 
 const stepEnvironment = (step: WorkflowStep): Readonly<Record<string, unknown>> => step.env ?? {};
 
@@ -306,7 +308,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const projection = yield* fs.readFileString(
         path.join(root, "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json")
       );
-      const decoded = yield* S.decodeEffect(S.fromJsonString(CiOperationalPatterns))(projection);
+      const decoded = yield* S.decodeEffect(CiOperationalPatternsJson)(projection);
       assert.deepEqual(decoded, ciOperationalPatterns);
       for (const file of ["README.md", "nested/note.md", "docs/runbooks/ci.md", "goals/demo/PLAN.md"]) {
         assert.isTrue(isHeavyDocsOnlyPath(file), file);

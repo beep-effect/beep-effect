@@ -1635,8 +1635,8 @@ const updateYeetInboxActiveIndex = Effect.fn("Yeet.updateInboxActiveIndex")(func
   const path = yield* Path.Path;
   const inboxDir = path.dirname(paths.activePath);
   const crypto = yield* Crypto.Crypto;
-  const inputPath = path.join(inboxDir, `.active-row-${yield* crypto.randomUUIDv4}.tmp`);
-  const outputPath = path.join(inboxDir, `.active-index-${yield* crypto.randomUUIDv4}.tmp`);
+  const inputPath = path.join(inboxDir, `.active-row-${yield* crypto.randomUUIDv4()}.tmp`);
+  const outputPath = path.join(inboxDir, `.active-index-${yield* crypto.randomUUIDv4()}.tmp`);
   const versionPath = path.join(inboxDir, "active-p0-safe-v2");
   yield* fs.writeFileString(inputPath, `${line}\n`, { flag: "wx", mode: 0o600 });
   const script = `

@@ -1,4 +1,3 @@
-// @effect-diagnostics globalTimers:skip-file
 import * as Clock from "effect/Clock";
 import { assert, describe, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";

@@ -35,8 +35,10 @@ import vectors from "./fixtures/contradiction-detection/snapshots.json" with { t
 const detect = Effect.fnUntraced(function* (snapshot: ContradictionDetectionSnapshot) {
   return yield* ContradictionDetectionService.use((service) => service.detect(snapshot));
 });
+const DetectedContradictions = S.Array(DetectedContradiction);
+
 const encodedOutput = Effect.fnUntraced(function* (candidates: ReadonlyArray<DetectedContradiction>) {
-  return canonicalDetectionJson(yield* S.encodeEffect(S.Array(DetectedContradiction))(candidates));
+  return canonicalDetectionJson(yield* S.encodeEffect(DetectedContradictions)(candidates));
 });
 const conformance = Effect.fnUntraced(function* (record: DetectedContradiction, index: number) {
   const wire = yield* S.encodeEffect(DetectedContradiction)(record);

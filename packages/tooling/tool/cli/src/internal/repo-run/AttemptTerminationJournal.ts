@@ -39,9 +39,9 @@ const textEncoder = new TextEncoder();
 
 const attemptJournalLockToken = Effect.fnUntraced(function* () {
   const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto.randomUUIDv4.pipe(
-    Effect.mapError(QualitySchedulerError.new("Failed to create an attempt journal lock identity."))
-  );
+  const token = yield* crypto
+    .randomUUIDv4()
+    .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create an attempt journal lock identity.")));
   return `${process.pid}:${token}`;
 });
 

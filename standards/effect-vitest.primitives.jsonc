@@ -1,15 +1,15 @@
-// Generated from the verified @effect/vitest@4.0.2 source snapshot.
+// Generated from the verified @effect/vitest@4.0.3 source snapshot.
 // Regenerate anchors, review semantic diffs, and update the pin as one change.
 // Example import paths track the installed surface: effect/Arbitrary (upstream moved it there in rc.118).
 {
   "schemaVersion": "effect-vitest-primitives/v1",
   "package": "@effect/vitest",
-  "version": "4.0.2",
-  "tag": "@effect/vitest@4.0.2",
-  "sha": "269a7c864351231d42e6e95b7fa8f32050df3691",
+  "version": "4.0.3",
+  "tag": "@effect/vitest@4.0.3",
+  "sha": "967a7dc5963a23d3705259d60ccac1ce9f060a3b",
   "coverage": {
     "exportStarModule": "vitest",
-    "method": "Immutable 4.0.2 direct exports, public Vitest namespace members/options, all utils exports and every non-fenced README heading; peer Vitest export-star remains one explicit boundary. Native Arbitrary options and internal lifecycle anchors are supplementary evidence, not invented @effect/vitest exports.",
+    "method": "Immutable 4.0.3 direct exports, public Vitest namespace members/options, all utils exports and every non-fenced README heading; peer Vitest export-star remains one explicit boundary. Native Arbitrary options and internal lifecycle anchors are supplementary evidence, not invented @effect/vitest exports.",
     "sourceFiles": [
       "packages/effect/src/Arbitrary.ts",
       "packages/effect/src/Effect.ts",
@@ -1128,7 +1128,7 @@
       "gotchas": [
         "Installed Vitest 4.1.11 at the rc117 audit violated the Vitest peer range; the rc118 re-pin found Vitest 5.0.1 installed, inside it; the 4.0.0 re-pin found Vitest 5.0.2.",
         "Reference README specifies Node ^22.12.0 || ^24.0.0 || >=26.0.0 and Vite 6.4+ within majors 6-8.",
-        "Graph pins the 4.0.2 commit; the README installation command is unversioned and floats."
+        "Graph pins the 4.0.3 commit; the README installation command is unversioned and floats."
       ]
     },
     {

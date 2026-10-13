@@ -76,6 +76,7 @@ type ExportFinding = {
   readonly documentationShapeViolations: ReadonlyArray<{ readonly rule: string }>;
   readonly exampleImportViolations: ReadonlyArray<{ readonly rule: string; readonly detail: string }>;
   readonly unsafeExampleViolations: ReadonlyArray<{ readonly rule: string }>;
+  readonly schemaAnnotationGaps: ReadonlyArray<{ readonly rule: string }>;
 };
 
 type PackageFinding = {
@@ -1182,4 +1183,44 @@ export const consumerValue = 1;
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
   });
+  it.effect("distinguishes schema heritage from schemas declared inside service methods", () =>
+    Effect.flatMap(
+      acquireFixtureRepo({
+        topoSortScript: "printf '@beep/demo\\n'",
+        packages: [
+          {
+            name: "@beep/demo",
+            dir: "demo",
+            files: [
+              [
+                "src/index.ts",
+                `
+import * as Context from "effect/Context";
+import * as S from "effect/Schema";
+export class DemoService extends Context.Service<DemoService, {}>()("DemoService") {
+  static schema() {
+    return class Inner extends S.Class<Inner>("Inner")({ value: S.String }) {};
+  }
+}
+export class DemoSchema extends S.Class<DemoSchema>("DemoSchema")({ value: S.String }) {}
+`,
+              ],
+            ],
+          },
+        ],
+      }),
+      Effect.fnUntraced(function* (repoRoot) {
+        const inventory = yield* buildInventory(repoRoot);
+        const exports = inventory.packages.find((entry) => entry.packageName === "@beep/demo")?.exports;
+        const service = exports?.find((entry) => entry.symbolName === "DemoService");
+        const schema = exports?.find((entry) => entry.symbolName === "DemoSchema");
+        expect(service).toBeDefined();
+        expect(schema).toBeDefined();
+        expect(service?.schemaAnnotationGaps).toEqual([]);
+        expect(schema?.schemaAnnotationGaps).toEqual(
+          expect.arrayContaining([expect.objectContaining({ rule: "missing-schema-annotation" })])
+        );
+      })
+    ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+  );
 });

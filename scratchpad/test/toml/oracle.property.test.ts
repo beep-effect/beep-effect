@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 // The smol-toml differential oracle: property tests cross-checking the engine
 // against the reference implementation (smol-toml 1.7.0, exact-pinned), plus
 // a corpus-wide differential over every toml-test valid file. This is the
@@ -262,7 +261,6 @@ const bigintArb = Arbitrary.schema(
 
 /** Finite-or-infinite doubles — NaN stays out of the equality properties. */
 // TOML float round-trip properties must include infinities, as the scalar tests require.
-// @effect-diagnostics-next-line schemaNumber:off
 const floatArb = Arbitrary.schema(S.Number.check(S.makeFilter((n) => !Number.isNaN(n))));
 
 const leafArb: Arbitrary.Arbitrary<unknown> = weighted<unknown>(

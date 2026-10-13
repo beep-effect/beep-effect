@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 // YamlLint facade + YamlLintConfig (#129): rule-aware config validation
 // (parse-validity locked always-on), severity resolution and precedence,
 // run() ordering, custom-rule registration, and the surgical fix pipeline

@@ -39,8 +39,10 @@ it.effect("refresh builds without an audience service when an explicit shape is 
   assert.strictEqual(fallbackTarget.ctx.paint("accent", "x"), "x");
   assert.strictEqual(fallbackTarget.ctx.link({ url: "/x" }, "x"), "x");
 }));
+const FailureName = S.Struct({ name: S.String });
+
 it.effect("status removal handles schema trees and empty reports", () => Effect.gen(function* () {
-  const error = yield* S.decodeUnknownEffect(S.Struct({ name: S.String }))({ name: 1 }).pipe(Effect.flip);
+  const error = yield* S.decodeUnknownEffect(FailureName)({ name: 1 }).pipe(Effect.flip);
   const cause = Cause.fail(error);
   const withStatus = linesOf(cause, fallbackTarget);
   const withoutStatus = linesOf(fallbackTarget, false)(cause);

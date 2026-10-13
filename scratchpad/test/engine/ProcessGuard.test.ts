@@ -1,4 +1,3 @@
-// @effect-diagnostics asyncFunction:skip-file globalTimers:skip-file newPromise:skip-file
 import { assert, describe, it, vi } from "@effect/vitest";
 import * as S from "effect/Schema";
 import type { ProcessGuardHost, ProcessGuardOptions } from "../../effected/engine/guard.ts";

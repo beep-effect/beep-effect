@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 // The fetch rung's guards, over the public `ScriptedSpawner` double: what the
 // rung refuses to use even when pnpm exits zero, and how a pnpm that never
 // ran is reported. The #842 scenario end to end, with real git and a fake

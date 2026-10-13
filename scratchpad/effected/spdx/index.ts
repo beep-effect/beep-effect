@@ -23,7 +23,7 @@
  *
  * const program = Effect.gen(function* () {
  *   const expr = yield* SpdxExpression.parse("(MIT OR Apache-2.0+)");
- *   return [expr._tag, expr.toString()] as const;
+ *   return [expr._tag, expr.toString()];
  * });
  *
  * console.log(Effect.runSync(program));

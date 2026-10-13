@@ -518,9 +518,9 @@ const proofLockReapPath = Effect.fn("Yeet.proofLockReapPath")(function* (
   lockPath: string
 ): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
   const crypto = yield* Crypto.Crypto;
-  const uuid = yield* crypto.randomUUIDv4.pipe(
-    YeetCommandError.mapError("Failed to generate Yeet proof-lock reap identifier.")
-  );
+  const uuid = yield* crypto
+    .randomUUIDv4()
+    .pipe(YeetCommandError.mapError("Failed to generate Yeet proof-lock reap identifier."));
   return `${lockPath}.reap-${process.pid}-${uuid}`;
 });
 

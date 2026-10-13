@@ -21,7 +21,6 @@ const reInitialSpace = /^ */;
 /**
  * Parses a soft or hard line break.
  *
- * **Details**
  *
  * **Example** (Register the newline trigger)
  *

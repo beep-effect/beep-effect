@@ -70,6 +70,8 @@ const ConsumerLive = Layer.effect(
 ).pipe(Layer.provideMerge(StateLive));
 const composition = () =>
   OfficeActionDocketIntakeLive.pipe(Layer.provideMerge(officeActionStructureFileStore(filename)));
+const OfficeActionStructureAttemptJson = S.fromJsonString(OfficeActionStructureAttempt);
+
 it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-action durable evidence intake", (it) => {
   it.layer(composition(), { timeout: "10 seconds", concurrent: false })("initial writer", (it) => {
     it.effect("persists an atomic evidence pair with no admission state", () =>
@@ -95,8 +97,8 @@ it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-act
         const fs = yield* FileSystem.FileSystem;
         const initial = yield* store.read;
         const first = yield* Effect.fromOption(A.head(initial), () => "missing first attempt");
-        const encoded = yield* S.encodeEffect(S.fromJsonString(OfficeActionStructureAttempt))(first);
-        const decoded = yield* S.decodeEffect(S.fromJsonString(OfficeActionStructureAttempt))(encoded);
+        const encoded = yield* S.encodeEffect(OfficeActionStructureAttemptJson)(first);
+        const decoded = yield* S.decodeEffect(OfficeActionStructureAttemptJson)(encoded);
         expect(decoded).toEqual(first);
         const contradicted = OfficeActionStructureAttempt.make({
           ...first,
@@ -263,13 +265,10 @@ it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-act
         expect((yield* store.read.pipe(Effect.flip))._tag).toBe("OfficeActionStructureStorageError");
         const first = yield* Effect.fromOption(A.head(rows), () => "missing first");
         const corrupt = OfficeActionStructureAttempt.make({ ...first, previousAttemptId: O.some("missing") });
-        yield* fs.writeFileString(
-          filename,
-          `${yield* S.encodeEffect(S.fromJsonString(OfficeActionStructureAttempt))(corrupt)}\n`
-        );
+        yield* fs.writeFileString(filename, `${yield* S.encodeEffect(OfficeActionStructureAttemptJson)(corrupt)}\n`);
         expect((yield* store.read.pipe(Effect.flip))._tag).toBe("OfficeActionStructureStorageError");
 
-        const firstLine = `${yield* S.encodeEffect(S.fromJsonString(OfficeActionStructureAttempt))(first)}\n`;
+        const firstLine = `${yield* S.encodeEffect(OfficeActionStructureAttemptJson)(first)}\n`;
         yield* fs.writeFileString(filename, firstLine + firstLine);
         expect((yield* store.read.pipe(Effect.flip))._tag).toBe("OfficeActionStructureStorageError");
         yield* fs.writeFileString(filename, "");

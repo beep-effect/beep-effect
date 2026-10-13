@@ -11,7 +11,6 @@
 // JsoncFormatter.test.ts (idempotence on plain JSON) are not repeated here.
 //
 // The synchronous digest twin is checked against Node's real SHA-256 backend.
-// @effect-diagnostics-next-line nodeBuiltinImport:off
 import { createHash } from "node:crypto";
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { assert, describe, it } from "@effect/vitest";

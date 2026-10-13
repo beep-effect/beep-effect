@@ -101,7 +101,7 @@ export const RegistryTarget = S.Struct({
  * @category type-level
  * @since 0.0.0
  */
-export interface RegistryTarget extends S.Schema.Type<typeof RegistryTarget> {
+export type RegistryTarget = typeof RegistryTarget.Type & {
 	/**
 	 * Retained explicitly for the source-level tripwire contract.
 	 *
@@ -109,7 +109,7 @@ export interface RegistryTarget extends S.Schema.Type<typeof RegistryTarget> {
 	 * @since 0.0.0
 	 */
 	readonly token?: never;
-}
+};
 
 /**
  * One published version of one package, on one registry.

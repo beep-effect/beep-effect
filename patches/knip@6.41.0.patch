@@ -1,8 +1,7 @@
-diff --git a/dist/util/resolve.js b/dist/util/resolve.js
-index ae91a5d..818b446 100644
 --- a/dist/util/resolve.js
 +++ b/dist/util/resolve.js
-@@ -4,5 +4,6 @@
+@@ -3,6 +3,7 @@
+ import { timerify } from './Performance.js';
  import { toPosix } from './path.js';
  export const extensionAlias = {
 +    '.ts': ['.ts', '.tsx'],

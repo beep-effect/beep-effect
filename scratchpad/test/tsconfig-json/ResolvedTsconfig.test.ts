@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 import { posix } from "node:path";
 import { assert, describe, it } from "@effect/vitest";
 import { pipe } from "effect/Function";

@@ -1,5 +1,4 @@
 // These test fixtures are internal helpers and preserve their direct-call contract.
-// @effect-diagnostics missingPipeableSignature:skip-file
 import { dual } from "effect/Function";
 // In-memory filesystem fixtures.
 //

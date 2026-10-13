@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 // PeerCheck, including the differential oracle against `pnpm peers check --json`.
 //
 // The oracle is COMMITTED, not shelled out to. This package forbids new local

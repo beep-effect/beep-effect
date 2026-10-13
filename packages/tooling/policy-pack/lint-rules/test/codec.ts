@@ -95,7 +95,7 @@ export class LinterProcessError extends S.TaggedError<LinterProcessError>()("Lin
   exitCode: S.Int,
   stdout: S.String,
   stderr: S.String,
-  signal: S.Option(S.String),
+  signal: S.Option(S.Union([S.String, S.Int])),
   timedOut: S.Boolean,
   outputTruncated: S.Boolean,
 }) {}

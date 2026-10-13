@@ -181,10 +181,9 @@ const generateAttemptId = Effect.fn("Yeet.generateAttemptId")(function* (): Effe
   Crypto.Crypto
 > {
   const crypto = yield* Crypto.Crypto;
-  return yield* crypto.randomUUIDv4.pipe(
-    Effect.flatMap(decodeUUID),
-    Effect.mapError(YeetCommandError.new("Failed to generate Yeet attempt id."))
-  );
+  return yield* crypto
+    .randomUUIDv4()
+    .pipe(Effect.flatMap(decodeUUID), Effect.mapError(YeetCommandError.new("Failed to generate Yeet attempt id.")));
 });
 
 const isNamedLocalProofShard = (step: RepoPlanStep): boolean =>
@@ -344,7 +343,7 @@ const executeMeasuredStep = Effect.fn("Yeet.executeMeasuredStep")(function* (
   const artifactDir = yield* artifactDirForContext(context);
   const rssDir = path.join(artifactDir, "rss");
   const crypto = yield* Crypto.Crypto;
-  const rssPath = path.join(rssDir, `${safeArtifactName(step.id)}-${yield* crypto.randomUUIDv4}.txt`);
+  const rssPath = path.join(rssDir, `${safeArtifactName(step.id)}-${yield* crypto.randomUUIDv4()}.txt`);
   yield* fs.makeDirectory(rssDir, { recursive: true });
   const measuredStep = RepoPlanStep.make({
     ...step,

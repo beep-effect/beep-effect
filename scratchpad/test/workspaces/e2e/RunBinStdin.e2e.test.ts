@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 // runBin / runCarrierBin stdin against a REAL spawned bin that echoes what it
 // reads. A hand-made consumer over a temp directory: no package manager runs.
 

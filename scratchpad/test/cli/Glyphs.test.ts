@@ -1,4 +1,3 @@
-// @effect-diagnostics processEnv:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { Glyphs } from "../../effected/cli/index.ts";
 import { displayWidth } from "../../effected/cli/internal/displayWidth.ts";

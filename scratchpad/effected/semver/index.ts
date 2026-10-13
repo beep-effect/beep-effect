@@ -19,7 +19,7 @@
  *   const version = yield* SemVer.parse("1.2.3");
  *   const next = version.bump.minor();
  *   const range = yield* Range.parse("^1.0.0");
- *   return [next.toString(), range.test(version), version.gt(next)] as const;
+ *   return [next.toString(), range.test(version), version.gt(next)];
  * });
  *
  * console.log(Effect.runSync(program));

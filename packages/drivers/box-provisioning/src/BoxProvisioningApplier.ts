@@ -787,7 +787,7 @@ const makeService = (
       const attemptId = yield* O.match(O.fromUndefinedOr(injectedAttemptId), {
         onNone: Effect.fnUntraced(function* () {
           const crypto = yield* Crypto.Crypto;
-          return BoxApplyAttemptId.make(yield* crypto.randomUUIDv4.pipe(Effect.mapError(digestFailure)));
+          return BoxApplyAttemptId.make(yield* crypto.randomUUIDv4().pipe(Effect.mapError(digestFailure)));
         }),
         onSome: Effect.succeed,
       });

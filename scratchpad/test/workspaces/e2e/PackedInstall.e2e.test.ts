@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file processEnvInEffect:skip-file
 // biome-ignore-all lint/suspicious/noTemplateCurlyInString: fixture file contents
 //
 // PackedInstall against real package managers and a real fixture workspace.

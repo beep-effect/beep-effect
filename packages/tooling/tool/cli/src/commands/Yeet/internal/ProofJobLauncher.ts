@@ -300,7 +300,7 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     );
     yield* fs.makeDirectory(jobsRoot, { recursive: true }).pipe(Effect.mapError(guardError));
     const start = yield* processStartIdentityForPid(process.pid).pipe(Effect.provide(context));
-    const nonce = yield* crypto.randomUUIDv4.pipe(Effect.mapError(guardError));
+    const nonce = yield* crypto.randomUUIDv4().pipe(Effect.mapError(guardError));
     const token = `${process.pid}:${O.getOrElse(start, constant("unknown"))}:${nonce}`;
     const owned = yield* acquireJournalFileLock(lockPath, token, retryAttempts).pipe(Effect.provide(context));
     return { lockPath, owned, token };
@@ -605,7 +605,7 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
       if (submission.request.checkout !== repoRoot)
         return yield* YeetCommandError.make({ message: "Submission checkout does not match launcher root." });
       yield* prune(PROOF_JOB_RETENTION_BUDGET);
-      const jobId = yield* decodeUUID(yield* crypto.randomUUIDv4.pipe(Effect.mapError(guardError))).pipe(
+      const jobId = yield* decodeUUID(yield* crypto.randomUUIDv4().pipe(Effect.mapError(guardError))).pipe(
         Effect.mapError(guardError)
       );
       const env = yield* proofJobEnvironment();

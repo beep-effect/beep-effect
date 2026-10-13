@@ -1,5 +1,3 @@
-diff --git a/dist/declarations/src/setupEffect.d.ts b/dist/declarations/src/setupEffect.d.ts
-index 565f28f3c006d68bd675c1ba8e104e9d5b541ffb..d5769ab559f865b1686bc1562c405f748bcbf61b 100644
 --- a/dist/declarations/src/setupEffect.d.ts
 +++ b/dist/declarations/src/setupEffect.d.ts
 @@ -1,6 +1,5 @@
@@ -9,7 +7,7 @@ index 565f28f3c006d68bd675c1ba8e104e9d5b541ffb..d5769ab559f865b1686bc1562c405f74
  import type { EffectRequirements } from "./types.js";
  import { type EffectSetupSchemas, type EffectSetupStateSchema, type ToStandardSetupSchemas, type ToStandardSetupStates, type ValidateEffectSetupSchemas, type ValidateEffectSetupStates } from "./schema.js";
  /**
-@@ -35,7 +34,7 @@ export type EffectAction<TContext extends MachineContext = MachineContext, TEven
+@@ -35,7 +34,7 @@
  type AnyEffectAction = EffectAction<any, any, any, any>;
  type EffectActionRequirements<TAction> = TAction extends (...args: any[]) => infer TResult ? EffectRequirements<TResult> : never;
  type CoreEffectAction<TAction> = TAction extends (...args: infer TArgs) => any ? ((...args: TArgs) => void) & {
@@ -18,8 +16,6 @@ index 565f28f3c006d68bd675c1ba8e104e9d5b541ffb..d5769ab559f865b1686bc1562c405f74
  } : never;
  type CoreEffectActionMap<TActionMap> = {
      [K in keyof TActionMap]: CoreEffectAction<TActionMap[K]>;
-diff --git a/dist/declarations/src/types.d.ts b/dist/declarations/src/types.d.ts
-index 31eb092d06e27ee02d3fbeedd9ce5276932be0d6..a3b852e62818db59a9e2b36cb812e28276bfad52 100644
 --- a/dist/declarations/src/types.d.ts
 +++ b/dist/declarations/src/types.d.ts
 @@ -1,11 +1,10 @@

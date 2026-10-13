@@ -49,7 +49,7 @@ it.effect.prop(
         contacts: A.map(contacts, (receipt) => CreatedContact.make({ ...receipt, contactId: "fixture-contact" })),
       });
       const encoded = yield* S.encodeEffect(JournalJson)(value);
-      const decoded = yield* S.decodeUnknownEffect(JournalJson)(encoded);
+      const decoded = yield* S.decodeEffect(JournalJson)(encoded);
       expect(S.toEquivalence(RunJournal)(decoded, value)).toBe(true);
     }),
   { arbitrary: fcRuns(20) }

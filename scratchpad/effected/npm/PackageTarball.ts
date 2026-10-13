@@ -90,7 +90,6 @@ const TarballFailureFromPayload = S.toType(TarballErrorPayload).pipe(S.decodeTo(
 /**
  * Raised when a published tarball cannot be fetched, verified or extracted.
  *
- *
  * **Example** (Distinguish a missing published version)
  *
  * ```ts

@@ -178,7 +178,6 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { flow, identity, pipe } from "effect/Function";
 import * as HM from "effect/HashMap";
-import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -2338,7 +2337,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const cryptoFailure = PlatformError.badArgument({ module: "Crypto", method: "test" });
 
             const withoutIndexIdentity = yield* prepareLaneProofSession([lane], "active").pipe(
-              Effect.provideService(Crypto.Crypto, { ...platformCrypto, randomUUIDv4: Effect.fail(cryptoFailure) })
+              Effect.provideService(Crypto.Crypto, {
+                ...platformCrypto,
+                randomUUIDv4: () => Effect.fail(cryptoFailure),
+              })
             );
             assertNone(withoutIndexIdentity);
 
@@ -2353,10 +2355,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const stagingFailure = yield* persistLaneProofs(session, [[lane, 12]]).pipe(
               Effect.provideService(Crypto.Crypto, {
                 ...platformCrypto,
-                randomUUIDv4: Effect.suspend(() => {
-                  identityCalls = identityCalls + 1;
-                  return identityCalls > 1 ? Effect.fail(cryptoFailure) : platformCrypto.randomUUIDv4;
-                }),
+                randomUUIDv4: (options: { readonly format?: "hex" | "bytes" | undefined }) =>
+                  Effect.suspend(() => {
+                    identityCalls = identityCalls + 1;
+                    return identityCalls > 1 ? Effect.fail(cryptoFailure) : platformCrypto.randomUUIDv4(options);
+                  }),
               }),
               Effect.flip
             );
@@ -4608,29 +4611,29 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     );
 
     it.effect(
-      "bounds coverage-summary decode diagnostics while retaining the typed parse cause",
+      "bounds coverage-summary decode diagnostics while retaining schema-error cause metadata",
       flow(
         Effect.fnUntraced(function* () {
           const invalidPct = Str.repeat(20_000)("x");
+          const summaryText = yield* encodeJson({
+            total: {
+              ...vitestCoverageMetrics(10, 10, 100),
+              lines: { total: 10, covered: 10, skipped: 0, pct: invalidPct },
+            },
+          });
           const error = yield* Effect.flip(
-            coveragePackageBaselineFromSummaryForTesting(
-              "/repo",
-              "/repo/packages/existing",
-              yield* encodeJson({
-                total: {
-                  ...vitestCoverageMetrics(10, 10, 100),
-                  lines: { total: 10, covered: 10, skipped: 0, pct: invalidPct },
-                },
-              })
-            )
+            coveragePackageBaselineFromSummaryForTesting("/repo", "/repo/packages/existing", summaryText)
           );
 
           assert.isTrue(isDomainError(error));
           if (isDomainError(error)) {
             assert.include(error.message, "Failed to parse coverage summary fixture");
             assert.isAtMost(Str.length(error.message), 4_096);
-            assert.isDefined(error.cause);
-            assert.isAbove(Str.length(Inspectable.toStringUnknown(error.cause, 0)), 16_384);
+            assert.deepInclude(error.cause, { _tag: "SchemaError" });
+            assert.nestedInclude(error.cause, {
+              message:
+                'Expected @beep/repo-cli/commands/Quality/internal/CoverageRegression/VitestCoveragePct\n  at ["total"]["lines"]["pct"]',
+            });
           }
         }),
         Effect.provideServiceEffect(Console.Console, TestConsole.make)

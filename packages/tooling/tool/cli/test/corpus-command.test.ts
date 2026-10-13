@@ -2838,6 +2838,7 @@ type PreservationDenominators = Pick<
   RestorationPreserveOptions,
   "expectedRootArchiveBytes" | "expectedSourceDirectoryCount" | "expectedSourceFileCount" | "expectedSourceTreeBytes"
 >;
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 const measurePreservationDenominators = Effect.fn("CorpusTest.measurePreservationDenominators")(function* (
   sourceRoot: string,
@@ -4250,7 +4251,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       for (const text of [
         "invalid json",
         Str.replace(defaults.runLabel, "wrong-archive")(encoded),
-        yield* S.encodeEffect(S.fromJsonString(S.Unknown))({ ...membership, members: [member, member] }),
+        yield* S.encodeEffect(UnknownJson)({ ...membership, members: [member, member] }),
       ]) {
         yield* fs.writeFileString(membershipFile, text);
         yield* restoreMail(options).pipe(Effect.flip);
@@ -4301,7 +4302,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       };
       const decoded = yield* S.decodeEffect(MailOccurrenceMembership)(invalid).pipe(Effect.exit);
       decoded.pipe(Exit.isFailure, assertTrue);
-      yield* fs.writeFileString(membershipFile, yield* S.encodeEffect(S.fromJsonString(S.Unknown))(invalid));
+      yield* fs.writeFileString(membershipFile, yield* S.encodeEffect(UnknownJson)(invalid));
       const options = yield* S.decodeEffect(RestorationMailOptions)({
         ...(yield* S.encodeEffect(RestorationMailOptions)(defaults)),
         occurrence: member.objectId,

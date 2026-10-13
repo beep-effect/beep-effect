@@ -879,9 +879,9 @@ const generateCryptoUuid = Effect.fn("SqlTest.generateCryptoUuid")(function* (
 ) {
   const context = yield* Layer.build(NodeCrypto.layer);
   const cryptoService = Context.get(context, Crypto.Crypto);
-  return yield* cryptoService.randomUUIDv4.pipe(
-    Effect.mapError((cause) => toHarnessError(driver, "provision", failureMessage, cause))
-  );
+  return yield* cryptoService
+    .randomUUIDv4()
+    .pipe(Effect.mapError((cause) => toHarnessError(driver, "provision", failureMessage, cause)));
 });
 
 const makePgliteConfig = Effect.fn("SqlTest.PgliteTestcontainersTestDriver.makeConfig")(function* (

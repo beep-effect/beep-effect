@@ -567,9 +567,9 @@ const tryWriteExclusiveCoordinationFile = Effect.fn("CorpusRestoration.tryWriteE
 
 const reapedCoordinationPath = Effect.fnUntraced(function* (filePath: string) {
   const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto.randomUUIDv4.pipe(
-    CorpusCommandError.mapError("Failed creating preservation coordination identity.")
-  );
+  const token = yield* crypto
+    .randomUUIDv4()
+    .pipe(CorpusCommandError.mapError("Failed creating preservation coordination identity."));
   return `${filePath}.reaped-${process.pid}-${token}`;
 });
 
@@ -723,9 +723,9 @@ const acquireRestorationWriterClaim = Effect.fn("CorpusRestoration.acquireWriter
     return yield* archiveError("Current preservation writer process identity is unavailable; ownership fails closed.");
   }
   const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto.randomUUIDv4.pipe(
-    CorpusCommandError.mapError("Failed creating preservation writer identity.")
-  );
+  const token = yield* crypto
+    .randomUUIDv4()
+    .pipe(CorpusCommandError.mapError("Failed creating preservation writer identity."));
   const encodedClaim = yield* encodeRestorationWriterClaim({
     bootId: yield* currentBootId(),
     pid: process.pid,

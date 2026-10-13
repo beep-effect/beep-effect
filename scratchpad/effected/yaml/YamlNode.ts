@@ -511,7 +511,6 @@ export interface YamlAliasEncoded extends S.Codec.Encoded<typeof YamlAlias> {}
  * A discriminated-union schema covering all four YAML AST value node types:
  * {@link YamlScalar}, {@link YamlMap}, {@link YamlSeq} and {@link YamlAlias}.
  *
- *
  * **Details**
  *
  * Defined lazily via `Schema.suspend` to break the recursive reference chain

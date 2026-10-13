@@ -322,9 +322,11 @@ const acquireModelStoreLock = Effect.fn("Files.PersonMatchModelStore.acquireLock
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const lockPath = path.join(modelRoot, modelStoreLockName);
-  const token = yield* crypto.randomUUIDv4.pipe(
-    Effect.mapError((cause) => acquisitionError("Failed to generate the AdaFace model-store lock token.", cause))
-  );
+  const token = yield* crypto
+    .randomUUIDv4()
+    .pipe(
+      Effect.mapError((cause) => acquisitionError("Failed to generate the AdaFace model-store lock token.", cause))
+    );
   yield* fs
     .writeFileString(lockPath, token, { flag: "wx", mode: 0o600 })
     .pipe(

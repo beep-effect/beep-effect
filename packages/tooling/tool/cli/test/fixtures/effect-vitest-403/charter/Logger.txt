@@ -1,5 +1,5 @@
 // Exact declaration excerpts from packages/effect/src/Logger.ts at
-// @effect/vitest@4.0.2 (MIT; see ../LICENSE).
+// @effect/vitest@4.0.3 (MIT; see ../LICENSE).
 // Pinned full-file SHA-256: df5873f80a7df745aa9774c16573f7c0b753f70a611bedb6a4044b8819f4bfe2
 
 // @effect-vitest-anchor Logger.consolePretty 823 829

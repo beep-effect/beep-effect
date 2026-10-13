@@ -11,9 +11,11 @@ import { Render } from "../../effected/cli/Render.ts";
 
 const runs = { arbitrary: fcRuns(100) };
 const context = Render.contextOf({ audience: "agent" });
+const StringJson = S.fromJsonString(S.String);
+
 it.effect.prop("failure formatting preserves each sanitized line and is stable through text encoding", [Arbitrary.schema(S.String)], ([message]) => Effect.gen(function* () {
-  const encoded = yield* S.encodeEffect(S.fromJsonString(S.String))(message);
-  const decoded = yield* S.decodeEffect(S.fromJsonString(S.String))(encoded);
+  const encoded = yield* S.encodeEffect(StringJson)(message);
+  const decoded = yield* S.decodeEffect(StringJson)(encoded);
   const doc = CliFailure.toDoc(Cause.fail(message), { spans: "off" });
   assert.deepStrictEqual(CliFailure.toDoc(Cause.fail(decoded), { spans: "off" }), doc);
   const rendered = Render.plain(doc, context);

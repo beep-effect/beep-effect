@@ -197,8 +197,8 @@ export const CiOperationalLive = Layer.effect(
       Redacted.Redacted<string>,
     ]) {
       const raw = Redacted.value(value);
-      let delimiter = `beep_ci_env_${yield* crypto.randomUUIDv4}`;
-      while (A.contains(Str.split(raw, /\r?\n/u), delimiter)) delimiter = `beep_ci_env_${yield* crypto.randomUUIDv4}`;
+      let delimiter = `beep_ci_env_${yield* crypto.randomUUIDv4()}`;
+      while (A.contains(Str.split(raw, /\r?\n/u), delimiter)) delimiter = `beep_ci_env_${yield* crypto.randomUUIDv4()}`;
       return `${name}<<${delimiter}\n${raw}\n${delimiter}\n`;
     });
     const jobEnvironment = Effect.gen(function* () {

@@ -75,7 +75,7 @@ const sha256Hex = Effect.fnUntraced(function* (bytes: Uint8Array) {
 });
 const randomAttemptId = Effect.fnUntraced(function* () {
   const crypto = yield* Crypto.Crypto;
-  return yield* decodeUUID(yield* crypto.randomUUIDv4);
+  return yield* decodeUUID(yield* crypto.randomUUIDv4());
 });
 const fastConfig = AdmissionConfig.make({
   capacityMaxTokens: 3,

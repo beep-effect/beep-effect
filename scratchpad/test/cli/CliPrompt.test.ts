@@ -2,7 +2,6 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as Stdio from "effect/Stdio";
 import * as Path from "effect/Path";
-// @effect-diagnostics strictEffectProvide:skip-file multipleEffectProvide:skip-file
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
 import { Audience, TerminalEnv } from "../../effected/env/index.ts";

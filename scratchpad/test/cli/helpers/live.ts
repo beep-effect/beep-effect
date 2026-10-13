@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { dual } from "effect/Function";
 // Shared by the CliUi.live tests: a small event model, its fold and frame, and the fake-terminal runner.
 import type * as Cause from "effect/Cause";

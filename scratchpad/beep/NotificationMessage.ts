@@ -110,7 +110,7 @@ const optionalTextDefault = (missing: string) =>
 export class NotificationMessage extends Model<NotificationMessage>("NotificationMessage")(
   {
     id: S.String.annotateKey({ description: "Notification id. Construction defaults to a random UUID." }).pipe(
-      S.withConstructorDefault(notificationCrypto.randomUUIDv4.pipe(Effect.orDie)),
+      S.withConstructorDefault(notificationCrypto.randomUUIDv4().pipe(Effect.orDie)),
       pg.text(),
       pg.columnName("id"),
     ),

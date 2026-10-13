@@ -2277,7 +2277,7 @@ const resolveSettings = Effect.fnUntraced(function* (options: ResidueReapOptions
     ),
   };
   return {
-    runId: yield* (yield* Crypto.Crypto).randomUUIDv4,
+    runId: yield* (yield* Crypto.Crypto).randomUUIDv4(),
     beepCacheRoot,
     checkoutRoots: yield* distinctCheckoutRoots(nonEmptyOr(options.checkoutRoots, [repoRoot])),
     classes: nonEmptyOr(options.classes, ResidueReapClass.literals),
@@ -2656,7 +2656,7 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
   const warnings = A.flatMap(rows, (row) => row.warnings);
   const refusalWarnings = A.flatMap(rows, (row) => (row.refused ? row.warnings : []));
   const crypto = yield* Crypto.Crypto;
-  const recoveryPath = path.join(root, `recovery-${yield* crypto.randomUUIDv4}.json`);
+  const recoveryPath = path.join(root, `recovery-${yield* crypto.randomUUIDv4()}.json`);
   const result = ResidueReapReport.make({
     ...report,
     reportPath: recoveryPath,

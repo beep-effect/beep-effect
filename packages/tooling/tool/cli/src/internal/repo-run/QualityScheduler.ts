@@ -532,9 +532,9 @@ export const setAdmissionEvictionProtocol = Effect.fn("QualityScheduler.setAdmis
 // same pid-reuse fence leases use, instead of trusting a bare pid.
 const stagingTemporaryPath = Effect.fnUntraced(function* (filePath: string, procStart: O.Option<string>) {
   const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto.randomUUIDv4.pipe(
-    Effect.mapError(QualitySchedulerError.new("Failed to create scheduler staging identity."))
-  );
+  const token = yield* crypto
+    .randomUUIDv4()
+    .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create scheduler staging identity.")));
   return `${filePath}.tmp-${process.pid}${O.match(procStart, {
     onNone: () => "",
     onSome: (identity) => `-${Hex.encode(identity)}`,
@@ -1046,9 +1046,9 @@ const processAdmissionJournalSink = Effect.fnUntraced(function* (
 
 const schedulerLockToken = Effect.fnUntraced(function* () {
   const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto.randomUUIDv4.pipe(
-    Effect.mapError(QualitySchedulerError.new("Failed to create scheduler lock identity."))
-  );
+  const token = yield* crypto
+    .randomUUIDv4()
+    .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create scheduler lock identity.")));
   return `${process.pid}:${token}`;
 });
 
@@ -2280,7 +2280,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     coordinationProtocol: AdmissionCoordinationProtocol.Enum["scheduler-origin-concurrency/v1"],
     enqueuedAtMillis: nowMillis,
     heartbeatAtMillis: nowMillis,
-    nonce: yield* Crypto.Crypto.use((crypto) => crypto.randomUUIDv4).pipe(
+    nonce: yield* Crypto.Crypto.use((crypto) => crypto.randomUUIDv4()).pipe(
       Effect.mapError(QualitySchedulerError.new("Failed to create admission ticket identity."))
     ),
     attemptId: admittedRequest.attemptId,

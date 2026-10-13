@@ -1,4 +1,3 @@
-// @effect-diagnostics asyncFunction:skip-file
 import type * as Rest from "../../effected/github/Rest.ts";
 
 /**

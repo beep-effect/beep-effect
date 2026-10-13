@@ -2,7 +2,6 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as Path from "effect/Path";
 import * as A from "effect/Array";
-// @effect-diagnostics strictEffectProvide:skip-file
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { assert, describe, it } from "@effect/vitest";

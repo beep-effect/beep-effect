@@ -1107,3 +1107,45 @@ export class Package extends S.Class<Package>($I`Package`)({
 		return renderJson(raw, resolveFormatOptions(options));
 	}
 }
+
+/** Decoded runtime value of {@link DependencyMapField}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DependencyMapField = typeof DependencyMapField.Type;
+
+/** Decoded runtime value of {@link StringMapField}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type StringMapField = typeof StringMapField.Type;
+
+/** Decoded runtime value of {@link BinField}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BinField = typeof BinField.Type;
+
+/** Decoded runtime value of {@link ExportsField}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ExportsField = typeof ExportsField.Type;
+
+/** Decoded runtime value of {@link PublishConfigField}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PublishConfigField = typeof PublishConfigField.Type;
+
+/** Decoded runtime value of {@link PeerDependenciesMetaField}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PeerDependenciesMetaField = typeof PeerDependenciesMetaField.Type;
+
+/** Decoded runtime value of {@link RepositoryField}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RepositoryField = typeof RepositoryField.Type;

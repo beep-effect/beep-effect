@@ -8,6 +8,8 @@ const runs = { arbitrary: fcRuns(100) };
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
 
 const equivalent = S.toEquivalence(S.Json);
+const JsonText = S.fromJsonString(S.Json);
+
 
 describe("JsonCodec properties", () => {
   it.effect.prop("parse(stringify(x)) recovers every JSON value without failure", [Arbitrary.schema(S.Json)], ([value]) =>
@@ -19,7 +21,7 @@ describe("JsonCodec properties", () => {
 
   it.effect.prop("normalization is idempotent and parse/stringify preserves the parsed document", [Arbitrary.schema(S.Json)], ([value]) =>
     Effect.gen(function* () {
-      const input = yield* S.encodeEffect(S.fromJsonString(S.Json))(value);
+      const input = yield* S.encodeEffect(JsonText)(value);
       const parsed = yield* JsonCodec.parse(input);
       const formatted = yield* JsonCodec.stringify(parsed);
       const reparsed = yield* JsonCodec.parse(formatted);

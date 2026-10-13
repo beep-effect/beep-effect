@@ -121,6 +121,8 @@ const textValue = Match.type<typeof Text.Type>().pipe(
   Match.when(S.is(S.String), (text) => text),
   Match.orElse((node) => O.getOrElse(node["#text"], () => ""))
 );
+const NiceNumber = S.Union([NiceClassNumber, NiceBasicNumber]);
+
 const label = (texts: readonly string[]) => A.join(A.filter(A.map(texts, Str.trim), Str.isNonEmpty), "; ");
 const sourceFailure = (detail: string) => ClassificationError.make({ reason: "source-parse", detail });
 const makeConcept = Effect.fnUntraced(function* (
@@ -134,7 +136,7 @@ const makeConcept = Effect.fnUntraced(function* (
     ? S.decodeEffect(IpcSymbol)(notation)
     : pin.kind === "cpc"
       ? S.decodeEffect(CpcSymbol)(notation)
-      : S.decodeEffect(S.Union([NiceClassNumber, NiceBasicNumber]))(notation);
+      : S.decodeEffect(NiceNumber)(notation);
   return yield* S.decodeEffect(ClassificationConcept)({
     kind: pin.kind,
     edition: pin.edition,

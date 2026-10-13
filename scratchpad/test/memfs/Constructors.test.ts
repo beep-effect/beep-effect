@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 // The constructor set: make/layer (the upstream mirror), makeWith/layerWith
 // (seed optional; root, caseSensitive and faults in one options bag),
 // makeHandle/makeSync (every view over one volume). Every memory layer also

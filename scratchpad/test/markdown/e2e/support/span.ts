@@ -1,5 +1,4 @@
 // These span factories are internal test helpers with direct-call contracts.
-// @effect-diagnostics missingPipeableSignature:skip-file
 // Position helpers for hand-built trees.
 //
 // Every node schema requires a `position`, which is right for a parser (it

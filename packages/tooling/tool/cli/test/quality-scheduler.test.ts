@@ -3296,19 +3296,19 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             // an orphan the way it cannot shield a dead lease.
             const staleLegacy = path.join(
               tempRoot.leases,
-              `nonce-${DEAD_PID}.lease.json.tmp-${DEAD_PID}-${yield* crypto.randomUUIDv4}`
+              `nonce-${DEAD_PID}.lease.json.tmp-${DEAD_PID}-${yield* crypto.randomUUIDv4()}`
             );
             const liveLegacy = path.join(
               tempRoot.queue,
-              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${yield* crypto.randomUUIDv4}`
+              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${yield* crypto.randomUUIDv4()}`
             );
             const reusedPid = path.join(
               tempRoot.leases,
-              `nonce-${process.pid}.lease.json.tmp-${process.pid}-${Hex.encode("proc:1")}-${yield* crypto.randomUUIDv4}`
+              `nonce-${process.pid}.lease.json.tmp-${process.pid}-${Hex.encode("proc:1")}-${yield* crypto.randomUUIDv4()}`
             );
             const current = path.join(
               tempRoot.queue,
-              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${Hex.encode(ownIdentity)}-${yield* crypto.randomUUIDv4}`
+              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${Hex.encode(ownIdentity)}-${yield* crypto.randomUUIDv4()}`
             );
             yield* Effect.forEach([staleLegacy, liveLegacy, reusedPid, current], (file) =>
               fs.writeFileString(file, "")

@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file nodeBuiltinImport:skip-file asyncFunction:skip-file processEnv:skip-file
 // Proves the Task 3-6 surface additions (nameStatus, the promoted working-tree
 // primitives, the quiet probes, commitInfo/status, and the mutating tier)
 // against a REAL git binary and a real filesystem, through

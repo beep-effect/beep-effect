@@ -2,7 +2,6 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as Path from "effect/Path";
 import * as A from "effect/Array";
-// @effect-diagnostics strictEffectProvide:skip-file
 import * as Data from "effect/Data";
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind, StreamEnv } from "../../effected/env/index.ts";

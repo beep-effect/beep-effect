@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file asyncFunction:skip-file
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { NodeServices } from "@effect/platform-node";

@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import { dual } from "effect/Function";
 import * as Effect from "effect/Effect";
 import type { RenderContext } from "../../../effected/cli/index.ts";

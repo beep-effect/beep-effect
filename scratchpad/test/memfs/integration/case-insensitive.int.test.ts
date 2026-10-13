@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 // The oracle for the case-insensitive contract: the same suite the memory
 // engine runs, against the real filesystem through @effect/platform-node. It
 // runs only where os.tmpdir() sits on a case-folding volume (default APFS,

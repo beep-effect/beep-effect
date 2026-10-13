@@ -9,6 +9,8 @@ import { GitHubError } from "../../effected/github/GitHubError.ts";
 import { Ruleset } from "../../effected/github/Ruleset.ts";
 import { Repo } from "../../effected/github/Repo.ts";
 import { harness, REPO } from "./harness.ts";
+const ErrorDetails = S.Struct({ _tag: S.String, message: S.String });
+
 
 describe("Ruleset test-double behavior", () => {
   it.layer(Layer.mergeAll(Ruleset.layerTest(), Repo.layer(REPO)), { timeout: "30 seconds" })((it) => {
@@ -22,7 +24,7 @@ describe("Ruleset test-double behavior", () => {
       const cause = yield* exit.pipe(Exit.getCause, Effect.fromOption);
       assertExitFailure(exit, cause);
       const defect = yield* cause.pipe(Cause.findDefect, Effect.fromResult);
-      assert.deepStrictEqual(yield* S.decodeUnknownEffect(S.Struct({ _tag: S.String, message: S.String }))(defect), {
+      assert.deepStrictEqual(yield* S.decodeUnknownEffect(ErrorDetails)(defect), {
         _tag: "UnstubbedError",
         message: "Ruleset.makeTest: list() was called but not stubbed — pass an override.",
       });

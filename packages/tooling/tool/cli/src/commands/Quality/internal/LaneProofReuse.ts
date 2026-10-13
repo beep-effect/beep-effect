@@ -181,7 +181,7 @@ const virtualTreeSha = Effect.fn("LaneProofReuse.virtualTreeSha")(function* (rep
     yield* runGit(repoRoot, [
       "rev-parse",
       "--git-path",
-      `yeet-lane-proof-index-${yield* crypto.randomUUIDv4.pipe(Effect.mapError(() => LaneProofGitError.make({ message: "Failed to create lane-proof index identity." })))}`,
+      `yeet-lane-proof-index-${yield* crypto.randomUUIDv4().pipe(Effect.mapError(() => LaneProofGitError.make({ message: "Failed to create lane-proof index identity." })))}`,
     ])
   );
   const indexEnv = { GIT_INDEX_FILE: indexPath };
@@ -350,7 +350,7 @@ export const persistLaneProofs = Effect.fn("LaneProofReuse.persist")(function* (
     LaneProofStore.make({ schemaVersion: "yeet-lane-proofs/v2", records })
   );
   const crypto = yield* Crypto.Crypto;
-  const temporaryPath = `${refreshedSession.path}.${yield* crypto.randomUUIDv4.pipe(Effect.mapError(() => LaneProofGitError.make({ message: "Failed to create lane-proof staging identity." })))}.tmp`;
+  const temporaryPath = `${refreshedSession.path}.${yield* crypto.randomUUIDv4().pipe(Effect.mapError(() => LaneProofGitError.make({ message: "Failed to create lane-proof staging identity." })))}.tmp`;
   yield* fs.makeDirectory(path.dirname(refreshedSession.path), { recursive: true });
   yield* fs.writeFileString(temporaryPath, `${encoded}\n`);
   yield* fs.rename(temporaryPath, refreshedSession.path);

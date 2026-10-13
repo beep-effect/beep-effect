@@ -110,7 +110,7 @@ export const contactSeedingLayer = (checkoutRoot: string) =>
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const crypto = yield* Crypto.Crypto;
-      const runId = () => crypto.randomUUIDv4.pipe(Effect.map((uuid) => `seed-${uuid}`));
+      const runId = () => crypto.randomUUIDv4().pipe(Effect.map((uuid) => `seed-${uuid}`));
       const online = () =>
         Effect.fromOption(mailbox).pipe(Effect.mapError(() => ContactsError.make({ reason: "input" })));
       const plan = Effect.fn("ContactSeeding.plan")(function* (

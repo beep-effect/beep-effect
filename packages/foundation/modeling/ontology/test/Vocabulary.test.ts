@@ -64,6 +64,8 @@ const CompetencyFixture = S.Struct({
   expectedIri: S.String,
 });
 const isVocabularyError = S.is(VocabularyError);
+const CompetencyFixturesJson = CompetencyFixture.pipe(S.Array, S.fromJsonString);
+const UnknownJson = S.fromJsonString(S.Unknown);
 
 it.layer(VocabularyRegistry.layer, { timeout: "30 seconds" })("pinned M3 vocabularies", (it) => {
   for (const [file, selected] of [
@@ -73,9 +75,7 @@ it.layer(VocabularyRegistry.layer, { timeout: "30 seconds" })("pinned M3 vocabul
     it.effect(
       `keeps ${file} TTL, JSON-LD and TS seeds identical`,
       Effect.fnUntraced(function* () {
-        const json = yield* read(`src/seed/${file}.jsonld`).pipe(
-          Effect.flatMap(S.decodeEffect(S.fromJsonString(S.Unknown)))
-        );
+        const json = yield* read(`src/seed/${file}.jsonld`).pipe(Effect.flatMap(S.decodeEffect(UnknownJson)));
         expect(json).toEqual({ "@context": context, "@graph": A.flatMap(selected, graph) });
         expect(yield* read(`src/seed/${file}.ttl`)).toBe(yield* ttl(selected));
       })
@@ -142,7 +142,7 @@ it.layer(VocabularyRegistry.layer, { timeout: "30 seconds" })("pinned M3 vocabul
     "replays CQ 1, 5, 7, 8 and 18 fixtures to stable concept IRIs",
     Effect.fnUntraced(function* () {
       const fixtures = yield* read("test/fixtures/vocabulary-competency.json").pipe(
-        Effect.flatMap(S.decodeEffect(S.fromJsonString(S.Array(CompetencyFixture))))
+        Effect.flatMap(S.decodeEffect(CompetencyFixturesJson))
       );
       const r = yield* VocabularyRegistry;
       expect(A.dedupe(A.map(fixtures, (f) => f.cq))).toEqual([1, 5, 7, 8, 18]);

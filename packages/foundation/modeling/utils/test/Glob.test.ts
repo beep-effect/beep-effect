@@ -25,7 +25,7 @@ const withFileSystem = <E>(use: (fs: FileSystem.FileSystem) => Effect.Effect<voi
 const makeDirectory = (path: string) => withFileSystem((fs) => fs.makeDirectory(path, { recursive: true }));
 const makeTempDirectory = Effect.fn("GlobTest.makeTempDirectory")(function* (prefix: string) {
   const crypto = yield* Crypto.Crypto;
-  const suffix = yield* crypto.randomUUIDv4;
+  const suffix = yield* crypto.randomUUIDv4();
   const dir = joinPath(tmpdir(), `${prefix}${suffix}`);
   yield* makeDirectory(dir);
   return dir;

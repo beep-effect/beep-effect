@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 // biome-ignore-all lint/suspicious/noTemplateCurlyInString: these strings are source text under test
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";

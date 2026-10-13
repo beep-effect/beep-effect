@@ -1,0 +1,17 @@
+diff --git a/dist/declarations/src/types.d.ts b/dist/declarations/src/types.d.ts
+index 61468cd8bd46f3e65ed2bed960414987ad65db98..950366b3a5c4159ea0c5a3deb988efbc9954b798 100644
+--- a/dist/declarations/src/types.d.ts
++++ b/dist/declarations/src/types.d.ts
+@@ -1288,9 +1288,9 @@ export type ToChildren<TActor extends ProvidedActor> = string extends TActor['sr
+ export type StateSchema = {
+     id?: string;
+     route?: unknown;
+-    states?: Record<string, StateSchema>;
+-    contextSchema?: StandardSchemaV1;
+-    outputSchema?: StandardSchemaV1;
++    states?: Record<string, StateSchema> | undefined;
++    contextSchema?: StandardSchemaV1 | undefined;
++    outputSchema?: StandardSchemaV1 | undefined;
+     input?: unknown;
+     initial?: unknown;
+     type?: unknown;

@@ -1121,7 +1121,6 @@ function normalizeNodeTags(node: YamlNode, tagMap: MutableHashMap.MutableHashMap
 /**
  * Recursively strips all comment fields from AST nodes.
  *
- *
  * **Details**
  *
  * Used when forceDefaultStyles is true to produce canonical output.

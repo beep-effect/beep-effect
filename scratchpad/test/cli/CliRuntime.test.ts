@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 import * as F from "effect/Function";
 import * as Data from "effect/Data";
 import { assert, describe, it } from "@effect/vitest";

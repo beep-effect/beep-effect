@@ -34,13 +34,15 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import type { M365Error } from "@beep/m365";
 
+const ContactDraftJson = S.fromJsonString(M365ContactDraft);
+
 it.effect.prop(
   "preserves generated contact draft optional fields and seed metadata through the codec",
   { value: M365ContactDraft },
   ({ value }) =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeEffect(S.fromJsonString(M365ContactDraft))(value);
-      const decoded = yield* S.decodeUnknownEffect(S.fromJsonString(M365ContactDraft))(encoded);
+      const encoded = yield* S.encodeEffect(ContactDraftJson)(value);
+      const decoded = yield* S.decodeEffect(ContactDraftJson)(encoded);
       expect(S.toEquivalence(M365ContactDraft)(decoded, value)).toBe(true);
     }),
   { arbitrary: fcRuns(20) }

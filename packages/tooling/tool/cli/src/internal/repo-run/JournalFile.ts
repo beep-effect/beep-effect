@@ -52,9 +52,9 @@ export const publishJournalTextAtomically = Effect.fn("JournalFile.publishTextAt
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto.randomUUIDv4.pipe(
-    Effect.mapError(QualitySchedulerError.new(`Failed to create a staging identity for ${label}.`))
-  );
+  const token = yield* crypto
+    .randomUUIDv4()
+    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to create a staging identity for ${label}.`)));
   const stagingPath = `${targetPath}.staging-${process.pid}-${token}`;
   yield* Effect.ensuring(
     Effect.gen(function* () {

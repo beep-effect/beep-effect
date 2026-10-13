@@ -9,10 +9,12 @@ it.effect("graph errors identify duplicate nodes and conflicting catch-all terms
   assert.strictEqual(ConflictingTermError.make({ nodeId: "_:work", term: "name" }).message,
     'Node "_:work" sets "name" in both a typed field and `additional`');
 }));
+const JsonText = S.fromJsonString(S.Json);
+
 
 it.effect("script text escapes all hazards without changing parsed string content", () => Effect.gen(function* () {
   const graph = yield* JsonLdDocument.build([CreativeWork.make({ "@id": "_:work", name: "</script><!-- & >\u2028\u2029" })]);
   assert.match(graph.toScriptBody(), /\\u003c\/script\\u003e/);
   assert.strictEqual(/[<>&]/.test(graph.toScriptBody()), false);
-  assert.deepStrictEqual(yield* S.decodeEffect(S.fromJsonString(S.Json))(graph.toScriptBody()), graph.toJsonLd());
+  assert.deepStrictEqual(yield* S.decodeEffect(JsonText)(graph.toScriptBody()), graph.toJsonLd());
 }));

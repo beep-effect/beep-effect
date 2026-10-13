@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 // TomlDocument: the lossless document class. The headline contract is the
 // byte-exact round-trip — stringify() reconstructs the source by
 // concatenating expression spans in order, proven byte-for-byte across every

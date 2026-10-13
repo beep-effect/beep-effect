@@ -324,7 +324,6 @@ export function renderSingleQuotedMultiline(s: string, ...[indent]: [indent: str
 /**
  * Renders a string scalar using block literal style (pipe `|`).
  *
- *
  * **Example** (Strip absent trailing newlines)
  *
  * ```ts

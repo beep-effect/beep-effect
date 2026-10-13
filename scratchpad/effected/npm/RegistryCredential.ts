@@ -31,7 +31,6 @@ export class InvalidBasicAuthUsernameError extends S.TaggedError<InvalidBasicAut
  * A bearer token — npm's `_authToken`, and the form every modern registry
  * documents first.
  *
- *
  * **Example** (Construct a redacted bearer credential)
  *
  * ```ts
@@ -76,7 +75,6 @@ export type TokenCredential = typeof TokenCredential.Type;
  * {@link basicCredentialFromPair} exists for the caller who genuinely holds a
  * pair — but this shape is the primitive, not that one.
  *
- *
  * **Example** (Carry an already encoded basic credential)
  *
  * ```ts
@@ -115,7 +113,6 @@ export type BasicCredential = typeof BasicCredential.Type;
  * that disagreed about the scheme would authenticate differently against the
  * same registry, which is the class of bug this union exists to make
  * unrepresentable.
- *
  *
  * **Example** (Recognize the bearer authentication case)
  *

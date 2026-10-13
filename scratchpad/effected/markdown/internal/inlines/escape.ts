@@ -17,7 +17,6 @@ const reEscapable = new RegExp(`^${ESCAPABLE}`);
 /**
  * Parses a backslash escape, or a backslash hard line break.
  *
- * **Details**
  *
  * **Example** (Register the backslash trigger)
  *

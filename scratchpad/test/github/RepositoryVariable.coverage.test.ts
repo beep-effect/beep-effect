@@ -9,6 +9,8 @@ import { GitHubError } from "../../effected/github/GitHubError.ts";
 import { RepositoryVariable } from "../../effected/github/RepositoryVariable.ts";
 import { Repo } from "../../effected/github/Repo.ts";
 import { harness, REPO } from "./harness.ts";
+const ErrorDetails = S.Struct({ _tag: S.String, message: S.String });
+
 
 describe("RepositoryVariable test-double behavior", () => {
   it.layer(Layer.mergeAll(RepositoryVariable.layerTest(), Repo.layer(REPO)), { timeout: "30 seconds" })((it) => {
@@ -23,7 +25,7 @@ describe("RepositoryVariable test-double behavior", () => {
       const cause = yield* exit.pipe(Exit.getCause, Effect.fromOption);
       assertExitFailure(exit, cause);
       const defect = yield* cause.pipe(Cause.findDefect, Effect.fromResult);
-      assert.deepStrictEqual(yield* S.decodeUnknownEffect(S.Struct({ _tag: S.String, message: S.String }))(defect), {
+      assert.deepStrictEqual(yield* S.decodeUnknownEffect(ErrorDetails)(defect), {
         _tag: "UnstubbedError",
         message: "RepositoryVariable.makeTest: list() was called but not stubbed — pass an override.",
       });

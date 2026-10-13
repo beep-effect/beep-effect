@@ -818,3 +818,9 @@ export class DetachedProcess {
 		...overrides,
 	});
 }
+
+/** Decoded runtime value of {@link ProcessId}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ProcessId = typeof ProcessId.Type;

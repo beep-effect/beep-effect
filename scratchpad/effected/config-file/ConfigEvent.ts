@@ -226,3 +226,9 @@ export class ConfigEvents extends Context.Service<ConfigEvents, ConfigEventsShap
 		}),
 	);
 }
+
+/** Decoded runtime value of {@link ConfigSourceRef}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConfigSourceRef = typeof ConfigSourceRef.Type;

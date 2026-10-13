@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 // Conformance against the CycloneDX 1.6 specification itself.
 //
 // This package declines the CycloneDX library (6.6 MB, seven optional peers)

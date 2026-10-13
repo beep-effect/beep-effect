@@ -293,7 +293,6 @@ export const SemanticItem = S.Union([
 /**
  * Represents a decoded mapping token, including empty explicit keys, value separators, content nodes, and comments.
  *
- * **Details**
  *
  * @category type-level
  * @since 0.0.0

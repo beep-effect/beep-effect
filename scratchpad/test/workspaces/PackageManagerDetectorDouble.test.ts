@@ -1,4 +1,3 @@
-// @effect-diagnostics strictEffectProvide:skip-file
 // `PackageManagerDetector.makeTest` / `layerTest` — the sanctioned double.
 //
 // The house pattern, matching `WorkspaceRoot` and `WorkspaceDiscovery` in this

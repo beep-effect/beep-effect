@@ -15,7 +15,7 @@ const NFS: typeof import("node:fs") = createRequire(import.meta.url)("node:fs");
 
 const makeTempDir = Effect.fn("FileSystemTest.makeTempDir")(function* () {
   const crypto = yield* Crypto.Crypto;
-  const uuid = yield* crypto.randomUUIDv4;
+  const uuid = yield* crypto.randomUUIDv4();
   const dir = Path.join(tmpdir(), `beep-fs-${uuid}`);
   return yield* Effect.acquireRelease(
     Effect.sync(() => {
@@ -118,7 +118,7 @@ it.layer(NodeCrypto.layer, { timeout: "5 seconds" })("FileSystem sync wrappers",
     "maps ENOENT to a PlatformError whose reason is NotFound",
     Effect.fnUntraced(function* () {
       const crypto = yield* Crypto.Crypto;
-      const uuid = yield* crypto.randomUUIDv4;
+      const uuid = yield* crypto.randomUUIDv4();
       const error = yield* Effect.flip(FileSystem.statSync(Path.join(tmpdir(), `beep-missing-${uuid}`)));
       expect(error.reason._tag).toBe("NotFound");
       expect(error.reason.module).toBe("FileSystem");

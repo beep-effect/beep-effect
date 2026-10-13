@@ -10,6 +10,8 @@
     "**/test/**",
     "**/*.test.ts",
     "**/vitest.config.ts",
+    "vitest.effected.config.ts",
+    "effected/.canary/**",
     "**/node_modules/**",
     "encode-keys-probe.ts",
     "identity-kit-probe.ts",

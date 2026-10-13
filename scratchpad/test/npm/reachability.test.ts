@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 // The tier guardrail, asserted rather than trusted to review.
 //
 // `@effected/npm` became boundary tier when NpmRegistry and PackagePublish

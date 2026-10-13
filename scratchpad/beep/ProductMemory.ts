@@ -1360,7 +1360,7 @@ const memoryIds = Crypto.make({
  * @since 0.0.0
  */
 export const newMemoryId = (): string =>
-  `mem_${memoryIds.randomUUIDv4.pipe(Effect.runSync, Str.replaceAll("-", ""))}`;
+  `mem_${memoryIds.randomUUIDv4().pipe(Effect.runSync, Str.replaceAll("-", ""))}`;
 
 /**
  * Add the 48-hour short-term policy window to a capture instant.

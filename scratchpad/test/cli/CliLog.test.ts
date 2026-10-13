@@ -3,7 +3,6 @@ import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as Terminal from "effect/Terminal";
 import * as Stdio from "effect/Stdio";
 import * as Path from "effect/Path";
-// @effect-diagnostics strictEffectProvide:skip-file
 import * as Data from "effect/Data";
 import { assert, describe, it } from "@effect/vitest";
 import type { AudienceKind } from "../../effected/env/index.ts";

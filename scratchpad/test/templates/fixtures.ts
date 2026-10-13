@@ -1,5 +1,4 @@
 // This filesystem factory is an internal test helper with a direct-call contract.
-// @effect-diagnostics missingPipeableSignature:skip-file
 import { assert } from "@effect/vitest";
 import type { MemoryFileSystemSeed, MemoryFileSystemVolume } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";

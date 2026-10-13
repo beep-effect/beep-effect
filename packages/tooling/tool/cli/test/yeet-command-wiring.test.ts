@@ -73,6 +73,8 @@ const findSubcommand = (name: string) =>
 
 // Compiled once at module scope: the plan fixtures and the plan render they are compared against.
 const decodeFixture = S.decodeUnknownEffect(S.fromJsonString(S.Record(S.String, S.String)));
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const decodePlan = S.decodeUnknownEffect(S.fromJsonString(RepoRunPlan));
 
 describe("yeet merge-loop command wiring", () => {
@@ -167,7 +169,7 @@ describe("yeet merge-loop command wiring", () => {
       yield* fs.writeFileString(`${root}/bun.lock`, "");
       yield* fs.writeFileString(
         `${root}/package.json`,
-        yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))({ name: "yeet-command-fixture", workspaces: [] })
+        yield* S.encodeUnknownEffect(UnknownJson)({ name: "yeet-command-fixture", workspaces: [] })
       );
       const encoder = new TextEncoder();
       const handle = (output: string) =>

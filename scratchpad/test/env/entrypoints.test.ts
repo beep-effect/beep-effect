@@ -1,4 +1,3 @@
-// @effect-diagnostics asyncFunction:skip-file
 import { assert, describe, it } from "@effect/vitest";
 
 describe("the @effected/env entrypoint", () => {

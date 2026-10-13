@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 // Document framing: a lockfile file is a YAML *stream*, not necessarily a
 // single document. pnpm 11 writes a config-dependencies ("env") preamble
 // document ahead of the lockfile whenever the workspace uses

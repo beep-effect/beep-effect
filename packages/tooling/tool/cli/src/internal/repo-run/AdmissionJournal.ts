@@ -807,7 +807,7 @@ const takenJournalLockIsOwned = Effect.fnUntraced(function* (
   });
 });
 
-const randomIdentity = Effect.orDie(Effect.flatMap(Crypto.Crypto, (crypto) => crypto.randomUUIDv4));
+const randomIdentity = Effect.orDie(Effect.flatMap(Crypto.Crypto, (crypto) => crypto.randomUUIDv4()));
 
 const journalLockReapClaimPath = Effect.fnUntraced(function* (lockPath: string, observedToken: string) {
   const crypto = yield* Crypto.Crypto;
@@ -1420,9 +1420,9 @@ const acquireFencedGeneration = Effect.fnUntraced(function* (
   busyMessage: string
 ): Effect.fn.Return<string, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const crypto = yield* Crypto.Crypto;
-  const identity = yield* crypto.randomUUIDv4.pipe(
-    Effect.mapError(QualitySchedulerError.new("Failed to create journal lock identity."))
-  );
+  const identity = yield* crypto
+    .randomUUIDv4()
+    .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create journal lock identity.")));
   const lockToken = `${process.pid}:${identity}`;
   if (yield* acquireJournalFileLock(lockPath, lockToken)) {
     return lockToken;

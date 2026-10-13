@@ -272,3 +272,9 @@ export const navigate: {
     ? NavigateResult.cases.Insert.make({ container: "array", at: lastEnd, isFirst: index === 0, depth })
     : NavigateResult.cases.NoOp.make({});
 });
+
+/** Decoded runtime value of {@link NavigateContainer}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type NavigateContainer = typeof NavigateContainer.Type;

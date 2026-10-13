@@ -96,15 +96,17 @@ it.effect("projects every dialect's flow and phrasing forms and literal frontmat
   assert.deepStrictEqual(Mdast.toMdast(yield* Mdast.fromMdast(Mdast.toMdast(foreign))), Mdast.toMdast(foreign));
   assert.strictEqual((yield* Effect.flip(Mdast.fromMdast({ type: "root", children: [{ type: "unknown" }] })))._tag, "MdastDecodeError");
 }));
+const MarkdownImageChildren = S.Struct({ children: S.Tuple([S.Struct({ children: S.Tuple([
+    S.Struct({ title: S.Null }), S.Struct({ title: S.Null, alt: S.String }),
+  ]) })]) });
+
 
 it.effect("projects absent link titles and image titles and alt text to mdast defaults", () => Effect.gen(function* () {
   const root = yield* Mdast.fromMdast({ type: "root", children: [{ type: "paragraph", children: [
     { type: "link", url: "./target", children: [] }, { type: "image", url: "./image" },
   ] }] });
   const plain = Mdast.toMdast(root);
-  const defaults = yield* S.decodeUnknownEffect(S.Struct({ children: S.Tuple([S.Struct({ children: S.Tuple([
-    S.Struct({ title: S.Null }), S.Struct({ title: S.Null, alt: S.String }),
-  ]) })]) }))(plain);
+  const defaults = yield* S.decodeUnknownEffect(MarkdownImageChildren)(plain);
   assert.strictEqual(defaults.children[0].children[1].alt, "");
   assert.deepStrictEqual(Mdast.toMdast(yield* Mdast.fromMdast(plain)), plain);
 }));

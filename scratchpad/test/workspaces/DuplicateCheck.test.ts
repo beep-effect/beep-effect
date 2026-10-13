@@ -1,4 +1,3 @@
-// @effect-diagnostics nodeBuiltinImport:skip-file
 // DuplicateCheck: which names resolve at more than one version, and who pulls
 // each copy.
 //
