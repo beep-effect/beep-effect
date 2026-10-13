@@ -113,6 +113,7 @@ export const DeprecatedApisESLintConfig: DeprecatedApisESLintConfigShape = [
             "packages/drivers/*/scripts/*.ts",
             "packages/ecosystem/*/scripts/*.ts",
             "packages/drivers/*/test/fixtures/*.ts",
+            "packages/law-practice/use-cases/test/fixtures/office-action-structure/*.ts",
             // graph-3d driver stories are Storybook-glob-loaded roots typed by
             // the package's tsconfig.stories.json, which the project service
             // does not auto-discover.
