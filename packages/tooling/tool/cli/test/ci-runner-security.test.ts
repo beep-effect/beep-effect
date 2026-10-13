@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import {
   CI_LANE_DESCRIPTORS,
   CiOperationalPatterns,
@@ -78,6 +79,18 @@ const WorkflowJobs = S.Record(
 type WorkflowJobs = typeof WorkflowJobs.Type;
 const decodeWorkflowSteps = S.decodeUnknownEffect(S.Array(WorkflowStep));
 const decodeWorkflowJobs = S.decodeUnknownEffect(WorkflowJobs);
+
+it.effect.prop(
+  "preserves generated workflow step fields and dynamic environment keys through the codec",
+  { value: S.Array(WorkflowStep) },
+  ({ value }) =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(S.Array(WorkflowStep))(value);
+      const decoded = yield* S.decodeUnknownEffect(S.Array(WorkflowStep))(encoded);
+      expect(S.toEquivalence(S.Array(WorkflowStep))(decoded, value)).toBe(true);
+    }),
+  { arbitrary: fcRuns(20) }
+);
 
 const workflowJobs = Effect.fnUntraced(function* (document: Document) {
   return yield* decodeWorkflowJobs(document.toJS().jobs);

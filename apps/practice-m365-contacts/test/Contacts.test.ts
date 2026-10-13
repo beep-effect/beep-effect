@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { normaliseContacts, RawContactCard } from "@beep/law-practice-use-cases/DocumentIdentification";
 import {
   GraphContact,
@@ -29,6 +30,31 @@ import { ContactsState, makeContactsState } from "@/Contacts.state";
 import type { Contact } from "@beep/law-practice-use-cases/DocumentIdentification";
 
 const JournalJson = S.fromJsonString(RunJournal);
+it.effect.prop(
+  "preserves generated contact journal ownership and receipts through the codec",
+  {
+    contacts: S.Array(
+      S.Struct({ sourceKey: CreatedContact.fields.sourceKey, changeKey: CreatedContact.fields.changeKey })
+    ),
+    folderCreated: RunJournal.fields.folderCreated,
+    pendingSourceKey: S.Option(S.NonEmptyString),
+  },
+  ({ contacts, folderCreated, pendingSourceKey }) =>
+    Effect.gen(function* () {
+      const value = RunJournal.make({
+        runId: "fixture-run",
+        folderId: O.some("fixture-folder"),
+        folderCreated,
+        pendingSourceKey,
+        contacts: A.map(contacts, (receipt) => CreatedContact.make({ ...receipt, contactId: "fixture-contact" })),
+      });
+      const encoded = yield* S.encodeEffect(JournalJson)(value);
+      const decoded = yield* S.decodeUnknownEffect(JournalJson)(encoded);
+      expect(S.toEquivalence(RunJournal)(decoded, value)).toBe(true);
+    }),
+  { arbitrary: fcRuns(20) }
+);
+
 const ExportRowJson = S.fromJsonString(S.Record(S.String, S.Unknown));
 
 const raw = (name: string, emails: ReadonlyArray<string>, company = "Fixture company") =>

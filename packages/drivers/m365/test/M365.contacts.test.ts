@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import {
   GraphContact,
   GraphContactProperty,
@@ -32,6 +33,18 @@ import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import type { M365Error } from "@beep/m365";
+
+it.effect.prop(
+  "preserves generated contact draft optional fields and seed metadata through the codec",
+  { value: M365ContactDraft },
+  ({ value }) =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(S.fromJsonString(M365ContactDraft))(value);
+      const decoded = yield* S.decodeUnknownEffect(S.fromJsonString(M365ContactDraft))(encoded);
+      expect(S.toEquivalence(M365ContactDraft)(decoded, value)).toBe(true);
+    }),
+  { arbitrary: fcRuns(20) }
+);
 
 class Capture extends S.Class<Capture>("@beep/m365/test/contacts/Capture")({
   method: S.String,
