@@ -67,6 +67,14 @@ export const DependencyMapField = S.Record(S.String, S.String).pipe(
 );
 
 /**
+ * Decoded value produced by {@link DependencyMapField}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DependencyMapField = typeof DependencyMapField.Type;
+
+/**
  * A string→string map field decoding a plain JSON object to a `HashMap`,
  * with no default (an absent key stays absent). Backs `engines`. Not meant to
  * be referenced directly.
@@ -91,6 +99,14 @@ export const StringMapField = S.Record(S.String, S.String).pipe(
 );
 
 /**
+ * Decoded value produced by {@link StringMapField}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type StringMapField = typeof StringMapField.Type;
+
+/**
  * The `bin` field: a single string path or a name→path map. Not meant to be
  * referenced directly.
  *
@@ -110,6 +126,14 @@ export const StringMapField = S.Record(S.String, S.String).pipe(
 export const BinField = S.Union([S.String, StringMapField]).pipe($I.annoteSchema("BinField", { description: "The `bin` field: a single string path or a name→path map. Not meant to be referenced directly." }));
 
 /**
+ * Decoded value produced by {@link BinField}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BinField = typeof BinField.Type;
+
+/**
  * The `exports` field: a single string entry point or an open object of
  * conditional exports. Not meant to be referenced directly.
  *
@@ -127,6 +151,14 @@ export const BinField = S.Union([S.String, StringMapField]).pipe($I.annoteSchema
  * @since 0.0.0
  */
 export const ExportsField = S.Union([S.String, S.Record(S.String, S.Unknown)]).pipe($I.annoteSchema("ExportsField", { description: "The `exports` field: a single string entry point or an open object of conditional exports. Not meant to be referenced directly." }));
+
+/**
+ * Decoded value produced by {@link ExportsField}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ExportsField = typeof ExportsField.Type;
 
 /**
  * The `publishConfig` field: an open record preserving known npm keys
@@ -149,6 +181,14 @@ export const ExportsField = S.Union([S.String, S.Record(S.String, S.Unknown)]).p
 export const PublishConfigField = S.Record(S.String, S.Unknown).pipe(
 	$I.annoteSchema("PublishConfigField", { description: "An open publishConfig record preserving npm keys and extensions." }),
 );
+
+/**
+ * Decoded value produced by {@link PublishConfigField}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PublishConfigField = typeof PublishConfigField.Type;
 
 /**
  * The `peerDependenciesMeta` field: a map of package name to `{ optional? }`.
@@ -175,6 +215,14 @@ export const PeerDependenciesMetaField = S.Record(
 );
 
 /**
+ * Decoded value produced by {@link PeerDependenciesMetaField}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PeerDependenciesMetaField = typeof PeerDependenciesMetaField.Type;
+
+/**
  * The `repository` field's raw wire shape: a shorthand string or an object.
  *
  * **Example** (Decode a repository shorthand)
@@ -195,6 +243,14 @@ export const PeerDependenciesMetaField = S.Record(
  * @since 0.0.0
  */
 export const RepositoryField = S.Union([S.String, S.Record(S.String, S.Unknown)]).pipe($I.annoteSchema("RepositoryField", { description: "The `repository` field's raw wire shape: a shorthand string or an object." }));
+
+/**
+ * Decoded value produced by {@link RepositoryField}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RepositoryField = typeof RepositoryField.Type;
 
 // ── Errors ──────────────────────────────────────────────────────────────────
 
@@ -1107,45 +1163,3 @@ export class Package extends S.Class<Package>($I`Package`)({
 		return renderJson(raw, resolveFormatOptions(options));
 	}
 }
-
-/** Decoded runtime value of {@link DependencyMapField}.
- * @category type-level
- * @since 0.0.0
- */
-export type DependencyMapField = typeof DependencyMapField.Type;
-
-/** Decoded runtime value of {@link StringMapField}.
- * @category type-level
- * @since 0.0.0
- */
-export type StringMapField = typeof StringMapField.Type;
-
-/** Decoded runtime value of {@link BinField}.
- * @category type-level
- * @since 0.0.0
- */
-export type BinField = typeof BinField.Type;
-
-/** Decoded runtime value of {@link ExportsField}.
- * @category type-level
- * @since 0.0.0
- */
-export type ExportsField = typeof ExportsField.Type;
-
-/** Decoded runtime value of {@link PublishConfigField}.
- * @category type-level
- * @since 0.0.0
- */
-export type PublishConfigField = typeof PublishConfigField.Type;
-
-/** Decoded runtime value of {@link PeerDependenciesMetaField}.
- * @category type-level
- * @since 0.0.0
- */
-export type PeerDependenciesMetaField = typeof PeerDependenciesMetaField.Type;
-
-/** Decoded runtime value of {@link RepositoryField}.
- * @category type-level
- * @since 0.0.0
- */
-export type RepositoryField = typeof RepositoryField.Type;

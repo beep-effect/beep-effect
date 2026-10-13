@@ -816,7 +816,6 @@ export const LICENSE_META_ROWS: readonly string[] = [
  * Metadata for every cataloged SPDX license id, active and deprecated, keyed
  * by identifier. A `LicenseRef`/`DocumentRef` reference is not a catalog
  * member and has no entry.
- *
  * **Example** (Look up a license title)
  *
  * ```ts
@@ -827,7 +826,6 @@ export const LICENSE_META_ROWS: readonly string[] = [
  * const title = O.map(HashMap.get(LICENSE_META, "MIT"), (entry) => entry[1]);
  * console.log(O.getOrElse(title, () => "missing")); // MIT License
  * ```
- *
  * @internal
  * @category constants
  * @since 0.0.0

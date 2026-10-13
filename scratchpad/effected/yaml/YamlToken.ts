@@ -196,7 +196,6 @@ export class YamlTokens {
  * errors arrive as `"error"`-kind tokens in the stream, never as a stream
  * failure. (The primitive's reserved failure channel would surface as a
  * defect here; it never fires today.)
- *
  * **Example** (Collect token text from a stream)
  *
  * ```ts

@@ -82,7 +82,6 @@ const visitorEvent = S.TaggedUnion({
  * level); collection/scalar begin events also carry `style` and the optional
  * `tag`/`anchor`. `Error` carries a materialized {@link YamlDiagnostic} for
  * every diagnostic recorded while composing the document — fatal or not.
- *
  * @public
  * @category type-level
  * @since 0.0.0

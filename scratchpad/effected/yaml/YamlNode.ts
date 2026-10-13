@@ -510,19 +510,16 @@ export interface YamlAliasEncoded extends S.Codec.Encoded<typeof YamlAlias> {}
 /**
  * A discriminated-union schema covering all four YAML AST value node types:
  * {@link YamlScalar}, {@link YamlMap}, {@link YamlSeq} and {@link YamlAlias}.
- *
  * **Details**
  *
  * Defined lazily via `Schema.suspend` to break the recursive reference chain
  * `YamlNode → YamlMap → YamlPair → YamlNode`.
- *
  * **Gotchas**
  *
  * Construct member nodes via their `.make(...)` static (e.g.
  * `YamlScalar.make(...)`), never `new YamlScalar(...)` — the internal
  * composer's hot-path `new` construction is the one recorded exception, kept
  * internal to the engine for its allocation-sensitive walk.
- *
  * **Example** (Recognize a scalar union member)
  *
  * ```ts
@@ -532,7 +529,6 @@ export interface YamlAliasEncoded extends S.Codec.Encoded<typeof YamlAlias> {}
  * const scalar = YamlScalar.make({ value: "hello", style: "plain", offset: 0, length: 5 })
  * console.log(S.is(YamlNode)(scalar)) // true
  * ```
- *
  * @public
  * @category schemas
  * @since 0.0.0

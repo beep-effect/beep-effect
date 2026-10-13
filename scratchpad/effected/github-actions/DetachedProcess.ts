@@ -362,6 +362,14 @@ export const ProcessId = S.Number.pipe(
 );
 
 /**
+ * Decoded value produced by {@link ProcessId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ProcessId = typeof ProcessId.Type;
+
+/**
  * How a detached child is started.
  *
  * @public
@@ -818,9 +826,3 @@ export class DetachedProcess {
 		...overrides,
 	});
 }
-
-/** Decoded runtime value of {@link ProcessId}.
- * @category type-level
- * @since 0.0.0
- */
-export type ProcessId = typeof ProcessId.Type;

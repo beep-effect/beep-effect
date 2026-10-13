@@ -89,7 +89,6 @@ const TarballFailureFromPayload = S.toType(TarballErrorPayload).pipe(S.decodeTo(
 
 /**
  * Raised when a published tarball cannot be fetched, verified or extracted.
- *
  * **Example** (Distinguish a missing published version)
  *
  * ```ts
@@ -98,7 +97,6 @@ const TarballFailureFromPayload = S.toType(TarballErrorPayload).pipe(S.decodeTo(
  * const error = TarballError.make({ reason: "notFound", package: "some-config", version: "1.2.3" });
  * console.log(error.reason) // notFound
  * ```
- *
  * @public
  * @category errors
  * @since 0.0.0

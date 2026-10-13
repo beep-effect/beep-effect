@@ -323,7 +323,6 @@ export function renderSingleQuotedMultiline(s: string, ...[indent]: [indent: str
 
 /**
  * Renders a string scalar using block literal style (pipe `|`).
- *
  * **Example** (Strip absent trailing newlines)
  *
  * ```ts
@@ -331,7 +330,6 @@ export function renderSingleQuotedMultiline(s: string, ...[indent]: [indent: str
  *
  * console.log(JSON.stringify(renderBlockLiteral("hello", "  "))) // "|-\n  hello"
  * ```
- *
  * @param explicitChomp - Original chomp indicator from the AST, when known.
  * `keep` (`+`) and `strip` (`-`) preserve trailing-newline semantics that
  * cannot be inferred from the resolved value alone.

@@ -42,6 +42,14 @@ export const NavigateContainer = LiteralKit(["object", "array"]).pipe(
 );
 
 /**
+ * Decoded value produced by {@link NavigateContainer}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type NavigateContainer = typeof NavigateContainer.Type;
+
+/**
  * Structural outcomes of locating a path in the original JSONC text.
  *
  * **Details**
@@ -272,9 +280,3 @@ export const navigate: {
     ? NavigateResult.cases.Insert.make({ container: "array", at: lastEnd, isFirst: index === 0, depth })
     : NavigateResult.cases.NoOp.make({});
 });
-
-/** Decoded runtime value of {@link NavigateContainer}.
- * @category type-level
- * @since 0.0.0
- */
-export type NavigateContainer = typeof NavigateContainer.Type;

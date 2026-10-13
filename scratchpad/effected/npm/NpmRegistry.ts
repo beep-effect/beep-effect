@@ -101,7 +101,7 @@ export const RegistryTarget = S.Struct({
  * @category type-level
  * @since 0.0.0
  */
-export type RegistryTarget = typeof RegistryTarget.Type & {
+export type RegistryTarget = S.Schema.Type<typeof RegistryTarget> & {
 	/**
 	 * Retained explicitly for the source-level tripwire contract.
 	 *

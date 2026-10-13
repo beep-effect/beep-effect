@@ -37,6 +37,14 @@ export const ConfigSourceRef = S.Struct({
 }).pipe($I.annoteSchema("ConfigSourceRef", { description: "A reference to one configuration source that contributed to a load." }));
 
 /**
+ * Decoded value produced by {@link ConfigSourceRef}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConfigSourceRef = typeof ConfigSourceRef.Type;
+
+/**
  * Every event published during config discovery, parsing, validation and
  * persistence.
  *
@@ -226,9 +234,3 @@ export class ConfigEvents extends Context.Service<ConfigEvents, ConfigEventsShap
 		}),
 	);
 }
-
-/** Decoded runtime value of {@link ConfigSourceRef}.
- * @category type-level
- * @since 0.0.0
- */
-export type ConfigSourceRef = typeof ConfigSourceRef.Type;

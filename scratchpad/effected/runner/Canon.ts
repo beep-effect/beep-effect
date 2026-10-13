@@ -52,8 +52,16 @@ const $I = $ScratchpadId.create("effected/runner/Canon");
 export const CanonExceptions = S.Struct({ id: S.NonEmptyString, reason: S.NonEmptyString }).pipe(
   S.Array,
   S.fromJsonString,
-  $I.annoteSchema("CanonExceptions", { description: "Ledgered finding identifiers and reasons accepted by the canon gate." })
+  $I.annoteSchema("CanonExceptions", { description: "Ledgered canon exceptions with detector finding ids and acceptance reasons." })
 );
+
+/**
+ * Decoded value produced by {@link CanonExceptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CanonExceptions = typeof CanonExceptions.Type;
 
 const decodeExceptions = S.decodeUnknownEffect(CanonExceptions);
 
@@ -170,9 +178,3 @@ export const coverageGaps = Effect.fn("Canon.coverageGaps")(function* (config: R
     })
   );
 });
-
-/** Decoded runtime value of {@link CanonExceptions}.
- * @category type-level
- * @since 0.0.0
- */
-export type CanonExceptions = typeof CanonExceptions.Type;

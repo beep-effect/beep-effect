@@ -120,6 +120,7 @@ const dotnetCompressionLevel = (level: number): string =>
  * entries — and this function does not check; `Artifact.zip` rejects such a
  * file as `invalidOptions`, naming it, before anything is written.
  *
+ *
  * **Example** (Serialize archive entries)
  *
  * ```ts
@@ -143,7 +144,6 @@ export const zipManifest = (files: ReadonlyArray<string>): string => files.map((
  * a stderr-writing try/catch, and with the archive disposed in a `finally` so
  * a failed entry cannot leave the handle open (the module doc says why not
  * `Compress-Archive`, and why the list travels in a file).
- *
  * **Example** (Construct a POSIX zip command)
  *
  * ```ts
@@ -152,7 +152,6 @@ export const zipManifest = (files: ReadonlyArray<string>): string => files.map((
  * const command = zipCommand({ windows: false, root: "/work", files: ["a.txt"], manifest: "/work/files.txt", destination: "/work/archive.zip", level: 6 });
  * console.log(command.command) // zip
  * ```
- *
  * @internal
  * @category commands
  * @since 0.0.0
@@ -205,7 +204,6 @@ export interface UnzipCommandOptions {
  * <destination>`, or the three-argument `ExtractToDirectory` overload under
  * `$ErrorActionPreference = 'Stop'` and a stderr-writing try/catch on
  * Windows (the module doc says why both halves are load-bearing).
- *
  * **Example** (Construct a POSIX unzip command)
  *
  * ```ts
@@ -214,7 +212,6 @@ export interface UnzipCommandOptions {
  * const command = unzipCommand({ windows: false, source: "/work/archive.zip", destination: "/work/output" });
  * console.log(command.command) // unzip
  * ```
- *
  * @internal
  * @category commands
  * @since 0.0.0
@@ -247,7 +244,6 @@ export interface TarExtractCommandOptions {
  * Extract a tarball: `tar <flags> <archive> -C <destination>`. The same on
  * every platform — bsdtar ships on the Windows runner image — so unlike the
  * zip pair there is no `windows` switch.
- *
  * **Example** (Construct a POSIX tar command)
  *
  * ```ts
@@ -256,7 +252,6 @@ export interface TarExtractCommandOptions {
  * const command = tarExtractCommand({ archive: "/work/archive.tar.gz", destination: "/work/output" });
  * console.log(command.command) // tar
  * ```
- *
  * @internal
  * @category commands
  * @since 0.0.0

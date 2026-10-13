@@ -36,7 +36,6 @@ export const CACHE_SERVICE = "github.actions.results.api.v1.CacheService";
 /**
  * How a caller reaches the cache service for one key: the RPC, already
  * mapped into the caller's error, and the caller's own `refused` error.
- *
  * @internal
  * @category services
  * @since 0.0.0
@@ -50,7 +49,6 @@ export interface CacheServiceClient<E> {
  * Reserve `(key, version)` for an upload. `Option.none()` means another job
  * saved this key first — entries are immutable, so the cache already holds
  * what the caller wanted and there is nothing left to do.
- *
  * **Example** (Observe an existing cache reservation)
  *
  * ```ts
@@ -67,7 +65,6 @@ export interface CacheServiceClient<E> {
  * const program = reserveUpload(client, "tool", "v1");
  * console.log(O.isNone(Effect.runSync(program))) // true
  * ```
- *
  * @internal
  * @category commands
  * @since 0.0.0
@@ -94,7 +91,6 @@ export const reserveUpload: {
  * Confirm an upload. Not folded in with the reservation: an unfinalized upload
  * leaves bytes in Azure that no lookup can reach — a silent no-op that reads
  * as a successful save — so it is a failure even though every byte arrived.
- *
  * **Example** (Compose upload finalization)
  *
  * ```ts
@@ -110,7 +106,6 @@ export const reserveUpload: {
  * const program = finalizeUpload(client, "tool", "v1", 128);
  * console.log(Effect.isEffect(program)) // true
  * ```
- *
  * @internal
  * @category commands
  * @since 0.0.0
@@ -148,7 +143,6 @@ export interface CacheHit {
 /**
  * The signed download url for a key, walking the restore-key ladder.
  * `Option.none()` is a miss, not a failure — a cold cache is the normal state.
- *
  * **Example** (Observe a cold cache)
  *
  * ```ts
@@ -165,7 +159,6 @@ export interface CacheHit {
  * const program = lookupDownload(client, "tool", ["fallback"], "v1");
  * console.log(O.isNone(Effect.runSync(program))) // true
  * ```
- *
  * @internal
  * @category queries
  * @since 0.0.0

@@ -16,7 +16,6 @@ const $I = $ScratchpadId.create("effected/semver/VersionCache");
 /**
  * Indicates that an extremum (`latest`/`oldest`) was requested from an empty
  * cache.
- *
  * **Example** (Inspect an empty cache failure)
  *
  * ```ts
@@ -24,7 +23,6 @@ const $I = $ScratchpadId.create("effected/semver/VersionCache");
  *
  * console.log(EmptyCacheError.make().message); // Version cache is empty
  * ```
- *
  * @public
  * @category errors
  * @since 0.0.0
@@ -52,7 +50,6 @@ export class EmptyCacheError extends S.TaggedError<EmptyCacheError>($I`EmptyCach
 /**
  * Indicates that a navigation operation (`diff`/`next`/`prev`) referenced a
  * version that is not in the cache.
- *
  * **Example** (Identify the missing version)
  *
  * ```ts
@@ -62,7 +59,6 @@ export class EmptyCacheError extends S.TaggedError<EmptyCacheError>($I`EmptyCach
  * const error = VersionNotFoundError.make({ version: SemVer.of(1, 2, 3) });
  * console.log(error.message); // Version not found in cache: 1.2.3
  * ```
- *
  * @public
  * @category errors
  * @since 0.0.0
@@ -96,7 +92,6 @@ export class VersionNotFoundError extends S.TaggedError<VersionNotFoundError>($I
  * Indicates that the cache contains versions but none satisfies the
  * requested range. Carries the range and the versions that were available,
  * and is fully serializable — both payload fields are schema classes.
- *
  * **Example** (Inspect an unmatched range)
  *
  * ```ts
@@ -108,7 +103,6 @@ export class VersionNotFoundError extends S.TaggedError<VersionNotFoundError>($I
  * const error = UnsatisfiedRangeError.make({ range, available: [] });
  * console.log(error.message); // No version satisfies range >=1.0.0 <2.0.0-0 (0 versions available)
  * ```
- *
  * @public
  * @category errors
  * @since 0.0.0
