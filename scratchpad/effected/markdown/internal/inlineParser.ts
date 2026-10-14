@@ -461,11 +461,11 @@ class InlineParser implements InlineScanner {
 		// document like `![[]()` repeated accumulates them and the walk turns
 		// quadratic — 160k repetitions of that shape did not terminate. The
 		// counter makes the common case (nothing left to deactivate) O(1)
-		// while the walk itself stays exactly upstream's.
+		// and stops the walk as soon as its last active link is cleared.
 		if (this.activeLinkOpeners === 0) {
 			return;
 		}
-		for (let opener = this.brackets; opener !== undefined; opener = opener.previous) {
+		for (let opener = this.brackets; opener !== undefined && this.activeLinkOpeners > 0; opener = opener.previous) {
 			if (!opener.image && opener.active) {
 				opener.active = false;
 				this.activeLinkOpeners -= 1;

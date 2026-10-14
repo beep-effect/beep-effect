@@ -1,7 +1,7 @@
 [
   {
-    "id": "EV015:scratchpad/test/github/GitHubApp.test.ts:384:TestClock.adjust@12#1",
-    "reason": "This isolated one-test layer owns its TestClock; no sibling test shares or observes the adjustment. An inline comment records that ownership."
+    "id": "EV010:scratchpad/test/github/reachability.test.ts:2:node:fs@0#1",
+    "reason": "The subject is the actual on-disk source import graph and package manifest. A memfs fixture would replace the artifacts whose reachability these tests verify; the file remains unchanged."
   },
   {
     "id": "EV015:scratchpad/test/github/resources2.test.ts:1165:TestClock.adjust@12#1",
@@ -12,7 +12,19 @@
     "reason": "This layer block contains exactly one test and owns its TestClock; advancing it cannot affect a sibling test."
   },
   {
-    "id": "EV010:scratchpad/test/github/reachability.test.ts:2:node:fs@0#1",
-    "reason": "The subject is the actual on-disk source import graph and package manifest. A memfs fixture would replace the artifacts whose reachability these tests verify; the file remains unchanged."
+    "id": "EV012:scratchpad/test/github/GitHubApp.test.ts:44:vi.mock@0#1",
+    "reason": "The cancellation regression must pause after the real InstallationToken decoder succeeds and before token postprocessing finishes. The partial mock preserves all real Schema exports and delegates to the real decoder; its scoped implementation is restored on exit. A service layer cannot intercept this internal codec boundary without changing the production API."
+  },
+  {
+    "id": "EV004:scratchpad/test/github/GitHubApp.test.ts:513:scoped@23#1",
+    "reason": "This test observes a failed client-layer acquisition and verifies that closing its scope revokes the observed credential. Building the failing layer in it.layer would fail the test hook before the typed error and revocation assertions can run. The local scope closes before those assertions."
+  },
+  {
+    "id": "EV015:scratchpad/test/github/GitHubApp.test.ts:577:TestClock.adjust@12#1",
+    "reason": "This isolated one-test layer owns its TestClock; no sibling test shares or observes the adjustment. An inline comment records that ownership."
+  },
+  {
+    "id": "EV011:scratchpad/test/github/GitHubApp.test.ts:18:vitest-import@0#1",
+    "reason": "Only Vitest's vi module-mocking API is imported here to intercept the internal decoder boundary in the cancellation regression. All tests, assertions and layer hooks use @effect/vitest; Effect service provisioning cannot replace a Schema module export."
   }
 ]

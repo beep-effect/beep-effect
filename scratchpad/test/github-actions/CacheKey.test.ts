@@ -605,12 +605,84 @@ describe("CacheKey", () => {
 	});
 
 	describe("JSON Schema export", () => {
+		it("annotates every reusable cache-key check", () => {
+			for (const { schema, path, name, title, description } of [
+				{
+					schema: CacheKey.fields.segments,
+					path: "ast.elements.0.checks.0.annotations",
+					name: "SegmentPattern",
+					title: "Cache key segment pattern",
+					description: "A nonempty cache-key segment without commas or newline delimiters.",
+				},
+				{
+					schema: CacheKey.fields.segments,
+					path: "ast.checks.0.annotations",
+					name: "SegmentsLength",
+					title: "a cache key of at most 512 characters",
+					description: "The complete cache key, including segment separators, fits GitHub's 512-character limit.",
+				},
+				{
+					schema: CacheKey.fields.restoreDepths,
+					path: "ast.rest.0.checks.1.annotations",
+					name: "RestoreDepthInteger",
+					title: "Integer restore depth",
+					description: "A restore-key rung keeps a whole number of leading segments.",
+				},
+				{
+					schema: CacheKey.fields.restoreDepths,
+					path: "ast.rest.0.checks.2.annotations",
+					name: "RestoreDepthRange",
+					title: "Positive safe restore depth",
+					description: "A restore depth is between one and the maximum safe integer, inclusive.",
+				},
+				{
+					schema: CacheKey,
+					path: "ast.typeParameters.0.checks.0.annotations",
+					name: "RestoreDepthWithinSegments",
+					title: "Restore depths retain a proper key prefix",
+					description: "Each explicit restore depth keeps fewer segments than the primary cache key.",
+				},
+			]) {
+				assert.nestedPropertyVal(schema, `${path}.identifier`, `@beep/scratchpad/effected/github-actions/CacheKey/${name}`);
+				assert.nestedPropertyVal(schema, `${path}.title`, title);
+				assert.nestedPropertyVal(schema, `${path}.description`, description);
+			}
+		});
+
 		it("each segment exports its pattern", () => {
 			const document = S.toJsonSchemaDocument(CacheKey);
 			assert.nestedPropertyVal(
 				document,
-				"definitions.@beep/scratchpad/effected/github-actions/CacheKey/CacheKeyEncoded.properties.segments.items.pattern",
+				"definitions.@beep/scratchpad/effected/github-actions/CacheKey/SegmentPattern.pattern",
 				String.raw`^[^,\n\r]+$`,
+			);
+			assert.nestedPropertyVal(
+				document,
+				"definitions.@beep/scratchpad/effected/github-actions/CacheKey/RestoreDepthWithinSegments.properties.segments.$ref",
+				"#/$defs/@beep~1scratchpad~1effected~1github-actions~1CacheKey~1SegmentsLength",
+			);
+			for (const path of ["prefixItems.0.$ref", "items.$ref"]) {
+				assert.nestedPropertyVal(
+					document,
+					`definitions.@beep/scratchpad/effected/github-actions/CacheKey/SegmentsLength.${path}`,
+					"#/$defs/@beep~1scratchpad~1effected~1github-actions~1CacheKey~1SegmentPattern",
+				);
+			}
+		});
+
+		it("keeps the restore-depth bounds and rejection message", () => {
+			const document = S.toJsonSchemaDocument(CacheKey);
+			const range = "definitions.@beep/scratchpad/effected/github-actions/CacheKey/RestoreDepthRange";
+			assert.nestedPropertyVal(document, `${range}.type`, "integer");
+			assert.nestedPropertyVal(document, `${range}.allOf.0.minimum`, 1);
+			assert.nestedPropertyVal(document, `${range}.allOf.0.maximum`, Number.MAX_SAFE_INTEGER);
+			const error = flow(S.decodeResult(CacheKey), Result.flip, Result.getOrThrow)({
+				segments: ["a", "b", "c"],
+				restoreDepths: [3],
+			});
+			assert.strictEqual(
+				error.message,
+				"every restore depth must be between 1 and segments.length - 1 — a rung keeping every segment would just repeat the primary key",
 			);
 		});
 	});

@@ -4,6 +4,15 @@ import * as Stream from "effect/Stream";
 import { YamlVisitor, YamlVisitorEvent } from "../../effected/yaml/YamlVisitor.ts";
 
 describe("YamlVisitor event fidelity", () => {
+  it.effect("replays the same stream after full and partial executions in event order", () => Effect.gen(function* () {
+    const stream = YamlVisitor.visit("a: 1\n");
+    const first = yield* Stream.runCollect(stream);
+    assert.deepStrictEqual(first.map((event) => event._tag), ["DocumentStart", "MapStart", "Pair", "Scalar", "Scalar", "MapEnd", "DocumentEnd"]);
+    assert.deepStrictEqual(yield* Stream.runCollect(stream), first);
+    assert.deepStrictEqual(yield* Stream.runCollect(Stream.take(stream, 1)), first.slice(0, 1));
+    assert.deepStrictEqual(yield* Stream.runCollect(stream), first);
+  }));
+
   it.effect("visits scalar comments, aliases without comments and positioned document errors", () => Effect.gen(function* () {
     const events = yield* Stream.runCollect(YamlVisitor.visit("base:\n  # scalar lead\n  &x 1 # scalar tail\nref: *x\n"));
     assert.deepStrictEqual(events.filter(YamlVisitorEvent.$is("Comment")).map((e) => [e.text, e.placement]), [

@@ -1,0 +1,23 @@
+I'll review the ten markdown files in depth against the pinned upstream oracle and the round-2 inventory, and I'll only report new findings.Round 2 already named several formatter and resolver issues. I'll read the current implementations and check which of those still fail, then look for new defects.### fable-3-1
+- file: scratchpad/effected/markdown/MarkdownFormat.ts:324
+- class: bug   severity: required
+- standard: D9 / D11 / section 14 cause 2 (upstream-bug). `MarkdownFormat.format` (MarkdownFormat.ts:743-746) skips a conversion that would not re-parse as the same construct. CommonMark 0.31.2 block-start order in `internal/blockRegistry.ts:94-99` tries an HTML block and a link-reference definition before a setext underline.   evidence: `SETEXT_CONTENT_HAZARD` does not cover `<` or `[`. `formatHeading` still emits at line 440. Flush `# <div>` with `{ headingStyle: "setext" }` becomes `<div>\n-----`, which `htmlBlockStart` keeps as one HTML block through the underline, so the heading is gone. Flush `# [foo]: /url` becomes a definition plus a paragraph of `=`, because `setextHeadingStart` (internal/blocks/setextHeading.ts:50-54) strips the definition and then refuses the underline. The pinned oracle `formatHeading` (upstream MarkdownFormat.ts:316-323) emits the same edit. Round-2 req-1 only guarded a non-blank previous line.
+- failure: ATX-to-setext normalization rewrites a heading into an HTML block or a link-reference definition when the heading text is itself a block start. Marker normalization changes the document structure.
+- fix: Before emitting a setext replacement, parse `` `${content}\n${underline}\n` `` with the same dialect `format` used. Emit only when that parse is a single setext heading of the same depth and text. Leave the ATX heading untouched otherwise.
+
+### fable-3-2
+- file: scratchpad/effected/markdown/MarkdownFormat.ts:1058
+- class: bug   severity: required
+- standard: D9 / D11 / section 14 cause 2. `MarkdownFormat.modify` (MarkdownFormat.ts:925-930) says every replacement re-parses cleanly by construction. CommonMark 0.31.2 allows the next block to start on the line immediately after an ATX heading.   evidence: The flow guard accepts a standalone child when any contextual node has the same type and `start === spliceStart + child.start`. It never compares ends. Ancestry is parents only (`findAncestry` returns at MarkdownFormat.ts:721), and `heading` is therefore not a `NO_MULTILINE_ANCESTORS` hit for a heading target. Replacing the heading in `# Title\nBody\n` with `"Hello"` renders a paragraph, splices `Hello`, and reparses as one paragraph `Hello\nBody`. The same start match accepts a table whose following plain line becomes another row (`internal/blocks/table.ts:22-24`) and a definition whose next line is a quoted title. Upstream `modify` (upstream MarkdownFormat.ts:787-794) returns the splice with no reparse at all.
+- failure: A flow replacement that keeps its opening boundary still swallows the following block: the section body merges into the new paragraph, a table gains a row, or a definition takes the next line as its title.
+- fix: Require `candidate.end === start + standaloneChild.end` as well as type and start. Reject with the existing `UnsupportedTarget` when the projected block is longer.
+
+### fable-3-3
+- file: scratchpad/effected/markdown/MarkdownFormat.ts:1046
+- class: bug   severity: required
+- standard: D9 / D11 / section 14 cause 2. `internal/blocks/table.ts:22-24` states that a GFM table interrupts a paragraph; that start is not in the commonmark registry (`internal/blockRegistry.ts:94-103`).   evidence: The safety reparse builds `MarkdownParseOptions` with only `frontmatter: document.frontmatter !== undefined`. `MarkdownDocument` stores source, root, diagnostics, and definitions, not the dialect `parseResult` used, so `dialectOf` falls through to `"gfm"`. For a commonmark document `# Title\n| a |\n| --- |\n| b |\n`, replacing the heading with `"Hello"` stays a heading plus a paragraph under commonmark, but the GFM reparse interrupts after `Hello` and the start/end check passes. The applied splice reparses under commonmark as one paragraph.
+- failure: `modify` accepts a replacement that is stable only under GFM, then the commonmark document loses the following block.
+- fix: Persist the parse dialect on `MarkdownDocument` (default `gfm`) and pass it into this reparse. Combine with the end check from fable-3-2.
+
+REQUIRED: 3
+BACKLOG: 0

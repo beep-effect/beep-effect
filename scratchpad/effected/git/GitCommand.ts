@@ -292,7 +292,7 @@ const repoRoot = (): GitInvocation => git(["rev-parse", "--show-toplevel"]);
 const commonDir = (): GitInvocation => git(["rev-parse", "--path-format=absolute", "--git-common-dir"]);
 
 // Implementation of GitCommand.commitInfo; the public contract lives on the static.
-const commitInfo = (ref = "HEAD"): GitInvocation => git(["log", "-1", "--format=%H%x00%G?%x00%B", ref]);
+const commitInfo = (ref = "HEAD"): GitInvocation => git(["log", "--no-show-signature", "-1", "--format=%H%x00%G?%x00%B", ref]);
 
 /**
  * The `git log` record format: a NUL record opener followed by the five
@@ -315,6 +315,7 @@ const log = (
 ): GitInvocation =>
 	git([
 		"log",
+		"--no-show-signature",
 		"-z",
 		LOG_FORMAT,
 		"--name-only",

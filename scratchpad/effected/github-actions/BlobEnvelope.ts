@@ -331,6 +331,10 @@ export class BlobEnvelope {
 		if (Result.isFailure(encoded)) {
 			return Result.fail(BlobMetadataEncodeError.make({ cause: encoded.failure }));
 		}
+		const decoded = S.decodeResult(S.fromJsonString(schema))(encoded.success);
+		if (Result.isFailure(decoded)) {
+			return Result.fail(BlobMetadataEncodeError.make({ cause: decoded.failure }));
+		}
 		const metaBytes = new TextEncoder().encode(encoded.success);
 		const out = new Uint8Array(HEADER_BYTES + metaBytes.length + body.length);
 		out.set(MAGIC, 0);

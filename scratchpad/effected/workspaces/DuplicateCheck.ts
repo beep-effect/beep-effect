@@ -22,6 +22,7 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import { indexInstances, rootInstances } from "./internal/roots.ts";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 
 const $I = $ScratchpadId.create("effected/workspaces/DuplicateCheck");
 
@@ -95,6 +96,11 @@ export const Dependent = S.Union([
  * @since 0.0.0
  */
 export type Dependent = typeof Dependent.Type;
+
+const RelationshipKey = S.fromJsonString(S.Tuple([S.String, Dependent])).pipe(
+	$I.annoteSchema("RelationshipKey", { description: "An unambiguous key for one target instance and its dependent." }),
+);
+const encodeRelationshipKey = S.encodeResult(RelationshipKey);
 
 /**
  * One resolved instance of a duplicated version, with everything that pulls it.
@@ -401,7 +407,7 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 		const dependents = MutableHashMap.empty<string, Array<Dependent>>();
 		const seen = MutableHashSet.empty<string>();
 		const record = (targetId: string, dependent: Dependent): void => {
-			const key = `${targetId}\0${renderKey(dependent)}`;
+			const key = Result.getOrThrow(encodeRelationshipKey([targetId, dependent]));
 			if (MutableHashSet.has(seen, key)) return;
 			MutableHashSet.add(seen, key);
 			const list = O.getOrElse(MutableHashMap.get(dependents, targetId), (): Array<Dependent> => []);
@@ -475,11 +481,3 @@ const dependentOf = (from: ResolvedPackage): Dependent =>
 	from.isWorkspace && from.relativePath !== undefined
 		? { _tag: "importer", path: from.relativePath }
 		: { _tag: "package", name: from.name, version: from.version };
-
-/**
- * Builds a stable deduplication key for an importer or package dependent.
- *
- * @internal
- */
-const renderKey = (dependent: Dependent): string =>
-	dependent._tag === "importer" ? `importer\0${dependent.path}` : `package\0${dependent.name}\0${dependent.version}`;

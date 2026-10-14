@@ -1,6 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
-import { assertDefined } from "@effect/vitest/utils";
+import { assertDefined, assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { Jsonc, JsoncParseOptions, JsoncVisitor, JsoncVisitorEvent } from "../../effected/jsonc/index.ts";
@@ -12,6 +13,21 @@ const errorCodes = (text: string) =>
 
 describe("JsoncVisitor", () => {
   describe("schema", () => {
+    it("constructs and decodes finite event spans, rejecting non-finite fields", () => {
+      for (const value of [-1, 0.5, -0.5, Number.MAX_SAFE_INTEGER + 1]) {
+        const input = { offset: value, length: value };
+        assert.deepStrictEqual({ ...JsoncVisitorEvent.cases.Comment.make(input) }, { _tag: "Comment", ...input });
+        assertSuccess(Result.map(S.decodeResult(JsoncVisitorEvent)({ _tag: "Comment", ...input }), (event) => [event.offset, event.length]), [value, value]);
+      }
+      for (const value of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+        for (const field of ["offset", "length"] as const) {
+          const input = { offset: 0, length: 0, [field]: value };
+          assert.throws(() => JsoncVisitorEvent.cases.Comment.make(input));
+          assertFailure(Result.mapError(S.decodeResult(JsoncVisitorEvent)({ _tag: "Comment", ...input }), (error) => error._tag), "SchemaError");
+        }
+      }
+    });
+
     it("builds tagged, structurally-equal events with guards", () => {
       const event = JsoncVisitorEvent.cases.Comment.make({ offset: 0, length: 3 });
       assert.strictEqual(event._tag, "Comment");

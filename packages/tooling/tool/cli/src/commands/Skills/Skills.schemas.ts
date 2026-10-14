@@ -939,39 +939,6 @@ export class SkillProvenanceReport extends S.Class<SkillProvenanceReport>($I`Ski
 ) {}
 
 /**
- * Version-2 project skill lock document keyed by installed skill name.
- *
- * **Details**
- *
- * `version` is a literal `2`, so a v1 lock fails to decode instead of being
- * read with v2 expectations.
- *
- * **Example** (Decode an empty v2 lock and reject a v1 document)
- *
- * ```ts
- * import { SkillsLockV2 } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import * as S from "effect/Schema"
- *
- * const lock = S.decodeUnknownSync(SkillsLockV2)({ version: 2, skills: {} })
- *
- * console.log(lock.version) // 2
- * console.log(S.is(SkillsLockV2)({ version: 1, skills: {} })) // false
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class SkillsLockV2 extends S.Class<SkillsLockV2>($I`SkillsLockV2`)(
-  {
-    version: S.Literal(2),
-    skills: S.Record(S.String, SkillLockV2Entry),
-  },
-  $I.annote("SkillsLockV2", {
-    description: "Canonical skills-lock/v2 document keyed by installed skill name.",
-  })
-) {}
-
-/**
  * Narrows an unknown value to a decoded {@link SkillUpstream} record.
  *
  * **Example** (Reject an upstream block missing its observed revisions)
@@ -1126,22 +1093,6 @@ export const isSkillEffective = S.is(SkillEffective);
  * @since 0.0.0
  */
 export const isSkillLockV2Entry = S.is(SkillLockV2Entry);
-/**
- * Narrows an unknown value to a decoded {@link SkillsLockV2} document.
- *
- * **Example** (Accept an empty v2 lock and reject a v1 one)
- *
- * ```ts
- * import { isSkillsLockV2 } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- *
- * console.log(isSkillsLockV2({ version: 2, skills: {} })) // true
- * console.log(isSkillsLockV2({ version: 1, skills: {} })) // false
- * ```
- *
- * @category guards
- * @since 0.0.0
- */
-export const isSkillsLockV2 = S.is(SkillsLockV2);
 
 /**
  * Decodes an unknown value as a {@link SkillUpstream} identity.
@@ -1628,97 +1579,3 @@ export const encodeSkillLockV2Entry: {
   (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof SkillLockV2Entry.Encoded, S.SchemaError>;
   (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof SkillLockV2Entry.Encoded, S.SchemaError>;
 } = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SkillLockV2Entry));
-/**
- * Decodes an unknown value as a {@link SkillsLockV2} document.
- *
- * **Example** (Decode a lock that pins no skills yet)
- *
- * ```ts
- * import { decodeSkillsLockV2 } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import * as Effect from "effect/Effect";
- * const lock = Effect.runSync(decodeSkillsLockV2({ version: 2, skills: {} }))
- *
- * console.log(lock.version) // 2
- * ```
- *
- * @category codecs
- * @since 0.0.0
- */
-export const decodeSkillsLockV2: {
-  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SkillsLockV2, S.SchemaError>;
-  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SkillsLockV2, S.SchemaError>;
-} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SkillsLockV2));
-/**
- * Encodes a {@link SkillsLockV2} document back to its wire shape.
- *
- * **Example** (Round-trip a lock that pins no skills yet)
- *
- * ```ts
- * import { decodeSkillsLockV2, encodeSkillsLockV2 } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import * as Effect from "effect/Effect";
- * const lock = Effect.runSync(decodeSkillsLockV2({ version: 2, skills: {} }))
- *
- * console.log(Effect.runSync(encodeSkillsLockV2(lock)).version) // 2
- * ```
- *
- * @category codecs
- * @since 0.0.0
- */
-export const encodeSkillsLockV2: {
-  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof SkillsLockV2.Encoded, S.SchemaError>;
-  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof SkillsLockV2.Encoded, S.SchemaError>;
-} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SkillsLockV2));
-
-const SkillsLockV2Json = S.fromJsonString(SkillsLockV2);
-
-/**
- * Decodes a raw `skills-lock.json` string as a {@link SkillsLockV2} document.
- *
- * **Details**
- *
- * JSON parsing and schema validation happen in one step, so a syntactically
- * valid but structurally wrong lock file fails on the same channel as a
- * malformed one.
- *
- * **Example** (Decode a lock file straight from its text)
- *
- * ```ts
- * import { decodeSkillsLockV2Json } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import * as Effect from "effect/Effect";
- * const lock = Effect.runSync(decodeSkillsLockV2Json('{"version":2,"skills":{}}'))
- *
- * console.log(lock.version) // 2
- * ```
- *
- * @category codecs
- * @since 0.0.0
- */
-export const decodeSkillsLockV2Json: {
-  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<SkillsLockV2, S.SchemaError>;
-  (input: unknown, options?: AST.ParseOptions): Effect.Effect<SkillsLockV2, S.SchemaError>;
-} = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(SkillsLockV2Json));
-/**
- * Encodes a {@link SkillsLockV2} document as a `skills-lock.json` string.
- *
- * **Gotchas**
- *
- * The result is compact JSON with no trailing newline; writers that need
- * stable on-disk formatting must format it before writing.
- *
- * **Example** (Serialize a lock that pins no skills yet)
- *
- * ```ts
- * import { decodeSkillsLockV2Json, encodeSkillsLockV2Json } from "@beep/repo-cli/commands/Skills/Skills.schemas"
- * import * as Effect from "effect/Effect";
- * const lock = Effect.runSync(decodeSkillsLockV2Json('{"version":2,"skills":{}}'))
- *
- * console.log(Effect.runSync(encodeSkillsLockV2Json(lock))) // '{"version":2,"skills":{}}'
- * ```
- *
- * @category codecs
- * @since 0.0.0
- */
-export const encodeSkillsLockV2Json: {
-  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<string, S.SchemaError>;
-  (input: unknown, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
-} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SkillsLockV2Json));

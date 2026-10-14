@@ -293,3 +293,41 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 		);
 	});
 });
+
+for (const channel of ["interrupt", "mixed", "failure", "defect"] as const) {
+  it.effect(`logger construction preserves ${channel} platform initialization semantics`, () => Effect.gen(function* () {
+    let builds = 0;
+    let executed = 0;
+    const original = new TestError("first platform build failed");
+    const platform = Layer.effectContext(Effect.gen(function* () {
+      builds += 1;
+      if (builds === 1) {
+        if (channel === "interrupt") return yield* Effect.interrupt;
+        if (channel === "mixed") return yield* original.pipe(Cause.fail, Cause.combine(Cause.interrupt(123)), Effect.failCause);
+        if (channel === "failure") return yield* original;
+        return yield* Effect.die(original);
+      }
+      return yield* Layer.build(platformServices);
+    }));
+    const { double, out, err } = capturing();
+    const program = Effect.sync(() => { executed += 1; });
+    const exit = yield* CliRuntime.main(program, {
+      platform,
+      env: { log: { format: "json", level: "None" } },
+    }).pipe(Effect.exit, Effect.provideService(Console.Console, double));
+    if (channel === "interrupt" || channel === "mixed") {
+      if (!Exit.isFailure(exit)) return yield* Effect.die("expected initialization interruption");
+      assertExitFailure(exit, exit.cause);
+      assert.isTrue(Cause.hasInterrupts(exit.cause));
+      assert.strictEqual(Cause.hasFails(exit.cause), channel === "mixed");
+      assert.strictEqual(builds, 1);
+      assert.strictEqual(executed, 0);
+    } else {
+      assertExitSuccess(exit, undefined);
+      assert.strictEqual(builds, 2);
+      assert.strictEqual(executed, 1);
+    }
+    assert.deepStrictEqual(out, []);
+    assert.deepStrictEqual(err, []);
+  }));
+}

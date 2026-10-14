@@ -66,7 +66,7 @@ export type GitConfigDiagnosticCode = typeof GitConfigDiagnosticCode.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type RawDiagnosticCode = typeof GitConfigDiagnosticCode.Type;
+export type RawDiagnosticCode = GitConfigDiagnosticCode;
 
 /**
  * One raw scanner diagnostic, positions in character offsets.
@@ -455,6 +455,7 @@ const scanEntry = (text: string, lineStart: number, keyStart: number, diagnostic
 		if (ch === "\\") {
 			const next = text[i + 1];
 			if (next === undefined && !inQuotes) {
+				significantDecoded = decoded.length;
 				significantEnd = i;
 				i += 1;
 				break;
@@ -462,10 +463,14 @@ const scanEntry = (text: string, lineStart: number, keyStart: number, diagnostic
 			if (next === "\n") {
 				// Line continuation: the backslash and newline are both dropped.
 				i += 2;
+				significantDecoded = decoded.length;
+				significantEnd = i - 1;
 				continue;
 			}
 			if (next === "\r" && text[i + 2] === "\n") {
 				i += 3;
+				significantDecoded = decoded.length;
+				significantEnd = i - 1;
 				continue;
 			}
 			const mapped =
@@ -506,6 +511,10 @@ const scanEntry = (text: string, lineStart: number, keyStart: number, diagnostic
 		if (!inQuotes && (ch === "#" || ch === ";")) {
 			// Trailing comment: the value ended at the last significant character.
 			break;
+		}
+		if (!inQuotes && decoded === "" && isWs(ch)) {
+			i += 1;
+			continue;
 		}
 		decoded += ch;
 		i += 1;

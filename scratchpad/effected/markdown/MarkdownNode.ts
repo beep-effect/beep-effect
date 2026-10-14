@@ -1535,6 +1535,16 @@ export const MdxJsxAttributeContent: S.Codec<MdxJsxAttributeContent> = S.Union([
  */
 export type MdxJsxAttributeContent = MdxJsxAttribute | MdxJsxExpressionAttribute;
 
+const mdxFragmentAttributes = S.makeFilter(
+	(element: { readonly name: string | null; readonly attributes: ReadonlyArray<MdxJsxAttributeContent> }) => element.name !== null || element.attributes.length === 0,
+	{
+		identifier: $I`MdxFragmentAttributes`,
+		title: "MDX JSX fragment attributes",
+		description: "An MDX JSX fragment has no attribute spelling and must carry an empty attributes array.",
+		message: "an MDX JSX fragment cannot carry attributes",
+	},
+);
+
 /**
  * MdxJsxFlowElement — a JSX element in flow (block) position (`<Component />`
  * on its own lines). `name` is `null` for a fragment (`<></>`); children are
@@ -1570,13 +1580,7 @@ export class MdxJsxFlowElement extends S.Class<MdxJsxFlowElement>($I`MdxJsxFlowE
 		children: S.Array(S.suspend((): S.Codec<FlowContent> => FlowContent)).annotateKey({ description: "Block content enclosed by the JSX element, in document order" }),
 		position: NodePosition.annotateKey({ description: "Source span of the block JSX element, constructor-defaulted to the synthetic position" }),
 	}).pipe(
-		S.check(
-			S.makeFilter((element) =>
-				element.name === null && element.attributes.length > 0
-					? "an MDX JSX fragment cannot carry attributes"
-					: undefined,
-			),
-		),
+		S.check(mdxFragmentAttributes),
 	), $I.annote("MdxJsxFlowElement", { description: "MdxJsxFlowElement — a JSX element in flow (block) position (`<Component />` on its own lines). `name` is `null` for a fragment (`<></>`); children are flow content, per the oracle's `BlockContent | DefinitionContent` model." }),
 ) {}
 
@@ -1607,13 +1611,7 @@ export class MdxJsxTextElement extends S.Class<MdxJsxTextElement>($I`MdxJsxTextE
 		children: S.Array(S.suspend((): S.Codec<PhrasingContent> => PhrasingContent)).annotateKey({ description: "Inline content enclosed by the JSX element, in document order" }),
 		position: NodePosition.annotateKey({ description: "Source span of the inline JSX element, constructor-defaulted to the synthetic position" }),
 	}).pipe(
-		S.check(
-			S.makeFilter((element) =>
-				element.name === null && element.attributes.length > 0
-					? "an MDX JSX fragment cannot carry attributes"
-					: undefined,
-			),
-		),
+		S.check(mdxFragmentAttributes),
 	), $I.annote("MdxJsxTextElement", { description: "MdxJsxTextElement — a JSX element in text (phrasing) position (`a <b>c</b> d`). `name` is `null` for a fragment; children are phrasing content. Refuses attributes on a fragment and an empty-string name, on the same terms as MdxJsxFlowElement." }),
 ) {}
 

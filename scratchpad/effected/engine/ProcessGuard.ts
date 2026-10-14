@@ -218,7 +218,7 @@ type InjectedKind = ProcessGuardInjection["kind"];
 const isInjectedKind = S.is(InjectKind);
 const isInjection = S.is(ProcessGuardInjection);
 
-class InjectedCrash extends S.TaggedError<InjectedCrash>()("InjectedCrash", {
+class InjectedCrash extends S.TaggedError<InjectedCrash, { readonly brand: unique symbol }>()("InjectedCrash", {
 	kind: InjectKind,
 	message: S.String,
 }, {

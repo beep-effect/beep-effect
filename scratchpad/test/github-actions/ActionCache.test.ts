@@ -1,19 +1,24 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Hex from "effect/encoding/Hex";
 import * as Path from "effect/Path";
+import * as O from "effect/Option";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import { FetchHttpClient } from "effect/http";
-import { ChildProcessSpawner } from "effect/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import { spawnOnce } from "../../effected/github-actions/internal/spawn.ts";
 import type { FileBlobTransfer } from "../../effected/github-actions/index.ts";
 import { ActionCache, ActionCacheError, BlobTransferError, CacheKey } from "../../effected/github-actions/index.ts";
 import { UnstubbedMemberError } from "../../effected/github-actions/internal/unstubbed.ts";
+import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { json, resultsEnv, twirpFetch } from "./results.ts";
 
 /**
@@ -71,6 +76,56 @@ const versionOf = (paths: ReadonlyArray<string>) =>
 	);
 
 describe("ActionCache", () => {
+	{
+		let manifestWrites = 0;
+		let archives = 0;
+		let uploads = 0;
+		const fsLayer = Layer.effect(FileSystem.FileSystem, Effect.map(FileSystem.FileSystem, (fs) => ({
+			...fs,
+			writeFileString: Effect.fnUntraced(function* (...args: Parameters<typeof fs.writeFileString>) {
+				if (args[0].endsWith("manifest.txt")) manifestWrites += 1;
+				return yield* fs.writeFileString(...args);
+			}),
+		}))).pipe(Layer.provide(MemoryFileSystem.layer));
+		const spawner = Layer.mock(ChildProcessSpawner.ChildProcessSpawner, {
+			spawn: Effect.fnUntraced(function* () {
+				archives += 1;
+				return yield* Effect.die("backslash filename reached tar");
+			}),
+		});
+		const transfer: FileBlobTransfer = {
+			uploadFile: () => Effect.sync(() => { uploads += 1; }),
+			downloadToFile: () => Effect.void,
+		};
+		const { calls, fetch } = twirpFetch({});
+		const layer = ActionCache.layerWith(transfer).pipe(Layer.provideMerge(Layer.mergeAll(
+			resultsEnv({ RUNNER_OS: "Linux", GITHUB_WORKSPACE: "/work/backslash" }), fsLayer, Path.layer, spawner,
+			FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch)(fetch))),
+		)));
+		it.layer(layer)((it) => {
+			it.effect("preserves a POSIX backslash filename and refuses it before manifest, tar or upload", () =>
+				Effect.gen(function* () {
+					const fs = yield* FileSystem.FileSystem;
+					const original = "/work/backslash/foo\\bar";
+					yield* fs.makeDirectory("/work/backslash/foo", { recursive: true });
+					yield* fs.writeFileString(original, "original");
+					yield* fs.writeFileString("/work/backslash/foo/bar", "different file");
+					const cache = yield* ActionCache;
+					const error = yield* Effect.flip(cache.save(["/work/backslash/**"], "backslash-name"));
+					assert.instanceOf(error, ActionCacheError);
+					assert.strictEqual(error.reason, "archiveFailed");
+					assert.strictEqual(error.key, "backslash-name");
+					assert.include(error.detail, original);
+					assert.include(error.detail, "backslash");
+					assert.strictEqual(manifestWrites, 0);
+					assert.strictEqual(archives, 0);
+					assert.strictEqual(uploads, 0);
+					assert.lengthOf(calls, 0);
+				})
+			);
+		});
+	}
+
 	{
 		const setup = Effect.gen(function* () {
 			const fs = yield* FileSystem.FileSystem;
@@ -835,6 +890,115 @@ describe("ActionCache", () => {
 			).pipe(Layer.provide(NodeServices.layer));
 			return { spawns, layer };
 		};
+
+		{
+			const setup = Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const { join } = yield* Path.Path;
+				const root = yield* fs.makeTempDirectoryScoped({ prefix: "effected-cache-test-" });
+				const files = [join(root, "payload\nnext.txt"), join(root, "payload\rnext.txt")];
+				for (const file of files) yield* fs.writeFileString(file, "unsafe manifest name");
+				let uploads = 0;
+				const transfer: FileBlobTransfer = {
+					uploadFile: () => Effect.sync(() => { uploads += 1; }),
+					downloadToFile: () => Effect.void,
+				};
+				const { calls, fetch } = twirpFetch({});
+				const spying = spyingSpawner();
+				const layer = ActionCache.layerWith(transfer).pipe(
+					Layer.provide(spying.layer),
+					Layer.provide(Layer.mergeAll(resultsEnv({}), NodeServices.layer,
+						FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch)(fetch))))),
+				);
+				return { files, calls, spying, uploads: () => uploads, layer };
+			});
+			class Fixture25 extends Context.Service<Fixture25, Effect.Success<typeof setup>>()(
+				"@beep/scratchpad/test/github-actions/ActionCache.test/Fixture25"
+			) {}
+			const fixtureLayer = Layer.effect(Fixture25, setup).pipe(Layer.provideMerge(NodeServices.layer));
+			it.layer(Layer.unwrap(Effect.map(Fixture25, (fixture) => fixture.layer)).pipe(Layer.provideMerge(fixtureLayer)), {
+				timeout: "30 seconds",
+			})((it) => {
+				it.effect("rejects LF and CR in resolved filenames before tar or upload", () =>
+					Effect.gen(function* () {
+						const { files, calls, spying, uploads } = yield* Fixture25;
+						const cache = yield* ActionCache;
+						for (const file of files) {
+							const error = yield* Effect.flip(cache.save([file], "unsafe-name"));
+							assert.instanceOf(error, ActionCacheError);
+							assert.strictEqual(error.reason, "archiveFailed");
+							assert.strictEqual(error.key, "unsafe-name");
+							assert.include(error.detail, file);
+						}
+						assert.lengthOf(spying.spawns, 0);
+						assert.strictEqual(uploads(), 0);
+						assert.lengthOf(calls, 0);
+					})
+				);
+			});
+		}
+
+		{
+			const setup = Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const { join } = yield* Path.Path;
+				const root = yield* fs.makeTempDirectoryScoped({ prefix: "effected-cache-test-" });
+				const directory = join(root, "tree");
+				const nested = join(directory, "nested");
+				yield* fs.makeDirectory(nested, { recursive: true });
+				const deep = join(nested, "deep.txt");
+				const files = [join(directory, "top.txt"), deep];
+				for (const file of files) yield* fs.writeFileString(file, "stored once");
+				const broken = join(directory, "broken-link");
+				yield* fs.symlink(join(root, "missing-target"), broken);
+				const other = join(root, "tree-sibling.txt");
+				yield* fs.writeFileString(other, "prefix sibling");
+				const target = join(root, "target");
+				yield* fs.makeDirectory(target);
+				yield* fs.writeFileString(join(target, "linked.txt"), "explicit link descendant");
+				const alias = join(root, "alias");
+				yield* fs.symlink(target, alias);
+				const archived = join(root, "uploaded.tar.gz");
+				const transfer: FileBlobTransfer = {
+					uploadFile: (_url, file) => fs.copyFile(file, archived).pipe(
+						Effect.mapError((cause) => BlobTransferError.make({ reason: "uploadFailed", cause }))),
+					downloadToFile: () => Effect.void,
+				};
+				const { calls, fetch } = backend();
+				const spying = spyingSpawner();
+				const patterns = [deep, `${directory}/**`, other, directory, alias, `${alias}/**`];
+				const layer = ActionCache.layerWith(transfer).pipe(
+					Layer.provide(spying.layer),
+					Layer.provide(Layer.mergeAll(resultsEnv({}), NodeServices.layer,
+						FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch)(fetch))))),
+				);
+				return { directory, files, broken, other, alias, archived, patterns, calls, spying, layer };
+			});
+			class Fixture26 extends Context.Service<Fixture26, Effect.Success<typeof setup>>()(
+				"@beep/scratchpad/test/github-actions/ActionCache.test/Fixture26"
+			) {}
+			const fixtureLayer = Layer.effect(Fixture26, setup).pipe(Layer.provideMerge(NodeServices.layer));
+			it.layer(Layer.unwrap(Effect.map(Fixture26, (fixture) => fixture.layer)).pipe(Layer.provideMerge(fixtureLayer)), {
+				timeout: "30 seconds",
+			})((it) => {
+				it.effect("archives covered files once and keeps explicit directory-symlink descendants", () =>
+					Effect.gen(function* () {
+						const { directory, files, broken, other, alias, archived, patterns, calls, spying } = yield* Fixture26;
+						yield* (yield* ActionCache).save(patterns, "recursive");
+						const listing = yield* spawnOnce(yield* ChildProcessSpawner.ChildProcessSpawner,
+							ChildProcess.make("tar", ["tzPf", archived]));
+						assert.strictEqual(listing.code, 0);
+						const members = Str.split(listing.output, "\n");
+						for (const file of [...files, broken, other, alias, `${alias}/linked.txt`]) {
+							assert.lengthOf(A.filter(members, (member) => member === file), 1, file);
+						}
+						const create = A.findFirst(spying.spawns, (spawn) => spawn.args[0] === "czPf");
+						assertSome(O.map(create, (spawn) => spawn.manifest), `${other}\n${directory}\n${alias}\n${alias}/linked.txt\n`);
+						assert.strictEqual(calls[0]?.body.version, yield* versionOf(patterns));
+					})
+				);
+			});
+		}
 
 		/** The real FileSystem with a live `readDirectory` call counter. */
 		const countingFileSystem = () => {

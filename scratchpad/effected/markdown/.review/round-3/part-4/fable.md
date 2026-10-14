@@ -1,0 +1,5 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the eleven inline parsers against the pinned upstream oracle and the round-2 inventory, and report only new findings.Round 2 already logged several inline findings. I'll check which of those landed in this commit, then read the eleven parsers against the pinned oracle.The round-2 inline defects look fixed in this commit. I'll differentially parse edge cases against the pinned oracle to see what still diverges.I'll re-read the eleven inline parsers against the pinned oracle and the round-2 inventory, and only file a finding that is still open and evidenced.NO FINDINGS
+
+REQUIRED: 0
+BACKLOG: 0

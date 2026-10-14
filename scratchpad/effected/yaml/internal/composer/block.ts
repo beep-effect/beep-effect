@@ -75,7 +75,25 @@ const PendingComment = S.Struct({
 }).annotate($I.annote("PendingComment", { description: "Pending block comment shared by mapping and sequence attribution." }));
 type PendingComment = typeof PendingComment.Type;
 
-function validatePendingProperty(child: CstNode, meta: NodeMeta, state: ComposerState): void {
+/**
+ * Records a fatal diagnostic before a second property overwrites its pending slot.
+ *
+ * **Example** (Reject a second scalar anchor)
+ *
+ * ```ts
+ * import { validatePendingProperty } from "@beep/scratchpad/effected/yaml/internal/composer/block"
+ * import { createState } from "@beep/scratchpad/effected/yaml/internal/composer/state"
+ * import { composeFlowMap, composeFlowSeq } from "@beep/scratchpad/effected/yaml/internal/composer/flow"
+ *
+ * const state = createState("&a &b value", { composeFlowMap, composeFlowSeq })
+ * validatePendingProperty({ type: "anchor", source: "&b", offset: 3, length: 2 }, { anchor: "a" }, state)
+ * console.log(state.errors[0]?.code) // UnexpectedToken
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export function validatePendingProperty(...[child, meta, state]: [child: CstNode, meta: NodeMeta, state: ComposerState]): void {
 	if ((child.type === "anchor" && meta.anchor !== undefined) || (child.type === "tag" && meta.tag !== undefined)) {
 		state.errors.push({
 			code: "UnexpectedToken",
@@ -228,16 +246,18 @@ function trimDisownedTrailingComments(
 		// Only comments disowned by THIS collection: `state.escapedComments` is a
 		// shared channel, so an entry outside the span belongs to another node.
 		if (ec.offset < offset || ec.offset >= cut) continue;
-		const lineStart = text.lastIndexOf("\n", ec.offset - 1) + 1;
+		const lineStart = Math.max(text.lastIndexOf("\n", ec.offset - 1), text.lastIndexOf("\r", ec.offset - 1)) + 1;
 		// A collection never shrinks past its own first line.
 		if (lineStart <= offset || lineStart >= cut) continue;
 		cut = lineStart;
 	}
 	if (cut === end) return end;
-	while (cut > offset && text[cut - 1] === "\n") {
-		const prevLineStart = text.lastIndexOf("\n", cut - 2) + 1;
+	while (cut > offset && (text[cut - 1] === "\n" || text[cut - 1] === "\r")) {
+		const prevEnd = text[cut - 1] === "\n" && text[cut - 2] === "\r" ? cut - 2 : cut - 1;
+		const prefix = text.slice(0, prevEnd);
+		const prevLineStart = Math.max(prefix.lastIndexOf("\n"), prefix.lastIndexOf("\r")) + 1;
 		if (prevLineStart <= offset) break;
-		if (text.slice(prevLineStart, cut - 1).trim() !== "") break;
+		if (text.slice(prevLineStart, prevEnd).trim() !== "") break;
 		cut = prevLineStart;
 	}
 	return cut;
@@ -372,13 +392,14 @@ export const flattenBlockMapChildren: {
 	// If we have pending meta and a newline has been seen since it was set, the
 	// pending meta applies to the surrounding context (outer container) and any
 	// new meta encountered belongs to the upcoming inner content.
-	function commitOuterIfNewlineSeen(): void {
+	function commitOuterIfNewlineSeen(nextProperty?: CstNode): void {
 		if (sawNewlineSincePending && hasMeta(pendingMeta)) {
-			// When both slots already carry an anchor or tag — the rare case of
-			// three or more consecutive metadata tokens spanning multiple newlines
-			// — the spread intentionally favours the most recent (pendingMeta)
-			// per a "last wins" rule. registerAnchor surfaces a duplicate-anchor
-			// warning if the dropped anchor is reused elsewhere.
+			// A further property forces both earlier slots onto the outer node.
+			// Diagnose the collision before recovering with the latest property.
+			if (nextProperty !== undefined) {
+				if (pendingMeta.anchor !== undefined) validatePendingProperty({ ...nextProperty, type: "anchor" }, outerMeta, state);
+				if (pendingMeta.tag !== undefined) validatePendingProperty({ ...nextProperty, type: "tag", ...pendingMeta.tagSpan }, outerMeta, state);
+			}
 			outerMeta = hasMeta(outerMeta) ? { ...outerMeta, ...pendingMeta } : pendingMeta;
 			pendingMeta = {};
 		}
@@ -568,14 +589,14 @@ export const flattenBlockMapChildren: {
 			// existing pending meta belongs to the outer container (it was on the
 			// same line as the value indicator). Move it to outerMeta so the new
 			// anchor can attach to the inner content as its own pending meta.
-			commitOuterIfNewlineSeen();
+			commitOuterIfNewlineSeen(child);
 			validatePendingProperty(child, pendingMeta, state);
 			pendingMeta.anchor = getAnchorName(child, state.text);
 			continue;
 		}
 		if (child.type === "tag") {
 			validatePropertyContinuationColumn(child, state, afterValueSep, lastValueSepOffset, lastKeyColumn);
-			commitOuterIfNewlineSeen();
+			commitOuterIfNewlineSeen(child);
 			validatePendingProperty(child, pendingMeta, state);
 			pendingMeta.tag = child.source;
 			pendingMeta.tagSpan = { offset: child.offset, length: child.length };
@@ -583,6 +604,9 @@ export const flattenBlockMapChildren: {
 			continue;
 		}
 		if (child.type === "flow-scalar" || child.type === "block-scalar") {
+			// Validate while both slots still exist; committing would hide a
+			// duplicate when the final property also ended with a newline.
+			validateNoDoubleAnchorOnScalar(child, children, i, outerMeta, pendingMeta, state);
 			// Reaching content: if pending meta predates a newline, it belongs to
 			// the outer container, not the upcoming inner content.
 			commitOuterIfNewlineSeen();
@@ -590,7 +614,6 @@ export const flattenBlockMapChildren: {
 			// outerMeta and pendingMeta both have anchors AND the scalar is
 			// neither a key nor produces a nested map (no block-map sibling and
 			// no following `:`), both anchors collapse onto the scalar — invalid.
-			validateNoDoubleAnchorOnScalar(child, children, i, outerMeta, pendingMeta, state);
 			// If this scalar is a key (followed by `:` at this level) and there's
 			// pending meta from a previous VALUE position, flush it as a null value.
 			// e.g., `a: &anchor\nb:` — the anchor belongs to null, not to `b`.
@@ -1185,10 +1208,19 @@ export const buildPairs: {
 				length: 0,
 			});
 			if (valueNode !== null) {
-				pairs.push(pushPair(YamlPair.make({ key: nullKey, value: valueNode.node ?? null }), pendingFields, undefined));
+				let pairTrailing: string | undefined;
+				for (const comment of valueNode.sameLineComments) pairTrailing = joinComments(pairTrailing, comment);
+				let valNode = valueNode.node;
+				if (valNode !== null && valueNode.leadingComments.length > 0) {
+					valNode = withCommentFields(valNode, { commentBefore: valueNode.leadingComments.join("\n") });
+				}
+				pairs.push(pushPair(
+					YamlPair.make({ key: nullKey, value: valNode }), pendingFields, pairTrailing,
+					valNode === null || !sameLineSpan(text, valueSepOffset, valNode.offset),
+				));
 				i = valueNode.nextIdx;
-				lastEnd = valueNode.node !== null ? nodeEnd(valueNode.node) : valueSepOffset + 1;
-				lastNode = valueNode.node ?? undefined;
+				lastEnd = valNode !== null ? nodeEnd(valNode) : valueSepOffset + 1;
+				lastNode = valNode ?? undefined;
 			} else {
 				pairs.push(pushPair(YamlPair.make({ key: nullKey, value: null }), pendingFields, undefined));
 				lastEnd = valueSepOffset + 1;
@@ -1407,41 +1439,8 @@ function consumeValueNodeForNullKey(
 	startIdx: number,
 	text: string,
 	valueSepOffset: number,
-): { node: YamlNode | null; nextIdx: number } | null {
-	let i = startIdx;
-	// Index of the first OWN-LINE comment after the `:` — the rewind point when
-	// no value node follows (mirrors consumeValueNode, and matters here
-	// for the empty-key document `:\n# c\n`).
-	let firstOwnLineIdx = -1;
-	while (i < items.length) {
-		const item = items[i];
-		if (item === undefined) break;
-		if (item.kind === "comment") {
-			if (firstOwnLineIdx < 0 && !sameLineSpan(text, valueSepOffset, item.offset)) {
-				firstOwnLineIdx = i;
-			}
-			i++;
-			continue;
-		}
-		if (item.kind === "node") {
-			if (i + 1 < items.length && items[i + 1]?.kind === "value-sep") {
-				// Check if the candidate node is on a different line from the
-				// null key's value-sep. Only refuse to consume cross-line nodes.
-				const nodeOffset = item.node.offset;
-				const hasNewline = !sameLine(text, valueSepOffset, nodeOffset);
-				if (hasNewline) {
-					// Cross-line: this node is a key for the next pair, not our value.
-					break;
-				}
-			}
-			return { node: item.node, nextIdx: i + 1 };
-		}
-		break;
-	}
-	// No value node followed: leave the own-line comments to the caller's own
-	// attribution rather than consuming them into nothing.
-	if (firstOwnLineIdx >= 0) return { node: null, nextIdx: firstOwnLineIdx };
-	return i > startIdx ? { node: null, nextIdx: i } : null;
+): ConsumedValue | null {
+	return consumeValueNode(items, startIdx, text, valueSepOffset);
 }
 
 /**
@@ -1661,6 +1660,7 @@ export const checkMultilineImplicitKeys: {
 	for (const pair of pairs) {
 		const key = pair.key;
 		if (key.length === 0) continue; // synthetic null key
+		if (wasIntroducedByExplicitKeyIndicator(state.text, key.offset)) continue;
 		// Quoted scalars: check the source span for newlines.
 		if (key._tag === "YamlScalar") {
 			const s = key.style;
@@ -1682,7 +1682,6 @@ export const checkMultilineImplicitKeys: {
 		// keys are allowed to span multiple lines (M5DY).
 		if (key._tag === "YamlMap" || key._tag === "YamlSeq") {
 			if (key.style !== "flow") continue;
-			if (wasIntroducedByExplicitKeyIndicator(state.text, key.offset)) continue;
 			const keySource = state.text.slice(key.offset, key.offset + key.length);
 			if (keySource.includes("\n") || keySource.includes("\r")) {
 				state.errors.push({

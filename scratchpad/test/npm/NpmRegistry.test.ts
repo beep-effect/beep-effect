@@ -3,6 +3,7 @@ import * as FileSystem from "effect/FileSystem";
 import { assert, describe, it } from "@effect/vitest";
 import { assertNone, assertSome, assertExitFailure } from "@effect/vitest/utils";
 import * as DateTime from "effect/DateTime";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
@@ -10,9 +11,10 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
-import { NpmRegistry, PublishedVersion, RegistryReadError } from "../../effected/npm/NpmRegistry.ts";
+import { DEFAULT_REGISTRY, NpmRegistry, PublishedVersion, RegistryReadError, type RegistrySeed } from "../../effected/npm/NpmRegistry.ts";
 
 const WireCause = S.Struct({ name: S.String, message: S.String, stack: S.String });
 
@@ -550,6 +552,104 @@ describe("NpmRegistry test doubles", () => {
 			}),
 		);
 	});
+});
+
+describe("NpmRegistry seeded own-key lookups", () => {
+	it.effect("does not publish inherited version keys on an empty package", () =>
+		Effect.gen(function* () {
+			const seed: RegistrySeed = { registries: { [DEFAULT_REGISTRY]: { pkg: {} } } };
+			const versions = O.getOrThrow(O.flatMap(R.get(seed.registries, DEFAULT_REGISTRY), R.get("pkg")));
+			Object.setPrototypeOf(versions, { inheritedVersion: { publishedAt: "2021-01-01T00:00:00.000Z" } });
+			const r = NpmRegistry.makeSeeded(seed);
+			assertNone(yield* r.version("pkg", "constructor"));
+			assertNone(yield* r.version("pkg", "toString"));
+			assertNone(yield* r.version("pkg", "inheritedVersion"));
+			assert.deepStrictEqual(yield* r.versions("pkg"), []);
+			assert.deepStrictEqual(yield* r.publishTimes("pkg"), []);
+		}),
+	);
+
+	it.effect("ignores inherited registry entries for every registry-scoped method", () =>
+		Effect.gen(function* () {
+			const seed: RegistrySeed = { registries: {} };
+			Object.setPrototypeOf(seed.registries, {
+				"https://inherited.example": { pkg: { "1.0.0": { publishedAt: "2021-01-01T00:00:00.000Z" } } },
+			});
+			const r = NpmRegistry.makeSeeded(seed);
+			const target = { registry: "https://inherited.example" };
+			assertNone(yield* r.version("pkg", "1.0.0", target));
+			assert.deepStrictEqual(yield* r.versions("pkg", target), []);
+			assert.deepStrictEqual(yield* r.publishTimes("pkg", target), []);
+		}),
+	);
+
+	it.effect("ignores inherited package entries for every registry-scoped method", () =>
+		Effect.gen(function* () {
+			const seed: RegistrySeed = { registries: { [DEFAULT_REGISTRY]: {} } };
+			Object.setPrototypeOf(O.getOrThrow(R.get(seed.registries, DEFAULT_REGISTRY)), {
+				inheritedPackage: { "1.0.0": { publishedAt: "2021-01-01T00:00:00.000Z" } },
+			});
+			const r = NpmRegistry.makeSeeded(seed);
+			assertNone(yield* r.version("inheritedPackage", "1.0.0"));
+			assert.deepStrictEqual(yield* r.versions("inheritedPackage"), []);
+			assert.deepStrictEqual(yield* r.publishTimes("inheritedPackage"), []);
+		}),
+	);
+
+	it.effect("ignores inherited dist-tag package and tag keys while retaining own tags", () =>
+		Effect.gen(function* () {
+			const distTags: Record<string, Record<string, string>> = { pkg: { constructor: "1.0.0", latest: "1.1.0" } };
+			Object.setPrototypeOf(distTags, { inheritedPackage: { latest: "9.9.9" } });
+			Object.setPrototypeOf(O.getOrThrow(R.get(distTags, "pkg")), { next: "2.0.0" });
+			const r = NpmRegistry.makeSeeded({ registries: {}, distTags });
+			assert.deepStrictEqual(yield* r.distTags("inheritedPackage"), {});
+			assert.deepStrictEqual(yield* r.distTags("constructor"), {});
+			assert.deepStrictEqual(yield* r.distTags("toString"), {});
+			assert.deepStrictEqual(yield* r.distTags("pkg"), { constructor: "1.0.0", latest: "1.1.0" });
+			assert.deepStrictEqual(yield* NpmRegistry.makeSeeded({ registries: {} }).distTags("pkg"), {});
+		}),
+	);
+
+	it.effect("retains explicitly seeded own constructor keys, version order and valid facts", () =>
+		Effect.gen(function* () {
+			const r = NpmRegistry.makeSeeded({
+				registries: {
+					constructor: {
+						constructor: {
+							constructor: {
+								integrity: "sha512-own==",
+								tarball: "https://registry.example/constructor.tgz",
+								publishedAt: "2021-01-01T00:00:00.000Z",
+							},
+							"1.0.0": { integrity: "not-integrity", publishedAt: "not-a-date" },
+							"1.1.0": {},
+						},
+					},
+				},
+				distTags: { constructor: { constructor: "constructor" } },
+			});
+			const target = { registry: "constructor" };
+			const found = yield* r.version("constructor", "constructor", target);
+			assertSome(found, O.getOrThrow(found));
+			assert.instanceOf(found.value, PublishedVersion);
+			assert.strictEqual(found.value.name, "constructor");
+			assert.strictEqual(found.value.version, "constructor");
+			assert.strictEqual(found.value.integrity, "sha512-own==");
+			assert.strictEqual(found.value.tarball, "https://registry.example/constructor.tgz");
+			assert.deepStrictEqual(yield* r.versions("constructor", target), ["constructor", "1.0.0", "1.1.0"]);
+			assert.deepStrictEqual(yield* r.distTags("constructor"), { constructor: "constructor" });
+			const times = yield* r.publishTimes("constructor", target);
+			assert.deepStrictEqual(A.map(times, (time) => [time.version, DateTime.formatIso(time.publishedAt)]), [
+				["constructor", "2021-01-01T00:00:00.000Z"],
+			]);
+			const invalidIntegrity = yield* r.version("constructor", "1.0.0", target);
+			assertSome(invalidIntegrity, O.getOrThrow(invalidIntegrity));
+			assert.strictEqual(invalidIntegrity.value.integrity, undefined);
+			assert.strictEqual(invalidIntegrity.value.tarball, undefined);
+			assertNone(yield* r.version("missing", "constructor", target));
+			assertNone(yield* r.version("constructor", "missing", target));
+		}),
+	);
 });
 
 describe("RegistryReadError encoding", () => {

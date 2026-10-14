@@ -13,7 +13,7 @@ export const nodeFits = (): ProcessGuardOptions => ({
 	load: async () => undefined,
 });
 
-class ExitCalled extends S.TaggedError<ExitCalled>()("ExitCalled", {
+class ExitCalled extends S.TaggedError<ExitCalled, { readonly brand: unique symbol }>()("ExitCalled", {
 	code: S.UndefinedOr(S.Finite),
 }) {
 	override readonly name = "Error";

@@ -14,6 +14,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Match from "effect/Match";
 
@@ -108,7 +109,7 @@ export type DefaultCacheDirectoryOptions = typeof DefaultCacheDirectoryOptions.T
 
 /** Join under `home` with the platform family's separator — no IO, no `node:path`. */
 const under = (home: string, windows: boolean, ...parts: ReadonlyArray<string>): string =>
-	[home, ...parts].join(windows ? "\\" : "/");
+	A.join([home, ...parts], windows ? "\\" : "/");
 
 /**
  * Where each package manager caches by default — a facts table, one

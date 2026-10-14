@@ -281,3 +281,29 @@ describe("extglob depth behavior", () => {
 		assert.strictEqual(m.match("a"), oracle("a", p));
 	});
 });
+
+
+describe("repeated extglob automaton", () => {
+	it("preserves positive, negative, dot, case and segment oracle results", () => {
+		for (const pattern of ["*(a|aa)b", "+(a|aa)b", "*(a|?)", "!(+(a|aa))b", "@(*(a|aa)|x)b", "*(?|??)b", "*(|a)b", "*(a|aa)!(b)", "x/*(a|aa)b", "*(a|aa).*"]) {
+			for (const options of [{}, { dot: true }, { nocase: true }, { noext: true }]) {
+				const matcher = new Minimatch(pattern, options);
+				for (const candidate of ["", "b", "ab", "aaaab", "aaaaac", "Ab", ".b", "a.b", "a.", "b.", ".", "..", "a", "aa", "x", "x/aaaab", "x/aaaaac", "a/b"]) {
+					assert.strictEqual(matcher.match(candidate), oracle(candidate, pattern, options), `${pattern}: ${candidate}`);
+				}
+			}
+		}
+	});
+
+	it("retains parse and regexp metadata on the matcher owner", () => {
+		const matcher = new Minimatch("*(a|aa)b");
+		const segment = matcher.set[0]?.[0];
+		assert.instanceOf(segment, RegExp);
+		if (segment instanceof RegExp) {
+			assert.strictEqual(segment.source, "^(?:a|aa)*b$");
+			assert.strictEqual(segment._glob, "*(a|aa)b");
+			assert.strictEqual(segment._src, "(?:a|aa)*b");
+			assert.isFunction(segment._matchSegment);
+		}
+	});
+});

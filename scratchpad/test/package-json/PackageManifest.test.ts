@@ -107,6 +107,20 @@ describe("PackageManifest.decode", () => {
 });
 
 describe("PackageManifest wire fidelity", () => {
+	it.effect("keeps colliding script keys canonically ordered after a wire round trip", () =>
+		Effect.gen(function* () {
+			const manifest = PackageManifest.make({
+				dependencies: HashMap.empty(), devDependencies: HashMap.empty(),
+				peerDependencies: HashMap.empty(), optionalDependencies: HashMap.empty(),
+				scripts: HashMap.make(["", ""], ["\u0000", ""], [")", ""]), rest: { extra: "" },
+			});
+			const text = manifest.toJsonString();
+			assert.strictEqual(text, '{\n  "scripts": {\n    "": "",\n    "\\u0000": "",\n    ")": ""\n  },\n  "extra": ""\n}\n');
+			const decoded = yield* PackageManifest.decode(yield* S.decodeEffect(Json)(text));
+			assert.strictEqual(decoded.toJsonString(), text);
+		}),
+	);
+
 	it.effect("preserves unknown top-level fields through rest and flattens them on encode", () =>
 		Effect.gen(function* () {
 			const manifest = yield* PackageManifest.decode({

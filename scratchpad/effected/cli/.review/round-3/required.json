@@ -1,0 +1,388 @@
+{
+  "module": "cli",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/cli/CliLinks.ts",
+        "scratchpad/effected/cli/Doc.ts",
+        "scratchpad/effected/cli/Fmt.ts",
+        "scratchpad/effected/cli/internal/layout.ts",
+        "scratchpad/effected/cli/internal/renderDoc.ts",
+        "scratchpad/effected/cli/internal/renderMarkdown.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/CliLinks.test.ts",
+        "scratchpad/test/cli/Doc.test.ts",
+        "scratchpad/test/cli/Fmt.test.ts",
+        "scratchpad/test/cli/layout.test.ts",
+        "scratchpad/test/cli/internal/renderDoc.coverage.test.ts",
+        "scratchpad/test/cli/internal/renderMarkdown.coverage.test.ts",
+        "scratchpad/test/cli/internal/renderMarkdown.property.test.ts",
+        "scratchpad/test/cli/internal/layout.property.test.ts",
+        "scratchpad/test/cli/round3-render-schemas.test.ts"
+      ],
+      "findings": [
+        "cli-r3-1",
+        "cli-r3-8",
+        "cli-r3-14",
+        "cli-r3-16",
+        "cli-r3-18",
+        "cli-r3-19",
+        "cli-r3-20",
+        "cli-r3-23",
+        "cli-r3-27"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/cli/CliLog.ts",
+        "scratchpad/effected/cli/internal/fileSink.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/CliLog.file.test.ts",
+        "scratchpad/test/cli/CliLog.property.test.ts",
+        "scratchpad/test/cli/internal/fileSink.coverage.test.ts",
+        "scratchpad/test/cli/CliLog.status.test.ts"
+      ],
+      "findings": [
+        "cli-r3-2",
+        "cli-r3-12",
+        "cli-r3-13"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/cli/CliPrompt.ts",
+        "scratchpad/effected/cli/internal/fallbackAnswer.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/CliPrompt.test.ts",
+        "scratchpad/test/cli/ui/CliUi.fallback.test.ts"
+      ],
+      "findings": [
+        "cli-r3-3"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/cli/CliRuntime.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/CliRuntime.test.ts",
+        "scratchpad/test/cli/CliRuntime.coverage.test.ts",
+        "scratchpad/test/cli/CliMain.test.ts"
+      ],
+      "findings": [
+        "cli-r3-4",
+        "cli-r3-5",
+        "cli-r3-6"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/cli/CliAudience.ts",
+        "scratchpad/effected/cli/CliEnv.ts",
+        "scratchpad/effected/cli/CliTheme.ts",
+        "scratchpad/effected/cli/CliMessage.ts",
+        "scratchpad/effected/cli/internal/scanAudience.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/CliAudience.test.ts",
+        "scratchpad/test/cli/CliTheme.property.test.ts",
+        "scratchpad/test/cli/CliMessage.property.test.ts",
+        "scratchpad/test/cli/internal/scanAudience.property.test.ts",
+        "scratchpad/test/cli/round3-config-schemas.test.ts"
+      ],
+      "findings": [
+        "cli-r3-7",
+        "cli-r3-9",
+        "cli-r3-10",
+        "cli-r3-11",
+        "cli-r3-26"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/cli/TestTerminal.ts",
+        "scratchpad/effected/cli/testing.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/TestTerminal.regressions.test.ts",
+        "scratchpad/test/cli/round3-key-input-schema.test.ts"
+      ],
+      "findings": [
+        "cli-r3-15"
+      ]
+    },
+    {
+      "id": "g7",
+      "files": [
+        "scratchpad/effected/cli/Token.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/Token.test.ts"
+      ],
+      "findings": [
+        "cli-r3-17"
+      ]
+    },
+    {
+      "id": "g8",
+      "files": [
+        "scratchpad/effected/cli/ui/Confirm.ts",
+        "scratchpad/effected/cli/ui/Select.ts",
+        "scratchpad/effected/cli/ui/MultiSelect.ts",
+        "scratchpad/effected/cli/ui/KeyHelp.ts",
+        "scratchpad/effected/cli/ui/KeyTable.ts",
+        "scratchpad/effected/cli/ui.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/ui/widget-resize.test.ts",
+        "scratchpad/test/cli/ui/Confirm.property.test.ts",
+        "scratchpad/test/cli/ui/Select.property.test.ts",
+        "scratchpad/test/cli/ui/MultiSelect.property.test.ts",
+        "scratchpad/test/cli/ui/KeyTable.property.test.ts"
+      ],
+      "findings": [
+        "cli-r3-22",
+        "cli-r3-24",
+        "cli-r3-25"
+      ]
+    },
+    {
+      "id": "g9",
+      "files": [
+        "scratchpad/effected/cli/ui/CliUiLive.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/ui/CliUi.live.final.test.ts",
+        "scratchpad/test/cli/ui/CliUi.live.close.test.ts",
+        "scratchpad/test/cli/ui/CliUiLive.coverage.test.ts"
+      ],
+      "findings": [
+        "cli-r3-21",
+        "cli-r3-28"
+      ]
+    },
+    {
+      "id": "g10",
+      "files": [
+        "scratchpad/effected/cli/ui/TextInput.ts",
+        "scratchpad/effected/cli/ui/Tabs.ts",
+        "scratchpad/effected/cli/ui/testing/CliUiTest.ts"
+      ],
+      "tests": [
+        "scratchpad/test/cli/ui/TextInput.test.ts",
+        "scratchpad/test/cli/ui/TextInput.coverage.test.ts",
+        "scratchpad/test/cli/ui/Tabs.coverage.test.ts",
+        "scratchpad/test/cli/ui/testing/CliUiTest.coverage.test.ts"
+      ],
+      "findings": [
+        "cli-r3-29",
+        "cli-r3-30",
+        "cli-r3-31",
+        "cli-r3-32"
+      ]
+    }
+  ],
+  "findings": {
+    "cli-r3-1": {
+      "file": "scratchpad/effected/cli/CliLinks.ts",
+      "class": "bug",
+      "summary": "Schema-valid file targets retain an invalid URL key and crash raw-target consumers.",
+      "fix": "Normalize Doc.link targets using the URL-member guard, storing only the selected URL or file fields. Use S.is(LinkTarget.members[0]) in CliLinks.makeTarget, renderDoc.targetText and renderMarkdown.linkUrl so raw schema-valid targets are safe too. Preserve valid URL precedence. Extend Doc.test.ts with the stored-target assertion, CliLinks.test.ts with target/linker cases, and renderer tests with direct raw-target cases."
+    },
+    "cli-r3-2": {
+      "file": "scratchpad/effected/cli/CliLog.ts",
+      "class": "bug",
+      "summary": "File-sink dispatch and codec precedence disagree with valid configuration shapes.",
+      "fix": "Put the named path member first in CliLogFile and select it with its schema-derived guard. Otherwise resolve envVar. Preserve explicit-path precedence when both strings are valid. Add layer tests for path: undefined plus a valid envVar, and codec/runtime fidelity tests for two valid keys."
+    },
+    "cli-r3-3": {
+      "file": "scratchpad/effected/cli/internal/fallbackAnswer.ts",
+      "class": "bug",
+      "summary": "A valid argument fallback with an invalid flag sibling dies instead of failing MissingArgument.",
+      "fix": "Select the valid flag member with a schema-derived guard in internal/fallbackAnswer.ts, otherwise construct MissingArgument. Reuse the target member schema or a local named structural member without creating a CliPrompt/CliUi import cycle. Keep otherwise handling and valid flag precedence. Add the public fallback regression."
+    },
+    "cli-r3-4": {
+      "file": "scratchpad/effected/cli/CliRuntime.ts",
+      "class": "effect-idiom",
+      "summary": "Logger construction swallows platform self-interruption and executes the program.",
+      "fix": "Propagate logger-build causes containing interruption; fall back to the plain logger only for noninterrupt causes. Add the self-interrupting-platform regression, retaining noninterrupt fallback behavior."
+    },
+    "cli-r3-5": {
+      "file": "scratchpad/effected/cli/CliRuntime.ts",
+      "class": "bug",
+      "summary": "Runtime marker installation on immutable errors loses the original failure and chosen exit code.",
+      "fix": "Capture marker-installation failure and return a fresh marked error retaining the original failure as cause and the selected exit code. Retain in-place marking when it succeeds. Account for wrappers in the public reported signature and reportFailures channels, and replace yield* reported(...) with an explicitly typed failure where widening requires it. Add immutable-error exit-code/reporting regressions."
+    },
+    "cli-r3-6": {
+      "file": "scratchpad/effected/cli/CliRuntime.ts",
+      "class": "type-safety",
+      "summary": "reported advertises subtype fields that its structural-Error wrapper discards.",
+      "fix": "Widen the generic reported overload to E | Error (or an equally sound fallback union). Adjust internal failure paths and typed recovery tests to narrow wrappers explicitly. Preserve runtime wrapping and valid in-place marking. Add a structural Error lookalike regression with code and _tag, and a compile-time assertion that stripped subtype members require narrowing."
+    },
+    "cli-r3-7": {
+      "file": "scratchpad/effected/cli/CliAudience.ts",
+      "class": "schema",
+      "summary": "AudienceFlagInput and CliAudienceFlagsOptions remain erased pure-data models.",
+      "fix": "Define identity-annotated structural schemas for AudienceFlagInput and CliAudienceFlagsOptions and derive the same-name types, composing existing domain schemas. Preserve optional keys, explicit undefined compatibility and plain constructor behavior; do not introduce decoding into the runtime path. Add focused production-schema tests in the owning group. Direct-file value exports suffice; preserve existing type exports."
+    },
+    "cli-r3-8": {
+      "file": "scratchpad/effected/cli/CliLinks.ts",
+      "class": "schema",
+      "summary": "CliLinksOptions remain erased pure-data models.",
+      "fix": "Define identity-annotated structural schemas for CliLinksOptions and derive the same-name types, composing existing domain schemas. Preserve optional keys, explicit undefined compatibility and plain constructor behavior; do not introduce decoding into the runtime path. Add focused production-schema tests in the owning group. Direct-file value exports suffice; preserve existing type exports."
+    },
+    "cli-r3-9": {
+      "file": "scratchpad/effected/cli/CliEnv.ts",
+      "class": "schema",
+      "summary": "CliEnvTestOptions remain erased pure-data models.",
+      "fix": "Define identity-annotated structural schemas for CliEnvTestOptions and derive the same-name types, composing existing domain schemas. Preserve optional keys, explicit undefined compatibility and plain constructor behavior; do not introduce decoding into the runtime path. Add focused production-schema tests in the owning group. Direct-file value exports suffice; preserve existing type exports."
+    },
+    "cli-r3-10": {
+      "file": "scratchpad/effected/cli/CliTheme.ts",
+      "class": "schema",
+      "summary": "CliThemeOptions and CliThemeTestOptions remain erased pure-data models.",
+      "fix": "Define identity-annotated structural schemas for CliThemeOptions and CliThemeTestOptions and derive the same-name types, composing existing domain schemas. Preserve optional keys, explicit undefined compatibility and plain constructor behavior; do not introduce decoding into the runtime path. Add focused production-schema tests in the owning group. Direct-file value exports suffice; preserve existing type exports."
+    },
+    "cli-r3-11": {
+      "file": "scratchpad/effected/cli/CliMessage.ts",
+      "class": "schema",
+      "summary": "CliMessageOptions remain erased pure-data models.",
+      "fix": "Define identity-annotated structural schemas for CliMessageOptions and derive the same-name types, composing existing domain schemas. Preserve optional keys, explicit undefined compatibility and plain constructor behavior; do not introduce decoding into the runtime path. Add focused production-schema tests in the owning group. Direct-file value exports suffice; preserve existing type exports."
+    },
+    "cli-r3-12": {
+      "file": "scratchpad/effected/cli/CliLog.ts",
+      "class": "schema",
+      "summary": "CliLogStatusOptions remain erased pure-data models.",
+      "fix": "Define identity-annotated structural schemas for CliLogStatusOptions and derive the same-name types, composing existing domain schemas. Preserve optional keys, explicit undefined compatibility and plain constructor behavior; do not introduce decoding into the runtime path. Add focused production-schema tests in the owning group. Direct-file value exports suffice; preserve existing type exports."
+    },
+    "cli-r3-13": {
+      "file": "scratchpad/effected/cli/internal/fileSink.ts",
+      "class": "bug",
+      "summary": "An unprintable filesystem defect kills the logging drain and scope finalizer.",
+      "fix": "Capture the entire error-description operation, including message access and coercion, with Result.try and a stable fallback. Continue the existing one-warning disabled-drain path. Add throwing toString and message-getter regressions that assert successful scope closure."
+    },
+    "cli-r3-14": {
+      "file": "scratchpad/effected/cli/Fmt.ts",
+      "class": "bug",
+      "summary": "Custom ellipsis markers can increase the assembled grapheme width past the requested limit.",
+      "fix": "Measure the assembled retained prefix plus marker, removing whole retained graphemes until it fits; apply the same boundary handling to truncateSpans while preserving span attributes. Retain the existing overwide-marker policy. Add variation-selector and keycap-marker regressions for Fmt and layout."
+    },
+    "cli-r3-15": {
+      "file": "scratchpad/effected/cli/TestTerminal.ts",
+      "class": "schema",
+      "summary": "KeyInput has no executable production schema.",
+      "fix": "Define an identity-annotated KeyInput structural schema and derive its same-name type. Preserve arbitrary string names, optional modifiers, explicit undefined and queue conversion without adding decoding to input. Re-export the value from testing.ts. Add focused codec tests derived from the production schema."
+    },
+    "cli-r3-16": {
+      "file": "scratchpad/effected/cli/internal/layout.ts",
+      "class": "schema",
+      "summary": "The shared Span rendering payload has no executable production schema.",
+      "fix": "Define an identity-annotated structural Span schema using TokenName, Style and LinkTarget, and derive its type. Preserve optional keys, literal-true flags, plain construction and shared link identity; do not decode in layout operations. Add focused production-schema codec tests."
+    },
+    "cli-r3-17": {
+      "file": "scratchpad/effected/cli/Token.ts",
+      "class": "schema",
+      "summary": "Style field annotations repeat names without explaining their contracts.",
+      "fix": "Replace the five placeholder Style field descriptions with their existing foreground/color and terminal-attribute semantics. Keep identities, field types and rendering unchanged. Assert meaningful annotation text in the Token test surface."
+    },
+    "cli-r3-18": {
+      "file": "scratchpad/effected/cli/internal/layout.ts",
+      "class": "bug",
+      "summary": "Document layout still treats span boundaries as grapheme boundaries.",
+      "fix": "Segment and measure concatenated visible text across adjacent spans. Track offsets so each grapheme is atomic while retaining style and link fragments. Retarget layout.test.ts:227-241 and add split-versus-joined emoji/combining-sequence regressions."
+    },
+    "cli-r3-19": {
+      "file": "scratchpad/effected/cli/internal/renderMarkdown.ts",
+      "class": "bug",
+      "summary": "Adjacent Markdown code nodes inject backticks into their displayed content.",
+      "fix": "Fence concatenated consecutive compatible code spans as one code run, preserving link/emphasis boundaries. Add parser-backed regressions for adjacent code nodes and differing internal backtick runs."
+    },
+    "cli-r3-20": {
+      "file": "scratchpad/effected/cli/internal/renderMarkdown.ts",
+      "class": "bug",
+      "summary": "Splitting URL-like plain text across spans bypasses Markdown autolink escaping.",
+      "fix": "Apply contextual escaping to concatenated compatible non-code text runs while preserving explicit links and formatting boundaries. Add parser-backed split-versus-unsplit URL-prefix regressions."
+    },
+    "cli-r3-21": {
+      "file": "scratchpad/effected/cli/ui/CliUiLive.ts",
+      "class": "bug",
+      "summary": "Describing a failed live callback can throw again and discard subsequent runs.",
+      "fix": "Capture the full DEGRADED error-description operation, including message access, with Result.try and use a fixed fallback on failure. Add the two-run regression proving continued folding, one warning and the second run output."
+    },
+    "cli-r3-22": {
+      "file": "scratchpad/effected/cli/ui/KeyHelp.ts",
+      "class": "bug",
+      "summary": "Confirm, Select and MultiSelect overflow their single-row budgets during immediate resize repaint.",
+      "fix": "Clip KeyHelp and intended single-row message/detail elements with layout-time Text truncation or height: 1 overflow-hidden wrappers, and clip Confirm's answer row. Reserve the cursor column through layout. Extend widget-resize.test.ts with long Confirm/Select/MultiSelect content and assert every intermediate frame for 80-to-20 and 80-to-10 resizes."
+    },
+    "cli-r3-23": {
+      "file": "scratchpad/effected/cli/internal/renderDoc.ts",
+      "class": "perf",
+      "summary": "Table width allocation performs quadratic work for short-header columns.",
+      "fix": "Batch widest-column reductions using sorted width levels or equivalent O(C log C) allocation. Preserve the exact leftmost tie rule and handling of zero/one-cell columns. Add operation-count and output-equivalence regressions."
+    },
+    "cli-r3-24": {
+      "file": "scratchpad/effected/cli/ui/Confirm.ts",
+      "class": "schema",
+      "summary": "Confirm, Select and MultiSelect reducer-state families lack schema ownership.",
+      "fix": "Define annotated structural schema factories for the three state families and constituent toggle/choice/item/section payloads, parameterized by key/value schemas. Reuse ViewportState and S.HashSet, derive the public types and expose added values consistently in ui.ts. Preserve plain reducers, optional fields and input behavior. Add production-schema tests."
+    },
+    "cli-r3-25": {
+      "file": "scratchpad/effected/cli/ui/KeyTable.ts",
+      "class": "schema",
+      "summary": "Binding, KeyHelpRow and UseKeysOptions are modeled only by erased declarations and a test-only schema.",
+      "fix": "Define an annotated Binding factory parameterized by the action schema, composing the existing key domain, plus structural KeyHelpRow and UseKeysOptions schemas. Derive types, expose values in ui.ts and make KeyTable.property.test.ts use the production Binding factory. Preserve KeyTable behavior, binding priority, normalization and optionality."
+    },
+    "cli-r3-26": {
+      "file": "scratchpad/effected/cli/internal/scanAudience.ts",
+      "class": "schema",
+      "summary": "AudienceFlagValues and AudienceTally remain erased shared payloads.",
+      "fix": "Define identity-annotated structural AudienceFlagValues and AudienceTally schemas composing AudienceKind, and derive their types. Preserve plain results and exact tally behavior. Add focused production-schema tests."
+    },
+    "cli-r3-27": {
+      "file": "scratchpad/effected/cli/internal/renderMarkdown.ts",
+      "class": "schema",
+      "summary": "Markdown renderer Mode remains an erased named runtime literal domain.",
+      "fix": "Define an annotated module-local Mode LiteralKit for flow, cell and line, derive the type, and preserve all branch behavior."
+    },
+    "cli-r3-28": {
+      "file": "scratchpad/effected/cli/ui/CliUiLive.ts",
+      "class": "law",
+      "summary": "S3 replaced the upstream empty-on-None subscription check without a law or diagnostic forcing it.",
+      "fix": "Restore O.getOrElse(PubSub.remainingUnsafe(sub), () => 0) === 0, preserving the surrounding final-message logic. Restore any upstream assertion weakened specifically for this replacement, retaining mechanical canon/import adaptations; no such rewritten assertion was found in the S3 diff. Keep the original shutdown and final-message cases in CliUi.live.close.test.ts. Add a focused None fallback regression without depending on an unproven scheduler race."
+    },
+    "cli-r3-29": {
+      "file": "scratchpad/effected/cli/ui/TextInput.ts",
+      "class": "bug",
+      "summary": "Editing input after Enter in one chunk cancels TextInput submission.",
+      "fix": "Return the existing state from step when submitted is already true. Retain the validation-failure reset that re-enables editing. Add Enter-then-arrow and rejected-validation-then-edit regressions."
+    },
+    "cli-r3-30": {
+      "file": "scratchpad/effected/cli/ui/TextInput.ts",
+      "class": "bug",
+      "summary": "TextInput scrolling splits multi-code-point graphemes.",
+      "fix": "Walk the shared graphemes(text) result in head and tail, measuring and retaining whole clusters with Fmt.width. Add prefix/suffix window tests for joined emoji and regional-indicator flags; preserve submitted raw text."
+    },
+    "cli-r3-31": {
+      "file": "scratchpad/effected/cli/ui/testing/CliUiTest.ts",
+      "class": "bug",
+      "summary": "An ended screen handle can resize the currently mounted screen.",
+      "fix": "Check ended() inside resize's suspension before fake.resize and return the existing SCREEN_ENDED defect when true. Keep surfaced outside so recorded crashes retain precedence. Add a two-screen regression requiring stale resize failure and an unchanged second frame."
+    },
+    "cli-r3-32": {
+      "file": "scratchpad/effected/cli/ui/Tabs.ts",
+      "class": "bug",
+      "summary": "Shrinking uncontrolled tabs leaves the active window centered beyond the remaining list.",
+      "fix": "Clamp the effective uncontrolled index to the current tab range before navigation refs and fitAround. Preserve empty-list behavior. Strengthen the shrinking-list test to require the remaining active marker and visible label immediately after rerender."
+    }
+  }
+}

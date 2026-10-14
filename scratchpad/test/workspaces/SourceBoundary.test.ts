@@ -12,6 +12,104 @@ import { SourceBoundary } from "../../effected/workspaces/testing.ts";
 const lines = (text: string, rule: BoundaryRule): ReadonlyArray<number> =>
 	SourceBoundary.check("fixture.ts", text, [rule]).map((offence) => offence.line);
 
+describe("SourceBoundary round-3 boundary regressions", () => {
+	it("spares incomplete and malformed stdout members", () => {
+		for (const source of ["stdout.", "stdout?. /* comment */", "stdout.\\u00ZZ", "stdout.\\u{110000}"]) {
+			assert.deepStrictEqual(SourceBoundary.check("f.ts", source, ["stdout-write"]), [], source);
+		}
+	});
+	it("spares complete cooked stderr methods and flags escaped longer console names", () => {
+		for (const source of [
+			"console.\\u0065rror(x)", "console?.wa\\u0072n(x)", "console.tr\\u{61}ce(x)",
+			"conso\\u006ce /* comment */ ?. /* comment */ ass\\u0065rt(ok)",
+		]) assert.deepStrictEqual(SourceBoundary.check("f.ts", source, ["console-stdout"]), [], source);
+		for (const member of ["error\\u0058", "wa\\u0072n\\u{58}", "trace\\u{1d499}", "assert\\uD835\\uDC99"]) {
+			const source = `"😀";\n  console.${member}(x)`;
+			const found = SourceBoundary.check("f.ts", source, ["console-stdout"]);
+			assert.strictEqual(found.length, 1, source);
+			assert.strictEqual(found[0]?.line, 2, source);
+			assert.strictEqual(found[0]?.column, 3, source);
+		}
+	});
+
+	it("flags complete cooked stdout receivers and members at their original locations", () => {
+		for (const [receiver, member, detail] of [
+			["std\\u006fut", "wr\\u0069te", "stdout.write"],
+			["\\u{73}tdout", "\\u0077rite", "stdout.write"],
+			["stdout", "e\\u006ed", "stdout.end"],
+			["std\\u{6f}ut", "\\u{65}nd", "stdout.end"],
+		] as const) {
+			const source = `"😀";\n  child.${receiver} /* comment */ ?. /* comment */ ${member}(chunk)`;
+			assert.deepStrictEqual(SourceBoundary.check("f.ts", source, ["stdout-write"]).map((offence) => offence.label), [
+				`f.ts:2:9 stdout-write ${detail}`,
+			], source);
+		}
+	});
+
+	it("spares escaped longer stdout names, private receivers and chunkless end calls", () => {
+		for (const source of [
+			"stdout.wr\\u0069te\\u0058(chunk)", "stdout.end\\u{58}(chunk)", "stdout.write\\u{1d499}(chunk)",
+			"stdout\\u0058.write(chunk)", "\\u{78}stdout.write(chunk)", "this.#std\\u006fut.write(chunk)",
+			"std\\u006fut.e\\u006ed()", "stdout?.\\u0065nd( /* comment */ )",
+			'"stdout.wr\\u0069te(chunk)"', "/* stdout.wr\\u0069te(chunk) */",
+		]) assert.deepStrictEqual(SourceBoundary.check("f.ts", source, ["stdout-write"]), [], source);
+		assert.strictEqual(SourceBoundary.check("f.ts", "stdout.wr\\u0069te", ["stdout-write"])[0]?.detail, "stdout.write");
+	});
+
+	it("keeps default and custom exemptions exact when an escaped suffix continues the name", () => {
+		for (const token of ["process.env.__PACKAGE_VERSION__", "process.platform"]) {
+			const options = token === "process.platform" ? { ignoreTokens: [token] } : {};
+			assert.deepStrictEqual(SourceBoundary.check("f.ts", `${token};`, ["process"], options), []);
+			for (const suffix of ["\\u0058", "\\u{58}", "\\u{1d499}", "\\uD835\\uDC99"]) {
+				const source = `  ${token}${suffix};`;
+				assert.isTrue(SourceBoundary.referencesProcess(source, options), source);
+				assert.deepStrictEqual(SourceBoundary.check("f.ts", source, ["process"], options).map((offence) => offence.label), [
+					"f.ts:1:3 process process",
+				], source);
+				assert.deepStrictEqual(SourceBoundary.check("f.ts", source, [{ forbidTokens: [token] }]), [], source);
+			}
+			assert.strictEqual(SourceBoundary.check("f.ts", `${token};`, [{ forbidTokens: [token] }]).length, 1);
+		}
+		assert.isTrue(SourceBoundary.referencesProcess("process.env.\\u005f_PACKAGE_VERSION__;"));
+		assert.isFalse(SourceBoundary.referencesProcess("process.plat\\u0066orm;", { ignoreTokens: ["process.plat\\u0066orm"] }));
+		assert.isTrue(SourceBoundary.referencesProcess("process.platform;", { ignoreTokens: ["process.plat\\u0066orm"] }));
+		assert.isTrue(SourceBoundary.referencesProcess("globalThis.process.platform;", { ignoreTokens: ["process.platform"] }));
+	});
+
+	it("flags optional end calls with a chunk and spares optional end calls without one", () => {
+		for (const receiver of ["stdout", "process.stdout", "stdout?"]) {
+			const member = `${receiver}.end`;
+			assert.deepStrictEqual(SourceBoundary.check("f.ts", `  ${member} /* comment */ ?. /* comment */ (chunk);`, ["stdout-write"]).map((offence) => offence.label), [
+				`f.ts:1:${receiver === "process.stdout" ? 11 : 3} stdout-write stdout.end`,
+			]);
+			assert.deepStrictEqual(SourceBoundary.check("f.ts", `${member}?.( /* comment */ );`, ["stdout-write"]), []);
+		}
+		assert.strictEqual(SourceBoundary.check("f.ts", 'stdout.e\\u006ed?.("chunk");', ["stdout-write"])[0]?.detail, "stdout.end");
+		assert.strictEqual(SourceBoundary.check("f.ts", "stdout.write?.();", ["stdout-write"])[0]?.detail, "stdout.write");
+	});
+
+	it("finds executable process reads after spaced, commented and repeated postfix assertions", () => {
+		for (const operand of ["x !", "x/* comment */!", "x!!", "x ! /* comment */ !", "f(x) ! !", "xs[0] ! !"]) {
+			const source = `const y = ${operand} / 2;\n  process.cwd(); const z = 1 / 4;`;
+			assert.deepStrictEqual(SourceBoundary.check("f.ts", source, ["process"]).map((offence) => offence.label), [
+				"f.ts:2:3 process process",
+			], source);
+		}
+		assert.deepStrictEqual(SourceBoundary.check("f.ts", "!! /process.cwd()/.test(value);", ["process"]), []);
+	});
+
+	it("spares local nested global-object names while recognizing genuine global-object chains", () => {
+		for (const receiver of ["child.globalThis", "child?.window", "child.self", "child?.global", "child.globalThis.window", "child.\\u{77}indow"]) {
+			const source = `const child = { globalThis: { process: 42 }, window: { console: 42 } }; ${receiver}?.process; ${receiver}.console.log(x);`;
+			assert.deepStrictEqual(SourceBoundary.check("f.ts", source, ["process", "console", "console-stdout"]), [], source);
+		}
+		for (const receiver of ["globalThis", "globalThis.window", "globalThis?.globalThis", "globalTh\\u0069s?.\\u{77}indow", "...globalThis"]) {
+			const source = `${receiver}?.pr\\u006fcess; ${receiver}.console.log(x);`;
+			assert.deepStrictEqual(SourceBoundary.check("f.ts", source, ["process", "console-stdout"]).map((offence) => offence.detail), ["process", "console.log"], source);
+		}
+	});
+});
+
 describe("SourceBoundary.stripComments", () => {
 	it("blanks line and block comments to spaces, keeping the length and every line break", () => {
 		const text = "const a = 1; // process\n/* process\n */ const b = 2;";

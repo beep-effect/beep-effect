@@ -12,6 +12,10 @@ import { Repo } from "./Repo.ts";
 
 const $I = $ScratchpadId.create("effected/github/GitBranch");
 
+const BranchRef = S.Struct({ object: S.Struct({ sha: S.String }) }).annotate(
+  $I.annote("BranchRef", { description: "The commit SHA selected from a GitHub branch ref response." }),
+);
+
 class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("UnstubbedError", {
 	message: S.String,
 }, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
@@ -435,11 +439,14 @@ const make = (client: GitHubClient["Service"]): GitBranchShape => {
   const readRef = Effect.fn("readRef")(function* (operation: string, branch: string) {
     const { owner, repo } = yield* Repo;
     const short = yield* rejectEmpty(operation, branch);
-    return yield* client.request("GET /repos/{owner}/{repo}/git/ref/{ref}", {
+    const ref = yield* client.request("GET /repos/{owner}/{repo}/git/ref/{ref}", {
       owner,
       repo,
       ref: `heads/${short}`,
     });
+    return yield* S.decodeEffect(BranchRef)(ref).pipe(
+      Effect.mapError((error) => GitHubError.decode(operation, "GitHub returned an unexpected branch ref", error)),
+    );
   });
 
   const shaOption = Effect.fn("GitBranch.shaOption")(function* (branch: string) {

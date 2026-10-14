@@ -14,6 +14,8 @@ import { assertNone } from "@effect/vitest/utils";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+import * as R from "effect/Record";
+import { vi } from "vitest";
 import { TestClock } from "effect/testing";
 import { AppIdentity, BotIdentity, GitHubApp, InstallationToken } from "../../effected/github/GitHubApp.ts";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
@@ -37,6 +39,11 @@ const pemBanner = (edge: "BEGIN" | "END"): string => `-----${edge} PRIVATE KEY--
 const privateKey = `${pemBanner("BEGIN")}\n${Base64.encode(keyBytes)}\n${pemBanner("END")}`;
 
 const CREDENTIALS = { appId: "Iv1.test", privateKey: Redacted.make(privateKey) };
+
+// Keep the real codecs while allowing one lifecycle test to pause token decoding.
+vi.mock("effect/Schema", (importOriginal) =>
+	importOriginal<typeof S>().then((actual) => ({ ...actual, decodeEffect: vi.fn(actual.decodeEffect) })),
+);
 
 const NO_RETRY = RetryPolicy.none;
 
@@ -96,6 +103,51 @@ describe("GitHubApp.token", () => {
 			// One call: a known installation id needs no discovery.
 			assert.strictEqual(script.count(), 1);
 			assert.include(script.calls[0]?.url ?? "", "/app/installations/42/access_tokens");
+		}),
+	);
+
+	withApp("returns a typed token error for a null mint response", [{ status: 201, body: null }], (app) =>
+		Effect.gen(function* () {
+			const error = yield* Effect.flip(app.token({ ...CREDENTIALS, installationId: 42 }));
+			assert.strictEqual(error._tag, "GitHubAppError");
+			assert.strictEqual(error.kind, "token");
+		}),
+	);
+
+	for (const [field, body] of [
+		["fractional installation id", { id: 1.5, account: { login: "acme" } }],
+		["invalid account login", { id: 1, account: { login: 42 } }],
+		["null installation", null],
+		["invalid account object", { id: 1, account: "acme" }],
+	] as const) {
+		withApp(`returns a typed installation error for ${field}`, [{ status: 200, body: [body] }], (app) =>
+			Effect.gen(function* () {
+				const error = yield* Effect.flip(app.installations(CREDENTIALS));
+				assert.strictEqual(error._tag, "GitHubAppError");
+				assert.strictEqual(error.kind, "installation");
+			}),
+		);
+	}
+
+	withApp(
+		"preserves own __proto__ and ordinary string grants during token normalization",
+		[{
+			status: 201,
+			body: {
+				token: "ghs_permissions",
+				expires_at: "2099-01-01T00:00:00Z",
+				permissions: R.fromEntries([
+					["__proto__", "read"], ["contents", "write"], ["metadata", "read"], ["invalid", 42],
+				]),
+			},
+		}],
+		(app) => Effect.gen(function* () {
+			const token = yield* app.token({ ...CREDENTIALS, installationId: 42 });
+			assert.isTrue(R.has(token.permissions, "__proto__"), "the special grant must be an own property");
+			assert.deepStrictEqual(R.get(token.permissions, "__proto__"), O.some("read"));
+			assert.deepStrictEqual(R.get(token.permissions, "contents"), O.some("write"));
+			assert.deepStrictEqual(R.get(token.permissions, "metadata"), O.some("read"));
+			assert.isFalse(R.has(token.permissions, "invalid"));
 		}),
 	);
 
@@ -240,6 +292,46 @@ describe("GitHubApp.revoke and scopedToken", () => {
 });
 
 describe("GitHubApp.identity", () => {
+	for (const [field, body] of [
+		["wrong-type name", { slug: "my-app", name: 42 }],
+		["wrong-type slug", { slug: 42, name: "My App" }],
+		["missing name", { slug: "my-app" }],
+	] as const) {
+		withApp(`returns a typed identity error for ${field}`, [{ status: 200, body }], (app, script) =>
+			Effect.gen(function* () {
+				const error = yield* Effect.flip(app.identity(CREDENTIALS));
+				assert.strictEqual(error._tag, "GitHubAppError");
+				assert.strictEqual(error.kind, "identity");
+				assert.strictEqual(script.count(), 1, "reject app fields before the bot lookup");
+			}),
+		);
+	}
+
+	for (const [field, body] of [
+		["fractional bot id", { id: 1.5 }],
+		["wrong-type bot id", { id: "7" }],
+		["null bot", null],
+	] as const) {
+		withApp(`returns a typed identity error for ${field}`, [
+			{ status: 200, body: { slug: "my-app", name: "My App" } },
+			{ status: 200, body },
+		], (app) => Effect.gen(function* () {
+			const error = yield* Effect.flip(app.identity(CREDENTIALS));
+			assert.strictEqual(error._tag, "GitHubAppError");
+			assert.strictEqual(error.kind, "identity");
+		}));
+	}
+
+	withApp("defaults a missing slug and keeps the bot HTTP failure fallback", [
+		{ status: 200, body: { name: "My App" } },
+		{ status: 403, body: { message: "forbidden" } },
+	], (app) => Effect.gen(function* () {
+		const identity = yield* app.identity(CREDENTIALS);
+		assert.strictEqual(identity.slug, "");
+		assert.strictEqual(identity.name, "My App");
+		assert.strictEqual(identity.userId, undefined);
+	}));
+
 	withApp(
 		"resolves slug, name and bot user id",
 		[
@@ -326,6 +418,105 @@ describe("GitHubApp.clientLayer", () => {
 			);
 		});
 	}
+
+	for (const blockedMethod of ["DELETE", "POST"] as const) {
+		const script = scriptedFetch([
+			tokenReply({ expiresAt: "1970-01-01T00:00:00Z", token: "ghs_first" }),
+			{ status: 204 },
+		]);
+		const started = Deferred.makeUnsafe<AbortSignal>();
+		let calls = 0;
+		let blocked = false;
+		function fetch(input: string | URL | Request, init?: RequestInit): Promise<Response> {
+			calls += 1;
+			if (calls > 1 && !blocked && init?.method === blockedMethod && init.signal !== undefined && init.signal !== null) {
+				blocked = true;
+				const signal = init.signal;
+				Deferred.doneUnsafe(started, Effect.succeed(signal));
+				return Effect.runPromise(Effect.never, { signal });
+			}
+			return script.fetch(input, init);
+		}
+		fetch.preconnect = globalThis.fetch.preconnect;
+
+		it.layer(scopedClientLayer({ ...script, fetch }), { timeout: "30 seconds" })((it) => {
+			it.effect(`scope closure aborts blocked ${blockedMethod} rotation before final revocation`, () =>
+				Effect.gen(function* () {
+					const { client, close } = yield* ScopedClient;
+					const requesting = yield* client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" })
+						.pipe(Effect.forkChild);
+					const signal = yield* Deferred.await(started);
+					const waiting = yield* client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" })
+						.pipe(Effect.forkChild);
+					yield* close;
+					assert.isTrue(signal.aborted, "scope cleanup must abort the active rotation without caller cancellation");
+					assert.isTrue(Exit.hasInterrupts(yield* Fiber.await(requesting)), "the active request must terminate");
+					assert.isTrue(Exit.hasInterrupts(yield* Fiber.await(waiting)), "queued refreshes must stop after closure");
+					assert.deepStrictEqual(script.calls.map((call) => call.method), ["POST", "DELETE"]);
+					assert.strictEqual(script.calls[1]?.headers.authorization, "token ghs_first");
+					assert.strictEqual(calls, 3, "only the observed initial credential is revoked, with one blocked attempt");
+				}),
+			);
+		});
+	}
+
+	{
+		const script = scriptedFetch([
+			tokenReply({ expiresAt: "1970-01-01T00:00:00Z", token: "ghs_first" }),
+			{ status: 204 },
+			tokenReply({ token: "ghs_observed" }),
+			{ status: 204 },
+		]);
+		it.layer(scopedClientLayer(script), { timeout: "30 seconds" })((it) => {
+			it.effect("revokes a received replacement when cancellation interrupts token postprocessing", () =>
+				Effect.gen(function* () {
+					const { client, close } = yield* ScopedClient;
+					const decoding = yield* Deferred.make<void>();
+					const actual = yield* Effect.promise(() => vi.importActual<typeof S>("effect/Schema"));
+					const originalDecode = actual.decodeEffect;
+					const stalledDecode: typeof S.decodeEffect = (schema, options) => {
+						const decode = originalDecode(schema, options);
+						return (input, parseOptions) => {
+							const result = decode(input, parseOptions);
+							return schema.ast === InstallationToken.ast
+								? result.pipe(Effect.tap(() => Deferred.succeed(decoding, undefined)), Effect.andThen(Effect.never))
+								: result;
+						};
+					};
+					yield* Effect.acquireRelease(
+						Effect.sync(() => vi.mocked(S.decodeEffect).mockImplementation(stalledDecode)),
+						(spy) => Effect.sync(() => spy.mockRestore()),
+					);
+					const requesting = yield* client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" })
+						.pipe(Effect.forkChild);
+					yield* Deferred.await(decoding);
+					assert.strictEqual(script.count(), 3, "the replacement HTTP response was received before cancellation");
+					yield* Fiber.interrupt(requesting);
+					assert.isTrue(Exit.hasInterrupts(yield* Fiber.await(requesting)));
+					yield* close;
+					assert.deepStrictEqual(script.calls.map((call) => call.method), ["POST", "DELETE", "POST", "DELETE"]);
+					assert.strictEqual(script.calls[1]?.headers.authorization, "token ghs_first");
+					assert.strictEqual(script.calls[3]?.headers.authorization, "token ghs_observed");
+				}),
+			);
+		});
+	}
+
+	it.effect("revokes an observed credential when initial token decoding rejects the response", () =>
+		Effect.gen(function* () {
+			const script = scriptedFetch([
+				tokenReply({ token: "ghs_invalid_expiry", expiresAt: "not a date" }),
+				{ status: 204 },
+			]);
+			const result = yield* GitHubApp.clientLayer(
+				{ ...CREDENTIALS, installationId: 42 }, { fetch: script.fetch, retry: NO_RETRY },
+			).pipe(Layer.build, Effect.scoped, Effect.flip);
+			assert.strictEqual(result._tag, "GitHubAppError");
+			assert.strictEqual(result.kind, "token");
+			assert.deepStrictEqual(script.calls.map((call) => call.method), ["POST", "DELETE"]);
+			assert.strictEqual(script.calls[1]?.headers.authorization, "token ghs_invalid_expiry");
+		}),
+	);
 
 	const withClientLayer = <A, E>(
 		name: string,

@@ -1,6 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import type { NamedColor, Style, TokenName } from "../../effected/cli/index.ts";
 import { Token } from "../../effected/cli/index.ts";
+import { Style as StyleSchema } from "../../effected/cli/Token.ts";
 import { nearest256, paintStyle } from "../../effected/cli/internal/ansi.ts";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
@@ -9,6 +10,19 @@ describe("Token", () => {
 		assert.deepStrictEqual(Token.hex("#e09a4e"), { fg: "#e09a4e" });
 		assert.deepStrictEqual(Token.named("red"), { fg: "red" });
 		assert.deepStrictEqual(Token.style({ bold: true }), { bold: true });
+	});
+
+	it("annotates every Style field with its contract rather than its name", () => {
+		const description = (field: keyof typeof StyleSchema.fields) =>
+			StyleSchema.fields[field].ast.annotations?.description;
+		assert.strictEqual(
+			description("fg"),
+			"The foreground colour: a named ANSI colour or a `#`-prefixed hex spelling; a hex that is not `#rgb` or `#rrggbb` is accepted and ignored when rendered.",
+		);
+		assert.strictEqual(description("bold"), "Renders the text bold (SGR 1) when true.");
+		assert.strictEqual(description("dim"), "Renders the text dim, or faint (SGR 2), when true.");
+		assert.strictEqual(description("italic"), "Renders the text italic (SGR 3) when true.");
+		assert.strictEqual(description("underline"), "Renders the text underlined (SGR 4) when true.");
 	});
 });
 

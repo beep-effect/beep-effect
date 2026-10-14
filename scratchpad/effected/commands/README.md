@@ -100,6 +100,8 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **numeric-domains** — The lab restricts scripted exits to the shared integer ExitCode domain, while upstream permits fractional and non-finite numbers (scratchpad/test/commands/ScriptedSpawner.test.ts:156).
 - **schema-first** — The lab permits Tool.make to omit three schema-defaulted fields while upstream requires them, retaining required decoded and encoded fields (scratchpad/test/commands/Tool.property.test.ts:32; scratchpad/test/commands/Tool.property.test.ts:79).
 - **added-exports** — The lab newly exports the ExitCode schema and derived type from Run.ts, while upstream exposes neither (scratchpad/effected/commands/Run.ts:104; scratchpad/test/commands/ScriptedSpawner.test.ts:156).
+- **schema-first** — The lab SpawnRecord validator now rejects invalid stream/sink payloads under numeric FD spellings such as fd 3 and fd0x3 while preserving valid carrier identity; upstream only declares the record type (scratchpad/test/commands/ScriptedSpawner.test.ts:196; scratchpad/test/commands/ScriptedSpawner.test.ts:213).
+- **tsgo-diagnostics** — The lab adds nominal brand type parameters to 18 schema classes/errors where upstream and earlier port declarations omit them, preserving runtime and encoded fields (scratchpad/effected/commands/LocalExec.ts:124; scratchpad/effected/commands/Run.ts:191; scratchpad/effected/commands/Tool.ts:93; scratchpad/effected/commands/ToolDiscovery.ts:83; scratchpad/effected/commands/ScriptedSpawner.ts:16; scratchpad/effected/commands/internal/capture.ts:36).
 
 ### Dependency backlog
 

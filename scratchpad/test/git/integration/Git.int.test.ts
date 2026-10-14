@@ -46,7 +46,7 @@ import { runCollected } from "../../../effected/git/internal/run.ts";
 
 const $I = $ScratchpadId.create("effected/git/Git.int.test");
 
-class FixtureSetupError extends S.TaggedError<FixtureSetupError>($I`FixtureSetupError`)(
+class FixtureSetupError extends S.TaggedError<FixtureSetupError, { readonly brand: unique symbol }>($I`FixtureSetupError`)(
 	"FixtureSetupError",
 	{ message: S.String.annotate({ description: "The failing Git invocation, exit code and stderr." }) },
 	$I.annote("FixtureSetupError", { description: "A real Git fixture command exited unsuccessfully." }),

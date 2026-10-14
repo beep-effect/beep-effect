@@ -7,6 +7,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
+import * as Struct from "effect/Struct";
 import * as Terminal from "effect/Terminal";
 import { ColorLevel } from "./ColorLevel.ts";
 import { colorDepth, colorKeys } from "./internal/colorDepth.ts";
@@ -86,21 +87,41 @@ export interface TerminalEnvOptions {
 	readonly stderrIsTerminal?: Effect.Effect<boolean>;
 }
 
+const PartialStreamEnv = StreamEnv.mapFields(Struct.map(S.optionalKey)).annotate(
+	$I.annote("PartialStreamEnv", { description: "Optional stream capabilities merged over a quiet terminal snapshot." }),
+);
+
 /**
  * The options {@link TerminalEnv.layerTest} takes: fields to set over the quiet terminal.
+ *
+ * **Example** (Validate a partial terminal override)
+ *
+ * ```ts
+ * import { TerminalEnvTestOptions } from "@beep/scratchpad/effected/env/TerminalEnv";
+ * import * as S from "effect/Schema";
+ * console.log(S.is(TerminalEnvTestOptions)({ stdout: { isTerminal: true } })) // true
+ * ```
  *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface TerminalEnvTestOptions {
+export const TerminalEnvTestOptions = S.Struct({
 	/** Whether standard input is a terminal. */
-	readonly stdinIsTerminal?: boolean;
+	stdinIsTerminal: S.optionalKey(S.Boolean).pipe($I.annoteKey("TerminalEnvTestOptions.stdinIsTerminal", { description: "Whether standard input is a terminal." })),
 	/** Fields merged over the quiet stdout. */
-	readonly stdout?: Partial<StreamEnv>;
+	stdout: S.optionalKey(PartialStreamEnv).pipe($I.annoteKey("TerminalEnvTestOptions.stdout", { description: "Fields merged over the quiet stdout." })),
 	/** Fields merged over the quiet stderr. */
-	readonly stderr?: Partial<StreamEnv>;
-}
+	stderr: S.optionalKey(PartialStreamEnv).pipe($I.annoteKey("TerminalEnvTestOptions.stderr", { description: "Fields merged over the quiet stderr." })),
+}).annotate($I.annote("TerminalEnvTestOptions", { description: "Optional fields to set over the quiet terminal in layerTest." }));
+
+/**
+ * The optional fields accepted by {@link TerminalEnv.layerTest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TerminalEnvTestOptions = typeof TerminalEnvTestOptions.Type;
 
 /**
  * The shape of the {@link TerminalEnv} service: a snapshot taken when the layer is built, not a live view.

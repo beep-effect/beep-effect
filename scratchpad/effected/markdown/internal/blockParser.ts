@@ -322,7 +322,9 @@ class BlockParser implements BlockScanner {
 		const replacement = makeBlockNode(type, block.startOffset, block.startLine, block.depth);
 		replacement.parent = parent;
 		replacement.stringContent = block.stringContent;
-		replacement.segments.push(...block.segments);
+		for (const segment of block.segments) {
+			replacement.segments.push(segment);
+		}
 		replacement.endOffset = block.endOffset;
 		replacement.endLine = block.endLine;
 

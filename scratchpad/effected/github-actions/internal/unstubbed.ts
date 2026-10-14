@@ -54,6 +54,4 @@ export class UnstubbedMemberError extends S.TaggedError<UnstubbedMemberError>($I
 export const unstubbed =
 	(double: string) =>
 	(member: string): Effect.Effect<never> =>
-		Effect.sync(() => {
-			throw UnstubbedMemberError.make({ message: `${double}: ${member}() was called but not stubbed — pass a \`${member}\` override.` });
-		});
+		Effect.die(UnstubbedMemberError.make({ message: `${double}: ${member}() was called but not stubbed — pass a \`${member}\` override.` }));

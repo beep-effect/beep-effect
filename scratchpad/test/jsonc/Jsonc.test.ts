@@ -80,6 +80,21 @@ describe("Jsonc", () => {
       assert.isTrue(JsoncStringifyErrorCode.is.SerializationFailed("SerializationFailed"));
     });
 
+    it("constructs and decodes finite parse-error positions, rejecting non-finite fields", () => {
+      for (const value of [-1, 0.5, -0.5, Number.MAX_SAFE_INTEGER + 1]) {
+        const input = { code: "ValueExpected", offset: value, length: value, line: value, character: value } as const;
+        assert.deepStrictEqual({ ...JsoncParseErrorDetail.make(input) }, input);
+        assertSuccess(Result.map(S.decodeResult(JsoncParseErrorDetail)(input), (decoded) => ({ ...decoded })), input);
+      }
+      for (const value of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+        for (const field of ["offset", "length", "line", "character"] as const) {
+          const input = { code: "ValueExpected", offset: 0, length: 0, line: 0, character: 0, [field]: value } as const;
+          assert.throws(() => JsoncParseErrorDetail.make(input));
+          assertFailure(Result.mapError(S.decodeResult(JsoncParseErrorDetail)(input), (error) => error._tag), "SchemaError");
+        }
+      }
+    });
+
     it("JsoncParseErrorDetail and JsoncParseError are schema classes", () => {
       const detail = JsoncParseErrorDetail.make({ code: "ValueExpected", offset: 7, length: 1, line: 0, character: 7 });
       const error = JsoncParseError.make({ errors: [detail], input: '{ "a": }' });
@@ -419,6 +434,26 @@ describe("Jsonc", () => {
 
     it("ignores comments and formatting", () => {
       assert.isTrue(Jsonc.equals('{ "a": 1 /* c */ }', '{\n  "a": 1 // note\n}'));
+    });
+
+    it("does not read later array getters after an earlier mismatch, including nested arrays", () => {
+      for (const nested of [false, true]) {
+        let reads = 0;
+        const value = [9, 2];
+        Object.defineProperty(value, 1, { get: () => { reads++; return 2; } });
+        assert.isFalse(Jsonc.equalsValue(nested ? "[[1,2]]" : "[1,2]", nested ? [value] : value));
+        assert.strictEqual(reads, 0);
+      }
+    });
+
+    it("returns false before a later throwing array getter, including nested arrays", () => {
+      for (const nested of [false, true]) {
+        let reads = 0;
+        const value = [9, 2];
+        Object.defineProperty(value, 1, { get: () => { reads++; throw new RangeError("later getter"); } });
+        assert.isFalse(Jsonc.equalsValue(nested ? "[[1,2]]" : "[1,2]", nested ? [value] : value));
+        assert.strictEqual(reads, 0);
+      }
     });
 
     it("equalsValue compares against a JS value", () => {

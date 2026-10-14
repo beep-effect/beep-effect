@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
@@ -16,6 +17,12 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 }, $I.annote("UnstubbedError", { description: "An unconfigured test-double member was called." })) {}
 
 const JsonValue = S.String.pipe(S.NullOr, S.fromJsonString);
+
+const ContentResponse = S.Struct({
+  type: S.String,
+  encoding: S.optionalKey(S.Unknown),
+  content: S.optionalKey(S.Unknown),
+}).annotate($I.annote("ContentResponse", { description: "The outer repository content response before file-specific decoding." }));
 
 /**
  * Read a text file out of a repository at a ref.
@@ -157,7 +164,7 @@ const make = (client: GitHubClient["Service"]): GitHubContentShape => {
 	) {
 		const { owner, repo } = yield* Repo;
 		yield* Effect.annotateCurrentSpan({ owner, repo, path, ref: options?.ref ?? "" });
-		const content = yield* client.request("GET /repos/{owner}/{repo}/contents/{path}", {
+		const response = yield* client.request("GET /repos/{owner}/{repo}/contents/{path}", {
 			owner,
 			repo,
 			path,
@@ -165,9 +172,12 @@ const make = (client: GitHubClient["Service"]): GitHubContentShape => {
 		});
 		// A directory comes back as an array. Reading one as a file would be a
 		// silent type confusion.
-		if (A.isArray(content)) {
+		if (A.isArray(response)) {
 			return yield*GitHubError.rejected("GitHubContent.getFile", 422, `${path} is a directory`);
 		}
+		const content = yield* S.decodeEffect(ContentResponse)(response).pipe(
+			Effect.mapError((error) => GitHubError.decode("GitHubContent.getFile", "GitHub returned unexpected file content", error)),
+		);
 		if (content.type !== "file") {
 			return yield*
 				GitHubError.rejected("GitHubContent.getFile", 422, `${path} is a ${content.type}, not a file`);
@@ -183,7 +193,10 @@ const make = (client: GitHubClient["Service"]): GitHubContentShape => {
 					`${path} came back with encoding ${O.getOrElse(S.encodeUnknownOption(JsonValue)(content.encoding), () => "undefined")} — it is probably too large for the contents API`,
 				);
 		}
-		return Buffer.from(content.content.replace(/\s/g, ""), "base64").toString("utf8");
+		const encoded = yield* S.decodeUnknownEffect(S.String)(content.content).pipe(
+			Effect.mapError((error) => GitHubError.decode("GitHubContent.getFile", "GitHub returned unexpected base64 content", error)),
+		);
+		return Buffer.from(Str.replace(/\s/g, "")(encoded), "base64").toString("utf8");
 	});
 
 	return {

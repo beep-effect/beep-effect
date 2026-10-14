@@ -1,0 +1,237 @@
+{
+  "module": "github",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/github/GitHubError.ts",
+        "scratchpad/effected/github/internal/octokit.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/GitHubError.test.ts",
+        "scratchpad/test/github/transport.test.ts",
+        "scratchpad/test/github/internal/octokit.coverage.test.ts"
+      ],
+      "findings": [
+        "req-01",
+        "req-17"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/github/GitHubApp.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/GitHubApp.test.ts"
+      ],
+      "findings": [
+        "req-02",
+        "req-08",
+        "req-15",
+        "req-16"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/github/GitHubIssue.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/GitHubIssue.coverage.test.ts"
+      ],
+      "findings": [
+        "req-03",
+        "req-04",
+        "req-13"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/github/CheckRun.ts",
+        "scratchpad/effected/github/GitHubRelease.ts",
+        "scratchpad/effected/github/GitHubCommit.ts",
+        "scratchpad/effected/github/DeploymentEnvironment.ts",
+        "scratchpad/effected/github/GitCommit.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/CheckRun.coverage.test.ts",
+        "scratchpad/test/github/GitHubRelease.coverage.test.ts",
+        "scratchpad/test/github/GitHubCommit.coverage.test.ts",
+        "scratchpad/test/github/DeploymentEnvironment.test.ts",
+        "scratchpad/test/github/GitCommit.coverage.test.ts"
+      ],
+      "findings": [
+        "req-05",
+        "req-06",
+        "req-07",
+        "req-09",
+        "req-10"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/github/GitBranch.ts",
+        "scratchpad/effected/github/GitHubContent.ts",
+        "scratchpad/effected/github/GitTag.ts",
+        "scratchpad/effected/github/GitHubRepository.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/GitBranch.test.ts",
+        "scratchpad/test/github/GitHubContent.coverage.test.ts",
+        "scratchpad/test/github/GitTag.test.ts",
+        "scratchpad/test/github/GitHubRepository.test.ts"
+      ],
+      "findings": [
+        "req-11",
+        "req-12",
+        "req-18",
+        "req-19",
+        "req-20",
+        "req-21"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/github/Attestation.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github/Attestation.coverage.test.ts"
+      ],
+      "findings": [
+        "req-14"
+      ]
+    }
+  ],
+  "findings": {
+    "req-01": {
+      "file": "scratchpad/effected/github/GitHubError.ts",
+      "class": "bug",
+      "summary": "Make REST throwable coercion total",
+      "fix": "Protect both coercions locally with Result.try and a stable fallback, preserving successful descriptions and the original cause. Reuse the GraphQL conversion pattern without requiring edits to GraphQL.ts. Add uncoercible-object and array regressions in GitHubError.test.ts."
+    },
+    "req-02": {
+      "file": "scratchpad/effected/github/GitHubApp.ts",
+      "class": "bug",
+      "summary": "Let scope cleanup terminate a blocked token rotation",
+      "fix": "Track and stop in-flight rotation before final cleanup; interrupt and join its fiber, then revoke the owned token without waiting behind an unbounded permit holder. Preserve refresh serialization and atomic ownership updates. Add a scope-close-while-refresh-is-blocked regression in GitHubApp.test.ts that proves abort, completion and correct revocation."
+    },
+    "req-03": {
+      "file": "scratchpad/effected/github/GitHubIssue.ts",
+      "class": "effect-idiom",
+      "summary": "Decode issue comments before marker matching and construction",
+      "fix": "Validate each inspected body's string shape before matching, retaining nullish-body normalization and upstream short-circuit search; decode the selected and created CommentRecord effectfully and map failures to GitHubError.decode. Do not eagerly decode/traverse the entire tail after a match or reintroduce the eager map removed in round 2. Add malformed-body/id/URL and early-match regressions in GitHubIssue.coverage.test.ts."
+    },
+    "req-04": {
+      "file": "scratchpad/effected/github/GitHubIssue.ts",
+      "class": "effect-idiom",
+      "summary": "Decode issue projections and label shapes in the typed channel",
+      "fix": "Decode the selected wire fields before unsafe label access and decode IssueInfo effectfully, mapping failures to the calling operation's GitHubError.decode. Preserve valid label omission, state normalization and ordering; use effectful list traversal. Add fractional-number/null-label/null-name regressions in GitHubIssue.coverage.test.ts."
+    },
+    "req-05": {
+      "file": "scratchpad/effected/github/CheckRun.ts",
+      "class": "effect-idiom",
+      "summary": "Decode check-run references instead of throwing",
+      "fix": "Make refOf an effectful decoder of validated selected fields and map errors to GitHubError.decode for create/get. Preserve numeric-id normalization and valid defaults; cover fractional ids and wrong-type fields in CheckRun.coverage.test.ts."
+    },
+    "req-06": {
+      "file": "scratchpad/effected/github/GitHubRelease.ts",
+      "class": "effect-idiom",
+      "summary": "Decode release and asset projections",
+      "fix": "Decode ReleaseInfo and ReleaseAsset effectfully with operation-specific GitHubError.decode mapping; validate selected wire shapes before unsafe access and use effectful traversal. Preserve uploadAsset's validated response path and valid defaults/order. Add invalid release-id/boolean and asset-size cases in GitHubRelease.coverage.test.ts."
+    },
+    "req-07": {
+      "file": "scratchpad/effected/github/GitHubCommit.ts",
+      "class": "effect-idiom",
+      "summary": "Decode commit summaries and comparison models",
+      "fix": "Decode the selected summary and comparison shapes effectfully, mapping errors to GitHubError.decode for get/list/compare, including compare's embedded commits. Validate nested wire access, preserve optional-field semantics and fileOf, and use effectful traversal. Add message/login/status/count regressions in GitHubCommit.coverage.test.ts."
+    },
+    "req-08": {
+      "file": "scratchpad/effected/github/GitHubApp.ts",
+      "class": "effect-idiom",
+      "summary": "Decode GitHub App responses before dereferencing",
+      "fix": "Decode selected wire response shapes before nested access, then decode Installation/AppIdentity/InstallationToken effectfully and map failures to the existing installation/identity/token GitHubAppError kinds. Preserve valid defaults, fallback behavior and order. Add null-token and invalid installation/identity/bot fields to GitHubApp.test.ts."
+    },
+    "req-09": {
+      "file": "scratchpad/effected/github/DeploymentEnvironment.ts",
+      "class": "effect-idiom",
+      "summary": "Decode environment list results without synchronous throws",
+      "fix": "Validate each selected environment wire shape and decode DeploymentEnvironmentInfo effectfully with GitHubError.decode('DeploymentEnvironment.list', ...). Preserve valid result representation and order; add wrong-type-name regression in DeploymentEnvironment.test.ts. Central codemod records the forced validation change."
+    },
+    "req-10": {
+      "file": "scratchpad/effected/github/GitCommit.ts",
+      "class": "effect-idiom",
+      "summary": "Decode Git Database commit references",
+      "fix": "Decode selected wire fields, including tree and parent SHA shapes, before projection; decode CommitRef effectfully and map failures to GitHubError.decode('GitCommit.get', ...). Add malformed-parent and missing-nested-object cases in GitCommit.coverage.test.ts."
+    },
+    "req-11": {
+      "file": "scratchpad/effected/github/GitBranch.ts",
+      "class": "type-safety",
+      "summary": "Validate branch ref SHA before returning typed success",
+      "fix": "Decode {object:{sha:S.String}} inside readRef and map errors to GitHubError.decode(operation, ...), preserving notFound recovery. Add wrong-type SHA and missing-object regressions for sha/shaOption/exists in GitBranch.test.ts."
+    },
+    "req-12": {
+      "file": "scratchpad/effected/github/GitHubContent.ts",
+      "class": "bug",
+      "summary": "Validate base64 file content before string operations",
+      "fix": "Validate the outer response before property access and the base64 branch's content as a string before replace. Map malformed data to GitHubError.decode while preserving existing directory/non-file/unsupported-encoding rejection behavior. Add null/omitted/wrong-type content cases through both file APIs in GitHubContent.coverage.test.ts."
+    },
+    "req-13": {
+      "file": "scratchpad/effected/github/GitHubIssue.ts",
+      "class": "bug",
+      "summary": "Traverse older issue cross-reference timeline pages",
+      "fix": "Add pageInfo and a before cursor to the owned query/schema and walk previous pages until a match or exhaustion. Preserve the CROSS_REFERENCED_EVENT filter and early match. Add a preceding-page match regression in GitHubIssue.coverage.test.ts."
+    },
+    "req-14": {
+      "file": "scratchpad/effected/github/Attestation.ts",
+      "class": "bug",
+      "summary": "Complete attestation cursor pagination",
+      "fix": "Use existing client pagination machinery for this route and owned ListResponse/entry decoding before projection. Preserve API-version headers, predicate filter, document order and initial notFound/422 empty-list recovery. Add a two-page Link/cursor regression in Attestation.coverage.test.ts; keep shared pagination helpers read-only."
+    },
+    "req-15": {
+      "file": "scratchpad/effected/github/GitHubApp.ts",
+      "class": "bug",
+      "summary": "Preserve own permission keys during normalization",
+      "fix": "Filter entries to string values and build the permission record with R.fromEntries so every accepted key becomes an own property. Add an own '__proto__' plus ordinary-grant regression through token normalization in GitHubApp.test.ts."
+    },
+    "req-16": {
+      "file": "scratchpad/effected/github/GitHubApp.ts",
+      "class": "bug",
+      "summary": "Own an observed minted credential before interruptible postprocessing",
+      "fix": "Separate interruptible mint HTTP from masked ownership transfer of a returned raw credential, registering cleanup before interruptible decoding/client construction. Track a revocable observed token even if decoding or construction does not finish. Keep stalled HTTP abortable and do not claim revocation of a token never observed by the client. Add a deterministic cancellation-after-response regression in GitHubApp.test.ts proving observed-token revocation."
+    },
+    "req-17": {
+      "file": "scratchpad/effected/github/internal/octokit.ts",
+      "class": "bug",
+      "summary": "Reject invalid rate-limit snapshots without discarding responses",
+      "fix": "In internal/octokit.ts record, validate the complete parsed snapshot nonthrowingly against RateLimitSnapshot. Leave the previous Ref value unchanged and succeed with void when invalid; update it only with a valid snapshot. Keep header parsing, retry-delay saturation and classification intact. Add complete-triple unsafe-integer/overflow REST, pagination and GraphQL regressions in transport.test.ts and internal/octokit.coverage.test.ts, including prior-snapshot retention. No headers.ts or Resilience.ts edit is needed."
+    },
+    "req-18": {
+      "file": "scratchpad/effected/github/GitTag.ts",
+      "class": "effect-idiom",
+      "summary": "Decode latest-semver candidates before fallible access",
+      "fix": "Validate the entry's string name before prefix/extraction, preserve prefix/non-version/prerelease short-circuit skips, and validate nested commit SHA for selected candidates before effectful SemverTag decoding. Map validation failures to GitHubError.decode('GitTag.latestSemver', ...), retaining one-pass selection and valid ordering. Add wrong-name/null-SHA/missing-commit typed-failure cases in GitTag.test.ts; do not force SHA validation on candidates the upstream algorithm skips."
+    },
+    "req-19": {
+      "file": "scratchpad/effected/github/GitTag.ts",
+      "class": "bug",
+      "summary": "Normalize tag upsert creation exactly once",
+      "fix": "Pass the original tag to create and retain the once-normalized short for reset. Add successful-create and already-exists-fallback regressions with tags/tags/foo in GitTag.test.ts."
+    },
+    "req-20": {
+      "file": "scratchpad/effected/github/GitHubRepository.ts",
+      "class": "bug",
+      "summary": "Exclude undefined settings from writes and applied-key reports",
+      "fix": "Skip undefined-valued entries before routing or recording their keys, preserving false, null and explicitly supplied values. Add REST-only and GraphQL-only undefined-input regressions asserting empty reports and zero HTTP requests in GitHubRepository.test.ts."
+    },
+    "req-21": {
+      "file": "scratchpad/effected/github/GitTag.ts",
+      "class": "effect-idiom",
+      "summary": "Validate nested tag records before the existing list decoder",
+      "fix": "Decode the selected page-element wire shape before nested access, then feed validated fields into the existing TagRef decoder and error mapping. Preserve list's existing decode-before-prefix behavior and ordering. Add null/missing-commit typed-failure cases in GitTag.test.ts."
+    }
+  }
+}

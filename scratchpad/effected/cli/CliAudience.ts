@@ -12,7 +12,7 @@ import { CliConfig, CliError, Command as CommandModule, Flag, GlobalFlag } from 
 import { CliInteractive } from "./CliInteractive.ts";
 import { canPrompt } from "./internal/canPrompt.ts";
 import { refreshFailureTarget } from "./internal/failureTarget.ts";
-import { scanAudience, tallyAudience } from "./internal/scanAudience.ts";
+import { AudienceFlagValues, scanAudience, tallyAudience } from "./internal/scanAudience.ts";
 import { WizardDropped } from "./internal/wizardGate.ts";
 
 const $I = $ScratchpadId.create("effected/cli/CliAudience");
@@ -45,35 +45,62 @@ const interactiveWhenFlagged = (kind: AudienceKind, current: boolean): Effect.Ef
 /**
  * The four parsed audience flags a root command carries once {@link CliAudience.flags} is shared onto it.
  *
+ * **Example** (Validate shared audience flags)
+ *
+ * ```ts
+ * import { AudienceFlagInput } from "@beep/scratchpad/effected/cli/CliAudience";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(AudienceFlagInput)({ audience: [], human: [], agent: [true], ci: [] })) // true
+ * ```
+ *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface AudienceFlagInput {
-	/** Every `--audience <kind>` occurrence. */
-	readonly audience: ReadonlyArray<AudienceKind>;
-	/** Every `--human` occurrence. */
-	readonly human: ReadonlyArray<boolean>;
-	/** Every `--agent` occurrence. */
-	readonly agent: ReadonlyArray<boolean>;
-	/** Every `--ci` occurrence. */
-	readonly ci: ReadonlyArray<boolean>;
-}
+export const AudienceFlagInput = S.Struct(AudienceFlagValues.fields).annotate(
+	$I.annote("AudienceFlagInput", { description: "The four audience flag arrays shared onto a root command." }),
+);
+
+/**
+ * The plain audience flags carried by a root command.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type AudienceFlagInput = typeof AudienceFlagInput.Type;
 
 /**
  * Options for {@link CliAudience.flags}.
+ *
+ * **Example** (Hide shared flags from help)
+ *
+ * ```ts
+ * import { CliAudienceFlagsOptions } from "@beep/scratchpad/effected/cli/CliAudience";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(CliAudienceFlagsOptions)({ hidden: true })) // true
+ * ```
  *
  * @public
  * @category configuration
  * @since 0.0.0
  */
-export interface CliAudienceFlagsOptions {
+export const CliAudienceFlagsOptions = S.Struct({
 	/**
 	 * Hide all four flags from every help screen. They still parse and resolve; describe them in the root
 	 * command's description instead.
 	 */
-	readonly hidden?: boolean | undefined;
-}
+	hidden: S.optional(S.Boolean).annotate($I.annote("CliAudienceFlagsOptions.hidden", { description: "Hide the audience flags without changing parsing or resolution." })),
+}).annotate($I.annote("CliAudienceFlagsOptions", { description: "Presentation options for shared audience flags." }));
+
+/**
+ * The plain audience flag presentation options.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CliAudienceFlagsOptions = typeof CliAudienceFlagsOptions.Type;
 
 /**
  * Resolves to nothing for a command that carries the four audience flags, and to an unsatisfiable marker otherwise,

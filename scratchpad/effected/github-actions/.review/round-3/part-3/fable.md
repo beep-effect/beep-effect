@@ -1,0 +1,59 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the named github-actions files against the pinned upstream oracle and the round-2 inventory, without changing anything. First I'm loading the binding decisions, closed findings, and the port notes so I don't re-raise them.Round-2 items on these files are already recorded as deviations. I'll read the current sources against the pinned oracle and look only for defects that review did not close.I'll finish the remaining candidates against the pinned oracle and D11, then report only findings that clear that bar.### fable-3-1
+- file: scratchpad/effected/github-actions/PackageManagerInstaller.ts:707
+- class: bug   severity: required
+- standard: D11; D9 / section 14 (`upstream-bug`). The containment comment at 701–706. `FileSystem.stat` follows links (`NFS.stat` in `packages/platform/node-shared/src/NodeFileSystem.ts:608–614`); `makeFileInfo` reports `SymbolicLink` only from an lstat-style result (`NodeFileSystem.ts:581`). `NFS.chmod` (`NodeFileSystem.ts:105–111`) and `NFS.copyFile` (`NodeFileSystem.ts:94–100`) follow an existing link. `tarExtractCommand` uses `xzf` (`archiveCommands.ts:269`). Upstream lexical check: `PackageManagerInstaller.ts:539–544`.
+- failure: A tarball can put a symlink at `package/` or at a bin path that stays lexically inside the package. `typeAt` (`fsProbe.ts:33`) then reports `Directory` or `File`, `assertFile` accepts it, and `chmod` (`PackageManagerInstaller.ts:1041`) and `copyFile` (`1028`, `1034`) change the link target outside the extract tree. The shim execs that link. Cache hits go through the same `readPackageManifest`.
+- fix: Reject a `packageDir` whose `readLink` succeeds. Require `realPath` of every bin and every overlay destination to stay inside `realPath(packageDir)` by `path.relative`. Keep a symlink whose real path stays inside the package. Add a regression with a symlink bin and a symlink `package/` root, and record the upstream bug.
+
+### fable-3-2
+- file: scratchpad/effected/github-actions/ToolInstaller.ts:494
+- class: bug   severity: required
+- standard: D11; D9 / section 14 (`upstream-bug`). Staging comment at 371–379. `Path.join` normalizes `..` (`packages/effect/src/Path.ts:505–523`, `normalizeStringPosix` at 270–298). Upstream `ToolInstaller.ts:420` joins the same way. The hit probe uses the same join at `ToolInstaller.ts:545`.
+- failure: `cacheFile("/source", "../victim", "tool", "1")` copies to the parent of staging (`/cache/victim` when staging is `/cache/.staging-example`), then renames that staging directory into the cache and returns success. The published entry can omit the binary, and the escaped write stays outside staging cleanup. `provisionFile` accepts the same `binary` segment on a cache hit.
+- fix: Before `copyFile` and before the hit `typeAt`, require the joined path to resolve strictly inside staging or the cache entry. Return the existing `cacheFailed` for an escape. Add a regression that rejects `../victim` before any copy or cache publication, and record the upstream bug.
+
+### fable-3-3
+- file: scratchpad/effected/github-actions/PackageManagerInstaller.ts:466
+- class: bug   severity: required
+- standard: D11; D9 / section 14 (`upstream-bug`). Node treats an argv that begins with `-` as an option until `--`; `-e` evaluates the rest of that argv. Round-2 r13 made the full shim target, including cache-root bytes, part of the literal-invocation contract. `WindowsShimTarget` (`PackageManagerInstaller.ts:48`) still admits `-`. Upstream `posixShim` is `PackageManagerInstaller.ts:323–324`.
+- failure: `posixShim` emits `exec node '<target>' "$@"` and `cmdShim` (`PackageManagerInstaller.ts:471`) emits `node "<target>" %*`. `ToolInstaller.cachePath` (`ToolInstaller.ts:682`) places the cache root first. A root whose text is `-eprocess.exit(1)//` is one Node argv and runs as code. Absolute roots that start with `/` or a drive letter stay scripts.
+- fix: On the `isNodeScript` branches only, emit `exec node -- ${literal} "$@"` and `node -- "${target}" %*`. Update the shim snapshots and add a dash-leading cache-root regression. Record the upstream bug.
+
+### fable-3-4
+- file: scratchpad/effected/github-actions/internal/archiveCommands.ts:232
+- class: bug   severity: required
+- standard: D11; D9 / section 14 (`upstream-bug`). Info-ZIP treats an operand that begins with `-` as an option until `--`. `-h` prints help and exits 0. Same class as round-2 r18, which inserted `--` for `zip` only. Upstream `archiveCommands.ts:186` matches this argv. `ToolInstaller.extractZip` (`ToolInstaller.ts:520`) passes the public archive string through, and `extractWith` (`ToolInstaller.ts:364`) treats exit code 0 as a finished extract.
+- failure: POSIX argv is `["-oq", source, "-d", destination]`. `unzip -oq -h -d <dest>` is help, exits 0, and leaves the destination empty. `archiveCommands.test.ts` pins the current argv. The Windows `ExtractToDirectory` branch is quoted.
+- fix: Use `["-oq", "-d", options.destination, "--", options.source]`. Update the POSIX assertion and add a source of `-h`. Leave `tarExtractCommand` on `["xzf", archive, "-C", destination]`, because `f` consumes the next argv. Record the upstream bug.
+
+### fable-3-5
+- file: scratchpad/effected/github-actions/PackageManagerInstaller.ts:872
+- class: bug   severity: required
+- standard: D11; D9 / section 14 (`upstream-bug`). Cache-hit comment at 876–880 (a missing shim write is `cacheFailed`, a silent hole in the PATH contract). `nativeWindowsBins` (`747–751`) appends `.exe` for `PNPM_NATIVE_BIN_NAMES`. `isPlaceholder` (`761–769`) runs on the pre-retarget path. Upstream `cachedRecord` does the same retarget at `PackageManagerInstaller.ts:689–691` and returns at `699` with no stat of the `.exe`.
+- failure: A Windows pnpm cache whose manifest lists a native optional dependency, whose extensionless `pnpm` file is a real binary (not the `#` placeholder), and which has no `pnpm.exe`, returns success with `bins.pnpm` joined to `pnpm.exe`. `writeShims` can also point a new shim at that missing file. `assertFile` is used for the bun hit (`843`) and for the overlay tarball (`1013`), and is skipped after this retarget.
+- fix: After `nativeWindowsBins`, `assertFile` each retargeted path and fail with `layoutUnexpected` when it is missing, before shim creation or the success record. Add a cache-hit regression with the extensionless binary present and `.exe` absent. Record the upstream bug.
+
+### fable-3-6
+- file: scratchpad/effected/github-actions/internal/sigv4.ts:164
+- class: bug   severity: required
+- standard: D11; D9 / section 14 (`upstream-bug`). `sign` (`228–231`) says the returned record is what was signed. `SigV4Request.headers` accepts any casing. Upstream `sigv4.ts:95–107` spreads the same way and folds case in a `Map`.
+- failure: `Host` and `host` are different record keys, so a caller `Host` survives next to the generated `host`. The canonical map (`176–180`) keeps one lowercased value. The returned record (`269–272`) still has both. The Fetch `Headers` constructor appends same-name values, so the transport host can be `stale, example.test` while the signature covers only `example.test`. The same split applies to `X-Amz-Date` / `x-amz-date` and to two caller headers that differ only by case.
+- fix: Lowercase names into one record before adding `host`, `x-amz-date`, `x-amz-content-sha256`, and `x-amz-security-token`, and build both the canonical headers and the returned headers from that record. Add a mixed-case collision regression. Record the upstream bug.
+
+### fable-3-7
+- file: scratchpad/effected/github-actions/internal/cacheService.ts:90
+- class: effect-idiom   severity: required
+- standard: effect-laws-v1 law 12; EF-7b; D11. Round-2 r12 required this form in `DryRun.ts` because the green tsgo, oxlint, and four beep-law gates do not flag `condition ? Effect : Effect`. `DryRun.ts:50` is the in-module `Bool.match` shape. These two sites are still on this commit and were not in that inventory.
+- failure: `reserveUpload` chooses `Effect.fail` or `Effect.succeedSome` with `!isOk(created) || url === undefined ? … : …` (lines 90–92). `finalizeUpload` chooses `Effect.fail` or `Effect.void` with `finalized === CONFLICT || !isOk(finalized) ? … : …` (lines 133–135). Both are boolean branches in runtime orchestration. Results stay correct.
+- fix: Import `effect/Boolean` as `Bool` and use `Bool.match` with lazy branches at both sites, preserving the conflict short-circuit, the missing-url refusal, and the success values. `lookupDownload` returns an `Option`, so it stays out of this change.
+
+### fable-3-8
+- file: scratchpad/effected/github-actions/ToolInstaller.ts:179
+- class: schema   severity: required
+- standard: standards/ARCHITECTURE.md, “Schemas Are Executable Contracts”; standards/effect-first-development.md EF-33; standards/schema-first-development-prompt.md, “Schema owns pure data”; D5/D11. Round-2 r11 required this for exported `S3Config`. The green gates leave these declarations intact. `ExtractOptions` (`ToolInstaller.ts:127`), `ProvisionFileOptions` (`179`), and `ProvisionedFile` (`208`) are public `@category models` made of representable fields.
+- failure: These three contracts have no executable source from which callers can derive guards, decoding, equivalence, annotations, or schema arbitraries.
+- fix: Replace them with identity-annotated schemas and derive the same-name types. Use `S.Struct` so plain-object construction stays valid. Preserve optional and explicit-undefined fields. Add a round-trip property for each schema. Record the law-forced additions centrally.
+
+REQUIRED: 8
+BACKLOG: 0

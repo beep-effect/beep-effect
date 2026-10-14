@@ -1,8 +1,11 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
 import { CommitRef, GitCommit } from "../../effected/github/GitCommit.ts";
+import { harness } from "./harness.ts";
 
 const repoLayer = Repo.layer(RepoRef.make({ owner: "o", repo: "r" }));
 
@@ -43,3 +46,21 @@ describe("GitCommit test double contract", () => {
     }));
   });
 });
+
+for (const [name, invalid] of [
+  ["parent sha", { sha: "commit", tree: { sha: "tree" }, parents: [{ sha: null }] }],
+  ["null parent", { sha: "commit", tree: { sha: "tree" }, parents: [null] }],
+  ["missing tree", { sha: "commit", parents: [] }],
+  ["null tree", { sha: "commit", tree: null, parents: [] }],
+  ["missing parents", { sha: "commit", tree: { sha: "tree" } }],
+] as const) {
+  const { base } = harness([{ status: 200, body: invalid }]);
+  it.layer(GitCommit.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
+    it.effect(`returns a typed Git Database commit decode failure for invalid ${name}`, () => Effect.gen(function* () {
+      const service = yield* GitCommit;
+      assertFailure(Result.mapError(yield* Effect.result(service.get("commit")), (error) => ({
+        tag: error._tag, kind: error.kind, operation: error.operation,
+      })), { tag: "GitHubError", kind: "decode", operation: "GitCommit.get" });
+    }));
+  });
+}

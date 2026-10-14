@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
@@ -116,6 +117,22 @@ describe("DeploymentEnvironment.upsert", () => {
 });
 
 describe("DeploymentEnvironment.list", () => {
+	for (const [name, invalid] of [
+		["wrong-type name", { name: 42 }],
+		["missing name", {}],
+		["null environment", null],
+	] as const) {
+		const { base } = harness([{ status: 200, body: { total_count: 2, environments: [{ name: "prod" }, invalid] } }]);
+		it.layer(DeploymentEnvironment.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
+			it.effect(`returns a typed list decode failure for a ${name}`, () => Effect.gen(function* () {
+				const service = yield* DeploymentEnvironment;
+				assertFailure(Result.mapError(yield* Effect.result(service.list), (error) => ({
+					tag: error._tag, kind: error.kind, operation: error.operation,
+				})), { tag: "GitHubError", kind: "decode", operation: "DeploymentEnvironment.list" });
+			}));
+		});
+	}
+
 	{
 		const requested: RecordedCall[] = [];
 		it.layer(

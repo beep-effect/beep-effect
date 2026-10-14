@@ -16,6 +16,7 @@ import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 
 /**
@@ -117,10 +118,25 @@ export const canMerge: {
 const safeFields = (value: Record<string, unknown>): Record<string, unknown> =>
   R.fromEntries(
     A.map(
-      A.filter(R.keys(value), (key) => !HashSet.has(FORBIDDEN, key)),
+      A.filter(R.keys(value), (key) => !HashSet.has(FORBIDDEN, key) && !Str.startsWith("~effect/Schema/Class/")(key)),
       (key) => Tuple.make(key, value[key])
     )
   );
+
+// Schema class markers are inherited, non-enumerable metadata. Copy names,
+// without invoking prototype getters, and never admit markers from the patch.
+const classProvenance = (base: Record<string, unknown>): Record<string, unknown> => {
+  let markers: ReadonlyArray<readonly [string, string]> = [];
+  let prototype = Reflect.getPrototypeOf(base);
+  while (prototype !== null) {
+    markers = A.appendAll(markers, A.map(
+      A.filter(A.filter(Reflect.ownKeys(prototype), P.isString), Str.startsWith("~effect/Schema/Class/")),
+      (key) => Tuple.make(key, key)
+    ));
+    prototype = Reflect.getPrototypeOf(prototype);
+  }
+  return R.fromEntries(markers);
+};
 
 /**
  * Shallow-merge `patch` over `base`, with `patch` winning.
@@ -130,7 +146,8 @@ const safeFields = (value: Record<string, unknown>): Record<string, unknown> =>
  * Copies only safe own enumerable fields into a plain record. Record filtering
  * and spread semantics ensure inherited setters never run. Schema construction
  * and encoding in the journal validate the patch and create its class instance.
- * The transient record does not retain the base's prototype.
+ * The transient record does not retain the base's prototype. Own schema-class
+ * markers retain its provenance until the patch encoder removes that metadata.
  *
  * **Example** (Retain untouched fields)
  *
@@ -149,4 +166,5 @@ export const shallowMerge: {
 } = dual(2, (base: Record<string, unknown>, patch: Record<string, unknown>): Record<string, unknown> => ({
   ...safeFields(base),
   ...safeFields(patch),
+  ...classProvenance(base),
 }));

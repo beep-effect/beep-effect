@@ -48,16 +48,16 @@ export const makeWire = <Self, RD = never, RE = never>(
 		S.decode(
 			SchemaTransformation.transform({
 				decode: (raw: { readonly [k: string]: unknown }): Record<string, unknown> => {
-					const known: Record<string, unknown> = {};
+					// Declared subclass fields can include `__proto__`; fromEntries
+					// defines own data properties instead of invoking inherited setters.
+					const known = R.fromEntries(A.filter(R.toEntries(raw), ([key]) => HashSet.has(knownKeys, key)));
 					// A null-prototype record: on a plain object, `rest["__proto__"] = v`
 					// MUTATES the prototype instead of storing data, so a manifest
 					// carrying an own `__proto__` key would both pollute the record and
-					// lose the key on encode. Known keys come from `Class.fields` and
-					// cannot collide with `__proto__`.
+					// lose the key on encode.
 					const rest: Record<string, unknown> = { __proto__: null };
 					for (const [key, value] of R.toEntries(raw)) {
-						if (HashSet.has(knownKeys, key)) known[key] = value;
-						else rest[key] = value;
+						if (!HashSet.has(knownKeys, key)) rest[key] = value;
 					}
 					// Spread uses define-own-property semantics, so an own `__proto__`
 					// data key survives into the encode side untouched.

@@ -5,8 +5,8 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
-import type { AudienceOptions } from "../../effected/env/Audience.ts";
-import { Audience } from "../../effected/env/Audience.ts";
+import * as S from "effect/Schema";
+import { Audience, AudienceOptions } from "../../effected/env/Audience.ts";
 import { CurrentRuntimeEnv, RuntimeEnv } from "../../effected/env/RuntimeEnv.ts";
 
 /** A pure logger stub that replaces the defaults, so TestConsole is never involved. */
@@ -209,6 +209,53 @@ describe("Audience options", () => {
 		const options: AudienceOptions = { envVar: "OKFIT_AUDIENCE" };
 		assert.isDefined(Audience.layer(options));
 	});
+
+	it.effect("decodes omitted envVar without adding a key", () =>
+		Effect.map(S.decodeEffect(AudienceOptions)({}), (options) => assert.deepStrictEqual(options, {})),
+	);
+
+	it.effect("accepts strings without trimming or restricting variable names", () =>
+		Effect.gen(function* () {
+			for (const envVar of ["", "OKFIT_AUDIENCE", " ", "custom.name", "観客\n"]) {
+				const options = yield* S.decodeEffect(AudienceOptions)({ envVar });
+				assert.deepStrictEqual(options, { envVar });
+			}
+		}),
+	);
+
+	it("rejects non-string envVar values and explicit undefined", () => {
+		for (const envVar of [undefined, null, 1, true, {}, []]) {
+			assert.isFalse(S.is(AudienceOptions)({ envVar }));
+		}
+	});
+
+	it.effect("plain omitted-key options preserve detection despite an override in the environment", () =>
+		Effect.gen(function* () {
+			const context = yield* Layer.build(
+				Audience.layer({}).pipe(
+					Layer.provide(CurrentRuntimeEnv.layer),
+					Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ CLAUDECODE: "1", OKFIT_AUDIENCE: "human" }))),
+				),
+			);
+			const audience = Context.get(context, Audience);
+			assert.deepStrictEqual({ ...audience }, { kind: "agent", source: "detected" });
+		}),
+	);
+
+	it.effect("decoded options preserve the named override's precedence over detection", () =>
+		Effect.gen(function* () {
+			const context = yield* Layer.build(
+				S.decodeEffect(AudienceOptions)({ envVar: "CUSTOM_AUDIENCE" }).pipe(
+					Effect.map(Audience.layer),
+					Layer.unwrap,
+					Layer.provide(CurrentRuntimeEnv.layer),
+					Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ CLAUDECODE: "1", CUSTOM_AUDIENCE: "human" }))),
+				),
+			);
+			const audience = Context.get(context, Audience);
+			assert.deepStrictEqual({ ...audience }, { kind: "human", source: "override" });
+		}),
+	);
 });
 
 describe("Audience.layerTest", () => {

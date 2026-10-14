@@ -504,7 +504,7 @@ export class AppDirs extends Context.Service<AppDirs, AppDirsShape>()($I`AppDirs
 				const runtimeDir = dirs.runtime;
 				const ensureRuntime: Effect.Effect<O.Option<string>, AppDirsError> = (
 					runtimeDir === undefined
-						? Effect.succeed(O.none<string>())
+						? Effect.succeedNone
 						: Effect.asSome(makeDir("runtime", runtimeDir))
 				).pipe(Effect.withSpan("AppDirs.ensureRuntime"));
 

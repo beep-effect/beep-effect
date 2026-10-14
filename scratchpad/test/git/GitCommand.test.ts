@@ -296,17 +296,17 @@ describe("GitCommand", () => {
 	});
 
 	it("commitInfo builds a NUL-separated single-commit log format", () => {
-		assertGitCommand(GitCommand.commitInfo(), ["log", "-1", "--format=%H%x00%G?%x00%B", "HEAD"]);
-		assertGitCommand(GitCommand.commitInfo("v1.0.0"), ["log", "-1", "--format=%H%x00%G?%x00%B", "v1.0.0"]);
+		assertGitCommand(GitCommand.commitInfo(), ["log", "--no-show-signature", "-1", "--format=%H%x00%G?%x00%B", "HEAD"]);
+		assertGitCommand(GitCommand.commitInfo("v1.0.0"), ["log", "--no-show-signature", "-1", "--format=%H%x00%G?%x00%B", "v1.0.0"]);
 	});
 
 	it("log builds the -z record format with --name-only and no pathspec by default", () => {
-		assertGitCommand(GitCommand.log(), ["log", "-z", "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae", "--name-only"]);
+		assertGitCommand(GitCommand.log(), ["log", "--no-show-signature", "-z", "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae", "--name-only"]);
 	});
 
 	it("log NUL-frames headers while passing record-separator bytes through in pathspecs", () => {
 		assertGitCommand(GitCommand.log(["left\x1eright.txt"]), [
-			"log", "-z", "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae", "--name-only",
+			"log", "--no-show-signature", "-z", "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae", "--name-only",
 			"--", "left\x1eright.txt",
 		]);
 	});
@@ -316,6 +316,7 @@ describe("GitCommand", () => {
 		// flag emitted late would be spawned as a filename.
 		assertGitCommand(GitCommand.log(["src/Git.ts"], true, 5, true), [
 			"log",
+			"--no-show-signature",
 			"-z",
 			"--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae",
 			"--name-only",
@@ -332,6 +333,7 @@ describe("GitCommand", () => {
 		// history when the caller asked for none of it.
 		assertGitCommand(GitCommand.log([], false, 0), [
 			"log",
+			"--no-show-signature",
 			"-z",
 			"--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae",
 			"--name-only",

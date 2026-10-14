@@ -59,6 +59,20 @@ describe("Line boundaries", () => {
     assert.strictEqual(Line.byteLength(text), expected);
     assert.strictEqual(Line.byteLength(text), encoder.encode(text).length);
   });
+  it("counts UTF-8 bytes, not UTF-16 code units", () => {
+    const emoji = "\u{1F600}";
+    assert.strictEqual(emoji.length, 2);
+    assert.notStrictEqual(Line.byteLength(emoji), emoji.length);
+  });
+  it("offsets an unpaired surrogate by its ENCODED width, which is lossy", () => {
+    const lone = "\ud800";
+    const [line] = Line.split(`${lone}\n`);
+    assert.strictEqual(line?.length, 3);
+    assert.strictEqual(line?.end, 4);
+    const roundTripped = decoder.decode(encoder.encode(lone));
+    assert.notStrictEqual(roundTripped, lone);
+    assert.strictEqual(roundTripped, "�");
+  });
   it.each(["x\n", "x\r\n", "\n", "x", "a\rb\n", "😀\n☃\n", "x\n\ny\n"])("tiles slices for %j", (text) => {
     let end = 0;
     for (const slice of Line.split(text)) {
@@ -150,10 +164,14 @@ describe("Line boundaries", () => {
     }
   });
   it("parses deep input without traversing unknown payloads", () => {
-    const text = Str.repeat(20000)("[") + "1" + Str.repeat(20000)("]");
+    const deep = `${Str.repeat(200_000)("[")}1${Str.repeat(200_000)("]")}`;
+    const [line] = Line.split(deep);
+    assert.isDefined(line);
+    const result = Line.parseResult(line);
+    assertSuccess(Result.map(result, (row) => row.line.text), deep);
     assertSuccess(
-      Result.map(Line.parseResult(first(text)), (row) => row.line.length),
-      text.length
+      Result.map(result, (row) => row.line.length),
+      deep.length
     );
   });
 });

@@ -242,6 +242,7 @@ describe("Git.log", () => {
 			});
 			assert.deepStrictEqual(seen, [
 				"log",
+				"--no-show-signature",
 				"-z",
 				"--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae",
 				"--name-only",

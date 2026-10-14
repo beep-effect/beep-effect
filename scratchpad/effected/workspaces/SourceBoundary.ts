@@ -14,7 +14,7 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import * as R from "effect/Record";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { codePointAt, codePointBefore, isIdentifierChar, lex, locate, references, specifierLiterals } from "./internal/sourceText.ts";
+import { codePointAt, codePointBefore, cookIdentifier, identifierAt, identifierTokens, isIdentifierChar, lex, locate, references, specifierLiterals } from "./internal/sourceText.ts";
 
 const $I = $ScratchpadId.create("effected/workspaces/SourceBoundary");
 
@@ -343,10 +343,8 @@ const EXEMPT: ReadonlyArray<string> = ["process.env.__PACKAGE_VERSION__"];
  * `time`) writes to stdout.
  */
 const STDERR_METHODS = MutableHashSet.fromIterable(["error", "warn", "trace", "assert"]);
-const STDOUT_WRITE = /stdout\s*(?:\?\.|\.)\s*(write|end)/gu;
-
 /** An `end(` call that passes a final chunk, which `Writable.end` writes before closing. */
-const END_WITH_CHUNK = /^\s*\(\s*[^\s)]/u;
+const END_WITH_CHUNK = /^\s*(?:\?\.\s*)?\(\s*[^\s)]/u;
 
 /** Whether the reference at `at` is itself a member access (`globalThis.process`), which no ignore token exempts. */
 const isMemberAccess = (code: string, at: number): boolean => {
@@ -359,37 +357,39 @@ const processReads = (code: string, ignoreTokens: ReadonlyArray<string>): Readon
 	references(code, "process").filter(
 		(at) =>
 			isMemberAccess(code, at) ||
-			!ignoreTokens.some((token) => code.startsWith(token, at) && !isIdentifierChar(codePointAt(code, at + token.length))),
+			!ignoreTokens.some((token) => code.startsWith(token, at) && identifierAt(code, at + token.length) === undefined),
 	);
 
-const stdoutWrites = (code: string): ReadonlyArray<{ readonly at: number; readonly method: string }> =>
-	[...code.matchAll(STDOUT_WRITE)]
-		.map((match) => ({
-			at: match.index,
-			end: match.index + match[0].length,
-			method: match[0].endsWith("write") ? "write" : "end",
-		}))
-		.filter(({ at, end }) => !isIdentifierChar(codePointBefore(code, at)) && code[at - 1] !== "#" && !isIdentifierChar(codePointAt(code, end)))
-		.filter(({ end, method }) => method === "write" || END_WITH_CHUNK.test(code.slice(end)))
-		.map(({ at, method }) => ({ at, method }));
-
-/** The member name directly after the reference at `at` (`console.log` → `"log"`, `console?.log` too), or `undefined` when it is not a named member access. */
-const memberAfter = (code: string, at: number): string | undefined => {
-	// references() supplies the start of a validated, cooked console identifier.
-	const rawName = O.getOrThrow(Str.match(/^(?:[\p{ID_Continue}$\u200c\u200d]|\\u(?:[\dA-Fa-f]{4}|\{[\dA-Fa-f]+\}))+/u)(code.slice(at)));
-	let j = at + rawName[0].length;
-	while (j < code.length && /\s/.test(code.charAt(j))) j++;
-	if (code[j] === "?" && code[j + 1] === ".") j++;
-	if (code[j] !== ".") return undefined;
-	j++;
-	while (j < code.length && /\s/.test(code.charAt(j))) j++;
-	let end = j;
-	for (const point of code.slice(j)) {
-		if (!isIdentifierChar(point)) break;
-		end += point.length;
+const stdoutWrites = (code: string): ReadonlyArray<{ readonly at: number; readonly method: string }> => {
+	const found: Array<{ readonly at: number; readonly method: string }> = [];
+	for (const token of identifierTokens(code)) {
+		const at = token.index;
+		if (cookIdentifier(token[0]) !== "stdout" || code[at - 1] === "#") continue;
+		const member = memberAfter(code, at);
+		if (member === undefined) continue;
+		const [method, end] = member;
+		if (method === "write" || (method === "end" && END_WITH_CHUNK.test(code.slice(end)))) found.push({ at, method });
 	}
-	return end > j ? code.slice(j, end) : undefined;
+	return found;
 };
+
+/** The cooked member and its raw end offset after a validated identifier reference, including optional member access. */
+const memberAfter = (code: string, at: number): readonly [string, number] | undefined =>
+	O.fromUndefinedOr(identifierAt(code, at)).pipe(
+		O.map((rawName): readonly [string, number] | undefined => {
+			let j = at + rawName.length;
+			while (j < code.length && /\s/.test(code.charAt(j))) j++;
+			if (code[j] === "?" && code[j + 1] === ".") j++;
+			if (code[j] !== ".") return undefined;
+			j++;
+			while (j < code.length && /\s/.test(code.charAt(j))) j++;
+			const rawMember = identifierAt(code, j);
+			if (rawMember === undefined) return undefined;
+			const member = cookIdentifier(rawMember);
+			return member === undefined ? undefined : [member, j + rawMember.length];
+		}),
+		O.getOrUndefined,
+	);
 
 /**
  * Every offset where `token` appears in `code` as whole text: a token that
@@ -403,7 +403,7 @@ const tokenOccurrences = (code: string, token: string): ReadonlyArray<number> =>
 	const found: Array<number> = [];
 	for (let at = code.indexOf(token); at !== -1; at = code.indexOf(token, at + 1)) {
 		if (guardStart && (isIdentifierChar(codePointBefore(code, at)) || code[at - 1] === "#")) continue;
-		if (guardEnd && isIdentifierChar(codePointAt(code, at + token.length))) continue;
+		if (guardEnd && identifierAt(code, at + token.length) !== undefined) continue;
 		found.push(at);
 	}
 	return found;
@@ -815,7 +815,7 @@ export class SourceBoundary {
 				for (const offset of references(lexed.code, "console")) found.push({ offset, rule, detail: "console" });
 			} else if (rule === "console-stdout") {
 				for (const offset of references(lexed.code, "console")) {
-					const member = memberAfter(lexed.code, offset);
+					const member = memberAfter(lexed.code, offset)?.[0];
 					if (member !== undefined && MutableHashSet.has(STDERR_METHODS, member)) continue;
 					found.push({ offset, rule, detail: member === undefined ? "console" : `console.${member}` });
 				}

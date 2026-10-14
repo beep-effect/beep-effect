@@ -1,0 +1,43 @@
+{
+  "module": "tsconfig-json",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/tsconfig-json/ResolvedTsconfig.ts"
+      ],
+      "tests": [
+        "scratchpad/test/tsconfig-json/ResolvedTsconfig.test.ts"
+      ],
+      "findings": [
+        "sol-3-1"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/tsconfig-json/PortableTsconfig.ts"
+      ],
+      "tests": [
+        "scratchpad/test/tsconfig-json/PortableTsconfig.test.ts"
+      ],
+      "findings": [
+        "fable-3-1"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-3-1": {
+      "file": "scratchpad/effected/tsconfig-json/ResolvedTsconfig.ts",
+      "class": "law",
+      "summary": "rebuildRecord and extractPassthrough retain prohibited Object.defineProperty calls despite the reported green native-runtime gate.",
+      "fix": "Build both records with R.fromEntries. Map R.toEntries(source) in rebuildRecord; filter R.keys(source) against consumed before reading retained values in extractPassthrough. Preserve enumeration/read order, own __proto__/constructor data keys, and the ordinary output prototype. Add public-path hostile-key and consumed-getter regressions in ResolvedTsconfig.test.ts; keep existing assertions. Deviation bookkeeping is centrally owned."
+    },
+    "fable-3-1": {
+      "file": "scratchpad/effected/tsconfig-json/PortableTsconfig.ts",
+      "class": "schema",
+      "summary": "S.toType strips preserved CompilerOptions field codecs, causing the portable document decoder to reject supported uppercase spellings instead of normalizing them.",
+      "fix": "Remove only the outer S.toType around PortableCompilerOptions, retaining picked codecs, identity annotations, optional types, literal forced flags, and excess-key stripping. Add mixed/uppercase enum and lib decode regressions with canonical output/encoding assertions in PortableTsconfig.test.ts. Preserve existing invalid-option, forced-flag, and path-stripping assertions and keep make as the upstream CompilerOptions.Type projection."
+    }
+  }
+}

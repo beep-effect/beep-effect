@@ -1,6 +1,8 @@
 import { assert, it } from "@effect/vitest";
+import { assertFailure } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Annotation, CheckRun, CheckRunOutput, CheckRunRef } from "../../effected/github/CheckRun.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
@@ -37,6 +39,30 @@ it.layer(Repo.layer(RepoRef.make({ owner: "acme", repo: "widget" })), { timeout:
     }));
   });
 });
+
+for (const [field, value] of [
+  ["id", 1.5],
+  ["id", "3"],
+  ["name", 42],
+  ["status", false],
+  ["html_url", 42],
+] as const) {
+  const { base } = harness([
+    { status: 201, body: { id: 3, name: "lint", status: "in_progress", [field]: value } },
+    { status: 200, body: { id: 3, name: "lint", status: "completed", [field]: value } },
+  ]);
+  it.layer(CheckRun.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
+    it.effect(`returns typed create/get decode failures for invalid ${field}=${value}`, () => Effect.gen(function* () {
+      const service = yield* CheckRun;
+      assertFailure(Result.mapError(yield* Effect.result(service.create("lint", "sha")), (error) => ({
+        tag: error._tag, kind: error.kind, operation: error.operation,
+      })), { tag: "GitHubError", kind: "decode", operation: "CheckRun.create" });
+      assertFailure(Result.mapError(yield* Effect.result(service.get(3)), (error) => ({
+        tag: error._tag, kind: error.kind, operation: error.operation,
+      })), { tag: "GitHubError", kind: "decode", operation: "CheckRun.get" });
+    }));
+  });
+}
 const { base, script } = harness([
   { status: 200, body: { id: 3, name: "lint", status: "completed", html_url: null } },
   { status: 200, body: {} },

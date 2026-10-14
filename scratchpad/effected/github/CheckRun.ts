@@ -9,7 +9,7 @@ import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
-import type { GitHubError } from "./GitHubError.ts";
+import { GitHubError } from "./GitHubError.ts";
 import { numericId } from "./internal/ids.ts";
 import { Repo } from "./Repo.ts";
 import * as O from "@beep/utils/Option";
@@ -610,18 +610,26 @@ const concludeFor = <A, E>(
   return Exit.isSuccess(exit) ? write : Effect.ignore(write);
 };
 
-const refOf = (raw: {
-  id: number | bigint;
-  name: string;
-  html_url?: string | null;
-  status: string
-}): CheckRunRef =>
-  CheckRunRef.make({
+const CheckRunResponse = S.Struct({
+  id: S.Union([S.Finite, S.BigInt]),
+  name: S.String,
+  html_url: S.String.pipe(S.NullOr, S.optional),
+  status: S.String,
+}).annotate($I.annote("CheckRunResponse", { description: "The selected fields of a check-run response." }));
+
+const refOf = Effect.fn("CheckRun.refOf")(function* (input: unknown, operation: string) {
+  const raw = yield* S.decodeUnknownEffect(CheckRunResponse)(input).pipe(
+    Effect.mapError((error) => GitHubError.decode(operation, "GitHub returned an unexpected check run", error)),
+  );
+  return yield* S.decodeEffect(CheckRunRef)({
     id: numericId(raw.id),
     name: raw.name,
     url: raw.html_url ?? "",
     status: raw.status,
-  });
+  }).pipe(
+    Effect.mapError((error) => GitHubError.decode(operation, "GitHub returned an unexpected check run", error)),
+  );
+});
 
 const make = (client: GitHubClient["Service"]): CheckRunShape => {
   const create = Effect.fn("CheckRun.create")(function* (name: string, headSha: string) {
@@ -635,7 +643,7 @@ const make = (client: GitHubClient["Service"]): CheckRunShape => {
       status: "in_progress",
       started_at: DateTime.formatIso(yield* DateTime.now),
     });
-    return refOf(created);
+    return yield* refOf(created, "CheckRun.create");
   });
 
   const complete = Effect.fn("CheckRun.complete")(function* (
@@ -668,7 +676,7 @@ const make = (client: GitHubClient["Service"]): CheckRunShape => {
         repo,
         check_run_id: id,
       });
-      return refOf(raw);
+      return yield* refOf(raw, "CheckRun.get");
     }),
 
     update: Effect.fn("CheckRun.update")(function* (id: number, output: CheckRunOutput) {

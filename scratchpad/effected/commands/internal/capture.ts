@@ -33,7 +33,7 @@ const NegativeInfinity = S.declare((input): input is number => input === Number.
  * @category errors
  * @since 0.0.0
  */
-export class OutputTooLarge extends S.TaggedError<OutputTooLarge>($I`OutputTooLarge`)("OutputTooLarge", {
+export class OutputTooLarge extends S.TaggedError<OutputTooLarge, { readonly brand: unique symbol }>($I`OutputTooLarge`)("OutputTooLarge", {
  limit: S.Union([S.Finite, NegativeInfinity]).annotateKey({ description: "The configured byte budget, including the negative-infinity sentinel." }),
 }, $I.annote("OutputTooLarge", { description: "A captured stream exceeded its byte budget." })) {}
 

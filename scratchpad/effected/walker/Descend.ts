@@ -25,6 +25,7 @@ import * as S from "effect/Schema";
 import { dual, identity } from "effect/Function";
 
 import { DepthCap } from "./Walker.ts";
+import { parentRealPath, walkFrames } from "./internal/worklist.ts";
 
 const $I = $ScratchpadId.create("effected/walker/Descend");
 
@@ -451,9 +452,8 @@ const descendImpl: (
 
 	const results: Array<string> = [];
 	const frames: Array<DescendFrame> = [{ relative: base, absolute: absoluteBase, depth: 0, ancestors: baseAncestors }];
-	// Array iteration visits frames appended during traversal without shifting
-	// or re-indexing the queue, keeping the walk linear in its frame count.
-	for (const frame of frames) {
+	// The internal iterator retains the head-index queue and missing-frame stop.
+	for (const frame of walkFrames(frames)) {
 
 		// A directory that vanished between its parent's listing and this read is
 		// a benign race — treat it as empty, and never record it as unreadable:
@@ -508,9 +508,7 @@ const descendImpl: (
 			// `realPathOf` reports or fails that per `onUnreadable`.
 			let ancestors = frame.ancestors;
 			if (followSymlinks) {
-				// Following seeds the base chain and appends every queued child's
-				// real path, so each frame here has a final ancestor.
-				const parentReal = O.getOrThrow(A.last(frame.ancestors));
+				const parentReal = parentRealPath(frame.ancestors, frame.absolute);
 				const real = (yield* isSymbolicLink(absolute))
 					? yield* realPathOf(absolute, relative)
 					: O.some(path.join(parentReal, entry));

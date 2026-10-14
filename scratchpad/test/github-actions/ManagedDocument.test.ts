@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { ManagedDocument, ManagedDocumentError } from "../../effected/github-actions/ManagedDocument.ts";
+import { ManagedDocument, ManagedDocumentError, ManagedDocumentSource } from "../../effected/github-actions/ManagedDocument.ts";
 
 const NS = "savvy-web";
 const KEY = "release-validation";
@@ -26,6 +26,23 @@ const marker = (kind: "BEGIN" | "END", region: string): string =>
 	`<!-- --- ${kind} ${NS}.${KEY}.${region} MANAGED REGION --- -->`;
 
 describe("ManagedDocument", () => {
+	it("the source schema preserves plain objects, arbitrary identity strings and optional text", () => {
+		for (const input of [
+			{ namespace: NS, key: KEY },
+			{ namespace: NS, key: KEY, text: undefined },
+			{ namespace: NS, key: KEY, text: "" },
+			{ namespace: NS, key: KEY, text: "human\r\ntext" },
+			{ namespace: "", key: "invalid.name" },
+		]) {
+			const source: ManagedDocumentSource = input;
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(ManagedDocumentSource)(source)), source);
+			assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(ManagedDocumentSource)(source)), source);
+		}
+		assert.isFalse(S.is(ManagedDocumentSource)({ namespace: NS }));
+		assert.isFalse(S.is(ManagedDocumentSource)({ namespace: NS, key: KEY, text: null }));
+		assert.isFalse(S.is(ManagedDocumentSource)({ namespace: 1, key: KEY }));
+	});
+
 	describe("create-or-update", () => {
 		it("a fresh document gains its regions and exactly one sentinel", () => {
 			const doc = apply(fresh(), [
@@ -157,6 +174,18 @@ describe("ManagedDocument", () => {
 			assert.strictEqual(error.key, "body", "the key is the consumer's region key, not the wire key");
 		});
 
+		it.each(["", "Human notes\n"])("trailingCarriageReturn fails through Result for LF text %j", (text) => {
+			const doc = Result.getOrThrow(ManagedDocument.parseResult({ namespace: NS, key: KEY, text }));
+			const error = failureOf(doc.withRegionsResult([["body", "hello\r"]]));
+			assert.instanceOf(error, ManagedDocumentError);
+			assert.strictEqual(error._tag, "ManagedDocumentError");
+			assert.strictEqual(error.kind, "trailingCarriageReturn");
+			assert.strictEqual(error.key, "body");
+			assert.strictEqual(error.message, 'Region content ends in a bare carriage return that LF rendering cannot preserve for region "body"');
+			assert.isTrue(S.is(ManagedDocumentError)(error));
+			assert.strictEqual(doc.text, text, "the refused update preserves the source document");
+		});
+
 		it("duplicateDeclaration — two intentions for one region in one call", () => {
 			const error = failureOf(
 				fresh().withRegionsResult([
@@ -273,6 +302,16 @@ describe("ManagedDocument", () => {
 	});
 
 	describe("the Effect variants", () => {
+		it.effect("trailingCarriageReturn stays in the typed Effect error channel", () =>
+			Effect.gen(function* () {
+				const doc = yield* ManagedDocument.parse({ namespace: NS, key: KEY, text: "Human notes\n" });
+				const error = yield* Effect.flip(doc.withRegions([["body", "hello\r"]]));
+				assert.instanceOf(error, ManagedDocumentError);
+				assert.strictEqual(error.kind, "trailingCarriageReturn");
+				assert.strictEqual(error.key, "body");
+			}),
+		);
+
 		it.effect("parse and withRegions succeed through the Effect channel", () =>
 			Effect.gen(function* () {
 				const doc = yield* ManagedDocument.parse({ namespace: NS, key: KEY });
@@ -303,13 +342,28 @@ describe("ManagedDocument", () => {
 	});
 
 	describe("JSON Schema export", () => {
+		it("namespace and key share an identified and documented name-part check", () => {
+			for (const field of [ManagedDocument.fields.namespace, ManagedDocument.fields.key]) {
+				assert.nestedPropertyVal(field, "ast.checks.0.annotations.identifier", "@beep/scratchpad/effected/github-actions/ManagedDocument/NamePart");
+				assert.nestedPropertyVal(field, "ast.checks.0.annotations.title", "NamePart");
+				assert.nestedPropertyVal(field, "ast.checks.0.annotations.description", "Letters, digits, dashes and underscores, starting alphanumeric; dots are excluded to keep marker keys unambiguous.");
+			}
+			assert.nestedPropertyVal(ManagedDocument.fields.namespace, "ast.context.annotations.description", "Whose document this is.");
+			assert.nestedPropertyVal(ManagedDocument.fields.key, "ast.context.annotations.description", "Which document, within that namespace.");
+		});
+
 		it("namespace and key export their name-part pattern", () => {
 			const document = S.toJsonSchemaDocument(ManagedDocument);
+			assert.nestedPropertyVal(
+				document,
+				"definitions.@beep/scratchpad/effected/github-actions/ManagedDocument/NamePart.pattern",
+				"^[A-Za-z0-9][A-Za-z0-9_-]*$",
+			);
 			for (const field of ["namespace", "key"]) {
 				assert.nestedPropertyVal(
 					document,
-					`definitions.@beep/scratchpad/effected/github-actions/ManagedDocument/ManagedDocumentEncoded.properties.${field}.pattern`,
-					"^[A-Za-z0-9][A-Za-z0-9_-]*$",
+					`definitions.@beep/scratchpad/effected/github-actions/ManagedDocument/ManagedDocumentEncoded.properties.${field}.allOf.0.$ref`,
+					"#/$defs/@beep~1scratchpad~1effected~1github-actions~1ManagedDocument~1NamePart",
 				);
 			}
 		});

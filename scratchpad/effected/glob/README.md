@@ -176,6 +176,9 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **identity-annotations** — File-local $I identifiers and schema/field/check annotations replace plain identifiers and incomplete schema metadata. (module suite scratchpad/test/glob/**)
 - **upstream-bug** — Lab bounds numeric brace generation by the validated member count and terminates stalled ranges where upstream appends indefinitely (scratchpad/test/glob/braceExpansion.test.ts:162; scratchpad/test/glob/hostility.test.ts:48; scratchpad/test/glob/GlobPattern.test.ts:312; scratchpad/test/glob/GlobSet.test.ts:292).
 - **upstream-bug** — Lab rejects NaN-producing brace arithmetic as a typed expansion-budget failure with actual Infinity where upstream bypasses the count guard (scratchpad/test/glob/braceExpansion.test.ts:176; scratchpad/test/glob/hostility.test.ts:60; scratchpad/test/glob/GlobPattern.test.ts:326; scratchpad/test/glob/GlobSet.test.ts:309).
+- **upstream-bug** — Lab segment matching memoizes repeated extglobs and adds optional MMRegExp._matchSegment metadata while upstream matching can explore Fibonacci-many regexp paths (scratchpad/test/glob/engine.test.ts:287,298; scratchpad/test/glob/hostility.test.ts:176).
+- **upstream-bug** — Lab brace expansion stops at the first excess emitted member and reports actual 1001 for max 1000 while upstream materializes 32,000 sibling members and reports actual 32000 (scratchpad/test/glob/braceExpansion.test.ts:297,318; scratchpad/test/glob/hostility.test.ts:185).
+- **tsgo-diagnostics** — Lab schema classes and errors gain unique-symbol brands that distinguish instance types nominally while upstream facade declarations omit those brands (scratchpad/effected/glob/GlobPattern.ts:49,134,331; scratchpad/effected/glob/GlobSet.ts:89; scratchpad/effected/glob/internal/limits.ts:29,228).
 
 ### Dependency backlog
 

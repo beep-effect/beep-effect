@@ -223,10 +223,10 @@ describe("GitConfig", () => {
 	});
 
 	it("an EOF backslash outside quotes is dropped from the value and included in the replaced span", () => {
-		for (const raw of ["first\\", '"first"\\', "\\", "first \t\\"]) {
+		for (const [raw, value] of [["first\\", "first"], ['"first"\\', "first"], ["\\", ""], ["first \t\\", "first \t"]] as const) {
 			const text = `[core]\nkey = ${raw}`;
 			const doc = parse(text);
-			assert.deepStrictEqual(doc.get("core", undefined, "key"), O.some(raw === "\\" ? "" : "first"));
+			assert.deepStrictEqual(doc.get("core", undefined, "key"), O.some(value));
 			assert.strictEqual(doc.stringify(), text);
 			assert.strictEqual(ok(doc.set("core", undefined, "key", "new")).stringify(), "[core]\nkey = new");
 		}
@@ -544,6 +544,116 @@ describe("GitConfig", () => {
 			const bogus = GitConfig.make({ text: "[unclosed\n", sections: [] });
 			assert.throws(() => bogus.get("a", undefined, "k"), /invariant/);
 		});
+	});
+});
+
+describe("GitConfig round-3 value and insertion regressions", () => {
+	it("append closes EOF backslashes and final LF or CRLF continuations before a new value", () => {
+		for (const [ending, separator] of [["\\", "\n\n"], ["\\\n", "\n"], ["\\\r\n", "\r\n"]] as const) {
+			for (const value of ["a", "a \t", ""]) {
+				const text = `[core]\nx=${value}${ending}`;
+				const doc = parse(text);
+				assert.deepStrictEqual(doc.getAll("core", undefined, "x"), [value]);
+				const edited = ok(doc.append("core", undefined, "x", "b"));
+				assert.strictEqual(edited.stringify(), `${text}${separator}x = b\n`);
+				assert.deepStrictEqual(parse(edited.stringify()).getAll("core", undefined, "x"), [value, "b"]);
+				assert.strictEqual(doc.stringify(), text);
+			}
+		}
+	});
+
+	it("set and append create missing keys after open EOF values in existing and new sections", () => {
+		for (const [ending, separator] of [["\\", "\n\n"], ["\\\n", "\n"], ["\\\r\n", "\r\n"]] as const) {
+			const text = `[core]\nx=a \t${ending}`;
+			const doc = parse(text);
+			for (const [section, subsection, content] of [
+				["core", undefined, "y = b\n"],
+				["remote", "origin", '[remote "origin"]\n\ty = b\n'],
+			] as const) {
+				for (const attempt of [doc.set(section, subsection, "y", "b"), doc.append(section, subsection, "y", "b")]) {
+					const edited = ok(attempt);
+					assert.strictEqual(edited.stringify(), text + separator + content);
+					const reparsed = parse(edited.stringify());
+					assert.deepStrictEqual(reparsed.getAll("core", undefined, "x"), ["a \t"]);
+					assert.deepStrictEqual(reparsed.get(section, subsection, "y"), O.some("b"));
+				}
+			}
+		}
+	});
+
+	it("addSection closes open EOF values before the new header", () => {
+		for (const [ending, separator] of [["\\", "\n\n"], ["\\\n", "\n"], ["\\\r\n", "\r\n"]] as const) {
+			const text = `[core]\nx=a \t${ending}`;
+			const edited = ok(parse(text).addSection("remote", "origin"));
+			assert.strictEqual(edited.stringify(), `${text}${separator}[remote "origin"]\n`);
+			const reparsed = parse(edited.stringify());
+			assert.deepStrictEqual(reparsed.getAll("core", undefined, "x"), ["a \t"]);
+			assert.strictEqual(reparsed.sections.length, 2);
+			assert.strictEqual(reparsed.sections[1]?.name, "remote");
+			assert.strictEqual(reparsed.sections[1]?.subsection, "origin");
+		}
+	});
+
+	it("ordinary EOF formatting, paired backslashes and comment backslashes need no extra separator", () => {
+		for (const [raw, value, separator] of [
+			["a", "a", "\n"],
+			["a\n", "a", ""],
+			["a\r\n", "a", ""],
+			["a\\\\", "a\\", "\n"],
+			["a\\\\\n", "a\\", ""],
+			["a # comment\\", "a", "\n"],
+			["a # comment\\\n", "a", ""],
+		] as const) {
+			const text = `[core]\nx=${raw}`;
+			const doc = parse(text);
+			const appended = ok(doc.append("core", undefined, "x", "b"));
+			assert.strictEqual(appended.stringify(), `${text}${separator}x = b\n`);
+			assert.deepStrictEqual(appended.getAll("core", undefined, "x"), [value, "b"]);
+			assert.strictEqual(ok(doc.set("core", undefined, "y", "b")).stringify(), `${text}${separator}y = b\n`);
+			assert.strictEqual(ok(doc.addSection("other", undefined)).stringify(), `${text}${separator}[other]\n`);
+		}
+	});
+
+	it("continuations commit preceding spaces and tabs and set removes their entire raw span", () => {
+		for (const ending of ["\n", "\r\n"]) {
+			for (const whitespace of [" ", "\t", " \t"]) {
+				for (const tail of [ending, `# keep${ending}`, `; keep${ending}`, ` \t # keep${ending}`]) {
+					const text = `[core]${ending}key=a${whitespace}\\${ending}${tail}`;
+					const doc = parse(text);
+					assert.deepStrictEqual(doc.get("core", undefined, "key"), O.some(`a${whitespace}`));
+					assert.strictEqual(doc.stringify(), text);
+					const edited = ok(doc.set("core", undefined, "key", "z"));
+					assert.strictEqual(edited.stringify(), `[core]${ending}key=z${tail}`);
+					assert.deepStrictEqual(parse(edited.stringify()).get("core", undefined, "key"), O.some("z"));
+				}
+			}
+		}
+		const ordinary = parse("[core]\nkey=a \t # keep\n");
+		assert.deepStrictEqual(ordinary.get("core", undefined, "key"), O.some("a"));
+		assert.strictEqual(ok(ordinary.set("core", undefined, "key", "z")).stringify(), "[core]\nkey=z \t # keep\n");
+	});
+
+	it("empty quotes and initial continuations discard leading unquoted whitespace but retain quoted and escaped spaces", () => {
+		for (const [raw, value] of [
+			['"" \tb', "b"],
+			["\\\n \tb", "b"],
+			["\\\r\n \tb", "b"],
+			['""\\\n \t"" \tb', "b"],
+			['"" \t', ""],
+			["\\\n \t", ""],
+			['" " b', "  b"],
+			['" "\\\n b', "  b"],
+			["\\t b", "\t b"],
+		] as const) {
+			const text = `[core]\nkey=${raw}\n`;
+			const doc = parse(text);
+			assert.deepStrictEqual(doc.get("core", undefined, "key"), O.some(value));
+			assert.strictEqual(doc.stringify(), text);
+			const tail = value === "" ? " \t\n" : "\n";
+			const edited = ok(doc.set("core", undefined, "key", "z"));
+			assert.strictEqual(edited.stringify(), `[core]\nkey=z${tail}`);
+			assert.deepStrictEqual(parse(edited.stringify()).get("core", undefined, "key"), O.some("z"));
+		}
 	});
 });
 

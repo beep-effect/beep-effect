@@ -7,7 +7,7 @@ import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { ManagedSection } from "../../effected/templates/index.ts";
+import { CommentStyle, ManagedSection, SectionId } from "../../effected/templates/index.ts";
 import { ManagedSectionTestError, SectionFileError } from "../../effected/templates/ManagedSection.ts";
 import { block, id, lines, memoryFs, section } from "./fixtures.ts";
 
@@ -62,6 +62,34 @@ describe("ManagedSection", () => {
   });
 
   describe("sync", () => {
+    {
+      const text = lines("#!/bin/sh", block("example-tool", "old"), "# user content: 雪", "");
+      const fs = memoryFs({ [HOOK]: text });
+      const bytes = fs.volume.bytes(HOOK);
+      it.layer(ManagedSection.layer.pipe(Layer.provide(fs.layer)), { timeout: "30 seconds" })((it) => {
+        it.effect("refuses closing rules inside Unicode attributes and preserves the existing file bytes", () =>
+          Effect.gen(function* () {
+            const service = yield* ManagedSection;
+            for (const style of [CommentStyle.hash, CommentStyle.html]) {
+              const identity = SectionId.make({ key: "example-tool", commentStyle: style });
+              const tail = style.suffix === undefined ? "---" : `--- ${style.suffix}`;
+              for (const separator of ["\u2028", "\u2029"]) {
+                const proposed = identity.section("new", { note: `before ${tail}${separator}after` });
+                const error = yield* Effect.flip(service.sync(HOOK, proposed));
+                assert.strictEqual(error._tag, "SectionRenderError");
+                if (error._tag !== "SectionRenderError") assert.fail("expected a typed render refusal");
+                assert.strictEqual(error.reason, "invalidAttribute");
+                assert.strictEqual(error.key, identity.key);
+                assert.strictEqual(fs.writes(), 0);
+                assert.strictEqual(fs.text(HOOK), text);
+                assert.deepStrictEqual(fs.volume.bytes(HOOK), bytes);
+              }
+            }
+          })
+        );
+      });
+    }
+
     {
       // The hook's PARENT must exist: this package requires no `Path`, so it
       // cannot derive a directory to create, and a real filesystem refuses a

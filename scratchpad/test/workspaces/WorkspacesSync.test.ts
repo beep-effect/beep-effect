@@ -32,6 +32,7 @@ import type { MemoryFileSystemHandle } from "../../effected/memfs/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import type { SyncFileSystem, WorkspacePackage, WorkspacesSyncOptions } from "../../effected/workspaces/index.ts";
 import {
 	WorkspaceDiscovery,
@@ -670,8 +671,8 @@ describe("getWorkspacePackagesSync — version-less manifests and skip reporting
 			// `missingName` is the one kind with nothing to attach — the field is
 			// simply absent, and there is no originating throwable.
 			assert.strictEqual(causes.get("/repo/packages/nameless/package.json"), undefined);
-			// Discriminating control: `invalidJson` carries the thrown SyntaxError.
-			assert.instanceOf(causes.get("/repo/packages/broken/package.json"), SyntaxError);
+			// Discriminating control: `invalidJson` carries the JSON codec's SchemaError.
+			assert.instanceOf(causes.get("/repo/packages/broken/package.json"), S.SchemaError);
 		}),
 	);
 

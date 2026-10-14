@@ -1,0 +1,5 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the commands port read-only against the pinned upstream oracle, the round-2 inventory, and the binding decisions, and report only new findings.The round-2 repairs are in the tree. I'll probe the duration schema and the JSON version walk against `Duration.fromInput` and the upstream parser for anything the tests don't cover.I'll finish the round-3 review from the oracle and the commands surface, and only file a finding if it is new evidence past the round-2 inventory.NO FINDINGS
+
+REQUIRED: 0
+BACKLOG: 0

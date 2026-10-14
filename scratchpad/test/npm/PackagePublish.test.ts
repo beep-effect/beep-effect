@@ -1,7 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure, assertSome } from "@effect/vitest/utils";
 import * as Context from "effect/Context";
-import { identity } from "effect/Function";
+import { flow, identity } from "effect/Function";
 import * as O from "effect/Option";
 import { LocalExec } from "../../effected/commands/index.ts";
 import type { MemoryFileSystemFaults, MemoryFileSystemSeed } from "../../effected/memfs/index.ts";
@@ -11,6 +11,7 @@ import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { NpmExecutor } from "../../effected/npm/NpmExecutor.ts";
 import { PackagePublish, PackedTarball } from "../../effected/npm/PackagePublish.ts";
@@ -20,6 +21,11 @@ import type { ScriptResult } from "./publish-fixtures.ts";
 import { fakeCrypto, scripted } from "./publish-fixtures.ts";
 
 const WireCause = S.Struct({ name: S.String, message: S.String, stack: S.String });
+
+const encodePackJson = flow(
+	S.encodeResult(S.fromJsonString(S.Unknown)),
+	Result.getOrElse((error) => assert.fail(`Pack fixture JSON encoding failed: ${error.message}`)),
+);
 
 const HOME = "/home/runner";
 const NPMRC = `${HOME}/.npmrc`;
@@ -39,14 +45,14 @@ const packEntry = {
 };
 
 /** `npm pack --json` output as npm 11 emits it: an array of one entry. */
-const packJson = JSON.stringify([packEntry]);
+const packJson = encodePackJson([packEntry]);
 
 /**
  * `npm pack --json` output as npm 12 emits it: an object keyed by package
  * name — verified against `npm@12.0.2`'s `lib/commands/pack.js`, which hands
  * `logTar` the tarball's `name` as the key where 11 handed it the index.
  */
-const packJsonNpm12 = JSON.stringify({ [packEntry.name]: packEntry });
+const packJsonNpm12 = encodePackJson({ [packEntry.name]: packEntry });
 
 const harness = (
 	options:
@@ -444,7 +450,7 @@ describe("PackagePublish.pack", () => {
 	{
 		const { filename: _dropped, ...noFilename } = packEntry;
 		const h = harness(
-			{ script: () => ({ stdout: JSON.stringify({ pkg: noFilename }), exit: 0 }) },
+			{ script: () => ({ stdout: encodePackJson({ pkg: noFilename }), exit: 0 }) },
 			"\"a keyed object whose entry is malformed still fails with kind 'output'\":h",
 		);
 		it.layer(h.layer, { timeout: "30 seconds" })((it) => {

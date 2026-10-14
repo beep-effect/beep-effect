@@ -289,7 +289,19 @@ const spanOf = (node: MarkdownNode): { readonly start: number; readonly end: num
 
 // ── Internal: format guards ─────────────────────────────────────────────────
 
-const ALPHANUMERIC = /[\p{L}\p{N}]/u;
+// Keep these character classes and flanking rules aligned with scanDelims.
+const DELIMITER_PUNCTUATION = /^[!"#$%&'()*+,\-./:;<=>?@[\]\\^_`{|}~\p{P}\p{S}]/u;
+const DELIMITER_WHITESPACE = /^\s/;
+
+const underscoreCanOpen = (before: string, after: string): boolean => {
+	const beforeWhitespace = DELIMITER_WHITESPACE.test(before);
+	const afterWhitespace = DELIMITER_WHITESPACE.test(after);
+	const beforePunctuation = DELIMITER_PUNCTUATION.test(before);
+	const afterPunctuation = DELIMITER_PUNCTUATION.test(after);
+	const left = !afterWhitespace && (!afterPunctuation || beforeWhitespace || beforePunctuation);
+	const right = !beforeWhitespace && (!beforePunctuation || afterWhitespace || afterPunctuation);
+	return left && (!right || beforePunctuation);
+};
 
 /** The start offset of the line containing `offset`. */
 const lineStartOf = (source: string, offset: number): number => {
@@ -351,14 +363,13 @@ const adjacentSpans = (source: string, endOfFirst: number, startOfSecond: number
 
 // ── Internal: format edit collection ────────────────────────────────────────
 
-interface TaggedEdit {
-	readonly offset: number;
-	readonly length: number;
-	readonly content: string;
-	readonly nodeStart: number;
-	readonly nodeEnd: number;
-	readonly bullet: boolean;
-}
+const TaggedEdit = S.Struct({
+	...MarkdownEdit.fields,
+	nodeStart: MarkdownEdit.fields.offset.annotateKey({ description: "Start offset of the owning node" }),
+	nodeEnd: MarkdownEdit.fields.offset.annotateKey({ description: "End offset of the owning node" }),
+	bullet: S.Boolean.annotateKey({ description: "Whether this edit normalizes a list bullet" }),
+}).annotate($I.annote("TaggedEdit", { description: "A source edit with its owning node span and bullet classification." }));
+type TaggedEdit = typeof TaggedEdit.Type;
 
 /** Accumulates edits after the formatting helpers have excluded unchanged markers. */
 class FormatEmitter {
@@ -392,6 +403,7 @@ const formatHeading = (
 	node: Heading,
 	target: HeadingStyle,
 	emphasisChar: EmphasisChar | undefined,
+	parseOptions: MarkdownParseOptions,
 ): boolean => {
 	const fidelity = node.headingStyle;
 	if (fidelity === target || A.isReadonlyArrayNonEmpty(node.children) === false) {
@@ -437,6 +449,15 @@ const formatHeading = (
 		return false;
 	}
 	const underline = (node.depth === 1 ? "=" : "-").repeat(Math.max(3, content.length));
+	const proposed = `${content}\n${underline}\n`;
+	const reparsed = Markdown.parseResult(proposed, parseOptions);
+	if (Result.isFailure(reparsed) || reparsed.success.children.length !== 1) return false;
+	const heading = reparsed.success.children[0];
+	if (heading?.type !== "heading" || heading.headingStyle !== "setext" || heading.depth !== node.depth ||
+		!A.isReadonlyArrayNonEmpty(heading.children) ||
+		Str.slice(A.headNonEmpty(heading.children).position.start.offset, A.lastNonEmpty(heading.children).position.end.offset)(proposed) !== content) {
+		return false;
+	}
 	emit.push(node, start, end - start, `${content}\n${underline}`);
 	return true;
 };
@@ -495,7 +516,8 @@ const formatEmphasis = (
 	const { start, end } = spanOf(node);
 	if (
 		target === "_" &&
-		((start > 0 && ALPHANUMERIC.test(codePointBefore(source, start))) || (end < source.length && ALPHANUMERIC.test(codePointAfter(source, end))))
+		(!underscoreCanOpen(codePointBefore(source, start) || "\n", codePointAfter(source, start + markerLength) || "\n") ||
+			!underscoreCanOpen(codePointAfter(source, end) || "\n", codePointBefore(source, end - markerLength) || "\n"))
 	) {
 		return;
 	}
@@ -835,7 +857,7 @@ export abstract class MarkdownFormat {
 				formatThematicBreak(text, emit, node, options.thematicBreakChar);
 			}
 			if (options?.headingStyle !== undefined && node.type === "heading") {
-				if (formatHeading(text, emit, node, options.headingStyle, options.emphasisChar)) {
+				if (formatHeading(text, emit, node, options.headingStyle, options.emphasisChar, parseOptions)) {
 					return false;
 				}
 			}
@@ -982,13 +1004,6 @@ export abstract class MarkdownFormat {
 		} else {
 			return yield* fail("UnsupportedTarget", `a ${target.type} node inside a ${parent.type} cannot be replaced`);
 		}
-		if (!P.isString(replacement) && A.some(ancestry, (node) => node.type === "link" || node.type === "linkReference")) {
-			let containsLink = false;
-			walk(replacement, undefined, [], 0, (node) => {
-				if (node.type === "link" || node.type === "linkReference") containsLink = true;
-			});
-			if (containsLink) return yield* fail("UnsupportedTarget", "a link replacement cannot be nested inside another link");
-		}
 		let renderRoot: Root;
 		if (P.isString(replacement)) {
 			// Synthesized render scaffolding: `make` fills the zero-width
@@ -1018,10 +1033,37 @@ export abstract class MarkdownFormat {
 		if (Result.isFailure(rendered)) {
 			return yield* fail("FragmentUnrenderable", rendered.failure.message);
 		}
+		if (!P.isString(replacement) && A.some(ancestry, (node) => node.type === "link" || node.type === "linkReference")) {
+			let containsLink = false;
+			walk(replacement, undefined, [], 0, (node) => {
+				if (node.type === "link" || node.type === "linkReference") containsLink = true;
+			});
+			if (containsLink) return yield* fail("UnsupportedTarget", "a link replacement cannot be nested inside another link");
+		}
 		const renderedContent = rendered.success.replace(/\n+$/, "");
 		const inCell = slot === "cell" || A.some(ancestry, (ancestor) => ancestor.type === "tableCell");
+		const noMultiline = A.some(ancestry, (ancestor) => isNoMultilineAncestor(ancestor.type));
+		if (noMultiline) {
+			let containsCarriageReturn = false;
+			walk(renderRoot, undefined, [], 0, (node) => {
+				if (node.type === "text" && /\r/.test(node.value)) containsCarriageReturn = true;
+			});
+			if (containsCarriageReturn) return yield* fail("UnsupportedTarget", "a carriage-return replacement cannot be spliced inside a prefixed or single-line container");
+		}
 		let content = inCell ? escapeCellPipes(renderedContent) : renderedContent;
-		if (/[\r\n]/.test(content) && A.some(ancestry, (ancestor) => isNoMultilineAncestor(ancestor.type))) {
+		if (slot === "phrasing" && A.some(ancestry, (ancestor) => {
+			const width = ancestor.type === "emphasis" ? 1 : ancestor.type === "strong" ? 2 :
+				ancestor.type === "delete" ? longestRun(Str.slice(spanOf(ancestor).start, start)(document.source), "~") : 0;
+			return width > 0 && end === spanOf(ancestor).end - width;
+		})) {
+			let whitespaceStart = content.length;
+			while (whitespaceStart > 0 && DELIMITER_WHITESPACE.test(Str.slice(whitespaceStart - 1, whitespaceStart)(content))) whitespaceStart--;
+			if (whitespaceStart < content.length) {
+				content = Str.slice(0, whitespaceStart)(content) + A.join(A.map(Str.split(Str.slice(whitespaceStart)(content), ""), (char) =>
+					`&#${O.getOrThrow(Str.charCodeAt(char, 0))};`), "");
+			}
+		}
+		if (/[\r\n]/.test(content) && noMultiline) {
 			return yield* fail(
 				"UnsupportedTarget",
 				"a multi-line replacement cannot be spliced inside a container whose continuation lines carry a prefix",
@@ -1043,7 +1085,7 @@ export abstract class MarkdownFormat {
 			}
 		}
 		if (slot === "flow") {
-			const parseOptions = MarkdownParseOptions.make({ frontmatter: document.frontmatter !== undefined });
+			const parseOptions = MarkdownParseOptions.make({ dialect: document.dialect, frontmatter: document.frontmatter !== undefined });
 			const standalone = Markdown.parseResult(content, parseOptions);
 			const projected = Markdown.parseResult(Str.slice(0, start)(document.source) + content + Str.slice(end)(document.source), parseOptions);
 			if (Result.isFailure(standalone) || Result.isFailure(projected)) {
@@ -1056,10 +1098,20 @@ export abstract class MarkdownFormat {
 				}
 			});
 			// Reuse actual interruption grammar: each standalone block must still
-			// begin at its splice-relative offset in the same container slot.
+			// retain both splice-relative boundaries in the same container slot.
 			if (!A.every(standalone.success.children, (node) => A.some(contextualBlocks, (candidate) =>
-				candidate.type === node.type && spanOf(candidate).start === start + spanOf(node).start))) {
-				return yield* fail("UnsupportedTarget", "the preceding block context would absorb the flow replacement");
+				candidate.type === node.type && spanOf(candidate).start === start + spanOf(node).start &&
+				spanOf(candidate).end === start + spanOf(node).end))) {
+				return yield* fail("UnsupportedTarget", "the block context would absorb the flow replacement or its following sibling");
+			}
+			const siblings = childrenOf(parent);
+			const targetIndex = A.findFirstIndex(siblings, (node) => node === target);
+			const following = O.getOrUndefined(O.flatMap(targetIndex, (index) => A.get(siblings, index + 1)));
+			const delta = content.length - (end - start);
+			if (following !== undefined && !A.some(contextualBlocks, (candidate) =>
+				candidate.type === following.type && spanOf(candidate).start === spanOf(following).start + delta &&
+				spanOf(candidate).end === spanOf(following).end + delta)) {
+				return yield* fail("UnsupportedTarget", "the flow replacement would absorb or change its following sibling");
 			}
 		}
 		const edits: ReadonlyArray<MarkdownEdit> = [MarkdownEdit.make({ offset: start, length: end - start, content })];

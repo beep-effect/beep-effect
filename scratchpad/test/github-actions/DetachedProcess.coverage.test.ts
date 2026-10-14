@@ -28,7 +28,7 @@ describe("DetachedProcess coverage", () => {
 import * as Layer from "effect/Layer";
 import { HttpClient, HttpClientResponse } from "effect/http";
 class InformationalResponse extends Response {
-  override get status(): number { return 199; }
+  override readonly status = 199;
 }
 for (const status of [199, 200, 299, 300, 503]) {
   it.layer(Layer.succeed(HttpClient.HttpClient, HttpClient.make((request) => Effect.succeed(HttpClientResponse.fromWeb(request, status === 199 ? new InformationalResponse(null) : new Response(null, { status }))))))((it) => {

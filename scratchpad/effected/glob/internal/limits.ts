@@ -26,7 +26,7 @@ const $I = $ScratchpadId.create("effected/glob/internal/limits");
  * @category errors
  * @since 0.0.0
  */
-export class InvalidCap extends S.TaggedError<InvalidCap>($I`InvalidCap`)("InvalidCap", {
+export class InvalidCap extends S.TaggedError<InvalidCap, { readonly brand: unique symbol }>($I`InvalidCap`)("InvalidCap", {
 	message: S.String.annotateKey({ description: "Why the programmer-supplied internal cap is invalid." }),
 }, $I.annote("InvalidCap", {
 	title: "Invalid internal glob cap",
@@ -225,7 +225,7 @@ export type GuardMeasurement = typeof GuardMeasurement.Type;
  * @category errors
  * @since 0.0.0
  */
-export class GuardExceeded extends S.TaggedError<GuardExceeded>($I`GuardExceeded`)("GuardExceeded", {
+export class GuardExceeded extends S.TaggedError<GuardExceeded, { readonly brand: unique symbol }>($I`GuardExceeded`)("GuardExceeded", {
 	reason: GuardReason.annotateKey({ description: "The compile-time guard whose cap was exceeded." }),
 	limit: S.Finite.annotateKey({ description: "The finite cap enforced by the compile-time guard." }),
 	// Expansion arithmetic intentionally overflows to Infinity; retain the oracle measurement.

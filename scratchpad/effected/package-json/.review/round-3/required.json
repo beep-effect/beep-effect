@@ -1,0 +1,43 @@
+{
+  "module": "package-json",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/package-json/Repository.ts"
+      ],
+      "tests": [
+        "scratchpad/test/package-json/Repository.test.ts"
+      ],
+      "findings": [
+        "sol-3-1"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/package-json/internal/wire.ts"
+      ],
+      "tests": [
+        "scratchpad/test/package-json/Package.test.ts"
+      ],
+      "findings": [
+        "sol-3-2"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-3-1": {
+      "file": "scratchpad/effected/package-json/Repository.ts",
+      "class": "bug",
+      "summary": "Repository.directoryUrl throws URIError on an accepted directory containing a lone UTF-16 surrogate, in both the lab and pinned upstream oracle.",
+      "fix": "Wrap each encodeURIComponent call in Result.try, convert results through Result.getSuccess, and sequence with O.all; return None on encoding failure while preserving current URL and percent-encoding behavior. Add a Repository.test.ts regression proving successful decoding, non-throwing None, and unchanged wire round-trip fidelity. Supply an upstream-bug receipt and regression reference to central bookkeeping; do not edit PORT_LEDGER.json or README Port notes."
+    },
+    "sol-3-2": {
+      "file": "scratchpad/effected/package-json/internal/wire.ts",
+      "class": "bug",
+      "summary": "The known-field accumulator loses a declared __proto__ subclass field, causing Package.wireFor to fail decoding its own encoding in both the lab and pinned upstream oracle.",
+      "fix": "Construct known with R.fromEntries over R.toEntries(raw) filtered by knownKeys instead of assignment into {}; retain the existing rest representation and typed-field precedence, and correct the adjacent collision comment. Add a Package.test.ts regression using Package.extend with a computed __proto__: S.String field, covering direct class decoding, wire decoding, and encode/decode fidelity with other metadata preserved. Supply an upstream-bug receipt and regression reference to central bookkeeping; do not edit PORT_LEDGER.json or README Port notes."
+    }
+  }
+}

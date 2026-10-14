@@ -5,12 +5,13 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import * as Terminal from "effect/Terminal";
 import type { ColorLevel } from "../../effected/env/ColorLevel.ts";
 import type { Env } from "../../effected/env/internal/types.ts";
-import type { TerminalEnvOptions, TerminalEnvTestOptions } from "../../effected/env/TerminalEnv.ts";
-import { TerminalEnv } from "../../effected/env/TerminalEnv.ts";
+import type { TerminalEnvOptions } from "../../effected/env/TerminalEnv.ts";
+import { TerminalEnv, TerminalEnvTestOptions } from "../../effected/env/TerminalEnv.ts";
 
 const stdio = (opts: { readonly stdin?: boolean; readonly stdout: boolean }) =>
 	Stdio.layerTest({
@@ -325,7 +326,108 @@ describe("TerminalEnv.layerStdio", () => {
 	});
 });
 
+describe("TerminalEnvTestOptions", () => {
+	it.effect("accepts omitted keys and each plain partial stream field independently", () => {
+		const accepts = S.is(TerminalEnvTestOptions);
+		assert.isTrue(accepts({}));
+		assert.isTrue(accepts({ stdinIsTerminal: true }));
+		for (const stream of [
+			{},
+			{ isTerminal: true },
+			{ color: "basic" },
+			{ hyperlinks: true },
+			{ columns: O.none() },
+			{ columns: O.some(90) },
+		]) {
+			assert.isTrue(accepts({ stdout: stream }));
+			assert.isTrue(accepts({ stderr: stream }));
+		}
+		return Effect.void;
+	});
+
+	it.effect("rejects values outside the existing stream field domains", () => {
+		const accepts = S.is(TerminalEnvTestOptions);
+		assert.isFalse(accepts({ stdinIsTerminal: "true" }));
+		for (const stream of [
+			{ isTerminal: "true" },
+			{ color: "unsupported" },
+			{ hyperlinks: "true" },
+			{ columns: O.some("90") },
+		]) {
+			assert.isFalse(accepts({ stdout: stream }));
+			assert.isFalse(accepts({ stderr: stream }));
+		}
+		return Effect.void;
+	});
+
+	it.effect("retains NaN and both infinities in partial stream columns", () => {
+		for (const columns of [NaN, Infinity, -Infinity]) {
+			assert.isTrue(S.is(TerminalEnvTestOptions)({ stdout: { columns: O.some(columns) } }));
+			assert.isTrue(S.is(TerminalEnvTestOptions)({ stderr: { columns: O.some(columns) } }));
+		}
+		return Effect.void;
+	});
+});
+
 describe("TerminalEnv.layerTest", () => {
+	for (const [name, options] of [
+		["omitted streams", {}],
+		["empty streams", { stdout: {}, stderr: {} }],
+	] as const) {
+		it.layer(TerminalEnv.layerTest(options), { timeout: "30 seconds" })((it) => {
+			it.effect(`keeps quiet defaults for ${name}`, () =>
+				Effect.gen(function* () {
+					const t = yield* TerminalEnv;
+					assert.strictEqual(t.stdinIsTerminal, false);
+					for (const stream of [t.stdout, t.stderr]) {
+						assert.deepStrictEqual(stream, {
+							isTerminal: false, color: "none", hyperlinks: false, columns: O.none(),
+						});
+					}
+					assert.strictEqual(t.width(), 80);
+					assert.strictEqual(t.width(40), 40);
+				}),
+			);
+		});
+	}
+
+	const partialOptions: TerminalEnvTestOptions = {
+		stdinIsTerminal: true,
+		stdout: { isTerminal: true, hyperlinks: true, columns: O.none() },
+		stderr: { color: "basic", columns: O.some(100) },
+	};
+	it.layer(TerminalEnv.layerTest(partialOptions), { timeout: "30 seconds" })((it) => {
+		it.effect("merges plain typed partial objects independently and preserves explicit None columns", () =>
+			Effect.gen(function* () {
+				const t = yield* TerminalEnv;
+				assert.strictEqual(t.stdinIsTerminal, true);
+				assert.deepStrictEqual(t.stdout, {
+					isTerminal: true, color: "none", hyperlinks: true, columns: O.none(),
+				});
+				assert.deepStrictEqual(t.stderr, {
+					isTerminal: false, color: "basic", hyperlinks: false, columns: O.some(100),
+				});
+				assert.strictEqual(t.width(40), 40);
+			}),
+		);
+	});
+
+	for (const columns of [NaN, Infinity, -Infinity]) {
+		it.layer(
+			TerminalEnv.layerTest({ stdout: { columns: O.some(columns) }, stderr: { columns: O.some(columns) } }),
+			{ timeout: "30 seconds" },
+		)((it) => {
+			it.effect(`preserves non-finite columns ${columns} in both streams and width`, () =>
+				Effect.gen(function* () {
+					const t = yield* TerminalEnv;
+					assertSome(t.stdout.columns, columns);
+					assertSome(t.stderr.columns, columns);
+					assert.deepStrictEqual(t.width(40), columns);
+				}),
+			);
+		});
+	}
+
 	// No Stdio, no Terminal, no ConfigProvider is provided: this compiling is the type-level check that the layer
 	// has no requirements, and running is the behavioural one.
 	it.layer(TerminalEnv.layerTest(), { timeout: "30 seconds" })((it) => {

@@ -27,6 +27,8 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -54,7 +56,7 @@ const $I = $ScratchpadId.create("effected/glob/internal/ast");
  * @category errors
  * @since 0.0.0
  */
-export class ASTError extends S.TaggedError<ASTError>($I`ASTError`)("ASTError", {
+export class ASTError extends S.TaggedError<ASTError, { readonly brand: unique symbol }>($I`ASTError`)("ASTError", {
 	message: S.String.annotateKey({ description: "The violated invariant in the extglob syntax tree." }),
 }, $I.annote("ASTError", {
 	title: "Extglob syntax tree invariant violation",
@@ -1316,7 +1318,163 @@ export class AST {
 		const pattern: MMRegExp = new RegExp(`^${re}$`, flags);
 		pattern._src = re;
 		pattern._glob = glob;
+		if (this.#hasRepeat()) pattern._matchSegment = this.#makeSegmentMatcher();
 		return pattern;
+	}
+
+	/**
+	 * Detects repeated extglobs that need a memoized segment matcher.
+	 *
+	 * **Details**
+	 *
+	 * Repetition nested inside an alternative also selects the matcher when
+	 * the root is compiled through toMMPattern.
+	 *
+	 * **Example** (Compile a nested repetition)
+	 *
+	 * ```ts
+	 * import { AST } from "@beep/scratchpad/effected/glob/internal/ast"
+	 *
+	 * const pattern = AST.fromGlob("a*(b|bb)c").toMMPattern()
+	 * console.log(pattern instanceof RegExp) // true
+	 * ```
+	 *
+	 * @category predicates
+	 * @since 0.0.0
+	 */
+	#hasRepeat(): boolean {
+		return this.type === "*" || this.type === "+" ||
+			this.#parts.some((part) => part instanceof AST && part.#hasRepeat());
+	}
+
+	/**
+	 * Compiles repeated alternatives into a memoized segment predicate.
+	 *
+	 * **Details**
+	 *
+	 * Each match caches reachable offsets by node and dot mode. Repetition
+	 * visits each reachable offset once, preserving contextual assertions and
+	 * normalized negative extglobs without exponential regexp backtracking.
+	 *
+	 * **Example** (Match overlapping repeated alternatives)
+	 *
+	 * ```ts
+	 * import { Minimatch } from "@beep/scratchpad/effected/glob/internal/minimatch"
+	 *
+	 * const pattern = new Minimatch("*(a|aa)b")
+	 * console.log(pattern.match("aaaab")) // true
+	 * console.log(pattern.match("aaaac")) // false
+	 * ```
+	 *
+	 * @category parsing
+	 * @since 0.0.0
+	 */
+	#makeSegmentMatcher(): (candidate: string) => boolean {
+		// Compile once with the regexp owner. Each invocation memoizes node,
+		// offset and dot mode; repeated alternatives visit each offset once.
+		type Memo = MutableHashMap.MutableHashMap<string, ReadonlyArray<number>>;
+		type Step = (candidate: string, start: number, allowDot: boolean, memo: Memo) => ReadonlyArray<number>;
+		let nextId = 0;
+		const compile = (node: AST): Step => {
+			const id = nextId++;
+			const sources = [node.toRegExpSource(), node.toRegExpSource(true)] as const;
+			const leaf = node.type === null && node.#parts.every(P.isString);
+			const compileRegexp = ([source, , , unicode]: ReturnType<AST["toRegExpSource"]>): RegExp =>
+				new RegExp(`^(?:${source.replace(startNoTraversal, "").replace(startNoDot, "")})$`, (node.#options.nocase === true ? "i" : "") + (unicode ? "u" : ""));
+			const regexps = [compileRegexp(sources[0]), compileRegexp(sources[1])] as const;
+			const branches: Array<readonly [AST, Step]> = [];
+			const children = node.#parts.map((part): Step => {
+				if (part instanceof AST) {
+					const step = compile(part);
+					branches.push([part, step]);
+					return step;
+				}
+				const [source, body, magic, unicode] = AST.#parseGlob(part, undefined);
+				const regexp = new RegExp(`^(?:${source})$`, (node.#options.nocase === true ? "i" : "") + (unicode ? "u" : ""));
+				return (candidate, start) => {
+					if (!magic) return regexp.test(candidate.slice(start, start + body.length)) ? [start + body.length] : [];
+					const ends: Array<number> = [];
+					for (let end = start; end <= candidate.length; end++) {
+						if (regexp.test(candidate.slice(start, end))) ends.push(end);
+					}
+					return ends;
+				};
+			});
+			return (candidate, start, allowDot, memo) => {
+				const key = `${id}:${start}:${allowDot}`;
+				const cached = MutableHashMap.get(memo, key);
+				if (O.isSome(cached)) return cached.value;
+				let ends = HashSet.empty<number>();
+				const mode = allowDot ? 1 : 0;
+				const metadata = sources[mode];
+				const regexp = regexps[mode];
+				if (leaf) {
+					const tail = candidate.slice(start);
+					const source = metadata[0];
+					const blocked = (source.startsWith(startNoDot) && tail.startsWith(".")) ||
+						(source.startsWith(startNoTraversal) && start === 0 && (tail === "." || tail === ".."));
+					if (blocked) { MutableHashMap.set(memo, key, []); return []; }
+					const [, body, magic] = metadata;
+					if (!magic) {
+						const end = start + body.length;
+						if (end <= candidate.length && regexp.test(candidate.slice(start, end))) ends = HashSet.add(ends, end);
+					} else {
+						for (let end = start; end <= candidate.length; end++) {
+							if (regexp.test(candidate.slice(start, end))) ends = HashSet.add(ends, end);
+						}
+					}
+					if (node.isEnd() && node.#parent?.type === "!") ends = HashSet.filter(ends, (end) => end === candidate.length);
+				} else if (node.type === null) {
+					// Preserve the contextual start assertions generated by the AST.
+					const source = metadata[0];
+					const tail = candidate.slice(start);
+					const blocked = (source.startsWith(startNoDot) && tail.startsWith(".")) ||
+						(source.startsWith(startNoTraversal) && start === 0 && (tail === "." || tail === ".."));
+					if (!blocked) {
+						ends = HashSet.make(start);
+						for (const child of children) {
+							let following = HashSet.empty<number>();
+							for (const offset of ends) {
+								for (const end of child(candidate, offset, allowDot, memo)) following = HashSet.add(following, end);
+							}
+							ends = following;
+						}
+						if (node.isEnd() && node.#parent?.type === "!") ends = HashSet.filter(ends, (end) => end === candidate.length);
+					}
+				} else {
+					const alternatives = (offset: number, dot: boolean): HashSet.HashSet<number> => {
+						let result = HashSet.empty<number>();
+						for (const [part, child] of branches) {
+							if (node.isStart() && node.isEnd() && part.toRegExpSource(dot)[0] === "") continue;
+							for (const end of child(candidate, offset, dot, memo)) result = HashSet.add(result, end);
+						}
+						return result;
+					};
+					ends = alternatives(start, allowDot);
+					if (node.type === "!") {
+						const forbidden = node.#emptyExt === false && HashSet.has(ends, candidate.length);
+						ends = HashSet.empty<number>();
+						const blocked = node.isStart() && node.#options.dot !== true && !allowDot && candidate.charAt(start) === ".";
+						if (!forbidden && !blocked) {
+							for (let end = start + (node.#emptyExt ? 1 : 0); end <= candidate.length; end++) ends = HashSet.add(ends, end);
+						}
+					} else if (node.type === "*" || node.type === "+") {
+						const queue = A.fromIterable(ends);
+						for (const offset of queue) {
+							for (const end of alternatives(offset, true)) {
+								if (!HashSet.has(ends, end)) { ends = HashSet.add(ends, end); queue.push(end); }
+							}
+						}
+						if (node.type === "*") ends = HashSet.add(ends, start);
+					} else if (node.type === "?") ends = HashSet.add(ends, start);
+				}
+				const result = A.fromIterable(ends);
+				MutableHashMap.set(memo, key, result);
+				return result;
+			};
+		};
+		const step = compile(this);
+		return (candidate) => !candidate.includes("/") && step(candidate, 0, false, MutableHashMap.empty()).includes(candidate.length);
 	}
 
 	/**

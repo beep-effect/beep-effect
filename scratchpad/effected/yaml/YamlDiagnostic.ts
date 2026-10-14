@@ -12,8 +12,10 @@
 // parity convention; `message` is yaml's additive extra.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
+import type { RawDiagnostic } from "./internal/diagnostics.ts";
 import {
 	YAML_COMPOSE_ERROR_CODES,
 	YAML_LEX_ERROR_CODES,
@@ -279,8 +281,9 @@ export class YamlDiagnostic extends S.Class<YamlDiagnostic>($I`YamlDiagnostic`)(
 	static fromRaw(
 		raw: { readonly code: YamlErrorCode; readonly message: string; readonly offset: number; readonly length: number },
 		text: string,
+		index?: ReturnType<typeof YamlDiagnostic.positionIndex>,
 	): YamlDiagnostic {
-		const { line, character } = lineChar(text, raw.offset);
+		const { line, character } = index === undefined ? lineChar(text, raw.offset) : index(raw.offset);
 		return YamlDiagnostic.make({
 			code: raw.code,
 			message: raw.message,
@@ -290,13 +293,76 @@ export class YamlDiagnostic extends S.Class<YamlDiagnostic>($I`YamlDiagnostic`)(
 			character,
 		});
 	}
+
+	/**
+	 * Index line breaks once and return a reusable binary position lookup.
+	 * CRLF offsets between the two code units belong to the new line at character zero.
+	 *
+	 * **Example** (Reuse positions for one source)
+	 *
+	 * ```ts
+	 * import { YamlDiagnostic } from "@beep/scratchpad/effected/yaml/YamlDiagnostic"
+	 * const position = YamlDiagnostic.positionIndex("a\nb")
+	 * console.log(position(2).line) // 1
+	 * ```
+	 *
+	 * @param text - Source whose UTF-16 line breaks are indexed.
+	 * @returns A lookup preserving standalone diagnostic position semantics.
+	 * @category constructors
+	 * @since 0.0.0
+	 */
+	static positionIndex(text: string): (offset: number) => { line: number; character: number } {
+		const breaks: Array<number> = [];
+		const starts: Array<number> = [0];
+		for (let i = 0; i < text.length; i++) {
+			const ch = text.charCodeAt(i);
+			if (ch === 0x0a || ch === 0x0d || ch === 0x2028 || ch === 0x2029) {
+				breaks.push(i + 1);
+				if (ch === 0x0d && text.charCodeAt(i + 1) === 0x0a) i++;
+				starts.push(i + 1);
+			}
+		}
+		return (offset) => {
+			const limit = Math.min(offset, text.length);
+			let low = 0;
+			let high = breaks.length;
+			while (low < high) {
+				const middle = Math.floor((low + high) / 2);
+				if (A.getUnsafe(breaks, middle) <= Math.ceil(limit)) low = middle + 1;
+				else high = middle;
+			}
+			const start = A.getUnsafe(starts, low);
+			const lineStart = low > 0 && breaks[low - 1] === start - 1 && limit <= start - 1 ? start - 1 : start;
+			return { line: low, character: offset - lineStart };
+		};
+	}
+
+	/**
+	 * Materialize an ordered batch using one source-position index.
+	 *
+	 * **Example** (Position a batch)
+	 *
+	 * ```ts
+	 * import { YamlDiagnostic } from "@beep/scratchpad/effected/yaml/YamlDiagnostic"
+	 * const diagnostics = YamlDiagnostic.fromRawBatch([
+	 *   { code: "DuplicateKey", message: "Repeated key", offset: 2, length: 1 }
+	 * ], "a\nb")
+	 * console.log(diagnostics[0]?.line) // 1
+	 * ```
+	 *
+	 * @param records - Raw diagnostics in their emitted order.
+	 * @param text - Source the offsets refer to.
+	 * @param index - An existing lookup shared by batches from one operation.
+	 * @returns Positioned diagnostics in the original order.
+	 * @category constructors
+	 * @since 0.0.0
+	 */
+	static fromRawBatch(records: ReadonlyArray<RawDiagnostic>, text: string, index = YamlDiagnostic.positionIndex(text)): ReadonlyArray<YamlDiagnostic> {
+		return records.map((raw) => YamlDiagnostic.fromRaw(raw, text, index));
+	}
 }
 
-/**
- * Compute the zero-based line/character position of `offset` within `text`.
- * Recognizes `\n`, `\r`, `\r\n`, LS and PS as line breaks, matching the
- * jsonc counterpart so positions are codec-generic.
- */
+/** Preserve the prefix-only scan for standalone diagnostic conversion. */
 function lineChar(text: string, offset: number): { line: number; character: number } {
 	let line = 0;
 	let lineStart = 0;
@@ -307,9 +373,7 @@ function lineChar(text: string, offset: number): { line: number; character: numb
 			line++;
 			lineStart = i + 1;
 		} else if (ch === 0x0d) {
-			if (i + 1 < limit && text.charCodeAt(i + 1) === 0x0a) {
-				i++;
-			}
+			if (i + 1 < limit && text.charCodeAt(i + 1) === 0x0a) i++;
 			line++;
 			lineStart = i + 1;
 		} else if (ch === 0x2028 || ch === 0x2029) {

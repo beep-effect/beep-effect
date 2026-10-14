@@ -56,9 +56,13 @@
 // one is doubled — the only escape a single-quoted PowerShell literal has.
 //
 // Pure: no filesystem, no environment, no spawn. `internal/spawn.ts` is the
-// execution half. Reaches `effect/process` alone, so it is safe for
-// any module to import (`__test__/reachability.test.ts`).
+// execution half. Command construction and schema identity add no Azure or
+// GitHub SDK imports (`__test__/reachability.test.ts`).
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import { ChildProcess } from "effect/process";
+
+const $I = $ScratchpadId.create("effected/github-actions/internal/archiveCommands");
 
 /** A PowerShell single-quoted literal: `'` becomes `''`, nothing else is special. */
 const pwshLiteral = (value: string): string => `'${value.replaceAll("'", "''")}'`;
@@ -70,20 +74,34 @@ const pwsh = (script: string, options?: ChildProcess.CommandOptions): ChildProce
 /**
  * What {@link zipCommand} packs.
  *
- * @category models
+ * **Details**
+ *
+ * A boundary struct preserves plain-object construction. Schema decoding
+ * requires a finite level; the command builder still clamps infinite levels.
+ *
+ * **Example** (Validate zip inputs)
+ *
+ * ```ts
+ * import { ZipCommandOptions } from "@beep/scratchpad/effected/github-actions/internal/archiveCommands";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(ZipCommandOptions)({ windows: false, root: "/work", files: ["a.txt"], manifest: "/m", destination: "/a.zip", level: 6 })) // true
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
-export interface ZipCommandOptions {
+export const ZipCommandOptions = S.Struct({
 	/** Whether the runner is Windows (`RUNNER_OS`), which selects the .NET `ZipFile` over `zip`. */
-	readonly windows: boolean;
+	windows: S.Boolean.annotateKey({ description: "Selects the Windows .NET ZipFile command." }),
 	/** The directory the archiver runs in; every entry is recorded relative to it. */
-	readonly root: string;
+	root: S.String.annotateKey({ description: "Working directory; entries are relative to it." }),
 	/**
 	 * The files to pack, ALREADY relative to `root` — the caller relativizes,
 	 * this module does not. POSIX passes them as `zip`'s argv; the Windows
 	 * branch ignores them and reads `manifest` instead.
 	 */
-	readonly files: ReadonlyArray<string>;
+	files: S.Array(S.String).annotateKey({ description: "Relative files passed as POSIX argv; Windows reads the manifest instead." }),
 	/**
 	 * Windows only: the path of a file holding {@link zipManifest}'s output for
 	 * the same `files`, which the pwsh script reads with `File.ReadAllLines`.
@@ -91,17 +109,23 @@ export interface ZipCommandOptions {
 	 * by the POSIX branch, whose argv has no comparable ceiling (the module doc
 	 * says why the two branches differ in mechanism).
 	 */
-	readonly manifest: string;
+	manifest: S.String.annotateKey({ description: "Windows manifest containing one relative file per line." }),
 	/** Where the archive is written; an existing archive is replaced on both platforms. */
-	readonly destination: string;
+	destination: S.String.annotateKey({ description: "Destination archive, replaced if already present." }),
 	/**
 	 * The zlib level, clamped to `0..9` and truncated. `zip` takes it as
 	 * `-<level>`; on Windows it maps onto .NET's `CompressionLevel`: `0` is
 	 * `NoCompression`, `1..3` `Fastest`, `4..8` `Optimal`, `9` `SmallestSize`
 	 * (.NET 6+, which pwsh 7.2+ on the hosted runners has).
 	 */
-	readonly level: number;
-}
+	level: S.Finite.annotateKey({ description: "Zlib compression level, clamped to 0–9 and truncated." }),
+}).pipe($I.annoteSchema("ZipCommandOptions", { description: "Plain-object inputs for constructing a zip command." }));
+
+/** The plain-object zip inputs validated by {@link ZipCommandOptions}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ZipCommandOptions = typeof ZipCommandOptions.Type;
 
 /** {@link ZipCommandOptions.level} clamped to `zip`'s `0..9` and truncated. */
 const clampLevel = (level: number): number => Math.min(9, Math.max(0, Math.trunc(level)));
@@ -136,7 +160,7 @@ const dotnetCompressionLevel = (level: number): string =>
 export const zipManifest = (files: ReadonlyArray<string>): string => files.map((file) => `${file}\n`).join("");
 
 /**
- * Pack `files` into a zip: `zip -<level> -qr <destination> <files...>` with
+ * Pack `files` into a zip: `zip -<level> -qr <destination> -- <files...>` with
  * `root` as the working directory, or on Windows a pwsh script that opens
  * `destination` with `ZipFile.Open(..., Create)` after a `File.Delete` (the
  * overwrite) and adds one `CreateEntryFromFile` per line of `manifest`,
@@ -159,7 +183,7 @@ export const zipManifest = (files: ReadonlyArray<string>): string => files.map((
 export const zipCommand = (options: ZipCommandOptions): ChildProcess.StandardCommand => {
 	const level = clampLevel(options.level);
 	if (!options.windows) {
-		return ChildProcess.make("zip", [`-${level}`, "-qr", options.destination, ...options.files], {
+		return ChildProcess.make("zip", [`-${level}`, "-qr", options.destination, "--", ...options.files], {
 			cwd: options.root,
 		});
 	}
@@ -187,21 +211,36 @@ export const zipCommand = (options: ZipCommandOptions): ChildProcess.StandardCom
 /**
  * What {@link unzipCommand} unpacks.
  *
- * @category models
+ * **Example** (Validate unzip inputs)
+ *
+ * ```ts
+ * import { UnzipCommandOptions } from "@beep/scratchpad/effected/github-actions/internal/archiveCommands";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(UnzipCommandOptions)({ windows: false, source: "/a.zip", destination: "/out" })) // true
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
-export interface UnzipCommandOptions {
+export const UnzipCommandOptions = S.Struct({
 	/** Whether the runner is Windows (`RUNNER_OS`), which selects the .NET `ZipFile` over `unzip`. */
-	readonly windows: boolean;
+	windows: S.Boolean.annotateKey({ description: "Selects the Windows .NET ZipFile command." }),
 	/** The archive. */
-	readonly source: string;
+	source: S.String.annotateKey({ description: "Source zip archive." }),
 	/** The directory its contents land in; existing files are overwritten on both platforms. */
-	readonly destination: string;
-}
+	destination: S.String.annotateKey({ description: "Extraction directory; existing files are overwritten." }),
+}).pipe($I.annoteSchema("UnzipCommandOptions", { description: "Plain-object inputs for constructing an unzip command." }));
+
+/** The plain-object unzip inputs validated by {@link UnzipCommandOptions}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type UnzipCommandOptions = typeof UnzipCommandOptions.Type;
 
 /**
- * Unpack a zip into `destination`, overwriting: `unzip -oq <source> -d
- * <destination>`, or the three-argument `ExtractToDirectory` overload under
+ * Unpack a zip into `destination`, overwriting: `unzip -oq -d <destination>
+ * -- <source>`, or the three-argument `ExtractToDirectory` overload under
  * `$ErrorActionPreference = 'Stop'` and a stderr-writing try/catch on
  * Windows (the module doc says why both halves are load-bearing).
  * **Example** (Construct a POSIX unzip command)
@@ -223,22 +262,37 @@ export const unzipCommand = (options: UnzipCommandOptions): ChildProcess.Standar
 					`[System.IO.Compression.ZipFile]::ExtractToDirectory(${pwshLiteral(options.source)}, ${pwshLiteral(options.destination)}, $true) } ` +
 					"catch { [Console]::Error.WriteLine($_.Exception.ToString()); exit 1 }",
 			)
-		: ChildProcess.make("unzip", ["-oq", options.source, "-d", options.destination]);
+		: ChildProcess.make("unzip", ["-oq", "-d", options.destination, "--", options.source]);
 
 /**
  * What {@link tarExtractCommand} unpacks.
  *
- * @category models
+ * **Example** (Validate tar extraction inputs)
+ *
+ * ```ts
+ * import { TarExtractCommandOptions } from "@beep/scratchpad/effected/github-actions/internal/archiveCommands";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(TarExtractCommandOptions)({ archive: "/a.tgz", destination: "/out", flags: undefined })) // true
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
-export interface TarExtractCommandOptions {
+export const TarExtractCommandOptions = S.Struct({
 	/** The tarball. */
-	readonly archive: string;
+	archive: S.String.annotateKey({ description: "Source tar archive." }),
 	/** The directory its contents land in (`-C`). */
-	readonly destination: string;
+	destination: S.String.annotateKey({ description: "Extraction directory passed to -C." }),
 	/** `tar`'s flags; absent or empty means `xzf`. */
-	readonly flags?: ReadonlyArray<string> | undefined;
-}
+	flags: S.String.pipe(S.Array, S.optional).annotateKey({ description: "Tar flags; absent or empty uses xzf." }),
+}).pipe($I.annoteSchema("TarExtractCommandOptions", { description: "Plain-object inputs for constructing a tar extraction command." }));
+
+/** The plain-object tar inputs validated by {@link TarExtractCommandOptions}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TarExtractCommandOptions = typeof TarExtractCommandOptions.Type;
 
 /**
  * Extract a tarball: `tar <flags> <archive> -C <destination>`. The same on

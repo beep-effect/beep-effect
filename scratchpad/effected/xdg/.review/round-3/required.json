@@ -1,0 +1,31 @@
+{
+  "module": "xdg",
+  "groups": [
+    {
+      "id": "g1",
+      "files": ["scratchpad/effected/xdg/AppDirs.ts"],
+      "tests": [],
+      "findings": ["grok-3-1"]
+    },
+    {
+      "id": "g2",
+      "files": ["scratchpad/effected/xdg/Xdg.ts"],
+      "tests": [],
+      "findings": ["fable-3-1"]
+    }
+  ],
+  "findings": {
+    "grok-3-1": {
+      "file": "scratchpad/effected/xdg/AppDirs.ts",
+      "class": "effect-idiom",
+      "summary": "The explicit type argument in Effect.succeed(O.none<string>()) bypasses the error-level preferSucceedSomeOrNone detector.",
+      "fix": "Replace only Effect.succeed(O.none<string>()) with Effect.succeedNone. Preserve Effect.asSome, the AppDirsError channel, all paths, the AppDirs.ensureRuntime span, and all upstream test lines."
+    },
+    "fable-3-1": {
+      "file": "scratchpad/effected/xdg/Xdg.ts",
+      "class": "law",
+      "summary": "splitDirs uses a manual array-emptiness ternary that violates short law 12 outside terse-effect gate coverage.",
+      "fix": "Import effect/Array as A and replace the final ternary with A.match(parts, { onEmpty: () => fallback, onNonEmpty: () => parts }). Preserve the undefined fallback, empty-entry filtering, exact defaults, original arrays and order, and all upstream test lines."
+    }
+  }
+}

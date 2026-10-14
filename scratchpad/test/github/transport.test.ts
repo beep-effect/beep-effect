@@ -193,6 +193,81 @@ describe("transport thrown headers and classification", () => {
 	);
 });
 
+describe("transport invalid rate-limit snapshots", () => {
+	for (const reset of ["9007199254740992", "1e308"]) {
+		const headers = {
+			"x-ratelimit-remaining": "0",
+			"x-ratelimit-limit": "5000",
+			"x-ratelimit-reset": reset,
+		};
+		for (const retained of [false, true]) {
+			for (const mode of ["request", "pagination"] as const) {
+				it.effect(`delivers ${mode} payloads with invalid reset ${reset}, prior snapshot ${retained}`, () =>
+					Effect.gen(function* () {
+						const prior = RateLimitSnapshot.make({ remaining: 12, limit: 5000, resetEpochSeconds: 1_700_000_000 });
+						const script = scriptedFetch([
+							...(retained ? [{ status: 200, body: {}, headers: rateLimitHeaders(prior) }] : []),
+							{ status: 200, body: mode === "pagination" ? [{ answer: 42 }] : { answer: 42 }, headers },
+						]);
+						const transport = yield* makeTransport({ retry: RetryPolicy.none, fetch: script.fetch });
+						if (retained) {
+							yield* transport.request("seed", "/seed", {});
+							assertSome(yield* transport.rateLimit, prior);
+						}
+						if (mode === "pagination") {
+							const source = transport.pageSource<{ readonly answer: number }>("pages", "GET /answers", {});
+							assertSome(yield* source.next, [{ answer: 42 }]);
+							assertNone(yield* source.next);
+						} else {
+							const response = yield* transport.request<{ readonly answer: number }>("answer", "/answer", {});
+							assert.strictEqual(response.status, 200);
+							assert.deepStrictEqual(response.data, { answer: 42 });
+						}
+						const snapshot = yield* transport.rateLimit;
+						if (retained) assertSome(snapshot, prior);
+						else assertNone(snapshot);
+						assert.strictEqual(script.count(), retained ? 2 : 1);
+					}),
+				);
+			}
+			for (const mode of ["request", "pagination", "graphql"] as const) {
+				it.effect(`classifies ${mode} HTTP failures with invalid reset ${reset}, prior snapshot ${retained}`, () =>
+					Effect.gen(function* () {
+						const prior = RateLimitSnapshot.make({ remaining: 12, limit: 5000, resetEpochSeconds: 1_700_000_000 });
+						const script = scriptedFetch([
+							...(retained ? [{ status: 200, body: {}, headers: rateLimitHeaders(prior) }] : []),
+							{ status: 429, body: { message: "limited" }, headers },
+						]);
+						const transport = yield* makeTransport({ retry: RetryPolicy.default, fetch: script.fetch });
+						if (retained) {
+							yield* transport.request("seed", "/seed", {});
+							assertSome(yield* transport.rateLimit, prior);
+						}
+						const operation: Effect.Effect<unknown, GitHubError | GitHubGraphQLError> = mode === "pagination"
+							? transport.pageSource<unknown>("limited", "GET /answers", {}).next
+							: mode === "graphql"
+								? transport.graphql("limited", "query { viewer { login } }", {})
+								: transport.request("limited", "/answer", {});
+						const error = yield* operation.pipe(Effect.flip, Effect.orDie);
+						assert.strictEqual(error._tag, mode === "graphql" ? "GitHubGraphQLError" : "GitHubError");
+						assert.strictEqual(error.kind, "rateLimited");
+						if (error._tag === "GitHubError") assert.strictEqual(error.status, 429);
+						assert.strictEqual(error.operation, "limited");
+						assert.strictEqual(error.reason, "limited");
+						assert.strictEqual(error.retryAfterMillis, Number.MAX_SAFE_INTEGER);
+						assert.isDefined(error.cause);
+						assert.isFalse(RetryPolicy.default.retries(error));
+						const snapshot = yield* transport.rateLimit;
+						if (retained) assertSome(snapshot, prior);
+						else assertNone(snapshot);
+						assert.strictEqual(script.count(), retained ? 2 : 1);
+					}),
+				);
+			}
+		}
+	}
+});
+
 describe("transport cancellation", () => {
 	it.effect("retains pagination options, retries the current page, normalizes and completes", () =>
 		Effect.gen(function* () {

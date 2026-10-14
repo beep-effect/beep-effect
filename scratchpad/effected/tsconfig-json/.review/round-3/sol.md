@@ -1,0 +1,9 @@
+### sol-3-1
+- file: scratchpad/effected/tsconfig-json/ResolvedTsconfig.ts:118
+- class: law   severity: required
+- standard: `standards/effect-laws-v1.md`, short law 6 and Allowlist Contract; `standards/effect-first-development.md`, EF-5; D5/D11.   evidence: `rg -n 'Object\.defineProperty' scratchpad/effected/tsconfig-json/ResolvedTsconfig.ts` finds native calls at lines 118 and 231, in `rebuildRecord` and `extractPassthrough`. The file matches commit `3ad7b305790c7f0903f6d55766c55186745ba2d1`. These surviving calls demonstrate a miss in the supplied green native-runtime gate: the law prohibits native `Object` in domain logic, and the recorded native-runtime deviation describes replacement with Record helpers. A read-only Bun probe comparing the current rebuilding operation with `R.fromEntries(A.map(R.toEntries(source), ...))`, including own `__proto__` and `constructor` keys, returned `replacement preserves values true prototype true descriptors true`.
+- failure: Compiler-option path rebuilding and unknown-key passthrough still use prohibited native `Object` operations, leaving the module short of D5’s full beep-native end state. The remaining sites are absent from the previous inventories.
+- fix: Build both results through `R.fromEntries`. For `rebuildRecord`, map `R.toEntries(source)` into transformed entries. For `extractPassthrough`, filter `R.keys(source)` against `consumed` before reading the retained values and constructing entries, preserving the current read order. Retain own `__proto__` keys as data and the existing pollution regression assertions.
+
+REQUIRED: 1
+BACKLOG: 0

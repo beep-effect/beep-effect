@@ -1,9 +1,11 @@
 import { assert, describe, it, layer } from "@effect/vitest";
 import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
@@ -338,6 +340,28 @@ const FsDenying = (denied: string, present: ReadonlyArray<string>) =>
 					: undefined,
 		},
 	});
+
+describe("Walker.findUpward callback contract", () => {
+	it.effect("passes exactly one directory argument and preserves upstream probe order", () =>
+		Effect.gen(function* () {
+			let calls: ReadonlyArray<ReadonlyArray<string>> = [];
+			const probed = yield* Ref.make<ReadonlyArray<string>>([]);
+			const fs = FileSystem.makeNoop({
+				exists: Effect.fn("exists")(function* (candidate: string) {
+					yield* Ref.update(probed, (seen) => [...seen, candidate]);
+					return candidate === "/far/.apprc" || candidate === "0/.apprc";
+				}),
+			});
+			const found = yield* Walker.findUpward(["/near", "/far"], (...dirs: Array<string>) => {
+				calls = [...calls, dirs];
+				return A.map(dirs, (dir) => `${dir}/.apprc`);
+			}).pipe(Effect.provideService(FileSystem.FileSystem, fs));
+			assert.deepStrictEqual(calls, [["/near"], ["/far"]]);
+			assert.deepStrictEqual(yield* Ref.get(probed), ["/near/.apprc", "/far/.apprc"]);
+			assertSome(found, "/far/.apprc");
+		}),
+	);
+});
 
 layer(FsWith(["/a/b/.apprc", "/a/.apprc"]), { timeout: "10 seconds" })("findUpward, config in both directories", (it) => {
 	it.effect("prefers the nearer directory", () =>

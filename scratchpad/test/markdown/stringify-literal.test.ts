@@ -43,6 +43,29 @@ const out = (root: Root): string => {
 const parse = (source: string): Root => Result.getOrThrow(Markdown.parseResult(source));
 
 describe("adjacent text run boundaries", () => {
+	it("keeps canonical soft newlines after spaces in adjoining mixed-style siblings", () => {
+		for (const children of [
+			[canonical("a "), canonical(" \nb")],
+			[literal("a "), canonical(""), canonical(" \nb")],
+			[literal("a  "), canonical("\nb")],
+		]) {
+			const tree = paragraphOf(...children);
+			const emitted = out(tree);
+			assert.strictEqual(emitted, "a  &#10;b\n");
+			const paragraph = parse(emitted).children[0];
+			if (paragraph?.type !== "paragraph") assert.fail("expected paragraph");
+			assert.strictEqual(paragraph.children.length, 1);
+			const text = paragraph.children[0];
+			if (text?.type !== "text") assert.fail("expected soft newline in text");
+			assert.strictEqual(text.value, "a  \nb");
+			for (let index = 0; index < children.length; index += 1) {
+				const original = tree.children[0];
+				if (original?.type !== "paragraph") assert.fail("expected original paragraph");
+				assert.strictEqual(original.children[index], children[index]);
+			}
+		}
+	});
+
 	it("keeps canonical underscore boundaries and split entity defenses", () => {
 		const children = [canonical("a"), canonical("_"), canonical("b &a"), canonical("mp;"), canonical("")];
 		const paragraph = Paragraph.make({ children });

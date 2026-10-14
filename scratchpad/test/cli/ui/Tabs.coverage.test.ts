@@ -37,11 +37,12 @@ it.effect("overflow widens around the active tab to the left and right", () =>
     assert.include(frame, "…");
   }));
 
-it.effect("shrinking uncontrolled tabs after navigation renders an empty missing position", () =>
+it.effect("shrinking uncontrolled tabs clamps the active tab to the remaining list", () =>
   Effect.gen(function* () {
     const handle = yield* CliUiTest.view(createElement(Tabs.View, { tabs: [{ name: "a", label: "Alpha" }, { name: "b", label: "Beta" }], defaultValue: "b" }), { columns: 5, color: "none" });
     yield* handle.rerender(createElement(Tabs.View, { tabs: [{ name: "a", label: "Long alpha" }] }));
     assert.notInclude(yield* handle.plainFrame, "Beta");
+    assert.strictEqual(yield* handle.plainFrame, "[L…]");
     yield* handle.press("right");
     assert.include(yield* handle.plainFrame, "[");
   }));

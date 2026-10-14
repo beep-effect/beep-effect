@@ -385,31 +385,49 @@ const cellContent = (source: RowSource, from: number, to: number): CellContent =
 	}
 
 	if (drops.length === 0) {
-		return { text: text.slice(from, to), segments: rebase(sliceWithSegments(source.segments, from, to), 0) };
+		return { text: text.slice(from, to), segments: sliceWithSegments(source.segments, from, to) };
 	}
 
 	let content = "";
 	const segments: RawInlineSegment[] = [];
 	let cursor = from;
+	// Retained intervals and provenance runs are ordered. Keep our place in
+	// the provenance instead of rescanning every preceding paragraph line.
+	const iterator = source.segments[Symbol.iterator]();
+	let next = iterator.next();
 	for (const drop of [...drops, to]) {
 		if (drop > cursor) {
-			segments.push(...rebase(sliceWithSegments(source.segments, cursor, drop), content.length));
+			while (next.done !== true) {
+				const segment = next.value;
+				const segmentStart = segment.textOffset;
+				const segmentEnd = segmentStart + segment.length;
+				if (segmentEnd <= cursor) {
+					next = iterator.next();
+					continue;
+				}
+				if (segmentStart >= drop) {
+					break;
+				}
+				const start = Math.max(segmentStart, cursor);
+				const end = Math.min(segmentEnd, drop);
+				if (end > start) {
+					segments.push({
+						textOffset: content.length + start - cursor,
+						sourceOffset: segment.sourceOffset + start - segmentStart,
+						length: end - start,
+					});
+				}
+				if (segmentEnd > drop) {
+					break;
+				}
+				next = iterator.next();
+			}
 			content += text.slice(cursor, drop);
 		}
 		cursor = drop + 1;
 	}
 	return { text: content, segments };
 };
-
-/** Shift a segment run's text offsets so it sits at `at` in a longer string. */
-const rebase = (segments: ReadonlyArray<RawInlineSegment>, at: number): ReadonlyArray<RawInlineSegment> =>
-	at === 0
-		? segments
-		: segments.map((segment) => ({
-				textOffset: segment.textOffset + at,
-				sourceOffset: segment.sourceOffset,
-				length: segment.length,
-			}));
 
 /** The absolute source offset of `index` in a row source. */
 const offsetAt = (source: RowSource, index: number, fallback: number): number => {
@@ -510,7 +528,9 @@ const addRow = (
 		cellBlock.startOffset = start;
 		const content = cellContent(source, cell.contentStart, cell.end);
 		cellBlock.stringContent = content.text;
-		cellBlock.segments.push(...content.segments);
+		for (const segment of content.segments) {
+			cellBlock.segments.push(segment);
+		}
 		closeAt(scanner, cellBlock, offsetAt(source, cell.end, start));
 	}
 
@@ -583,7 +603,9 @@ export const tableHeaderStart: BlockStart = {
 			const reclaimed = cellContent(headerSource, 0, headerRow.paragraphOffset);
 			const paragraph = scanner.insertBefore(container, "paragraph");
 			paragraph.stringContent = reclaimed.text;
-			paragraph.segments.push(...reclaimed.segments);
+			for (const segment of reclaimed.segments) {
+				paragraph.segments.push(segment);
+			}
 			paragraph.endOffset = headerStart;
 			paragraph.endLine = Math.max(scanner.lineNumber - 2, paragraph.startLine);
 		}

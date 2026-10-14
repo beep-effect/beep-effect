@@ -1,0 +1,16 @@
+I'll review the `xdg` port read-only against the pinned upstream oracle, the round-2 inventory, and the binding port decisions. First I'm loading the review surfaces so I don't reopen closed items.Round 2 left one required finding on platform decoding. I'll check whether this commit closed it, then compare the port with the pinned oracle.### fable-3-1
+- file: scratchpad/effected/xdg/Xdg.ts:203
+- class: law   severity: required
+- standard: `standards/effect-laws-v1.md` short law 12; EF-7 for the empty-array case.   evidence: `splitDirs` returns `parts.length === 0 ? fallback : parts`. Short law 12 requires `Bool.match` for boolean branching in domain code. The green `terse-effect` gate does not cover this shape: `packages/tooling/tool/cli/test/terse-effect.test.ts` ("does not enforce broad nested ternary or if shapes") expects a clean summary for a boolean ternary. Round 2 required the same ungated form in `detectPlatform` (fable-2-2). This ternary is a different site; backlog b8 only suggested `A.filter` and left the length branch in place.
+- failure: The search-path fallback is still a boolean branch the law gates do not check. Empty and non-empty results stay correct only while this expression is left untouched.
+- fix: Replace the ternary with `A.match` on the filtered parts (`onEmpty` returns `fallback`, `onNonEmpty` returns the parts in order). Import `effect/Array` as `A`. Keep the `raw === undefined` fallback and the current entry order.
+
+### fable-3-2
+- file: scratchpad/test/xdg/AppDirs.test.ts:413
+- class: test   severity: backlog
+- standard: D11 test-strength bar; `goals/effect-vitest-canon/SPEC.md` meaningful assertions.   evidence: The only `ensureRuntime` case builds a layer with no runtime directory and expects `None`. `AppDirs.ts:508` (`Effect.asSome(makeDir("runtime", runtimeDir))`) runs only when a runtime directory exists. The later `ensure` case with `runtimeDir: "/run"` calls `makeDir` directly, so v8 can mark line 508 covered when the layer is built without ever running that effect. `Effect.asSome` is `map(self, Option.some)` in `effect/src/internal/effect.ts`, so this is a missing execution pin, not a shown wrong result.
+- failure: A break that skips the runtime mkdir, drops `AppDirsError`, or returns a bare string from `ensureRuntime` still passes, including the 100 percent coverage gate.
+- fix: Add one case that sets `runtimeDir`, runs `ensureRuntime`, and `assertSome`s the namespaced path. Assert that path is the only mkdir. Leave the existing `None` case as it is.
+
+REQUIRED: 1
+BACKLOG: 1

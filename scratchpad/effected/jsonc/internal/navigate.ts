@@ -160,7 +160,7 @@ export const navigate: {
   const skipValue = (): number => skipBalancedValue(skipCursor);
 
   const located = (
-    container: typeof NavigateContainer.Type,
+    container: NavigateContainer,
     keyStart: number,
     commaBefore: O.Option<number>
   ): NavigateResult => {

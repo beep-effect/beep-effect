@@ -373,7 +373,7 @@ const toStringifyInput = (options?: YamlStringifyOptions): StringifyOptionsInput
 			};
 
 const toDiagnostics = (text: string, records: ReadonlyArray<RawDiagnostic>): ReadonlyArray<YamlDiagnostic> =>
-	records.map((r) => YamlDiagnostic.fromRaw(r, text));
+	YamlDiagnostic.fromRawBatch(records, text);
 
 /**
  * Build the fatal {@link YamlParseError} for an alias-expansion "billion

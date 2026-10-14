@@ -1,0 +1,9 @@
+I'll review the tsconfig-json port read-only against the pinned upstream oracle and the round-2 inventory, and I won't repeat closed items.Round 2 left five required defects. I'll check whether this commit closed them, then look only for new divergences against the pinned oracle.### fable-3-1
+- file: scratchpad/effected/tsconfig-json/PortableTsconfig.ts:196
+- class: schema   severity: required
+- standard: standards/schema-first-development-prompt.md (schema transformations for deterministic type-shaping; derive behavior from the source codec). CompilerOptions.ts:16-20 and CompilerOptions.ts:37-45 define the case-insensitive literal codec (`Str.toLowerCase` into the literal union). Evidence: `SchemaAST.toType` replaces a transformation with its Type AST (`~/YeeBois/references/effect/effect/packages/effect/src/SchemaAST.ts:4704`; `NumberFromString` becomes `Number`). `PortableCompilerOptions` wraps the picked `CompilerOptions` fields, including `target`, `module`, `jsx`, and `lib`, in `S.toType`. The property tests generate already-canonical `CompilerOptions.Type` and `PortableTsconfig` values and assert that encode deep-equals the value (`scratchpad/test/tsconfig-json/PortableTsconfig.property.test.ts:28-35` and `:43-50`). They never decode `"ES2022"` or `"ESNEXT"`.
+- failure: Decoding a portable document whose `compilerOptions` are `{ target: "ES2022", noEmit: true, composite: false }` or `{ lib: ["ESNEXT"], noEmit: true, composite: false }` fails. The same spellings decode through `CompilerOptions` to `"es2022"` and `"esnext"`. `make` copies a runtime `"ES2022"` through, and that result fails `S.is(PortableTsconfig)`.
+- fix: Remove `S.toType` around the portable options struct so the picked field codecs keep their case-folding transformations. Keep the `noEmit: true` and `composite: false` literals and the excess-key strip. Canonical values still encode as themselves because that transform's encode is `identity`.
+
+REQUIRED: 1
+BACKLOG: 0

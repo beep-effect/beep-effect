@@ -80,7 +80,7 @@ const decodeGitBoolean = S.decodeUnknownOption(GitBoolean);
  * @category models
  * @since 0.0.0
  */
-export class GitmodulesEntry extends S.Class<GitmodulesEntry>($I`GitmodulesEntry`)({
+export class GitmodulesEntry extends S.Class<GitmodulesEntry, { readonly brand: unique symbol }>($I`GitmodulesEntry`)({
 	/**
   * The submodule's logical name — the section's subsection, case-sensitive.
   *
@@ -132,7 +132,7 @@ export class GitmodulesEntry extends S.Class<GitmodulesEntry>($I`GitmodulesEntry
  * @category errors
  * @since 0.0.0
  */
-export class GitmodulesDecodeError extends S.TaggedError<GitmodulesDecodeError>($I`GitmodulesDecodeError`)("GitmodulesDecodeError", {
+export class GitmodulesDecodeError extends S.TaggedError<GitmodulesDecodeError, { readonly brand: unique symbol }>($I`GitmodulesDecodeError`)("GitmodulesDecodeError", {
 	/** The submodule name (the section's subsection) that failed to decode. */
 	name: S.String.annotateKey({ description: "The submodule name (the section's subsection) that failed to decode." }),
 	/** The field the failure is about, when it is field-specific. */
@@ -230,7 +230,7 @@ const render = (fields: (typeof Gitmodules)["Encoded"]): string => {
  * @category models
  * @since 0.0.0
  */
-export class Gitmodules extends S.Class<Gitmodules>($I`Gitmodules`)({
+export class Gitmodules extends S.Class<Gitmodules, { readonly brand: unique symbol }>($I`Gitmodules`)({
 	/** The decoded submodule entries, in first-appearance order. */
 	entries: S.Array(GitmodulesEntry).check(S.makeFilter(
 		(entries) => A.dedupe(A.map(entries, (entry) => entry.name)).length === entries.length,

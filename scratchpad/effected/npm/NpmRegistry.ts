@@ -101,7 +101,7 @@ export const RegistryTarget = S.Struct({
  * @category type-level
  * @since 0.0.0
  */
-export type RegistryTarget = S.Schema.Type<typeof RegistryTarget> & {
+export type RegistryTarget = typeof RegistryTarget.Type & {
 	/**
 	 * Retained explicitly for the source-level tripwire contract.
 	 *
@@ -736,29 +736,37 @@ export class NpmRegistry extends Context.Service<NpmRegistry, NpmRegistryShape>(
 	 * @since 0.0.0
 	 */
 	static readonly makeSeeded = (seed: RegistrySeed): NpmRegistryShape => {
-		const at = (target: RegistryTarget | undefined): Record<string, Record<string, SeededVersion>> =>
-			seed.registries[target?.registry ?? DEFAULT_REGISTRY] ?? {};
+		const at = (name: string, target: RegistryTarget | undefined): Record<string, SeededVersion> =>
+			R.get(seed.registries, target?.registry ?? DEFAULT_REGISTRY).pipe(
+				O.flatMap(R.get(name)),
+				O.getOrElse(() => ({})),
+			);
 		return {
-			version: (name, version, target) => {
-				const found = at(target)[name]?.[version];
-				return Effect.succeed(
-					found === undefined
-						? O.none()
-						: O.some(
-								PublishedVersion.make({
-									name,
-									version,
-									...integrityField(found.integrity),
-									...O.getSomesStruct({ tarball: O.fromUndefinedOr(found.tarball) }),
-								}),
-							),
-				);
-			},
-			versions: (name, target) => Effect.succeed(R.keys(at(target)[name] ?? {})),
-			distTags: (name) => Effect.succeed({ ...(seed.distTags?.[name] ?? {}) }),
+			version: (name, version, target) =>
+				Effect.succeed(
+					R.get(at(name, target), version).pipe(
+						O.map((found) =>
+							PublishedVersion.make({
+								name,
+								version,
+								...integrityField(found.integrity),
+								...O.getSomesStruct({ tarball: O.fromUndefinedOr(found.tarball) }),
+							}),
+						),
+					),
+				),
+			versions: (name, target) => Effect.succeed(R.keys(at(name, target))),
+			distTags: (name) =>
+				Effect.succeed(
+					O.fromUndefinedOr(seed.distTags).pipe(
+						O.flatMap(R.get(name)),
+						O.map((tags) => ({ ...tags })),
+						O.getOrElse(() => ({})),
+					),
+				),
 			publishTimes: (name, target) =>
 				Effect.succeed(
-					A.flatMap(R.toEntries(at(target)[name] ?? {}), ([version, facts]) => {
+					A.flatMap(R.toEntries(at(name, target)), ([version, facts]) => {
 						if (facts.publishedAt === undefined) return [];
 						const parsed = DateTime.make(facts.publishedAt);
 						return O.isNone(parsed) ? [] : [PublishTime.make({ version, publishedAt: parsed.value })];

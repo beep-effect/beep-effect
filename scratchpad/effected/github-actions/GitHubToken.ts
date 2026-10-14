@@ -1,7 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import type { BotIdentity, GitHubAppShape, PermissionLevel, RetryPolicy } from "../github/index.ts";
-import { GitHubApp, GitHubClient, InstallationToken, TokenPermissions } from "../github/index.ts";
-import type * as Redacted from "effect/Redacted";
+import type { BotIdentity, GitHubAppShape, RetryPolicy } from "../github/index.ts";
+import { GitHubApp, GitHubClient, InstallationToken, PermissionLevel, TokenPermissions } from "../github/index.ts";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -67,19 +66,32 @@ const DEFAULT_KEY = "githubToken";
 /**
  * What to mint a token for.
  *
+ * **Example** (Validate ProvisionOptions input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
+ * import { ProvisionOptions } from "@beep/scratchpad/effected/github-actions/GitHubToken";
+ *
+ * const input = { appId: "123", privateKey: Redacted.make("example PEM") };
+ * Effect.runSync(Console.log(S.is(ProvisionOptions)(input))) // true
+ * ```
+ *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface ProvisionOptions {
+export const ProvisionOptions = S.Struct({
 	/** The app id or client id. */
-	readonly appId: string;
+	appId: S.String.annotateKey({ description: "The app id or client id." }),
 	/** The app's private key, in PEM. */
-	readonly privateKey: Redacted.Redacted<string>;
+	privateKey: S.Redacted(S.String).annotateKey({ description: "The app's private key, in PEM." }),
 	/** The installation. Discovered from `owner`, or from the app's only installation, when omitted. */
-	readonly installationId?: number | undefined;
+	installationId: S.optional(S.Finite).annotateKey({ description: "The installation id, discovered when omitted." }),
 	/** The account whose installation to use, when `installationId` is omitted. */
-	readonly owner?: string | undefined;
+	owner: S.optional(S.String).annotateKey({ description: "The account whose installation to discover." }),
 	/**
 	 * The permissions the action needs.
 	 *
@@ -91,21 +103,40 @@ export interface ProvisionOptions {
 	 * naming the missing permission rather than in the middle of `main` with a
 	 * `403` on one request.
 	 */
-	readonly required?: Readonly<Record<string, PermissionLevel>> | undefined;
+	required: S.optional(S.Record(S.String, PermissionLevel)).annotateKey({ description: "The permissions to verify before persisting the token." }),
 	/** The `GITHUB_STATE` key. One default, so `pre` and `post` agree without saying so. */
-	readonly stateKey?: string | undefined;
-}
+	stateKey: S.optional(S.String).annotateKey({ description: "The state key; defaults to githubToken." }),
+}).annotate($I.annote("ProvisionOptions", { description: "Options for minting and persisting an installation token." }));
+/**
+ * Decoded credentials, installation selection and persistence options for provisioning a token.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ProvisionOptions = typeof ProvisionOptions.Type;
 
 /**
  * Where to read a persisted token from.
+ *
+ * **Example** (Validate ReadOptions input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
+ * import { ReadOptions } from "@beep/scratchpad/effected/github-actions/GitHubToken";
+ *
+ * const input = { stateKey: "releaseToken" };
+ * Effect.runSync(Console.log(S.is(ReadOptions)(input))) // true
+ * ```
  *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface ReadOptions {
+export const ReadOptions = S.Struct({
 	/** The `GITHUB_STATE` key. */
-	readonly stateKey?: string | undefined;
+	stateKey: S.optional(S.String).annotateKey({ description: "The state key; defaults to githubToken." }),
 	/**
 	 * How long before the stated expiry to treat the token as spent.
 	 *
@@ -114,8 +145,15 @@ export interface ReadOptions {
 	 * A minute by default. The window exists because the check and the request
 	 * it guards are not the same instant.
 	 */
-	readonly skew?: Duration.Duration | undefined;
-}
+	skew: S.optional(S.Duration).annotateKey({ description: "The expiry safety window; defaults to one minute." }),
+}).annotate($I.annote("ReadOptions", { description: "Options for reading a persisted installation token." }));
+/**
+ * Decoded state-key and expiry-window options for reading a persisted token.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ReadOptions = typeof ReadOptions.Type;
 
 /**
  * How to build a client from a persisted token.
@@ -296,13 +334,11 @@ export abstract class GitHubToken {
 					yield* state.save(key, enriched, InstallationToken);
 					return enriched;
 				}),
-			(minted, exit) =>
-				Exit.isSuccess(exit)
-					? Effect.void
-					: // Ignored, and that is deliberate: the action is already failing for
-						// a reason the caller needs to see, and replacing it with "revocation
-						// failed" would hide it.
-						Effect.ignore(app.revoke(minted.token)),
+			(minted, exit) => Exit.match(exit, {
+				onSuccess: () => Effect.void,
+				// Preserve the original action failure even if revocation fails.
+				onFailure: () => Effect.ignore(app.revoke(minted.token)),
+			}),
 		);
 	});
 

@@ -107,14 +107,32 @@ export type AudienceShape = typeof AudienceShape.Type;
 /**
  * The options {@link Audience.layer} takes.
  *
+ * **Example** (Validate plain audience options)
+ *
+ * ```ts
+ * import { AudienceOptions } from "@beep/scratchpad/effected/env/Audience";
+ * import * as S from "effect/Schema";
+ * console.log(S.is(AudienceOptions)({ envVar: "OKFIT_AUDIENCE" })) // true
+ * ```
+ *
  * @public
- * @category models
+ * @category schemas
  * @since 0.0.0
  */
-export interface AudienceOptions {
+export const AudienceOptions = S.Struct({
 	/** The environment variable that overrides detection; without it the audience is always detected. */
-	readonly envVar?: string;
-}
+	envVar: S.optionalKey(S.String).pipe($I.annoteKey("AudienceOptions.envVar", {
+		description: "The environment variable that overrides detection; without it the audience is always detected.",
+	})),
+}).annotate($I.annote("AudienceOptions", { description: "Options naming the optional audience override environment variable." }));
+
+/**
+ * Plain configuration accepted by {@link Audience.layer}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type AudienceOptions = typeof AudienceOptions.Type;
 
 /**
  * Who the output is for, decided once.

@@ -304,9 +304,13 @@ needed only for the escalation list below.
   of the lane before removal; the fence exempts the invoking session's
   ancestry and, under Claude Code (`CLAUDE_PID`), everything that session
   spawned into the lane (its MCP servers, tool shells, background jobs), so a
-  desktop session retires its own lane. A desktop terminal panel, an editor,
-  or another session standing in the lane still refuses it and is named in
-  the error: close or `cd` it out, then rerun. A later session retires a
+  desktop session retires its own lane. Run from inside the lane, it also
+  leaves an idle Claude Desktop Terminal panel shell (the app starts one in
+  the session folder even if the panel is never opened) and removes the lane
+  under it. A panel shell running a command, any panel shell under `--lane`,
+  an editor, or another session standing in the lane still refuses it and is
+  named in the error: `cd ~` in it (closing a panel tab starts a new shell in
+  the lane) or close it, then rerun. A later session retires a
   leftover lane with `bun run beep yeet sweep --retire --lane <lane>` from
   any sibling lane of the same clone; when only the clone is at hand and its
   checkout predates `--retire`, run the lane's own CLI:

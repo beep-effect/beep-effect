@@ -30,6 +30,24 @@ describe("JsoncModifier", () => {
       assert.isFalse("offset" in error);
     });
 
+    it("constructs and decodes finite mismatch paths and depths, rejecting non-finite values", () => {
+      for (const value of [-1, 0.5, -0.5, Number.MAX_SAFE_INTEGER + 1]) {
+        const input = { path: ["a", value], expected: "array", depth: value } as const;
+        const error = JsoncModificationError.make(input);
+        assert.deepStrictEqual(error.path, input.path);
+        assert.strictEqual(error.depth, value);
+        assertSuccess(Result.map(S.decodeResult(JsoncModificationError)({ _tag: "JsoncModificationError", ...input }), (decoded) => [decoded.path, decoded.depth]), [input.path, value]);
+      }
+      for (const value of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+        const pathInput = { path: [value], expected: "array", depth: 1 } as const;
+        const depthInput = { path: [], expected: "array", depth: value } as const;
+        for (const input of [pathInput, depthInput]) {
+          assert.throws(() => JsoncModificationError.make(input));
+          assertFailure(Result.mapError(S.decodeResult(JsoncModificationError)({ _tag: "JsoncModificationError", ...input }), (error) => error._tag), "SchemaError");
+        }
+      }
+    });
+
     it("JsoncModificationError.expected is the named NavigateContainer kit", () => {
       assert.strictEqual(JsoncModificationError.fields.expected, NavigateContainer);
     });
@@ -273,6 +291,21 @@ describe("JsoncModifier", () => {
             assert.strictEqual(refused.code, "SerializationFailed");
           }
         }
+      })
+    );
+
+    it.effect("reports negative and fractional mismatch paths as typed failures", () =>
+      Effect.gen(function* () {
+        const negative = yield* Effect.flip(JsoncModifier.modify('{ "a": 1 }', ["a", -1], 2));
+        assertInstanceOf(negative, JsoncModificationError);
+        assert.deepStrictEqual(negative.path, ["a", -1]);
+        assert.strictEqual(negative.expected, "array");
+        assert.strictEqual(negative.depth, 2);
+        const fractional = yield* Effect.flip(JsoncModifier.modify("[1]", [0.5, "x"], 1));
+        assertInstanceOf(fractional, JsoncModificationError);
+        assert.deepStrictEqual(fractional.path, [0.5, "x"]);
+        assert.strictEqual(fractional.expected, "object");
+        assert.strictEqual(fractional.depth, 2);
       })
     );
 

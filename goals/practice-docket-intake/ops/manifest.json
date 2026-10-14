@@ -83,5 +83,9 @@
     "The same blocker repeats after reasonable investigation."
   ],
   "dependsOn": ["goals/m365-driver"],
-  "provides": ["practice/docket-intake", "drivers/m365-calendar-write"]
+  "provides": [
+    "practice/docket-intake",
+    "drivers/m365-calendar-write",
+    "m365/message-category-write"
+  ]
 }

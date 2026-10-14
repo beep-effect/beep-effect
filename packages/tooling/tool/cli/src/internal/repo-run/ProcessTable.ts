@@ -20,6 +20,7 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $RepoCliId.create("internal/repo-run/ProcessTable");
 
@@ -27,7 +28,17 @@ const PID_DIRECTORY_NAME = /^[0-9]+$/u;
 const LINK_SCAN_CONCURRENCY = 16;
 const STATUS_NAME_LINE = /^Name:\s*(.*?)\s*$/mu;
 const STATUS_PARENT_LINE = /^PPid:\s*(\d+)\s*$/mu;
+const STATUS_VOLUNTARY_SWITCHES_LINE = /^voluntary_ctxt_switches:\s*(\d+)\s*$/mu;
+const STATUS_INVOLUNTARY_SWITCHES_LINE = /^nonvoluntary_ctxt_switches:\s*(\d+)\s*$/mu;
 const INIT_PID = 1;
+// Zero-based positions in the space-separated tail of `/proc/<pid>/stat` that
+// follows the parenthesized command name: state, ppid, pgrp, session, tty_nr, tpgid.
+const STAT_PROCESS_GROUP_FIELD = 2;
+const STAT_TERMINAL_FIELD = 4;
+const STAT_FOREGROUND_GROUP_FIELD = 5;
+const NO_TERMINAL = 0;
+const NO_FOREGROUND_GROUP = -1;
+const GROUP_SCAN_CONCURRENCY = 16;
 
 /**
  * A running process id as `/proc` names it.
@@ -65,8 +76,21 @@ const ProcessParentPid = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   })
 );
 
+const ProcessContextSwitches = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+  $I.annoteSchema("ProcessContextSwitches", {
+    description: "Voluntary plus involuntary context switches a process has made since it started.",
+  })
+);
+
 /**
- * What `/proc/<pid>/status` says about one process: its parent and command name.
+ * What `/proc/<pid>/status` says about one process: its parent, command name, and context switches.
+ *
+ * **Details**
+ *
+ * `contextSwitches` is the sum of the voluntary and involuntary switch counts.
+ * A process blocked in a read makes none until something wakes it, so two
+ * equal samples prove it did nothing in between. It is `None` when the
+ * status document does not carry the counts.
  *
  * **Example** (Construct a status row)
  *
@@ -85,11 +109,16 @@ export class ProcessStatus extends S.Class<ProcessStatus>($I`ProcessStatus`)(
     pid: ProcessPid,
     parent: ProcessParentPid,
     command: S.String,
+    contextSwitches: ProcessContextSwitches.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("ProcessStatus", {
-    description: "A process id with the parent pid and command name its /proc status file reports.",
+    description:
+      "A process id with the parent pid, command name, and context-switch count its /proc status file reports.",
   })
 ) {}
+
+const statusCount = (pattern: RegExp, text: string): O.Option<number> =>
+  O.flatMap(O.fromNullishOr(pattern.exec(text)), (match) => O.flatMap(O.fromNullishOr(match[1]), N.parse));
 
 /**
  * Parse the parent pid and command name out of a `/proc/<pid>/status` document.
@@ -98,7 +127,9 @@ export class ProcessStatus extends S.Class<ProcessStatus>($I`ProcessStatus`)(
  *
  * The `Name:` line carries the kernel's `comm` value (the executable name,
  * truncated to fifteen characters) and the `PPid:` line the parent pid. A
- * document missing either line yields `None`.
+ * document missing either line yields `None`. The `voluntary_ctxt_switches:`
+ * and `nonvoluntary_ctxt_switches:` lines, when both are present, add up to
+ * `contextSwitches`.
  *
  * **Example** (Parse a status document)
  *
@@ -125,11 +156,111 @@ export const parseProcessStatus: {
   (text: string, pid: number): O.Option<ProcessStatus> =>
     O.all({
       command: O.flatMap(O.fromNullishOr(STATUS_NAME_LINE.exec(text)), (match) => O.fromNullishOr(match[1])),
-      parent: O.flatMap(O.fromNullishOr(STATUS_PARENT_LINE.exec(text)), (match) =>
-        O.flatMap(O.fromNullishOr(match[1]), N.parse)
-      ),
-    }).pipe(O.map(({ command, parent }) => ProcessStatus.make({ pid, parent, command })))
+      parent: statusCount(STATUS_PARENT_LINE, text),
+    }).pipe(
+      O.map(({ command, parent }) =>
+        ProcessStatus.make({
+          pid,
+          parent,
+          command,
+          contextSwitches: O.map(
+            O.all([
+              statusCount(STATUS_VOLUNTARY_SWITCHES_LINE, text),
+              statusCount(STATUS_INVOLUNTARY_SWITCHES_LINE, text),
+            ]),
+            ([voluntary, involuntary]) => voluntary + involuntary
+          ),
+        })
+      )
+    )
 );
+
+const ProcessGroupId = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+  $I.annoteSchema("ProcessGroupId", {
+    description: "Process group id as /proc reports it; kernel threads report 0.",
+  })
+);
+
+/**
+ * What `/proc/<pid>/stat` says about a process's place in terminal job control.
+ *
+ * **Details**
+ *
+ * `processGroup` is the group the process belongs to. `terminal` is the
+ * controlling terminal's device number, `0` when there is none, and
+ * `foregroundGroup` is the process group that terminal currently runs in the
+ * foreground, `-1` when there is no controlling terminal. An interactive
+ * shell with job control puts each foreground job in a group of its own, so
+ * a shell sitting at its prompt is the one whose terminal's foreground group
+ * is the shell's own pid.
+ *
+ * **Example** (Construct an idle shell's job control)
+ *
+ * ```ts
+ * import { ProcessJobControl } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const idle = ProcessJobControl.make({ pid: 70, processGroup: 70, terminal: 34823, foregroundGroup: 70 })
+ * console.log(idle.foregroundGroup === idle.pid) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ProcessJobControl extends S.Class<ProcessJobControl>($I`ProcessJobControl`)(
+  {
+    pid: ProcessPid,
+    processGroup: ProcessGroupId,
+    terminal: S.Int,
+    foregroundGroup: S.Int,
+  },
+  $I.annote("ProcessJobControl", {
+    description:
+      "A process id with its process group, controlling terminal device (0 for none), and that terminal's foreground group (-1 for none).",
+  })
+) {}
+
+const decodeProcessJobControl = S.decodeUnknownOption(ProcessJobControl);
+
+/**
+ * Parse the job-control fields out of a `/proc/<pid>/stat` document.
+ *
+ * **Details**
+ *
+ * The command name sits in parentheses and may itself contain spaces or
+ * parentheses, so the fields are read from the text after the last `)`:
+ * the process group, controlling terminal, and terminal foreground group are
+ * the third, fifth, and sixth of them. A document cut short, or with a field
+ * that is not an integer, yields `None`.
+ *
+ * **Example** (Parse a stat document)
+ *
+ * ```ts
+ * import { parseProcessJobControl } from "@beep/repo-cli/test/RepoRun"
+ * import * as O from "effect/Option"
+ *
+ * const stat = "70 (zsh) S 60 70 70 34823 70 4194304 13355"
+ * console.log(O.map(parseProcessJobControl(stat, 70), (job) => job.foregroundGroup)) // { _id: 'Option', _tag: 'Some', value: 70 }
+ * console.log(O.isNone(parseProcessJobControl(70)("70 (zsh) S 60"))) // true
+ * ```
+ *
+ * @param text - The stat document content; the data-last form takes it alone.
+ * @param pid - The process the document describes.
+ * @returns The parsed job control, or `None` when a field is absent or malformed.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const parseProcessJobControl: {
+  (text: string, pid: number): O.Option<ProcessJobControl>;
+  (pid: number): (text: string) => O.Option<ProcessJobControl>;
+} = dual(2, (text: string, pid: number): O.Option<ProcessJobControl> => {
+  const fields = O.map(Str.lastIndexOf(")")(text), (at) => pipe(text, Str.slice(at + 1), Str.trim, Str.split(" ")));
+  const field = (index: number): O.Option<number> => O.flatMap(fields, (all) => O.flatMap(A.get(all, index), N.parse));
+  return O.all({
+    processGroup: field(STAT_PROCESS_GROUP_FIELD),
+    terminal: field(STAT_TERMINAL_FIELD),
+    foregroundGroup: field(STAT_FOREGROUND_GROUP_FIELD),
+  }).pipe(O.flatMap((parsed) => decodeProcessJobControl({ pid, ...parsed })));
+});
 
 /**
  * How a process table answers the questions a retirement fence asks of `/proc`.
@@ -140,8 +271,8 @@ export const parseProcessStatus: {
  * not be listed at all. `cwd` and `descriptors` return the fully resolved
  * paths a process holds through those link families; an unreadable process
  * answers empty, never as attached. `status` reads a process's parent and
- * command name, `None` when the process cannot be read. `self` is the pid of
- * the process asking.
+ * command name, and `jobControl` its process group and terminal, each `None`
+ * when the process cannot be read. `self` is the pid of the process asking.
  *
  * @category models
  * @since 0.0.0
@@ -151,6 +282,8 @@ export interface ProcessTableShape {
   readonly cwd: (pid: number) => Effect.Effect<O.Option<string>, never, FileSystem.FileSystem>;
   /** The resolved targets of a process's open descriptors, empty when unreadable. */
   readonly descriptors: (pid: number) => Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem>;
+  /** The process group and controlling terminal of a process, when readable. */
+  readonly jobControl: (pid: number) => Effect.Effect<O.Option<ProcessJobControl>, never, FileSystem.FileSystem>;
   /** Every listed pid, or `None` when the table cannot be listed. */
   readonly pids: Effect.Effect<O.Option<ReadonlyArray<number>>, never, FileSystem.FileSystem>;
   /** The pid of the process consulting the table. */
@@ -205,6 +338,14 @@ const readProcStatus = Effect.fnUntraced(function* (
   return O.flatMap(text, parseProcessStatus(pid));
 });
 
+const readProcJobControl = Effect.fnUntraced(function* (
+  pid: number
+): Effect.fn.Return<O.Option<ProcessJobControl>, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const text = yield* fs.readFileString(`/proc/${pid}/stat`).pipe(Effect.option);
+  return O.flatMap(text, parseProcessJobControl(pid));
+});
+
 /**
  * The live process table, read from `/proc` through the ambient file system.
  *
@@ -224,6 +365,7 @@ export const procProcessTable: ProcessTableShape = {
   pids: listProcPids(),
   cwd: (pid) => readLinkTarget(`/proc/${pid}/cwd`),
   descriptors: readProcDescriptors,
+  jobControl: readProcJobControl,
   status: readProcStatus,
 };
 
@@ -255,6 +397,14 @@ export const ProcessTable: Context.Reference<ProcessTableShape> = Context.Refere
 /**
  * One row of a fake process table: lineage plus the paths the process holds.
  *
+ * **Details**
+ *
+ * The job-control fields are optional: a row without them is its own process
+ * group with no controlling terminal, which is what an agent's tool shell or
+ * an MCP server looks like. A terminal shell names its `terminal` device and
+ * the `foregroundGroup` that terminal runs. `contextSwitches` is optional too;
+ * a row without it reports no count.
+ *
  * **Example** (Describe a shell standing in a lane)
  *
  * ```ts
@@ -274,9 +424,14 @@ export class ProcessTableEntry extends S.Class<ProcessTableEntry>($I`ProcessTabl
     command: S.String,
     cwd: S.optionalKey(S.String),
     descriptors: S.Array(S.String).pipe(S.optionalKey),
+    processGroup: S.optionalKey(ProcessGroupId),
+    terminal: S.optionalKey(S.Int),
+    foregroundGroup: S.optionalKey(S.Int),
+    contextSwitches: S.optionalKey(ProcessContextSwitches),
   },
   $I.annote("ProcessTableEntry", {
-    description: "A fake process-table row: pid, parent, command name, and the resolved paths it holds.",
+    description:
+      "A fake process-table row: pid, parent, command name, the resolved paths it holds, and optional job control.",
   })
 ) {}
 
@@ -284,7 +439,20 @@ const entryIndex = (entries: ReadonlyArray<ProcessTableEntry>): HashMap.HashMap<
   HashMap.fromIterable(A.map(entries, (entry) => [entry.pid, entry] as const));
 
 const entryStatus = (entry: ProcessTableEntry): ProcessStatus =>
-  ProcessStatus.make({ pid: entry.pid, parent: entry.parent, command: entry.command });
+  ProcessStatus.make({
+    pid: entry.pid,
+    parent: entry.parent,
+    command: entry.command,
+    contextSwitches: O.fromUndefinedOr(entry.contextSwitches),
+  });
+
+const entryJobControl = (entry: ProcessTableEntry): ProcessJobControl =>
+  ProcessJobControl.make({
+    pid: entry.pid,
+    processGroup: O.getOrElse(O.fromUndefinedOr(entry.processGroup), () => entry.pid),
+    terminal: O.getOrElse(O.fromUndefinedOr(entry.terminal), () => NO_TERMINAL),
+    foregroundGroup: O.getOrElse(O.fromUndefinedOr(entry.foregroundGroup), () => NO_FOREGROUND_GROUP),
+  });
 
 /**
  * A fully fake process table built from rows.
@@ -334,6 +502,7 @@ export const processTableFromEntries = ({
           A.empty
         )
       ),
+    jobControl: (pid) => Effect.succeed(O.map(lookup(pid), entryJobControl)),
     status: (pid) => Effect.succeed(O.map(lookup(pid), entryStatus)),
   };
 };
@@ -382,6 +551,7 @@ export const processTableWithLineage = ({
   return {
     ...base,
     self,
+    jobControl: (pid) => Effect.succeed(O.map(HashMap.get(index, pid), entryJobControl)),
     status: (pid) => Effect.succeed(O.map(HashMap.get(index, pid), entryStatus)),
   };
 };
@@ -652,3 +822,165 @@ export const descendsFromProcess: {
       A.some((status) => status.pid === root)
     )
 );
+
+/**
+ * The command names of the desktop app that hosts agent sessions and their Terminal panels.
+ *
+ * **Example** (Recognize the Claude Desktop app)
+ *
+ * ```ts
+ * import { ProcessDesktopHostCommand } from "@beep/repo-cli/test/RepoRun"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ProcessDesktopHostCommand)("claude-desktop")) // true
+ * console.log(S.is(ProcessDesktopHostCommand)("claude")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProcessDesktopHostCommand = LiteralKit(["claude-desktop"]).pipe(
+  $I.annoteSchema("ProcessDesktopHostCommand", {
+    description: "Command names (kernel comm values) of the desktop app whose Terminal panel starts a login shell.",
+  })
+);
+
+/**
+ * The command names of the interactive shells a Terminal panel may start.
+ *
+ * **Example** (Recognize zsh)
+ *
+ * ```ts
+ * import { ProcessShellCommand } from "@beep/repo-cli/test/RepoRun"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ProcessShellCommand)("zsh")) // true
+ * console.log(S.is(ProcessShellCommand)("nvim")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProcessShellCommand = LiteralKit(["bash", "dash", "fish", "ksh", "sh", "tcsh", "zsh"]).pipe(
+  $I.annoteSchema("ProcessShellCommand", {
+    description: "Command names (kernel comm values) of interactive shells.",
+  })
+);
+
+/**
+ * Whether a desktop Terminal panel shell sits at its prompt or is running a command.
+ *
+ * **Example** (Read the state literals)
+ *
+ * ```ts
+ * import { DesktopTerminalShellState } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(DesktopTerminalShellState.literals) // [ 'idle', 'busy' ]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const DesktopTerminalShellState = LiteralKit(["idle", "busy"]).pipe(
+  $I.annoteSchema("DesktopTerminalShellState", {
+    description:
+      "A desktop Terminal panel shell at its prompt (idle) or with a command in its terminal's foreground (busy).",
+  })
+);
+
+/**
+ * Desktop Terminal panel shell state type.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DesktopTerminalShellState = typeof DesktopTerminalShellState.Type;
+
+const isDesktopHostCommand = S.is(ProcessDesktopHostCommand);
+const isShellCommand = S.is(ProcessShellCommand);
+
+// Nothing but the shell itself may belong to its group: a shell without job
+// control runs its foreground commands in its own group, so the foreground
+// group alone would read such a shell as idle mid-command. A table that cannot
+// be listed proves nothing, so the shell counts as busy. A listed pid whose
+// stat cannot be read is skipped: `/proc/<pid>/stat` is world-readable, so an
+// unreadable one has exited between the listing and the read and belongs to no
+// group. Counting it as a member would read every shell as busy whenever any
+// process on the machine exits mid-scan. A foreground job under job control is
+// caught by the foreground-group check, which does not depend on this scan.
+const groupHasOtherMembers = Effect.fnUntraced(function* (
+  table: ProcessTableShape,
+  shell: number
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
+  const pids = yield* table.pids;
+  if (O.isNone(pids)) {
+    return true;
+  }
+  const others = A.filter(pids.value, (pid) => pid !== shell);
+  const controls = yield* Effect.forEach(others, table.jobControl, { concurrency: GROUP_SCAN_CONCURRENCY });
+  return A.some(A.getSomes(controls), (control) => control.processGroup === shell);
+});
+
+/**
+ * Whether a process is a Claude Desktop Terminal panel shell, and if so whether it is idle.
+ *
+ * **Details**
+ *
+ * The desktop app starts a login shell on a pseudo-terminal for each Code
+ * session's Terminal panel, in the session's folder, whether or not the panel
+ * was ever opened, and starts a new one there when it exits. Such a shell is
+ * recognized narrowly: its command is a shell, its direct parent is the
+ * desktop app (an agent session's tool shells sit under the `claude` process
+ * instead, and have no terminal), and it has a controlling terminal. It is
+ * `idle` when that terminal's foreground group is the shell's own group and
+ * no other process belongs to that group, which is a shell sitting at its
+ * prompt; anything else, including a table that cannot be listed, is `busy`.
+ * `None` for every other process.
+ *
+ * **Example** (Classify a panel shell at its prompt)
+ *
+ * ```ts
+ * import { desktopTerminalShellState, ProcessTable, processTableFromEntries, ProcessTableEntry } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect";
+ * import * as FileSystem from "effect/FileSystem";
+ * const table = processTableFromEntries({
+ *   self: 100,
+ *   entries: [
+ *     ProcessTableEntry.make({ pid: 55, parent: 50, command: "claude-desktop" }),
+ *     ProcessTableEntry.make({ pid: 70, parent: 55, command: "zsh", terminal: 34823, foregroundGroup: 70 }),
+ *   ],
+ * })
+ * const state = desktopTerminalShellState(70).pipe(
+ *   Effect.provideService(ProcessTable, table),
+ *   Effect.provide(FileSystem.layerNoop({}))
+ * )
+ * console.log(Effect.runSync(state)) // { _id: 'Option', _tag: 'Some', value: 'idle' }
+ * ```
+ *
+ * @param pid - The process to classify.
+ * @returns The panel shell's state, or `None` when the process is not one.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const desktopTerminalShellState = Effect.fnUntraced(function* (
+  pid: number
+): Effect.fn.Return<O.Option<DesktopTerminalShellState>, never, FileSystem.FileSystem> {
+  const table = yield* ProcessTable;
+  const status = yield* table.status(pid);
+  if (O.isNone(status) || !isShellCommand(status.value.command)) {
+    return O.none();
+  }
+  const parent = yield* table.status(status.value.parent);
+  const control = yield* table.jobControl(pid);
+  if (
+    !O.exists(parent, (host) => isDesktopHostCommand(host.command)) ||
+    !O.exists(control, (job) => job.terminal !== NO_TERMINAL)
+  ) {
+    return O.none();
+  }
+  const atPrompt = O.exists(control, (job) => job.processGroup === pid && job.foregroundGroup === pid);
+  if (!atPrompt) {
+    return O.some("busy");
+  }
+  return O.some((yield* groupHasOtherMembers(table, pid)) ? "busy" : "idle");
+});

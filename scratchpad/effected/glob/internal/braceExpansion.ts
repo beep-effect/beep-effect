@@ -167,7 +167,14 @@ export const expand: {
 		input = `\\{\\}${input.slice(2)}`;
 	}
 
-	return expand_(escapeBraces(input), max, true, 0).map(unescapeBraces);
+	const result: Array<string> = [];
+	for (const member of expand_(escapeBraces(input), max, true, 0)) {
+		if (result.length >= max) {
+			throw GuardExceeded.fromReason("ExpansionBudgetExceeded", max, result.length + 1);
+		}
+		result.push(unescapeBraces(member));
+	}
+	return result;
 });
 
 const embrace = (str: string): string => `{${str}}`;
@@ -178,12 +185,11 @@ const lte = (i: number, y: number): boolean => i <= y;
 
 const gte = (i: number, y: number): boolean => i >= y;
 
-const expand_ = (str: string, max: number, isTopInput: boolean, depth: number): Array<string> => {
+function* expand_(str: string, max: number, isTopInput: boolean, depth: number): Generator<string> {
 	if (depth > MAX_NESTING_DEPTH) {
 		throw GuardExceeded.fromReason("NestingDepthExceeded", MAX_NESTING_DEPTH, depth);
 	}
 
-	const expansions: Array<string> = [];
 	let current = str;
 	let isTop = isTopInput;
 
@@ -192,17 +198,15 @@ const expand_ = (str: string, max: number, isTopInput: boolean, depth: number): 
 	// of non-expanding `{}` groups can't exhaust the call stack.
 	for (;;) {
 		const m = balanced("{", "}", current);
-		if (m === false) return [current];
+		if (m === false) { yield current; return; }
 
 		// no need to expand pre, since it is guaranteed to be free of brace-sets
 		const pre = m.pre;
 
 		if (/\$$/.test(m.pre)) {
-			const post: Array<string> = m.post.length !== 0 ? expand_(m.post, max, false, depth + 1) : [""];
-			for (const p of post) {
-				expansions.push(`${pre}{${m.body}}${p}`);
-			}
-			return expansions;
+			const post = () => m.post.length !== 0 ? expand_(m.post, max, false, depth + 1) : [""];
+			for (const p of post()) yield `${pre}{${m.body}}${p}`;
+			return;
 		}
 
 		const isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
@@ -216,33 +220,25 @@ const expand_ = (str: string, max: number, isTopInput: boolean, depth: number): 
 				isTop = true;
 				continue;
 			}
-			return [current];
+			yield current;
+			return;
 		}
 
 		// Only expand post once we know this brace set actually expands. Computing
 		// it before the early returns above expanded post a second time on every
 		// non-expanding `{}`, which is what made inputs like `a{},{},{}...` blow up
 		// exponentially.
-		const post: Array<string> = m.post.length !== 0 ? expand_(m.post, max, false, depth + 1) : [""];
+		const post = () => m.post.length !== 0 ? expand_(m.post, max, false, depth + 1) : [""];
 
-		let n: Array<string>;
-		if (isSequence) {
-			n = m.body.split(/\.\./);
-		} else {
-			n = parseCommaParts(m.body, depth + 1);
-			const first = n[0];
-			if (n.length === 1 && first !== undefined) {
-				// x{{a,b}}y ==> x{a}y x{b}y
-				n = expand_(first, max, false, depth + 1).map(embrace);
-				if (n.length === 1) {
-					return post.map((p) => `${m.pre}${n[0]}${p}`);
+		const n = isSequence ? m.body.split(/\.\./) : parseCommaParts(m.body, depth + 1);
+		const emit = function* (members: Iterable<string>): Generator<string> {
+			for (const member of members) {
+				for (const suffix of post()) {
+					const expansion = pre + member + suffix;
+					if (!isTop || isSequence || expansion !== "") yield expansion;
 				}
 			}
-		}
-
-		// at this point, n is the parts, and we know it's not a comma set
-		// with a single entry.
-		let N: Array<string>;
+		};
 
 		const n0 = n[0];
 		const n1 = n[1];
@@ -268,11 +264,10 @@ const expand_ = (str: string, max: number, isTopInput: boolean, depth: number): 
 				throw GuardExceeded.fromReason("ExpansionBudgetExceeded", max, total);
 			}
 
-			N = [];
-
-			// Floating-point addition can stop advancing, even at a singleton's
-			// endpoint. The validated count bounds work independently of progress.
-			for (let i = x, member = 0; member < total && test(i, y); i += incr, member++) {
+			// Advancing arithmetic follows the endpoint, even when rounding makes
+			// the actual increment smaller than the declared step. A stalled
+			// addition retains the round-2 bounded duplicate-member behavior.
+			for (let i = x, member = 0; test(i, y); member++) {
 				let c: string;
 				if (isAlphaSequence) {
 					c = String.fromCharCode(i);
@@ -289,35 +284,30 @@ const expand_ = (str: string, max: number, isTopInput: boolean, depth: number): 
 						}
 					}
 				}
-				N.push(c);
+				yield* emit([c]);
+				const next = i + incr;
+				if (next === i && member + 1 >= total) break;
+				i = next;
+			}
+		} else if (n.length === 1 && n[0] !== undefined) {
+			// The doubled-brace form wraps each expanded inner alternative. Its
+			// singleton form bypasses top-level empty-member filtering upstream.
+			let first = "";
+			let count = 0;
+			for (const member of expand_(n[0], max, false, depth + 1)) {
+				if (count === 0) first = member;
+				else {
+					if (count === 1) yield* emit([embrace(first)]);
+					yield* emit([embrace(member)]);
+				}
+				count++;
+			}
+			if (count === 1) {
+				for (const suffix of post()) yield pre + embrace(first) + suffix;
 			}
 		} else {
-			N = [];
-
-			for (const part of n) {
-				N.push(...expand_(part, max, false, depth + 1));
-			}
+			for (const part of n) yield* emit(expand_(part, max, false, depth + 1));
 		}
-
-		for (let j = 0; j < N.length; j++) {
-			for (let k = 0; k < post.length; k++) {
-				const expansion = pre + N[j] + post[k];
-				if (!isTop || isSequence || expansion !== "") {
-					if (expansions.length >= max) {
-						// Budget exhausted with work remaining: the actual reported is the
-						// count reached plus what remains in this group — a lower bound on
-						// the full expansion size.
-						throw GuardExceeded.fromReason(
-							"ExpansionBudgetExceeded",
-							max,
-							expansions.length + (N.length - j) * post.length - k,
-						);
-					}
-					expansions.push(expansion);
-				}
-			}
-		}
-
-		return expansions;
+		return;
 	}
-};
+}

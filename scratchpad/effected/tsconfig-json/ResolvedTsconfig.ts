@@ -105,25 +105,14 @@ const isAbsolutePath = (p: string): boolean => p.startsWith("/") || p.startsWith
 // ── Safe record rebuilding (untrusted keys) ─────────────────────────────────
 
 /**
- * Rebuild a record, mapping each value, using `defineProperty` so an own
+ * Rebuild a record, mapping each value, using `R.fromEntries` so an own
  * `__proto__` key is written as data rather than triggering the prototype
  * setter. Preserves every own key (forward tolerance) without pollution.
  */
 const rebuildRecord = <Value>(
 	source: Record<string, Value>,
 	mapValue: (key: string, value: Value) => Value,
-): Record<string, Value> => {
-	const out: Record<string, Value> = {};
-	for (const [key, value] of R.toEntries(source)) {
-		Object.defineProperty(out, key, {
-			value: mapValue(key, value),
-			enumerable: true,
-			writable: true,
-			configurable: true,
-		});
-	}
-	return out;
-};
+): Record<string, Value> => R.fromEntries(A.map(R.toEntries(source), ([key, value]) => [key, mapValue(key, value)] as const));
 
 // ── compilerOptions path surfaces ────────────────────────────────────
 
@@ -224,14 +213,10 @@ const RESOLVED_STRUCTURAL_KEYS: HashSet.HashSet<string> = HashSet.fromIterable([
 const extractPassthrough = (
 	source: Record<string, unknown>,
 	consumed: HashSet.HashSet<string>,
-): Record<string, unknown> => {
-	const out: Record<string, unknown> = {};
-	for (const key of R.keys(source)) {
-		if (HashSet.has(consumed, key)) continue;
-		Object.defineProperty(out, key, { value: source[key], enumerable: true, writable: true, configurable: true });
-	}
-	return out;
-};
+): Record<string, unknown> => R.fromEntries(A.map(
+	A.filter(R.keys(source), (key) => !HashSet.has(consumed, key)),
+	(key) => [key, source[key]] as const,
+));
 
 /** Re-root one inherited `files`/`include`/`exclude` entry, exempting absolute and `${configDir}` entries. */
 const rerootEntry = (prefix: string, entry: string): string => {

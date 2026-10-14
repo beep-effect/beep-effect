@@ -1,11 +1,10 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
-import type { GitHubError } from "./GitHubError.ts";
+import { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
 
 const $I = $ScratchpadId.create("effected/github/DeploymentEnvironment");
@@ -263,7 +262,11 @@ const make = (client: GitHubClient["Service"]): DeploymentEnvironmentShape => {
 		// Paginated, so this is already an array — octokit's paginator normalises
 		// the envelope, including the case where a repository with none answers
 		// without the key at all.
-		return A.map(environments, (environment) => DeploymentEnvironmentInfo.make({ name: environment.name }));
+		return yield* Effect.forEach(environments, (environment) =>
+			S.decodeEffect(DeploymentEnvironmentInfo)(environment).pipe(
+				Effect.mapError((error) => GitHubError.decode("DeploymentEnvironment.list", "GitHub returned an unexpected deployment environment", error)),
+			),
+		);
 	}));
 
 	const delete_ = Effect.fn("DeploymentEnvironment.delete")(function* (name: string) {

@@ -1,6 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
-import { canonicalize, sign } from "../../effected/github-actions/internal/sigv4.ts";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import { canonicalize, sign, SigV4Credentials, SigV4Request } from "../../effected/github-actions/internal/sigv4.ts";
 
 const credentials = { accessKeyId: "AK", secretAccessKey: "SK", region: "us-east-1", service: "s3" };
 const request = {
@@ -54,4 +56,100 @@ describe("SigV4 raw paths", () => {
 			assert.include(sign({ ...request, path }, credentials).authorization ?? "", `Signature=${signature}`);
 		}
 	});
+});
+
+describe("SigV4 normalized transport headers", () => {
+	it("replaces mixed-case Host and signing headers with exactly the signed values", () => {
+		const input = {
+			...request,
+			path: "bucket/key",
+			headers: {
+				Host: "stale.example.test",
+				"X-Amz-Date": "20000101T000000Z",
+				"X-Amz-Content-Sha256": "stale-hash",
+				"X-Amz-Security-Token": "stale-token",
+				Authorization: "stale-authorization",
+			},
+		};
+		const temporary = { ...credentials, sessionToken: "session-token" };
+		const canonical = canonicalize(input, temporary);
+		const signed = sign(input, temporary);
+		const sent = new Headers(signed);
+		assert.strictEqual(sent.get("host"), request.host);
+		assert.strictEqual(sent.get("x-amz-date"), "20240101T000000Z");
+		assert.strictEqual(sent.get("x-amz-security-token"), "session-token");
+		assert.strictEqual(sent.get("x-amz-content-sha256"), canonical.headers["x-amz-content-sha256"]);
+		assert.strictEqual(sent.get("authorization"), signed.authorization);
+		assert.notProperty(signed, "Host");
+		assert.notProperty(signed, "X-Amz-Date");
+		assert.notProperty(signed, "Authorization");
+		assert.notInclude(canonical.signedHeaders, "authorization");
+		for (const [name, value] of Object.entries(canonical.headers)) {
+			assert.strictEqual(sent.get(name), value);
+			assert.include(canonical.canonicalRequest, `${name}:${value}\n`);
+		}
+		assert.strictEqual(signed.authorization, sign({ ...input, headers: {} }, temporary).authorization);
+	});
+
+	it("combines ordinary case collisions in transport order and signs the combined value", () => {
+		const input = {
+			...request,
+			path: "bucket/key",
+			headers: { "X-Test": "  first\t value  ", "x-test": " second  value ", "X-TEST": "third" },
+		};
+		const canonical = canonicalize(input, credentials);
+		const signed = sign(input, credentials);
+		const sent = new Headers(signed);
+		assert.strictEqual(sent.get("x-test"), "first value, second value, third");
+		assert.strictEqual(canonical.headers["x-test"], sent.get("x-test"));
+		assert.include(canonical.canonicalRequest, "x-test:first value, second value, third\n");
+		assert.strictEqual(canonical.signedHeaders, "host;x-amz-content-sha256;x-amz-date;x-test");
+		assert.strictEqual(signed.authorization, sign({
+			...input, headers: { "x-test": "first value, second value, third" },
+		}, credentials).authorization);
+		assert.strictEqual(canonicalize({ ...input, headers: canonical.headers }, credentials).canonicalRequest, canonical.canonicalRequest);
+	});
+
+	it("preserves endpoint escapes while encoding raw object segments once", () => {
+		const canonical = canonicalize({
+			...request,
+			path: "cache/a%2Fb//?#",
+			encodedPathPrefix: "/gateway%2ftenant/sp%20ace/%252F",
+		}, credentials);
+		assert.strictEqual(canonical.canonicalRequest.split("\n")[1], "/gateway%2ftenant/sp%20ace/%252F/cache/a%252Fb//%3F%23");
+	});
+});
+
+describe("SigV4 executable contracts", () => {
+	it.effect("keeps plain credential construction, free-form strings and optional explicit undefined", () =>
+		Effect.gen(function* () {
+			const plain: SigV4Credentials = { ...credentials, service: "custom-service", region: "", accessKeyId: "" };
+			const decoded = yield* S.decodeEffect(SigV4Credentials)(plain);
+			assert.deepStrictEqual(decoded, plain);
+			assert.notProperty(decoded, "sessionToken");
+			const explicit = yield* S.decodeEffect(SigV4Credentials)({ ...plain, sessionToken: undefined });
+			assert.property(explicit, "sessionToken");
+			assert.strictEqual(explicit.sessionToken, undefined);
+			assert.isTrue(S.is(SigV4Credentials)({ ...plain, sessionToken: "" }));
+			assert.isFalse(S.is(SigV4Credentials)({ ...plain, secretAccessKey: 123 }));
+			assert.isFalse(S.is(SigV4Credentials)({ ...plain, sessionToken: null }));
+		}),
+	);
+
+	it.effect("keeps request fields structural without coercion or added defaults", () =>
+		Effect.gen(function* () {
+			const plain: SigV4Request = { ...request, method: "custom", path: "", host: "" };
+			const decoded = yield* S.decodeEffect(SigV4Request)(plain);
+			assert.deepStrictEqual(decoded, plain);
+			assert.strictEqual(decoded.body, plain.body);
+			assert.strictEqual(decoded.now, plain.now);
+			assert.notProperty(decoded, "encodedPathPrefix");
+			assert.isTrue(S.is(SigV4Request)({ ...plain, encodedPathPrefix: undefined }));
+			assert.isTrue(S.is(SigV4Request)({ ...plain, encodedPathPrefix: "/s3" }));
+			assert.isFalse(S.is(SigV4Request)({ ...plain, body: [1, 2] }));
+			assert.isFalse(S.is(SigV4Request)({ ...plain, now: "2024-01-01T00:00:00Z" }));
+			assert.isFalse(S.is(SigV4Request)({ ...plain, headers: { "x-test": 1 } }));
+			assert.isFalse(S.is(SigV4Request)({ ...plain, path: undefined }));
+		}),
+	);
 });

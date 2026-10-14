@@ -147,4 +147,4 @@ export type DevEnginesSchema = typeof DevEnginesSchema.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type DevEngines = typeof DevEnginesSchema.Type;
+export type DevEngines = DevEnginesSchema;

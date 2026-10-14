@@ -1,0 +1,23 @@
+{
+  "module": "engine",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [],
+      "tests": [
+        "scratchpad/test/engine/entrypoints.test.ts"
+      ],
+      "findings": [
+        "sol-3-1"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-3-1": {
+      "file": "scratchpad/test/engine/entrypoints.test.ts",
+      "class": "test",
+      "summary": "The narrowed runtime-import walker misses default-plus-named, default-plus-namespace and comment-separated imports, allowing guard graph checks to omit forbidden dependencies or reachable modules. Merged seats: sol-3-1 and fable-3-1.",
+      "fix": "Extend runtimeImportsIn to recognize the three demonstrated runtime forms while preserving the verified exported-class JSDoc exclusion, multiline runtime clauses and type-only filtering. Add fixtures for import fs, { readFileSync } from \"node:fs\";, import fs, * as fsNamespace from \"node:fs\";, and import fs /* binding */ from \"node:fs\";, each expecting [\"node:fs\"]. Retain existing JSDoc and multiline/type-only controls, diagnostic header, lab paths, HashSet traversal and effect/* guard assertions. Restore upstream recognition without reintroducing the oracle's JSDoc false positive. No source, repo configuration, README Port notes or ledger changes are assigned."
+    }
+  }
+}

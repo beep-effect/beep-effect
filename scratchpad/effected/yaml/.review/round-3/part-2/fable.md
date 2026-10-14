@@ -1,0 +1,17 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the yaml focus files read-only against the pinned upstream oracle, the port decisions, and the round-2 inventory so I only raise new findings.Round 2 already closed a large set of findings on these files. I’ll read the binding decisions and the focus sources, then look only for new divergences.The unread lexer tail is the last open comparison. I will match `scanNext` after the flow-sequence handler against the pinned oracle before closing the review.### fable-3-1
+- file: scratchpad/effected/yaml/internal/requote.ts:79
+- class: schema   severity: required
+- standard: D5; D11; `standards/effect-laws-v1.md` law 19; `standards/schema-first-development-prompt.md`, “Derive behavior instead of duplicating truth.”   evidence: `export type RequoteMode = "conservative" | "escaping"` is a named literal domain, and `requoteScalarText` branches on it with `mode === "conservative"`. The same signature inlines another named-by-use union, `quote: '"' | "'"`, at line 118. Upstream `requote.ts` has the same type aliases; the recorded schema-first deviation lists the converted kits and does not cover this domain. Law 19 reserves `S.Literals` for anonymous unions that are never named.
+- failure: The re-quote policy has no schema, guard, or annotation. Callers pass unchecked strings, and the domain cannot share `LiteralKit` equality or arbitrary generation with the rest of the yaml literal domains.
+- fix: Replace `RequoteMode` with an annotated `LiteralKit(["conservative", "escaping"])` and `export type RequoteMode = typeof RequoteMode.Type`. Give the quote-character parameter the same treatment. Keep the string comparisons and the return values. List the new value exports under Port notes → Added exports.
+
+### fable-3-2
+- file: scratchpad/effected/yaml/internal/requote.ts:52
+- class: schema   severity: required
+- standard: D5; D11; `standards/effect-laws-v1.md` law 17; `standards/effect-first-development.md`, EF-33; `standards/schema-first-development-prompt.md`, “Schema owns pure data.”   evidence: `RequoteScalarInput` is still a handwritten interface (`value`, `style`, `tag`, `anchor`, `offset`, `length`). `requoteScalarText` reads those fields directly. `ScalarStyle` in `YamlNode.ts` is already a `LiteralKit`, and `requote.ts` does not import the node class, so a struct does not create the cycle the file header avoids. The recorded schema-first list names `RawEdit` and the option and CST payloads, not this one. The type-level carve-out is for service ports and overload machinery; this value is a pure field payload.
+- failure: The re-quote input has no executable schema. Offset and length stay unbounded `number`, and the payload cannot be validated or generated with the other raw pipeline records.
+- fix: Define an annotated `S.Struct` with `ScalarStyle`, `S.Unknown`, optional tag and anchor, and `S.Finite` span fields. Derive `export type RequoteScalarInput` from it. Keep plain-object arguments and do not decode at the call.
+
+REQUIRED: 2
+BACKLOG: 0

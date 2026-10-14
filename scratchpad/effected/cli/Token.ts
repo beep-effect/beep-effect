@@ -79,17 +79,17 @@ export type NamedColor = typeof NamedColor.Type;
 export const Style = S.Struct({
 	/** The foreground: a named colour or a hex spelling, including invalid hex handled by the renderer. */
 	fg: S.optionalKey(S.Union([NamedColor, S.TemplateLiteral(["#", S.String])])).annotate(
-		$I.annote("Style.fg", { description: "The fg field of Style." }),
+		$I.annote("Style.fg", { description: "The foreground colour: a named ANSI colour or a `#`-prefixed hex spelling; a hex that is not `#rgb` or `#rrggbb` is accepted and ignored when rendered." }),
 	),
 	/** Bold. */
-	bold: S.optionalKey(S.Boolean).annotate($I.annote("Style.bold", { description: "The bold field of Style." })),
+	bold: S.optionalKey(S.Boolean).annotate($I.annote("Style.bold", { description: "Renders the text bold (SGR 1) when true." })),
 	/** Dim, or faint. */
-	dim: S.optionalKey(S.Boolean).annotate($I.annote("Style.dim", { description: "The dim field of Style." })),
+	dim: S.optionalKey(S.Boolean).annotate($I.annote("Style.dim", { description: "Renders the text dim, or faint (SGR 2), when true." })),
 	/** Italic. */
-	italic: S.optionalKey(S.Boolean).annotate($I.annote("Style.italic", { description: "The italic field of Style." })),
+	italic: S.optionalKey(S.Boolean).annotate($I.annote("Style.italic", { description: "Renders the text italic (SGR 3) when true." })),
 	/** Underline. */
 	underline: S.optionalKey(S.Boolean).annotate(
-		$I.annote("Style.underline", { description: "The underline field of Style." }),
+		$I.annote("Style.underline", { description: "Renders the text underlined (SGR 4) when true." }),
 	),
 }).annotate($I.annote("Style", { description: "A readonly terminal foreground and text attributes." }));
 /**

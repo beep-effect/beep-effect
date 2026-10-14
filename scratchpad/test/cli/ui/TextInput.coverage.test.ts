@@ -48,3 +48,55 @@ it.effect("coalesced controls skip empty runs, backspace a run and ignore Ctrl-X
     yield* handle.press("enter");
     assert.strictEqual(yield* handle.result, " zz");
   }));
+
+it.effect("enter then an arrow in one chunk still submits the text before the return", () =>
+  Effect.gen(function* () {
+    const handle = yield* CliUiTest.render(TextInput.screen({ message: "Name", initial: "ac" }));
+    yield* handle.chunk("enter", "left");
+    assert.strictEqual(yield* handle.result, "ac");
+  }));
+
+it.effect("a submitted state ignores every key until validation re-enables editing", () => Effect.sync(() => {
+  const submitted = TextInput.step(TextInput.init({ initial: "ac" }), { _tag: "Named", name: "enter" });
+  assert.strictEqual(TextInput.step(submitted, { _tag: "Named", name: "left" }), submitted);
+  assert.strictEqual(TextInput.step(submitted, { _tag: "Char", char: "x" }), submitted);
+  assert.strictEqual(TextInput.step(submitted, { _tag: "Named", name: "backspace" }), submitted);
+}));
+
+it.effect("a rejected value can be edited after enter, then submits", () =>
+  Effect.gen(function* () {
+    const handle = yield* CliUiTest.render(
+      TextInput.screen({ message: "Name", initial: "a", validate: (value) => (value.length < 2 ? "Too short" : undefined) }),
+      { color: "none" },
+    );
+    yield* handle.press("enter");
+    assert.include(yield* handle.plainFrame, "Too short");
+    yield* handle.press("left");
+    yield* handle.type("b");
+    assert.include(yield* handle.plainFrame, "b▏a");
+    assert.notInclude(yield* handle.plainFrame, "Too short");
+    yield* handle.press("enter");
+    assert.strictEqual(yield* handle.result, "ba");
+  }));
+
+const valueRow = (frame: string): string => frame.split("\n")[1] ?? "";
+
+it.effect("scrolling keeps joined emoji whole at the prefix and suffix cuts", () =>
+  Effect.gen(function* () {
+    const handle = yield* CliUiTest.render(TextInput.screen({ message: "E", initial: "👩‍💻👩‍💻👩‍💻" }), { columns: 6, color: "none" });
+    assert.strictEqual(valueRow(yield* handle.plainFrame), "…👩‍💻▏");
+    yield* handle.press("home");
+    assert.strictEqual(valueRow(yield* handle.plainFrame), "▏👩‍💻…");
+    yield* handle.press("enter");
+    assert.strictEqual(yield* handle.result, "👩‍💻👩‍💻👩‍💻");
+  }));
+
+it.effect("scrolling keeps regional-indicator flags whole at the prefix and suffix cuts", () =>
+  Effect.gen(function* () {
+    const handle = yield* CliUiTest.render(TextInput.screen({ message: "F", initial: "🇯🇵🇫🇷🇩🇪" }), { columns: 6, color: "none" });
+    assert.strictEqual(valueRow(yield* handle.plainFrame), "…🇩🇪▏");
+    yield* handle.press("home");
+    assert.strictEqual(valueRow(yield* handle.plainFrame), "▏🇯🇵…");
+    yield* handle.press("enter");
+    assert.strictEqual(yield* handle.result, "🇯🇵🇫🇷🇩🇪");
+  }));

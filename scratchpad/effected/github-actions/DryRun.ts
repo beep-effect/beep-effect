@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as Bool from "effect/Boolean";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -46,7 +47,10 @@ const DEFAULT_INPUT = "dry-run";
 const make = (enabled: boolean): DryRunShape => ({
 	isDryRun: Effect.succeed(enabled),
 	guard: <A, E, R>(label: string, effect: Effect.Effect<A, E, R>, fallback: A) =>
-		enabled ? Effect.as(Effect.logInfo(`[DRY-RUN] ${label}`), fallback) : effect,
+		Bool.match(enabled, {
+			onFalse: () => effect,
+			onTrue: () => Effect.as(Effect.logInfo(`[DRY-RUN] ${label}`), fallback),
+		}),
 });
 
 /**

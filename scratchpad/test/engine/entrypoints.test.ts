@@ -13,7 +13,7 @@ const BUILT = resolve(SRC, "dist", "dev", "pkg");
  * `import()` is not a static import, and a bare package counts.
  */
 const runtimeImportsIn = (source: string): ReadonlyArray<string> =>
-	[...source.matchAll(/^\s*(import|export)\s+(type\s+)?(?:\{[^}]*\}|\*(?:\s+as\s+[\w$]+)?|[\w$]+)\s+from\s+"([^"]+)"/gm)]
+	[...source.matchAll(/^\s*(import|export)\s+(type\s+)?(?:\{[^}]*\}|\*(?:\s+as\s+[\w$]+)?|[\w$]+(?:\s*,\s*(?:\{[^}]*\}|\*\s+as\s+[\w$]+))?)(?:\s|\/\*[\s\S]*?\*\/)+from\s+"([^"]+)"/gm)]
 		.filter((match) => match[2] === undefined)
 		.map((match) => match[3] ?? "");
 
@@ -55,6 +55,18 @@ export {
   Guard,
   type Host,
 } from "./Guard.ts";`), ["effect/Schema", "./Guard.ts"]);
+	});
+
+	it("walks default-plus-named runtime imports", () => {
+		assert.deepStrictEqual(runtimeImportsIn(`import fs, { readFileSync } from "node:fs";`), ["node:fs"]);
+	});
+
+	it("walks default-plus-namespace runtime imports", () => {
+		assert.deepStrictEqual(runtimeImportsIn(`import fs, * as fsNamespace from "node:fs";`), ["node:fs"]);
+	});
+
+	it("walks runtime imports with a comment before from", () => {
+		assert.deepStrictEqual(runtimeImportsIn(`import fs /* binding */ from "node:fs";`), ["node:fs"]);
 	});
 
 	it("./guard statically reaches only ProcessGuard, and only effect/* packages", () => {

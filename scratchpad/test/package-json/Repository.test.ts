@@ -335,6 +335,28 @@ describe("Repository — directoryUrl", () => {
 		}),
 	);
 
+	it.effect("a lone UTF-16 surrogate yields none without changing the wire", () =>
+		Effect.gen(function* () {
+			const codec = S.fromJsonString(Repository.FromValue);
+			for (const text of [
+				'{"url":"github:owner/repo","directory":"src/\\ud800","tracker":"linear"}',
+				'{"url":"github:owner/repo","directory":"src/\\udfff/tail","tracker":"linear"}',
+			]) {
+				const input = yield* decode(Json, text);
+				const repo = yield* decode(codec, text);
+				assert.instanceOf(repo, Repository);
+				assert.doesNotThrow(() => assertNone(repo.directoryUrl));
+				assert.deepStrictEqual(yield* encode(Repository.FromValue, repo), input);
+				const encoded = yield* encode(codec, repo);
+				assert.strictEqual(encoded, text);
+				const roundTripped = yield* decode(codec, encoded);
+				assert.strictEqual(roundTripped.directory, repo.directory);
+				assertNone(roundTripped.directoryUrl);
+				assert.strictEqual(yield* encode(codec, roundTripped), text);
+			}
+		}),
+	);
+
 	it.effect("an uninterpretable url stays uninterpretable", () =>
 		Effect.gen(function* () {
 			const repo = yield* decode(Repository.FromValue, { url: "", directory: "packages/spdx" });

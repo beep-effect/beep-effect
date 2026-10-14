@@ -1,5 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
-import { tarExtractCommand, unzipCommand, zipCommand, zipManifest } from "../../effected/github-actions/internal/archiveCommands.ts";
+import * as S from "effect/Schema";
+import * as Effect from "effect/Effect";
+import { TarExtractCommandOptions, UnzipCommandOptions, ZipCommandOptions, tarExtractCommand, unzipCommand, zipCommand, zipManifest } from "../../effected/github-actions/internal/archiveCommands.ts";
 
 /**
  * The archiver command lines, pinned verbatim.
@@ -14,6 +16,31 @@ import { tarExtractCommand, unzipCommand, zipCommand, zipManifest } from "../../
  * try/catch that writes the .NET exception to stderr and exits 1.
  */
 describe("archiveCommands", () => {
+	it.effect("option schemas preserve plain objects, required fields and explicit undefined flags", () =>
+		Effect.gen(function* () {
+			const zip: ZipCommandOptions = { windows: false, root: "/r", files: ["a"], manifest: "/m", destination: "/d", level: 4.9 };
+			const unzip: UnzipCommandOptions = { windows: true, source: "a.zip", destination: "out" };
+			assert.deepStrictEqual(yield* S.decodeEffect(ZipCommandOptions)(zip), zip);
+			assert.deepStrictEqual(yield* S.decodeEffect(UnzipCommandOptions)(unzip), unzip);
+			for (const options of [{ archive: "a.tgz", destination: "out" }, { archive: "a.tgz", destination: "out", flags: undefined }, { archive: "a.tgz", destination: "out", flags: [] }]) {
+				const plain: TarExtractCommandOptions = options;
+				assert.deepStrictEqual(yield* S.decodeEffect(TarExtractCommandOptions)(plain), plain);
+				assert.deepStrictEqual([...tarExtractCommand(plain).args], ["xzf", "a.tgz", "-C", "out"]);
+			}
+			assert.isFalse(S.is(ZipCommandOptions)({ ...zip, level: Infinity }));
+			assert.isFalse(S.is(ZipCommandOptions)({ ...zip, files: [1] }));
+			assert.isFalse(S.is(UnzipCommandOptions)({ source: "a.zip", destination: "out" }));
+			assert.isFalse(S.is(TarExtractCommandOptions)({ archive: "a.tgz" }));
+			assert.isFalse(S.is(TarExtractCommandOptions)({ archive: "a.tgz", destination: "out", flags: [1] }));
+		})
+	);
+
+	it("retains compression clamping for positive and negative infinity", () => {
+		for (const [level, expected] of [[Infinity, "-9"], [-Infinity, "-0"]] as const) {
+			assert.strictEqual(zipCommand({ windows: false, root: "/r", files: ["a"], manifest: "/m", destination: "/d", level }).args[0], expected);
+		}
+	});
+
 	const PWSH_FLAGS = ["-NoProfile", "-NonInteractive", "-Command"];
 
 	describe("zipCommand", () => {
@@ -27,7 +54,21 @@ describe("archiveCommands", () => {
 				level: 6,
 			});
 			assert.strictEqual(command.command, "zip");
-			assert.deepStrictEqual([...command.args], ["-6", "-qr", "/tmp/scratch/artifact.zip", "a.txt", "dir/b.txt"]);
+			assert.deepStrictEqual([...command.args], ["-6", "-qr", "/tmp/scratch/artifact.zip", "--", "a.txt", "dir/b.txt"]);
+			assert.strictEqual(command.options.cwd, "/work/root");
+		});
+
+		it("POSIX: leading-dash paths follow the option terminator literally", () => {
+			const command = zipCommand({
+				windows: false,
+				root: "/work/root",
+				files: ["-h", "--help", "-r/nested.txt"],
+				manifest: "/tmp/scratch/artifact.manifest",
+				destination: "/tmp/scratch/artifact.zip",
+				level: 6,
+			});
+			assert.strictEqual(command.command, "zip");
+			assert.deepStrictEqual([...command.args], ["-6", "-qr", "/tmp/scratch/artifact.zip", "--", "-h", "--help", "-r/nested.txt"]);
 			assert.strictEqual(command.options.cwd, "/work/root");
 		});
 
@@ -175,11 +216,17 @@ describe("archiveCommands", () => {
 	});
 
 	describe("unzipCommand", () => {
-		it("POSIX: `unzip -oq <source> -d <destination>` — `-o` overwrites", () => {
+		it("POSIX: `unzip -oq -d <destination> -- <source>` — `-o` overwrites", () => {
 			const command = unzipCommand({ windows: false, source: "/tmp/a.zip", destination: "/tmp/out" });
 			assert.strictEqual(command.command, "unzip");
-			assert.deepStrictEqual([...command.args], ["-oq", "/tmp/a.zip", "-d", "/tmp/out"]);
+			assert.deepStrictEqual([...command.args], ["-oq", "-d", "/tmp/out", "--", "/tmp/a.zip"]);
 			assert.isUndefined(command.options.cwd);
+		});
+
+		it("POSIX: a source named -h follows the option terminator literally", () => {
+			const command = unzipCommand({ windows: false, source: "-h", destination: "/tmp/out" });
+			assert.strictEqual(command.command, "unzip");
+			assert.deepStrictEqual([...command.args], ["-oq", "-d", "/tmp/out", "--", "-h"]);
 		});
 
 		it("Windows: the THREE-argument ExtractToDirectory overload under Stop + try/catch, quoted", () => {

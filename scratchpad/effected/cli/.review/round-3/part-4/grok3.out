@@ -1,0 +1,4 @@
+I'll review the named CLI UI files against the pinned upstream oracle and the round-2 inventory, then report only new findings.The remaining comparison is the unread test harness and the internal UI helpers against the pinned oracle. I will read those next and only file a finding if it is new and observable.NO FINDINGS
+
+REQUIRED: 0
+BACKLOG: 0

@@ -1,0 +1,23 @@
+### sol-3-1
+- file: scratchpad/effected/yaml/internal/rules/eof-newline.ts:82
+- class: bug   severity: required
+- standard: `scratchpad/EFFECTED_PORT_GOAL.md` D9, D11, §14 — verified upstream-bug correction preserving YAML values.   evidence: A read-only Bun probe against the requested commit and pinned upstream ran `YamlLint.fix` with only `eof-newline` enabled on `"a: |+\n  hi\n  "`. Both returned `"a: |+\n  hi\n  \n"`. The independent `yaml` parser reads the original as `{ a: "hi\n" }` and the fixed text as `{ a: "hi\n\n" }`. The equivalent `>+` case also gains a retained newline. The port’s parser returns `"hi\n\n"` for both inputs, so a fidelity assertion using only that parser would miss the change. This case is absent from the round-2 inventory and recorded deviations.
+- failure: The unconditional EOF insertion completes an unfinished whitespace-only line inside a keep-chomp block scalar, adding a newline to its value. A successful layout fix therefore changes the document’s meaning.
+- fix: Retain the diagnostic but omit the insertion when completing the final whitespace-only line of a keep-chomp block scalar would add a retained content break. Add literal and folded regressions comparing the original and fixed values through the independent `yaml` parser, and register the verified upstream-bug deviation under §14.
+
+### sol-3-2
+- file: scratchpad/effected/yaml/internal/rules/quoted-strings.ts:129
+- class: bug   severity: required
+- standard: The `quotedStrings` contract excludes mapping keys from checking and inference; `truthyOptions.checkKeys` controls whether mapping keys are checked. `scratchpad/EFFECTED_PORT_GOAL.md` D11 and §14 permit a verified upstream-bug correction.   evidence: Read-only probes against the requested commit and pinned upstream produced the same results. For `"? ['a', 'b']\n: value\n"`, `quoted-strings` reports and offers fixes for both strings inside the mapping key. For `"? ['a']\n: \"value\"\n"`, observation emits both `single` and `double` votes, and strict resolution fails with `YamlStyleConflictError`, although the sole value uses double quotes. For `"? [yes, no]\n: value\n"` with `truthy: { checkKeys: false }`, the rule still reports and quotes both key elements. `util.ts:178–185` explains the shared cause: traversal enters the collection with role `"key"` but replaces that role with `"item"` or `"value"` when descending.
+- failure: Collection-valued mapping keys bypass the key-exclusion policy. Their contents receive unwanted diagnostics and fixes, and their quote styles can create a false inference conflict. `checkKeys: false` also fails to leave those keys alone.
+- fix: Give these rule consumers a traversal mode that excludes entire mapping-key subtrees: always use it for quoted-string checking and inference, and use it for truthy checking when `checkKeys` is false. Preserve the existing helper’s immediate-parent role semantics for other callers. Add sequence-key and mapping-key regressions and register the upstream-bug correction under §14.
+
+### sol-3-3
+- file: scratchpad/effected/yaml/internal/rules/hyphen-spacing.ts:108
+- class: perf   severity: required
+- standard: `scratchpad/EFFECTED_PORT_GOAL.md` D11 — measured regression versus pinned upstream and an algorithmic-class improvement.   evidence: For `"-   ".repeat(n) + "x\n"`, every over-spaced hyphen scans the remaining same-line token suffix. The total scan is Θ(n²); upstream checks these indicators in Θ(n). A read-only Bun probe captured each lint context once, excluded parsing, warmed the checks, then measured three samples of five checks each. At 1,024 entries, port samples were `[26.76, 27.49, 27.53]` ms versus upstream `[5.15, 4.16, 4.81]` ms. At 2,048 entries, port samples were `[105.73, 105.85, 106.14]` ms versus upstream `[10.28, 13.92, 9.44]` ms. Both implementations returned exactly `n` hyphen diagnostics. These larger inputs have a recovered nesting-depth error; `YamlLint.run` explicitly supports malformed documents. This suffix-scan regression is distinct from the closed round-2 scalar-guard findings.
+- failure: Doubling the token stream approximately quadruples hyphen-check time. The parser’s depth limit does not bound this work because the rule still examines the full eager token stream.
+- fix: Compute the relocation-safety information once per line or token stream, then reuse it for each hyphen. Preserve the existing compact-collection and explicit-indent scalar protections while eliminating repeated suffix traversal. Add a scaling regression or operation-count check covering recovered deep input.
+
+REQUIRED: 3
+BACKLOG: 0

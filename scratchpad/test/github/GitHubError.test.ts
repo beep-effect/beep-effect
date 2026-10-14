@@ -20,6 +20,34 @@ const thrown = (options: {
 const NOW = 1_700_000_000_000;
 
 describe("GitHubError.fromOctokit", () => {
+	it("classifies uncoercible objects and arrays without losing the original cause", () => {
+		const uncoercible = { toString: null };
+		for (const original of [uncoercible, Object.create(null), [uncoercible]]) {
+			const error = GitHubError.fromOctokit("uncoercible", original, NOW);
+			assert.strictEqual(error._tag, "GitHubError");
+			assert.strictEqual(error.kind, "transport");
+			assert.strictEqual(error.reason, "Unable to describe GitHub REST failure");
+			assert.strictEqual(error.status, undefined);
+			assert.isTrue(error.retryable);
+			assert.strictEqual(error.cause, original);
+		}
+	});
+
+	it("preserves successful throwable descriptions and explicit messages", () => {
+		const samples = [
+			{ input: { toString: () => "custom failure" }, reason: "custom failure" },
+			{ input: ["offline", "again"], reason: "offline,again" },
+			{ input: Symbol("offline"), reason: "Symbol(offline)" },
+			{ input: null, reason: "null" },
+			{ input: { toString: null, message: "explicit failure" }, reason: "explicit failure" },
+		];
+		for (const { input, reason } of samples) {
+			const error = GitHubError.fromOctokit("descriptions", input, NOW);
+			assert.strictEqual(error.reason, reason);
+			assert.strictEqual(error.cause, input);
+		}
+	});
+
 	it("ignores array records at every throwable boundary", () => {
 		const headers = Object.assign([], { "retry-after": "2" });
 		const errors = [{ code: "already_exists" }];

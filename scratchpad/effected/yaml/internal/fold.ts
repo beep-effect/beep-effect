@@ -10,7 +10,7 @@
  *
  * Column-based line folding for a single logical scalar line (YAML 1.2 flow
  * folding, §7.3 / §8.2.1). Breaks the content at "safe" single-space
- * boundaries — a space whose neighbours are both non-space — so each inserted
+ * boundaries — a space whose neighbours are neither spaces nor tabs — so each inserted
  * line break is a *semantically transparent* fold: on read, a lone break
  * between non-empty lines at the same indent folds back to a single space, and
  * the leading indentation of continuation lines is absorbed as separation
@@ -65,9 +65,9 @@ export function foldScalarLine(
 			prev = undefined;
 			continue;
 		}
-		if (ch === " " && prev !== undefined && prev !== " ") {
+		if (ch === " " && prev !== undefined && prev !== " " && prev !== "\t") {
 			const next = text[i + 1];
-			if (next !== undefined && next !== " ") split = i;
+			if (next !== undefined && next !== " " && next !== "\t") split = i;
 		}
 		if (i >= end && split !== undefined) {
 			folds.push(split);

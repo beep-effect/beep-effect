@@ -1,0 +1,11 @@
+### sol-3-1
+
+- file: scratchpad/effected/commands/ScriptedSpawner.ts:106
+- class: schema   severity: required
+- standard: `standards/ARCHITECTURE.md`, Core Principle 5 (“Schemas Are Executable Contracts”); `standards/effect-first-development.md` EF-3; D11’s schema-defect criterion. Core declares `additionalFds` as `Record<\`fd${number}\`, AdditionalFdConfig>` in `effect/process/ChildProcess.ts`.
+  evidence: Read-only Bun probes supplied a complete `SpawnRecord` whose options contained `additionalFds: { "fd 3": { type: "input", stream: 42 } }`. `S.is(SpawnRecord)` returned `true`, and `S.decodeUnknownOption(SpawnRecord)` returned `Some`, preserving the original options object and the numeric `stream`. The same invalid payload under `"fd3"` returned `false` / `None`. `"fd0x3"` also bypassed validation. An in-memory TypeScript check confirmed that `"fd 3"` and `"fd0x3"` inhabit `fd${number}`; its only diagnostic was for the control `"fdNaN"`. The narrower `S.TemplateLiteral(["fd", S.Finite])` does not recognize these valid numeric-template keys, so the record validator ignores their values as excess properties. The enclosing `S.declare<ChildProcess.CommandOptions>` then preserves those unchecked values.
+- failure: The public guard and decoder claim that an invalid additional-FD configuration is a valid `ChildProcess.CommandOptions`. A consumer narrowing the decoded entry to `type: "input"` receives `stream: 42` where the declared type promises an optional `Stream<Uint8Array, PlatformError>`. This is a concrete validation hole in the opaque carrier; the existing tests exercise canonical `fd3`/`fd4` keys and miss it.
+- fix: Replace the additional-FD key schema with one that covers core’s full `fd${number}` key domain, ensuring every matching entry passes through the existing input/output configuration union. Preserve the original options object. Add regressions showing that `"fd 3"` and `"fd0x3"` accept valid configurations and reject invalid stream/sink payloads.
+
+REQUIRED: 1
+BACKLOG: 0

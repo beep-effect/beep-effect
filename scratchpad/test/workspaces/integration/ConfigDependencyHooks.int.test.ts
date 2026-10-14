@@ -235,6 +235,40 @@ it.layer(FixtureLayer, { timeout: "30 seconds" })((it) => {
 
 	describe("ConfigDependencyHooks.layerLive — rejects a traversal name before import()", () => {
 		it.layer(ConfigDependencyHooks.layerLive, { timeout: "30 seconds" })((it) => {
+			it.effect("a config dependency version with a '..' segment fails typed before hook replay", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					for (const version of ["../../outside", "..\\..\\outside", "../../outside+sha512-pin"]) {
+						const error = yield* Effect.flip(hooks.inject(root, { [DEP_NAME]: version }, SEED));
+						assert.instanceOf(error, CatalogAssemblyError);
+						assert.strictEqual(error.source, "hooks");
+						assert.strictEqual(error.path, DEP_NAME);
+						assert.include(error.cause instanceof Error ? error.cause.message : "", "version has a '..' path segment");
+					}
+				}),
+			);
+		});
+
+		it.layer(ConfigDependencyHooks.layerLive, { timeout: "30 seconds" })((it) => {
+			it.effect("a single-segment prerelease containing '..' still resolves at its declared version", () =>
+				Effect.gen(function* () {
+					const hooks = yield* ConfigDependencyHooks;
+					const name = "cfg-dotted-prerelease";
+					const version = "1.0.0-beta..1";
+					const dir = yield* configDepDir(name);
+					yield* (yield* RealFileSystem).writeFileString(join(dir, "package.json"), manifest(name, { version }));
+					const result = yield* hooks.inject(root, { [name]: version }, SEED);
+					assert.deepStrictEqual(result, {
+						catalogs: SEED,
+						releaseAge: {},
+						peerDependencyRules: { allowedVersions: {}, ignoreMissing: [], allowAny: [] },
+						replays: { [name]: { version, source: "installed" } },
+					});
+				}),
+			);
+		});
+
+		it.layer(ConfigDependencyHooks.layerLive, { timeout: "30 seconds" })((it) => {
 			it.effect("a config dependency name with a '..' segment fails typed, never escaping .pnpm-config", () =>
 				Effect.gen(function* () {
 					const hooks = yield* ConfigDependencyHooks;

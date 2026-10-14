@@ -1,0 +1,55 @@
+{
+  "module": "jsonc",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/jsonc/Jsonc.ts",
+        "scratchpad/effected/jsonc/JsoncEdit.ts",
+        "scratchpad/effected/jsonc/JsoncModifier.ts",
+        "scratchpad/effected/jsonc/JsoncNode.ts",
+        "scratchpad/effected/jsonc/JsoncVisitor.ts"
+      ],
+      "tests": [
+        "scratchpad/test/jsonc/Jsonc.test.ts",
+        "scratchpad/test/jsonc/JsoncEdit.test.ts",
+        "scratchpad/test/jsonc/JsoncModifier.test.ts",
+        "scratchpad/test/jsonc/JsoncNode.test.ts",
+        "scratchpad/test/jsonc/JsoncVisitor.test.ts"
+      ],
+      "findings": ["R1", "R2", "R3", "R4", "R5"]
+    }
+  ],
+  "findings": {
+    "R1": {
+      "file": "scratchpad/effected/jsonc/JsoncModifier.ts",
+      "class": "bug",
+      "summary": "A negative or fractional mismatch path dies during error construction instead of failing with JsoncModificationError.",
+      "fix": "Restore JsoncModificationError.path to S.Array(S.Union([S.String, S.Finite])) independently of JsoncPath. Restore any upstream assertions rewritten by the narrowing; add typed-failure regressions for modify('{ \"a\": 1 }', ['a', -1], 2) and modify('[1]', [0.5, 'x'], 1), checking path, expected and depth. Preserve NoOp behavior. The retained non-finite rejection is recorded centrally by the deviation codemod."
+    },
+    "R2": {
+      "file": "scratchpad/effected/jsonc/JsoncEdit.ts",
+      "class": "schema",
+      "summary": "Unforced S.Natural fields reject finite public span, position and depth values accepted by the upstream oracle.",
+      "fix": "Restore S.Finite for JsoncRange.offset/length, JsoncEdit.offset/length, JsoncEditOverlapError.lower/upper, JsoncNode.offset/length/optional colonOffset, JsoncParseErrorDetail.offset/length/line/character, JsoncVisitor Span.offset/length and JsoncModificationError.depth, preserving optionality/defaults. Restore upstream shape and upstream test lines rewritten to require natural numbers. Retarget the negative-rejection pins in JsoncEdit.test.ts and JsoncNode.test.ts; add finite negative/fractional constructor/decode checks for the listed public shapes and overlap-error reporting, retaining non-finite rejection. R1 owns the distinct error-path reuse fix. Central metadata is outside this group's writes."
+    },
+    "R3": {
+      "file": "scratchpad/effected/jsonc/JsoncNode.ts",
+      "class": "bug",
+      "summary": "Hand-built object evaluation admits extra property children and drops numeric property keys; pathAt also drops numeric keys.",
+      "fix": "Restore the exact-two-children property guard and safely narrow string/number heads without copying unsafe oracle casts. Coerce numeric keys to their property-key strings in object evaluation and append the original numeric key in buildPath. Preserve strict string-segment find comparisons and __proto__ own-data-property protection. Restore any upstream assertions rewritten by these changes; add two-child numeric-key and three-child-property regressions in JsoncNode.test.ts. Do not append arbitrary unknown values to a typed path."
+    },
+    "R4": {
+      "file": "scratchpad/effected/jsonc/Jsonc.ts",
+      "class": "bug",
+      "summary": "Eager A.zip reads later array getters after an earlier inequality, so equalsValue can throw where upstream returns false.",
+      "fix": "Restore indexed array comparison that returns immediately on the first inequality, retaining the nesting guard and lawful types. Restore any upstream assertions rewritten by the eager comparison; add counting and throwing later-getter regressions, including nested arrays, in Jsonc.test.ts. Earlier mismatches must return false with zero later getter reads."
+    },
+    "R5": {
+      "file": "scratchpad/effected/jsonc/JsoncVisitor.ts",
+      "class": "bug",
+      "summary": "The visitor loops forever on a mismatched CloseBrace in an array; the same bug is verified in the pinned upstream oracle.",
+      "fix": "After the orchestrator registers the verified upstream-bug deviation under section 14, stop visitArray on CloseBrace as well as CloseBracket/EOF. Let closeContainer emit CloseBracketExpected without consuming the enclosing object's brace. Add terminating full-collection regressions for '[}', '{\"a\":[}' and '[1,}' with a bounded completion safeguard and finite error/enclosing-object recovery assertions in JsoncVisitor.test.ts. Keep existing recovery assertions. Workers do not edit PORT_LEDGER.json or README Port notes."
+    }
+  }
+}

@@ -579,6 +579,7 @@ const make = (client: GitHubClient["Service"]): GitHubRepositoryShape => {
 			const graphqlKeys: Array<string> = [];
 
 			for (const [key, value] of R.toEntries(input)) {
+				if (P.isUndefined(value)) continue;
 				// `R.has` checks own keys: the map is open by design, so a
 				// caller key of `toString` or `constructor` would otherwise resolve
 				// through the prototype chain to a FUNCTION, and that function would

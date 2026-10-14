@@ -25,6 +25,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 import type { CstNode } from "./cst.ts";
 import { parseCSTAll } from "./cst-parser.ts";
@@ -361,9 +362,15 @@ function findNextContent(nodes: ReadonlyArray<CstNode>, startIdx: number): CstNo
 
 /** Find content or an indicator without crossing a physical entry boundary. */
 function findMapContent(nodes: ReadonlyArray<CstNode>, startIdx: number): CstNode | undefined {
+	// A scalar or collection can absorb the newline terminating an entry.
+	// Include that preceding source span in the same-line lookahead.
+	if (startIdx > 0) {
+		const source = A.getUnsafe(nodes, startIdx - 1).source;
+		if (Str.includes("\n")(source) || Str.includes("\r")(source)) return undefined;
+	}
 	for (let i = startIdx; i < nodes.length; i++) {
 		const node = A.getUnsafe(nodes, i);
-		if (node.type === "newline") return undefined;
+		if (isTriviaCstNode(node) && (Str.includes("\n")(node.source) || Str.includes("\r")(node.source))) return undefined;
 		if (node.type === "comment") continue;
 		if (node.type === "whitespace" && (node.source === ":" || node.source === "?")) return node;
 		if (!isTriviaCstNode(node)) return node;
@@ -399,6 +406,12 @@ function* walkBlockMapChildren(
 	let crossedNewline = false;
 
 	for (const [i, child] of children.entries()) {
+		// The preceding child may contain the boundary instead of leaving a
+		// separate newline sibling, including inside a nested collection.
+		if (i > 0) {
+			const source = A.getUnsafe(children, i - 1).source;
+			crossedNewline ||= Str.includes("\n")(source) || Str.includes("\r")(source);
+		}
 		// Always emit comments
 		if (child.type === "comment") {
 			yield { _tag: "CstCommentEvent", path, depth, source: child.source };
@@ -438,16 +451,16 @@ function* walkBlockMapChildren(
 		}
 
 		if (isScalarCstNode(child)) {
+			const nextContent = findMapContent(children, i + 1);
 			// A separator after this scalar identifies the next entry's key even
 			// when the previous entry had no value to toggle the state.
-			if (!expectingKey && findMapContent(children, i + 1)?.source === ":") {
+			if (!expectingKey && nextContent?.source === ":") {
 				expectingKey = true;
 				keyHasContent = false;
 			}
 			crossedNewline = false;
 			// Look ahead to detect if this scalar is followed by a block-map
 			// (meaning it is a key for a nested mapping).
-			const nextContent = findNextContent(children, i + 1);
 			if (!expectingKey && nextContent !== undefined && isBlockMapCstNode(nextContent)) {
 				// This scalar is a key for a nested block-map that follows.
 				// The nested map's first value will be the value for this key.

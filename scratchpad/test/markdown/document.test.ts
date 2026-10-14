@@ -179,6 +179,22 @@ describe("MarkdownDocument.parse", () => {
 });
 
 describe("MarkdownDocument schema", () => {
+	it("stores the resolved dialect and defaults legacy documents to GFM", () => {
+		for (const dialect of ["commonmark", "gfm"] as const) {
+			const document = Result.getOrThrow(MarkdownDocument.parseResult("~~text~~\n", { dialect }));
+			assert.strictEqual(document.dialect, dialect);
+			const encoded = Result.getOrThrow(S.encodeResult(MarkdownDocument)(document));
+			assert.strictEqual(Result.getOrThrow(S.decodeResult(MarkdownDocument)(encoded)).dialect, dialect);
+			const { dialect: omitted, ...legacy } = encoded;
+			assert.strictEqual(omitted, dialect);
+			assert.strictEqual(Result.getOrThrow(S.decodeResult(MarkdownDocument)(legacy)).dialect, "gfm");
+			const { dialect: resolved, ...constructorFields } = document;
+			assert.strictEqual(resolved, dialect);
+			assert.strictEqual(MarkdownDocument.make(constructorFields).dialect, "gfm");
+		}
+		assert.strictEqual(Result.getOrThrow(MarkdownDocument.parseResult("text\n")).dialect, "gfm");
+	});
+
 	it("round-trips a parsed document through its own schema", () => {
 		const result = MarkdownDocument.parseResult(source);
 		if (Result.isFailure(result)) {

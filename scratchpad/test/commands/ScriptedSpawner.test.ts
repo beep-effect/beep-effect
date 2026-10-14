@@ -193,6 +193,33 @@ it("SpawnRecord retains complete options, opaque objects and writable unref stat
  assert.isFalse(S.is(SpawnRecord)({ ...record, options: { killSignal: "INVALID" } }));
 });
 
+it("SpawnRecord accepts numeric-template FD keys and preserves their opaque carriers", () => {
+ for (const key of ["fd 3", "fd0x3"] as const) {
+  for (const config of [
+   { type: "input", stream: Stream.empty },
+   { type: "output", sink: Sink.succeed(new Uint8Array()) },
+  ] as const) {
+   const options: ChildProcess.CommandOptions = { additionalFds: { [key]: config } };
+   const record = { command: "tool", args: [], cwd: undefined, env: undefined, extendEnv: undefined, options, unrefed: false };
+   assert.isTrue(S.is(SpawnRecord)(record));
+   const decoded = S.decodeOption(SpawnRecord)(record);
+   if (decoded._tag !== "Some") assert.fail("expected a spawn record with a numeric-template FD key");
+   assert.strictEqual(decoded.value.options, options);
+   assert.strictEqual(decoded.value.options.additionalFds?.[key], config);
+  }
+ }
+});
+
+it("SpawnRecord rejects invalid stream and sink payloads under numeric-template FD keys", () => {
+ for (const key of ["fd3", "fd4", "fd 3", "fd0x3"] as const) {
+  for (const config of [{ type: "input", stream: 42 }, { type: "output", sink: 42 }] as const) {
+   const record = { command: "tool", args: [], cwd: undefined, env: undefined, extendEnv: undefined, options: { additionalFds: { [key]: config } }, unrefed: false };
+   assert.isFalse(S.is(SpawnRecord)(record));
+   assertNone(S.decodeUnknownOption(SpawnRecord)(record));
+  }
+ }
+});
+
 it.effect("SpawnRecord accepts whitespace in forceKillAfter and preserves the original options", () => Effect.gen(function* () {
  for (const forceKillAfter of ["1  seconds", "-1  seconds"] as const) {
   const options: ChildProcess.CommandOptions = { forceKillAfter };

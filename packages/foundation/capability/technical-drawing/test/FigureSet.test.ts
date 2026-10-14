@@ -304,7 +304,7 @@ const rowInk = (
 const rowSquares = (ink: ReadonlyArray<boolean>, previous: ReadonlyArray<number>): ReadonlyArray<number> => {
   const current: Array<number> = [];
   for (let c = 0; c < ink.length; c++) {
-    current[c] = ink[c] ? 1 + Math.min(previous[c] ?? 0, current[c - 1] ?? 0, previous[c - 1] ?? 0) : 0;
+    current[c] = ink[c] === true ? 1 + Math.min(previous[c] ?? 0, current[c - 1] ?? 0, previous[c - 1] ?? 0) : 0;
   }
   return current;
 };

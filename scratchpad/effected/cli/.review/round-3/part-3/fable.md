@@ -1,0 +1,19 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the named CLI render and UI files against the pinned upstream oracle and the round-2 inventory, without changing anything.Round-2 items on this slice are recorded as fixed or backlog. I'll read the current sources against the pinned oracle and look only for new failures.### fable-3-1
+- file: scratchpad/effected/cli/ui/Select.ts:431
+- class: bug   severity: required
+- standard: D9, D11, §14 verified-upstream-bug; `ui/UiTheme.ts` `useTerminalSize` (text cut to the hook’s `columns` is one paint stale, and a long row needs `wrap: "truncate-end"` or a one-row `overflow: "hidden"` box). Same mechanism as closed cli-r2-24, which only covered TextInput, Toggle, and column Tabs.
+- evidence: Select’s message (`Select.ts:431`), detail (`Select.ts:437`), and `KeyHelp` (`Select.ts:444`) are `Fmt.truncate`’d to `useTerminalSize().columns` and painted with `Styled` or `ink.Text` and no clip. Confirm’s message and answer row (`Confirm.ts:446`, `Confirm.ts:451`) and its `KeyHelp` (`Confirm.ts:479`), and MultiSelect’s message, detail, and `KeyHelp` (`MultiSelect.ts:440`, `MultiSelect.ts:442`, `MultiSelect.ts:445`), are the same. `KeyHelp.ts:92` builds that footer and `KeyHelp.ts:98` hands it to `Styled`, whose `ink.Text` (`UiTheme.ts:257`) sets no `wrap`. `Viewport.View` already clips list rows with `height: 1` and `overflow: "hidden"`, and TextInput now wraps its title and `KeyHelp` the same way (`TextInput.ts:434`, `TextInput.ts:463`). `widget-resize.test.ts` never mounts Select, Confirm, or MultiSelect. The pinned oracle has the same unclipped rows. cli-r2-24’s production-path probe (100 `X`s at 80 columns, resize to 20) showed the first Ink repaint wrapping a stale row before React re-renders.
+- failure: Shrinking the terminal wraps the message, detail, answer, or key footer that was laid out for the previous width. That extra row lands before the corrected truncation and can push the screen into scrollback. Choice and toggle rows inside the viewport stay one line.
+- fix: Clip those single-row siblings the way TextInput does: a `height: 1`, `overflow: "hidden"` box around each `Styled` message, detail, and `KeyHelp`, and around Confirm’s answer `ink.Text`. Add production-path 80-to-20 and 80-to-10 resize assertions for a long Select message, a long Confirm message, and a long MultiSelect detail, and record the upstream bug centrally.
+
+### fable-3-2
+- file: scratchpad/effected/cli/ui/CliUiLive.ts:859
+- class: bug   severity: required
+- standard: D9, D11. `PubSub.remainingUnsafe` returns `None` when `shutdownFlag` is set (`packages/effect/src/PubSub.ts:1647`). `Option.getOrThrow` throws `Error("getOrThrow called on a None")` (`packages/effect/src/Option.ts:1092`). A throw inside `Effect.flatMap` dies the fiber.
+- evidence: After a successful `PubSub.takeAll`, the port decides the sticky final message with `sub.pipe(PubSub.remainingUnsafe, O.getOrThrow) === 0`. The pinned oracle is `Option.getOrElse(PubSub.remainingUnsafe(sub), () => 0) === 0` (upstream `CliUiLive.ts:765`). The earlier `O.isNone` branches at `CliUiLive.ts:841` and `CliUiLive.ts:848` already treat shutdown as “events ended” and do not throw. Shutdown can flip the flag after `takeAll` returns and before this read. Line coverage only hits `getOrThrow` on `Some`.
+- failure: A subscription shutdown in that window kills the live-view pump with a defect. Upstream treats that same `None` as an empty subscription and ends the pump. `close` and `done` then fail instead of finishing the run.
+- fix: Replace that `O.getOrThrow` with `O.getOrElse(() => 0)`, leaving the `=== 0` test and the `finalTaken` write as they are. Add a regression that shuts the `PubSub` down after `takeAll` has produced the final message and asserts the pump ends without a defect.
+
+REQUIRED: 2
+BACKLOG: 0

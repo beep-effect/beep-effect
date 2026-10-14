@@ -248,9 +248,15 @@ const make = Effect.gen(function* () {
 	const issue = Effect.fn("OidcTokenIssuer.token")(function* (audience?: string) {
 		const bearer = yield* required(REQUEST_TOKEN);
 		const base = yield* required(REQUEST_URL);
-		// The runner's URL already carries a query string, so the audience is
-		// appended with `&` rather than `?`.
-		const url = audience === undefined ? base : `${base}&audience=${encodeURIComponent(audience)}`;
+		let url = base;
+		if (audience !== undefined) {
+			const parsed = yield* S.decodeEffect(S.URLFromString)(base).pipe(
+				Effect.mapError((cause) => OidcTokenError.make({ reason: "requestFailed", cause })),
+			);
+			// Keep encodeURIComponent's %20 spelling and append before the fragment.
+			parsed.search = `${parsed.search}${parsed.search === "" ? "?" : "&"}audience=${encodeURIComponent(audience)}`;
+			url = parsed.href;
+		}
 
 		const response = yield* http
 			.execute(HttpClientRequest.get(url).pipe(HttpClientRequest.bearerToken(bearer), HttpClientRequest.acceptJson))

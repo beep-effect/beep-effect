@@ -1,0 +1,26 @@
+{
+  "module": "templates",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/templates/SectionDialect.ts"
+      ],
+      "tests": [
+        "scratchpad/test/templates/SectionDialect.test.ts",
+        "scratchpad/test/templates/ManagedSection.test.ts"
+      ],
+      "findings": [
+        "sol-3-1"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-3-1": {
+      "file": "scratchpad/effected/templates/SectionDialect.ts",
+      "class": "bug",
+      "summary": "A closing-rule tail before U+2028 or U+2029 inside a quoted attribute lets render succeed with a block that parsing rejects as orphanedEnd, allowing sync to write an unreadable file.",
+      "fix": "Before render succeeds, verify markerMatches recognizes the synthesized BEGIN marker in full with BEGIN kind, the declared identity and exactly the declared attributes; otherwise return the existing typed invalidAttribute refusal before any write. Preserve ordinary Unicode attributes and linear scanner behavior. Add hash/HTML regressions for U+2028 and U+2029 in SectionDialect.test.ts, retaining ordinary Unicode round trips, and a ManagedSection.test.ts sync regression proving typed refusal and preservation of existing file bytes. Section 14 upstream-bug bookkeeping is central integration work; do not edit the ledger or README Port notes."
+    }
+  }
+}

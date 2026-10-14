@@ -1,6 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { assertSuccess, assertFailure } from "@effect/vitest/utils";
 import * as Result from "effect/Result";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { BlobEnvelopeError } from "../../effected/github-actions/index.ts";
 import { BlobEnvelope, UnsupportedBlobEnvelopeVersionError } from "../../effected/github-actions/index.ts";
@@ -137,6 +138,29 @@ describe("BlobEnvelope", () => {
 	});
 
 	describe("schema mismatch", () => {
+		it("refuses Option metadata that cannot decode after JSON serialization", () => {
+			const result = BlobEnvelope.encodeResult(O.some("hello"), bytes(42), S.Option(S.String));
+			assertFailure(result, Result.getOrThrowWith(Result.flip(result), (value) => value));
+			assert.strictEqual(result.failure._tag, "BlobMetadataEncodeError");
+			assert.instanceOf(result.failure.cause, S.SchemaError);
+		});
+
+		it("preserves OptionFromNullOr wire bytes and recovers Some and None", () => {
+			const codec = S.OptionFromNullOr(S.String);
+			for (const metadata of [O.some("hello"), O.none<string>()]) {
+				const frame = BlobEnvelope.encodeResult(metadata, bytes(42), codec);
+				assertSuccess(frame, Result.getOrThrowWith(frame, (error) => error));
+				const text = S.encodeResult(S.fromJsonString(codec))(metadata);
+				assertSuccess(text, Result.getOrThrowWith(text, (error) => error));
+				const metaBytes = new TextEncoder().encode(text.success);
+				assert.deepStrictEqual([...frame.success], [0x45, 0x46, 0x42, 0x53, 1, 0, 0, 0, metaBytes.length, ...metaBytes, 42]);
+				const decoded = BlobEnvelope.decodeResult(frame.success, codec);
+				assertSuccess(decoded, Result.getOrThrowWith(decoded, (error) => error));
+				assert.deepStrictEqual(decoded.success.metadata, metadata);
+				assert.deepStrictEqual([...decoded.success.body], [42]);
+			}
+		});
+
 		it("reports metadata that does not satisfy the caller's schema", () => {
 			const Other = S.Struct({ completelyDifferent: S.Boolean });
 			const frame = encoded({ tag: "t", durationMs: 1 }, bytes(1));

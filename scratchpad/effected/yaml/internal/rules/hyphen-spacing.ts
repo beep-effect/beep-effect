@@ -6,7 +6,9 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as P from "effect/Predicate";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { YamlRule } from "../../YamlLintRule.ts";
 import { YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
@@ -86,6 +88,66 @@ export const hyphenSpacing: YamlRule = {
 		// delete the separation space.
 		const maxAfter = Math.max(1, P.isNumber(opts.maxSpacesAfter) ? opts.maxSpacesAfter : 1);
 		const out: Array<YamlLintDiagnostic> = [];
+		// Index same-line structure once. Flow colons are not compact block
+		// mappings, and only a scalar's immediate parent indicator determines
+		// whether moving a hyphen changes its explicit indentation.
+		const compactEntries = A.makeBy(ctx.tokens.length, () => false);
+		const explicitScalarParents = A.makeBy(ctx.tokens.length, () => false);
+		let line = -1;
+		let flowDepth = 0;
+		let previousContentIndex = -1;
+		for (let index = 0; index < ctx.tokens.length; index++) {
+			const token = A.getUnsafe(ctx.tokens, index);
+			if (token.line !== line) {
+				line = token.line;
+				flowDepth = 0;
+				previousContentIndex = -1;
+			}
+			if (token.kind === "whitespace" || token.kind === "tag" || token.kind === "anchor") continue;
+			if (
+				token.kind === "scalar" && previousContentIndex >= 0 &&
+				A.getUnsafe(ctx.tokens, previousContentIndex).kind === "block-seq-entry" &&
+				O.isSome(Str.match(/^[|>](?:[1-9][+-]?|[+-][1-9])(?:[ \t\r\n]|$)/)(token.text))
+			) {
+				explicitScalarParents[previousContentIndex] = true;
+			}
+			if (token.kind === "flow-map-start" || token.kind === "flow-seq-start") {
+				flowDepth++;
+			} else if (token.kind === "flow-map-end" || token.kind === "flow-seq-end") {
+				flowDepth--;
+			} else if (
+				flowDepth === 0 &&
+				(token.kind === "block-seq-entry" || token.kind === "block-map-key" || token.kind === "block-map-value")
+			) {
+				compactEntries[index] = true;
+			}
+			previousContentIndex = index;
+		}
+		// Suffix summaries make each hyphen's safety query constant-time. The
+		// next content column skips blank/comment lines, as the old scan did.
+		const relocatesCollections = A.makeBy(ctx.tokens.length, () => false);
+		line = -1;
+		let nextContentCharacter = -1;
+		let nextLineCharacter = -1;
+		let compact = false;
+		let movesScalarParent = false;
+		for (let index = ctx.tokens.length - 1; index >= 0; index--) {
+			const token = A.getUnsafe(ctx.tokens, index);
+			if (token.line !== line) {
+				line = token.line;
+				nextLineCharacter = nextContentCharacter;
+				compact = false;
+				movesScalarParent = false;
+			}
+			relocatesCollections[index] = movesScalarParent || (compact && nextLineCharacter > token.character);
+			compact = compact || A.getUnsafe(compactEntries, index);
+			// The parent hyphen itself stays put when deleting spaces after it.
+			// Only earlier hyphens move that parent and must withhold their fix.
+			movesScalarParent = movesScalarParent || A.getUnsafe(explicitScalarParents, index);
+			if (token.kind !== "whitespace" && token.kind !== "newline" && token.kind !== "comment") {
+				nextContentCharacter = token.character;
+			}
+		}
 		for (let tokenIndex = 0; tokenIndex < ctx.tokens.length; tokenIndex++) {
 			const token = ctx.tokens[tokenIndex];
 			if (token === undefined || token.kind !== "block-seq-entry") continue;
@@ -98,39 +160,7 @@ export const hyphenSpacing: YamlRule = {
 			const next = ctx.text[j];
 			if (next === undefined || next === "\n" || next === "\r" || next === "#") continue;
 			if (after > maxAfter) {
-				// Moving a compact block collection's first entry without its
-				// continuation entries changes their relative indentation. Flow
-				// collections' colons do not introduce a compact block mapping.
-				let compact = false;
-				let movesSequenceEntry = false;
-				let flowDepth = 0;
-				let relocatesCollection = false;
-				for (let followingIndex = tokenIndex + 1; followingIndex < ctx.tokens.length; followingIndex++) {
-					const following = A.getUnsafe(ctx.tokens, followingIndex);
-					if (following.offset < j) continue;
-					if (following.line > token.line) {
-						if (following.kind === "whitespace" || following.kind === "newline" || following.kind === "comment") continue;
-						relocatesCollection = compact && following.character > token.character;
-						break;
-					}
-					if (following.kind === "block-seq-entry") movesSequenceEntry = true;
-					if (movesSequenceEntry && following.kind === "scalar" && /^[|>](?:[1-9][+-]?|[+-][1-9])(?:[ \t\r\n]|$)/.test(ctx.text.slice(following.offset, following.offset + following.length))) {
-						// The explicit block indent is relative to the preceding '-'.
-						// Moving that entry would strip different bytes from its body.
-						relocatesCollection = true;
-						break;
-					}
-					if (following.kind === "flow-map-start" || following.kind === "flow-seq-start") {
-						flowDepth++;
-					} else if (following.kind === "flow-map-end" || following.kind === "flow-seq-end") {
-						flowDepth--;
-					} else if (
-						flowDepth === 0 &&
-						(following.kind === "block-seq-entry" || following.kind === "block-map-key" || following.kind === "block-map-value")
-					) {
-						compact = true;
-					}
-				}
+				const relocatesCollection = A.getUnsafe(relocatesCollections, tokenIndex);
 				out.push(
 					YamlLintDiagnostic.make({
 						rule: "hyphen-spacing",

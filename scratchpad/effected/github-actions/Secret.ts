@@ -102,7 +102,7 @@ export abstract class Secret {
 			for (const [name, secret] of R.toEntries(entries)) {
 				const plaintext = Redacted.value(secret);
 				yield* outputs.setSecret(plaintext);
-				declassified[name] = plaintext;
+				R.assignProperty(declassified, name, plaintext);
 			}
 			return declassified;
 		});

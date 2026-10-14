@@ -1,0 +1,42 @@
+{
+  "module": "glob",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/glob/internal/braceExpansion.ts",
+        "scratchpad/effected/glob/internal/minimatch.ts",
+        "scratchpad/effected/glob/internal/ast.ts",
+        "scratchpad/effected/glob/internal/types.ts"
+      ],
+      "tests": [
+        "scratchpad/test/glob/braceExpansion.test.ts",
+        "scratchpad/test/glob/engine.test.ts",
+        "scratchpad/test/glob/hostility.test.ts",
+        "scratchpad/test/glob/GlobPattern.test.ts",
+        "scratchpad/test/glob/GlobSet.test.ts"
+      ],
+      "findings": ["sol-3-1", "sol-3-2", "sol-3-3"]
+    }
+  ],
+  "findings": {
+    "sol-3-1": {
+      "file": "scratchpad/effected/glob/internal/braceExpansion.ts",
+      "class": "bug",
+      "summary": "The round-2 member-count bound truncates a terminating range when floating-point rounding makes its advancing increments smaller than the declared step; it also hides the upstream max: 5 budget failure. Merges grok-3-1 and sol-3-1.",
+      "fix": "Drive progressing ranges by the endpoint and enforce the actual generated-output budget. Detect stalled addition separately and preserve bounded duplicate handling, singleton behavior, non-finite-count rejection, and pre-loop budget checks. Add the exact six-member {18014398509481984..18014398509482004..5} regression and max: 5 typed failure in braceExpansion.test.ts, plus endpoint matches and typed failures through GlobPattern.test.ts and GlobSet.test.ts. Retain the round-2 stall and overflow regressions. Do not restore the unbounded upstream stall loop. Deviation bookkeeping is central; do not edit ledger or README Port notes."
+    },
+    "sol-3-2": {
+      "file": "scratchpad/effected/glob/internal/minimatch.ts",
+      "class": "perf",
+      "summary": "The repeated overlapping alternatives in *(a|aa)b produce Fibonacci-many backtracking paths on an a-prefix followed by c. This inherited defect qualifies under D11's algorithmic-class criterion.",
+      "fix": "Use a non-backtracking segment matcher for repeated overlapping extglobs, implemented with memoized AST states or an equivalent automaton in ast.ts and dispatched in minimatch.ts, with types.ts available for typed owner metadata. Preserve language, segment boundaries, dot and case options, and existing parse/regexp metadata; keep matcher state with its owner and use Effect collections where needed. Add positive/negative oracle-parity cases in engine.test.ts, public facade checks in GlobPattern.test.ts and GlobSet.test.ts, and a watchdog-bounded subprocess regression in hostility.test.ts. Route the verified upstream-bug deviation record centrally; do not edit ledger or README Port notes."
+    },
+    "sol-3-3": {
+      "file": "scratchpad/effected/glob/internal/braceExpansion.ts",
+      "class": "perf",
+      "summary": "Every brace sibling gets the full budget and is materialized into N before the parent rejects, requiring Theta(kB) temporary member storage instead of budget-bounded O(B) storage.",
+      "fix": "Make sibling generation and accumulation budget-aware and stop before materializing all remaining siblings. Bound retained intermediate member storage by the effective budget, accounting for suffix multiplication and top-level empty-result filtering while preserving within-budget order and contents. Keep typed ExpansionBudgetExceeded failures and send any changed actual measurement to central verified upstream-bug bookkeeping. Add allocation-bounded rejection and boundary/suffix/empty-member parity regressions in braceExpansion.test.ts and a bounded hostile-input regression in hostility.test.ts. Do not edit ledger or README Port notes."
+    }
+  }
+}

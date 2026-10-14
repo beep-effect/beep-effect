@@ -186,10 +186,18 @@ and the clone's `main` may still be behind the merge; the command steps its
 own process out of the lane before removal and the archive fence exempts the
 invoking session's ancestry plus, when Claude Code names the session through
 `CLAUDE_PID`, everything that session spawned into the lane (MCP servers, tool
-shells, background jobs). Any other holder (a desktop terminal panel, an
+shells, background jobs). Run from inside the lane, it also leaves an idle
+Claude Desktop Terminal panel shell standing in the lane by cwd (the app
+starts one in the session folder even when the panel is never opened, and
+starts a new one when it exits) and removes the lane under it. Any other
+holder (a panel shell running a command, any panel shell under `--lane`, an
 editor, another session) still refuses the retirement and is named in the
 error. Finish writes from session MCP servers and other exempt children before
-retiring the lane: file writes after archive capture are not included. This
+retiring the lane: file writes after archive capture are not included. The
+idle panel shell is the exception that is checked rather than trusted: a
+shell whose context-switch count changed between the fence's first scan and
+the post-capture rescan (it ran something, even a builtin redirect) leaves
+the fenced copy preserved instead of deleted. This
 process fence controls active writers, independently of the commit-count
 decision to create an archive ref. Step the shell into the swept clone afterwards:
 `CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"`.

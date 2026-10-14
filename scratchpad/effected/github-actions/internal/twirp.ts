@@ -6,6 +6,9 @@
 // `TwirpFailure` into its own typed error, because the failure a caller
 // reports is about *its* operation, not about HTTP.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as S from "effect/Schema";
 import type * as Redacted from "effect/Redacted";
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
@@ -14,6 +17,16 @@ import type { HttpClient } from "effect/http";
 import { HttpClientRequest } from "effect/http";
 import * as P from "effect/Predicate";
 import * as O from "@beep/utils/Option";
+
+const $I = $ScratchpadId.create("effected/github-actions/internal/twirp");
+const TwirpFailureKind = LiteralKit(["transport", "status", "malformed"]).annotate(
+	$I.annote("TwirpFailureKind", { description: "The transport, HTTP status, or JSON decoding stage of a failed RPC." }),
+);
+const TwirpFailureFields = {
+	method: S.String.annotateKey({ description: "The RPC that failed." }),
+	status: S.optional(S.Finite).annotateKey({ description: "The finite HTTP status, when present; explicit undefined is accepted." }),
+	cause: S.optionalKey(S.Unknown).annotateKey({ description: "The underlying failure, when present; explicit undefined is accepted." }),
+};
 
 /**
  * Returned instead of a failure when the backend answers HTTP 409.
@@ -56,24 +69,34 @@ export type TwirpResult<T> = T | typeof CONFLICT;
  * retryability by testing the *message* for `"HTTP 503"` and `"ECONNRESET"`,
  * which makes a reworded message a silent policy change.
  *
+ * **Example** (Classify an unsupported HTTP status)
+ *
+ * ```ts
+ * import { TwirpFailure } from "@beep/scratchpad/effected/github-actions/internal/twirp"
+ * import * as S from "effect/Schema"
+ *
+ * const failure = S.decodeUnknownSync(TwirpFailure)({ kind: "status", method: "CreateCacheEntry", status: 503 })
+ * console.log(failure.kind, failure.status) // status 503
+ * ```
+ *
  * @internal
  * @category models
  * @since 0.0.0
  */
-export interface TwirpFailure {
-	/** The RPC that failed, e.g. `CreateCacheEntry`. */
-	readonly method: string;
-	/**
-	 * `transport` — the request never completed. `status` — the backend answered
-	 * with a status the protocol has no meaning for. `malformed` — it answered
-	 * 2xx with something that is not JSON.
-	 */
-	readonly kind: "transport" | "status" | "malformed";
-	/** The status, when there was one. */
-	readonly status?: number | undefined;
-	/** The underlying failure, preserved structurally. */
-	readonly cause?: unknown;
-}
+export const TwirpFailure = TwirpFailureKind.mapMembers(([transport, status, malformed]) => [
+	S.Struct({ ...TwirpFailureFields, kind: transport.annotateKey({ description: "The request never completed." }) }),
+	S.Struct({ ...TwirpFailureFields, kind: status.annotateKey({ description: "The backend returned an unsupported HTTP status." }) }),
+	S.Struct({ ...TwirpFailureFields, kind: malformed.annotateKey({ description: "The successful response was not JSON." }) }),
+]).pipe(S.toTaggedUnion("kind")).annotate(
+	$I.annote("TwirpFailure", { description: "Plain-object RPC failure variants preserving optional status and cause fields in every variant." }),
+);
+
+/**
+ * The failure variants accepted by {@link TwirpFailure}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TwirpFailure = typeof TwirpFailure.Type;
 
 /**
  * The error fields a {@link TwirpFailure} contributes to a caller's own error

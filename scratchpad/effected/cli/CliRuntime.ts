@@ -45,7 +45,10 @@ const $I = $ScratchpadId.create("effected/cli/CliRuntime");
 /** A runtime invariant failure or a non-Error value wrapped for teardown. */
 class CliRuntimeError extends S.TaggedError<CliRuntimeError>($I`CliRuntimeError`)(
 	"CliRuntimeError",
-	{ message: S.String.annotate({ description: "The runtime invariant or reported failure that needs teardown handling." }) },
+	{
+		message: S.String.annotate({ description: "The runtime invariant or reported failure that needs teardown handling." }),
+		cause: S.optionalKey(S.Defect({ includeStack: true })).annotate({ description: "The original failure when runtime markers could not be installed in place." }),
+	},
 	$I.annote("CliRuntimeError", { description: "A CLI runtime invariant failed or a non-Error failure was reported." }),
 ) {
 	override readonly name = "Error";
@@ -467,7 +470,7 @@ export abstract class CliRuntime {
 					// "Help requested" line.
 					if (isShowHelp(error)) {
 						const code = error.errors.length > 0 ? (options.usageExitCode ?? 64) : 0;
-						return yield* CliRuntime.reported(error, code);
+						return yield* Effect.fail(CliRuntime.reported(error, code));
 					}
 
 					// Command.runWith rendered a UserError through the CliOutput formatter
@@ -478,7 +481,7 @@ export abstract class CliRuntime {
 					// runWith's `renderErrors: false` the mark stays true and it renders
 					// below.
 					if (isRenderedUserError(error)) {
-						return yield* CliRuntime.reported(error, chooseExitCode(error, options.usageExitCode ?? 64));
+						return yield* Effect.fail(CliRuntime.reported(error, chooseExitCode(error, options.usageExitCode ?? 64)));
 					}
 
 					const render = options.render;
@@ -628,7 +631,12 @@ export abstract class CliRuntime {
 								envBuildLogLayer(envLog, options.env?.audienceEnvVar),
 							),
 						),
-						Layer.catchCause(() => CliLogger.layer(envLog.logger)),
+						Layer.catchCause((cause) =>
+							Cause.hasInterrupts(cause)
+								? // Cause.map, not Effect.mapError: mapping the error channel drops the interrupt of a mixed cause.
+									cause.pipe(Cause.map(CliRuntime.reported), Effect.failCause, Layer.effectDiscard)
+								: CliLogger.layer(envLog.logger),
+						),
 					));
 		const inside =
 			env === undefined
@@ -711,18 +719,15 @@ export abstract class CliRuntime {
 	 * mark. It does keep the code you pass: `reported(userError, 3)` exits `3`,
 	 * not `usageExitCode`.
 	 *
-	 * The marks are added in place, so a typed error comes back as its own
-	 * type: the `E` overload returns the very instance it was given, and a
-	 * program failing with it keeps `catchTags` narrowing downstream without a
-	 * cast. Any other value takes the `unknown` fallback and is wrapped in a
-	 * plain `Error`.
+	 * The marks are added in place when the argument is a mutable Error whose
+	 * marker properties can be defined. Its instance and subtype fields are
+	 * preserved. If marker installation fails, a fresh marked Error retains
+	 * the original failure as its cause and carries the selected exit code.
 	 *
-	 * The `E extends Error` constraint is structural, not nominal — TypeScript
-	 * cannot express "is really an `Error`", so the guarantee holds only when
-	 * the argument passes `instanceof Error` at runtime. A value that merely
-	 * satisfies `Error`'s shape (an object `implements Error`, or an error
-	 * revived from JSON) still takes the wrapping branch and comes back as a
-	 * fresh, stripped `Error` typed as `E`.
+	 * The `E extends Error` constraint is structural. An Error lookalike is
+	 * wrapped at runtime and its subtype fields are discarded, so the generic
+	 * overload returns `E | Error`. Narrow the result before reading subtype
+	 * fields or recovering a tagged error.
 	 *
 	 * **Example** (Preserve a reported error instance)
 	 *
@@ -736,20 +741,24 @@ export abstract class CliRuntime {
 	 * @category constructors
 	 * @since 0.0.0
 	 */
-	static reported<E extends Error>(error: E, exitCode?: number): E;
+	static reported<E extends Error>(error: E, exitCode?: number): E | Error;
 	static reported(error: unknown, exitCode?: number): Error;
 	static reported(error: unknown, exitCode = 1): Error {
 		const marked = error instanceof Error ? error : CliRuntimeError.make({
 			message: Result.getOrElse(Result.try(() => String(error)), () => "[unprintable failure]"),
 		});
-		// defineProperty, not assignment: a class may carry the exit code as a prototype getter, which a plain
-		// assignment cannot overwrite.
-		for (const [key, value] of [
-			[Runtime.errorReported, false],
-			[Runtime.errorExitCode, exitCode],
-		] as const) {
-			Object.defineProperty(marked, key, { value, writable: true, configurable: true, enumerable: false });
-		}
-		return marked;
+		const install = (target: Error): Error => {
+			// A prototype getter needs an own descriptor rather than assignment.
+			for (const [key, value] of [
+				[Runtime.errorReported, false],
+				[Runtime.errorExitCode, exitCode],
+			] as const) {
+				Object.defineProperty(target, key, { value, writable: true, configurable: true, enumerable: false });
+			}
+			return target;
+		};
+		return Result.getOrElse(Result.try(() => install(marked)), () =>
+			install(CliRuntimeError.make({ message: marked.message, cause: error })),
+		);
 	}
 }

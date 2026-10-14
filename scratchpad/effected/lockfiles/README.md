@@ -174,6 +174,7 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **upstream-bug** — The lab skips unmodeled npm targets and continues ancestor resolution where upstream can emit dangling resolved edges (scratchpad/test/lockfiles/internal/npm.coverage.test.ts:41).
 - **upstream-bug** — The lab marks unmodeled root and skipped pnpm targets unresolved where upstream emits dangling resolved edges, retaining valid alias and workspace targets (scratchpad/test/lockfiles/internal/pnpm.coverage.test.ts:20; scratchpad/test/lockfiles/Lockfile.test.ts:1066).
 - **upstream-bug** — The lab resolves bun edges only to emitted identities where upstream can select malformed or suppressed tuple rows, retaining ancestor precedence and workspace identities (scratchpad/test/lockfiles/internal/bun.coverage.test.ts:23).
+- **upstream-bug** — Lab Yarn parsing records indexed targets without emitted package instances as unresolved, while upstream emits dangling resolved edges; aliases to emitted locators retain upstream behavior (scratchpad/test/lockfiles/internal/yarn.coverage.test.ts:12,27,42).
 
 ### Dependency backlog
 

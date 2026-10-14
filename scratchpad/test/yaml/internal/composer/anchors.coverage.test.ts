@@ -59,3 +59,10 @@ describe("anchor machinery boundary behavior", () => {
     assert.strictEqual(MutableHashMap.size(buildAnchorMap(empty)), 0);
   }));
 });
+
+
+it.effect("positions a tag-on-alias error at the alias when no tag span is supplied", () => Effect.sync(() => {
+  const state = createState("*name", { composeFlowMap, composeFlowSeq });
+  checkAnchorOnAlias({ tag: "!!str" }, { type: "alias", source: "*name", offset: 0, length: 5 }, state);
+  assert.deepStrictEqual(state.errors, [{ code: "UnexpectedToken", message: "Tag !!str cannot be applied to alias *name", offset: 0, length: 5 }]);
+}));

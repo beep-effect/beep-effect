@@ -1,44 +1,64 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import type * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Queue from "effect/Queue";
+import * as S from "effect/Schema";
 import * as Terminal from "effect/Terminal";
+
+const $I = $ScratchpadId.create("effected/cli/TestTerminal");
 
 /**
  * One key press for {@link TestTerminal}.
  *
+ * **Details**
+ *
+ * `name` is any string, so a test can send a key the prompts do not know. Each modifier may be omitted or
+ * explicitly `undefined`; both read as "not held" when the key is queued. `TestTerminalHandle.input` takes these
+ * values as typed and never decodes them.
+ *
+ * **Example** (Check a key press)
+ *
+ * ```ts
+ * import { KeyInput } from "@beep/scratchpad/effected/cli/TestTerminal"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(KeyInput)({ name: "c", ctrl: true })) // true
+ * ```
+ *
  * @public
- * @category models
+ * @category schemas
  * @since 0.0.0
  */
-export interface KeyInput {
-	/**
-	 * The key name the prompts switch on: `down`, `up`, `enter`, `space`, `escape`, or a character.
-	 *
-	 * @since 0.0.0
-	 */
-	readonly name: string;
-	/**
-	 * Whether Ctrl is held.
-	 *
-	 * @since 0.0.0
-	 */
-	readonly ctrl?: boolean | undefined;
-	/**
-	 * Whether Meta is held.
-	 *
-	 * @since 0.0.0
-	 */
-	readonly meta?: boolean | undefined;
-	/**
-	 * Whether Shift is held.
-	 *
-	 * @since 0.0.0
-	 */
-	readonly shift?: boolean | undefined;
-}
+export const KeyInput = S.Struct({
+	/** The key name the prompts switch on: `down`, `up`, `enter`, `space`, `escape`, or a character. */
+	name: S.String.annotate(
+		$I.annote("KeyInput.name", {
+			description: "The key name the prompts switch on, such as down, up, enter, space, escape or a single character; any string is accepted.",
+		}),
+	),
+	/** Whether Ctrl is held. */
+	ctrl: S.optional(S.Boolean).annotate(
+		$I.annote("KeyInput.ctrl", { description: "Whether Ctrl is held; omitted or undefined is queued as not held." }),
+	),
+	/** Whether Meta is held. */
+	meta: S.optional(S.Boolean).annotate(
+		$I.annote("KeyInput.meta", { description: "Whether Meta is held; omitted or undefined is queued as not held." }),
+	),
+	/** Whether Shift is held. */
+	shift: S.optional(S.Boolean).annotate(
+		$I.annote("KeyInput.shift", { description: "Whether Shift is held; omitted or undefined is queued as not held." }),
+	),
+}).annotate($I.annote("KeyInput", { description: "One scripted key press queued into a TestTerminal." }));
+/**
+ * One key press for {@link TestTerminal}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type KeyInput = typeof KeyInput.Type;
 
 /**
  * What {@link TestTerminal.make} builds: the `Terminal` layer and the means to drive and inspect it.

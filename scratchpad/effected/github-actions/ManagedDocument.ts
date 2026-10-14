@@ -41,7 +41,9 @@ export class RejectedRegionDialectError extends S.TaggedError<RejectedRegionDial
  *
  * @since 0.0.0
  */
-const NamePart = S.String.check(S.isPattern(/^[A-Za-z0-9][A-Za-z0-9_-]*$/u));
+const NamePart = S.String.check(S.isPattern(/^[A-Za-z0-9][A-Za-z0-9_-]*$/u, $I.annote("NamePart", {
+	description: "Letters, digits, dashes and underscores, starting alphanumeric; dots are excluded to keep marker keys unambiguous.",
+})));
 
 /**
  * The marker vocabulary every managed document is written with: HTML comments
@@ -65,14 +67,16 @@ const REGION_DIALECT: SectionDialect = SectionDialect.make({
  * The four structural kinds (`unterminatedRegion`, `orphanedEnd`,
  * `overlappingRegions`, `duplicateRegion`) surface at parse time and name an
  * ambiguity whose silent resolution would corrupt content a human wrote by
- * hand. The three declaration kinds surface when regions are applied:
+ * hand. The four declaration kinds surface when regions are applied:
  * `markerInContent` refuses region content that itself contains a line the
  * scanner would read as a region marker, `duplicateDeclaration` refuses
  * one call that states two intentions for the same region, and
  * `invalidAttribute` refuses region metadata whose name is outside the
  * `[A-Za-z][A-Za-z0-9_-]*` grammar or whose value contains `"` or a line
  * break — either would write a marker the region scanner could not read
- * back verbatim.
+ * back verbatim. `trailingCarriageReturn` refuses content whose final bare
+ * carriage return LF rendering would absorb into the boundary line ending,
+ * losing a byte on the next parse.
  *
  * **Example** (Describe an ambiguous region)
  *
@@ -101,6 +105,7 @@ export class ManagedDocumentError extends S.TaggedError<ManagedDocumentError>($I
 		"markerInContent",
 		"duplicateDeclaration",
 		"invalidAttribute",
+		"trailingCarriageReturn",
 	]).annotateKey({ description: "Which ambiguity or refusal was found." }),
 	/**
 	 * 1-based line of the offending marker, for the structural kinds.
@@ -152,6 +157,7 @@ const KIND_PROSE: Record<ManagedDocumentError["kind"], string> = {
 	markerInContent: "Region content contains a managed-region marker",
 	duplicateDeclaration: "Region was declared twice in one call",
 	invalidAttribute: "Region metadata has an invalid attribute name or value",
+	trailingCarriageReturn: "Region content ends in a bare carriage return that LF rendering cannot preserve",
 };
 
 /**
@@ -182,23 +188,35 @@ const structural = (failure: SectionParseError): ManagedDocumentError =>
  * Options identifying a managed document inside a text that may not carry one
  * yet.
  *
+ * **Example** (Validate ManagedDocumentSource input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
+ * import { ManagedDocumentSource } from "@beep/scratchpad/effected/github-actions/ManagedDocument";
+ *
+ * const input = { namespace: "release", key: "summary", text: "human text" };
+ * Effect.runSync(Console.log(S.is(ManagedDocumentSource)(input))) // true
+ * ```
+ *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface ManagedDocumentSource {
+export const ManagedDocumentSource = S.Struct({
 	/**
 	 * Whose document this is, e.g. your action's name.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly namespace: string;
+	namespace: S.String.annotateKey({ description: "Whose document this is, such as the action's name." }),
 	/**
 	 * Which document, within that namespace.
 	 *
 	 * @since 0.0.0
 	 */
-	readonly key: string;
+	key: S.String.annotateKey({ description: "Which document, within the namespace." }),
 	/**
 	 * The current text — a fetched comment body, a PR description — or absent
 	 * when there is nothing yet. An absent text and an empty one mean the same
@@ -206,8 +224,15 @@ export interface ManagedDocumentSource {
 	 *
 	 * @since 0.0.0
 	 */
-	readonly text?: string | undefined;
-}
+	text: S.optional(S.String).annotateKey({ description: "The current text; absent and empty text both start a fresh document." }),
+}).annotate($I.annote("ManagedDocumentSource", { description: "Source text and identity of a managed document." }));
+/**
+ * Decoded document identity and optional source text accepted by ManagedDocument.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ManagedDocumentSource = typeof ManagedDocumentSource.Type;
 
 /**
  * A marker-delimited document: named regions a tool owns, inside text a human
@@ -505,11 +530,13 @@ export class ManagedDocument extends S.Class<ManagedDocument>($I`ManagedDocument
 		const reconciled = parsed.success.reconcile(declared);
 		if (Result.isFailure(reconciled)) {
 			const failure = reconciled.failure;
+			// Every declaration uses REGION_DIALECT's own HTML style.
+			if (failure.reason === "unknownCommentStyle") {
+				throw RejectedRegionDialectError.make({ message: "ManagedDocument: the region dialect rejected its own comment style" });
+			}
 			return Result.fail(
 				ManagedDocumentError.make({
-					// Every declaration uses REGION_DIALECT's own HTML style; decode
-					// the remaining upstream reasons into the public error vocabulary.
-					kind: Result.getOrThrow(S.decodeUnknownResult(ManagedDocumentError.fields.kind)(failure.reason)),
+					kind: failure.reason,
 					key: this.regionKeyOf(failure.key),
 					...O.getSomesStruct({ attribute: O.fromUndefinedOr(failure.attribute) }),
 				}),

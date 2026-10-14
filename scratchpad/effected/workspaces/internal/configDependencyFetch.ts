@@ -1,7 +1,8 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { dual } from "effect/Function";
+import { dual, flow, identity } from "effect/Function";
 import * as S from "effect/Schema";
+import * as Result from "effect/Result";
 // The fetch rung of the config-dependency ladder: when neither
 // `node_modules/.pnpm-config` nor any discovered store holds the version a
 // side DECLARES, have pnpm put exactly that version into the store, verified
@@ -59,6 +60,11 @@ import { splitConfigDependencySpec } from "./configDependencySpecGrammar.ts";
 import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/workspaces/internal/configDependencyFetch");
+
+const JsonString = S.fromJsonString(S.String).annotate(
+	$I.annote("JsonString", { description: "A JSON-quoted YAML scalar retaining dependency and registry text." }),
+);
+const quote = flow(S.encodeResult(JsonString), Result.getOrThrowWith(identity));
 
 // The caller's Effect FileSystem may be virtual; fetching must use the real scratch workspace and store.
 const { copyFile, mkdtemp, readFile, realpath, rm, writeFile } = process.getBuiltinModule("node:fs/promises");
@@ -328,7 +334,7 @@ export const registrySettingsOf = (document: unknown): RegistrySettings => {
 	const registries: Record<string, string> = {};
 	if (P.isObject(document.registries)) {
 		for (const [scope, url] of R.toEntries(document.registries)) {
-			if (P.isString(url)) registries[scope] = url;
+			if (P.isString(url)) R.assignProperty(registries, scope, url);
 		}
 	}
 	return P.isString(document.registry) ? { registry: document.registry, registries } : { registries };
@@ -361,12 +367,12 @@ export const scratchWorkspaceYaml: {
 	version: string,
 	settings: RegistrySettings = { registries: {} },
 ): string => {
-	const lines = ["configDependencies:", `  ${JSON.stringify(name)}: ${JSON.stringify(version)}`];
-	if (settings.registry !== undefined) lines.push(`registry: ${JSON.stringify(settings.registry)}`);
+	const lines = ["configDependencies:", `  ${quote(name)}: ${quote(version)}`];
+	if (settings.registry !== undefined) lines.push(`registry: ${quote(settings.registry)}`);
 	const scopes = R.toEntries(settings.registries);
 	if (scopes.length > 0) {
 		lines.push("registries:");
-		for (const [scope, url] of scopes) lines.push(`  ${JSON.stringify(scope)}: ${JSON.stringify(url)}`);
+		for (const [scope, url] of scopes) lines.push(`  ${quote(scope)}: ${quote(url)}`);
 	}
 	return `${lines.join("\n")}\n`;
 });
@@ -380,7 +386,7 @@ const isNotFound = (error: unknown): boolean => P.isObject(error) && error.code 
  * empty lockfile document they write when there are no projects.
  */
 const scratchLockfile = (name: string, version: string, integrity: string): string => {
-	const key = JSON.stringify(`${name}@${version}`);
+	const key = quote(`${name}@${version}`);
 	return [
 		"---",
 		"lockfileVersion: '9.0'",
@@ -389,14 +395,14 @@ const scratchLockfile = (name: string, version: string, integrity: string): stri
 		"",
 		"  .:",
 		"    configDependencies:",
-		`      ${JSON.stringify(name)}:`,
-		`        specifier: ${JSON.stringify(version)}`,
-		`        version: ${JSON.stringify(version)}`,
+		`      ${quote(name)}:`,
+		`        specifier: ${quote(version)}`,
+		`        version: ${quote(version)}`,
 		"",
 		"packages:",
 		"",
 		`  ${key}:`,
-		`    resolution: {integrity: ${JSON.stringify(integrity)}}`,
+		`    resolution: {integrity: ${quote(integrity)}}`,
 		"",
 		"snapshots:",
 		"",

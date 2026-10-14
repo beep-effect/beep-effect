@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
+import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -60,12 +60,29 @@ describe("JsoncNode", () => {
       assert.strictEqual(arity("null"), "leaf");
     });
 
+    it("constructs and decodes finite node spans and optional colon offsets", () => {
+      for (const value of [-1, 0.5, -0.5, Number.MAX_SAFE_INTEGER + 1]) {
+        const input = { type: "property", offset: value, length: value, colonOffset: value } as const;
+        const node = JsoncNode.make(input);
+        assert.deepStrictEqual([node.offset, node.length, node.colonOffset], [value, value, value]);
+        assertSuccess(Result.map(S.decodeResult(JsoncNode)(input), (decoded) => [decoded.offset, decoded.length, decoded.colonOffset]), [value, value, value]);
+      }
+      assert.isFalse("colonOffset" in JsoncNode.make({ type: "null", offset: 0, length: 0 }));
+      for (const value of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+        for (const field of ["offset", "length", "colonOffset"] as const) {
+          const input = { type: "property", offset: 0, length: 0, [field]: value } as const;
+          assert.throws(() => JsoncNode.make(input));
+          assertFailure(Result.mapError(S.decodeResult(JsoncNode)(input), (error) => error._tag), "SchemaError");
+        }
+      }
+    });
+
     it("JsoncNode round-trips through its codec", () => {
       const node = JsoncNode.make({ type: "array", offset: 0, length: 3, children: [JsoncNode.make({ type: "number", offset: 1, length: 1, value: 1 })] });
       const encoded = Result.getOrThrow(S.encodeResult(JsoncNode)(node));
       const decoded = Result.getOrThrow(S.decodeResult(JsoncNode)(encoded));
       assert.isTrue(Equal.equals(node, decoded));
-      assertFailure(Result.mapError(S.decodeResult(JsoncNode)({ type: "array", offset: -1, length: 0 }), (error) => error._tag), "SchemaError");
+      assertFailure(Result.mapError(S.decodeResult(JsoncNode)({ type: "array", offset: Number.NEGATIVE_INFINITY, length: 0 }), (error) => error._tag), "SchemaError");
     });
   });
 
@@ -185,6 +202,35 @@ describe("JsoncNode", () => {
       assert.strictEqual(prop.toValue(), undefined);
       assert.deepStrictEqual(makeNodeUnsafe({ type: "object", offset: 0, length: 5, children: [prop] }).toValue(), {});
       assert.deepStrictEqual(makeNodeUnsafe({ type: "object", offset: 0, length: 2 }).toValue(), {});
+    });
+
+    it("evaluates a two-child numeric property key and preserves its original path segment", () => {
+      const key = JsoncNode.make({ type: "number", offset: 1, length: 1, value: 7 });
+      const value = JsoncNode.make({ type: "number", offset: 3, length: 1, value: 42 });
+      const prop = JsoncNode.make({ type: "property", offset: 1, length: 3, children: [key, value] });
+      const root = JsoncNode.make({ type: "object", offset: 0, length: 5, children: [prop] });
+      assert.deepStrictEqual(root.toValue(), { "7": 42 });
+      assertSome(root.pathAt(1), [7]);
+      assertSome(root.pathAt(3), [7]);
+      assertNone(root.find(["7"]));
+      assertNone(root.find([7]));
+    });
+
+    it("skips a three-child object property during evaluation", () => {
+      const key = JsoncNode.make({ type: "string", offset: 1, length: 3, value: "a" });
+      const value = JsoncNode.make({ type: "number", offset: 5, length: 1, value: 1 });
+      const extra = JsoncNode.make({ type: "number", offset: 7, length: 1, value: 2 });
+      const prop = JsoncNode.make({ type: "property", offset: 1, length: 7, children: [key, value, extra] });
+      assert.deepStrictEqual(JsoncNode.make({ type: "object", offset: 0, length: 9, children: [prop] }).toValue(), {});
+    });
+
+    it("does not append an unknown property head to a typed path", () => {
+      const key = JsoncNode.make({ type: "boolean", offset: 1, length: 1, value: true });
+      const value = JsoncNode.make({ type: "number", offset: 3, length: 1, value: 42 });
+      const prop = JsoncNode.make({ type: "property", offset: 1, length: 3, children: [key, value] });
+      const root = JsoncNode.make({ type: "object", offset: 0, length: 5, children: [prop] });
+      assertSome(root.pathAt(3), []);
+      assert.deepStrictEqual(root.toValue(), {});
     });
 
     it("defines __proto__ as an own data property", () => {

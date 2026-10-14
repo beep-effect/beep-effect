@@ -190,6 +190,29 @@ describe("Mdast.fromMdast", () => {
 		assert.deepStrictEqual(Mdast.toMdast(readmitted.success), projected);
 	});
 
+	it("derives mixed-position list spread from real item gaps", () => {
+		for (const [line, admittedSpread, expectedSpread] of [[3, false, true], [2, true, false]] as const) {
+			const positionedItem = (itemLine: number) => ({
+				type: "listItem", children: [], position: {
+					start: { line: itemLine, column: 1, offset: itemLine - 1 },
+					end: { line: itemLine, column: 2, offset: itemLine },
+				},
+			});
+			const omitted = { type: "listItem", children: [] };
+			for (const children of [
+				[positionedItem(1), positionedItem(line), omitted],
+				[positionedItem(1), omitted, positionedItem(line)],
+				[omitted, positionedItem(1), positionedItem(line)],
+			]) {
+				const result = Mdast.fromMdastResult({
+					type: "root", children: [{ type: "list", spread: admittedSpread, children }],
+				});
+				assertSuccess(result, Result.getOrThrow(result));
+				assert.strictEqual(first(Mdast.toMdast(result.success)).spread, expectedSpread);
+			}
+		}
+	});
+
 	it("round-trips parsed code blocks with trailing blank content lines", () => {
 		for (const source of ["```\nbody\n\n```\n", "```\r\nbody\r\n\r\n```\r\n"]) {
 			const plain = Mdast.toMdast(gfm(source));

@@ -1,5 +1,6 @@
 import { dual } from "effect/Function";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 /**
@@ -96,13 +97,21 @@ export const deepMerge: {
 	<T extends object>(target: T, source: object): T;
 } = dual(2, mergeRecords);
 
-function mergeRecords<T extends object>(target: T, source: object): T;
+function mergeRecords<T extends object>(
+	target: T,
+	source: object,
+	ancestors?: ReadonlyArray<readonly [object, object, Record<PropertyKey, unknown>]>,
+): T;
 function mergeRecords(
 	target: object,
 	source: object,
+	ancestors: ReadonlyArray<readonly [object, object, Record<PropertyKey, unknown>]> = [],
 ): object {
 	if (!isPlainObject(target) || !isPlainObject(source) || !canMerge(target, source)) return target;
+	const previous = A.findFirst(ancestors, ([higher, lower]) => higher === target && lower === source);
+	if (O.isSome(previous)) return previous.value[2];
 	const result: Record<PropertyKey, unknown> = { __proto__: Object.getPrototypeOf(target) };
+	const active = A.prepend(ancestors, [target, source, result] as const);
 	// Own keys are copied as data properties, including constructor/prototype.
 	// A bare assignment uses [[Set]] semantics, so an own `__proto__` key on the
 	// higher-priority document would reach `Object.prototype`'s inherited accessor
@@ -121,7 +130,7 @@ function mergeRecords(
 		} else {
 			const targetValue = result[key];
 			if (isPlainObject(targetValue) && isPlainObject(sourceValue)) {
-				define(result, key, deepMerge(targetValue, sourceValue));
+				define(result, key, mergeRecords(targetValue, sourceValue, active));
 			}
 		}
 	}

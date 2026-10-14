@@ -158,6 +158,13 @@ const correspondents = PracticeKgCorrespondentTables.make({
     // flagged is still the practice's own, by its domain.
     contact({ address: "'Counsel@acme.example.test'", contactId: "c-counsel" }),
     contact({ address: "'paralegal@practice.example.test'", contactId: "c-quoted-practice" }),
+    // The quoted, unflagged spelling sorts first in DuckDB: keeping that row loses the later owner's flag.
+    contact({ address: "'Alias@acme.example.test'", contactId: "c-alias-role" }),
+    contact({ address: "alias@acme.example.test", contactId: "c-alias-role", roleAddress: true }),
+    contact({ address: "'Alias@own.example.test'", contactId: "c-alias-practice" }),
+    contact({ address: "alias@own.example.test", contactId: "c-alias-practice", isPracticeAddress: true }),
+    // A flagged practice domain also excludes an unflagged sibling on a nested subdomain.
+    contact({ address: "assistant@staff.mail.practice.example.test", contactId: "c-subdomain" }),
   ],
   links: [
     link("c-counsel", "1234.10001"),
@@ -176,6 +183,9 @@ const correspondents = PracticeKgCorrespondentTables.make({
     link("c-twin-1", "1234.10001"),
     link("c-twin-2", "1234.10001"),
     link("c-quoted-practice", "1234.10001"),
+    link("c-alias-role", "1234.10001"),
+    link("c-alias-practice", "1234.10001"),
+    link("c-subdomain", "1234.10001"),
   ],
   // A candidate by message count, and practice addresses that only filed email marks as such.
   correspondents: [
@@ -384,6 +394,19 @@ describe("MailTagging practice-KG matter directory", () => {
           ["1234.10001", ["counsel@acme.example.test", "quoted@acme.example.test"], []],
           ["1234.20002", [], []],
         ]);
+      })
+    );
+
+    it.effect(
+      "excludes conflicting owner flags across spellings and unflagged practice subdomain siblings",
+      Effect.fnUntraced(function* () {
+        const index = yield* snapshotOf(yield* seeded);
+        const addresses = A.flatMap(index.entries, (entry) => entry.contactAddresses);
+
+        expect(addresses).not.toContain("alias@acme.example.test");
+        expect(addresses).not.toContain("alias@own.example.test");
+        expect(addresses).not.toContain("assistant@staff.mail.practice.example.test");
+        expect(addresses).toContain("counsel@acme.example.test");
       })
     );
 

@@ -742,6 +742,8 @@ const makeTerminal = (
 			resize: (nextColumns, nextRows) =>
 				surfaced(
 					Effect.suspend(() => {
+						// The terminal is shared by a session's screens: an ended screen's resize would reach the mounted one.
+						if (ended()) return Effect.die(CliUiTestError.make({ message: SCREEN_ENDED }));
 						const before = raws().length;
 						const since = Clock.Clock.defaultValue().currentTimeMillisUnsafe();
 						fake.resize(nextColumns, nextRows);

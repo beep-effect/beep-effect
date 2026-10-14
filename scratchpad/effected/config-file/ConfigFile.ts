@@ -772,9 +772,12 @@ const makeImpl = <A, I, RR>(
 	 * Both events carry EVERY contributing source, because under `layeredMerge`
 	 * all of them contributed.
 	 */
-	const mergeAndEmit: (sources: NonEmptySources<A>) => Effect.Effect<A> =
+	const mergeAndEmit: (sources: NonEmptySources<A>) => Effect.Effect<A, ConfigValidationError> =
 		Effect.fnUntraced(function* (sources: NonEmptySources<A>) {
-			const value = yield* options.strategy.resolve(sources);
+			const merged = yield* options.strategy.resolve(sources);
+			const value = yield* S.decodeUnknownEffect(S.toType(options.schema))(merged, options.parseOptions).pipe(
+				Effect.mapError((error) => ConfigValidationError.make({ path: O.none(), issue: error.issue })),
+			);
 			const refs = sourceRefs(sources);
 			yield* emit({ _tag: "Resolved", sources: refs, strategy: options.strategy.name });
 			yield* emit({ _tag: "Loaded", sources: refs });

@@ -94,6 +94,7 @@ class AddressContactRow extends S.Class<AddressContactRow>($I`AddressContactRow`
   {
     address: S.String,
     ...PracticeKgCorrespondentContact.fields,
+    isPracticeAddress: S.Boolean,
   },
   $I.annote("AddressContactRow", {
     description: "One contact that owns one address, as contact_addresses lists it.",
@@ -121,7 +122,8 @@ class PracticeAddressRow extends S.Class<PracticeAddressRow>($I`PracticeAddressR
 
 // The same columns the correspondent lookup reads for one address, for every address at once.
 const contactsSql = `
-SELECT address, contact_id AS "contactId", display_name AS "displayName", organization, role_address AS "roleAddress"
+SELECT address, contact_id AS "contactId", display_name AS "displayName", organization,
+  role_address AS "roleAddress", is_practice_address AS "isPracticeAddress"
 FROM contact_addresses ORDER BY address, contact_id`;
 
 const linksSql = `
@@ -167,7 +169,15 @@ const normalizedAddresses = (rows: ReadonlyArray<{ readonly address: string }>):
 // bundle builder trims and lowercases a contact's addresses but keeps their quotes, so the same contact can
 // hold two `contact_addresses` rows that normalize to one address.
 const oneOwnerEach = (rows: ReadonlyArray<AddressContactRow>): ReadonlyArray<AddressContactRow> =>
-  A.dedupeWith(rows, (left, right) => left.contactId === right.contactId);
+  A.map(
+    A.dedupeWith(rows, (left, right) => left.contactId === right.contactId),
+    (owner) =>
+      AddressContactRow.make({
+        ...owner,
+        roleAddress: A.some(rows, (row) => row.contactId === owner.contactId && row.roleAddress),
+        isPracticeAddress: A.some(rows, (row) => row.contactId === owner.contactId && row.isPracticeAddress),
+      })
+  );
 
 const oneLinkEach = (rows: ReadonlyArray<AddressLinkRow>): ReadonlyArray<AddressLinkRow> =>
   A.dedupeWith(
@@ -185,25 +195,31 @@ const domainOf = (address: EmailString): string => A.lastNonEmpty(Str.split("@")
 // The builder marks an address as the practice's own by its domain, after trimming and lowercasing only, so
 // a quoted spelling of a practice address can reach the bundle unflagged. The guard therefore also holds the
 // domains of the flagged addresses and applies the builder's rule to the normalized address.
-const isPracticeAddress = (tables: AddressTables, address: EmailString): boolean =>
-  HashSet.has(tables.practiceAddresses, address) || HashSet.has(tables.practiceDomains, domainOf(address));
+const isPracticeAddress = (tables: AddressTables, address: EmailString): boolean => {
+  const domain = domainOf(address);
+  return (
+    HashSet.has(tables.practiceAddresses, address) ||
+    HashSet.some(tables.practiceDomains, (practice) => domain === practice || Str.endsWith(`.${practice}`)(domain))
+  );
+};
 
 const rowsAt = <Row>(byAddress: Record<string, ReadonlyArray<Row>>, address: string): ReadonlyArray<Row> =>
   O.getOrElse(R.get(byAddress, address), (): ReadonlyArray<Row> => []);
 
 // Message-count candidates only separate `ambiguous` from `none`; a unique answer never reads them.
 const evidenceAt = (tables: AddressTables, address: EmailString): PracticeKgCorrespondentEvidence => {
+  const owners = oneOwnerEach(rowsAt(tables.contacts, address));
   const links = A.map(oneLinkEach(rowsAt(tables.links, address)), (row) => PracticeKgCorrespondentLink.make(row));
   return PracticeKgCorrespondentEvidence.make({
     candidates: [],
-    contacts: A.map(oneOwnerEach(rowsAt(tables.contacts, address)), (row) => PracticeKgCorrespondentContact.make(row)),
+    contacts: A.map(owners, (row) => PracticeKgCorrespondentContact.make(row)),
     links,
     matterFamilyKeys: A.dedupe(
       A.filter(A.getSomes(A.map(links, (link) => O.fromNullishOr(link.familyKey))), (familyKey) =>
         HashSet.has(tables.matterKeys, familyKey)
       )
     ),
-    practiceAddress: isPracticeAddress(tables, address),
+    practiceAddress: A.some(owners, (row) => row.isPracticeAddress) || isPracticeAddress(tables, address),
   });
 };
 
@@ -240,7 +256,8 @@ const unreadable = () => MailTaggingPortError.during("MatterDirectory", "snapsho
  * answer counts, so a candidate, a role mailbox, a practice address, and an
  * address shared by two contacts are never evidence. A row whose address is
  * not a mail address is dropped. One contact listing two spellings of an
- * address is one owner, and an address on the domain of any flagged practice
+ * address is one owner whose role and practice flags are merged with OR across
+ * spellings. An address on the domain or a subdomain of any flagged practice
  * address is a practice address, as the builder flags by domain.
  *
  * **Example** (Read the correspondents of a bundle)

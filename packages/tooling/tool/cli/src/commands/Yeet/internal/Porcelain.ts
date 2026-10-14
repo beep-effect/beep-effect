@@ -203,13 +203,17 @@ const encodeSweepPlan = (plan: SweepPlan): Effect.Effect<string, YeetCommandErro
 const encodeSweepReport = (report: SweepReport): Effect.Effect<string, YeetCommandError> =>
   SweepReportJson.encode(report).pipe(Effect.mapError(YeetCommandError.new("Failed to encode the yeet sweep report.")));
 
-const renderSweepPlanStep = (planStep: SweepPlanStep): ReadonlyArray<string> => [
-  `  ${planStep.id}: ${planStep.action}${planStep.requiresOperator ? " (needs operator)" : ""}`,
-  ...A.map(
-    planStep.preconditions,
-    (precondition) => `    ${precondition.satisfied ? "ok" : "unmet"}: ${precondition.description}`
-  ),
-];
+const renderSweepPlanStep = (planStep: SweepPlanStep): ReadonlyArray<string> =>
+  O.match(planStep.alreadyDone, {
+    onSome: (observation) => [`  ${planStep.id}: nothing to do: ${observation}`],
+    onNone: () => [
+      `  ${planStep.id}: ${planStep.action}${planStep.requiresOperator ? " (needs operator)" : ""}`,
+      ...A.map(
+        planStep.preconditions,
+        (precondition) => `    ${precondition.satisfied ? "ok" : "unmet"}: ${precondition.description}`
+      ),
+    ],
+  });
 
 const renderSweepPlan = (plan: SweepPlan): string =>
   A.join([`[yeet] sweep plan ${plan.branch} (dry run)`, ...A.flatMap(plan.steps, renderSweepPlanStep)], "\n");

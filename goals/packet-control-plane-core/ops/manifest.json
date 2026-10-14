@@ -87,5 +87,6 @@
     "The slice requires candidate-2/3/4 machinery to pass its own proof.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "provides": ["goals/packet-core"]
 }

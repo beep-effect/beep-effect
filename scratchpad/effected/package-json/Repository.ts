@@ -348,7 +348,10 @@ export class Repository extends S.Class<Repository>($I`Repository`)({
 			const host = /^https:\/\/([^/]+)/.exec(url)?.[1];
 			const path = host === undefined ? undefined : O.getOrUndefined(HashMap.get(DIRECTORY_PATHS, host));
 			if (path === undefined) return O.none();
-			return O.some(`${url}/${path}/${A.join(A.map(segments, encodeURIComponent), "/")}`);
+			return O.map(
+				O.all(A.map(segments, (segment) => Result.getSuccess(Result.try(() => encodeURIComponent(segment))))),
+				(encodedSegments) => `${url}/${path}/${A.join(encodedSegments, "/")}`,
+			);
 		});
 	}
 

@@ -1,0 +1,27 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the yaml composer and rules files against the pinned upstream oracle and the round-2 inventory, and report only new findings.The rule and composer changes are in place. Next I’ll probe the cases those fixes can still get wrong: comment-separated flow values, lone-CR diagnostic positions, and folded CRLF scalars.### fable-3-1
+- file: scratchpad/effected/yaml/internal/composer/flow.ts:88
+- class: bug   severity: required
+- standard: D9 behaviour-preserving; D11. The recorded comment-separator repair rejects entries separated only by a comment (`scratchpad/test/yaml/composer-regressions.test.ts:193`). Oracle `validateFlowSeparators` (`packages/yaml/src/internal/composer/flow.ts:54-60`) arms only when `contentAfterColon > 0`.
+- evidence: A colon clears `separatorRequired` and `contentAfterColon` but leaves `sawContent` true (lines 100-111). The next comment therefore sets `separatorRequired` again (line 88). The following value is content, so line 145 emits `MalformedFlowCollection`. For `{foo: #c\n bar}`, `{ "foo": #c\n [1] }`, and `[foo: #c\n bar]`, the comment sits between the colon and that entry's value. The oracle comment arm does not run, because `contentAfterColon` is 0 after the colon, and the value raises it only to 1.
+- failure: A comment between a flow colon and its value is reported as a missing comma. The pinned oracle accepts these documents. `{foo: 1 #c\n bar}` and `[foo #c\n bar]` still need the diagnostic. The existing regression list uses sources with no comma at all, so this extra rejection stays green.
+- fix: Arm `separatorRequired` only when the comment follows content that already closed an entry (`contentAfterColon > 0` for a mapping value, or sequence content with no pending colon). Keep the colon clear for `{foo #c\n: bar}`. Add `{foo: #c\n bar}`, `{ "foo": #c\n [1] }`, and `[foo: #c\n bar}` as acceptance cases beside the existing missing-comma cases.
+
+### fable-3-2
+- file: scratchpad/effected/yaml/internal/rules/document-end.ts:70
+- class: bug   severity: required
+- standard: D9; D11. `endOfStreamPosition` requires `line` and `character` to name `offset`. The admitted CR line split (`YamlLint.ts:210-222`) treats a final lone CR as a break and does not keep it in line text. Upstream `buildLines` (`packages/yaml/src/YamlLint.ts:146-160`) still leaves that CR in the line, so its character equals the offset.
+- evidence: For `"a: 1\r"`, `buildLines` yields one line `"a: 1"` and the next offset is 5. `endsWith("\n")` is false, so the diagnostic is `line: 0`, `character: 4`, `offset: 5`. Character 4 is the CR at offset 4. The LF case `"a: 1\n"` is asserted as line 1, character 0, because that is the offset (`documents-and-keys.test.ts:136-139`). CRLF already matches, because it ends in `\n`. `infer` uses the same helper (line 170).
+- failure: A missing `...` on a lone-CR-terminated stream is reported on the content line, one column before the offset where the fix is inserted. The LF and CRLF reports name that offset. The insertion bytes stay `"\n...\n"`, matching the pinned oracle.
+- fix: Treat a final `\n` or lone `\r` as a trailing break: report the following line at character 0. Leave the inserted text on `endsWith("\n")`. Cover `"a: 1\r"` for both the diagnostic position and the unchanged fix bytes.
+
+### fable-3-3
+- file: scratchpad/effected/yaml/internal/composer/comments.ts:141
+- class: bug   severity: required
+- standard: D9; D11. The recorded composer CR repair recognizes lone CR in line starts, `sameLine`, indentation, and scalar boundaries (`state.ts:50-127`; `composer-regressions.test.ts:224`). `isOwnLineAt` and `isAfterIndicatorOnly` already stop on `\r`. `sameLineSpan` (line 141), `hasBlankLineBetween` (line 117), `blankLineAboveStart` (line 274), `hasBlankLineBelow` (line 381), and `columnAt` (line 467) still search only for `\n`.
+- evidence: `consumeValueNode` classifies a comment with `sameLineSpan` and `buildPairs` sets `trailingOnKey` from it (`block.ts:1365`, `block.ts:1252`). For `a: # kc\r  1\r` there is no `\n`, so the value is treated as same-line and the comment is stored on the value. The LF spelling stores it on the key. The stringifier keeps a key comment on the key line and inlines a scalar whose comment sits on the value (`stringifier.ts:1782-1803`), so the CR document formats as one line `a: 1 # kc`. `blankLineAboveStart` misses `\r\r`, so `a: 1\r\rb: 2\r` does not set `spaceBefore` and formatting drops the blank line that the LF spelling keeps. `columnAt` measures a CR-only `#` from the start of the text, so a column-0 comment after a nested block does not escape at `block.ts:1295`.
+- failure: Lone-CR documents that now compose with the same block structure as LF lose key-line comments, blank lines, and outer-scope comment ownership when formatted. CRLF still works, because those helpers see the `\n`.
+- fix: Use the `getLineStarts` break rule (lone CR, and CRLF once) in `sameLineSpan`, `hasBlankLineBetween`, `blankLineAboveStart`, `hasBlankLineBelow`, and `columnAt`. Pin the three CR cases against their LF twins: key-line comment, blank line between keys, and a column-0 comment after a nested block.
+
+REQUIRED: 3
+BACKLOG: 0

@@ -199,8 +199,8 @@ const isWorkspaceRoot = Effect.fn("isWorkspaceRoot")(function* (dir: string): Ef
 	const path = yield* Path.Path;
 
 	const pnpmWorkspace = yield* fs
-		.exists(path.join(dir, "pnpm-workspace.yaml"))
-		.pipe(Effect.orElseSucceed(() => false));
+		.stat(path.join(dir, "pnpm-workspace.yaml"))
+		.pipe(Effect.map((info) => info.type === "File"), Effect.orElseSucceed(() => false));
 	if (pnpmWorkspace) return true;
 
 	const packageJson = path.join(dir, "package.json");

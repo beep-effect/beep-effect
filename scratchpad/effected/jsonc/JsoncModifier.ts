@@ -15,7 +15,7 @@ import * as Str from "effect/String";
 import { NavigateContainer, NavigateResult, navigate } from "./internal/navigate.ts";
 import { Jsonc, type JsoncStringifyError, JsoncStringifyOptions } from "./Jsonc.ts";
 import { JsoncEdit, JsoncFormattingOptions, JsoncFormattingOptionsLike } from "./JsoncEdit.ts";
-import { JsoncPath } from "./JsoncNode.ts";
+import type { JsoncPath } from "./JsoncNode.ts";
 
 const $I = $ScratchpadId.create("effected/jsonc/JsoncModifier");
 
@@ -51,9 +51,9 @@ const $I = $ScratchpadId.create("effected/jsonc/JsoncModifier");
 export class JsoncModificationError extends S.TaggedError<JsoncModificationError>($I.make("JsoncModificationError"))(
   "JsoncModificationError",
   {
-    path: JsoncPath,
+    path: S.Array(S.Union([S.String, S.Finite])),
     expected: NavigateContainer,
-    depth: S.Natural,
+    depth: S.Finite,
     offset: S.optionalKey(S.Finite),
   },
   $I.annoteError<JsoncModificationError>("JsoncModificationError", {

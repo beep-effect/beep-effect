@@ -38,12 +38,16 @@
 //
 // Registered under the `gfm` dialect only.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { InlineNode } from "../inlineNode.ts";
 import { appendChild, childrenOf, insertAfter, makeInlineNode, unlink } from "../inlineNode.ts";
 import type { InlineConstruct, InlineScanner } from "../inlineTypes.ts";
+
+const $I = $ScratchpadId.create("effected/markdown/internal/inlines/autolinkLiteral");
 
 const C_LOWER_W = 0x77;
 const C_COLON = 0x3a;
@@ -331,11 +335,13 @@ export const urlAutolinkConstruct: InlineConstruct = {
 // --- email literals: the postprocess ----------------------------------------
 
 /** One email run found in a merged text run, in that run's coordinates. */
-interface EmailMatch {
-	readonly from: number;
-	readonly to: number;
-	readonly url: string;
-}
+const EmailMatch = S.Struct({
+	from: S.Natural.annotateKey({ description: "Inclusive start offset in the merged text run." }),
+	to: S.Natural.annotateKey({ description: "Exclusive end offset in the merged text run." }),
+	url: S.String.annotateKey({ description: "Link destination for the matched email address." }),
+}).annotate($I.annote("EmailMatch", { description: "An email link and its offsets within a merged text run." }));
+
+type EmailMatch = typeof EmailMatch.Type;
 
 /**
  * `validate_protocol`: is `protocol` the run immediately left of the address,

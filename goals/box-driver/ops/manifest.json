@@ -303,5 +303,6 @@
     "git diff --check"
   ],
   "statusNote": "Implementation and PR closure shipped in merge commit f306e8ca5b; packet bookkeeping reconciled on 2026-07-14. Initiative status remains externally managed.",
-  "lifecycle": "completed-retained"
+  "lifecycle": "completed-retained",
+  "provides": ["box/driver"]
 }

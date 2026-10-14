@@ -80,3 +80,52 @@ describe("GitHubRelease coverage", () => {
     }));
   });
 });
+
+for (const [field, value] of [
+  ["id", 1.5],
+  ["draft", "false"],
+  ["prerelease", 1],
+  ["name", false],
+  ["body", 42],
+] as const) {
+  const invalid = { ...raw, [field]: value };
+  const { base } = harness([
+    { status: 200, body: invalid },
+    { status: 201, body: invalid },
+    { status: 200, body: [raw, invalid] },
+    { status: 200, body: invalid },
+    { status: 200, body: invalid },
+  ]);
+  it.layer(GitHubRelease.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
+    it.effect(`returns operation-specific release decode failures for invalid ${field}=${value}`, () => Effect.gen(function* () {
+      const service = yield* GitHubRelease;
+      assertFailure(Result.mapError(yield* Effect.result(service.getByTag("v1")), (error) => ({
+        tag: error._tag, kind: error.kind, operation: error.operation,
+      })), { tag: "GitHubError", kind: "decode", operation: "GitHubRelease.getByTag" });
+      assertFailure(Result.mapError(yield* Effect.result(service.create({ tag: "v1" })), (error) => ({
+        tag: error._tag, kind: error.kind, operation: error.operation,
+      })), { tag: "GitHubError", kind: "decode", operation: "GitHubRelease.create" });
+      assertFailure(Result.mapError(yield* Effect.result(service.list()), (error) => ({
+        tag: error._tag, kind: error.kind, operation: error.operation,
+      })), { tag: "GitHubError", kind: "decode", operation: "GitHubRelease.list" });
+      assertFailure(Result.mapError(yield* Effect.result(service.update(1, {})), (error) => ({
+        tag: error._tag, kind: error.kind, operation: error.operation,
+      })), { tag: "GitHubError", kind: "decode", operation: "GitHubRelease.update" });
+      assertFailure(Result.mapError(yield* Effect.result(service.getByTagOption("v1")), (error) => ({
+        tag: error._tag, kind: error.kind, operation: error.operation,
+      })), { tag: "GitHubError", kind: "decode", operation: "GitHubRelease.getByTag" });
+    }));
+  });
+}
+
+for (const size of [1.5, "3", null]) {
+  const { base } = harness([{ status: 200, body: [rawAsset, { ...rawAsset, size }] }]);
+  it.layer(GitHubRelease.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
+    it.effect(`returns a typed asset decode failure for invalid size=${size}`, () => Effect.gen(function* () {
+      const service = yield* GitHubRelease;
+      assertFailure(Result.mapError(yield* Effect.result(service.listAssets(1)), (error) => ({
+        tag: error._tag, kind: error.kind, operation: error.operation,
+      })), { tag: "GitHubError", kind: "decode", operation: "GitHubRelease.listAssets" });
+    }));
+  });
+}

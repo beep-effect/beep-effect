@@ -3,8 +3,8 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { ListItem, Paragraph, Root, TableCell, TableRow } from "../../../effected/markdown/MarkdownNode.ts";
-import { BlockType, RawInlineSegment, flowChildren, listItemChildren, makeBlockNode, tableCellChildren, tableRowChildren } from "../../../effected/markdown/internal/blockTypes.ts";
+import { Heading, ListItem, Paragraph, Root, TableCell, TableRow, Text } from "../../../effected/markdown/MarkdownNode.ts";
+import { BlockContinueResult, BlockStartResult, BlockType, DefinitionData, FootnoteData, PreparedInline, RawInlineSegment, RawInlineSlice, flowChildren, listItemChildren, makeBlockNode, tableCellChildren, tableRowChildren } from "../../../effected/markdown/internal/blockTypes.ts";
 import type { MaterializedBlock } from "../../../effected/markdown/internal/blockTypes.ts";
 
 const runs = { arbitrary: fcRuns(100) };
@@ -61,4 +61,67 @@ it("source-run and block-kind schemas reject invalid domain values", () => {
   }
   for (const type of BlockType.literals) assert.isTrue(S.is(BlockType)(type));
   assert.isFalse(S.is(BlockType)("root"));
+});
+
+it.effect.prop("inline payload schemas round-trip plain records for every inline host", [Arbitrary.schema(S.Struct({
+  text: S.String,
+  startOffset: S.Finite,
+  endOffset: S.Finite,
+  segments: S.Array(RawInlineSegment),
+}))], ([source]) => Effect.gen(function* () {
+  const children = [Text.make({ value: source.text })];
+  const prepared = { ...source, children };
+  assert.isTrue(S.is(PreparedInline)(prepared));
+  const encodedPrepared = yield* S.encodeEffect(PreparedInline)(prepared);
+  const decodedPrepared = yield* S.decodeEffect(PreparedInline)(encodedPrepared);
+  assert.deepStrictEqual(decodedPrepared, prepared);
+  assert.isFalse("_tag" in decodedPrepared);
+  for (const parent of [Paragraph.make({ children }), Heading.make({ depth: 2, children }), TableCell.make({ children })]) {
+    const slice = { parent, text: source.text, startOffset: source.startOffset, segments: source.segments };
+    assert.isTrue(S.is(RawInlineSlice)(slice));
+    const encodedSlice = yield* S.encodeEffect(RawInlineSlice)(slice);
+    const decodedSlice = yield* S.decodeEffect(RawInlineSlice)(encodedSlice);
+    assert.deepStrictEqual(decodedSlice, slice);
+    assert.isFalse("_tag" in decodedSlice);
+  }
+}), runs);
+
+it.effect.prop("definition payload schema round-trips the exact optional title key", [Arbitrary.schema(DefinitionData)], ([definition]) => Effect.gen(function* () {
+  const encoded = yield* S.encodeEffect(DefinitionData)(definition);
+  const decoded = yield* S.decodeEffect(DefinitionData)(encoded);
+  assert.deepStrictEqual(decoded, definition);
+  assert.strictEqual("title" in decoded, "title" in definition);
+  assert.isFalse("_tag" in decoded);
+}), runs);
+
+it.effect.prop("footnote payload schema round-trips normalized and raw labels", [Arbitrary.schema(FootnoteData)], ([footnote]) => Effect.gen(function* () {
+  const encoded = yield* S.encodeEffect(FootnoteData)(footnote);
+  const decoded = yield* S.decodeEffect(FootnoteData)(encoded);
+  assert.deepStrictEqual(decoded, footnote);
+  assert.isFalse("_tag" in decoded);
+}), runs);
+
+it("payload schemas retain required fields and verdict schemas retain numeric codes", () => {
+  const parent = Paragraph.make({ children: [] });
+  const slice = { parent, text: "", startOffset: 0, segments: [] };
+  const prepared = { text: "", startOffset: 0, endOffset: 0, segments: [], children: [] };
+  const definition = { key: "ref", identifier: "ref", label: "Ref", url: "/target" };
+  const footnote = { key: "note", identifier: "note", label: "Note" };
+  assert.isTrue(S.is(RawInlineSlice)(slice));
+  assert.isTrue(S.is(PreparedInline)(prepared));
+  assert.isTrue(S.is(DefinitionData)(definition));
+  assert.isTrue(S.is(DefinitionData)({ ...definition, title: "" }));
+  assert.isTrue(S.is(FootnoteData)(footnote));
+  assert.isFalse(S.is(DefinitionData)({ ...definition, title: undefined }));
+  assert.isFalse(S.is(DefinitionData)({ key: "ref", identifier: "ref", label: "Ref" }));
+  assert.isFalse(S.is(FootnoteData)({ key: "note", identifier: "note" }));
+  assert.isFalse(S.is(RawInlineSlice)({ ...slice, parent: Root.make({ children: [] }) }));
+  assert.isFalse(S.is(RawInlineSlice)({ parent, text: "", startOffset: 0 }));
+  assert.isFalse(S.is(PreparedInline)({ text: "", startOffset: 0, segments: [], children: [] }));
+  assert.isFalse(S.is(PreparedInline)({ ...prepared, children: [Root.make({ children: [] })] }));
+  for (const verdict of [BlockContinueResult, BlockStartResult]) {
+    assert.deepStrictEqual(verdict.literals, [0, 1, 2]);
+    for (const code of [0, 1, 2]) assert.isTrue(S.is(verdict)(code));
+    for (const code of [-1, 3, "0", undefined]) assert.isFalse(S.is(verdict)(code));
+  }
 });

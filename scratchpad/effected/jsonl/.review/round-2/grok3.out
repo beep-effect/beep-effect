@@ -1,0 +1,23 @@
+I'll review the jsonl port at that commit against the pinned upstream oracle and round-1 inventory, and I'll only report new findings.Round 1 is closed and the tree is on the named commit. Next I’ll compare the port’s runtime against the pinned oracle, starting with the small internal modules.I'll pin the two required candidates and the depth-test gap against the oracle, the ledger, and the round-1 inventory before writing the report.### fable-2-1
+- file: scratchpad/effected/jsonl/internal/utf8.ts:37
+- class: perf   severity: required
+- standard: D11 algorithmic-class win; D9 (oracle `packages/jsonl/src/internal/utf8.ts:21-44`)   evidence: `utf8Length` is `encoder.encode(text).length`, which allocates a `Uint8Array` of Θ(encoded bytes) and drops it. `Line.split` calls it once per line (`Line.ts:180`); `decodeRange` and `readFrom` call it once per window (`Journal.ts:683`, `Journal.ts:969`). The pinned oracle counts with `charCodeAt` and allocates nothing, including the unpaired-surrogate to U+FFFD (3 bytes) case. Space per call is Θ(n) versus O(1). Same class as closed R3/fable-1-1 (an intermediate copy of the bytes) at a different site; not in the round-1 inventory and not a ledger deviation. No beep law forces `TextEncoder`; the comment's "Option per code unit" alternative is not what the oracle does.
+- failure: Every split and every window length pays a temporary buffer the size of the text. A journal of N lines allocates Θ(total bytes) of garbage the oracle does not.
+- fix: Restore the oracle in-place loop. The existing property already requires agreement with `TextEncoder`, including lone surrogates.
+
+### fable-2-2
+- file: scratchpad/effected/jsonl/internal/tail.ts:137
+- class: bug   severity: required
+- standard: D9 behaviour-preserving; section 14 (observable difference, not a proposed deviation)   evidence: `windowOf` sets `size: from + length - bomBytes` from the requested length. `readBytes` (`tail.ts:91-100`) stops at the first empty chunk and returns only the bytes obtained. `decodeRange` then sets `torn` when `advanced < window.size` (`Journal.ts:695`). A newline-terminated file shorter than the request still decodes every byte it has: file `42\n`, `readRangeWindow(fs, path, 0, 100, 0)` yields `text === "42\n"`, `start === 0`, `size === 100`, so `advanced === 3` and the result is `JournalUnterminated` with `end: 100`. The oracle `readRangeText` returns only the bytes read, and its `decodeRange` (`Journal.ts:429-461`) advances over terminated lines of that text and does not compare against the request. `Helpers.test.ts:107-118` requests length 100 past EOF but the fixture is unterminated `"é"` and asserts only `text`, so the size lie is unpinned. `readSampledWindow` already treats `bytes.length < page.length` as `JournalResync` (`tail.ts:315-322`). Deviation 1 is a real missing newline; deviation 13 is the historical pager. Neither records this field.
+- failure: Reconcile decides `shrank` from the pre-read stat (`Journal.ts:730`) and then asks `decodeRange` for that same span (`Journal.ts:761`). A truncation or an early EOF after that stat makes a clean remainder look unterminated. `consumed` moves to the short `advanced` (`Journal.ts:777`), `appendWith` refuses with `JournalUnterminated` (`Journal.ts:825`) and publishes `state.entries` without `JournalResync`. The oracle appends. The lost tail is dropped with the wrong tag, and the next stable stat no longer looks truncated.
+- fix: Set `size` from `bytes.length` (`from + bytes.length - bomBytes`). The documented 4-byte request that reads 4 bytes and withholds the byte after the last LF stays `size === 4`. A real withheld suffix still has `advanced < size`. Do not add a deviation.
+
+### fable-2-3
+- file: scratchpad/test/jsonl/Line.test.ts:153
+- class: test   severity: backlog
+- standard: D11 (a weakened test with no shown behaviour break is backlog); oracle `__test__/Line.test.ts:206-217` and `__test__/Envelope.test.ts:116-121`   evidence: Lab depth is `Str.repeat(20000)`. The oracle uses `200_000`, and its Line comment says the depth is there so a throw escaping `parseResult` is a defect. `scratchpad/test/jsonl/Envelope.test.ts:89` uses the same 20_000 depth and parses the nested value through the frame source, while the oracle parses the 200_000 value first and then frames it so a stack blow is specifically a frame traversal of `data`.
+- failure: 20_000 can sit under a stack limit that 200_000 crosses, so the cross-engine defense and the "frame does not traverse `data`" pin are weaker than the oracle tests. No behaviour break is shown on this engine.
+- fix: Restore depth 200_000 in both tests, and build the envelope payload the way the oracle does: parse first, then frame.
+
+REQUIRED: 2
+BACKLOG: 1

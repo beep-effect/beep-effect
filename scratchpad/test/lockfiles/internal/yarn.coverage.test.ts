@@ -1,10 +1,61 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
+import { Lockfile } from "../../../effected/lockfiles/Lockfile.ts";
 import { parseYarn } from "../../../effected/lockfiles/internal/yarn.ts";
 import { Yaml } from "../../../effected/yaml/index.ts";
 
 describe("Yarn descriptor and identity boundaries", () => {
+  it.effect("records a compound descriptor targeting a skipped row as unresolved", () => Effect.gen(function* () {
+    const lockfile = yield* Lockfile.parse(yield* Yaml.stringify({
+      __metadata: { version: 8 },
+      "consumer@npm:1": { version: "1", dependencies: { ghost: "npm:1" } },
+      ", ghost@npm:1": { version: "1", resolution: "ghost@npm:1" },
+    }), { format: "yarn" });
+    assert.deepStrictEqual(A.map(lockfile.packages, (pkg) => ({
+      name: pkg.name, resolved: pkg.resolved, unresolvedEdges: pkg.unresolvedEdges,
+    })), [{ name: "consumer", resolved: {}, unresolvedEdges: ["ghost"] }]);
+    assertNone(lockfile.packageByInstanceId("ghost@npm:1"));
+    for (const pkg of lockfile.packages) {
+      for (const instanceId of R.values(pkg.resolved)) lockfile.packageByInstanceId(instanceId).pipe(O.isSome, assertTrue);
+    }
+  }));
+
+  it.effect("records an unsupported-protocol descriptor targeting a skipped row as unresolved", () => Effect.gen(function* () {
+    const lockfile = yield* Lockfile.parse(yield* Yaml.stringify({
+      __metadata: { version: 8 },
+      "ghost@not-a-protocol": {},
+      "real@npm:1.0.0": { dependencies: { ghost: "not-a-protocol" } },
+    }), { format: "yarn" });
+    assert.deepStrictEqual(A.map(lockfile.packages, (pkg) => ({
+      name: pkg.name, resolved: pkg.resolved, unresolvedEdges: pkg.unresolvedEdges,
+    })), [{ name: "real", resolved: {}, unresolvedEdges: ["ghost"] }]);
+    assertNone(lockfile.packageByInstanceId("ghost@not-a-protocol"));
+    for (const pkg of lockfile.packages) {
+      for (const instanceId of R.values(pkg.resolved)) lockfile.packageByInstanceId(instanceId).pipe(O.isSome, assertTrue);
+    }
+  }));
+
+  it.effect("preserves skipped-row aliases to emitted locators and descriptor overwrite precedence", () => Effect.gen(function* () {
+    const lockfile = yield* Lockfile.parse(yield* Yaml.stringify({
+      __metadata: { version: 8 },
+      "consumer@npm:1": { dependencies: { ghost: "npm:1" } },
+      "ghost@npm:1": { resolution: "ghost@npm:previous" },
+      "real@npm:1": { resolution: "real@npm:1" },
+      ", ghost@npm:1": { resolution: "real@npm:1" },
+    }), { format: "yarn" });
+    assert.strictEqual(lockfile.packages.length, 3);
+    assert.deepStrictEqual(A.map(lockfile.packagesNamed("consumer"), (pkg) => ({
+      resolved: pkg.resolved, unresolvedEdges: pkg.unresolvedEdges,
+    })), [{ resolved: { ghost: "real@npm:1" }, unresolvedEdges: [] }]);
+    for (const pkg of lockfile.packages) {
+      for (const instanceId of R.values(pkg.resolved)) lockfile.packageByInstanceId(instanceId).pipe(O.isSome, assertTrue);
+    }
+  }));
+
   it.effect("skips malformed names and empty identities without losing valid defaulted rows", () => Effect.gen(function* () {
     const content = yield* Yaml.stringify({
       "": {},

@@ -38,12 +38,12 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import { Git, NotARepositoryError, UnknownRefError } from "../../../effected/git/Git.ts";
+import { Git, GitCommandError, NotARepositoryError, UnknownRefError } from "../../../effected/git/Git.ts";
 import { runCollected } from "../../../effected/git/internal/run.ts";
 
 const $I = $ScratchpadId.create("effected/git/GitSurface.int.test");
 
-class FixtureSetupError extends S.TaggedError<FixtureSetupError>($I`FixtureSetupError`)(
+class FixtureSetupError extends S.TaggedError<FixtureSetupError, { readonly brand: unique symbol }>($I`FixtureSetupError`)(
 	"FixtureSetupError",
 	{ message: S.String.annotate({ description: "The failing Git invocation, exit code and stderr." }) },
 	$I.annote("FixtureSetupError", { description: "A real Git fixture command exited unsuccessfully." }),
@@ -300,6 +300,39 @@ it.layer(SharedTestLayer, { timeout: "30 seconds" })("Git surface — introspect
 			assert.strictEqual(info.message, expectedMessage);
 		}),
 	);
+
+	it.effect("commitInfo ignores repository signature banners and preserves the exact message", () =>
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const previous = yield* git.configGet(dirA, "log.showSignature", { scope: "local" });
+			const restore = O.match(previous, {
+				onSome: (value) => runFixtureGit(dirA, ["config", "--local", "log.showSignature", value]),
+				onNone: () => runFixtureGit(dirA, ["config", "--local", "--unset", "log.showSignature"]),
+			});
+			yield* Effect.gen(function* () {
+				yield* runFixtureGit(dirA, ["config", "--local", "log.showSignature", "true"]);
+				const info = yield* git.commitInfo(dirA);
+				assert.strictEqual(info.sha, yield* git.revParse(dirA, "HEAD"));
+				assert.strictEqual(info.signatureStatus, "N");
+				assert.strictEqual(info.message, yield* runFixtureGit(dirA, ["log", "--no-show-signature", "-1", "--format=%B"]));
+			}).pipe(Effect.ensuring(restore));
+		}),
+	);
+
+	it.effect("commitInfo returns a typed failure when a tree ref selects no commit", () =>
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const ref = "HEAD^{tree}";
+			assert.strictEqual(yield* runFixtureGit(dirA, ["log", "--no-show-signature", "-1", "--format=%H%x00%G?%x00%B", ref]), "");
+			const error = yield* Effect.flip(git.commitInfo(dirA, ref));
+			assert.instanceOf(error, GitCommandError);
+			if (!S.is(GitCommandError)(error)) return;
+			assert.strictEqual(error.kind, "failed");
+			assert.deepStrictEqual(error.args, ["log", "--no-show-signature", "-1", "--format=%H%x00%G?%x00%B", ref]);
+			assert.strictEqual(error.cwd, dirA);
+			assert.include(error.detail, "unparseable commitInfo output");
+		}),
+	);
 });
 
 it.layer(SharedTestLayer, { timeout: "30 seconds" })("Git surface — submodule/fetch pair (fixture B)", (it) => {
@@ -552,6 +585,22 @@ it.layer(SharedTestLayer, { timeout: "30 seconds" })("Git.log — history reposi
 			const merged = unfollowed.find((entry) => entry.paths.length === 0);
 			assert.isDefined(merged);
 			assert.isUndefined(followed.find((entry) => entry.sha === merged?.sha));
+		}),
+	);
+
+	it.effect("log ignores repository signature banners without changing history", () =>
+		Effect.gen(function* () {
+			const git = yield* Git;
+			const expected = yield* git.log(dirC);
+			const previous = yield* git.configGet(dirC, "log.showSignature", { scope: "local" });
+			const restore = O.match(previous, {
+				onSome: (value) => runFixtureGit(dirC, ["config", "--local", "log.showSignature", value]),
+				onNone: () => runFixtureGit(dirC, ["config", "--local", "--unset", "log.showSignature"]),
+			});
+			yield* Effect.gen(function* () {
+				yield* runFixtureGit(dirC, ["config", "--local", "log.showSignature", "true"]);
+				assert.deepStrictEqual(yield* git.log(dirC), expected);
+			}).pipe(Effect.ensuring(restore));
 		}),
 	);
 

@@ -1,4 +1,6 @@
 import * as F from "effect/Function";
+import { expectTypeOf } from "@effect/vitest";
+import * as P from "effect/Predicate";
 import * as Data from "effect/Data";
 import { assert, describe, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
@@ -246,23 +248,22 @@ describe("CliRuntime.reported", () => {
 		}
 	}
 
-	it.effect("returns the same typed instance, so catchTags narrows without a cast", () =>
+	it.effect("returns the same typed instance, with explicit narrowing for wrapper recovery", () =>
 		Effect.gen(function* () {
 			const error = new GateError(2);
 			const marked = CliRuntime.reported(error, 1);
 
-			// The overload's contract at the type level: no cast, no widening.
+			// A wrapper is possible; narrow before accessing the original subtype.
+			if (!(marked instanceof GateError)) return yield* Effect.fail(marked);
 			const typed: GateError = marked;
 			assert.strictEqual(typed, error);
 			assert.strictEqual(typed.count, 2);
 			assert.strictEqual(Runtime.getErrorExitCode(typed), 1);
 			assert.strictEqual(Runtime.getErrorReported(typed), false);
 
-			// The narrowing the issue exists for: the failure channel keeps the
-			// tag, so catchTags compiles against it directly. If `reported` ever
-			// widens to plain Error again, this line stops compiling.
+			// Recover only the preserved typed instance, leaving wrappers as failures.
 			const recovered = yield* Effect.fail(CliRuntime.reported(new GateError(3), 1)).pipe(
-				Effect.catchTags({ GateError: (caught) => Effect.succeed(caught.count) }),
+				Effect.catchIf((caught): caught is GateError => caught instanceof GateError, (caught) => Effect.succeed(caught.count)),
 			);
 			assert.strictEqual(recovered, 3);
 		}),
@@ -275,6 +276,20 @@ describe("CliRuntime.reported", () => {
 		assert.strictEqual(asError.message, "boom");
 		assert.strictEqual(Runtime.getErrorExitCode(asError), 3);
 		assert.strictEqual(Runtime.getErrorReported(asError), false);
+	});
+
+	it("wraps a structural Error without advertising its stripped subtype fields", () => {
+		const lookalike = { name: "Error", message: "boom", _tag: "RemoteError", code: 42 };
+		const marked = CliRuntime.reported(lookalike, 7);
+		expectTypeOf(marked).toEqualTypeOf<Error | typeof lookalike>();
+		expectTypeOf(marked).not.toExtend<{ readonly code: number }>();
+		expectTypeOf(marked).not.toExtend<{ readonly _tag: string }>();
+		assert.notStrictEqual(marked, lookalike);
+		assert.isTrue(marked instanceof Error);
+		assert.isFalse(P.hasProperty(marked, "code"));
+		assert.isTrue(P.isTagged("CliRuntimeError")(marked));
+		assert.strictEqual(Runtime.getErrorExitCode(marked), 7);
+		assert.strictEqual(Runtime.getErrorReported(marked), false);
 	});
 
 	it("defaults the exit code to 1", () => {

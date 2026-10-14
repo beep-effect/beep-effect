@@ -39,6 +39,10 @@ unit.
 
 ## Latest Evidence
 
+- 2026-10-13: #1537 closes the correspondent lookup follow-up from #1525:
+  owner role/practice flags are merged across normalized spellings, and
+  flagged practice domains exclude unflagged subdomain siblings. Synthetic
+  DuckDB fixtures cover both traps; D-47 records the rule.
 - 2026-10-06: backfill since 2026-07-01 on the attorney's mailbox: 300 more
   matter tags, 24 review, 20 USPTO; filing on, nothing routable
   ([record](history/2026-10-06-backfill-attorney-mailbox.md)).

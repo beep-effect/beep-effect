@@ -46,7 +46,7 @@ const $I = $ScratchpadId.create("effected/glob/GlobPattern");
  * @category errors
  * @since 0.0.0
  */
-export class GlobPatternError extends S.TaggedError<GlobPatternError>($I`GlobPatternError`)("GlobPatternError", {
+export class GlobPatternError extends S.TaggedError<GlobPatternError, { readonly brand: unique symbol }>($I`GlobPatternError`)("GlobPatternError", {
 	/**
 	 * The pattern source that was rejected.
 	 *
@@ -131,7 +131,7 @@ export class GlobPatternError extends S.TaggedError<GlobPatternError>($I`GlobPat
  * @category schemas
  * @since 0.0.0
  */
-export class GlobPatternOptions extends S.Class<GlobPatternOptions>($I`GlobPatternOptions`)({
+export class GlobPatternOptions extends S.Class<GlobPatternOptions, { readonly brand: unique symbol }>($I`GlobPatternOptions`)({
 	/**
 	 * Do not expand `{x,y}` style braces.
 	 *
@@ -328,7 +328,7 @@ const compilesUnderDefaults = (source: string): true | string => {
  * @category models
  * @since 0.0.0
  */
-export class GlobPattern extends S.Class<GlobPattern>($I`GlobPattern`)(
+export class GlobPattern extends S.Class<GlobPattern, { readonly brand: unique symbol }>($I`GlobPattern`)(
 	S.Struct({ source: S.String.annotateKey({ description: "The glob pattern source, preserved verbatim." }) }).check(
 		S.makeFilter((v) => compilesUnderDefaults(v.source), $I.annote("CompilesUnderDefaults", {
 			title: "compilable glob pattern",

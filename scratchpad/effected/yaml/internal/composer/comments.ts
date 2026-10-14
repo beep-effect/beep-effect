@@ -114,7 +114,7 @@ export const hasBlankLineBetween: {
 } = dual(3, (text: string, start: number, end: number): boolean => {
 	if (start < 0) return false;
 	const gap = text.slice(Math.max(0, start), Math.max(0, end));
-	return /\n[ \t\r]*\n/.test(gap);
+	return /(?:\r\n|\r(?!\n)|\n)[ \t]*(?:\r\n|\r|\n)/.test(gap);
 });
 
 /**
@@ -138,7 +138,7 @@ export const sameLineSpan: {
 	(text: string, start: number, end: number): boolean;
 } = dual(3, (text: string, start: number, end: number): boolean => {
 	if (start < 0) return false;
-	return !text.slice(Math.max(0, start), Math.max(0, end)).includes("\n");
+	return !/[\r\n]/.test(text.slice(Math.max(0, start), Math.max(0, end)));
 });
 
 /**
@@ -271,10 +271,12 @@ export const blankLineAboveStart: {
 	(offset: number): (text: string) => number;
 	(text: string, offset: number): number;
 } = dual(2, (text: string, offset: number): number => {
-	const lineBreak = text.lastIndexOf("\n", Math.max(0, offset - 1));
+	const before = Math.max(0, offset - 1);
+	const lineBreak = Math.max(text.lastIndexOf("\n", before), text.lastIndexOf("\r", before));
 	if (lineBreak < 0) return -1;
-	const prevBreak = text.lastIndexOf("\n", lineBreak - 1);
-	const prevLine = text.slice(prevBreak + 1, lineBreak);
+	const prevEnd = text[lineBreak] === "\n" && text[lineBreak - 1] === "\r" ? lineBreak - 1 : lineBreak;
+	const prevBreak = prevEnd > 0 ? Math.max(text.lastIndexOf("\n", prevEnd - 1), text.lastIndexOf("\r", prevEnd - 1)) : -1;
+	const prevLine = text.slice(prevBreak + 1, prevEnd);
 	return prevLine.trim() === "" ? prevBreak + 1 : -1;
 });
 
@@ -378,11 +380,13 @@ export const hasBlankLineBelow: {
 	(offset: number): (text: string) => boolean;
 	(text: string, offset: number): boolean;
 } = dual(2, (text: string, offset: number): boolean => {
-	const lineEnd = text.indexOf("\n", Math.max(0, offset));
-	if (lineEnd < 0) return false;
-	const nextEnd = text.indexOf("\n", lineEnd + 1);
-	if (nextEnd < 0) return false;
-	return text.slice(lineEnd + 1, nextEnd).trim() === "";
+	let lineEnd = Math.max(0, offset);
+	while (lineEnd < text.length && text[lineEnd] !== "\n" && text[lineEnd] !== "\r") lineEnd++;
+	if (lineEnd >= text.length) return false;
+	const nextStart = lineEnd + (text[lineEnd] === "\r" && text[lineEnd + 1] === "\n" ? 2 : 1);
+	let nextEnd = nextStart;
+	while (nextEnd < text.length && text[nextEnd] !== "\n" && text[nextEnd] !== "\r") nextEnd++;
+	return nextEnd < text.length && text.slice(nextStart, nextEnd).trim() === "";
 });
 
 /**
@@ -464,7 +468,7 @@ export const columnAt: {
 	(text: string, offset: number): number;
 } = dual(2, (text: string, offset: number): number => {
 	if (offset <= 0) return 0;
-	const lineStart = text.lastIndexOf("\n", offset - 1) + 1;
+	const lineStart = Math.max(text.lastIndexOf("\n", offset - 1), text.lastIndexOf("\r", offset - 1)) + 1;
 	const bom = text[lineStart] === "\uFEFF" && offset > lineStart ? 1 : 0;
 	return offset - lineStart - bom;
 });

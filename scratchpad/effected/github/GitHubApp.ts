@@ -1,6 +1,8 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Scope from "effect/Scope";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
+import * as Fiber from "effect/Fiber";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
@@ -582,8 +584,8 @@ export class GitHubApp extends Context.Service<GitHubApp, GitHubAppShape>()($I`G
 	): Layer.Layer<GitHubClient, GitHubAppError> =>
 		Layer.effect(
 			GitHubClient,
-			Effect.flatMap(GitHubApp, (app) => makeRotatingClient(app, request, options)),
-		).pipe(Layer.provide(GitHubApp.layerWith(options)));
+			makeRotatingClient(request, options),
+		);
 
 	/**
 	 * An in-memory double; unstubbed members die naming themselves.
@@ -711,19 +713,43 @@ const asBearer = (
 const appFailure = (kind: GitHubAppError["kind"]) => (error: GitHubError) =>
 	Effect.fail(GitHubAppError.of(kind, error.reason, error));
 
-function makeApp(options: GitHubAppOptions): Effect.Effect<GitHubAppShape> {
+// Selected wire fields are decoded before projection; unrelated response fields stay ignored.
+const InstallationResponse = S.Struct({
+	id: S.Union([S.Finite, S.BigInt]),
+	account: S.Struct({ login: S.optional(S.String) }).pipe(S.NullOr, S.optional),
+}).annotate($I.annote("InstallationResponse", { description: "Selected GitHub installation fields." }));
+const IdentityResponse = S.Struct({
+	slug: S.String.pipe(S.NullOr, S.optional),
+	name: S.String,
+}).annotate($I.annote("IdentityResponse", { description: "Selected GitHub App identity fields." }));
+const BotResponse = S.Struct({ id: S.Union([S.Finite, S.BigInt]) })
+	.annotate($I.annote("BotResponse", { description: "The GitHub App bot identifier." }));
+const ObservedCredential = S.Struct({ token: S.String })
+	.annotate($I.annote("ObservedCredential", { description: "A received credential that can be revoked." }));
+const TokenResponse = S.Struct({
+	token: S.String,
+	expires_at: S.String,
+	permissions: S.optionalKey(S.Unknown),
+}).annotate($I.annote("TokenResponse", { description: "Selected installation-token response fields." }));
+
+const decodeFailure = (kind: GitHubAppError["kind"]) => (error: S.SchemaError) =>
+	GitHubAppError.of(kind, `GitHub returned an unexpected ${kind} payload`, error);
+
+function makeApp(
+	options: GitHubAppOptions,
+	observe: (credential: Redacted.Redacted<string>) => Effect.Effect<void> = () => Effect.void,
+): Effect.Effect<GitHubAppShape> {
 	return Effect.sync(() => {
 		const installations = Effect.fn("GitHubApp.installations")(function* (credentials: AppCredentials) {
 			const client = yield* asApp(credentials, options);
 			const raw = yield* client.paginate("GET /app/installations", {}).pipe(Effect.catch(appFailure("installation")));
-			return raw.map((entry) =>
-				Installation.make({
-					id: numericId(entry.id),
-					...(entry.account !== null && entry.account !== undefined && "login" in entry.account
-						? { account: entry.account.login }
-						: {}),
-				}),
-			);
+			return yield* Effect.forEach(raw, Effect.fnUntraced(function* (entry) {
+				const wire = yield* S.decodeEffect(InstallationResponse)(entry);
+				return yield* S.decodeEffect(Installation)({
+					id: numericId(wire.id),
+					...O.getSomesStruct({ account: O.fromNullishOr(wire.account?.login) }),
+				});
+			}, Effect.mapError(decodeFailure("installation"))));
 		});
 
 		const resolveInstallationId = (request: TokenRequest): Effect.Effect<number, GitHubAppError> =>
@@ -752,23 +778,28 @@ function makeApp(options: GitHubAppOptions): Effect.Effect<GitHubAppShape> {
 							);
 					});
 
-		const token = Effect.fn("GitHubApp.token")(function* (request: TokenRequest) {
-			const installationId = yield* resolveInstallationId(request);
-			const client = yield* asApp(request, options);
-			const minted = yield* client
-				.request("POST /app/installations/{installation_id}/access_tokens", { installation_id: installationId })
-				.pipe(Effect.catch(appFailure("token")));
-			return yield* S.decodeEffect(InstallationToken)({
-				token: minted.token,
-				expiresAt: minted.expires_at,
-				installationId,
-				permissions: normalizePermissions(minted.permissions),
-			}).pipe(
-				Effect.catchTag("SchemaError", (error) =>
-					Effect.fail(GitHubAppError.of("token", "GitHub returned an unexpected token payload", error)),
-				),
-			);
-		});
+		const token = Effect.fn("GitHubApp.token")((request: TokenRequest) =>
+			Effect.uninterruptibleMask(Effect.fnUntraced(function* (restore) {
+				const installationId = yield* restore(resolveInstallationId(request));
+				const client = yield* restore(asApp(request, options));
+				const minted = yield* restore(client
+					.request("POST /app/installations/{installation_id}/access_tokens", { installation_id: installationId })
+					.pipe(Effect.catch(appFailure("token"))));
+				// Only the HTTP wait is restored above. Own a received string credential
+				// while masked, even if its other fields fail decoding or decoding yields.
+				const observed = S.decodeOption(ObservedCredential)(minted);
+				if (O.isSome(observed)) yield* observe(Redacted.make(observed.value.token));
+				return yield* restore(Effect.gen(function* () {
+					const wire = yield* S.decodeEffect(TokenResponse)(minted);
+					return yield* S.decodeEffect(InstallationToken)({
+						token: wire.token,
+						expiresAt: wire.expires_at,
+						installationId,
+						permissions: normalizePermissions(wire.permissions),
+					});
+				}).pipe(Effect.mapError(decodeFailure("token"))));
+			})),
+		);
 
 		const revoke = Effect.fn("GitHubApp.revoke")(function* (value: Redacted.Redacted<string>) {
 			const client = yield* asBearer(value, options);
@@ -786,18 +817,23 @@ function makeApp(options: GitHubAppOptions): Effect.Effect<GitHubAppShape> {
 			if (app === null) {
 				return yield*GitHubAppError.of("identity", "GET /app returned no app");
 			}
-			const slug = app.slug ?? "";
-			const name = app.name;
+			const wire = yield* S.decodeEffect(IdentityResponse)(app)
+				.pipe(Effect.mapError(decodeFailure("identity")));
+			const slug = wire.slug ?? "";
+			const name = wire.name;
 			// `GET /users/{slug}[bot]` rejects an app JWT, so this bears the
 			// installation token when one was supplied and otherwise runs
 			// unauthenticated — 60 requests per hour per IP.
 			const userClient = yield* asBearer(request.installationToken, options);
 			const user = yield* userClient.request("GET /users/{username}", { username: `${slug}[bot]` }).pipe(Effect.option);
-			return AppIdentity.make({
+			const bot = O.isSome(user)
+				? O.some(yield* S.decodeEffect(BotResponse)(user.value).pipe(Effect.mapError(decodeFailure("identity"))))
+				: O.none();
+			return yield* S.decodeEffect(AppIdentity)({
 				slug,
 				name,
-				...(O.isSome(user) ? { userId: numericId(user.value.id) } : {}),
-			});
+				...O.getSomesStruct({ userId: O.map(bot, (value) => numericId(value.id)) }),
+			}).pipe(Effect.mapError(decodeFailure("identity")));
 		});
 
 		return { token, scopedToken, revoke, identity, installations };
@@ -807,12 +843,8 @@ function makeApp(options: GitHubAppOptions): Effect.Effect<GitHubAppShape> {
 /** GitHub's permission values are strings; anything else is not a permission. */
 const normalizePermissions = (raw: unknown): Record<string, string> => {
 	if (!P.isObjectOrArray(raw)) return {};
-	const out: Record<string, string> = {};
 	const entries = P.isObject(raw) ? R.toEntries(raw) : R.toEntries<keyof typeof raw & string, unknown>(raw);
-	for (const [key, value] of entries) {
-		if (P.isString(value)) out[key] = value;
-	}
-	return out;
+	return R.fromEntries(A.filter(entries, (entry): entry is [string, string] => P.isString(entry[1])));
 };
 
 /**
@@ -826,16 +858,18 @@ const normalizePermissions = (raw: unknown): Record<string, string> => {
  * exists at a time and the scope's release revokes the last of them.
  */
 const makeRotatingClient = Effect.fn("makeRotatingClient")(function* (
-	app: GitHubAppShape,
 	request: TokenRequest,
 	options: GitHubAppOptions,
 ): Effect.fn.Return<GitHubClientShape, GitHubAppError, Scope.Scope> {
 	const held = yield* Ref.make(O.none<{ token: InstallationToken; client: GitHubClientShape }>());
-	const owned = yield* Ref.make(O.none<InstallationToken>());
+	const owned = yield* Ref.make(O.none<Redacted.Redacted<string>>());
+	const app = yield* makeApp(options, (credential) => Ref.set(owned, O.some(credential)));
+	const inFlight = yield* Ref.make(O.none<Fiber.Fiber<GitHubClientShape, GitHubAppError>>());
+	const closed = yield* Ref.make(false);
 	const rotation = yield* Semaphore.make(1);
 
 	const revokeHeld = Effect.flatMap(Ref.get(owned), (current) =>
-		O.isSome(current) ? Effect.ignore(app.revoke(current.value.token)) : Effect.void,
+		O.isSome(current) ? Effect.ignore(app.revoke(current.value)) : Effect.void,
 	);
 
 	const rotate = Effect.uninterruptibleMask(
@@ -843,31 +877,43 @@ const makeRotatingClient = Effect.fn("makeRotatingClient")(function* (
 			yield* restore(revokeHeld);
 			yield* Ref.set(owned, O.none());
 			const minted = yield* restore(app.token(request));
-			// Retain the acquired token before restoring interruption for client
-			// construction: scope cleanup must own it even if construction stops.
-			yield* Ref.set(owned, O.some(minted));
+			// The mint observer already owns the raw credential before decoding.
+			// Ownership stays masked across this handoff to client construction.
 			const client = yield* restore(makeClientShape({ ...options, token: minted.token }));
 			yield* Ref.set(held, O.some({ token: minted, client }));
 			return client;
 		}),
 	);
 
-	// Register cleanup before interruptible acquisition so failed construction
-	// also releases any token whose ownership has already transferred to us.
-	yield* Effect.addFinalizer(() => revokeHeld.pipe(rotation.withPermits(1)));
-
-	// Mint eagerly so a misconfigured app fails at layer construction, where
-	// the error is a `GitHubAppError` a caller can read, rather than on the
-	// first request as an opaque authorization failure.
-	yield* rotate;
-
 	/** The live client, re-minting first if the held token is spent. */
-	const fresh: Effect.Effect<GitHubClientShape, GitHubAppError> = Effect.gen(function* () {
+	const refresh = Effect.gen(function* () {
 		const now = yield* Clock.currentTimeMillis;
 		const state = yield* Ref.get(held);
 		if (O.isSome(state) && !state.value.token.isExpired(now)) return state.value.client;
 		return yield* rotate;
-	}).pipe(rotation.withPermits(1));
+	});
+	const fresh = Effect.uninterruptibleMask(Effect.fnUntraced(function* (restore) {
+		if (yield* Ref.get(closed)) return yield* Effect.interrupt;
+		const fiber = yield* Effect.forkChild(refresh, { uninterruptible: false });
+		yield* Ref.set(inFlight, O.some(fiber));
+		return yield* restore(Fiber.join(fiber)).pipe(
+			Effect.ensuring(Fiber.interrupt(fiber)),
+			Effect.ensuring(Ref.set(inFlight, O.none())),
+		);
+	})).pipe(rotation.withPermits(1));
+
+	// Closing never waits for the rotation permit: prevent new work, stop and
+	// join the active child, then revoke the credential it last transferred.
+	yield* Effect.addFinalizer(Effect.fnUntraced(function* () {
+		yield* Ref.set(closed, true);
+		const active = yield* Ref.get(inFlight);
+		if (O.isSome(active)) yield* Fiber.interrupt(active.value);
+		yield* revokeHeld;
+		yield* Ref.set(owned, O.none());
+	}));
+
+	// Mint eagerly so bad credentials fail layer construction in the App channel.
+	yield* fresh;
 
 	// A credential failure is reported in the channel the caller is already
 	// handling: "could not authenticate" IS an authorization failure from a

@@ -86,7 +86,7 @@ interface Classified {
  * @category models
  * @since 0.0.0
  */
-export class GlobSet extends S.Class<GlobSet>($I`GlobSet`)(
+export class GlobSet extends S.Class<GlobSet, { readonly brand: unique symbol }>($I`GlobSet`)(
 	S.Struct({ patterns: S.Array(S.String).annotateKey({ description: "The ordered include and exclusion pattern sources, preserved verbatim." }) }).check(
 		S.makeFilter((v) => allCompileUnderDefaults(v.patterns), $I.annote("AllCompileUnderDefaults", {
 			title: "compilable glob pattern set",

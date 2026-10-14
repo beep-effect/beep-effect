@@ -6,6 +6,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import * as A from "effect/Array";
+import * as P from "effect/Predicate";
 import type { LintLine } from "../../YamlLintRule.ts";
 import type { YamlNode, YamlScalar } from "../../YamlNode.ts";
 import { YamlScalar as Scalar, YamlMap, YamlSeq } from "../../YamlNode.ts";
@@ -147,7 +148,8 @@ export type ScalarRole = typeof ScalarRole.Type;
  *
  * Mapping keys and values receive their respective roles; sequence elements receive
  * the `item` role. A scalar at the starting node receives the supplied role.
- * Null nodes and aliases are skipped.
+ * Null nodes and aliases are skipped. With `excludeMappingKeys`, entire mapping-key
+ * subtrees are skipped while visited scalars retain their immediate-parent roles.
  *
  * **Example** (Visit a root scalar)
  *
@@ -165,23 +167,23 @@ export type ScalarRole = typeof ScalarRole.Type;
  * @since 0.0.0
  */
 export const walkScalars: {
-	(role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): (node: YamlNode | null) => void;
-	(node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): void;
-} = dual(3, (node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void): void => {
-	if (node === null) return;
+	(role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void, excludeMappingKeys?: boolean): (node: YamlNode | null) => void;
+	(node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void, excludeMappingKeys?: boolean): void;
+} = dual((args) => !P.isString(args[0]), (node: YamlNode | null, role: ScalarRole, visit: (scalar: YamlScalar, role: ScalarRole) => void, excludeMappingKeys: boolean = false): void => {
+	if (node === null || (excludeMappingKeys && role === "key")) return;
 	if (isScalar(node)) {
 		visit(node, role);
 		return;
 	}
 	if (isMap(node)) {
 		for (const pair of node.items) {
-			walkScalars(pair.key, "key", visit);
-			walkScalars(pair.value, "value", visit);
+			walkScalars(pair.key, "key", visit, excludeMappingKeys);
+			walkScalars(pair.value, "value", visit, excludeMappingKeys);
 		}
 		return;
 	}
 	if (isSeq(node)) {
-		for (const item of node.items) walkScalars(item, "item", visit);
+		for (const item of node.items) walkScalars(item, "item", visit, excludeMappingKeys);
 	}
 });
 

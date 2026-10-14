@@ -24,6 +24,8 @@ import * as HashSet from "effect/HashSet";
 import * as Str from "effect/String";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import { constVoid } from "effect/Function";
 
 const $I = $ScratchpadId.create("effected/npm/ReleaseAgeGate");
 
@@ -130,7 +132,7 @@ const matchesPattern = (name: string, pattern: string): boolean => {
 };
 
 const matchesExclude = (name: string, patterns: readonly string[]): boolean =>
-	patterns.some((pattern) => matchesPattern(name, pattern));
+	A.some(patterns, (pattern) => matchesPattern(name, pattern));
 
 /**
  * pnpm's publish-time release-age gate: the number of minutes a published
@@ -218,11 +220,12 @@ export class ReleaseAgeGate extends S.Class<ReleaseAgeGate>($I`ReleaseAgeGate`)(
 	 * @since 0.0.0
 	 */
 	static combine(...contributions: readonly PartialReleaseAgeGate[]): ReleaseAgeGate {
-		const ages = contributions
-			.map((contribution) => contribution.ageMinutes)
-			.filter((age): age is number => P.isNumber(age) && Number.isFinite(age));
+		const ages = A.filterMap(contributions, (contribution) => {
+			const age = contribution.ageMinutes;
+			return Result.fromOption(P.isNumber(age) && Number.isFinite(age) ? O.some(age) : O.none(), constVoid);
+		});
 		const ageMinutes = ages.length > 0 ? Math.max(0, ...ages) : 0;
-		const exclude = A.sort(A.fromIterable(HashSet.fromIterable(contributions.flatMap((contribution) => contribution.exclude ?? []))), Str.Order);
+		const exclude = A.sort(A.fromIterable(HashSet.fromIterable(A.flatMap(contributions, (contribution) => contribution.exclude ?? []))), Str.Order);
 		return ReleaseAgeGate.make({ ageMinutes, exclude });
 	}
 
@@ -325,7 +328,7 @@ export class ReleaseAgeGate extends S.Class<ReleaseAgeGate>($I`ReleaseAgeGate`)(
 	): readonly string[] {
 		if (this.ageMinutes <= 0 || this.isExcluded(name)) return versions;
 		const cutoff = now - this.ageMinutes * MS_PER_MINUTE;
-		return versions.filter((version) => {
+		return A.filter(versions, (version) => {
 			const time = times[version];
 			if (time === undefined) return false;
 			return O.exists(

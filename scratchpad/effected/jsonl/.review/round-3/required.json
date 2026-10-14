@@ -1,0 +1,35 @@
+{
+  "module": "jsonl",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/jsonl/Envelope.ts",
+        "scratchpad/effected/jsonl/internal/merge.ts"
+      ],
+      "tests": [
+        "scratchpad/test/jsonl/Journal.test.ts",
+        "scratchpad/test/jsonl/EnvelopePatch.test.ts",
+        "scratchpad/test/jsonl/merge.test.ts"
+      ],
+      "findings": [
+        "grok-3-1",
+        "fable-3-1"
+      ]
+    }
+  ],
+  "findings": {
+    "grok-3-1": {
+      "file": "scratchpad/effected/jsonl/Envelope.ts",
+      "class": "bug",
+      "summary": "Patch encoding does not traverse root Suspend nodes or relax class declarations reached from union/suspended wire targets, so valid upstream patches fail InvalidData and write nothing.",
+      "fix": "Extend patchAst lazily through Suspend and structural Objects/Union/Suspend encoding targets with per-codec identity memoization in owned state, without native Map. Preserve annotations, rewritten encoding, context, transformations, field checks and scalar declaration behavior; pass undefined for Suspend checks because its constructor rejects checks. Keep original-codec validation before writing and coordinate class provenance with fable-3-1. Add Journal.test.ts regressions for suspended classes, suspended union members, union-wire decodeTo and suspended wire targets, checking untouched fields, class identity, two persisted records and invalid-patch non-writing; extend EnvelopePatch.test.ts boundary cases. Retain the law-forced plain-record merge."
+    },
+    "fable-3-1": {
+      "file": "scratchpad/effected/jsonl/Envelope.ts",
+      "class": "bug",
+      "summary": "The plain merge drops decoded class provenance and every patched declaration accepts any record, so an ambiguous class union can encode through the wrong member, drop fields and return the wrong class.",
+      "fix": "Carry decoded-base schema-class provenance through shallowMerge as transient own metadata collected from its prototype chain with Reflect.getPrototypeOf. Require the corresponding marker in relaxed class encodingRun, otherwise delegate to the original encodingRun or run; prevent patch fields from overriding provenance and exclude metadata from field encoding and persisted JSON. Preserve the plain prototype, forbidden-key filtering, setter protection, checks and non-class transformations; do not restore Object.create or Object.defineProperty. Pin both orders of the AsNumber/AsString union in Journal.test.ts with AsString seed, retained extra, string n encoding, AsString identity and invalid-patch non-writing. Retarget merge.test.ts class-merge assertions to separate payload fields from provenance while keeping pollution/setter assertions, and extend EnvelopePatch.test.ts class-selection boundaries."
+    }
+  }
+}

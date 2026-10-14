@@ -52,7 +52,7 @@ const fixture = (options: Options = {}) => {
         if (manifest === undefined) return yield* Effect.die("missing manifest");
         const contents = yield* fs.readFileString(manifest);
         assert.isTrue(contents.endsWith("\n"));
-        if (options.expectedPath !== undefined) assert.include(contents.split("\n"), options.expectedPath);
+        if (options.expectedPath !== undefined) assert.deepStrictEqual(contents.split("\n"), [options.expectedPath, ""]);
         yield* fs.writeFileString(destination, "archive bytes");
       }
       return ChildProcessSpawner.makeHandle({
@@ -82,6 +82,7 @@ const restore = (cache: ActionCache["Service"]) => cache.restore(["a.txt"], "key
 describe("cache supplemental failure paths", () => {
   failed("archive temp directory failure", { fs: (fs) => ({ ...fs, makeTempDirectory: () => Effect.fail(fault) }) }, save, "archiveFailed");
   failed("manifest write failure", { fs: (fs) => ({ ...fs, writeFileString: () => Effect.fail(fault) }) }, save, "archiveFailed");
+  failed("selected path inspection failure", { fs: (fs) => ({ ...fs, stat: (path) => path === "/work/a.txt" ? Effect.fail(fault) : fs.stat(path) }) }, (cache) => cache.save(["/work/*.txt"], "key"), "archiveFailed");
   failed("archive stat failure", { fs: (fs) => ({ ...fs, stat: (path) => path.endsWith("cache.tar.gz") ? Effect.fail(fault) : fs.stat(path) }) }, save, "archiveFailed");
   failed("archive subprocess failure", { spawnFails: true }, save, "archiveFailed");
   failed("archive nonzero status", { code: 2 }, save, "archiveFailed");
@@ -147,9 +148,15 @@ it.layer(fixture({ env: { GITHUB_WORKSPACE: "" } }), { timeout: "30 seconds" })(
   }));
 });
 
-it.layer(fixture({ expectedPath: "/work/sub/b.txt" }), { timeout: "30 seconds" })((it) => {
-  it.effect("a literal ancestor retains traversal required by a wildcard descendant", () => Effect.gen(function* () {
+it.layer(fixture({ expectedPath: "/work" }), { timeout: "30 seconds" })((it) => {
+  it.effect("a literal ancestor covers its wildcard descendants with one recursive tar input", () => Effect.gen(function* () {
     yield* (yield* ActionCache).save(["/work", "/work/sub/*.txt"], "key");
     assertSome(yield* restore(yield* ActionCache), "key");
+  }));
+});
+
+it.layer(fixture({ env: { RUNNER_OS: "Windows" }, expectedPath: "/work/a.txt" }), { timeout: "5 seconds" })((it) => {
+  it.effect("Windows path normalization preserves the resolved manifest path", () => Effect.gen(function* () {
+    yield* (yield* ActionCache).save(["/work/a.txt"], "windows-key");
   }));
 });

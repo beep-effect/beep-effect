@@ -1,7 +1,50 @@
 import { assert, describe, it } from "@effect/vitest";
 import { delimiterFor, heredocBlock, isUsableName } from "../../effected/github-actions/internal/runnerFile.ts";
 
+// Follow FileCommandManager.ReadLine and its heredoc endIndex calculation,
+// rather than removing framing by fixed slices.
+// https://github.com/actions/runner/blob/main/src/Runner.Worker/FileCommandManager.cs
+const parseRunnerBlock = (body: string, windows: boolean): string => {
+	let index = 0;
+	const readLine = () => {
+		const lfIndex = body.indexOf("\n", index);
+		assert.isAtLeast(lfIndex, index, "the runner requires a newline before the delimiter");
+		const crlfIndex = body.indexOf("\r\n", index);
+		const crlf = windows && crlfIndex >= 0 && crlfIndex < lfIndex;
+		const end = crlf ? crlfIndex : lfIndex;
+		const newlineLength = crlf ? 2 : 1;
+		const line = body.slice(index, end);
+		index = end + newlineLength;
+		return { line, newlineLength };
+	};
+	const header = readLine().line;
+	const delimiter = header.slice(header.indexOf("<<") + 2);
+	const startIndex = index;
+	let endIndex = index;
+	let current = readLine();
+	while (current.line !== delimiter) {
+		endIndex = index - current.newlineLength;
+		current = readLine();
+	}
+	return body.slice(startIndex, endIndex);
+};
+
 describe("runner-file heredoc protocol", () => {
+	it("reproduces the Windows runner's terminal-CR loss with LF framing", () => {
+		const block = heredocBlock({ name: "result", value: "abc\r" });
+		assert.strictEqual(parseRunnerBlock(block, true), "abc");
+		assert.strictEqual(parseRunnerBlock(block, false), "abc\r");
+	});
+
+	for (const windows of [false, true]) {
+		it(`preserves terminal CR, CRLF and LF through the ${windows ? "Windows" : "POSIX"} runner parser`, () => {
+			for (const value of ["", "\r", "abc\r", "abc\r\n", "abc\n", "first\r\nsecond\nlast\r", "EFFECTED_EOF\r"]) {
+				const block = heredocBlock({ name: "result", value, lineEnding: windows ? "\r\n" : "\n" });
+				assert.strictEqual(parseRunnerBlock(block, windows), value);
+			}
+		});
+	}
+
 	it("keeps the base delimiter when it is absent", () => {
 		for (const value of ["", "ordinary value", "EFFECTED_EO", "EFFECTED_EO_F", "________"]) {
 			assert.strictEqual(delimiterFor(value), "EFFECTED_EOF");

@@ -1,11 +1,12 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
-import type { GitHubError } from "./GitHubError.ts";
+import { GitHubError } from "./GitHubError.ts";
 import { Repo } from "./Repo.ts";
 import * as O from "@beep/utils/Option";
 
@@ -371,6 +372,12 @@ const treeEntry = (change: FileChange) =>
 		: // A null sha is how the Git Database API spells "remove this path".
 			{ path: change.path, mode: "100644" as const, type: "blob" as const, sha: null };
 
+const CommitResponse = S.Struct({
+	sha: S.String,
+	tree: S.Struct({ sha: S.String }),
+	parents: S.Array(S.Struct({ sha: S.String })),
+}).annotate($I.annote("CommitResponse", { description: "The commit, tree and parent SHAs selected from a Git Database response." }));
+
 const make = (client: GitHubClient["Service"]): GitCommitShape => {
 	const get = Effect.fn("GitCommit.get")(function* (sha: string) {
 		const { owner, repo } = yield* Repo;
@@ -380,10 +387,13 @@ const make = (client: GitHubClient["Service"]): GitCommitShape => {
 			repo,
 			commit_sha: sha,
 		});
+		const selected = yield* S.decodeEffect(CommitResponse)(commit).pipe(
+			Effect.mapError((error) => GitHubError.decode("GitCommit.get", "GitHub returned an unexpected Git Database commit", error)),
+		);
 		return CommitRef.make({
-			sha: commit.sha,
-			treeSha: commit.tree.sha,
-			parents: commit.parents.map((parent) => parent.sha),
+			sha: selected.sha,
+			treeSha: selected.tree.sha,
+			parents: A.map(selected.parents, (parent) => parent.sha),
 		});
 	});
 

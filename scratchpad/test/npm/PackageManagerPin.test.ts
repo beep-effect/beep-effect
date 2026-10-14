@@ -10,12 +10,18 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import { SemVer } from "../../effected/semver/index.ts";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { InvalidPackageManagerPinError, PackageManagerPin } from "../../effected/npm/index.ts";
 
 const decode = S.decodeUnknownEffect(PackageManagerPin.FromString);
 const encode = S.encodeUnknownEffect(PackageManagerPin.FromString);
+
+const quoteInput = flow(
+	S.encodeResult(S.fromJsonString(S.String)),
+	Result.getOrElse((error) => assert.fail(`Rejection name JSON encoding failed: ${error.message}`)),
+);
 
 const flipParse = (input: string) => Effect.flip(PackageManagerPin.parse(input));
 
@@ -108,7 +114,7 @@ describe("the +-split rule", () => {
 
 describe("PackageManagerPin rejection matrix", () => {
 	const rejects = (input: string, reason: "format" | "name" | "version" | "integrity") =>
-		it.effect(`rejects ${JSON.stringify(input)} with reason "${reason}"`, () =>
+		it.effect(`rejects ${quoteInput(input)} with reason "${reason}"`, () =>
 			Effect.gen(function* () {
 				const error = yield* flipParse(input);
 				assert.instanceOf(error, InvalidPackageManagerPinError);

@@ -10,6 +10,7 @@ import * as Deferred from "effect/Deferred";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import { CliUi } from "../../../../effected/cli/ui/CliUi.ts";
+import { TextInput } from "../../../../effected/cli/ui/TextInput.ts";
 import { Text } from "ink";
 import { UiRenderOptions } from "../../../../effected/cli/ui/internal/renderOptions.ts";
 import { CliUiTest } from "../../../../effected/cli/ui/testing/CliUiTest.ts";
@@ -163,4 +164,23 @@ it.effect("rerender observes an unmount before the run records its exit", () => 
   } finally {
     run.mockRestore();
   }
+}));
+
+it.effect("an ended screen's resize dies and leaves the mounted screen's frame unchanged", () => Effect.gen(function* () {
+  const session = yield* CliUiTest.session({ columns: 30, color: "none" });
+  const program = Effect.gen(function* () {
+    yield* CliUi.run(TextInput.screen({ message: "First" }));
+    return yield* CliUi.run(TextInput.screen({ message: "Second", initial: "abcdefghijklmnopqrstuv" }));
+  }).pipe((self) => Effect.scopedWith((scope) => Effect.flatMap(Layer.buildWithScope(session.layer, scope), (context) => Effect.provideContext(self, context))));
+  const fiber = yield* Effect.forkScoped(program);
+  const first = yield* session.next({ contains: "First" });
+  yield* first.press("enter");
+  const second = yield* session.next({ contains: "Second" });
+  const before = yield* second.plainFrame;
+  assert.include(before, "abcdefghijklmnopqrstuv");
+  const stale = yield* Effect.exit(first.resize(10, 24));
+  assert.include(Cause.pretty(Exit.isFailure(stale) ? stale.cause : Cause.empty), "screen that has ended");
+  assert.strictEqual(yield* second.plainFrame, before);
+  yield* second.press("enter");
+  assert.strictEqual(yield* Fiber.join(fiber), "abcdefghijklmnopqrstuv");
 }));

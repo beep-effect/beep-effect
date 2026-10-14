@@ -1,0 +1,9 @@
+I'll review the github-actions slice against the round-2 inventory, the port ledger, and the pinned upstream oracle, and report only new findings.Round-2 closed the recorded defects. I'll compare the twelve focus files with the pinned oracle and look for new divergences the gates do not catch.The remaining question is whether `addPath` still writes unsanitized line breaks, and whether the removed cache-root guards are actually reachable. I am checking those call sites against the pinned oracle before filing anything.### grok-3-1
+- file: scratchpad/effected/github-actions/ActionOutputs.ts:415
+- class: bug   severity: required
+- standard: D11; D9 / section 14 (`upstream-bug`); round-2 r2 (newline-delimited runner/tool file).   evidence: Live `addPath` is `append(RUNNER_FILE.addPath, `${path}\n`)` with no LF/CR check. The pinned oracle is the same write at `ActionOutputs.ts:255`. `GITHUB_PATH` is one directory per line (`echo "{path}" >> "$GITHUB_PATH"`). `addPath("a\nb")` therefore appends `a\nb\n` — two directory lines from one call. `File.ReadAllLines` also splits on a bare CR. `ActionOutputs.recording` at line 682 journals the raw string and does not reject it. `ActionOutputs.test.ts` only covers `addPath("/opt/bin")`. Heredoc names already go through `isUsableName`; this member does not.
+- failure: One `addPath` call publishes extra `PATH` entries for later steps when the directory contains LF or CR. The recording double accepts that input, so a test can pass while the runner file is split.
+- fix: Reject LF and CR in both the live `addPath` and `ActionOutputs.recording` before any append or journal entry, failing with the existing `ActionOutputError` channel (`InvalidOutputNameError` with file `GITHUB_PATH`, or a sibling in that union). Add a regression that the `GITHUB_PATH` file is not written. Record it as a verified upstream bug.
+
+REQUIRED: 1
+BACKLOG: 0

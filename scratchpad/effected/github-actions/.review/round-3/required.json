@@ -1,0 +1,497 @@
+{
+  "module": "github-actions",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/github-actions/ActionOutputs.ts",
+        "scratchpad/effected/github-actions/ActionState.ts",
+        "scratchpad/effected/github-actions/internal/runnerFile.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/ActionOutputs.test.ts",
+        "scratchpad/test/github-actions/ActionState.test.ts",
+        "scratchpad/test/github-actions/runnerFile.test.ts"
+      ],
+      "findings": [
+        "r1",
+        "r4",
+        "r9",
+        "r32"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/github-actions/Action.ts",
+        "scratchpad/effected/github-actions/ActionEnvironment.ts",
+        "scratchpad/effected/github-actions/ActionInput.ts",
+        "scratchpad/effected/github-actions/ActionLogger.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/ActionInput.test.ts",
+        "scratchpad/test/github-actions/ActionLogger.test.ts"
+      ],
+      "findings": [
+        "r5",
+        "r8",
+        "r10",
+        "r11",
+        "r12",
+        "r34",
+        "r35"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/github-actions/Artifact.ts",
+        "scratchpad/effected/github-actions/BlobEnvelope.ts",
+        "scratchpad/effected/github-actions/ActionCache.ts",
+        "scratchpad/effected/github-actions/internal/archiveCommands.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/Artifact.test.ts",
+        "scratchpad/test/github-actions/BlobEnvelope.test.ts",
+        "scratchpad/test/github-actions/ActionCache.test.ts",
+        "scratchpad/test/github-actions/archiveCommands.test.ts"
+      ],
+      "findings": [
+        "r2",
+        "r3",
+        "r6",
+        "r7",
+        "r27",
+        "r36",
+        "r47"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/github-actions/BlobStore.ts",
+        "scratchpad/effected/github-actions/internal/sigv4.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/BlobStore.test.ts",
+        "scratchpad/test/github-actions/sigv4.test.ts"
+      ],
+      "findings": [
+        "r15",
+        "r16",
+        "r17",
+        "r30",
+        "r50"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/github-actions/CheckDocument.ts",
+        "scratchpad/effected/github-actions/CheckState.ts",
+        "scratchpad/effected/github-actions/ChildEnv.ts",
+        "scratchpad/effected/github-actions/DetachedProcess.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/CheckDocument.test.ts",
+        "scratchpad/test/github-actions/CheckState.test.ts",
+        "scratchpad/test/github-actions/ChildEnv.test.ts",
+        "scratchpad/test/github-actions/DetachedProcess.test.ts"
+      ],
+      "findings": [
+        "r18",
+        "r20",
+        "r21",
+        "r23",
+        "r37",
+        "r38",
+        "r39",
+        "r40"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/github-actions/GitHubMarkdown.ts",
+        "scratchpad/effected/github-actions/GitHubToken.ts",
+        "scratchpad/effected/github-actions/ManagedDocument.ts",
+        "scratchpad/effected/github-actions/OidcTokenIssuer.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/GitHubMarkdown.test.ts",
+        "scratchpad/test/github-actions/GitHubToken.test.ts",
+        "scratchpad/test/github-actions/ManagedDocument.test.ts",
+        "scratchpad/test/github-actions/OidcTokenIssuer.test.ts"
+      ],
+      "findings": [
+        "r13",
+        "r14",
+        "r19",
+        "r22",
+        "r24",
+        "r41",
+        "r42",
+        "r43"
+      ]
+    },
+    {
+      "id": "g7",
+      "files": [
+        "scratchpad/effected/github-actions/PackageManagerInstaller.ts",
+        "scratchpad/effected/github-actions/ToolInstaller.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/PackageManagerInstaller.test.ts",
+        "scratchpad/test/github-actions/ToolInstaller.test.ts"
+      ],
+      "findings": [
+        "r25",
+        "r26",
+        "r29",
+        "r31",
+        "r33",
+        "r45",
+        "r46"
+      ]
+    },
+    {
+      "id": "g8",
+      "files": [
+        "scratchpad/effected/github-actions/internal/actionsResults.ts",
+        "scratchpad/effected/github-actions/internal/cacheService.ts",
+        "scratchpad/effected/github-actions/internal/jwt.ts",
+        "scratchpad/effected/github-actions/internal/spawn.ts",
+        "scratchpad/effected/github-actions/internal/twirp.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/internal/actionsResults.coverage.test.ts",
+        "scratchpad/test/github-actions/internal/cacheService.coverage.test.ts",
+        "scratchpad/test/github-actions/internal/jwt.coverage.test.ts",
+        "scratchpad/test/github-actions/internal/spawn.test.ts",
+        "scratchpad/test/github-actions/internal/twirp.coverage.test.ts"
+      ],
+      "findings": [
+        "r28",
+        "r44",
+        "r48",
+        "r49",
+        "r51",
+        "r52"
+      ]
+    }
+  ],
+  "findings": {
+    "r1": {
+      "file": "scratchpad/effected/github-actions/ActionOutputs.ts",
+      "class": "bug",
+      "summary": "Reject runner PATH line breaks",
+      "fix": "Reject CR and LF in live and recording addPath through the existing typed ActionOutputError channel before append or journal mutation. Add ActionOutputs.test.ts regressions proving no file write and no recording entry."
+    },
+    "r2": {
+      "file": "scratchpad/effected/github-actions/Artifact.ts",
+      "class": "bug",
+      "summary": "Validate artifact retention before creating or uploading",
+      "fix": "Validate positive finite retention and a representable expiration before scratch/archive, CreateArtifact or transfer; return ArtifactError invalidOptions for invalid values or overflow. Preserve omitted and valid retention. Add Artifact.test.ts cases for NaN, Infinity and overflowing finite retention with zero archive, RPC and transfer calls."
+    },
+    "r3": {
+      "file": "scratchpad/effected/github-actions/BlobEnvelope.ts",
+      "class": "bug",
+      "summary": "Refuse blob metadata that cannot decode its own serialized frame",
+      "fix": "Decode the serialized metadata through the caller codec before returning framed bytes; map failure to BlobMetadataEncodeError without changing supported wire bytes. Add the S.Option(S.String) failure regression and retain S.OptionFromNullOr(S.String) success in BlobEnvelope.test.ts."
+    },
+    "r4": {
+      "file": "scratchpad/effected/github-actions/ActionState.ts",
+      "class": "bug",
+      "summary": "Refuse lossy non-JSON action state before append",
+      "fix": "Validate the encoded value with S.Json before serialization and map rejection to notPlainJson; retain the subsequent caller-schema decode check. Add ActionState.test.ts cases for NaN and undefined object members proving no append."
+    },
+    "r5": {
+      "file": "scratchpad/effected/github-actions/ActionInput.ts",
+      "class": "bug",
+      "summary": "Use own environment entries in the input provider",
+      "fix": "Use O.getOrUndefined(R.get(env, name)) for the direct lookup, preserving direct-entry precedence, aliases and empty-string handling. Add ActionInput.test.ts inherited-only and inherited runner-name shadowing regressions."
+    },
+    "r6": {
+      "file": "scratchpad/effected/github-actions/Artifact.ts",
+      "class": "bug",
+      "summary": "Reject NaN artifact compression before archiving",
+      "fix": "Reject an explicitly supplied NaN compressionLevel with ArtifactError invalidOptions before scratch or zip. Keep the existing clamping of finite values and positive/negative infinity unless a cited schema law separately forces a restriction. Add Artifact.test.ts regression proving no zip spawn."
+    },
+    "r7": {
+      "file": "scratchpad/effected/github-actions/ActionCache.ts",
+      "class": "bug",
+      "summary": "Preserve POSIX backslash filenames until typed archive refusal",
+      "fix": "Normalize backslashes only on Windows. On POSIX retain entry bytes and refuse backslash-containing resolved paths with archiveFailed before writing the manifest or spawning tar. Add ActionCache.test.ts backslash-filename regression."
+    },
+    "r8": {
+      "file": "scratchpad/effected/github-actions/Action.ts",
+      "class": "effect-idiom",
+      "summary": "Match Action debug and exit orchestration",
+      "fix": "Use lazy Bool.match for the lower-only step-debug override and Exit.match for the success/failure renderer. Preserve original program, Console.log, debug dump and process.exitCode behavior."
+    },
+    "r9": {
+      "file": "scratchpad/effected/github-actions/ActionOutputs.ts",
+      "class": "effect-idiom",
+      "summary": "Match the runner heredoc name gate",
+      "fix": "Use lazy Bool.match for withUsableName; preserve the success effect and InvalidOutputNameError payload."
+    },
+    "r10": {
+      "file": "scratchpad/effected/github-actions/ActionEnvironment.ts",
+      "class": "effect-idiom",
+      "summary": "Match finite runner-number parsing",
+      "fix": "Use lazy Bool.match on Number.isFinite(parsed), preserving GITHUB_RUN_ID/GITHUB_RUN_ATTEMPT values and malformed details."
+    },
+    "r11": {
+      "file": "scratchpad/effected/github-actions/ActionInput.ts",
+      "class": "effect-idiom",
+      "summary": "Match literal acceptance and flat input lookup",
+      "fix": "Use lazy Bool.match for the schema literal guard and P.isString(name) lookup branch. Preserve allowed-set messages, raw actual values, inputVariable mapping and the undefined miss."
+    },
+    "r12": {
+      "file": "scratchpad/effected/github-actions/ActionLogger.ts",
+      "class": "effect-idiom",
+      "summary": "Match the logger buffering decision",
+      "fix": "Use lazy Bool.match for debug bypass versus buffer setup. Preserve warn passthrough and onSuccess flush policy."
+    },
+    "r13": {
+      "file": "scratchpad/effected/github-actions/GitHubMarkdown.ts",
+      "class": "bug",
+      "summary": "Escape unmatched trailing link-label backslashes",
+      "fix": "After bracket escaping, append a backslash only for an odd trailing backslash run. Preserve existing escape pairs and inline Markdown. Add parser-backed GitHubMarkdown.test.ts cases for lone, odd and even trailing backslashes."
+    },
+    "r14": {
+      "file": "scratchpad/effected/github-actions/GitHubMarkdown.ts",
+      "class": "bug",
+      "summary": "Keep bare-CR list continuations in the same item",
+      "fix": "Normalize CRLF and bare CR to LF in each list item before passthrough/ListItem construction, so hanging indentation applies. Add parser-backed GitHubMarkdown.test.ts regression for a\\rb as one item."
+    },
+    "r15": {
+      "file": "scratchpad/effected/github-actions/BlobStore.ts",
+      "class": "bug",
+      "summary": "Sign the exact custom-endpoint S3 resource",
+      "fix": "Parse endpoints fallibly and return BlobStoreError misconfigured before HTTP for malformed endpoints or unsupported search/hash. Include the endpoint pathname in the signed and transmitted object path, preserving its encoding without double encoding and retaining object-segment validation. Add recording-client BlobStore.test.ts regressions for /s3 and an encoded endpoint path, invalid URLs, search and hash."
+    },
+    "r16": {
+      "file": "scratchpad/effected/github-actions/BlobStore.ts",
+      "class": "schema",
+      "summary": "Use a kit for the named dot-segment domain",
+      "fix": "Define DotSegment with LiteralKit([\".\", \"..\"]) and file-local identity annotations; preserve S.is(DotSegment) rejection behavior."
+    },
+    "r17": {
+      "file": "scratchpad/effected/github-actions/BlobStore.ts",
+      "class": "effect-idiom",
+      "summary": "Match BlobStore optional and HTTP orchestration",
+      "fix": "Use O.match for stored bytes and the optional session token, and lazy Bool.match for HTTP status acceptance. Preserve declassification timing, none results and BlobStoreError payloads."
+    },
+    "r18": {
+      "file": "scratchpad/effected/github-actions/CheckDocument.ts",
+      "class": "effect-idiom",
+      "summary": "Match document read selection and stale logging",
+      "fix": "Match O.fromUndefinedOr(sink.read) for shadow-ref versus timed live read; keep timeout failure and success-only empty fallback. Use lazy Bool.match for stale log level with unchanged fields."
+    },
+    "r19": {
+      "file": "scratchpad/effected/github-actions/GitHubToken.ts",
+      "class": "effect-idiom",
+      "summary": "Match token revocation on release",
+      "fix": "Use Exit.match (or lazy Bool.match) for success versus failure release, preserving failure-only ignored revocation."
+    },
+    "r20": {
+      "file": "scratchpad/effected/github-actions/DetachedProcess.ts",
+      "class": "effect-idiom",
+      "summary": "Match ESRCH handling in detached reap",
+      "fix": "Use lazy Bool.match for ESRCH versus DetachedSignalFailedError, preserving pid, cause and false success."
+    },
+    "r21": {
+      "file": "scratchpad/effected/github-actions/ChildEnv.ts",
+      "class": "bug",
+      "summary": "Prepend the actual case-sensitive POSIX PATH",
+      "fix": "Use exact PATH on non-win32 platforms and pathKeyOf(base) only on win32; preserve the public case-insensitive pathKeyOf API. Add ChildEnv.test.ts cases containing both Path and PATH and only path."
+    },
+    "r22": {
+      "file": "scratchpad/effected/github-actions/GitHubMarkdown.ts",
+      "class": "bug",
+      "summary": "Keep heading line breaks inside the heading",
+      "fix": "Normalize CRLF, CR and LF to <br> before heading interpolation, matching the existing table policy. Add parser-backed GitHubMarkdown.test.ts LF and bare-CR cases."
+    },
+    "r23": {
+      "file": "scratchpad/effected/github-actions/ChildEnv.ts",
+      "class": "bug",
+      "summary": "Ignore inherited PATH values in child environments",
+      "fix": "Read the selected key with O.getOrUndefined(R.get(options.base, key)), preserving own-key platform behavior. Add ChildEnv.test.ts inherited PATH and inherited Path cases."
+    },
+    "r24": {
+      "file": "scratchpad/effected/github-actions/OidcTokenIssuer.ts",
+      "class": "bug",
+      "summary": "Append OIDC audience to the URL query",
+      "fix": "When audience is present, parse base fallibly, append the encodeURIComponent-encoded audience to search using ? or &, and retain the fragment separately. Return OidcTokenError requestFailed for parse failure. Preserve the existing %20 fixture and add no-query and fragment regressions in OidcTokenIssuer.test.ts."
+    },
+    "r25": {
+      "file": "scratchpad/effected/github-actions/PackageManagerInstaller.ts",
+      "class": "bug",
+      "summary": "Enforce real package containment before bin mutation",
+      "fix": "Reject a symlink package root and require real bin/overlay destination paths to remain inside the real package root before assertFile, overlay copy or chmod. Handle not-yet-created destinations through their resolved existing parent. Allow internal symlinks. Add PackageManagerInstaller.test.ts symlink-bin, symlink-ancestor and symlink-root regressions for install/cache hits."
+    },
+    "r26": {
+      "file": "scratchpad/effected/github-actions/PackageManagerInstaller.ts",
+      "class": "bug",
+      "summary": "Terminate Node options in generated shims",
+      "fix": "Insert -- after node in POSIX and Windows node-script shim branches, keeping direct-exec branches unchanged. Update PackageManagerInstaller.test.ts shim expectations and add a dash-leading cache-root regression."
+    },
+    "r27": {
+      "file": "scratchpad/effected/github-actions/internal/archiveCommands.ts",
+      "class": "bug",
+      "summary": "Terminate unzip options before its archive operand",
+      "fix": "Use POSIX unzip argv [\"-oq\", \"-d\", destination, \"--\", source]. Update archiveCommands.test.ts and add source -h. Preserve Windows extraction and tar argv, where f consumes its next operand."
+    },
+    "r28": {
+      "file": "scratchpad/effected/github-actions/internal/cacheService.ts",
+      "class": "effect-idiom",
+      "summary": "Match upload reservation and finalization outcomes",
+      "fix": "Use lazy Bool.match in reserveUpload and finalizeUpload, preserving conflict short-circuit, missing-url refusal, success values and lookupDownload."
+    },
+    "r29": {
+      "file": "scratchpad/effected/github-actions/ToolInstaller.ts",
+      "class": "bug",
+      "summary": "Contain tool binary destinations on misses and hits",
+      "fix": "Before copyFile or cache-hit typeAt, require the normalized/resolved destination to remain strictly within staging or the published entry. Return cacheFailed for escapes. Add ToolInstaller.test.ts ../victim miss/hit regressions proving no copy or publication."
+    },
+    "r30": {
+      "file": "scratchpad/effected/github-actions/internal/sigv4.ts",
+      "class": "bug",
+      "summary": "Return exactly the normalized headers that SigV4 signs",
+      "fix": "Normalize caller header names into one record, combining ordinary duplicates consistently with transport and replacing generated signing headers. Derive canonical and returned headers from that record. Add sigv4.test.ts Host, X-Amz-Date and ordinary case-collision regressions."
+    },
+    "r31": {
+      "file": "scratchpad/effected/github-actions/PackageManagerInstaller.ts",
+      "class": "bug",
+      "summary": "Validate Windows native bins after exe retargeting",
+      "fix": "Assert every retargeted nativeWindowsBins target exists before shim creation/reuse or return, using layoutUnexpected for missing executables. Add PackageManagerInstaller.test.ts extensionless-pnpm-present/pnpm.exe-absent cache-hit regression."
+    },
+    "r32": {
+      "file": "scratchpad/effected/github-actions/internal/runnerFile.ts",
+      "class": "bug",
+      "summary": "Preserve terminal CR through Windows runner framing",
+      "fix": "Parameterize heredocBlock line endings, use CRLF framing for Windows and LF for POSIX, and pass the runner selection from ActionOutputs and ActionState. Keep payload bytes unchanged. Add runnerFile.test.ts runner-parser regressions for terminal CR, CRLF and LF, plus caller regressions in ActionOutputs.test.ts and ActionState.test.ts."
+    },
+    "r33": {
+      "file": "scratchpad/effected/github-actions/ToolInstaller.ts",
+      "class": "bug",
+      "summary": "Publish tool-cache completion markers after successful install",
+      "fix": "Invalidate stale sibling <arch>.complete before replacement and create the empty marker only after staging publication succeeds; map marker failures to cacheFailed. Add ToolInstaller.test.ts fresh-entry discoverability and failed-publication/marker regressions using the official lookup predicate."
+    },
+    "r34": {
+      "file": "scratchpad/effected/github-actions/ActionInput.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for PairsOptions",
+      "fix": "Define identity-annotated structural schemas for PairsOptions and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r35": {
+      "file": "scratchpad/effected/github-actions/ActionLogger.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for WithBufferOptions and WithStepOptions",
+      "fix": "Define identity-annotated structural schemas for WithBufferOptions and WithStepOptions and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r36": {
+      "file": "scratchpad/effected/github-actions/Artifact.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for UploadOptions, DownloadOptions and DownloadResult",
+      "fix": "Define identity-annotated structural schemas for UploadOptions, DownloadOptions and DownloadResult and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r37": {
+      "file": "scratchpad/effected/github-actions/CheckState.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for CheckRunConclusion and CheckRunProjection",
+      "fix": "Define identity-annotated structural schemas for CheckRunConclusion and CheckRunProjection and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r38": {
+      "file": "scratchpad/effected/github-actions/CheckDocument.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for CheckFlushOutcome",
+      "fix": "Define identity-annotated structural schemas for CheckFlushOutcome and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r39": {
+      "file": "scratchpad/effected/github-actions/ChildEnv.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for PathPrependEnv and PathPrependOptions",
+      "fix": "Define identity-annotated structural schemas for PathPrependEnv and PathPrependOptions and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r40": {
+      "file": "scratchpad/effected/github-actions/DetachedProcess.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for DetachedSpawnOptions",
+      "fix": "Define identity-annotated structural schemas for DetachedSpawnOptions and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r41": {
+      "file": "scratchpad/effected/github-actions/GitHubToken.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for ProvisionOptions and ReadOptions",
+      "fix": "Define identity-annotated structural schemas for ProvisionOptions and ReadOptions and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r42": {
+      "file": "scratchpad/effected/github-actions/ManagedDocument.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for ManagedDocumentSource",
+      "fix": "Define identity-annotated structural schemas for ManagedDocumentSource and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r43": {
+      "file": "scratchpad/effected/github-actions/GitHubMarkdown.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for GitHubHeadingDepth and GitHubListOptions",
+      "fix": "Define identity-annotated structural schemas for GitHubHeadingDepth and GitHubListOptions and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r44": {
+      "file": "scratchpad/effected/github-actions/internal/actionsResults.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for BackendIds and ResultsBackend",
+      "fix": "Define identity-annotated structural schemas for BackendIds and ResultsBackend and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r45": {
+      "file": "scratchpad/effected/github-actions/PackageManagerInstaller.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for PackageManagerInstallOptions",
+      "fix": "Define identity-annotated structural schemas for PackageManagerInstallOptions and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r46": {
+      "file": "scratchpad/effected/github-actions/ToolInstaller.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for ExtractOptions, ProvisionFileOptions and ProvisionedFile",
+      "fix": "Define identity-annotated structural schemas for ExtractOptions, ProvisionFileOptions and ProvisionedFile and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r47": {
+      "file": "scratchpad/effected/github-actions/internal/archiveCommands.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for ZipCommandOptions, UnzipCommandOptions and TarExtractCommandOptions",
+      "fix": "Define identity-annotated structural schemas for ZipCommandOptions, UnzipCommandOptions and TarExtractCommandOptions and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r48": {
+      "file": "scratchpad/effected/github-actions/internal/cacheService.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for CacheHit",
+      "fix": "Define identity-annotated structural schemas for CacheHit and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r49": {
+      "file": "scratchpad/effected/github-actions/internal/jwt.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for JwtPayloadFailure",
+      "fix": "Define identity-annotated structural schemas for JwtPayloadFailure and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r50": {
+      "file": "scratchpad/effected/github-actions/internal/sigv4.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for SigV4Credentials and SigV4Request",
+      "fix": "Define identity-annotated structural schemas for SigV4Credentials and SigV4Request and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r51": {
+      "file": "scratchpad/effected/github-actions/internal/spawn.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for SpawnOnceResult",
+      "fix": "Define identity-annotated structural schemas for SpawnOnceResult and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    },
+    "r52": {
+      "file": "scratchpad/effected/github-actions/internal/twirp.ts",
+      "class": "schema",
+      "summary": "Define executable schemas for TwirpFailure",
+      "fix": "Define identity-annotated structural schemas for TwirpFailure and derive the existing same-name types. Use LiteralKit for named finite domains and structural unions for conditional/discriminated payloads; reuse existing schema blocks. Preserve plain-object construction, brands, field types, optional versus explicit-undefined semantics and current acceptance/default behavior except separately required bug/law fixes. Keep existing root type re-exports; exporting schema values from their owning file does not require an index.ts edit. Add focused contract assertions in the assigned tests; defer the full Arbitrary.schema property floor to b2. Added-export and forced-deviation bookkeeping is central."
+    }
+  }
+}

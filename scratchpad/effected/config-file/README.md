@@ -256,6 +256,8 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **upstream-bug** — The lab checks ownership before reading merge fields, preventing inherited accessor calls that can make the upstream merge throw. (scratchpad/test/config-file/MergeStrategy.test.ts:95)
 - **upstream-bug** — Lab merges only compatible plain records and retains atomic class identity and private state, whereas upstream manufactures class instances without private-field brands (scratchpad/test/config-file/MergeStrategy.test.ts:95,254,272; scratchpad/test/config-file/MergeStrategy.property.test.ts:50; scratchpad/test/config-file/internal/deepMerge.property.test.ts:27,120).
 - **upstream-bug** — Lab preserves enumerable symbol fields and schema validity during merging, whereas upstream drops those fields through string-only enumeration (scratchpad/test/config-file/MergeStrategy.test.ts:145,187; scratchpad/test/config-file/internal/deepMerge.property.test.ts:52,100).
+- **upstream-bug** — The lab rejects schema-invalid merged configurations before success events, whereas upstream returns them successfully. (scratchpad/test/config-file/ConfigFile.test.ts:231,256,279)
+- **upstream-bug** — The lab terminates compatible cyclic record merges by reusing active-pair results, whereas upstream exhausts the stack. (scratchpad/test/config-file/internal/deepMerge.property.test.ts:27,48; scratchpad/test/config-file/MergeStrategy.test.ts:29; scratchpad/test/config-file/ConfigFile.test.ts:313)
 
 ### Dependency backlog
 

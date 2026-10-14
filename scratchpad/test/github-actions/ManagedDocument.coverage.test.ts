@@ -1,7 +1,7 @@
-import { assert, describe, it } from "@effect/vitest";
+import { assert, describe, it, vi } from "@effect/vitest";
 import { assertFailure, assertNone } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
-import { ManagedDocument, ManagedDocumentError } from "../../effected/github-actions/ManagedDocument.ts";
+import { ManagedDocument, ManagedDocumentError, RejectedRegionDialectError } from "../../effected/github-actions/ManagedDocument.ts";
 
 describe("ManagedDocument coverage", () => {
   it.effect("raw corrupt documents expose no regions and refuse writes with the structural error", () => Effect.gen(function* () {
@@ -14,3 +14,21 @@ describe("ManagedDocument coverage", () => {
     assert.strictEqual(doc.text, "<!-- --- BEGIN test.body.header MANAGED REGION --- -->\nunclosed");
   }));
 });
+
+import * as Result from "effect/Result";
+import { SectionDocument, SectionRenderError } from "../../effected/templates/index.ts";
+
+it.effect("a dialect invariant failure throws the typed error instead of returning an empty document", () =>
+  Effect.acquireUseRelease(
+    Effect.sync(() => vi.spyOn(SectionDocument.prototype, "reconcile").mockReturnValue(
+      Result.fail(SectionRenderError.make({ reason: "unknownCommentStyle", key: "test.body.header" })),
+    )),
+    () => Effect.sync(() => {
+      const doc = ManagedDocument.make({ namespace: "test", key: "body", text: "human text" });
+      assert.throws(() => doc.withRegionsResult([["header", "replacement"]]), RejectedRegionDialectError,
+        "ManagedDocument: the region dialect rejected its own comment style");
+      assert.strictEqual(doc.text, "human text");
+    }),
+    (mock) => Effect.sync(() => mock.mockRestore()),
+  ),
+);

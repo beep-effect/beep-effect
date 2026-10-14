@@ -11,8 +11,8 @@ import { useScreenCancel } from "./internal/ScreenContext.ts";
 import { KeyHelp } from "./KeyHelp.ts";
 import { KeyTable, useKeys } from "./KeyTable.ts";
 import { Styled, useGlyphs, useTerminalSize, useTheme } from "./UiTheme.ts";
-import type { ViewportRow, ViewportState } from "./Viewport.ts";
-import { Viewport } from "./Viewport.ts";
+import type { ViewportRow } from "./Viewport.ts";
+import { Viewport, ViewportState } from "./Viewport.ts";
 
 const $I = $ScratchpadId.create("effected/cli/ui/Select");
 
@@ -42,38 +42,81 @@ export class NoEnabledChoiceError extends S.TaggedError<NoEnabledChoiceError>($I
 ) {}
 
 /**
- * One choice of a {@link Select}.
+ * One choice of a {@link Select}, as a schema over the value schema: `label` is what the row shows, `value` what
+ * choosing it returns, `detail` a line shown muted beneath the list while it is highlighted, and `disabled` shows it
+ * muted and never highlighted, so moves skip it.
  *
+ * **Example** (Validate a choice payload)
+ *
+ * ```ts
+ * import { SelectChoice } from "@beep/scratchpad/effected/cli/ui/Select"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(SelectChoice(S.String))({ label: "Staging", value: "staging", detail: "Safe" })) // true
+ * ```
+ *
+ * @param value - the schema of the value choosing it returns
  * @public
- * @category models
+ * @category schemas
  * @since 0.0.0
  */
-export interface SelectChoice<A> {
-	/** What the row shows. */
-	readonly label: string;
-	/** What choosing it returns. */
-	readonly value: A;
-	/** A line shown, muted, beneath the list while this choice is highlighted. */
-	readonly detail?: string;
-	/** Shown muted and never highlighted: moves skip it. */
-	readonly disabled?: boolean;
-}
+export const SelectChoice = <Value extends S.Top>(value: Value) =>
+	S.Struct({
+		label: S.String.annotateKey($I.annote("SelectChoice.label", { description: "What the row shows." })),
+		value,
+		detail: S.optionalKey(S.String).annotateKey($I.annote("SelectChoice.detail", {
+			description: "A line shown, muted, beneath the list while this choice is highlighted.",
+		})),
+		disabled: S.optionalKey(S.Boolean).annotateKey($I.annote("SelectChoice.disabled", {
+			description: "Shown muted and never highlighted: moves skip it.",
+		})),
+	}).annotate($I.annote("SelectChoice", { description: "One labelled, optionally disabled choice of a selection." }));
 
 /**
- * Where a {@link Select} is: its choices, the viewport over them, and whether one was submitted.
+ * Plain payload accepted by {@link SelectChoice}; reducers retain this structural representation.
  *
- * @public
- * @category models
+ * @category type-level
  * @since 0.0.0
  */
-export interface SelectState<A> {
-	/** The choices. */
-	readonly choices: ReadonlyArray<SelectChoice<A>>;
-	/** The highlighted choice and the window over the list. */
-	readonly viewport: ViewportState;
-	/** Whether the highlighted choice was submitted. */
-	readonly submitted: boolean;
-}
+export type SelectChoice<A> = ReturnType<typeof SelectChoice<S.Codec<A>>>["Type"];
+
+/**
+ * Where a {@link Select} is, as a schema over the value schema: its choices, the viewport over them (the highlighted
+ * choice and the window), and whether one was submitted.
+ *
+ * **Example** (Validate a selection state)
+ *
+ * ```ts
+ * import { Select, SelectState } from "@beep/scratchpad/effected/cli/ui/Select"
+ * import * as S from "effect/Schema"
+ *
+ * const state = Select.init([{ label: "Staging", value: "staging" }])
+ * console.log(S.is(SelectState(S.String))(state)) // true
+ * ```
+ *
+ * @param value - the schema of the choices' values
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SelectState = <Value extends S.Top>(value: Value) =>
+	S.Struct({
+		choices: value.pipe(SelectChoice, S.Array).annotateKey($I.annote("SelectState.choices", { description: "The choices." })),
+		viewport: ViewportState.annotateKey($I.annote("SelectState.viewport", {
+			description: "The highlighted choice and the window over the list.",
+		})),
+		submitted: S.Boolean.annotateKey($I.annote("SelectState.submitted", {
+			description: "Whether the highlighted choice was submitted.",
+		})),
+	}).annotate($I.annote("SelectState", { description: "The plain reducer state of a single-choice selection." }));
+
+/**
+ * Plain payload accepted by {@link SelectState}; reducers retain this structural representation.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SelectState<A> = ReturnType<typeof SelectState<S.Codec<A>>>["Type"];
 
 /**
  * What a key does in a {@link Select}: a viewport move, submit, or cancel.
@@ -425,23 +468,27 @@ export abstract class Select {
 			return react.createElement(ink.Text, null, text);
 		};
 		const detail = state.choices[state.viewport.cursor]?.detail;
+		// One row each, clipped at layout time with the cursor column reserved: during Ink's immediate resize repaint the
+		// width above is one paint stale, and an unclipped row would wrap past the screen's row budget.
+		const line = (child: ReactElement): ReactElement =>
+			react.createElement(ink.Box, { height: 1, overflow: "hidden", marginRight: 1 }, child);
 		return react.createElement(
 			ink.Box,
 			{ flexDirection: "column" },
-			react.createElement(
+			line(react.createElement(
 				Styled,
 				{ token: "emphasis" },
 				Fmt.truncate(lineText(props.message), columns, { ellipsis: glyphs.ellipsis }),
-			),
+			)),
 			react.createElement(Viewport.View, { rows, state: state.viewport, renderRow, reserved: RESERVED }),
 			detail === undefined
 				? null
-				: react.createElement(
+				: line(react.createElement(
 						Styled,
 						{ token: "muted" },
 						Fmt.truncate(lineText(detail), columns, { ellipsis: glyphs.ellipsis }),
-					),
-			react.createElement(KeyHelp, { tables: [KEYS] }),
+					)),
+			line(react.createElement(KeyHelp, { tables: [KEYS] })),
 		);
 	};
 

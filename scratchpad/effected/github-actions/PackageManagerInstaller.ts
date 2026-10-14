@@ -5,7 +5,7 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import type { IntegrityHashBrand } from "../npm/index.ts";
-import { CorepackIntegrityHash, DEFAULT_REGISTRY, PackageManagerPin, PackageManagerPinName } from "../npm/index.ts";
+import { CorepackIntegrityHash, IntegrityHash, DEFAULT_REGISTRY, PackageManagerPin, PackageManagerPinName } from "../npm/index.ts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -14,9 +14,9 @@ import * as Match from "effect/Match";
 import * as R from "effect/Record";
 import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
+import type * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
-import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
@@ -38,6 +38,20 @@ const BinName = S.String.check(S.isPattern(/^(?!\.{1,2}$)[^/\\:\x00]+$/, {
 	description: "A nonempty filename component without path separators, drive prefixes or NUL bytes.",
 })).pipe($I.annoteSchema("BinName", { description: "A package manager command name confined to one shim filename." }));
 const isBinName = S.is(BinName);
+
+const WindowsDeviceName = S.String.check(S.isPattern(/^(?:CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])(?:\.|$)/i, {
+	identifier: "WindowsDeviceName",
+	title: "Windows reserved device name",
+	description: "A reserved Win32 device stem, including names with extensions.",
+})).pipe($I.annoteSchema("WindowsDeviceName", { description: "A command name that Windows resolves as a device." }));
+const isWindowsDeviceName = S.is(WindowsDeviceName);
+
+const WindowsShimTarget = S.String.check(S.isPattern(/^[^"%!\x00-\x1f\x7f]+$/, {
+	identifier: "WindowsShimTarget",
+	title: "Literal Windows shim target",
+	description: "A complete target without quotes, cmd expansion markers or control bytes; path separators are allowed.",
+})).pipe($I.annoteSchema("WindowsShimTarget", { description: "A complete path safe inside a quoted cmd argument." }));
+const isWindowsShimTarget = S.is(WindowsShimTarget);
 
 /**
  * Raised when a package manager cannot be provisioned on the runner.
@@ -149,11 +163,23 @@ export class PackageManagerInstallerError extends S.TaggedError<PackageManagerIn
 /**
  * How {@link PackageManagerInstallerShape.install} should behave.
  *
+ * **Example** (Validate PackageManagerInstallOptions input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
+ * import { PackageManagerInstallOptions } from "@beep/scratchpad/effected/github-actions/PackageManagerInstaller";
+ *
+ * const input = { requireIntegrity: true };
+ * Effect.runSync(Console.log(S.is(PackageManagerInstallOptions)(input))) // true
+ * ```
+ *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface PackageManagerInstallOptions {
+export const PackageManagerInstallOptions = S.Struct({
 	/**
 	 * Fail with `integrityMissing` when neither the pin nor the `integrity`
 	 * option carries an integrity hash, instead of proceeding with a logged
@@ -162,7 +188,7 @@ export interface PackageManagerInstallOptions {
 	 *
 	 * @since 0.0.0
 	 */
-	readonly requireIntegrity?: boolean | undefined;
+	requireIntegrity: S.optional(S.Boolean).annotateKey({ description: "Require an integrity authority before provisioning." }),
 	/**
 	 * The expected integrity of the manager's own artifact, supplied beside
 	 * the pin rather than through its `+<integrity>` tail — for a caller whose
@@ -193,7 +219,7 @@ export interface PackageManagerInstallOptions {
 	 *
 	 * @since 0.0.0
 	 */
-	readonly integrity?: IntegrityHashBrand | undefined;
+	integrity: S.optional(IntegrityHash).annotateKey({ description: "The existing branded integrity hash supplied alongside the pin." }),
 	/**
 	 * The npm registry host the npm, pnpm and yarn tarballs download from.
 	 * Defaults to `https://registry.npmjs.org`. A corporate mirror qualifies
@@ -208,7 +234,7 @@ export interface PackageManagerInstallOptions {
 	 *
 	 * @since 0.0.0
 	 */
-	readonly registry?: string | undefined;
+	registry: S.optional(S.String).annotateKey({ description: "The optional registry override; the install operation supplies its default." }),
 	/**
 	 * The expected Subresource Integrity of each pnpm native-binary package,
 	 * keyed by bare package name with no version (`"@pnpm/exe.linux-x64"`) —
@@ -232,7 +258,7 @@ export interface PackageManagerInstallOptions {
 	 *
 	 * @since 0.0.0
 	 */
-	readonly nativeIntegrity?: Readonly<Record<string, string>> | undefined;
+	nativeIntegrity: S.optional(S.Record(S.String, S.String)).annotateKey({ description: "Native package names mapped to caller-supplied SRI strings." }),
 	/**
 	 * Whether an npm pin may be answered by the runner's own ambient npm.
 	 * Defaults to `true`.
@@ -251,8 +277,16 @@ export interface PackageManagerInstallOptions {
 	 *
 	 * @since 0.0.0
 	 */
-	readonly allowAmbient?: boolean | undefined;
-}
+	allowAmbient: S.optional(S.Boolean).annotateKey({ description: "Whether the install operation may use the runner ambient npm." }),
+}).annotate($I.annote("PackageManagerInstallOptions", { description: "Structural provisioning options, with absent and explicit undefined fields preserved." }));
+
+/**
+ * The plain-object input accepted by {@link PackageManagerInstallOptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PackageManagerInstallOptions = typeof PackageManagerInstallOptions.Type;
 
 /**
  * A package manager the runner's own toolchain already had: nothing was
@@ -448,12 +482,14 @@ const SHIM_DIR = ".bin";
  * a shell script or a Mach-O to node is exactly the "Invalid or unexpected
  * token" failure this rule exists to prevent.
  */
-const posixShim = (target: string): string =>
-	isNodeScript(target) ? `#!/bin/sh\nexec node "${target}" "$@"\n` : `#!/bin/sh\nexec "${target}" "$@"\n`;
+const posixShim = (target: string): string => {
+	const literal = `'${Str.replaceAll("'", "'\\''")(target)}'`;
+	return isNodeScript(target) ? `#!/bin/sh\nexec node -- ${literal} "$@"\n` : `#!/bin/sh\nexec ${literal} "$@"\n`;
+};
 
 /** The Windows shim body, CRLF-terminated as cmd expects; same node-vs-direct rule. */
 const cmdShim = (target: string): string =>
-	isNodeScript(target) ? `@echo off\r\nnode "${target}" %*\r\n` : `@echo off\r\n"${target}" %*\r\n`;
+	isNodeScript(target) ? `@echo off\r\nnode -- "${target}" %*\r\n` : `@echo off\r\n"${target}" %*\r\n`;
 
 /** The bin names pnpm's wrapper publishes, every one of which becomes the native binary on Windows. */
 const PNPM_NATIVE_BIN_NAMES: ReadonlyArray<string> = ["pnpm", "pn", "pnpx", "pnx"];
@@ -505,7 +541,7 @@ const normalizeBins = (bin: unknown, fallbackName: string): O.Option<Record<stri
 		if (!P.isString(value)) {
 			return O.none();
 		}
-		entries[name] = value.replace(/^\.\//, "");
+		R.assignProperty(entries, name, value.replace(/^\.\//, ""));
 	}
 	return R.keys(entries).length === 0 ? O.none() : O.some(entries);
 };
@@ -630,6 +666,40 @@ const make = Effect.gen(function* () {
 		}
 	});
 
+	/** Resolve missing destinations through their existing parent without following dangling links. */
+	const resolvedDestination = Effect.fnUntraced(function* (file: string): Effect.fn.Return<string, PlatformError.PlatformError> {
+		return yield* fs.realPath(file).pipe(Effect.catchIf(
+			(error) => error.reason._tag === "NotFound",
+			Effect.fnUntraced(function* (error: PlatformError.PlatformError): Effect.fn.Return<string, PlatformError.PlatformError> {
+				const link = yield* Effect.option(fs.readLink(file));
+				const parent = path.dirname(file);
+				if (O.isSome(link) || parent === file) {
+					return yield* error;
+				}
+				return path.join(yield* resolvedDestination(parent), path.basename(file));
+			}),
+		));
+	});
+
+	/** Package roots must be real directories; bins may follow links only within that root. */
+	const containedPackagePath = Effect.fnUntraced(function* (
+		pin: PackageManagerPin,
+		packageDir: string,
+		file: string,
+	): Effect.fn.Return<void, PackageManagerInstallerError> {
+		const root = path.resolve(packageDir);
+		const link = yield* Effect.option(fs.readLink(root));
+		if (O.isSome(link)) {
+			return yield* errorFor(pin)({ reason: "layoutUnexpected", subject: "package root is a symbolic link" });
+		}
+		const realRoot = yield* fs.realPath(root).pipe(Effect.mapError((cause) => errorFor(pin)({ reason: "layoutUnexpected", subject: packageDir, cause })));
+		const target = yield* resolvedDestination(path.resolve(file)).pipe(Effect.mapError((cause) => errorFor(pin)({ reason: "layoutUnexpected", subject: file, cause })));
+		const relative = path.relative(realRoot, target);
+		if (relative === "" || relative === ".." || Str.startsWith(`..${path.sep}`)(relative) || path.isAbsolute(relative)) {
+			return yield* errorFor(pin)({ reason: "layoutUnexpected", subject: `${file} escapes the real package directory` });
+		}
+	});
+
 	const validateShimDestinations = Effect.fnUntraced(function* (
 		pin: PackageManagerPin,
 		into: string,
@@ -639,7 +709,7 @@ const make = Effect.gen(function* () {
 		for (const name of R.keys(bins)) {
 			const shim = path.resolve(shimDir, shimFileName(name));
 			const containment = path.relative(shimDir, shim);
-			if (!isBinName(name) || containment === "" || containment === ".." ||
+			if (!isBinName(name) || (windows && isWindowsDeviceName(name)) || containment === "" || containment === ".." ||
 				Str.startsWith(`..${path.sep}`)(containment) || path.isAbsolute(containment)) {
 				return yield* errorFor(pin)({
 					reason: "layoutUnexpected",
@@ -668,15 +738,15 @@ const make = Effect.gen(function* () {
 		packageDir: string,
 	): Effect.fn.Return<PackageManifest, PackageManagerInstallerError> {
 		const manifestPath = path.join(packageDir, "package.json");
+		yield* containedPackagePath(pin, packageDir, manifestPath);
 		const raw = yield* fs
 			.readFileString(manifestPath)
 			.pipe(
 				Effect.mapError((cause) => errorFor(pin)({ reason: "layoutUnexpected", subject: "no package.json", cause })),
 			);
-		const manifest = yield* Effect.try({
-			try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error),
-			catch: (cause) => errorFor(pin)({ reason: "layoutUnexpected", subject: "unparseable package.json", cause }),
-		});
+		const manifest = yield* S.decodeEffect(Json)(raw).pipe(
+			Effect.mapError((cause) => errorFor(pin)({ reason: "layoutUnexpected", subject: "unparseable package.json", cause })),
+		);
 		const bins = O.getOrUndefined(normalizeBins(P.hasProperty(manifest, "bin") ? manifest.bin : undefined, pin.name));
 		if (bins === undefined) {
 			return yield* errorFor(pin)({ reason: "layoutUnexpected", subject: "package.json names no bin" });
@@ -697,6 +767,7 @@ const make = Effect.gen(function* () {
 						subject: `bin ${name} (${relative}) escapes the package directory`,
 					});
 			}
+			yield* containedPackagePath(pin, packageDir, target);
 			yield* assertFile(pin, target, `bin ${name} (${relative}) is missing`);
 		}
 		return {
@@ -780,14 +851,32 @@ const make = Effect.gen(function* () {
 		options: { readonly skipExisting: boolean },
 	): Effect.fn.Return<void, PackageManagerInstallerError> {
 		const shimDir = path.join(into, SHIM_DIR);
+		for (const [name, relative] of R.toEntries(bins)) {
+			const target = path.join(into, relative);
+			yield* containedPackagePath(pin, into, target);
+			yield* assertFile(pin, target, `bin ${name} (${relative}) is missing`);
+		}
+		yield* containedPackagePath(pin, into, shimDir);
 		// Preflight the whole map before creating the directory or writing even
 		// the first valid shim; a later hostile name must leave no partial shims.
 		yield* validateShimDestinations(pin, into, bins);
+		if (windows) {
+			for (const [name, relative] of R.toEntries(bins)) {
+				const target = path.join(finalDirectory, relative);
+				if (!isWindowsShimTarget(target)) {
+					return yield* errorFor(pin)({
+						reason: "layoutUnexpected",
+						subject: `bin ${name} (${target}) cannot be represented literally in a Windows shim`,
+					});
+				}
+			}
+		}
 		const cacheError = (subject: string) => (cause: unknown) =>
 			errorFor(pin)({ reason: "cacheFailed", subject, cause });
 		yield* fs.makeDirectory(shimDir, { recursive: true }).pipe(Effect.mapError(cacheError(shimDir)));
 		for (const [name, relative] of R.toEntries(bins)) {
 			const shim = path.join(shimDir, shimFileName(name));
+			yield* containedPackagePath(pin, into, shim);
 			if (options.skipExisting) {
 				if ((yield* typeAt(fs, shim)) === "File") {
 					continue;
@@ -894,13 +983,8 @@ const make = Effect.gen(function* () {
 		const unverifiable = (cause: unknown) =>
 			errorFor(pin)({ reason: "integrityMismatch", subject: packumentUrl, cause });
 		const packument = yield* fs.readFileString(packumentFile).pipe(
+			Effect.flatMap(S.decodeEffect(Json)),
 			Effect.mapError(unverifiable),
-			Effect.flatMap((raw) =>
-				Effect.try({
-					try: () => Result.getOrThrowWith(S.decodeResult(Json)(raw), (error) => error),
-					catch: unverifiable,
-				}),
-			),
 		);
 		const dist = P.hasProperty(packument, "dist") ? packument.dist : undefined;
 		return yield* expectedFromSri(pin, P.hasProperty(dist, "integrity") ? dist.integrity : undefined, packumentUrl);
@@ -990,6 +1074,7 @@ const make = Effect.gen(function* () {
 		const extracted = yield* installer.extractTar(archive).pipe(Effect.mapError(fromInstaller(pin)));
 		const nativeName = windows ? "pnpm.exe" : "pnpm";
 		const native = path.join(extracted, "package", nativeName);
+		yield* containedPackagePath(pin, path.join(extracted, "package"), native);
 		yield* assertFile(pin, native, `package/${nativeName} is missing from the ${packageName} tarball`);
 
 		const cacheError = (subject: string) => (cause: unknown) =>
@@ -1005,12 +1090,14 @@ const make = Effect.gen(function* () {
 					continue;
 				}
 				for (const destination of [path.join(packageDir, relative), path.join(packageDir, `${relative}.exe`)]) {
+					yield* containedPackagePath(pin, packageDir, destination);
 					yield* fs.copyFile(native, destination).pipe(Effect.mapError(cacheError(destination)));
 				}
 			}
 			return nativeWindowsBins(bins);
 		}
 		const destination = path.join(packageDir, placeholder);
+		yield* containedPackagePath(pin, packageDir, destination);
 		yield* fs.copyFile(native, destination).pipe(Effect.mapError(cacheError(destination)));
 		// The overlaid binary and the `#!/bin/sh` alias bins are exec'd
 		// directly by their shims, so every non-Node bin needs the executable
@@ -1018,6 +1105,7 @@ const make = Effect.gen(function* () {
 		for (const relative of R.values(bins)) {
 			if (!isNodeScript(relative)) {
 				const file = path.join(packageDir, relative);
+				yield* containedPackagePath(pin, packageDir, file);
 				yield* fs.chmod(file, 0o755).pipe(Effect.mapError(cacheError(file)));
 			}
 		}

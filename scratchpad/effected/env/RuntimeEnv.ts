@@ -115,18 +115,45 @@ export class RuntimeEnv extends S.Class<RuntimeEnv>($I`RuntimeEnv`)({
 /**
  * The fields {@link CurrentRuntimeEnv.layerTest} can override.
  *
+ * **Example** (Validate an explicit absent agent override)
+ *
+ * ```ts
+ * import { RuntimeEnvOverrides } from "@beep/scratchpad/effected/env/RuntimeEnv";
+ * import * as O from "effect/Option";
+ * import * as S from "effect/Schema";
+ * console.log(S.is(RuntimeEnvOverrides)({ agent: O.none() })) // true
+ * ```
+ *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface RuntimeEnvOverrides {
+export const RuntimeEnvOverrides = S.Struct({
 	/** Replaces the detected agent. */
-	readonly agent?: O.Option<string>;
+	agent: S.Option(S.String).pipe(
+		S.optionalKey,
+		$I.annoteKey("RuntimeEnvOverrides.agent", { description: "Replaces the detected agent when supplied, including explicit `None`." }),
+	),
 	/** Replaces the detected CI. */
-	readonly ci?: O.Option<CiName>;
+	ci: S.Option(CiName).pipe(
+		S.optionalKey,
+		$I.annoteKey("RuntimeEnvOverrides.ci", { description: "Replaces the detected CI when supplied, including explicit `None`." }),
+	),
 	/** Replaces the detected terminal. */
-	readonly terminal?: O.Option<typeof DetectedTerminal.Type>;
-}
+	terminal: S.Option(DetectedTerminal).pipe(
+		S.optionalKey,
+		$I.annoteKey("RuntimeEnvOverrides.terminal", { description: "Replaces the detected terminal when supplied, including explicit `None`." }),
+	),
+}).annotate($I.annote("RuntimeEnvOverrides", { description: "Optional runtime snapshot overrides accepted as plain objects by the fixed test layer." }));
+
+/**
+ * The schema-derived fields {@link CurrentRuntimeEnv.layerTest} can override.
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export type RuntimeEnvOverrides = typeof RuntimeEnvOverrides.Type;
 
 /**
  * The {@link RuntimeEnv} of the running process, as a service.

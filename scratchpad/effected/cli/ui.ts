@@ -28,30 +28,30 @@ export {
 	type ConfirmInitOptions,
 	type ConfirmResult,
 	type ConfirmScreenOptions,
-	type ConfirmState,
-	type ConfirmToggle,
+	ConfirmState,
+	ConfirmToggle,
 	type ConfirmViewProps,
 } from "./ui/Confirm.ts";
 export { DocView, type DocViewProps } from "./ui/DocView.ts";
 export { KeyHelp, type KeyHelpProps } from "./ui/KeyHelp.ts";
-export { type Binding, type KeyHelpRow, KeyTable, type UseKeysOptions, useKeys } from "./ui/KeyTable.ts";
+export { Binding, KeyHelpRow, KeyTable, UseKeysOptions, useKeys } from "./ui/KeyTable.ts";
 export {
 	MultiSelect,
 	type MultiSelectAction,
 	type MultiSelectInitOptions,
-	type MultiSelectItem,
+	MultiSelectItem,
 	type MultiSelectScreenOptions,
-	type MultiSelectSection,
-	type MultiSelectState,
+	MultiSelectSection,
+	MultiSelectState,
 	type MultiSelectViewProps,
 } from "./ui/MultiSelect.ts";
 export {
 	Select,
 	type SelectAction,
-	type SelectChoice,
+	SelectChoice,
 	type SelectInitOptions,
 	type SelectScreenOptions,
-	type SelectState,
+	SelectState,
 	type SelectViewProps,
 } from "./ui/Select.ts";
 export { type Tab, Tabs, type TabsAction, type TabsProps } from "./ui/Tabs.ts";

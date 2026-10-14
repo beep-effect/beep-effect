@@ -1,8 +1,10 @@
 import {
   descendsFromProcess,
+  desktopTerminalShellState,
   invokerSessionRoot,
   ProcessTable,
   ProcessTableEntry,
+  parseProcessJobControl,
   parseProcessStatus,
   processLineage,
   processTableFromEntries,
@@ -12,7 +14,7 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -67,7 +69,105 @@ describe("parseProcessStatus", () => {
     expect(O.getOrThrow(parseProcessStatus(70)(document)).command).toBe("zsh");
     assertNone(parseProcessStatus("State:\tS (sleeping)\nPPid:\t60\n", 70));
     assertNone(parseProcessStatus("Name:\tzsh\n", 70));
+    assertNone(status.contextSwitches);
   });
+
+  it("adds the voluntary and involuntary context switches when both are present", () => {
+    const document = "Name:\tzsh\nPPid:\t60\nvoluntary_ctxt_switches:\t40\nnonvoluntary_ctxt_switches:\t2\n";
+    assertSome(O.getOrThrow(parseProcessStatus(document, 70)).contextSwitches, 42);
+    assertNone(
+      O.getOrThrow(parseProcessStatus("Name:\tzsh\nPPid:\t60\nvoluntary_ctxt_switches:\t40\n", 70)).contextSwitches
+    );
+  });
+});
+
+describe("parseProcessJobControl", () => {
+  it("reads the group, terminal, and foreground group after the last parenthesis", () => {
+    const shell = O.getOrThrow(parseProcessJobControl("70 (zsh) S 60 70 70 34823 70 4194304 13355 95982", 70));
+    expect([shell.processGroup, shell.terminal, shell.foregroundGroup]).toEqual([70, 34823, 70]);
+    // A command name may itself hold spaces and parentheses; only the last `)` ends it.
+    const odd = O.getOrThrow(parseProcessJobControl(80)("80 (tmux: (server) x) S 1 80 80 0 -1 4194560"));
+    expect([odd.processGroup, odd.terminal, odd.foregroundGroup]).toEqual([80, 0, -1]);
+    assertNone(parseProcessJobControl("70 (zsh) S 60 70", 70));
+    assertNone(parseProcessJobControl("70 zsh S 60 70 70 34823 70", 70));
+    assertNone(parseProcessJobControl("70 (zsh) S 60 x 70 34823 70", 70));
+  });
+});
+
+// The Claude Desktop app (55) runs a Code session (60) whose tool shell (70)
+// has no terminal, and starts a Terminal-panel login shell (300) on a pty in
+// the session folder. Rows below add one panel-like process at a time.
+const desktop: ReadonlyArray<ProcessTableEntry> = [
+  ProcessTableEntry.make({ pid: 1, parent: 0, command: "systemd" }),
+  ProcessTableEntry.make({ pid: 50, parent: 1, command: "systemd" }),
+  ProcessTableEntry.make({ pid: 55, parent: 50, command: "claude-desktop" }),
+  ProcessTableEntry.make({ pid: 60, parent: 55, command: "claude" }),
+  ProcessTableEntry.make({ pid: 70, parent: 60, command: "zsh" }),
+  ProcessTableEntry.make({ pid: 500, parent: 50, command: "ghostty" }),
+];
+
+const panelShell = (overrides: Partial<{ readonly command: string; readonly foregroundGroup: number }> = {}) =>
+  ProcessTableEntry.make({
+    pid: 300,
+    parent: 55,
+    command: "zsh",
+    terminal: 34823,
+    foregroundGroup: 300,
+    ...overrides,
+  });
+
+const terminalStateIn = (entries: ReadonlyArray<ProcessTableEntry>, pid: number) =>
+  desktopTerminalShellState(pid).pipe(withTable(processTableFromEntries({ self: 100, entries })));
+
+describe("desktopTerminalShellState", () => {
+  it.effect("reads a panel shell at its prompt as idle", () =>
+    Effect.gen(function* () {
+      assertSome(yield* terminalStateIn(A.append(desktop, panelShell()), 300), "idle");
+    })
+  );
+
+  it.effect("reads a panel shell whose terminal runs another group in the foreground as busy", () =>
+    Effect.gen(function* () {
+      const job = ProcessTableEntry.make({ pid: 310, parent: 300, command: "make", terminal: 34823 });
+      const entries = A.appendAll(desktop, [panelShell({ foregroundGroup: 310 }), job]);
+      assertSome(yield* terminalStateIn(entries, 300), "busy");
+    })
+  );
+
+  it.effect("reads a shell without job control running a command in its own group as busy", () =>
+    Effect.gen(function* () {
+      // The terminal's foreground group is still the shell's, but a child shares it.
+      const child = ProcessTableEntry.make({ pid: 311, parent: 300, command: "sleep", processGroup: 300 });
+      assertSome(yield* terminalStateIn(A.appendAll(desktop, [panelShell(), child]), 300), "busy");
+    })
+  );
+
+  it.effect("reads a panel shell as busy when the table cannot be listed", () =>
+    Effect.gen(function* () {
+      const table = processTableFromEntries({ self: 100, entries: A.append(desktop, panelShell()) });
+      const state = yield* desktopTerminalShellState(300).pipe(withTable({ ...table, pids: Effect.succeedNone }));
+      assertSome(state, "busy");
+    })
+  );
+
+  it.effect("recognizes no other process as a panel shell", () =>
+    Effect.gen(function* () {
+      const entries = A.appendAll(desktop, [
+        // An editor the desktop app started on a pty is not a shell.
+        ProcessTableEntry.make({ pid: 320, parent: 55, command: "nvim", terminal: 34824, foregroundGroup: 320 }),
+        // A shell the desktop app started without a terminal.
+        ProcessTableEntry.make({ pid: 330, parent: 55, command: "zsh" }),
+        // A terminal emulator's shell, not the desktop app's.
+        ProcessTableEntry.make({ pid: 510, parent: 500, command: "zsh", terminal: 34825, foregroundGroup: 510 }),
+        // A shell on a pty below the agent session rather than the app itself.
+        ProcessTableEntry.make({ pid: 340, parent: 60, command: "zsh", terminal: 34826, foregroundGroup: 340 }),
+      ]);
+      const states = yield* Effect.forEach([55, 60, 70, 320, 330, 340, 510, 999], (pid) =>
+        terminalStateIn(entries, pid)
+      );
+      assertTrue(A.every(states, O.isNone));
+    })
+  );
 });
 
 describe("processLineage", () => {
@@ -182,6 +282,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("process table over a fi
       expect(yield* table.descriptors(80)).toEqual(["/lane/held.log"]);
       expect(O.getOrThrow(yield* table.status(7)).command).toBe("scripted");
       assertNone(yield* table.status(100));
+      // Job control is lineage too: a row without it is its own group with no terminal.
+      expect(O.getOrThrow(yield* table.jobControl(7))).toMatchObject({
+        processGroup: 7,
+        terminal: 0,
+        foregroundGroup: -1,
+      });
+      assertNone(yield* table.jobControl(100));
     })
   );
 
@@ -217,6 +324,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("process table over a fi
       const own = O.getOrThrow(yield* procProcessTable.status(process.pid));
       expect(own.parent).toBe(process.ppid);
       expect(own.command.length).toBeGreaterThan(0);
+      const job = O.getOrThrow(yield* procProcessTable.jobControl(process.pid));
+      expect(job.pid).toBe(process.pid);
+      expect(job.processGroup).toBeGreaterThan(0);
       const lineage = yield* processLineage(process.pid);
       expect(pidsOf(lineage)).toContain(process.ppid);
       const root = yield* invokerSessionRoot();

@@ -1,3 +1,5 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as HashSet from "effect/HashSet";
@@ -12,6 +14,8 @@ import * as SchemaIssue from "effect/SchemaIssue";
 import * as Result from "effect/Result";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+
+const $I = $ScratchpadId.create("effected/github-actions/ActionInput");
 
 const Json = S.fromJsonString(S.Unknown);
 const StringList = S.Array(S.String);
@@ -67,11 +71,23 @@ const FALSE = HashSet.fromIterable<string>(["false", "False", "FALSE"]);
 /**
  * Options for {@link ActionInput.pairs}.
  *
+ * **Example** (Validate PairsOptions input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
+ * import { PairsOptions } from "@beep/scratchpad/effected/github-actions/ActionInput";
+ *
+ * const input = { requireValue: true };
+ * Effect.runSync(Console.log(S.is(PairsOptions)(input))) // true
+ * ```
+ *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface PairsOptions {
+export const PairsOptions = S.Struct({
 	/**
 	 * Reject a pair whose value is empty (`key=`).
 	 *
@@ -88,8 +104,16 @@ export interface PairsOptions {
 	 * @category configuration
 	 * @since 0.0.0
 	 */
-	readonly requireValue?: boolean;
-}
+	requireValue: S.optionalKey(S.Boolean).annotateKey({ description: "Reject pairs with empty values; omitted means empty values are accepted." }),
+}).annotate($I.annote("PairsOptions", { description: "Options controlling empty-value acceptance when reading action input pairs." }));
+
+/**
+ * The plain-object options accepted by {@link ActionInput.pairs}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PairsOptions = typeof PairsOptions.Type;
 
 /** Strip a trailing `#` comment and surrounding whitespace from one line. */
 const stripComment = (line: string): string => {
@@ -328,9 +352,10 @@ export class ActionInput {
 	): Config.Config<L[number]> {
 		return Config.String(inputVariable(name)).pipe(
 			Config.mapEffect((raw) =>
-				S.is(S.Literals(allowed))(raw)
-					? Effect.succeed(raw)
-					: Effect.fail(configError(`Input "${name}" must be one of: ${allowed.join(" | ")} — received "${raw}"`, raw)),
+				Bool.match(S.is(S.Literals(allowed))(raw), {
+					onTrue: () => Effect.succeed(raw),
+					onFalse: () => Effect.fail(configError(`Input "${name}" must be one of: ${allowed.join(" | ")} — received "${raw}"`, raw)),
+				}),
 			),
 		);
 	}
@@ -714,7 +739,7 @@ export class ActionInput {
 		}
 		/** Resolve one runner-variable name: the verbatim entry wins, then the input-name entry. */
 		const lookup = (name: string): string | undefined => {
-			const direct = env[name];
+			const direct = O.getOrUndefined(R.get(env, name));
 			return present(direct) ? direct : O.getOrUndefined(MutableHashMap.get(byInputName, name));
 		};
 		return ConfigProvider.make((path) => {
@@ -827,7 +852,10 @@ export class ActionInput {
 				// The attempt resolves through `ambient` rather than reading an
 				// environment of its own, so there is exactly one source of values and
 				// exactly one spelling of the derivation (`inputVariable`).
-				return P.isString(name) ? ambient.load([inputVariable(name)]) : Effect.as(Effect.void, undefined);
+				return Bool.match(P.isString(name), {
+					onTrue: () => ambient.load([inputVariable(`${name}`)]),
+					onFalse: () => Effect.as(Effect.void, undefined),
+				});
 			}),
 			ambient,
 		);

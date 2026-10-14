@@ -224,6 +224,47 @@ describe("Package wire transform + rest", () => {
 		}),
 	);
 
+	it.effect("preserves a declared __proto__ subclass field through direct and wire decoding", () =>
+		Effect.gen(function* () {
+			class ProtoPackage extends Package.extend<ProtoPackage>("ProtoPackage")({
+				["__proto__"]: S.String,
+			}) {}
+			const raw = {
+				name: "proto-subclass",
+				version: "1.0.0",
+				description: "typed metadata",
+				["__proto__"]: "kept",
+				custom: { enabled: true },
+				arr: [1, 2, 3],
+			};
+			const direct = yield* S.decodeEffect(ProtoPackage)(raw);
+			assert.instanceOf(direct, ProtoPackage);
+			assert.strictEqual(direct["__proto__"], "kept");
+
+			const wire = Package.wireFor(ProtoPackage);
+			const decoded = yield* S.decodeEffect(wire)(raw);
+			assert.instanceOf(decoded, ProtoPackage);
+			assert.strictEqual(decoded["__proto__"], "kept");
+			assert.deepStrictEqual(decoded.rest, { custom: { enabled: true }, arr: [1, 2, 3] });
+			const encoded = yield* S.encodeEffect(wire)(decoded);
+			assert.deepStrictEqual(encoded, {
+				...raw,
+				dependencies: {},
+				devDependencies: {},
+				peerDependencies: {},
+				optionalDependencies: {},
+				scripts: {},
+			});
+			assert.isFalse("rest" in encoded);
+			const roundTrip = yield* S.decodeEffect(wire)(encoded);
+			assert.strictEqual(roundTrip["__proto__"], "kept");
+			assert.strictEqual(roundTrip.name, raw.name);
+			assert.strictEqual(roundTrip.version.toString(), raw.version);
+			assert.deepStrictEqual(roundTrip.description, decoded.description);
+			assert.deepStrictEqual(roundTrip.rest, decoded.rest);
+		}),
+	);
+
 	it.effect("supports .extend() pulling a typed field out of rest", () =>
 		Effect.gen(function* () {
 			class ToolPackage extends Package.extend<ToolPackage>("ToolPackage")({

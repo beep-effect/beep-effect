@@ -9,7 +9,7 @@ import { Yaml } from "../../../effected/yaml/Yaml.ts";
 import { foldScalarLine, foldRenderedScalar, renderBlockFolded, renderBlockLiteral, renderSingleQuotedMultiline } from "../../../effected/yaml/internal/fold.ts";
 
 const runs = { arbitrary: fcRuns(100) };
-const words = S.Literals(["alpha", "beta", "gamma", "delta"]).pipe(S.Array, Arbitrary.schema, Arbitrary.map((parts) => `word ${A.join(parts, " ")} end`));
+const words = S.Literals(["alpha", "beta", "gamma", "delta", "\tbeta", "alpha\t beta", "gamma \tdelta"]).pipe(S.Array, Arbitrary.schema, Arbitrary.map((parts) => `word ${A.join(parts, " ")} end`));
 const blockValue = S.Literals(["alpha", "beta gamma", "'quote'", "é", " more", "\tmore", ""]).pipe(S.Array, Arbitrary.schema, Arbitrary.map(A.join("\n")));
 const quotedValue = S.Literals(["alpha", "beta gamma", "'quote'", "é", ""]).pipe(S.Array, Arbitrary.schema, Arbitrary.map(A.join("\n")));
 const width = Arbitrary.schema(S.Literals([8, 12, 20, 40]));

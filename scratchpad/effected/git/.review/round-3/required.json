@@ -1,0 +1,69 @@
+{
+  "module": "git",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/git/Git.ts",
+        "scratchpad/effected/git/GitCommand.ts"
+      ],
+      "tests": [
+        "scratchpad/test/git/Git.test.ts",
+        "scratchpad/test/git/GitCommand.test.ts",
+        "scratchpad/test/git/GitLog.test.ts",
+        "scratchpad/test/git/integration/GitSurface.int.test.ts"
+      ],
+      "findings": ["git-r3-1", "git-r3-2", "git-r3-3"]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/git/GitConfig.ts",
+        "scratchpad/effected/git/internal/config.ts"
+      ],
+      "tests": [
+        "scratchpad/test/git/GitConfig.test.ts",
+        "scratchpad/test/git/internal/config.coverage.test.ts"
+      ],
+      "findings": ["git-r3-4", "git-r3-5", "git-r3-6"]
+    }
+  ],
+  "findings": {
+    "git-r3-1": {
+      "file": "scratchpad/effected/git/GitCommand.ts",
+      "class": "bug",
+      "summary": "log.showSignature adds signature banners to machine-parsed log stdout, rejecting history output and corrupting commitInfo.sha.",
+      "fix": "Add --no-show-signature to GitCommand.log and GitCommand.commitInfo while retaining %G? and exact message bytes. Update argv expectations in GitCommand.test.ts, Git.test.ts and GitLog.test.ts; add real-Git regressions for both service methods under repository-local log.showSignature=true in integration/GitSurface.int.test.ts and restore fixture config. Central deviation recording only; do not edit ledger or README Port notes."
+    },
+    "git-r3-2": {
+      "file": "scratchpad/effected/git/Git.ts",
+      "class": "bug",
+      "summary": "A successful commitInfo invocation with empty stdout defects at S.asserts instead of returning a typed GitCommandError.",
+      "fix": "Make parseCommitInfo return a non-throwing parse result; require both NUL separators and valid signature-status data, preserving successful message bytes. Map parse misses to GitCommandError kind failed in the success handler using invocation metadata. Add empty/tree-ref output tests in Git.test.ts and a real tree-ref or empty-range regression in integration/GitSurface.int.test.ts. Keep schema-derived validation and do not restore the unsafe cast removed by step 2. Central deviation recording only."
+    },
+    "git-r3-3": {
+      "file": "scratchpad/effected/git/Git.ts",
+      "class": "schema",
+      "summary": "SshFromEnv is a named, reused SSH configuration payload defined by a handwritten interface rather than a schema.",
+      "fix": "Replace SshFromEnv with a module-local identity-annotated schema with S.Option(S.String) fields and a schema-derived type. Preserve Option representation, blank-value policy, construction semantics, precedence and transport behavior without new restrictions or exports; retain Git.test.ts SSH regressions."
+    },
+    "git-r3-4": {
+      "file": "scratchpad/effected/git/GitConfig.ts",
+      "class": "bug",
+      "summary": "Insertion after an EOF backslash or final continuation consumes the new key or section into the preceding value.",
+      "fix": "Terminate open logical values with the additional line ending needed before new content, consistently in appendAtEof, append and insertEntry. Preserve ordinary formatting and existing values. Add append/set/addSection regressions in GitConfig.test.ts for bare EOF backslash, final LF continuation and final CRLF continuation, checking old value preservation and new entry/section existence. Coordinate scanner fixes in this group. Central deviation recording only."
+    },
+    "git-r3-5": {
+      "file": "scratchpad/effected/git/internal/config.ts",
+      "class": "bug",
+      "summary": "Whitespace before continuations or an accepted EOF backslash is lost from decoded values and excluded from replacement spans.",
+      "fix": "Commit pending decoded whitespace and extend the significant raw span through continuations and the permitted unquoted EOF backslash. Preserve trimming of ordinary trailing whitespace. Add LF/CRLF/tab/comment/EOF/set fidelity regressions in GitConfig.test.ts and internal/config.coverage.test.ts; correct the EOF-whitespace expectation at GitConfig.test.ts:225 while preserving invalid quoted and terminal-CR escape cases. Central deviation recording only."
+    },
+    "git-r3-6": {
+      "file": "scratchpad/effected/git/internal/config.ts",
+      "class": "bug",
+      "summary": "Empty quotes or initial continuations cause leading unquoted whitespace to be returned contrary to Git semantics.",
+      "fix": "Skip unquoted whitespace while decoded is empty, including after empty quotes and initial continuations; retain quoted/escaped whitespace and accurate source spans. Add GitConfig.test.ts and internal/config.coverage.test.ts regressions with the quoted-space control. Implement alongside git-r3-5 to keep continuation significance consistent. Central deviation recording only."
+    }
+  }
+}

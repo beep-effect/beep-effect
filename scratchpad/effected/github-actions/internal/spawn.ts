@@ -16,21 +16,44 @@
 // cannot deadlock on a full pipe; the stream ends at exit. The caller applies
 // its own exit-code policy (the cache tolerates `tar -k`'s exit 1) and maps
 // the `PlatformError` into its own error class.
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import type * as PlatformError from "effect/PlatformError";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
 import * as Function from "effect/Function";
 import type { ChildProcess, ChildProcessSpawner } from "effect/process";
 
+const $I = $ScratchpadId.create("effected/github-actions/internal/spawn");
+
 /**
  * What one run produced: stdout and stderr interleaved, and the exit code.
+ * **Example** (Validate SpawnOnceResult input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
+ * import { SpawnOnceResult } from "@beep/scratchpad/effected/github-actions/internal/spawn";
+ *
+ * const input = { output: "installed", code: 0 };
+ * Effect.runSync(Console.log(S.is(SpawnOnceResult)(input))) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface SpawnOnceResult {
-	readonly output: string;
-	readonly code: number;
-}
+export const SpawnOnceResult = S.Struct({
+	output: S.String.annotateKey({ description: "The interleaved stdout and stderr from one spawn." }),
+	code: S.Finite.annotateKey({ description: "The same spawn's finite exit code, without applying caller policy." }),
+}).annotate($I.annote("SpawnOnceResult", { description: "The plain-object output and exit code collected from one spawn handle." }));
+
+/**
+ * The plain-object result accepted by {@link SpawnOnceResult}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SpawnOnceResult = typeof SpawnOnceResult.Type;
 
 /**
  * Spawn `command` once, drain `stdout`+`stderr`, then read the exit code from

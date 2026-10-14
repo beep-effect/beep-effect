@@ -338,12 +338,84 @@ const stageEditorTsgo = Effect.fn("Gates.stageEditorTsgo")(function* (config: Ru
   const [version, lib] = newest.value;
   const staged = path.join(config.repoRoot, "coverage", "tsgo-editor", version);
   if (!(yield* fs.exists(path.join(staged, "tsc")))) {
+    // Concurrent gates stage the same version: copy into a private directory and rename it into
+    // place, so no gate ever executes a half-copied binary. The loser of the race keeps the winner's copy.
     yield* fs.makeDirectory(path.dirname(staged), { recursive: true });
-    yield* fs.copy(lib, staged);
-    yield* fs.chmod(path.join(staged, "tsc"), 0o755);
+    const scratch = yield* fs.makeTempDirectory({ directory: path.dirname(staged), prefix: `${version}-` });
+    const copy = path.join(scratch, "lib");
+    yield* fs.copy(lib, copy);
+    yield* fs.chmod(path.join(copy, "tsc"), 0o755);
+    yield* Effect.ignore(fs.rename(copy, staged));
+    yield* fs.remove(scratch, { recursive: true });
   }
   return O.some({ version, binary: path.join(staged, "tsc") });
 });
+
+const EDITOR_ERROR = /(?:\(\d+,\d+\): |^)error TS\d+:/;
+const EDITOR_ADVISORY = /\(\d+,\d+\): (?:warning|suggestion|message) TS\d+:/;
+
+/**
+ * What the editor's tsgo run means for the check gate.
+ *
+ * **Example** (Decode a clean verdict with advisories)
+ *
+ * ```ts
+ * import { EditorTsgoVerdict } from "@beep/scratchpad/effected/runner/Gates"
+ * import * as S from "effect/Schema"
+ *
+ * const verdict = S.decodeUnknownSync(EditorTsgoVerdict)({ red: false, errors: [], advisories: 3 })
+ * console.log(verdict.red, verdict.advisories) // false 3
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const EditorTsgoVerdict = S.Struct({
+  red: S.Boolean.annotateKey({ description: "Whether the editor run fails the check gate." }),
+  errors: S.Array(S.String).annotateKey({ description: "The error-category diagnostic lines." }),
+  advisories: S.Finite.annotateKey({ description: "The count of suggestion, warning and message diagnostics." }),
+}).annotate($I.annote("EditorTsgoVerdict", { description: "The check gate's reading of one editor tsgo run." }));
+
+/**
+ * The editor tsgo verdict, inferred from its schema.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EditorTsgoVerdict = typeof EditorTsgoVerdict.Type;
+
+/**
+ * Reads an editor tsgo run: red on any error-category diagnostic, or on a non-zero exit that printed no
+ * diagnostic at all (a crash); clean when the only output is suggestion, warning or message diagnostics.
+ *
+ * **Details**
+ *
+ * Newer editor tsgo builds exit non-zero when they report suggestion-level Effect diagnostics (0.52.0 does
+ * for `TS377141`), which the pinned tsgo never fails on. Exit codes alone would turn advisory output into a
+ * red gate, so the verdict classifies the printed diagnostics instead.
+ *
+ * **Example** (Advisory output stays clean)
+ *
+ * ```ts
+ * import { editorTsgoVerdict } from "@beep/scratchpad/effected/runner/Gates"
+ *
+ * const verdict = editorTsgoVerdict({ exitCode: 1, output: "test/a.test.ts(22,28): suggestion TS377141: Add a brand." })
+ * console.log(verdict.red, verdict.advisories) // false 1
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const editorTsgoVerdict = (run: { readonly exitCode: number; readonly output: string }): EditorTsgoVerdict => {
+  const lines = A.filter(Str.split("\n")(run.output), Str.isNonEmpty);
+  const errors = A.filter(lines, (line) => EDITOR_ERROR.test(line));
+  const advisories = A.filter(lines, (line) => EDITOR_ADVISORY.test(line)).length;
+  return {
+    red: A.isReadonlyArrayNonEmpty(errors) || (run.exitCode !== 0 && advisories === 0),
+    errors,
+    advisories,
+  };
+};
 
 /**
  * The check gate: proves Effect diagnostics are live with the canary, then
@@ -369,18 +441,23 @@ export const check = Effect.fn("Gates.check")(function* (config: RunnerConfig, t
   yield* canary(config, target);
   const editor = yield* stageEditorTsgo(config);
   if (O.isSome(editor)) {
-    const editorExit = yield* runInherited(
+    const editorRun = yield* captureExit(
       heavy({
         command: editor.value.binary,
         args: ["-p", `effected/${target}/tsconfig.json`, "--noEmit", "--pretty", "false"],
         cwd: path.join(config.repoRoot, "scratchpad"),
       })
     );
-    if (editorExit !== 0) {
+    const verdict = editorTsgoVerdict(editorRun);
+    if (verdict.red) {
+      yield* Console.log(A.isReadonlyArrayNonEmpty(verdict.errors) ? A.join(verdict.errors, "\n") : editorRun.output);
       yield* Console.log(`[effected] ${target} check: editor tsgo ${editor.value.version} red`);
-      return yield* gateExit(target, "check", editorExit);
+      return yield* gateExit(target, "check", editorRun.exitCode === 0 ? 1 : editorRun.exitCode);
     }
-    yield* Console.log(`[effected] ${target} check: editor tsgo ${editor.value.version} clean`);
+    yield* Console.log(
+      `[effected] ${target} check: editor tsgo ${editor.value.version} clean` +
+        (verdict.advisories > 0 ? ` (${verdict.advisories} advisory diagnostic(s))` : "")
+    );
   } else {
     yield* Console.log(`[effected] ${target} check: no editor tsgo cache found; pinned tsgo only`);
   }

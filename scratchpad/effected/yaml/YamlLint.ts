@@ -869,17 +869,16 @@ export class YamlLint {
 			return Result.fail(YamlParseError.make({ diagnostics: fatal, input: text }));
 		}
 		const fixes: Array<YamlEdit> = [];
-		let lastEnd = -1;
-		let lastOffset = -1;
 		for (const diagnostic of runRules(ctx, rules, config)) {
 			const fix = diagnostic.fix;
 			if (fix === undefined) continue;
-			// Overlapping — and same-offset (two zero-length insertions at one
-			// position would apply in arbitrary order) — earlier fix wins.
-			if (fix.offset < lastEnd || fix.offset === lastOffset) continue;
+			// Diagnostic order need not match fix offsets. Compare every accepted
+			// interval; overlapping and same-offset edits keep the earlier diagnostic.
+			if (A.some(fixes, (accepted) =>
+				fix.offset === accepted.offset ||
+				(fix.offset < accepted.offset + accepted.length && accepted.offset < fix.offset + fix.length),
+			)) continue;
 			fixes.push(fix);
-			lastEnd = fix.offset + fix.length;
-			lastOffset = fix.offset;
 		}
 		return Result.succeed(YamlEdit.applyAll(text, fixes));
 	}

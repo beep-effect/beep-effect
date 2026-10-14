@@ -248,7 +248,7 @@ const findUpward: (
 			candidatesFor: (dir: string) => ReadonlyArray<string>,
 		) {
 		const fs = yield* FileSystem.FileSystem;
-		const candidates = A.flatMap(dirs, candidatesFor);
+		const candidates = A.flatMap(dirs, (dir) => candidatesFor(dir));
 		return yield* firstMatch(candidates, (candidate) => fs.exists(candidate));
 	});
 

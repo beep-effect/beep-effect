@@ -1,6 +1,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as HashSet from "effect/HashSet";
 import { headerNumber, headerString, retryAfterMillisFrom } from "./internal/headers.ts";
@@ -448,6 +449,9 @@ interface Throwable {
 	readonly validation: ReadonlyArray<GitHubValidationEntry>;
 }
 
+const describeThrowable = (value: unknown): string =>
+	Result.getOrElse(Result.try(() => String(value)), () => "Unable to describe GitHub REST failure");
+
 /**
  * Read an unknown throwable structurally.
  *
@@ -461,7 +465,7 @@ interface Throwable {
  */
 const readThrowable = (error: unknown): Throwable => {
 	if (!P.isObject(error)) {
-		return { status: undefined, headers: undefined, reason: String(error), validation: [] };
+		return { status: undefined, headers: undefined, reason: describeThrowable(error), validation: [] };
 	}
 	const record = error;
 	const response = asRecord(record.response);
@@ -470,7 +474,7 @@ const readThrowable = (error: unknown): Throwable => {
 	return {
 		status: isStatus(record.status) ? record.status : undefined,
 		headers,
-		reason: P.isString(record.message) ? record.message : String(error),
+		reason: P.isString(record.message) ? record.message : describeThrowable(error),
 		validation: readValidation(data),
 	};
 };

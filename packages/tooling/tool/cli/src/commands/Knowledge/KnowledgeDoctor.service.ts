@@ -1349,7 +1349,7 @@ const textEncoder = new TextEncoder();
  * ```
  *
  * @param input - Files plus optional command surface, ancestry, history, and producers.
- * @returns The in-memory doctor tree.
+ * @returns A tree whose reads come from `input.files` and never touch git or the disk.
  * @category testing
  * @since 0.0.0
  */

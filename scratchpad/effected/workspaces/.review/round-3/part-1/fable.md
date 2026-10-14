@@ -1,0 +1,7 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the named workspaces files against the pinned upstream oracle and the round-2 inventory, then report only new findings.Round 2 already records the lockfile, hooks, manager-name, and duplicate-check defects. I’ll read the port laws and the nine files for anything new.I'll finish the read-only pass on the eight focus files and only keep a finding if it is a new divergence from the pinned oracle or a cited law the green gates missed.The subprocess script and the in-process `configOf` guards may not accept the same catalog shapes. I'll compare those schemas with the pinned oracle before deciding whether that is a real divergence.NO FINDINGS
+
+The eight focus files match the pinned oracle at `af7566a9da2eff169cb74955efcc5ede1e5de9f8` on observable behaviour. Round-2 items r01–r05 are already fixed in this tree, and the README Port notes already record those deviations. Nothing new clears the D11 bar.
+
+REQUIRED: 0
+BACKLOG: 0

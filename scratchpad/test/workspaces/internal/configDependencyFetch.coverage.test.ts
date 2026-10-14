@@ -1,5 +1,7 @@
 import { assert, it, vi } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as R from "effect/Record";
+import { Yaml } from "../../../effected/yaml/index.ts";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { ScriptedSpawner } from "../../../effected/commands/index.ts";
 
@@ -26,6 +28,8 @@ it.effect("invalid inline integrity fails before consulting locks", () => Effect
 
 const spawner = ScriptedSpawner.make((_command, args) => {
   const scratch = args[args.indexOf("--dir") + 1] ?? "";
+  assert.strictEqual(sync.readFileSync(path.join(scratch, "pnpm-lock.yaml"), "utf8"),
+    `---\nlockfileVersion: '9.0'\n\nimporters:\n\n  .:\n    configDependencies:\n      "config":\n        specifier: "1.0.0"\n        version: "1.0.0"\n\npackages:\n\n  "config@1.0.0":\n    resolution: {integrity: "${sri}"}\n\nsnapshots:\n\n  "config@1.0.0": {}\n\n---\n`);
   const target = path.join(scratch, "store", "links", "config", "1.0.0", "hash", "node_modules", "config");
   sync.mkdirSync(target, { recursive: true });
   sync.writeFileSync(path.join(target, "package.json"), JSON.stringify({ version: "1.0.0" }));
@@ -34,6 +38,28 @@ const spawner = ScriptedSpawner.make((_command, args) => {
   sync.symlinkSync(target, linked);
   return {};
 });
+
+it.effect("own __proto__ and normal registry scopes survive extraction and scratch YAML in order", () => Effect.gen(function* () {
+  const text = 'registry: "https://default.test"\nregistries:\n  "__proto__": "https://proto.test"\n  "@normal": "https://normal.test"\n  "@ignored": 42\n';
+  const document = yield* Yaml.parse(text);
+  const settings = subject.registrySettingsOf(document);
+  assert.isTrue(R.has(settings.registries, "__proto__"));
+  assert.deepStrictEqual(R.toEntries(settings.registries), [["__proto__", "https://proto.test"], ["@normal", "https://normal.test"]]);
+  const yaml = subject.scratchWorkspaceYaml("config", "1.0.0", settings);
+  assert.strictEqual(yaml, 'configDependencies:\n  "config": "1.0.0"\nregistry: "https://default.test"\nregistries:\n  "__proto__": "https://proto.test"\n  "@normal": "https://normal.test"\n');
+  assert.deepStrictEqual(subject.registrySettingsOf(yield* Yaml.parse(yaml)), settings);
+  for (const input of [undefined, null, 42, [], { registry: 42, registries: [] }]) {
+    assert.deepStrictEqual(subject.registrySettingsOf(input), { registries: {} });
+  }
+}));
+
+it.effect("string JSON quoting preserves hostile YAML scalar text and the final newline", () => Effect.gen(function* () {
+  const name = 'config"\n: #';
+  const version = '1.0.0\\\t';
+  const yaml = subject.scratchWorkspaceYaml(name, version, { registry: 'https://r.test/"\n', registries: { ['@x"\n']: 'https://s.test/\\' } });
+  assert.strictEqual(yaml, 'configDependencies:\n  "config\\"\\n: #": "1.0.0\\\\\\t"\nregistry: "https://r.test/\\"\\n"\nregistries:\n  "@x\\"\\n": "https://s.test/\\\\"\n');
+  assert.deepStrictEqual(yield* Yaml.parse(yaml), { configDependencies: { [name]: version }, registry: 'https://r.test/"\n', registries: { ['@x"\n']: 'https://s.test/\\' } });
+}));
 it.layer(spawner.layer, { timeout: "30 seconds" })((it) => {
   it.effect("fetches the exact store version using the workspace registry settings", () => Effect.gen(function* () {
     const dir = yield* root();

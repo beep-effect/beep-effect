@@ -1,11 +1,35 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { GitHubMarkdown } from "../../effected/github-actions/GitHubMarkdown.ts";
+import { GitHubHeadingDepth, GitHubListOptions, GitHubMarkdown } from "../../effected/github-actions/GitHubMarkdown.ts";
+import { Markdown } from "../../effected/markdown/index.ts";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 describe("GitHubMarkdown", () => {
+	it("heading and list schemas preserve literal depths and optional undefined options", () => {
+		for (const depth of [1, 2, 3, 4, 5, 6]) assert.isTrue(S.is(GitHubHeadingDepth)(depth));
+		for (const depth of [0, 7, 1.5, "2"]) assert.isFalse(S.is(GitHubHeadingDepth)(depth));
+		for (const options of [{}, { ordered: undefined }, { ordered: false }, { ordered: true }]) {
+			const input: GitHubListOptions = options;
+			assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(GitHubListOptions)(input)), input);
+			assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(GitHubListOptions)(input)), input);
+		}
+		assert.isFalse(S.is(GitHubListOptions)({ ordered: "true" }));
+	});
+
 	describe("table — escaping is the safety argument", () => {
+		it("CR, CRLF and LF in headers and cells preserve one data row", () => {
+			for (const ending of ["\r", "\r\n", "\n"]) {
+				const rendered = GitHubMarkdown.table([`first${ending}header`, "second"], [[`left${ending}right`, "ok"]]);
+				assert.strictEqual(rendered, "| first<br>header | second |\n| --- | --- |\n| left<br>right | ok |");
+				const table = Result.getOrThrow(Markdown.parseResult(rendered)).children[0];
+				if (table?.type !== "table") return assert.fail("expected a table");
+				assert.lengthOf(table.children, 2);
+				for (const row of table.children) assert.lengthOf(row.children, 2);
+			}
+		});
+
 		it("a cell carrying `>=1 || <2` must not shift columns", () => {
 			// The live defect this writer exists to delete: the predecessor joined
 			// cells with " | " and a semver range added two phantom columns.
@@ -52,6 +76,64 @@ describe("GitHubMarkdown", () => {
 	});
 
 	describe("link", () => {
+		it("lone, odd and even trailing backslash runs stay inside one link", () => {
+			for (const [label, escaped, visible] of [
+				["\\", "\\\\", "\\"],
+				["abc\\", "abc\\\\", "abc\\"],
+				["abc\\\\\\", "abc\\\\\\\\", "abc\\\\"],
+				["abc\\\\", "abc\\\\", "abc\\"],
+				["abc\\\\\\\\", "abc\\\\\\\\", "abc\\\\"],
+			] as const) {
+				const rendered = GitHubMarkdown.link(label, "https://example.test");
+				assert.strictEqual(rendered, `[${escaped}](https://example.test)`);
+				const root = Result.getOrThrow(Markdown.parseResult(rendered));
+				assert.lengthOf(root.children, 1);
+				const paragraph = root.children[0];
+				if (paragraph?.type !== "paragraph") return assert.fail("expected a paragraph");
+				assert.lengthOf(paragraph.children, 1);
+				const link = paragraph.children[0];
+				if (link?.type !== "link") return assert.fail("expected one complete link");
+				assert.strictEqual(link.url, "https://example.test");
+				assert.lengthOf(link.children, 1);
+				const text = link.children[0];
+				if (text?.type !== "text") return assert.fail("expected a text label");
+				assert.strictEqual(text.value, visible);
+			}
+		});
+
+		it("an unmatched opening or closing bracket stays inside one complete link label", () => {
+			for (const label of ["left]right", "left[right", "[left]right]", "[left[right]", "😀left]right"]) {
+				const paragraph = Result.getOrThrow(Markdown.parseResult(GitHubMarkdown.link(label, "https://example.test"))).children[0];
+				if (paragraph?.type !== "paragraph") return assert.fail("expected a paragraph");
+				assert.lengthOf(paragraph.children, 1);
+				const link = paragraph.children[0];
+				if (link?.type !== "link") return assert.fail("expected the whole label inside one link");
+				assert.strictEqual(link.url, "https://example.test");
+				assert.lengthOf(link.children, 1);
+				const text = link.children[0];
+				if (text?.type !== "text") return assert.fail("expected a text label");
+				assert.strictEqual(text.value, label);
+			}
+		});
+
+		it("bracket escaping preserves emphasis, inline code, balanced brackets and existing escapes", () => {
+			const label = "**bold** *em* `left[right` [balanced] \\[escaped\\] left]right";
+			const rendered = GitHubMarkdown.link(label, "https://example.test");
+			assert.strictEqual(rendered, "[**bold** *em* `left[right` [balanced] \\[escaped\\] left\\]right](https://example.test)");
+			const paragraph = Result.getOrThrow(Markdown.parseResult(rendered)).children[0];
+			if (paragraph?.type !== "paragraph") return assert.fail("expected a paragraph");
+			assert.lengthOf(paragraph.children, 1);
+			const link = paragraph.children[0];
+			if (link?.type !== "link") return assert.fail("expected one link");
+			assert.deepStrictEqual(link.children.map((child) => child.type), ["strong", "text", "emphasis", "text", "inlineCode", "text"]);
+			const code = link.children[4];
+			if (code?.type !== "inlineCode") return assert.fail("expected inline code");
+			assert.strictEqual(code.value, "left[right");
+			const tail = link.children[5];
+			if (tail?.type !== "text") return assert.fail("expected trailing text");
+			assert.strictEqual(tail.value, " [balanced] [escaped] left]right");
+		});
+
 		it("a url the destination cannot carry raw is angle-bracketed", () => {
 			assert.strictEqual(
 				GitHubMarkdown.link("the check", "https://x.dev/a b(c)"),
@@ -65,6 +147,19 @@ describe("GitHubMarkdown", () => {
 	});
 
 	describe("heading", () => {
+		it("LF, bare CR and CRLF remain inline inside one heading", () => {
+			for (const ending of ["\n", "\r", "\r\n"]) {
+				const rendered = GitHubMarkdown.heading(`a${ending}b`);
+				assert.strictEqual(rendered, "## a<br>b");
+				const root = Result.getOrThrow(Markdown.parseResult(rendered));
+				assert.lengthOf(root.children, 1);
+				const heading = root.children[0];
+				if (heading?.type !== "heading") return assert.fail("expected one heading");
+				assert.strictEqual(heading.depth, 2);
+				assert.deepStrictEqual(heading.children.map((child) => child.type), ["text", "html", "text"]);
+			}
+		});
+
 		it("defaults to level 2", () => {
 			assert.strictEqual(GitHubMarkdown.heading("Release Validation"), "## Release Validation");
 		});
@@ -75,6 +170,22 @@ describe("GitHubMarkdown", () => {
 	});
 
 	describe("list", () => {
+		it("bare CR and CRLF continuations stay in one list item", () => {
+			for (const ending of ["\r", "\r\n"]) {
+				for (const ordered of [false, true]) {
+					const rendered = GitHubMarkdown.list([`a${ending}b`], { ordered });
+					assert.strictEqual(rendered, ordered ? "1. a\n   b" : "- a\n  b");
+					const root = Result.getOrThrow(Markdown.parseResult(rendered));
+					assert.lengthOf(root.children, 1);
+					const list = root.children[0];
+					if (list?.type !== "list") return assert.fail("expected a list");
+					assert.strictEqual(list.ordered, ordered);
+					assert.lengthOf(list.children, 1);
+					assert.lengthOf(list.children[0]?.children ?? [], 1);
+				}
+			}
+		});
+
 		it("renders bullets, and a multi-line item stays inside its bullet", () => {
 			assert.strictEqual(
 				GitHubMarkdown.list(["first **bold**", "second line1\nline2"]),
@@ -104,6 +215,16 @@ describe("GitHubMarkdown", () => {
 	});
 
 	describe("tableFor — the schema is the single authority for the table's shape", () => {
+		it("bare CR in schema-derived headers and values preserves one data row", () => {
+			const Row = S.Struct({ detail: S.String.annotate({ title: "first\rheader" }), outcome: S.String });
+			const rendered = GitHubMarkdown.tableFor(Row).render([{ detail: "left\rright", outcome: "ok" }]);
+			assert.strictEqual(rendered, "| first<br>header | outcome |\n| --- | --- |\n| left<br>right | ok |");
+			const table = Result.getOrThrow(Markdown.parseResult(rendered)).children[0];
+			if (table?.type !== "table") return assert.fail("expected a table");
+			assert.lengthOf(table.children, 2);
+			for (const row of table.children) assert.lengthOf(row.children, 2);
+		});
+
 		it("headers come from title annotations, falling back to the field name", () => {
 			const Row = S.Struct({
 				name: S.String.annotate({ title: "Check" }),

@@ -60,6 +60,47 @@ const outputLayer = (files: ReturnType<typeof runnerFiles>, env: Record<string, 
 
 describe("ActionOutputs", () => {
 	describe("runner files", () => {
+		for (const os of ["Windows", "Linux", "macOS"]) {
+			const files = runnerFiles();
+			it.layer(outputLayer(files, { ...FILES, RUNNER_OS: os }), { timeout: "30 seconds" })((it) => {
+				it.effect(`uses ${os} framing without changing terminal CR, CRLF or LF in outputs and variables`, () =>
+					Effect.gen(function* () {
+						const outputs = yield* ActionOutputs;
+						const newline = os === "Windows" ? "\r\n" : "\n";
+						let expected = "";
+						for (const value of ["\r", "abc\r", "abc\r\n", "abc\n"]) {
+							yield* outputs.set("result", value);
+							yield* outputs.exportVariable("result", value);
+							expected += `result<<EFFECTED_EOF${newline}${value}${newline}EFFECTED_EOF${newline}`;
+							assert.strictEqual(files.written.text(FILES.GITHUB_OUTPUT), expected);
+							assert.strictEqual(files.written.text(FILES.GITHUB_ENV), expected);
+						}
+					}),
+				);
+			});
+		}
+
+		{
+			const files = runnerFiles();
+			it.layer(outputLayer(files), { timeout: "30 seconds" })((it) => {
+				it.effect("rejects CR and LF in PATH entries before writing", () =>
+					Effect.gen(function* () {
+						const outputs = yield* ActionOutputs;
+						for (const path of ["/opt/a\r/opt/b", "/opt/a\n/opt/b", "/opt/a\r\n/opt/b", "/opt/a\n"]) {
+							const error = yield* Effect.flip(outputs.addPath(path));
+							assert.instanceOf(error, InvalidOutputNameError);
+							assert.strictEqual(error.file, "GITHUB_PATH");
+							assert.strictEqual(error.name, path);
+							assert.isUndefined(files.written.text(FILES.GITHUB_PATH));
+						}
+						// PATH entries have no heredoc separator restrictions.
+						yield* outputs.addPath("/opt/a=b<<c");
+						assert.strictEqual(files.written.text(FILES.GITHUB_PATH), "/opt/a=b<<c\n");
+					}),
+				);
+			});
+		}
+
 		{
 			const files = runnerFiles();
 			it.layer(outputLayer(files), { timeout: "30 seconds" })((it) => {
@@ -476,6 +517,26 @@ describe("ActionOutputs", () => {
 	});
 
 	describe("recording", () => {
+		{
+			const recorder = ActionOutputs.recording();
+			it.layer(recorder.layer, { timeout: "30 seconds" })((it) => {
+				it.effect("rejects CR and LF in PATH entries before recording", () =>
+					Effect.gen(function* () {
+						const outputs = yield* ActionOutputs;
+						for (const path of ["/opt/a\r/opt/b", "/opt/a\n/opt/b", "/opt/a\r\n/opt/b", "/opt/a\n"]) {
+							const error = yield* Effect.flip(outputs.addPath(path));
+							assert.instanceOf(error, InvalidOutputNameError);
+							assert.strictEqual(error.file, "GITHUB_PATH");
+							assert.strictEqual(error.name, path);
+							assert.strictEqual(recorder.entries().length, 0);
+						}
+						yield* outputs.addPath("/opt/a=b<<c");
+						assert.deepStrictEqual(recorder.entries().map((entry) => [entry.member, entry.value]), [["addPath", "/opt/a=b<<c"]]);
+					}),
+				);
+			});
+		}
+
 		{
 			const recorder = ActionOutputs.recording();
 			it.layer(recorder.layer, { timeout: "30 seconds" })((it) => {

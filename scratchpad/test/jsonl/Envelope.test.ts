@@ -86,12 +86,13 @@ describe("Envelope boundaries", () => {
     );
   });
   it("does not traverse deeply nested unknown data at the frame boundary", () => {
-    const deep = Str.repeat(20000)("[") + "1" + Str.repeat(20000)("]");
-    const source = line(`{"at":"2026-08-03T17:04:11.912Z","event":"mail","data":${deep}}`);
-    assertSuccess(
-      Result.map(Envelope.frameResult(source), (frame) => frame.event),
-      "mail"
-    );
+    const deep = `${Str.repeat(200_000)("[")}1${Str.repeat(200_000)("]")}`;
+    // Node v24.21.0 parses this depth, but the oracle's parse-then-stringify
+    // fixture raises RangeError: Maximum call stack size exceeded. The Schema
+    // JSON encoder reports Expected a JSON-serializable value. Keep the full
+    // oracle depth in the wire text so the frame boundary still has to parse it.
+    const text = `{"at":"2026-08-03T17:04:11.912Z","event":"mail-received","data":${deep}}`;
+    assert.strictEqual(Result.getOrThrow(Envelope.frameResult(line(text))).event, "mail-received");
   });
   it("retains typed error details for malformed lines, foreign events and invalid data", () => {
     const malformed = line("{bad");

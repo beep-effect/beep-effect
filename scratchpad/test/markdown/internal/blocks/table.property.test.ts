@@ -1,13 +1,17 @@
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
-import { assert, describe, it } from "@effect/vitest";
+import { assert, describe, it, vi } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { Markdown, MarkdownFormat, MarkdownFormattingOptions, Mdast } from "../../../../effected/markdown/index.ts";
-import { CellContent, RawCell, RowSource, ScannedRow } from "../../../../effected/markdown/internal/blocks/table.ts";
+import { CellContent, RawCell, RowSource, ScannedRow, tableHeaderStart } from "../../../../effected/markdown/internal/blocks/table.ts";
+import { parseBlocks } from "../../../../effected/markdown/internal/blockParser.ts";
+import * as BlockRegistry from "../../../../effected/markdown/internal/blockRegistry.ts";
+import type { BlockNode, BlockScanner } from "../../../../effected/markdown/internal/blockTypes.ts";
 
 const runs = { arbitrary: fcRuns(100) };
 // Positions refer to different byte strings after canonical serialization.
@@ -24,6 +28,138 @@ const sourceOf = (text: string, style: string) => `| ${text} | other |\n| ${styl
 const options = MarkdownFormattingOptions.make({ headingStyle: "atx", bulletChar: "-" });
 
 describe("table parser properties", () => {
+  it.effect("bounds provenance reads while reclaiming a paragraph above escaped header pipes", () => Effect.sync(() => {
+    const dialect = BlockRegistry.blockDialect("gfm");
+    for (const scale of [500, 1_000, 2_000]) {
+      const prefix = Str.repeat(scale)("lead\n");
+      const source = `${prefix}| ${Str.repeat(scale)("a\\|")} z |\n| --- |\n`;
+      let reads = 0;
+      let promotionReads = 0;
+      let promotions = 0;
+      const lookup = vi.spyOn(BlockRegistry, "blockDialect").mockReturnValue({
+        ...dialect,
+        starts: A.map(dialect.starts, (start) => start !== tableHeaderStart ? start : {
+          ...start,
+          trigger(scanner: BlockScanner, container: BlockNode) {
+            if (container.type !== "paragraph" || scanner.currentLine !== "| --- |") return start.trigger(scanner, container);
+            const measured = A.map(container.segments, (segment) => ({
+              get textOffset() { reads += 1; return segment.textOffset; },
+              get sourceOffset() { reads += 1; return segment.sourceOffset; },
+              get length() { reads += 1; return segment.length; },
+            }));
+            container.segments.length = 0;
+            for (const segment of measured) container.segments.push(segment);
+            const result = start.trigger(scanner, container);
+            promotionReads = reads;
+            promotions += 1;
+            return result;
+          },
+        }),
+      });
+      try {
+        const root = parseBlocks(source, { dialect: "gfm" }).root;
+        assert.strictEqual(promotions, 1);
+        assert.isAbove(promotionReads, scale);
+        assert.isAtMost(promotionReads, 30 * (scale + 1), `segment reads at scale ${scale}`);
+        assert.strictEqual(root.children.length, 2);
+        const paragraph = root.children[0];
+        const table = root.children[1];
+        assert.ok(paragraph?.type === "paragraph");
+        if (paragraph?.type === "paragraph") {
+          const text = paragraph.children[0];
+          assert.strictEqual(text?.type === "text" ? text.value : undefined, Str.slice(0, prefix.length - 1)(prefix));
+        }
+        assert.ok(table?.type === "table");
+        if (table?.type === "table") {
+          const cell = table.children[0]?.children[0];
+          assert.strictEqual(cell?.position.start.offset, prefix.length + 2);
+          assert.strictEqual(cell?.position.end.offset, prefix.length + scale * 3 + 4);
+          const text = cell?.children[0];
+          assert.strictEqual(text?.type === "text" ? text.value : undefined, `${Str.repeat(scale)("a|")} z`);
+        }
+      } finally { lookup.mockRestore(); }
+    }
+  }));
+  it.effect("keeps reclaimed and header segment boundaries around escapes and injected newlines", () => Effect.sync(() => {
+    const dialect = BlockRegistry.blockDialect("gfm");
+    let promotions = 0;
+    const lookup = vi.spyOn(BlockRegistry, "blockDialect").mockReturnValue({
+      ...dialect,
+      starts: A.map(dialect.starts, (start) => start !== tableHeaderStart ? start : {
+        ...start,
+        trigger(scanner: BlockScanner, container: BlockNode) {
+          const result = start.trigger(scanner, container);
+          if (result !== 2) return result;
+          promotions += 1;
+          const table = scanner.tip;
+          const reclaimed = table.parent?.children[0];
+          assert.strictEqual(reclaimed?.type, "paragraph");
+          assert.strictEqual(reclaimed?.stringContent, "a|b\nc|d\n");
+          assert.deepStrictEqual(reclaimed?.segments, [
+            { textOffset: 0, sourceOffset: 0, length: 1 },
+            { textOffset: 1, sourceOffset: 2, length: 2 },
+            { textOffset: 4, sourceOffset: 5, length: 1 },
+            { textOffset: 5, sourceOffset: 7, length: 2 },
+          ]);
+          const cells = table.children[0]?.children;
+          assert.strictEqual(cells?.[0]?.stringContent, "e|f|g ");
+          assert.deepStrictEqual(cells?.[0]?.segments, [
+            { textOffset: 0, sourceOffset: 12, length: 1 },
+            { textOffset: 1, sourceOffset: 14, length: 2 },
+            { textOffset: 3, sourceOffset: 17, length: 3 },
+          ]);
+          assert.strictEqual(cells?.[1]?.stringContent, "tail ");
+          assert.deepStrictEqual(cells?.[1]?.segments, [{ textOffset: 0, sourceOffset: 22, length: 5 }]);
+          return result;
+        },
+      }),
+    });
+    try {
+      const root = parseBlocks("a\\|b\nc\\|d\n| e\\|f\\|g | tail |\n| --- | --- |\n", { dialect: "gfm" }).root;
+      assert.strictEqual(promotions, 1);
+      assert.strictEqual(root.children.length, 2);
+    } finally { lookup.mockRestore(); }
+  }));
+  it.effect("drops zero-width provenance runs while unescaping a header cell", () => Effect.sync(() => {
+    const dialect = BlockRegistry.blockDialect("gfm");
+    let promotions = 0;
+    const lookup = vi.spyOn(BlockRegistry, "blockDialect").mockReturnValue({
+      ...dialect,
+      starts: A.map(dialect.starts, (start) => start !== tableHeaderStart ? start : {
+        ...start,
+        trigger(scanner: BlockScanner, container: BlockNode) {
+          if (container.type !== "paragraph" || scanner.currentLine !== "| --- |") return start.trigger(scanner, container);
+          container.segments.length = 0;
+          container.segments.push(
+            { textOffset: 0, sourceOffset: 0, length: 3 },
+            { textOffset: 3, sourceOffset: 3, length: 0 },
+            { textOffset: 3, sourceOffset: 3, length: 8 },
+          );
+          const result = start.trigger(scanner, container);
+          assert.strictEqual(result, 2);
+          promotions += 1;
+          const cell = scanner.tip.children[0]?.children[0];
+          assert.strictEqual(cell?.stringContent, "abc|def ");
+          assert.deepStrictEqual(cell?.segments, [
+            { textOffset: 0, sourceOffset: 2, length: 1 },
+            { textOffset: 1, sourceOffset: 3, length: 2 },
+            { textOffset: 3, sourceOffset: 6, length: 5 },
+          ]);
+          return result;
+        },
+      }),
+    });
+    try {
+      const root = parseBlocks("| abc\\|def |\n| --- |\n", { dialect: "gfm" }).root;
+      assert.strictEqual(promotions, 1);
+      const table = root.children[0];
+      assert.ok(table?.type === "table");
+      if (table?.type === "table") {
+        const text = table.children[0]?.children[0]?.children[0];
+        assert.strictEqual(text?.type === "text" ? text.value : undefined, "abc|def");
+      }
+    } finally { lookup.mockRestore(); }
+  }));
   it.effect("scanner models retain text provenance, cell boundaries and optional scan status", () => Effect.gen(function* () {
     const source = { text: "  a\\|b | tail |\n", segments: [{ textOffset: 0, sourceOffset: 10, length: 15 }] };
     const cell = { start: 0, contentStart: 2, end: 6 };

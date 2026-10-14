@@ -1,6 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, flow, identity } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -21,6 +21,19 @@ import type { WorkspacePackage } from "../WorkspacePackage.ts";
 import { RUNTIME_DEPENDENCY_FIELDS } from "./dependencyFields.ts";
 
 const $I = $ScratchpadId.create("effected/workspaces/internal/packedInstallPlan");
+
+const JsonValue = S.fromJsonString(S.Unknown).annotate(
+	$I.annote("JsonValue", { description: "A JSON value inspected with tolerant packed-manifest checks." }),
+);
+const JsonString = S.fromJsonString(S.String).annotate(
+	$I.annote("JsonString", { description: "A JSON-quoted YAML scalar retaining its exact string value." }),
+);
+const ConsumerDocument = S.fromJsonString(S.JsonObject, { space: 2 }).annotate(
+	$I.annote("ConsumerDocument", { description: "The formatted JSON object written as the consumer package.json." }),
+);
+const decodeJson = S.decodeResult(JsonValue);
+const quote = flow(S.encodeResult(JsonString), Result.getOrThrowWith(identity));
+const encodeConsumerDocument = flow(S.encodeResult(ConsumerDocument), Result.getOrThrowWith(identity));
 
 class PackedManifestError extends S.TaggedError<PackedManifestError>($I`PackedManifestError`)("PackedManifestError", {
 	message: S.String,
@@ -65,7 +78,7 @@ const TRAP_PREFIXES = /^(npm_|pnpm_config_|yarn_)/i;
  * import { scrubEnv } from "@beep/scratchpad/effected/workspaces/internal/packedInstallPlan";
  *
  * const env = scrubEnv({ HOME: "/home/consumer", CI: "true", npm_config_user_agent: "pnpm", EMPTY: undefined });
- * console.log(JSON.stringify(env)) // {"HOME":"/home/consumer"}
+ * console.log(env) // { HOME: "/home/consumer" }
  * ```
  *
  * @category utilities
@@ -212,7 +225,7 @@ const pnpmWorkspaceYaml = (specs: Readonly<Record<string, string>>): string => {
 	const entries = R.toEntries(specs);
 	return entries.length === 0
 		? "minimumReleaseAge: 0\noverrides: {}\n"
-		: `minimumReleaseAge: 0\noverrides:\n${entries.map(([name, spec]) => `  ${JSON.stringify(name)}: ${JSON.stringify(spec)}`).join("\n")}\n`;
+		: `minimumReleaseAge: 0\noverrides:\n${entries.map(([name, spec]) => `  ${quote(name)}: ${quote(spec)}`).join("\n")}\n`;
 };
 
 /**
@@ -278,7 +291,7 @@ export const consumerFiles = (
 		...(input.manager === "npm" || input.manager === "bun" ? { overrides: specs } : {}),
 		...(input.manager === "yarn" ? { resolutions: specs } : {}),
 	};
-	const files = [{ file: "package.json", content: `${JSON.stringify(manifest, null, 2)}\n` }];
+	const files = [{ file: "package.json", content: `${encodeConsumerDocument(manifest)}\n` }];
 	if (input.manager === "pnpm") files.push({ file: "pnpm-workspace.yaml", content: pnpmWorkspaceYaml(specs) });
 	if (input.manager === "yarn" && major(input.version) >= 2)
 		files.push({ file: ".yarnrc.yml", content: yarnrc(input.version) });
@@ -375,12 +388,9 @@ export type PackedManifest = typeof PackedManifest.Type;
  * @since 0.0.0
  */
 export const readPackedManifest = (manifestJson: string): Result.Result<PackedManifest, unknown> => {
-	let manifest: unknown;
-	try {
-		manifest = JSON.parse(manifestJson);
-	} catch (cause) {
-		return Result.fail(cause);
-	}
+	const decoded = decodeJson(manifestJson);
+	if (Result.isFailure(decoded)) return Result.fail(decoded.failure);
+	const manifest = decoded.success;
 	if (!P.isObject(manifest))
 		return Result.fail(PackedManifestError.make({ message: "package.json is not an object" }));
 	const record = manifest;
@@ -424,12 +434,9 @@ export const binTargetOf: {
 	(name: string): (manifestJson: string) => string | undefined;
 	(manifestJson: string, name: string): string | undefined;
 } = dual(2, (manifestJson: string, name: string): string | undefined => {
-	let manifest: unknown;
-	try {
-		manifest = JSON.parse(manifestJson);
-	} catch {
-		return undefined;
-	}
+	const decoded = S.decodeOption(JsonValue)(manifestJson);
+	if (O.isNone(decoded)) return undefined;
+	const manifest = decoded.value;
 	if (!P.isObject(manifest)) return undefined;
 	const bin = manifest.bin;
 	if (P.isString(bin)) {
@@ -526,7 +533,7 @@ const BARE_NAME = /^(?:@[^/@\s>]+\/)?[^/@\s>]+$/;
  *   "core@1": "file:./old-core.tgz",
  *   external: "^1.0.0",
  * } });
- * console.log(JSON.stringify(overrides)) // {"@demo/core":"./core.tgz"}
+ * console.log(overrides) // { "@demo/core": "./core.tgz" }
  * ```
  *
  * @category parsing

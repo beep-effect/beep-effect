@@ -20,7 +20,7 @@ import { REDACTED, Redaction } from "./Redaction.ts";
 const $I = $ScratchpadId.create("effected/commands/Run");
 
 /** Captured stdout contained no candidate JSON line. */
-class EmptyJsonLineError extends S.TaggedError<EmptyJsonLineError>($I`EmptyJsonLineError`)(
+class EmptyJsonLineError extends S.TaggedError<EmptyJsonLineError, { readonly brand: unique symbol }>($I`EmptyJsonLineError`)(
 	"EmptyJsonLineError",
 	{ message: S.String },
 	$I.annote("EmptyJsonLineError", { description: "Captured stdout contained no non-empty line to decode as JSON." }),
@@ -188,7 +188,7 @@ export type RunOptions = typeof RunOptions.Type;
  * @category models
  * @since 0.0.0
  */
-export class CommandOutput extends S.Class<CommandOutput>($I`CommandOutput`)({
+export class CommandOutput extends S.Class<CommandOutput, { readonly brand: unique symbol }>($I`CommandOutput`)({
 	/** Captured standard output, redacted. */
 	stdout: S.String.annotateKey({ description: "Captured standard output, redacted." }),
 	/** Captured standard error, redacted. */
@@ -274,7 +274,7 @@ const tail = (text: string): string => {
  * @category errors
  * @since 0.0.0
  */
-export class CommandFailedError extends S.TaggedError<CommandFailedError>($I`CommandFailedError`)("CommandFailedError", {
+export class CommandFailedError extends S.TaggedError<CommandFailedError, { readonly brand: unique symbol }>($I`CommandFailedError`)("CommandFailedError", {
 	/** Why it failed. */
 	kind: S.Literals(["nonZero", "spawn", "timeout"]).annotateKey({ description: "Why it failed." }),
 	/** The executable (or `"a | b"` for a pipeline). */
@@ -473,7 +473,7 @@ export class CommandFailedError extends S.TaggedError<CommandFailedError>($I`Com
  * @category errors
  * @since 0.0.0
  */
-export class CommandOutputError extends S.TaggedError<CommandOutputError>($I`CommandOutputError`)("CommandOutputError", {
+export class CommandOutputError extends S.TaggedError<CommandOutputError, { readonly brand: unique symbol }>($I`CommandOutputError`)("CommandOutputError", {
 	/** Which way the output was unusable. */
 	kind: S.Literals(["notJson", "schema", "tooLarge"]).annotateKey({ description: "Which way the output was unusable." }),
 	/** The executable that produced it. */

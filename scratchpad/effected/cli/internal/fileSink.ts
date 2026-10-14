@@ -10,6 +10,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Logger from "effect/Logger";
 import * as Path from "effect/Path";
 import * as Queue from "effect/Queue";
+import * as Result from "effect/Result";
 import { sanitize } from "../Fmt.ts";
 import { formatNdjson, passes } from "./diagnostics.ts";
 
@@ -76,8 +77,10 @@ export const makeFileSink = Effect.fn("makeFileSink")(function* (
 			const exit = yield* Effect.exit(append(batch));
 			if (Exit.isFailure(exit)) {
 				disabled = true;
-				const error = Cause.squash(exit.cause);
-				const message = error instanceof Error ? error.message : String(error);
+				const message = Result.try(() => {
+					const error = Cause.squash(exit.cause);
+					return String(error instanceof Error ? error.message : error);
+				}).pipe(Result.getOrElse(() => "unprintable filesystem error"));
 				const line = sanitize(`diagnostics log file ${path} failed: ${message}; further file logging disabled`);
 				yield* Effect.withFiber((self) => Console.error(underActions(self) ? CommandNeutralizer.text(line) : line));
 			}

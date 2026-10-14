@@ -1,0 +1,55 @@
+{
+  "module": "jsonl",
+  "groups": [
+    {
+      "id": "g1",
+      "files": ["scratchpad/effected/jsonl/internal/tail.ts"],
+      "tests": [
+        "scratchpad/test/jsonl/Helpers.test.ts",
+        "scratchpad/test/jsonl/Journal.regressions.test.ts"
+      ],
+      "findings": ["grok-2-1"]
+    },
+    {
+      "id": "g2",
+      "files": ["scratchpad/effected/jsonl/Envelope.ts"],
+      "tests": ["scratchpad/test/jsonl/Journal.test.ts"],
+      "findings": ["sol-2-1"]
+    },
+    {
+      "id": "g3",
+      "files": ["scratchpad/effected/jsonl/internal/utf8.ts"],
+      "tests": [
+        "scratchpad/test/jsonl/Line.test.ts",
+        "scratchpad/test/jsonl/Envelope.test.ts"
+      ],
+      "findings": ["fable-2-1", "fable-2-3"]
+    }
+  ],
+  "findings": {
+    "grok-2-1": {
+      "file": "scratchpad/effected/jsonl/internal/tail.ts:137",
+      "class": "bug",
+      "summary": "A short read reports the requested end instead of the actual byte end, falsely producing JournalUnterminated and hiding a later shrink. Merges grok-2-1 and fable-2-2.",
+      "fix": "Set TailWindow.size to from + bytes.length - bomBytes; remove the unused requested-length argument locally if needed. Pin newline-aligned EOF and BOM-relative size in Helpers.test.ts, retaining full-read torn-suffix size; pin the reconcile stat/read truncation race and post-write JournalWriteConflict in Journal.regressions.test.ts."
+    },
+    "sol-2-1": {
+      "file": "scratchpad/effected/jsonl/Envelope.ts:255",
+      "class": "bug",
+      "summary": "Structural patch encoding handles only bare schema classes, so nullable class unions and transformed class payloads reject valid partial patches.",
+      "fix": "Derive structural patch encoding through class-bearing unions and codec transformations, preserving checks and transformations. Validate with the original registered codec before persistence. Add nullable-class and transformed-class appendPatch regressions to Journal.test.ts that assert retained fields, decoded class identity, and two persisted records; retain rejection of invalid patches before writing."
+    },
+    "fable-2-1": {
+      "file": "scratchpad/effected/jsonl/internal/utf8.ts:37",
+      "class": "perf",
+      "summary": "An unforced TextEncoder rewrite raises UTF-8 length measurement auxiliary space from O(1) to Theta(n) per line/window.",
+      "fix": "Restore the oracle's in-place UTF-16 counting control flow and surrogate handling with required Effect String/Option substitutions; remove the encoder and avoid full-input temporary buffers. Retain the TextEncoder differential property and explicit surrogate cases in Line.test.ts, restoring any rewritten upstream assertion lines."
+    },
+    "fable-2-3": {
+      "file": "scratchpad/test/jsonl/Line.test.ts:153",
+      "class": "test",
+      "summary": "Both Line.test.ts and Envelope.test.ts reduce upstream pathological nesting from 200,000 to 20,000 without a diagnostic, law, or ruling forcing the reduction.",
+      "fix": "Restore 200_000 depth in Line.test.ts and Envelope.test.ts, along with the original deep-parse and frame-boundary assertions and unforced fixture/sequence changes. Preserve required schema JSON-codec substitutions and D15 cast removal rather than restoring native JSON operations or as unknown. Attribute any demonstrated codec/engine diagnostic before modifying the oracle input."
+    }
+  }
+}

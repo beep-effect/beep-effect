@@ -61,7 +61,7 @@ const $I = $ScratchpadId.create("effected/glob/internal/minimatch");
  * @category errors
  * @since 0.0.0
  */
-export class MinimatchError extends S.TaggedError<MinimatchError>($I`MinimatchError`)("MinimatchError", {
+export class MinimatchError extends S.TaggedError<MinimatchError, { readonly brand: unique symbol }>($I`MinimatchError`)("MinimatchError", {
 	message: S.String.annotateKey({ description: "Describes the internal matching invariant that was violated." }),
 }, $I.annote("MinimatchError", {
 	title: "Minimatch engine invariant violation",
@@ -1485,7 +1485,7 @@ export class Minimatch {
 				hit = f === p;
 				this.debug("string match", p, f, hit);
 			} else {
-				hit = p.test(f);
+				hit = p._matchSegment !== undefined ? p._matchSegment(f) : p.test(f);
 				this.debug("pattern match", p, f, hit);
 			}
 

@@ -224,3 +224,19 @@ it.layer(ToolInstaller.layerTest({ find: () => Effect.succeedNone }), { timeout:
     }),
   );
 });
+
+for (const mode of ["root-fault", "destination-fault", "dangling-link"] as const) {
+  it.layer(runtime((fs) => ({ ...fs,
+    realPath: Effect.fnUntraced(function* (file) {
+      if (mode === "root-fault" || (mode === "destination-fault" && file.endsWith("/bin"))) return yield* refused;
+      return yield* fs.realPath(mode === "dangling-link" && file.endsWith("/bin") ? "/missing-binary" : file);
+    }),
+    readLink: Effect.fnUntraced(function* (file) {
+      return mode === "dangling-link" && file.endsWith("/bin") ? "/missing-binary" : yield* fs.readLink(file);
+    }),
+  })), { timeout: "5 seconds" })((it) => {
+    it.effect(`cacheFile refuses ${mode} through the typed channel`, () => Effect.gen(function* () {
+      yield* expectError((yield* ToolInstaller).cacheFile("/source", "bin", "tool", "1"), "cacheFailed", "tool");
+    }));
+  });
+}

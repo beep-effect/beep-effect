@@ -25,13 +25,18 @@
 // emit a scalar of that style — so a format-path caller that flips a node's
 // `style` and re-stringifies produces exactly this replacement.
 //
-// Like the stringifier, this module consumes the public AST *types* only;
-// nothing public imports it back, so the cycle firewall holds.
+// Like the stringifier, this module reuses the public AST's scalar style;
+// YamlNode has no runtime dependency on this module, so initialization stays acyclic.
 
-import type { ScalarStyle } from "../YamlNode.ts";
+import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as S from "effect/Schema";
+import { ScalarStyle } from "../YamlNode.ts";
 import { isControlChar } from "./fold.ts";
 import { renderDoubleQuoted, renderSingleQuoted } from "./stringifier.ts";
 import * as P from "effect/Predicate";
+
+const $I = $ScratchpadId.create("effected/yaml/internal/requote");
 
 /**
  * The structural slice of a scalar node the re-quoting decision reads —
@@ -46,17 +51,27 @@ import * as P from "effect/Predicate";
  * console.log(scalar.length) // 5
  * ```
  *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RequoteScalarInput = S.Struct({
+	value: S.Unknown.annotateKey({ description: "Parsed scalar value considered for quote conversion." }),
+	style: ScalarStyle.annotateKey({ description: "Presentation style of the source scalar." }),
+	tag: S.optional(S.String).annotateKey({ description: "Optional tag preventing quote conversion when present." }),
+	anchor: S.optional(S.String).annotateKey({ description: "Optional anchor preventing quote conversion when present." }),
+	offset: S.Finite.annotateKey({ description: "Start of the raw scalar span in UTF-16 code units." }),
+	length: S.Finite.annotateKey({ description: "Length of the raw scalar span in UTF-16 code units." }),
+}).annotate($I.annote("RequoteScalarInput", {
+	description: "Structural scalar payload accepted without per-call decoding by quote conversion.",
+}));
+
+/**
+ * The structural scalar payload inferred from its schema.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export interface RequoteScalarInput {
-	readonly value: unknown;
-	readonly style: ScalarStyle;
-	readonly tag?: string | undefined;
-	readonly anchor?: string | undefined;
-	readonly offset: number;
-	readonly length: number;
-}
+export type RequoteScalarInput = typeof RequoteScalarInput.Type;
 
 /**
  * Selects the safety policy for changing a scalar's quote style.
@@ -73,10 +88,20 @@ export interface RequoteScalarInput {
  * console.log(mode) // escaping
  * ```
  *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RequoteMode = LiteralKit(["conservative", "escaping"]).annotate($I.annote("RequoteMode", {
+	description: "Safety policies for byte-preserving or value-preserving quote conversion.",
+}));
+
+/**
+ * The quote-conversion policy inferred from its literal vocabulary.
+ *
  * @category type-level
  * @since 0.0.0
  */
-export type RequoteMode = "conservative" | "escaping";
+export type RequoteMode = typeof RequoteMode.Type;
 
 /**
  * True when `value` can be carried by a single-quoted flow scalar on one

@@ -180,7 +180,7 @@ export function parseDirective(source: string): RawDirective | null {
  * @category validation
  * @since 0.0.0
  */
-export function validateTagHandlesInDocument(...[docCst, state, mode = "all"]: [docCst: CstNode, state: ComposerState, mode?: "all" | "handles" | "percent"]): void {
+export function validateTagHandlesInDocument(...[docCst, state, mode = "all"]: [docCst: CstNode, state: ComposerState, mode?: "all" | "handles" | "percent" | "properties"]): void {
 	const children = docCst.children ?? [];
 	// Build local tagMap from %TAG directives in this doc.
 	const localHandles = MutableHashSet.empty<string>();
@@ -199,9 +199,9 @@ export function validateTagHandlesInDocument(...[docCst, state, mode = "all"]: [
 		if (node === undefined) continue;
 		if (node.type === "tag") {
 			// Plain continuation collectors can absorb tag-shaped CST tokens.
-			// Per-document percent validation sees only actual node properties;
-			// standalone and cross-document handle validation retain their scope.
-			if (mode === "percent" && !MutableHashSet.has(state.tagOffsets, node.offset)) continue;
+			// Composition validates only the offsets it consumed as properties.
+			// Standalone CST validation retains its exhaustive default.
+			if ((mode === "percent" || mode === "properties") && !MutableHashSet.has(state.tagOffsets, node.offset)) continue;
 			const src = node.source;
 			if (mode !== "handles" && !src.startsWith("!<")) {
 				const named = src.match(/^(![\w-]*!)(.*)$/);

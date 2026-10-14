@@ -1,0 +1,23 @@
+### sol-2-1
+- file: scratchpad/effected/github-actions/Artifact.ts:546
+- class: bug   severity: required
+- standard: standards/effect-first-development.md EF-3 and EF-33; D11; D9 section 14’s `upstream-bug` route.   evidence: Read-only, in-memory protocol probes against both commit `2f515ae2519cc72223c94917019bf7ebfe92a4a5` and the pinned oracle supplied `{ ok: true, artifactId: "not-a-number" }` to `FinalizeArtifact` and `DeleteArtifact`. Both implementations returned successful upload and delete results with `id: NaN`; each probe printed `isNaN: true`. The unchecked conversion also occurs at `Artifact.ts:615`. Round-1 r4 fixed `ListArtifacts` rows; these separate response boundaries remain unchecked.
+- failure: A successful upload returns an unusable database id that cannot match any artifact in `download`, because `NaN === NaN` is false. A successful deletion likewise exposes an invalid id. The `satisfies UploadResult` and `satisfies ArtifactRef` expressions provide no runtime validation, so malformed backend data crosses both service boundaries without an `ArtifactError`.
+- fix: Validate the normalized upload and delete results with identity-annotated runtime schemas containing finite numeric ids, deriving the corresponding types from those schemas. Preserve the existing missing-id defaults (`0` for upload and the listed id for delete), and map invalid supplied ids through the existing malformed-response `ArtifactError` policy. Add focused malformed-id regressions for both RPCs and record the verified upstream bug under section 14.
+
+### sol-2-2
+- file: scratchpad/effected/github-actions/ActionCache.ts:488
+- class: bug   severity: required
+- standard: D11; D9 section 14’s `upstream-bug` route; the save/restore fidelity contract exercised by `scratchpad/test/github-actions/ActionCache.test.ts`.   evidence: In-memory probes against both the port and pinned oracle seeded the valid filename `/work/a\nb` and called `save(["/work/a\nb"], "k")`. Both admitted the filename and produced the manifest `"/work/a\nb\n"`, which represents two tar entries rather than one. A separate read-only native probe streamed `/etc/hosts\n/etc/passwd\n` into `tar cPf - -T -`; creation exited `0`, and listing the archive returned two entries, `/etc/hosts` and `/etc/passwd`. All archive bytes stayed in memory.
+- failure: A matched filename containing a newline loses its identity when the resolved paths are joined into the line-delimited manifest. Tar consequently fails on different filenames or archives unrelated files when those split names exist. The accepted path cannot survive the cache round-trip.
+- fix: Before writing the manifest or spawning tar, reject resolved paths containing `\n` or `\r` with the existing `ActionCacheError` `archiveFailed` reason and a diagnostic naming the offending path. This follows the module’s existing cross-platform approach in `Artifact.upload`. Add a regression asserting that a newline-bearing filename fails before tar or upload, and record the verified upstream bug under section 14.
+
+### sol-2-3
+- file: scratchpad/effected/github-actions/ActionCache.ts:493
+- class: perf   severity: required
+- standard: D11’s algorithmic-class criterion.   evidence: In-memory probes against both the port and pinned oracle seeded `/work/a/b/c` with one file at each level and saved `["/work/**"]`. Both manifests contained `/work/a`, `/work/a/b`, `/work/a/b/c`, and their individually matched files. Tar recursively archives each listed directory. A native streamed-archive probe listing a directory and one of its files confirmed that the file appeared twice in the archive. For a chain of \(d\) matched directories containing one \(B\)-byte file at each level, the current manifest causes approximately \(B(1+2+\cdots+d)\) payload bytes to be read and archived: **Θ(\(Bd²\))**, although the distinct file payload is only **Θ(\(Bd\))**.
+- failure: Recursive glob saves repeatedly read, compress, upload, and later extract the same descendants. Deep directory trees therefore incur quadratic payload I/O and duplicate archive members. Exact-path deduplication in `seen` does not remove the overlap between a directory’s recursive archive and its separately listed descendants.
+- fix: Before writing the tar manifest, remove entries already covered by another selected real directory that tar will recurse into, using an ordered prefix pass or path trie rather than another quadratic pairwise scan. Preserve symlink behavior and continue hashing the original literal pattern list for the cache version. Add an archive-member regression proving that a recursive-glob save stores each covered file once.
+
+REQUIRED: 3
+BACKLOG: 0

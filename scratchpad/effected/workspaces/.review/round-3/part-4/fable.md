@@ -1,0 +1,45 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the workspaces slice read-only against the pinned upstream oracle, the round-2 inventory, and the port decisions, and report only new findings.Round-2 already recorded schema and bug findings on this slice. I'll check which of those landed at `c3fc60bd` and look only for new defects.The lexer and registry-key paths look like the places a behavior change could still hide. I'll probe those two against the pinned oracle.I'll finish the read-only review from the source and the pinned oracle, then file only defects that survive the closed round-2 list and the recorded deviations.### fable-3-1
+- file: scratchpad/effected/workspaces/internal/sourceText.ts:290
+- class: bug   severity: required
+- standard: D9/D11 and section 14 `upstream-bug`   evidence: `regexAllowed` treats `last === "!"` as `!endsOperand(j - 1)` without skipping whitespace. A space or a comment (already blanked to spaces in the code view) makes `endsOperand` see that space, so it returns false and the `/` opens a regex. The same branch treats a second `!` as a non-operand, so `x!! / 2` opens a regex too. `sourceText.test.ts:15` pins only `of! / 2`. The pinned oracle has the same test at `packages/workspaces/src/internal/sourceText.ts:144`.
+- failure: In `const y = x ! / 2; process.cwd(); const z = 1 / 4;`, the `/` after `!` runs to the `/` in `1 / 4` and blanks `process.cwd()`. `SourceBoundary.check` then reports no `process` offence. `x! / 2` still divides, which is why the existing pin stays green.
+- fix: Walk a run of `!` and call `endsOperand(lastCode(...))` on the token before that run. Record the deviation as `upstream-bug`. Keep the no-space pin.
+
+### fable-3-2
+- file: scratchpad/effected/workspaces/internal/sourceText.ts:539
+- class: bug   severity: required
+- standard: `references` JSDoc at sourceText.ts:498–500; D9/D11; section 14 `upstream-bug`   evidence: After a `.`, the receiver is only `cookIdentifier` of the immediately preceding word, then `MutableHashSet.has(GLOBAL_OBJECTS, receiver)`. Nothing checks that this receiver is free. The oracle does the same at `sourceText.ts:361`. `sourceText.test.ts:194` pins only a free `globalThis.process`.
+- failure: `child.globalThis.process` and `child.window.process` are counted as reads of `process`. `SourceBoundary.check(..., ["process"])` reports an offence for a property of `child`. A free `globalThis.process` must still count.
+- fix: Accept a `GLOBAL_OBJECTS` receiver only when it is not itself a member or optional member (`?.`), using the same `...` exception already used for spread. Record `upstream-bug`.
+
+### fable-3-3
+- file: scratchpad/effected/workspaces/internal/sourceText.ts:247
+- class: bug   severity: required
+- standard: ECMAScript `IdentifierName` Unicode escapes are cooked before keyword classification; D9/D11; section 14 `upstream-bug`   evidence: `wordAt` stops at `\` because `isIdentifierChar` does not include it, and it returns the raw slice. `isRegexKeyword` therefore sees `u006e` rather than `return`. `identifierStartBefore` and `cookIdentifier` already exist for `references`, and README deviation “cooked identifiers” covers that path and specifier cooking only. The oracle `wordAt` (`sourceText.ts:102–106`) also does not cook.
+- failure: `retur\u006e /process.cwd()/` is real `return /process.cwd()/`, but the `/` is classified as division, the regex body stays in the code view, and `references` / `SourceBoundary.check` report `process` inside the literal.
+- fix: Classify the keyword with `cookIdentifier` over the raw span from `identifierStartBefore`, and keep using that raw span for the lookbehind offset. Record `upstream-bug`. Do not change cooked `references()` offsets.
+
+### fable-3-4
+- file: scratchpad/effected/workspaces/internal/configDependencyFetch.ts:331
+- class: bug   severity: required
+- standard: D9/D11; section 14 `upstream-bug`; same own-key class as the recorded scrubEnv fix (`R.assignProperty` at packedInstallPlan.ts:77)   evidence: `registries[scope] = url` is an ordinary assignment into `{}`. For an own data key `"__proto__"` (as produced by `Object.fromEntries` or `JSON.parse`), the inherited `__proto__` setter ignores a string and does not store it. `R.toEntries` still lists that own key. `workspaceYaml.ts:38` and `:81` already use `R.assignProperty` for this key class. The oracle assigns the same way at `configDependencyFetch.ts:198`. The property in `configDependencyFetch.property.test.ts:11–17` compares `registrySettingsOf` output to itself, so a dropped key still passes.
+- failure: `registrySettingsOf` drops a string URL stored under an own `"__proto__"` scope. `scratchWorkspaceYaml` then omits that registry, and the scratch install fetches that scope from the default registry.
+- fix: Replace the assignment with `R.assignProperty(registries, scope, url)`. Add a regression through `registrySettingsOf` and `scratchWorkspaceYaml`. Record `upstream-bug`.
+
+### fable-3-5
+- file: scratchpad/effected/workspaces/WorkspacesSync.ts:392
+- class: effect-idiom   severity: required
+- standard: `standards/effect-first-development.md` EF-3 (line 104) and EF-19 (lines 486–492), checklist item 16; `SchemaFirstDetectors.ts` rule `SFV4-boundary-codec` (advisory, so the green law run does not remove these calls)   evidence: Direct calls remain at `WorkspacesSync.ts:392` and `:420`, `packedInstallPlan.ts:215`, `:281`, `:380`, and `:429`, and `configDependencyFetch.ts:364–399`. `configDependencyShared.ts:26` already uses `S.fromJsonString`. `effect-laws-v1.md` does not mention `JSON.parse`. The schema-first README bullet records `SchemaError` only for codecs already converted.
+- failure: Manifest reads and packed-manifest reads throw `SyntaxError` and catch it by hand. YAML key quoting and the consumer `package.json` are built with `JSON.stringify`. Both violate the schema JSON codec rule. A Result codec changes a stored `invalidJson` cause from `SyntaxError` to `SchemaError`, which section 14 requires to be recorded.
+- fix: Parse with `S.decodeUnknownResult(S.fromJsonString(S.Unknown))`, keeping the existing `read` / `invalidJson` / `invalidShape` split and the total sync contract. Quote strings and write `package.json` through the matching encode codec, including the trailing newline at `packedInstallPlan.ts:281`. Record the cause change on the existing schema-first deviation.
+
+### fable-3-6
+- file: scratchpad/effected/workspaces/WorkspacesSync.ts:174
+- class: test   severity: required
+- standard: D10 and `EFFECTED_PORT_GOAL.md` section 11.4   evidence: `rg Arbitrary.schema` over `scratchpad/test/workspaces` has no `Arbitrary.schema(<exported schema>)` round trip for the exports below. `Workspaces.test.ts:246–262` generates a stand-in struct and states that the depth declaration has no generation link. `EnumerateOptions.maxDepth` (`enumerate.ts:145`) and `TraversalFrame.depth` (`traverse.ts:54`) are `S.declare(P.isNumber)`, which `Arbitrary.schema` cannot derive until a `toCodecArbitrary` link exists. These floors are present and are not part of this finding: `WorkspaceEnumerationDepthError`, `EnumerationFailureKind`, `ManifestVersion`, `ResolvedPnpmfile`, `PatternReadFailureKind`, `SourceLiteral`, `LexedSource`.
+- failure: The D10 encode/decode floor is missing for `SyncDirectoryEntry` (`WorkspacesSync.ts:174`), `WorkspaceDiscoverySkipKind` (`:293`), `WorkspaceDiscoverySkip` (`:344`), `WorkspacesOptions` (`Workspaces.ts:62`), `WorkspacesGitOptions` (`Workspaces.ts:124`), `CatalogMisconfiguration` (`catalogs.ts:45`), `FetchFailureReason` (`configDependencyFetch.ts:122`), `FetchFailure` (`:152`), `RegistrySettings` (`:290`), `ConfigDependencySpecParts` (`configDependencySpecGrammar.ts:41`), `EnumeratedDirectory` (`enumerate.ts:46`), `EnumerationFailure` (`enumerate.ts:114`), `EnumerateOptions` (`enumerate.ts:143`), `LayerRootOptions` (`layerRoot.ts:32`), `ConsumerInput` (`packedInstallPlan.ts:170`), `PackedManifest` (`packedInstallPlan.ts:340`), `PatternReadFailure` (`patterns.ts:72`), `ImporterRoots` (`roots.ts:111`), `TraversalFrame` (`traverse.ts:51`), and `TraversalStop` (`traverse.ts:83`).
+- fix: Add `toCodecArbitrary` on the `S.declare(P.isNumber)` depths, then register one `it.effect.prop` per schema with `Arbitrary.schema(schema)`, `fcRuns`, Effect equality, and a second encode of the decoded value.
+
+REQUIRED: 6
+BACKLOG: 0

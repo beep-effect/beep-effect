@@ -22,21 +22,18 @@ import type * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
+import { Heading, Paragraph, PhrasingContent, TableCell } from "../MarkdownNode.ts";
 import type {
 	BulletChar,
 	FenceChar,
 	FlowContent,
-	Heading,
 	HeadingDepth,
 	HeadingStyle,
 	ListDelimiter,
 	ListItem,
-	Paragraph,
-	PhrasingContent,
 	Position,
 	Root,
 	TableAlign,
-	TableCell,
 	TableRow,
 	ThematicBreakChar,
 } from "../MarkdownNode.ts";
@@ -149,30 +146,60 @@ export type InlineHost = Paragraph | Heading | TableCell;
  * the trimmed content; `startOffset` is where `text` begins in the source,
  * and `segments` maps the rest of it (see {@link RawInlineSegment}).
  *
- * @category models
- * @since 0.0.0
- */
-export interface RawInlineSlice {
-	readonly parent: InlineHost;
-	readonly text: string;
-	readonly startOffset: number;
-	readonly segments: ReadonlyArray<RawInlineSegment>;
-}
-
-/**
- *  A leaf's inline text prepared for materialization, before it has a parent.
+ * **Example** (Validate RawInlineSlice)
+ *
+ * ```ts
+ * import { RawInlineSlice } from "@beep/scratchpad/effected/markdown/internal/blockTypes"
+ * import { Paragraph } from "@beep/scratchpad/effected/markdown/MarkdownNode"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(RawInlineSlice)({ parent: Paragraph.make({ children: [] }), text: "hello", startOffset: 0, segments: [] }) // => true
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
-export interface PreparedInline {
-	readonly text: string;
-	readonly startOffset: number;
-	readonly endOffset: number;
-	readonly segments: ReadonlyArray<RawInlineSegment>;
-	/** The temporary passthrough children (see `rawInline.ts`). */
-	readonly children: ReadonlyArray<PhrasingContent>;
-}
+export const RawInlineSlice = S.Struct({
+	parent: S.Union([Paragraph, Heading, TableCell]).annotateKey({ description: "The materialized node that will own the parsed inline children." }),
+	text: S.String.annotateKey({ description: "Trimmed inline text prepared by the block pass." }),
+	startOffset: S.Finite.annotateKey({ description: "Absolute source offset where the inline text begins." }),
+	segments: S.Array(RawInlineSegment).annotateKey({ description: "Source runs mapping the inline text back to the document." }),
+}).annotate($I.annote("RawInlineSlice", { description: "A leaf block's raw inline text and its materialized parent." }));
+
+/** The immutable RawInlineSlice payload derived from its schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RawInlineSlice = typeof RawInlineSlice.Type;
+
+/**
+ *  A leaf's inline text prepared for materialization, before it has a parent.
+ *
+ * **Example** (Validate PreparedInline)
+ *
+ * ```ts
+ * import { PreparedInline } from "@beep/scratchpad/effected/markdown/internal/blockTypes"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(PreparedInline)({ text: "hello", startOffset: 0, endOffset: 5, segments: [], children: [] }) // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const PreparedInline = S.Struct({
+	text: S.String.annotateKey({ description: "Inline text prepared for materialization." }),
+	startOffset: S.Finite.annotateKey({ description: "Absolute source offset where the inline text begins." }),
+	endOffset: S.Finite.annotateKey({ description: "Absolute source offset where the inline text ends." }),
+	segments: S.Array(RawInlineSegment).annotateKey({ description: "Source runs mapping the inline text back to the document." }),
+	children: S.Array(PhrasingContent).annotateKey({ description: "The temporary passthrough children (see `rawInline.ts`)." }),
+}).annotate($I.annote("PreparedInline", { description: "A leaf's inline text prepared for materialization before it has a parent." }));
+
+/** The immutable PreparedInline payload derived from its schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PreparedInline = typeof PreparedInline.Type;
 
 /**
  * Construct-specific state carried on a {@link BlockNode} during the pass —
@@ -243,20 +270,31 @@ export interface TableData {
 /**
  *  A parsed link reference definition, awaiting materialization.
  *
+ * **Example** (Validate DefinitionData)
+ *
+ * ```ts
+ * import { DefinitionData } from "@beep/scratchpad/effected/markdown/internal/blockTypes"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(DefinitionData)({ key: "ref", identifier: "ref", label: "Ref", url: "/target" }) // => true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface DefinitionData {
-	/** The case-folded lookup key. */
-	readonly key: string;
-	/** mdast's `identifier`: the normalized label, lowercased. */
-	readonly identifier: string;
-	/** mdast's `label`: the raw label text. */
-	readonly label: string;
-	/** The decoded destination — never percent-encoded (`references.ts`). */
-	readonly url: string;
-	readonly title?: string;
-}
+export const DefinitionData = S.Struct({
+	key: S.String.annotateKey({ description: "The case-folded lookup key." }),
+	identifier: S.String.annotateKey({ description: "mdast's identifier: the normalized label, lowercased." }),
+	label: S.String.annotateKey({ description: "mdast's label: the raw label text." }),
+	url: S.String.annotateKey({ description: "The decoded destination, never percent-encoded (see `references.ts`)." }),
+	title: S.optionalKey(S.String).annotateKey({ description: "The definition's title, absent when no title was provided." }),
+}).annotate($I.annote("DefinitionData", { description: "A parsed link reference definition awaiting materialization." }));
+
+/** The immutable DefinitionData payload derived from its schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DefinitionData = typeof DefinitionData.Type;
 
 /**
  * A GFM footnote definition's label, carried on the block.
@@ -266,17 +304,29 @@ export interface DefinitionData {
  * The fold happens once, at the block start, so the label map the inline pass
  * consults and the node's `identifier` can never disagree.
  *
+ * **Example** (Validate FootnoteData)
+ *
+ * ```ts
+ * import { FootnoteData } from "@beep/scratchpad/effected/markdown/internal/blockTypes"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(FootnoteData)({ key: "note", identifier: "note", label: "Note" }) // => true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface FootnoteData {
-	/** The case-folded lookup key. */
-	readonly key: string;
-	/** mdast's `identifier`: the normalized label, lowercased. */
-	readonly identifier: string;
-	/** mdast's `label`: the raw label text, as written. */
-	readonly label: string;
-}
+export const FootnoteData = S.Struct({
+	key: DefinitionData.fields.key,
+	identifier: DefinitionData.fields.identifier,
+	label: DefinitionData.fields.label.annotateKey({ description: "mdast's label: the raw label text, as written." }),
+}).annotate($I.annote("FootnoteData", { description: "A GFM footnote definition's label carried on the block." }));
+
+/** The immutable FootnoteData payload derived from its schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type FootnoteData = typeof FootnoteData.Type;
 
 /**
  *  A list marker's parsed shape, upstream's `_listData`.
@@ -332,10 +382,27 @@ export interface BlockNode {
  * - `1` — it does not; close it.
  * - `2` — the line is fully consumed (a fence close); go to the next line.
  *
+ * **Example** (Validate BlockContinueResult)
+ *
+ * ```ts
+ * import { BlockContinueResult } from "@beep/scratchpad/effected/markdown/internal/blockTypes"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(BlockContinueResult)(0) // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BlockContinueResult = LiteralKit([0, 1, 2]).annotate(
+	$I.annote("BlockContinueResult", { description: "The numeric verdicts returned by a block continue scanner." }),
+);
+
+/** The block continue verdict domain derived from its schema.
  * @category type-level
  * @since 0.0.0
  */
-export type BlockContinueResult = 0 | 1 | 2;
+export type BlockContinueResult = typeof BlockContinueResult.Type;
 
 /**
  * A block start's verdict.
@@ -346,10 +413,27 @@ export type BlockContinueResult = 0 | 1 | 2;
  * - `1` — a container opened; keep looking for starts inside it.
  * - `2` — a leaf opened; stop looking.
  *
+ * **Example** (Validate BlockStartResult)
+ *
+ * ```ts
+ * import { BlockStartResult } from "@beep/scratchpad/effected/markdown/internal/blockTypes"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(BlockStartResult)(2) // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BlockStartResult = LiteralKit([0, 1, 2]).annotate(
+	$I.annote("BlockStartResult", { description: "The numeric verdicts returned by a block start scanner." }),
+);
+
+/** The block start verdict domain derived from its schema.
  * @category type-level
  * @since 0.0.0
  */
-export type BlockStartResult = 0 | 1 | 2;
+export type BlockStartResult = typeof BlockStartResult.Type;
 
 /**
  * The parser surface a construct may drive: upstream's scanner state and the

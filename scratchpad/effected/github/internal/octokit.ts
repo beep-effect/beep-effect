@@ -152,8 +152,8 @@ export const makeTransport = Effect.fn("makeTransport")(function* (options: Tran
 		const policy = options.retry;
 
 		const record = (headers: Readonly<Record<string, unknown>> | undefined): Effect.Effect<void> => {
-			const parsed = readRateLimitHeaders(headers);
-			return parsed === undefined ? Effect.void : Ref.set(snapshot, O.some(RateLimitSnapshot.make(parsed)));
+			const parsed = S.decodeUnknownOption(RateLimitSnapshot)(readRateLimitHeaders(headers));
+			return O.isNone(parsed) ? Effect.void : Ref.set(snapshot, parsed);
 		};
 
 		/**

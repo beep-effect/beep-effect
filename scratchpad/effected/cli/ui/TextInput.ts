@@ -3,6 +3,7 @@ import * as S from "effect/Schema";
 import * as A from "effect/Array";
 import type { ReactElement } from "react";
 import { Fmt } from "../Fmt.ts";
+import { graphemes } from "../internal/displayWidth.ts";
 import type { Screen } from "./CliUi.ts";
 import { inkModules } from "./internal/ink.ts";
 import { lineText, lineTextAround } from "./internal/lineText.ts";
@@ -174,6 +175,9 @@ const typedKeys = (input: string, key: Parameters<typeof UiKey.fromInk>[1]): Rea
 };
 
 const step = (state: TextInputState, key: UiKey): TextInputState => {
+	// A submitted input awaits validation: keys read in the same chunk after enter must not cancel or change it. A
+	// rejected value re-enables editing by clearing `submitted`.
+	if (state.submitted) return state;
 	if (key._tag === "Char") return insert(state, key.char);
 	const { value, cursor } = state;
 	return Match.value(key.name).pipe(
@@ -195,29 +199,29 @@ const step = (state: TextInputState, key: UiKey): TextInputState => {
 	);
 };
 
-/** Take code points from the end of `text` while they fit in `width` cells. */
+/** Take whole graphemes from the end of `text` while they fit in `width` cells. */
 const tail = (text: string, width: number): string => {
-	const points = [...text];
+	const clusters = graphemes(text);
 	let out = "";
 	let used = 0;
-	for (let index = points.length - 1; index >= 0; index--) {
-		const point = A.getUnsafe(points, index);
-		const cells = Fmt.width(point);
+	for (let index = clusters.length - 1; index >= 0; index--) {
+		const cluster = A.getUnsafe(clusters, index);
+		const cells = Fmt.width(cluster);
 		if (used + cells > width) break;
-		out = point + out;
+		out = cluster + out;
 		used += cells;
 	}
 	return out;
 };
 
-/** Take code points from the start of `text` while they fit in `width` cells. */
+/** Take whole graphemes from the start of `text` while they fit in `width` cells. */
 const head = (text: string, width: number): string => {
 	let out = "";
 	let used = 0;
-	for (const point of text) {
-		const cells = Fmt.width(point);
+	for (const cluster of graphemes(text)) {
+		const cells = Fmt.width(cluster);
 		if (used + cells > width) break;
-		out += point;
+		out += cluster;
 		used += cells;
 	}
 	return out;
@@ -319,7 +323,7 @@ export abstract class TextInput {
 	/**
 	 * Apply a key: a typed character (every character, `q` included) or space is inserted at the cursor; backspace and delete
 	 * remove the grapheme before or after it; left and right move it a grapheme, home and end to either end, clamped
-	 * to the text; enter marks it submitted. Every other key changes nothing.
+	 * to the text; enter marks it submitted. Every other key changes nothing, and so does every key while it is submitted.
 	 *
 	 * **Example** (Delete a whole emoji grapheme)
 	 *

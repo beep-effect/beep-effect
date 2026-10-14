@@ -2,6 +2,7 @@
   "version": 2,
   "skills": {
     "oracle": {
+      "_tag": "vendored",
       "sourceType": "github",
       "upstream": {
         "repository": "steipete/oracle",

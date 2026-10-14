@@ -53,7 +53,7 @@ const $I = $ScratchpadId.create("effected/git/GitConfig");
  * @category diagnostics
  * @since 0.0.0
  */
-export class GitConfigDiagnostic extends S.Class<GitConfigDiagnostic>($I`GitConfigDiagnostic`)({
+export class GitConfigDiagnostic extends S.Class<GitConfigDiagnostic, { readonly brand: unique symbol }>($I`GitConfigDiagnostic`)({
   /** What kind of malformation this is. */
   code: GitConfigDiagnosticCode.annotateKey({ description: "What kind of malformation this is." }),
   /** A human-readable description of the problem. */
@@ -90,7 +90,7 @@ export class GitConfigDiagnostic extends S.Class<GitConfigDiagnostic>($I`GitConf
  * @category errors
  * @since 0.0.0
  */
-export class GitConfigParseError extends S.TaggedError<GitConfigParseError>($I`GitConfigParseError`)("GitConfigParseError", {
+export class GitConfigParseError extends S.TaggedError<GitConfigParseError, { readonly brand: unique symbol }>($I`GitConfigParseError`)("GitConfigParseError", {
   /** The raw input that failed to parse. */
   input: S.String.annotateKey({ description: "The raw input that failed to parse." }),
   /** Every structural problem found, in document order. */
@@ -134,7 +134,7 @@ export class GitConfigParseError extends S.TaggedError<GitConfigParseError>($I`G
  * @category errors
  * @since 0.0.0
  */
-export class GitConfigEditError extends S.TaggedError<GitConfigEditError>($I`GitConfigEditError`)("GitConfigEditError", {
+export class GitConfigEditError extends S.TaggedError<GitConfigEditError, { readonly brand: unique symbol }>($I`GitConfigEditError`)("GitConfigEditError", {
   /** The edit operation that was refused. */
   op: S.Literals(["set", "append", "unset", "unsetAll", "addSection", "removeSection", "renameSection"]).annotateKey({ description: "The edit operation that was refused." }),
   /** Why it was refused. */
@@ -206,7 +206,7 @@ export class GitConfigEditError extends S.TaggedError<GitConfigEditError>($I`Git
  * @category models
  * @since 0.0.0
  */
-export class GitConfigEntry extends S.Class<GitConfigEntry>($I`GitConfigEntry`)({
+export class GitConfigEntry extends S.Class<GitConfigEntry, { readonly brand: unique symbol }>($I`GitConfigEntry`)({
   /** The variable name, raw spelling preserved (names compare case-insensitively). */
   key: S.String.annotateKey({ description: "The variable name, raw spelling preserved (names compare case-insensitively)." }),
   /** The decoded value; absent for the bare boolean-true shorthand. */
@@ -244,7 +244,7 @@ export class GitConfigEntry extends S.Class<GitConfigEntry>($I`GitConfigEntry`)(
  * @category models
  * @since 0.0.0
  */
-export class GitConfigSection extends S.Class<GitConfigSection>($I`GitConfigSection`)({
+export class GitConfigSection extends S.Class<GitConfigSection, { readonly brand: unique symbol }>($I`GitConfigSection`)({
   /** The section name, raw spelling preserved. */
   name: S.String.annotateKey({ description: "The section name, raw spelling preserved." }),
   /** The decoded subsection name, when present. */
@@ -280,7 +280,7 @@ export class GitConfigSection extends S.Class<GitConfigSection>($I`GitConfigSect
  * @category models
  * @since 0.0.0
  */
-export class GitConfigInclude extends S.Class<GitConfigInclude>($I`GitConfigInclude`)({
+export class GitConfigInclude extends S.Class<GitConfigInclude, { readonly brand: unique symbol }>($I`GitConfigInclude`)({
   /** The include path exactly as written (not resolved, not expanded). */
   path: S.String.annotateKey({ description: "The include path exactly as written (not resolved, not expanded)." }),
   /** The `includeIf` condition, when this came from an `includeIf` section. */
@@ -347,7 +347,7 @@ const fromRaw = (text: string, raw: RawParse): GitConfig =>
   });
 
 /** A hand-built document violated the clean-text invariant. */
-class GitConfigInvariantError extends S.TaggedError<GitConfigInvariantError>($I`GitConfigInvariantError`)(
+class GitConfigInvariantError extends S.TaggedError<GitConfigInvariantError, { readonly brand: unique symbol }>($I`GitConfigInvariantError`)(
   "GitConfigInvariantError",
   {
     message: S.String.annotateKey({ description: "The violated document invariant." }),
@@ -388,9 +388,25 @@ const lastMatchingEntry = (
   return found;
 };
 
-/** Appends `content` at the end of `text`, inserting a newline separator when the text does not end with one. */
-const appendAtEof = (text: string, content: string): string =>
-  text === "" ? content : text.endsWith("\n") ? text + content : `${text}\n${content}`;
+/** Separates inserted content from the preceding entry, including an open EOF continuation. */
+const insertionSeparator = (text: string, offset: number, entry: RawEntry | undefined): string => {
+  const separator = offset > 0 && text[offset - 1] !== "\n" ? "\n" : "";
+  if (entry === undefined || entry.valueOffset + entry.valueLength !== offset) return separator;
+  // A significant value span reaching the newline consumed a continuation.
+  if (text[offset - 1] === "\n") return text[offset - 2] === "\r" ? "\r\n" : "\n";
+  let slashStart = offset;
+  while (text[slashStart - 1] === "\\") slashStart -= 1;
+  // Paired backslashes decode literally; only an odd final backslash stays open.
+  return (offset - slashStart) % 2 === 1 ? `${separator}\n` : separator;
+};
+
+/** Appends `content` after terminating the last logical value, retaining the existing text. */
+const appendAtEof = (text: string, content: string): string => {
+  const sections = reparse(text).sections;
+  const section = sections[sections.length - 1];
+  const entry = section?.entries[section.entries.length - 1];
+  return text + insertionSeparator(text, text.length, entry) + content;
+};
 
 /**
  * A lossless git-config document: the source text plus the structural index
@@ -441,7 +457,7 @@ const appendAtEof = (text: string, content: string): string =>
  * @category models
  * @since 0.0.0
  */
-export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
+export class GitConfig extends S.Class<GitConfig, { readonly brand: unique symbol }>($I`GitConfig`)({
   /** The document's source text — `stringify` returns exactly this. */
   text: S.String.annotateKey({ description: "The document's source text — `stringify` returns exactly this." }),
   /** The sections scanned from `text`, in document order. */
@@ -696,7 +712,7 @@ export class GitConfig extends S.Class<GitConfig>($I`GitConfig`)({
       const indent = sectionIndent(this.text, found.section);
       const offset = found.entry.offset + found.entry.length;
       const line = `${indent}${key} = ${serializeValue(value)}\n`;
-      const content = this.text[offset - 1] !== "\n" ? `\n${line}` : line;
+      const content = insertionSeparator(this.text, offset, found.entry) + line;
       return Result.succeed(rebuild(applySplice(this.text, {
         offset,
         length: 0,
@@ -962,7 +978,7 @@ const insertEntry = (
   const indent = sectionIndent(text, target);
   const offset = sectionInsertOffset(target);
   const line = `${indent}${key} = ${serializeValue(value)}\n`;
-  const content = text[offset - 1] !== "\n" ? `\n${line}` : line;
+  const content = insertionSeparator(text, offset, target.entries[target.entries.length - 1]) + line;
   return rebuild(applySplice(text, { offset, length: 0, content }));
 };
 

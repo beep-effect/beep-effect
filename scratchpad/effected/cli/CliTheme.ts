@@ -3,17 +3,18 @@ import { Prompt } from "effect/cli";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
-import type { AudienceKind, ColorLevel } from "../env/index.ts";
+import type { AudienceKind } from "../env/index.ts";
+import { ColorLevel } from "../env/ColorLevel.ts";
 import { TerminalEnv } from "../env/index.ts";
 import type { GlyphSet } from "./Glyphs.ts";
 import { Glyphs } from "./Glyphs.ts";
 import { openSequence, paintStyle } from "./internal/ansi.ts";
 import type { Status } from "./Status.ts";
-import type { Style, TokenName } from "./Token.ts";
-import { Token } from "./Token.ts";
+import { Style, Token, TokenName } from "./Token.ts";
 
 const $I = $ScratchpadId.create("effected/cli/CliTheme");
 
@@ -77,32 +78,66 @@ export interface StreamTheme {
 /**
  * Options for {@link CliTheme.layer}.
  *
- * @public
- * @category type-level
- * @since 0.0.0
- */
-export interface CliThemeOptions {
-	/** Styles that replace the default of a token. */
-	readonly tokens?: Partial<Record<TokenName, Style>> | undefined;
-	/** The glyph set. `auto`, the default, is ASCII only when `TERM=dumb`. */
-	readonly glyphs?: "unicode" | "ascii" | "auto" | undefined;
-}
-
-/**
- * Options for {@link CliTheme.layerTest}.
+ * **Example** (Choose ASCII glyphs)
+ *
+ * ```ts
+ * import { CliThemeOptions } from "@beep/scratchpad/effected/cli/CliTheme";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(CliThemeOptions)({ glyphs: "ascii" })) // true
+ * ```
  *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface CliThemeTestOptions {
+export const CliThemeOptions = S.Struct({
+	/** Styles that replace the default of a token. */
+	tokens: S.optional(S.Record(TokenName, S.optionalKey(Style))).annotate($I.annote("CliThemeOptions.tokens", { description: "Partial replacements for default semantic token styles." })),
+	/** The glyph set. `auto`, the default, is ASCII only when `TERM=dumb`. */
+	glyphs: S.optional(S.Literals(["unicode", "ascii", "auto"])).annotate($I.annote("CliThemeOptions.glyphs", { description: "Glyph selection, with auto following TERM." })),
+}).annotate($I.annote("CliThemeOptions", { description: "Plain token overrides and glyph selection for a CLI theme." }));
+
+/**
+ * The plain options accepted by the live theme layer.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CliThemeOptions = typeof CliThemeOptions.Type;
+
+/**
+ * Options for {@link CliTheme.layerTest}.
+ *
+ * **Example** (Fix test colour support)
+ *
+ * ```ts
+ * import { CliThemeTestOptions } from "@beep/scratchpad/effected/cli/CliTheme";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(CliThemeTestOptions)({ color: "none", stderrColor: "none" })) // true
+ * ```
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export const CliThemeTestOptions = S.Struct({
 	/** The stdout colour level; `none` by default. */
-	readonly color?: ColorLevel | undefined;
+	color: S.optional(ColorLevel).annotate($I.annote("CliThemeTestOptions.color", { description: "Fixed stdout colour support." })),
 	/** The stderr colour level; the same as `color` by default. */
-	readonly stderrColor?: ColorLevel | undefined;
+	stderrColor: S.optional(ColorLevel).annotate($I.annote("CliThemeTestOptions.stderrColor", { description: "Fixed stderr colour support, defaulting to stdout." })),
 	/** The glyph set; Unicode by default. */
-	readonly glyphs?: "unicode" | "ascii" | undefined;
-}
+	glyphs: S.optional(S.Literals(["unicode", "ascii"])).annotate($I.annote("CliThemeTestOptions.glyphs", { description: "The fixed glyph set used by a test." })),
+}).annotate($I.annote("CliThemeTestOptions", { description: "Plain colour and glyph answers for a test theme layer." }));
+
+/**
+ * The plain options accepted by the test theme layer.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CliThemeTestOptions = typeof CliThemeTestOptions.Type;
 
 /**
  * A stream theme at `color`, over a style resolution and a glyph set: the one way a {@link StreamTheme} is built.

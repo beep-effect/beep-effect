@@ -344,8 +344,8 @@ export function createScanner(text: string): YamlScanner {
 	 */
 	function isPlainScalarBreak(ch: string): boolean {
 		if (ch === "" || isNewline(ch)) return true;
-		if (flowDepth > 0 && isFlowIndicator(ch)) return true;
-		return false;
+		return flowDepth > 0 && isFlowIndicator(ch);
+
 	}
 
 	// -----------------------------------------------------------------------
@@ -749,8 +749,26 @@ export function createScanner(text: string): YamlScanner {
 			} else {
 				// Invalid content after block scalar indicator:
 				// either # without preceding whitespace, or arbitrary text
+				let inSingleQuote = false;
+				let inDoubleQuote = false;
 				while (pos < text.length && !isNewline(peek())) {
-					if (peek() === "#" && isWhitespace(charAt(pos - 1))) break;
+					const ch = peek();
+					if (inDoubleQuote && ch === "\\") {
+						advance();
+						if (pos < text.length && !isNewline(peek())) advance();
+						continue;
+					}
+					if (ch === "'" && !inDoubleQuote) {
+						if (inSingleQuote && peek(1) === "'") {
+							advance(2);
+							continue;
+						}
+						inSingleQuote = !inSingleQuote;
+					} else if (ch === '"' && !inSingleQuote) {
+						inDoubleQuote = !inDoubleQuote;
+					} else if (ch === "#" && !inSingleQuote && !inDoubleQuote && isWhitespace(charAt(pos - 1))) {
+						break;
+					}
 					advance();
 				}
 				const error = makeToken("error", text.slice(start, pos), start, sLine, sCol);

@@ -38,23 +38,44 @@ const $I = $ScratchpadId.create("effected/cli/CliLog");
 /**
  * Options for `CliLog.status`.
  *
+ * **Example** (Validate plain status options)
+ *
+ * ```ts
+ * import { CliLogStatusOptions } from "@beep/scratchpad/effected/cli/CliLog"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(CliLogStatusOptions)({ level: "Warn", indent: 2 })) // true
+ * ```
+ *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface CliLogStatusOptions {
+export const CliLogStatusOptions = S.Struct({
 	/**
 	 * The level the line is logged at. By default it follows the status's rank in its vocabulary: `Error` at or above
 	 * `failure`'s rank, `Warn` at or above `warning`'s, and `Info` below that.
 	 */
-	readonly level?: LogLevel.Severity | undefined;
+	level: S.optional(S.Literals(["Fatal", "Error", "Warn", "Info", "Debug", "Trace"])).annotate(
+		$I.annote("CliLogStatusOptions.level", { description: "The message severity overriding the status vocabulary's rank." }),
+	),
 	/**
 	 * What the line starts with, before the glyph, so an indented report line keeps its place in a block: a number of
 	 * spaces (floored, at most 64; zero, a negative or a non-finite number is none), or a string. A string is sanitised as text is (escapes and controls removed, a tab a space) and its line
 	 * breaks dropped, so the indent can never carry an escape onto the trusted line. None by default.
 	 */
-	readonly indent?: number | string | undefined;
-}
+	indent: S.optional(S.Union([S.declare(P.isNumber).annotate(
+		$I.annote("CliLogStatusOptions.NumericIndent", { description: "Every JavaScript number, including non-finite values that the status renderer treats as no indent." }),
+	), S.String])).annotate(
+		$I.annote("CliLogStatusOptions.indent", { description: "Spaces or sanitized text before the glyph; non-finite numbers produce no indent." }),
+	),
+}).annotate($I.annote("CliLogStatusOptions", { description: "Plain optional severity and indentation settings for a status log line." }));
+
+/**
+ * Plain options validated by {@link CliLogStatusOptions}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CliLogStatusOptions = typeof CliLogStatusOptions.Type;
 
 /** The most spaces a numeric `indent` writes. */
 const MAX_INDENT = 64;
@@ -176,6 +197,14 @@ export interface CliLogOptions {
 	readonly runtimeEnv?: RuntimeEnv | undefined;
 }
 
+const CliLogFilePath = S.Struct({
+	path: S.String.annotate($I.annote("CliLogFile.Path.path", { description: "The literal log path; an empty path disables file logging." })),
+}).annotate($I.annote("CliLogFile.Path", { description: "A directly supplied file-sink location." }));
+
+const CliLogFileEnvironment = S.Struct({
+	envVar: S.String.annotate($I.annote("CliLogFile.Environment.envVar", { description: "The variable holding the log path; unset or empty disables file logging." })),
+}).annotate($I.annote("CliLogFile.Environment", { description: "A file-sink location read from an environment variable." }));
+
 /**
  * Where the file sink writes: a literal path, or the environment variable that holds it.
  *
@@ -193,12 +222,8 @@ export interface CliLogOptions {
  * @since 0.0.0
  */
 export const CliLogFile = S.Union([
-	S.Struct({
-		envVar: S.String.annotate($I.annote("CliLogFile.Environment.envVar", { description: "The variable holding the log path; unset or empty disables file logging." })),
-	}).annotate($I.annote("CliLogFile.Environment", { description: "A file-sink location read from an environment variable." })),
-	S.Struct({
-		path: S.String.annotate($I.annote("CliLogFile.Path.path", { description: "The literal log path; an empty path disables file logging." })),
-	}).annotate($I.annote("CliLogFile.Path", { description: "A directly supplied file-sink location." })),
+	CliLogFilePath,
+	CliLogFileEnvironment,
 ]).annotate($I.annote("CliLogFile", { description: "A plain file-sink configuration using a path or an environment variable." }));
 
 /**
@@ -647,7 +672,7 @@ export class CliLog {
 							];
 							if (file !== undefined) {
 								let target: O.Option<string>;
-								if ("path" in file) {
+								if (S.is(CliLogFilePath)(file)) {
 									target = O.some(file.path);
 								} else {
 									target = yield* Config.option(Config.String(file.envVar)).pipe(

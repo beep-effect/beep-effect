@@ -13,6 +13,7 @@ import * as Path from "effect/Path";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 import { HttpClient } from "effect/http";
 import type { ChildProcess } from "effect/process";
 import { ChildProcessSpawner } from "effect/process";
@@ -115,13 +116,26 @@ export class ToolInstallerError extends S.TaggedError<ToolInstallerError>($I`Too
 
 /**
  * Where extraction should put its output.
+ *
+ * **Example** (Validate ExtractOptions input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
+ * import { ExtractOptions } from "@beep/scratchpad/effected/github-actions/ToolInstaller";
+ *
+ * const input = { destination: "/tools/staging", flags: ["xzf"] };
+ * Effect.runSync(Console.log(S.is(ExtractOptions)(input))) // true
+ * ```
+ *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface ExtractOptions {
+export const ExtractOptions = S.Struct({
 	/** The destination. A fresh temporary directory when omitted. */
-	readonly destination?: string | undefined;
+	destination: S.optional(S.String).annotateKey({ description: "Requested extraction destination; omission allocates a temporary directory." }),
 	/**
   * Flags for `tar`. Defaults to `["xzf"]`, i.e. a gzipped tarball.
   *
@@ -133,8 +147,16 @@ export interface ExtractOptions {
   * is last inside the cluster; a custom set like `["xz", "--strip=1", "-f"]`
   * must end the same way, deliberately rather than by ordering luck.
   */
-	readonly flags?: ReadonlyArray<string> | undefined;
-}
+	flags: S.String.pipe(S.Array, S.optional).annotateKey({ description: "Custom tar flags in argv order; omission retains the extraction default." }),
+}).annotate($I.annote("ExtractOptions", { description: "Structural archive extraction options, preserving absent and explicit undefined fields." }));
+
+/**
+ * The plain-object contract represented by {@link ExtractOptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ExtractOptions = typeof ExtractOptions.Type;
 
 /**
  * How a {@link ToolInstallerShape.download} should behave.
@@ -163,23 +185,44 @@ export interface ToolDownloadOptions {
 
 /**
  * What {@link ToolInstallerShape.provisionFile} should provision.
+ *
+ * **Example** (Validate ProvisionFileOptions input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
+ * import { ProvisionFileOptions } from "@beep/scratchpad/effected/github-actions/ToolInstaller";
+ *
+ * const input = { tool: "biome", version: "2.0.0", url: "https://example.com/biome", binary: "biome" };
+ * Effect.runSync(Console.log(S.is(ProvisionFileOptions)(input))) // true
+ * ```
+ *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface ProvisionFileOptions {
+export const ProvisionFileOptions = S.Struct({
 	/** The tool-cache name the binary is provisioned under, e.g. `"biome"`. */
-	readonly tool: string;
+	tool: S.String.annotateKey({ description: "The name under which the binary is cached." }),
 	/** The exact version — a tool-cache path segment, so spell it canonically. */
-	readonly version: string;
+	version: S.String.annotateKey({ description: "The exact version used in the cache path." }),
 	/** The url the binary downloads from on a cache miss. */
-	readonly url: string;
+	url: S.String.annotateKey({ description: "The binary download URL used on a cache miss." }),
 	/**
 	 * The cached file's name — what the tool is invoked as once its directory
 	 * is on the `PATH` (e.g. `"biome"`, or `"biome.exe"` on Windows).
 	 */
-	readonly binary: string;
-}
+	binary: S.String.annotateKey({ description: "The filename of the binary inside the cache entry." }),
+}).annotate($I.annote("ProvisionFileOptions", { description: "The tool, exact version, download URL and binary filename for single-file provisioning." }));
+
+/**
+ * The plain-object contract represented by {@link ProvisionFileOptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ProvisionFileOptions = typeof ProvisionFileOptions.Type;
 
 /**
  * Where {@link ToolInstallerShape.provisionFile} put a single-binary tool.
@@ -191,17 +234,36 @@ export interface ProvisionFileOptions {
  * single binary the two coincide: the cached directory contains exactly the
  * executable, so it IS the directory to hand to `ActionOutputs.addPath`.
  *
+ * **Example** (Validate ProvisionedFile input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
+ * import { ProvisionedFile } from "@beep/scratchpad/effected/github-actions/ToolInstaller";
+ *
+ * const input = { directory: "/tools/biome/2.0.0/x64", binDir: "/tools/biome/2.0.0/x64" };
+ * Effect.runSync(Console.log(S.is(ProvisionedFile)(input))) // true
+ * ```
  *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface ProvisionedFile {
+export const ProvisionedFile = S.Struct({
 	/** The cached entry: `<tool-cache>/<tool>/<version>/<arch>`. */
-	readonly directory: string;
+	directory: S.String.annotateKey({ description: "The published tool-cache entry directory." }),
 	/** The directory to `addPath` — for a single binary, the cached directory itself. */
-	readonly binDir: string;
-}
+	binDir: S.String.annotateKey({ description: "The directory to publish on PATH for the provisioned tool." }),
+}).annotate($I.annote("ProvisionedFile", { description: "Structural paths to the published single-file tool entry and its executable directory." }));
+
+/**
+ * The plain-object contract represented by {@link ProvisionedFile}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ProvisionedFile = typeof ProvisionedFile.Type;
 
 /**
  * The members of the {@link ToolInstaller} service: find, download, extract and
@@ -372,8 +434,10 @@ const make = Effect.gen(function* () {
 			const destination = cachePath(tool, version);
 			yield* fs.makeDirectory(path.dirname(destination), { recursive: true });
 			// A previous interrupted install, or a re-install of the same version.
+			yield* fs.remove(`${destination}.complete`, { force: true });
 			yield* fs.remove(destination, { recursive: true, force: true });
 			yield* fs.rename(staging, destination);
+			yield* fs.writeFileString(`${destination}.complete`, "");
 			return destination;
 		}).pipe(Effect.mapError((cause) => ToolInstallerError.make({ reason: "cacheFailed", subject: tool, cause })));
 
@@ -472,6 +536,41 @@ const make = Effect.gen(function* () {
 			type === "Directory" ? O.some(cachePath(tool, version)) : O.none(),
 		);
 
+	/** Fail before any binary probe or write when its normalized name escapes the entry. */
+	const binaryDestination = (directory: string, name: string): Effect.Effect<string, ToolInstallerError> => {
+		const destination = path.resolve(directory, name);
+		const relative = path.relative(path.resolve(directory), destination);
+		return relative === "" || relative === ".." || Str.startsWith(`..${path.sep}`)(relative) || path.isAbsolute(relative)
+			? Effect.fail(ToolInstallerError.make({ reason: "cacheFailed", subject: name }))
+			: Effect.succeed(destination);
+	};
+
+	/** Resolve a new filename through its existing parent, rejecting dangling links. */
+	const resolvedDestination = Effect.fnUntraced(function* (file: string): Effect.fn.Return<string, PlatformError.PlatformError> {
+		return yield* fs.realPath(file).pipe(Effect.catchIf(
+			(error) => error.reason._tag === "NotFound",
+			Effect.fnUntraced(function* (error: PlatformError.PlatformError): Effect.fn.Return<string, PlatformError.PlatformError> {
+				const link = yield* Effect.option(fs.readLink(file));
+				const parent = path.dirname(file);
+				if (O.isSome(link) || parent === file) {
+					return yield* error;
+				}
+				return path.join(yield* resolvedDestination(parent), path.basename(file));
+			}),
+		));
+	});
+
+	const containedBinaryDestination = Effect.fnUntraced(function* (
+		directory: string,
+		name: string,
+	): Effect.fn.Return<string, ToolInstallerError> {
+		const destination = yield* binaryDestination(directory, name);
+		const realRoot = yield* fs.realPath(directory).pipe(Effect.mapError((cause) => ToolInstallerError.make({ reason: "cacheFailed", subject: directory, cause })));
+		const realDestination = yield* resolvedDestination(destination).pipe(Effect.mapError((cause) => ToolInstallerError.make({ reason: "cacheFailed", subject: destination, cause })));
+		yield* binaryDestination(realRoot, path.relative(realRoot, realDestination));
+		return destination;
+	});
+
 	const cacheFile = Effect.fn("ToolInstaller.cacheFile")(function* (
 		source: string,
 		name: string,
@@ -480,7 +579,8 @@ const make = Effect.gen(function* () {
 	) {
 		yield* Effect.annotateCurrentSpan({ tool, version });
 		return yield* staged(tool, (staging) =>
-			fs.copyFile(source, path.join(staging, name)).pipe(
+			containedBinaryDestination(staging, name).pipe(
+				Effect.flatMap((destination) => fs.copyFile(source, destination)),
 				Effect.mapError((cause) => ToolInstallerError.make({ reason: "cacheFailed", subject: tool, cause })),
 				Effect.flatMap(() => swapIntoCache(staging, tool, version)),
 			),
@@ -524,6 +624,7 @@ const make = Effect.gen(function* () {
 
 		provisionFile: Effect.fn("ToolInstaller.provisionFile")(function* (options: ProvisionFileOptions) {
 			yield* Effect.annotateCurrentSpan({ tool: options.tool, version: options.version });
+			yield* binaryDestination(cachePath(options.tool, options.version), options.binary);
 			const cached = yield* find(options.tool, options.version);
 			if (O.isSome(cached)) {
 				// The hit is validated, per find's shared-cache warning: the entry may
@@ -531,7 +632,8 @@ const make = Effect.gen(function* () {
 				// without the named binary is a directory that cannot run the tool.
 				// Absence falls through to a reinstall over the entry rather than
 				// failing — the install path is the only recovery a caller has anyway.
-				if ((yield* typeAt(fs, path.join(cached.value, options.binary))) === "File") {
+				const destination = yield* containedBinaryDestination(cached.value, options.binary);
+				if ((yield* typeAt(fs, destination)) === "File") {
 					return { directory: cached.value, binDir: cached.value };
 				}
 			}
@@ -600,7 +702,6 @@ const testRoot = (): string => Effect.runSync(
  *
  * console.log(Effect.isEffect(install)) // true
  * ```
- *
  *
  * @public
  * @category services

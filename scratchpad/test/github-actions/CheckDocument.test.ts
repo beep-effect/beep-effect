@@ -8,6 +8,8 @@ import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
+import { CheckFlushOutcome } from "../../effected/github-actions/CheckDocument.ts";
 import * as Result from "effect/Result";
 import * as MutableRef from "effect/MutableRef";
 import { TestClock } from "effect/testing";
@@ -123,6 +125,28 @@ describe("CheckDocument", () => {
 					assert.strictEqual(all.length, 1, "exactly one write, at the staleness bound");
 					assert.include(all[0] ?? "", "step 4", "and it carries the latest state, not the first");
 				}).pipe(withLayer(layer));
+			}),
+		);
+
+		it.effect("a maxWait between quiet-window multiples flushes at its exact deadline", () =>
+			Effect.gen(function* () {
+				const { writes, layer } = yield* harness({ quiet: "500 millis", maxWait: "750 millis" });
+				yield* Effect.gen(function* () {
+					const doc = yield* CheckDocument;
+					yield* doc.report("build", CheckReport.make({ state: "pass" }));
+					yield* TestClock.adjust("400 millis");
+					yield* doc.report("build", CheckReport.make({ state: "fail" }));
+					yield* TestClock.adjust("100 millis");
+					assert.deepStrictEqual(yield* Ref.get(writes), [], "the report at 400ms prevents settling at 500ms");
+					yield* TestClock.adjust("249 millis");
+					assert.deepStrictEqual(yield* Ref.get(writes), [], "no write before the 750ms deadline");
+					yield* TestClock.adjust("1 millis");
+					const all = yield* Ref.get(writes);
+					assert.strictEqual(all.length, 1, "exactly one write at 750ms, before the next full quiet interval");
+					assert.include(all[0] ?? "", "fail", "the deadline flush carries the latest report");
+					assert.notInclude(all[0] ?? "", "pass");
+				}).pipe(withLayer(layer));
+				assert.strictEqual((yield* Ref.get(writes)).length, 1, "scope finalization does not duplicate the write");
 			}),
 		);
 	});
@@ -633,4 +657,16 @@ describe("CheckDocument", () => {
 			}).pipe(withLayer(CheckDocument.layerTest({ flush: Effect.succeed("unchanged" as const) }))),
 		);
 	});
+});
+
+
+describe("CheckFlushOutcome schema contract", () => {
+	it.effect("accepts exactly the three reconciliation outcomes", () => Effect.gen(function* () {
+		for (const outcome of ["written", "unchanged", "stale"]) {
+			assert.strictEqual(yield* S.decodeUnknownEffect(CheckFlushOutcome)(outcome), outcome);
+		}
+		assert.strictEqual(CheckFlushOutcome.literals.length, 3);
+		assert.isFalse(S.is(CheckFlushOutcome)("failed"));
+		assert.isFalse(S.is(CheckFlushOutcome)(undefined));
+	}));
 });

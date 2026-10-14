@@ -17,6 +17,7 @@ import * as Scope from "effect/Scope";
 import * as Tracer from "effect/Tracer";
 import { TestClock } from "effect/testing";
 import { CliLog } from "../../effected/cli/index.ts";
+import { CliLogFile } from "../../effected/cli/CliLog.ts";
 
 const Json = S.fromJsonString(S.Unknown);
 
@@ -98,6 +99,40 @@ const program = Effect.gen(function* () {
 });
 
 describe("CliLog.layer file option", () => {
+	it.effect("resolves a valid envVar when the path key is explicitly undefined", () =>
+		Effect.gen(function* () {
+			const file = { path: undefined, envVar: FILE_ENV };
+			assert.isTrue(S.is(CliLogFile)(file));
+			const h = yield* harness({ file, env: { [LEVEL_ENV]: "error", [FILE_ENV]: PATH } });
+			yield* h.log(Effect.logError("from environment"));
+			yield* h.close;
+			assert.isDefined(h.file());
+			assert.include(h.file() ?? "", "from environment");
+			assert.deepStrictEqual(plain(h.err), []);
+		}),
+	);
+
+	it.effect("both valid keys keep explicit-path precedence before and after the file codec", () =>
+		Effect.gen(function* () {
+			const original = { path: PATH, envVar: FILE_ENV };
+			const encoded = yield* S.encodeEffect(CliLogFile)(original);
+			const decoded = yield* S.decodeEffect(CliLogFile)(encoded);
+			assert.deepStrictEqual(encoded, { path: PATH });
+			assert.deepStrictEqual(decoded, { path: PATH });
+			for (const file of [original, decoded]) {
+				const h = yield* harness({
+					file,
+					env: { [LEVEL_ENV]: "error", [FILE_ENV]: "/logs/environment.ndjson" },
+				});
+				yield* h.log(Effect.logError("explicit path"));
+				yield* h.close;
+				assert.include(h.file() ?? "", "explicit path");
+				assert.isFalse(h.handle.volume.has("/logs/environment.ndjson"));
+				assert.deepStrictEqual(plain(h.err), []);
+			}
+		}),
+	);
+
 	it.effect("traces sink construction as makeFileSink and file writes as append", () => {
 		let spans: ReadonlyArray<string> = [];
 		const tracer = Tracer.make({

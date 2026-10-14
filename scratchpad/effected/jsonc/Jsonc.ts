@@ -85,10 +85,10 @@ export type JsoncParseErrorCode = typeof JsoncParseErrorCode.Type;
 export class JsoncParseErrorDetail extends S.Class<JsoncParseErrorDetail>($I`JsoncParseErrorDetail`)(
   {
     code: JsoncParseErrorCode,
-    offset: S.Natural,
-    length: S.Natural,
-    line: S.Natural,
-    character: S.Natural,
+    offset: S.Finite,
+    length: S.Finite,
+    line: S.Finite,
+    character: S.Finite,
   },
   $I.annote("JsoncParseErrorDetail", {
     description: "A recovered parse error with its offset, length, line and character.",
@@ -389,12 +389,15 @@ const deepEqual = (a: unknown, b: unknown, depth: number): boolean => {
     return false;
   }
   if (A.isArray(a) || A.isArray(b)) {
-    return (
-      A.isArray(a) &&
-      A.isArray(b) &&
-      a.length === b.length &&
-      A.every(A.zip(a, b), ([x, y]) => deepEqual(x, y, depth + 1))
-    );
+    if (!A.isArray(a) || !A.isArray(b) || a.length !== b.length) {
+      return false;
+    }
+    for (let index = 0; index < a.length; index++) {
+      if (!deepEqual(a[index], b[index], depth + 1)) {
+        return false;
+      }
+    }
+    return true;
   }
   if (P.isObject(a) && P.isObject(b)) {
     const aKeys = R.keys(a);

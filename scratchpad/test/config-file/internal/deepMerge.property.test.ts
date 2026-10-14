@@ -24,6 +24,58 @@ const Document = S.Struct({
 });
 
 describe("deepMerge structural properties", () => {
+  it.effect("compatible self-cycles reuse the allocated result without mutating either input", () =>
+    Effect.gen(function* () {
+      const target: Record<PropertyKey, unknown> = { priority: "higher" };
+      const source: Record<PropertyKey, unknown> = { priority: "lower", fallback: "base" };
+      target.self = target;
+      source.self = source;
+      const actual = deepMerge(target, source);
+      assert.notStrictEqual(actual, target);
+      assert.notStrictEqual(actual, source);
+      assert.strictEqual(actual.self, actual);
+      assert.strictEqual(actual.priority, "higher");
+      assert.strictEqual(actual.fallback, "base");
+      assert.strictEqual(target.self, target);
+      assert.strictEqual(source.self, source);
+      assert.isFalse(R.has(target, "fallback"));
+      assert.strictEqual(source.priority, "lower");
+      const repeated = deepMerge(source)(target);
+      assert.notStrictEqual(repeated, actual);
+      assert.strictEqual(repeated.self, repeated);
+    }));
+
+  it.effect("mutual cycles close over the corresponding result pair rather than a different ancestor", () =>
+    Effect.gen(function* () {
+      const target: Record<string, unknown> = { priority: "higher root" };
+      const targetChild: Record<string, unknown> = { priority: "higher child", parent: target };
+      target.child = targetChild;
+      const source: Record<string, unknown> = { priority: "lower root", fallback: "root base" };
+      const sourceChild: Record<string, unknown> = {
+        priority: "lower child", fallback: "child base", parent: source,
+      };
+      source.child = sourceChild;
+      const actual = deepMerge(target, source);
+      const child = actual.child;
+      if (!isPlainObject(child)) return assert.fail("expected a merged child record");
+      assert.notStrictEqual(child, actual);
+      assert.notStrictEqual(child, targetChild);
+      assert.notStrictEqual(child, sourceChild);
+      assert.strictEqual(child.parent, actual);
+      assert.strictEqual(actual.priority, "higher root");
+      assert.strictEqual(actual.fallback, "root base");
+      assert.strictEqual(child.priority, "higher child");
+      assert.strictEqual(child.fallback, "child base");
+      assert.strictEqual(target.child, targetChild);
+      assert.strictEqual(targetChild.parent, target);
+      assert.strictEqual(source.child, sourceChild);
+      assert.strictEqual(sourceChild.parent, source);
+      assert.isFalse(R.has(target, "fallback"));
+      assert.isFalse(R.has(targetChild, "fallback"));
+      assert.strictEqual(source.priority, "lower root");
+      assert.strictEqual(sourceChild.priority, "lower child");
+    }));
+
   it.effect.prop("decoded classes stay atomic by identity with their private-field brands intact", [Arbitrary.schema(S.Struct({ port: S.Int, host: S.String })), Arbitrary.schema(S.Struct({ port: S.Int, host: S.String }))], ([higherFields, lowerFields]) =>
     Effect.gen(function* () {
       const higher = yield* S.decodeEffect(Settings)(higherFields);

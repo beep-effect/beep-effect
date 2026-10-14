@@ -111,7 +111,6 @@ const windowOf = Effect.fn("Jsonl.windowOf")(function* (
   path: string,
   bytes: Uint8Array,
   from: number,
-  length: number,
   bomBytes: number,
   skipPartialLine: boolean,
   completeOnly: boolean,
@@ -134,7 +133,7 @@ const windowOf = Effect.fn("Jsonl.windowOf")(function* (
   return TailWindow.make({
     text,
     start: from + cursor - bomBytes,
-    size: from + length - bomBytes,
+    size: from + bytes.length - bomBytes,
     atFileStart: from === bomBytes,
   });
 });
@@ -151,7 +150,7 @@ const readWindow = Effect.fn("Jsonl.readWindow")(function* (
   const file = yield* fs.open(path, { flag: "r" });
   yield* file.seek(BigInt(from), "start");
   const bytes = yield* readBytes(file, length);
-  return yield* windowOf(path, bytes, from, length, bomBytes, skipPartialLine, completeOnly);
+  return yield* windowOf(path, bytes, from, bomBytes, skipPartialLine, completeOnly);
 }, Effect.scoped);
 
 /**
@@ -162,7 +161,7 @@ const readWindow = Effect.fn("Jsonl.readWindow")(function* (
  * A leading cursor fragment is discarded in bytes when requested, before strict
  * UTF-8 decoding. Every byte after the final newline is withheld without decoding
  * so a live writer can finish its suffix. The window start and size are logical
- * post-BOM offsets; size records the sampled range end, including withheld bytes.
+ * post-BOM offsets; size records the actual byte end read, including withheld bytes.
  *
  * **Example** (Hold an unfinished multi-byte suffix)
  * ```ts
@@ -321,7 +320,7 @@ export const readSampledWindow: {
         actual: Math.max(0, ByteSize.toNumberUnsafe(info.size) - page.bomBytes),
       });
     }
-    return yield* windowOf(page.path, bytes, page.from, page.length, page.bomBytes, page.skipPartialLine, true);
+    return yield* windowOf(page.path, bytes, page.from, page.bomBytes, page.skipPartialLine, true);
   }),
 );
 

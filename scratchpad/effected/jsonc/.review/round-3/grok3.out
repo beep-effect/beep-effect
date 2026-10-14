@@ -1,0 +1,51 @@
+I'll review the jsonc port read-only against the pinned upstream oracle, round-2 inventory, and the port ledger, and report only new findings.### fable-3-1
+- file: scratchpad/effected/jsonc/JsoncModifier.ts:210
+- class: bug   severity: required
+- standard: EFFECTED_PORT_GOAL.md D9 and section 14; standards/effect-laws-v1.md law 7; `JsoncModifier.modify` JSDoc at JsoncModifier.ts:165.   evidence: `JsoncModificationError.path` is `JsoncPath` (JsoncModifier.ts:54), which is `S.Array(JsoncSegment)` and `JsoncSegment` is `S.Union([S.String, S.Natural])` (JsoncNode.ts:39). `S.Natural` is `Int` and `>= 0` (`Schema.ts` `Natural`). The Mismatch arm calls `JsoncModificationError.make({ path, expected, depth })`, and `S.Class` construction throws a native `Error` on invalid input (`Schema.ts` class contract). That throw sits inside `Effect.fn` (JsoncModifier.ts:187), so it becomes a defect. `S.Natural`'s type is plain `number`, and the NoOp test at `scratchpad/test/jsonc/JsoncModifier.test.ts:108` already passes `[-1]` and `[0.5]`. Those inputs only die once navigation returns `Mismatch`. Oracle `navigate` (`src/internal/navigate.ts`) reports that mismatch with `Schema.Union([Schema.String, Schema.Number])` and `modify` returns a typed `JsoncModificationError`. README deviation 4 records only the final-index `NoOp` answer. A final `[-1]` on an array stays `[]`; `modify('{ "a": 1 }', ['a', -1], 2)`, `modify('[1]', [0.5, 'x'], 1)`, and `modify('1', [-1], 2)` construct the error and die.
+- failure: A structural mismatch whose path contains a negative or fractional segment dies with a schema-validation `Error`. `Effect.catchTag("JsoncModificationError")` does not see it. Upstream returns the tagged error with that same path, `expected`, and `depth`.
+- fix: Type `JsoncModificationError.path` as `S.Array(S.Union([S.String, S.Finite]))`. Pin `modify('{ "a": 1 }', ['a', -1], 2)` to `{ path: ['a', -1], expected: 'array', depth: 2 }` and `modify('[1]', [0.5, 'x'], 1)` to `{ path: [0.5, 'x'], expected: 'object', depth: 2 }`. Record the leftover: a non-finite segment on a mismatch path still cannot be echoed (`law:tsgo-schemaNumber`), same family as deviation 13.
+
+### fable-3-2
+- file: scratchpad/effected/jsonc/Jsonc.ts:396
+- class: bug   severity: required
+- standard: EFFECTED_PORT_GOAL.md D9 and D11. Oracle `deepEqual` (`src/Jsonc.ts`) walks array indices and returns on the first mismatch.   evidence: The lab compares with `A.every(A.zip(a, b), ...)`. `Array.zip` (`effect/src/Array.ts` `zipWith`) reads every index up to `min(length)` while building the pair list, and only then does `every` short-circuit. `equalsValue` calls `deepEqual(parsed, value, 0)` (Jsonc.ts:797). For `Jsonc.equalsValue("[1,2]", value)` where `value[0]` is `9` and `value[1]` is a getter that throws, the oracle returns `false` and never reads index 1. The lab reads index 1 during `A.zip` and throws that getter. Object keys go through `A.every` on `R.keys` and still short-circuit. Equality properties use plain JSON values, so the coverage gate does not see the getter.
+- failure: An already-unequal array runs later element getters and can throw out of `equalsValue` instead of returning `false`.
+- fix: Compare indices in a loop that returns on the first `false`, and add a regression whose later getter both throws and counts reads.
+
+### fable-3-3
+- file: scratchpad/effected/jsonc/JsoncVisitor.ts:316
+- class: bug   severity: required
+- standard: EFFECTED_PORT_GOAL.md D11 and section 14 (`upstream-bug`). The progress comment at JsoncVisitor.ts:244 says an unconsumed token loops forever.   evidence: `visitArray` continues while the token is neither `CloseBracket` nor `EOF`. `visitValue` leaves `CloseBrace` in place (`isNotConsumable`, line 247) after emitting `ValueExpected`. The next iteration emits `CommaExpected` and `ValueExpected` at the same offset. `visit("[}")` and `visit('{"a":[}')` therefore never end. Oracle `visitArray` (`src/JsoncVisitor.ts`) has the same `CloseBracket`/`EOF` condition, so this is inherited and unrecorded. `Stream.take` hides it. The parser does not hang: its `pushError` skip list moves past `}`.
+- failure: Collecting the visitor stream for `[}` never finishes, and a mismatched `}` inside an array also prevents the enclosing object from completing.
+- fix: Stop the array loop on `CloseBrace` as well as `CloseBracket` and `EOF`, and let `closeContainer` emit `CloseBracketExpected` while leaving the brace for the enclosing object. Record the upstream-bug deviation and add terminating visits for `[}` and `{"a":[}`.
+
+### fable-3-4
+- file: scratchpad/effected/jsonc/JsoncEdit.ts:206
+- class: schema   severity: required
+- standard: EFFECTED_PORT_GOAL.md D9; round-2 R4 (restore every finite input upstream accepts; `schemaNumber` only forces out non-finite numbers).   evidence: `JsoncEdit.offset` and `length` are `S.Natural` (JsoncEdit.ts:206). `JsoncRange` uses the same pair (JsoncRange.ts:43). Oracle types both as `Schema.Number` (`src/JsoncEdit.ts`). `S.Class` `make` throws on a negative or fractional component. `applyAll` then uses `Str.substring`, which is `String.prototype.substring`, so a negative or fractional span that the oracle constructs and applies is rejected before apply. `schemaNumber` still requires rejecting `NaN` and the infinities. No deviation records that extra rejection. Formatter-produced edits are non-negative integers, which is why the tests stay green.
+- failure: `JsoncEdit.make({ offset: -1, length: 0, content: "x" })` and `JsoncRange.make({ offset: 1.5, length: 1 })` throw. The oracle constructs them, and `applyAll("abcd", [{ offset: 1.5, length: 0, content: "x" }])` returns `"axbcd"`.
+- fix: Use `S.Finite` for those four fields. Record the non-finite rejection beside deviation 13. `applyAll` and `format` already read the numbers the way the oracle does.
+
+### fable-3-5
+- file: scratchpad/effected/jsonc/JsoncFormatter.ts:25
+- class: jsdoc   severity: required
+- standard: `.patterns/jsdoc-documentation.md` (accurate lead; `@throws` when the symbol throws synchronously). Round-2 R3 treated a JSDoc promise the port does not keep as required.   evidence: The module header (line 6) and the class lead (line 25) say both statics are pure and total and that computing edits never fails. Neither `format` nor `formatToString` documents `@throws`. `format` calls `JsoncFormattingOptions.make` (line 65), and `JsoncFormatter.test.ts:152` pins that `format("{}", undefined, { tabSize })` throws for `NaN` and both infinities. README deviation 13 records that throw. `JsoncEdit.applyAll` already documents its synchronous throw with `@throws`.
+- failure: The hover text says `JsoncFormatter.format` cannot throw. A non-finite `tabSize` throws from a function the docs call total.
+- fix: Say the statics are total for every finite width, and add `@throws` on `format` and `formatToString` for the `JsoncFormattingOptions` constructor failure on a non-finite `tabSize`.
+
+### fable-3-6
+- file: scratchpad/effected/jsonc/Jsonc.ts:648
+- class: perf   severity: backlog
+- standard: EFFECTED_PORT_GOAL.md D11. Constant-factor, unmeasured.   evidence: `stringifyResult` builds a new `S.fromJsonString` codec and calls `S.encodeResult` on every call because the replacer closes over per-call state. `toFlags` and the omitted-options path also call `JsoncParseOptions.make({})` and `JsoncStringifyOptions.make({})` per call (Jsonc.ts:353 and :630). The codec itself is deviation 11. The oracle calls `JSON.stringify` on plain option fields.
+- failure: Every stringify, parse, and equals pays schema construction before it looks at the value. No output difference.
+- fix: Hoist one default `JsoncParseOptions` and one default `JsoncStringifyOptions`. Measure a hoisted codec before changing the replacer.
+
+### fable-3-7
+- file: scratchpad/effected/jsonc/internal/parser.ts:448
+- class: perf   severity: backlog
+- standard: EFFECTED_PORT_GOAL.md D11. Same observable object, higher constant per member.   evidence: The value parser defines every object member with `Object.defineProperty` (parser.ts:448). `JsoncNode.toValue` does the same (JsoncNode.ts:467). The oracle uses a keyed store for every key other than `__proto__` (`src/internal/parser.ts` and `src/JsoncNode.ts`). The descriptor is an own writable enumerable configurable data property in both.
+- failure: Wide objects pay a descriptor allocation and the `defineProperty` path for every member. Results match.
+- fix: Keep `defineProperty` for the `__proto__` key only, and assign every other key.
+
+REQUIRED: 5
+BACKLOG: 2

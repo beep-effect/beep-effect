@@ -7,6 +7,9 @@
 // (c) `.cmd` shims need `shell: true` since CVE-2024-27980.
 
 import { assert, describe, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import { PathPrependEnv, PathPrependOptions } from "../../effected/github-actions/ChildEnv.ts";
 import { ChildEnv } from "../../effected/github-actions/index.ts";
 
 describe("ChildEnv", () => {
@@ -88,4 +91,52 @@ describe("ChildEnv", () => {
 			});
 		});
 	});
+});
+
+
+describe("ChildEnv regression contracts", () => {
+	it("prepends the exact POSIX PATH when Path is also present", () => {
+		assert.deepStrictEqual(ChildEnv.prependPath(["/tools"], {
+			base: { Path: "/ignored", PATH: "/usr/bin" }, platform: "linux",
+		}).env, { PATH: "/tools:/usr/bin" });
+	});
+
+	it("creates POSIX PATH rather than prepending an unrelated lowercase path", () => {
+		assert.deepStrictEqual(ChildEnv.prependPath(["/tools"], {
+			base: { path: "/ignored" }, platform: "darwin",
+		}).env, { PATH: "/tools" });
+	});
+
+	it("ignores a prototype PATH on POSIX and Windows", () => {
+		const base: Record<string, string | undefined> = {};
+		Object.setPrototypeOf(base, { PATH: "/prototype" });
+		for (const platform of ["linux", "win32"]) {
+			assert.deepStrictEqual(ChildEnv.prependPath(["/tools"], { base, platform }).env, { PATH: "/tools" });
+		}
+	});
+
+	it("ignores a prototype Path while retaining Windows own-key casing", () => {
+		const base: Record<string, string | undefined> = {};
+		Object.setPrototypeOf(base, { Path: "/prototype" });
+		assert.deepStrictEqual(ChildEnv.prependPath(["/tools"], { base, platform: "win32" }).env, { PATH: "/tools" });
+		const own: Record<string, string | undefined> = { Path: "/own" };
+		Object.setPrototypeOf(own, { PATH: "/prototype" });
+		assert.deepStrictEqual(ChildEnv.prependPath(["/tools"], { base: own, platform: "win32" }).env, { Path: "/tools;/own" });
+	});
+
+	it.effect("validates plain additions and requires the true merge flag", () => Effect.gen(function* () {
+		const additions: PathPrependEnv = { env: { PATH: "/tools" }, extendEnv: true };
+		assert.deepStrictEqual(yield* S.decodeEffect(PathPrependEnv)(additions), additions);
+		assert.isFalse(S.is(PathPrependEnv)({ env: {}, extendEnv: false }));
+		assert.isFalse(S.is(PathPrependEnv)({ env: {} }));
+		assert.isFalse(S.is(PathPrependEnv)({ env: { PATH: undefined }, extendEnv: true }));
+	}));
+
+	it.effect("keeps undefined base entries and requires explicit base and platform", () => Effect.gen(function* () {
+		const options: PathPrependOptions = { base: { PATH: undefined, HOME: "/home/ci" }, platform: "other-platform" };
+		assert.deepStrictEqual(yield* S.decodeEffect(PathPrependOptions)(options), options);
+		assert.isFalse(S.is(PathPrependOptions)({ platform: "linux" }));
+		assert.isFalse(S.is(PathPrependOptions)({ base: {} }));
+		assert.isFalse(S.is(PathPrependOptions)({ base: { PATH: 42 }, platform: "linux" }));
+	}));
 });

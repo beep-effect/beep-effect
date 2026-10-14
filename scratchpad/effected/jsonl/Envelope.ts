@@ -11,12 +11,16 @@ import * as A from "effect/Array";
 import { constant, dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
+import type * as SchemaIssue from "effect/SchemaIssue";
+import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { InvalidData, type MalformedLine, UnknownEvent, UnserializableData } from "./JsonlError.ts";
 import type { DataSchema, JsonlEvent } from "./JsonlEvent.ts";
+import { isRecordLike } from "./internal/merge.ts";
 import { Line } from "./Line.ts";
 import { LineSlice } from "./LineSlice.ts";
 
@@ -248,17 +252,69 @@ const lastValidResult: {
   }
 );
 
-// A Schema.Class declaration's first type parameter is its structural field
-// codec. The registered codec has no services, so neither do those fields.
-// Encode a plain decoded patch through that codec; the envelope decoder then
-// creates the class instance once, before any bytes are written.
+// Follow only wire containers, never payload fields. Resolve suspensions when
+// the encoder runs; an identity stack bounds recursive wire targets.
+const structuralTarget = (ast: SchemaAST.AST, ancestors: ReadonlyArray<SchemaAST.AST> = []): boolean => {
+  if (A.some(ancestors, (ancestor) => ancestor === ast)) return false;
+  if (SchemaAST.isObjects(ast)) return true;
+  const next = A.append(ancestors, ast);
+  if (SchemaAST.isUnion(ast)) return A.some(ast.types, (member) => structuralTarget(member, next));
+  if (SchemaAST.isSuspend(ast)) return structuralTarget(ast.thunk(), next);
+  return ast.encoding !== undefined && A.some(ast.encoding, (link) => structuralTarget(link.to, next));
+};
+
+// The merge stays plain. Class declarations accept only the decoded base's
+// provenance; non-class structural transformations retain their patch adapter.
+// The original registered codec still validates the result before persistence.
 const patchCodec = (data: DataSchema): DataSchema => {
-  const ast = data.ast;
-  if (!P.isFunction(data) || !SchemaAST.isDeclaration(ast)) return data;
-  return A.head(ast.typeParameters).pipe(
-    O.map((fields) => S.make<DataSchema>(fields)),
-    O.getOrElse(constant(data))
-  );
+  let memo: ReadonlyArray<readonly [SchemaAST.AST, SchemaAST.AST]> = [];
+  const patchAst = (ast: SchemaAST.AST): SchemaAST.AST => {
+    const cached = A.findFirst(memo, ([original]) => original === ast);
+    if (O.isSome(cached)) return cached.value[1];
+    const encoding = ast.encoding === undefined
+      ? undefined
+      : A.map(ast.encoding, (link) => new SchemaAST.Link(patchAst(link.to), link.transformation));
+    let rewritten = ast;
+    if (SchemaAST.isSuspend(ast)) {
+      rewritten = new SchemaAST.Suspend(
+        () => patchAst(ast.thunk()), ast.annotations, undefined, encoding, ast.context
+      );
+    } else if (SchemaAST.isUnion(ast)) {
+      rewritten = new SchemaAST.Union(
+        A.map(ast.types, patchAst), ast.options, ast.annotations, ast.checks, encoding, ast.context, ast.encodingChecks
+      );
+    } else if (SchemaAST.isObjects(ast)) {
+      rewritten = new SchemaAST.Objects(
+        ast.propertySignatures, ast.indexSignatures, ast.annotations, ast.checks, encoding, ast.context, ast.encodingChecks
+      );
+    } else if (SchemaAST.isDeclaration(ast) && ast.encoding !== undefined) {
+      const links = ast.encoding;
+      const identifier = ast.annotations?.identifier;
+      const marker = P.isFunction(ast.annotations?.["~constructor"]) && P.isString(identifier)
+        ? `~effect/Schema/Class/${identifier}`
+        : undefined;
+      rewritten = new SchemaAST.Declaration(
+        ast.typeParameters, ast.run, ast.annotations, ast.checks, encoding, ast.context, ast.encodingChecks,
+        () => Effect.fnUntraced(function* (
+          value: unknown,
+          self: SchemaAST.Declaration,
+          options: SchemaAST.ParseOptions
+        ): Effect.fn.Return<unknown, SchemaIssue.Issue> {
+          if (
+            isRecordLike(value) &&
+            (marker === undefined || (R.has(value, marker) && value[marker] === marker)) &&
+            A.some(links, (link) => structuralTarget(link.to))
+          ) {
+            return R.filter(value, (_, key) => !Str.startsWith("~effect/Schema/Class/")(key));
+          }
+          return yield* (ast.encodingRun ?? ast.run)(ast.typeParameters)(value, self, options);
+        })
+      );
+    }
+    memo = A.append(memo, Tuple.make(ast, rewritten));
+    return rewritten;
+  };
+  return S.make<DataSchema>(patchAst(data.ast));
 };
 
 const encodeResultWith = <R extends JsonlEvent.Registry>(

@@ -131,6 +131,34 @@ describe("WorkspacesSync bounded and degraded enumeration", () => {
 });
 
 it.layer(Path.layer, { timeout: "30 seconds" })((it) => {
+  it.effect("JSON codec failures preserve skip kinds and tolerant manifest fields", () =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+      const fs = MemoryFileSystem.makeSync({
+        ...seed,
+        "/repo/packages/a/package.json": '{"name":"a","publishConfig":42,"dependencies":{"x":3},"extra":{"keep":true}}',
+        "/repo/packages/broken/package.json": "{",
+        "/repo/packages/scalar/package.json": "42",
+        "/repo/packages/array/package.json": "[]",
+      }).sync;
+      const skips: Array<WorkspaceDiscoverySkip> = [];
+      const packages = getWorkspacePackagesSync("/repo", { fileSystem: fs, path, onSkip: (skip) => skips.push(skip) });
+      assert.deepStrictEqual(packages.map((pkg) => pkg.name), ["root", "a", "child"]);
+      const member = packages.find((pkg) => pkg.name === "a");
+      assert.isUndefined(member?.publishConfig);
+      assert.deepStrictEqual(member?.manifestRecord, { name: "a", publishConfig: 42, dependencies: { x: 3 }, extra: { keep: true } });
+      assert.deepStrictEqual(skips.map((skip) => [skip.path, skip.kind]), [
+        ["/repo/packages/array/package.json", "invalidShape"],
+        ["/repo/packages/broken/package.json", "invalidJson"],
+        ["/repo/packages/scalar/package.json", "invalidShape"],
+      ]);
+      assert.instanceOf(skips.find((skip) => skip.kind === "invalidJson")?.cause, S.SchemaError);
+      for (const text of ["{", "42", "[]", "null"]) {
+        const badRoot = MemoryFileSystem.makeSync({ "/repo/package.json": text }).sync;
+        assert.isNull(findWorkspaceRootSync("/repo", { fileSystem: badRoot, path }));
+      }
+    }),
+  );
   it.effect("scalar manifests and broken YAML degrade without throwing", () =>
     Effect.gen(function* () {
       const path = yield* Path.Path;

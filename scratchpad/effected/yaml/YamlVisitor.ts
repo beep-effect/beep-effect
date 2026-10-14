@@ -178,27 +178,28 @@ export class YamlVisitor {
  * @since 0.0.0
  */
 	static visit(text: string, options?: YamlParseOptions): Stream.Stream<YamlVisitorEvent> {
-		return Stream.fromIterable(visitGen(text, options));
+		return Stream.suspend(() => Stream.fromIterable(visitGen(text, options)));
 	}
 }
 
 function* visitGen(text: string, options?: YamlParseOptions): Generator<YamlVisitorEvent> {
+	const index = YamlDiagnostic.positionIndex(text);
 	const { documents, streamErrors } = composeAllDocuments(text, {
 		strict: options?.strict,
 		maxAliasCount: options?.maxAliasCount,
 		uniqueKeys: options?.uniqueKeys,
 	});
 
-	for (const raw of streamErrors) {
-		yield YamlVisitorEvent.Error({ path: [], depth: 0, diagnostic: YamlDiagnostic.fromRaw(raw, text) });
+	for (const diagnostic of YamlDiagnostic.fromRawBatch(streamErrors, text, index)) {
+		yield YamlVisitorEvent.Error({ path: [], depth: 0, diagnostic });
 	}
 
 	for (const doc of documents) {
-		yield* walkDocument(doc, text);
+		yield* walkDocument(doc, text, index);
 	}
 }
 
-function* walkDocument(doc: RawYamlDocument, text: string): Generator<YamlVisitorEvent> {
+function* walkDocument(doc: RawYamlDocument, text: string, index: ReturnType<typeof YamlDiagnostic.positionIndex>): Generator<YamlVisitorEvent> {
 	const path: YamlPath = [];
 	const depth = 0;
 
@@ -212,11 +213,11 @@ function* walkDocument(doc: RawYamlDocument, text: string): Generator<YamlVisito
 		directives: doc.directives.map((d) => ({ name: d.name, parameters: d.parameters })),
 	});
 
-	for (const raw of doc.errors) {
-		yield YamlVisitorEvent.Error({ path, depth, diagnostic: YamlDiagnostic.fromRaw(raw, text) });
+	for (const diagnostic of YamlDiagnostic.fromRawBatch(doc.errors, text, index)) {
+		yield YamlVisitorEvent.Error({ path, depth, diagnostic });
 	}
-	for (const raw of doc.warnings) {
-		yield YamlVisitorEvent.Error({ path, depth, diagnostic: YamlDiagnostic.fromRaw(raw, text) });
+	for (const diagnostic of YamlDiagnostic.fromRawBatch(doc.warnings, text, index)) {
+		yield YamlVisitorEvent.Error({ path, depth, diagnostic });
 	}
 
 	if (doc.commentBefore !== undefined) {

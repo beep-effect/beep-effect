@@ -11,6 +11,7 @@ import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { AppliedSettings, GitHubRepository, repositoryPatch, transformSecurityAndAnalysis } from "../../effected/github/GitHubRepository.ts";
 import type { RepositoryPatch } from "../../effected/github/GitHubRepository.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
+import { harness } from "./harness.ts";
 
 /**
  * A wrong-but-valid route literal typechecks, so every method asserts the route
@@ -358,6 +359,17 @@ describe("transformSecurityAndAnalysis", () => {
 });
 
 describe("GitHubRepository.applySettings reporting", () => {
+	for (const key of ["has_issues", "has_discussions"]) {
+		const { script, base } = harness([]);
+		it.layer(GitHubRepository.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
+			it.effect(`omits undefined ${key} from writes and reports`, () => Effect.gen(function* () {
+				const repository = yield* GitHubRepository;
+				const report = yield* repository.applySettings({ [key]: undefined });
+				assert.deepStrictEqual(report, { rest: [], graphql: [] });
+				assert.strictEqual(script.count(), 0);
+			}));
+		});
+	}
 	it.effect("returns a plain object compatible with the owning AppliedSettings schema", () =>
 		Effect.gen(function* () {
 			const { value } = yield* run(

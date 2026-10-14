@@ -21,7 +21,7 @@ import { VersionProbe } from "./Tool.ts";
 const $I = $ScratchpadId.create("effected/commands/ToolDiscovery");
 
 /** An unstubbed test-double member was exercised. */
-class ToolDiscoveryUnstubbedError extends S.TaggedError<ToolDiscoveryUnstubbedError>($I`ToolDiscoveryUnstubbedError`)(
+class ToolDiscoveryUnstubbedError extends S.TaggedError<ToolDiscoveryUnstubbedError, { readonly brand: unique symbol }>($I`ToolDiscoveryUnstubbedError`)(
 	"ToolDiscoveryUnstubbedError",
 	{ message: S.String },
 	$I.annote("ToolDiscoveryUnstubbedError", { description: "An unstubbed tool-discovery test-double member was exercised." }),
@@ -80,7 +80,7 @@ export type ResolvedSource = typeof ResolvedSource.Type;
  * @category models
  * @since 0.0.0
  */
-export class ResolvedTool extends S.Class<ResolvedTool>($I`ResolvedTool`)({
+export class ResolvedTool extends S.Class<ResolvedTool, { readonly brand: unique symbol }>($I`ResolvedTool`)({
 	/** The executable name. */
 	name: S.String.annotateKey({ description: "The executable name." }),
 	/** Which copy this resolution selected. */
@@ -147,7 +147,7 @@ export class ResolvedTool extends S.Class<ResolvedTool>($I`ResolvedTool`)({
  * @category errors
  * @since 0.0.0
  */
-export class ToolNotFoundError extends S.TaggedError<ToolNotFoundError>($I`ToolNotFoundError`)("ToolNotFoundError", {
+export class ToolNotFoundError extends S.TaggedError<ToolNotFoundError, { readonly brand: unique symbol }>($I`ToolNotFoundError`)("ToolNotFoundError", {
 	/** The tool that was looked for. */
 	tool: S.String.annotateKey({ description: "The tool that was looked for." }),
 	/** The locations its `source` requirement demanded. */
@@ -190,7 +190,7 @@ export class ToolNotFoundError extends S.TaggedError<ToolNotFoundError>($I`ToolN
  * @category errors
  * @since 0.0.0
  */
-export class ToolVersionMismatchError extends S.TaggedError<ToolVersionMismatchError>($I`ToolVersionMismatchError`)(
+export class ToolVersionMismatchError extends S.TaggedError<ToolVersionMismatchError, { readonly brand: unique symbol }>($I`ToolVersionMismatchError`)(
 	"ToolVersionMismatchError",
 	{
 		/** The tool. */
@@ -245,7 +245,7 @@ export class ToolVersionMismatchError extends S.TaggedError<ToolVersionMismatchE
  * @category errors
  * @since 0.0.0
  */
-export class ToolRefusedError extends S.TaggedError<ToolRefusedError>($I`ToolRefusedError`)("ToolRefusedError", {
+export class ToolRefusedError extends S.TaggedError<ToolRefusedError, { readonly brand: unique symbol }>($I`ToolRefusedError`)("ToolRefusedError", {
 	/** The refused name. */
 	tool: S.String.annotateKey({ description: "The refused name." }),
 }, $I.annote("ToolRefusedError", { description: "A tool name that cannot safely be spawned was refused before any process started." })) {
@@ -325,7 +325,7 @@ type Evidence = typeof Evidence.Type;
  * lookup needs no side table. Policy fields are deliberately absent: they are
  * applied to the evidence per call.
  */
-class EvidenceKey extends S.Class<EvidenceKey>($I`EvidenceKey`)({
+class EvidenceKey extends S.Class<EvidenceKey, { readonly brand: unique symbol }>($I`EvidenceKey`)({
 	name: S.String.annotateKey({ description: "The executable being probed globally and project-locally, used to identify cached discovery evidence" }),
 	probe: VersionProbe.annotateKey({ description: "How the tool is asked for its version and how its output is interpreted, distinguishing cached discovery evidence" }),
 }, $I.annote("EvidenceKey", { description: "The cache key: everything the probe outcome depends on, and nothing else." })) {}

@@ -1,0 +1,65 @@
+I'll review the named GitHub port files against the pinned upstream oracle and the round-2 inventory, then report only new findings.Round-2 already recorded sixteen required items. I'll check whether this commit still has them, then read the assigned files against the pinned oracle.The round-2 defects are recorded as deviations. I'll read the live implementations and compare them with the pinned oracle.### fable-3-1
+- file: scratchpad/effected/github/GitHubError.ts:473
+- class: bug   severity: required
+- standard: D9/D11; §14 upstream-bug; effect-first-development EF-31 and EF-39   evidence: `readThrowable` still calls `String(error)` at lines 464 and 473. `P.isObject` is true for `{ status: 404, toString: null }` and for `Object.create(null)`, and `String` on those values throws `TypeError` before `GitHubError.make`. The same counterexample was closed for GraphQL by `describeThrowable` (`GraphQL.ts:203`, `Result.try(() => String(value))`). README deviations do not record a GitHubError coercion repair.
+- failure: `GitHubError.fromOctokit` dies while classifying an unknown throwable, so a REST failure never becomes a typed `GitHubError`.
+- fix: Route both coercions through the same nonthrowing helper GraphQL uses, keep a stable fallback reason, and retain the original throwable as `cause`. Add the `{ toString: null }` and null-prototype cases to `GitHubError.test.ts`.
+
+### fable-3-2
+- file: scratchpad/effected/github/Attestation.ts:255
+- class: bug   severity: required
+- standard: D9/D11; §14 upstream-bug; `listForSubject` contract at Attestation.ts:127   evidence: `listForSubject` performs one `client.requestDecoded` against `GET /repos/{owner}/{repo}/attestations/{subject_digest}` and maps `listed.attestations`. The pinned oracle (`packages/github/src/Attestation.ts:137-153`) does the same. The attestations route is Link/cursor paged; nothing reads `Link`, `per_page`, or a cursor. Round-2 req-03 is not in the module deviation list.
+- failure: Attestations after the first page are absent, so a subject that has them can look unattested.
+- fix: Walk the cursor pages with the existing pagination machinery, decode each page through `ListResponse`, and keep API-version headers, the predicate filter, order, and the 404/422 empty-list catch on the first page. Add a two-page `Link` regression in the Attestation coverage suite.
+
+### fable-3-3
+- file: scratchpad/effected/github/GitHubApp.ts:810
+- class: bug   severity: required
+- standard: D9/D11; §14 upstream-bug; TokenPermissions own-grant repair   evidence: `normalizePermissions` copies with `out[key] = value` on a normal object. Bracket assignment to `__proto__` invokes the prototype setter and does not create an own property. `JSON.parse('{"__proto__":"write","contents":"read"}')` exposes `__proto__` as an own enumerable key, `R.toEntries` yields it, and this assignment drops it. `TokenPermissions.fromGitHub` keeps that key via `R.fromEntries` (`Object.fromEntries` / `CreateDataProperty`). Token payloads pass through `normalizePermissions` before `InstallationToken` decode (`GitHubApp.ts:758-763`), so the repaired constructor never sees the grant. The oracle (`GitHubApp.ts:510-516`) has the same assignment.
+- failure: A permission whose name is `__proto__` disappears from the installation token.
+- fix: Build the map with `R.fromEntries` (or `assignProperty`'s own-property path) after keeping string values. Cover a `__proto__` grant plus an ordinary grant in `GitHubApp.test.ts`.
+
+### fable-3-4
+- file: scratchpad/effected/github/GitHubApp.ts:841
+- class: bug   severity: required
+- standard: D9/D11; §14; effect-first-development EF-26 and EF-31   evidence: `rotate` is an `Effect.uninterruptibleMask`. It revokes, then `Ref.set(owned, O.none())`, then `restore(app.token(request))`. `app.token` (`GitHubApp.ts:752-767`) yields `client.request` and only then `S.decodeEffect`. Interruptibility is on for that whole restored effect. The minted value is stored in `owned` only after `app.token` returns. The finalizer revokes `owned` alone.
+- failure: An interrupt after GitHub has issued the replacement, and before `Ref.set(owned, O.some(minted))`, drops that credential. The previous token is already revoked, and scope cleanup has nothing left to revoke.
+- fix: Publish the raw replacement into `owned` in the uninterruptible continuation as soon as the mint request returns, and revoke it from the finalizer if client construction or decode does not finish. Keep revoke/mint/client construction inside `restore`. Add an interrupted-mint regression that shows the HTTP abort, fiber termination, and revocation of a token that was issued.
+
+### fable-3-5
+- file: scratchpad/effected/github/GitHubIssue.ts:503
+- class: effect-idiom   severity: required
+- standard: D11; effect-first-development EF-3 and EF-31   evidence: `commentOnce` calls `CommentRecord.make` on paginated and created comment payloads. `CommentRecord.id` is `S.Int` and `url` is `S.String` (`PullRequestComment.ts:111-115`). A synchronous `S.Class.make` failure inside `Effect.fn` is a defect. The same wire shape is already decoded with `S.decodeEffect(CommentRecord)` in `PullRequestComment.recordOf` (`PullRequestComment.ts:268-274`), which maps `SchemaError` to `GitHubError.decode`. `project` (`GitHubIssue.ts:414`) likewise uses `IssueInfo.make` (`number: S.Int`). `labelNames` (`GitHubIssue.ts:403`) reads `.name` when the element is not a string, so a null label throws `TypeError` before that constructor.
+- failure: `commentOnce`, `get`, and `list` die on a non-integer comment id, a null `html_url`, a non-integer issue number, or a null label. `PullRequestComment.create` returns `GitHubError` of kind `decode` for the same comment payload.
+- fix: Decode comments through `CommentRecord` and issues through `IssueInfo`, mapping failures to `GitHubError.decode`. Guard label elements with `P.isObject` before reading `name`. Add those payloads to `GitHubIssue` coverage.
+
+### fable-3-6
+- file: scratchpad/effected/github/GitHubCommit.ts:461
+- class: effect-idiom   severity: required
+- standard: D11; effect-first-development EF-3 and EF-31   evidence: `compare` decodes each file with `fileOf` → `GitHubError.decode`, then calls `CommitComparison.make`. `status` is `S.Literals(["diverged","ahead","behind","identical"])` and `aheadBy`/`behindBy` are `S.Int` (`GitHubCommit.ts:193-197`). `summarize` (`GitHubCommit.ts:363`) calls `CommitSummary.make` from `get` and `list` with no decode. A thrown schema failure in the generator dies.
+- failure: A comparison status outside that literal, or a non-integer `ahead_by`, dies after file decoding has already been made typed. A commit payload whose `message` or `sha` is not a string dies in `get` and `list`.
+- fix: Decode the comparison and the commit summary with `S.decodeUnknownEffect`, mapping `SchemaError` to `GitHubError.decode` for `GitHubCommit.compare`, `get`, and `list`. Add those counterexamples beside the existing commit-file decode test.
+
+### fable-3-7
+- file: scratchpad/effected/github/CheckRun.ts:619
+- class: effect-idiom   severity: required
+- standard: D11; effect-first-development EF-3 and EF-31   evidence: `refOf` calls `CheckRunRef.make` from `create` and `get`. `id` is `S.Int` (`CheckRun.ts:289`). `numericId` is `Number(id)` (`internal/ids.ts:27`), so a fractional id stays fractional and `make` throws inside `Effect.fn`.
+- failure: `CheckRun.create` and `CheckRun.get` die on a non-integer check-run id instead of failing with `GitHubError` of kind `decode`.
+- fix: Decode `CheckRunRef` with `S.decodeEffect` after `numericId`, and map the schema error to `GitHubError.decode("CheckRun.create" | "CheckRun.get", ...)`. Add a fractional-id response to the CheckRun coverage suite.
+
+### fable-3-8
+- file: scratchpad/effected/github/GitHubRelease.ts:259
+- class: effect-idiom   severity: required
+- standard: D11; effect-first-development EF-3 and EF-31   evidence: `project` calls `ReleaseInfo.make` for `getByTag`, `create`, `list`, and `update`. `id` is `S.Int` and `draft`/`prerelease` are `S.Boolean` (`GitHubRelease.ts:39-46`). `assetOf` (`GitHubRelease.ts:280`) calls `ReleaseAsset.make` (`id` and `size` are `S.Int`) from `listAssets` with no decode. `uploadAsset` decodes `AssetResponse` and then calls `make` again. A throw in the generator is a defect.
+- failure: A non-integer release id, a missing `draft`, or a non-integer asset size dies in the release methods whose error channel is `GitHubError`.
+- fix: Decode `ReleaseInfo` and `ReleaseAsset` effectfully and map `SchemaError` to `GitHubError.decode` for each operation. Add those payloads to the GitHubRelease coverage suite.
+
+### fable-3-9
+- file: scratchpad/effected/github/GitHubApp.ts:717
+- class: effect-idiom   severity: required
+- standard: D11; effect-first-development EF-3 and EF-31   evidence: `token` decodes `InstallationToken` and maps `SchemaError` to `GitHubAppError` (`GitHubApp.ts:758-766`). `installations` still calls `Installation.make` (`id: S.Int`, `GitHubApp.ts:422-424`) inside the paginate success path, after `Effect.catch(appFailure("installation"))` can no longer see a synchronous throw. `identity` calls `AppIdentity.make` with `userId: numericId(...)` (`GitHubApp.ts:793-797`); `userId` is `S.optionalKey(S.Int)`.
+- failure: A non-integer installation id dies in `installations`. A non-integer bot user id dies in `identity`. Both advertise `GitHubAppError`.
+- fix: Decode `Installation` and `AppIdentity` with `S.decodeEffect` and map `SchemaError` to `GitHubAppError.of("installation" | "identity", ...)`. Add the fractional-id cases to `GitHubApp.test.ts`.
+
+REQUIRED: 9
+BACKLOG: 0

@@ -53,3 +53,10 @@ None while parked. The packet reopens when either trigger in
   ci-lane-economics. The doctrine landed in AGENTS.md and in the orchestrate
   and Yeet skills. A standalone Yeet PR fixes the PR-creation base. Packet
   parked.
+- 2026-10-14: after operator ruling S23 ("I want things done"), the
+  executable residue landed. The S11 ready-fallback sentences in the
+  orchestrate and Yeet skills now require every review thread answered and
+  use the guarded `yeet gh pr ready`, as promised on a #1619 thread. The
+  non-required Heavy lanes finding is now in
+  `goals/ci-lane-economics/research/OPPORTUNITIES.md`. Everything else in
+  the packet waits on its re-entry gates.

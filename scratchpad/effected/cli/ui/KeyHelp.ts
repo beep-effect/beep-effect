@@ -37,7 +37,9 @@ export interface KeyHelpProps {
  * Drawn from the same tables that dispatch the keys, so the help cannot name a key the screen ignores. Neighbouring
  * rows with the same help share one entry (`↑/↓ move`). It stays one line, cut to the terminal width with the glyph
  * set's ellipsis; when it must be cut, the widget's own keys give way and the root hint (`esc cancel`) stays whole at
- * the end. Painted with the `muted` token; labels follow the screen's glyph set.
+ * the end. Painted with the `muted` token; labels follow the screen's glyph set. The row is a one-row box that clips at
+ * layout time, so a resize repaint drawn before the new width arrives cannot wrap it; the host widget reserves the
+ * cursor column.
  *
  * **Example** (Construct a key help footer)
  *
@@ -95,5 +97,12 @@ export const KeyHelp = (props: KeyHelpProps): ReactElement => {
 			: room >= MIN_OWN
 				? `${Fmt.truncate(own, room, ellipsis)}${separator}${root}`
 				: Fmt.truncate(root, columns, ellipsis);
-	return inkModules().react.createElement(Styled, { token: "muted" }, line);
+	// The width above is one paint stale during Ink's immediate resize repaint, so the row is also clipped at layout
+	// time: a footer laid out wider than the new terminal never wraps into extra rows.
+	const { ink, react } = inkModules();
+	return react.createElement(
+		ink.Box,
+		{ height: 1, overflow: "hidden" },
+		react.createElement(Styled, { token: "muted" }, line),
+	);
 };

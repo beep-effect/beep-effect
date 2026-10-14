@@ -175,9 +175,10 @@ bun run beep yeet publish --prove-first --message "type(scope): summary"
 bun run beep yeet ready
 ```
 
-  Under S11 (AGENTS.md "Mergeable"), when the refusing red is inherited from
-  `main`, call final, flip with `gh pr ready <n>`, and record each inherited
-  red with its attribution in the PR body.
+  Under S11 (AGENTS.md "Mergeable"), when the only refusing red is inherited
+  from `main` and every review thread is answered, call final, flip with
+  `bun run beep yeet gh pr ready <n>`, and record each inherited red with its
+  attribution in the PR body.
 
 - Publish exactly the staged index from a dirty worktree (unstaged/untracked
   residue is parked in a marked stash after the commit, the clean tree is
@@ -322,9 +323,14 @@ CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run b
   to the swept clone. The fence exempts the invoking session's own ancestry
   and, when Claude Code names the session through `CLAUDE_PID`, everything
   that session spawned into the lane (MCP servers, tool shells, background
-  jobs), so a desktop session retires its own lane. Any other holder (a
-  desktop terminal panel, an editor, another session) still refuses it and
-  is named in the error: close or `cd` it out, then rerun. Outside Claude
+  jobs), so a desktop session retires its own lane. Run from inside the
+  lane, an idle Claude Desktop Terminal panel shell (the app starts one in
+  the session folder even when the panel is never opened) that stays quiet
+  until the deletion is left in place and the lane removed under it; the
+  report says to `cd ~` in that tab. Any other holder (a panel shell running
+  a command, any panel shell under `--lane`, an editor, another session)
+  still refuses it and is named in the error: `cd ~` in it (closing a panel
+  tab starts a new shell in the lane) or close it, then rerun. Outside Claude
   Code, redirect the output to a file rather than piping it: the other stages
   of a shell pipeline stand in the lane and count as holders. `--lane <path>`
   retires a lane from elsewhere: the owning clone, or any sibling lane of

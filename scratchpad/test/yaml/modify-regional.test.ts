@@ -16,6 +16,16 @@ const modify = YamlFormat.modify;
 const modifyToString = YamlFormat.modifyToString;
 
 describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
+	it.effect("preserves regional NaN and positive zero while negative zero takes the full rewrite", () => Effect.gen(function* () {
+		const text = "a: 1 # value\r\nb: 2\r\n";
+		assert.strictEqual(yield* modifyToString(text, ["a"], 0), "a: 0 # value\r\nb: 2\r\n");
+		assert.strictEqual(yield* modifyToString(text, ["a"], NaN), "a: .nan # value\r\nb: 2\r\n");
+		assert.strictEqual(yield* modifyToString(text, ["a"], -0), "a: 0\nb: 2\n");
+		const flow = "a: [1, 2] # value\r\n";
+		assert.strictEqual(yield* modifyToString(flow, ["a", 0], 0), "a: [0, 2] # value\r\n");
+		assert.strictEqual(yield* modifyToString(flow, ["a", 0], -0), "a: [0, 2] # value\n");
+	}));
+
 	it.effect("preserves single quotes and CRLF line endings — the issue repro", () =>
 		Effect.gen(function* () {
 			const text = "generated:\r\n  by: x\r\n  at: '2020-01-01T00:00:00Z'\r\n";

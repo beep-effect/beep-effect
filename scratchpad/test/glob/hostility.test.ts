@@ -3,6 +3,9 @@
 // the default test timeout — the timeout is the hang detector. Malformed or
 // hostile input must never surface as a stack overflow, an OOM, or a hang.
 
+import * as NodeServices from "@effect/platform-node/NodeServices";
+import * as Effect from "effect/Effect";
+import * as ChildProcess from "effect/process/ChildProcess";
 import { assert, describe, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { assertInstanceOf } from "@effect/vitest/utils";
@@ -160,4 +163,34 @@ describe("hostility: internal cap wiring", () => {
 		assert.throws(() => new Minimatch("{a,b}", { braceExpandMax: 0 }), InvalidCap);
 		assert.throws(() => new Minimatch("+(a)", { maxExtglobRecursion: Number.NaN }), InvalidCap);
 	});
+});
+
+
+
+const underWatchdog = Effect.fnUntraced(function* (script: string) {
+	const process = yield* ChildProcess.make("bun", ["--eval", script], { stdin: "ignore", stdout: "ignore", stderr: "inherit" });
+	assert.strictEqual(yield* process.exitCode, 0);
+}, Effect.scoped, Effect.timeout("2 seconds"));
+
+it.layer(NodeServices.layer, { timeout: "2 seconds" })((it) => {
+	it.effect("rejects a long ambiguous repetition without exponential backtracking under a subprocess watchdog", () =>
+		underWatchdog(`
+			import { Minimatch } from "./scratchpad/effected/glob/internal/minimatch.ts";
+			const matcher = new Minimatch("*(a|aa)b");
+			if (matcher.match("a".repeat(1000) + "c")) throw new Error("unexpected match");
+			if (!matcher.match("a".repeat(1000) + "b")) throw new Error("missing match");
+		`),
+	);
+
+	it.effect("rejects sibling expansion at the first excess member under a subprocess watchdog", () =>
+		underWatchdog(`
+			import { expand } from "./scratchpad/effected/glob/internal/braceExpansion.ts";
+			import { GuardExceeded } from "./scratchpad/effected/glob/internal/limits.ts";
+			const source = "{" + Array.from({ length: 128 }, () => "{1..1000}").join(",") + "}";
+			try { expand(source, { max: 1000 }); throw new Error("missing guard"); }
+			catch (error) {
+				if (!(error instanceof GuardExceeded) || error.reason !== "ExpansionBudgetExceeded" || error.actual !== 1001) throw error;
+			}
+		`),
+	);
 });

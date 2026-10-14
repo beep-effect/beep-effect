@@ -115,6 +115,8 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **native-runtime** — The lab installs upstream Logger.layer captures through the ruled scoped context recipe while retaining the warning assertions (scratchpad/test/env/Audience.test.ts:20; scratchpad/test/env/EnvOverride.test.ts:21).
 - **type-safety** — The lab makes deliberately invalid test inputs explicit through one sanctioned helper while preserving upstream invalid-CI rejection (scratchpad/test/env/RuntimeEnv.test.ts:199; scratchpad/test/env/internal/osc8/detect.coverage.test.ts:10; scratchpad/test/env/deliberatelyInvalid.ts:1).
 - **identity-annotations** — The lab adds composer metadata to the newly schema-owned upstream payloads and override domain and removes the obsolete StreamColumns identity (scratchpad/effected/env/Audience.ts:86; scratchpad/effected/env/internal/osc8/detect.ts:64; scratchpad/effected/env/TerminalEnv.ts:66).
+- **schema-first** — Lab adds runtime Struct exports and schema-derived types for AudienceOptions, RuntimeEnvOverrides and TerminalEnvTestOptions in place of upstream's type-only interfaces, preserving plain options, omitted keys, Option values and non-finite columns (scratchpad/test/env/Audience.test.ts:213; scratchpad/test/env/RuntimeEnv.test.ts:19; scratchpad/test/env/TerminalEnv.test.ts:330).
+- **identity-annotations** — Lab adds composer identities for the three options schemas and PartialStreamEnv plus metadata on seven outer fields, where upstream's interfaces provide no runtime schema metadata (scratchpad/effected/env/Audience.ts:122; scratchpad/effected/env/RuntimeEnv.ts:130; scratchpad/effected/env/TerminalEnv.ts:90,113).
 
 ### Dependency backlog
 

@@ -20,6 +20,8 @@
  */
 
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import { Yaml, YamlFormat } from "../../../effected/yaml/index.ts";
@@ -68,12 +70,25 @@ function deepEqual(a: unknown, b: unknown): boolean {
 // NKF9 — a mapping whose last pair had a null value swallowed the terminal
 // own-line comment while looking for a value that was not there, losing it on
 // a SINGLE pass. Both fixed; ids removed from this ledger.
-const KNOWN_NON_IDEMPOTENT: ReadonlyArray<string> = ["M2N8/00", "M2N8/01", "T26H", "T4YY", "WZ62"];
+// Round 3 preserves tagged empty scalar separators (WZ62) and alias-key
+// separators (X38W). WZ62 now converges too; both have regressions below.
+const KNOWN_NON_IDEMPOTENT: ReadonlyArray<string> = ["M2N8/00", "M2N8/01", "T26H", "T4YY"];
 
 // F6MC and R4YG now preserve meaning; keep them outside the defect ratchet.
-const KNOWN_MEANING_CHANGES: ReadonlyArray<string> = [ "T26H", "T4YY", "WZ62", "X38W", "ZWK4"];
+const KNOWN_MEANING_CHANGES: ReadonlyArray<string> = ["T26H", "T4YY", "ZWK4"];
 
 describe("format properties over the yaml-test-suite corpus", () => {
+	for (const id of ["WZ62", "X38W"]) {
+		it(`${id} formats to a fixed point while preserving tagged and anchored keys`, () => {
+			const tc = O.getOrThrow(A.findFirst(allCases, (entry) => entry.id === id));
+			const before = Result.getOrThrow(Yaml.parseAllResult(tc.yaml));
+			const formatted = YamlFormat.formatToString(tc.yaml);
+			const after = Result.getOrThrow(Yaml.parseAllResult(formatted));
+			assert.deepStrictEqual(after, before);
+			assert.strictEqual(YamlFormat.formatToString(formatted), formatted);
+		});
+	}
+
 	it("format is idempotent on every corpus input (modulo the pinned ledger)", () => {
 		const failures: string[] = [];
 		for (const tc of allCases) {

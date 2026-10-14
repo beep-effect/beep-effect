@@ -143,3 +143,55 @@ it.effect("a reducer defect after a run starts is retained by done and close", (
     assert.strictEqual(fake.stdout(), "");
   }),
 );
+
+it.effect("a final failure whose description throws still degrades only its run, warns once, and the fold goes on", () =>
+  Effect.gen(function* () {
+    const fake = makeFakeStreams();
+    const logs = capturing();
+    let calls = 0;
+    const final = (state: { readonly seen: ReadonlyArray<string> }) => {
+      calls += 1;
+      if (calls === 1) throw { toString: () => { throw "warning conversion failed"; } };
+      return [Doc.paragraph(state.seen.join(","))];
+    };
+    const handle = yield* liveOn(fake, optionsOf(Stream.make(Start, End, Start, End), { final }), { interactive: false, console: logs.console });
+    yield* handle.done;
+    assert.deepStrictEqual((yield* handle.state).seen, ["Start", "End", "Start", "End"]);
+    assert.strictEqual(calls, 2);
+    assert.strictEqual(warningsIn(logs.lines).length, 1);
+    assert.include(warningsIn(logs.lines)[0] ?? "", "the live view stopped drawing this run: an error that could not be described");
+    assert.strictEqual(fake.stdout(), "Start,End,Start,End\n");
+  }),
+);
+
+it.effect("a final message taken from a subscription that reports shut down at once counts nothing left behind it", () =>
+  Effect.gen(function* () {
+    const fake = makeFakeStreams();
+    const pubsub = yield* PubSub.unbounded<Ev>();
+    const sub = yield* PubSub.subscribe(pubsub);
+    yield* PubSub.end(pubsub, End);
+    // Deterministic stand-in for a shutdown landing between the take and the count: the first `ended` read reports
+    // the PubSub still open, so the final message is taken by a waiting take; from the fourth `ended` read (the check
+    // after that take) the subscription reports itself shut down, so its remaining count is None.
+    let endedReads = 0;
+    let reportedShutdown = false;
+    const shutDownAfterTake = new Proxy(sub, {
+      get: (target, key, receiver) => {
+        if (key === "ended") {
+          endedReads += 1;
+          if (endedReads === 1) return { current: O.none() };
+        }
+        if (key === "shutdownFlag" && endedReads >= 4) {
+          reportedShutdown = true;
+          return { current: true };
+        }
+        return Reflect.get(target, key, receiver);
+      },
+    });
+    const handle = yield* liveOn(fake, optionsOf(shutDownAfterTake, { final: (state) => [Doc.paragraph(state.seen.join(","))] }), { interactive: false });
+    yield* handle.done;
+    yield* handle.close;
+    assert.isTrue(reportedShutdown);
+    assert.deepStrictEqual((yield* handle.state).seen, ["End"]);
+  }),
+);

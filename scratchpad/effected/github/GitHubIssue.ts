@@ -1,11 +1,12 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
-import type { GitHubError } from "./GitHubError.ts";
+import { GitHubError } from "./GitHubError.ts";
 import type { GitHubGraphQLError } from "./GraphQL.ts";
 import { GraphQLDocument } from "./GraphQL.ts";
 import { numericId } from "./internal/ids.ts";
@@ -156,6 +157,10 @@ const CrossReferencedResponse = S.Struct({
 	repository: S.Struct({
 		issue: S.Struct({
 			timelineItems: S.Struct({
+				pageInfo: S.optionalKey(S.Struct({
+					hasPreviousPage: S.Boolean,
+					startCursor: S.NullOr(S.String),
+				})),
 				nodes: S.Array(
 					S.Struct({
 						source: S.optionalKey(
@@ -173,10 +178,11 @@ const CrossReferencedResponse = S.Struct({
 
 const CrossReferencedDocument = GraphQLDocument.make({
 	name: "issueCrossReferences",
-	document: `query ($owner: String!, $repo: String!, $issueNumber: Int!) {
+	document: `query ($owner: String!, $repo: String!, $issueNumber: Int!, $before: String) {
   repository(owner: $owner, name: $repo) {
     issue(number: $issueNumber) {
-      timelineItems(last: 50, itemTypes: CROSS_REFERENCED_EVENT) {
+      timelineItems(last: 50, before: $before, itemTypes: CROSS_REFERENCED_EVENT) {
+        pageInfo { hasPreviousPage startCursor }
         nodes {
           __typename
           ... on CrossReferencedEvent { source { __typename ... on PullRequest { number } } }
@@ -186,7 +192,7 @@ const CrossReferencedDocument = GraphQLDocument.make({
   }
 }`,
 	response: CrossReferencedResponse,
-})<{ readonly owner: string; readonly repo: string; readonly issueNumber: number }>();
+})<{ readonly owner: string; readonly repo: string; readonly issueNumber: number; readonly before?: string }>();
 
 /**
  * Read, list, close and comment on issues, and resolve the issues a pull
@@ -400,19 +406,22 @@ const API_VERSION_HEADERS = { "x-github-api-version": "2026-03-10" } as const;
 
 /** GitHub sends a label as either a string or an object; callers want the name. */
 const labelNames = (labels: ReadonlyArray<string | { name?: string | undefined }>): ReadonlyArray<string> =>
-	labels.flatMap((label) => (P.isString(label) ? [label] : label.name !== undefined ? [label.name] : []));
+	A.flatMap(labels, (label) => (P.isString(label) ? [label] : O.toArray(O.fromUndefinedOr(label.name))));
 
-interface RawIssue {
-	readonly number: number;
-	readonly title: string;
-	readonly state: string;
-	readonly labels: ReadonlyArray<string | { name?: string | undefined }>;
-	readonly html_url: string;
-	readonly node_id: string;
-}
+const RawIssue = S.Struct({
+	number: S.Int,
+	title: S.String,
+	state: S.String,
+	labels: S.Array(S.Union([S.String, S.Struct({ name: S.optional(S.String) })])),
+	html_url: S.String,
+	node_id: S.String,
+}).annotate($I.annote("RawIssue", { description: "The REST issue fields consumed by the issue projection." }));
 
-const project = (raw: RawIssue): IssueInfo =>
-	IssueInfo.make({
+const project = Effect.fn("GitHubIssue.project")(function* (operation: string, input: unknown) {
+	const raw = yield* S.decodeUnknownEffect(RawIssue)(input).pipe(
+		Effect.mapError((error) => GitHubError.decode(operation, "GitHub returned an unexpected issue", error)),
+	);
+	return IssueInfo.make({
 		number: raw.number,
 		title: raw.title,
 		state: raw.state === "closed" ? "closed" : "open",
@@ -420,6 +429,22 @@ const project = (raw: RawIssue): IssueInfo =>
 		url: raw.html_url,
 		nodeId: raw.node_id,
 	});
+});
+
+const CommentBody = S.Struct({ body: S.String.pipe(S.NullOr, S.optional) }).annotate(
+	$I.annote("CommentBody", { description: "The nullable REST comment body inspected for a marker." }),
+);
+
+const RawComment = S.Struct({
+	id: S.Union([S.Finite, S.BigInt]),
+	body: S.String.pipe(S.NullOr, S.optional),
+	html_url: S.String,
+}).annotate($I.annote("RawComment", { description: "The REST comment fields consumed by a selected or created comment." }));
+
+const recordOf = Effect.fn("GitHubIssue.recordOf")(function* (input: unknown) {
+	const raw = yield* S.decodeUnknownEffect(RawComment)(input);
+	return yield* S.decodeEffect(CommentRecord)({ id: numericId(raw.id), body: raw.body ?? "", url: raw.html_url });
+}, Effect.mapError((error) => GitHubError.decode("GitHubIssue.commentOnce", "GitHub returned an unexpected comment", error)));
 
 const make = (client: GitHubClient["Service"]): GitHubIssueShape => ({
 	get: Effect.fn("GitHubIssue.get")(function* (number: number) {
@@ -431,7 +456,7 @@ const make = (client: GitHubClient["Service"]): GitHubIssueShape => ({
 			issue_number: number,
 			headers: API_VERSION_HEADERS,
 		});
-		return project(raw);
+		return yield* project("GitHubIssue.get", raw);
 	}),
 
 	list: Effect.fn("GitHubIssue.list")(function* (options?: {
@@ -448,13 +473,13 @@ const make = (client: GitHubClient["Service"]): GitHubIssueShape => ({
 				repo,
 				...O.getSomesStruct({
 					state: O.fromUndefinedOr(options?.state),
-					labels: O.map(O.fromUndefinedOr(options?.labels), (labels) => labels.join(",")),
+					labels: O.map(O.fromUndefinedOr(options?.labels), A.join(",")),
 				}),
 				headers: API_VERSION_HEADERS,
 			},
 			options?.page,
 		);
-		return raw.map(project);
+		return yield* Effect.forEach(raw, (issue) => project("GitHubIssue.list", issue));
 	}),
 
 	close: Effect.fn("GitHubIssue.close")(function* (number: number, reason?: "completed" | "not_planned") {
@@ -496,12 +521,13 @@ const make = (client: GitHubClient["Service"]): GitHubIssueShape => ({
 			issue_number: issueNumber,
 			headers: API_VERSION_HEADERS,
 		});
-		const existing = comments.find((comment) => marker.matches(comment.body ?? ""));
-		if (existing !== undefined) {
-			return CommentOnceResult.make({
-				wrote: false,
-				comment: CommentRecord.make({ id: numericId(existing.id), body: existing.body ?? "", url: existing.html_url }),
-			});
+		for (const candidate of comments) {
+			const inspected = yield* S.decodeEffect(CommentBody)(candidate).pipe(
+				Effect.mapError((error) => GitHubError.decode("GitHubIssue.commentOnce", "GitHub returned an unexpected comment", error)),
+			);
+			if (marker.matches(inspected.body ?? "")) {
+				return CommentOnceResult.make({ wrote: false, comment: yield* recordOf(candidate) });
+			}
 		}
 		const created = yield* client.request("POST /repos/{owner}/{repo}/issues/{issue_number}/comments", {
 			owner,
@@ -512,7 +538,7 @@ const make = (client: GitHubClient["Service"]): GitHubIssueShape => ({
 		});
 		return CommentOnceResult.make({
 			wrote: true,
-			comment: CommentRecord.make({ id: numericId(created.id), body: created.body ?? "", url: created.html_url }),
+			comment: yield* recordOf(created),
 		});
 	}),
 
@@ -520,8 +546,8 @@ const make = (client: GitHubClient["Service"]): GitHubIssueShape => ({
 		const { owner, repo } = yield* Repo;
 		yield* Effect.annotateCurrentSpan({ owner, repo, prNumber });
 		const result = yield* client.graphql(LinkedIssuesDocument, { owner, repo, prNumber });
-		const manual = HashSet.fromIterable(result.repository.pullRequest.manuallyLinked.nodes.map((node) => node.number));
-		return result.repository.pullRequest.allLinked.nodes.map((node) =>
+		const manual = HashSet.fromIterable(A.map(result.repository.pullRequest.manuallyLinked.nodes, (node) => node.number));
+		return A.map(result.repository.pullRequest.allLinked.nodes, (node) =>
 			LinkedIssue.make({
 				number: node.number,
 				title: node.title,
@@ -536,9 +562,20 @@ const make = (client: GitHubClient["Service"]): GitHubIssueShape => ({
 	isCrossReferencedBy: Effect.fn("GitHubIssue.isCrossReferencedBy")(function* (issueNumber: number, prNumber: number) {
 		const { owner, repo } = yield* Repo;
 		yield* Effect.annotateCurrentSpan({ owner, repo, issueNumber, prNumber });
-		const result = yield* client.graphql(CrossReferencedDocument, { owner, repo, issueNumber });
-		return result.repository.issue.timelineItems.nodes.some(
-			(node) => node.source?.__typename === "PullRequest" && node.source.number === prNumber,
-		);
+		let before: string | undefined;
+		while (true) {
+			const result = yield* client.graphql(CrossReferencedDocument, {
+				owner, repo, issueNumber, ...O.getSomesStruct({ before: O.fromUndefinedOr(before) }),
+			});
+			const timeline = result.repository.issue.timelineItems;
+			if (A.some(timeline.nodes, (node) => node.source?.__typename === "PullRequest" && node.source.number === prNumber)) {
+				return true;
+			}
+			const cursor = O.fromNullishOr(timeline.pageInfo?.startCursor);
+			if (timeline.pageInfo?.hasPreviousPage !== true || O.isNone(cursor)) {
+				return false;
+			}
+			before = cursor.value;
+		}
 	}),
 });

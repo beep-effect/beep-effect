@@ -1,0 +1,38 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the yaml surface read-only against the round-2 inventory, the port ledger, and the upstream oracle, and report only new findings.Round-2 already recorded a large required set. I'll read the rest of that inventory and the binding decisions, then review the named files against the pinned oracle.Round-2 fixes are already recorded as deviations. I'll review the nine public files for new divergences the gates would miss.I'll verify the two open candidates against the focus files, the pinned oracle, and the recorded deviations before writing findings.Sol’s five claims are leads only. I’ll check each one against the law text and the focus-file code before deciding whether it is a finding.### fable-3-1
+- file: scratchpad/effected/yaml/YamlNode.ts:1170
+- class: bug   severity: required
+- standard: D9; D11; §14 `upstream-bug`; YAML 1.2.2 §3.2.2.2 (an alias denotes the most recent preceding node with that anchor).   evidence: `nodeToValue` registers `node.anchor` on the live map at line 1144 before walking children, then line 1170 looks the name up again on every expansion. For `a: &x 1` / `b: &y [*x]` / `c: &x 2` / `d: *y`, the walk of `d` re-enters `&y` after `&x` has been overwritten, so `*x` yields `2`. For `c: &x [*y]` the overwrite happens before the child walk, so `*y` → `*x` → the node being built. `aliasExpansionLimit(100)` is `1010000` (`YamlNode.ts:1075`), which is above the call-stack depth, so the walk throws `RangeError`. `parseResultImpl` (`Yaml.ts:451-455`) rethrows every defect other than `AliasExpansionBudgetExceeded`, against its contract that alias failure is a typed `Failure` (`Yaml.ts:437-438`). The oracle `nodeToValue` (`packages/yaml/src/YamlNode.ts:602-634`) is the same live map. The pinned duplicate-anchor case (`first`/`before`/`second`/`after`) never re-expands an earlier collection, so it stays green.
+- failure: A later reuse of an anchor name changes aliases already nested inside an earlier anchored collection, and a redefinition that points at that collection overflows the stack instead of returning the acyclic document value.
+- fix: On the first source-order visit of an alias, bind it to the anchor node registered at that moment and reuse that node on later expansions. Record the §14 `upstream-bug` correction and add both documents as regressions. A true cycle must still surface as `AliasExpansionBudgetExceeded`.
+
+### fable-3-2
+- file: scratchpad/effected/yaml/YamlDocument.ts:163
+- class: bug   severity: required
+- standard: D11; §14 `upstream-bug`; YAML 1.2.2 (a `%TAG` handle applies to the following document; an undeclared handle is an error); `UnresolvedTag` is fatal (`internal/diagnostics.ts:292`).   evidence: `validateCrossDocumentDirectives` (`internal/composer/document.ts:1000-1005`) pushes `UnresolvedTag` onto an isolated state for every document after the first, and `composeAllDocuments` returns that list as `streamErrors` (`document.ts:1296`). `parseAll` keeps a stream error only when `code === "InvalidDirective"`. The document's own `errors` stay empty. `parseAllResultImpl` (`Yaml.ts:476-478`) keeps every `isFatalCode` stream error, so the same text fails `Yaml.parseAll` and succeeds `YamlDocument.parseAll` with empty `errors` and `warnings`. Oracle `YamlDocument.ts:110` has the same filter. `scratchpad/test/yaml/YamlDocument.coverage.test.ts:17-18` pins success for `%TAG !e!` on the first document and `!e!foo` on the second.
+- failure: A later document that uses a handle declared only on an earlier document is returned as a clean AST. The fatal diagnostic is discarded.
+- fix: Keep stream errors with `isFatalCode`, matching `parseAllResultImpl`. Update the coverage pin and record the §14 `upstream-bug` correction. Directive-placement handling stays as it is.
+
+### fable-3-3
+- file: scratchpad/effected/yaml/YamlLint.ts:879
+- class: bug   severity: required
+- standard: D11; §14 `upstream-bug`; `YamlLint.fix` (`YamlLint.ts:825-835`) promises every non-overlapping fix, with diagnostic order deciding only overlaps and same-offset edits.   evidence: `runRules` sorts by diagnostic offset, length, then rule id (`YamlLint.ts:705-731`). `fix` then treats that sequence as if fix intervals were sorted, dropping a fix when `fix.offset < lastEnd`. A custom rule may attach a fix whose span differs from the diagnostic span (`YamlLintRule.ts` does not require those offsets to match). For diagnostics `(offset 0, fix {offset:5,length:1})` then `(offset 1, fix {offset:0,length:1})` on `"a: 1\nb: 2\n"`, the intervals `[5,6)` and `[0,1)` are disjoint, and the second is dropped. Oracle `YamlLint.ts:626` uses the same frontier.
+- failure: A disjoint edit is silently omitted when an earlier diagnostic carries a later fix. The fixed text keeps the source bytes that edit would have replaced.
+- fix: Decide overlaps from the fix intervals themselves. Keep the current diagnostic-order winner for overlapping or same-offset edits, then pass the surviving edits to `YamlEdit.applyAll`. Add the custom-rule regression and record the §14 correction.
+
+### fable-3-4
+- file: scratchpad/effected/yaml/YamlFormat.ts:774
+- class: law   severity: required
+- standard: `standards/effect-laws-v1.md` law 6; `standards/effect-first-development.md` EF-5; D11.   evidence: The regional probe compares with `Object.is`. `Equal.equals` returns true for `-0` and `0` because it short-circuits on `===` (`effect/src/Equal.ts:187`). The probe comment (`YamlFormat.ts:762-763`) requires `-0` rendered as `0` to fall back to the full pipeline. The native-runtime checker lists `keys`, `values`, `entries`, `fromEntries`, `assign`, `hasOwn`, `freeze`, `seal`, and `create` (`NoNativeRuntime.ts:56-66`) and its globs omit `scratchpad/effected/**`, so a green law run never sees this call. The coverage ledger row for `YamlFormat.ts:759` records keeping this comparison while deleting unreachable branches; it does not waive law 6.
+- failure: Domain comparison still goes through a native `Object` method. Replacing it with `Equal.equals` alone would accept a signed-zero change that the regional path currently rejects.
+- fix: Compare with `Equal.equals` and an explicit numeric zero-sign check so NaN still matches and `-0` still differs from `0`. Leave the fallback behavior unchanged.
+
+### fable-3-5
+- file: scratchpad/effected/yaml/YamlDiagnostic.ts:304
+- class: perf   severity: required
+- standard: D11 algorithmic-class criterion.   evidence: Each `fromRaw` (`YamlDiagnostic.ts:283`) calls `lineChar`, which scans from offset 0 through that diagnostic's offset. Batch callers are `toDiagnostics` (`Yaml.ts:375`) and document materialization. For `"a: 1\n".repeat(N)`, the `N - 1` duplicate-key offsets `6, 12, …, 6(N - 1)` cost `3N(N - 1)` character visits, Θ(N²). One line-start index for the source plus a binary search per diagnostic is O(T + D log T). The oracle loop is the same shape; this is an algorithmic class, independent of a timing sample.
+- failure: Materializing many diagnostics rescans the same source prefix once per diagnostic.
+- fix: Build one position index per source operation and reuse it for the batch. Preserve CR, LF, CRLF, LS, and PS, and keep the interior-CRLF column bounded by `limit`.
+
+REQUIRED: 5
+BACKLOG: 0

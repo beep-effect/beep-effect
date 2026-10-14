@@ -3,7 +3,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { BlobStoreError } from "../../effected/github-actions/BlobStore.ts";
+import { BlobStoreError, S3Config } from "../../effected/github-actions/BlobStore.ts";
 
 const runs = { arbitrary: fcRuns(100) };
 const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
@@ -24,4 +24,24 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
 };
 describe("BlobStore property floor", () => {
   roundTrips("BlobStoreError", BlobStoreError);
+  roundTrips("S3Config", S3Config);
+  it.effect.prop(
+    "S3Config: round trips preserve absent and explicitly undefined optional fields",
+    [Arbitrary.schema(S3Config)],
+    ([value]) => Effect.gen(function* () {
+      const required = {
+        bucket: value.bucket,
+        region: value.region,
+        accessKeyId: value.accessKeyId,
+        secretAccessKey: value.secretAccessKey,
+      };
+      for (const config of [required, { ...required, endpoint: undefined, sessionToken: undefined, prefix: undefined }]) {
+        const encoded = yield* S.encodeEffect(S3Config)(config);
+        const decoded = yield* S.decodeEffect(S3Config)(encoded);
+        assert.deepStrictEqual(encoded, config);
+        assert.deepStrictEqual(decoded, config);
+      }
+    }),
+    runs
+  );
 });

@@ -7,13 +7,17 @@
 // Opt-in: absent from both presets.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { YamlEdit } from "../../YamlEdit.ts";
 import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
 import { StyleVote, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
 import type { YamlToken } from "../../YamlToken.ts";
+import { composeFirstDocument } from "../composer/document.ts";
 
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/document-end");
 
@@ -50,7 +54,7 @@ const TRIVIA = HashSet.fromIterable(["newline", "whitespace", "comment", "byte-o
 
 /** The last non-trivia token: it decides whether the stream ends with `...`. */
 const tailToken = (ctx: LintContext): YamlToken | undefined =>
-	[...ctx.tokens].reverse().find((t) => !HashSet.has(TRIVIA, t.kind));
+	O.getOrUndefined(A.findLast(ctx.tokens, (t) => !HashSet.has(TRIVIA, t.kind)));
 
 /**
  * The end-of-stream position, shared by the missing-marker diagnostic and
@@ -66,8 +70,8 @@ const tailToken = (ctx: LintContext): YamlToken | undefined =>
 const endOfStreamPosition = (
 	ctx: LintContext,
 ): { readonly offset: number; readonly length: number; readonly line: number; readonly character: number } => {
-	const lastLine = ctx.lines[ctx.lines.length - 1];
-	const trailingNewline = ctx.text.endsWith("\n");
+	const lastLine = O.getOrUndefined(A.last(ctx.lines));
+	const trailingNewline = Str.endsWith("\n")(ctx.text) || Str.endsWith("\r")(ctx.text);
 	return {
 		offset: ctx.text.length,
 		length: 0,
@@ -107,7 +111,7 @@ export const documentEnd: YamlRule = {
 		// The last non-trivia token decides: does the stream end with `...`?
 		const tail = tailToken(ctx);
 		const ended = tail?.kind === "document-end";
-		if (present && !ended && ctx.text.trim() !== "") {
+		if (present && !ended && Str.trim(ctx.text) !== "") {
 			return [
 				YamlLintDiagnostic.make({
 					rule: "document-end",
@@ -119,17 +123,26 @@ export const documentEnd: YamlRule = {
 					fix: YamlEdit.make({
 						offset: ctx.text.length,
 						length: 0,
-						content: ctx.text.endsWith("\n") ? "...\n" : "\n...\n",
+						content: Str.endsWith("\n")(ctx.text) ? "...\n" : "\n...\n",
 					}),
 				}),
 			];
 		}
 		if (!present && tail !== undefined && tail.kind === "document-end") {
 			const lineText = ctx.lines[tail.line]?.text ?? "";
-			const alone = lineText.trim() === "...";
+			// Compose only the final document: ctx.document is the first one.
+			// A previous end marker closes its document; a start marker belongs
+			// to the final document and independently preserves an empty value.
+			const boundary = O.getOrUndefined(A.findLast(ctx.tokens, (token) =>
+				token.offset < tail.offset && (token.kind === "document-start" || token.kind === "document-end"),
+			));
+			const start = boundary === undefined ? 0 : boundary.offset + (boundary.kind === "document-end" ? boundary.length : 0);
+			const finalDocument = composeFirstDocument(Str.slice(start)(ctx.text), { uniqueKeys: false });
+			const preservesDocument = finalDocument.contents !== null || finalDocument.hasDocumentStart === true;
+			const alone = preservesDocument && Str.trim(lineText) === "...";
 			// The fix removes the marker line whole: marker plus its terminator
 			// (two characters under CRLF, one under LF).
-			const terminator = ctx.text.startsWith("\r\n", tail.offset + tail.length) ? 2 : 1;
+			const terminator = Str.startsWith("\r\n", tail.offset + tail.length)(ctx.text) ? 2 : 1;
 			return [
 				YamlLintDiagnostic.make({
 					rule: "document-end",
@@ -150,7 +163,7 @@ export const documentEnd: YamlRule = {
 	// Inference: a non-empty stream votes `present` — tailed by `...`
 	// or not; absence votes `false` (mirroring document-start).
 	infer: (ctx) => {
-		if (ctx.text.trim() === "") return [];
+		if (Str.trim(ctx.text) === "") return [];
 		const tail = tailToken(ctx);
 		if (tail === undefined) return [];
 		const ended = tail.kind === "document-end";

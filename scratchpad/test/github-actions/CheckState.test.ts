@@ -3,6 +3,8 @@ import { CheckConclusion } from "../../effected/github/index.ts";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { flow } from "effect/Function";
+import * as Effect from "effect/Effect";
+import { CheckRunConclusion, CheckRunProjection } from "../../effected/github-actions/CheckState.ts";
 import { CheckState, projectCheckState } from "../../effected/github-actions/CheckState.ts";
 
 describe("CheckState", () => {
@@ -61,4 +63,28 @@ describe("CheckState", () => {
 			}
 		}
 	});
+});
+
+
+describe("check-run schema contracts", () => {
+	it.effect("decodes every conclusion and excludes cancelled", () => Effect.gen(function* () {
+		for (const conclusion of CheckRunConclusion.literals) {
+			assert.strictEqual(yield* S.decodeEffect(CheckRunConclusion)(conclusion), conclusion);
+			assert.isTrue(S.is(CheckConclusion)(conclusion));
+		}
+		assert.strictEqual(CheckRunConclusion.literals.length, 6);
+		assert.isFalse(S.is(CheckRunConclusion)("cancelled"));
+	}));
+
+	it.effect("preserves plain wire objects and requires completed conclusions", () => Effect.gen(function* () {
+		const running: CheckRunProjection = { status: "in_progress" };
+		const completed: CheckRunProjection = { status: "completed", conclusion: "neutral" };
+		assert.deepStrictEqual(yield* S.decodeEffect(CheckRunProjection)(running), running);
+		assert.deepStrictEqual(yield* S.decodeEffect(CheckRunProjection)(completed), completed);
+		assert.isFalse("conclusion" in (yield* S.decodeEffect(CheckRunProjection)(running)));
+		assert.isFalse(S.is(CheckRunProjection)({ status: "completed" }));
+		assert.isFalse(S.is(CheckRunProjection)({ status: "completed", conclusion: undefined }));
+		assert.isFalse(S.is(CheckRunProjection)({ status: "completed", conclusion: "cancelled" }));
+		assert.isFalse(S.is(CheckRunProjection)({ status: "queued" }));
+	}));
 });

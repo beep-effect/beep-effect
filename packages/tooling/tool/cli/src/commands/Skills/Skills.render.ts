@@ -10,7 +10,9 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as jsonc from "jsonc-parser";
+import { SkillsLockMigrationPlan } from "./SkillsLock.schemas.ts";
 import type { SkillProvenanceReport } from "./Skills.schemas.ts";
+import type { VendoredMigrationRow } from "./SkillsLock.schemas.ts";
 
 const encodeUnknownJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 
@@ -187,6 +189,75 @@ export const renderSkillProvenanceSummary = (report: SkillProvenanceReport): str
       `drift: ${drift}`,
       `patches: ${patches}`,
       `effective: ${entry.effective.treeHash}; installed ${entry.effective.installedTreeHash}`,
+    ],
+    "\n"
+  );
+};
+
+const encodeMigrationPlanJson = S.encodeResult(S.fromJsonString(SkillsLockMigrationPlan));
+
+/**
+ * Renders a lock migration plan as formatted JSON.
+ *
+ * **Example** (Render an empty plan)
+ *
+ * ```ts
+ * import { renderSkillsLockMigrationPlanJson } from "@beep/repo-cli/commands/Skills/Skills.render"
+ * import { SkillsLockMigrationPlan } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ *
+ * console.log(renderSkillsLockMigrationPlanJson(SkillsLockMigrationPlan.make({ rows: [] })))
+ * ```
+ *
+ * @param plan - Migration plan to render.
+ * @returns Two-space formatted JSON with a trailing newline.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderSkillsLockMigrationPlanJson = (plan: SkillsLockMigrationPlan): string => {
+  const encoded = Result.getOrThrow(encodeMigrationPlanJson(plan));
+  const edits = jsonc.format(encoded, undefined, { tabSize: 2, insertSpaces: true });
+  return `${jsonc.applyEdits(encoded, edits)}\n`;
+};
+
+/**
+ * Renders a lock migration plan as one line per skill.
+ *
+ * **Example** (Render an empty plan summary)
+ *
+ * ```ts
+ * import { renderSkillsLockMigrationPlanSummary } from "@beep/repo-cli/commands/Skills/Skills.render"
+ * import { SkillsLockMigrationPlan } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ *
+ * console.log(renderSkillsLockMigrationPlanSummary(SkillsLockMigrationPlan.make({ rows: [] })))
+ * ```
+ *
+ * @param plan - Migration plan to render.
+ * @returns Headline counts followed by one line per skill.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderSkillsLockMigrationPlanSummary = (plan: SkillsLockMigrationPlan): string => {
+  const count = (disposition: string): number =>
+    A.length(A.filter(plan.rows, (row) => row.disposition === disposition));
+  const describeDrift = (drift: VendoredMigrationRow["drift"]): string => {
+    const differs = A.length(A.filter(drift, (row) => row.driftClass === "differs-from-upstream-head"));
+    const matches = A.length(A.filter(drift, (row) => row.driftClass === "matches-upstream-head"));
+    return A.isReadonlyArrayEmpty(drift) ? "" : ` drift: ${differs} differ from upstream head, ${matches} match it`;
+  };
+  const lines = A.map(plan.rows, (row) => {
+    switch (row.disposition) {
+      case "vendored":
+        return `  ${row.skill}: vendored${describeDrift(row.drift)}`;
+      case "unresolved":
+        return `  ${row.skill}: unresolved (${row.note})`;
+      case "local":
+        return `  ${row.skill}: local`;
+    }
+  });
+  return A.join(
+    [
+      `skills lock-plan: ${count("vendored")} vendored, ${count("local")} local, ${count("unresolved")} unresolved`,
+      ...lines,
     ],
     "\n"
   );

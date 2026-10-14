@@ -4,6 +4,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
 import * as S from "effect/Schema";
+import { braceExpand as oracleExpand } from "minimatch";
 import { balanced } from "../../effected/glob/internal/balancedMatch.ts";
 import { expand } from "../../effected/glob/internal/braceExpansion.ts";
 import { GuardExceeded, InvalidCap } from "../../effected/glob/internal/limits.ts";
@@ -272,5 +273,56 @@ describe("braceExpansion hardening", () => {
 		// 2^16 = 65_536 <= 100_000: expands fully, no throw
 		const r = expand("{a,b}".repeat(16));
 		assert.lengthOf(r, 65_536);
+	});
+});
+
+
+describe("braceExpansion round-3 regressions", () => {
+	it("follows rounded advancing increments to the endpoint and rejects the sixth member at max five", () => {
+		const source = "{18014398509481984..18014398509482004..5}";
+		const expected = ["18014398509481984", "18014398509481988", "18014398509481990", "18014398509481996", "18014398509482000", "18014398509482004"];
+		assert.deepStrictEqual(expand(source), expected);
+		assert.deepStrictEqual(expand(source, { max: 6 }), oracleExpand(source));
+		try {
+			expand(source, { max: 5 });
+			assert.fail("expected a budget failure");
+		} catch (error) {
+			assertInstanceOf(error, GuardExceeded);
+			assert.strictEqual(error.reason, "ExpansionBudgetExceeded");
+			assert.strictEqual(error.limit, 5);
+			assert.strictEqual(error.actual, 6);
+		}
+	});
+
+	it("rejects siblings without materializing their full member arrays", () => {
+		const source = `{${Array.from({ length: 32 }, () => "{1..1000}").join(",")}}`;
+		const push = Array.prototype.push;
+		let retained = 0;
+		let members = 0;
+		Array.prototype.push = function (this: Array<unknown>, ...items: Array<unknown>) {
+			const size = push.apply(this, items);
+			retained = Math.max(retained, size);
+			members += items.filter((item) => S.is(S.String)(item) && /^\d+$/.test(item)).length;
+			return size;
+		};
+		let failure: unknown;
+		try { expand(source, { max: 1000 }); } catch (error) { failure = error; } finally { Array.prototype.push = push; }
+		assertInstanceOf(failure, GuardExceeded);
+		assert.strictEqual(failure.reason, "ExpansionBudgetExceeded");
+		assert.strictEqual(failure.limit, 1000);
+		assert.strictEqual(failure.actual, 1001);
+		assert.isAtMost(retained, 1000);
+		assert.strictEqual(members, 1000);
+	});
+
+	it("preserves boundary, suffix-product and filtered-empty ordering", () => {
+		for (const [source, max] of [
+			["{{1..3},{4..6}}", 6], ["{{1..3},{4..6}}{a,b}", 12],
+			["{,,a,,b,}", 2], ["{,,a,,b,}{,x}", 10], ["x{,,a,,b,}", 7],
+			["{{,},{,},a}", 1], ["{{,a}}{,b}", 4], ["{Z..a}", 8],
+		] as const) {
+			assert.deepStrictEqual(expand(source, { max }), oracleExpand(source), source);
+		}
+		assert.strictEqual(reasonOf(() => expand("{{1..3},{4..6}}{a,b}", { max: 11 })), "ExpansionBudgetExceeded");
 	});
 });

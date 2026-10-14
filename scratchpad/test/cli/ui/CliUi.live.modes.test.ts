@@ -94,7 +94,7 @@ describe("CliUi.live: the tick, an Effect schedule in the run's scope", () => {
 				}),
 			);
 			yield* Queue.offerAll(queue, [Start, End]);
-			yield* settle(30);
+			yield* TestClock.withLive(until(() => screenAfter(fake.stdout()).includes("ended")));
 			const drawn = frames.length;
 			yield* TestClock.adjust("400 millis");
 			yield* settle(50);

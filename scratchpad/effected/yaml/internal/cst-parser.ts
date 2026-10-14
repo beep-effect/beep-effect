@@ -4,23 +4,28 @@
 // whitespace, comments, and structural indicators. No value interpretation
 // occurs at this stage.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
+import * as S from "effect/Schema";
 
 import type { CstNode, CstNodeType } from "./cst.ts";
 import { lexAll } from "./lexer.ts";
-import type { YamlToken, YamlTokenKind } from "./token.ts";
+import { YamlToken, type YamlTokenKind } from "./token.ts";
 
 // ---------------------------------------------------------------------------
 // Internal parser state
 // ---------------------------------------------------------------------------
 
-interface ParserState {
-	readonly tokens: ReadonlyArray<YamlToken>;
-	readonly text: string;
-	pos: number;
-	/** Current collection-nesting depth — see {@link guardDepth}. */
-	depth: number;
-}
+const $I = $ScratchpadId.create("effected/yaml/internal/cst-parser");
+const ParserState = S.Struct({
+	tokens: S.Array(YamlToken).annotateKey({ description: "Dense lexer token stream being consumed." }),
+	text: S.String.annotateKey({ description: "Original YAML source used to preserve exact CST spans." }),
+	pos: S.mutableKey(S.Finite).annotateKey({ description: "Writable cursor pointing to the next token." }),
+	depth: S.mutableKey(S.Finite).annotateKey({ description: "Writable collection-nesting depth checked by guardDepth." }),
+}).annotate($I.annote("ParserState", {
+	description: "Structural parser state constructed directly without per-step validation.",
+}));
+type ParserState = typeof ParserState.Type;
 
 /**
  * Hardening: cap CST nesting so hostile inputs cannot overflow the stack

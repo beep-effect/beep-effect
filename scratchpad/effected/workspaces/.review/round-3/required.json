@@ -1,0 +1,170 @@
+{
+  "module": "workspaces",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/workspaces/DuplicateCheck.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/DuplicateCheck.test.ts"
+      ],
+      "findings": [
+        "r01"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/workspaces/LayerPolicy.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/LayerPolicy.test.ts"
+      ],
+      "findings": [
+        "r02"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/workspaces/DependencyGraph.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/DependencyGraph.test.ts"
+      ],
+      "findings": [
+        "r03"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/workspaces/SourceBoundary.ts",
+        "scratchpad/effected/workspaces/internal/sourceText.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/SourceBoundary.test.ts",
+        "scratchpad/test/workspaces/sourceText.test.ts"
+      ],
+      "findings": [
+        "r04",
+        "r05",
+        "r09",
+        "r10"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/workspaces/WorkspaceRoot.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/WorkspaceRoot.test.ts"
+      ],
+      "findings": [
+        "r06"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/workspaces/internal/configDependencyResolution.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/internal/configDependencyResolution.coverage.test.ts",
+        "scratchpad/test/workspaces/integration/ConfigDependencyHooks.int.test.ts"
+      ],
+      "findings": [
+        "r07"
+      ]
+    },
+    {
+      "id": "g7",
+      "files": [
+        "scratchpad/effected/workspaces/WorkspacesSync.ts",
+        "scratchpad/effected/workspaces/internal/packedInstallPlan.ts",
+        "scratchpad/effected/workspaces/internal/configDependencyFetch.ts"
+      ],
+      "tests": [
+        "scratchpad/test/workspaces/WorkspacesSync.test.ts",
+        "scratchpad/test/workspaces/WorkspacesSync.coverage.test.ts",
+        "scratchpad/test/workspaces/PackedInstallPlan.test.ts",
+        "scratchpad/test/workspaces/internal/packedInstallPlan.coverage.test.ts",
+        "scratchpad/test/workspaces/internal/configDependencyFetch.coverage.test.ts"
+      ],
+      "findings": [
+        "r08",
+        "r11"
+      ]
+    }
+  ],
+  "findings": {
+    "r01": {
+      "file": "scratchpad/effected/workspaces/DuplicateCheck.ts",
+      "class": "bug",
+      "summary": "Use collision-free keys for duplicate-instance provenance.",
+      "fix": "Encode the entire [targetId, dependent] pair unambiguously with a schema-backed JSON tuple codec instead of delimiter concatenation. Preserve first-occurrence order and identical-relationship deduplication. Add embedded-NUL collision and non-collision controls in DuplicateCheck.test.ts. Supply verified upstream-bug evidence to central bookkeeping; do not edit ledger or Port notes."
+    },
+    "r02": {
+      "file": "scratchpad/effected/workspaces/LayerPolicy.ts",
+      "class": "schema",
+      "summary": "Annotate the reusable required-edge check.",
+      "fix": "Pass a distinct $I-derived identifier, title and description directly to S.isPattern. Preserve REQUIRED_EDGE and validation behavior. Add a targeted metadata assertion in LayerPolicy.test.ts. No hand-written deviation entry."
+    },
+    "r03": {
+      "file": "scratchpad/effected/workspaces/DependencyGraph.ts",
+      "class": "schema",
+      "summary": "Give the graph index payload a schema owner.",
+      "fix": "Define a module-local identity-annotated Edges structural schema and derive the existing type from .Type. Retain plain objects, immutable Effect collections, explicit vertex order and construction timing; do not introduce runtime rejection or an unnecessary export. Retain graph behavior tests and add a representation/ordering control in DependencyGraph.test.ts."
+    },
+    "r04": {
+      "file": "scratchpad/effected/workspaces/SourceBoundary.ts",
+      "class": "bug",
+      "summary": "Recognize complete Unicode identifiers in boundary rules and exemptions.",
+      "fix": "Read complete raw identifier tokens and reuse Unicode cooking for console members and stdout receiver/write/end members. Make processReads and tokenOccurrences exemption end guards recognize escaped identifier continuations. Preserve raw UTF-16 offsets, optional/member access, receiver/private-name/comment controls and exact ignore-token semantics; retain the existing final-chunk rule. Add escaped permitted console methods, escaped longer names, escaped stdout receivers/members and default/custom exemption suffix regressions in SourceBoundary.test.ts, with identifier helper controls in sourceText.test.ts if needed. Any shared lexer helper/export belongs to the same owning group. Supply upstream-bug evidence centrally."
+    },
+    "r05": {
+      "file": "scratchpad/effected/workspaces/SourceBoundary.ts",
+      "class": "bug",
+      "summary": "Detect optional stdout.end calls that pass a chunk.",
+      "fix": "Accept optional-call ?. before the argument parenthesis in the final-chunk check. Add chunk-bearing and empty optional-call controls in SourceBoundary.test.ts; preserve existing write/end distinctions and locations. Supply verified upstream-bug evidence centrally."
+    },
+    "r06": {
+      "file": "scratchpad/effected/workspaces/WorkspaceRoot.ts",
+      "class": "bug",
+      "summary": "Require a file for the pnpm workspace marker.",
+      "fix": "Use fs.stat for the pnpm marker and require type === \"File\". Absorb per-probe errors as before and continue to the package.json check when the marker is a directory. Add directory-marker, real-file and ancestor controls in WorkspaceRoot.test.ts. Supply verified upstream-bug evidence centrally."
+    },
+    "r07": {
+      "file": "scratchpad/effected/workspaces/internal/configDependencyResolution.ts",
+      "class": "bug",
+      "summary": "Reject traversal segments in config-dependency versions before resolving paths.",
+      "fix": "Validate hasTraversalSegment(entry.version) in declaredEntries before either resolver constructs paths, failing through the existing typed CatalogAssemblyError path. Add resolvePnpmfiles({pkg: \"../../outside\"}) refusal with no directory read or fetch and a valid single-segment version control; keep name validation. Tests belong to internal/configDependencyResolution.coverage.test.ts and integration/ConfigDependencyHooks.int.test.ts. Supply verified upstream-bug evidence centrally."
+    },
+    "r08": {
+      "file": "scratchpad/effected/workspaces/internal/configDependencyFetch.ts",
+      "class": "bug",
+      "summary": "Preserve own __proto__ registry scopes.",
+      "fix": "Use R.assignProperty(registries, scope, url). Add an own __proto__ scope plus a normal-scope control through registrySettingsOf and scratchWorkspaceYaml in internal/configDependencyFetch.coverage.test.ts. Preserve tolerant input handling and scope order. This file shares ownership with r11. Supply verified upstream-bug evidence centrally."
+    },
+    "r09": {
+      "file": "scratchpad/effected/workspaces/internal/sourceText.ts",
+      "class": "bug",
+      "summary": "Classify division after spaced or repeated non-null assertions.",
+      "fix": "Walk backward over postfix ! tokens using lastCode to inspect the preceding significant operand. Preserve prefix logical negation and genuine-regex handling. Add spaced, commented and repeated assertion regressions plus division/regex controls in sourceText.test.ts and a public SourceBoundary.check regression in SourceBoundary.test.ts. Retain raw offsets and the adjacent-assertion pin; supply upstream-bug evidence centrally."
+    },
+    "r10": {
+      "file": "scratchpad/effected/workspaces/internal/sourceText.ts",
+      "class": "bug",
+      "summary": "Exclude global-object spellings nested under local receivers.",
+      "fix": "Require the recognized receiver to be a free global-object reference or a verified global-object chain; reject unrelated member and optional-member receivers, retaining the spread exception. Preserve cooked identifiers, optional chaining and original offsets. Add local nested-object controls and genuine globalThis.process/global-object-chain controls in sourceText.test.ts and SourceBoundary.test.ts. Supply verified upstream-bug evidence centrally."
+    },
+    "r11": {
+      "file": "scratchpad/effected/workspaces/WorkspacesSync.ts",
+      "class": "effect-idiom",
+      "summary": "Use Schema JSON codecs in the remaining synchronous boundaries.",
+      "fix": "Use S.fromJsonString with Result/Option decode/encode codecs for these deliberate synchronous helpers, including a string JSON codec for YAML quoting and an appropriate document codec for consumer package.json. Preserve skip behavior, read/invalidJson/invalidShape classification, tolerant shape handling, formatting and trailing newlines (including packedInstallPlan.ts:281). Add/adjust assertions in WorkspacesSync.test.ts, WorkspacesSync.coverage.test.ts, PackedInstallPlan.test.ts, internal/packedInstallPlan.coverage.test.ts and internal/configDependencyFetch.coverage.test.ts. Supply law-forced SyntaxError-to-SchemaError cause changes and adjusted oracle assertions to central per-class bookkeeping; do not edit ledger/Port notes."
+    }
+  }
+}

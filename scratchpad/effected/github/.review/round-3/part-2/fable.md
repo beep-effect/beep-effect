@@ -1,0 +1,19 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review the assigned GitHub files read-only against the port laws, prior-round inventory, and the pinned upstream oracle. First I'll load the review context and the graft routing rules.I'll finish the review by checking the two open sites against the Effect generator protocol and the pinned oracle, then report only confirmed findings.### fable-3-1
+- file: scratchpad/effected/github/GitTag.ts:405
+- class: bug   severity: required
+- standard: standards/effect-first-development.md EF-3 and EF-31; D9/D11 and section 14 (`law:EF-3` / `law:EF-31`). Same cause as round-2 req-13, which stopped at `GitTag.list`.
+- evidence: `latestSemver` still projects each tags-page element inside `Effect.sync` (`GitTag.ts:396-405`). `Effect.sync` runs the thunk with no catch (`effect/src/internal/effect.ts:965-969`); `FiberImpl.runLoop` turns that throw into `exitDie` (`effect/src/internal/effect.ts:667-671`). `SemverTag.make` is `SchemaParser.make` (`Schema.ts:15903-15904`), which throws `Error("Schema validation failed")` (`SchemaParser.ts:244`). On `{ name: "v1.0.0", commit: { sha: null } }` — the payload `scratchpad/test/github/GitTag.test.ts:32` already feeds to `list` — `versionFromTag` / `SemVer.parseResult` succeed and `SemverTag.make` throws inside the thunk. On `{ name: 42, commit: { sha: "abc" } }` (`GitTag.test.ts:31`), `entry.name.startsWith` throws before parse. `GitTag.list` maps both through `S.decodeEffect(TagRef)` to `GitHubError.decode`. The latestSemver coverage case only walks well-formed tags (`GitTag.coverage.test.ts:73-78`), so line coverage never enters the throw. Oracle `GitTag.ts:281-291` is the same `Effect.sync` plus `SemverTag.make`.
+- failure: `tags.latestSemver` dies on a version-shaped tag whose name is not a string or whose `commit.sha` is not a string. `Effect.flip` and `catchTag` never see `GitHubError`. `tags.list` on those same bodies fails typed (`kind: "decode"`, `operation: "GitTag.list"`). Non-version names must still be skipped.
+- fix: Keep the one-pass skip for names that do not parse as versions. Decode the structural tag with `S.decodeEffect` (or `SemverTag.makeEffect` after a successful parse) and `mapError` to `GitHubError.decode("GitTag.latestSemver", ...)`. Do not read `entry.name` / `entry.commit.sha` or call `SemverTag.make` inside `Effect.sync`. Record the deviation as `law:EF-3` / `law:EF-31` and add the two malformed bodies above as `hasDies === false` regressions.
+
+### fable-3-2
+- file: scratchpad/effected/github/GitTag.ts:335
+- class: bug   severity: required
+- standard: EF-3 and EF-31; D11. Residual of req-13: the new decoder never runs when building its input throws.
+- evidence: `GitTag.list` evaluates `sha: entry.commit.sha` in the `Effect.forEach` callback before `S.decodeEffect(TagRef)`. Default concurrency is sequential (`internal/effect.ts:5015`), and `forEachSequential` calls that callback from `whileLoop`'s `body()` (`internal/effect.ts:5003`, `4914-4926`) with no local try. `runLoop` then dies (`internal/effect.ts:667-671`). `{ name: "v1.0.0", commit: null }` and `{ name: "v1.0.0" }` throw on that property read. The req-13 matrix (`GitTag.test.ts:29-33`) uses `commit: { sha: null }`, `name: ""`, and `name: 42`, all of which survive the property read and fail inside the decoder, so the green `hasDies === false` assertions never cover a null `commit`.
+- failure: A tags element whose `commit` is null or absent kills `tags.list` as a defect. The typed `GitHubError.decode("GitTag.list", ...)` channel is only reached when `commit` is an object.
+- fix: Decode the page element itself (`S.decodeUnknownEffect` of a wire schema, or pass `entry.commit?.sha`) so a missing `commit` fails the existing `GitHubError.decode` mapping. Extend the `GitTag.test.ts:29` matrix with `commit: null`.
+
+REQUIRED: 2
+BACKLOG: 0

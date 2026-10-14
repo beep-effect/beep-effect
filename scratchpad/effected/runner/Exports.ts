@@ -290,11 +290,13 @@ const isForeignSpecifier = (specifier: string): boolean =>
  *
  * **Details**
  *
- * Specifiers are read by the TypeScript pre-processor, so only real imports,
- * exports, dynamic imports and `require` calls count, plus vitest module
- * mocks at statement start. The same text inside a comment, a JSDoc example
- * or a string (a service identity, an error message, test input) is upstream
- * content that the verbatim copy carries as is.
+ * Specifiers are read from the TypeScript syntax tree, so only real imports,
+ * exports, dynamic imports, `require` calls and import types count, plus
+ * vitest module mocks at statement start. The same text inside a comment, a
+ * JSDoc example or a string (a service identity, an error message, test input)
+ * is upstream content that the verbatim copy carries as is. The lighter
+ * `preProcessFile` scanner lost its place after regex literals holding a quote
+ * or a backtick and then read later JSDoc example imports as code.
  *
  * **Example** (Find foreign specifiers in text)
  *
@@ -311,9 +313,31 @@ export const foreignSpecifierLines: {
   (text: string): (label: string) => ReadonlyArray<string>;
   (label: string, text: string): ReadonlyArray<string>;
 } = dual(2, (label: string, text: string): ReadonlyArray<string> => {
-  const lineOf = (position: number): number => Str.split("\n")(Str.slice(0, position)(text)).length;
-  const imported = A.filterMap(ts.preProcessFile(text, true, true).importedFiles, (file) =>
-    isForeignSpecifier(file.fileName) ? Result.succeed(lineOf(file.pos)) : Result.failVoid
+  const sourceFile = ts.createSourceFile(label, text, ts.ScriptTarget.Latest, false, ts.ScriptKind.TS);
+  const specifierOf = (node: ts.Node): O.Option<ts.StringLiteralLike> => {
+    if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier !== undefined) {
+      return ts.isStringLiteral(node.moduleSpecifier) ? O.some(node.moduleSpecifier) : O.none();
+    }
+    if (ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference)) {
+      return ts.isStringLiteral(node.moduleReference.expression) ? O.some(node.moduleReference.expression) : O.none();
+    }
+    if (
+      ts.isCallExpression(node) &&
+      (node.expression.kind === ts.SyntaxKind.ImportKeyword || (ts.isIdentifier(node.expression) && node.expression.text === "require"))
+    ) {
+      return O.filter(O.fromUndefinedOr(node.arguments[0]), ts.isStringLiteralLike);
+    }
+    if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument) && ts.isStringLiteral(node.argument.literal)) {
+      return O.some(node.argument.literal);
+    }
+    return O.none();
+  };
+  const specifiers = (node: ts.Node): ReadonlyArray<ts.StringLiteralLike> =>
+    A.appendAll(O.toArray(specifierOf(node)), A.flatMap(node.getChildren(sourceFile), specifiers));
+  const imported = A.filterMap(specifiers(sourceFile), (literal) =>
+    isForeignSpecifier(literal.text)
+      ? Result.succeed(sourceFile.getLineAndCharacterOfPosition(literal.getStart(sourceFile)).line + 1)
+      : Result.failVoid
   );
   const mocked = A.filterMap(Str.split("\n")(text), (line, index) =>
     MODULE_MOCK.test(line) ? Result.succeed(index + 1) : Result.failVoid

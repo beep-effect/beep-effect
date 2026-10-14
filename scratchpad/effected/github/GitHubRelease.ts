@@ -245,19 +245,22 @@ const unstubbed = (member: string): never => {
 	throw UnstubbedError.make({ message: `GitHubRelease.makeTest: ${member}() was called but not stubbed — pass an override.` });
 };
 
-interface RawRelease {
-	readonly id: number;
-	readonly tag_name: string;
-	readonly name?: string | null | undefined;
-	readonly body?: string | null | undefined;
-	readonly draft: boolean;
-	readonly prerelease: boolean;
-	readonly html_url: string;
-	readonly upload_url: string;
-}
+const ReleaseResponse = S.Struct({
+	id: S.Int,
+	tag_name: S.String,
+	name: S.String.pipe(S.NullOr, S.optional),
+	body: S.String.pipe(S.NullOr, S.optional),
+	draft: S.Boolean,
+	prerelease: S.Boolean,
+	html_url: S.String,
+	upload_url: S.String,
+}).annotate($I.annote("ReleaseResponse", { description: "The selected fields of a release response." }));
 
-const project = (raw: RawRelease): ReleaseInfo =>
-	ReleaseInfo.make({
+const project = Effect.fn("GitHubRelease.project")(function* (input: unknown, operation: string) {
+	const raw = yield* S.decodeUnknownEffect(ReleaseResponse)(input).pipe(
+		Effect.mapError((error) => GitHubError.decode(operation, "GitHub returned an unexpected release", error)),
+	);
+	return ReleaseInfo.make({
 		id: raw.id,
 		tag: raw.tag_name,
 		// GitHub sends null for an unset name or body; the empty string is what
@@ -269,6 +272,7 @@ const project = (raw: RawRelease): ReleaseInfo =>
 		url: raw.html_url,
 		uploadUrl: raw.upload_url,
 	});
+});
 
 const AssetResponse = S.Struct({
 	id: S.Int,
@@ -277,15 +281,19 @@ const AssetResponse = S.Struct({
 	size: S.Int,
 });
 
-const assetOf = (raw: { id: number; name: string; browser_download_url: string; size: number }): ReleaseAsset =>
-	ReleaseAsset.make({ id: raw.id, name: raw.name, url: raw.browser_download_url, size: raw.size });
+const assetOf = Effect.fn("GitHubRelease.assetOf")(function* (input: unknown, operation: string) {
+	const raw = yield* S.decodeUnknownEffect(AssetResponse)(input).pipe(
+		Effect.mapError((error) => GitHubError.decode(operation, "GitHub returned an unexpected release asset", error)),
+	);
+	return ReleaseAsset.make({ id: raw.id, name: raw.name, url: raw.browser_download_url, size: raw.size });
+});
 
 const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
 	const getByTag = Effect.fn("GitHubRelease.getByTag")(function* (tag: string) {
 		const { owner, repo } = yield* Repo;
 		yield* Effect.annotateCurrentSpan({ owner, repo, tag });
 		const raw = yield* client.request("GET /repos/{owner}/{repo}/releases/tags/{tag}", { owner, repo, tag });
-		return project(raw);
+		return yield* project(raw, "GitHubRelease.getByTag");
 	});
 
 	return {
@@ -311,7 +319,7 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
 				...O.getSomesStruct({ prerelease: O.fromUndefinedOr(input.prerelease) }),
 				...O.getSomesStruct({ generate_release_notes: O.fromUndefinedOr(input.generateReleaseNotes) }),
 			});
-			return project(created);
+			return yield* project(created, "GitHubRelease.create");
 		}),
 
 		getByTagOption: Effect.fn("GitHubRelease.getByTagOption")(function* (tag: string) {
@@ -325,7 +333,7 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
 			const { owner, repo } = yield* Repo;
 			yield* Effect.annotateCurrentSpan({ owner, repo });
 			const raw = yield* client.paginate("GET /repos/{owner}/{repo}/releases", { owner, repo }, options?.page);
-			return raw.map(project);
+			return yield* Effect.forEach(raw, (release) => project(release, "GitHubRelease.list"));
 		}),
 
 		update: Effect.fn("GitHubRelease.update")(function* (
@@ -348,7 +356,7 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
 				...O.getSomesStruct({ draft: O.fromUndefinedOr(patch.draft) }),
 				...O.getSomesStruct({ prerelease: O.fromUndefinedOr(patch.prerelease) }),
 			});
-			return project(updated);
+			return yield* project(updated, "GitHubRelease.update");
 		}),
 
 		uploadAsset: Effect.fn("GitHubRelease.uploadAsset")(function* (
@@ -384,7 +392,7 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
 				},
 				AssetResponse,
 			);
-			return assetOf(raw);
+			return yield* assetOf(raw, "GitHubRelease.uploadAsset");
 		}),
 
 		listAssets: Effect.fn("GitHubRelease.listAssets")(function* (
@@ -399,7 +407,7 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
 				{ owner, repo, release_id: id },
 				options?.page,
 			);
-			return raw.map(assetOf);
+			return yield* Effect.forEach(raw, (asset) => assetOf(asset, "GitHubRelease.listAssets"));
 		}),
 	};
 };

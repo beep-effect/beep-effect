@@ -7,13 +7,97 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { CurrentRuntimeEnv, RuntimeEnv } from "../../effected/env/RuntimeEnv.ts";
+import { CurrentRuntimeEnv, RuntimeEnv, RuntimeEnvOverrides } from "../../effected/env/RuntimeEnv.ts";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
 const runtimeEnvJson = S.fromJsonString(RuntimeEnv);
 
 const withEnv = (env: Record<string, string>) =>
 	Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env));
+
+describe("RuntimeEnvOverrides", () => {
+	it("accepts plain objects with absent keys without adding fields", () => {
+		assert.isTrue(S.is(RuntimeEnvOverrides)({}));
+		assert.deepStrictEqual(RuntimeEnvOverrides.make({}), {});
+		const partial = { agent: O.some("codex") };
+		assert.isTrue(S.is(RuntimeEnvOverrides)(partial));
+		assert.deepStrictEqual(RuntimeEnvOverrides.make(partial), partial);
+	});
+
+	it("accepts explicit None in every optional field", () => {
+		const overrides: RuntimeEnvOverrides = { agent: O.none(), ci: O.none(), terminal: O.none() };
+		assert.isTrue(S.is(RuntimeEnvOverrides)(overrides));
+		assert.deepStrictEqual(RuntimeEnvOverrides.make(overrides), overrides);
+	});
+
+	it("accepts arbitrary agent strings and both CI names", () => {
+		for (const agent of ["", "claude", "mystery-agent"]) {
+			assert.isTrue(S.is(RuntimeEnvOverrides)({ agent: O.some(agent) }));
+		}
+		for (const ci of ["github-actions", "generic"] as const) {
+			assert.isTrue(S.is(RuntimeEnvOverrides)({ ci: O.some(ci) }));
+		}
+	});
+
+	it("accepts arbitrary terminal names with Some or None versions", () => {
+		for (const name of ["", "kitty", "custom-terminal"]) {
+			for (const version of [O.none(), O.some(""), O.some("3.5.0")]) {
+				assert.isTrue(S.is(RuntimeEnvOverrides)({ terminal: O.some({ name, version }) }));
+			}
+		}
+	});
+
+	it("rejects non-Option fields and invalid Option payloads", () => {
+		for (const overrides of [
+			{ agent: "codex" },
+			{ agent: O.some(1) },
+			{ ci: O.some("jenkins") },
+			{ terminal: O.some({ name: 1, version: O.none() }) },
+			{ terminal: O.some({ name: "kitty", version: O.some(1) }) },
+		]) {
+			assert.isFalse(S.is(RuntimeEnvOverrides)(overrides));
+		}
+	});
+
+	it.effect("layerTest keeps all-none defaults for an omitted argument and an empty plain object", () =>
+		Effect.gen(function* () {
+			for (const layer of [CurrentRuntimeEnv.layerTest(), CurrentRuntimeEnv.layerTest({})]) {
+				const context = yield* Layer.build(layer);
+				const env = Context.get(context, CurrentRuntimeEnv);
+				assertNone(env.agent);
+				assertNone(env.ci);
+				assertNone(env.terminal);
+			}
+		}).pipe(withEnv({ CLAUDECODE: "1", CI: "true", TERM_PROGRAM: "kitty" })),
+	);
+
+	it.effect("layerTest keeps explicit None overrides without reading ambient Config", () =>
+		Effect.gen(function* () {
+			const overrides: RuntimeEnvOverrides = { agent: O.none(), ci: O.none(), terminal: O.none() };
+			const context = yield* Layer.build(CurrentRuntimeEnv.layerTest(overrides));
+			const env = Context.get(context, CurrentRuntimeEnv);
+			assertNone(env.agent);
+			assertNone(env.ci);
+			assertNone(env.terminal);
+		}).pipe(withEnv({ CLAUDECODE: "1", CI: "true", TERM_PROGRAM: "kitty" })),
+	);
+
+	it.effect("layerTest accepts plain Some overrides for both CI names and arbitrary terminal values", () =>
+		Effect.gen(function* () {
+			for (const ci of ["github-actions", "generic"] as const) {
+				for (const version of [O.none(), O.some(""), O.some("3.5.0")]) {
+					const terminal = { name: "custom-terminal", version };
+					const overrides: RuntimeEnvOverrides = { agent: O.some("mystery-agent"), ci: O.some(ci), terminal: O.some(terminal) };
+					const context = yield* Layer.build(CurrentRuntimeEnv.layerTest(overrides));
+					const env = Context.get(context, CurrentRuntimeEnv);
+					assertSome(env.agent, "mystery-agent");
+					assertSome(env.ci, ci);
+					assertSome(env.terminal, terminal);
+				}
+			}
+		}),
+	);
+});
 
 describe("RuntimeEnv", () => {
 	it.layer(

@@ -27,6 +27,27 @@ const chain = DependencyGraph.make({
 });
 
 describe("DependencyGraph", () => {
+	it.effect("retains immutable adjacency and deterministic ordering with unsorted vertices", () =>
+		Effect.gen(function* () {
+			const packages = [pkg("d"), pkg("b", { c: "1.0.0" }), pkg("a", { b: "1.0.0" }), pkg("c")];
+			const graph = DependencyGraph.make({ packages });
+			const adjacency = graph.adjacency;
+			const dependencies = O.getOrThrow(HashMap.get(adjacency, "a"));
+			assert.isTrue(HashMap.isHashMap(adjacency));
+			assert.isTrue(HashSet.isHashSet(dependencies));
+			assert.strictEqual(graph.adjacency, adjacency);
+			assert.isTrue(HashSet.has(HashSet.add(dependencies, "d"), "d"));
+			assert.isFalse(HashSet.has(dependencies, "d"));
+			assert.isTrue(HashMap.has(HashMap.set(adjacency, "extra", HashSet.empty<string>()), "extra"));
+			assert.isFalse(HashMap.has(graph.adjacency, "extra"));
+			assert.deepStrictEqual(graph.names, ["a", "b", "c", "d"]);
+			assert.deepStrictEqual(yield* graph.levels(), [["c", "d"], ["b"], ["a"]]);
+			assert.deepStrictEqual(yield* graph.sort(), ["c", "d", "b", "a"]);
+			assert.deepStrictEqual(yield* graph.sortSubset(["a", "d"]), ["c", "d", "b", "a"]);
+			assert.strictEqual(graph.toMermaid(), chain.toMermaid());
+		}),
+	);
+
 	it("only draws edges BETWEEN workspace packages, never to external deps", () => {
 		const graph = DependencyGraph.make({
 			packages: [pkg("a", { b: "1.0.0", react: "^19.0.0" }), pkg("b")],

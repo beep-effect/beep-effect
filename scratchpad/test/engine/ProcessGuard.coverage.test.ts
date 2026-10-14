@@ -4,7 +4,7 @@ import * as S from "effect/Schema";
 import { ProcessGuard, type ProcessGuardHost } from "../../effected/engine/ProcessGuard.ts";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 
-class Stackless extends S.TaggedError<Stackless>()("Stackless", { message: S.String }) {}
+class Stackless extends S.TaggedError<Stackless, { readonly brand: unique symbol }>()("Stackless", { message: S.String }) {}
 
 describe("ProcessGuard reporting boundaries", () => {
   it.effect("formats an Error without a stack using its message", () =>

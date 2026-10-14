@@ -18,6 +18,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Match from "effect/Match";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as P from "effect/Predicate";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -754,7 +755,8 @@ function renderRegionalScalarText(
 
 /**
  * Prove the rendered text means exactly what the caller asked: re-compose a
- * one-pair probe document and compare the resolved scalar with `Object.is`.
+ * one-pair probe document and compare the scalar with Effect equality and
+ * its numeric zero sign.
  * The probe mirrors the target's context — `k: [rendered]` for a flow
  * parent. The renderers produce one syntactically valid scalar, and the
  * caller has already excluded line breaks, so the probe always has one
@@ -771,7 +773,8 @@ function regionalRenderPreservesValue(rendered: string, value: string | number |
 		? A.getUnsafe(O.getOrThrow(S.decodeUnknownOption(YamlSeq)(pair.value)).items, 0)
 		: pair.value;
 	const node = O.getOrThrow(S.decodeUnknownOption(YamlScalar)(valueNode));
-	return Object.is(node.value, value);
+	return Equal.equals(node.value, value)
+		&& (node.value !== 0 || value !== 0 || 1 / node.value === 1 / value);
 }
 
 /**
@@ -1093,6 +1096,7 @@ export class YamlFormat {
 		value: unknown,
 		options?: YamlStringifyOptions,
 	) {
+		const index = YamlDiagnostic.positionIndex(text);
 		const { document: doc, documentCount } = composeFirstDocumentCounted(text, {});
 		if (documentCount > 1) {
 			return yield* YamlModificationError.make({
@@ -1106,6 +1110,7 @@ export class YamlFormat {
 							length: 0,
 						},
 						text,
+						index,
 					),
 				],
 			});
@@ -1114,7 +1119,7 @@ export class YamlFormat {
 		if (fatal.length > 0) {
 			return yield* YamlModificationError.make({
 				path: echoErrorPath(path),
-				diagnostics: fatal.map((e) => YamlDiagnostic.fromRaw(e, text)),
+				diagnostics: YamlDiagnostic.fromRawBatch(fatal, text, index),
 			});
 		}
 		if (doc.directives.length > 0) {
@@ -1130,6 +1135,7 @@ export class YamlFormat {
 							length: 0,
 						},
 						text,
+						index,
 					),
 				],
 			});
@@ -1155,6 +1161,7 @@ export class YamlFormat {
 						YamlDiagnostic.fromRaw(
 							{ code: err.code, message: err.message, offset: err.offset, length: err.length },
 							text,
+							index,
 						),
 					],
 				});
@@ -1172,6 +1179,7 @@ export class YamlFormat {
 						YamlDiagnostic.fromRaw(
 							{ code: "NestingDepthExceeded", message: defect.message, offset: 0, length: 0 },
 							text,
+							index,
 						),
 					],
 				});

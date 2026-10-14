@@ -5,91 +5,126 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import { graphemes } from "../internal/displayWidth.ts";
 import { inkModules } from "./internal/ink.ts";
 import { useScreenGuard } from "./internal/ScreenContext.ts";
-import type { KeyName } from "./UiKey.ts";
-import { UiKey } from "./UiKey.ts";
+import { KeyName, UiKey } from "./UiKey.ts";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity/packages";
+
+const $I = $ScratchpadId.create("effected/cli/ui/KeyTable");
 
 /**
- * One row of a {@link KeyTable}: the keys that trigger an action, and the help line that names it.
- *
- * @public
- * @category models
- * @since 0.0.0
+ * A key a binding names: a named key, or a typed character (`{ char: "q" }`).
  */
-export interface Binding<Action> {
-	/**
-	 * The keys, named or typed (`{ char: "q" }`); each of them triggers the action.
-	 */
-	readonly keys: ReadonlyArray<KeyName | { readonly char: string }>;
-	/**
-	 * What the keys do.
-	 */
-	readonly action: Action;
-	/**
-	 * The words `KeyHelp` shows beside the keys.
-	 *
-	 * **Example** (Label root help under ASCII)
-	 *
-	 * ```ts
-	 * import { KeyTable } from "@beep/scratchpad/effected/cli/ui/KeyTable"
-	 * import { Glyphs } from "@beep/scratchpad/effected/cli/Glyphs"
-	 *
-	 * console.log(KeyTable.root.help(Glyphs.ascii)[0]?.label) // esc
-	 * ```
-	 *
-	 * @category formatting
-	 * @since 0.0.0
-	 */
-	readonly help: string;
-	/**
-	 * Bound but left out of the help line.
-	 */
-	readonly hidden?: boolean;
-}
+const BindingKey = S.Union([
+	KeyName,
+	S.Struct({
+		char: S.String.annotateKey($I.annote("BindingKey.char", { description: "The typed character, matched in NFC." })),
+	}).annotate($I.annote("BindingChar", { description: "A typed-character key of a binding." })),
+]).annotate($I.annote("BindingKey", { description: "A named key or a typed character that triggers a binding." }));
 
 /**
- * One entry of a key table's help: the key labels and what they do.
+ * One row of a {@link KeyTable}, as a schema over the action schema: the keys that trigger an action, and the help line
+ * that names it.
  *
+ * **Details**
+ *
+ * `keys` are named keys or typed characters (`{ char: "q" }`), each of which triggers `action`; `help` is the words
+ * `KeyHelp` shows beside the keys; `hidden` binds the keys but leaves them out of the help line.
+ *
+ * **Example** (Validate a binding payload)
+ *
+ * ```ts
+ * import { Binding } from "@beep/scratchpad/effected/cli/ui/KeyTable"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(Binding(S.String))({ keys: ["enter", { char: "y" }], action: "submit", help: "submit" })) // true
+ * ```
+ *
+ * @param action - the schema of the action the keys trigger
  * @public
- * @category models
+ * @category schemas
  * @since 0.0.0
  */
-export interface KeyHelpRow {
-	/**
-	 * The keys, labelled for the glyph set and joined with `/`.
-	 */
-	readonly label: string;
-	/**
-	 * What they do.
-	 *
-	 * **Example** (Label root help under ASCII)
-	 *
-	 * ```ts
-	 * import { KeyTable } from "@beep/scratchpad/effected/cli/ui/KeyTable"
-	 * import { Glyphs } from "@beep/scratchpad/effected/cli/Glyphs"
-	 *
-	 * console.log(KeyTable.root.help(Glyphs.ascii)[0]?.label) // esc
-	 * ```
-	 *
-	 * @category formatting
-	 * @since 0.0.0
-	 */
-	readonly help: string;
-}
+export const Binding = <Action extends S.Top>(action: Action) =>
+	S.Struct({
+		keys: S.Array(BindingKey).annotateKey($I.annote("Binding.keys", {
+			description: "The named or typed keys; each of them triggers the action.",
+		})),
+		action,
+		help: S.String.annotateKey($I.annote("Binding.help", { description: "The words KeyHelp shows beside the keys." })),
+		hidden: S.optionalKey(S.Boolean).annotateKey($I.annote("Binding.hidden", {
+			description: "Whether the keys are bound but left out of the help line.",
+		})),
+	}).annotate($I.annote("Binding", { description: "One key-table row: its keys, its action and its help words." }));
+
+/**
+ * Plain payload accepted by {@link Binding}; key tables retain this structural representation.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type Binding<Action> = ReturnType<typeof Binding<S.Codec<Action>>>["Type"];
+
+/**
+ * One entry of a key table's help: the key labels, joined with `/` for the glyph set, and what they do.
+ *
+ * **Example** (Validate a help row)
+ *
+ * ```ts
+ * import { KeyHelpRow } from "@beep/scratchpad/effected/cli/ui/KeyTable"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(KeyHelpRow)({ label: "esc", help: "cancel" })) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const KeyHelpRow = S.Struct({
+	label: S.String.annotateKey($I.annote("KeyHelpRow.label", {
+		description: "The keys, labelled for the glyph set and joined with a slash.",
+	})),
+	help: S.String.annotateKey($I.annote("KeyHelpRow.help", { description: "What the keys do." })),
+}).annotate($I.annote("KeyHelpRow", { description: "One labelled entry of a key table's help line." }));
+
+/**
+ * Plain payload accepted by {@link KeyHelpRow}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type KeyHelpRow = typeof KeyHelpRow.Type;
 
 /**
  * Controls whether {@link useKeys} listens for input.
  *
+ * **Example** (Validate key-reading options)
+ *
+ * ```ts
+ * import { UseKeysOptions } from "@beep/scratchpad/effected/cli/ui/KeyTable"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(UseKeysOptions)({ isActive: false })) // true
+ * ```
+ *
  * @public
- * @category models
+ * @category schemas
  * @since 0.0.0
  */
-export interface UseKeysOptions {
-	/**
-	 * Whether the keys are read; `true` by default.
-	 */
-	readonly isActive?: boolean;
-}
+export const UseKeysOptions = S.Struct({
+	isActive: S.optionalKey(S.Boolean).annotateKey($I.annote("UseKeysOptions.isActive", {
+		description: "Whether the keys are read; true by default.",
+	})),
+}).annotate($I.annote("UseKeysOptions", { description: "Whether a key table currently reads input." }));
+
+/**
+ * Plain payload accepted by {@link UseKeysOptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type UseKeysOptions = typeof UseKeysOptions.Type;
 
 /**
  * Arrows under a Unicode glyph set; everything else, and everything under ASCII, as words.

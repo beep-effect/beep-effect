@@ -15,10 +15,12 @@ import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import * as Crypto from "effect/Crypto";
 import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
 import { FetchHttpClient } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 import type { FileBlobTransfer } from "../../effected/github-actions/index.ts";
 import { Artifact, ArtifactError, BlobTransferError } from "../../effected/github-actions/index.ts";
+import { DownloadOptions, DownloadResult, UploadOptions } from "../../effected/github-actions/Artifact.ts";
 import { json, resultsEnv, runtimeToken, twirpFetch } from "./results.ts";
 
 const Json = S.fromJsonString(S.Unknown);
@@ -69,7 +71,8 @@ const live = (
 const protocol = (
 	fetch: typeof globalThis.fetch,
 	transfer: ReturnType<typeof fileTransfer>["transfer"],
-	env: Readonly<Record<string, string>> = {}
+	env: Readonly<Record<string, string>> = {},
+	spawner = Layer.mock(ChildProcessSpawner.ChildProcessSpawner, {})
 ) =>
 	artifactLayer(transfer).pipe(
 		Layer.provideMerge(
@@ -77,11 +80,38 @@ const protocol = (
 				resultsEnv(env),
 				MemoryFileSystem.layer,
 				Path.layer,
-				Layer.mock(ChildProcessSpawner.ChildProcessSpawner, {}),
+				spawner,
 				FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch)(fetch)))
 			)
 		)
 	);
+
+// The RPC regressions need archive bytes, but do not depend on a native zip process.
+const protocolZip = Layer.effect(
+	ChildProcessSpawner.ChildProcessSpawner,
+	Effect.map(FileSystem.FileSystem, (fs) =>
+		ChildProcessSpawner.make(Effect.fnUntraced(function* (command) {
+			const destination = "args" in command ? command.args[2] : undefined;
+			if (destination === undefined) {
+				return yield* Effect.die("expected a zip destination");
+			}
+			yield* fs.writeFileString(destination, "archive bytes").pipe(Effect.orDie);
+			return ChildProcessSpawner.makeHandle({
+				pid: ChildProcessSpawner.ProcessId(42),
+				exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+				isRunning: Effect.succeed(false),
+				kill: () => Effect.void,
+				stdin: Sink.drain,
+				stdout: Stream.empty,
+				stderr: Stream.empty,
+				all: Stream.empty,
+				getInputFd: () => Sink.drain,
+				getOutputFd: () => Stream.empty,
+				unref: Effect.succeed(Effect.void),
+			});
+		}))
+	)
+).pipe(Layer.provide(MemoryFileSystem.layer));
 
 const uploadable = {
 	CreateArtifact: () => json({ ok: true, signedUploadUrl: "https://blob.example/artifact?sig=abc" }),
@@ -89,6 +119,150 @@ const uploadable = {
 };
 
 describe("Artifact", () => {
+	it.effect("option and result schemas preserve plain objects and explicit undefined fields", () =>
+		Effect.gen(function* () {
+			for (const options of [{}, { retentionDays: undefined, compressionLevel: undefined }, { retentionDays: 7, compressionLevel: 4.9 }, { retentionDays: -1, compressionLevel: 12 }]) {
+				const plain: UploadOptions = options;
+				assert.deepStrictEqual(yield* S.decodeEffect(UploadOptions)(plain), plain);
+			}
+			for (const options of [{}, { path: undefined }, { path: "/out" }]) {
+				const plain: DownloadOptions = options;
+				assert.deepStrictEqual(yield* S.decodeEffect(DownloadOptions)(plain), plain);
+			}
+			const result: DownloadResult = { downloadPath: "/out" };
+			assert.deepStrictEqual(yield* S.decodeEffect(DownloadResult)(result), result);
+			assert.isFalse(S.is(UploadOptions)({ retentionDays: Infinity }));
+			assert.isFalse(S.is(UploadOptions)({ compressionLevel: NaN }));
+			assert.isFalse(S.is(DownloadOptions)({ path: 1 }));
+			assert.isFalse(S.is(DownloadResult)({}));
+			assert.isFalse(S.is(DownloadResult)({ downloadPath: undefined }));
+		})
+	);
+
+	{
+		let scratches = 0;
+		let archives = 0;
+		let transfers = 0;
+		const fsLayer = Layer.effect(FileSystem.FileSystem, Effect.map(FileSystem.FileSystem, (fs) => ({
+			...fs,
+			makeTempDirectory: Effect.fnUntraced(function* (...args: Parameters<typeof fs.makeTempDirectory>) {
+				scratches += 1;
+				return yield* fs.makeTempDirectory(...args);
+			}),
+		}))).pipe(Layer.provide(MemoryFileSystem.layer));
+		const spawner = Layer.mock(ChildProcessSpawner.ChildProcessSpawner, {
+			spawn: Effect.fnUntraced(function* () {
+				archives += 1;
+				return yield* Effect.die("invalid options reached the archiver");
+			}),
+		});
+		const transfer: FileBlobTransfer = {
+			uploadFile: () => Effect.sync(() => { transfers += 1; }),
+			downloadToFile: () => Effect.sync(() => { transfers += 1; }),
+		};
+		const { calls, fetch } = twirpFetch(uploadable);
+		const layer = Artifact.layerWith(transfer).pipe(Layer.provideMerge(Layer.mergeAll(
+			resultsEnv({}), fsLayer, Path.layer, spawner,
+			FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch)(fetch))),
+		)));
+		it.layer(layer)((it) => {
+			for (const [label, options] of [
+				["NaN retention", { retentionDays: NaN }],
+				["infinite retention", { retentionDays: Infinity }],
+				["negative infinite retention", { retentionDays: -Infinity }],
+				["finite expiration overflow", { retentionDays: 1e20 }],
+				["finite arithmetic overflow", { retentionDays: Number.MAX_VALUE }],
+				["NaN compression", { compressionLevel: NaN }],
+			] as const) {
+				it.effect(`refuses ${label} before scratch, archive, RPC or transfer`, () =>
+					Effect.gen(function* () {
+						const artifacts = yield* Artifact;
+						const error = yield* Effect.flip(artifacts.upload("logs", ["/work/a.txt"], "/work", options));
+						assert.instanceOf(error, ArtifactError);
+						assert.strictEqual(error.reason, "invalidOptions");
+						assert.strictEqual(error.artifact, "logs");
+						assert.strictEqual(scratches, 0);
+						assert.strictEqual(archives, 0);
+						assert.strictEqual(transfers, 0);
+						assert.lengthOf(calls, 0);
+					})
+				);
+			}
+		});
+	}
+
+	{
+		const { transfer } = fileTransfer();
+		const { calls, fetch } = twirpFetch(uploadable);
+		it.layer(protocol(fetch, transfer, {}, protocolZip))((it) => {
+			it.effect("preserves valid retention, omitted expiry and infinity compression acceptance", () =>
+				Effect.gen(function* () {
+					const artifacts = yield* Artifact;
+					const now = yield* Clock.currentTimeMillis;
+					yield* artifacts.upload("retained", ["/work/a.txt"], "/work", { retentionDays: 7 });
+					assert.strictEqual(calls.find((call) => call.method === "FinalizeArtifact")?.body.expiresAt,
+						DateTime.formatIso(DateTime.makeUnsafe(now + 7 * 86_400_000)));
+					for (const compressionLevel of [12, -3, 4.9, Infinity, -Infinity]) {
+						yield* artifacts.upload("default", ["/work/a.txt"], "/work", { retentionDays: undefined, compressionLevel });
+					}
+					for (const call of calls.filter((call) => call.method === "FinalizeArtifact" && call.body.name === "default")) {
+						assert.notProperty(call.body, "expiresAt");
+					}
+				})
+			);
+		});
+	}
+
+	for (const idField of ["artifactId", "artifact_id"]) {
+		for (const malformed of ["not-a-number", "Infinity", "1e309"]) {
+			for (const method of ["FinalizeArtifact", "DeleteArtifact"] as const) {
+				const { transfer } = fileTransfer();
+				const { calls, fetch } = twirpFetch({
+					...uploadable,
+					ListArtifacts: () => json({ artifacts: [{ databaseId: "11", name: "logs", size: "1" }] }),
+					[method]: () => json({ ok: true, [idField]: malformed }),
+				});
+				it.layer(protocol(fetch, transfer, {}, protocolZip), { timeout: "10 seconds" })((it) => {
+					it.effect(`rejects malformed ${idField} ${malformed} from ${method}`, () =>
+						Effect.gen(function* () {
+							const artifacts = yield* Artifact;
+							const error = yield* Effect.flip(method === "FinalizeArtifact"
+								? artifacts.upload("logs", ["/work/a.txt"], "/work")
+								: artifacts.delete("logs"));
+							assert.instanceOf(error, ArtifactError);
+							assert.strictEqual(error.reason, "unreachable");
+							assert.strictEqual(error.artifact, "logs");
+							assert.strictEqual(error.detail, `${method} did not answer with a Twirp body`);
+							assert.instanceOf(error.cause, S.SchemaError);
+							assert.deepStrictEqual(calls.map((call) => call.method), method === "FinalizeArtifact"
+								? ["CreateArtifact", "FinalizeArtifact"]
+								: ["ListArtifacts", "DeleteArtifact"]);
+						})
+					);
+				});
+			}
+		}
+	}
+
+	{
+		const { transfer } = fileTransfer();
+		const { fetch } = twirpFetch({
+			...uploadable,
+			FinalizeArtifact: () => json({ ok: true }),
+			ListArtifacts: () => json({ artifacts: [{ databaseId: "11", name: "logs", size: "1" }] }),
+			DeleteArtifact: () => json({ ok: true }),
+		});
+		it.layer(protocol(fetch, transfer, {}, protocolZip), { timeout: "10 seconds" })((it) => {
+			it.effect("preserves missing-id defaults at finalize and delete boundaries", () =>
+				Effect.gen(function* () {
+					const artifacts = yield* Artifact;
+					assert.deepStrictEqual(yield* artifacts.upload("logs", ["/work/a.txt"], "/work"), { id: 0, size: 13 });
+					assert.deepStrictEqual(yield* artifacts.delete("logs"), { id: 11 });
+				})
+			);
+		});
+	}
+
 	{
 		const { blobs, transfer } = fileTransfer();
 		const { calls, fetch } = twirpFetch(uploadable);

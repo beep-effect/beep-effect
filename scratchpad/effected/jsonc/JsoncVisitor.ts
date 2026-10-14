@@ -24,7 +24,7 @@ import { JsoncPath, type JsoncSegment } from "./JsoncNode.ts";
 
 const $I = $ScratchpadId.create("effected/jsonc/JsoncVisitor");
 
-const Span = { offset: S.Natural, length: S.Natural };
+const Span = { offset: S.Finite, length: S.Finite };
 
 /**
  * The discriminated union of JSONC visitor events.

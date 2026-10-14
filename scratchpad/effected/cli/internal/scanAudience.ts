@@ -1,31 +1,69 @@
 import * as S from "effect/Schema";
 import * as A from "effect/Array";
+import { $ScratchpadId } from "@beep/identity/packages";
 import { AudienceKind } from "../../env/Audience.ts";
+
+const $I = $ScratchpadId.create("effected/cli/internal/scanAudience");
 
 /**
  * The four parsed audience flags, as core hands them to a shared-flag command.
+ *
+ * **Example** (Decode one explicit agent audience)
+ *
+ * ```ts
+ * import { AudienceFlagValues } from "@beep/scratchpad/effected/cli/internal/scanAudience"
+ * import * as S from "effect/Schema"
+ *
+ * const flags = S.decodeUnknownSync(AudienceFlagValues)({ audience: ["agent"], human: [], agent: [true], ci: [] })
+ * console.log(flags.audience, flags.agent) // [ "agent" ] [ true ]
+ * ```
  *
  * @internal
  * @category type-level
  * @since 0.0.0
  */
-export interface AudienceFlagValues {
-	readonly audience: ReadonlyArray<AudienceKind>;
-	readonly human: ReadonlyArray<boolean>;
-	readonly agent: ReadonlyArray<boolean>;
-	readonly ci: ReadonlyArray<boolean>;
-}
+export const AudienceFlagValues = S.Struct({
+	audience: S.Array(AudienceKind).annotate($I.annote("AudienceFlagValues.audience", { description: "Every explicit audience occurrence." })),
+	human: S.Array(S.Boolean).annotate($I.annote("AudienceFlagValues.human", { description: "Every parsed human flag occurrence." })),
+	agent: S.Array(S.Boolean).annotate($I.annote("AudienceFlagValues.agent", { description: "Every parsed agent flag occurrence." })),
+	ci: S.Array(S.Boolean).annotate($I.annote("AudienceFlagValues.ci", { description: "Every parsed CI flag occurrence." })),
+}).annotate($I.annote("AudienceFlagValues", { description: "The four parsed audience flag arrays, including disabled occurrences." }));
 
 /**
- * What the flags named: one entry per TRUE occurrence, and whether that is more than one.
+ * The plain parsed audience flags.
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface AudienceTally {
-	readonly given: ReadonlyArray<AudienceKind>;
-	readonly conflict: boolean;
-}
+export type AudienceFlagValues = typeof AudienceFlagValues.Type;
+
+/**
+ * What the flags named: one entry per TRUE occurrence, and whether that is more than one.
+ *
+ * **Example** (Validate a single audience tally)
+ *
+ * ```ts
+ * import { AudienceTally } from "@beep/scratchpad/effected/cli/internal/scanAudience";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(AudienceTally)({ given: ["agent"], conflict: false })) // true
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export const AudienceTally = S.Struct({
+	given: S.Array(AudienceKind).annotate($I.annote("AudienceTally.given", { description: "Enabled audience occurrences in tally order." })),
+	conflict: S.Boolean.annotate($I.annote("AudienceTally.conflict", { description: "Whether more than one audience occurrence was enabled." })),
+}).annotate($I.annote("AudienceTally", { description: "Plain audience occurrences and their conflict result." }));
+
+/**
+ * The plain result shared by parsed flags and argv scanning.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type AudienceTally = typeof AudienceTally.Type;
 
 /**
  * The one counting rule, shared by the resolver that runs on parsed flags and by {@link scanAudience}, so the two

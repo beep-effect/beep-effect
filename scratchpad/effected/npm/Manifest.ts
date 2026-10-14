@@ -12,6 +12,7 @@
 // untouched and flattens back to the top level on encode.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as O from "@beep/utils/Option";
@@ -311,11 +312,11 @@ export class Manifest extends S.Class<Manifest>($I`Manifest`)({
 	 * @since 0.0.0
 	 */
 	get needsResolution(): boolean {
-		return DependencyField.literals.some((field) => {
+		return A.some(DependencyField.literals, (field) => {
 			const section = this[field];
 			return (
 				section !== undefined &&
-				R.values(section).some(
+				A.some(R.values(section),
 					(specifier) => DependencySpecifier.isCatalog(specifier) || DependencySpecifier.isWorkspace(specifier),
 				)
 			);

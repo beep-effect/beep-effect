@@ -1,0 +1,9 @@
+### sol-3-1
+- file: scratchpad/test/engine/entrypoints.test.ts:17
+- class: test   severity: required
+- standard: D9 (upstream tests retain their meaning), D11 (bug), and section 14 (behaviour deviation protocol). The recorded `upstream-bug` deviation permits excluding JSDoc example imports; it does not justify losing valid runtime import forms.   evidence: A read-only Node probe extracted and executed the regexes from the pinned oracle and the reviewed test. For both `import fs, { readFileSync } from "node:fs";` and `import fs, * as fsNamespace from "node:fs";`, the oracle returned `["node:fs"]` while the lab returned `[]`. Prepending the first declaration to the actual `ProcessGuard.ts` text in memory left the lab’s detected dependencies at `["effect/Effect","effect/Schema","effect/String"]`. The green gate misses this because the current fixtures cover namespace imports and multiline named exports, but neither combined import form.
+- failure: The revised walker silently drops imports combining a default binding with named bindings or a namespace binding. Consequently, the source and built guard graph checks can approve a forbidden runtime dependency—or miss an additional reachable local module—introduced through valid import syntax. This weakens the upstream dependency-boundary test beyond the recorded JSDoc false-positive fix.
+- fix: Extend the import-clause alternative to recognize default-plus-named and default-plus-namespace bindings while retaining the JSDoc exclusion and type-only filtering. Add regression fixtures asserting that both demonstrated declarations produce `["node:fs"]`, and retain the existing exported-class documentation regression.
+
+REQUIRED: 1
+BACKLOG: 0

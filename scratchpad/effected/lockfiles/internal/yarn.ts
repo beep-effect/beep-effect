@@ -114,11 +114,15 @@ const toFields = Effect.fn("toFields")(function* (lockfileVersion: string, decod
 		}
 	}
 
-	// First pass: identify workspace names.
+	// First pass: identify workspace names and the instances package emission will produce.
+	let instanceIds = HashSet.empty<string>();
 	for (const [key, entry] of decoded) {
+		const name = extractYarnPackageName(key);
+		if (name === undefined) continue;
+		const instanceId = entry.resolution ?? Str.split(key, ", ")[0];
+		if (instanceId !== "") instanceIds = HashSet.add(instanceIds, instanceId);
 		if (entry.linkType === "soft") {
-			const name = extractYarnPackageName(key);
-			if (name !== undefined) workspaceNames = HashSet.add(workspaceNames, name);
+			workspaceNames = HashSet.add(workspaceNames, name);
 		}
 	}
 
@@ -147,7 +151,7 @@ const toFields = Effect.fn("toFields")(function* (lockfileVersion: string, decod
 				// Peer ranges are recorded plainly (no `npm:` protocol prefix),
 				// so unlike the dependency sections they need no cleaning.
 				...peerDeclarations(entry.peerDependencies, entry.peerDependenciesMeta, undefined),
-				...resolveYarnEdges(entry, locators),
+				...resolveYarnEdges(entry, locators, instanceIds),
 			}),
 		);
 
@@ -199,6 +203,7 @@ const toFields = Effect.fn("toFields")(function* (lockfileVersion: string, decod
 const resolveYarnEdges = (
 	entry: YarnEntryType,
 	locators: MutableHashMap.MutableHashMap<string, string>,
+	instanceIds: HashSet.HashSet<string>,
 ): { readonly resolved: Record<string, string>; readonly unresolvedEdges: ReadonlyArray<string> } => {
 	const edges = MutableHashMap.empty<string, string>();
 	const unnameable = MutableHashSet.empty<string>();
@@ -207,9 +212,9 @@ const resolveYarnEdges = (
 		for (const [name, range] of R.toEntries(section)) {
 			if (name === "") continue;
 			const locator = O.getOrUndefined(MutableHashMap.get(locators, `${name}@${range}`));
-			if (locator !== undefined) MutableHashMap.set(edges, name, locator);
-			// The descriptor IS the recorded edge; a descriptor the key index does
-			// not name is an inconsistent lockfile, not an absent dependency.
+			if (locator !== undefined && HashSet.has(instanceIds, locator)) MutableHashMap.set(edges, name, locator);
+			// The descriptor IS the recorded edge; a missing index entry or a
+			// locator without an emitted instance is unresolved, not absent.
 			else MutableHashSet.add(unnameable, name);
 		}
 	}

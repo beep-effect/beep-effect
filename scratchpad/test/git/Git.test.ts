@@ -1123,6 +1123,32 @@ describe("Git", () => {
 	});
 
 	describe("commitInfo", () => {
+		for (const { name, ref, stdout } of [
+			{ name: "empty output", ref: "HEAD", stdout: "" },
+			{ name: "a tree ref selecting no commit", ref: "HEAD^{tree}", stdout: "" },
+			{ name: "a missing first separator", ref: "HEAD", stdout: "sha" },
+			{ name: "a missing second separator", ref: "HEAD", stdout: "sha\0N" },
+			{ name: "an invalid signature verdict", ref: "HEAD", stdout: "sha\0invalid\0message\n" },
+			{ name: "an empty signature verdict", ref: "HEAD", stdout: "sha\0\0message\n" },
+		]) {
+			it.effect(`returns a typed failed GitCommandError for ${name}`, () =>
+				Effect.gen(function* () {
+					const program = Effect.gen(function* () {
+						const git = yield* Git;
+						return yield* git.commitInfo(cwd, ref);
+					});
+					const error = yield* Effect.flip(run(program, () => ({ stdout, exit: 0 })));
+					assert.instanceOf(error, GitCommandError);
+					if (!S.is(GitCommandError)(error)) return;
+					assert.strictEqual(error.kind, "failed");
+					assert.deepStrictEqual(error.args, ["log", "--no-show-signature", "-1", "--format=%H%x00%G?%x00%B", ref]);
+					assert.strictEqual(error.cwd, cwd);
+					assert.strictEqual(error.stderr, "");
+					assert.include(error.detail, "unparseable commitInfo output");
+				}),
+			);
+		}
+
 		it.effect("splits the NUL-separated format and keeps the message untrimmed", () =>
 			Effect.gen(function* () {
 				const program = Effect.gen(function* () {
@@ -1131,7 +1157,7 @@ describe("Git", () => {
 				});
 				const sha = "f78d2940dca62faf93051f94c54d5c7c24d465a8";
 				const result = yield* run(program, (args) => {
-					assert.deepStrictEqual(args, ["log", "-1", "--format=%H%x00%G?%x00%B", "HEAD"]);
+					assert.deepStrictEqual(args, ["log", "--no-show-signature", "-1", "--format=%H%x00%G?%x00%B", "HEAD"]);
 					return { stdout: `${sha}\0N\0feat: second commit\n\nbody line\n\n`, exit: 0 };
 				});
 				assert.strictEqual(result.sha, sha);

@@ -92,6 +92,12 @@ export const isUsableName = (name: string): boolean =>
  * One heredoc block, ready to append. The caller has checked the name with
  * {@link isUsableName}.
  *
+ * **Details**
+ *
+ * Use CRLF framing for Windows runners and LF elsewhere. The framing newline
+ * stays separate from a terminal CR in the payload, which the Windows runner
+ * would otherwise consume as part of CRLF. Payload bytes are unchanged.
+ *
  * **Example** (Frame a validated output name)
  *
  * ```ts
@@ -108,7 +114,13 @@ export const isUsableName = (name: string): boolean =>
  * @category formatting
  * @since 0.0.0
  */
-export const heredocBlock = ({ name, value }: { readonly name: string; readonly value: string }): string => {
+export const heredocBlock = (
+	{ name, value, lineEnding = "\n" }: {
+		readonly name: string;
+		readonly value: string;
+		readonly lineEnding?: "\n" | "\r\n";
+	},
+): string => {
 	const delimiter = delimiterFor(value);
-	return `${name}<<${delimiter}\n${value}\n${delimiter}\n`;
+	return `${name}<<${delimiter}${lineEnding}${value}${lineEnding}${delimiter}${lineEnding}`;
 };

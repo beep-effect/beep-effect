@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as Bool from "effect/Boolean";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -347,9 +348,10 @@ export interface ActionEnvironmentShape {
 
 const numeric = (name: string, raw: string): Effect.Effect<number, ActionEnvironmentError> => {
 	const parsed = Number(raw);
-	return Number.isFinite(parsed)
-		? Effect.succeed(parsed)
-		: Effect.fail(ActionEnvironmentError.make({ reason: "malformed", name, detail: `expected a number, got "${raw}"` }));
+	return Bool.match(Number.isFinite(parsed), {
+		onTrue: () => Effect.succeed(parsed),
+		onFalse: () => Effect.fail(ActionEnvironmentError.make({ reason: "malformed", name, detail: `expected a number, got "${raw}"` })),
+	});
 };
 
 const make = Effect.fn("make")(function* (base: Readonly<Record<string, string | undefined>>) {

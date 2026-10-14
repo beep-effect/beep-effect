@@ -1,0 +1,62 @@
+{
+  "module": "npm",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/npm/ReleaseAgeGate.ts",
+        "scratchpad/effected/npm/Manifest.ts",
+        "scratchpad/effected/npm/PackageManagerCache.ts"
+      ],
+      "tests": [],
+      "findings": ["npm-3-1", "npm-3-2", "npm-3-3"]
+    },
+    {
+      "id": "g2",
+      "files": ["scratchpad/effected/npm/NpmRegistry.ts"],
+      "tests": ["scratchpad/test/npm/NpmRegistry.test.ts"],
+      "findings": ["npm-3-4"]
+    },
+    {
+      "id": "g3",
+      "files": [],
+      "tests": [
+        "scratchpad/test/npm/PackagePublish.test.ts",
+        "scratchpad/test/npm/PackageManagerPin.test.ts"
+      ],
+      "findings": ["npm-3-5"]
+    }
+  ],
+  "findings": {
+    "npm-3-1": {
+      "file": "scratchpad/effected/npm/ReleaseAgeGate.ts",
+      "class": "effect-idiom",
+      "summary": "Release-age routines retain native array some, map/filter, flatMap and filter operations missed by the green gates.",
+      "fix": "Use A.some, A.filterMap with an Option result and the existing numeric/finite guard, A.flatMap and A.filter. Preserve the maximum/non-negative clamp, sorted deduplicated excludes, wildcard scan, DateFromString parsing, output order and inert-gate original-array return. Preserve existing oracle assertions; no test-file edit is required."
+    },
+    "npm-3-2": {
+      "file": "scratchpad/effected/npm/Manifest.ts",
+      "class": "effect-idiom",
+      "summary": "Manifest.needsResolution retains two native Array.some calls despite equivalent Effect helpers.",
+      "fix": "Import effect/Array as A and use A.some for DependencyField.literals and R.values(section). Preserve absent-section behavior, short-circuit evaluation and catalog/workspace predicates, and retain own-key-preserving manifest resolution. No test-file edit is required."
+    },
+    "npm-3-3": {
+      "file": "scratchpad/effected/npm/PackageManagerCache.ts",
+      "class": "effect-idiom",
+      "summary": "Default cache-directory construction uses native Array.join despite an equivalent Effect helper.",
+      "fix": "Import effect/Array as A and replace the under helper's native join with A.join([home, ...parts], windows ? \"\\\\\" : \"/\"). Preserve every path byte, platform separator and trailing-home-separator behavior. No test-file edit is required."
+    },
+    "npm-3-4": {
+      "file": "scratchpad/effected/npm/NpmRegistry.ts",
+      "class": "bug",
+      "summary": "Seeded registry dictionary indexing reads inherited keys and reports unseeded constructor/toString versions as published.",
+      "fix": "Use R.get and Option composition for own-key registry/package/version lookup and the other seeded methods, including optional distTags package lookup. Preserve absent defaults, own seeded keys, integrity/timestamp handling and order. Add NpmRegistry.test.ts regressions for inherited version, registry/package and dist-tag keys, plus a successful explicitly seeded own constructor version. Preserve oracle tests; supply upstream-bug deviation evidence to the central codemod without editing ledger or Port notes."
+    },
+    "npm-3-5": {
+      "file": "scratchpad/test/npm/PackagePublish.test.ts",
+      "class": "law",
+      "summary": "Pack fixtures and PackageManagerPin rejection names use native JSON.stringify outside the Effect contexts enforced by tsgo.",
+      "fix": "Replace PackagePublish.test.ts:42,49,447 serialization with S.fromJsonString(S.Unknown) encoding through explicit Result codecs for synchronous setup or Effect codecs for effectful setup. Preserve npm 11 array, npm 12 keyed-object and malformed missing-filename fixtures. Replace PackageManagerPin.test.ts:111 rejection-name quoting with a Schema string JSON codec. Preserve bytes, test names and oracle assertions; make any Result unwrapping failure explicit at the test boundary without synchronous Schema codecs. Documentation changes remain backlog."
+    }
+  }
+}

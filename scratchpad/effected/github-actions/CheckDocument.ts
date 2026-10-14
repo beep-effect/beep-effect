@@ -1,4 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as Bool from "effect/Boolean";
 import * as A from "effect/Array";
 import * as BigInt from "effect/BigInt";
 import * as Clock from "effect/Clock";
@@ -289,11 +291,31 @@ const maxStampOf = (
  * without writing (only possible when {@link CheckDocumentOptions.stamp} is
  * set).
  *
+ * **Example** (Validate a reconciliation outcome)
+ *
+ * ```ts
+ * import { CheckFlushOutcome } from "@beep/scratchpad/effected/github-actions/CheckDocument";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(CheckFlushOutcome)("stale")) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CheckFlushOutcome = LiteralKit(["written", "unchanged", "stale"]).annotate(
+	$I.annote("CheckFlushOutcome", { description: "The result of a document reconciliation pass: written, unchanged or stale." }),
+);
+
+/**
+ * The reconciliation result accepted by {@link CheckFlushOutcome}.
+ *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export type CheckFlushOutcome = "written" | "unchanged" | "stale";
+export type CheckFlushOutcome = typeof CheckFlushOutcome.Type;
 
 /**
  * How a rendered document leaves the process: the narrow sink contract.
@@ -540,7 +562,7 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 			CheckDocument,
 			Effect.gen(function* () {
 				const quietMillis = Duration.toMillis(options.debounce?.quiet ?? "500 millis");
-				const maxWaitMillis = Math.max(Duration.toMillis(options.debounce?.maxWait ?? "3 seconds"), quietMillis);
+				const maxWaitMillis = Num.max(Duration.toMillis(options.debounce?.maxWait ?? "3 seconds"), quietMillis);
 				const checksRef = yield* Ref.make(CheckDocumentSnapshot.make({ checks: HashMap.empty(), order: [] }));
 				const writtenRef = yield* Ref.make(options.initial ?? "");
 				const versionRef = yield* Ref.make(0);
@@ -560,13 +582,14 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 					// `undefined` is "nothing there yet": a fresh document. The same
 					// timeout bounds the read as the write, and for the same reason:
 					// this pass holds the single permit.
-					const current =
-						sink.read === undefined
-							? yield* Ref.get(writtenRef)
-							: ((yield* sink.read.pipe(
-									Effect.timeout(passTimeout),
-									Effect.mapError((cause) => CheckDocumentError.make({ kind: "read", cause })),
-								)) ?? "");
+					const current = yield* O.match(O.fromUndefinedOr(sink.read), {
+						onNone: () => Ref.get(writtenRef),
+						onSome: (read) => read.pipe(
+							Effect.timeout(passTimeout),
+							Effect.mapError((cause) => CheckDocumentError.make({ kind: "read", cause })),
+							Effect.map((text) => text ?? ""),
+						),
+					});
 					const document = yield* ManagedDocument.parse({
 						namespace: options.namespace,
 						key: options.key,
@@ -586,15 +609,17 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 							// common pair) log at debug so a chatty run does not repeat
 							// the same drop per report.
 							const alreadyLogged = yield* Ref.getAndSet(staleLoggedRef, true);
-							yield* (alreadyLogged ? Effect.logDebug : Effect.logInfo)(
-								"CheckDocument pass dropped: the document carries a more recent run's regions",
-								{
-									incomingAt: stamp.at,
-									incomingRunId: stamp.runId,
-									existingAt: existing.at,
-									existingRunId: existing.runId,
-								},
-							);
+							const message = "CheckDocument pass dropped: the document carries a more recent run's regions";
+							const fields = {
+								incomingAt: stamp.at,
+								incomingRunId: stamp.runId,
+								existingAt: existing.at,
+								existingRunId: existing.runId,
+							};
+							yield* Bool.match(alreadyLogged, {
+								onTrue: () => Effect.logDebug(message, fields),
+								onFalse: () => Effect.logInfo(message, fields),
+							});
 							return "stale" as const;
 						}
 						yield* Ref.set(staleLoggedRef, false);
@@ -636,7 +661,9 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 						let settled = false;
 						while (!settled) {
 							const before = yield* Ref.get(versionRef);
-							yield* Effect.sleep(quietMillis);
+							const pollingAt = yield* Clock.currentTimeMillis;
+							const remaining = Num.max(0, maxWaitMillis - (pollingAt - start));
+							yield* Effect.sleep(Num.min(quietMillis, remaining));
 							const after = yield* Ref.get(versionRef);
 							const now = yield* Clock.currentTimeMillis;
 							settled = after === before || now - start >= maxWaitMillis;

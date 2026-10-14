@@ -65,6 +65,7 @@ import * as S from "effect/Schema";
 import * as Match from "effect/Match";
 import * as HashSet from "effect/HashSet";
 import * as A from "effect/Array";
+import * as Str from "effect/String";
 import type {
 	Code,
 	Definition,
@@ -230,17 +231,23 @@ const escapeText = (
 	mdx: boolean,
 	followingText: string,
 	nonTextFollows: boolean,
+	precedingText = "",
 ): { text: string; atLineStart: boolean } => {
 	let out = "";
 	let lineStart = atLineStart;
 	for (let index = 0; index < value.length; index += 1) {
 		const char = value.charAt(index);
+		if (char === "\r") {
+			out += "&#13;";
+			lineStart = false;
+			continue;
+		}
 		if (char === "\n") {
 			// A soft break survives as a plain newline, INCLUDING at a Text
 			// value's boundary (index 0 or the last index) — that is exactly
 			// where a line wraps beside a non-text inline (inlineCode, strong,
 			// emphasis, link), and the neighbouring inline keeps the paragraph
-			// continuous, so a literal `\n` there cannot open a block. Two
+			// continuous, so a literal `\n` there cannot open a block. Some
 			// cases still have no raw spelling and keep the numeric reference:
 			// a newline adjacent to another newline WITHIN this value (a
 			// literal blank line, which would end the paragraph on re-parse),
@@ -250,12 +257,14 @@ const escapeText = (
 			// which is the same "blank line ends the block" hazard as the
 			// adjacent case, just arriving from the previous sibling instead
 			// of from this value. Single-line contexts have no newline
-			// spelling at all.
+			// spelling at all. Trailing emitted spaces must not turn a soft
+			// newline into a hard break, including across Text siblings.
 			const adjacent = value[index - 1] === "\n" || value[index + 1] === "\n";
+			const hardBreak = Str.endsWith("  ")(Str.slice(-2)(precedingText) + Str.slice(-2)(out));
 			if (context.singleLine) {
 				out += " ";
 				lineStart = false;
-			} else if (adjacent || lineStart) {
+			} else if (adjacent || lineStart || hardBreak) {
 				out += "&#10;";
 				lineStart = false;
 			} else {
@@ -555,7 +564,7 @@ const forcesPointy = (char: string): boolean => {
  */
 const destination = (url: string): string => {
 	if (url === "" || A.some([...url], forcesPointy) || !balancedParens(url)) {
-		return `<${url.replace(/&/g, "&amp;").replace(/[<>\\]/g, (char) => `\\${char}`)}>`;
+		return `<${url.replace(/&/g, "&amp;").replace(/\r/g, "&#13;").replace(/\n/g, "&#10;").replace(/[<>\\]/g, (char) => `\\${char}`)}>`;
 	}
 	return url.replace(/&/g, "&amp;");
 };
@@ -576,7 +585,7 @@ const balancedParens = (url: string): boolean => {
 };
 
 const titleSuffix = (title: string | undefined): string =>
-	title === undefined ? "" : ` "${title.replace(/&/g, "&amp;").replace(/[\\"]/g, (char) => `\\${char}`)}"`;
+	title === undefined ? "" : ` "${title.replace(/&/g, "&amp;").replace(/\r/g, "&#13;").replace(/\n/g, "&#10;").replace(/[\\"]/g, (char) => `\\${char}`)}"`;
 
 /**
  * Serialize an inline-code span with a fence run longer than any interior run.
@@ -682,6 +691,7 @@ const serializeInline = Match.type<PhrasingContent>().pipe(
 			run.state.mdx,
 			run.textRun.slice(run.textRunOffset),
 			run.textRunEnd < run.children.length,
+			run.out,
 		);
 		run.out += escaped.text;
 		run.atLineStart = escaped.atLineStart;
@@ -711,9 +721,17 @@ const serializeInline = Match.type<PhrasingContent>().pipe(
 		} else {
 			marker = emphasisMarker(child.markerChar, run.adjacentMarker);
 		}
-		// The intraword-underscore restriction: `_` against an
-		// alphanumeric cannot open.
-		if (marker === "_" && run.lastChar !== undefined && /[\p{L}\p{N}]/u.test(run.lastChar)) {
+		// Underscores cannot preserve emphasis beside a letter or number.
+		let nextIndex = run.index + 1;
+		let next = run.children[nextIndex];
+		while (next?.type === "text" && next.value === "") {
+			nextIndex += 1;
+			next = run.children[nextIndex];
+		}
+		if (marker === "_" && (
+			(run.lastChar !== undefined && reAlphanumeric.test(run.lastChar)) ||
+			(next?.type === "text" && /^[\p{L}\p{N}]/u.test(next.value))
+		)) {
 			marker = "*";
 		}
 		const markers = kind === "strong" ? marker.repeat(2) : marker;
@@ -802,7 +820,9 @@ const serializeInlines = (
 	};
 	for (const child of children) {
 		guard(state, child);
-		run.lastChar = run.out === "" ? undefined : run.out[run.out.length - 1];
+		const pair = Str.slice(-2)(run.out);
+		run.lastChar = run.out === "" ? undefined : /^[\uD800-\uDBFF][\uDC00-\uDFFF]$/.test(pair)
+			? pair : run.out[run.out.length - 1];
 		run.atEdge = run.out === "" || run.index === children.length - 1;
 		run.adjacentMarker = run.lastChar === "*" || run.lastChar === "_" ? run.lastChar : undefined;
 		serializeInline(child)(run);
@@ -1010,12 +1030,14 @@ const hangingIndent = (content: string, marker: string): string => {
 };
 
 /** Encode decoded info without introducing fence syntax or token boundaries. */
-const encodeCodeInfo = (value: string, language: boolean): string =>
-	value
+const encodeCodeInfo = (value: string, language: boolean, fenceChar: Code["fenceChar"]): string => {
+	const encoded = value
 		.replace(/&/g, "&amp;")
 		.replace(/\\/g, "&#92;")
 		.replace(/`/g, "&#96;")
 		.replace(language ? /\s/g : /[\t\r\n\v\f]|^\s|\s$/g, (char) => `&#${char.charCodeAt(0)};`);
+	return language && fenceChar === "~" ? Str.replace(/^~/, "&#126;")(encoded) : encoded;
+};
 
 const serializeCode = (node: Code, forceFence: boolean): string => {
 	// The parser's code values end with the block's final line terminator;
@@ -1039,7 +1061,7 @@ const serializeCode = (node: Code, forceFence: boolean): string => {
 	for (const run of runs) longest = Math.max(longest, run.length);
 	const length = Math.max(3, node.fenceLength ?? 0, longest + 1);
 	const fence = char.repeat(length);
-	const info = `${encodeCodeInfo(node.lang ?? "", true)}${node.meta !== undefined ? ` ${encodeCodeInfo(node.meta, false)}` : ""}`;
+	const info = node.lang === undefined ? "" : `${encodeCodeInfo(node.lang, true, char)}${node.meta !== undefined ? ` ${encodeCodeInfo(node.meta, false, char)}` : ""}`;
 	const body = value === "" ? "" : `${value}\n`;
 	return `${fence}${info}\n${body}${fence}`;
 };
@@ -1189,7 +1211,7 @@ const interruptsParagraph = Match.type<Block>().pipe(
 	Match.discriminator("type")("list", (next) => next.ordered !== true || (next.start ?? 1) === 1),
 	Match.discriminator("type")("blockquote", "thematicBreak", () => true),
 	Match.discriminator("type")("heading", (next) => next.headingStyle !== "setext"),
-	Match.discriminator("type")("code", (next) => next.fenceChar !== undefined || next.lang !== undefined),
+	Match.discriminator("type")("code", (next) => next.fenceChar !== undefined || next.lang !== undefined || next.meta !== undefined),
 	Match.orElse(() => false),
 );
 
@@ -1205,8 +1227,8 @@ const canJoinWithoutBlankDispatch = Match.type<{ prev: Block; next: Block }>().p
 		// A closed fence self-terminates. Indented code ends at the first
 		// insufficiently indented line — but another indented block would
 		// merge into it.
-		if (prev.fenceChar !== undefined || prev.lang !== undefined) return true;
-		return !(next.type === "code" && next.fenceChar === undefined && next.lang === undefined);
+		if (prev.fenceChar !== undefined || prev.lang !== undefined || prev.meta !== undefined) return true;
+		return !(next.type === "code" && next.fenceChar === undefined && next.lang === undefined && next.meta === undefined);
 	}),
 	Match.when({ prev: { type: "paragraph" } }, ({ next }) => interruptsParagraph(next)),
 	Match.when(

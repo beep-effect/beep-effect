@@ -16,8 +16,8 @@ import { useScreenCancel } from "./internal/ScreenContext.ts";
 import { KeyHelp } from "./KeyHelp.ts";
 import { KeyTable, useKeys } from "./KeyTable.ts";
 import { Styled, useGlyphs, useTerminalSize } from "./UiTheme.ts";
-import type { ViewportRow, ViewportState } from "./Viewport.ts";
-import { Viewport } from "./Viewport.ts";
+import type { ViewportRow } from "./Viewport.ts";
+import { Viewport, ViewportState } from "./Viewport.ts";
 
 const $I = $ScratchpadId.create("effected/cli/ui/MultiSelect");
 
@@ -47,61 +47,123 @@ export class DuplicateItemKey extends S.TaggedError<DuplicateItemKey>($I`Duplica
 }
 
 /**
- * One item of a {@link MultiSelect} section.
+ * One item of a {@link MultiSelect} section, as a schema over the value schema: `key` identifies the item (unique
+ * across sections), `label` is what the row shows, `value` what selecting it returns, `detail` a line shown muted
+ * beneath the list while it is highlighted, and `selected` whether it starts selected.
  *
+ * **Example** (Validate an item payload)
+ *
+ * ```ts
+ * import { MultiSelectItem } from "@beep/scratchpad/effected/cli/ui/MultiSelect"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(MultiSelectItem(S.String))({ key: "lint", label: "Linting", value: "lint", selected: true })) // true
+ * ```
+ *
+ * @param value - the schema of the value selecting it returns
  * @public
- * @category models
+ * @category schemas
  * @since 0.0.0
  */
-export interface MultiSelectItem<A> {
-	/** Identifies the item within its section. */
-	readonly key: string;
-	/** What the row shows. */
-	readonly label: string;
-	/** What selecting it returns. */
-	readonly value: A;
-	/** A line shown, muted, beneath the list while this item is highlighted. */
-	readonly detail?: string;
-	/** Whether it starts selected. */
-	readonly selected?: boolean;
-}
+export const MultiSelectItem = <Value extends S.Top>(value: Value) =>
+	S.Struct({
+		key: S.String.annotateKey($I.annote("MultiSelectItem.key", { description: "Identifies the item; unique across sections." })),
+		label: S.String.annotateKey($I.annote("MultiSelectItem.label", { description: "What the row shows." })),
+		value,
+		detail: S.optionalKey(S.String).annotateKey($I.annote("MultiSelectItem.detail", {
+			description: "A line shown, muted, beneath the list while this item is highlighted.",
+		})),
+		selected: S.optionalKey(S.Boolean).annotateKey($I.annote("MultiSelectItem.selected", {
+			description: "Whether it starts selected.",
+		})),
+	}).annotate($I.annote("MultiSelectItem", { description: "One keyed, labelled item of a multi-selection section." }));
 
 /**
- * A titled group of items; the title is a header the cursor never stops on.
+ * Plain payload accepted by {@link MultiSelectItem}; reducers retain this structural representation.
  *
- * @public
- * @category models
+ * @category type-level
  * @since 0.0.0
  */
-export interface MultiSelectSection<A> {
-	/** The header. */
-	readonly title: string;
-	/** The items, in order. */
-	readonly items: ReadonlyArray<MultiSelectItem<A>>;
-}
+export type MultiSelectItem<A> = ReturnType<typeof MultiSelectItem<S.Codec<A>>>["Type"];
 
 /**
- * Where a {@link MultiSelect} is: its sections, which items are selected, the viewport over the items, and whether
- * it was submitted.
+ * A titled group of items, as a schema over the value schema; the title is a header the cursor never stops on.
+ *
+ * **Example** (Validate a section payload)
+ *
+ * ```ts
+ * import { MultiSelectSection } from "@beep/scratchpad/effected/cli/ui/MultiSelect"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(MultiSelectSection(S.String))({ title: "Tools", items: [] })) // true
+ * ```
+ *
+ * @param value - the schema of the items' values
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MultiSelectSection = <Value extends S.Top>(value: Value) =>
+	S.Struct({
+		title: S.String.annotateKey($I.annote("MultiSelectSection.title", { description: "The header." })),
+		items: value.pipe(MultiSelectItem, S.Array).annotateKey($I.annote("MultiSelectSection.items", {
+			description: "The items, in order.",
+		})),
+	}).annotate($I.annote("MultiSelectSection", { description: "A titled group of multi-selection items." }));
+
+/**
+ * Plain payload accepted by {@link MultiSelectSection}; reducers retain this structural representation.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MultiSelectSection<A> = ReturnType<typeof MultiSelectSection<S.Codec<A>>>["Type"];
+
+/**
+ * Where a {@link MultiSelect} is, as a schema over the value schema: its sections, which items are selected, the
+ * viewport over the items, and whether it was submitted.
  *
  * **Details**
  *
- * Items are numbered across sections in order, section by section; `chosen` holds those numbers.
+ * Items are numbered across sections in order, section by section; `chosen` holds those numbers. The viewport counts
+ * items only, never headers.
  *
+ * **Example** (Validate a multi-selection state)
+ *
+ * ```ts
+ * import { MultiSelect, MultiSelectState } from "@beep/scratchpad/effected/cli/ui/MultiSelect"
+ * import * as S from "effect/Schema"
+ *
+ * const state = MultiSelect.init([{ title: "Tools", items: [{ key: "lint", label: "Linting", value: "lint" }] }])
+ * console.log(S.is(MultiSelectState(S.String))(state)) // true
+ * ```
+ *
+ * @param value - the schema of the items' values
  * @public
- * @category models
+ * @category schemas
  * @since 0.0.0
  */
-export interface MultiSelectState<A> {
-	/** The sections. */
-	readonly sections: ReadonlyArray<MultiSelectSection<A>>;
-	/** The selected items, by their number across all sections. */
-	readonly chosen: HashSet.HashSet<number>;
-	/** The highlighted item and the window over the list; it counts items only, never headers. */
-	readonly viewport: ViewportState;
-	/** Whether enter was pressed. */
-	readonly submitted: boolean;
-}
+export const MultiSelectState = <Value extends S.Top>(value: Value) =>
+	S.Struct({
+		sections: value.pipe(MultiSelectSection, S.Array).annotateKey($I.annote("MultiSelectState.sections", {
+			description: "The sections.",
+		})),
+		chosen: S.HashSet(S.Finite).annotateKey($I.annote("MultiSelectState.chosen", {
+			description: "The selected items, by their number across all sections.",
+		})),
+		viewport: ViewportState.annotateKey($I.annote("MultiSelectState.viewport", {
+			description: "The highlighted item and the window over the list; it counts items only, never headers.",
+		})),
+		submitted: S.Boolean.annotateKey($I.annote("MultiSelectState.submitted", { description: "Whether enter was pressed." })),
+	}).annotate($I.annote("MultiSelectState", { description: "The plain reducer state of a sectioned multi-selection." }));
+
+/**
+ * Plain payload accepted by {@link MultiSelectState}; reducers retain this structural representation.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MultiSelectState<A> = ReturnType<typeof MultiSelectState<S.Codec<A>>>["Type"];
 
 /**
  * What a key does in a {@link MultiSelect}.
@@ -434,15 +496,19 @@ export abstract class MultiSelect {
 				: react.createElement(ink.Text, null, text);
 		};
 		const detail = items[state.viewport.cursor]?.item.detail;
+		// One row each, clipped at layout time with the cursor column reserved: during Ink's immediate resize repaint the
+		// width above is one paint stale, and an unclipped row would wrap past the screen's row budget.
+		const line = (child: ReactElement): ReactElement =>
+			react.createElement(ink.Box, { height: 1, overflow: "hidden", marginRight: 1 }, child);
 		return react.createElement(
 			ink.Box,
 			{ flexDirection: "column" },
-			react.createElement(Styled, { token: "emphasis" }, Fmt.truncate(lineText(props.message), columns, ellipsis)),
+			line(react.createElement(Styled, { token: "emphasis" }, Fmt.truncate(lineText(props.message), columns, ellipsis))),
 			react.createElement(Viewport.View, { rows, state: state.viewport, renderRow, reserved: RESERVED }),
 			detail === undefined
 				? null
-				: react.createElement(Styled, { token: "muted" }, Fmt.truncate(lineText(detail), columns, ellipsis)),
-			react.createElement(KeyHelp, { tables: [KEYS] }),
+				: line(react.createElement(Styled, { token: "muted" }, Fmt.truncate(lineText(detail), columns, ellipsis))),
+			line(react.createElement(KeyHelp, { tables: [KEYS] })),
 		);
 	};
 

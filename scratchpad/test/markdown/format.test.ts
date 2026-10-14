@@ -16,8 +16,8 @@ import { Markdown } from "../../effected/markdown/Markdown.ts";
 import { MarkdownDocument } from "../../effected/markdown/MarkdownDocument.ts";
 import { MarkdownEdit } from "../../effected/markdown/MarkdownEdit.ts";
 import { MarkdownFormat, MarkdownFormattingOptions, MarkdownModificationError } from "../../effected/markdown/MarkdownFormat.ts";
-import type { MarkdownNode } from "../../effected/markdown/MarkdownNode.ts";
-import { Blockquote, Code, Emphasis, Heading, InlineCode, Link, LinkReference, Paragraph, Point, Position, Text } from "../../effected/markdown/MarkdownNode.ts";
+import type { MarkdownNode, PhrasingContent } from "../../effected/markdown/MarkdownNode.ts";
+import { Blockquote, Code, Definition, Emphasis, Heading, InlineCode, Link, LinkReference, Paragraph, Point, Position, Table, TableCell, TableRow, Text } from "../../effected/markdown/MarkdownNode.ts";
 import { renderHtml } from "./e2e/support/htmlWriter.ts";
 
 /** A throwaway span for hand-built fragments; modify never reads fragment offsets. */
@@ -425,6 +425,147 @@ describe("MarkdownFormat.format", () => {
 			assert.strictEqual(edits.length, 0);
 		});
 	});
+});
+
+describe("MarkdownFormat round-3 boundary regressions", () => {
+	const firstChild = (document: MarkdownDocument): MarkdownNode => {
+		const child = document.root.children[0];
+		if (child === undefined) assert.fail("expected a flow block");
+		return child;
+	};
+	it.effect("rejects replacements that absorb a following flow sibling", () =>
+		Effect.gen(function* () {
+			const listDoc = yield* parseDoc("- new\n");
+			const fixtures: ReadonlyArray<readonly [string, MarkdownNode | string]> = [
+				["# title\nbody\n", "new"],
+				["# title\n\n- kept\n", firstChild(listDoc)],
+				["# title\n\n    kept\n", Code.make({ value: "new\n" })],
+				["# title\n> kept\n", Blockquote.make({ children: [Paragraph.make({ children: [Text.make({ value: "new" })] })] })],
+				["# title\n| kept |\n", Table.make({ children: [TableRow.make({ children: [TableCell.make({ children: [Text.make({ value: "new" })] })] })] })],
+				['# title\n"kept"\n', Definition.make({ identifier: "a", url: "/url" })],
+			];
+			for (const [source, replacement] of fixtures) {
+				const doc = yield* parseDoc(source);
+				assert.strictEqual(doc.root.children.length, 2);
+				const error = yield* Effect.flip(MarkdownFormat.modify(doc, firstChild(doc), replacement));
+				assert.instanceOf(error, MarkdownModificationError);
+				assert.strictEqual(error.code, "UnsupportedTarget", source);
+			}
+		}),
+	);
+
+	it.effect("rejects an empty flow replacement that merges its neighboring lists", () =>
+		Effect.gen(function* () {
+			const doc = yield* parseDoc("- before\n# separator\n- after\n");
+			const target = doc.find("heading");
+			if (target === undefined) assert.fail("expected a separating heading");
+			const error = yield* Effect.flip(MarkdownFormat.modify(doc, target, ""));
+			assert.strictEqual(error.code, "UnsupportedTarget");
+			assert.strictEqual(error.detail, "the flow replacement would absorb or change its following sibling");
+			assert.strictEqual(doc.root.children.length, 3);
+		}),
+	);
+
+	it("preserves punctuation-flanked emphasis while requesting underscores", () => {
+		for (const [source, expected] of [["a*?hi*\n", "a*?hi*\n"], ["(*?hi*)\n", "(_?hi_)\n"]] as const) {
+			const out = fmt(source, { emphasisChar: "_" });
+			assert.strictEqual(out, expected);
+			assertEquivalent(source, out);
+		}
+	});
+
+	it.effect("retains the following sibling boundaries after a safe length-changing replacement", () =>
+		Effect.gen(function* () {
+			const doc = yield* parseDoc("# old\nbody\n");
+			const out = yield* MarkdownFormat.modifyToString(doc, firstChild(doc), Heading.make({ depth: 2, children: [Text.make({ value: "longer" })] }));
+			assert.strictEqual(out, "## longer\nbody\n");
+			const reparsed = yield* parseDoc(out);
+			assert.strictEqual(reparsed.root.children[1]?.type, "paragraph");
+			assert.strictEqual(reparsed.root.children[1]?.position.start.offset, "## longer\n".length);
+			assert.strictEqual(reparsed.root.children[1]?.position.end.offset, out.length - 1);
+			const quoted = yield* parseDoc("# old\n\n> kept\n");
+			const quoteOut = yield* MarkdownFormat.modifyToString(quoted, firstChild(quoted), Blockquote.make({ children: [Paragraph.make({ children: [Text.make({ value: "new" })] })] }));
+			assert.strictEqual(quoteOut, "> new\n\n> kept\n");
+			assert.strictEqual((yield* parseDoc(quoteOut)).root.children.length, 2);
+		}),
+	);
+
+	it.effect("protects terminal whitespace at emphasis, strong and delete closing delimiters", () =>
+		Effect.gen(function* () {
+			for (const [source, type] of [["*old*\n", "emphasis"], ["**old**\n", "strong"], ["~~old~~\n", "delete"], ["~old~\n", "delete"]] as const) {
+				for (const value of ["new ", "new\t", "new \t", "new\u00a0"]) {
+					const doc = yield* parseDoc(source);
+					const target = doc.find("text");
+					if (target === undefined) assert.fail("expected text");
+					for (const replacement of [value, Text.make({ value })]) {
+						const out = yield* MarkdownFormat.modifyToString(doc, target, replacement);
+						const reparsed = yield* parseDoc(out);
+						assert.strictEqual(reparsed.find(type)?.type, type);
+						assert.strictEqual(reparsed.find("text")?.value, value);
+						assert.include(out, "&#");
+					}
+				}
+			}
+		}),
+	);
+
+	it("preserves emphasis beside combining marks and format characters when requesting underscores", () => {
+		for (const neighbor of ["\u0301", "\u200c"]) {
+			for (const marker of ["*", "**"]) {
+				for (const source of [`${neighbor}${marker}hi${marker}\n`, `${marker}hi${marker}${neighbor}\n`, `${neighbor}${marker}hi${marker}${neighbor}\n`]) {
+					const out = fmt(source, { emphasisChar: "_" });
+					assert.strictEqual(out, source);
+					assertEquivalent(source, out);
+				}
+			}
+		}
+	});
+
+	it.effect("returns FragmentUnrenderable for an over-deep fragment inside a link", () =>
+		Effect.gen(function* () {
+			let fragment: PhrasingContent = Text.make({ value: "new" });
+			for (let depth = 0; depth < 30000; depth++) fragment = Emphasis.make({ children: [fragment] });
+			for (const source of ["[old](/a)\n", "[old][a]\n\n[a]: /a\n"]) {
+				const doc = yield* parseDoc(source);
+				const target = doc.find("text");
+				if (target === undefined) assert.fail("expected link text");
+				const error: MarkdownModificationError = yield* Effect.flip(MarkdownFormat.modify(doc, target, fragment));
+				assert.instanceOf(error, MarkdownModificationError);
+				assert.strictEqual(error.code, "FragmentUnrenderable");
+				assert.include(error.detail, "NestingDepthExceeded");
+			}
+		}),
+	);
+
+	it("skips setext conversions that parse as HTML or reference definitions in either dialect", () => {
+		for (const dialect of ["commonmark", "gfm"] as const) {
+			for (const content of ["<div>", "<script>text</script>", "<!-- comment -->", "[foo]: /url", '[foo]: /url "title"']) {
+				for (const marker of ["#", "##"]) {
+					const source = `${marker} ${content}\n`;
+					assert.strictEqual(fmt(source, { dialect, headingStyle: "setext" }), source);
+				}
+			}
+			assert.strictEqual(fmt("# <span>hi</span>\n", { dialect, headingStyle: "setext" }), "<span>hi</span>\n===============\n");
+		}
+	});
+
+	it.effect("checks flow boundaries using the document's commonmark or GFM dialect", () =>
+		Effect.gen(function* () {
+			const source = "# Title\n| a |\n| --- |\n| b |\n";
+			const commonmark = yield* MarkdownDocument.parse(source, { dialect: "commonmark" });
+			const error = yield* Effect.flip(MarkdownFormat.modify(commonmark, firstChild(commonmark), "Hello"));
+			assert.strictEqual(error.code, "UnsupportedTarget");
+			for (const dialect of ["commonmark", "gfm"] as const) {
+				const separated = "# Title\n\n| a |\n| --- |\n| b |\n";
+				const doc = yield* MarkdownDocument.parse(separated, { dialect });
+				const out = yield* MarkdownFormat.modifyToString(doc, firstChild(doc), "Hello");
+				assert.strictEqual(out, "Hello\n\n| a |\n| --- |\n| b |\n");
+				const reparsed = yield* MarkdownDocument.parse(out, { dialect: doc.dialect });
+				assert.strictEqual(reparsed.root.children[0]?.type, "paragraph");
+				assert.strictEqual(reparsed.root.children[1]?.type, dialect === "gfm" ? "table" : "paragraph");
+			}
+		}),
+	);
 });
 
 describe("MarkdownFormat.modify", () => {

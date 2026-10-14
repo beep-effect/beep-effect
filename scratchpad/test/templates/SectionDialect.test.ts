@@ -403,3 +403,39 @@ it("keeps marker-shaped Unicode attribute text inside its owning marker span", (
   assert.deepStrictEqual(parsed.sections[0]?.section.attributes, section.attributes);
   assert.strictEqual(parsed.check(section)._tag, "UpToDate");
 });
+
+describe("SectionDialect round-3 regressions", () => {
+  for (const style of [CommentStyle.hash, CommentStyle.html]) {
+    it(`refuses a ${style.prefix} closing rule before a Unicode separator inside an attribute`, () => {
+      const id = SectionId.make({ key: "example-tool", commentStyle: style });
+      const tail = style.suffix === undefined ? "---" : `--- ${style.suffix}`;
+      for (const separator of ["\u2028", "\u2029"]) {
+        const section = id.section("body", { note: `before ${tail}${separator}after` });
+        for (const eol of Eol.literals) {
+          const error = expectFailure(SectionDialect.default.render(section, eol));
+          assert.strictEqual(error._tag, "SectionRenderError");
+          assert.strictEqual(error.reason, "invalidAttribute");
+          assert.strictEqual(error.key, id.key);
+        }
+      }
+    });
+  }
+
+  it("round trips ordinary Unicode attributes in hash and HTML markers", () => {
+    for (const style of [CommentStyle.hash, CommentStyle.html]) {
+      const id = SectionId.make({ key: "example-tool", commentStyle: style });
+      for (const separator of ["\u2028", "\u2029"]) {
+        const section = id.section("body", { note: `雪 café${separator}after --- quoted ---`, origin: "工具" });
+        for (const eol of Eol.literals) {
+          const rendered = expectSuccess(SectionDialect.default.render(section, eol));
+          const parsed = Result.getOrThrow(SectionDocument.parseResult(rendered));
+          assert.deepStrictEqual(parsed.sections[0]?.section.attributes, section.attributes);
+          assert.strictEqual(parsed.check(section)._tag, "UpToDate");
+          const repeated = Result.getOrThrow(parsed.reconcile([section]));
+          assert.strictEqual(repeated.text, rendered);
+          assert.isFalse(repeated.changed);
+        }
+      }
+    }
+  });
+});

@@ -40,6 +40,68 @@ const byName = (report: DuplicateCheck, name: string): DuplicatedPackage | undef
 	report.duplicates.find((row) => row.name === name);
 
 describe("DuplicateCheck.run", () => {
+	for (const [label, secondVersion] of [["embedded-NUL collision", "y\0z"], ["non-collision control", "yz"]] as const) {
+		it.effect(`keeps distinct package dependents in first-occurrence order: ${label}`, () =>
+			Effect.gen(function* () {
+				const first = { _tag: "package", name: "x\0y", version: "z" } as const;
+				const second = { _tag: "package", name: "x", version: secondVersion } as const;
+				const lockfile = yield* S.decodeEffect(Lockfile)({
+					format: "pnpm", lockfileVersion: "9", workspaceDependencies: [],
+					packages: [
+						{ name: "app", version: "1", instanceId: "app", isWorkspace: true, relativePath: ".",
+							resolved: { first: "holder-first", second: "holder-second", again: "holder-again", foo: "foo@2" } },
+						{ name: first.name, version: first.version, instanceId: "holder-first", isWorkspace: false,
+							resolved: { foo: "foo@1", alias: "foo@1" } },
+						{ name: second.name, version: second.version, instanceId: "holder-second", isWorkspace: false,
+							resolved: { foo: "foo@1", alias: "foo@1" } },
+						{ name: first.name, version: first.version, instanceId: "holder-again", isWorkspace: false,
+							resolved: { foo: "foo@1" } },
+						{ name: "foo", version: "1", instanceId: "foo@1", isWorkspace: false },
+						{ name: "foo", version: "2", instanceId: "foo@2", isWorkspace: false },
+					],
+					importers: [{ path: ".", dependencies: [] }],
+				});
+				const foo = byName(DuplicateCheck.run(lockfile), "foo");
+				if (foo === undefined) return assert.fail("expected foo in collision report");
+				assert.deepStrictEqual(A.flatMap(foo.versions, (version) =>
+					A.map(version.instances, (instance) => [instance.instanceId, instance.dependents])), [
+					["foo@1", [first, second]],
+					["foo@2", [{ _tag: "importer", path: "." }]],
+				]);
+				assert.deepStrictEqual(DuplicateCheck.run(lockfile).unresolvedImporters, []);
+			}),
+		);
+	}
+
+	it.effect("keeps target ids separate from importer paths containing embedded NULs", () =>
+		Effect.gen(function* () {
+			for (const secondId of ["foo\0importer\0tail", "other-target"]) {
+				const firstPath = "tail\0importer\0path";
+				const secondPath = "path";
+				const lockfile = yield* S.decodeEffect(Lockfile)({
+					format: "pnpm", lockfileVersion: "9", workspaceDependencies: [],
+					packages: [
+						{ name: "app-first", version: "1", instanceId: "app-first", isWorkspace: true, relativePath: firstPath,
+							resolved: { foo: "foo", alias: "foo" } },
+						{ name: "app-second", version: "1", instanceId: "app-second", isWorkspace: true, relativePath: secondPath,
+							resolved: { foo: secondId, alias: secondId } },
+						{ name: "foo", version: "1", instanceId: "foo", isWorkspace: false },
+						{ name: "foo", version: "2", instanceId: secondId, isWorkspace: false },
+					],
+					importers: [{ path: firstPath, dependencies: [] }, { path: secondPath, dependencies: [] }],
+				});
+				const foo = byName(DuplicateCheck.run(lockfile), "foo");
+				if (foo === undefined) return assert.fail("expected foo in target-id collision report");
+				assert.deepStrictEqual(A.flatMap(foo.versions, (version) =>
+					A.map(version.instances, (instance) => [instance.instanceId, instance.dependents])), [
+					["foo", [{ _tag: "importer", path: firstPath }]],
+					[secondId, [{ _tag: "importer", path: secondPath }]],
+				]);
+				assert.deepStrictEqual(DuplicateCheck.run(lockfile).unresolvedImporters, []);
+			}
+		}),
+	);
+
 	it.effect("preserves provenance, deduplication and importer order on sparse roots", () =>
 		Effect.gen(function* () {
 			const packages = A.makeBy(160, (i) => ({

@@ -1,12 +1,16 @@
 import { assert, describe, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
+import type { ConfigCodec } from "../../effected/config-file/ConfigCodec.ts";
+import { ConfigEvents } from "../../effected/config-file/ConfigEvent.ts";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
+import * as PubSub from "effect/PubSub";
 import * as S from "effect/Schema";
 import { ConfigCodecError } from "../../effected/config-file/ConfigCodec.ts";
 import type { ConfigLoadError, ConfigReadError } from "../../effected/config-file/ConfigFile.ts";
@@ -195,6 +199,133 @@ describe("ConfigFile.load", () => {
 					}),
 				);
 				assert.strictEqual(label, "bad-syntax");
+			}),
+		);
+	});
+});
+
+describe("ConfigFile merged schema validation", () => {
+	const ExclusiveFields = S.Struct({ a: S.optionalKey(S.Int), b: S.optionalKey(S.Int) }).check(
+		S.makeFilter(({ a, b }) => a === undefined || b === undefined, {
+			identifier: "ExclusiveFields",
+			title: "Mutually exclusive fields",
+			description: "A document may contain a or b, but not both.",
+		}),
+	);
+	class ExclusiveConfig extends ConfigFile.Service<ExclusiveConfig, typeof ExclusiveFields.Type>()(
+		"test/ExclusiveConfig",
+	) {}
+	const exclusiveLayer = (files: Record<string, string>) => Layer.mergeAll(
+		ConfigEvents.layer,
+		ConfigFile.layer(ExclusiveConfig, {
+			schema: ExclusiveFields,
+			codec: JsonCodec,
+			resolvers: [ConfigResolver.explicitPath("/higher"), ConfigResolver.explicitPath("/lower")],
+			strategy: MergeStrategy.layeredMerge<typeof ExclusiveFields.Type>(),
+			events: ConfigEvents,
+		}).pipe(Layer.provide(Layer.mergeAll(MemoryFileSystem.layerWith(files), Path.layer))),
+	);
+
+	it.layer(exclusiveLayer({ "/higher": `{"a":1}`, "/lower": `{"b":2}` }), { timeout: "1 second" })((it) => {
+		for (const method of ["load", "loadOrDefault"] as const) {
+			it.effect(`${method} rejects a merged cross-field violation with no path and no Loaded event`, () =>
+				Effect.gen(function* () {
+					assert.isTrue(S.is(ExclusiveFields)({ a: 1 }));
+					assert.isTrue(S.is(ExclusiveFields)({ b: 2 }));
+					assert.isFalse(S.is(ExclusiveFields)({ a: 1, b: 2 }));
+					const hub = yield* ConfigEvents;
+					const sub = yield* PubSub.subscribe(hub.events);
+					const cfg = yield* ExclusiveConfig;
+					const error = yield* Effect.flip(method === "load" ? cfg.load : cfg.loadOrDefault({}));
+					if (!S.is(ConfigValidationError)(error)) return assert.fail("expected a typed validation failure");
+					assert.instanceOf(error, ConfigValidationError);
+					assert.strictEqual(error._tag, "ConfigValidationError");
+					assertNone(error.path);
+					assert.isTrue(P.isObjectKeyword(error.issue));
+					assert.property(error.issue, "_tag");
+					const events = yield* PubSub.takeAll(sub);
+					assert.deepStrictEqual(A.map(events, (event) => event.event._tag), [
+						"Discovered", "Parsed", "Validated", "Discovered", "Parsed", "Validated",
+					]);
+				}),
+			);
+		}
+	});
+
+	it.layer(exclusiveLayer({}), { timeout: "1 second" })((it) => {
+		it.effect("loadOrDefault preserves an empty-source default without schema validation", () =>
+			Effect.gen(function* () {
+				const cfg = yield* ExclusiveConfig;
+				const defaultValue = { a: 1, b: 2 };
+				assert.isFalse(S.is(ExclusiveFields)(defaultValue));
+				assert.strictEqual(yield* cfg.loadOrDefault(defaultValue), defaultValue);
+			}),
+		);
+	});
+
+	const Transformed = S.Struct({ port: S.FiniteFromString, host: S.optionalKey(S.String) });
+	class TransformedConfig extends ConfigFile.Service<TransformedConfig, typeof Transformed.Type>()(
+		"test/TransformedConfig",
+	) {}
+	it.layer(ConfigFile.layer(TransformedConfig, {
+		schema: Transformed,
+		codec: JsonCodec,
+		resolvers: [ConfigResolver.explicitPath("/higher"), ConfigResolver.explicitPath("/lower")],
+		strategy: MergeStrategy.layeredMerge<typeof Transformed.Type>(),
+	}).pipe(Layer.provide(Layer.mergeAll(
+		MemoryFileSystem.layerWith({ "/higher": `{"port":"8080"}`, "/lower": `{"port":"80","host":"base"}` }),
+		Path.layer,
+	))), { timeout: "1 second" })((it) => {
+		it.effect("validates the decoded type after merging without repeating wire transformations", () =>
+			Effect.gen(function* () {
+				const cfg = yield* TransformedConfig;
+				assert.deepStrictEqual(yield* cfg.load, { port: 8080, host: "base" });
+				assert.deepStrictEqual(yield* cfg.loadOrDefault({ port: 1 }), { port: 8080, host: "base" });
+			}),
+		);
+	});
+});
+
+describe("ConfigFile cyclic codec documents", () => {
+	const Cyclic = S.Struct({ self: S.Unknown });
+	class CyclicConfig extends ConfigFile.Service<CyclicConfig, typeof Cyclic.Type>()("test/CyclicConfig") {}
+	const codec: ConfigCodec = {
+		name: "cyclic",
+		parse: Effect.fnUntraced(function* (_raw: string) {
+			const record: Record<string, unknown> = {};
+			record.self = record;
+			return record;
+		}),
+		stringify: () => Effect.succeed("cyclic"),
+	};
+	it.layer(Layer.mergeAll(
+		ConfigEvents.layer,
+		ConfigFile.layer(CyclicConfig, {
+			schema: Cyclic,
+			codec,
+			resolvers: [ConfigResolver.explicitPath("/higher"), ConfigResolver.explicitPath("/lower")],
+			strategy: MergeStrategy.layeredMerge<typeof Cyclic.Type>(),
+			events: ConfigEvents,
+		}).pipe(Layer.provide(Layer.mergeAll(
+			MemoryFileSystem.layerWith({ "/higher": "higher", "/lower": "lower" }), Path.layer,
+		))),
+	), { timeout: "1 second" })((it) => {
+		it.effect("load succeeds with compatible cyclic decoded sources and emits Loaded", () =>
+			Effect.gen(function* () {
+				const cfg = yield* CyclicConfig;
+				const sources = yield* cfg.discover;
+				assert.strictEqual(sources.length, 2);
+				assert.isTrue(A.every(sources, (source) => S.is(Cyclic)(source.value)));
+				const hub = yield* ConfigEvents;
+				const sub = yield* PubSub.subscribe(hub.events);
+				const value = yield* cfg.load;
+				assert.isTrue(S.is(Cyclic)(value));
+				if (!S.is(Cyclic)(value.self)) return assert.fail("expected the merged cyclic record");
+				assert.strictEqual(value.self.self, value.self);
+				const events = yield* PubSub.takeAll(sub);
+				assert.deepStrictEqual(A.map(events, (event) => event.event._tag), [
+					"Discovered", "Parsed", "Validated", "Discovered", "Parsed", "Validated", "Resolved", "Loaded",
+				]);
 			}),
 		);
 	});

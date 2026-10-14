@@ -125,8 +125,7 @@ export const quotedStrings: YamlRule = {
 		const quote = quoteType === "double" ? '"' : "'";
 		const wrongStyle = quoteType === "double" ? "single-quoted" : "double-quoted";
 		const out: Array<YamlLintDiagnostic> = [];
-		walkScalars(ctx.document.contents, "root", (scalar, role) => {
-			if (role === "key") return;
+		walkScalars(ctx.document.contents, "root", (scalar) => {
 			if (!P.isString(scalar.value)) return;
 			if (scalar.style === wrongStyle) {
 				const fix = safeQuoteFix(ctx, scalar, quote);
@@ -161,7 +160,7 @@ export const quotedStrings: YamlRule = {
 					}),
 				);
 			}
-		});
+		}, true);
 		return out;
 	},
 	// Inference: every already-quoted string VALUE scalar votes its
@@ -169,8 +168,7 @@ export const quotedStrings: YamlRule = {
 	// excluded, plain scalars say nothing about quote preference).
 	infer: (ctx) => {
 		const out: Array<StyleVote> = [];
-		walkScalars(ctx.document.contents, "root", (scalar, role) => {
-			if (role === "key") return;
+		walkScalars(ctx.document.contents, "root", (scalar) => {
 			if (!P.isString(scalar.value)) return;
 			if (scalar.style !== "single-quoted" && scalar.style !== "double-quoted") return;
 			const pos = positionAt(ctx.lines, scalar.offset);
@@ -184,7 +182,7 @@ export const quotedStrings: YamlRule = {
 					character: pos.character,
 				}),
 			);
-		});
+		}, true);
 		return out;
 	},
 };

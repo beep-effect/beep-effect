@@ -8,6 +8,18 @@
     "reason": "This is a table of four distinct config-edit operations, each checked once for rejection. It performs no retry or polling."
   },
   {
+    "id": "EV013:scratchpad/test/git/GitConfig.test.ts:566:retry-loop@2#1",
+    "reason": "This loop enumerates three distinct EOF encodings and their expected separators once each; it neither retries nor polls."
+  },
+  {
+    "id": "EV013:scratchpad/test/git/GitConfig.test.ts:569:retry-loop@3#1",
+    "reason": "This nested loop checks insertion into two distinct target sections once each for every EOF encoding; it neither retries nor polls."
+  },
+  {
+    "id": "EV013:scratchpad/test/git/GitConfig.test.ts:573:retry-loop@4#1",
+    "reason": "This innermost loop checks the two distinct set and append edit results once each for every target section and EOF encoding; replacing it with Effect.retry would change the test semantics."
+  },
+  {
     "id": "EV010:scratchpad/test/git/integration/Git.int.test.ts:27:@effect/platform-node@0#1",
     "reason": "The suite tests real Git execution, concurrent OS-pipe collection, and environment propagation through NodeServices."
   },

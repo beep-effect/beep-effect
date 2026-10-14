@@ -460,7 +460,7 @@
     "reason": "Vitest requires vi to be imported directly from \"vitest\" for this hoisted loader mock; importing vi through @effect/vitest caused suite initialization to fail. Current scanner ID: EV011:scratchpad/test/cli/ui/CliUi.run.test.ts:12:vitest-import@0#1."
   },
   {
-    "id": "EV011:scratchpad/test/cli/ui/CliUi.fallback.test.ts:3:vitest-import@0#1",
+    "id": "EV011:scratchpad/test/cli/ui/CliUi.fallback.test.ts:4:vitest-import@0#1",
     "reason": "Retained the direct `vi` import from `vitest`, with a reason comment. Importing `vi` through `@effect/vitest` causes Vitest to reject the hoisted mock before collecting tests: \u201cThere are some problems in resolving the mocks API.\u201d The remaining detector identity is EV011:scratchpad/test/cli/ui/CliUi.fallback.test.ts:3:vitest-import@0#1."
   },
   {
@@ -526,5 +526,21 @@
   {
     "id": "EV010:scratchpad/test/cli/boundary.test.ts:5:@effect/platform-node@0#1",
     "reason": "Retained the platform layer: `SourceBoundary.scan` must inspect the actual CLI source tree, and assertions explicitly verify that the real tree was read."
+  },
+  {
+    "id": "EV006:scratchpad/test/cli/round3-key-input-schema.test.ts:34:isTrue@2#1",
+    "reason": "This production-schema rejection test intentionally accepts any SchemaError cause: only input rejection is the contract. assertExitFailure requires an exact expected Cause and would couple this test to schema issue formatting rather than validation behavior."
+  },
+  {
+    "id": "EV006:scratchpad/test/cli/round3-key-input-schema.test.ts:35:isTrue@2#1",
+    "reason": "This production-schema rejection test intentionally accepts any SchemaError cause: only input rejection is the contract. assertExitFailure requires an exact expected Cause and would couple this test to schema issue formatting rather than validation behavior."
+  },
+  {
+    "id": "EV006:scratchpad/test/cli/round3-key-input-schema.test.ts:36:isTrue@2#1",
+    "reason": "This production-schema rejection test intentionally accepts any SchemaError cause: only input rejection is the contract. assertExitFailure requires an exact expected Cause and would couple this test to schema issue formatting rather than validation behavior."
+  },
+  {
+    "id": "EV006:scratchpad/test/cli/round3-key-input-schema.test.ts:37:isTrue@2#1",
+    "reason": "This production-schema rejection test intentionally accepts any SchemaError cause: only input rejection is the contract. assertExitFailure requires an exact expected Cause and would couple this test to schema issue formatting rather than validation behavior."
   }
 ]

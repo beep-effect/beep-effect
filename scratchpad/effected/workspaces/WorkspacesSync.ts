@@ -24,6 +24,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import { MAX_ENUMERATION_DEPTH } from "./internal/limits.ts";
 import { manifestPatternsOf, pnpmPatternsOf } from "./internal/patterns.ts";
 import { Traversal, badMaxDepthMessage, isPruned, isValidMaxDepth, joinRelative } from "./internal/traverse.ts";
@@ -34,6 +35,11 @@ import * as O from "@beep/utils/Option";
 const isDependencyMap = S.is(WorkspacePackage.fields.dependencies);
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspacesSync");
+
+const JsonValue = S.fromJsonString(S.Unknown).annotate(
+	$I.annote("JsonValue", { description: "A JSON value parsed before the tolerant manifest shape checks." }),
+);
+const decodeJson = S.decodeResult(JsonValue);
 
 /**
  * A malformed synchronous workspace manifest, preserving its diagnostic message.
@@ -268,7 +274,7 @@ export interface WorkspacesSyncOptions {
  * member on both surfaces.
  *
  * The vocabulary is shared; the CHECKS are shared only as far as this list.
- * Both surfaces perform the same five: the file read (`read`), `JSON.parse`
+ * Both surfaces perform the same five: the file read (`read`), JSON decoding
  * (`invalidJson`), the parsed value being a non-null non-array object
  * (`invalidShape`), a non-empty string `name` (`missingName`), and a `version`
  * that is either absent or a non-empty string (`invalidShape`). Beyond them
@@ -324,7 +330,7 @@ const workspaceDiscoverySkipCase = <const Kind extends WorkspaceDiscoverySkipKin
  * plausible empty array indistinguishable from "no workspaces configured". The
  * fields mirror
  * `WorkspaceDiscoveryError`: `root`, `path`, `kind`, and on `cause` either the
- * caught throwable (`read` / `invalidJson`) or an `Error` carrying the same
+ * caught throwable (`read`), a `SchemaError` (`invalidJson`), or an `Error` carrying the same
  * sentence the Effect surface fails with (`invalidShape`). Only `missingName`
  * has `cause: undefined` — the field is simply absent, and nothing threw.
  *
@@ -387,13 +393,10 @@ const readManifest = (fileSystem: SyncFileSystem, file: string): ManifestRead =>
 	} catch (cause) {
 		return { kind: "read", cause };
 	}
-	let parsed: unknown;
-	try {
-		parsed = JSON.parse(text);
-	} catch (cause) {
-		return { kind: "invalidJson", cause };
-	}
-	// `JSON.parse` returns `null` / a number / a string for VALID input; only a
+	const decoded = decodeJson(text);
+	if (Result.isFailure(decoded)) return { kind: "invalidJson", cause: decoded.failure };
+	const parsed = decoded.success;
+	// JSON decoding returns `null` / a number / a string for VALID input; only a
 	// non-null, non-array object is a manifest.
 	return P.isObject(parsed)
 		? { raw: parsed }
@@ -411,17 +414,12 @@ const readManifest = (fileSystem: SyncFileSystem, file: string): ManifestRead =>
  * only on `undefined` sails straight into `raw.name` and throws a `TypeError`.
  * These functions are documented as total and are reached from a Vitest config,
  * which has nowhere to put a crash: malformed input must be *skipped*, never a
- * defect. A throwing consumer `readFile` lands in the same catch as a JSON
- * syntax error — an unusable manifest either way.
+ * defect. A throwing consumer `readFile` and a JSON codec failure both collapse
+ * to an unusable manifest.
  */
 const readJson = (fileSystem: SyncFileSystem, file: string): Record<string, unknown> | undefined => {
-	let parsed: unknown;
-	try {
-		parsed = JSON.parse(fileSystem.readFile(file));
-	} catch {
-		return undefined;
-	}
-	return P.isObject(parsed) ? parsed : undefined;
+	const manifest = readManifest(fileSystem, file);
+	return P.hasProperty(manifest, "raw") ? manifest.raw : undefined;
 };
 
 /**

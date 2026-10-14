@@ -14,11 +14,12 @@ const isMap = S.is(YamlMap);
 const isSeq = S.is(YamlSeq);
 
 /**
- * Check if a pending anchor is being applied to an alias node (invalid in YAML 1.2 §3.2.2).
+ * Reject pending node properties on an alias (YAML 1.2 §7.1).
  *
  * **Details**
  *
- * Aliases represent references to existing anchored nodes and cannot have their own anchors.
+ * Aliases refer to existing nodes and cannot carry their own anchors or tags.
+ * Tags record `UnexpectedToken` at their property span; recovery keeps the alias node.
  *
  * Uses `DuplicateAnchor` error code as a pragmatic reuse — semantically this is
  * "anchor on alias" rather than "same anchor name defined twice", but adding a
@@ -41,6 +42,14 @@ const isSeq = S.is(YamlSeq);
  * @since 0.0.0
  */
 export function checkAnchorOnAlias(...[pendingMeta, cst, state]: [pendingMeta: NodeMeta, cst: CstNode, state: ComposerState]): void {
+	if (pendingMeta.tag !== undefined) {
+		state.errors.push({
+			code: "UnexpectedToken",
+			message: `Tag ${pendingMeta.tag} cannot be applied to alias *${getAliasName(cst, state.text)}`,
+			offset: pendingMeta.tagSpan?.offset ?? cst.offset,
+			length: pendingMeta.tagSpan?.length ?? cst.length,
+		});
+	}
 	if (pendingMeta.anchor !== undefined) {
 		state.errors.push({
 			code: "DuplicateAnchor",

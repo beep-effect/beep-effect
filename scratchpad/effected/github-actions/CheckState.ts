@@ -84,11 +84,35 @@ export type CheckState = typeof CheckState.Type;
  * suite pins these literals against `CheckConclusion` in `@effected/github`,
  * so drift between the two spellings fails a test rather than a consumer.
  *
+ * **Example** (Validate a CheckRunConclusion value)
+ *
+ * ```ts
+ * import { CheckRunConclusion } from "@beep/scratchpad/effected/github-actions/CheckState";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(CheckRunConclusion)("success")) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CheckRunConclusion = LiteralKit([
+	"success", "failure", "neutral", "skipped", "timed_out", "action_required",
+]).annotate($I.annote("CheckRunConclusion", { description: "The GitHub check-run conclusions the kit vocabulary can produce." }));
+
+/**
+ * The conclusion type accepted by {@link CheckRunConclusion}.
+ *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export type CheckRunConclusion = "success" | "failure" | "neutral" | "skipped" | "timed_out" | "action_required";
+export type CheckRunConclusion = typeof CheckRunConclusion.Type;
+
+const CheckRunStatus = LiteralKit(["in_progress", "completed"]).annotate(
+	$I.annote("CheckRunStatus", { description: "The statuses produced by a kit check-state projection." }),
+);
 
 /**
  * A `CheckState` on GitHub's check-run wire: a status, and a conclusion
@@ -100,13 +124,39 @@ export type CheckRunConclusion = "success" | "failure" | "neutral" | "skipped" |
  * protocol's own invariant is conditional: an in-progress check run *has* no
  * conclusion, and a completed one always does.
  *
+ * **Example** (Validate a CheckRunProjection value)
+ *
+ * ```ts
+ * import { CheckRunProjection } from "@beep/scratchpad/effected/github-actions/CheckState";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(CheckRunProjection)({ status: "completed", conclusion: "success" })) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CheckRunProjection = S.Union([
+	S.Struct({
+		status: S.Literal(CheckRunStatus.Enum.in_progress).annotateKey({ description: "An active check without a conclusion." }),
+	}),
+	S.Struct({
+		status: S.Literal(CheckRunStatus.Enum.completed).annotateKey({ description: "A finished check carrying its conclusion." }),
+		conclusion: CheckRunConclusion.annotateKey({ description: "The completed check's wire conclusion." }),
+	}),
+]).pipe(S.toTaggedUnion("status")).annotate(
+	$I.annote("CheckRunProjection", { description: "A plain-object wire projection with a conclusion exactly for completed checks." }),
+);
+
+/**
+ * The wire projection type accepted by {@link CheckRunProjection}.
+ *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export type CheckRunProjection =
-	| { readonly status: "in_progress" }
-	| { readonly status: "completed"; readonly conclusion: CheckRunConclusion };
+export type CheckRunProjection = typeof CheckRunProjection.Type;
 
 /**
  * Project a kit check state onto GitHub's check-run wire vocabulary.

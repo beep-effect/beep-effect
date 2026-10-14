@@ -121,5 +121,6 @@
     "Stop and report before adding write/approval MCP tools (D-4).",
     "Stop and report before any corpus content or PII lands in the repo.",
     "Stop and report before introducing a graph DB engine (intake SPEC D6 stands)."
-  ]
+  ],
+  "provides": ["law-practice/practice-kg-matter-lookup"]
 }

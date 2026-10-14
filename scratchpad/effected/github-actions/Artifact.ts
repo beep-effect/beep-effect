@@ -5,6 +5,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
+import * as Num from "effect/Number";
 import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
@@ -150,11 +151,27 @@ export type ArtifactItem = typeof ArtifactItem.Type;
 /**
  * How to pack an upload.
  *
+ * **Details**
+ *
+ * This boundary struct preserves plain objects and explicit undefined fields.
+ * Schema decoding requires finite numbers; the upload operation also validates
+ * positive retention and expiration range, and still clamps infinite compression.
+ * Defaults are applied by the operation rather than added during schema decoding.
+ *
+ * **Example** (Validate upload options)
+ *
+ * ```ts
+ * import { UploadOptions } from "@beep/scratchpad/effected/github-actions/Artifact";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(UploadOptions)({ retentionDays: 7, compressionLevel: 6 })) // true
+ * ```
+ *
  * @public
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
-export interface UploadOptions {
+export const UploadOptions = S.Struct({
 	/**
   * How long to keep it, in days.
   *
@@ -165,7 +182,7 @@ export interface UploadOptions {
   * being silently corrected, because "delete it immediately" and "keep it for
   * the default period" are too far apart to guess between.
   */
-	readonly retentionDays?: number | undefined;
+	retentionDays: S.optional(S.Finite).annotateKey({ description: "Positive finite retention in days; omitted uses the repository default." }),
 	/**
   * The zlib level, 0–9, defaulting to 6 as `@actions/artifact` does.
   *
@@ -175,58 +192,100 @@ export interface UploadOptions {
   * `CompressionLevel`: `0` is `NoCompression`, `1..3` `Fastest`, `4..8`
   * `Optimal`, `9` `SmallestSize`.
   */
-	readonly compressionLevel?: number | undefined;
-}
+	compressionLevel: S.optional(S.Finite).annotateKey({ description: "The zlib level, clamped to 0–9; omitted defaults to 6." }),
+}).pipe($I.annoteSchema("UploadOptions", { description: "Plain-object options for artifact retention and compression." }));
+
+/** The plain-object upload options validated by {@link UploadOptions}.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type UploadOptions = typeof UploadOptions.Type;
+
+// A boundary struct keeps the upload's plain-record public representation.
+const UploadResult = S.Struct({
+	/** The new artifact's database id, which `download` takes. */
+	id: S.Finite.annotateKey({ description: "The new artifact's database id, which download takes." }),
+	/** The size of the uploaded zip, in bytes. */
+	size: S.Finite.annotateKey({ description: "The size of the uploaded zip, in bytes." }),
+}).pipe($I.annoteSchema("UploadResult", { description: "What an upload produced." }));
 
 /**
- * What an upload produced.
+ * What an upload produced, decoded as a plain record with a finite database id.
  *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface UploadResult {
-	/** The new artifact's database id, which `download` takes. */
-	readonly id: number;
-	/** The size of the uploaded zip, in bytes. */
-	readonly size: number;
-}
+export type UploadResult = typeof UploadResult.Type;
 
 /**
  * Where a download should land.
  *
+ * **Example** (Validate a download destination)
+ *
+ * ```ts
+ * import { DownloadOptions } from "@beep/scratchpad/effected/github-actions/Artifact";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(DownloadOptions)({ path: "/work/output" })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DownloadOptions = S.Struct({
+	/** The destination directory. A fresh temporary directory when omitted. */
+	path: S.optional(S.String).annotateKey({ description: "Destination directory; omitted creates a fresh temporary directory." }),
+}).pipe($I.annoteSchema("DownloadOptions", { description: "Plain-object options specifying where an artifact download lands." }));
+
+/** The plain-object download options validated by {@link DownloadOptions}.
  * @category type-level
  * @since 0.0.0
  */
-export interface DownloadOptions {
-	/** The destination directory. A fresh temporary directory when omitted. */
-	readonly path?: string | undefined;
-}
+export type DownloadOptions = typeof DownloadOptions.Type;
 
 /**
  * What a download produced.
  *
+ * **Example** (Validate a download result)
+ *
+ * ```ts
+ * import { DownloadResult } from "@beep/scratchpad/effected/github-actions/Artifact";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(DownloadResult)({ downloadPath: "/work/output" })) // true
+ * ```
+ *
  * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DownloadResult = S.Struct({
+	/** The directory the artifact's contents were extracted into. */
+	downloadPath: S.String.annotateKey({ description: "The directory the artifact's contents were extracted into." }),
+}).pipe($I.annoteSchema("DownloadResult", { description: "The plain-object result naming an artifact's extraction directory." }));
+
+/** The plain-object download result validated by {@link DownloadResult}.
  * @category type-level
  * @since 0.0.0
  */
-export interface DownloadResult {
-	/** The directory the artifact's contents were extracted into. */
-	readonly downloadPath: string;
-}
+export type DownloadResult = typeof DownloadResult.Type;
+
+// A boundary struct keeps the deletion's plain-record public representation.
+const ArtifactRef = S.Struct({
+	/** The deleted artifact's database id. */
+	id: S.Finite.annotateKey({ description: "The deleted artifact's database id." }),
+}).pipe($I.annoteSchema("ArtifactRef", { description: "The id of an artifact that delete removed." }));
 
 /**
- * The id of an artifact that `delete` removed.
+ * The finite database id of an artifact that `delete` removed, decoded as a plain record.
  *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface ArtifactRef {
-	/** The deleted artifact's database id. */
-	readonly id: number;
-}
+export type ArtifactRef = typeof ArtifactRef.Type;
 
 /**
  * The members of the {@link Artifact} service: upload, list, get, download and
@@ -480,12 +539,30 @@ const make = Effect.fn("make")(function* (
 				if (files.length === 0) {
 					return yield* ArtifactError.make({ reason: "invalidOptions", artifact: name, detail: "no files were given to upload" });
 				}
-				if (options?.retentionDays !== undefined && options.retentionDays <= 0) {
+				const retentionDays = options?.retentionDays;
+				if (retentionDays !== undefined && (!S.is(S.Finite)(retentionDays) || retentionDays <= 0)) {
 					return yield* ArtifactError.make({
 							reason: "invalidOptions",
 							artifact: name,
-							detail: "retentionDays must be positive — omit it to use the repository default",
+							detail: "retentionDays must be positive and finite — omit it to use the repository default",
 						});
+				}
+				const expiresAt = retentionDays === undefined
+					? O.none<DateTime.Utc>()
+					: DateTime.make((yield* Clock.currentTimeMillis) + retentionDays * 86_400_000);
+				if (retentionDays !== undefined && O.isNone(expiresAt)) {
+					return yield* ArtifactError.make({
+						reason: "invalidOptions",
+						artifact: name,
+						detail: "retentionDays must produce a representable expiration",
+					});
+				}
+				if (options?.compressionLevel !== undefined && Num.Equivalence(options.compressionLevel, NaN)) {
+					return yield* ArtifactError.make({
+						reason: "invalidOptions",
+						artifact: name,
+						detail: "compressionLevel must not be NaN",
+					});
 				}
 				return yield* scratch(name, Effect.fnUntraced(function* (directory: string) {
 						const packed = path.join(directory, "artifact.zip");
@@ -520,9 +597,6 @@ const make = Effect.fn("make")(function* (
 							.stat(packed)
 							.pipe(Effect.mapError((cause) => ArtifactError.make({ reason: "archiveFailed", artifact: name, cause })));
 						const digest = yield* digestOf(packed, name);
-						const expiresAt = options?.retentionDays === undefined
-							? O.none<number>()
-							: O.some((yield* Clock.currentTimeMillis) + options.retentionDays * 86_400_000);
 						const finalized = yield* call(
 							"FinalizeArtifact",
 							() => ({
@@ -530,7 +604,7 @@ const make = Effect.fn("make")(function* (
 								size: String(size.size),
 								hash: `sha256:${digest}`,
 								...O.getSomesStruct({
-									expiresAt: O.map(expiresAt, (timestamp) => DateTime.formatIso(DateTime.makeUnsafe(timestamp))),
+									expiresAt: O.map(expiresAt, DateTime.formatIso),
 								}),
 							}),
 							name,
@@ -542,10 +616,13 @@ const make = Effect.fn("make")(function* (
 									detail: "FinalizeArtifact did not confirm the upload",
 								});
 						}
-						return {
+						return yield* S.decodeEffect(UploadResult)({
 							id: Number(stringField(finalized, "artifactId") ?? 0),
 							size: Number(size.size),
-						} satisfies UploadResult;
+						}).pipe(Effect.mapError((cause) => ArtifactError.make({
+							...twirpFailureFields({ method: "FinalizeArtifact", kind: "malformed", cause }),
+							artifact: name,
+						})));
 					}),
 				);
 			}),
@@ -612,7 +689,12 @@ const make = Effect.fn("make")(function* (
 				if (deleted === CONFLICT || !isOk(deleted)) {
 					return yield* ArtifactError.make({ reason: "refused", artifact: name, detail: "DeleteArtifact did not confirm" });
 				}
-				return { id: Number(stringField(deleted, "artifactId") ?? found.id) } satisfies ArtifactRef;
+				return yield* S.decodeEffect(ArtifactRef)({
+					id: Number(stringField(deleted, "artifactId") ?? found.id),
+				}).pipe(Effect.mapError((cause) => ArtifactError.make({
+					...twirpFailureFields({ method: "DeleteArtifact", kind: "malformed", cause }),
+					artifact: name,
+				})));
 			}),
 		} satisfies ArtifactShape;
 	});

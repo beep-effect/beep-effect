@@ -1,11 +1,14 @@
 import * as A from "effect/Array";
 import * as Order from "effect/Order";
 import * as Str from "effect/String";
-import * as MutableHashMap from "effect/MutableHashMap";
 import * as Function from "effect/Function";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import { sha256Hex } from "./digest.ts";
 import * as R from "effect/Record";
 import * as O from "@beep/utils/Option";
+
+const $I = $ScratchpadId.create("effected/github-actions/internal/sigv4");
 
 // Effect Crypto cannot provide the synchronous HMAC required by SigV4.
 const { createHmac } = process.getBuiltinModule("node:crypto");
@@ -60,34 +63,75 @@ export const uriEncode = (value: string): string =>
 
 /**
  * The credentials and coordinates a signature needs.
+ * **Example** (Validate SigV4Credentials input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
+ * import { SigV4Credentials } from "@beep/scratchpad/effected/github-actions/internal/sigv4";
+ *
+ * const input = { accessKeyId: "example-access", secretAccessKey: "example-secret", region: "us-east-1", service: "s3" };
+ * Effect.runSync(Console.log(S.is(SigV4Credentials)(input))) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface SigV4Credentials {
-	readonly accessKeyId: string;
-	readonly secretAccessKey: string;
-	readonly sessionToken?: string | undefined;
-	readonly region: string;
+export const SigV4Credentials = S.Struct({
+	accessKeyId: S.String.annotateKey({ description: "The public access key identifier." }),
+	secretAccessKey: S.String.annotateKey({ description: "The already declassified signing secret." }),
+	sessionToken: S.optional(S.String).annotateKey({ description: "A temporary session token, absent or explicitly undefined otherwise." }),
+	region: S.String.annotateKey({ description: "The signing region." }),
 	/** Almost always `"s3"` here, but the algorithm is not S3-specific. */
-	readonly service: string;
-}
+	service: S.String.annotateKey({ description: "The signing service, usually s3." }),
+}).annotate($I.annote("SigV4Credentials", { description: "Plain-object credentials and coordinates used to sign a request." }));
+
+/**
+ * The credential type derived from the executable contract.
+ * @category models
+ * @since 0.0.0
+ */
+export type SigV4Credentials = typeof SigV4Credentials.Type;
 
 /**
  * One request to sign.
+ * **Example** (Validate SigV4Request input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
+ * import * as DateTime from "effect/DateTime";
+ * import { SigV4Request } from "@beep/scratchpad/effected/github-actions/internal/sigv4";
+ *
+ * const input = { method: "GET", path: "/object.txt", host: "example.s3.amazonaws.com", headers: {}, body: new Uint8Array(), now: DateTime.toDateUtc(DateTime.makeUnsafe("2013-05-24T00:00:00Z")) };
+ * Effect.runSync(Console.log(S.is(SigV4Request)(input))) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface SigV4Request {
-	readonly method: string;
+export const SigV4Request = S.Struct({
+	method: S.String.annotateKey({ description: "The HTTP method, preserved verbatim." }),
 	/** The raw path; every segment is encoded here, preserving empty segments. */
-	readonly path: string;
-	readonly host: string;
+	path: S.String.annotateKey({ description: "The raw object path, including empty segments." }),
+	/** An already encoded endpoint pathname, without a trailing slash. */
+	encodedPathPrefix: S.optional(S.String).annotateKey({ description: "An already encoded endpoint path prefix; omitted requests retain raw-path signing." }),
+	host: S.String.annotateKey({ description: "The host and optional port sent to the server." }),
 	/** Headers to sign, in any case and any order. */
-	readonly headers: Readonly<Record<string, string>>;
-	readonly body: Uint8Array;
+	headers: S.Record(S.String, S.String).annotateKey({ description: "String-valued headers in any case and order." }),
+	body: S.Uint8Array.annotateKey({ description: "The exact payload bytes." }),
 	/** The signing instant. Explicit so a signature is reproducible in a test. */
-	readonly now: Date;
-}
+	now: S.instanceOf(Date).annotateKey({ description: "The explicit JavaScript Date signing instant." }),
+}).annotate($I.annote("SigV4Request", { description: "A plain-object request with the exact payload and reproducible signing instant." }));
+
+/**
+ * The request type derived from the executable contract.
+ * @category models
+ * @since 0.0.0
+ */
+export type SigV4Request = typeof SigV4Request.Type;
 
 /** `20130524T000000Z` and `20130524`, the two forms the algorithm uses. */
 const timestamps = (now: Date): { readonly amzDate: string; readonly dateStamp: string } => {
@@ -161,29 +205,36 @@ export const canonicalize: {
 	const { amzDate, dateStamp } = timestamps(request.now);
 	const payloadHash = sha256Hex(request.body);
 
-	const headers: Record<string, string> = {
-		...request.headers,
+	const normalized = R.reduce(request.headers, R.empty<string, string>(), (headers, value, name) => {
+		const lowered = Str.toLowerCase(name);
+		const trimmed = Str.trim(value);
+		return R.set(headers, lowered, O.match(R.get(headers, lowered), {
+			onNone: () => trimmed,
+			onSome: (previous) => `${previous}, ${trimmed}`,
+		}));
+	});
+	const signingHeaders: Record<string, string> = {
+		...R.remove(normalized, "authorization"),
 		host: request.host,
 		"x-amz-date": amzDate,
 		"x-amz-content-sha256": payloadHash,
 		...O.getSomesStruct({ "x-amz-security-token": O.fromUndefinedOr(credentials.sessionToken) }),
 	};
+	const headers = R.map(signingHeaders, Function.flow(Str.trim, Str.replace(/\s+/g, " ")));
 
 	// Canonical headers are lowercased, whitespace-collapsed and sorted by name.
 	// The sort is not cosmetic: the signature covers this exact string, so any
 	// other order produces a valid-looking signature the server will reject with
 	// nothing more informative than `SignatureDoesNotMatch`.
-	const lowered = MutableHashMap.fromIterable(R.toEntries(headers).map(([name, value]) => [name.toLowerCase(), value] as const));
-	const canonicalNames = A.sort(MutableHashMap.keys(lowered), Order.String);
-	const canonicalHeaders = canonicalNames
-		.map((name) => `${name}:${O.getOrThrow(MutableHashMap.get(lowered, name)).trim().replace(/\s+/g, " ")}\n`)
-		.join("");
-	const signedHeaders = canonicalNames.join(";");
+	const canonicalNames = A.sort(R.keys(headers), Order.String);
+	const canonicalHeaders = A.join(A.map(canonicalNames, (name) => `${name}:${O.getOrThrow(R.get(headers, name))}\n`), "");
+	const signedHeaders = A.join(canonicalNames, ";");
 
-	const canonicalPath = A.join(
+	const encodedObjectPath = A.join(
 		A.map(Str.split(Str.startsWith("/")(request.path) ? request.path : `/${request.path}`, "/"), uriEncode),
 		"/",
 	);
+	const canonicalPath = `${request.encodedPathPrefix ?? ""}${encodedObjectPath}`;
 
 	return {
 		headers,

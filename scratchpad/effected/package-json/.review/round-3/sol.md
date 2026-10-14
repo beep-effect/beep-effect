@@ -1,0 +1,16 @@
+### sol-3-1
+- file: scratchpad/effected/package-json/Repository.ts:351
+- class: bug   severity: required
+- standard: `standards/effect-first-development.md` EF-1 and Operating Model (convert throwable APIs into explicit failures); D11; section 14 verified upstream-bug exception.   evidence: A read-only `bun --no-env-file -e` probe decoded `{ url: "github:owner/repo", directory: "src/\ud800" }` through `Repository.FromValue`, then accessed `directoryUrl`. Both the reviewed source and the pinned oracle produced `URIError: String contained an illegal UTF-16 sequence.` Decoding succeeds because `directory` accepts any string; escaped lone surrogates can also arrive through JSON text. The existing directory tests cover percent encoding and path rejection, but neither they nor the round-trip properties exercise this getter with malformed UTF-16.
+- failure: Reading the `Option<string>` getter on an accepted manifest can throw a native exception instead of returning an answer or absence. A consumer inspecting repository locations can therefore fail on otherwise successfully decoded data.
+- fix: Wrap segment encoding in `Result.try(() => encodeURIComponent(segment))`, project each result through `Result.getSuccess`, and sequence the resulting Options with `O.all`; return `O.none()` if any segment cannot be encoded. This replacement was probed read-only: ordinary segments retain their encoded bytes, and a lone surrogate produces `None`. Add a regression asserting successful manifest decoding, `directoryUrl` returning `None` without throwing, and unchanged wire round-trip fidelity. Record the verified upstream-bug deviation under section 14.
+
+### sol-3-2
+- file: scratchpad/effected/package-json/internal/wire.ts:59
+- class: bug   severity: required
+- standard: `Package.wireFor`’s documented support for typed subclass fields; D10 encode/decode round-trip contract; D11; section 14 verified upstream-bug exception.   evidence: A read-only probe defined `class Extended extends Package.extend("Extended")({ ["__proto__"]: S.String }) {}` and directly decoded `{ name: "pkg", version: "1.0.0", ["__proto__"]: "kept" }`. Direct class decoding succeeded. Encoding that instance through `Package.wireFor(Extended)` retained `"__proto__":"kept"`, but decoding the encoded output failed with `Missing key at ["__proto__"]`. The pinned oracle produced the same results. Existing wire properties cover `__proto__` in the unknown-key `rest` partition; they do not cover it as a declared subclass field.
+- failure: The known-field accumulator is `{}`, so `known["__proto__"] = value` invokes the inherited prototype setter rather than creating an own data property. A supported subclass codec consequently cannot decode its own successfully encoded output; an optional field can instead disappear silently. This is a separate partition from the unknown-key partitions repaired in previous rounds.
+- fix: Build the known-field record with `R.fromEntries` over entries selected by `knownKeys`, preserving own-property semantics while retaining the existing `rest` representation and typed-field precedence. Correct the nearby claim that declared fields cannot collide with `__proto__`. Add a subclass encode/decode regression with a computed `["__proto__"]` schema field, and record the verified upstream-bug deviation under section 14.
+
+REQUIRED: 2
+BACKLOG: 0

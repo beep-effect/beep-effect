@@ -1,0 +1,6 @@
+[
+  {
+    "id": "EV010:scratchpad/test/glob/hostility.test.ts:6:@effect/platform-node/NodeServices@0#1",
+    "reason": "The hostility regression tests require a real Bun subprocess so an engine hang can be interrupted by the existing two-second watchdog. NodeServices supplies the live ChildProcessSpawner and scoped process cleanup; a mock platform layer cannot prove termination of the actual engine."
+  }
+]

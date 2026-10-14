@@ -1,0 +1,266 @@
+{
+  "module": "markdown",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/markdown/MarkdownFormat.ts",
+        "scratchpad/effected/markdown/MarkdownDocument.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/format.test.ts",
+        "scratchpad/test/markdown/MarkdownFormat.property.test.ts",
+        "scratchpad/test/markdown/document.test.ts"
+      ],
+      "findings": [
+        "req-1",
+        "req-2",
+        "req-3",
+        "req-4",
+        "req-5",
+        "req-6",
+        "req-7"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/markdown/Mdast.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/mdast.test.ts",
+        "scratchpad/test/markdown/Mdast.coverage.test.ts"
+      ],
+      "findings": [
+        "req-8",
+        "req-12"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/markdown/MarkdownNode.ts",
+        "scratchpad/effected/markdown/internal/carriers.ts",
+        "scratchpad/effected/markdown/internal/blockTypes.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/mdx.test.ts",
+        "scratchpad/test/markdown/node.test.ts",
+        "scratchpad/test/markdown/internal/carriers.coverage.test.ts",
+        "scratchpad/test/markdown/internal/blockTypes.property.test.ts"
+      ],
+      "findings": [
+        "req-9",
+        "req-10",
+        "req-14",
+        "req-15"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/markdown/internal/blockParser.ts",
+        "scratchpad/effected/markdown/internal/inlineParser.ts",
+        "scratchpad/effected/markdown/internal/blocks/table.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/hardening.test.ts",
+        "scratchpad/test/markdown/gfm-tables.test.ts",
+        "scratchpad/test/markdown/internal/blockParser.coverage.test.ts",
+        "scratchpad/test/markdown/internal/inlineParser.coverage.test.ts",
+        "scratchpad/test/markdown/internal/blocks/table.property.test.ts"
+      ],
+      "findings": [
+        "req-11",
+        "req-13",
+        "req-20",
+        "req-23"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/markdown/internal/stringify.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/stringify.test.ts",
+        "scratchpad/test/markdown/stringify-literal.test.ts",
+        "scratchpad/test/markdown/e2e/stringify-roundtrip.e2e.test.ts"
+      ],
+      "findings": [
+        "req-16",
+        "req-17",
+        "req-18",
+        "req-19",
+        "req-21",
+        "req-22",
+        "req-24"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/markdown/internal/inlines/autolinkLiteral.ts"
+      ],
+      "tests": [
+        "scratchpad/test/markdown/internal/inlines/autolinkLiteral.property.test.ts",
+        "scratchpad/test/markdown/internal/inlines/autolinkLiteral.coverage.test.ts"
+      ],
+      "findings": [
+        "req-25"
+      ]
+    }
+  ],
+  "findings": {
+    "req-1": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "Flow replacements absorb an untouched following sibling",
+      "fix": "Require each contextual replacement block to retain its standalone end offset as well as type/start. If the target has a following sibling, require that sibling in the same projected parent at its original start plus the splice length delta, preserving its boundary/type. Return existing UnsupportedTarget on absorption. Add immediate heading/paragraph and blank-separated list/code/blockquote regressions, plus table and definition continuation cases. Coordinate the dialect-aware reparse with req-7; record the verified upstream bug centrally under section 14."
+    },
+    "req-2": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "Phrasing replacement whitespace invalidates an enclosing delimiter",
+      "fix": "When the replacement reaches a delimiter-bearing ancestor’s closing boundary, encode its terminal whitespace as character references so the closing delimiter remains valid, or return typed `UnsupportedTarget` for that unsafe splice. Add regressions for emphasis, strong, and delete text children and record the upstream bug."
+    },
+    "req-3": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "Underscore formatting misclassifies combining and format characters",
+      "fix": "Evaluate the proposed underscore delimiters using the parser’s actual whitespace, punctuation, and flanking rules, and skip unsafe rewrites. Add U+0301 and U+200C regressions, including one-sided and two-sided neighbors, and record the upstream bug."
+    },
+    "req-4": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "Nested-link precheck overflows before typed depth validation",
+      "fix": "Run the descendant-link check after `Markdown.stringifyResult` has successfully validated the fragment’s depth, or make that check iterative and depth bounded with a typed `FragmentUnrenderable` result. Add a regression proving that an over-deep fragment inside a link fails through the typed channel."
+    },
+    "req-5": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "schema",
+      "summary": "TaggedEdit needs an executable schema",
+      "fix": "Define an annotated module-local TaggedEdit schema and derive its same-name type, reusing existing edit field schemas. Keep plain-object records, all six fields and formatter behavior. Check the existing formatter regressions. The resulting law-forced recording belongs to the central per-class deviation codemod; do not edit Port notes or PORT_LEDGER.json."
+    },
+    "req-6": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "Setext heading conversion can become HTML or a reference definition",
+      "fix": "Before emitting a setext replacement, parse `` `${content}\\n${underline}\\n` `` with the same dialect `format` used. Emit only when that parse is a single setext heading of the same depth and text. Leave the ATX heading untouched otherwise."
+    },
+    "req-7": {
+      "file": "scratchpad/effected/markdown/MarkdownFormat.ts",
+      "class": "bug",
+      "summary": "Flow safety reparse loses the original parse dialect",
+      "fix": "Persist the resolved parse dialect on MarkdownDocument using the existing MarkdownDialect schema and a gfm default, populate it in MarkdownDocument.parseResult, and pass it into both standalone and contextual reparses in MarkdownFormat.modify. Combine with req-1 boundary validation. Add commonmark/GFM paired modification regressions. Record the verified parsing-contract bug centrally under section 14; keep changes within these two source files and their tests."
+    },
+    "req-8": {
+      "file": "scratchpad/effected/markdown/Mdast.ts",
+      "class": "bug",
+      "summary": "One synthetic list position suppresses real item gaps",
+      "fix": "Treat the list as positionless only when fewer than two children have a non-synthetic position, and return `node.spread ?? false` in that case. Otherwise run the existing gap loop over the non-synthetic children in order. Keep the all-sentinel behaviour `mdast.test.ts:176` pins, and add the mixed line-1 / line-3 / omitted-position case."
+    },
+    "req-9": {
+      "file": "scratchpad/effected/markdown/internal/carriers.ts",
+      "class": "law",
+      "summary": "Engine errors still extend Data.TaggedError instead of S.TaggedError",
+      "fix": "Derive RawMarkdownError and GuardExceeded directly from annotated S.TaggedError schemas, reusing the existing schema-backed diagnostic and reason domain. Preserve tags, name = Error, messages, positional new constructors and instanceof guards. Retarget carrier tests only where the schema constructor requires it. This is the still-missing migration, not recording alone; the law-forced bookkeeping remains central."
+    },
+    "req-10": {
+      "file": "scratchpad/effected/markdown/MarkdownNode.ts",
+      "class": "schema",
+      "summary": "MDX fragment attribute checks lack shared filter metadata",
+      "fix": "Declare one module-level filter, `S.makeFilter` with `identifier`, `title`, `description`, and the existing message `\"an MDX JSX fragment cannot carry attributes\"`, and pass that filter to both `S.check` calls."
+    },
+    "req-11": {
+      "file": "scratchpad/effected/markdown/internal/blockParser.ts",
+      "class": "bug",
+      "summary": "Setext promotion spreads an unbounded source-segment array",
+      "fix": "Copy the segments with an iterative loop instead of argument spreading. Add a Node regression for the 150,000-line setext heading, asserting successful parsing and retained source positions, and record the verified upstream bug through section 14."
+    },
+    "req-12": {
+      "file": "scratchpad/effected/markdown/Mdast.ts",
+      "class": "bug",
+      "summary": "Deep acyclic foreign mdast input overflows normalization",
+      "fix": "Add an iterative admission preflight that checks a documented safe foreign-tree depth budget before recursive normalization and schema decoding. Return `MdastDecodeError` with a structured `SchemaIssue.InvalidValue` when that budget is exceeded. Preserve shared acyclic subtrees and supported foreign trees above the visitor’s separate depth limit; add regressions for both entry points and record the upstream-bug deviation."
+    },
+    "req-13": {
+      "file": "scratchpad/effected/markdown/internal/inlineParser.ts",
+      "class": "perf",
+      "summary": "Link opener deactivation continues scanning after all active links clear",
+      "fix": "Include `this.activeLinkOpeners > 0` in the traversal’s continuation condition, or break immediately after the count reaches zero. Add a scaled bracket-visit regression and record the verified upstream performance bug."
+    },
+    "req-14": {
+      "file": "scratchpad/effected/markdown/internal/blockTypes.ts",
+      "class": "schema",
+      "summary": "Four immutable parser payloads remain handwritten interfaces",
+      "fix": "Define annotated S.Struct values for RawInlineSlice, PreparedInline, DefinitionData and FootnoteData and derive same-name types. Reuse existing node/content schemas and RawInlineSegment; retain plain-object construction and exact field optionality. Add focused schema acceptance/round-trip regressions to the existing blockTypes property test. Do not turn this into a module-wide S3 coverage or canon assignment; recording and added exports are central."
+    },
+    "req-15": {
+      "file": "scratchpad/effected/markdown/internal/blockTypes.ts",
+      "class": "schema",
+      "summary": "Parser continue/start verdicts lack named literal schemas",
+      "fix": "Define annotated `LiteralKit([0, 1, 2])` values for the two verdict domains and derive their same-name types. Retain the existing numeric codes and scanner behavior."
+    },
+    "req-16": {
+      "file": "scratchpad/effected/markdown/internal/stringify.ts",
+      "class": "bug",
+      "summary": "Underscore serialization loses emphasis at unsafe neighboring code points",
+      "fix": "Before keeping `_`, classify the previous output code point (step back over a valid surrogate pair) and, when the next sibling is text, its first code point. If either is a Unicode letter or number, emit `*`. Add regressions for `𐐀_a_`, `_a_b`, and the strong forms."
+    },
+    "req-17": {
+      "file": "scratchpad/effected/markdown/internal/stringify.ts",
+      "class": "bug",
+      "summary": "Destination and title line endings serialize as active block syntax",
+      "fix": "After escaping literal ampersands, encode CR/LF as &#13;/&#10; in the pointy destination spelling and in titleSuffix, preserving the existing quote/destination escapes. Add link, image and definition round-trips for both line endings and blank-line titles. Exclude unrepresentable NUL from this fix. Record the verified upstream bug centrally under section 14."
+    },
+    "req-18": {
+      "file": "scratchpad/effected/markdown/internal/stringify.ts",
+      "class": "bug",
+      "summary": "Metadata without language becomes a language class",
+      "fix": "When `lang` is absent, emit an empty info string. No first word unescapes to `\"\"`, so metadata cannot occupy that slot and keep the class absent. Add a regression that this node re-renders without `language-tail`."
+    },
+    "req-19": {
+      "file": "scratchpad/effected/markdown/internal/stringify.ts",
+      "class": "bug",
+      "summary": "Metadata-only fenced blocks acquire loose-list separators",
+      "fix": "Treat `meta !== undefined` as a fence in `interruptsParagraph` and in both sides of the code clause of `canJoinWithoutBlank`, the same condition `serializeCode` already uses. Add a tight-list regression for a paragraph followed by metadata-only code."
+    },
+    "req-20": {
+      "file": "scratchpad/effected/markdown/internal/blocks/table.ts",
+      "class": "bug",
+      "summary": "Table segment spreads exceed Node argument limits",
+      "fix": "Append `content.segments` iteratively. Apply the same bounded append to the table module’s other unbounded segment spreads at lines 396 and 586. Add a focused Node regression for the escaped-pipe cell and record the upstream bug under section 14."
+    },
+    "req-21": {
+      "file": "scratchpad/effected/markdown/internal/stringify.ts",
+      "class": "bug",
+      "summary": "Decoded carriage returns become new block boundaries",
+      "fix": "Emit decoded CR as `&#13;` in canonical text escaping so it remains inline content rather than a source-line boundary. Add paragraph and image-alt regressions with block-opening characters after decoded CR, and record the upstream bug under section 14."
+    },
+    "req-22": {
+      "file": "scratchpad/effected/markdown/internal/stringify.ts",
+      "class": "bug",
+      "summary": "Decoded spaces turn a soft newline into a hard break",
+      "fix": "Emit `&#10;` instead of a physical newline when the preceding emitted text would make it a hard break. Account for adjoining Text siblings as well as spaces within one value. Add the decoded-space regression and record the upstream bug under section 14."
+    },
+    "req-23": {
+      "file": "scratchpad/effected/markdown/internal/blocks/table.ts",
+      "class": "perf",
+      "summary": "Table header promotion rescans provenance quadratically",
+      "fix": "Maintain a forward segment cursor while processing the ordered escape-drop intervals, visiting each source segment and drop once. Preserve the current source offsets and resulting segment boundaries. Add a segment-read bound regression and record the algorithmic upstream bug under section 14."
+    },
+    "req-24": {
+      "file": "scratchpad/effected/markdown/internal/stringify.ts",
+      "class": "bug",
+      "summary": "Leading tilde language text lengthens a tilde fence",
+      "fix": "After the existing replacements, encode one leading `~` as `&#126;` when the fence character is `~`. Add a round-trip for `lang: \"~\"` and `lang: \"~~x\"` with `fenceChar: \"~\"`."
+    },
+    "req-25": {
+      "file": "scratchpad/effected/markdown/internal/inlines/autolinkLiteral.ts",
+      "class": "schema",
+      "summary": "EmailMatch needs a schema-derived representation",
+      "fix": "Define a file-local, annotated `EmailMatch` schema and derive the same-name type from it. Use nonnegative integer schemas for the merged-text offsets and a string schema for the destination. Keep the existing plain-object records, matching algorithm, and export surface."
+    }
+  }
+}

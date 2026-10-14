@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
+import { PairsOptions } from "../../effected/github-actions/ActionInput.ts";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -30,6 +31,23 @@ const readErrorText = <A>(config: Config.Config<A>, env: Record<string, string>)
 	Effect.map(Effect.flip(read(config, env)), (error) => String(error));
 
 describe("ActionInput", () => {
+	describe("PairsOptions contract", () => {
+		it.effect("preserves plain objects, exact optional keys and boolean values", () =>
+			Effect.gen(function* () {
+				const omitted: PairsOptions = {};
+				assert.deepStrictEqual(yield* S.decodeEffect(PairsOptions)(omitted), {});
+				assert.deepStrictEqual(yield* S.encodeEffect(PairsOptions)(omitted), {});
+				for (const requireValue of [false, true]) {
+					const options: PairsOptions = { requireValue };
+					assert.deepStrictEqual(yield* S.decodeEffect(PairsOptions)(options), options);
+				}
+				assert.isFalse(S.is(PairsOptions)({ requireValue: undefined }));
+				assert.isFalse(S.is(PairsOptions)({ requireValue: "true" }));
+				assert.isFalse(S.is(PairsOptions)({ requireValue: null }));
+			}),
+		);
+	});
+
 	describe("the INPUT_ name mangling", () => {
 		it.effect("PRESERVES dashes — the bug that shipped", () =>
 			Effect.gen(function* () {
@@ -53,6 +71,24 @@ describe("ActionInput", () => {
 
 		it.effect("treats an empty value as absent, as the runner sets unsupplied inputs to ''", () =>
 			readFails(ActionInput.string("missing"), { INPUT_MISSING: "" }),
+		);
+
+		it.effect("treats an inherited-only runner input as absent", () =>
+			Effect.gen(function* () {
+				const env: Record<string, string> = {};
+				Object.setPrototypeOf(env, { INPUT_TOKEN: "prototype-token" });
+				yield* readFails(ActionInput.string("token"), env);
+				yield* readFails(Config.String("token"), env);
+			}),
+		);
+
+		it.effect("an inherited runner name cannot shadow an own input-name entry", () =>
+			Effect.gen(function* () {
+				const env = { token: "own-token" };
+				Object.setPrototypeOf(env, { INPUT_TOKEN: "prototype-token" });
+				assert.strictEqual(yield* readOk(ActionInput.string("token"), env), "own-token");
+				assert.strictEqual(yield* readOk(Config.String("token"), env), "own-token");
+			}),
 		);
 	});
 

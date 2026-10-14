@@ -40,8 +40,8 @@ const $I = $ScratchpadId.create("effected/jsonc/JsoncEdit");
  */
 export class JsoncRange extends S.Class<JsoncRange>($I`JsoncRange`)(
   {
-    offset: S.Natural,
-    length: S.Natural,
+    offset: S.Finite,
+    length: S.Finite,
   },
   $I.annote("JsoncRange", {
     description: "A character span inside a JSONC document.",
@@ -159,8 +159,8 @@ export type JsoncFormattingOptionsLike = typeof JsoncFormattingOptionsLike.Type;
 export class JsoncEditOverlapError extends S.TaggedError<JsoncEditOverlapError>($I.make("JsoncEditOverlapError"))(
   "JsoncEditOverlapError",
   {
-    lower: S.Natural,
-    upper: S.Natural,
+    lower: S.Finite,
+    upper: S.Finite,
   },
   $I.annoteError<JsoncEditOverlapError>("JsoncEditOverlapError", {
     description: "Two edits passed to JsoncEdit.applyAll overlap.",
@@ -203,8 +203,8 @@ const byOffsetDescending = Order.flip(Order.mapInput(Order.Number, (edit: JsoncE
  */
 export class JsoncEdit extends S.Class<JsoncEdit>($I`JsoncEdit`)(
   {
-    offset: S.Natural,
-    length: S.Natural,
+    offset: S.Finite,
+    length: S.Finite,
     content: S.String,
   },
   $I.annote("JsoncEdit", {

@@ -1,0 +1,9 @@
+I'll review the walker port at that commit against the round-2 inventory, the port decisions, and the pinned upstream oracle. Findings only; I won't edit anything.Round 2 required eight fixes. I'll check those landed at this commit, then look for new divergences against the pinned oracle.### grok-3-1
+- file: scratchpad/effected/walker/Descend.ts:456
+- class: law   severity: required
+- standard: D9; section 14; round-2 req-8 (still unfixed). EF-2 for the ancestor read.   evidence: The pinned oracle `packages/walker/src/Descend.ts:304-308` dequeues with `for (let head = 0; head < frames.length; head += 1)` and breaks when `frames[head]` is `undefined`. Line 363 uses `frame.ancestors[frame.ancestors.length - 1] ?? frame.absolute`. This commit still has `for (const frame of frames)` at Descend.ts:456 and `O.getOrThrow(A.last(frame.ancestors))` at Descend.ts:513. `Option.getOrThrow` throws `Error("getOrThrow called on a None")`. The walker `deviations` entries do not record this worklist or this fallback (`law:` or `upstream-bug:`). Round-2 req-1 through req-7 are present (no `"30 seconds"` timeouts, shared `OnUnreadableArray` and `DepthCap`, Option ceiling, `Effect.fromResult`, `ExpansionStage` match). Req-8 is not.
+- failure: The descent worklist and the symlink parent-real fallback still differ from the oracle with no allowed deviation. An empty ancestor chain dies instead of continuing from `frame.absolute`. The carried JSDoc at Descend.ts:574-575 still describes a head-index dequeue.
+- fix: Restore the oracle head-index loop, the `frame === undefined` break, and the queue comment. Restore `frame.ancestors[frame.ancestors.length - 1] ?? frame.absolute`. Keep the surrounding schema, Option probe, `MutableHashSet`, and `A.contains` / `A.append` changes. Do not rewrite the head-index paragraph.
+
+REQUIRED: 1
+BACKLOG: 0

@@ -14,7 +14,7 @@ import { YamlMap, YamlScalar, YamlSeq } from "../../YamlNode.ts";
 import type { CstNode } from "../cst.ts";
 import { checkAnchorOnAlias, getAnchorName, makeAlias, registerAnchor } from "./anchors.ts";
 import type { SemanticItem } from "./block.ts";
-import { buildPairs, checkDuplicateKeys, checkMultilineImplicitKeys } from "./block.ts";
+import { buildPairs, checkDuplicateKeys, checkMultilineImplicitKeys, validatePendingProperty } from "./block.ts";
 import type { CommentFields } from "./comments.ts";
 import {
 	blankLineAboveStart,
@@ -108,6 +108,7 @@ function validateFlowSeparators(
 			}
 			colonCount++;
 			contentAfterColon = 0;
+			sawContent = false;
 			separatorRequired = false;
 			continue;
 		}
@@ -364,6 +365,23 @@ export const flattenFlowChildren: {
 	const items: SemanticItem[] = [];
 	let pendingMeta: NodeMeta = {};
 	let explicitKeyOffset = 0;
+	const materializeEmptyExplicitKey = (): void => {
+		let keyIndex = items.length - 1;
+		while (keyIndex >= 0 && items[keyIndex]?.kind === "comment") keyIndex--;
+		const last = items[keyIndex];
+		if (last?.kind !== "key" || last.node !== undefined) return;
+		const scalar = YamlScalar.make({
+			value: resolveScalar("", ["plain", pendingMeta.tag, state, pendingMeta.tagSpan]),
+			style: "plain",
+			offset: explicitKeyOffset,
+			length: 0,
+			...O.getSomesStruct({ tag: O.fromUndefinedOr(pendingMeta.tag), anchor: O.fromUndefinedOr(pendingMeta.anchor) }),
+		});
+		if (pendingMeta.anchor !== undefined && pendingMeta.anchor !== "")
+			registerAnchor(scalar, pendingMeta.anchor, state, explicitKeyOffset);
+		pendingMeta = {};
+		items[keyIndex] = { kind: "key", node: scalar };
+	};
 
 	for (let i = 0; i < children.length; i++) {
 		const child = children[i];
@@ -377,15 +395,7 @@ export const flattenFlowChildren: {
 			if (child.source === ",") {
 				// A node-less explicit key ends at the comma. Materialize its
 				// null key before the following entry can supply a node to it.
-				let keyIndex = items.length - 1;
-				while (keyIndex >= 0 && items[keyIndex]?.kind === "comment") keyIndex--;
-				const last = items[keyIndex];
-				if (last?.kind === "key" && last.node === undefined) {
-					items[keyIndex] = {
-						kind: "key",
-						node: YamlScalar.make({ value: null, style: "plain", offset: explicitKeyOffset, length: 0 }),
-					};
-				}
+				materializeEmptyExplicitKey();
 				if (hasMeta(pendingMeta)) {
 					const value = resolveScalar("", ["plain", pendingMeta.tag, state, pendingMeta.tagSpan]);
 					const scalar = YamlScalar.make({
@@ -406,6 +416,7 @@ export const flattenFlowChildren: {
 				continue;
 			}
 			if (child.source === ":") {
+				if (!hasMeta(pendingMeta)) materializeEmptyExplicitKey();
 				// Flush pending tag/anchor as empty scalar before value-sep
 				if (hasMeta(pendingMeta)) {
 					const value = resolveScalar("", ["plain", pendingMeta.tag, state, pendingMeta.tagSpan]);
@@ -454,10 +465,12 @@ export const flattenFlowChildren: {
 			continue;
 		}
 		if (child.type === "anchor") {
+			validatePendingProperty(child, pendingMeta, state);
 			pendingMeta.anchor = getAnchorName(child, state.text);
 			continue;
 		}
 		if (child.type === "tag") {
+			validatePendingProperty(child, pendingMeta, state);
 			pendingMeta.tag = child.source;
 			pendingMeta.tagSpan = { offset: child.offset, length: child.length };
 			MutableHashSet.add(state.tagOffsets, child.offset);
@@ -586,15 +599,7 @@ export const flattenFlowChildren: {
 			items.push({ kind: "node", node: seq });
 		}
 	}
-	let trailingKeyIndex = items.length - 1;
-	while (trailingKeyIndex >= 0 && items[trailingKeyIndex]?.kind === "comment") trailingKeyIndex--;
-	const trailingKey = items[trailingKeyIndex];
-	if (trailingKey?.kind === "key" && trailingKey.node === undefined) {
-		items[trailingKeyIndex] = {
-			kind: "key",
-			node: YamlScalar.make({ value: null, style: "plain", offset: explicitKeyOffset, length: 0 }),
-		};
-	}
+	materializeEmptyExplicitKey();
 	// Flush trailing pending tag/anchor as empty scalar (e.g., !!str at end of flow)
 	if (hasMeta(pendingMeta)) {
 		const value = resolveScalar("", ["plain", pendingMeta.tag, state, pendingMeta.tagSpan]);

@@ -1,9 +1,46 @@
 import { assert, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { makeTransport } from "../../../effected/github/internal/octokit.ts";
 import { RateLimitSnapshot, RetryPolicy } from "../../../effected/github/Resilience.ts";
 import { rateLimitHeaders, scriptedFetch } from "../fixtures.ts";
+
+for (const field of ["x-ratelimit-remaining", "x-ratelimit-limit", "x-ratelimit-reset"]) {
+  for (const value of ["9007199254740992", "1e308"]) {
+    for (const retained of [false, true]) {
+      it.effect(`ignores invalid complete snapshot ${field}=${value}, prior snapshot ${retained}`, () => Effect.gen(function* () {
+        const prior = RateLimitSnapshot.make({ remaining: 12, limit: 5000, resetEpochSeconds: 1_700_000_000 });
+        const refreshed = RateLimitSnapshot.make({ remaining: 8, limit: 5000, resetEpochSeconds: 1_700_000_090 });
+        const headers = { ...rateLimitHeaders({ remaining: 0 }), [field]: value };
+        const script = scriptedFetch([
+          ...(retained ? [{ status: 200, body: {}, headers: rateLimitHeaders(prior) }] : []),
+          { status: 200, body: { answer: 42 }, headers },
+          { status: 200, body: { data: { viewer: null }, errors: [{ message: "missing", type: "NOT_FOUND" }] }, headers },
+          { status: 200, body: {}, headers: rateLimitHeaders(refreshed) },
+        ]);
+        const transport = yield* makeTransport({ retry: RetryPolicy.none, fetch: script.fetch });
+        if (retained) {
+          yield* transport.request("seed", "/seed", {});
+          assertSome(yield* transport.rateLimit, prior);
+        }
+        const response = yield* transport.request("answer", "/answer", {});
+        assert.deepStrictEqual(response.data, { answer: 42 });
+        assert.deepStrictEqual(yield* transport.rateLimit, retained ? O.some(prior) : O.none());
+        const error = yield* transport.graphql("viewer", "query { viewer { login } }", {}).pipe(Effect.flip, Effect.orDie);
+        assert.strictEqual(error._tag, "GitHubGraphQLError");
+        assert.strictEqual(error.kind, "notFound");
+        assert.strictEqual(error.reason, "missing");
+        assert.strictEqual(error.errors[0]?.message, "missing");
+        assert.isDefined(error.cause);
+        assert.deepStrictEqual(yield* transport.rateLimit, retained ? O.some(prior) : O.none());
+        yield* transport.request("refresh", "/refresh", {});
+        assertSome(yield* transport.rateLimit, refreshed);
+        assert.strictEqual(script.count(), retained ? 4 : 3);
+      }));
+    }
+  }
+}
 
 for (const thrown of [null, "offline", { status: 404, message: "missing" }, { response: null }]) {
   it.effect(`classifies a throwable without response headers: ${String(thrown)}`, () => Effect.gen(function* () {

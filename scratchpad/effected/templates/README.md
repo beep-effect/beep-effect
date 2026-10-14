@@ -118,6 +118,7 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **upstream-bug** — The lab refuses LF rendering of trailing bare CR with a typed error and preserves CRLF fidelity, while upstream succeeds and loses the CR on parsing. (scratchpad/test/templates/SectionDialect.test.ts:268; scratchpad/test/templates/SectionDialect.property.test.ts:54; scratchpad/test/templates/SectionDocument.test.ts:451)
 - **upstream-bug** — The lab exposes prefix matchers plus shared full-marker recognition with a linear boundary sweep, while upstream exposes complete regex matchers whose malformed whitespace tails backtrack quadratically. (scratchpad/test/templates/SectionDialect.test.ts:298,322,357; scratchpad/test/templates/internal/scan.coverage.test.ts:32,67)
 - **schema-first** — The lab exposes identified attribute schema checks with explicit decode messages and unchanged grammar, while upstream uses grammar predicates and the pre-round lab checks report generic regex failures. (scratchpad/test/templates/SectionAttributes.test.ts:369,378,387,397)
+- **upstream-bug** — The lab refuses hash/HTML markers containing closing-rule tails before U+2028/U+2029 with typed invalidAttribute errors and preserves existing files during sync, whereas upstream renders unreadable blocks successfully (scratchpad/test/templates/SectionDialect.test.ts:409; scratchpad/test/templates/ManagedSection.test.ts:70).
 
 ### Dependency backlog
 

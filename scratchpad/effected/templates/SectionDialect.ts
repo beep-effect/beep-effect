@@ -366,6 +366,15 @@ export class SectionDialect extends S.Class<SectionDialect>($I`SectionDialect`)(
 		}
 		const body = eol === "\n" ? normalized : Str.replace(/\n/g, eol)(normalized);
 		const begin = this.marker("BEGIN", section.id, section.attributes);
+		// A closing rule before a Unicode boundary can truncate a quoted value.
+		// Validate the emitted marker with the same scanner that reads it back.
+		const recognized = A.some(A.fromIterable(this.markerMatches(begin)), ([style, match, attributes]) =>
+			match.index === 0 && match[0] === begin && match[1] === "BEGIN" && match[2] === section.key &&
+			Equal.equals(style, section.commentStyle) && Equal.equals(attributes, section.attributes),
+		);
+		if (!recognized) {
+			return Result.fail(SectionRenderError.make({ reason: "invalidAttribute", key: section.key }));
+		}
 		return Result.succeed(`${begin}${eol}${body}${eol}${this.endMarker(section.id)}`);
 	}
 

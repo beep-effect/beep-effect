@@ -174,10 +174,10 @@ export type JsoncNodeType = typeof JsoncNodeType.Type;
 export class JsoncNode extends S.Class<JsoncNode>($I`JsoncNode`)(
   {
     type: JsoncNodeType,
-    offset: S.Natural,
-    length: S.Natural,
+    offset: S.Finite,
+    length: S.Finite,
     value: S.optionalKey(S.Unknown),
-    colonOffset: S.optionalKey(S.Natural),
+    colonOffset: S.optionalKey(S.Finite),
     children: S.suspend((): S.Codec<JsoncNode, JsoncNode.Encoded> => JsoncNode).pipe(S.Array, S.optionalKey),
   },
   $I.annote("JsoncNode", {
@@ -348,12 +348,12 @@ export declare namespace JsoncNode {
  */
 export const makeNodeUnsafe = (props: JsoncNode.Encoded): JsoncNode => JsoncNode.make(props, { disableChecks: true });
 
-const propertyKey = (prop: JsoncNode): O.Option<string> =>
+const propertyKey = (prop: JsoncNode): O.Option<JsoncSegment> =>
   JsoncNodeType.is.property(prop.type)
     ? O.fromUndefinedOr(prop.children).pipe(
         O.flatMap(A.head),
         O.map((keyNode) => keyNode.value),
-        O.filter(P.isString)
+        O.filter((value): value is JsoncSegment => P.isString(value) || P.isNumber(value))
       )
     : O.none();
 
@@ -459,12 +459,15 @@ const evaluateNode: {
     object: () => {
       const obj = R.empty<string, unknown>();
       for (const prop of children) {
+        if (prop.children?.length !== 2) {
+          continue;
+        }
         const key = propertyKey(prop);
         const valueNode = O.flatMap(O.fromUndefinedOr(prop.children), A.get(1));
         if (O.isSome(key) && O.isSome(valueNode)) {
           // Own data property, not a prototype mutation: matches the value
           // parser and JSON.parse semantics for a `__proto__` key.
-          Object.defineProperty(obj, key.value, {
+          Object.defineProperty(obj, `${key.value}`, {
             value: evaluateNode(valueNode.value, depth + 1),
             writable: true,
             enumerable: true,

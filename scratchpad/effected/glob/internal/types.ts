@@ -132,6 +132,8 @@ export interface EngineOptions {
 export type MMRegExp = RegExp & {
 	_src?: string;
 	_glob?: string;
+	/** Owner-local non-backtracking evaluator for repeated extglobs. */
+	_matchSegment?: (candidate: string) => boolean;
 };
 
 /**

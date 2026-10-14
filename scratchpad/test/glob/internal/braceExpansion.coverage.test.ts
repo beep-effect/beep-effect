@@ -12,6 +12,7 @@ describe("brace expansion coverage", () => {
     assert.deepStrictEqual(expand("{,}"), []);
     assert.deepStrictEqual(expand("{{${a,b}}}tail"), ["{{${a,b}}}tail"]);
     assert.deepStrictEqual(expand("{{a,b}}tail"), ["{a}tail", "{b}tail"]);
+    assert.deepStrictEqual(expand("{{a,b,c}}tail"), ["{a}tail", "{b}tail", "{c}tail"]);
     assert.deepStrictEqual(expand("{{a},b}}tail"), ["{a}}tail", "b}tail"]);
   }));
   it.effect("ascending and descending padded and mixed-case sequences follow Bash", () => Effect.sync(() => {

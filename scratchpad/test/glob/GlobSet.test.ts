@@ -415,3 +415,55 @@ describe("GlobSet.compileResult", () => {
 		assert.strictEqual(r.failure.reason, "PatternTooLong");
 	});
 });
+
+
+describe("GlobSet round-3 regressions", () => {
+	it.effect("matches rounded range endpoints for includes and exclusions", () =>
+		Effect.gen(function* () {
+			const source = "{18014398509481984..18014398509482004..5}";
+			for (const member of [source, `!${source}`]) {
+				const patterns = member === source ? [source] : ["*", member];
+				const sync = GlobSet.compileResult(patterns);
+				assertSuccess(sync, Result.getOrThrow(sync));
+				const compiled = yield* GlobSet.compile(patterns);
+				assert.strictEqual(sync.success.matches("18014398509482004"), member === source);
+				assert.strictEqual(compiled.matches("18014398509482004"), member === source);
+				assert.strictEqual(compiled.isExcluded("18014398509482004"), member !== source);
+			}
+		}),
+	);
+
+	it.effect("fails typed when rounded advancing increments exceed the set's fixed default budget", () =>
+		Effect.gen(function* () {
+			// GlobSet exposes no lowered-budget option. This terminating range has
+			// 100001 actual members, despite a declared-step estimate of 80001.
+			const source = "{18014398509481984..18014398509881984..5}";
+			for (const member of [source, `!${source}`]) {
+				const sync = GlobSet.compileResult([member]);
+				const error = yield* Effect.flip(GlobSet.compile([member]));
+				assertFailure(sync, error);
+				assert.instanceOf(error, GlobPatternError);
+				assert.strictEqual(error.pattern, member);
+				assert.strictEqual(error.reason, "ExpansionBudgetExceeded");
+				assert.strictEqual(error.limit, 100_000);
+				assert.strictEqual(error.actual, 100_001);
+			}
+		}),
+	);
+
+	it.effect("matches and excludes overlapping repetition through both public compilation APIs", () =>
+		Effect.gen(function* () {
+			for (const patterns of [["*(a|aa)b"], ["*", "!*(a|aa)b"]]) {
+				const sync = GlobSet.compileResult(patterns);
+				assertSuccess(sync, Result.getOrThrow(sync));
+				const compiled = yield* GlobSet.compile(patterns);
+				for (const [candidate, hit] of [["b", true], ["aaaab", true], ["aaaaac", false]] as const) {
+					assert.strictEqual(sync.success.matches(candidate), patterns.length === 1 ? hit : !hit);
+					assert.strictEqual(compiled.matches(candidate), patterns.length === 1 ? hit : !hit);
+					assert.strictEqual(compiled.isExcluded(candidate), patterns.length === 2 && hit);
+				}
+				assert.isFalse(compiled.matches("a/b"));
+			}
+		}),
+	);
+});

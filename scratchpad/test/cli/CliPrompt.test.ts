@@ -3,7 +3,7 @@ import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as Stdio from "effect/Stdio";
 import * as Path from "effect/Path";
 import { assert, describe, it } from "@effect/vitest";
-import { assertExitFailure } from "@effect/vitest/utils";
+import { assertExitFailure, assertFailure } from "@effect/vitest/utils";
 import { Audience, TerminalEnv } from "../../effected/env/index.ts";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
@@ -12,8 +12,10 @@ import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as Queue from "effect/Queue";
 import * as Runtime from "effect/Runtime";
+import * as S from "effect/Schema";
 import * as Terminal from "effect/Terminal";
-import { Command, Flag, Prompt } from "effect/cli";
+import { CliError, Command, Flag, Prompt } from "effect/cli";
+import { CliPromptTarget } from "../../effected/cli/CliPrompt.ts";
 import { CliInteractive, CliPrompt, CliRuntime } from "../../effected/cli/index.ts";
 import type { TestTerminalHandle } from "../../effected/cli/testing.ts";
 import { TestTerminal } from "../../effected/cli/testing.ts";
@@ -93,6 +95,36 @@ const run = Effect.fn("run")(function* (
 
 it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 	describe("CliPrompt.fallback", () => {
+		it.effect("a valid argument with an invalid flag sibling fails with MissingArgument", () =>
+			Effect.gen(function* () {
+				for (const flag of [undefined, null, 42]) {
+					const target = { argument: "project", flag };
+					assert.isTrue(S.is(CliPromptTarget)(target));
+					const fallback = CliPrompt.fallback(select, target);
+					const result = yield* Effect.result(Prompt.isPrompt(fallback) ? Effect.die("expected a fallback effect") : fallback);
+					assertFailure(result, CliError.MissingArgument.make({ argument: "project" }));
+				}
+			}),
+		);
+
+		it.effect("a valid flag takes precedence over an argument target", () =>
+			Effect.gen(function* () {
+				const fallback = CliPrompt.fallback(select, { argument: "project", flag: "profile" });
+				const result = yield* Effect.result(Prompt.isPrompt(fallback) ? Effect.die("expected a fallback effect") : fallback);
+				assertFailure(result, CliError.MissingOption.make({ option: "profile" }));
+			}),
+		);
+
+		it.effect("otherwise still answers an argument target with an invalid flag sibling", () =>
+			Effect.gen(function* () {
+				const terminal = yield* TestTerminal.make();
+				const context = yield* Layer.build(terminal.layer);
+				const fallback = CliPrompt.fallback(select, { argument: "project", flag: undefined, otherwise: "guest" });
+				const answered = yield* (Prompt.isPrompt(fallback) ? Effect.die("expected a fallback effect") : fallback);
+				assert.strictEqual(yield* answered.pipe(Effect.provideContext(context)), "guest");
+			}),
+		);
+
 		it.effect("interactive: the prompt runs and its answer is used (down, enter selects the second choice)", () =>
 			Effect.gen(function* () {
 				const terminal = yield* TestTerminal.make();

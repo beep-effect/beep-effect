@@ -121,7 +121,7 @@ const PREFIXES: Readonly<Record<Launcher, LauncherPrefixes>> = {
  * @category models
  * @since 0.0.0
  */
-export class ExecContext extends S.Class<ExecContext>($I`ExecContext`)({
+export class ExecContext extends S.Class<ExecContext, { readonly brand: unique symbol }>($I`ExecContext`)({
 	/** Human label of the launcher, e.g. `"pnpm"`. Reporting only. */
 	label: S.String.annotateKey({ description: "Human label of the launcher, e.g. `\"pnpm\"`. Reporting only." }),
 	/** argv prefix that runs a project-local binary, e.g. `["pnpm", "exec"]`. */
@@ -248,7 +248,7 @@ export class ExecContext extends S.Class<ExecContext>($I`ExecContext`)({
  * @category errors
  * @since 0.0.0
  */
-export class LocalExecError extends S.TaggedError<LocalExecError>($I`LocalExecError`)("LocalExecError", {
+export class LocalExecError extends S.TaggedError<LocalExecError, { readonly brand: unique symbol }>($I`LocalExecError`)("LocalExecError", {
 	/** The directory whose context could not be determined, when one is known. */
 	directory: S.optionalKey(S.String).annotateKey({ description: "The directory whose context could not be determined, when one is known." }),
 	/** The underlying failure. */

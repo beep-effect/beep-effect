@@ -24,6 +24,8 @@ import {
 	ProcessId,
 } from "../../effected/github-actions/index.ts";
 
+import { DetachedSpawnOptions } from "../../effected/github-actions/DetachedProcess.ts";
+
 const Json = S.fromJsonString(S.Unknown);
 const EnvironmentRecord = S.Record(S.String, S.String);
 
@@ -594,4 +596,26 @@ describe("DetachedProcess", () => {
 			}).pipe(Effect.ensuring(Effect.sync(() => rmSync(directory, { recursive: true, force: true }))));
 		});
 	});
+});
+
+
+describe("DetachedSpawnOptions schema contract", () => {
+	it.effect("keeps absent options absent and preserves explicit undefined", () => Effect.gen(function* () {
+		const minimal: DetachedSpawnOptions = { command: "node", logFile: "/tmp/child.log" };
+		assert.deepStrictEqual(yield* S.decodeEffect(DetachedSpawnOptions)(minimal), minimal);
+		const explicit: DetachedSpawnOptions = { ...minimal, args: undefined, cwd: undefined, base: undefined, env: undefined };
+		assert.deepStrictEqual(yield* S.decodeEffect(DetachedSpawnOptions)(explicit), explicit);
+		const configured: DetachedSpawnOptions = {
+			...minimal, args: ["worker.js"], cwd: "/work", base: { PATH: undefined, HOME: "/home/ci" }, env: { MODE: "worker" },
+		};
+		assert.deepStrictEqual(yield* S.decodeEffect(DetachedSpawnOptions)(configured), configured);
+	}));
+
+	it.effect("requires command and logFile and distinguishes base from additions", () => Effect.gen(function* () {
+		assert.isFalse(S.is(DetachedSpawnOptions)({ command: "node" }));
+		assert.isFalse(S.is(DetachedSpawnOptions)({ logFile: "/tmp/child.log" }));
+		assert.isFalse(S.is(DetachedSpawnOptions)({ command: "node", logFile: "/tmp/child.log", args: [42] }));
+		assert.isFalse(S.is(DetachedSpawnOptions)({ command: "node", logFile: "/tmp/child.log", env: { PATH: undefined } }));
+		assert.isFalse(S.is(DetachedSpawnOptions)({ command: "node", logFile: "/tmp/child.log", base: { PATH: 42 } }));
+	}));
 });

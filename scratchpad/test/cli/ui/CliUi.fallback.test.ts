@@ -1,4 +1,5 @@
 import { assert, it } from "@effect/vitest";
+import { assertFailure } from "@effect/vitest/utils";
 // Vitest requires a direct vi import to resolve hoisted mocks without globals.
 import { vi } from "vitest";
 import * as Cause from "effect/Cause";
@@ -10,7 +11,7 @@ import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as References from "effect/References";
 import * as Runtime from "effect/Runtime";
-import { Command, Flag, Prompt } from "effect/cli";
+import { CliError, Command, Flag, Prompt } from "effect/cli";
 import * as Path from "effect/Path";
 import * as Stdio from "effect/Stdio";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
@@ -104,6 +105,37 @@ it.layer(
 	Layer.mergeAll(services, Layer.unwrap(Effect.map(TestTerminal.make(), (terminal) => terminal.layer))),
 	{ timeout: "30 seconds" },
 )("CliUi.fallback", (it) => {
+	it.effect("a valid argument with an invalid flag sibling fails with MissingArgument without loading Ink", () =>
+		Effect.gen(function* () {
+			const before = loads.count;
+			for (const flag of [undefined, null, 42]) {
+				const target = { argument: "project", flag };
+				const fallback = CliUi.fallback(profile, target);
+				const result = yield* Effect.result(Prompt.isPrompt(fallback) ? Effect.die("expected a fallback effect") : fallback);
+				assertFailure(result, CliError.MissingArgument.make({ argument: "project" }));
+			}
+			assert.strictEqual(loads.count, before);
+		}),
+	);
+
+	it.effect("a valid flag takes precedence over an argument target", () =>
+		Effect.gen(function* () {
+			const fallback = CliUi.fallback(profile, { argument: "project", flag: "profile" });
+			const result = yield* Effect.result(Prompt.isPrompt(fallback) ? Effect.die("expected a fallback effect") : fallback);
+			assertFailure(result, CliError.MissingOption.make({ option: "profile" }));
+		}),
+	);
+
+	it.effect("otherwise still answers an argument target with an invalid flag sibling without loading Ink", () =>
+		Effect.gen(function* () {
+			const before = loads.count;
+			const fallback = CliUi.fallback(profile, { argument: "project", flag: undefined, otherwise: "guest" });
+			const answered = yield* (Prompt.isPrompt(fallback) ? Effect.die("expected a fallback effect") : fallback);
+			assert.strictEqual(yield* answered, "guest");
+			assert.strictEqual(loads.count, before);
+		}),
+	);
+
 	it.effect("the flag given: the screen never mounts and Ink is never loaded", () =>
 		Effect.gen(function* () {
 			const session = yield* CliUiTest.session();

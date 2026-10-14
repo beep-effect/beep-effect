@@ -3,6 +3,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+const JsonString = S.fromJsonString(S.String);
 const runs = { arbitrary: fcRuns(100) };
 const roundTrips = <A, I>(name: string, schema: S.Codec<A, I>): void => {
   it.effect.prop(`${name}: decode(encode(x)) equals x and never fails`, [Arbitrary.schema(schema)], ([value]) => Effect.gen(function* () {
@@ -42,7 +43,7 @@ it.effect.prop("managed regions are idempotent, reparse faithfully and preserve 
 
 it.effect.prop("adopting human text preserves its exact bytes and formatting twice is identical", [Arbitrary.schema(S.String)], ([human]) => Effect.gen(function* () {
   // A JSON string is one physical line and cannot contain an exact marker line.
-  const text = yield* S.encodeEffect(S.fromJsonString(S.String))(human);
+  const text = yield* S.encodeEffect(JsonString)(human);
   const parsed = yield* ManagedDocument.parse({ namespace: "property", key: "adopt", text });
   const formatted = yield* parsed.withRegions([]);
   assert.strictEqual(formatted.text, `${text}\n${parsed.sentinel}\n`);

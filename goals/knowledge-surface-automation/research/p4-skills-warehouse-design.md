@@ -67,12 +67,15 @@ v1 file, because the 29 local skills would lose their installed-tree hash and
    `sourceRevision` through the existing `SkillUpstreamContentSource` and cached
    content-addressed under `~/.cache/beep/skills/<treeHash>`. The lock carries the
    tree manifest hash, so a fetched snapshot is verified before use.
-6. **Drift is classified before it becomes a patch.** The migration plan splits
-   each skill's delta from its pin into `upstream-advanced` (the installed file
-   equals a newer upstream revision of the same path) and `local` (no upstream
-   revision matches). Only `local` hunks become patches. `upstream-advanced` skills
-   are offered a pin bump to the matching revision instead, so the floating updater's
-   pulls are not laundered into local customizations.
+6. **Drift is classified before it becomes a patch.** The migration plan compares each
+   drifted file with the tracking ref's current upstream head and names only what that
+   proves: `matches-upstream-head` (the floating updater pulled newer upstream content;
+   the remedy is a pin bump to `upstreamHead`) or `differs-from-upstream-head` (the
+   file matches neither the pin nor the current head). A differing file may be a repo
+   customization or a pull of an intermediate upstream revision. The plan does not walk
+   every upstream commit to tell those apart, so it never asserts "local". Differing
+   files become `temporary-drift` patch candidates that the HITL hunk review classifies
+   (B8).
 7. **The floating updater stops touching vendored skills.** After the lock flip
    (B-3), `skills update` refuses to refetch a `vendored` entry at a floating ref.
    Vendored skills move only through a pinned bump (Renovate, B3) that replays the
@@ -94,6 +97,17 @@ v1 file, because the 29 local skills would lose their installed-tree hash and
 - **Later:** `materialize` + the clearing-house equivalence check (P4); Renovate +
   hunk ledger (P5).
 
+### Tracked follow-ups (from #1633 review, round 3)
+
+- **B-3 input:** a per-skill `SkillsCommandError` from `resolveSkillProvenance`
+  still aborts the whole plan. Catch it per skill, as the content error already is,
+  and emit an `unresolved` row instead.
+- **B-3 input:** `matches-upstream-head` is not yet a safe pin-bump signal, because
+  `classifyDrift` sees only the drifted paths and never the rest of the tree at the
+  head. Before the lock write relies on it, either compare the whole tree at the
+  head or reword the promise. The path-history reclassification in the B verdict
+  (`p1-fp-eyeball-verdicts.md`) subsumes this.
+
 ## Decisions (B5–B10)
 
 - **B5 — tagged-union lock.** Reason: the 29 local skills need the same drift
@@ -110,7 +124,10 @@ v1 file, because the 29 local skills would lose their installed-tree hash and
   relabel per hunk in the review session.
 - **B10 — drift classification and the floating updater.** Reason: the live run
   shows floating `main` refetches are indistinguishable from local edits without
-  classification, and would invalidate pins on every update. Reverse: allow
+  classification, and would invalidate pins on every update. The classes name only
+  what a comparison with the current head proves (review on #1633). Walking every
+  upstream commit to separate intermediate pulls from customizations is deferred to the
+  HITL review. Reverse: allow
   floating refetch for skills explicitly marked `tracking: floating` in the lock.
 - **B9 — patch owner resolves from `.github/CODEOWNERS`** at the merge-base, with
   GitHub last-match semantics over the skill's installed path, exactly as the knowledge

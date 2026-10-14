@@ -1,0 +1,31 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review those twelve github-actions files against the pinned upstream oracle and the round-2 inventory, and I'll only report new findings.The round-2 fixes are in the tree. Next I’ll probe the remaining behaviors against the pinned oracle, starting with link labels, child `PATH`, and stamp ordering.I'll verify the remaining candidate defects against the lab sources, the upstream oracle, and the recorded deviations before writing the round-3 findings.### fable-3-1
+- file: scratchpad/effected/github-actions/GitHubMarkdown.ts:524
+- class: bug   severity: required
+- standard: D11; D9 / section 14 (`upstream-bug`); `GitHubMarkdown.list` Details (the multi-line item stays inside its bullet). Round-2 r9 fixed this byte class only for tables.   evidence: `hangingIndent` splits only on `"\n"` (`scratchpad/effected/markdown/internal/stringify.ts:1021-1028`) and an HTML passthrough leaf is emitted raw (`stringify.ts:1273-1275`). `preprocessLines` treats a bare CR as a line ending (`preprocess.ts:127-129`). List continuation then requires `scanner.indent >= markerOffset + padding` (`blocks/list.ts:235-238`). Upstream `list` (`packages/github-actions/src/GitHubMarkdown.ts:372-380` in the pinned oracle) passes the item through the same way. `GitHubMarkdown.list(["a\rb"])` therefore serializes as `- a` plus an unindented `b`. CRLF already survives because `split("\n")` leaves the CR on the first line and the continuation stays indented.
+- failure: A list item that contains a bare CR parses as a one-line bullet followed by a paragraph, so the item ends early.
+- fix: In `list`, replace `/\r\n|\r/g` with `\n` on each item before `ListItem.make`. Add a `Markdown.parseResult` regression beside the existing list test. Record the upstream bug in the ledger and Port notes.
+
+### fable-3-2
+- file: scratchpad/effected/github-actions/GitHubMarkdown.ts:435
+- class: bug   severity: required
+- standard: D11; D9 / section 14 (`upstream-bug`); class Details at `GitHubMarkdown.ts:240-242` (the writer owns structure wherever a fragment can break the construct). ATX headings are one line.   evidence: `heading` interpolates `text` with no line-ending normalization. `preprocessLines` splits `\n`, `\r\n`, and bare `\r`, so `heading("a\nb")` and `heading("a\rb")` parse as a heading plus a following paragraph. Upstream `heading` (oracle `GitHubMarkdown.ts:337-338`) is the same interpolation. `table` already maps those three endings to `<br>` (`GitHubMarkdown.ts:313`).
+- failure: A line ending in heading text closes the ATX heading and emits the remainder as a separate block.
+- fix: Replace `/\r\n|\r|\n/g` in the heading text with `<br>` before interpolation, matching `table`. Add a parser-backed regression for LF and bare CR. Record the upstream bug.
+
+### fable-3-3
+- file: scratchpad/effected/github-actions/ChildEnv.ts:175
+- class: bug   severity: required
+- standard: D11; D9 / section 14 (`upstream-bug`); `ChildEnv.prependPath` Details (`ChildEnv.ts:136-140`) require the base's own `PATH` spelling and treat an absent inherited value as empty. The recorded own-property deviation cites only `ActionEnvironment.test.ts:73,88`; that lookup is `R.get` at `ActionEnvironment.ts:360`.   evidence: `pathKeyOf` (`ChildEnv.ts:123`) uses `R.keys`, which is `Object.keys`, so a prototype key is invisible and the fallback key is `"PATH"`. The next line reads `options.base[key]`, which walks the prototype. A base whose only `PATH` is inherited therefore contributes that value. A prototype key spelled `Path` is dropped and the child key becomes `PATH`. Upstream `prependPath` (oracle `ChildEnv.ts:137`) uses the same bracket read. `R.get` (`effect/Record.ts:465-471`) is own-property only.
+- failure: An inherited `PATH` is prepended into the child environment even though it is not an own property of `base`.
+- fix: Read the inherited value with `O.getOrUndefined(R.get(options.base, key))`. Add a regression whose `base` is `Object.create({ PATH: "..." })` and one whose prototype key is `Path`. Record the upstream bug.
+
+### fable-3-4
+- file: scratchpad/effected/github-actions/OidcTokenIssuer.ts:253
+- class: bug   severity: required
+- standard: D11; D9 / section 14 (`upstream-bug`); `token` Details (`OidcTokenIssuer.ts:191-193`) match `@actions/core.getIDToken` on the audience parameter. The comment at `251-252` assumes `&` is safe because the runner URL already has a query.   evidence: The request URL is `` `${base}&audience=${encodeURIComponent(audience)}` ``. Under the URL grammar, a base with no `?` keeps `&audience=` in the path, and a base with a `#` keeps it in the fragment, so neither sends a query parameter. `OidcTokenIssuer.test.ts:18,95` locks the `&` form only for `https://token.actions.example/?api-version=2.0`. Upstream `issue` (oracle `OidcTokenIssuer.ts:183`) concatenates the same way. `URL.searchParams.set` would encode the space locked at `OidcTokenIssuer.test.ts:109-112` as `+`.
+- failure: An audience supplied with a request URL that has no query, or that has a fragment, is not sent as the `audience` query parameter, so the token service issues its default audience.
+- fix: When an audience is present, parse `base` with `new URL`, append `audience=${encodeURIComponent(audience)}` to `search` (`?` when `search` is empty, otherwise `&`), and leave the fragment on the URL object. On a parse failure, fail with `OidcTokenError` reason `requestFailed`. Keep the existing fixture assertion. Record the upstream bug.
+
+REQUIRED: 4
+BACKLOG: 0

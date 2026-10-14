@@ -24735,6 +24735,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Goals/Graph.mermaid.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts": {
           "lines": 100,
           "statements": 100,
@@ -24768,6 +24780,18 @@
             "lines": 1,
             "statements": 1,
             "branches": 2,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Goals/Materialize.ts": {
+          "lines": 93.47,
+          "statements": 93.61,
+          "branches": 71.42,
+          "functions": 100,
+          "uncovered": {
+            "lines": 6,
+            "statements": 6,
+            "branches": 8,
             "functions": 0
           }
         },
@@ -25261,6 +25285,30 @@
             "statements": 39,
             "branches": 15,
             "functions": 17
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts": {
+          "lines": 92.94,
+          "statements": 92.71,
+          "branches": 92.8,
+          "functions": 89.24,
+          "uncovered": {
+            "lines": 22,
+            "statements": 25,
+            "branches": 9,
+            "functions": 20
           }
         },
         "packages/tooling/tool/cli/src/commands/Knowledge/index.ts": {
@@ -35635,6 +35683,57 @@
           }
         },
         "packages/drivers/tailscale/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/tesseract": {
+      "path": "packages/drivers/tesseract",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "packages/drivers/tesseract/src/Tesseract.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/tesseract/src/Tesseract.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/tesseract/src/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

@@ -48,26 +48,37 @@ export class DuplicateToggleKeyError extends S.TaggedError<DuplicateToggleKeyErr
 ) {}
 
 /**
- * An extra on/off row a {@link Confirm} hosts beneath its yes/no answer.
+ * An extra on/off row a {@link Confirm} hosts beneath its yes/no answer, as a schema over the key schema: `key` names
+ * the toggle in the result, `label` is what the row shows and `value` whether it is on.
  *
+ * **Example** (Validate a toggle payload)
+ *
+ * ```ts
+ * import { ConfirmToggle } from "@beep/scratchpad/effected/cli/ui/Confirm"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ConfirmToggle(S.String))({ key: "promote", label: "Promote drafts", value: true })) // true
+ * ```
+ *
+ * @param key - the schema of the toggle's result key
  * @public
- * @category models
+ * @category schemas
  * @since 0.0.0
  */
-export interface ConfirmToggle<K extends string> {
-	/**
-	 * Names the toggle in the result.
-	 */
-	readonly key: K;
-	/**
-	 * What the row shows.
-	 */
-	readonly label: string;
-	/**
-	 * Whether it starts on.
-	 */
-	readonly value: boolean;
-}
+export const ConfirmToggle = <Key extends S.Top>(key: Key) =>
+	S.Struct({
+		key,
+		label: S.String.annotateKey($I.annote("ConfirmToggle.label", { description: "What the toggle row shows." })),
+		value: S.Boolean.annotateKey($I.annote("ConfirmToggle.value", { description: "Whether the toggle is on." })),
+	}).annotate($I.annote("ConfirmToggle", { description: "A keyed on/off row beneath a confirmation's answer." }));
+
+/**
+ * Plain payload accepted by {@link ConfirmToggle}; reducers retain this structural representation.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConfirmToggle<K extends string> = ReturnType<typeof ConfirmToggle<S.Codec<K>>>["Type"];
 
 /**
  * What a {@link Confirm} resolves with: the answer, and every toggle by key.
@@ -89,30 +100,42 @@ export interface ConfirmResult<K extends string> {
 }
 
 /**
- * Tracks the answer, highlighted row, toggle values and submission state of a {@link Confirm}.
+ * Tracks the answer, highlighted row, toggle values and submission state of a {@link Confirm}, as a schema over the
+ * toggle key schema. `row` 0 is the yes/no row and each toggle follows.
  *
+ * **Example** (Validate a confirmation state)
+ *
+ * ```ts
+ * import { ConfirmState } from "@beep/scratchpad/effected/cli/ui/Confirm"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ConfirmState(S.String))({ confirmed: false, row: 0, toggles: [], submitted: false })) // true
+ * ```
+ *
+ * @param key - the schema of the toggles' result keys
  * @public
- * @category models
+ * @category schemas
  * @since 0.0.0
  */
-export interface ConfirmState<K extends string> {
-	/**
-	 * The answer.
-	 */
-	readonly confirmed: boolean;
-	/**
-	 * The highlighted row: 0 is the yes/no row, each toggle follows.
-	 */
-	readonly row: number;
-	/**
-	 * The toggles and their current values.
-	 */
-	readonly toggles: ReadonlyArray<ConfirmToggle<K>>;
-	/**
-	 * Whether enter was pressed.
-	 */
-	readonly submitted: boolean;
-}
+export const ConfirmState = <Key extends S.Top>(key: Key) =>
+	S.Struct({
+		confirmed: S.Boolean.annotateKey($I.annote("ConfirmState.confirmed", { description: "The yes/no answer." })),
+		row: S.Finite.annotateKey($I.annote("ConfirmState.row", {
+			description: "The highlighted row: 0 is the yes/no row, each toggle follows.",
+		})),
+		toggles: key.pipe(ConfirmToggle, S.Array).annotateKey($I.annote("ConfirmState.toggles", {
+			description: "The toggles and their current values.",
+		})),
+		submitted: S.Boolean.annotateKey($I.annote("ConfirmState.submitted", { description: "Whether enter was pressed." })),
+	}).annotate($I.annote("ConfirmState", { description: "The plain reducer state of a confirmation with toggles." }));
+
+/**
+ * Plain payload accepted by {@link ConfirmState}; reducers retain this structural representation.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConfirmState<K extends string> = ReturnType<typeof ConfirmState<S.Codec<K>>>["Type"];
 
 /**
  * What a key does in a {@link Confirm}.
@@ -440,22 +463,26 @@ export class Confirm {
 			chosen
 				? react.createElement(Styled, { token: "accent" }, `[${label}]`)
 				: react.createElement(ink.Text, null, ` ${label} `);
+		// One row each, clipped at layout time with the cursor column reserved: during Ink's immediate resize repaint the
+		// width above is one paint stale, and an unclipped row would wrap past the screen's row budget.
+		const line = (child: ReactElement): ReactElement =>
+			react.createElement(ink.Box, { height: 1, overflow: "hidden", marginRight: 1 }, child);
 		return react.createElement(
 			ink.Box,
 			{ flexDirection: "column" },
-			react.createElement(
+			line(react.createElement(
 				Styled,
 				{ token: "emphasis" },
 				Fmt.truncate(lineText(props.message), columns, ellipsis),
-			),
-			react.createElement(
+			)),
+			line(react.createElement(
 				ink.Text,
-				null,
+				{ wrap: "truncate-end" },
 				`${lead} `,
 				answer("Yes", state.confirmed),
 				" ",
 				answer("No", !state.confirmed),
-			),
+			)),
 			state.toggles.length === 0
 				? null
 				: react.createElement(Viewport.View, {
@@ -476,7 +503,7 @@ export class Confirm {
 							});
 						},
 					}),
-			react.createElement(KeyHelp, { tables: [keys] }),
+			line(react.createElement(KeyHelp, { tables: [keys] })),
 		);
 	};
 

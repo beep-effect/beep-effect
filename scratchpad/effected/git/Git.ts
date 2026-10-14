@@ -253,7 +253,7 @@ const sshEnv = (resolved: string): Record<string, string> =>
  * @category errors
  * @since 0.0.0
  */
-export class GitCommandError extends S.TaggedError<GitCommandError>($I`GitCommandError`)("GitCommandError", {
+export class GitCommandError extends S.TaggedError<GitCommandError, { readonly brand: unique symbol }>($I`GitCommandError`)("GitCommandError", {
   /**
    * Discriminates a pre-spawn guard rejection from a genuine git failure.
    * `"refused"` — a pre-spawn guard (an option-like ref) rejected the
@@ -326,7 +326,7 @@ export class GitCommandError extends S.TaggedError<GitCommandError>($I`GitComman
  * @category errors
  * @since 0.0.0
  */
-export class NotARepositoryError extends S.TaggedError<NotARepositoryError>($I`NotARepositoryError`)("NotARepositoryError", {
+export class NotARepositoryError extends S.TaggedError<NotARepositoryError, { readonly brand: unique symbol }>($I`NotARepositoryError`)("NotARepositoryError", {
   /** The working directory that is not a git repository. */
   cwd: S.String.annotateKey({ description: "The working directory that is not a git repository." }),
 }, $I.annote("NotARepositoryError", { description: "`cwd` is not inside a git work tree." })) {
@@ -365,7 +365,7 @@ export class NotARepositoryError extends S.TaggedError<NotARepositoryError>($I`N
  * @category errors
  * @since 0.0.0
  */
-export class UnknownRefError extends S.TaggedError<UnknownRefError>($I`UnknownRefError`)("UnknownRefError", {
+export class UnknownRefError extends S.TaggedError<UnknownRefError, { readonly brand: unique symbol }>($I`UnknownRefError`)("UnknownRefError", {
   /** The ref (or ref range) that failed to resolve. */
   ref: S.String.annotateKey({ description: "The ref (or ref range) that failed to resolve." }),
   /** The working directory the ref was resolved against. */
@@ -414,7 +414,7 @@ export class UnknownRefError extends S.TaggedError<UnknownRefError>($I`UnknownRe
  * @category errors
  * @since 0.0.0
  */
-export class NonFastForwardError extends S.TaggedError<NonFastForwardError>($I`NonFastForwardError`)("NonFastForwardError", {
+export class NonFastForwardError extends S.TaggedError<NonFastForwardError, { readonly brand: unique symbol }>($I`NonFastForwardError`)("NonFastForwardError", {
   /** The working directory the push ran in. */
   cwd: S.String.annotateKey({ description: "The working directory the push ran in." }),
   /** The refspec that was rejected, when the caller passed one. */
@@ -466,7 +466,7 @@ export class NonFastForwardError extends S.TaggedError<NonFastForwardError>($I`N
  * @category errors
  * @since 0.0.0
  */
-export class MergeConflictError extends S.TaggedError<MergeConflictError>($I`MergeConflictError`)("MergeConflictError", {
+export class MergeConflictError extends S.TaggedError<MergeConflictError, { readonly brand: unique symbol }>($I`MergeConflictError`)("MergeConflictError", {
   /** The working directory the merge ran in. */
   cwd: S.String.annotateKey({ description: "The working directory the merge ran in." }),
 }, $I.annote("MergeConflictError", { description: "A merge-shaped operation (`pull`, `stash pop`, `stash apply`) stopped with conflict markers in the working tree." })) {
@@ -514,7 +514,7 @@ export class MergeConflictError extends S.TaggedError<MergeConflictError>($I`Mer
  * @category errors
  * @since 0.0.0
  */
-export class DirtyWorktreeError extends S.TaggedError<DirtyWorktreeError>($I`DirtyWorktreeError`)("DirtyWorktreeError", {
+export class DirtyWorktreeError extends S.TaggedError<DirtyWorktreeError, { readonly brand: unique symbol }>($I`DirtyWorktreeError`)("DirtyWorktreeError", {
   /** The working directory whose local changes blocked the operation. */
   cwd: S.String.annotateKey({ description: "The working directory whose local changes blocked the operation." }),
 }, $I.annote("DirtyWorktreeError", { description: "A merge-shaped operation refused to start because local modifications would be overwritten — git's refusal reads `Your local changes ... would be overwritten by merge`." })) {
@@ -553,7 +553,7 @@ export class DirtyWorktreeError extends S.TaggedError<DirtyWorktreeError>($I`Dir
  * @category models
  * @since 0.0.0
  */
-export class LsTreeEntry extends S.Class<LsTreeEntry>($I`LsTreeEntry`)({
+export class LsTreeEntry extends S.Class<LsTreeEntry, { readonly brand: unique symbol }>($I`LsTreeEntry`)({
   /** The entry's file mode, e.g. `100644`. */
   mode: S.String.annotateKey({ description: "The entry's file mode, e.g. `100644`." }),
   /** The kind of object the entry points at. */
@@ -603,7 +603,7 @@ type NameStatusCode = typeof NameStatusCode.Type;
  * @category models
  * @since 0.0.0
  */
-export class NameStatusEntry extends S.Class<NameStatusEntry>($I`NameStatusEntry`)({
+export class NameStatusEntry extends S.Class<NameStatusEntry, { readonly brand: unique symbol }>($I`NameStatusEntry`)({
   /**
    * The change kind, decoded from git's one-letter status code. `T` decodes
    * to `"typeChanged"` and `B` to `"broken"` — this package's spelling, not
@@ -940,7 +940,7 @@ const parseNameStatus = (output: string): ReadonlyArray<NameStatusEntry> => {
  * @category models
  * @since 0.0.0
  */
-export class CommitInfo extends S.Class<CommitInfo>($I`CommitInfo`)({
+export class CommitInfo extends S.Class<CommitInfo, { readonly brand: unique symbol }>($I`CommitInfo`)({
   /** The commit's full object id (`%H`). */
   sha: S.String.annotateKey({ description: "The commit's full object id (`%H`)." }),
   /** git's `%G?` signature verdict: Good, Bad, Unknown validity, eXpired, expired-key (Y), Revoked, cannot-check (E), None. */
@@ -988,7 +988,7 @@ export class CommitInfo extends S.Class<CommitInfo>($I`CommitInfo`)({
  * @category models
  * @since 0.0.0
  */
-export class CommitLogEntry extends S.Class<CommitLogEntry>($I`CommitLogEntry`)({
+export class CommitLogEntry extends S.Class<CommitLogEntry, { readonly brand: unique symbol }>($I`CommitLogEntry`)({
   /** The commit's full object id (`%H`). */
   sha: S.String.annotateKey({ description: "The commit's full object id (`%H`)." }),
   /** When the change was authored (`%aI`), as a UTC instant. */
@@ -1110,7 +1110,7 @@ export interface StatusRenderOptions {
  * @category models
  * @since 0.0.0
  */
-export class StatusEntry extends S.Class<StatusEntry>($I`StatusEntry`)({
+export class StatusEntry extends S.Class<StatusEntry, { readonly brand: unique symbol }>($I`StatusEntry`)({
   /** The index-side status code (first porcelain column). */
   x: porcelainCode.annotateKey({ description: "The index-side status code (first porcelain column)." }),
   /** The working-tree-side status code (second porcelain column). */
@@ -1192,20 +1192,20 @@ const statusInput = S.Struct(StatusEntry.fields);
 /**
  * Parses `git log -1 --format=%H%x00%G?%x00%B` output: exactly two NUL
  * separators, everything after the second is the raw message, untrimmed.
- * Only ever called on the successful output of this package's own format
- * string, so the separators are guaranteed present.
+ * A successful invocation can select no commits; missing separators or an
+ * invalid signature verdict return None instead of escaping as a defect.
  */
-const parseCommitInfo = (output: string): CommitInfo => {
+const parseCommitInfo = (output: string): O.Option<CommitInfo> => {
   const first = output.indexOf("\0");
+  if (first < 0) return O.none();
   const second = output.indexOf("\0", first + 1);
+  if (second < 0) return O.none();
   const parsed = {
     sha: output.slice(0, first),
-    // Our own format string only ever emits git's %G? verdict letters.
     signatureStatus: output.slice(first + 1, second),
     message: output.slice(second + 1),
   };
-  S.asserts(commitInfoInput, parsed);
-  return CommitInfo.make(parsed);
+  return O.map(S.decodeUnknownOption(commitInfoInput)(parsed), (input) => CommitInfo.make(input));
 };
 
 /**
@@ -1272,7 +1272,7 @@ const parseStatus = (output: string): ReadonlyArray<StatusEntry> => {
  * @category models
  * @since 0.0.0
  */
-export class SubmoduleStatusEntry extends S.Class<SubmoduleStatusEntry>($I`SubmoduleStatusEntry`)({
+export class SubmoduleStatusEntry extends S.Class<SubmoduleStatusEntry, { readonly brand: unique symbol }>($I`SubmoduleStatusEntry`)({
   /** The decoded state prefix. */
   state: S.Literals(["current", "uninitialized", "outOfSync", "conflict"]).annotateKey({ description: "The decoded state prefix." }),
   /** The submodule's checked-out (or, uninitialized, gitlink) commit sha. */
@@ -1344,7 +1344,7 @@ const parseSubmoduleStatus = (output: string): ReadonlyArray<SubmoduleStatusEntr
  * @category models
  * @since 0.0.0
  */
-export class LsRemoteEntry extends S.Class<LsRemoteEntry>($I`LsRemoteEntry`)({
+export class LsRemoteEntry extends S.Class<LsRemoteEntry, { readonly brand: unique symbol }>($I`LsRemoteEntry`)({
   /** The sha the advertised ref points at. */
   sha: S.String.annotateKey({ description: "The sha the advertised ref points at." }),
   /** The full advertised refname, `^{}` peel suffix included. */
@@ -1450,7 +1450,7 @@ const parseLsRemote = (output: string): ReadonlyArray<LsRemoteEntry> =>
  * @category models
  * @since 0.0.0
  */
-export class StashEntry extends S.Class<StashEntry>($I`StashEntry`)({
+export class StashEntry extends S.Class<StashEntry, { readonly brand: unique symbol }>($I`StashEntry`)({
   /** The reflog selector (`stash@{0}`) — the index other stash methods take. */
   ref: S.String.annotateKey({ description: "The reflog selector (`stash@{0}`) — the index other stash methods take." }),
   /** The stash commit's sha. */
@@ -1487,7 +1487,7 @@ const parseStashList = (output: string): ReadonlyArray<StashEntry> =>
  * @category models
  * @since 0.0.0
  */
-export class BranchEntry extends S.Class<BranchEntry>($I`BranchEntry`)({
+export class BranchEntry extends S.Class<BranchEntry, { readonly brand: unique symbol }>($I`BranchEntry`)({
   /** The short branch name (`main`, or `origin/main` for a remote branch). */
   name: S.String.annotateKey({ description: "The short branch name (`main`, or `origin/main` for a remote branch)." }),
   /** The branch tip's sha. */
@@ -1529,7 +1529,7 @@ const parseBranchList = (output: string): ReadonlyArray<BranchEntry> =>
  * @category models
  * @since 0.0.0
  */
-export class RefEntry extends S.Class<RefEntry>($I`RefEntry`)({
+export class RefEntry extends S.Class<RefEntry, { readonly brand: unique symbol }>($I`RefEntry`)({
   /** The full refname (`refs/tags/v1`). */
   ref: S.String.annotateKey({ description: "The full refname (`refs/tags/v1`)." }),
   /** The sha of the object the ref points at. */
@@ -1581,7 +1581,7 @@ const parseForEachRef = (output: string): ReadonlyArray<RefEntry> =>
  * @category models
  * @since 0.0.0
  */
-export class ConfigListEntry extends S.Class<ConfigListEntry>($I`ConfigListEntry`)({
+export class ConfigListEntry extends S.Class<ConfigListEntry, { readonly brand: unique symbol }>($I`ConfigListEntry`)({
   /** The canonical dotted key (`section.subsection.key`). */
   key: S.String.annotateKey({ description: "The canonical dotted key (`section.subsection.key`)." }),
   /**
@@ -1626,7 +1626,7 @@ const parseConfigList = (output: string): ReadonlyArray<ConfigListEntry> =>
  * @category models
  * @since 0.0.0
  */
-export class WorktreeEntry extends S.Class<WorktreeEntry>($I`WorktreeEntry`)({
+export class WorktreeEntry extends S.Class<WorktreeEntry, { readonly brand: unique symbol }>($I`WorktreeEntry`)({
   /** The working tree's absolute path. */
   path: S.String.annotateKey({ description: "The working tree's absolute path." }),
   /** The checked-out commit sha; absent for a bare repository entry. */
@@ -1726,7 +1726,7 @@ const parseWorktreeList = (output: string): ReadonlyArray<WorktreeEntry> => {
  * @category models
  * @since 0.0.0
  */
-export class LsFilesEntry extends S.Class<LsFilesEntry>($I`LsFilesEntry`)({
+export class LsFilesEntry extends S.Class<LsFilesEntry, { readonly brand: unique symbol }>($I`LsFilesEntry`)({
   /** The entry's file mode, e.g. `100644` — `160000` for a gitlink. */
   mode: S.String.annotateKey({ description: "The entry's file mode, e.g. `100644` — `160000` for a gitlink." }),
   /** The staged object id. */
@@ -1842,14 +1842,15 @@ const rejectNonNaturalNumber = (
  * can change under a running service, so none is re-read per call — unlike
  * their git-config counterparts, which are repository-local.
  */
-interface SshFromEnv {
+const SshFromEnv = S.Struct({
   /** `GIT_SSH_COMMAND` — a full command line; the first rung. */
-  readonly command: O.Option<string>;
+  command: S.Option(S.String).annotateKey({ description: "GIT_SSH_COMMAND, a full command line with highest precedence." }),
   /** `GIT_SSH` — a program name with no argument support; the third rung. */
-  readonly program: O.Option<string>;
+  program: S.Option(S.String).annotateKey({ description: "GIT_SSH, a program name with no argument support." }),
   /** `GIT_SSH_VARIANT` — overrides git's basename inference of the grammar. */
-  readonly variant: O.Option<string>;
-}
+  variant: S.Option(S.String).annotateKey({ description: "GIT_SSH_VARIANT, overriding basename inference of the SSH grammar." }),
+}).annotate($I.annote("SshFromEnv", { description: "The optional SSH environment settings captured at layer construction." }));
+type SshFromEnv = typeof SshFromEnv.Type;
 
 /** Builds the `Git.Service` shape over an already-resolved `ChildProcessSpawner`. */
 const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: SshFromEnv) => {
@@ -2698,9 +2699,18 @@ const make = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: 
     const target = ref ?? "HEAD";
     yield* Effect.annotateCurrentSpan({ cwd, ref: target });
     yield* rejectOptionLikeRefs(cwd, [target]);
-    const classified = yield* runFor(GitCommand.commitInfo(target), cwd, "generic");
+    const invocation = GitCommand.commitInfo(target);
+    const classified = yield* runFor(invocation, cwd, "generic");
     return yield* Match.valueTags(classified, {
-      success: (classified) => Effect.succeed(parseCommitInfo(classified.output)),
+      success: (classified) => Effect.fromOption(parseCommitInfo(classified.output),
+        () => GitCommandError.make({
+          kind: "failed",
+          args: invocation.redactedArgs,
+          cwd,
+          stderr: "",
+          detail: "unparseable commitInfo output: expected two NUL separators and a valid signature status",
+        }),
+      ),
       notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
       unknownRef: () => Effect.fail(UnknownRefError.make({ ref: target, cwd })),
       failure: (classified) => Effect.fail(classified.error),
@@ -4720,7 +4730,7 @@ export interface GitShape {
  * @category errors
  * @since 0.0.0
  */
-export class NotStubbedError extends S.TaggedError<NotStubbedError>($I`NotStubbedError`)(
+export class NotStubbedError extends S.TaggedError<NotStubbedError, { readonly brand: unique symbol }>($I`NotStubbedError`)(
   "NotStubbedError",
   { message: S.String },
   $I.annote("NotStubbedError", { description: "A Git test double method was invoked without an explicit stub." }),

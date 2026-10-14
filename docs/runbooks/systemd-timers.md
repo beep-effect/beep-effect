@@ -180,9 +180,11 @@ run in. The archive fence refuses a lane that any process still stands in, and
 it exempts the invoker's ancestry (the CLI, its shell, the agent session above
 them) plus, when Claude Code names the session through `CLAUDE_PID`, everything
 that session spawned into the lane (MCP servers, tool shells, background jobs);
-anything else holding the lane (a desktop terminal panel, an editor, another
-session) still refuses it, and the error names each holder and prints the
-working form. Run it as the last command of the session, from inside the lane,
+run from inside the lane, an idle Claude Desktop Terminal panel shell is left
+in place and the lane removed under it; anything else holding the lane (a
+panel shell running a command, any panel shell under `--lane`, an editor,
+another session) still refuses it, and the error names each holder and prints
+the working form. Run it as the last command of the session, from inside the lane,
 and step the shell into the swept clone afterwards. The clone is returned to
 `main` only when it already stands on `main`; a clone on another live branch
 keeps its checkout and receives ref-only updates (no `git switch`, no

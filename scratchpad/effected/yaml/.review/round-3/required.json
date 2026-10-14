@@ -1,0 +1,408 @@
+{
+  "module": "yaml",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/yaml/Yaml.ts",
+        "scratchpad/effected/yaml/YamlDiagnostic.ts",
+        "scratchpad/effected/yaml/YamlDocument.ts",
+        "scratchpad/effected/yaml/YamlNode.ts",
+        "scratchpad/effected/yaml/YamlFormat.ts",
+        "scratchpad/effected/yaml/YamlVisitor.ts"
+      ],
+      "tests": [
+        "scratchpad/test/yaml/Yaml.test.ts",
+        "scratchpad/test/yaml/Yaml.coverage.test.ts",
+        "scratchpad/test/yaml/YamlDiagnostic.test.ts",
+        "scratchpad/test/yaml/YamlDiagnostic.property.test.ts",
+        "scratchpad/test/yaml/YamlDocument.test.ts",
+        "scratchpad/test/yaml/YamlDocument.coverage.test.ts",
+        "scratchpad/test/yaml/YamlNode.test.ts",
+        "scratchpad/test/yaml/YamlNode.coverage.test.ts",
+        "scratchpad/test/yaml/YamlVisitor.test.ts",
+        "scratchpad/test/yaml/YamlVisitor.coverage.test.ts",
+        "scratchpad/test/yaml/YamlVisitor.property.test.ts",
+        "scratchpad/test/yaml/modify-regional.test.ts",
+        "scratchpad/test/yaml/YamlFormat.coverage.test.ts",
+        "scratchpad/test/yaml/diagnostic-batch.round-3.test.ts"
+      ],
+      "findings": [
+        "alias-history",
+        "fatal-stream-errors",
+        "diagnostic-position-index",
+        "regional-effect-equality",
+        "visitor-stream-reexecution"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/yaml/internal/lexer.ts"
+      ],
+      "tests": [
+        "scratchpad/test/yaml/lexer.test.ts",
+        "scratchpad/test/yaml/internal/lexer.coverage.test.ts",
+        "scratchpad/test/yaml/internal/lexer.property.test.ts",
+        "scratchpad/test/yaml/invalid-header.round-3.test.ts"
+      ],
+      "findings": [
+        "invalid-header-quoted-hash"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/yaml/internal/cst-visitor.ts",
+        "scratchpad/effected/yaml/internal/cst-parser.ts",
+        "scratchpad/effected/yaml/internal/requote.ts"
+      ],
+      "tests": [
+        "scratchpad/test/yaml/internal/cst-visitor.coverage.test.ts",
+        "scratchpad/test/yaml/internal/cst-visitor.property.test.ts",
+        "scratchpad/test/yaml/internal/cst-parser.round-2.test.ts",
+        "scratchpad/test/yaml/internal/cst-parser.coverage.test.ts",
+        "scratchpad/test/yaml/internal/cst-parser.property.test.ts",
+        "scratchpad/test/yaml/internal/requote.coverage.test.ts",
+        "scratchpad/test/yaml/internal/requote.round-3.test.ts"
+      ],
+      "findings": [
+        "cst-block-entry-boundary",
+        "requote-schema-models",
+        "parser-state-schema"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/yaml/internal/fold.ts",
+        "scratchpad/effected/yaml/internal/stringifier.ts"
+      ],
+      "tests": [
+        "scratchpad/test/yaml/internal/fold.coverage.test.ts",
+        "scratchpad/test/yaml/internal/fold.property.test.ts",
+        "scratchpad/test/yaml/internal/stringifier.coverage.test.ts",
+        "scratchpad/test/yaml/internal/stringifier.property.test.ts",
+        "scratchpad/test/yaml/Yaml.property.test.ts",
+        "scratchpad/test/yaml/YamlDocument.property.test.ts",
+        "scratchpad/test/yaml/stringifier.round-3.test.ts"
+      ],
+      "findings": [
+        "fold-tab-fidelity",
+        "nested-flow-comment-lines",
+        "flow-alias-key-spacing",
+        "empty-document-final-newline"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/yaml/internal/composer/anchors.ts",
+        "scratchpad/effected/yaml/internal/composer/block.ts",
+        "scratchpad/effected/yaml/internal/composer/comments.ts",
+        "scratchpad/effected/yaml/internal/composer/document.ts",
+        "scratchpad/effected/yaml/internal/composer/flow.ts",
+        "scratchpad/effected/yaml/internal/composer/tags.ts"
+      ],
+      "tests": [
+        "scratchpad/test/yaml/composer-regressions.test.ts",
+        "scratchpad/test/yaml/comment-fidelity.test.ts",
+        "scratchpad/test/yaml/comment-model-oracle.test.ts",
+        "scratchpad/test/yaml/internal/composer/anchors.coverage.test.ts",
+        "scratchpad/test/yaml/internal/composer/anchors.property.test.ts",
+        "scratchpad/test/yaml/internal/composer/block.coverage.test.ts",
+        "scratchpad/test/yaml/internal/composer/block.property.test.ts",
+        "scratchpad/test/yaml/internal/composer/comments.coverage.test.ts",
+        "scratchpad/test/yaml/internal/composer/comments.property.test.ts",
+        "scratchpad/test/yaml/internal/composer/document.coverage.test.ts",
+        "scratchpad/test/yaml/internal/composer/document.property.test.ts",
+        "scratchpad/test/yaml/internal/composer/flow.coverage.test.ts",
+        "scratchpad/test/yaml/internal/composer/flow.property.test.ts",
+        "scratchpad/test/yaml/internal/composer/tags.coverage.test.ts",
+        "scratchpad/test/yaml/internal/composer/tags.property.test.ts",
+        "scratchpad/test/yaml/composer.round-3.test.ts"
+      ],
+      "findings": [
+        "flow-empty-key-span",
+        "alias-tag-properties",
+        "explicit-multiline-keys",
+        "empty-key-value-comments",
+        "duplicate-node-properties",
+        "composer-cr-comments",
+        "flow-comment-before-value",
+        "flow-property-empty-key-once",
+        "tag-handle-composition"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/yaml/internal/rules/empty-lines.ts",
+        "scratchpad/effected/yaml/internal/rules/eof-newline.ts",
+        "scratchpad/effected/yaml/internal/rules/indentation.ts",
+        "scratchpad/effected/yaml/internal/rules/quoted-strings.ts",
+        "scratchpad/effected/yaml/internal/rules/truthy.ts",
+        "scratchpad/effected/yaml/internal/rules/util.ts"
+      ],
+      "tests": [
+        "scratchpad/test/yaml/rules/line-shape.test.ts",
+        "scratchpad/test/yaml/rules/indentation.test.ts",
+        "scratchpad/test/yaml/rules/scalar-style.test.ts",
+        "scratchpad/test/yaml/rules/util.test.ts",
+        "scratchpad/test/yaml/rules/inference.test.ts",
+        "scratchpad/test/yaml/rules/scalar-layout.round-3.test.ts"
+      ],
+      "findings": [
+        "plain-scalar-blank-lines",
+        "indent-document-reset",
+        "eof-keep-chomp-fidelity",
+        "mapping-key-subtree-policy",
+        "indent-own-line-properties",
+        "indent-bom-and-spaces"
+      ]
+    },
+    {
+      "id": "g7",
+      "files": [
+        "scratchpad/effected/yaml/internal/rules/hyphen-spacing.ts"
+      ],
+      "tests": [
+        "scratchpad/test/yaml/rules/spacing-regressions.test.ts",
+        "scratchpad/test/yaml/rules/token-adjacency.test.ts",
+        "scratchpad/test/yaml/rules/hyphen-spacing.round-3.test.ts"
+      ],
+      "findings": [
+        "hyphen-scan-scaling",
+        "hyphen-safe-map-fix"
+      ]
+    },
+    {
+      "id": "g8",
+      "files": [
+        "scratchpad/effected/yaml/internal/rules/document-end.ts"
+      ],
+      "tests": [
+        "scratchpad/test/yaml/rules/documents-and-keys.test.ts",
+        "scratchpad/test/yaml/rules/document-end.round-3.test.ts"
+      ],
+      "findings": [
+        "document-end-cr-position",
+        "document-end-empty-fidelity"
+      ]
+    },
+    {
+      "id": "g9",
+      "files": [
+        "scratchpad/effected/yaml/YamlLint.ts"
+      ],
+      "tests": [
+        "scratchpad/test/yaml/YamlLint.test.ts",
+        "scratchpad/test/yaml/YamlLint.coverage.test.ts",
+        "scratchpad/test/yaml/YamlLint.property.test.ts"
+      ],
+      "findings": [
+        "lint-fix-order"
+      ]
+    }
+  ],
+  "findings": {
+    "alias-history": {
+      "file": "scratchpad/effected/yaml/YamlNode.ts",
+      "class": "bug",
+      "summary": "Bind nested aliases at their original source position",
+      "fix": "Bind each alias to the preceding anchor target on its first source-order visit and reuse that binding during later expansion. Historical expansion must not re-register anchors into the live environment. Keep real cycles bounded and typed as AliasExpansionBudgetExceeded. Add both duplicate-anchor counterexamples across value, stream, and document extraction; preserve existing anchor and budget tests."
+    },
+    "fatal-stream-errors": {
+      "file": "scratchpad/effected/yaml/YamlDocument.ts",
+      "class": "bug",
+      "summary": "Keep every fatal stream diagnostic in AST stream parsing",
+      "fix": "Filter streamErrors with isFatalCode, matching the document and value-parser filters. Add the cross-document tag-handle regression and change the erroneous success assertion at YamlDocument.coverage.test.ts:17-19 to a typed failure. Coordinate with tag-handle-composition in g5: after its validation move, the fatal error may belong to a document rather than streamErrors, and both channels must remain fatal."
+    },
+    "lint-fix-order": {
+      "file": "scratchpad/effected/yaml/YamlLint.ts",
+      "class": "bug",
+      "summary": "Select conflicting edits by their actual intervals",
+      "fix": "Check actual fix intervals rather than a monotone lastEnd frontier. Preserve diagnostic-order priority for overlapping and same-offset edits, then apply every accepted edit through YamlEdit.applyAll. Add a custom-rule regression with disjoint fixes in reversed edit-offset order, retaining overlap and zero-length priority tests."
+    },
+    "diagnostic-position-index": {
+      "file": "scratchpad/effected/yaml/YamlDiagnostic.ts",
+      "class": "perf",
+      "summary": "Index source positions once for diagnostic batches",
+      "fix": "Add a reusable position index and indexed batch conversion in YamlDiagnostic.ts; build it once per source operation and reuse it in Yaml.ts, YamlDocument.ts, YamlVisitor.ts and YamlFormat.ts batch paths. Preserve standalone fromRaw, diagnostic order, LF/CR/CRLF/LS/PS, and offsets inside CRLF. Add an operation-count or scaling regression for many duplicate-key diagnostics and retain existing position assertions. Keep the implementation within these existing files."
+    },
+    "regional-effect-equality": {
+      "file": "scratchpad/effected/yaml/YamlFormat.ts",
+      "class": "law",
+      "summary": "Remove the native Object.is comparison without changing signed-zero behavior",
+      "fix": "Replace Object.is with Effect primitive equality plus an explicit numeric zero-sign comparison. Preserve NaN equality and the fallback when -0 renders as 0. Retain and extend regional-modification signed-zero regressions. Checker hardening is outside this module inventory; no Laws checker file is assigned."
+    },
+    "invalid-header-quoted-hash": {
+      "file": "scratchpad/effected/yaml/internal/lexer.ts",
+      "class": "bug",
+      "summary": "Keep quoted hashes in invalid block-scalar headers",
+      "fix": "Track single- and double-quote state only in the invalid-header scan, including doubled single quotes and double-quote backslash escapes. Split comments only outside quotes; preserve the round-2 unquoted-header split. Test quoted hashes, a real comment after the closing quote, stripComments output, and exact token spans."
+    },
+    "fold-tab-fidelity": {
+      "file": "scratchpad/effected/yaml/internal/fold.ts",
+      "class": "bug",
+      "summary": "Do not fold a scalar before an interior tab",
+      "fix": "Exclude width-fold split points that move a tab to the start of a continuation line. Add the public block-folded stringify counterexample and extend the folding generator to interior tabs with positive lineWidth; compare decoded values with the independent yaml parser."
+    },
+    "cst-block-entry-boundary": {
+      "file": "scratchpad/effected/yaml/internal/cst-visitor.ts",
+      "class": "bug",
+      "summary": "Respect line breaks embedded in block-scalar CST spans",
+      "fix": "Use source spans to detect same-line key promotion and subsequent entry boundaries, including breaks contained inside scalar or collection nodes. Preserve the preceding block scalar as a value and emit the following empty key. Add literal and folded regressions beside existing CST empty-key tests."
+    },
+    "visitor-stream-reexecution": {
+      "file": "scratchpad/effected/yaml/YamlVisitor.ts",
+      "class": "bug",
+      "summary": "Create a fresh visitor generator for each stream execution",
+      "fix": "Return Stream.suspend(() => Stream.fromIterable(visitGen(text, options))). Add full-collection-twice and partial-then-full regressions on the same stream; preserve event ordering and lazy construction."
+    },
+    "requote-schema-models": {
+      "file": "scratchpad/effected/yaml/internal/requote.ts",
+      "class": "schema",
+      "summary": "Make the requote payload and named policy schema-derived",
+      "fix": "Define an identity- and field-annotated structural RequoteScalarInput schema, reusing ScalarStyle, with unknown value, optional tag/anchor accepting their existing undefined compatibility, and finite offset/length fields. Derive the same-name type and retain plain structural inputs without per-call decoding. Define annotated LiteralKit([\"conservative\", \"escaping\"]) for RequoteMode and derive its type. Preserve conversion behavior and module initialization. Leave the anonymous inline quote-character domain anonymous; no named QuoteCharacter kit is required. Added-export and systemic law-deviation recording belongs to the central codemod."
+    },
+    "parser-state-schema": {
+      "file": "scratchpad/effected/yaml/internal/cst-parser.ts",
+      "class": "schema",
+      "summary": "Derive mutable parser state from an annotated schema",
+      "fix": "Define a file-local annotated structural ParserState schema using the existing token schema and derive its type. Keep pos and depth writable through field modifiers or the established derived mutable-field type. Preserve plain-object construction, parser behavior and depth guards; do not validate on each parser step."
+    },
+    "flow-empty-key-span": {
+      "file": "scratchpad/effected/yaml/internal/composer/block.ts",
+      "class": "bug",
+      "summary": "Locate explicit empty flow keys at the question indicator",
+      "fix": "In the flow colon branch, replace a preceding node-less key with a zero-length null plain scalar at explicitKeyOffset when no metadata-generated key replaced it. Skip intervening comments as at comma boundaries. Preserve metadata-bearing keys and invalid tight ?: syntax. Add {? : 1}, nested duplicate empty-key offsets 9/16, and comment-separated regressions alongside the comma tests."
+    },
+    "nested-flow-comment-lines": {
+      "file": "scratchpad/effected/yaml/internal/stringifier.ts",
+      "class": "bug",
+      "summary": "Keep multiline nested flow renderings intact",
+      "fix": "Promote a flow map or sequence to multiline layout whenever any rendered child spans lines. Preserve child line breaks; append commas and parent trailing comments after the final child line. Cover nested flow maps/sequences with comments through document stringify and independent-parser round trips."
+    },
+    "flow-alias-key-spacing": {
+      "file": "scratchpad/effected/yaml/internal/stringifier.ts",
+      "class": "bug",
+      "summary": "Separate alias keys from flow value indicators",
+      "fix": "Apply the existing block-map key-separator logic in both flow-map rendering branches: emit *a : val for alias keys and preserve metadata-only empty-key separation. Test flow maps with and without comments using both the port and independent yaml parser."
+    },
+    "alias-tag-properties": {
+      "file": "scratchpad/effected/yaml/internal/composer/anchors.ts",
+      "class": "bug",
+      "summary": "Reject tags attached to aliases",
+      "fix": "Extend shared alias-property validation to reject pending tags with an existing fatal diagnostic such as UnexpectedToken at tagSpan. Preserve the anchor check and recovered alias AST. Add block-map and block-sequence tagged-alias regressions."
+    },
+    "explicit-multiline-keys": {
+      "file": "scratchpad/effected/yaml/internal/composer/block.ts",
+      "class": "bug",
+      "summary": "Exempt explicit quoted keys from the implicit multiline-key rejection",
+      "fix": "Check the existing explicit-key exemption before rejecting quoted scalar keys containing line breaks. Add explicit single- and double-quoted multiline acceptance regressions while retaining multiline implicit-key rejection."
+    },
+    "empty-key-value-comments": {
+      "file": "scratchpad/effected/yaml/internal/composer/block.ts",
+      "class": "bug",
+      "summary": "Preserve comments consumed between an empty key and its value",
+      "fix": "Return the existing ConsumedValue payload from the empty-key value consumer and attach sameLineComments and leadingComments using the named-key path. Preserve cross-line next-key lookahead. Test separator-line and own-line comments on empty keys through parse/stringify."
+    },
+    "empty-document-final-newline": {
+      "file": "scratchpad/effected/yaml/internal/stringifier.ts",
+      "class": "bug",
+      "summary": "Honor finalNewline for canonically framed empty documents",
+      "fix": "Apply finalNewline to assembled empty-document marker output. Remove only the terminal newline when false, retaining the separator between --- and .... Add canonical start-only and start/end-marker option regressions."
+    },
+    "duplicate-node-properties": {
+      "file": "scratchpad/effected/yaml/internal/composer/block.ts",
+      "class": "bug",
+      "summary": "Validate duplicate properties before overwriting or collapsing metadata",
+      "fix": "Validate duplicate scalar tag/anchor slots before commitOuterIfNewlineSeen merges or clears them in block.ts. Apply equivalent pending-property validation before metadata replacement in document.ts and flow.ts. Preserve legal outer-container/inner-key splits and the recovered last-property AST while recording fatal diagnostics. Add multiline block, root, and flow multiple-tag/multiple-anchor counterexamples."
+    },
+    "composer-cr-comments": {
+      "file": "scratchpad/effected/yaml/internal/composer/comments.ts",
+      "class": "bug",
+      "summary": "Use physical CR/LF/CRLF boundaries throughout comment attribution",
+      "fix": "Recognize LF, lone CR, and CRLF counted once in sameLineSpan, hasBlankLineBetween, blankLineAboveStart, hasBlankLineBelow and columnAt. Update both LF-only line-start scans in block.ts trimDisownedTrailingComments as well. Keep isOwnLineAt/isAfterIndicatorOnly behavior. Compare CR inputs with LF twins for key-line/own-line comments, blank lines, empty-key comments, escaped node spans and nested terminal-comment ownership."
+    },
+    "document-end-cr-position": {
+      "file": "scratchpad/effected/yaml/internal/rules/document-end.ts",
+      "class": "bug",
+      "summary": "Report EOF positions after a trailing lone CR",
+      "fix": "Recognize a trailing lone CR as a physical break in endOfStreamPosition, reporting the following line at character 0. Test one and multiple CR terminators in diagnostics and inference. Preserve current insertion bytes; this position fix must not change the endsWith-LF insertion policy."
+    },
+    "flow-comment-before-value": {
+      "file": "scratchpad/effected/yaml/internal/composer/flow.ts",
+      "class": "bug",
+      "summary": "Accept comments between a flow colon and its value",
+      "fix": "Distinguish an entry awaiting its value from completed entry content when arming separatorRequired. Clear completed-content state at the first structural colon or gate the comment arm appropriately. Add valid map and implicit sequence-map cases with comments before values; keep missing-comma and comment-before-colon regressions. Use correctly matched brackets in test inputs."
+    },
+    "flow-property-empty-key-once": {
+      "file": "scratchpad/effected/yaml/internal/composer/flow.ts",
+      "class": "bug",
+      "summary": "Materialize property-bearing empty explicit flow keys once",
+      "fix": "At comma and closing boundaries, create one explicit empty key using pending tag/anchor metadata and its resolved empty value. Register that anchor, consume the metadata once, and avoid a subsequent phantom node. Test parsed values, AST pair counts and {? &a, next: *a}, {? &a}, {? !!str}; preserve empty-key source positions."
+    },
+    "tag-handle-composition": {
+      "file": "scratchpad/effected/yaml/internal/composer/tags.ts",
+      "class": "bug",
+      "summary": "Validate actual tag properties in every document",
+      "fix": "Perform named-handle validation during every document composition, filtering to consumed property offsets in state.tagOffsets. Remove only the corresponding handle check from the pre-composition cross-document pass to avoid duplicates; retain directive-placement checks. Test undeclared scalar/collection tags in document one and tag-shaped plain continuation text in later documents. Coordinate the AST parseAll assertions with g1."
+    },
+    "document-end-empty-fidelity": {
+      "file": "scratchpad/effected/yaml/internal/rules/document-end.ts",
+      "class": "bug",
+      "summary": "Do not erase an explicit empty document when removing its sole marker",
+      "fix": "Keep the forbidden-end-marker diagnostic but withhold removal when the final document has no content and no explicit start marker independently preserving it. Inspect the final document rather than first-document context. Test standalone and comment-prefixed ... streams with independent document counts, including safe removal when a start marker remains."
+    },
+    "plain-scalar-blank-lines": {
+      "file": "scratchpad/effected/yaml/internal/rules/empty-lines.ts",
+      "class": "bug",
+      "summary": "Exclude composed scalar-content blank lines from layout fixes and inference",
+      "fix": "Collect composed sourceMultiline scalar spans through walkScalars once per rule operation. In both empty-lines checking and inference, skip blank lines whose offsets lie inside those spans, retaining existing token-span protection. Test multiline plain map values, flow/block sequence items, max 0/default settings and unchanged block scalars with independent value fidelity."
+    },
+    "indent-document-reset": {
+      "file": "scratchpad/effected/yaml/internal/rules/indentation.ts",
+      "class": "bug",
+      "summary": "Reset explicit-key continuation state at document markers",
+      "fix": "Clear explicitKeyColumn before continuing on document-start or document-end tokens. Test an unfinished explicit key followed by ---/... and a deeper plain, quoted or block scalar in the next document; assert both expected indentation diagnostics and spaces votes while retaining same-document continuation exemptions."
+    },
+    "eof-keep-chomp-fidelity": {
+      "file": "scratchpad/effected/yaml/internal/rules/eof-newline.ts",
+      "class": "bug",
+      "summary": "Withhold EOF insertion that adds a keep-chomp scalar content break",
+      "fix": "Keep the eof-newline diagnostic but omit insertion when completing a final whitespace-only line inside a keep-chomp block scalar adds a retained content newline. Add literal |+ and folded >+ fidelity regressions using the independent yaml parser, since the current port parser masks this difference."
+    },
+    "mapping-key-subtree-policy": {
+      "file": "scratchpad/effected/yaml/internal/rules/quoted-strings.ts",
+      "class": "bug",
+      "summary": "Exclude whole collection-valued key subtrees from value-only scalar rules",
+      "fix": "Add a walkScalars traversal mode excluding entire mapping-key subtrees while retaining immediate-parent roles for existing callers. Use it for quoted-string checking/inference and for truthy checking when checkKeys is false. Add sequence-key and mapping-key diagnostics, fix and strict-inference regressions; retain checkKeys true behavior."
+    },
+    "hyphen-scan-scaling": {
+      "file": "scratchpad/effected/yaml/internal/rules/hyphen-spacing.ts",
+      "class": "perf",
+      "summary": "Precompute hyphen relocation safety instead of scanning every suffix",
+      "fix": "Compute reusable relocation-safety data once per line or token stream and query it for each hyphen; eliminate repeated same-line suffix scans. Preserve compact collection and explicit-indent scalar protections, including hyphen-safe-map-fix. Add a bounded scaling or operation-count regression for recovered deep input rather than relying on parser depth to bound lint work."
+    },
+    "indent-own-line-properties": {
+      "file": "scratchpad/effected/yaml/internal/rules/indentation.ts",
+      "class": "bug",
+      "summary": "Look past own-line node properties when pairing a key with its sequence",
+      "fix": "For indentSequences checking/inference pair scans, skip lines containing only anchors/tags and pair the sequence with the nearest earlier opening key. Keep those property lines in the indentation-unit stack and leave aliases as content. Test own-line anchor, tag and combined forms for explicit policy, consistent drift and strict inference."
+    },
+    "hyphen-safe-map-fix": {
+      "file": "scratchpad/effected/yaml/internal/rules/hyphen-spacing.ts",
+      "class": "bug",
+      "summary": "Keep safe outer-hyphen fixes before explicit-indent mapping values",
+      "fix": "Withhold an explicit-indent scalar fix only when the nearest separated structural indicator before the header, skipping whitespace/tag/anchor properties, is a hyphen affected by the deletion. A preceding colon does not withhold. Apply the safe -   - item: |2/>2 fix while preserving protection for -   - |2/>2, chomp orders and node properties, and the existing safe -   |2 fix. Assert decoded-value fidelity."
+    },
+    "indent-bom-and-spaces": {
+      "file": "scratchpad/effected/yaml/internal/rules/indentation.ts",
+      "class": "bug",
+      "summary": "Measure YAML indentation in U+0020 and skip the stream BOM",
+      "fix": "Count leading U+0020 spaces rather than trimStart whitespace. Exclude a single initial U+FEFF at offset 0 and carry that width into every probe offset, including token lookup and diagnostics. Retain tab-indented-line skipping. Add BOM diagnostics/consistent-inference tests and prevent NBSP or other non-YAML whitespace from counting as indentation."
+    }
+  }
+}

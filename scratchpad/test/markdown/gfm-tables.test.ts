@@ -8,6 +8,10 @@
 // the `commonmark` dialect never sees a table at all.
 
 import { assert, describe, it } from "@effect/vitest";
+import { assertSuccess } from "@effect/vitest/utils";
+import * as Effect from "effect/Effect";
+import * as Str from "effect/String";
+import { Markdown } from "../../effected/markdown/Markdown.ts";
 import { parseBlocks } from "../../effected/markdown/internal/blockParser.ts";
 import type { PhrasingContent, Table, TableAlign } from "../../effected/markdown/MarkdownNode.ts";
 
@@ -63,6 +67,33 @@ const grid = (table: Table): string =>
 const alignOf = (table: Table): string => (table.align ?? []).map((entry: TableAlign | null) => entry ?? "-").join(",");
 
 describe("gfm tables", () => {
+	it.effect("parses a 150,000-escaped-pipe cell in Node with its original source span", () => Effect.sync(() => {
+		const repetitions = 150_000;
+		const source = `| ${Str.repeat(repetitions)("a\\|")} b |\n| --- |\n`;
+		const parsed = Markdown.parseResult(source, { dialect: "gfm" });
+		assertSuccess(parsed, parseBlocks(source, { dialect: "gfm" }).root);
+		const table = parsed.success.children[0];
+		assert.ok(table?.type === "table");
+		if (table?.type === "table") {
+			assert.strictEqual(table.children.length, 1);
+			const row = table.children[0];
+			assert.strictEqual(row?.children.length, 1);
+			const cell = row?.children[0];
+			assert.ok(cell !== undefined);
+			if (cell !== undefined) {
+				const end = repetitions * 3 + 4;
+				assert.deepStrictEqual({ ...cell.position.start }, { line: 1, column: 3, offset: 2 });
+				assert.deepStrictEqual({ ...cell.position.end }, { line: 1, column: end + 1, offset: end });
+				assert.strictEqual(cell.children.length, 1);
+				const text = cell.children[0];
+				assert.ok(text?.type === "text");
+				if (text?.type === "text") {
+					assert.strictEqual(text.value, `${Str.repeat(repetitions)("a|")} b`);
+					assert.deepStrictEqual(text.position, cell.position);
+				}
+			}
+		}
+	}));
 	describe("formation", () => {
 		it("forms from a header row and a delimiter row", () => {
 			const table = requireTable("| a | b |\n| - | - |\n");

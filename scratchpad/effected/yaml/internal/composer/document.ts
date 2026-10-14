@@ -19,7 +19,7 @@ import type { RawDiagnostic } from "../diagnostics.ts";
 import type { ParseOptionsInput } from "../options.ts";
 import type { RawDirective, RawYamlDocument } from "../raw-document.ts";
 import { checkAnchorOnAlias, getAnchorName, makeAlias, registerAnchor } from "./anchors.ts";
-import { composeBlockMap, composeBlockSeq, composeFlatBlockMap } from "./block.ts";
+import { composeBlockMap, composeBlockSeq, composeFlatBlockMap, validatePendingProperty } from "./block.ts";
 import { hasBlankLineAbove, hasBlankLineBelow, rawCommentText, withCommentFields } from "./comments.ts";
 import { composeFlowMap, composeFlowSeq } from "./flow.ts";
 import {
@@ -300,8 +300,13 @@ export const composeDocument: {
 	// later meta would silently overwrite the earlier one.
 	const outerMeta: NodeMeta = {};
 	let sawNewlineSinceMeta = false;
-	const commitMetaAcrossNewline = () => {
+	const validateMetaMerge = (child: CstNode): void => {
+		if (meta.anchor !== undefined) validatePendingProperty({ ...child, type: "anchor" }, outerMeta, state);
+		if (meta.tag !== undefined) validatePendingProperty({ ...child, type: "tag", ...meta.tagSpan }, outerMeta, state);
+	};
+	const commitMetaAcrossNewline = (child: CstNode) => {
 		if (sawNewlineSinceMeta && hasMeta(meta)) {
+			validateMetaMerge(child);
 			if (meta.tag !== undefined) outerMeta.tag = meta.tag;
 			if (meta.tagSpan !== undefined) outerMeta.tagSpan = meta.tagSpan;
 			if (meta.anchor !== undefined) outerMeta.anchor = meta.anchor;
@@ -411,14 +416,16 @@ export const composeDocument: {
 			// SAME line is invalid. Anchors must be followed by a node, not a
 			// new block-seq indicator on the same line.
 			validateAnchorTagNotFollowedBySeqDashOnSameLine(child, children, i, state);
-			commitMetaAcrossNewline();
+			commitMetaAcrossNewline(child);
+			validatePendingProperty(child, meta, state);
 			meta.anchor = getAnchorName(child, state.text);
 			i++;
 			continue;
 		}
 		if (child.type === "tag") {
 			validateAnchorTagNotFollowedBySeqDashOnSameLine(child, children, i, state);
-			commitMetaAcrossNewline();
+			commitMetaAcrossNewline(child);
+			validatePendingProperty(child, meta, state);
 			meta.tag = child.source;
 			meta.tagSpan = { offset: child.offset, length: child.length };
 			MutableHashSet.add(state.tagOffsets, child.offset);
@@ -489,6 +496,7 @@ export const composeDocument: {
 				contents = composeFlatBlockMap(children, i + 1, cst, state, key, mapMeta);
 				break; // consumed all remaining children
 			}
+			validateMetaMerge(child);
 			// Standalone scalar — try multi-line plain scalar merging
 			if (child.type === "flow-scalar" && getScalarStyle(child) === "plain") {
 				const { value, nextIdx, partsCount, endOffset } = collectMultilinePlainScalar(
@@ -567,6 +575,7 @@ export const composeDocument: {
 		}
 
 		if (child.type === "block-map") {
+			validateMetaMerge(child);
 			// Outer meta belongs to the map; remaining `meta` would belong to the
 			// first key inside, but block-map's own children carry that context.
 			const combined: NodeMeta = { ...outerMeta };
@@ -582,6 +591,7 @@ export const composeDocument: {
 		}
 
 		if (child.type === "block-seq") {
+			validateMetaMerge(child);
 			const isRootSeq = contents === null;
 			const combined: NodeMeta = { ...outerMeta };
 			if (meta.tag !== undefined) combined.tag = meta.tag;
@@ -610,6 +620,7 @@ export const composeDocument: {
 				mapMeta = { ...outerMeta };
 				flowMeta = { ...meta };
 			} else {
+				validateMetaMerge(child);
 				const combined: NodeMeta = { ...outerMeta };
 				if (meta.tag !== undefined) combined.tag = meta.tag;
 				if (meta.tagSpan !== undefined) combined.tagSpan = meta.tagSpan;
@@ -642,6 +653,7 @@ export const composeDocument: {
 				mapMeta = { ...outerMeta };
 				flowMeta = { ...meta };
 			} else {
+				validateMetaMerge(child);
 				const combined: NodeMeta = { ...outerMeta };
 				if (meta.tag !== undefined) combined.tag = meta.tag;
 				if (meta.tagSpan !== undefined) combined.tagSpan = meta.tagSpan;
@@ -764,7 +776,7 @@ export const composeDocument: {
 			headerForDocument === undefined ? afterMarkerComment : `${headerForDocument}\n${afterMarkerComment}`;
 	}
 
-	validateTagHandlesInDocument(cst, state, "percent");
+	validateTagHandlesInDocument(cst, state, "properties");
 	return {
 		contents: decorated,
 		errors: [...state.errors],
@@ -996,13 +1008,6 @@ export const validateCrossDocumentDirectives: {
 	for (let docIdx = 1; docIdx < cstNodes.length; docIdx++) {
 		const cst = A.getUnsafe(cstNodes, docIdx);
 		const children = cst.children ?? [];
-
-		// QLJ7: directives are local to a single document. Subsequent
-		// documents do not inherit %TAG handles from earlier documents,
-		// so a `!handle!` reference here without a local %TAG is unresolved.
-		// Run this for every doc >= 1 — even docs that DO declare directives
-		// can reference handles those directives didn't define.
-		validateTagHandlesInDocument(cst, state, "handles");
 
 		// Check if this document has directives
 		const hasDirectives = children.some((c) => c.type === "directive");
@@ -1249,7 +1254,20 @@ export const composeFirstDocumentCounted: {
 	const doc = A.getUnsafe(cstNodes, 0);
 
 	const result = composeDocument(doc, state, cstNodes.length > 1, cstNodes[1]);
-	return { document: decorateDocumentSourceMultiline(result, text), documentCount: cstNodes.length };
+	// The first-document parser has always rejected undeclared handles in
+	// later documents too (QLJ7). Discover actual properties by composing each
+	// later document in isolation, rather than validating tag-shaped CST text.
+	const laterHandleErrors: RawDiagnostic[] = [];
+	for (let i = 1; i < cstNodes.length; i++) {
+		const later = composeDocument(A.getUnsafe(cstNodes, i), createState(text, FLOW, options), i < cstNodes.length - 1, cstNodes[i + 1]);
+		for (const error of later.errors) {
+			if (error.code === "UnresolvedTag" && error.message.startsWith("Tag handle ")) laterHandleErrors.push(error);
+		}
+	}
+	return {
+		document: decorateDocumentSourceMultiline({ ...result, errors: [...result.errors, ...laterHandleErrors] }, text),
+		documentCount: cstNodes.length,
+	};
 });
 
 /**

@@ -14,6 +14,7 @@ import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Markdown, MarkdownStringifyError } from "../../effected/markdown/Markdown.ts";
+import { renderHtml } from "./e2e/support/htmlWriter.ts";
 import {
 	Blockquote,
 	Break,
@@ -989,6 +990,141 @@ describe("Markdown.stringify", () => {
 
 
 describe("decoded source spelling regressions", () => {
+	it("keeps underscore emphasis and strong beside Unicode letters and numbers", () => {
+		for (const Node of [Emphasis, Strong]) {
+			const markers = Node === Strong ? "**" : "*";
+			for (const [before, after] of [["𐐀", ""], ["", "b"], ["", "𐐀"], ["1", ""], ["", "1"]] as const) {
+				const tree = rootOf(paragraph(text(before), Node.make({ children: [text("a")], markerChar: "_" }), text(""), text(after)));
+				const emitted = out(tree);
+				assert.strictEqual(emitted, `${before}${markers}a${markers}${after}\n`);
+				const parsed = Result.getOrThrow(Markdown.parseResult(emitted));
+				assert.strictEqual(renderHtml(parsed), renderHtml(tree));
+			}
+			const safe = rootOf(paragraph(text("😀"), Node.make({ children: [text("a")], markerChar: "_" }), text("!b")));
+			const safeMarkers = Node === Strong ? "__" : "_";
+			assert.strictEqual(out(safe), `😀${safeMarkers}a${safeMarkers}!b\n`);
+			const parsedSafe = Result.getOrThrow(Markdown.parseResult(out(safe)));
+			assert.strictEqual(renderHtml(parsedSafe), renderHtml(safe));
+		}
+	});
+
+	it("preserves destination line endings and blank-line titles in links, images and definitions", () => {
+		for (const ending of ["\r", "\n"]) {
+			const url = `a${ending}b&amp;<>\\`;
+			const title = `a${ending}${ending}b&amp; "quoted"\\`;
+			const tree = rootOf(
+				paragraph(Link.make({ url, title, children: [text("x")] }), Image.make({ url, title, alt: "x" })),
+				Definition.make({ identifier: "r", url, title }),
+			);
+			const parsed = Result.getOrThrow(Markdown.parseResult(out(tree)));
+			assert.strictEqual(parsed.children.length, 2);
+			const first = parsed.children[0];
+			const definition = parsed.children[1];
+			if (first?.type !== "paragraph" || definition?.type !== "definition") assert.fail("expected paragraph and definition");
+			assert.strictEqual(first.children.length, 2);
+			for (const child of first.children) {
+				if (child.type !== "link" && child.type !== "image") assert.fail("expected link or image");
+				assert.strictEqual(child.url, url);
+				assert.strictEqual(child.title, title);
+			}
+			assert.strictEqual(definition.url, url);
+			assert.strictEqual(definition.title, title);
+			assert.strictEqual(renderHtml(parsed), renderHtml(tree));
+		}
+	});
+
+	it("keeps metadata-only code free of a language class", () => {
+		for (const fenceChar of [undefined, "`", "~"] as const) {
+			const tree = rootOf(Code.make({ value: "x\n", meta: "tail", ...(fenceChar === undefined ? {} : { fenceChar }) }));
+			const parsed = Result.getOrThrow(Markdown.parseResult(out(tree)));
+			const code = parsed.children[0];
+			if (code?.type !== "code") assert.fail("expected code block");
+			assert.strictEqual(code.lang, undefined);
+			assert.strictEqual(code.meta, undefined);
+			assert.strictEqual(code.value, "x\n");
+			assert.notInclude(renderHtml(parsed), "language-tail");
+			assert.strictEqual(renderHtml(parsed), renderHtml(tree));
+		}
+	});
+
+	it("keeps tight-list separators around metadata-only fences", () => {
+		const metadata = Code.make({ value: "x\n", meta: "tail" });
+		for (const children of [
+			[paragraph(text("p")), metadata],
+			[metadata, Code.make({ value: "y\n", meta: "tail" })],
+			[Code.make({ value: "y\n" }), metadata],
+		]) {
+			const tree = rootOf(List.make({ ordered: false, spread: false,
+				children: [ListItem.make({ spread: false, children })],
+			}));
+			const emitted = out(tree);
+			assert.notInclude(emitted, "\n\n");
+			const parsed = Result.getOrThrow(Markdown.parseResult(emitted));
+			const list = parsed.children[0];
+			if (list?.type !== "list") assert.fail("expected list");
+			assert.strictEqual(list.spread, false);
+			assert.strictEqual(list.children[0]?.spread, false);
+			assert.strictEqual(list.children[0]?.children.length, 2);
+			assert.strictEqual(renderHtml(parsed), renderHtml(tree));
+		}
+	});
+
+	it("preserves decoded carriage returns before block-opening text and image alt", () => {
+		for (const opener of ["# heading", "- item", "> quote", "```code"]) {
+			const value = `a\r${opener}`;
+			const tree = rootOf(paragraph(text(value), Image.make({ url: "u", alt: value })));
+			const emitted = out(tree);
+			assert.notInclude(emitted, "\r");
+			const parsed = Result.getOrThrow(Markdown.parseResult(emitted));
+			assert.strictEqual(parsed.children.length, 1);
+			const first = parsed.children[0];
+			if (first?.type !== "paragraph") assert.fail("expected paragraph");
+			assert.strictEqual(first.children.length, 2);
+			const content = first.children[0];
+			const image = first.children[1];
+			if (content?.type !== "text" || image?.type !== "image") assert.fail("expected text and image");
+			assert.strictEqual(content.value, value);
+			assert.strictEqual(image.alt, value);
+			assert.strictEqual(renderHtml(parsed), renderHtml(tree));
+		}
+	});
+
+	it("keeps decoded spaces before a soft newline from becoming a hard break", () => {
+		for (const children of [
+			[text("a  \nb")],
+			[text("a "), text(" \nb")],
+			[text("a  "), text(""), text("\nb")],
+			[text("a "), text(" "), text("\n"), text("b")],
+		]) {
+			const tree = rootOf(paragraph(...children));
+			const emitted = out(tree);
+			assert.strictEqual(emitted, "a  &#10;b\n");
+			const parsed = Result.getOrThrow(Markdown.parseResult(emitted));
+			const first = parsed.children[0];
+			if (first?.type !== "paragraph") assert.fail("expected paragraph");
+			assert.strictEqual(first.children.length, 1);
+			const content = first.children[0];
+			if (content?.type !== "text") assert.fail("expected soft newline in text");
+			assert.strictEqual(content.value, "a  \nb");
+			assert.strictEqual(renderHtml(parsed), renderHtml(tree));
+		}
+	});
+
+	it("preserves language tildes beside a tilde fence", () => {
+		for (const lang of ["~", "~~x"]) {
+			const tree = rootOf(Code.make({ value: "x\n", lang, meta: "~tail", fenceChar: "~" }));
+			assert.strictEqual(out(tree), `~~~&#126;${lang === "~" ? "" : "~x"} ~tail\nx\n~~~\n`);
+			const parsed = Result.getOrThrow(Markdown.parseResult(out(tree)));
+			assert.strictEqual(parsed.children.length, 1);
+			const code = parsed.children[0];
+			if (code?.type !== "code") assert.fail("expected code block");
+			assert.strictEqual(code.lang, lang);
+			assert.strictEqual(code.meta, "~tail");
+			assert.strictEqual(code.value, "x\n");
+			assert.strictEqual(renderHtml(parsed), renderHtml(tree));
+		}
+	});
+
 	it("protects entity-shaped destinations and titles for links, images and definitions", () => {
 		const url = "a&amp;b";
 		const title = 't&amp; "quoted"\\';

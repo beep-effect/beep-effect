@@ -2,25 +2,46 @@ import { Audience } from "../env/index.ts";
 import { CommandNeutralizer } from "../github-commands/index.ts";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity/packages";
 import { CliTheme } from "./CliTheme.ts";
 import { sanitize } from "./Fmt.ts";
 import { underGithubActions } from "./internal/autoFormat.ts";
 import { Status } from "./Status.ts";
 
+const $I = $ScratchpadId.create("effected/cli/CliMessage");
+
 /**
  * Options for {@link CliMessage.status}.
+ *
+ * **Example** (Send a status line to stderr)
+ *
+ * ```ts
+ * import { CliMessageOptions } from "@beep/scratchpad/effected/cli/CliMessage";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(CliMessageOptions)({ stream: "stderr" })) // true
+ * ```
  *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface CliMessageOptions {
+export const CliMessageOptions = S.Struct({
 	/**
 	 * Where the line goes. Defaults to stderr for a status whose rank is at or above `warning`'s in its
 	 * vocabulary, stdout otherwise.
 	 */
-	readonly stream?: "stdout" | "stderr" | undefined;
-}
+	stream: S.optional(S.Literals(["stdout", "stderr"])).annotate($I.annote("CliMessageOptions.stream", { description: "The output stream override for a status line." })),
+}).annotate($I.annote("CliMessageOptions", { description: "Plain output routing options for a status message." }));
+
+/**
+ * The plain stream override accepted by status messages.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CliMessageOptions = typeof CliMessageOptions.Type;
 
 /**
  * One-line status messages: a glyph and some text, themed for a person and plain for an agent.

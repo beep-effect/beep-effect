@@ -1,5 +1,6 @@
 import * as Match from "effect/Match";
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as Bool from "effect/Boolean";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -147,6 +148,10 @@ const make = Effect.gen(function* () {
 	const env = yield* ActionEnvironment;
 	const fs = yield* FileSystem.FileSystem;
 	const outputs = yield* ActionOutputs;
+	const lineEnding = Bool.match(O.contains("Windows")(yield* env.getOptional("RUNNER_OS")), {
+		onTrue: () => "\r\n" as const,
+		onFalse: () => "\n" as const,
+	});
 
 	const write = Effect.fnUntraced(function* (key: string, serialized: string) {
 			const writeFailed = (cause: unknown) => ActionStateError.make({ reason: "writeFailed", key, cause });
@@ -156,7 +161,7 @@ const make = Effect.gen(function* () {
 				return yield* writeFailed(InvalidActionStateNameError.make({ message: `"${key}" cannot name a GITHUB_STATE entry` }));
 			}
 			const path = yield* env.get("GITHUB_STATE").pipe(Effect.mapError(writeFailed));
-			yield* fs.writeFileString(path, heredocBlock({ name: key, value: serialized }), { flag: "a" }).pipe(Effect.mapError(writeFailed));
+			yield* fs.writeFileString(path, heredocBlock({ name: key, value: serialized, lineEnding }), { flag: "a" }).pipe(Effect.mapError(writeFailed));
 		});
 
 	const read = Effect.fnUntraced(function* <A, I>(key: string, schema: S.Codec<A, I>) {
@@ -182,7 +187,8 @@ const make = Effect.gen(function* () {
 			// later as a `malformed` mystery. States are small; the round-trip is
 			// noise next to the file append.
 			const notPlainJson = (cause: unknown) => ActionStateError.make({ reason: "notPlainJson", key, cause });
-			const serialized = yield* S.encodeEffect(Json)(encoded).pipe(Effect.mapError(notPlainJson));
+			const plainJson = yield* S.decodeUnknownEffect(S.Json)(encoded).pipe(Effect.mapError(notPlainJson));
+			const serialized = yield* S.encodeEffect(Json)(plainJson).pipe(Effect.mapError(notPlainJson));
 			const parsed = yield* S.decodeEffect(Json)(serialized).pipe(Effect.mapError(notPlainJson));
 			yield* S.decodeUnknownEffect(schema)(parsed).pipe(
 				Effect.mapError((cause) => ActionStateError.make({ reason: "notPlainJson", key, cause })),

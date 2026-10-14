@@ -233,6 +233,109 @@ it.effect("postwrite growth returns typed conflict and next append reconciles ph
 );
 
 for (const bom of ["", "\ufeff"]) {
+  it.effect(`reconcile short reads keep complete records and detect a later shrink with BOM${bom.length}`, () =>
+    Effect.gen(function* () {
+      const fs = yield* memory();
+      const first = line(1);
+      const retained = first + line(2);
+      const encoder = new TextEncoder();
+      const retainedSize = encoder.encode(retained).length;
+      yield* fs.writeFileString(path, bom + first);
+      let inject = false;
+      const decorated: FileSystem.FileSystem = {
+        ...fs,
+        watch: () => Stream.never,
+        stat: Effect.fn("JsonlTest.truncateAfterReconcileStat")(function* (target) {
+          const info = yield* fs.stat(target);
+          if (inject && target === path) {
+            inject = false;
+            yield* fs.truncate(path, encoder.encode(bom + retained).length);
+          }
+          return info;
+        }),
+      };
+      const journal = yield* open(decorated);
+      yield* externalAppend(fs, line(2) + line(3));
+      inject = true;
+      assertFailure(
+        (yield* Effect.result(journal.append("noted", { round: Number.NaN, label: "invalid" }))).pipe(
+          Result.mapError((error) => error._tag)
+        ),
+        "InvalidData"
+      );
+      assertSome(
+        O.map(yield* SubscriptionRef.get(journal.latest), (row) => row.event === "noted" ? row.data.round : row.event),
+        2
+      );
+      assert.deepStrictEqual(yield* fs.readFile(path), encoder.encode(bom + retained));
+      const reader = yield* journal.changes({ cursor: retainedSize }).pipe(
+        Stream.runDrain,
+        Effect.result,
+        Effect.forkChild({ startImmediately: true })
+      );
+      yield* fs.truncate(path, encoder.encode(bom + first).length);
+      const failure = yield* Effect.result(journal.append("noted", { round: 4, label: "refused" }));
+      assertFailure(
+        Result.mapError(failure, (error) =>
+          error._tag === "JournalResync" ? [error.reason, error.expected, error.actual] : error._tag
+        ),
+        ["truncated", retainedSize, encoder.encode(first).length]
+      );
+      assertFailure(
+        Result.mapError(yield* Fiber.join(reader), (error) =>
+          error._tag === "JournalResync" ? [error.reason, error.expected, error.actual] : error._tag
+        ),
+        ["truncated", retainedSize, encoder.encode(first).length]
+      );
+      assert.deepStrictEqual(yield* fs.readFile(path), encoder.encode(bom + first));
+    })
+  );
+  it.effect(`append after a stat/read truncation reports the postwrite size conflict with BOM${bom.length}`, () =>
+    Effect.gen(function* () {
+      const fs = yield* memory();
+      const first = line(1);
+      const retained = bom + first + line(2);
+      const sampled = retained + line(3);
+      const encoder = new TextEncoder();
+      yield* fs.writeFileString(path, bom + first);
+      let inject = false;
+      const decorated: FileSystem.FileSystem = {
+        ...fs,
+        watch: () => Stream.never,
+        stat: Effect.fn("JsonlTest.truncateBeforeAppendRange")(function* (target) {
+          const info = yield* fs.stat(target);
+          if (inject && target === path) {
+            inject = false;
+            yield* fs.truncate(path, encoder.encode(retained).length);
+          }
+          return info;
+        }),
+      };
+      const journal = yield* open(decorated);
+      yield* externalAppend(fs, line(2) + line(3));
+      inject = true;
+      const conflict = yield* Effect.result(journal.append("noted", { round: 4, label: "ours" }));
+      const written = yield* fs.readFile(path);
+      const appendedSize = written.length - encoder.encode(retained).length;
+      assert.isAbove(appendedSize, 0);
+      assertFailure(
+        Result.mapError(conflict, (error) =>
+          error._tag === "JournalWriteConflict" ? [error.path, error.expected, error.actual] : error._tag
+        ),
+        [path, encoder.encode(sampled).length + appendedSize, written.length]
+      );
+      assertSome(
+        O.map(yield* SubscriptionRef.get(journal.latest), (row) => row.event === "noted" ? row.data.round : row.event),
+        2
+      );
+      const appended = yield* journal.append("noted", { round: 5, label: "next" });
+      assert.strictEqual(appended.line.offset, written.length - encoder.encode(bom).length);
+      assert.deepStrictEqual(
+        A.map(yield* journal.query({ events: ["noted"] }).pipe(Stream.runCollect), (row) => row.data.round),
+        [1, 2, 4, 5]
+      );
+    })
+  );
   for (const terminal of [false, true]) {
     it.effect(`seeded unterminated ${terminal ? "terminal" : "Unicode snapshot"} completes with BOM${bom.length}`, () =>
       Effect.gen(function* () {

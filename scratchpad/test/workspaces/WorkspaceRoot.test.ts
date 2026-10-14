@@ -14,6 +14,8 @@ import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
+import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import {
 	WORKSPACE_MARKERS,
 	WorkspaceDiscovery,
@@ -118,6 +120,74 @@ describe("WorkspaceRoot.find — malformed ancestor manifest", () => {
 			Effect.gen(function* () {
 				const roots = yield* WorkspaceRoot;
 				assert.strictEqual(yield* roots.find("/ws/packages/a/src"), "/ws");
+			}),
+		);
+	});
+});
+
+describe("WorkspaceRoot.find — pnpm marker files", () => {
+	for (const [label, tree, expected] of [
+		["ascends past a directory named pnpm-workspace.yaml", {
+			"/repo/package.json": rootManifest(["packages/*"]),
+			"/repo/packages/a/pnpm-workspace.yaml/child": "",
+		}, "/repo"],
+		["selects a real marker file before an ancestor workspace", {
+			"/repo/package.json": rootManifest(["packages/*"]),
+			"/repo/packages/a/pnpm-workspace.yaml": "packages:\n  - children/*\n",
+		}, "/repo/packages/a"],
+		["ascends past an ordinary directory to an ancestor manifest", {
+			"/repo/package.json": rootManifest(["packages/*"]),
+			"/repo/packages/a/ordinary/child": "",
+		}, "/repo"],
+		["checks the same directory's manifest after rejecting a marker directory", {
+			"/repo/package.json": rootManifest(["packages/*"]),
+			"/repo/packages/a/package.json": rootManifest(["children/*"]),
+			"/repo/packages/a/pnpm-workspace.yaml/child": "",
+		}, "/repo/packages/a"],
+		["ascends past a marker directory to a real ancestor marker file", {
+			"/repo/pnpm-workspace.yaml": "packages:\n  - packages/*\n",
+			"/repo/packages/a/pnpm-workspace.yaml/child": "",
+		}, "/repo"],
+	] as const) {
+		layer(rootsOver(tree), { timeout: "30 seconds" })((it) => {
+			it.effect(label, () =>
+				Effect.gen(function* () {
+					const roots = yield* WorkspaceRoot;
+					assert.strictEqual(yield* roots.find("/repo/packages/a"), expected);
+				}),
+			);
+		});
+	}
+});
+
+describe("WorkspaceRoot.find — marker stat failures", () => {
+	const base = Layer.merge(Path.layer, MemoryFileSystem.layerWith({
+		"/repo/pnpm-workspace.yaml": "packages:\n  - packages/*\n",
+		"/repo/packages/a/package.json": rootManifest(["children/*"]),
+		"/repo/packages/b/ordinary/child": "",
+	}, {
+		faults: {
+			stat: (path) => path === "/repo/pnpm-workspace.yaml" ? undefined : Effect.fail(PlatformError.systemError({
+				_tag: "PermissionDenied",
+				module: "FileSystem",
+				method: "stat",
+				pathOrDescriptor: path,
+			})),
+		},
+	}));
+
+	layer(WorkspaceRoot.layer.pipe(Layer.provide(base)), { timeout: "30 seconds" })((it) => {
+		it.effect("checks the same directory's manifest after a marker stat failure", () =>
+			Effect.gen(function* () {
+				const roots = yield* WorkspaceRoot;
+				assert.strictEqual(yield* roots.find("/repo/packages/a"), "/repo/packages/a");
+			}),
+		);
+
+		it.effect("continues past marker stat failures to a valid ancestor", () =>
+			Effect.gen(function* () {
+				const roots = yield* WorkspaceRoot;
+				assert.strictEqual(yield* roots.find("/repo/packages/b"), "/repo");
 			}),
 		);
 	});

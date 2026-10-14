@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import { ActionOutputs, Secret } from "../../effected/github-actions/index.ts";
 
@@ -53,6 +54,19 @@ describe("Secret", () => {
 				const env = yield* Secret.forChildEnv({ A: Redacted.make("aaa"), B: Redacted.make("bbb") });
 				assert.deepStrictEqual(outputs.masked, ["aaa", "bbb"]);
 				assert.deepStrictEqual(env, { A: "aaa", B: "bbb" });
+			}).pipe(Effect.provide(outputs.layer));
+		});
+
+		it.effect("preserves an own __proto__ entry and masks every value in order", () => {
+			const outputs = recordingOutputs();
+			return Effect.gen(function* () {
+				const env = yield* Secret.forChildEnv({
+					["__proto__"]: Redacted.make("proto-secret"),
+					NORMAL: Redacted.make("normal-secret"),
+				});
+				assert.isTrue(R.has(env, "__proto__"));
+				assert.deepStrictEqual(env, { ["__proto__"]: "proto-secret", NORMAL: "normal-secret" });
+				assert.deepStrictEqual(outputs.masked, ["proto-secret", "normal-secret"]);
 			}).pipe(Effect.provide(outputs.layer));
 		});
 

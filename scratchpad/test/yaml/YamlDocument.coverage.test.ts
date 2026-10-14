@@ -6,7 +6,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { YamlDocument, documentFromRaw } from "../../effected/yaml/YamlDocument.ts";
 import { YamlScalar } from "../../effected/yaml/YamlNode.ts";
-import { YamlStringifyError } from "../../effected/yaml/Yaml.ts";
+import { YamlParseError, YamlStringifyError } from "../../effected/yaml/Yaml.ts";
 import { StringifyFailure } from "../../effected/yaml/internal/stringifier.ts";
 const scalarFailure = YamlScalar.make({ value: { toString() { throw StringifyFailure.new("Circular reference detected"); } }, style: "plain", offset: 0, length: 1 });
 const cyclic = YamlDocument.make({ contents: scalarFailure, errors: [], warnings: [], directives: [] });
@@ -14,9 +14,16 @@ describe("document uncovered contracts", () => {
   it.effect("stream fatal diagnostics aggregate from directives and documents", () => Effect.gen(function* () {
     const documents = yield* YamlDocument.parseAll("---\na: 1\n---\nb: 2\n");
     assert.deepStrictEqual(A.map(documents, (doc) => doc.toValue()), [{ a: 1 }, { b: 2 }]);
-    const localTags = yield* YamlDocument.parseAll("%TAG !e! tag:example.com,2020:\n---\na: !e!foo x\n---\nb: !e!foo y\n");
-    assert.deepStrictEqual(A.map(localTags, (doc) => doc.toValue()), [{ a: "x" }, { b: "y" }]);
-    assert.deepStrictEqual(A.map(localTags, (doc) => doc.directives.length), [1, 0]);
+    const tagStream = "%TAG !e! tag:example.com,2020:\n---\na: !e!foo x\n---\nb: !e!foo y\n";
+    const localTags = yield* Effect.flip(YamlDocument.parseAll(tagStream));
+    assert.instanceOf(localTags, YamlParseError);
+    assert.strictEqual(localTags.input, tagStream);
+    assert.deepStrictEqual(A.map(localTags.diagnostics, (d) => d.code), ["UnresolvedTag"]);
+    const explicitEnd = "%TAG !e! tag:example.com,2000:\n---\n!e!foo bar\n...\n---\n!e!foo baz\n";
+    const error = yield* Effect.flip(YamlDocument.parseAll(explicitEnd));
+    assert.instanceOf(error, YamlParseError);
+    assert.strictEqual(error.input, explicitEnd);
+    assert.deepStrictEqual(A.map(error.diagnostics, (d) => [d.code, d.offset]), [["UnresolvedTag", 54]]);
     for (const input of ["a: 1\n%YAML 1.2\n---\nb: 2", "---\n*missing"]) {
       const error = yield* Effect.flip(YamlDocument.parseAll(input));
       assert.strictEqual(error.input, input);

@@ -17,6 +17,9 @@ import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import { badArgument } from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as S from "effect/Schema";
+import * as Result from "effect/Result";
+import { ExtractOptions, ProvisionFileOptions, ProvisionedFile } from "../../effected/github-actions/ToolInstaller.ts";
 import * as TestClock from "effect/testing/TestClock";
 import { ActionEnvironment, ToolInstaller, ToolInstallerError } from "../../effected/github-actions/index.ts";
 import { settle } from "./results.ts";
@@ -218,6 +221,144 @@ const liveWithSpawner = (root: string, spawner: Layer.Layer<ChildProcessSpawner.
 	);
 
 describe("ToolInstaller", () => {
+	it("preserves the structural extraction and provisioning contracts", () => {
+		const extraction: ExtractOptions = { destination: undefined, flags: undefined };
+		const options: ProvisionFileOptions = { tool: "tool", version: "1", url: "url", binary: "cli" };
+		const provisioned: ProvisionedFile = { directory: "/cache/tool/1/x64", binDir: "/cache/tool/1/x64" };
+		assert.isTrue(S.is(ExtractOptions)({}));
+		assert.isTrue(S.is(ExtractOptions)(extraction));
+		assert.deepEqual(S.decodeResult(ExtractOptions)(extraction).pipe(Result.getOrThrow), extraction);
+		assert.deepEqual(S.decodeResult(ExtractOptions)({}).pipe(Result.getOrThrow), {});
+		assert.isTrue(S.is(ExtractOptions)({ flags: [] }));
+		assert.isTrue(S.is(ExtractOptions)({ destination: "", flags: ["xz", "-f"] }));
+		assert.isFalse(S.is(ExtractOptions)({ flags: [1] }));
+		assert.isTrue(S.is(ProvisionFileOptions)(options));
+		assert.deepEqual(S.decodeResult(ProvisionFileOptions)(options).pipe(Result.getOrThrow), options);
+		assert.isTrue(S.is(ProvisionFileOptions)({ tool: "", version: "", url: "", binary: "" }));
+		assert.isFalse(S.is(ProvisionFileOptions)({ tool: "tool", version: "1", url: "url" }));
+		assert.isFalse(S.is(ProvisionFileOptions)({ ...options, binary: undefined }));
+		assert.isTrue(S.is(ProvisionedFile)(provisioned));
+		assert.deepEqual(S.decodeResult(ProvisionedFile)(provisioned).pipe(Result.getOrThrow), provisioned);
+		assert.isFalse(S.is(ProvisionedFile)({ directory: "/cache" }));
+	});
+
+	{
+		let copies = 0;
+		let publications = 0;
+		const requests = countingFetch(() => new Response("binary"));
+		it.layer(testLayer({
+			make: (root) => liveWithFileSystem(root, (fs) => ({
+				...fs,
+				copyFile: (source, destination) => { copies += 1; return fs.copyFile(source, destination); },
+				rename: (source, destination) => { publications += 1; return fs.rename(source, destination); },
+			}), requests.fetch),
+		}), { timeout: "30 seconds" })((it) => {
+			it.effect("rejects ../victim on cacheFile misses and provisionFile misses and hits without copying or publishing", () =>
+				Effect.gen(function* () {
+					const fs = yield* FileSystem.FileSystem;
+					const path = yield* Path.Path;
+					const root = yield* TestRoot;
+					const installer = yield* ToolInstaller;
+					const source = path.join(root, "source");
+					yield* fs.writeFileString(source, "source");
+					const cacheError = yield* Effect.flip(installer.cacheFile(source, "../victim", "tool", "1"));
+					assert.strictEqual(cacheError.reason, "cacheFailed");
+					assert.isFalse(yield* fs.exists(path.join(root, "victim")));
+					for (const cached of [false, true]) {
+						const directory = installer.cachePath("tool", "1");
+						if (cached) {
+							yield* fs.makeDirectory(directory, { recursive: true });
+							yield* fs.writeFileString(path.join(directory, "..", "victim"), "untouched");
+						}
+						const error = yield* Effect.flip(installer.provisionFile({ tool: "tool", version: "1", url: "https://example.test/tool", binary: "../victim" }));
+						assert.strictEqual(error.reason, "cacheFailed");
+						if (cached) assert.strictEqual(yield* fs.readFileString(path.join(directory, "..", "victim")), "untouched");
+						assert.isFalse(yield* fs.exists(`${directory}.complete`));
+					}
+					assert.strictEqual(requests.count(), 0);
+					assert.strictEqual(copies, 0);
+					assert.strictEqual(publications, 0);
+				}),
+			);
+		});
+	}
+
+	it.layer(testLayer(), { timeout: "30 seconds" })((it) => {
+		it.effect("publishes entries discoverable by the official directory-and-completion-marker lookup predicate", () =>
+			Effect.gen(function* () {
+				const fs = yield* FileSystem.FileSystem;
+				const path = yield* Path.Path;
+				const root = yield* TestRoot;
+				const installer = yield* ToolInstaller;
+				const source = path.join(root, "marker-source");
+				yield* fs.writeFileString(source, "binary");
+				const directory = yield* installer.cacheFile(source, "tool", "tool", "1");
+				// @actions/tool-cache.find checks both the tool path and its sibling <arch>.complete.
+				assert.isTrue((yield* fs.exists(directory)) && (yield* fs.exists(`${directory}.complete`)));
+				assert.strictEqual(yield* fs.readFileString(`${directory}.complete`), "");
+				const tree = path.join(root, "marker-tree");
+				yield* fs.makeDirectory(tree);
+				yield* fs.writeFileString(path.join(tree, "tool"), "directory tool");
+				const treeDirectory = yield* installer.cacheDir(tree, "tree", "1");
+				assert.isTrue((yield* fs.exists(treeDirectory)) && (yield* fs.exists(`${treeDirectory}.complete`)));
+				assert.strictEqual(yield* fs.readFileString(`${treeDirectory}.complete`), "");
+			}),
+		);
+	});
+
+	for (const failure of ["publication", "marker", "invalidation"]) {
+		let markerWrites = 0;
+		it.layer(testLayer({
+			make: (root, path) => liveWithFileSystem(root, (fs) => {
+				const destination = ToolInstaller.cachePath({ root, tool: "tool", version: "1", arch: process.arch });
+				return {
+					...fs,
+					remove: (file, options) => failure === "invalidation" && file === `${destination}.complete`
+						? Effect.fail(badArgument({ module: "FileSystem", method: "remove", description: "marker invalidation refused" }))
+						: fs.remove(file, options),
+					rename: (from, to) => failure === "publication" && to === destination
+						? Effect.fail(badArgument({ module: "FileSystem", method: "rename", description: "publication refused" }))
+						: fs.rename(from, to),
+					writeFileString: (file, content, options) => {
+						if (file === `${destination}.complete`) {
+							markerWrites += 1;
+							if (failure === "marker") return Effect.fail(badArgument({ module: "FileSystem", method: "writeFileString", description: "marker write refused" }));
+							assert.isTrue(path.isAbsolute(destination));
+						}
+						return fs.writeFileString(file, content, options);
+					},
+				};
+			}, alwaysFails),
+		}), { timeout: "30 seconds" })((it) => {
+			it.effect(`maps ${failure} failures to cacheFailed and never advertises an incomplete replacement`, () =>
+				Effect.gen(function* () {
+					const fs = yield* FileSystem.FileSystem;
+					const path = yield* Path.Path;
+					const root = yield* TestRoot;
+					const installer = yield* ToolInstaller;
+					const destination = installer.cachePath("tool", "1");
+					// Fixture writes use the original FileSystem, so only the install is refused.
+					yield* fs.makeDirectory(destination, { recursive: true });
+					yield* fs.writeFileString(path.join(destination, "old"), "old entry");
+					yield* fs.writeFileString(`${destination}.complete`, "stale");
+					const source = path.join(root, "new-source");
+					yield* fs.writeFileString(source, "new binary");
+					const error = yield* Effect.flip(installer.cacheFile(source, "tool", "tool", "1"));
+					assert.strictEqual(error.reason, "cacheFailed");
+					assert.strictEqual(markerWrites, failure === "marker" ? 1 : 0);
+					const officiallyDiscoverable = (yield* fs.exists(destination)) && (yield* fs.exists(`${destination}.complete`));
+					assert.strictEqual(officiallyDiscoverable, failure === "invalidation");
+					if (failure === "invalidation") {
+						assert.strictEqual(yield* fs.readFileString(path.join(destination, "old")), "old entry");
+					} else {
+						assert.isFalse(yield* fs.exists(`${destination}.complete`));
+						assert.isFalse(yield* fs.exists(path.join(destination, "old")));
+					}
+				}),
+			);
+		});
+	}
+
 	describe("the cache layout", () => {
 		it("is the layout the runner and @actions/tool-cache both use", () => {
 			// A contract with the runner, not an internal detail: a tool cached at

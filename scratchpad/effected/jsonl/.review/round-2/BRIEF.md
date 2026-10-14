@@ -1,4 +1,4 @@
-You are a read-only reviewer. Module: jsonl. Commit: 4ba902dc2b9cff84eabfbfc4ba133cdbc605be39. Round: 2.
+You are a read-only reviewer. Module: jsonl. Commit: a67fdb1f52f7bd981bd8345a5f3ba4ef3bd6cd56. Round: 2.
 Surface: scratchpad/effected/jsonl/**, scratchpad/test/jsonl/**, scratchpad/test/jsonl.test.ts (and nothing else).
 Upstream oracle: /home/elpresidank/.cache/beep/effected-port/upstream/af7566a9da2eff169cb74955efcc5ede1e5de9f8/packages/jsonl (read-only; upstream at the commit the ledger pins).
 The live checkout ~/YeeBois/references/effect/effected may have moved past that commit: compare against the
@@ -28,3 +28,6 @@ Use this record shape for every finding:
 - fix: <smallest change>
 
 End with a line `REQUIRED: <n>` and a line `BACKLOG: <n>`. If both are zero, say `NO FINDINGS`.
+
+
+Memory (binding): if you run tests, pass --maxWorkers=2 to vitest and never run coverage; many seats share this machine.

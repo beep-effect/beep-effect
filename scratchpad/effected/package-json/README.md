@@ -304,6 +304,8 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **upstream-bug** — The lab preserves top-level __proto__ data in default rendering that upstream sorting dropped. (scratchpad/test/package-json/Package.test.ts:174,199)
 - **upstream-bug** — The lab preserves own __proto__ data fields and ordinary rest prototypes through nested Person, Funding, Repository and Bugs edits, where upstream loses the fields. (scratchpad/test/package-json/Person.test.ts:11; scratchpad/test/package-json/Funding.test.ts:39; scratchpad/test/package-json/Repository.test.ts:31)
 - **upstream-bug** — The lab honors funding-extension deletions, clearing and own-key replacements while preserving bare/array representation, where upstream can replay stale extensions. (scratchpad/test/package-json/Funding.test.ts:87; scratchpad/test/package-json/Funding.test.ts:114)
+- **upstream-bug** — The lab returns None for an accepted lone-surrogate repository directory while preserving its wire value; upstream throws URIError when directoryUrl is read (scratchpad/test/package-json/Repository.test.ts:338).
+- **upstream-bug** — The lab preserves a declared __proto__ subclass field through Package.wireFor decoding and round trips; upstream loses the field and rejects its own encoding (scratchpad/test/package-json/Package.test.ts:227).
 
 ### Dependency backlog
 

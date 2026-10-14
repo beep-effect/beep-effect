@@ -1,7 +1,9 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import type { AnnotationProperties } from "../github-commands/index.ts";
 import { CommandNeutralizer, WorkflowCommand } from "../github-commands/index.ts";
 import * as Console from "effect/Console";
+import * as Bool from "effect/Boolean";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -14,6 +16,7 @@ import { ActionEnvironment } from "./ActionEnvironment.ts";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as O from "@beep/utils/Option";
+import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effected/github-actions/ActionLogger");
 
@@ -166,14 +169,30 @@ const flush = (state: BufferState): Effect.Effect<void> =>
 		return Effect.forEach(body, (line) => Console.log(CommandNeutralizer.text(line)), { discard: true });
 	});
 
+const BufferSuccessPolicy = LiteralKit(["flush", "discard"]).annotate(
+	$I.annote("BufferSuccessPolicy", { description: "Whether to replay or discard a successful step's buffered transcript." }),
+);
+
 /**
  * Options for {@link ActionLoggerShape.withBuffer}.
+ *
+ * **Example** (Validate WithBufferOptions input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
+ * import { WithBufferOptions } from "@beep/scratchpad/effected/github-actions/ActionLogger";
+ *
+ * const input = { onSuccess: "discard" };
+ * Effect.runSync(Console.log(S.is(WithBufferOptions)(input))) // true
+ * ```
  *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface WithBufferOptions {
+export const WithBufferOptions = S.Struct({
 	/**
 	 * What happens to the captured transcript when the step **succeeds**.
 	 *
@@ -197,17 +216,37 @@ export interface WithBufferOptions {
 	 * @category configuration
 	 * @since 0.0.0
 	 */
-	readonly onSuccess?: "flush" | "discard";
-}
+	onSuccess: S.optionalKey(BufferSuccessPolicy).annotateKey({ description: "Replay or discard successful transcripts; omitted means flush." }),
+}).annotate($I.annote("WithBufferOptions", { description: "Plain-object options controlling successful buffered step transcripts." }));
+
+/**
+ * The plain-object options accepted by {@link ActionLoggerShape.withBuffer}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type WithBufferOptions = typeof WithBufferOptions.Type;
 
 /**
  * Options for {@link ActionLoggerShape.withStep}.
+ *
+ * **Example** (Validate WithStepOptions input)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import * as Console from "effect/Console";
+ * import * as Effect from "effect/Effect";
+ * import { WithStepOptions } from "@beep/scratchpad/effected/github-actions/ActionLogger";
+ *
+ * const input = { summary: "Published" };
+ * Effect.runSync(Console.log(S.is(WithStepOptions)(input))) // true
+ * ```
  *
  * @public
  * @category models
  * @since 0.0.0
  */
-export interface WithStepOptions {
+export const WithStepOptions = S.Struct({
 	/**
 	 * The info line emitted when the step **succeeds**.
 	 *
@@ -228,8 +267,16 @@ export interface WithStepOptions {
 	 * @category configuration
 	 * @since 0.0.0
 	 */
-	readonly summary?: string;
-}
+	summary: S.optionalKey(S.String).annotateKey({ description: "The success summary; omitted means the default check-mark line naming the step." }),
+}).annotate($I.annote("WithStepOptions", { description: "Plain-object options customizing a successful action step's summary." }));
+
+/**
+ * The plain-object options accepted by {@link ActionLoggerShape.withStep}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type WithStepOptions = typeof WithStepOptions.Type;
 
 /**
  * The members of the {@link ActionLogger} service: log groups, buffered steps,
@@ -408,39 +455,40 @@ const make = Effect.gen(function* () {
 	const flushActive = Effect.flatMap(ActiveBuffer, (state) => (state === null ? Effect.void : flush(state)));
 
 	const withBuffer = Effect.fn("withBuffer")(function*<A, E, R>(label: string, effect: Effect.Effect<A, E, R>, options?: WithBufferOptions) {
-			const minimum = yield* References.MinimumLogLevel;
-			const stepDebug = yield* env.isDebug;
-			if (stepDebug || LogLevel.isLessThanOrEqualTo(minimum, "Debug")) {
-				return yield* effect;
-			}
+		const minimum = yield* References.MinimumLogLevel;
+		const stepDebug = yield* env.isDebug;
+		return yield* Bool.match(stepDebug || LogLevel.isLessThanOrEqualTo(minimum, "Debug"), {
+			onTrue: () => effect,
+			onFalse: () => {
+				const state: BufferState = { label, entries: [] };
+				const buffering = Logger.make<unknown, void>((options) => {
+					if (LogLevel.isGreaterThanOrEqualTo(options.logLevel, "Warn")) {
+						commandLogger.log(options);
+						return;
+					}
+					state.entries.push(formatMessage(options.message));
+				});
 
-			const state: BufferState = { label, entries: [] };
-			const buffering = Logger.make<unknown, void>((options) => {
-				if (LogLevel.isGreaterThanOrEqualTo(options.logLevel, "Warn")) {
-					commandLogger.log(options);
-					return;
-				}
-				state.entries.push(formatMessage(options.message));
-			});
-
-			return yield* Effect.scopedWith((scope) =>
-				Effect.flatMap(Layer.buildWithScope(Logger.layer([buffering]), scope), (context) =>
-					effect.pipe(
-						// `All` so debug output is captured rather than dropped: the whole
-						// point of a buffer is that the verbose transcript exists if the step
-						// fails.
-						Effect.provideService(References.MinimumLogLevel, "All"),
-						Effect.provideContext(context),
-						Effect.provideService(ActiveBuffer, state),
-						Effect.onExit((exit) =>
-							// Only a SUCCESS is ever discarded: a failure, a defect or an
-							// interruption is exactly the moment the transcript was kept for.
-							Exit.isSuccess(exit) && options?.onSuccess === "discard" ? discard(state) : flush(state),
+				return Effect.scopedWith((scope) =>
+					Effect.flatMap(Layer.buildWithScope(Logger.layer([buffering]), scope), (context) =>
+						effect.pipe(
+							// `All` so debug output is captured rather than dropped: the whole
+							// point of a buffer is that the verbose transcript exists if the step
+							// fails.
+							Effect.provideService(References.MinimumLogLevel, "All"),
+							Effect.provideContext(context),
+							Effect.provideService(ActiveBuffer, state),
+							Effect.onExit((exit) =>
+								// Only a SUCCESS is ever discarded: a failure, a defect or an
+								// interruption is exactly the moment the transcript was kept for.
+								Exit.isSuccess(exit) && options?.onSuccess === "discard" ? discard(state) : flush(state),
+							),
 						),
 					),
-				),
-			);
+				);
+			},
 		});
+	});
 
 	return {
 		group: <A, E, R>(name: string, effect: Effect.Effect<A, E, R>) =>

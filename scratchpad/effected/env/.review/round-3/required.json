@@ -1,0 +1,43 @@
+{
+  "module": "env",
+  "groups": [
+    {
+      "id": "g1",
+      "files": ["scratchpad/effected/env/Audience.ts"],
+      "tests": ["scratchpad/test/env/Audience.test.ts"],
+      "findings": ["sol-3-1"]
+    },
+    {
+      "id": "g2",
+      "files": ["scratchpad/effected/env/RuntimeEnv.ts"],
+      "tests": ["scratchpad/test/env/RuntimeEnv.test.ts"],
+      "findings": ["sol-3-2"]
+    },
+    {
+      "id": "g3",
+      "files": ["scratchpad/effected/env/TerminalEnv.ts"],
+      "tests": ["scratchpad/test/env/TerminalEnv.test.ts"],
+      "findings": ["sol-3-3"]
+    }
+  ],
+  "findings": {
+    "sol-3-1": {
+      "file": "scratchpad/effected/env/Audience.ts",
+      "class": "schema",
+      "summary": "AudienceOptions is a handwritten pure configuration interface instead of a schema-derived executable contract.",
+      "fix": "Define identity- and field-annotated AudienceOptions = S.Struct({ envVar: S.optionalKey(S.String) }) and derive its same-name type. Preserve plain objects, omitted keys, all strings, Audience.layer behavior and the type-only barrel export. Add focused schema acceptance and layer compatibility checks in Audience.test.ts without rewriting upstream assertions. Defer D10 properties and S2 conversion; central codemod owns added-export bookkeeping."
+    },
+    "sol-3-2": {
+      "file": "scratchpad/effected/env/RuntimeEnv.ts",
+      "class": "schema",
+      "summary": "RuntimeEnvOverrides lacks schema ownership of its optional Option-valued agent, CI and terminal configuration fields.",
+      "fix": "Define identity- and field-annotated RuntimeEnvOverrides as S.Struct with optional keys containing S.Option(S.String), S.Option(CiName) and S.Option(DetectedTerminal), then derive its same-name type. Preserve plain objects, absent keys, explicit None, accepted terminal values, layerTest defaults and the type-only barrel export. Add focused acceptance and layerTest compatibility checks in RuntimeEnv.test.ts without weakening upstream assertions. Defer D10 properties and S2 conversion; central codemod owns added-export bookkeeping."
+    },
+    "sol-3-3": {
+      "file": "scratchpad/effected/env/TerminalEnv.ts",
+      "class": "schema",
+      "summary": "TerminalEnvTestOptions independently declares a pure configuration payload instead of deriving it from schemas.",
+      "fix": "Derive an annotated partial stream schema from StreamEnv with optional fields; define identity- and field-annotated TerminalEnvTestOptions as S.Struct with optional stdinIsTerminal, stdout and stderr keys and derive its same-name type. Preserve plain partial objects, omitted fields, quiet defaults, non-finite columns and the type-only barrel export. Reuse StreamEnv's full number domain and reasoned schemaNumber exception; do not substitute S.Finite. Add focused acceptance and layerTest compatibility checks in TerminalEnv.test.ts without weakening upstream assertions. Defer D10 properties and S2 conversion; central codemod owns added-export bookkeeping."
+    }
+  }
+}

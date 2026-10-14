@@ -66,6 +66,7 @@ const mergedFacts = {
   mainTip: O.some(mainTipBeforeUpdate),
   localTip: O.some(mergedTip),
   remoteTip: O.some(mergedTip),
+  remoteBranchAbsent: false,
   pullRequestState: O.some("MERGED"),
   pullRequestHeadBranch: O.some("feat/merge-loop"),
   pullRequestHeadOid: O.some(mergedTip),
@@ -159,11 +160,34 @@ describe("local branch deletion contract", () => {
     ]);
   });
 
-  it("blocks deletion when there is no local branch left to delete", () => {
-    expect(blockerText(stateWith({ localTip: O.none() }), "delete-local-branch")).toEqual([
-      "local branch feat/merge-loop exists",
-      "local tip <absent> equals pull request head aaaa1111bbbb2222",
-    ]);
+  it("reports a local branch that is already gone as already deleted, not as blocked", () => {
+    const step = stepFor(stateWith({ localTip: O.none() }), "delete-local-branch");
+    assertSome(step.alreadyDone, "local branch feat/merge-loop is already deleted");
+    expect(sweepStepBlockers(step)).toEqual([]);
+    expect(step.requiresOperator).toBe(false);
+  });
+
+  it("plans no already-done observation while the local branch still exists", () => {
+    assertNone(stepFor(mergedState, "delete-local-branch").alreadyDone);
+  });
+
+  it("keeps a missing branch no merged pull request heads blocked rather than calling it deleted", () => {
+    // A mistyped `--branch` has no ref and no pull request: nothing shows it ever existed.
+    const typo = stateWith({
+      localTip: O.none(),
+      remoteTip: O.none(),
+      remoteBranchAbsent: true,
+      pullRequestState: O.none(),
+      pullRequestHeadBranch: O.none(),
+      pullRequestHeadOid: O.none(),
+    });
+    assertNone(stepFor(typo, "delete-local-branch").alreadyDone);
+    assertNone(stepFor(typo, "delete-remote-branch").alreadyDone);
+    expect(blockerText(typo, "delete-local-branch")).toContain("local branch feat/merge-loop exists");
+    expect(blockerText(typo, "delete-remote-branch")).toContain("pull request for feat/merge-loop is MERGED");
+    // A merged pull request that heads some other branch does not vouch for this one either.
+    const elsewhere = stateWith({ localTip: O.none(), pullRequestHeadBranch: O.some("feat/other") });
+    assertNone(stepFor(elsewhere, "delete-local-branch").alreadyDone);
   });
 
   it("blocks -D when the pull request never recorded a head oid", () => {
@@ -263,8 +287,18 @@ describe("remote branch deletion contract", () => {
     expect(stepFor(state, "delete-remote-branch").requiresOperator).toBe(false);
   });
 
-  it("blocks deletion when the remote branch is already gone", () => {
-    expect(blockerText(stateWith({ remoteTip: O.none() }), "delete-remote-branch")).toEqual([
+  it("reports a remote branch the remote says is gone as already deleted, without an operator handoff", () => {
+    const step = stepFor(stateWith({ remoteTip: O.none(), remoteBranchAbsent: true }), "delete-remote-branch");
+    assertSome(step.alreadyDone, "remote branch origin/feat/merge-loop is already deleted");
+    expect(sweepStepBlockers(step)).toEqual([]);
+    expect(step.requiresOperator).toBe(false);
+  });
+
+  it("blocks deletion when the remote branch state is unknown rather than calling it deleted", () => {
+    // A missing remote-tracking ref without the remote's answer proves nothing.
+    const state = stateWith({ remoteTip: O.none() });
+    assertNone(stepFor(state, "delete-remote-branch").alreadyDone);
+    expect(blockerText(state, "delete-remote-branch")).toEqual([
       "remote branch origin/feat/merge-loop exists",
       "remote tip <absent> equals pull request head aaaa1111bbbb2222",
     ]);
@@ -729,6 +763,63 @@ describe("executeSweep", () => {
             expect(blockerText(state, "delete-local-branch")).toEqual([
               "git worktree list --porcelain succeeded without truncation",
             ]);
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
+  it.layer(
+    sweepTestLayer([
+      ["git rev-parse --verify --quiet refs/heads/feat/merge-loop", nonzero(1)],
+      ["git rev-parse --verify --quiet refs/remotes/origin/feat/merge-loop", nonzero(1)],
+      ["git ls-remote origin refs/heads/feat/merge-loop", ok("")],
+      ...mergedSweepStubs,
+    ]),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("reports branches a retirement already deleted as already deleted and runs no deletion", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const { report, spawned } = yield* recordedSweep(root);
+            expect(skipReason(report, "delete-local-branch")).toBe("local branch feat/merge-loop is already deleted");
+            expect(skipReason(report, "delete-remote-branch")).toBe(
+              "remote branch origin/feat/merge-loop is already deleted"
+            );
+            expect(A.filter(spawned, Str.startsWith("git branch -"))).toEqual([]);
+            expect(A.filter(spawned, Str.startsWith("git push"))).toEqual([]);
+            const rendered = renderSweepReport(report);
+            expect(rendered).toContain(
+              "  delete-local-branch: skipped: local branch feat/merge-loop is already deleted"
+            );
+            expect(rendered).not.toContain("<absent>");
+            expect(rendered).not.toContain("operator handoff");
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
+  it.layer(
+    sweepTestLayer([
+      ["git rev-parse --verify --quiet refs/remotes/origin/feat/merge-loop", nonzero(1)],
+      ...mergedSweepStubs,
+    ]),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("asks the remote when the tracking ref is missing and deletes the branch it still has", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const { report, spawned } = yield* recordedSweep(root);
+            expect(spawned).toContain("git ls-remote origin refs/heads/feat/merge-loop");
+            expect(spawned).toContain(
+              "git push origin --force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222 :refs/heads/feat/merge-loop"
+            );
+            expect(outcomeOf(report, "delete-remote-branch").status).toBe("executed");
           }),
         removeTempDirectory
       )

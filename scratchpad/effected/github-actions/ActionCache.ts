@@ -1,6 +1,8 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { BlobClient, BlockBlobClient } from "@azure/storage-blob";
 import { GlobPattern, GlobSet } from "../glob/index.ts";
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -322,7 +324,7 @@ const make = Effect.fn("make")(function* (
 		/**
 		 * Platform separators to the dialect's — applied to paths WE produce, never to the caller's pattern text, where a backslash is minimatch's escape character.
 		 */
-		const posix = (value: string): string => value.replaceAll("\\", "/");
+		const posix = (value: string): string => windows ? Str.replaceAll("\\", "/")(value) : value;
 
 		/**
 		 * Resolve the caller's patterns to the concrete files and directories
@@ -454,7 +456,63 @@ const make = Effect.fn("make")(function* (
 				if (matched.length === 0) {
 					return yield* failed(`no file or directory matched the cache paths: ${cleaned.join(", ")}`);
 				}
-				return matched;
+				// A line is one tar input. Reject every resolved name, including names
+				// later covered by a directory, before writing the manifest or spawning.
+				for (const candidate of matched) {
+					if (!windows && Str.includes("\\")(candidate)) {
+						return yield* failed(`cache path contains a backslash: "${candidate}"`);
+					}
+					if (Str.includes("\n")(candidate) || Str.includes("\r")(candidate)) {
+						return yield* failed(`cache path contains a line break: "${candidate}"`);
+					}
+				}
+
+				// Collect all selected real directories first, so a descendant that
+				// precedes its parent in filesystem enumeration is covered too. Tar
+				// stores symlinks without following them, unlike fs.stat.
+				const directories = MutableHashSet.empty<string>();
+				const symlinks = MutableHashSet.empty<string>();
+				const checkedLinks = MutableHashSet.empty<string>();
+				const isSymlink = Effect.fnUntraced(function* (candidate: string) {
+					if (!MutableHashSet.has(checkedLinks, candidate)) {
+						const link = yield* fs.readLink(candidate).pipe(Effect.option);
+						MutableHashSet.add(checkedLinks, candidate);
+						if (O.isSome(link)) MutableHashSet.add(symlinks, candidate);
+					}
+					return MutableHashSet.has(symlinks, candidate);
+				});
+				for (const candidate of matched) {
+					// Enumerated broken links are valid tar members too; do not stat
+					// their missing targets when deciding which paths recurse.
+					if (yield* isSymlink(candidate)) continue;
+					const info = yield* fs.stat(candidate).pipe(
+						Effect.mapError((cause) => failed(`could not inspect "${candidate}"`, cause)),
+					);
+					if (info.type === "Directory") {
+						MutableHashSet.add(directories, candidate);
+					}
+				}
+
+				const retained: Array<string> = [];
+				for (const candidate of matched) {
+					let parent = posix(path.dirname(candidate));
+					let covered = false;
+					while (parent !== candidate) {
+						// A link between a real ancestor and this path stops tar's
+						// recursion; its explicitly selected descendants still belong.
+						if (yield* isSymlink(parent)) break;
+						if (MutableHashSet.has(directories, parent)) {
+							covered = true;
+							break;
+						}
+						const next = posix(path.dirname(parent));
+						if (next === parent) break;
+						parent = next;
+					}
+					if (!covered) retained.push(candidate);
+				}
+				// Keep the original resolution order among the surviving inputs.
+				return retained;
 			});
 
 		return {
@@ -485,7 +543,7 @@ const make = Effect.fn("make")(function* (
 						// resolved paths here are always absolute, so no line can.
 						const manifest = path.join(scratch, "manifest.txt");
 						yield* fs
-							.writeFileString(manifest, `${resolved.join("\n")}\n`)
+							.writeFileString(manifest, `${A.join(resolved, "\n")}\n`)
 							.pipe(Effect.mapError(archiveFailed(primary)));
 						// `-P` keeps leading separators, so an absolute path is stored
 						// verbatim and restored where it came from rather than under the

@@ -6,16 +6,11 @@ import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Glyphs } from "../../../effected/cli/Glyphs.ts";
-import { KeyTable } from "../../../effected/cli/ui/KeyTable.ts";
+import { Binding, KeyHelpRow, KeyTable, UseKeysOptions } from "../../../effected/cli/ui/KeyTable.ts";
 import { KeyName, UiKey } from "../../../effected/cli/ui/UiKey.ts";
 
 const runs = { arbitrary: fcRuns(100) };
-const BindingInput = S.Struct({
-  keys: S.Array(S.Union([KeyName, S.Struct({ char: S.String })])),
-  action: S.String,
-  help: S.String,
-  hidden: S.optionalKey(S.Boolean),
-});
+const BindingInput = Binding(S.String);
 const BindingInputs = S.Array(BindingInput);
 
 it.effect.prop("binding normalization is idempotent and serialization preserves dispatch and help", [BindingInput.pipe(S.Array, Arbitrary.schema)], ([bindings]) =>
@@ -43,4 +38,15 @@ it.effect.prop("named help labels retain the bound action and agree with the gly
     assertSome(table.match(UiKey.named(name)), name);
     assert.lengthOf(table.help(Glyphs.ascii), 1);
     assert.deepStrictEqual(KeyTable.make(table.bindings).help(Glyphs.unicode), table.help(Glyphs.unicode));
+  }), runs);
+
+it.effect.prop("production schemas accept every table's bindings, help rows and key-reading options", [BindingInput.pipe(S.Array, Arbitrary.schema), Arbitrary.schema(UseKeysOptions)], ([bindings, options]) =>
+  Effect.sync(() => {
+    const table = KeyTable.make(bindings);
+    for (const binding of table.bindings) assert.isTrue(S.is(BindingInput)(binding));
+    for (const glyphs of [Glyphs.ascii, Glyphs.unicode]) {
+      for (const row of table.help(glyphs)) assert.isTrue(S.is(KeyHelpRow)(row));
+    }
+    assert.isTrue(S.is(UseKeysOptions)(options));
+    assert.isFalse(S.is(BindingInput)({ keys: [{ char: 1 }], action: "a", help: "h" }));
   }), runs);

@@ -1,0 +1,25 @@
+{
+  "module": "commands",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/commands/ScriptedSpawner.ts"
+      ],
+      "tests": [
+        "scratchpad/test/commands/ScriptedSpawner.test.ts"
+      ],
+      "findings": [
+        "sol-3-1"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-3-1": {
+      "file": "scratchpad/effected/commands/ScriptedSpawner.ts",
+      "class": "schema",
+      "summary": "SpawnRecord accepts invalid additional-FD stream/sink payloads under numeric-template keys such as \"fd 3\" and \"fd0x3\" because the narrower S.Finite key template skips their value validation.",
+      "fix": "Replace the additional-FD key schema with one covering core's full fd${number} key domain so every matching entry is validated by the existing input/output configuration union. Preserve the original options object and its opaque stream/sink carriers. In scratchpad/test/commands/ScriptedSpawner.test.ts add guard and decoder regressions proving that \"fd 3\" and \"fd0x3\" accept valid input/output configurations and reject invalid stream/sink payloads; retain canonical fd3/fd4 cases and options-object identity assertions. Keep D15 compliance, using the module's deliberatelyInvalid helper if a wrong-input cast is necessary."
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "module": "lockfiles",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/lockfiles/internal/yarn.ts"
+      ],
+      "tests": [
+        "scratchpad/test/lockfiles/internal/yarn.coverage.test.ts"
+      ],
+      "findings": [
+        "sol-3-1"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-3-1": {
+      "file": "scratchpad/effected/lockfiles/internal/yarn.ts",
+      "class": "bug",
+      "summary": "Yarn's descriptor index can resolve a recorded dependency to a skipped package row, producing a dangling resolved edge without an unresolvedEdges signal.",
+      "fix": "Precompute an Effect HashSet of the nonempty instance ids that package emission will produce, using the same extractYarnPackageName and resolution-or-first-descriptor checks as the emission pass. Pass that membership to resolveYarnEdges and emit a resolved edge only when the indexed locator belongs to it; otherwise record the dependency name through the existing sorted unresolvedEdges path. Preserve the full descriptor index and its overwrite precedence, including descriptors from skipped rows whose locator identifies another emitted row. Add both seats' dangling-target counterexamples and a skipped-row alias to an emitted locator to scratchpad/test/lockfiles/internal/yarn.coverage.test.ts. Assert empty resolved plus unresolvedEdges [\"ghost\"] for dangling cases, retain resolution for the valid alias, and verify every emitted resolved value is found by packageByInstanceId. Use the existing Lockfile API without changing its source. Supply upstream-bug evidence for central D9 bookkeeping; do not edit the shared ledger or README Port notes."
+    }
+  }
+}

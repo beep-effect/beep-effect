@@ -1091,3 +1091,26 @@ evidence, what would have prevented it). Redact for the public repo.
   ratification prompt whenever ruleset `10240248` gains a history version,
   plus a `--window` warning when a population change falls inside the window
   instead of only resolving the version at its end.
+
+## 2026-10-14 — input from stacked-pr-adoption: two non-required Heavy lanes dominate PR Heavy cost
+
+- **Doing:** the `explorations/stacked-pr-adoption` align session
+  (2026-10-13) measured where PR Heavy runner-minutes go, then ruled
+  (`non-required-heavy-lanes` in that packet's `DECISIONS.md`) that this
+  goal owns the finding as an input to its next repair decision.
+- **Evidence:** window 2026-09-29..10-13, PR heads only, Heavy jobs with a
+  runner (that packet's `RESEARCH.md`, 2026-10-13 refresh):
+  - Heavy / Coverage Regression and Heavy / Lint Policy, both dropped
+    from the required set (09-12 and 09-25), took 19,838 of 31,347 PR
+    Heavy runner-min (63%).
+  - Of 86 failing `check.yml` `main` push runs, 68 failed Coverage
+    Regression and 57 failed Lint Policy; only 41 had a required context
+    failing.
+  - On the whole-run basis the E8 merge-queue gate reads 23.2%
+    non-cancelled success. With all required checks green it reads 63.4%.
+    These two lanes account for most of the gap.
+- **Opportunity:** decide where the two lanes run: on every PR as today,
+  on `main` pushes only, nightly, or path-scoped. Weigh the coverage
+  ratchet's per-PR baseline attribution. Per repair decision 3 ruling 6,
+  start any change only after window 4 is censused, so the governor's
+  attribution stays clean.

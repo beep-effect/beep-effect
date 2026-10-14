@@ -1,0 +1,9 @@
+### sol-3-1
+- file: scratchpad/effected/templates/SectionDialect.ts:369
+- class: bug   severity: required
+- standard: D9 and section 14’s verified upstream-bug exception; D10 formatter fidelity; `SectionDialect.render`’s documented guarantee that it refuses output it cannot read back.   evidence: Read-only Bun probes against the reviewed source and the pinned oracle both produced `render: Success`, followed by `parse: Failure`, `reason: orphanedEnd`, `line: 3`, for a hash-style section with content `"body"` and attributes `{ note: "before ---\u2028after" }`. Replacing U+2028 with U+2029 gives the same result. HTML-style attributes `{ note: "before --- -->\u2028after" }` also reproduce it with either separator. These values pass `isValidAttributeValue`. In `markerMatches`, the first closing-rule boundary inside the quoted value is selected at line 444; the truncated attribute run fails parsing at line 457, and the actual BEGIN marker is discarded. Existing Unicode tests do not place a complete closing-rule tail immediately before the separator.
+- failure: Rendering succeeds with a block that the same dialect cannot parse. `ManagedSection.sync` can therefore write an unreadable managed file; subsequent reads, checks and syncs fail with `SectionParseError` instead of reaching a fixed point.
+- fix: Before returning render success, verify that the synthesized BEGIN marker is recognized in full with the declared attributes. If recognition truncates or rejects it, return the existing typed `invalidAttribute` refusal before any write. Add regressions for U+2028 and U+2029 with hash and wrapped styles, retaining ordinary Unicode attribute support, and record this inherited bug repair under section 14.
+
+REQUIRED: 1
+BACKLOG: 0

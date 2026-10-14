@@ -3,6 +3,9 @@ import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Base64Url from "effect/encoding/Base64Url";
 import * as S from "effect/Schema";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
+import { BackendIds, ResultsBackend } from "../../../effected/github-actions/internal/actionsResults.ts";
 import { ActionEnvironment } from "../../../effected/github-actions/ActionEnvironment.ts";
 import {
   backendIdsFrom,
@@ -52,3 +55,22 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
     }),
   );
 });
+
+it.effect("backend schemas preserve plain objects, redacted tokens, and both scope outcomes", () =>
+  Effect.gen(function* () {
+    const ids = { workflowRunBackendId: "", workflowJobRunBackendId: "job" } satisfies BackendIds;
+    assert.deepStrictEqual(yield* S.decodeEffect(BackendIds)(ids), ids);
+    assert.deepStrictEqual(yield* S.encodeEffect(BackendIds)(ids), ids);
+    assert.isFalse(S.is(BackendIds)({ workflowRunBackendId: "run" }));
+    assert.isFalse(S.is(BackendIds)({ workflowRunBackendId: 1, workflowJobRunBackendId: "job" }));
+    for (const backendIds of [Result.succeed(ids), Result.fail("no scope")]) {
+      const backend = { baseUrl: "", token: Redacted.make("token"), backendIds } satisfies ResultsBackend;
+      const decoded = yield* S.decodeEffect(ResultsBackend)(backend);
+      assert.deepStrictEqual(decoded, backend);
+      assert.strictEqual(Redacted.value(decoded.token), "token");
+      assert.isTrue(S.is(ResultsBackend)(yield* S.encodeEffect(ResultsBackend)(decoded)));
+    }
+    assert.isFalse(S.is(ResultsBackend)({ baseUrl: "https://example/", token: "token", backendIds: Result.succeed(ids) }));
+    assert.isFalse(S.is(ResultsBackend)({ baseUrl: "https://example/", token: Redacted.make("token") }));
+  }),
+);

@@ -3,6 +3,8 @@ import { assertFailure } from "@effect/vitest/utils";
 import * as Result from "effect/Result";
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
+import { TwirpFailure } from "../../../effected/github-actions/internal/twirp.ts";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import { field, stringField, twirpCall, twirpFailureFields, isRetryable } from "../../../effected/github-actions/internal/twirp.ts";
 it.effect("Twirp field readers handle absent, primitive, snake-case, and empty values", () => Effect.sync(() => {
@@ -17,6 +19,24 @@ it.effect("Twirp field readers handle absent, primitive, snake-case, and empty v
   assert.deepStrictEqual(twirpFailureFields({ method: "Read", kind: "status" }), { reason: "refused", detail: "Read" });
   assert.deepStrictEqual(twirpFailureFields({ method: "Read", kind: "transport" }), { reason: "unreachable", detail: "Read did not answer with a Twirp body" });
   assert.strictEqual(isRetryable({ method: "Read", kind: "status" }), false);
+}));
+
+it.effect("Twirp failure schema preserves optional fields in every structural variant", () => Effect.gen(function* () {
+  for (const kind of ["transport", "status", "malformed"] as const) {
+    for (const failure of [
+      { method: "", kind },
+      { method: "Read", kind, status: undefined, cause: undefined },
+      { method: "Read", kind, status: 503, cause: { message: "failure" } },
+    ] satisfies ReadonlyArray<TwirpFailure>) {
+      assert.deepStrictEqual(yield* S.decodeEffect(TwirpFailure)(failure), failure);
+      assert.deepStrictEqual(yield* S.encodeEffect(TwirpFailure)(failure), failure);
+    }
+    for (const status of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, "503"]) {
+      assert.isFalse(S.is(TwirpFailure)({ method: "Read", kind, status }));
+    }
+  }
+  assert.isFalse(S.is(TwirpFailure)({ method: "Read", kind: "other" }));
+  assert.isFalse(S.is(TwirpFailure)({ kind: "status" }));
 }));
 it.effect("Twirp maps malformed JSON and informational statuses without retry", () => Effect.gen(function* () {
   for (const status of [199, 200]) {

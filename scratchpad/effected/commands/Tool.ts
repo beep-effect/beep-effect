@@ -90,7 +90,7 @@ export type MismatchPolicy = typeof MismatchPolicy.Type;
  * @category models
  * @since 0.0.0
  */
-export class VersionFlag extends S.TaggedClass<VersionFlag>($I`VersionFlag`)("VersionFlag", {
+export class VersionFlag extends S.TaggedClass<VersionFlag, { readonly brand: unique symbol }>($I`VersionFlag`)("VersionFlag", {
 	/** The flag to pass, e.g. `"--version"`. Split on spaces into argv. */
 	flag: S.String.annotateKey({ description: "The flag to pass, e.g. `\"--version\"`. Split on spaces into argv." }),
 	/**
@@ -123,7 +123,7 @@ export class VersionFlag extends S.TaggedClass<VersionFlag>($I`VersionFlag`)("Ve
  * @category models
  * @since 0.0.0
  */
-export class VersionJson extends S.TaggedClass<VersionJson>($I`VersionJson`)("VersionJson", {
+export class VersionJson extends S.TaggedClass<VersionJson, { readonly brand: unique symbol }>($I`VersionJson`)("VersionJson", {
 	/** The flag(s) to pass, e.g. `"info --json"`. Split on spaces into argv. */
 	flag: S.String.annotateKey({ description: "The flag(s) to pass, e.g. `\"info --json\"`. Split on spaces into argv." }),
 	/** Dotted path to the version, e.g. `"deno.version"`. */
@@ -147,7 +147,7 @@ export class VersionJson extends S.TaggedClass<VersionJson>($I`VersionJson`)("Ve
  * @category models
  * @since 0.0.0
  */
-export class VersionNone extends S.TaggedClass<VersionNone>($I`VersionNone`)("VersionNone", {}, $I.annote("VersionNone", { description: "Do not ask for a version; presence is the only question." })) {}
+export class VersionNone extends S.TaggedClass<VersionNone, { readonly brand: unique symbol }>($I`VersionNone`)("VersionNone", {}, $I.annote("VersionNone", { description: "Do not ask for a version; presence is the only question." })) {}
 
 /**
  * How to learn a tool's version.
@@ -206,7 +206,7 @@ export type VersionProbe = typeof VersionProbe.Type;
  * @category models
  * @since 0.0.0
  */
-export class Tool extends S.Class<Tool>($I`Tool`)({
+export class Tool extends S.Class<Tool, { readonly brand: unique symbol }>($I`Tool`)({
 	/** The executable name, e.g. `"biome"`. */
 	name: S.String.annotateKey({ description: "The executable name, e.g. `\"biome\"`." }),
 	/** How to learn its version. */

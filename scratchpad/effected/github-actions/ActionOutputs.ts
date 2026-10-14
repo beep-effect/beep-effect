@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as Bool from "effect/Boolean";
 import { CommandNeutralizer, WorkflowCommand } from "../github-commands/index.ts";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
@@ -275,7 +276,24 @@ const withUsableName = <A, E, R>(
 	name: string,
 	effect: Effect.Effect<A, E, R>,
 ): Effect.Effect<A, E | InvalidOutputNameError, R> =>
-	isUsableName(name) ? effect : Effect.fail(InvalidOutputNameError.make({ file, name }));
+	Bool.match(isUsableName(name), {
+		onTrue: () => effect,
+		onFalse: () => Effect.fail(InvalidOutputNameError.make({ file, name })),
+	});
+
+const SingleLinePath = S.String.check(S.isPattern(/^[^\r\n]*$/u)).annotate(
+	$I.annote("SingleLinePath", { description: "A runner PATH entry without carriage returns or line feeds." }),
+);
+const isSingleLinePath = S.is(SingleLinePath);
+
+const withUsablePath = <A, E, R>(
+	path: string,
+	effect: Effect.Effect<A, E, R>,
+): Effect.Effect<A, E | InvalidOutputNameError, R> =>
+	Bool.match(isSingleLinePath(path), {
+		onTrue: () => effect,
+		onFalse: () => Effect.fail(InvalidOutputNameError.make({ file: RUNNER_FILE.addPath, name: path })),
+	});
 
 /**
  * The JSON text `setJson` publishes for `value`: encoded through `schema`,
@@ -393,6 +411,10 @@ export interface ActionOutputsShape {
 const make = Effect.gen(function* () {
 	const env = yield* ActionEnvironment;
 	const fs = yield* FileSystem.FileSystem;
+	const lineEnding = Bool.match(O.contains("Windows")(yield* env.getOptional("RUNNER_OS")), {
+		onTrue: () => "\r\n" as const,
+		onFalse: () => "\n" as const,
+	});
 
 	const append = Effect.fnUntraced(function* (file: string, content: string) {
 			const path = yield* env.get(file).pipe(Effect.mapError(() => RunnerFileUnavailableError.make({ file })));
@@ -402,7 +424,7 @@ const make = Effect.gen(function* () {
 		});
 
 	const appendBlock = (file: string, name: string, value: string): Effect.Effect<void, ActionOutputError> =>
-		withUsableName(file, name, append(file, heredocBlock({ name, value })));
+		withUsableName(file, name, append(file, heredocBlock({ name, value, lineEnding })));
 
 	const set = (name: string, value: string) => appendBlock(RUNNER_FILE.set, name, value);
 
@@ -412,7 +434,7 @@ const make = Effect.gen(function* () {
 			encodeJson(name, value, schema).pipe(Effect.flatMap((json) => set(name, json))),
 		summary: (content: string) => append(RUNNER_FILE.summary, content),
 		exportVariable: (name: string, value: string) => appendBlock(RUNNER_FILE.exportVariable, name, value),
-		addPath: (path: string) => append(RUNNER_FILE.addPath, `${path}\n`),
+		addPath: (path: string) => withUsablePath(path, append(RUNNER_FILE.addPath, `${path}\n`)),
 		setFailed: (message: string) => Console.log(WorkflowCommand.error(message)),
 		setSecret: (value: string) => Console.log(WorkflowCommand.addMask(value)),
 	} satisfies ActionOutputsShape;
@@ -679,7 +701,7 @@ export class ActionOutputs extends Context.Service<ActionOutputs, ActionOutputsS
 			summary: (content) => record("summary", content),
 			exportVariable: (name, value) =>
 				withUsableName(RUNNER_FILE.exportVariable, name, record("exportVariable", value, name)),
-			addPath: (path) => record("addPath", path),
+			addPath: (path) => withUsablePath(path, record("addPath", path)),
 			setFailed: (message) => record("setFailed", message),
 			setSecret: (value) => record("setSecret", value),
 		} satisfies ActionOutputsShape);

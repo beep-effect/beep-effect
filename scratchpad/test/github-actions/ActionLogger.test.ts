@@ -1,8 +1,10 @@
 import { assert, describe, it } from "@effect/vitest";
+import { WithBufferOptions, WithStepOptions } from "../../effected/github-actions/ActionLogger.ts";
 import * as Effect from "effect/Effect";
 import * as Latch from "effect/Latch";
 import * as Layer from "effect/Layer";
 import * as References from "effect/References";
+import * as S from "effect/Schema";
 import { TestConsole } from "effect/testing";
 import { ActionEnvironment, ActionLogger } from "../../effected/github-actions/index.ts";
 
@@ -17,6 +19,38 @@ const bufferedFor = (label: string, captured: ReadonlyArray<string>): ReadonlyAr
 };
 
 describe("ActionLogger", () => {
+	describe("options contracts", () => {
+		it.effect("WithBufferOptions preserves plain objects and exact optional flush/discard policies", () =>
+			Effect.gen(function* () {
+				const omitted: WithBufferOptions = {};
+				assert.deepStrictEqual(yield* S.decodeEffect(WithBufferOptions)(omitted), {});
+				assert.deepStrictEqual(yield* S.encodeEffect(WithBufferOptions)(omitted), {});
+				for (const onSuccess of ["flush", "discard"] as const) {
+					const options: WithBufferOptions = { onSuccess };
+					assert.deepStrictEqual(yield* S.decodeEffect(WithBufferOptions)(options), options);
+				}
+				assert.isFalse(S.is(WithBufferOptions)({ onSuccess: undefined }));
+				assert.isFalse(S.is(WithBufferOptions)({ onSuccess: "ignore" }));
+				assert.isFalse(S.is(WithBufferOptions)({ onSuccess: null }));
+			}),
+		);
+
+		it.effect("WithStepOptions preserves plain objects, exact optional summaries and empty strings", () =>
+			Effect.gen(function* () {
+				const omitted: WithStepOptions = {};
+				assert.deepStrictEqual(yield* S.decodeEffect(WithStepOptions)(omitted), {});
+				assert.deepStrictEqual(yield* S.encodeEffect(WithStepOptions)(omitted), {});
+				for (const summary of ["", "Published"]) {
+					const options: WithStepOptions = { summary };
+					assert.deepStrictEqual(yield* S.decodeEffect(WithStepOptions)(options), options);
+				}
+				assert.isFalse(S.is(WithStepOptions)({ summary: undefined }));
+				assert.isFalse(S.is(WithStepOptions)({ summary: 7 }));
+				assert.isFalse(S.is(WithStepOptions)({ summary: null }));
+			}),
+		);
+	});
+
 	describe("groups", () => {
 		it.layer(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), { timeout: "30 seconds" })(
 			(it) => {

@@ -1,4 +1,8 @@
-import type { AudienceKind, ColorLevel, StreamEnv } from "../env/index.ts";
+import type { StreamEnv } from "../env/index.ts";
+import { AudienceKind } from "../env/Audience.ts";
+import { ColorLevel } from "../env/ColorLevel.ts";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as S from "effect/Schema";
 import { Audience, CurrentRuntimeEnv, TerminalEnv } from "../env/index.ts";
 import type * as Effect from "effect/Effect";
 import type * as Layer from "effect/Layer";
@@ -13,8 +17,9 @@ import type { CliLinks, EditorLinks } from "./CliLinks.ts";
 import { ambientLinksLayer } from "./CliLinks.ts";
 import type { CliLogFileOptions, CliLogOptions } from "./CliLog.ts";
 import { CliPrompt } from "./CliPrompt.ts";
-import type { CliThemeOptions } from "./CliTheme.ts";
-import { CliTheme } from "./CliTheme.ts";
+import { CliTheme, CliThemeOptions } from "./CliTheme.ts";
+
+const $I = $ScratchpadId.create("effected/cli/CliEnv");
 
 /**
  * Options for {@link CliEnv.layer} and for `CliRuntime.main`'s `env` option.
@@ -122,27 +127,44 @@ export type CliEnvServices = CurrentRuntimeEnv | TerminalEnv | Audience | CliThe
 /**
  * Options for {@link CliEnv.layerTest}: the answers a test fixes. Every field has a quiet default.
  *
+ * **Example** (Fix terminal answers for a test)
+ *
+ * ```ts
+ * import { CliEnvTestOptions } from "@beep/scratchpad/effected/cli/CliEnv";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(CliEnvTestOptions)({ tty: true, columns: 80, audience: "human" })) // true
+ * ```
+ *
  * @public
  * @category configuration
  * @since 0.0.0
  */
-export interface CliEnvTestOptions {
+export const CliEnvTestOptions = S.Struct({
 	/** Whether standard input, output and error are all terminals; `false` by default, as for a pipe. */
-	readonly tty?: boolean | undefined;
+	tty: S.optional(S.Boolean).annotate($I.annote("CliEnvTestOptions.tty", { description: "Whether all three standard streams are terminals." })),
 	/**
 	 * The `TERM` the layer's own builds read: `dumb` makes a terminal not interactive and, with the theme's glyphs at
 	 * `auto`, draws ASCII. Unset by default, whatever the host's `TERM` is.
 	 */
-	readonly term?: string | undefined;
+	term: S.optional(S.String).annotate($I.annote("CliEnvTestOptions.term", { description: "The TERM answer read by this test environment." })),
 	/** The audience; `human` by default. */
-	readonly audience?: AudienceKind | undefined;
+	audience: S.optional(AudienceKind).annotate($I.annote("CliEnvTestOptions.audience", { description: "The fixed audience of the test run." })),
 	/** The width of the terminal, in columns; none by default, so a width falls back to the reader's (80). */
-	readonly columns?: number | undefined;
+	columns: S.optional(S.Finite).annotate($I.annote("CliEnvTestOptions.columns", { description: "The terminal width answer, preserved exactly as supplied." })),
 	/** The colour level of both stdout and stderr; `none` by default. Fixed as given: `term` does not change it. */
-	readonly color?: ColorLevel | undefined;
+	color: S.optional(ColorLevel).annotate($I.annote("CliEnvTestOptions.color", { description: "Fixed colour support for stdout and stderr." })),
 	/** Options for the theme, as {@link CliEnvOptions.theme}; its glyphs are `auto` by default, so `term` decides. */
-	readonly theme?: CliThemeOptions | undefined;
-}
+	theme: S.optional(CliThemeOptions).annotate($I.annote("CliEnvTestOptions.theme", { description: "Token and glyph overrides for the test theme." })),
+}).annotate($I.annote("CliEnvTestOptions", { description: "Plain terminal, audience and theme answers for a CLI test environment." }));
+
+/**
+ * The plain answers accepted by the test environment layer.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CliEnvTestOptions = typeof CliEnvTestOptions.Type;
 
 /**
  * The services {@link CliEnv.layerTest} provides.

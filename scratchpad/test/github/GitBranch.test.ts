@@ -161,6 +161,28 @@ describe("GitBranch.upsert", () => {
 });
 
 describe("GitBranch reads", () => {
+	for (const [name, body] of [
+		["wrong-type SHA", { object: { sha: 42 } }],
+		["missing object", {}],
+	] as const) {
+		for (const method of ["sha", "shaOption", "exists"] as const) {
+			const { script, base } = harness([{ status: 200, body }]);
+			it.layer(GitBranch.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
+				it.effect(`${method} fails typed on a ${name}`, () => Effect.gen(function* () {
+					const branch = yield* GitBranch;
+					const reads = {
+						sha: branch.sha("main").pipe(Effect.asVoid),
+						shaOption: branch.shaOption("main").pipe(Effect.asVoid),
+						exists: branch.exists("main").pipe(Effect.asVoid),
+					};
+					const error = yield* Effect.flip(reads[method]);
+					assert.strictEqual(error.kind, "decode");
+					assert.strictEqual(error.operation, method === "sha" ? "GitBranch.sha" : "GitBranch.shaOption");
+					assert.strictEqual(script.count(), 1);
+				}));
+			});
+		}
+	}
 	{
 		const { script, base } = harness([ref("deadbeef")]);
 		it.layer(GitBranch.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {

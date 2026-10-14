@@ -111,7 +111,8 @@ const COLUMN_KEYS = table("up", "down");
 const fitAround = (widths: ReadonlyArray<number>, active: number, gap: number, width: number) => {
 	let from = active;
 	let to = active;
-	let used = widths[active] ?? 0;
+	// The nonempty overflow row supplies an active index clamped to its tab range.
+	let used = A.getUnsafe(widths, active);
 	let grew = true;
 	while (grew) {
 		grew = false;
@@ -242,7 +243,8 @@ export abstract class Tabs {
 			name === undefined ? -1 : props.tabs.findIndex((tab) => tab.name === name);
 		const [own, setOwn] = react.useState(() => Math.max(0, indexOf(props.defaultValue)));
 		const controlled = props.value !== undefined;
-		const index = controlled ? Math.max(0, indexOf(props.value)) : own;
+		// Uncontrolled, a list that shrank under the active tab clamps it to the last remaining tab.
+		const index = controlled ? Math.max(0, indexOf(props.value)) : Math.min(own, Math.max(0, props.tabs.length - 1));
 		const focused = props.isFocused ?? true;
 		const column = props.direction === "column";
 		const { onChange } = props;
@@ -343,7 +345,7 @@ export abstract class Tabs {
 		for (let position = from; position <= to; position++) {
 			if (position > from) children.push(separator);
 			const room = Math.max(1, columns - (from > 0 ? mark : 0) - (to < labels.length - 1 ? mark : 0));
-			const label = labels[position] ?? "";
+			const label = A.getUnsafe(labels, position);
 			const cut = (): string =>
 				marked(position, Fmt.truncate(labelOf(position), Math.max(1, room - marks), { ellipsis: glyphs.ellipsis }));
 			children.push(draw(position, from === to && Fmt.width(label) > room ? cut() : label));

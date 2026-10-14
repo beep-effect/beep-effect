@@ -12,6 +12,13 @@ import * as Cause from "effect/Cause";
 import { UnstubbedMemberError } from "../../effected/github-actions/internal/unstubbed.ts";
 
 const Json = S.fromJsonString(S.Unknown);
+const JsonString = S.fromJsonString(S.String);
+// JSON canonicalizes -0 to 0, so this contract can encode successfully and fail the parsed round trip.
+const NegativeZero = S.Finite.check(S.makeFilter((value) => 1 / value === Number.NEGATIVE_INFINITY, {
+  identifier: "NegativeZero",
+  title: "NegativeZero",
+  description: "A negative zero whose sign must survive state serialization.",
+}));
 
 const Token = S.Struct({ value: S.String, expires: S.Finite });
 
@@ -34,6 +41,28 @@ const stateFixture = (env: Record<string, string> = { GITHUB_STATE: "/rf/state" 
 };
 
 describe("ActionState", () => {
+	for (const os of ["Windows", "Linux", "macOS"]) {
+		const { files, layer } = stateFixture({ GITHUB_STATE: "/rf/state", RUNNER_OS: os });
+		it.layer(layer, { timeout: "30 seconds" })((it) => {
+			it.effect(`uses ${os} framing and preserves terminal CR, CRLF and LF in saved state and secrets`, () =>
+				Effect.gen(function* () {
+					const state = yield* ActionState;
+					const newline = os === "Windows" ? "\r\n" : "\n";
+					let expected = "";
+					for (const value of ["\r", "abc\r", "abc\r\n", "abc\n"]) {
+						const serialized = yield* S.encodeEffect(JsonString)(value);
+						yield* state.save("result", value, S.String);
+						yield* state.saveSecret("secret", value);
+						expected += `result<<EFFECTED_EOF${newline}${serialized}${newline}EFFECTED_EOF${newline}`;
+						expected += `secret<<EFFECTED_EOF${newline}${serialized}${newline}EFFECTED_EOF${newline}`;
+						assert.strictEqual(files.written.text("/rf/state"), expected);
+						assert.strictEqual(yield* S.decodeEffect(JsonString)(serialized), value);
+					}
+				}),
+			);
+		});
+	}
+
 	{
 		const { files, layer } = stateFixture();
 		it.layer(layer, { timeout: "30 seconds" })((it) => {
@@ -163,6 +192,21 @@ describe("ActionState", () => {
 	}
 
 	describe("save-time round-trip validation", () => {
+		for (const [name, value] of [["NaN", Number.NaN], ["an undefined object member", { kept: "x", missing: undefined }]] as const) {
+			const { files, layer } = stateFixture();
+			it.layer(layer, { timeout: "30 seconds" })((it) => {
+				it.effect(`rejects ${name} with a permissive schema before appending`, () =>
+					Effect.gen(function* () {
+						const error = yield* Effect.flip((yield* ActionState).save("payload", value, S.Unknown));
+						assert.strictEqual(error._tag, "ActionStateError");
+						assert.strictEqual(error.reason, "notPlainJson");
+						assert.strictEqual(error.key, "payload");
+						assert.isUndefined(files.written.text("/rf/state"));
+					}),
+				);
+			});
+		}
+
 		{
 			const { files, layer } = stateFixture();
 			it.layer(layer, { timeout: "30 seconds" })((it) => {
@@ -264,3 +308,16 @@ describe("ActionState", () => {
 		}
 	});
 });
+
+{
+  const { files, layer } = stateFixture();
+  it.layer(layer, { timeout: "5 seconds" })((it) => {
+    it.effect("a JSON-normalized value that no longer decodes is refused before writing state", () => Effect.gen(function* () {
+      const error = yield* Effect.flip((yield* ActionState).save("signed-zero", -0, NegativeZero));
+      assert.strictEqual(error.reason, "notPlainJson");
+      assert.strictEqual(error.key, "signed-zero");
+      assert.instanceOf(error.cause, S.SchemaError);
+      assert.isUndefined(files.written.text("/rf/state"));
+    }));
+  });
+}

@@ -1,5 +1,14 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { CliError, Prompt } from "effect/cli";
+
+const $I = $ScratchpadId.create("effected/cli/internal/fallbackAnswer");
+
+const FlagTarget = S.Struct({
+	flag: S.String.annotate($I.annote("FlagTarget.flag", { description: "The missing flag's name without leading dashes." })),
+}).annotate($I.annote("FlagTarget", { description: "The structural flag member of a fallback target." }));
+const isFlagTarget = S.is(FlagTarget);
 
 /**
  * The parameter a fallback stands in for, and its default when there is no one to ask: the shape of
@@ -37,7 +46,7 @@ export const answerWithoutPerson = <A>(
 ): Effect.Effect<Prompt.Prompt<A>, CliError.MissingOption | CliError.MissingArgument> => {
 	if ("otherwise" in target && target.otherwise !== undefined) return Effect.succeed(Prompt.succeed(target.otherwise));
 	return Effect.fail(
-		"flag" in target
+		isFlagTarget(target)
 			? CliError.MissingOption.make({ option: target.flag })
 			: CliError.MissingArgument.make({ argument: target.argument }),
 	);

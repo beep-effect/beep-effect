@@ -22,6 +22,13 @@ class UnstubbedError extends S.TaggedError<UnstubbedError>($I`UnstubbedError`)("
 /** How many annotated-tag dereferences to follow before giving up. */
 const MAX_TAG_PEEL = 5;
 
+const TagName = S.Struct({ name: S.String }).annotate(
+	$I.annote("TagName", { description: "The tag name inspected before semver candidate selection." }),
+);
+const TagEntry = S.Struct({ name: S.String, commit: S.Struct({ sha: S.String }) }).annotate(
+	$I.annote("TagEntry", { description: "The name and nested commit SHA selected from a GitHub tag page entry." }),
+);
+
 /**
  * A tag and the commit it ultimately points at.
  *
@@ -332,7 +339,8 @@ const make = (client: GitHubClient["Service"]): GitTagShape => {
 		// filter is client-side by necessity — which is exactly why latestSemver
 		// exists rather than leaving callers to list-then-sort.
 		const prefix = options?.prefix;
-		const refs = yield* Effect.forEach(tags, (entry) => S.decodeEffect(TagRef)({ tag: entry.name, sha: entry.commit.sha }).pipe(
+		const refs = yield* Effect.forEach(tags, (entry) => S.decodeEffect(TagEntry)(entry).pipe(
+			Effect.flatMap((validated) => S.decodeEffect(TagRef)({ tag: validated.name, sha: validated.commit.sha })),
 			Effect.mapError((error) => GitHubError.decode("GitTag.list", "GitHub returned an unexpected tag", error)),
 		));
 		return A.filter(refs, (entry) => prefix === undefined || entry.tag.startsWith(prefix));
@@ -343,7 +351,7 @@ const make = (client: GitHubClient["Service"]): GitTagShape => {
 		upsert: Effect.fn("GitTag.upsert")(function* (tag: string, sha: string) {
 			const short = yield* rejectEmpty("GitTag.upsert", tag);
 			yield* Effect.annotateCurrentSpan({ tag: short });
-			yield* create(short, sha).pipe(Effect.catchIf(GitHubError.hasKind("alreadyExists"), () => reset(short, sha)));
+			yield* create(tag, sha).pipe(Effect.catchIf(GitHubError.hasKind("alreadyExists"), () => reset(short, sha)));
 		}),
 		delete: Effect.fn("GitTag.delete")(function* (tag: string) {
 			const { owner, repo } = yield* Repo;
@@ -390,21 +398,25 @@ const make = (client: GitHubClient["Service"]): GitTagShape => {
 			yield* Effect.annotateCurrentSpan({ owner, repo, prefix: options?.prefix ?? "" });
 			const extract = options?.extract ?? versionFromTag;
 			let best: SemverTag | undefined;
-			// One pass, no Effect per candidate: parsing and comparison are both
-			// synchronous in @effected/semver.
+			// One pass: parsing and comparison are synchronous; wire validation
+			// remains effectful so malformed selected candidates fail typed.
 			yield* Stream.runForEach(listStream({ page: options?.page }), (entry) =>
-				Effect.sync(() => {
-					if (options?.prefix !== undefined && !entry.name.startsWith(options.prefix)) return;
-					const raw = extract(entry.name);
+				Effect.gen(function* () {
+					const { name } = yield* S.decodeEffect(TagName)(entry);
+					if (options?.prefix !== undefined && !name.startsWith(options.prefix)) return;
+					const raw = extract(name);
 					if (O.isNone(raw)) return;
 					const parsed = SemVer.parseResult(raw.value);
 					if (Result.isFailure(parsed)) return;
 					const version = parsed.success;
 					if (version.prerelease.length > 0 && options?.includePrerelease !== true) return;
 					if (best === undefined || version.compare(best.version) === 1) {
-						best = SemverTag.make({ tag: entry.name, sha: entry.commit.sha, version });
+						const validated = yield* S.decodeEffect(TagEntry)(entry);
+						best = yield* S.decodeEffect(SemverTag)({ tag: name, sha: validated.commit.sha, version });
 					}
-				}),
+				}).pipe(
+					Effect.mapError((error) => GitHubError.decode("GitTag.latestSemver", "GitHub returned an unexpected semver tag", error)),
+				),
 			);
 			return O.fromUndefinedOr(best);
 		}),

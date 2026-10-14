@@ -2,7 +2,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, layer } from "@effect/vitest";
-import { SourceBoundary } from "../../effected/workspaces/testing.ts";
+import { SourceBoundary } from "../../effected/workspaces/SourceBoundary.ts";
 import * as Effect from "effect/Effect";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "engine");

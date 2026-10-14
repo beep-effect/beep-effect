@@ -19,6 +19,37 @@ describe("PortableTsconfig runtime models", () => {
 		assert.isFalse(S.is(PortableTsconfigOptions)({ includeTypes: undefined }));
 	});
 
+	it.effect("normalizes uppercase and mixed-case enum options and encodes canonical spellings", () =>
+		Effect.gen(function* () {
+			const expected = PortableTsconfig.make({
+				target: "es2022",
+				module: "nodenext",
+				jsx: "react-jsx",
+				moduleResolution: "bundler",
+				moduleDetection: "force",
+			});
+			for (const compilerOptions of [
+				{ target: "ES2022", module: "NODENEXT", jsx: "REACT-JSX", moduleResolution: "BUNDLER", moduleDetection: "FORCE" },
+				{ target: "Es2022", module: "NodeNext", jsx: "React-JsX", moduleResolution: "Bundler", moduleDetection: "Force" },
+			]) {
+				const input = { ...expected, compilerOptions: { ...expected.compilerOptions, ...compilerOptions } };
+				const decoded = yield* S.decodeEffect(PortableTsconfig)(input);
+				assert.deepStrictEqual(decoded, expected);
+				assert.deepStrictEqual(yield* S.encodeEffect(PortableTsconfig)(decoded), expected);
+			}
+		}));
+
+	it.effect("normalizes uppercase and mixed-case lib options and encodes canonical spellings", () =>
+		Effect.gen(function* () {
+			const expected = PortableTsconfig.make({ lib: ["esnext", "dom", "dom.iterable"] });
+			for (const lib of [["ESNEXT", "DOM", "DOM.ITERABLE"], ["EsNext", "Dom", "Dom.Iterable"]]) {
+				const input = { ...expected, compilerOptions: { ...expected.compilerOptions, lib } };
+				const decoded = yield* S.decodeEffect(PortableTsconfig)(input);
+				assert.deepStrictEqual(decoded, expected);
+				assert.deepStrictEqual(yield* S.encodeEffect(PortableTsconfig)(decoded), expected);
+			}
+		}));
+
 	it("rejects missing and reversed portable flags at decode and encode boundaries", () => {
 		for (const compilerOptions of [
 			{},

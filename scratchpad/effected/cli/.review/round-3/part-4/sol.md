@@ -1,0 +1,30 @@
+### sol-3-1
+- file: scratchpad/effected/cli/ui/TextInput.ts:176
+- class: bug   severity: required
+- standard: D9, D11 and §14; `TextInput.View` documents that a return submits the preceding text and drops input after submission (`TextInput.ts:350–353`).   evidence: A read-only `bun --no-cache -e` probe mounted `TextInput.screen({ message: "Name", initial: "ac" })`, then called `handle.chunk("enter", "left")`. The frame became `a▏c`, and awaiting `handle.result` with a 100 ms timeout returned `Failure(Cause([Fail(TimeoutError: Operation timed out after '100ms')]))`. The pure reducer confirms the transition: Enter followed by Left produces `{ value: "ac", cursor: 1, submitted: false }`. The pinned oracle reproduced the same frame and timeout; its source was loaded with Ink/React peer import paths redirected in memory to the installed dependencies. Existing chunk tests cover printable text after a return, but not a subsequent escape-delimited arrow key. Round-2 `cli-r2-16` fixed Confirm, Select and MultiSelect; it did not cover TextInput.
+- failure: Ink dispatches both keys before React commits. Left resets `submitted` to false, so the submission effect never observes Enter and the prompt remains waiting. Other editing actions after Enter can similarly cancel submission or change the text awaiting validation.
+- fix: Return the existing state from `step` when `state.submitted` is true. Keep the view’s existing validation-failure reset to `submitted: false`, which permits later editing after rejection. Add an Enter-then-arrow chunk regression and a rejected-validation-then-edit regression; record the verified upstream bug under §14.
+
+### sol-3-2
+- file: scratchpad/effected/cli/ui/TextInput.ts:199
+- class: bug   severity: required
+- standard: D9, D11 and §14; the input edits and masks by grapheme, and `windowAround` promises to keep the cursor and surrounding text within the available display cells (`TextInput.ts:226–247`).   evidence: A read-only mounted probe used initial value `"👩‍💻👩‍💻👩‍💻"` with `{ columns: 6, color: "none" }`. Its value row was `"…‍💻▏"`; after Home, it was `"▏👩‍…"`. Both contain fragments of the joined emoji rather than complete graphemes. The pinned oracle reproduced `"…‍💻▏"` with the same installed Ink/React peers. `tail` at line 200 and `head` at line 217 iterate code points and measure them individually, although each complete `👩‍💻` occupies two cells. The coverage test titled “wide graphemes are cut whole” exercises CJK characters only.
+- failure: Horizontal scrolling splits emoji and other grapheme clusters. A developer emoji becomes a standalone laptop or woman with a dangling joiner, and summing individual code-point widths discards text that could fit as complete graphemes. This is separate from round-2’s document-span layout finding.
+- fix: Iterate the shared `graphemes(text)` result in both `head` and `tail`, measuring and retaining each complete grapheme with `Fmt.width`. Add prefix and suffix window regressions for joined emoji and regional-indicator flags, preserve the submitted raw text, and record the verified upstream bug under §14.
+
+### sol-3-3
+- file: scratchpad/effected/cli/ui/testing/CliUiTest.ts:744
+- class: bug   severity: required
+- standard: D9, D11 and §14; `CliUiTest.view` explicitly promises that resize after a deliberate end dies with the ended-screen error (`CliUiTest.ts:979–983`). The neighboring `send` implementation enforces the same screen ownership boundary at line 717.   evidence: A read-only probe ran two TextInput screens in one session, submitted the first, and obtained the second with `session.next()`. Calling `first.resize(10, 24)` then returned `Exit.Success(undefined)` and changed the second screen’s value row from `"abcdefghijklmnopqrstuv▏"` to `"…pqrstuv▏"`. The pinned oracle reproduced both the successful stale resize and the changed second frame. The resize closure calls `fake.resize` without checking `ended()`, while session handles share those terminal streams. Existing ended-screen tests exercise press, type and chunk.
+- failure: A handle belonging to an ended screen can resize the currently mounted screen. Tests that have lost track of their screen receive a successful operation and silently affect a later screen instead of the promised defect.
+- fix: Check `ended()` inside the resize suspension before mutating the fake streams, returning the existing `SCREEN_ENDED` defect when true. Retain the outer `surfaced` wrapper so a recorded crash still takes precedence. Add a two-screen regression proving the stale resize fails and leaves the second frame unchanged; record the verified upstream bug under §14.
+
+### sol-3-4
+- file: scratchpad/effected/cli/ui/Tabs.ts:245
+- class: bug   severity: required
+- standard: D9, D11 and §14; `Tabs.View` describes an active tab and an overflow window containing the tabs that fit around it (`Tabs.ts:211–220`).   evidence: A read-only probe mounted uncontrolled tabs Alpha/Beta with `defaultValue: "b"` at `{ columns: 5, color: "none" }`, then rerendered the same component with only `{ name: "a", label: "Long alpha" }`. The resulting frame was exactly `"…"`. Pressing Right subsequently produced `"[L…]"`. The pinned oracle reproduced both outputs. The uncontrolled `own` index remains 1 after the list shrinks to length 1; `fitAround` consequently starts outside the labels array. `Tabs.coverage.test.ts:40` exercises this case but only asserts that the removed Beta label disappears, accepting the empty selected position.
+- failure: Shrinking a nonempty uncontrolled tab list can remove every visible tab label and active marker until another navigation key arrives. The overflow window is centered on an index that no longer names a tab.
+- fix: Clamp the effective uncontrolled index to the current tab range before assigning the navigation refs and calculating the visible window, retaining the existing empty-list behavior. Strengthen the shrinking-list regression to require the remaining tab’s active marker and visible label immediately after rerender, and record the verified upstream bug under §14.
+
+REQUIRED: 4
+BACKLOG: 0

@@ -27,8 +27,18 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { formatJsonValue } from "../../internal/cli/Json.ts";
 import { decodeTomlTextWith } from "../../internal/schema/TextCodec.ts";
 import { SkillsCommandError, SkillsDriftError } from "./Skills.errors.ts";
-import { renderSkillProvenanceJson, renderSkillProvenanceSummary } from "./Skills.render.ts";
-import { runSkillProvenance, SkillProvenanceServiceLive } from "./Skills.service.ts";
+import {
+  renderSkillProvenanceJson,
+  renderSkillProvenanceSummary,
+  renderSkillsLockMigrationPlanJson,
+  renderSkillsLockMigrationPlanSummary,
+} from "./Skills.render.ts";
+import {
+  planSkillsLockMigration,
+  runSkillProvenance,
+  SkillProvenanceServiceLive,
+  SkillUpstreamContentSourceLive,
+} from "./Skills.service.ts";
 import type { SkillProvenanceService } from "./Skills.service.ts";
 
 // cspell:ignore mattpocock Gebert
@@ -317,7 +327,9 @@ const skillFlag = Flag.String("skill").pipe(
   Flag.optional
 );
 const provenanceSkillArgument = Argument.String("skill").pipe(
-  Argument.withDescription("Installed skill to resolve; the P1 pilot supports shadcn")
+  Argument.withDescription(
+    "Installed skill to resolve: one with a ratified resolution seed (grill-me, oracle, portless, shadcn, teach, turborepo)"
+  )
 );
 const provenanceJsonFlag = Flag.Boolean("json").pipe(
   Flag.withDefault(false),
@@ -1070,6 +1082,39 @@ const skillsProvenanceCommand = Command.make(
   Command.provide(SkillProvenanceServiceLive)
 );
 
+const skillsLockPlanCommand = Command.make(
+  "lock-plan",
+  {
+    json: Flag.Boolean("json").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Print the skills-lock-migration-plan/v1 report as JSON")
+    ),
+  },
+  Effect.fn("Skills.lockPlanCommand")(function* (options) {
+    yield* Effect.gen(function* () {
+      const repoRoot = yield* findRepoRoot().pipe(
+        SkillsCommandError.mapError("Failed to locate repository root for the skills lock plan.")
+      );
+      const plan = yield* planSkillsLockMigration(repoRoot);
+      yield* Console.log(
+        options.json ? Str.trimEnd(renderSkillsLockMigrationPlanJson(plan)) : renderSkillsLockMigrationPlanSummary(plan)
+      );
+    }).pipe(
+      Effect.catchTag(
+        "SkillsCommandError",
+        Effect.fn("Skills.lockPlanCommand.reportError")(function* (error) {
+          const message = `skills:lock-plan: ${error.message}`;
+          yield* Console.error(message);
+          return yield* failWithReportedExit(message);
+        })
+      )
+    );
+  })
+).pipe(
+  Command.withDescription("Plan the skills-lock v1 to v2 migration without writing repository state"),
+  Command.provide(SkillUpstreamContentSourceLive)
+);
+
 /**
  * Skills command group.
  *
@@ -1088,9 +1133,9 @@ const skillsProvenanceCommand = Command.make(
  */
 export const skillsCommand = Command.make("skills", {}, () =>
   Console.log(
-    "Skills commands:\n- bun run beep skills update\n- bun run beep skills update --check\n- bun run beep skills provenance shadcn"
+    "Skills commands:\n- bun run beep skills update\n- bun run beep skills update --check\n- bun run beep skills provenance <skill>\n- bun run beep skills lock-plan [--json]"
   )
 ).pipe(
   Command.withDescription("Manage repo-local Claude and Codex skill mirrors"),
-  Command.withSubcommands([skillsUpdateCommand, skillsProvenanceCommand])
+  Command.withSubcommands([skillsUpdateCommand, skillsProvenanceCommand, skillsLockPlanCommand])
 );

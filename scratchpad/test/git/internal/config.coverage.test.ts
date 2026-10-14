@@ -2,9 +2,77 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertDefined, assertFalse } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { matchesSection, scan } from "../../../effected/git/internal/config.ts";
+import { applySplice, matchesSection, scan } from "../../../effected/git/internal/config.ts";
 
 describe("git config scanner boundary coverage", () => {
+  it.effect("commits whitespace and raw replacement spans through LF, CRLF and EOF continuations", () =>
+    Effect.gen(function* () {
+      for (const ending of ["\\", "\\\n", "\\\r\n"]) {
+        for (const whitespace of [" ", "\t", " \t"]) {
+          for (const tail of ending === "\\" ? [""] : ["", "\n", "\r\n", "# keep\n", "; keep\r\n", " \t # keep\n"]) {
+            const raw = `a${whitespace}${ending}`;
+            const text = `[core]\nkey=${raw}${tail}`;
+            const parsed = scan(text);
+            assert.deepStrictEqual(parsed.diagnostics, []);
+            const entry = parsed.sections[0]?.entries[0];
+            assertDefined(entry);
+            assert.strictEqual(entry.value, `a${whitespace}`);
+            assert.strictEqual(entry.valueOffset, "[core]\nkey=".length);
+            assert.strictEqual(entry.valueLength, raw.length);
+            assert.strictEqual(entry.offset, "[core]\n".length);
+            assert.strictEqual(entry.length, `key=${raw}${tail}`.length);
+            const replaced = applySplice(text, { offset: entry.valueOffset, length: entry.valueLength, content: "z" });
+            assert.strictEqual(replaced, `[core]\nkey=z${tail}`);
+            const rescanned = scan(replaced);
+            assert.deepStrictEqual(rescanned.diagnostics, []);
+            assert.strictEqual(rescanned.sections[0]?.entries[0]?.value, "z");
+          }
+        }
+      }
+    }),
+  );
+
+  it.effect("continues trimming ordinary trailing whitespace outside continuation spans", () =>
+    Effect.gen(function* () {
+      for (const tail of [" \t", " \t\n", " \t\r\n", " \t# keep\n", " \t; keep\r\n"]) {
+        const text = `[core]\nkey=a${tail}`;
+        const parsed = scan(text);
+        assert.deepStrictEqual(parsed.diagnostics, []);
+        const entry = parsed.sections[0]?.entries[0];
+        assertDefined(entry);
+        assert.strictEqual(entry.value, "a");
+        assert.strictEqual(entry.valueLength, 1);
+        assert.strictEqual(applySplice(text, { offset: entry.valueOffset, length: entry.valueLength, content: "z" }), `[core]\nkey=z${tail}`);
+      }
+    }),
+  );
+
+  it.effect("skips leading unquoted whitespace after empty quotes and initial continuations with accurate spans", () =>
+    Effect.gen(function* () {
+      for (const [raw, value, significantRaw] of [
+        ['"" \tb', "b", '"" \tb'],
+        ["\\\n \tb", "b", "\\\n \tb"],
+        ["\\\r\n \tb", "b", "\\\r\n \tb"],
+        ['""\\\n \t"" \tb', "b", '""\\\n \t"" \tb'],
+        ['"" \t', "", '""'],
+        ["\\\n \t", "", "\\\n"],
+        ['" " b', "  b", '" " b'],
+        ['" "\\\n b', "  b", '" "\\\n b'],
+        ["\\t b", "\t b", "\\t b"],
+      ] as const) {
+        const text = `[core]\nkey= \t${raw}\n`;
+        const parsed = scan(text);
+        assert.deepStrictEqual(parsed.diagnostics, []);
+        const entry = parsed.sections[0]?.entries[0];
+        assertDefined(entry);
+        assert.strictEqual(entry.value, value);
+        assert.strictEqual(entry.valueOffset, "[core]\nkey= \t".length);
+        assert.strictEqual(entry.valueLength, significantRaw.length);
+        assert.strictEqual(text.slice(entry.valueOffset, entry.valueOffset + entry.valueLength), significantRaw);
+      }
+    }),
+  );
+
   it.effect("accepts horizontal whitespace between a quoted subsection and its closing bracket", () =>
     Effect.gen(function* () {
       const text = '[remote "Origin" \t]\nkey = value\n';

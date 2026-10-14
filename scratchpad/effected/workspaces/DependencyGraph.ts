@@ -69,14 +69,16 @@ export class CyclicDependencyError extends S.TaggedError<CyclicDependencyError>(
 	}
 }
 
-interface Edges {
+const Edges = S.Struct({
 	/** Vertex order, independent of the hash map's iteration order. */
-	readonly order: ReadonlyArray<string>;
+	order: S.Array(S.String).annotateKey({ description: "Vertex order, independent of the hash map's iteration order." }),
 	/** name → the workspace packages it depends on. */
-	readonly forward: HashMap.HashMap<string, HashSet.HashSet<string>>;
+	forward: S.HashMap(S.String, S.HashSet(S.String)).annotateKey({ description: "Each workspace package's direct workspace dependencies." }),
 	/** name → the workspace packages that depend on it. */
-	readonly reverse: HashMap.HashMap<string, HashSet.HashSet<string>>;
-}
+	reverse: S.HashMap(S.String, S.HashSet(S.String)).annotateKey({ description: "Each workspace package's direct workspace dependents." }),
+}).annotate($I.annote("Edges", { description: "The graph's ordered vertices and immutable forward and reverse dependency indexes." }));
+
+type Edges = typeof Edges.Type;
 
 // Core's `Graph` is already adopted in this file — `stronglyConnectedComponents`
 // for the cycle payload, and `directed`/`addNode`/`addEdge`/`toMermaid` over the

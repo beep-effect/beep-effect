@@ -172,3 +172,18 @@ describe("stringifier explicit compact and leading flow comments", () => {
     assert.include(output, "# leading");
   }));
 });
+
+
+it.effect("keeps one-pair block map values nested beneath explicit newline keys", () => Effect.sync(() => {
+  for (const key of ["a", "", "x y"]) {
+    const value = [{ "\n": { [key]: [] } }];
+    const input = stringifyValue(value);
+    for (const forceDefaultStyles of [false, true]) {
+      const options = { forceDefaultStyles };
+      const rendered = stringifyDocument(composeFirstDocument(input), options);
+      assert.deepStrictEqual(parse(rendered), value);
+      assert.deepStrictEqual(composeFirstDocument(rendered).contents?.toValue(), value);
+      assert.strictEqual(stringifyDocument(composeFirstDocument(rendered), options), rendered);
+    }
+  }
+}));

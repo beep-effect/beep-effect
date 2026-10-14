@@ -30,6 +30,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PubSub from "effect/PubSub";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -301,6 +302,159 @@ describe("Journal — appendPatch inherits from a Schema.Class payload", () => {
     })
   );
 });
+
+const nullableBoxEvents = Tuple.make(JsonlEvent.make("boxed", { data: S.NullOr(Boxed) }));
+class NullableBoxJournal extends Journal.Service<NullableBoxJournal>()($I`NullableBoxJournal`, {
+  events: nullableBoxEvents,
+}) {}
+const transformedBox = S.Struct({ ...Boxed.fields, round: S.FiniteFromString }).pipe(
+  S.decodeTo(S.instanceOf(Boxed), {
+    decode: SchemaGetter.transformEffect((fields) =>
+      S.decodeEffect(Boxed)({ ...fields, round: 1 / fields.round }).pipe(Effect.mapError((error) => error.issue))
+    ),
+    encode: SchemaGetter.transform((boxed) => ({ ...boxed, round: 1 / boxed.round })),
+  })
+);
+const transformedBoxEvents = Tuple.make(JsonlEvent.make("boxed", { data: transformedBox }));
+class TransformedBoxJournal extends Journal.Service<TransformedBoxJournal>()($I`TransformedBoxJournal`, {
+  events: transformedBoxEvents,
+}) {}
+
+it.effect("appendPatch preserves nullable class payloads and rejects invalid patches before writing", () =>
+  Effect.gen(function* () {
+    const fs = yield* memory();
+    yield* fs.writeFileString(
+      path,
+      '{"at":"2026-01-01T00:00:00.000Z","event":"boxed","data":{"round":1,"phase":"keep-me","note":"must-survive"}}\n'
+    );
+    const context = yield* Layer.build(
+      NullableBoxJournal.layer({ path }).pipe(Layer.provide(Layer.succeed(FileSystem.FileSystem, fs)))
+    );
+    const journal = Context.get(context, NullableBoxJournal);
+    const envelope = yield* journal.appendPatch("boxed", { round: 2 });
+    assertInstanceOf(envelope.data, Boxed);
+    assert.strictEqual(envelope.data.round, 2);
+    assert.strictEqual(envelope.data.phase, "keep-me");
+    assert.strictEqual(envelope.data.note, "must-survive");
+    const persisted = yield* fs.readFileString(path);
+    assert.strictEqual(Line.split(persisted).length, 2);
+    const failure = yield* Effect.flip(journal.appendPatch("boxed", { round: Number.NaN }));
+    assert.strictEqual(failure._tag, "InvalidData");
+    assert.strictEqual(yield* fs.readFileString(path), persisted);
+  })
+);
+
+it.effect("appendPatch preserves transformed class codecs and rejects invalid patches before writing", () =>
+  Effect.gen(function* () {
+    const fs = yield* memory();
+    yield* fs.writeFileString(
+      path,
+      '{"at":"2026-01-01T00:00:00.000Z","event":"boxed","data":{"round":"1","phase":"keep-me","note":"must-survive"}}\n'
+    );
+    const context = yield* Layer.build(
+      TransformedBoxJournal.layer({ path }).pipe(Layer.provide(Layer.succeed(FileSystem.FileSystem, fs)))
+    );
+    const journal = Context.get(context, TransformedBoxJournal);
+    const envelope = yield* journal.appendPatch("boxed", { round: 2 });
+    assertInstanceOf(envelope.data, Boxed);
+    assert.strictEqual(envelope.data.round, 2);
+    assert.strictEqual(envelope.data.phase, "keep-me");
+    assert.strictEqual(envelope.data.note, "must-survive");
+    const persisted = yield* fs.readFileString(path);
+    assert.strictEqual(Line.split(persisted).length, 2);
+    assert.include(persisted, '"round":"0.5"');
+    const failure = yield* Effect.flip(journal.appendPatch("boxed", { round: Number.NaN }));
+    assert.strictEqual(failure._tag, "InvalidData");
+    assert.strictEqual(yield* fs.readFileString(path), persisted);
+    // Infinity encodes to the valid wire value "0", but the original decoder
+    // reconstructs Infinity and rejects it through Boxed's finite field check.
+    const decodedFailure = yield* Effect.flip(journal.appendPatch("boxed", { round: Number.POSITIVE_INFINITY }));
+    assert.strictEqual(decodedFailure._tag, "InvalidData");
+    assert.strictEqual(yield* fs.readFileString(path), persisted);
+  })
+);
+
+// Each composed codec must patch the decoded class while retaining its wire transformation.
+const boxedWire = S.Struct({ ...Boxed.fields, round: S.FiniteFromString });
+const boxedWireUnion = S.Union([boxedWire, S.Struct(Boxed.fields)]);
+const boxedFromWire = {
+  decode: SchemaGetter.transformEffect((fields: typeof boxedWire.Type) =>
+    S.decodeEffect(Boxed)(fields).pipe(Effect.mapError((error) => error.issue))
+  ),
+  encode: SchemaGetter.transform((boxed: Boxed) => ({ ...boxed })),
+};
+const composedBoxCases = [
+  ["suspended class", S.suspend(() => Boxed), "1", '"round":2'],
+  ["suspended union member", S.Union([S.suspend(() => Boxed), S.Null]), "1", '"round":2'],
+  ["union wire decodeTo", boxedWireUnion.pipe(S.decodeTo(S.instanceOf(Boxed), boxedFromWire)), '"1"', '"round":"2"'],
+  ["suspended wire target", S.suspend(() => boxedWire).pipe(S.decodeTo(S.instanceOf(Boxed), boxedFromWire)), '"1"', '"round":"2"'],
+] as const;
+
+for (const [name, data, seedRound, encodedRound] of composedBoxCases) {
+  it.effect(`appendPatch preserves ${name} and rejects invalid patches without writing`, () =>
+    Effect.gen(function* () {
+      const fs = yield* memory();
+      yield* fs.writeFileString(path,
+        `{"at":"2026-01-01T00:00:00.000Z","event":"boxed","data":{"round":${seedRound},"phase":"keep-me","note":"must-survive"}}\n`
+      );
+      class ComposedJournal extends Journal.Service<ComposedJournal>()($I`ComposedJournal`, {
+        events: Tuple.make(JsonlEvent.make("boxed", { data })),
+      }) {}
+      const context = yield* Layer.build(
+        ComposedJournal.layer({ path }).pipe(Layer.provide(Layer.succeed(FileSystem.FileSystem, fs)))
+      );
+      const journal = Context.get(context, ComposedJournal);
+      const envelope = yield* journal.appendPatch("boxed", { round: 2 });
+      assertInstanceOf(envelope.data, Boxed);
+      if (envelope.data === null) return assert.fail("the class payload must survive");
+      assert.strictEqual(envelope.data.round, 2);
+      assert.strictEqual(envelope.data.phase, "keep-me");
+      assert.strictEqual(envelope.data.note, "must-survive");
+      const persisted = yield* fs.readFileString(path);
+      assert.strictEqual(Line.split(persisted).length, 2);
+      assert.include(persisted, encodedRound);
+      assert.notInclude(persisted, "~effect/Schema/Class/");
+      assert.strictEqual((yield* Effect.flip(journal.appendPatch("boxed", { round: Number.NaN })))._tag, "InvalidData");
+      assert.strictEqual(yield* fs.readFileString(path), persisted);
+    })
+  );
+}
+
+class AsNumber extends S.Class<AsNumber>($I`AsNumber`)({ n: S.Finite, keep: S.String }) {}
+class AsString extends S.Class<AsString>($I`AsString`)({ n: S.FiniteFromString, keep: S.String, extra: S.String }) {}
+for (const [name, data] of [
+  ["number first", S.Union([AsNumber, AsString])],
+  ["string first", S.Union([AsString, AsNumber])],
+] as const) {
+  it.effect(`appendPatch retains ambiguous class provenance with ${name}`, () =>
+    Effect.gen(function* () {
+      const fs = yield* memory();
+      yield* fs.writeFileString(path,
+        '{"at":"2026-01-01T00:00:00.000Z","event":"ambiguous","data":{"n":"1","keep":"a","extra":"z"}}\n'
+      );
+      class AmbiguousJournal extends Journal.Service<AmbiguousJournal>()($I`AmbiguousJournal`, {
+        events: Tuple.make(JsonlEvent.make("ambiguous", { data })),
+      }) {}
+      const context = yield* Layer.build(
+        AmbiguousJournal.layer({ path }).pipe(Layer.provide(Layer.succeed(FileSystem.FileSystem, fs)))
+      );
+      const journal = Context.get(context, AmbiguousJournal);
+      const envelope = yield* journal.appendPatch("ambiguous", { n: 2 });
+      assertInstanceOf(envelope.data, AsString);
+      if (!S.is(AsString)(envelope.data)) return assert.fail("the string class must survive");
+      assert.strictEqual(envelope.data.n, 2);
+      assert.strictEqual(envelope.data.keep, "a");
+      assert.strictEqual(envelope.data.extra, "z");
+      const persisted = yield* fs.readFileString(path);
+      assert.strictEqual(Line.split(persisted).length, 2);
+      assert.include(persisted, '"n":"2"');
+      assert.include(persisted, '"extra":"z"');
+      assert.notInclude(persisted, "~effect/Schema/Class/");
+      assert.strictEqual((yield* Effect.flip(journal.appendPatch("ambiguous", { n: Number.NaN })))._tag, "InvalidData");
+      assert.strictEqual(yield* fs.readFileString(path), persisted);
+    })
+  );
+}
 
 /** Assert the envelope carries `noted`, then read its round: never a silent skip. */
 const roundOf = (envelope: EnvelopeUnion<typeof events>): number =>

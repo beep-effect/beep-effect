@@ -29,7 +29,7 @@ const $I = $ScratchpadId.create("effected/glob/internal/assertValidPattern");
  * @category errors
  * @since 0.0.0
  */
-export class InvalidPattern extends S.TaggedError<InvalidPattern>($I`InvalidPattern`)("InvalidPattern", {
+export class InvalidPattern extends S.TaggedError<InvalidPattern, { readonly brand: unique symbol }>($I`InvalidPattern`)("InvalidPattern", {
 	message: S.String.annotateKey({ description: "Why the programmer-supplied pattern is invalid." }),
 }, $I.annote("InvalidPattern", {
 	title: "Invalid internal glob pattern",

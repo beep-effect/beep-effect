@@ -1,6 +1,24 @@
 {
   "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
   "extends": ["./.oxlintrc.json"],
-  // Keep the root rules and plugins while admitting the effected lane's lab targets and canary.
-  "ignorePatterns": ["!scratchpad/**"]
+  // Oxlint replaces inherited ignorePatterns. Keep this list aligned with the root,
+  // admitting scratchpad first so generated/build/cache exclusions still win below.
+  "ignorePatterns": [
+    "!scratchpad/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/.turbo/**",
+    "**/coverage/**",
+    "**/generated/**",
+    "**/*.gen.*",
+    ".repos/**",
+    ".codex/**",
+    ".claude/**",
+    "docs/generated/**",
+    "**/scripts/**",
+    "goals/**",
+    "explorations/**"
+  ]
 }

@@ -1,31 +1,65 @@
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+
+const $I = $ScratchpadId.create("effected/github-actions/ChildEnv");
 /**
  * The environment additions {@link ChildEnv.prependPath} builds: exactly one
- * entry, keyed by the spelling of `PATH` the base environment already uses.
+ * entry, keyed by `PATH` on POSIX or the base's own spelling on Windows.
+ *
+ * **Example** (Validate PathPrependEnv)
+ *
+ * ```ts
+ * import { PathPrependEnv } from "@beep/scratchpad/effected/github-actions/ChildEnv";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(PathPrependEnv)({ env: { PATH: "/tools" }, extendEnv: true })) // true
+ * ```
  *
  * @public
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
-export interface PathPrependEnv {
+export const PathPrependEnv = S.Struct({
 	/** The additions to hand a child, ready to merge over the parent's block. */
-	readonly env: Readonly<Record<string, string>>;
+	env: S.Record(S.String, S.String).annotateKey({ description: "The additions to merge over the parent environment." }),
 	/**
 	 * Always `true`, and part of the answer on purpose: `env` **without**
 	 * `extendEnv: true` silently replaces the child's entire environment with
 	 * this one entry. See {@link ChildEnv.prependPath}.
 	 */
-	readonly extendEnv: true;
-}
+	extendEnv: S.Literal(true).annotateKey({ description: "Merge additions rather than replacing the child environment." }),
+}).annotate($I.annote("PathPrependEnv", { description: "Plain-object PATH additions paired with the required environment merge flag." }));
 
 /**
- * What {@link ChildEnv.prependPath} derives the additions from.
+ * The environment additions type accepted by {@link PathPrependEnv}.
  *
  * @public
  * @category type-level
  * @since 0.0.0
  */
-export interface PathPrependOptions {
+export type PathPrependEnv = typeof PathPrependEnv.Type;
+
+/**
+ * What {@link ChildEnv.prependPath} derives the additions from.
+ *
+ * **Example** (Validate PathPrependOptions)
+ *
+ * ```ts
+ * import { PathPrependOptions } from "@beep/scratchpad/effected/github-actions/ChildEnv";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(PathPrependOptions)({ base: {}, platform: "linux" })) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PathPrependOptions = S.Struct({
 	/**
   * The environment the child will inherit — on a runner, `process.env`.
   *
@@ -35,13 +69,22 @@ export interface PathPrependOptions {
   * {@link ChildEnv} — which is also what makes the Windows casing branch
   * exercisable from a test on any host.
   */
-	readonly base: Readonly<Record<string, string | undefined>>;
+	base: S.Record(S.String, S.UndefinedOr(S.String)).annotateKey({ description: "The explicitly supplied parent environment, including undefined values." }),
 	/**
 	 * The platform the child runs on, `process.platform`-shaped. Decides the
 	 * `PATH` entry delimiter: `;` on `win32`, `:` everywhere else.
 	 */
-	readonly platform: string;
-}
+	platform: S.String.annotateKey({ description: "The platform selecting PATH casing and its entry delimiter." }),
+}).annotate($I.annote("PathPrependOptions", { description: "Plain-object inputs for constructing child PATH additions without ambient defaults." }));
+
+/**
+ * The options type accepted by {@link PathPrependOptions}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PathPrependOptions = typeof PathPrependOptions.Type;
 
 /**
  * Child-process environment construction: prepending directories to `PATH`
@@ -121,7 +164,7 @@ export abstract class ChildEnv {
 	 * @since 0.0.0
 	 */
 	static pathKeyOf(base: Readonly<Record<string, string | undefined>>): string {
-		return R.keys(base).find((key) => key.toUpperCase() === "PATH") ?? "PATH";
+		return O.getOrElse(A.findFirst(R.keys(base), (key) => Str.toUpperCase(key) === "PATH"), () => "PATH");
 	}
 
 	/**
@@ -133,7 +176,8 @@ export abstract class ChildEnv {
 	 * `dirs` are joined ahead of the inherited value **in the order given** —
 	 * order is the caller's policy, because the first directory wins any name
 	 * collision (a package manager's shim directory leads so it beats a runtime
-	 * of the same name). The entry is written under the base's own `PATH`
+	 * of the same name). POSIX uses the exact `PATH` key. On Windows, the
+	 * entry is written under the base's own `PATH`
 	 * spelling ({@link ChildEnv.pathKeyOf}), so a Windows child never receives
 	 * `PATH` beside its inherited `Path`. An absent or empty inherited value
 	 * appends nothing — deliberately not an empty trailing entry, which both
@@ -171,10 +215,10 @@ export abstract class ChildEnv {
 	 */
 	static prependPath(dirs: readonly [string, ...ReadonlyArray<string>], options: PathPrependOptions): PathPrependEnv {
 		const delimiter = options.platform === "win32" ? ";" : ":";
-		const key = ChildEnv.pathKeyOf(options.base);
-		const inherited = options.base[key];
+		const key = options.platform === "win32" ? ChildEnv.pathKeyOf(options.base) : "PATH";
+		const inherited = O.getOrUndefined(R.get(options.base, key));
 		const entries = inherited === undefined || inherited === "" ? dirs : [...dirs, inherited];
-		return { env: { [key]: entries.join(delimiter) }, extendEnv: true };
+		return { env: { [key]: A.join(entries, delimiter) }, extendEnv: true };
 	}
 
 	/**

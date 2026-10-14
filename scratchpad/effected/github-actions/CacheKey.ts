@@ -158,11 +158,17 @@ const MAX_KEY_LENGTH = 512;
  * Commas and newlines are refused because the runner uses both to delimit the
  * restore-key list — a segment carrying one would silently become two keys.
  */
-const Segment = S.String.check(S.isPattern(/^[^,\n\r]+$/u));
+const Segment = S.String.check(S.isPattern(/^[^,\n\r]+$/u, {
+	identifier: $I`SegmentPattern`,
+	title: "Cache key segment pattern",
+	description: "A nonempty cache-key segment without commas or newline delimiters.",
+}));
 
 const Segments = S.NonEmptyArray(Segment).check(
 	S.makeFilter((values) => values.join(SEPARATOR).length <= MAX_KEY_LENGTH, {
+		identifier: $I`SegmentsLength`,
 		title: `a cache key of at most ${MAX_KEY_LENGTH} characters`,
+		description: "The complete cache key, including segment separators, fits GitHub's 512-character limit.",
 	}),
 );
 
@@ -171,8 +177,16 @@ const Segments = S.NonEmptyArray(Segment).check(
  * cross-field (`segments.length - 1`) and lives on the class schema.
  */
 const RestoreDepth = S.Finite.check(
-	S.isInt(),
-	S.isBetween({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER }),
+	S.isInt({
+		identifier: $I`RestoreDepthInteger`,
+		title: "Integer restore depth",
+		description: "A restore-key rung keeps a whole number of leading segments.",
+	}),
+	S.isBetween({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER }, {
+		identifier: $I`RestoreDepthRange`,
+		title: "Positive safe restore depth",
+		description: "A restore depth is between one and the maximum safe integer, inclusive.",
+	}),
 );
 
 /**
@@ -231,6 +245,11 @@ export class CacheKey extends S.Class<CacheKey>($I`CacheKey`)(
 			key.restoreDepths === undefined || key.restoreDepths.every((depth) => depth <= key.segments.length - 1)
 				? undefined
 				: "every restore depth must be between 1 and segments.length - 1 — a rung keeping every segment would just repeat the primary key",
+			{
+				identifier: $I`RestoreDepthWithinSegments`,
+				title: "Restore depths retain a proper key prefix",
+				description: "Each explicit restore depth keeps fewer segments than the primary cache key.",
+			},
 		),
 	), $I.annote("CacheKey", { description: "A GitHub Actions cache key and the restore-key ladder that goes with it." }),
 ) {

@@ -126,6 +126,45 @@ const CONTROL = MutableHashSet.fromIterable(["if", "while", "for", "with"]);
 const GLOBAL_OBJECTS = MutableHashSet.fromIterable(["globalThis", "global", "window", "self"]);
 
 /**
+ * Reads complete raw identifier tokens, including escaped and malformed continuations.
+ *
+ * **Example** (Retain an escaped token's raw width)
+ *
+ * ```ts
+ * import { identifierTokens } from "@beep/scratchpad/effected/workspaces/internal/sourceText";
+ *
+ * for (const token of identifierTokens("stdout.wr\\u0069te")) console.log(token.index, token[0]);
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const identifierTokens = (code: string): IterableIterator<RegExpExecArray> => code.matchAll(IDENTIFIER_TOKEN);
+
+/**
+ * Reads a complete raw identifier beginning exactly at a UTF-16 offset.
+ *
+ * **Example** (Read an escaped identifier)
+ *
+ * ```ts
+ * import { identifierAt } from "@beep/scratchpad/effected/workspaces/internal/sourceText";
+ *
+ * console.log(identifierAt("x.stdout", 2)) // stdout
+ * console.log(identifierAt(1)("x.stdout")) // undefined
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const identifierAt: {
+	(at: number): (code: string) => string | undefined;
+	(code: string, at: number): string | undefined;
+} = dual(2, (code: string, at: number): string | undefined => {
+	const first = identifierTokens(code.slice(at)).next();
+	return first.done === true || first.value.index !== 0 ? undefined : first.value[0];
+});
+
+/**
  * Tests whether `char` can continue an identifier.
  *
  * **Example** (Recognize identifier continuations)
@@ -277,7 +316,7 @@ export const lex = (text: string): LexedSource => {
 	/** Whether the code at offset `j` ends an operand (a value a postfix operator or a `/` division can follow). */
 	const endsOperand = (j: number): boolean => {
 		const char = code[j] ?? "";
-		return char === ")" || char === "]" || (isIdentifierChar(codePointBefore(code, j + 1)) && !isRegexKeyword(j));
+		return (char === ")" && !MutableHashSet.has(controlCloses, j)) || char === "]" || (isIdentifierChar(codePointBefore(code, j + 1)) && !isRegexKeyword(j));
 	};
 
 	/** Whether a `/` here opens a regex, judged by the last code token. */
@@ -286,8 +325,12 @@ export const lex = (text: string): LexedSource => {
 		if (j < 0) return true;
 		const last = code.slice(j, j + 1).join("");
 		if (isIdentifierChar(codePointBefore(code, j + 1))) return isRegexKeyword(j);
-		// `x!` is a TypeScript non-null assertion: an operand, so `/` divides.
-		if (last === "!") return !endsOperand(j - 1);
+		// Postfix assertions may be repeated or separated from their operand by comments or spaces.
+		if (last === "!") {
+			let operand = lastCode(j - 1);
+			while (code[operand] === "!") operand = lastCode(operand - 1);
+			return !endsOperand(operand);
+		}
 		// `i++` / `i--` is a postfix update: an operand, so `/` divides.
 		if ((last === "+" || last === "-") && code[j - 1] === last) return !endsOperand(lastCode(j - 2));
 		if (last === ")") return MutableHashSet.has(controlCloses, j);
@@ -517,7 +560,7 @@ export const references: {
 	(code: string, name: string): ReadonlyArray<number>;
 } = dual(2, (code: string, name: string): ReadonlyArray<number> => {
 	const found: Array<number> = [];
-	for (const token of code.matchAll(IDENTIFIER_TOKEN)) {
+	for (const token of identifierTokens(code)) {
 		if (cookIdentifier(token[0]) !== name) continue;
 		const at = token.index;
 		const after = at + token[0].length;
@@ -534,9 +577,7 @@ export const references: {
 		}
 		let end = code[j - 1] === "?" ? j - 2 : j - 1;
 		while (end >= 0 && SPACE.test(code.charAt(end))) end--;
-		const start = identifierStartBefore(code, end + 1);
-		const receiver = cookIdentifier(code.slice(start, end + 1));
-		if (receiver !== undefined && MutableHashSet.has(GLOBAL_OBJECTS, receiver)) found.push(at);
+		if (isGlobalReceiver(code, end)) found.push(at);
 	}
 	return found;
 });
@@ -563,6 +604,22 @@ const identifierStartBefore = (code: string, end: number): number => {
 	return start;
 };
 
+/** Require every receiver in the chain to be a global object, ending at a free or spread reference. */
+const isGlobalReceiver = (code: string, end: number): boolean => {
+	while (end >= 0) {
+		const start = identifierStartBefore(code, end + 1);
+		const receiver = cookIdentifier(code.slice(start, end + 1));
+		if (receiver === undefined || !MutableHashSet.has(GLOBAL_OBJECTS, receiver)) return false;
+		let before = start - 1;
+		while (before >= 0 && SPACE.test(code.charAt(before))) before--;
+		if (code[before] === "#") return false;
+		if (code[before] !== "." || (code[before - 1] === "." && code[before - 2] === ".")) return true;
+		end = code[before - 1] === "?" ? before - 2 : before - 1;
+		while (end >= 0 && SPACE.test(code.charAt(end))) end--;
+	}
+	return false;
+};
+
 /** The cooked identifier ending at or before `end`; empty for member calls or invalid escapes. */
 const wordEndingAt = (code: string, end: number): string => {
 	let j = end;
@@ -573,8 +630,22 @@ const wordEndingAt = (code: string, end: number): string => {
 	return code[before] === "." || code[before] === "#" ? "" : cookIdentifier(code.slice(start, j + 1)) ?? "";
 };
 
-/** Cook only Unicode identifier escapes; malformed or non-identifier escapes match no name. */
-const cookIdentifier = (raw: string): string | undefined => {
+/**
+ * Cooks Unicode identifier escapes; malformed or non-identifier escapes match no name.
+ *
+ * **Example** (Cook a Unicode member spelling)
+ *
+ * ```ts
+ * import { cookIdentifier } from "@beep/scratchpad/effected/workspaces/internal/sourceText";
+ *
+ * console.log(cookIdentifier("wr\\u0069te")) // write
+ * console.log(cookIdentifier("\\u0020")) // undefined
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const cookIdentifier = (raw: string): string | undefined => {
 	const cooked = raw.replace(/\\u(?:[\dA-Fa-f]{4}|\{[\dA-Fa-f]+\})/gu, (escape) => {
 		const point = Number.parseInt(escape[2] === "{" ? escape.slice(3, -1) : escape.slice(2), 16);
 		return point <= 0x10ffff ? String.fromCodePoint(point) : escape;

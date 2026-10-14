@@ -133,8 +133,7 @@ export const truthy: YamlRule = {
 				? options.checkKeys
 				: true;
 		const out: Array<YamlLintDiagnostic> = [];
-		walkScalars(ctx.document.contents, "root", (scalar, role) => {
-			if (role === "key" && !checkKeys) return;
+		walkScalars(ctx.document.contents, "root", (scalar) => {
 			if (scalar.style !== "plain" || scalar.tag !== undefined) return;
 			const raw = ctx.text.slice(scalar.offset, scalar.offset + scalar.length);
 			if (!HashSet.has(TRUTHY, raw) || HashSet.has(allowed, raw)) return;
@@ -161,7 +160,7 @@ export const truthy: YamlRule = {
 					...O.getSomesStruct({ fix: O.fromUndefinedOr(fix) }),
 				}),
 			);
-		});
+		}, !checkKeys);
 		return out;
 	},
 };

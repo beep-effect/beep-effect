@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure, assertSuccess } from "@effect/vitest/utils";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
   JsoncEdit,
@@ -14,7 +15,35 @@ describe("JsoncEdit", () => {
     it("JsoncRange and JsoncEdit validate non-negative spans", () => {
       assert.strictEqual(JsoncRange.make({ offset: 0, length: 4 }).length, 4);
       assert.isTrue(S.is(JsoncEdit)(JsoncEdit.make({ offset: 10, length: 0, content: ", true" })));
-      assert.isFalse(S.is(JsoncEdit)({ offset: -1, length: 0, content: "" }));
+      assert.isFalse(S.is(JsoncEdit)({ offset: Number.NEGATIVE_INFINITY, length: 0, content: "" }));
+    });
+
+    it("constructs and decodes finite spans and overlap offsets, rejecting non-finite fields", () => {
+      for (const value of [-1, 0.5, -0.5, Number.MAX_SAFE_INTEGER + 1]) {
+        const span = { offset: value, length: value };
+        const edit = { ...span, content: "" };
+        const overlap = { lower: value, upper: value };
+        assert.deepStrictEqual({ ...JsoncRange.make(span) }, span);
+        assert.deepStrictEqual({ ...JsoncEdit.make(edit) }, edit);
+        assert.strictEqual(JsoncEditOverlapError.make(overlap).lower, value);
+        assertSuccess(Result.map(S.decodeResult(JsoncRange)(span), (decoded) => ({ ...decoded })), span);
+        assertSuccess(Result.map(S.decodeResult(JsoncEdit)(edit), (decoded) => ({ ...decoded })), edit);
+        assertSuccess(Result.map(S.decodeResult(JsoncEditOverlapError)({ _tag: "JsoncEditOverlapError", ...overlap }), (decoded) => [decoded.lower, decoded.upper]), [value, value]);
+      }
+      for (const value of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+        for (const field of ["offset", "length"] as const) {
+          const span = { offset: 0, length: 0, [field]: value };
+          assert.throws(() => JsoncRange.make(span));
+          assert.throws(() => JsoncEdit.make({ ...span, content: "" }));
+          assertFailure(Result.mapError(S.decodeResult(JsoncRange)(span), (error) => error._tag), "SchemaError");
+          assertFailure(Result.mapError(S.decodeResult(JsoncEdit)({ ...span, content: "" }), (error) => error._tag), "SchemaError");
+        }
+        for (const field of ["lower", "upper"] as const) {
+          const overlap = { lower: 0, upper: 0, [field]: value };
+          assert.throws(() => JsoncEditOverlapError.make(overlap));
+          assertFailure(Result.mapError(S.decodeResult(JsoncEditOverlapError)({ _tag: "JsoncEditOverlapError", ...overlap }), (error) => error._tag), "SchemaError");
+        }
+      }
     });
 
     it("JsoncFormattingOptions defaults every field and accepts a literal through its Like schema", () => {
@@ -54,6 +83,13 @@ describe("JsoncEdit", () => {
         JsoncEdit.make({ offset: 2, length: 3, content: "y" }),
       ]);
       assertFailure(result, JsoncEditOverlapError.make({ lower: 0, upper: 2 }));
+    });
+
+    it("reports negative and fractional overlapping offsets as a typed failure", () => {
+      assertFailure(JsoncEdit.applyAllResult("abcdef", [
+        JsoncEdit.make({ offset: -1, length: 3, content: "x" }),
+        JsoncEdit.make({ offset: 0.5, length: 1, content: "y" }),
+      ]), JsoncEditOverlapError.make({ lower: -1, upper: 0.5 }));
     });
 
     it("applies no edits as the identity", () => {

@@ -153,6 +153,78 @@ describe("ResolvedTsconfig.merge — E4 merge per field", () => {
 		assert.deepStrictEqual(result.extendedPaths, ["/proj/configs/base.json", "/proj/tsconfig.json"]);
 	});
 
+	it("preserves hostile own passthrough keys as data through base and derived merges", () => {
+		const baseProto = { polluted: "base" };
+		const derivedProto = { polluted: "derived" };
+		const base = merge(seed(), {
+			["__proto__"]: baseProto,
+			["constructor"]: "base constructor",
+			ordinary: "base",
+		}, "/proj/base.json");
+		assert.deepStrictEqual(Object.getOwnPropertyDescriptor(base, "__proto__"), {
+			value: baseProto, enumerable: true, writable: true, configurable: true,
+		});
+		assert.deepStrictEqual(Object.getOwnPropertyDescriptor(base, "constructor"), {
+			value: "base constructor", enumerable: true, writable: true, configurable: true,
+		});
+		assert.strictEqual(Object.getPrototypeOf(base), Object.getPrototypeOf({}));
+		assert.isUndefined(base.polluted);
+
+		const inherited = merge(base, {}, "/proj/inherited.json");
+		assert.deepStrictEqual(Object.getOwnPropertyDescriptor(inherited, "__proto__"), {
+			value: baseProto, enumerable: true, writable: true, configurable: true,
+		});
+		assert.deepStrictEqual(Object.getOwnPropertyDescriptor(inherited, "constructor"), {
+			value: "base constructor", enumerable: true, writable: true, configurable: true,
+		});
+		assert.strictEqual(Object.getPrototypeOf(inherited), Object.getPrototypeOf({}));
+		assert.isUndefined(inherited.polluted);
+
+		const result = merge(base, {
+			["__proto__"]: derivedProto,
+			["constructor"]: "derived constructor",
+		}, "/proj/tsconfig.json");
+		assert.deepStrictEqual(Object.getOwnPropertyDescriptor(result, "__proto__"), {
+			value: derivedProto, enumerable: true, writable: true, configurable: true,
+		});
+		assert.deepStrictEqual(Object.getOwnPropertyDescriptor(result, "constructor"), {
+			value: "derived constructor", enumerable: true, writable: true, configurable: true,
+		});
+		assert.strictEqual(result.ordinary, "base");
+		assert.strictEqual(Object.getPrototypeOf(result), Object.getPrototypeOf({}));
+		assert.isUndefined(result.polluted);
+	});
+
+	it("skips consumed passthrough getters and reads retained getters in enumeration order", () => {
+		const reads: Array<string> = [];
+		let consumedReads = 0;
+		const base: ResolvedTsconfig = {
+			...seed(),
+			get second() { reads.push("base second"); return "second"; },
+			get references() { consumedReads++; return []; },
+			get 2() { reads.push("base 2"); return "two"; },
+			get extends() { consumedReads++; return "./ignored.json"; },
+			get first() { reads.push("base first"); return "first"; },
+			get typeAcquisition() { consumedReads++; return { enable: true }; },
+		};
+		const derived: TsconfigJson.Type = {
+			get last() { reads.push("derived last"); return "last"; },
+			get extends() { consumedReads++; return "./ignored.json"; },
+			get 1() { reads.push("derived 1"); return "one"; },
+		};
+		const result = merge(base, derived, "/proj/tsconfig.json");
+		assert.strictEqual(consumedReads, 0);
+		assert.deepStrictEqual(reads, ["base 2", "base second", "base first", "derived 1", "derived last"]);
+		assert.strictEqual(result["2"], "two");
+		assert.strictEqual(result.second, "second");
+		assert.strictEqual(result.first, "first");
+		assert.strictEqual(result["1"], "one");
+		assert.strictEqual(result.last, "last");
+		assert.isUndefined(result.extends);
+		assert.isUndefined(result.references);
+		assert.isUndefined(result.typeAcquisition);
+	});
+
 	it("E4 files/include/exclude: a 3-config chain re-roots per-step, composing WITHOUT collapsing `..` (byte-identical to tsc)", () => {
 		// Three non-nested dirs: /proj/shared (base) and /proj/apps (mid) are
 		// SIBLINGS under /proj; /proj/apps/web (leaf) is nested under /proj/apps.
@@ -288,6 +360,32 @@ describe("ResolvedTsconfig.absolutize — E5 parse-time absolutization", () => {
 });
 
 describe("ResolvedTsconfig.substituteConfigDir — E5 final phase", () => {
+	it("rebuilds hostile own paths keys as data and reads values in enumeration order", () => {
+		const reads: Array<string> = [];
+		const paths: Record<string, Array<string>> = {
+			get ordinary() { reads.push("ordinary"); return [cd("/ordinary")]; },
+			get ["__proto__"]() { reads.push("__proto__"); return [cd("/proto")]; },
+			get 2() { reads.push("2"); return [cd("/two")]; },
+			get ["constructor"]() { reads.push("constructor"); return [cd("/constructor")]; },
+		};
+		const result = substituteConfigDir({ ...seed(), compilerOptions: { paths } }, "/final");
+		assert.deepStrictEqual(reads, ["2", "ordinary", "__proto__", "constructor"]);
+		assert.deepStrictEqual(result.compilerOptions.paths, {
+			["2"]: ["/final/two"],
+			ordinary: ["/final/ordinary"],
+			["__proto__"]: ["/final/proto"],
+			["constructor"]: ["/final/constructor"],
+		});
+		assert.deepStrictEqual(Object.getOwnPropertyDescriptor(result.compilerOptions.paths, "__proto__"), {
+			value: ["/final/proto"], enumerable: true, writable: true, configurable: true,
+		});
+		assert.deepStrictEqual(Object.getOwnPropertyDescriptor(result.compilerOptions.paths, "constructor"), {
+			value: ["/final/constructor"], enumerable: true, writable: true, configurable: true,
+		});
+		assert.strictEqual(Object.getPrototypeOf(result.compilerOptions.paths), Object.getPrototypeOf({}));
+		assert.deepStrictEqual(Object.keys(result.compilerOptions.paths ?? {}), ["2", "ordinary", "__proto__", "constructor"]);
+	});
+
 	it("E5 substitutes string compiler paths and preserves invalid entries and non-array paths values", () => {
 		const marker = { future: true };
 		const resolved = deliberatelyInvalid<ResolvedTsconfig>({

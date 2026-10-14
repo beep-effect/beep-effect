@@ -58,6 +58,26 @@ const live = (fake: typeof globalThis.fetch, env: Record<string, string> = TOKEN
 
 describe("OidcTokenIssuer", () => {
 	describe("requesting a token", () => {
+		for (const [base, expected] of [
+			["https://token.actions.example/", "https://token.actions.example/?audience=sigstore"],
+			["https://token.actions.example/#runner", "https://token.actions.example/?audience=sigstore#runner"],
+			["https://token.actions.example/?api-version=2.0#runner", "https://token.actions.example/?api-version=2.0&audience=sigstore#runner"],
+		] as const) {
+			const seen: Array<string> = [];
+			const fake: typeof globalThis.fetch = Object.assign((input: Parameters<typeof globalThis.fetch>[0]) => {
+				seen.push(String(input));
+				return Promise.resolve(json({ value: jwtFor(CLAIMS) }));
+			}, { preconnect: () => {} });
+			it.layer(live(fake, { ...TOKEN_ENV, ACTIONS_ID_TOKEN_REQUEST_URL: base }))((it) => {
+				it.effect(`places the audience in the query for ${base}`, () =>
+					Effect.gen(function* () {
+						yield* (yield* OidcTokenIssuer).token("sigstore");
+						assert.deepStrictEqual(seen, [expected]);
+					}),
+				);
+			});
+		}
+
 		{
 			const seen: Array<{ url: string; authorization: string | null }> = [];
 			const fake: typeof globalThis.fetch = Object.assign((input: Parameters<typeof globalThis.fetch>[0], init: Parameters<typeof globalThis.fetch>[1]) => {
@@ -136,6 +156,24 @@ describe("OidcTokenIssuer", () => {
 	});
 
 	describe("failure paths", () => {
+		{
+			const seen: Array<string> = [];
+			const fake: typeof globalThis.fetch = Object.assign((input: Parameters<typeof globalThis.fetch>[0]) => {
+				seen.push(String(input));
+				return Promise.resolve(json({ value: jwtFor(CLAIMS) }));
+			}, { preconnect: () => {} });
+			it.layer(live(fake, { ...TOKEN_ENV, ACTIONS_ID_TOKEN_REQUEST_URL: "not a URL" }))((it) => {
+				it.effect("an invalid audience request URL fails typed before any request", () =>
+					Effect.gen(function* () {
+						const error = yield* Effect.flip(Effect.flatMap(OidcTokenIssuer, (issuer) => issuer.token("sigstore")));
+						assert.strictEqual(error.reason, "requestFailed");
+						assert.isDefined(error.cause);
+						assert.deepStrictEqual(seen, []);
+					}),
+				);
+			});
+		}
+
 		{
 			const fake: typeof globalThis.fetch = Object.assign(() => Promise.resolve(json({ value: jwtFor(CLAIMS) })), { preconnect: () => {} });
 

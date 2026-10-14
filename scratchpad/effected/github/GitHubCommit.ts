@@ -1,5 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -344,23 +345,44 @@ const unstubbed = (member: string): never => {
  * empty object — typed `Record<string, never>` — for a commit it cannot
  * attribute to an account.
  */
-interface RawCommit {
-	readonly sha: string;
-	readonly html_url: string;
-	readonly commit: { readonly message: string; readonly author?: { readonly name?: string | null } | null };
-	readonly author?: { readonly login?: string } | null;
-	readonly parents: ReadonlyArray<{ readonly sha: string }>;
-}
+const CommitResponse = S.Struct({
+	sha: S.String,
+	html_url: S.String,
+	commit: S.Struct({
+		message: S.String,
+		author: S.Struct({ name: S.String.pipe(S.NullOr, S.optional) }).pipe(S.NullOr, S.optional),
+	}),
+	author: S.Struct({ login: S.optional(S.String) }).pipe(S.NullOr, S.optional),
+	parents: S.Array(S.Struct({ sha: S.String })),
+}).annotate($I.annote("CommitResponse", { description: "The selected fields used to summarize a commit response." }));
 
-const summarize = (raw: RawCommit): CommitSummary =>
-	CommitSummary.make({
+const summarize = Effect.fn("GitHubCommit.summarize")(function* (input: unknown, operation: string) {
+	const raw = yield* S.decodeUnknownEffect(CommitResponse)(input).pipe(
+		Effect.mapError((error) => GitHubError.decode(operation, "GitHub returned an unexpected commit", error)),
+	);
+	return CommitSummary.make({
 		sha: raw.sha,
 		message: raw.commit.message,
 		author: raw.commit.author?.name ?? "Unknown",
 		...O.getSomesStruct({ authorLogin: O.fromUndefinedOr(raw.author?.login) }),
 		url: raw.html_url,
-		parents: raw.parents.map((parent) => parent.sha),
+		parents: A.map(raw.parents, (parent) => parent.sha),
 	});
+});
+
+const ComparisonResponse = S.Struct({
+	status: S.String,
+	ahead_by: S.Finite,
+	behind_by: S.Finite,
+	commits: S.Array(CommitResponse),
+	files: S.Array(S.Struct({
+		filename: S.String,
+		status: S.String,
+		additions: S.Finite,
+		deletions: S.Finite,
+		previous_filename: S.optional(S.String),
+	})).pipe(S.NullOr, S.optional),
+}).annotate($I.annote("ComparisonResponse", { description: "The selected comparison fields, including nested commits and diff entries." }));
 
 /**
  * The minimum of GitHub's `diff-entry` payload the {@link CommitFile}
@@ -418,7 +440,7 @@ const make = (client: GitHubClient["Service"]): GitHubCommitShape => ({
 		const { owner, repo } = yield* Repo;
 		yield* Effect.annotateCurrentSpan({ owner, repo, ref });
 		const commit = yield* client.request("GET /repos/{owner}/{repo}/commits/{ref}", { owner, repo, ref });
-		return summarize(commit);
+		return yield* summarize(commit, "GitHubCommit.get");
 	}),
 
 	list: Effect.fn("GitHubCommit.list")(function* (options?: {
@@ -438,7 +460,7 @@ const make = (client: GitHubClient["Service"]): GitHubCommitShape => ({
 			},
 			options?.page,
 		);
-		return commits.map(summarize);
+		return yield* Effect.forEach(commits, (commit) => summarize(commit, "GitHubCommit.list"));
 	}),
 
 	compare: Effect.fn("GitHubCommit.compare")(function* (base: string, head: string) {
@@ -449,13 +471,18 @@ const make = (client: GitHubClient["Service"]): GitHubCommitShape => ({
 			repo,
 			basehead: `${base}...${head}`,
 		});
-		return CommitComparison.make({
-			status: comparison.status,
-			aheadBy: comparison.ahead_by,
-			behindBy: comparison.behind_by,
-			commits: comparison.commits.map(summarize),
-			files: yield* Effect.forEach(comparison.files ?? [], (file) => fileOf(file, "GitHubCommit.compare")),
-		});
+		const selected = yield* S.decodeEffect(ComparisonResponse)(comparison).pipe(
+			Effect.mapError((error) => GitHubError.decode("GitHubCommit.compare", "GitHub returned an unexpected commit comparison", error)),
+		);
+		return yield* S.decodeUnknownEffect(CommitComparison)({
+			status: selected.status,
+			aheadBy: selected.ahead_by,
+			behindBy: selected.behind_by,
+			commits: yield* Effect.forEach(selected.commits, (commit) => summarize(commit, "GitHubCommit.compare")),
+			files: yield* Effect.forEach(selected.files ?? [], (file) => fileOf(file, "GitHubCommit.compare")),
+		}).pipe(
+			Effect.mapError((error) => GitHubError.decode("GitHubCommit.compare", "GitHub returned an unexpected commit comparison", error)),
+		);
 	}),
 
 	changedFiles: Effect.fn("GitHubCommit.changedFiles")(function* (

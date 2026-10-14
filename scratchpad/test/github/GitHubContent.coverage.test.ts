@@ -7,6 +7,25 @@ import { Repo, RepoRef } from "../../effected/github/Repo.ts";
 import { harness } from "./harness.ts";
 
 describe("GitHubContent coverage", () => {
+  for (const [name, body] of [
+    ["null content", { type: "file", encoding: "base64", content: null }],
+    ["omitted content", { type: "file", encoding: "base64" }],
+    ["wrong-type content", { type: "file", encoding: "base64", content: 42 }],
+    ["null response", null],
+  ] as const) {
+    const { script, base } = harness([{ status: 200, body }, { status: 200, body }]);
+    it.layer(GitHubContent.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
+      it.effect(`fails typed on ${name} through both file APIs`, () => Effect.gen(function* () {
+        const content = yield* GitHubContent;
+        for (const result of [content.getFile("invalid").pipe(Effect.asVoid), content.getFileOption("invalid").pipe(Effect.asVoid)]) {
+          const error = yield* Effect.flip(result);
+          assert.strictEqual(error.kind, "decode");
+          assert.strictEqual(error.operation, "GitHubContent.getFile");
+        }
+        assert.strictEqual(script.count(), 2);
+      }));
+    });
+  }
   for (const { name, body, rendered } of [
     { name: "omitted", body: { type: "file", content: "" }, rendered: "undefined" },
     { name: "null", body: { type: "file", encoding: null, content: "" }, rendered: "null" },

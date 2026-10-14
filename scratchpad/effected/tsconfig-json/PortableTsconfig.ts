@@ -193,12 +193,12 @@ const isResolvedTsconfig = (input: ResolvedTsconfig | CompilerOptions.Type): inp
 
 // ── The filter ────────────────────────────────────────────────────────────
 
-const PortableCompilerOptions = S.toType(S.Struct({
+const PortableCompilerOptions = S.Struct({
 	...Struct.pick(CompilerOptions.schema.fields, PRESERVED_OPTIONS),
 	types: CompilerOptions.schema.fields.types,
 	noEmit: S.Literal(true).annotateKey({ description: "Portable environments control emission externally." }),
 	composite: S.Literal(false).annotateKey({ description: "Portable configs do not orchestrate project-reference builds." }),
-})).annotate($I.annote("PortableCompilerOptions", {
+}).annotate($I.annote("PortableCompilerOptions", {
 	description: "Only portable compiler options, with optional type packages and required non-emitting, non-composite flags.",
 }));
 

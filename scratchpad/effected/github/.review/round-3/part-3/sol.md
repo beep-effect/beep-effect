@@ -1,0 +1,9 @@
+### sol-3-1
+- file: scratchpad/effected/github/internal/octokit.ts:156
+- class: bug   severity: required
+- standard: `standards/effect-first-development.md` EF-3 (decode external data without throwing) and EF-31 (preserve expected failures in the typed channel); D11; §14 verified upstream bug.   evidence: Read-only `bun --eval` probes supplied the complete header triple `x-ratelimit-remaining: "0"`, `x-ratelimit-limit: "5000"`, `x-ratelimit-reset: "9007199254740992"`. REST HTTP 200, pagination HTTP 200, REST HTTP 429 and GraphQL HTTP 429 all returned `exit="Failure", fails=false, dies=true, calls=1`. The pinned oracle’s `readRateLimitHeaders` returns `{ remaining: 0, limit: 5000, resetEpochSeconds: 9007199254740992 }`, and its `RateLimitSnapshot.make` throws `Schema validation failed`. The parser accepts finite integers outside the safe-integer range enforced by the snapshot’s `S.Int` fields. This is distinct from round-2 req-11: retry-delay saturation is present, but snapshot construction still throws before failure classification.
+- failure: Unusable rate-limit metadata turns a successful REST response or pagination page into a defect. On an HTTP failure, `record` defects before `classify` runs, so callers receive neither `GitHubError` nor `GitHubGraphQLError`; typed recovery and retry are bypassed.
+- fix: Replace the unchecked `RateLimitSnapshot.make(parsed)` with nonthrowing schema validation of the complete snapshot. For invalid metadata, leave the previous snapshot unchanged and return `Effect.void`; for valid metadata, update the `Ref`. Add regressions with a complete header triple containing an unsafe integer, asserting that HTTP 200 retains its payload and HTTP 429 retains its typed rate-limit failure.
+
+REQUIRED: 1
+BACKLOG: 0

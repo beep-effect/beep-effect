@@ -3,6 +3,8 @@ import { assertFailure } from "@effect/vitest/utils";
 import * as Result from "effect/Result";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 import { InlineCode, Position, Text } from "../../../effected/markdown/MarkdownNode.ts";
 import { parseInlines } from "../../../effected/markdown/internal/inlineParser.ts";
 import { isGuardExceeded } from "../../../effected/markdown/internal/carriers.ts";
@@ -134,6 +136,50 @@ it.effect("deactivates link openers around active image brackets and pops spent 
     assert.strictEqual(scanner.brackets, undefined);
   });
   assert.deepStrictEqual(nodes, [Text.make({ value: "x", position: position(0, 1) })]);
+}));
+
+it.effect("bounds bracket visits when each link close leaves older image and inactive openers", () => Effect.sync(() => {
+  const dialect = Registry.inlineDialect("commonmark");
+  for (const repetitions of [50, 500, 1_000, 2_000, 4_000]) {
+    const text = Str.repeat(repetitions)("![[[]()");
+    const source = { text, startOffset: 0, segments: [{ textOffset: 0, sourceOffset: 0, length: text.length }] };
+    const expected = parseInlines(source, HashMap.empty(), position);
+    let visits = 0;
+    let deactivating = false;
+    const lookup = vi.spyOn(Registry, "inlineDialect").mockReturnValue({
+      ...dialect,
+      byTrigger: HashMap.map(dialect.byTrigger, (constructs) => A.map(constructs, (construct) => ({
+        ...construct,
+        parse(scanner: InlineScanner) {
+          const deactivate = scanner.deactivateLinkOpeners;
+          scanner.deactivateLinkOpeners = () => {
+            deactivating = true;
+            try { deactivate.call(scanner); } finally { deactivating = false; }
+          };
+          try {
+            const previous = scanner.brackets;
+            const matched = construct.parse(scanner);
+            const bracket = scanner.brackets;
+            if ((construct.name === "linkOpen" || construct.name === "imageOpen") && bracket !== undefined && bracket !== previous) {
+              const image = bracket.image;
+              scanner.brackets = {
+                ...bracket,
+                get image() {
+                  if (deactivating) visits += 1;
+                  return image;
+                },
+              };
+            }
+            return matched;
+          } finally { scanner.deactivateLinkOpeners = deactivate; }
+        },
+      }))),
+    });
+    try {
+      assert.deepStrictEqual(parseInlines(source, HashMap.empty(), position), expected);
+      assert.strictEqual(visits, repetitions, `bracket visits at scale ${repetitions}`);
+    } finally { lookup.mockRestore(); }
+  }
 }));
 
 it.effect("preserves an image reference's non-empty alternative text", () => Effect.sync(() => {

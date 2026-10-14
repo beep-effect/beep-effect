@@ -1,0 +1,262 @@
+{
+  "module": "github-actions",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/github-actions/Artifact.ts",
+        "scratchpad/effected/github-actions/internal/archiveCommands.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/Artifact.test.ts",
+        "scratchpad/test/github-actions/archiveCommands.test.ts"
+      ],
+      "findings": [
+        "r1",
+        "r18"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/github-actions/ActionCache.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/ActionCache.test.ts"
+      ],
+      "findings": [
+        "r2",
+        "r3"
+      ]
+    },
+    {
+      "id": "g3",
+      "files": [
+        "scratchpad/effected/github-actions/ManagedDocument.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/ManagedDocument.test.ts"
+      ],
+      "findings": [
+        "r4",
+        "r6"
+      ]
+    },
+    {
+      "id": "g4",
+      "files": [
+        "scratchpad/effected/github-actions/CacheKey.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/CacheKey.test.ts"
+      ],
+      "findings": [
+        "r5"
+      ]
+    },
+    {
+      "id": "g5",
+      "files": [
+        "scratchpad/effected/github-actions/BlobStore.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/BlobStore.test.ts",
+        "scratchpad/test/github-actions/BlobStore.property.test.ts"
+      ],
+      "findings": [
+        "r7",
+        "r11"
+      ]
+    },
+    {
+      "id": "g6",
+      "files": [
+        "scratchpad/effected/github-actions/CheckDocument.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/CheckDocument.test.ts"
+      ],
+      "findings": [
+        "r8"
+      ]
+    },
+    {
+      "id": "g7",
+      "files": [
+        "scratchpad/effected/github-actions/GitHubMarkdown.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/GitHubMarkdown.test.ts"
+      ],
+      "findings": [
+        "r9",
+        "r10"
+      ]
+    },
+    {
+      "id": "g8",
+      "files": [
+        "scratchpad/effected/github-actions/DryRun.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "r12"
+      ]
+    },
+    {
+      "id": "g9",
+      "files": [
+        "scratchpad/effected/github-actions/PackageManagerInstaller.ts",
+        "scratchpad/effected/github-actions/internal/jwt.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/PackageManagerInstaller.test.ts",
+        "scratchpad/test/github-actions/internal/jwt.coverage.test.ts"
+      ],
+      "findings": [
+        "r13",
+        "r14",
+        "r15",
+        "r17"
+      ]
+    },
+    {
+      "id": "g10",
+      "files": [
+        "scratchpad/effected/github-actions/Secret.ts"
+      ],
+      "tests": [
+        "scratchpad/test/github-actions/Secret.test.ts"
+      ],
+      "findings": [
+        "r16"
+      ]
+    },
+    {
+      "id": "g11",
+      "files": [
+        "scratchpad/effected/github-actions/internal/unstubbed.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "r19"
+      ]
+    }
+  ],
+  "findings": {
+    "r1": {
+      "file": "scratchpad/effected/github-actions/Artifact.ts",
+      "class": "schema",
+      "summary": "Validate finite IDs at finalize and delete response boundaries",
+      "fix": "Decode normalized finalize/delete results with identity-annotated schemas using finite numeric ids and derived result types. Preserve missing-id defaults (upload 0; delete found.id); map invalid supplied ids to the existing malformed ArtifactError policy. Add RPC regressions for not-a-number, Infinity and 1e309 in Artifact.test.ts. Central bookkeeping records the verified upstream bug."
+    },
+    "r2": {
+      "file": "scratchpad/effected/github-actions/ActionCache.ts",
+      "class": "bug",
+      "summary": "Reject line breaks in resolved tar-manifest paths",
+      "fix": "Before writing the manifest or invoking tar/upload, reject resolved paths containing LF or CR with ActionCacheError archiveFailed and an offending-path diagnostic. Add ActionCache.test.ts regression proving no tar/upload runs for a newline-bearing filename; record the verified upstream bug centrally."
+    },
+    "r3": {
+      "file": "scratchpad/effected/github-actions/ActionCache.ts",
+      "class": "perf",
+      "summary": "Remove recursively covered descendants from the tar input manifest",
+      "fix": "Use an ordered prefix pass or path trie to omit paths already covered by a selected real directory that tar recursively archives. Preserve symlink behavior, meaningful ordering, and cache-version hashing of the original literal patterns. Add an archive-member regression in ActionCache.test.ts proving each covered file is stored once. Record the demonstrated upstream bug centrally."
+    },
+    "r4": {
+      "file": "scratchpad/effected/github-actions/ManagedDocument.ts",
+      "class": "bug",
+      "summary": "Propagate the templates trailing-carriage-return refusal as a typed Result failure",
+      "fix": "Add trailingCarriageReturn to the public error-kind schema and prose map, then return ManagedDocumentError through Result.fail without throwing on reason translation. Handle the unreachable unknownCommentStyle invariant separately with the existing RejectedRegionDialectError contract. Add an LF-document/bare-CR regression in ManagedDocument.test.ts and record the propagation centrally."
+    },
+    "r5": {
+      "file": "scratchpad/effected/github-actions/CacheKey.ts",
+      "class": "schema",
+      "summary": "Annotate all reusable cache-key constraint blocks",
+      "fix": "Supply identity-derived identifier, title and description on every named reusable check, including both RestoreDepth built-ins. Preserve pattern, length/range bounds, existing title, and restore-depth message. Retain/update CacheKey.test.ts assertions to cover the metadata without weakening grammar tests; any forced schema-key bookkeeping is central."
+    },
+    "r6": {
+      "file": "scratchpad/effected/github-actions/ManagedDocument.ts",
+      "class": "schema",
+      "summary": "Annotate the reusable managed-region name grammar check",
+      "fix": "Pass identity-derived identifier, title and description as S.isPattern filter annotations. Preserve the pattern and field descriptions; retain/update ManagedDocument.test.ts metadata assertions."
+    },
+    "r7": {
+      "file": "scratchpad/effected/github-actions/BlobStore.ts",
+      "class": "bug",
+      "summary": "Reject object-path dot segments before S3 signing and HTTP execution",
+      "fix": "Reject complete . and .. segments in the joined bucket/prefix/key path with a typed BlobStoreError before signing or sending. Preserve all other raw segments and existing encoding. Add BlobStore.test.ts regressions showing no HTTP execution for those paths; record the verified upstream bug centrally."
+    },
+    "r8": {
+      "file": "scratchpad/effected/github-actions/CheckDocument.ts",
+      "class": "bug",
+      "summary": "Honor non-multiple maxWait debounce deadlines",
+      "fix": "Bound each poll sleep by the remaining maxWait budget and flush when that budget expires, preserving quiet-window behavior and scope finalization. Add the 500ms/750ms TestClock regression in CheckDocument.test.ts; record the verified upstream bug centrally."
+    },
+    "r9": {
+      "file": "scratchpad/effected/github-actions/GitHubMarkdown.ts",
+      "class": "bug",
+      "summary": "Normalize bare carriage returns inside table cells",
+      "fix": "Replace CRLF, CR and LF with <br> using /\\r\\n|\\r|\\n/g. Add direct-table and schema-derived-table bare-CR regressions in GitHubMarkdown.test.ts; record the verified upstream bug centrally."
+    },
+    "r10": {
+      "file": "scratchpad/effected/github-actions/GitHubMarkdown.ts",
+      "class": "bug",
+      "summary": "Escape unmatched link-label brackets while preserving supported inline Markdown",
+      "fix": "Apply bracket-aware escaping to unmatched, unescaped brackets before constructing the passthrough node, preserving supported inline Markdown. Add parser-backed regressions in GitHubMarkdown.test.ts showing the whole label belongs to one link; record the verified upstream bug centrally."
+    },
+    "r11": {
+      "file": "scratchpad/effected/github-actions/BlobStore.ts",
+      "class": "schema",
+      "summary": "Give S3Config an executable schema source of truth",
+      "fix": "Define an identity-annotated S3Config schema and derive its same-name type, preserving all field types and explicit-undefined optional semantics. Keep constructor behavior. Add a focused new-schema round-trip property in BlobStore.property.test.ts; added-export/deviation bookkeeping is central, not a module-group README/ledger edit."
+    },
+    "r12": {
+      "file": "scratchpad/effected/github-actions/DryRun.ts",
+      "class": "effect-idiom",
+      "summary": "Use Bool.match for the dry-run orchestration decision",
+      "fix": "Import effect/Boolean as Bool and use Bool.match with lazy branches, preserving logging, fallback and the original disabled effect. Retain DryRun.test.ts behavior assertions; no test rewrite is required."
+    },
+    "r13": {
+      "file": "scratchpad/effected/github-actions/PackageManagerInstaller.ts",
+      "class": "bug",
+      "summary": "Keep complete shim targets literal in POSIX and Windows scripts",
+      "fix": "Encode the entire resolved POSIX target as a single-quoted literal with embedded single-quote escaping in both node-script and executable branches, retaining \"$@\". On Windows encode safely or reject unsupported quote/expansion/control bytes in the complete target with layoutUnexpected before any shim write, including cache-root components; do not blanket-reject Windows path separators. Add target/cache-root metacharacter regressions in PackageManagerInstaller.test.ts, preserving ordinary shim semantics. Record the verified upstream bug centrally."
+    },
+    "r14": {
+      "file": "scratchpad/effected/github-actions/PackageManagerInstaller.ts",
+      "class": "bug",
+      "summary": "Reject Windows device names before writing installer shims",
+      "fix": "When windows is true, reject reserved device stems before the first dot, case-insensitively, through layoutUnexpected before any shim write. Preserve current containment checks and POSIX accepted names. Add a Windows-only regression beside the escaping-bin cases in PackageManagerInstaller.test.ts; record the verified upstream bug centrally."
+    },
+    "r15": {
+      "file": "scratchpad/effected/github-actions/PackageManagerInstaller.ts",
+      "class": "bug",
+      "summary": "Preserve own __proto__ bin-map entries",
+      "fix": "Use R.assignProperty or R.fromEntries to construct the bin record, preserving string-value and empty-map validation. Add a JSON own-__proto__ plus normal-bin regression in PackageManagerInstaller.test.ts; record the verified upstream bug centrally."
+    },
+    "r16": {
+      "file": "scratchpad/effected/github-actions/Secret.ts",
+      "class": "bug",
+      "summary": "Preserve own __proto__ keys when handing off child secrets",
+      "fix": "Use R.assignProperty(declassified, name, plaintext), preserving the plain-record representation and masking order. Add the own-key regression in Secret.test.ts and record the verified upstream bug centrally."
+    },
+    "r17": {
+      "file": "scratchpad/effected/github-actions/PackageManagerInstaller.ts",
+      "class": "effect-idiom",
+      "summary": "Remove throw-to-catch JSON codec control flow and redundant identity unwraps",
+      "fix": "Use S.decodeEffect(Json) plus Effect.mapError for installer JSON boundaries with existing subjects/reasons/SchemaError causes. Map the JWT decodeResult failure directly to JwtPayloadFailure without throwing, preserving segment/base64url behavior and cause identity. Use Result.getOrThrow for unsignedJwt's intentionally throwing fixture encoder. Add/retain malformed-input regressions in PackageManagerInstaller.test.ts and internal/jwt.coverage.test.ts. Keep codecs and guarded unknown reads; their forced deviation record belongs centrally."
+    },
+    "r18": {
+      "file": "scratchpad/effected/github-actions/internal/archiveCommands.ts",
+      "class": "bug",
+      "summary": "Terminate POSIX zip options before supplying filenames",
+      "fix": "Insert -- between destination and files in the POSIX argv. Update archiveCommands.test.ts command-shape assertions and add a leading-dash-path regression; preserve the Windows branch. Record the verified upstream bug centrally."
+    },
+    "r19": {
+      "file": "scratchpad/effected/github-actions/internal/unstubbed.ts",
+      "class": "effect-idiom",
+      "summary": "Construct unstubbed defects directly with Effect.die",
+      "fix": "Return Effect.die(UnstubbedMemberError.make({ message })) with the exact existing message and defect value. Retain callers' defect assertions; no upstream restore or module-local bookkeeping edit is needed."
+    }
+  }
+}

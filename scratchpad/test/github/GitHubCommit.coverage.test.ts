@@ -1,6 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { CommitComparison, CommitSummary, GitHubCommit } from "../../effected/github/GitHubCommit.ts";
 import { Repo, RepoRef } from "../../effected/github/Repo.ts";
@@ -11,6 +13,54 @@ const comparison = CommitComparison.make({ status: "identical", aheadBy: 0, behi
 const raw = (extra: Record<string, unknown> = {}) => ({
   sha: "c", html_url: "u", commit: { message: "" }, parents: [], ...extra,
 });
+
+for (const [name, invalid] of [
+  ["message", raw({ commit: { message: 42 } })],
+  ["login", raw({ author: { login: null } })],
+  ["missing commit", { sha: "c", html_url: "u", parents: [] }],
+  ["null commit", raw({ commit: null })],
+  ["parent sha", raw({ parents: [{ sha: null }] })],
+] as const) {
+  const { base } = harness([
+    { status: 200, body: invalid },
+    { status: 200, body: [raw(), invalid] },
+    { status: 200, body: { status: "ahead", ahead_by: 1, behind_by: 0, commits: [raw(), invalid] } },
+  ]);
+  it.layer(GitHubCommit.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
+    it.effect(`returns typed get/list/compare decode failures for invalid ${name}`, () => Effect.gen(function* () {
+      const service = yield* GitHubCommit;
+      assertFailure(Result.mapError(yield* Effect.result(service.get("c")), (error) => ({
+        tag: error._tag, kind: error.kind, operation: error.operation,
+      })), { tag: "GitHubError", kind: "decode", operation: "GitHubCommit.get" });
+      assertFailure(Result.mapError(yield* Effect.result(service.list()), (error) => ({
+        tag: error._tag, kind: error.kind, operation: error.operation,
+      })), { tag: "GitHubError", kind: "decode", operation: "GitHubCommit.list" });
+      assertFailure(Result.mapError(yield* Effect.result(service.compare("a", "b")), (error) => ({
+        tag: error._tag, kind: error.kind, operation: error.operation,
+      })), { tag: "GitHubError", kind: "decode", operation: "GitHubCommit.compare" });
+    }));
+  });
+}
+
+for (const [field, value] of [
+  ["status", "unknown"],
+  ["ahead_by", 1.5],
+  ["behind_by", 1.5],
+  ["commits", null],
+  ["files", [null]],
+] as const) {
+  const { base } = harness([{ status: 200, body: {
+    status: "identical", ahead_by: 0, behind_by: 0, commits: [], [field]: value,
+  } }]);
+  it.layer(GitHubCommit.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
+    it.effect(`returns a typed comparison decode failure for invalid ${field}`, () => Effect.gen(function* () {
+      const service = yield* GitHubCommit;
+      assertFailure(Result.mapError(yield* Effect.result(service.compare("a", "b")), (error) => ({
+        tag: error._tag, kind: error.kind, operation: error.operation,
+      })), { tag: "GitHubError", kind: "decode", operation: "GitHubCommit.compare" });
+    }));
+  });
+}
 
 describe("GitHubCommit coverage", () => {
   for (const { name, message, subject } of [

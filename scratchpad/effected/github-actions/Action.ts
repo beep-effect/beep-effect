@@ -1,5 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { WorkflowCommand } from "../github-commands/index.ts";
+import * as Bool from "effect/Boolean";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
@@ -169,9 +170,10 @@ const withStepDebugLogLevel = Effect.fn("withStepDebugLogLevel")(function* <A, E
 		const env = yield* ActionEnvironment;
 		const stepDebug = yield* env.isDebug;
 		const minimum = yield* References.MinimumLogLevel;
-		return yield* stepDebug && LogLevel.isGreaterThan(minimum, "Debug")
-			? Effect.provideService(program, References.MinimumLogLevel, "Debug")
-			: program;
+		return yield* Bool.match(stepDebug && LogLevel.isGreaterThan(minimum, "Debug"), {
+			onFalse: () => program,
+			onTrue: () => Effect.provideService(program, References.MinimumLogLevel, "Debug"),
+		});
 	});
 
 /**
@@ -347,19 +349,20 @@ export class Action {
 		).pipe(
 			Effect.exit,
 			Effect.flatMap((exit) =>
-				Exit.isSuccess(exit)
-					? Effect.void
-					: Effect.gen(function* () {
-							// Written with the workflow-command renderer rather than through
-							// the `Logger`, because this runs after the program — and after
-							// whatever went wrong with it.
-							const detail = Cause.pretty(exit.cause);
-							if (detail.trim() !== "") {
-								yield* Console.log(WorkflowCommand.render("debug", {}, detail));
-							}
-							yield* Console.log(WorkflowCommand.render("error", {}, `Action failed: ${describeCause(exit.cause)}`));
-							process.exitCode = 1;
-						}),
+				Exit.match(exit, {
+					onSuccess: () => Effect.void,
+					onFailure: Effect.fn("Action.run.onFailure")(function* (cause) {
+						// Written with the workflow-command renderer rather than through
+						// the `Logger`, because this runs after the program — and after
+						// whatever went wrong with it.
+						const detail = Cause.pretty(cause);
+						if (detail.trim() !== "") {
+							yield* Console.log(WorkflowCommand.render("debug", {}, detail));
+						}
+						yield* Console.log(WorkflowCommand.render("error", {}, `Action failed: ${describeCause(cause)}`));
+						process.exitCode = 1;
+					}),
+				}),
 			),
 		);
 

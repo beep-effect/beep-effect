@@ -115,7 +115,7 @@ const PNPMFILE_CANDIDATES = ["pnpmfile.mjs", "pnpmfile.cjs", "pnpmfile.js"] as c
 const declaredVersionOf = (spec: string): string => splitConfigDependencySpec(spec).version;
 
 /**
- * Whether a config-dependency `name` carries a `..` path segment. A scoped name
+ * Whether a config-dependency name or version carries a `..` path segment. A scoped name
  * legitimately contains `/` (`@scope/pkg`), so only a `..` *segment* is rejected —
  * it would traverse out of `.pnpm-config` and feed an attacker-chosen path to the
  * dynamic `import()`.
@@ -125,7 +125,7 @@ const hasTraversalSegment = (name: string): boolean => name.split(/[/\\]/).inclu
 /** A declared `(name, version)` pair, validated, with the spec it came from. */
 const DeclaredEntry = S.Struct({
 	name: S.String.pipe($I.annoteKey("DeclaredEntry.name", { description: "The declared config dependency name, checked for traversal by the ladder." })),
-	version: S.String.pipe($I.annoteKey("DeclaredEntry.version", { description: "The unvalidated version text before the first plus sign." })),
+	version: S.String.pipe($I.annoteKey("DeclaredEntry.version", { description: "The version text before the first plus sign, checked for traversal by the ladder." })),
 	/** The declared spec verbatim; the fetch rung reads its inline integrity. */
 	spec: S.String.pipe($I.annoteKey("DeclaredEntry.spec", { description: "The complete declared spec, retained for fetch integrity verification." })),
 }).pipe($I.annoteSchema("DeclaredEntry", { description: "A plain declared config dependency in declaration order, without strict spec validation." }));
@@ -135,7 +135,7 @@ type DeclaredEntry = typeof DeclaredEntry.Type;
 
 /**
  * The declared `(name, version)` pairs of a `configDependencies` map, in
- * declaration order, with EVERY name validated before any path is built from
+ * declaration order, with EVERY name and version validated before any path is built from
  * one: a `..` segment fails typed. Shared by both resolvers so the refusal and
  * the version split cannot drift between them.
  */
@@ -147,13 +147,15 @@ const declaredEntries = (
 		version: declaredVersionOf(spec),
 		spec,
 	}));
-	const traversal = entries.find((entry) => hasTraversalSegment(entry.name));
+	const traversal = entries.find((entry) => hasTraversalSegment(entry.name) || hasTraversalSegment(entry.version));
 	return traversal === undefined
 		? Effect.succeed(entries)
 		: Effect.fail(
 				hooksError(
 					traversal.name,
-					ConfigDependencyResolutionError.make({ message: `config dependency name has a '..' path segment: ${traversal.name}` }),
+					ConfigDependencyResolutionError.make({ message: hasTraversalSegment(traversal.name)
+						? `config dependency name has a '..' path segment: ${traversal.name}`
+						: `config dependency version has a '..' path segment: ${traversal.version}` }),
 					undefined,
 				),
 			);
@@ -486,7 +488,7 @@ export interface ResolveOptions {
  * Resolve every declared config dependency at its declared version, in
  * declaration order. A dependency that ships no pnpmfile is still returned
  * (resolved, `path` undefined — the one legitimate skip at replay time); a
- * `..` segment in a name, an unresolvable declared version, or any
+ * `..` segment in a name or version, an unresolvable declared version, or any
  * non-absent IO failure fails typed as a `hooks`-source
  * `CatalogAssemblyError`. `options.fetch`, when wired, is tried for a version
  * found nowhere before that fails.

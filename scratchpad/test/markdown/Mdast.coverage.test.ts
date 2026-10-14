@@ -1,6 +1,9 @@
 import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess, assertExitSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import { Markdown, MarkdownParseOptions } from "../../effected/markdown/Markdown.ts";
 import { Code, Root } from "../../effected/markdown/MarkdownNode.ts";
 import { Mdast, MdastDecodeError } from "../../effected/markdown/Mdast.ts";
@@ -11,7 +14,45 @@ const ProjectedDefaults = S.Struct({ children: S.Tuple([S.Struct({ children: S.T
 
 const element = (attributes: ReadonlyArray<unknown>) => ({ type: "root", children: [{ type: "mdxJsxFlowElement", name: "Box", attributes, children: [] }] });
 
+const foreignTree = (maxDepth: number) => {
+  let child: unknown = { type: "paragraph", children: [{ type: "text", value: "deep" }] };
+  for (let depth = 2; depth < maxDepth; depth++) {
+    child = { type: "blockquote", children: [child] };
+  }
+  return { type: "root", children: [child] };
+};
+
+const depthError = MdastDecodeError.make({
+  issue: new SchemaIssue.InvalidValue(
+    { message: "Foreign mdast depth exceeds the admission limit of 512." },
+    { depth: 513, maxDepth: 512 },
+    { reportInput: true },
+  ),
+});
+
 describe("Mdast boundary coverage", () => {
+  it("rejects deep acyclic input as a structured Result failure", () => {
+    assertFailure(Mdast.fromMdastResult(foreignTree(16_000)), depthError);
+    assertFailure(Mdast.fromMdastResult(foreignTree(513)), depthError);
+  });
+  it.effect("rejects deep acyclic input through the Effect failure channel", () => Effect.gen(function* () {
+    for (const depth of [16_000, 513]) {
+      assertExitSuccess(yield* Effect.exit(Mdast.fromMdast(foreignTree(depth)).pipe(Effect.flip)), depthError);
+    }
+  }));
+  it.effect("admits shared trees beyond the visitor limit up to the admission budget", () => Effect.gen(function* () {
+    for (const depth of [300, 512]) {
+      const input = foreignTree(depth);
+      const sharedInput = { ...input, children: [input.children[0], input.children[0]] };
+      const result = Mdast.fromMdastResult(sharedInput);
+      assertSuccess(result, Result.getOrThrow(result));
+      const decoded = yield* Mdast.fromMdast(sharedInput);
+      assert.deepStrictEqual(decoded, result.success);
+      assert.strictEqual(decoded.children.length, 2);
+      const projected = Mdast.toMdast(decoded);
+      assert.deepStrictEqual(Mdast.toMdast(yield* Mdast.fromMdast(projected)), projected);
+    }
+  }));
   it.effect("reports a stable message with the structured issue", () => Effect.gen(function* () {
     const error = yield* Effect.flip(Mdast.fromMdast({ type: "root", children: [{ type: "text", value: 1 }] }));
     assert.strictEqual(error.message, "mdast input failed to decode into markdown nodes");

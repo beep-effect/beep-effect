@@ -19,7 +19,7 @@ import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
 import { preprocessLines } from "./internal/preprocess.ts";
 import { normalizeLabelText } from "./internal/references.ts";
 import type { MarkdownParseError, MarkdownParseOptions } from "./Markdown.ts";
-import { parsePassResult } from "./Markdown.ts";
+import { MarkdownDialect, parsePassResult } from "./Markdown.ts";
 import { MarkdownDiagnostic } from "./MarkdownDiagnostic.ts";
 import { MarkdownRange } from "./MarkdownEdit.ts";
 import type {
@@ -558,6 +558,7 @@ const phrasingText = (nodes: ReadonlyArray<PhrasingContent>): string => {
  */
 export class MarkdownDocument extends S.Class<MarkdownDocument>($I`MarkdownDocument`)({
 	source: S.String.annotateKey({ description: "Original markdown text retained so tree positions and surgical edits refer to the exact parsed source" }),
+	dialect: MarkdownDialect.pipe(S.withDecodingDefault(Effect.succeed<MarkdownDialect>("gfm")), S.withConstructorDefault(Effect.succeed<MarkdownDialect>("gfm"))).annotateKey({ description: "Resolved grammar used for parsing and contextual modification checks; defaults to gfm" }),
 	root: Root.annotateKey({ description: "Parsed mdast-shaped document tree carrying source positions and fidelity details" }),
 	diagnostics: S.Array(MarkdownDiagnostic).annotateKey({ description: "Non-fatal conditions reported during parsing; currently empty for every accepted document" }),
 	definitions: S.HashMap(S.String, Definition).annotateKey({ description: "Link-reference definitions indexed by normalized, case-folded label, with the first definition winning and nodes retained in the tree" }),
@@ -1002,6 +1003,7 @@ export class MarkdownDocument extends S.Class<MarkdownDocument>($I`MarkdownDocum
 		return Result.map(parsePassResult(text, options), (pass) =>
 			MarkdownDocument.make({
 				source: text,
+				dialect: options?.dialect ?? "gfm",
 				root: pass.root,
 				diagnostics: [],
 				definitions: pass.refmap,

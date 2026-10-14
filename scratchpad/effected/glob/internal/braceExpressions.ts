@@ -32,7 +32,7 @@ const $I = $ScratchpadId.create("effected/glob/internal/braceExpressions");
  * @category errors
  * @since 0.0.0
  */
-export class BraceExpressionError extends S.TaggedError<BraceExpressionError>($I`BraceExpressionError`)("BraceExpressionError", {
+export class BraceExpressionError extends S.TaggedError<BraceExpressionError, { readonly brand: unique symbol }>($I`BraceExpressionError`)("BraceExpressionError", {
 	message: S.String.annotateKey({ description: "Explains why character-class parsing was called outside a brace expression." }),
 }, $I.annote("BraceExpressionError", {
 	title: "Invalid brace-expression parser invocation",

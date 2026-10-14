@@ -1,0 +1,17 @@
+<!-- seat: grok-4.7 medium (third seat; Fable and cursor Opus quota exhausted, 2026-10-09) -->
+I'll review those twelve github-actions files read-only against the pinned upstream oracle, the round-1 inventory, and the port ledger, and report only new findings.Round 1 already closed a large inventory. I'll read the twelve files, their port notes, and the pinned oracle so I only report what is still open.The leading-zero run-id path is still unproven at runtime. I am re-reading the compare function, the filter sites, and the severity rules, then I will confirm the numeric fall-through from source.### fable-2-1
+- file: scratchpad/effected/github-actions/CacheKey.ts:161
+- class: schema   severity: required
+- standard: standards/effect-laws-v1.md law 18 and standards/effect-first-development.md EF-12c (a reusable `S.makeFilter` or reusable built-in check carries `identifier`, `title`, and `description`). Round-1 r18 is the same miss on this grammar, and the source is unchanged. `S.isPattern` (`Schema.ts:6882`), `S.isInt` (`Schema.ts:7903`), and `S.isBetween` (`Schema.ts:7810`) all take those filter annotations. `DecimalRunId` in `CheckDocument.ts:226` and `ProcessId` in `DetachedProcess.ts:348` already pass them. The green tsgo, oxlint, and four-law gates do not reject these call sites: `CacheKey.test.ts:607` only asserts the segment pattern string.
+- failure: The exported cache-key grammar still decodes through anonymous checks. `Segment` (`CacheKey.ts:161`) calls `S.isPattern` with no annotations. `Segments` (`CacheKey.ts:163`) passes only `title`. `RestoreDepth` (`CacheKey.ts:174`) calls `S.isInt()` and `S.isBetween(...)` with no annotations. The cross-field restore-depth filter (`CacheKey.ts:230`) passes no annotations object. Those constraints stay unnamed in issue trees and JSON Schema.
+- fix: Pass `identifier`, `title`, and `description` on all four checks, using `$I.annote` or a plain filter annotation as `DecimalRunId` does. Keep the existing length title, the restore-depth failure string, and the pattern and range bounds.
+
+### fable-2-2
+- file: scratchpad/effected/github-actions/ManagedDocument.ts:44
+- class: schema   severity: required
+- standard: standards/effect-laws-v1.md law 18 and standards/effect-first-development.md EF-12c. `NamePart` is the named pattern reused by `namespace` (`ManagedDocument.ts:262`) and `key` (`ManagedDocument.ts:268`). `S.isPattern` accepts `Annotations.Filter` (`Schema.ts:6882`). The field `annotateKey` descriptions do not annotate the check. `ManagedDocument.test.ts:306` asserts only the exported pattern, so the green gates miss the omitted filter metadata. This site was not in round 1.
+- failure: A namespace or key that fails `^[A-Za-z0-9][A-Za-z0-9_-]*$` is reported as an anonymous pattern filter. The shared name-part grammar has no `identifier`, `title`, or `description` in the issue tree.
+- fix: Pass `identifier`, `title`, and `description` as the second argument of that `S.isPattern` call. Leave the pattern and the field descriptions as they are.
+
+REQUIRED: 2
+BACKLOG: 0

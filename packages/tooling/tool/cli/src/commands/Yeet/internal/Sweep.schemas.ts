@@ -134,6 +134,13 @@ export class SweepPrecondition extends S.Class<SweepPrecondition>($I`SweepPrecon
 /**
  * One planned sweep step with the action it would take and the facts behind it.
  *
+ * **Details**
+ *
+ * `alreadyDone` records an observation that the step's end state already
+ * holds, such as a branch deletion whose branch is already gone. Such a step
+ * carries no preconditions and never runs its action; the report records it
+ * as skipped with that observation as the reason, rather than as blocked.
+ *
  * **Example** (Plan the local branch deletion)
  *
  * ```ts
@@ -157,9 +164,11 @@ export class SweepPlanStep extends S.Class<SweepPlanStep>($I`SweepPlanStep`)(
     action: S.NonEmptyString,
     preconditions: S.Array(SweepPrecondition),
     requiresOperator: S.Boolean,
+    alreadyDone: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SweepPlanStep", {
-    description: "One planned sweep step with its action, observed preconditions, and operator requirement.",
+    description:
+      "One planned sweep step with its action, observed preconditions, operator requirement, and an optional observation that its end state already holds.",
   })
 ) {}
 

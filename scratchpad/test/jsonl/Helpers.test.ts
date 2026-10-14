@@ -87,6 +87,39 @@ const shortReads = (fs: FileSystem.FileSystem, limit: number): FileSystem.FileSy
 });
 
 describe("bounded short reads", () => {
+  it.effect("reports the actual byte end of a newline-aligned short range", () =>
+    Effect.gen(function* () {
+      const fs = yield* MemoryFileSystem.make;
+      yield* fs.writeFileString("/journal", "42\n");
+      const short = shortReads(fs, 1);
+      const window = yield* readRangeWindow(short, "/journal", 0, 100, 0);
+      assert.strictEqual(window.text, "42\n");
+      assert.strictEqual(window.start, 0);
+      assert.strictEqual(window.size, 3);
+      assert.isTrue(window.atFileStart);
+      const eof = yield* readRangeWindow(short, "/journal", 3, 100, 0);
+      assert.strictEqual(eof.text, "");
+      assert.strictEqual(eof.start, 3);
+      assert.strictEqual(eof.size, 3);
+    })
+  );
+  it.effect("reports BOM-relative byte ends for short ranges at the start and later offsets", () =>
+    Effect.gen(function* () {
+      const fs = yield* MemoryFileSystem.make;
+      yield* fs.writeFileString("/journal", "\ufeff42\né😀\n");
+      const short = shortReads(fs, 1);
+      const window = yield* readRangeWindow(short, "/journal", 3, 100, 3);
+      assert.strictEqual(window.text, "42\né😀\n");
+      assert.strictEqual(window.start, 0);
+      assert.strictEqual(window.size, 10);
+      assert.isTrue(window.atFileStart);
+      const later = yield* readRangeWindow(short, "/journal", 6, 100, 3);
+      assert.strictEqual(later.text, "é😀\n");
+      assert.strictEqual(later.start, 3);
+      assert.strictEqual(later.size, 10);
+      assert.isFalse(later.atFileStart);
+    })
+  );
   it.effect("aggregates split BOM and Unicode before tail decoding", () =>
     Effect.gen(function* () {
       const fs = yield* MemoryFileSystem.make;

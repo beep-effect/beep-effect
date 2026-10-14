@@ -1,0 +1,41 @@
+{
+  "module": "walker",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/walker/Walker.ts"
+      ],
+      "tests": [
+        "scratchpad/test/walker/Walker.test.ts"
+      ],
+      "findings": [
+        "req-1"
+      ]
+    },
+    {
+      "id": "g2",
+      "files": [
+        "scratchpad/effected/walker/Descend.ts"
+      ],
+      "tests": [],
+      "findings": [
+        "req-2"
+      ]
+    }
+  ],
+  "findings": {
+    "req-1": {
+      "file": "scratchpad/effected/walker/Walker.ts",
+      "class": "bug",
+      "summary": "A.flatMap passes its numeric index into the public candidatesFor callback, changing upstream unary invocation and candidate selection.",
+      "fix": "Use A.flatMap(dirs, (dir) => candidatesFor(dir)). In scratchpad/test/walker/Walker.test.ts add a type-correct rest-parameter callback regression asserting exactly one directory argument per invocation, upstream probe order, and the selected file. Preserve directory-major ordering and existing oracle assertions."
+    },
+    "req-2": {
+      "file": "scratchpad/effected/walker/Descend.ts",
+      "class": "law",
+      "summary": "The unforced S3 array-iteration worklist and throwing ancestor lookup remain despite round-2 req-8; history confirms neither was diagnostic- or law-forced.",
+      "fix": "Restore the upstream head-index loop, frames[head] lookup, undefined-frame break and queue comment. Restore frame.ancestors[frame.ancestors.length - 1] ?? frame.absolute and remove the added justification for the throwing lookup. Preserve forced schema, tagged-error, Option probe, sorting, collection and non-freezing changes. Restore upstream test lines rewritten specifically for these changes if any; the inspected S3 Descend.test.ts diff is empty, so no test edit is required. Do not weaken tests, add coverage-ignore comments, substitute another structural refactor or ledger an accepted deviation; defer coverage-policy conflicts to S3."
+    }
+  }
+}

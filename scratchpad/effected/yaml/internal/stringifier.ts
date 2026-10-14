@@ -1468,6 +1468,14 @@ function pushExplicitKeyValueLines(
 		return colonIdx;
 	}
 	if (valLines.length === 1) {
+		// A one-pair block map needs its own indented line: compact `: k: v`
+		// is flattened into two pairs by the composer after an explicit key.
+		if (isYamlMap(valNode) && valNode.items.length > 0 &&
+			(ctx.forceDefaultStyles ? ctx.defaultCollectionStyle : valNode.style) === "block") {
+			const colonIdx = lines.length;
+			lines.push(":", `${pad}${A.getUnsafe(valLines, 0)}`);
+			return colonIdx;
+		}
 		lines.push(`: ${valLines[0]}`);
 		return lines.length - 1;
 	}
@@ -1545,49 +1553,55 @@ function stringifyMapNodeLines(node: YamlMap, ctx: StringifyContext, depth: numb
 	if (style === "flow") {
 		const flowPrefix = buildMetadataPrefix(node.tag, node.anchor);
 		const flowCtx: StringifyContext = { ...ctx, inFlow: true };
-		// Mirrors `rendersAcrossLines`: inner comments force the layout, and so
-		// does a terminal run that was written INSIDE the braces. A trailing
-		// comment written after the closing brace does not — it renders past
-		// the closer and the entry keeps its single line.
+		const emitComments = !ctx.forceDefaultStyles;
+		const rendered = A.map(items, (pair) => {
+			const keyLines = stringifyMappingKeyLines(pair.key, flowCtx, depth + 1);
+			const valLines = pair.value !== null ? stringifyNodeLines(pair.value, flowCtx, depth + 1) : ["null"];
+			const keyIsAnchoredOrTaggedEmpty =
+				isYamlScalar(pair.key) &&
+				pair.key.length === 0 &&
+				(pair.key.value === null || pair.key.value === undefined || pair.key.value === "") &&
+				(pair.key.anchor !== undefined || pair.key.tag !== undefined);
+			const sep = isYamlAlias(pair.key) || keyIsAnchoredOrTaggedEmpty ? " :" : ":";
+			const lines = Str.split(`${A.join(keyLines, "\n")}${sep} ${A.join(valLines, "\n")}`, "\n");
+			return { pair, lines,
+				leading: emitComments ? pairLeading(pair) : undefined,
+				trailing: emitComments ? (pair.key.comment ?? pairTrailing(pair)) : undefined,
+			};
+		});
 		const flowHasComments =
-			!ctx.forceDefaultStyles &&
-			(items.some(
+			emitComments &&
+			(A.some(items,
 				(p) => pairLeading(p) !== undefined || pairTrailing(p) !== undefined || pairSpaceBefore(p) === true,
 			) ||
 				(node.comment !== undefined && node.sourceMultiline === true));
-		if (flowHasComments) {
-			// Comment-carrying flow mapping: one entry per line (multi-line
-			// flow layout), so a `#` comment cannot swallow the closing brace.
+		if (flowHasComments || A.some(rendered, ({ lines }) => lines.length > 1)) {
 			const flowPad = " ".repeat(ctx.indent);
 			const flowLines: string[] = [flowPrefix !== undefined && flowPrefix !== "" ? `${flowPrefix} {` : "{"];
-			for (const [fi, pair] of items.entries()) {
-				if (pairSpaceBefore(pair) === true) flowLines.push("");
-				const flowLeading = pairLeading(pair);
+			for (let fi = 0; fi < rendered.length; fi++) {
+				const entry = A.getUnsafe(rendered, fi);
+				const { pair, lines } = entry;
+				if (emitComments && pairSpaceBefore(pair) === true) flowLines.push("");
+				const flowLeading = entry.leading;
 				if (flowLeading !== undefined) {
-					// An embedded blank line (`""`) stays unpadded — padding it
-					// would emit a whitespace-only line.
 					for (const cl of commentBlockLines(flowLeading)) flowLines.push(cl === "" ? "" : `${flowPad}${cl}`);
 				}
-				const keyStr =
-					stringifyMappingKeyLines(pair.key, flowCtx, depth + 1).join(" ");
-				const valStr = pair.value !== null ? stringifyNodeLines(pair.value, flowCtx, depth + 1).join(" ") : "null";
 				const comma = fi < items.length - 1 ? "," : "";
-				const flowTrailing = pairTrailing(pair);
+				const flowTrailing = entry.trailing;
 				const trailing = flowTrailing !== undefined ? renderTrailingComment(flowTrailing) : "";
-				flowLines.push(`${flowPad}${keyStr}: ${valStr}${comma}${trailing}`);
+				for (let li = 0; li < lines.length; li++) {
+					const line = A.getUnsafe(lines, li);
+					const suffix = li === lines.length - 1 ? `${comma}${trailing}` : "";
+					flowLines.push(line === "" ? "" : `${flowPad}${line}${suffix}`);
+				}
 			}
-			if (node.comment !== undefined) {
+			if (emitComments && !ctx.inFlow && node.comment !== undefined) {
 				for (const cl of commentBlockLines(node.comment)) flowLines.push(cl === "" ? "" : `${flowPad}${cl}`);
 			}
 			flowLines.push("}");
 			return flowLines;
 		}
-		const pairs = items.map((pair) => {
-			const keyStr = stringifyMappingKeyLines(pair.key, flowCtx, depth + 1).join(" ");
-			const valStr = pair.value !== null ? stringifyNodeLines(pair.value, flowCtx, depth + 1).join(" ") : "null";
-			return `${keyStr}: ${valStr}`;
-		});
-		let line = `{${pairs.join(", ")}}`;
+		let line = `{${A.join(A.map(rendered, ({ lines }) => A.join(lines, "")), ", ")}}`;
 		if (flowPrefix !== undefined && flowPrefix !== "") line = `${flowPrefix} ${line}`;
 		return [line];
 	}
@@ -1940,40 +1954,37 @@ function stringifySeqNodeLines(node: YamlSeq, ctx: StringifyContext, depth: numb
 	if (style === "flow") {
 		const flowPrefix = buildMetadataPrefix(node.tag, node.anchor);
 		const flowCtx: StringifyContext = { ...ctx, inFlow: true };
-		// Mirrors `rendersAcrossLines`: inner comments force the layout, and so
-		// does a terminal run that was written INSIDE the brackets. A trailing
-		// comment written after the closing bracket does not — it renders past
-		// the closer and the entry keeps its single line.
+		const rendered = A.map(items, (item) => stringifyNodeLines(item, flowCtx, depth + 1));
 		const flowHasComments =
 			emitComments &&
-			(items.some((it) => itemFields(it) !== undefined) ||
+			(A.some(items, (item) => itemFields(item) !== undefined) ||
 				(node.comment !== undefined && node.sourceMultiline === true));
-		if (flowHasComments) {
-			// Comment-carrying flow sequence: one entry per line (multi-line
-			// flow layout), so a `#` comment cannot swallow the closing bracket.
+		if (flowHasComments || A.some(rendered, (lines) => lines.length > 1)) {
 			const flowPad = " ".repeat(ctx.indent);
 			const flowLines: string[] = [flowPrefix !== undefined && flowPrefix !== "" ? `${flowPrefix} [` : "["];
-			for (const [fi, item] of items.entries()) {
+			for (let fi = 0; fi < items.length; fi++) {
+				const item = A.getUnsafe(items, fi);
 				const fields = itemFields(item);
 				if (fields?.spaceBefore === true) flowLines.push("");
 				if (fields?.commentBefore !== undefined) {
-					// An embedded blank line (`""`) stays unpadded — padding it
-					// would emit a whitespace-only line.
 					for (const cl of commentBlockLines(fields.commentBefore)) flowLines.push(cl === "" ? "" : `${flowPad}${cl}`);
 				}
-				const itemStr = stringifyNodeLines(item, flowCtx, depth + 1).join(" ");
+				const itemLines = A.getUnsafe(rendered, fi);
 				const comma = fi < items.length - 1 ? "," : "";
 				const trailing = fields?.comment !== undefined ? renderTrailingComment(fields.comment) : "";
-				flowLines.push(`${flowPad}${itemStr}${comma}${trailing}`);
+				for (let li = 0; li < itemLines.length; li++) {
+					const line = A.getUnsafe(itemLines, li);
+					const suffix = li === itemLines.length - 1 ? `${comma}${trailing}` : "";
+					flowLines.push(line === "" ? "" : `${flowPad}${line}${suffix}`);
+				}
 			}
-			if (node.comment !== undefined) {
+			if (emitComments && !ctx.inFlow && node.comment !== undefined) {
 				for (const cl of commentBlockLines(node.comment)) flowLines.push(cl === "" ? "" : `${flowPad}${cl}`);
 			}
 			flowLines.push("]");
 			return flowLines;
 		}
-		const parts = items.map((item) => stringifyNodeLines(item, flowCtx, depth + 1).join(" "));
-		let line = `[${parts.join(", ")}]`;
+		let line = `[${A.join(A.map(rendered, (lines) => A.join(lines, "")), ", ")}]`;
 		if (flowPrefix !== undefined && flowPrefix !== "") line = `${flowPrefix} ${line}`;
 		return [line];
 	}
@@ -2125,7 +2136,8 @@ export function stringifyDocument(doc: RawYamlDocument, ...[options]: [options?:
 			// Bare ... (no doc-start, no content) produces empty output.
 			if (doc.hasDocumentStart) {
 				const docEnd = doc.hasDocumentEnd ? "...\n" : "";
-				return `---\n${docEnd}`;
+				const out = `---\n${docEnd}`;
+				return finalNewline ? out : Str.replace(/\n$/, "")(out);
 			}
 			return "";
 		}

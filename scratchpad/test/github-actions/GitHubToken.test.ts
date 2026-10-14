@@ -17,6 +17,7 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import { TestClock } from "effect/testing";
+import { ProvisionOptions, ReadOptions } from "../../effected/github-actions/GitHubToken.ts";
 import {
   ActionOutputs,
   ActionState,
@@ -26,6 +27,35 @@ import {
 } from "../../effected/github-actions/index.ts";
 
 const Json = S.fromJsonString(S.Unknown);
+
+describe("GitHubToken option schemas", () => {
+  it("provision options retain plain objects, redacted keys and explicit undefined fields", () => {
+    const minimal: ProvisionOptions = { appId: "app", privateKey: Redacted.make("pem") };
+    const explicit: ProvisionOptions = {
+      ...minimal, installationId: undefined, owner: undefined, required: undefined, stateKey: undefined,
+    };
+    const scoped: ProvisionOptions = { ...minimal, installationId: 42, owner: "acme", required: { contents: "write" }, stateKey: "token" };
+    for (const input of [minimal, explicit, scoped]) {
+      assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(ProvisionOptions)(input)), input);
+      assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(ProvisionOptions)(input)), input);
+    }
+    assert.isFalse(S.is(ProvisionOptions)({ ...minimal, privateKey: "pem" }));
+    assert.isFalse(S.is(ProvisionOptions)({ ...minimal, required: { contents: "owner" } }));
+    for (const installationId of [NaN, Infinity, -Infinity]) {
+      assert.isFalse(S.is(ProvisionOptions)({ ...minimal, installationId }));
+    }
+  });
+
+  it("read options preserve Duration values and leave existing defaults to the reader", () => {
+    for (const input of [{}, { stateKey: undefined, skew: undefined }, { stateKey: "token", skew: Duration.seconds(30) }]) {
+      const options: ReadOptions = input;
+      assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(ReadOptions)(options)), options);
+      assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(ReadOptions)(options)), options);
+    }
+    assert.isFalse(S.is(ReadOptions)({ skew: 30 }));
+    assert.isFalse(S.is(ReadOptions)({ stateKey: null }));
+  });
+});
 
 /** A fixed instant to reason about expiry from — the clock starts at the epoch otherwise. */
 const NOW = Date.parse("2026-07-25T12:00:00.000Z");

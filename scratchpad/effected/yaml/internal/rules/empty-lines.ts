@@ -8,9 +8,10 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
 import { YamlEdit } from "../../YamlEdit.ts";
-import type { LintContext, YamlRule } from "../../YamlLintRule.ts";
+import type { LintContext, LintLine, YamlRule } from "../../YamlLintRule.ts";
 import { StyleFloor, YamlLintDiagnostic, YamlLintSeverity } from "../../YamlLintRule.ts";
-import { insideScalarSpan, nonNegativeIntegerOption } from "./util.ts";
+import type { YamlScalar } from "../../YamlNode.ts";
+import { insideScalarSpan, nonNegativeIntegerOption, walkScalars } from "./util.ts";
 
 const $I = $ScratchpadId.create("effected/yaml/internal/rules/empty-lines");
 
@@ -65,6 +66,16 @@ export const emptyLinesOptions = S.Struct({
  */
 export type emptyLinesOptions = typeof emptyLinesOptions.Type;
 
+/** Build the layout-line predicate once, protecting composed scalar content too. */
+const layoutBlankLine = (ctx: LintContext): ((line: LintLine) => boolean) => {
+	const spans: Array<YamlScalar> = [];
+	walkScalars(ctx.document.contents, "root", (scalar) => {
+		if (scalar.sourceMultiline === true) spans.push(scalar);
+	});
+	return (line) => line.text === "" && !insideScalarSpan(ctx.tokens, line.offset) &&
+		!A.some(spans, (scalar) => scalar.offset < line.offset && line.offset < scalar.offset + scalar.length);
+};
+
 /**
  * Report runs of blank lines beyond the configured caps, with a deleting fix.
  *
@@ -105,19 +116,20 @@ export const emptyLines: YamlRule = {
 				: 0;
 		const out: Array<YamlLintDiagnostic> = [];
 		const lines = ctx.lines;
+		const isLayoutBlank = layoutBlankLine(ctx);
 		// Line text excludes the terminator whole (a CRLF blank line is `""`),
 		// but fix spans are SOURCE coordinates: the deletion below derives its
 		// end from the next line's offset so a CRLF terminator goes whole.
 		let i = 0;
 		while (i < lines.length) {
 			const line = lines[i];
-			if (line === undefined || line.text !== "" || insideScalarSpan(ctx.tokens, line.offset)) {
+			if (line === undefined || !isLayoutBlank(line)) {
 				i++;
 				continue;
 			}
 			// A run of blank lines [i, end).
 			let end = i;
-			while (end < lines.length && A.getUnsafe(lines, end).text === "") end++;
+			while (end < lines.length && isLayoutBlank(A.getUnsafe(lines, end))) end++;
 			const runLength = end - i;
 			const atStart = i === 0;
 			const atEnd = end === lines.length;
@@ -160,15 +172,16 @@ export const emptyLines: YamlRule = {
 	infer: (ctx) => {
 		let longest = 0;
 		const lines = ctx.lines;
+		const isLayoutBlank = layoutBlankLine(ctx);
 		let i = 0;
 		while (i < lines.length) {
 			const line = lines[i];
-			if (line === undefined || line.text !== "" || insideScalarSpan(ctx.tokens, line.offset)) {
+			if (line === undefined || !isLayoutBlank(line)) {
 				i++;
 				continue;
 			}
 			let end = i;
-			while (end < lines.length && A.getUnsafe(lines, end).text === "") end++;
+			while (end < lines.length && isLayoutBlank(A.getUnsafe(lines, end))) end++;
 			if (i !== 0 && end !== lines.length && end - i > longest) longest = end - i;
 			i = end;
 		}

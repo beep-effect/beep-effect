@@ -9,13 +9,14 @@ import { ActionEnvironment } from "../../effected/github-actions/ActionEnvironme
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as S from "effect/Schema";
 import { ActionOutputs, RunnerFileUnavailableError, RunnerFileWriteError, InvalidOutputNameError, OutputEncodeError, DetachedOutputError, RecordedOutput } from "../../effected/github-actions/ActionOutputs.ts";
+const Defect = S.Defect();
 const runs = { arbitrary: fcRuns(100) };
 // Defect is a JSON boundary: compare causes in their documented wire form,
 // which intentionally omits Error stacks and normalizes non-JSON values.
 const structural = Effect.fn("structural")(function*<A extends object>(value: A) {
   const fields = "name" in value ? { ...value, name: value.name } : { ...value };
   return "cause" in value
-    ? { ...fields, cause: yield* S.encodeEffect(S.Defect())(value.cause) }
+    ? { ...fields, cause: yield* S.encodeEffect(Defect)(value.cause) }
     : fields;
 });
 const roundTrips = <A extends object, I>(name: string, schema: S.Codec<A, I>): void => {

@@ -1,0 +1,35 @@
+{
+  "module": "config-file",
+  "groups": [
+    {
+      "id": "g1",
+      "files": [
+        "scratchpad/effected/config-file/ConfigFile.ts",
+        "scratchpad/effected/config-file/internal/deepMerge.ts"
+      ],
+      "tests": [
+        "scratchpad/test/config-file/ConfigFile.test.ts",
+        "scratchpad/test/config-file/MergeStrategy.test.ts",
+        "scratchpad/test/config-file/internal/deepMerge.property.test.ts"
+      ],
+      "findings": [
+        "sol-3-1",
+        "sol-3-2"
+      ]
+    }
+  ],
+  "findings": {
+    "sol-3-1": {
+      "file": "scratchpad/effected/config-file/ConfigFile.ts",
+      "class": "bug",
+      "summary": "load and loadOrDefault can return a merged value that violates the decoded schema and emit Loaded without post-merge validation.",
+      "fix": "Validate the strategy result with S.decodeUnknownEffect(S.toType(options.schema)), preserving applicable parse options, before returning it or emitting Loaded. Map SchemaError.issue to ConfigValidationError with O.none() for path and widen the internal helper's error annotation. Add cross-field-refinement regressions for load and loadOrDefault, typed failure/absent-path and no-Loaded assertions, and a transformed-schema success regression in ConfigFile.test.ts. Preserve the empty-source default behavior. This is an evidenced upstream-bug fix; deviation bookkeeping is central and grants no PORT_LEDGER.json or README Port notes write."
+    },
+    "sol-3-2": {
+      "file": "scratchpad/effected/config-file/internal/deepMerge.ts",
+      "class": "bug",
+      "summary": "Merging compatible cyclic plain records revisits the same target/source pair indefinitely, causing a synchronous RangeError and a defect in ConfigFile.load.",
+      "fix": "Thread a per-operation ancestor stack of target/source pairs and allocated results through internal merge recursion; compare pair members with ===, register the result before descending, and reuse the result when the pair recurs. Follow the operator's identity-cycle ruling without native Map/Set/WeakMap/WeakSet or global reference marks. Preserve priority, enumerable string/symbol keys, prototype compatibility, atomic values, pollution protections and input immutability. Add direct self-cycle/mutual-cycle regressions in internal/deepMerge.property.test.ts, a layeredMerge regression in MergeStrategy.test.ts, and a successful custom-codec ConfigFile.load regression with S.Struct({ self: S.Unknown }) in ConfigFile.test.ts. This is an evidenced upstream-bug fix; deviation bookkeeping remains central."
+    }
+  }
+}

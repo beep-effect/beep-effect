@@ -26,6 +26,27 @@ describe("MergeStrategy.firstMatch", () => {
 });
 
 describe("MergeStrategy.layeredMerge", () => {
+	it.effect("merges compatible cyclic records successfully while keeping priority and inputs intact", () =>
+		Effect.gen(function* () {
+			const higher: Record<string, unknown> = { priority: "higher" };
+			const lower: Record<string, unknown> = { priority: "lower", fallback: "base" };
+			higher.self = higher;
+			lower.self = lower;
+			const value = yield* MergeStrategy.layeredMerge<Record<string, unknown>>().resolve([
+				src("/a", "walk", higher), src("/etc", "system", lower),
+			]);
+			assert.strictEqual(value.self, value);
+			assert.strictEqual(value.priority, "higher");
+			assert.strictEqual(value.fallback, "base");
+			assert.notStrictEqual(value, higher);
+			assert.notStrictEqual(value, lower);
+			assert.strictEqual(higher.self, higher);
+			assert.strictEqual(lower.self, lower);
+			assert.isFalse(R.has(higher, "fallback"));
+			assert.strictEqual(lower.priority, "lower");
+		}),
+	);
+
 	it.effect("deep-merges with earlier sources winning on conflict", () =>
 		Effect.gen(function* () {
 			const strategy = MergeStrategy.layeredMerge<Record<string, unknown>>();

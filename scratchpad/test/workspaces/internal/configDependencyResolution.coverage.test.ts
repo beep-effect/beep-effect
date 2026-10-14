@@ -5,8 +5,63 @@ const fs = process.getBuiltinModule("node:fs/promises");
 const path = process.getBuiltinModule("node:path");
 const os = process.getBuiltinModule("node:os");
 vi.spyOn(os, "homedir").mockReturnValue("/tmp/workspaces-v6-no-home");
+// Install spies before the resolver captures the real filesystem functions.
+const directoryReads = vi.spyOn(fs, "readdir");
+const fileReads = vi.spyOn(fs, "readFile");
+const realpaths = vi.spyOn(fs, "realpath");
 const subject = await import("../../../effected/workspaces/internal/configDependencyResolution.ts");
 const root = () => Effect.acquireRelease(Effect.promise(() => fs.mkdtemp("/tmp/workspaces-v6-resolution-")), (dir) => Effect.promise(() => fs.rm(dir, { recursive: true, force: true })));
+
+it.effect("both resolvers reject traversal versions before filesystem reads or fetch", () => Effect.gen(function* () {
+  directoryReads.mockClear();
+  fileReads.mockClear();
+  realpaths.mockClear();
+  const fetch = vi.fn(() => Effect.succeed("/outside"));
+  for (const version of ["../../outside", "..\\..\\outside", "../../../../outside+sha512-pin"]) {
+    const failure = yield* Effect.flip(subject.resolvePnpmfiles({ pkg: version }, { fetch })("/workspace"));
+    assert.strictEqual(failure._tag, "CatalogAssemblyError");
+    assert.strictEqual(failure.source, "hooks");
+    assert.strictEqual(failure.path, "pkg");
+    assert.include(failure.cause instanceof Error ? failure.cause.message : "", "version has a '..' path segment");
+    const supplied = yield* Effect.flip(subject.lookupPnpmfiles({ [`pkg@${version}`]: "/outside/pnpmfile.cjs" }, { pkg: version }));
+    assert.strictEqual(supplied._tag, "CatalogAssemblyError");
+    assert.strictEqual(supplied.source, "hooks");
+    assert.strictEqual(supplied.path, "pkg");
+    assert.include(supplied.cause instanceof Error ? supplied.cause.message : "", "version has a '..' path segment");
+  }
+  assert.lengthOf(directoryReads.mock.calls, 0);
+  assert.lengthOf(fileReads.mock.calls, 0);
+  assert.lengthOf(realpaths.mock.calls, 0);
+  assert.lengthOf(fetch.mock.calls, 0);
+}));
+it.effect("both resolvers still reject traversal names before filesystem reads or fetch", () => Effect.gen(function* () {
+  directoryReads.mockClear();
+  fileReads.mockClear();
+  realpaths.mockClear();
+  const fetch = vi.fn(() => Effect.succeed("/outside"));
+  const failure = yield* Effect.flip(subject.resolvePnpmfiles("/workspace", { "../../pkg": "1.0.0" }, { fetch }));
+  const supplied = yield* Effect.flip(subject.lookupPnpmfiles({ "../../pkg@1.0.0": "/outside/pnpmfile.cjs" }, { "../../pkg": "1.0.0" }));
+  for (const error of [failure, supplied]) {
+    assert.strictEqual(error._tag, "CatalogAssemblyError");
+    assert.strictEqual(error.source, "hooks");
+    assert.strictEqual(error.path, "../../pkg");
+    assert.include(error.cause instanceof Error ? error.cause.message : "", "name has a '..' path segment");
+  }
+  assert.lengthOf(directoryReads.mock.calls, 0);
+  assert.lengthOf(fileReads.mock.calls, 0);
+  assert.lengthOf(realpaths.mock.calls, 0);
+  assert.lengthOf(fetch.mock.calls, 0);
+}));
+it.effect("a single-segment prerelease containing dots resolves through both resolvers", () => Effect.gen(function* () {
+  const dir = yield* root();
+  const installed = path.join(dir, "node_modules", ".pnpm-config", "pkg");
+  yield* Effect.promise(() => fs.mkdir(installed, { recursive: true }));
+  yield* Effect.promise(() => fs.writeFile(path.join(installed, "package.json"), '{"name":"pkg","version":"1.0.0-beta..1"}'));
+  const result = yield* subject.resolvePnpmfiles(dir, { pkg: "1.0.0-beta..1" });
+  assert.deepStrictEqual(result, [{ name: "pkg", version: "1.0.0-beta..1", source: "installed", path: undefined }]);
+  const supplied = yield* subject.lookupPnpmfiles({ "pkg@1.0.0-beta..1": "/hooks/pnpmfile.cjs" }, { pkg: "1.0.0-beta..1" });
+  assert.deepStrictEqual(supplied, [{ name: "pkg", version: "1.0.0-beta..1", source: "supplied", path: "/hooks/pnpmfile.cjs" }]);
+}));
 
 it.effect("an empty supplied map diagnoses that no keys are known", () => Effect.gen(function* () {
   const failure = yield* Effect.flip(subject.lookupPnpmfiles({ config: "1.0.0" })({}));

@@ -9,10 +9,43 @@ import * as Logger from "effect/Logger";
 import { CliEnv } from "../../effected/cli/CliEnv.ts";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { CliLog, CliLogFile } from "../../effected/cli/CliLog.ts";
+import { CliLog, CliLogFile, CliLogStatusOptions } from "../../effected/cli/CliLog.ts";
 import { Fmt } from "../../effected/cli/Fmt.ts";
 
 const runs = { arbitrary: fcRuns(100) };
+
+it.effect("CliLogStatusOptions preserves optional keys, undefined and plain construction", () =>
+  Effect.gen(function* () {
+    const omitted = CliLogStatusOptions.make({});
+    assert.deepStrictEqual(omitted, {});
+    const undefinedOptions = CliLogStatusOptions.make({ level: undefined, indent: undefined });
+    assert.deepStrictEqual(undefinedOptions, { level: undefined, indent: undefined });
+    assert.isTrue(Object.hasOwn(undefinedOptions, "level"));
+    assert.isTrue(Object.hasOwn(undefinedOptions, "indent"));
+    assert.isFalse(Object.hasOwn(undefinedOptions, "_tag"));
+    for (const value of [omitted, undefinedOptions, { level: "Warn", indent: 2 }, { indent: "  │ " },
+      { indent: Number.NaN }, { indent: Number.POSITIVE_INFINITY }, { indent: Number.NEGATIVE_INFINITY }]) {
+      assert.isTrue(S.is(CliLogStatusOptions)(value));
+      const encoded = yield* S.encodeUnknownEffect(CliLogStatusOptions)(value);
+      const decoded = yield* S.decodeEffect(CliLogStatusOptions)(encoded);
+      assert.deepStrictEqual(decoded, value);
+      assert.deepStrictEqual(yield* S.encodeEffect(CliLogStatusOptions)(decoded), encoded);
+    }
+    for (const value of [{ level: "All" }, { level: "None" }, { level: "warning" }, { indent: null }, { indent: true }]) {
+      assert.isFalse(S.is(CliLogStatusOptions)(value));
+    }
+  }));
+
+it.effect("CliLogFile encodes two valid keys as the explicit path without changing codec precedence", () =>
+  Effect.gen(function* () {
+    const original = { path: "/logs/explicit.ndjson", envVar: "TOOL_LOG_FILE" };
+    assert.isTrue(S.is(CliLogFile)(original));
+    const encoded = yield* S.encodeEffect(CliLogFile)(original);
+    assert.deepStrictEqual(encoded, { path: original.path });
+    const decoded = yield* S.decodeEffect(CliLogFile)(encoded);
+    assert.deepStrictEqual(decoded, { path: original.path });
+    assert.deepStrictEqual(yield* S.encodeEffect(CliLogFile)(decoded), encoded);
+  }));
 
 it.effect.prop("CliLogFile round-trips both plain file-sink cases", [Arbitrary.schema(CliLogFile)], ([value]) =>
   Effect.gen(function* () {

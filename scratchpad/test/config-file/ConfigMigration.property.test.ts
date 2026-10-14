@@ -25,6 +25,7 @@ import { ConfigMigration } from "../../effected/config-file/ConfigMigration.ts";
 import { JsonCodec } from "../../effected/config-file/JsonCodec.ts";
 
 const Latest = S.Struct({ version: S.Literal(2), payload: S.Json });
+const Previous = S.Struct({ version: S.Literal(1), payload: S.Json });
 const migrating = ConfigMigration.make({ codec: JsonCodec, migrations: [{ version: 2, name: "upgrade", up: Effect.succeed }] });
 
 it.effect.prop("migration codec round-trips current documents and normalization is idempotent", [Arbitrary.schema(Latest)], ([value]) =>
@@ -38,9 +39,21 @@ it.effect.prop("migration codec round-trips current documents and normalization 
 it.effect.prop("upgrading old documents preserves their payload and is stable on reparse", [Arbitrary.schema(S.Json)], ([payload]) =>
   Effect.gen(function* () {
     const old = yield* JsonCodec.stringify({ version: 1, payload });
+    // Migration preserves the decoded document; JSON encoding normalizes -0 to 0.
+    const previous = yield* S.decodeUnknownEffect(Previous)(yield* JsonCodec.parse(old));
     const parsed = yield* migrating.parse(old);
-    assert.deepStrictEqual(parsed, { version: 2, payload });
+    assert.deepStrictEqual(parsed, { version: 2, payload: previous.payload });
     const formatted = yield* migrating.stringify(parsed);
     assert.deepStrictEqual(yield* migrating.parse(formatted), parsed);
     assert.strictEqual(yield* migrating.stringify(yield* migrating.parse(formatted)), formatted);
   }), runs);
+
+it.effect("upgrading preserves JSON-normalized negative zero in nested payloads", () =>
+  Effect.gen(function* () {
+    const old = yield* JsonCodec.stringify({ version: 1, payload: { scalar: -0, values: [-0] } });
+    const parsed = yield* migrating.parse(old);
+    assert.deepStrictEqual(parsed, { version: 2, payload: { scalar: 0, values: [0] } });
+    const formatted = yield* migrating.stringify(parsed);
+    assert.deepStrictEqual(yield* migrating.parse(formatted), parsed);
+    assert.strictEqual(yield* migrating.stringify(yield* migrating.parse(formatted)), formatted);
+  }));
