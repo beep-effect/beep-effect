@@ -36,11 +36,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Admit (PR-A, docs), P1 (PR-B: spec-carried sheet options, `cfr-strict` margins, isometric
-pictorials, plan facing) and P2 (PR-C: outlined sans/serif labels) are committed in lane
-`drawings-review-1`. Next: PR-D and PR-E in their own lanes, PR-F (`beep drawings intake`) in
-parallel; the corpus remodel for round 2 starts against the lane build. The attorney's questions were sent on 2026-10-13; the Decision Log defaults
-hold until answered.
+P0-P2 merged in #1644 (2026-10-14). Open: #1648 (PR-D broken-line parts), #1649 (PR-F
+`beep drawings intake`), #1650 (PR-G review rounds). The corpus remodel is done and the round-2
+render is in progress (P7). The attorney answered the round-1 questions on 2026-10-14 (SPEC
+Decision Log rows of that date): labels become embedded Arial and Times New Roman text (PR-K, P7a)
+and the tab-in-slot edge emphasis and corrugation overlay need new tooling (PR-L, P7b). Open with
+the attorney: the bottom-edge question (Q7) and the overlay's edge extent.
 
 ## Latest Evidence
 

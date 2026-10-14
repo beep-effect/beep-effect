@@ -20,12 +20,26 @@ export * from "./M365.auth.ts";
  */
 export * from "./M365.config.ts";
 /**
+ * App-only lane settings loaded from prefixed environment variables.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export * from "./M365.env.ts";
+/**
  * Typed Microsoft 365 driver errors.
  *
  * @category errors
  * @since 0.0.0
  */
 export * from "./M365.errors.ts";
+/**
+ * Outlook web links and raw ids decoded into Graph item references.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./M365.links.ts";
 /**
  * Microsoft Graph response schemas.
  *

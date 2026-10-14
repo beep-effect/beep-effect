@@ -182,6 +182,37 @@ export class LabelFontRecord extends S.Class<LabelFontRecord>($I`LabelFontRecord
 ) {}
 
 /**
+ * A font a render embedded for text labels: the requested family, the file it
+ * resolved to, and the file's sha256.
+ *
+ * **Example** (A pinned Arial)
+ *
+ * ```ts
+ * import { FontPin } from "@beep/technical-drawing/Manifest.schemas"
+ *
+ * const pin = FontPin.make({
+ *   family: "Arial",
+ *   file: "/fonts/arial.ttf",
+ *   sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ * })
+ * console.log(pin.family)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FontPin extends S.Class<FontPin>($I`FontPin`)(
+  {
+    family: S.NonEmptyString.annotateKey({ description: "Font family a text label requested." }),
+    file: S.NonEmptyString.annotateKey({ description: "Absolute path of the font file the family resolved to." }),
+    sha256: Sha256Hex.annotateKey({ description: "SHA-256 of the font file bytes embedded in the PDF." }),
+  },
+  $I.annote("FontPin", {
+    description: "Requested family, resolved file, and SHA-256 of a font embedded for text labels.",
+  })
+) {}
+
+/**
  * The render manifest written next to a sheet set.
  *
  * **Example** (A minimal manifest)
@@ -248,9 +279,17 @@ export class RenderManifest extends S.Class<RenderManifest>($I`RenderManifest`)(
         description: "Operator font files the labels were outlined from, with their hashes. Empty for vendored faces.",
       })
     ),
+    fonts: S.Array(FontPin).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.withDecodingDefaultTypeKey(Effect.succeed([])),
+      S.annotateKey({
+        description:
+          "Fonts resolved and embedded for text labels, with their files and hashes. Empty when every label is outlined.",
+      })
+    ),
   },
   $I.annote("RenderManifest", {
     description:
-      "Spec hash, engine, model facts, scale, figures, omission proofs, PDF hash, validation, recorded approver, effective sheet options, and label font files of a render.",
+      "Spec hash, engine, model facts, scale, figures, omission proofs, PDF hash, validation, recorded approver, effective sheet options, label font files, and embedded label fonts of a render.",
   })
 ) {}

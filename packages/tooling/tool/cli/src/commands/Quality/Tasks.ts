@@ -5,12 +5,14 @@
  * @since 0.0.0
  */
 
+import { createRequire, isBuiltin } from "node:module";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Console from "effect/Console";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
@@ -18,6 +20,7 @@ import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Inspectable from "effect/Inspectable";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -27,6 +30,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import { ts } from "ts-morph";
 import {
   canUseTurboCacheSecretSession,
   configStringEqualsSync,
@@ -3009,8 +3013,183 @@ const listRootEslintCacheKeyFiles = Effect.fnUntraced(function* (repoRoot: strin
   return A.map(files, (entry) => `${source}/${entry}`);
 });
 
+const $I = $RepoCliId.create("commands/Quality/Tasks");
+
+// Installed package metadata is the version authority even when a plugin has no meta.
+class EslintInputPackage extends S.Class<EslintInputPackage>($I`EslintInputPackage`)(
+  {
+    name: S.String,
+    version: S.String,
+    dependencies: S.optionalKey(S.Record(S.String, S.String)),
+    peerDependencies: S.optionalKey(S.Record(S.String, S.String)),
+    optionalDependencies: S.optionalKey(S.Record(S.String, S.String)),
+  },
+  $I.annote("EslintInputPackage", {
+    description: "Installed ESLint input package identity and runtime dependency declarations.",
+  })
+) {}
+
+// Nested module-format markers are not package identities. A failed decode means
+// discovery must keep walking; filesystem failures still fail input collection.
+const decodeEslintInputPackageOption = S.decodeUnknownOption(S.fromJsonString(EslintInputPackage));
+
+const rootEslintModuleSpecifier = Match.type<ts.Node>().pipe(
+  Match.when(ts.isImportDeclaration, (node) =>
+    node.importClause?.isTypeOnly === true ? O.none<ts.Node>() : O.some(node.moduleSpecifier)
+  ),
+  Match.when(ts.isExportDeclaration, (node) =>
+    node.isTypeOnly ? O.none<ts.Node>() : O.fromUndefinedOr(node.moduleSpecifier)
+  ),
+  Match.when(ts.isCallExpression, (node) => {
+    if (node.expression.kind === ts.SyntaxKind.ImportKeyword) return A.head(node.arguments);
+    if (!ts.isIdentifier(node.expression)) return O.none<ts.Node>();
+    return node.expression.text === "require" ? A.head(node.arguments) : O.none<ts.Node>();
+  }),
+  Match.orElse(O.none<ts.Node>)
+);
+
+const rootEslintImportSpecifiers = (file: string, content: string): ReadonlyArray<string> => {
+  const source = ts.createSourceFile(file, content, ts.ScriptTarget.Latest, true);
+  const imports: Array<string> = [];
+  const visit = (node: ts.Node): void => {
+    const specifier = O.filter(rootEslintModuleSpecifier(node), ts.isStringLiteral);
+    if (O.isSome(specifier)) imports.push(specifier.value.text);
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return imports;
+};
+
+interface RootEslintInputsShape {
+  readonly collect: (repoRoot: string) => Effect.Effect<ReadonlyArray<string>, QualityTaskConfigurationError>;
+}
+
+// Keep module resolution at the Node boundary; filesystem reads remain Effect services.
+class RootEslintInputs extends Context.Service<RootEslintInputs, RootEslintInputsShape>()($I`RootEslintInputs`, {
+  make: Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const resolve = Effect.fnUntraced(function* (specifier: string, importer: string) {
+      return yield* Effect.try({
+        try: () => createRequire(importer).resolve(specifier),
+        catch: (cause) => QualityTaskConfigurationError.new(`Cannot resolve ESLint input ${specifier}: ${cause}`),
+      });
+    });
+    const resolvePackage = Effect.fnUntraced(function* (name: string, importer: string) {
+      const directories = yield* Effect.try({
+        try: () => createRequire(importer).resolve.paths("__eslint_cache_package__") ?? [],
+        catch: (cause) => QualityTaskConfigurationError.new(`Cannot locate ESLint package ${name}: ${cause}`),
+      });
+      for (const directory of directories) {
+        const file = path.join(directory, name, "package.json");
+        if (yield* fs.exists(file)) return O.some(file);
+      }
+      // Peer and optional dependencies may legitimately be absent. Actual imports
+      // in workspace config still use the required module resolver above.
+      return O.none<string>();
+    });
+    const packageFile = Effect.fnUntraced(function* (entry: string) {
+      let directory = path.dirname(entry);
+      while (true) {
+        const file = path.join(directory, "package.json");
+        if (yield* fs.exists(file)) {
+          const manifest = decodeEslintInputPackageOption(yield* fs.readFileString(file));
+          if (O.isSome(manifest)) return file;
+        }
+        const parent = path.dirname(directory);
+        if (parent === directory) {
+          return yield* QualityTaskConfigurationError.make({ message: `No package.json for ESLint input ${entry}` });
+        }
+        directory = parent;
+      }
+    });
+    const isWorkspaceInput = (root: string, file: string): boolean => {
+      const relative = path.relative(root, file);
+      return !Str.includes("node_modules/")(relative) && !Str.startsWith("../")(relative);
+    };
+    const packageDependencies = Effect.fnUntraced(function* (
+      root: string,
+      manifestFile: string,
+      manifest: EslintInputPackage
+    ) {
+      const dependencies = A.dedupe([
+        ...R.keys(manifest.dependencies ?? {}),
+        ...R.keys(manifest.peerDependencies ?? {}),
+        ...R.keys(manifest.optionalDependencies ?? {}),
+      ]);
+      const files: Array<string> = [];
+      for (const dependency of dependencies) {
+        const installed = yield* resolvePackage(dependency, manifestFile);
+        if (O.isNone(installed)) continue;
+        files.push(installed.value);
+        // Linked workspace plugins also contribute their source import closure.
+        if (isWorkspaceInput(root, yield* fs.realPath(installed.value))) {
+          files.push(yield* resolve(dependency, manifestFile));
+        }
+      }
+      return files;
+    });
+    const workspaceImports = Effect.fnUntraced(function* (file: string, content: string) {
+      const files: Array<string> = [];
+      if (path.extname(file) === ".json") return files;
+      for (const specifier of rootEslintImportSpecifiers(file, content)) {
+        if (isBuiltin(specifier)) continue;
+        const entry = yield* resolve(specifier, file);
+        files.push(entry);
+        if (!Str.startsWith(".")(specifier) && !Str.startsWith("#")(specifier)) {
+          files.push(yield* packageFile(entry));
+        }
+      }
+      return files;
+    });
+    const collect = Effect.fn("RootEslintInputs.collect")(function* (repoRoot: string) {
+      const root = yield* fs.realPath(repoRoot);
+      const pending = [
+        path.join(root, "eslint.config.mjs"),
+        yield* resolve("eslint", path.join(root, "eslint.config.mjs")),
+      ];
+      let visited = HashSet.empty<string>();
+      const parts: Array<string> = [];
+      while (A.isReadonlyArrayNonEmpty(pending)) {
+        const next = A.headNonEmpty(pending);
+        pending.shift();
+        const file = yield* fs.realPath(next);
+        if (HashSet.has(visited, file)) continue;
+        const relative = path.relative(root, file);
+        if (!isWorkspaceInput(root, file)) {
+          const manifestFile = yield* packageFile(file);
+          if (HashSet.has(visited, manifestFile)) continue;
+          visited = HashSet.add(visited, manifestFile);
+          const manifest = yield* S.decodeEffect(S.fromJsonString(EslintInputPackage))(
+            yield* fs.readFileString(manifestFile)
+          );
+          // Root-relative resolution identity distinguishes multiple installed copies without
+          // hashing checkout-specific absolute paths. Traverse declared runtime dependencies
+          // too: an external shared config can load plugins indirectly.
+          parts.push(`${path.relative(root, manifestFile)}\0${manifest.name}\0${manifest.version}\0`);
+          pending.push(...(yield* packageDependencies(root, manifestFile, manifest)));
+          continue;
+        }
+        visited = HashSet.add(visited, file);
+        const content = yield* fs.readFileString(file);
+        parts.push(`${relative}\0${content}\0`);
+        pending.push(...(yield* workspaceImports(file, content)));
+      }
+      return A.sort(parts, Order.String);
+    }, QualityTaskConfigurationError.mapError("Cannot collect ESLint cache inputs"));
+    return { collect };
+  }),
+}) {}
+
 /**
  * Digest the root ESLint configuration sources into the cache directory key.
+ *
+ * **Details**
+ *
+ * The key includes root config and policy-pack source, the workspace import closure,
+ * and installed ESLint/plugin package.json versions (including runtime dependencies of
+ * external shared configs). Plugin metadata is never used. Sorted relative paths and
+ * contents keep unchanged inputs stable. Unreadable inputs yield the `unkeyed` directory.
  *
  * **Example** (Key the root ESLint cache)
  * ```ts
@@ -3018,14 +3197,6 @@ const listRootEslintCacheKeyFiles = Effect.fnUntraced(function* (repoRoot: strin
  * import * as Effect from "effect/Effect"
  * console.log(Effect.isEffect(rootEslintCacheKey("/repo"))) // true
  * ```
- *
- * **Details**
- *
- * The key is the first sixteen hex characters of a SHA-256 over every file under the
- * configuration sources (`eslint.config.mjs`, `tsdoc.json`, the policy-pack configs package
- * source including `src/internal/eslint`), each prefixed by its path. A source that cannot be
- * read yields the `unkeyed` directory so a missing file never blocks lint; the cache is then
- * shared.
  *
  * @param repoRoot - Repository root directory.
  * @returns The cache directory key.
@@ -3041,8 +3212,15 @@ export const rootEslintCacheKey = Effect.fn("QualityTasks.rootEslintCacheKey")(
       A.flatten,
       A.sort(Order.String)
     );
-    const parts = yield* Effect.forEach(files, (file) =>
-      fs.readFileString(`${repoRoot}/${file}`).pipe(Effect.map((content) => `${file}\0${content}\0`))
+    const inputs = yield* RootEslintInputs.make;
+    const parts = A.sort(
+      [
+        ...(yield* inputs.collect(repoRoot)),
+        ...(yield* Effect.forEach(files, (file) =>
+          fs.readFileString(`${repoRoot}/${file}`).pipe(Effect.map((content) => `${file}\0${content}\0`))
+        )),
+      ],
+      Order.String
     );
     const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(A.join(parts, "")));
     return Str.slice(0, 16)(Hex.encode(digest));

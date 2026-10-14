@@ -760,6 +760,10 @@ const VALIDATION_REQUIREMENTS_BY_FINDING_KIND: Readonly<
   "packet-fleet-dependency-cycle": [],
   "packet-fleet-unreachable": [],
   "packet-fleet-unmigrated-reference": [],
+  "capability-duplicate-declaration": ["manifest-decodes", "doctor-clean"],
+  "capability-packet-id-mismatch": ["manifest-decodes", "doctor-clean"],
+  "capability-reference-provides": ["doctor-clean"],
+  "capability-stranded": [],
 };
 
 /**

@@ -14225,6 +14225,27 @@
       "status": "open"
     },
     {
+      "id": "EV004:packages/tooling/tool/cli/test/drawings-review.test.ts:604:scoped@2#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/drawings-review.test.ts",
+      "line": 604,
+      "endLine": 612,
+      "symbol": "scoped",
+      "occurrence": "v2:0a09c561d1deb42b2337280ef11708c5b7aaf9e7ae09c728d48d708ff3b32a3d",
+      "class": "inner-helper-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const spawner = yield* ChildProcessSpawner.ChildProcessSpawner; const handle = yield* spawner.spawn( ChildProcess.make(command, [\"-v\"], { stdin: \"ignore\", stde",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV004:packages/tooling/tool/cli/test/explore-atlas.test.ts:113:scoped@31#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -15218,13 +15239,13 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/skills-provenance.test.ts:456:scoped@4#1",
+      "id": "EV004:packages/tooling/tool/cli/test/skills-provenance.test.ts:657:scoped@4#1",
       "lens": "detector",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/skills-provenance.test.ts",
-      "line": 456,
-      "endLine": 503,
+      "line": 657,
+      "endLine": 704,
       "symbol": "scoped",
       "occurrence": "v2:f446937f7a0fa0b09fad5fdbecb640cfc9ec77df1d4eaac1a3fed67fa752173f",
       "class": "redundant-whole-body-scope",
@@ -15239,13 +15260,13 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/skills-provenance.test.ts:507:scoped@4#1",
+      "id": "EV004:packages/tooling/tool/cli/test/skills-provenance.test.ts:708:scoped@4#1",
       "lens": "detector",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/skills-provenance.test.ts",
-      "line": 507,
-      "endLine": 548,
+      "line": 708,
+      "endLine": 749,
       "symbol": "scoped",
       "occurrence": "v2:bd92d1c2610d772dcf84cc408d536b2534d7843a9f05e68aa7d8c6e77cbfa9c6",
       "class": "redundant-whole-body-scope",
@@ -15260,13 +15281,13 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/skills-provenance.test.ts:552:scoped@4#1",
+      "id": "EV004:packages/tooling/tool/cli/test/skills-provenance.test.ts:753:scoped@4#1",
       "lens": "detector",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/skills-provenance.test.ts",
-      "line": 552,
-      "endLine": 587,
+      "line": 753,
+      "endLine": 788,
       "symbol": "scoped",
       "occurrence": "v2:1a6eec6e7d3eca10b3fb4dd99f8b5571d565eda09520978cbda6c80c9313547d",
       "class": "redundant-whole-body-scope",
@@ -15281,13 +15302,13 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/skills-provenance.test.ts:696:scoped@4#1",
+      "id": "EV004:packages/tooling/tool/cli/test/skills-provenance.test.ts:897:scoped@4#1",
       "lens": "detector",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/skills-provenance.test.ts",
-      "line": 696,
-      "endLine": 759,
+      "line": 897,
+      "endLine": 960,
       "symbol": "scoped",
       "occurrence": "v2:ccb77e468c4c0e3dc6c53367c47e16bc22af7178ed93d72a0eefca211cfee920",
       "class": "redundant-whole-body-scope",
@@ -15302,13 +15323,13 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/skills-provenance.test.ts:763:scoped@4#1",
+      "id": "EV004:packages/tooling/tool/cli/test/skills-provenance.test.ts:964:scoped@4#1",
       "lens": "detector",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/skills-provenance.test.ts",
-      "line": 763,
-      "endLine": 961,
+      "line": 964,
+      "endLine": 1162,
       "symbol": "scoped",
       "occurrence": "v2:4c08590911fd736ad5ab5e88874f99e1de66567ad99c5eb33435ef29c7949baa",
       "class": "redundant-whole-body-scope",
@@ -16706,13 +16727,13 @@
       "reason": "Retain the complete original metadata-family assertion and dynamic module/member diagnostic. Public assertion helpers lack the message parameter; dropping it would weaken failure localization."
     },
     {
-      "id": "EV006:packages/foundation/capability/technical-drawing/test/FigureSet.test.ts:1054:expect@8#1",
+      "id": "EV006:packages/foundation/capability/technical-drawing/test/FigureSet.test.ts:1271:expect@8#1",
       "lens": "detector",
       "ruleId": "EV006",
       "package": "@beep/technical-drawing",
       "file": "packages/foundation/capability/technical-drawing/test/FigureSet.test.ts",
-      "line": 1054,
-      "endLine": 1054,
+      "line": 1271,
+      "endLine": 1271,
       "symbol": "expect",
       "occurrence": "v2:08f98db9d58005f004d8dd8bd14cd972dabcbd173a66d895f41a28b7828ea6c5",
       "class": "hand-rolled-data-assertion",
@@ -16724,6 +16745,27 @@
       "severity": "minor",
       "confidence": 0.95,
       "mechanization": "detector",
+      "status": "open"
+    },
+    {
+      "id": "EV006:packages/foundation/capability/technical-drawing/test/FigureSet.test.ts:642:expect@8#1",
+      "lens": "resource",
+      "ruleId": "EV006",
+      "package": "@beep/technical-drawing",
+      "file": "packages/foundation/capability/technical-drawing/test/FigureSet.test.ts",
+      "line": 642,
+      "endLine": 647,
+      "symbol": "expect",
+      "occurrence": "v2:6e7ad30086532979405335c1179285ceab187cb9360ea9c905a2e55a72541c91",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "expect( A.map(labelTextFindings({ page: 1, pages: 8, text: \"11/8\\nFIG. 10\\n\", options }), (f) => [f.code, f.page]) ).toEqual([ [\"label-missing\", O.some(1)], [\"label-missing\", O.some(1)], ])",
+      "replacement": {
+        "primitive": "utils.deepStrictEqual",
+        "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.55,
+      "mechanization": "judgment",
       "status": "open"
     },
     {
@@ -22772,13 +22814,13 @@
       "reason": "Actual executable files, chmod, child-visible paths, native process spawning and kernel termination are the subject. Retain NodeServices and scoped native temporary directories; MemoryFS would remove the tested boundary."
     },
     {
-      "id": "EV010:packages/drivers/pdf-tools/test/PdfTools.service.test.ts:12:@effect/platform-node@0#1",
+      "id": "EV010:packages/drivers/pdf-tools/test/PdfTools.service.test.ts:14:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/pdf-tools",
       "file": "packages/drivers/pdf-tools/test/PdfTools.service.test.ts",
-      "line": 12,
-      "endLine": 12,
+      "line": 14,
+      "endLine": 14,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -22793,13 +22835,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/drivers/pdf-tools/test/integration/PdfTools.live.test.ts:3:@effect/platform-node@0#1",
+      "id": "EV010:packages/drivers/pdf-tools/test/integration/PdfTools.live.test.ts:10:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/pdf-tools",
       "file": "packages/drivers/pdf-tools/test/integration/PdfTools.live.test.ts",
-      "line": 3,
-      "endLine": 3,
+      "line": 10,
+      "endLine": 10,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -23140,13 +23182,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/foundation/capability/technical-drawing/test/FigureSet.test.ts:40:@effect/platform-node@0#1",
+      "id": "EV010:packages/foundation/capability/technical-drawing/test/FigureSet.test.ts:43:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/technical-drawing",
       "file": "packages/foundation/capability/technical-drawing/test/FigureSet.test.ts",
-      "line": 40,
-      "endLine": 40,
+      "line": 43,
+      "endLine": 43,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -25650,6 +25692,27 @@
       "status": "open"
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/drawings-intake.test.ts:24:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/drawings-intake.test.ts",
+      "line": 24,
+      "endLine": 24,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/drawings-judge.test.ts:3:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -25678,6 +25741,27 @@
       "file": "packages/tooling/tool/cli/test/drawings-live.test.ts",
       "line": 6,
       "endLine": 6,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/drawings-review.test.ts:41:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/drawings-review.test.ts",
+      "line": 41,
+      "endLine": 41,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -27964,13 +28048,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/skills-provenance.test.ts:36:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/skills-provenance.test.ts:40:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/skills-provenance.test.ts",
-      "line": 36,
-      "endLine": 36,
+      "line": 40,
+      "endLine": 40,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -37389,13 +37473,13 @@
       "status": "open"
     },
     {
-      "id": "EV014:packages/tooling/tool/cli/test/skills-provenance.test.ts:145:it.layer@0#1",
+      "id": "EV014:packages/tooling/tool/cli/test/skills-provenance.test.ts:151:it.layer@0#1",
       "lens": "resource",
       "ruleId": "EV014",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/skills-provenance.test.ts",
-      "line": 145,
-      "endLine": 145,
+      "line": 151,
+      "endLine": 151,
       "symbol": "it.layer",
       "occurrence": "v2:dba8b825b31de4bd3c19dfdffcf06cc3e219a555a8934b885f78e5c0a3bf420c",
       "class": "resource-layer-without-hook-timeout",
@@ -37410,13 +37494,13 @@
       "status": "open"
     },
     {
-      "id": "EV014:packages/tooling/tool/cli/test/skills-provenance.test.ts:454:it.layer@0#1",
+      "id": "EV014:packages/tooling/tool/cli/test/skills-provenance.test.ts:655:it.layer@0#1",
       "lens": "resource",
       "ruleId": "EV014",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/skills-provenance.test.ts",
-      "line": 454,
-      "endLine": 454,
+      "line": 655,
+      "endLine": 655,
       "symbol": "it.layer",
       "occurrence": "v2:46d35fe6fe35bb0b3e4cb1dff0339ee7a6fdccc62756d785e69915f6babd7696",
       "class": "resource-layer-without-hook-timeout",
@@ -39400,13 +39484,13 @@
       "reason": "This block has one effect test and a private TestClock. The case owns the request child fiber, advances the deterministic one-second retry delay and joins that fiber before fixture teardown. No sibling test shares or advances this clock; retain the retry subject without live time or resets."
     },
     {
-      "id": "EV015:packages/drivers/pdf-tools/test/PdfTools.service.test.ts:320:TestClock.adjust@17#1",
+      "id": "EV015:packages/drivers/pdf-tools/test/PdfTools.service.test.ts:537:TestClock.adjust@17#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/pdf-tools",
       "file": "packages/drivers/pdf-tools/test/PdfTools.service.test.ts",
-      "line": 320,
-      "endLine": 320,
+      "line": 537,
+      "endLine": 537,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:be3d8e00e5f6724d35353fc1614267e0d1bfcb4ccc5fe18ab4b7f576a9af37dd",
       "class": "shared-test-clock-adjustment",
@@ -39421,13 +39505,13 @@
       "status": "open"
     },
     {
-      "id": "EV015:packages/drivers/pdf-tools/test/PdfTools.service.test.ts:322:TestClock.adjust@17#1",
+      "id": "EV015:packages/drivers/pdf-tools/test/PdfTools.service.test.ts:539:TestClock.adjust@17#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/pdf-tools",
       "file": "packages/drivers/pdf-tools/test/PdfTools.service.test.ts",
-      "line": 322,
-      "endLine": 322,
+      "line": 539,
+      "endLine": 539,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:b6ba6f79959fb4d3a93781abc1fec28975a344511f13ebfc790a66c9477b9854",
       "class": "shared-test-clock-adjustment",
@@ -40389,6 +40473,132 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The audit-timestamp regression is the only test in its independent fresh Cuid layer block. It owns its deterministic TestClock and advances one minute between creation and rename. All exact createdAt/updatedAt assertions remain; no other test or forked task shares this block clock."
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/drawings-review.test.ts:391:assertTrue@4#1",
+      "lens": "resource",
+      "ruleId": "EV006",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/drawings-review.test.ts",
+      "line": 391,
+      "endLine": 391,
+      "symbol": "assertTrue",
+      "occurrence": "v2:b9da5edf6e745eadeca42e540e3d15ce431790e39e3174e02f2b69791465f27a",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "assertTrue(decode(base).pipe(Result.isFailure))",
+      "replacement": {
+        "primitive": "utils.deepStrictEqual",
+        "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/drawings-review.test.ts:392:assertTrue@4#1",
+      "lens": "resource",
+      "ruleId": "EV006",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/drawings-review.test.ts",
+      "line": 392,
+      "endLine": 392,
+      "symbol": "assertTrue",
+      "occurrence": "v2:183bf9526982399b509a972e88609528d1265993d6d48bcfd69bade28b128ab4",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "assertTrue(decode({ ...base, scope: \"sheet\", status: \"planned\" }).pipe(Result.isFailure))",
+      "replacement": {
+        "primitive": "utils.deepStrictEqual",
+        "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/drawings-review.test.ts:393:assertTrue@4#1",
+      "lens": "resource",
+      "ruleId": "EV006",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/drawings-review.test.ts",
+      "line": 393,
+      "endLine": 393,
+      "symbol": "assertTrue",
+      "occurrence": "v2:250729dff38d5e5664bfc3f0696c4bcd6db89ff5f32b867dfb500d0bd7b46872",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "assertTrue(decode({ ...base, scope: \"sheet\", figures: [] }).pipe(Result.isFailure))",
+      "replacement": {
+        "primitive": "utils.deepStrictEqual",
+        "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/drawings-review.test.ts:394:assertTrue@4#1",
+      "lens": "resource",
+      "ruleId": "EV006",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/drawings-review.test.ts",
+      "line": 394,
+      "endLine": 394,
+      "symbol": "assertTrue",
+      "occurrence": "v2:c8bf2dad7e00ccab3cbbcd2b4bd9529e92ab61092a0e394724a5fa2a27cc282d",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "assertTrue(decode({ ...base, scope: \"sheet\" }).pipe(Result.isSuccess))",
+      "replacement": {
+        "primitive": "utils.deepStrictEqual",
+        "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/drawings-review.test.ts:395:assertTrue@4#1",
+      "lens": "resource",
+      "ruleId": "EV006",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/drawings-review.test.ts",
+      "line": 395,
+      "endLine": 395,
+      "symbol": "assertTrue",
+      "occurrence": "v2:822d22ac151bafb1f65cc021f109d6754f563fd25164dc64bb779ba4acea3dbb",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "assertTrue(decode({ ...base, figures: [] }).pipe(Result.isSuccess))",
+      "replacement": {
+        "primitive": "utils.deepStrictEqual",
+        "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/drawings-review.test.ts:874:assertTrue@8#1",
+      "lens": "resource",
+      "ruleId": "EV006",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/drawings-review.test.ts",
+      "line": 874,
+      "endLine": 874,
+      "symbol": "assertTrue",
+      "occurrence": "v2:b34df7d8f61c8f176f20d7b5185805d0d31b05bae2b6bf8c7400e7f516255579",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "assertTrue(planned.round.dispositionsSha256.pipe(O.isSome))",
+      "replacement": {
+        "primitive": "utils.deepStrictEqual",
+        "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     }
   ]
 }

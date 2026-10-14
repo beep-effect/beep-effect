@@ -7,18 +7,17 @@
  */
 
 import { $TechnicalDrawingId } from "@beep/identity/packages";
-import { A } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { verifyConfirmation } from "./Approval.rules.ts";
 import { ApprovalRecord, approvalStatement, EmailAddress, PdfConfirmation } from "./Approval.schemas.ts";
+import { sha256Hex } from "./Manifest.digest.ts";
 import { RenderManifest, Sha256Hex } from "./Manifest.schemas.ts";
 import { DrawingError } from "./TechnicalDrawing.errors.ts";
 import { MailReader, PdfBackend } from "./TechnicalDrawing.ports.ts";
@@ -134,21 +133,6 @@ export interface SheetSetApprovalShape {
   readonly statement: (manifestPath: string) => Effect.Effect<string, DrawingError>;
 }
 
-// shared digest idiom with FigureSet.service; no in-family home, future foundation capability candidate.
-// fallow-ignore-next-line code-duplication -- shared digest idiom; no in-family home, future foundation capability candidate
-const sha256 = (bytes: Uint8Array): Effect.Effect<Sha256Hex> =>
-  Effect.promise(() => crypto.subtle.digest("SHA-256", bytes.slice().buffer)).pipe(
-    Effect.map((digest) =>
-      Sha256Hex.make(
-        pipe(
-          A.fromIterable(new Uint8Array(digest)),
-          A.map((b) => b.toString(16).padStart(2, "0")),
-          A.join("")
-        )
-      )
-    )
-  );
-
 const refused = (message: string): DrawingError => DrawingError.make({ reason: "approval", message });
 
 const REFUSAL_MESSAGES = {
@@ -181,7 +165,7 @@ const makeService = Effect.fn("SheetSetApproval.makeService")(function* () {
     );
     const pdfPath = path.join(path.dirname(resolved), manifest.pdfFile);
     const bytes = yield* fs.readFile(pdfPath).pipe(Effect.mapError(io(`Could not read "${pdfPath}".`)));
-    const onDisk = yield* sha256(bytes);
+    const onDisk = yield* sha256Hex(bytes);
     if (onDisk !== manifest.pdfSha256) {
       return yield* refused(`"${pdfPath}" no longer matches its manifest (sha256 ${onDisk} ≠ ${manifest.pdfSha256}).`);
     }
@@ -242,7 +226,7 @@ const makeService = Effect.fn("SheetSetApproval.makeService")(function* () {
       recordedAt: DateTime.formatIso(yield* DateTime.now),
       confirmationKind: confirmation.kind,
       confirmationLocator: locatorOf(confirmation),
-      confirmationSha256: yield* sha256(encoder.encode(evidence.matchedText)),
+      confirmationSha256: yield* sha256Hex(encoder.encode(evidence.matchedText)),
       matchedAddress: evidence.matchedAddress,
       attestedBy: confirmation.kind === "pdf" ? confirmation.attestedBy : "",
     });

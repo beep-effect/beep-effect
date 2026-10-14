@@ -8,25 +8,36 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
-import { HttpClient, HttpClientResponse } from "effect/http";
+import * as HashMap from "effect/HashMap";
+import { Headers, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { asArrayBufferView, concatBytes } from "../../internal/cli/Bytes.ts";
-import { SkillInstallStateError, SkillsCommandError, SkillUpstreamContentError } from "./Skills.errors.ts";
+import { canonicalJsonText } from "../Goals/PacketCore/PacketDigest.ts";
+import {
+  SkillInstallStateError,
+  SkillsCommandError,
+  SkillUpstreamContentError,
+  SkillUpstreamContentErrorReason,
+} from "./Skills.errors.ts";
 import {
   decodeSkillLockV2Entry,
   SkillGitRevision,
   SkillLicense,
   SkillPatch,
+  SkillPathHistory,
   SkillProvenanceReport,
   SkillProvenanceResolution,
   SkillSnapshotFile,
@@ -37,16 +48,21 @@ import {
 } from "./Skills.schemas.ts";
 import { skillResolutionSeeds } from "./Skills.seeds.ts";
 import {
+  KeepSeedPin,
   LocalMigrationRow,
   LocalSkillLockEntry,
-  SkillDriftRow,
+  MatchesNoExaminedRevisionDrift,
+  MatchesUpstreamRevisionDrift,
+  PristineAtRevisionPin,
+  SkillMigrationRow,
+  SkillPathHistoryWindow,
   SkillsLockMigrationPlan,
   UnresolvedMigrationRow,
   VendoredMigrationRow,
   VendoredSkillLockEntry,
 } from "./SkillsLock.schemas.ts";
 import type * as Crypto from "effect/Crypto";
-import type { SkillMigrationRow } from "./SkillsLock.schemas.ts";
+import type { SkillDriftRow, SkillPinProposal } from "./SkillsLock.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Skills/Skills.service");
 
@@ -455,11 +471,33 @@ const buildPatchSeries = Effect.fn("SkillsProvenance.buildPatchSeries")(function
   ];
 });
 
-const fetchResponseBytes = Effect.fn("SkillUpstreamContentSource.fetchResponseBytes")(function* (
+const GITHUB_API_ORIGIN = "https://api.github.com/";
+
+/**
+ * The most commits one path-history listing returns (GitHub's REST page maximum).
+ */
+const MAX_PATH_HISTORY_REVISIONS = 100;
+
+// The bearer token only travels to the REST API; raw content needs none for public repositories.
+const githubRequest = (url: string, token: O.Option<Redacted.Redacted<string>>): HttpClientRequest.HttpClientRequest =>
+  O.match(
+    O.filter(token, () => Str.startsWith(GITHUB_API_ORIGIN)(url)),
+    {
+      onNone: () => HttpClientRequest.get(url),
+      onSome: (value) => HttpClientRequest.get(url).pipe(HttpClientRequest.bearerToken(value)),
+    }
+  );
+
+const fetchResponse = Effect.fn("SkillUpstreamContentSource.fetchResponse")(function* (
   url: string,
-  skill: string
-): Effect.fn.Return<Uint8Array, SkillsCommandError, HttpClient.HttpClient> {
-  const response = yield* HttpClient.get(url).pipe(
+  skill: string,
+  token: O.Option<Redacted.Redacted<string>>
+): Effect.fn.Return<
+  { readonly bytes: Uint8Array; readonly hasNextPage: boolean },
+  SkillsCommandError,
+  HttpClient.HttpClient
+> {
+  const response = yield* HttpClient.execute(githubRequest(url, token)).pipe(
     SkillsCommandError.mapError(`Failed to fetch pinned upstream content from ${url}.`, url, skill),
     Effect.flatMap(HttpClientResponse.filterStatusOk),
     SkillsCommandError.mapError(`Pinned upstream content returned a non-2xx response from ${url}.`, url, skill)
@@ -467,30 +505,75 @@ const fetchResponseBytes = Effect.fn("SkillUpstreamContentSource.fetchResponseBy
   const buffer = yield* response.arrayBuffer.pipe(
     SkillsCommandError.mapError(`Failed to read pinned upstream response from ${url}.`, url, skill)
   );
-  return new Uint8Array(buffer);
+  const hasNextPage = O.exists(Headers.get(response.headers, "link"), Str.includes('rel="next"'));
+  return { bytes: new Uint8Array(buffer), hasNextPage };
 });
 
-const GitHubCommitJson = S.fromJsonString(S.Struct({ sha: SkillGitRevision }));
+const fetchResponseBytes = Effect.fn("SkillUpstreamContentSource.fetchResponseBytes")(function* (
+  url: string,
+  skill: string,
+  token: O.Option<Redacted.Redacted<string>>
+): Effect.fn.Return<Uint8Array, SkillsCommandError, HttpClient.HttpClient> {
+  return (yield* fetchResponse(url, skill, token)).bytes;
+});
 
-const resolveGitHubRevision = Effect.fn("SkillUpstreamContentSource.resolveGitHubRevision")(function* (
-  repository: string,
-  ref: string,
-  skill: string
-): Effect.fn.Return<SkillGitRevision, SkillsCommandError, HttpClient.HttpClient> {
-  const url = `https://api.github.com/repos/${repository}/commits/${ref}`;
-  const bytes = yield* fetchResponseBytes(url, skill);
-  const commit = yield* S.decodeEffect(GitHubCommitJson)(new TextDecoder().decode(bytes)).pipe(
-    SkillsCommandError.mapError(`Failed to decode the ${ref} commit of ${repository}.`, url, skill)
+// Historical trees share most blobs, so blob bytes are fetched once per Git object id.
+const fetchBlobBytes = Effect.fn("SkillUpstreamContentSource.fetchBlobBytes")(function* (
+  blobCache: MutableHashMap.MutableHashMap<string, Uint8Array>,
+  blobSha: string,
+  url: string,
+  skill: string,
+  token: O.Option<Redacted.Redacted<string>>
+): Effect.fn.Return<Uint8Array, SkillsCommandError, HttpClient.HttpClient> {
+  const cached = MutableHashMap.get(blobCache, blobSha);
+  if (O.isSome(cached)) {
+    return cached.value;
+  }
+  const bytes = yield* fetchResponseBytes(url, skill, token);
+  MutableHashMap.set(blobCache, blobSha, bytes);
+  return bytes;
+});
+
+const GitHubCommitListJson = S.Struct({ sha: SkillGitRevision }).pipe(S.Array, S.fromJsonString);
+
+const listGitHubPathHistory = Effect.fn("SkillUpstreamContentSource.listGitHubPathHistory")(function* (
+  resolution: SkillProvenanceResolution,
+  token: O.Option<Redacted.Redacted<string>>
+): Effect.fn.Return<SkillPathHistory, SkillsCommandError | SkillUpstreamContentError, HttpClient.HttpClient> {
+  const upstream = resolution.upstream;
+  const url = `${GITHUB_API_ORIGIN}repos/${upstream.repository}/commits?sha=${encodeURIComponent(
+    upstream.trackingRef
+  )}&path=${encodeURIComponent(upstream.treePath)}&per_page=${MAX_PATH_HISTORY_REVISIONS}`;
+  const response = yield* fetchResponse(url, resolution.name, token);
+  const commits = yield* S.decodeEffect(GitHubCommitListJson)(new TextDecoder().decode(response.bytes)).pipe(
+    SkillsCommandError.mapError(
+      `Failed to decode the ${upstream.treePath} path history of ${upstream.repository}.`,
+      url,
+      resolution.name
+    )
   );
-  return commit.sha;
+  const revisions = A.map(A.take(commits, MAX_PATH_HISTORY_REVISIONS), (commit) => commit.sha);
+  if (!A.isReadonlyArrayNonEmpty(revisions)) {
+    return yield* SkillUpstreamContentError.make({
+      skill: resolution.name,
+      reason: "path-absent",
+      message: `No commit touches ${upstream.repository}:${upstream.treePath} at ${upstream.trackingRef}.`,
+    });
+  }
+  return SkillPathHistory.make({
+    revisions,
+    truncated: response.hasNextPage || A.length(commits) > MAX_PATH_HISTORY_REVISIONS,
+  });
 });
 
 const loadGitHubContent = Effect.fn("SkillUpstreamContentSource.loadGitHubContent")(function* (
-  resolution: SkillProvenanceResolution
-): Effect.fn.Return<SkillUpstreamContent, SkillsCommandError, HttpClient.HttpClient> {
+  resolution: SkillProvenanceResolution,
+  blobCache: MutableHashMap.MutableHashMap<string, Uint8Array>,
+  token: O.Option<Redacted.Redacted<string>>
+): Effect.fn.Return<SkillUpstreamContent, SkillsCommandError | SkillUpstreamContentError, HttpClient.HttpClient> {
   const upstream = resolution.upstream;
-  const treeUrl = `https://api.github.com/repos/${upstream.repository}/git/trees/${upstream.sourceRevision}?recursive=1`;
-  const treeBytes = yield* fetchResponseBytes(treeUrl, resolution.name);
+  const treeUrl = `${GITHUB_API_ORIGIN}repos/${upstream.repository}/git/trees/${upstream.sourceRevision}?recursive=1`;
+  const treeBytes = yield* fetchResponseBytes(treeUrl, resolution.name, token);
   const tree = yield* decodeGitHubTree(new TextDecoder().decode(treeBytes)).pipe(
     SkillsCommandError.mapError(
       `Failed to decode pinned upstream tree for ${resolution.name}.`,
@@ -513,12 +596,15 @@ const loadGitHubContent = Effect.fn("SkillUpstreamContentSource.loadGitHubConten
     Str.Order
   );
   if (A.isReadonlyArrayEmpty(entries)) {
-    return yield* SkillsCommandError.make({
-      message: `No files found at ${upstream.repository}:${upstream.treePath}@${upstream.sourceRevision}.`,
+    return yield* SkillUpstreamContentError.make({
       skill: resolution.name,
+      reason: "path-absent",
+      message: `No files found at ${upstream.repository}:${upstream.treePath}@${upstream.sourceRevision}.`,
     });
   }
 
+  const rawUrl = (filePath: string): string =>
+    `https://raw.githubusercontent.com/${upstream.repository}/${upstream.sourceRevision}/${filePath}`;
   const files = yield* Effect.forEach(
     entries,
     Effect.fnUntraced(function* (entry) {
@@ -530,17 +616,21 @@ const loadGitHubContent = Effect.fn("SkillUpstreamContentSource.loadGitHubConten
           resolution.name
         )
       );
-      const url = `https://raw.githubusercontent.com/${upstream.repository}/${upstream.sourceRevision}/${entry.path}`;
       return SkillUpstreamContentFile.make({
         path: relativePath,
         mode,
-        bytes: yield* fetchResponseBytes(url, resolution.name),
+        bytes: yield* fetchBlobBytes(blobCache, entry.sha, rawUrl(entry.path), resolution.name, token),
       });
     }),
     { concurrency: 6 }
   );
-  const licenseUrl = `https://raw.githubusercontent.com/${upstream.repository}/${upstream.sourceRevision}/${resolution.license.path}`;
-  const licenseBytes = yield* fetchResponseBytes(licenseUrl, resolution.name);
+  const licenseBytes = yield* O.match(
+    A.findFirst(tree.tree, (entry) => Str.Equivalence(entry.path, resolution.license.path)),
+    {
+      onNone: () => fetchResponseBytes(rawUrl(resolution.license.path), resolution.name, token),
+      onSome: (entry) => fetchBlobBytes(blobCache, entry.sha, rawUrl(entry.path), resolution.name, token),
+    }
+  );
   return SkillUpstreamContent.make({ files, licenseBytes });
 });
 
@@ -549,26 +639,30 @@ const loadGitHubContent = Effect.fn("SkillUpstreamContentSource.loadGitHubConten
  *
  * **Details**
  *
- * Implementations must resolve content strictly from
+ * `load` must resolve content strictly from
  * `resolution.upstream.sourceRevision`; consulting a floating ref would make
  * the resulting hashes unreproducible. Bytes are returned rather than text so
- * hashing sees exactly what upstream stores.
+ * hashing sees exactly what upstream stores. `listPathHistory` is the one
+ * floating read: it names the immutable revisions a caller then loads.
+ * A `path-absent` error from either method proves the skill path absent; every
+ * other failure is `unavailable`.
  *
  * @see {@link SkillUpstreamContentSource} for the injectable service built on this contract.
  * @category services
  * @since 0.0.0
  */
 export interface SkillUpstreamContentSourceShape {
-  /** Load a complete pinned tree and license without consulting a floating ref. */
+  /**
+   * List the commits touching `resolution.upstream.treePath` at its tracking ref,
+   * newest first, at most one REST page; a longer history is flagged `truncated`.
+   */
+  readonly listPathHistory: (
+    resolution: SkillProvenanceResolution
+  ) => Effect.Effect<SkillPathHistory, SkillUpstreamContentError>;
+  /** Load a complete tree and license at `resolution.upstream.sourceRevision`, never at a floating ref. */
   readonly load: (
     resolution: SkillProvenanceResolution
   ) => Effect.Effect<SkillUpstreamContent, SkillUpstreamContentError>;
-  /** Resolve a floating ref (such as `main`) to the immutable commit it names right now. */
-  readonly resolveRevision: (
-    repository: string,
-    ref: string,
-    skill: string
-  ) => Effect.Effect<SkillGitRevision, SkillUpstreamContentError>;
 }
 
 /**
@@ -582,7 +676,7 @@ export interface SkillUpstreamContentSourceShape {
  * **Example** (Resolve against a stubbed offline source)
  *
  * ```ts
- * import { SkillGitRevision, SkillProvenanceResolution, SkillUpstreamContent } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillPathHistory, SkillProvenanceResolution, SkillUpstreamContent } from "@beep/repo-cli/commands/Skills/Skills.schemas"
  * import { SkillUpstreamContentSource } from "@beep/repo-cli/commands/Skills/Skills.service"
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
@@ -617,8 +711,8 @@ export interface SkillUpstreamContentSourceShape {
  *   SkillUpstreamContentSource.of({
  *     load: () =>
  *       Effect.succeed(SkillUpstreamContent.make({ files: [], licenseBytes: new Uint8Array() })),
- *     resolveRevision: () =>
- *       Effect.orDie(S.decodeEffect(SkillGitRevision)("0123456789abcdef0123456789abcdef01234567")),
+ *     listPathHistory: () =>
+ *       Effect.orDie(S.decodeEffect(SkillPathHistory)({ revisions: [revision], truncated: false })),
  *   })
  * )
  *
@@ -640,23 +734,33 @@ export class SkillUpstreamContentSource extends Context.Service<
   SkillUpstreamContentSourceShape
 >()($I`SkillUpstreamContentSource`) {}
 
-// Every failure behind the live source is upstream unavailability (fetch, status,
-// tree decode, missing tree path, truncated tree), so it is typed as such.
+// Every SkillsCommandError behind the live source is upstream unavailability (fetch,
+// status, decode, truncated tree), so it is typed as such; a proven-absent path is
+// already a `path-absent` SkillUpstreamContentError.
 const asUpstreamError =
   (skill: string) =>
   (error: SkillsCommandError): SkillUpstreamContentError =>
-    SkillUpstreamContentError.make({ skill, message: error.message, cause: error });
+    SkillUpstreamContentError.make({ skill, reason: "unavailable", message: error.message, cause: error });
 
 const makeSkillUpstreamContentSource = Effect.gen(function* () {
   const httpContext = yield* Effect.context<HttpClient.HttpClient>();
+  const token = yield* Config.Redacted("GITHUB_TOKEN").pipe(
+    Config.option,
+    Effect.orDie,
+    Effect.map(O.filter(flow(Redacted.value, Str.isNonEmpty)))
+  );
+  const blobCache = MutableHashMap.empty<string, Uint8Array>();
   return SkillUpstreamContentSource.of({
     load: Effect.fn("SkillUpstreamContentSource.load")((resolution) =>
-      loadGitHubContent(resolution).pipe(Effect.provide(httpContext), Effect.mapError(asUpstreamError(resolution.name)))
-    ),
-    resolveRevision: Effect.fn("SkillUpstreamContentSource.resolveRevision")((repository, ref, skill) =>
-      resolveGitHubRevision(repository, ref, skill).pipe(
+      loadGitHubContent(resolution, blobCache, token).pipe(
         Effect.provide(httpContext),
-        Effect.mapError(asUpstreamError(skill))
+        Effect.catchTag("SkillsCommandError", flow(asUpstreamError(resolution.name), Effect.fail))
+      )
+    ),
+    listPathHistory: Effect.fn("SkillUpstreamContentSource.listPathHistory")((resolution) =>
+      listGitHubPathHistory(resolution, token).pipe(
+        Effect.provide(httpContext),
+        Effect.catchTag("SkillsCommandError", flow(asUpstreamError(resolution.name), Effect.fail))
       )
     ),
   });
@@ -668,9 +772,17 @@ const makeSkillUpstreamContentSource = Effect.gen(function* () {
  * **Details**
  *
  * The layer stays open on `HttpClient.HttpClient` so the caller decides how
- * requests are made. Every fetch targets the pinned `sourceRevision`, and a
- * truncated GitHub tree response is rejected rather than hashed, because a
- * partial tree would silently produce a wrong snapshot digest.
+ * requests are made. Every content fetch targets the requested
+ * `sourceRevision`, and a truncated GitHub tree response is rejected rather
+ * than hashed, because a partial tree would silently produce a wrong snapshot
+ * digest. Blob bytes are cached per Git object id for the layer's lifetime,
+ * so a path-history walk refetches only the blobs that changed.
+ *
+ * **Gotchas**
+ *
+ * A non-empty `GITHUB_TOKEN` is sent as a bearer token to the REST API only.
+ * Without one, GitHub allows 60 unauthenticated REST requests an hour, and a
+ * path-history walk spends one per examined revision.
  *
  * **Example** (Close the layer over a fetch-based HTTP client)
  *
@@ -970,7 +1082,7 @@ const makeSkillProvenanceService = Effect.gen(function* () {
  * **Example** (Build an offline resolver)
  *
  * ```ts
- * import { SkillGitRevision, SkillUpstreamContent } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import { SkillPathHistory, SkillUpstreamContent } from "@beep/repo-cli/commands/Skills/Skills.schemas"
  * import { SkillProvenanceServiceLayer, SkillUpstreamContentSource } from "@beep/repo-cli/commands/Skills/Skills.service"
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
@@ -980,8 +1092,13 @@ const makeSkillProvenanceService = Effect.gen(function* () {
  *   SkillUpstreamContentSource.of({
  *     load: () =>
  *       Effect.succeed(SkillUpstreamContent.make({ files: [], licenseBytes: new Uint8Array() })),
- *     resolveRevision: () =>
- *       Effect.orDie(S.decodeEffect(SkillGitRevision)("0123456789abcdef0123456789abcdef01234567")),
+ *     listPathHistory: () =>
+ *       Effect.orDie(
+ *         S.decodeEffect(SkillPathHistory)({
+ *           revisions: ["0123456789abcdef0123456789abcdef01234567"],
+ *           truncated: false,
+ *         })
+ *       ),
  *   })
  * )
  *
@@ -1082,59 +1199,129 @@ const atRevision = (resolution: SkillProvenanceResolution, revision: SkillGitRev
     upstream: SkillUpstream.make({ ...resolution.upstream, sourceRevision: revision }),
   });
 
-// A drifted path is `matches-upstream-head` when the installed bytes (or absence)
-// equal the same path at the tracking ref's current upstream head; otherwise it is
-// `differs-from-upstream-head`.
-const classifyDrift = Effect.fn("SkillsLock.classifyDrift")(function* (
+const sameInstalledFile = (installed: O.Option<HashedSkillFile>, upstream: O.Option<HashedSkillFile>): boolean =>
+  O.match(installed, {
+    onNone: () => O.isNone(upstream),
+    onSome: (file) => O.exists(upstream, (upstreamFile) => filesMatch(upstreamFile, file)),
+  });
+
+// A revision where the skill path does not exist is an empty tree, not a failure:
+// the path history includes the commit that deleted or moved the path.
+const loadTreeAtRevision = Effect.fn("SkillsLock.loadTreeAtRevision")(function* (
   resolution: SkillProvenanceResolution,
-  repoRoot: string,
-  driftPaths: ReadonlyArray<string>,
-  headRevision: SkillGitRevision
+  revision: SkillGitRevision
 ): Effect.fn.Return<
-  ReadonlyArray<SkillDriftRow>,
+  ComputedSkillTree,
   SkillsCommandError | SkillUpstreamContentError,
-  SkillUpstreamContentSource | FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  SkillUpstreamContentSource | Crypto.Crypto
 > {
   const source = yield* SkillUpstreamContentSource;
-  const head = yield* source.load(atRevision(resolution, headRevision));
-  const headTree = yield* computeSkillTree(head.files, `${resolution.name}:observed-head`);
-  const { localTree } = yield* readInstalledTargets(repoRoot, resolution.name).pipe(
-    Effect.catchTag("SkillInstallStateError", (error) =>
-      Effect.fail(SkillsCommandError.make({ message: error.message, skill: error.skill }))
+  const files = yield* source.load(atRevision(resolution, revision)).pipe(
+    Effect.map((content) => content.files),
+    Effect.catchTag("SkillUpstreamContentError", (error) =>
+      SkillUpstreamContentErrorReason.is["path-absent"](error.reason)
+        ? Effect.succeed(A.empty<SkillUpstreamContentFile>())
+        : Effect.fail(error)
     )
   );
-  return A.map(driftPaths, (filePath) => {
-    const installed = findFile(localTree.files, filePath);
-    const atHead = findFile(headTree.files, filePath);
-    const matchesHead = O.match(installed, {
-      onNone: () => O.isNone(atHead),
-      onSome: (file) => O.exists(atHead, (headFile) => filesMatch(headFile, file)),
-    });
-    return SkillDriftRow.make({
-      path: filePath,
-      driftClass: matchesHead ? "matches-upstream-head" : "differs-from-upstream-head",
-    });
-  });
+  return yield* computeSkillTree(files, `${resolution.name}:${revision}`);
+});
+
+const driftRows = (
+  driftPaths: ReadonlyArray<string>,
+  matches: HashMap.HashMap<string, SkillGitRevision>
+): ReadonlyArray<SkillDriftRow> =>
+  A.map(driftPaths, (path) =>
+    O.match(HashMap.get(matches, path), {
+      onNone: () => MatchesNoExaminedRevisionDrift.make({ path }),
+      onSome: (revision) => MatchesUpstreamRevisionDrift.make({ path, revision }),
+    })
+  );
+
+// Records `revision` for every drifted path that has no newer match yet and whose
+// file at this revision equals the installed one.
+const recordRevisionMatches = (
+  matches: HashMap.HashMap<string, SkillGitRevision>,
+  driftPaths: ReadonlyArray<string>,
+  revision: SkillGitRevision,
+  matchesInstalled: (filePath: string) => boolean
+): HashMap.HashMap<string, SkillGitRevision> =>
+  A.reduce(driftPaths, matches, (acc, filePath) =>
+    !HashMap.has(acc, filePath) && matchesInstalled(filePath) ? HashMap.set(acc, filePath, revision) : acc
+  );
+
+// Walks the path history newest to oldest. The first revision whose whole mode-aware
+// tree hash equals the installed tree's is the proposed pin and ends the walk. Until
+// then each drifted path remembers the newest revision whose bytes and mode equal the
+// installed file. With no drift against the seed pin, the seed pin is already pristine.
+const classifyAgainstPathHistory = Effect.fn("SkillsLock.classifyAgainstPathHistory")(function* (
+  seed: SkillProvenanceResolution,
+  localTree: ComputedSkillTree,
+  driftPaths: ReadonlyArray<string>,
+  history: SkillPathHistory
+): Effect.fn.Return<
+  { readonly pin: SkillPinProposal; readonly drift: ReadonlyArray<SkillDriftRow> },
+  SkillsCommandError | SkillUpstreamContentError,
+  SkillUpstreamContentSource | Crypto.Crypto
+> {
+  if (A.isReadonlyArrayEmpty(driftPaths)) {
+    return { pin: PristineAtRevisionPin.make({ revision: seed.upstream.sourceRevision }), drift: A.empty() };
+  }
+  let matches = HashMap.empty<string, SkillGitRevision>();
+  for (const revision of history.revisions) {
+    const tree = yield* loadTreeAtRevision(seed, revision);
+    const pristine = Str.Equivalence(tree.treeHash, localTree.treeHash);
+    matches = recordRevisionMatches(
+      matches,
+      driftPaths,
+      revision,
+      (filePath) => pristine || sameInstalledFile(findFile(localTree.files, filePath), findFile(tree.files, filePath))
+    );
+    if (pristine) {
+      return { pin: PristineAtRevisionPin.make({ revision }), drift: driftRows(driftPaths, matches) };
+    }
+  }
+  return { pin: KeepSeedPin.make({ revision: seed.upstream.sourceRevision }), drift: driftRows(driftPaths, matches) };
 });
 
 const vendoredRow = Effect.fn("SkillsLock.vendoredRow")(function* (
   repoRoot: string,
   skill: string,
-  seed: SkillProvenanceResolution
+  seed: SkillProvenanceResolution,
+  localTree: ComputedSkillTree,
+  localEntry: LocalSkillLockEntry
 ): Effect.fn.Return<
-  VendoredMigrationRow,
+  VendoredMigrationRow | UnresolvedMigrationRow,
   SkillsCommandError | SkillUpstreamContentError,
   SkillUpstreamContentSource | FileSystem.FileSystem | Path.Path | Crypto.Crypto
 > {
-  const report = yield* resolveSkillProvenance(skill, repoRoot);
+  // A provenance refusal (license digest mismatch, unsafe upstream path, unencodable
+  // entry) belongs to this skill: report it and keep planning the rest.
+  const report = yield* resolveSkillProvenance(skill, repoRoot).pipe(
+    Effect.map(Result.succeed),
+    Effect.catchTag("SkillsCommandError", flow(Result.fail, Effect.succeed))
+  );
+  if (Result.isFailure(report)) {
+    return UnresolvedMigrationRow.make({
+      skill,
+      note: `provenance-unavailable: ${report.failure.message}`,
+      entry: localEntry,
+    });
+  }
   const source = yield* SkillUpstreamContentSource;
-  const upstreamHead = yield* source.resolveRevision(seed.upstream.repository, seed.upstream.trackingRef, skill);
-  const drift = yield* classifyDrift(seed, repoRoot, report.driftPaths, upstreamHead);
+  const history = yield* source.listPathHistory(seed);
+  const { pin, drift } = yield* classifyAgainstPathHistory(seed, localTree, report.success.driftPaths, history);
   return VendoredMigrationRow.make({
     skill,
-    entry: VendoredSkillLockEntry.make({ ...report.entry }),
+    entry: VendoredSkillLockEntry.make({ ...report.success.entry }),
+    pin,
     drift,
-    upstreamHead,
+    pathHistory: SkillPathHistoryWindow.make({
+      trackingRef: seed.upstream.trackingRef,
+      head: A.headNonEmpty(history.revisions),
+      revisionCount: A.length(history.revisions),
+      truncated: history.truncated,
+    }),
   });
 });
 
@@ -1163,9 +1350,9 @@ const migrateSkill = Effect.fn("SkillsLock.migrateSkill")(function* (
   });
   const seed = A.findFirst(seeds, (candidate) => Str.Equivalence(candidate.name, skill));
   if (O.isSome(seed)) {
-    // An upstream that cannot be read at the pin or the head (moved tree path,
-    // truncated tree, network) is likewise reported for this skill only.
-    return yield* vendoredRow(repoRoot, skill, seed.value).pipe(
+    // An upstream that cannot be read at the pin or along its path history (moved
+    // tree path, truncated tree, network) is likewise reported for this skill only.
+    return yield* vendoredRow(repoRoot, skill, seed.value, installed.success.localTree, entry).pipe(
       Effect.catchTag("SkillUpstreamContentError", (error) =>
         Effect.succeed(UnresolvedMigrationRow.make({ skill, note: `upstream-unavailable: ${error.message}`, entry }))
       )
@@ -1180,6 +1367,22 @@ const migrateSkill = Effect.fn("SkillsLock.migrateSkill")(function* (
     : LocalMigrationRow.make({ skill, entry });
 });
 
+const PLAN_SCHEMA_VERSION = "skills-lock-migration-plan/v2";
+const encodeMigrationRows = S.encodeEffect(S.Array(SkillMigrationRow));
+
+// The digest preimage is the compact canonical JSON of the encoded schema version and
+// rows, so it covers every vendored row's path-history head.
+const sealSkillsLockMigrationPlan = Effect.fn("SkillsLock.sealSkillsLockMigrationPlan")(function* (
+  rows: ReadonlyArray<SkillMigrationRow>
+): Effect.fn.Return<SkillsLockMigrationPlan, SkillsCommandError, Crypto.Crypto> {
+  const encodedRows = yield* encodeMigrationRows(rows).pipe(
+    SkillsCommandError.mapError("Failed to encode the skills lock migration plan rows.")
+  );
+  const preimage = canonicalJsonText({ schemaVersion: PLAN_SCHEMA_VERSION, rows: encodedRows });
+  const planDigest = yield* hashBytes(textEncoder.encode(preimage), "skills-lock-migration-plan");
+  return SkillsLockMigrationPlan.make({ planDigest, rows });
+});
+
 /**
  * Computes the read-only `skills-lock/v1` to `skills-lock/v2` migration plan.
  *
@@ -1187,10 +1390,14 @@ const migrateSkill = Effect.fn("SkillsLock.migrateSkill")(function* (
  *
  * Every skill in the v1 lock gets one row, sorted by name. A skill with a
  * ratified resolution seed becomes a `vendored` entry, computed by the same
- * resolver as `beep skills provenance`, and each of its drifted paths is
- * classified against the observed upstream head. A v1 `github` skill
- * without a seed is `unresolved` and stays local. Every other skill is
- * `local`, identified by its installed tree hash. Nothing is written.
+ * resolver as `beep skills provenance`. Its upstream path history is then
+ * walked newest to oldest: the newest revision whose whole tree equals the
+ * installed tree is proposed as the pin, and otherwise each drifted path names
+ * the newest revision carrying its bytes, or none. A seeded skill whose
+ * provenance or upstream cannot be read, a missing or divergent install, and a
+ * v1 `github` skill without a seed are `unresolved`. Every other skill is
+ * `local`, identified by its installed tree hash. The rows are sealed into
+ * `planDigest`. Nothing is written.
  *
  * **Example** (Inspect the requirements before providing them)
  *
@@ -1239,5 +1446,5 @@ export const planSkillsLockMigration = Effect.fn("SkillsLock.planSkillsLockMigra
       ),
     { concurrency: 1 }
   );
-  return SkillsLockMigrationPlan.make({ rows });
+  return yield* sealSkillsLockMigrationPlan(rows);
 });

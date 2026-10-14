@@ -1,6 +1,7 @@
 /**
  * Design-figure vision judge: build a round pack (sheet PNGs, reference
- * photos, rendered drawing-rubric prompt) and ingest the judge's
+ * photos, rendered drawing-rubric prompt, and, for a re-render answering a
+ * review round, the reviewer's requests) and ingest the judge's
  * `qa-inventory/v1` reply against the drawing lens family.
  *
  * @packageDocumentation
@@ -21,8 +22,11 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { DrawingQaLens, decodeQaInventory, QaInventory } from "../Qa/Inventory.schemas.ts";
-import { DRAWING_JUDGE_PROMPT_TEMPLATE } from "../Qa/JudgePack.ts";
+import { DRAWING_JUDGE_PROMPT_TEMPLATE, JudgeEvidenceKind } from "../Qa/JudgePack.ts";
 import { DrawingsCommandError } from "./Drawings.errors.ts";
+import { reviewerRequestsSection } from "./Drawings.review.rules.ts";
+import { ReviewInventory, ReviewRound } from "./Drawings.review.schemas.ts";
+import { readRoundFile } from "./Drawings.review.ts";
 
 const $I = $RepoCliId.create("commands/Drawings/Drawings.judge");
 const decodeManifest = S.decodeEffect(S.fromJsonString(RenderManifest));
@@ -45,7 +49,7 @@ const PHOTO_EXTENSIONS = HashSet.fromIterable([".jpg", ".jpeg", ".png", ".webp"]
  */
 export class DrawingJudgeFile extends S.Class<DrawingJudgeFile>($I`DrawingJudgeFile`)(
   {
-    kind: S.Literals(["sheet", "screenshot"]).annotateKey({
+    kind: JudgeEvidenceKind.pick(["sheet", "screenshot"]).annotateKey({
       description: "`sheet` for a figure, `screenshot` for a photo.",
     }),
     path: S.NonEmptyString.annotateKey({ description: "Pack-relative path." }),
@@ -76,6 +80,8 @@ export class DrawingJudgeManifest extends S.Class<DrawingJudgeManifest>($I`Drawi
 ) {}
 
 const encodeJudgeManifest = S.encodeEffect(S.fromJsonString(DrawingJudgeManifest));
+const decodeReviewRound = S.decodeEffect(S.fromJsonString(ReviewRound));
+const decodeReviewInventory = S.decodeEffect(S.fromJsonString(ReviewInventory));
 const encodeInventory = S.encodeEffect(S.fromJsonString(QaInventory));
 
 const fail = (message: string) => (cause: unknown) => DrawingsCommandError.new(cause, message);
@@ -132,8 +138,36 @@ const copyPhotos = Effect.fn("DrawingsJudge.copyPhotos")(function* (photosDir: s
   return A.map(photos, (name) => DrawingJudgeFile.make({ kind: "screenshot", path: `photos/${name}` }));
 });
 
+// The reviewer-requests section for a judge pack, from a round.json and the
+// inventory.json beside it, checked against the hash round.json records.
+const reviewSection = Effect.fn("DrawingsJudge.reviewSection")(function* (roundPath: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const resolved = path.resolve(roundPath);
+  const round = yield* fs
+    .readFileString(resolved)
+    .pipe(Effect.flatMap(decodeReviewRound), Effect.mapError(fail(`Could not read the review round "${resolved}".`)));
+  const inventoryPath = path.join(path.dirname(resolved), "inventory.json");
+  const text = yield* readRoundFile({ file: inventoryPath, recorded: round.inventorySha256, draftAllowed: false });
+  const inventory = yield* Effect.fromOption(text).pipe(
+    Effect.flatMap(decodeReviewInventory),
+    Effect.mapError(fail(`Review round ${round.round} has no readable inventory.json; ingest it first.`))
+  );
+  return reviewerRequestsSection({
+    round: round.round,
+    sheetSetSha256: round.reviewedSheetSetSha256,
+    findings: inventory.findings,
+  });
+});
+
 /**
  * Build a drawing judge pack next to a render manifest.
+ *
+ * **Details**
+ *
+ * With a review round (`round.json`), the prompt's figures section also lists
+ * the reviewer's requests, verbatim, with their dispositions, so the judge
+ * checks each one on the re-render.
  *
  * **Example** (Reference the builder)
  *
@@ -150,6 +184,7 @@ export const buildDrawingJudgePack = Effect.fn("DrawingsJudge.buildPack")(functi
   readonly manifestPath: string;
   readonly round: number;
   readonly photosDir: O.Option<string>;
+  readonly reviewPath: O.Option<string>;
 }) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -162,6 +197,10 @@ export const buildDrawingJudgePack = Effect.fn("DrawingsJudge.buildPack")(functi
       Effect.flatMap(decodeManifest),
       Effect.mapError(fail(`Could not read the render manifest "${manifestPath}".`))
     );
+  const requests = yield* O.match(input.reviewPath, {
+    onNone: () => Effect.succeed(""),
+    onSome: (roundPath) => Effect.map(reviewSection(roundPath), (section) => `\n\n${section}`),
+  });
   const packDir = path.join(manifestDir, "judge", `round-${input.round}`);
   yield* fs
     .makeDirectory(path.join(packDir, "sheets"), { recursive: true })
@@ -200,13 +239,13 @@ export const buildDrawingJudgePack = Effect.fn("DrawingsJudge.buildPack")(functi
     ROUND: `${input.round}`,
     TITLE: manifest.title,
     PACK_DIR: packDir,
-    FIGURES: figuresTable(manifest),
+    FIGURES: `${figuresTable(manifest)}${requests}`,
     SESSION_REF: "../../manifest.json",
   });
   yield* fs
     .writeFileString(path.join(packDir, "prompt.md"), prompt)
     .pipe(Effect.mapError(fail("Could not write prompt.md.")));
-  return { packDir, sheets: A.length(sheets), photos: A.length(photos) };
+  return { packDir, sheets: A.length(sheets), photos: A.length(photos), reviewed: O.isSome(input.reviewPath) };
 });
 
 const FENCED_JSON = /```json\s*\n([\s\S]*?)\n```/;

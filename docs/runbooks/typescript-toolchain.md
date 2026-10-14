@@ -10,12 +10,12 @@ Effect compiler is patched over one of them.
 | --- | --- | --- |
 | `typescript` | `^6.0.3` | Programmatic (JS) compiler API only. Never runs a repo typecheck; its `bin/tsc` is shadowed. |
 | `@typescript/native` | `npm:typescript@^7.0.2` | The TypeScript 7 Go compiler. Owns the hoisted `node_modules/.bin/tsc`. |
-| `@effect/tsgo` + seven `@effect/tsgo-<platform>` packages | `0.47.2` | The Effect language service build of TypeScript 7. Ships one binary per upstream TypeScript version. |
+| `@effect/tsgo` + seven `@effect/tsgo-<platform>` packages | `0.51.1` | The Effect language service build of TypeScript 7. Ships one binary per upstream TypeScript version. Pinned to the effect-tsgo version that tsc-rs ports (see below). |
 
 The root `prepare` script (`effect-tsgo unpatch && node scripts/prune-tsgo-backups.mjs && effect-tsgo patch`)
 copies the Effect binary over the native package's Go binary, keeping the stock
 one beside it as `tsc.original`. After install, both of these print
-`Version 7.0.2+effect-tsgo.0.47.2`:
+`Version 7.0.2+effect-tsgo.0.51.1`:
 
 ```text
 node_modules/.bin/tsc      -> @typescript/native/bin/tsc  (patched Go binary)
@@ -30,7 +30,7 @@ compiler for the current one (`tools/tsgo-shim/tsgo.js`).
 
 ## Binary paths (Linux x64)
 
-Verified 2026-09-24. Substitute the platform triple on other machines.
+Verified 2026-10-13 at 0.51.1. Substitute the platform triple on other machines.
 
 - `node_modules/@effect/tsgo-linux-x64/artifacts/typescript/7.0.2/tsc` is the
   canonical Effect artifact. `effect-tsgo get-exe-path` returns it and the
@@ -40,6 +40,19 @@ Verified 2026-09-24. Substitute the platform triple on other machines.
 - `node_modules/@typescript/typescript-linux-x64/lib/tsc` is the patched
   native binary, byte-identical to the artifact above after `prepare`.
   `tsc.original` beside it is stock TypeScript 7.0.2.
+
+## Version coupling with tsc-rs
+
+`@effect/tsgo` is held at the effect-tsgo version that
+[tsc-rs](https://github.com/pingdotgg/ts-rust) ports (0.51.1 for tsc-rs 0.6.0),
+because tsc-rs compiles the Effect rules in and the editor and the gate must
+agree on rule names and defaults. The next effect-tsgo release, 0.52.0, adds six
+rules. Do not register their names while running 0.51.1: unknown keys produce
+TS377134 warnings, and `ignoreEffectWarningsInTscExitCode: false` makes those
+warnings fail the gate. The planned severities and the deferred
+`schemaClassMissingBrand` decision are recorded beside the version hold in
+`syncpack.config.ts`. Include lab apps in the next rule sweep because
+`bun run check` filters them out.
 
 ## Why `typescript@6` cannot go yet
 

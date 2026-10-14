@@ -4,8 +4,8 @@
   `explorations/patent-drawing-pipeline/research/SOURCES.md` (re-graduated 2026-10-13).
 - **Predecessor ledger:** `goals/design-figure-generation/research/SOURCES.md` (kernel, rules,
   upstream licenses); rows there are not repeated here.
-- **Provenance:** the attorney's 2026-10-10 review and the operator's 2026-10-13 request (SPEC
-  Source Hierarchy #1).
+- **Provenance:** the attorney's 2026-10-10 review, the operator's 2026-10-13 request, and the
+  attorney's 2026-10-14 answers to the round-1 questions (SPEC Source Hierarchy #1).
 
 ## 1. Mined source corpus
 
@@ -15,6 +15,7 @@ source, never its content.
 | Source | Title | Location | Theme | Disposition |
 |--------|-------|----------|-------|-------------|
 | `review-mail-2026-10-10` | The attorney's reply of 2026-10-10, subject "Re: [client] design application: draft drawing sheets for your review" (client name redacted) | Mailbox; attachments saved under `<corpus>/ops/patent-drawing-pipeline/matter/inputs/feedback-2026-10-10/` (eight annotated sheet PDFs, two reference images) | F1-F10 markup | Source Hierarchy #1; quoted only in the corpus |
+| `answers-mail-2026-10-14` | The attorney's reply of 2026-10-14 02:09Z answering the round-1 questions, same subject thread (client name redacted) | Mailbox; answers transcribed under `<corpus>/ops/patent-drawing-pipeline/matter/round-2/attorney-answers-2026-10-14.md` | Rulings on F1, F2, F3, F5, F6, F8, F10; Q7 open | Source Hierarchy #1; SPEC Decision Log rows of 2026-10-14; quoted only in the corpus |
 | `guide-1993` | USPTO, Guide for the Preparation of Patent Drawings (1993), Appendix 4 Examples 32-38 (surface shading) at pp. A-4-77..A-4-89 | HathiTrust full-view id `osu.32437010555650` | F4 shading calibration | reference |
 | `guide-2002-hathi` | USPTO, Guide for the Preparation of Patent Drawings (June 2002) | HathiTrust full-view id `mdp.39015051563529` | F4, F7 | reference |
 | `guide-2002-gbooks` | Same 2002 edition, 149 pages; Examples 16 (spaced-line shading) and 17 (stippling) | Google Books id `iu5UAAAAMAAJ`; PDF saved under `<corpus>/ops/patent-drawing-pipeline/reference/` (sha256 `4e5ab386f190586bcf7ff3c6cff0871c12c53b0b96cbed4951d17f716936b882`) | F4 calibration | reference |

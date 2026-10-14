@@ -50,6 +50,13 @@ export * from "./Geometry.schemas.ts";
  */
 export * from "./Geometry.segments.ts";
 /**
+ * SHA-256 digests of recorded bytes.
+ *
+ * @since 0.0.0
+ * @category utilities
+ */
+export * from "./Manifest.digest.ts";
+/**
  * Render manifest schemas.
  *
  * @since 0.0.0

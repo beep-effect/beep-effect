@@ -401,6 +401,42 @@ export class SkillUpstreamContent extends S.Class<SkillUpstreamContent>($I`Skill
 ) {}
 
 /**
+ * The commits that touched a skill's tree path at its tracking ref, newest first.
+ *
+ * **Details**
+ *
+ * The list is bounded. `truncated` is `true` when the upstream reports more
+ * history than was returned, so a caller must never read a truncated list as
+ * the skill's complete history.
+ *
+ * **Example** (Record a one-commit history)
+ *
+ * ```ts
+ * import { SkillPathHistory } from "@beep/repo-cli/commands/Skills/Skills.schemas"
+ * import * as S from "effect/Schema"
+ *
+ * const history = S.decodeUnknownSync(SkillPathHistory)({
+ *   revisions: ["91f21dfe1328585670275781b4525fff2507f917"],
+ *   truncated: false,
+ * })
+ *
+ * console.log(history.revisions[0]) // "91f21dfe1328585670275781b4525fff2507f917"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SkillPathHistory extends S.Class<SkillPathHistory>($I`SkillPathHistory`)(
+  {
+    revisions: S.NonEmptyArray(SkillGitRevision),
+    truncated: S.Boolean,
+  },
+  $I.annote("SkillPathHistory", {
+    description: "Bounded newest-first commits touching a skill's tree path, with a truncation flag.",
+  })
+) {}
+
+/**
  * Immutable upstream identity and observation metadata for one skill.
  *
  * **Details**

@@ -7,22 +7,34 @@
  * Without a label style, lettering is drawn from a small single-stroke glyph
  * table (digits, `F`, `I`, `G`, `.`, `/`). A label style switches a label to
  * the same stroke table at a point size, or to filled sans or serif outlines.
- * Either way a sheet needs no font and embeds none. Outlined labels are
- * placed by the ink box of the glyph run: the sheet number's ink top sits on
- * the label line under the top margin, the `FIG. n` ink bottom on the one over
- * the bottom margin. Coordinates are rounded to three decimals and segments
- * keep the engine's canonical order, so equal geometry yields byte-equal SVG.
+ * On the default `outline` route a sheet needs no font and embeds none.
+ * Outlined labels are placed by the ink box of the glyph run: the sheet
+ * number's ink top sits on the label line under the top margin, the `FIG. n`
+ * ink bottom on the one over the bottom margin. A `text` label is an SVG
+ * `<text>` element centred on the sight, its baseline where the outline
+ * route would put it for the same face. Coordinates are rounded to three
+ * decimals and segments keep the engine's canonical order, so equal geometry
+ * yields byte-equal SVG.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { A, N, O } from "@beep/utils";
+import { A, Html, N, O } from "@beep/utils";
 import { pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import { SANS_FACE, SERIF_FACE } from "./internal/LabelGlyphs.ts";
 import { alphabetSpan } from "./internal/LabelOutline.ts";
-import { LabelTypeface, marginsCm, PT_PER_CM, PT_PER_MM, pageSizePt, SheetLabelFaces } from "./Sheet.schemas.ts";
+import {
+  LabelRender,
+  LabelTypeface,
+  labelFontFamily,
+  marginsCm,
+  PT_PER_CM,
+  PT_PER_MM,
+  pageSizePt,
+  SheetLabelFaces,
+} from "./Sheet.schemas.ts";
 import type { Segment2 } from "./Geometry.schemas.ts";
 import type { InkBox, LabelFace } from "./internal/LabelOutline.ts";
 import type { LabelStyle, SheetOptions } from "./Sheet.schemas.ts";
@@ -287,11 +299,19 @@ export const viewExtents = (
 };
 
 // How one label is lettered: the original stroke at `letterHeightCm`, the
-// stroke table at a style's size, or a filled outline face.
+// stroke table at a style's size, a filled outline face, or embedded text
+// placed with a face's metrics.
 type LabelLettering =
   | { readonly _tag: "legacy"; readonly cap: number }
   | { readonly _tag: "stroke"; readonly cap: number; readonly halfStroke: number }
-  | { readonly _tag: "outline"; readonly face: LabelFace; readonly scale: number };
+  | { readonly _tag: "outline"; readonly face: LabelFace; readonly scale: number }
+  | {
+      readonly _tag: "text";
+      readonly face: LabelFace;
+      readonly scale: number;
+      readonly family: string;
+      readonly sizePt: number;
+    };
 
 const letteringOf = (
   style: O.Option<LabelStyle>,
@@ -303,7 +323,11 @@ const letteringOf = (
     onSome: (s): LabelLettering => {
       const outline = (vendored: LabelFace): LabelLettering => {
         const face = O.getOrElse(override, () => vendored);
-        return { _tag: "outline", face, scale: s.sizePt / face.unitsPerEm };
+        const scale = s.sizePt / face.unitsPerEm;
+        return LabelRender.$match(s.render, {
+          outline: (): LabelLettering => ({ _tag: "outline", face, scale }),
+          text: (): LabelLettering => ({ _tag: "text", face, scale, family: labelFontFamily(s), sizePt: s.sizePt }),
+        });
       };
       return LabelTypeface.$match(s.typeface, {
         stroke: (): LabelLettering => ({
@@ -317,16 +341,19 @@ const letteringOf = (
     },
   });
 
+const faceExtent = ({ face, scale }: { readonly face: LabelFace; readonly scale: number }): number => {
+  const [low, high] = alphabetSpan(face);
+  return (high - low) * scale;
+};
+
 // Height every label of a lettering fits in, whatever its digits: the band
 // under the top margin (and over the bottom one) is twice this.
 const letteringExtent = (lettering: LabelLettering): number =>
   Match.valueTags(lettering, {
     legacy: ({ cap }) => cap,
     stroke: ({ cap, halfStroke }) => cap + 2 * halfStroke,
-    outline: ({ face, scale }) => {
-      const [low, high] = alphabetSpan(face);
-      return (high - low) * scale;
-    },
+    outline: faceExtent,
+    text: faceExtent,
   });
 
 const NO_FACES = SheetLabelFaces.make({});
@@ -376,9 +403,9 @@ const geometryOf = (options: SheetOptions, faces: SheetLabelFaces) => {
  *
  * **Gotchas**
  *
- * A label style with a `fontFile` is measured here with the vendored face of
- * its typeface; {@link commonScale} and {@link composeSheet} take the loaded
- * faces through their `faces` input.
+ * A label style with a `fontFile`, or a `text` label, is measured here with
+ * the vendored face of its typeface; {@link commonScale} and
+ * {@link composeSheet} take the loaded faces through their `faces` input.
  *
  * **Example** (Letter sight)
  *
@@ -481,7 +508,15 @@ const runPath = (input: {
   }).d;
 };
 
-type LetteredLabel = { readonly strokes: ReadonlyArray<Polyline>; readonly fill: string };
+type LetteredLabel = {
+  readonly strokes: ReadonlyArray<Polyline>;
+  readonly fill: string;
+  readonly text: string;
+};
+
+// Baseline that puts a glyph run's ink top (anchor "top") or ink bottom on `edge`.
+const inkBaseline = (ink: InkBox, scale: number, edge: number, anchor: "top" | "bottom"): number =>
+  anchor === "top" ? edge + ink[3] * scale : edge + ink[1] * scale;
 
 // Letter one label centred at `centreX`, its ink edge on `edge`: the ink top
 // for the sheet number (`anchor: "top"`), the ink bottom for `FIG. n`.
@@ -501,6 +536,7 @@ const letter = (input: {
       capHeightPt: cap,
     }),
     fill: "",
+    text: "",
   });
   return Match.valueTags(lettering, {
     legacy: ({ cap }) => stroked(cap, anchor === "top" ? edge + cap : edge),
@@ -514,10 +550,17 @@ const letter = (input: {
           text,
           scale,
           x: centreX - ((xMin + xMax) / 2) * scale,
-          baseline: anchor === "top" ? edge + yMax * scale : edge + yMin * scale,
+          baseline: inkBaseline([xMin, yMin, xMax, yMax], scale, edge, anchor),
         }),
+        text: "",
       };
     },
+    // One user unit is one point, so `font-size` is the style's point size.
+    text: ({ face, scale, family, sizePt }): LetteredLabel => ({
+      strokes: [],
+      fill: "",
+      text: `<text x="${r3(centreX)}" y="${r3(inkBaseline(runInk(face, text), scale, edge, anchor))}" font-family="${Html.escapeHtml(family)}" font-size="${r3(sizePt)}" text-anchor="middle" fill="#000000">${Html.escapeHtml(text)}</text>`,
+    }),
   });
 };
 
@@ -527,8 +570,9 @@ const letter = (input: {
  * **Details**
  *
  * Stroke labels go in the stroked `labels` path; outlined labels go in one
- * filled `label-outlines` path. A sheet without label styles is byte-equal to
- * one composed before label styles existed.
+ * filled `label-outlines` path; text labels are `<text>` elements after them.
+ * A sheet without label styles is byte-equal to one composed before label
+ * styles existed.
  *
  * **Example** (A sheet with one segment)
  *
@@ -609,6 +653,7 @@ export const composeSheet = (input: {
   const labelLayers = [
     ...(A.length(labels) === 0 ? [] : [`<path id="labels" d="${labelPath}" ${attrs}/>`]),
     ...(outlinePath === "" ? [] : [`<path id="label-outlines" d="${outlinePath}" fill="#000000" stroke="none"/>`]),
+    ...A.filter([sheetNumber.text, figLabel.text], (element) => element !== ""),
   ];
   return pipe(
     [

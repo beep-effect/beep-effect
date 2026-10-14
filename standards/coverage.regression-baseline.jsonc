@@ -15420,6 +15420,18 @@
             "functions": 36
           }
         },
+        "packages/drivers/m365/src/M365.env.ts": {
+          "lines": 96,
+          "statements": 96,
+          "branches": 100,
+          "functions": 87.5,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
         "packages/drivers/m365/src/M365.errors.ts": {
           "lines": 89.74,
           "statements": 84.44,
@@ -15430,6 +15442,18 @@
             "statements": 7,
             "branches": 2,
             "functions": 7
+          }
+        },
+        "packages/drivers/m365/src/M365.links.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/drivers/m365/src/M365.schemas.ts": {
@@ -17573,6 +17597,105 @@
         }
       }
     },
+    "@beep/occt": {
+      "path": "packages/drivers/occt",
+      "lines": 93.86,
+      "statements": 94.32,
+      "branches": 70.73,
+      "functions": 88.5,
+      "uncovered": {
+        "lines": 13,
+        "statements": 13,
+        "branches": 12,
+        "functions": 10
+      },
+      "files": {
+        "packages/drivers/occt/src/Occt.errors.ts": {
+          "lines": 87.5,
+          "statements": 88.88,
+          "branches": 16.66,
+          "functions": 66.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 5,
+            "functions": 1
+          }
+        },
+        "packages/drivers/occt/src/Occt.models.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/occt/src/Occt.service.ts": {
+          "lines": 87.5,
+          "statements": 87.75,
+          "branches": 100,
+          "functions": 71.42,
+          "uncovered": {
+            "lines": 6,
+            "statements": 6,
+            "branches": 0,
+            "functions": 6
+          }
+        },
+        "packages/drivers/occt/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/occt/src/internal/kernel.ts": {
+          "lines": 94.44,
+          "statements": 94.73,
+          "branches": 88,
+          "functions": 91.42,
+          "uncovered": {
+            "lines": 5,
+            "statements": 5,
+            "branches": 3,
+            "functions": 3
+          }
+        },
+        "packages/drivers/occt/src/internal/shading.ts": {
+          "lines": 98.27,
+          "statements": 98.41,
+          "branches": 62.5,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 3,
+            "functions": 0
+          }
+        },
+        "packages/drivers/occt/src/internal/vector.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 50,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        }
+      }
+    },
     "@beep/oip-web": {
       "path": "apps/oip-web",
       "lines": 77.52,
@@ -19646,6 +19769,93 @@
         }
       }
     },
+    "@beep/pdf-tools": {
+      "path": "packages/drivers/pdf-tools",
+      "lines": 90.47,
+      "statements": 89.47,
+      "branches": 73.25,
+      "functions": 74.02,
+      "uncovered": {
+        "lines": 22,
+        "statements": 26,
+        "branches": 23,
+        "functions": 20
+      },
+      "files": {
+        "packages/drivers/pdf-tools/src/PdfTools.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 50,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 3,
+            "functions": 0
+          }
+        },
+        "packages/drivers/pdf-tools/src/PdfTools.models.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/pdf-tools/src/PdfTools.service.ts": {
+          "lines": 87.35,
+          "statements": 87.09,
+          "branches": 75,
+          "functions": 69.23,
+          "uncovered": {
+            "lines": 11,
+            "statements": 12,
+            "branches": 2,
+            "functions": 12
+          }
+        },
+        "packages/drivers/pdf-tools/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/pdf-tools/src/internal/ppm.ts": {
+          "lines": 94.44,
+          "statements": 93.75,
+          "branches": 75.86,
+          "functions": 93.33,
+          "uncovered": {
+            "lines": 5,
+            "statements": 6,
+            "branches": 14,
+            "functions": 1
+          }
+        },
+        "packages/drivers/pdf-tools/src/internal/structure.ts": {
+          "lines": 85.36,
+          "statements": 81.81,
+          "branches": 71.42,
+          "functions": 65,
+          "uncovered": {
+            "lines": 6,
+            "statements": 8,
+            "branches": 4,
+            "functions": 7
+          }
+        }
+      }
+    },
     "@beep/pglite": {
       "path": "packages/drivers/pglite",
       "lines": 100,
@@ -19772,6 +19982,69 @@
         }
       }
     },
+    "@beep/poppler": {
+      "path": "packages/drivers/poppler",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "packages/drivers/poppler/src/Poppler.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/poppler/src/Poppler.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/poppler/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/poppler/src/internal/PosInt.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
     "@beep/postgres": {
       "path": "packages/drivers/postgres",
       "lines": 75.51,
@@ -19879,6 +20152,57 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/practice-identify": {
+      "path": "apps/practice-identify",
+      "lines": 92.9,
+      "statements": 90.9,
+      "branches": 73.52,
+      "functions": 83.67,
+      "uncovered": {
+        "lines": 10,
+        "statements": 14,
+        "branches": 9,
+        "functions": 8
+      },
+      "files": {
+        "apps/practice-identify/src/PracticeIdentify.command.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-identify/src/bin.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 100,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "apps/practice-identify/src/runtime/Layer.ts": {
+          "lines": 93.49,
+          "statements": 90.83,
+          "branches": 78.12,
+          "functions": 77.77,
+          "uncovered": {
+            "lines": 8,
+            "statements": 12,
+            "branches": 7,
+            "functions": 8
           }
         }
       }
@@ -20050,6 +20374,129 @@
             "statements": 13,
             "branches": 0,
             "functions": 4
+          }
+        }
+      }
+    },
+    "@beep/practice-m365-contacts": {
+      "path": "apps/practice-m365-contacts",
+      "lines": 73.15,
+      "statements": 72.81,
+      "branches": 75.69,
+      "functions": 71.06,
+      "uncovered": {
+        "lines": 98,
+        "statements": 115,
+        "branches": 35,
+        "functions": 46
+      },
+      "files": {
+        "apps/practice-m365-contacts/src/Contacts.command.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 24,
+            "statements": 26,
+            "branches": 4,
+            "functions": 15
+          }
+        },
+        "apps/practice-m365-contacts/src/Contacts.mailbox.ts": {
+          "lines": 12.5,
+          "statements": 11.47,
+          "branches": 0,
+          "functions": 25,
+          "uncovered": {
+            "lines": 49,
+            "statements": 54,
+            "branches": 14,
+            "functions": 12
+          }
+        },
+        "apps/practice-m365-contacts/src/Contacts.plan.ts": {
+          "lines": 86.36,
+          "statements": 86.79,
+          "branches": 96.15,
+          "functions": 76,
+          "uncovered": {
+            "lines": 6,
+            "statements": 7,
+            "branches": 1,
+            "functions": 6
+          }
+        },
+        "apps/practice-m365-contacts/src/Contacts.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-m365-contacts/src/Contacts.service.ts": {
+          "lines": 97.43,
+          "statements": 94.47,
+          "branches": 83.52,
+          "functions": 91.8,
+          "uncovered": {
+            "lines": 4,
+            "statements": 10,
+            "branches": 14,
+            "functions": 5
+          }
+        },
+        "apps/practice-m365-contacts/src/Contacts.source.ts": {
+          "lines": 95.45,
+          "statements": 93.1,
+          "branches": 100,
+          "functions": 87.09,
+          "uncovered": {
+            "lines": 2,
+            "statements": 4,
+            "branches": 0,
+            "functions": 4
+          }
+        },
+        "apps/practice-m365-contacts/src/Contacts.state.ts": {
+          "lines": 85.18,
+          "statements": 86.2,
+          "branches": 100,
+          "functions": 87.5,
+          "uncovered": {
+            "lines": 4,
+            "statements": 4,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "apps/practice-m365-contacts/src/bin.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 8,
+            "statements": 9,
+            "branches": 2,
+            "functions": 3
+          }
+        },
+        "apps/practice-m365-contacts/src/main.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 0
           }
         }
       }
@@ -24135,6 +24582,30 @@
             "functions": 32
           }
         },
+        "packages/tooling/tool/cli/src/commands/Drawings/Drawings.intake.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Drawings/Drawings.intake.ts": {
+          "lines": 97.1,
+          "statements": 94.78,
+          "branches": 92.18,
+          "functions": 87.05,
+          "uncovered": {
+            "lines": 6,
+            "statements": 12,
+            "branches": 5,
+            "functions": 11
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Drawings/Drawings.judge.ts": {
           "lines": 55,
           "statements": 55.95,
@@ -24157,6 +24628,42 @@
             "statements": 19,
             "branches": 0,
             "functions": 17
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Drawings/Drawings.review.rules.ts": {
+          "lines": 94.69,
+          "statements": 94.55,
+          "branches": 88.63,
+          "functions": 89.87,
+          "uncovered": {
+            "lines": 7,
+            "statements": 8,
+            "branches": 5,
+            "functions": 8
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Drawings/Drawings.review.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Drawings/Drawings.review.ts": {
+          "lines": 97.25,
+          "statements": 95.4,
+          "branches": 89.36,
+          "functions": 88.23,
+          "uncovered": {
+            "lines": 5,
+            "statements": 9,
+            "branches": 5,
+            "functions": 8
           }
         },
         "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts": {
@@ -35692,6 +36199,225 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/technical-drawing": {
+      "path": "packages/foundation/capability/technical-drawing",
+      "lines": 96.33,
+      "statements": 96.24,
+      "branches": 82.02,
+      "functions": 91.7,
+      "uncovered": {
+        "lines": 21,
+        "statements": 23,
+        "branches": 32,
+        "functions": 20
+      },
+      "files": {
+        "packages/foundation/capability/technical-drawing/src/Approval.rules.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/Approval.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/Approval.service.ts": {
+          "lines": 98.24,
+          "statements": 96.72,
+          "branches": 100,
+          "functions": 89.47,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/FigureSet.service.ts": {
+          "lines": 95.04,
+          "statements": 94.65,
+          "branches": 91.66,
+          "functions": 87.75,
+          "uncovered": {
+            "lines": 6,
+            "statements": 7,
+            "branches": 1,
+            "functions": 6
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/Geometry.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/Geometry.segments.ts": {
+          "lines": 96.15,
+          "statements": 96.15,
+          "branches": 93.33,
+          "functions": 91.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/Manifest.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/Sheet.compose.ts": {
+          "lines": 96.49,
+          "statements": 96.72,
+          "branches": 70.45,
+          "functions": 93.75,
+          "uncovered": {
+            "lines": 4,
+            "statements": 4,
+            "branches": 13,
+            "functions": 3
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/Sheet.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/TechnicalDrawing.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 50,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 3,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/TechnicalDrawing.ports.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/Validation.rules.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/Validation.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/View.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 87.5,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/internal/LabelGlyphs.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/internal/LabelOutline.ts": {
+          "lines": 86.56,
+          "statements": 87.5,
+          "branches": 69.04,
+          "functions": 79.48,
+          "uncovered": {
+            "lines": 9,
+            "statements": 9,
+            "branches": 13,
+            "functions": 8
           }
         }
       }

@@ -51,10 +51,11 @@ v1 file, because the 29 local skills would lose their installed-tree hash and
    hardcoded `shadcnResolutionInput` is deleted, and `provenance <skill>` reads its
    resolution from the lock.
 3. **Plan before write.** `beep skills lock migrate --plan --json` is read-only. It
-   emits a `skills-lock-migration-plan/v1` report: per skill, the v1 entry, the
-   computed v2 entry, drift paths, generated patch hunks with proposed labels, and
-   conflicts. `--write` performs an atomic rename only when the plan has no conflicts
-   and its digest matches `--expect <digest>`. That is the shared plan-contract shape
+   emits a `skills-lock-migration-plan/v2` report (v1 before B-3a): per skill, the v1
+   entry, the computed v2 entry, the pin proposal, classified drift, generated patch
+   hunks with proposed labels, and conflicts, sealed by `planDigest`. `--write`
+   performs an atomic rename only when the plan has no conflicts and its digest
+   matches `--expect <digest>`. That is the shared plan-contract shape
    from Workstream E.
 4. **Patches are generated, then classified.** For a vendored skill whose installed
    tree differs from the pristine snapshot, migration emits one patch per drifted
@@ -67,15 +68,18 @@ v1 file, because the 29 local skills would lose their installed-tree hash and
    `sourceRevision` through the existing `SkillUpstreamContentSource` and cached
    content-addressed under `~/.cache/beep/skills/<treeHash>`. The lock carries the
    tree manifest hash, so a fetched snapshot is verified before use.
-6. **Drift is classified before it becomes a patch.** The migration plan compares each
-   drifted file with the tracking ref's current upstream head and names only what that
-   proves: `matches-upstream-head` (the floating updater pulled newer upstream content;
-   the remedy is a pin bump to `upstreamHead`) or `differs-from-upstream-head` (the
-   file matches neither the pin nor the current head). A differing file may be a repo
-   customization or a pull of an intermediate upstream revision. The plan does not walk
-   every upstream commit to tell those apart, so it never asserts "local". Differing
-   files become `temporary-drift` patch candidates that the HITL hunk review classifies
-   (B8).
+6. **Drift is classified against the upstream path history before it becomes a patch.**
+   The migration plan lists the commits touching the skill's tree path at its tracking
+   ref (newest first, at most 100; a longer history is reported as truncated, never read
+   as complete). It walks them newest to oldest. The newest revision whose whole
+   mode-aware tree hash equals the installed tree is proposed as the pin
+   (`pristine-at-revision`). Otherwise the seed pin is kept (`keep-seed-pin`), and each
+   file that drifted from the seed pin is classified by what the walk proves:
+   `matches-upstream-revision` names the newest revision carrying its bytes and mode;
+   `matches-no-examined-revision` means no examined revision does, so the file is a
+   `temporary-drift` patch candidate for the HITL hunk review (B8). The plan records the
+   path-history head it classified against per skill and seals it into `planDigest`, so a
+   reviewed plan stops matching once upstream changes the skill (B11).
 7. **The floating updater stops touching vendored skills.** After the lock flip
    (B-3), `skills update` refuses to refetch a `vendored` entry at a floating ref.
    Vendored skills move only through a pinned bump (Renovate, B3) that replays the
@@ -91,24 +95,33 @@ v1 file, because the 29 local skills would lose their installed-tree hash and
   schema with a v1 decoder, `SkillResolutionSeed`, the pure migration compiler,
   `skills lock migrate --plan --json`, tests (golden plan per wave-1 skill,
   fail-closed on unresolved), and the committed plan report as the FP-eyeball input.
-- **PR B-3 (write, after the plan's verdict):** `--write`, the lock flip, the
-  generated patch series, `provenance` reading from the lock, `skills update --check`
-  over v2.
+- **PR B-3a (read-only, after the plan's verdict):** path-history reclassification
+  (B11): the content source lists the path history, the plan proposes the newest
+  pristine revision as the pin, classifies drift by the newest matching revision or
+  none, isolates a per-skill provenance refusal as `unresolved`, and seals the
+  classified-against path-history heads into `planDigest`.
+- **PR B-3b (write, next):** `--write --expect <planDigest>` and the lock flip (entries
+  recomputed at each proposed pin), the generated patch series for the
+  `matches-no-examined-revision` files, `provenance` reading its resolution from the
+  lock, `skills update --check` over v2, and the floating updater refusing to refetch a
+  `vendored` entry (contract 7).
 - **Later:** `materialize` + the clearing-house equivalence check (P4); Renovate +
   hunk ledger (P5).
 
 ### Tracked follow-ups (from #1633 review, round 3)
 
-- **B-3 input:** a per-skill `SkillsCommandError` from `resolveSkillProvenance`
-  still aborts the whole plan. Catch it per skill, as the content error already is,
-  and emit an `unresolved` row instead.
-- **B-3 input:** `matches-upstream-head` is not yet a safe pin-bump signal, because
-  `classifyDrift` sees only the drifted paths and never the rest of the tree at the
-  head. Before the lock write relies on it, either compare the whole tree at the
-  head or reword the promise. The path-history reclassification in the B verdict
-  (`p1-fp-eyeball-verdicts.md`) subsumes this.
+Both are addressed by B-3a.
 
-## Decisions (B5–B10)
+- **Addressed (B-3a):** a per-skill `SkillsCommandError` from `resolveSkillProvenance`
+  (license digest mismatch, unsafe upstream path, unencodable entry) used to abort the
+  whole plan. It is now caught per skill, like the content error, and emitted as an
+  `unresolved` row (`provenance-unavailable: …`) that keeps the skill's local entry.
+- **Addressed (B-3a):** `matches-upstream-head` was not a safe pin-bump signal, because
+  `classifyDrift` saw only the drifted paths at the head. The class and the
+  `upstreamHead` pin-bump promise are gone. A pin is proposed only when a whole
+  upstream tree equals the installed tree (B11).
+
+## Decisions (B5–B11)
 
 - **B5 — tagged-union lock.** Reason: the 29 local skills need the same drift
   oracle, and one file is what Renovate and `update --check` already read. Reverse:
@@ -125,9 +138,9 @@ v1 file, because the 29 local skills would lose their installed-tree hash and
 - **B10 — drift classification and the floating updater.** Reason: the live run
   shows floating `main` refetches are indistinguishable from local edits without
   classification, and would invalidate pins on every update. The classes name only
-  what a comparison with the current head proves (review on #1633). Walking every
-  upstream commit to separate intermediate pulls from customizations is deferred to the
-  HITL review. Reverse: allow
+  what the plan's comparison proves (review on #1633). B11 replaces the head-only
+  comparison with a path-history walk that separates intermediate upstream pulls from
+  local edits. Reverse: allow
   floating refetch for skills explicitly marked `tracking: floating` in the lock.
 - **B9 — patch owner resolves from `.github/CODEOWNERS`** at the merge-base, with
   GitHub last-match semantics over the skill's installed path, exactly as the knowledge
@@ -137,3 +150,14 @@ v1 file, because the 29 local skills would lose their installed-tree hash and
   policy the repo already has, and keeps one owner-resolution rule across workstreams
   (review on #1626). Reverse: a dedicated owner registry, if per-path ownership outgrows
   CODEOWNERS.
+- **B11 — path-history reclassification (B-3a).** The plan walks the skill's upstream
+  path history newest to oldest, proposes the newest revision whose whole tree equals
+  the installed tree as the pin, and otherwise classifies each drifted file by the
+  newest revision carrying its bytes (`matches-upstream-revision`) or none
+  (`matches-no-examined-revision`). The walked history head is sealed into
+  `planDigest`. Reason: the Workstream B lock-plan verdict
+  (`p1-fp-eyeball-verdicts.md`) rejected head-only classification, because three of
+  the five "differs from upstream head" files were byte-equal to older upstream path
+  revisions that the floating updater had pulled. Reverse: revert to head-only
+  classification (`matches-upstream-head` / `differs-from-upstream-head` against the
+  tracking ref's current head).

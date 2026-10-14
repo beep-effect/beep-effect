@@ -48,20 +48,22 @@ P4 in progress. Shipped on main so far:
   adoption). This packet adopted itself with its own executor (self-hosting test case
   #1).
 - **B:** the read-only `beep skills lock-plan` with six ratified resolution seeds.
+- **C:** Stage-2 PR 1, the read-only `beep knowledge doctor --report`
+  ([`research/p4-report-knowledge-doctor.md`](./research/p4-report-knowledge-doctor.md)).
 - **Designs:** B, E, and C Stage 2
   ([`research/p4-skills-warehouse-design.md`](./research/p4-skills-warehouse-design.md),
   [`research/p4-goals-materialize-design.md`](./research/p4-goals-materialize-design.md),
   [`research/p4-knowledge-doctor-design.md`](./research/p4-knowledge-doctor-design.md)).
 
-This PR adds C Stage-2 PR 1, the read-only `beep knowledge doctor --report`, with its
-FP-eyeball report
-([`research/p4-report-knowledge-doctor.md`](./research/p4-report-knowledge-doctor.md)).
+The D and B verdicts are recorded. The D verdict unlocked this PR (design PR 3):
+`beep goals doctor` now emits `capability-duplicate-declaration` and
+`capability-reference-provides` (blocking, ratcheted) and `capability-stranded`
+(advisory). All three are zero on the live census, so the baseline is unchanged. A
+separate manifest-only PR declares the four missing `provides`. The B verdict gates the
+lock write on a path-history reclassification (B-3).
 
-Waiting on verdicts:
-
-- the D and B reports gate D's doctor findings and B's lock write;
-- the C report gates PR 2 (domain evaluators and the assertion/planned-command
-  classification fixes).
+Waiting on verdicts: the C report gates PR 2 (domain evaluators and the
+assertion/planned-command classification fixes).
 
 Phase-0 verdicts: [`research/p1-fp-eyeball-verdicts.md`](./research/p1-fp-eyeball-verdicts.md).
 

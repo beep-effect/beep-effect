@@ -1,13 +1,15 @@
 /**
  * PDF tools service: `rsvg-convert` SVG → PDF, pdf-lib structure inspection,
- * and poppler `pdftoppm` page rasters measured without leaving the driver.
+ * poppler `pdftoppm` page rasters measured without leaving the driver, and
+ * the markup-reading verbs a review round needs (text blocks with their
+ * rectangles, raster ink coverage between two pages, annotation objects).
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $PdfToolsId } from "@beep/identity/packages";
-import { O, Str, thunkEmptyStr } from "@beep/utils";
+import { A, Html, O, Str, thunkEmptyStr } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -17,17 +19,37 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { PDFDocument } from "pdf-lib";
+import { inkCoverageOf } from "./internal/coverage.ts";
 import { measureP6 } from "./internal/ppm.ts";
-import { structureOf } from "./internal/structure.ts";
+import { annotationsOf, structureOf } from "./internal/structure.ts";
+import { parseBboxLayout } from "./internal/words.ts";
 import { PdfToolsError } from "./PdfTools.errors.ts";
-import { PageTextRequest, PngRequest, RasterRequest, SvgToPdfRequest, SvgToPdfResult } from "./PdfTools.models.ts";
-import type { PdfStructure, PdfVersion, RasterMetrics } from "./PdfTools.models.ts";
+import {
+  InkCoverageRequest,
+  PageTextRequest,
+  PinnedFontconfigRequest,
+  PngRequest,
+  RasterRequest,
+  SvgToPdfRequest,
+  SvgToPdfResult,
+} from "./PdfTools.models.ts";
+import type {
+  InkCoverage,
+  PdfAnnotation,
+  PdfStructure,
+  PdfVersion,
+  RasterMetrics,
+  TextBlock,
+} from "./PdfTools.models.ts";
 
 const $I = $PdfToolsId.create("PdfTools.service");
 const validateSvgToPdfRequest = S.decodeUnknownEffect(S.toType(SvgToPdfRequest));
 const validateRasterRequest = S.decodeUnknownEffect(S.toType(RasterRequest));
 const validatePngRequest = S.decodeUnknownEffect(S.toType(PngRequest));
 const validatePageTextRequest = S.decodeUnknownEffect(S.toType(PageTextRequest));
+const validateInkCoverageRequest = S.decodeUnknownEffect(S.toType(InkCoverageRequest));
+// Luminance at or below which a pixel counts as ink in a coverage comparison.
+const COVERAGE_BLACK_THRESHOLD = 128;
 const encoder = new TextEncoder();
 
 // pdf-lib always writes a `%PDF-1.7` header; the merged pages only use the
@@ -49,6 +71,50 @@ const mergePages = Effect.fn("PdfTools.mergePages")(function* (pages: ReadonlyAr
   saved.set(encoder.encode(`%PDF-${version}`), 0);
   return saved;
 });
+
+/**
+ * The fontconfig file a pinned conversion runs under.
+ *
+ * **Details**
+ *
+ * The file names `fonts.directory` as the only font directory (fontconfig
+ * reads it recursively) and includes no system configuration, so no host font
+ * is visible. Each alias rebinds its requested family to the resolved family
+ * with a strong binding. `cacheDirectory` holds fontconfig's scan cache.
+ *
+ * **Example** (Pin one family)
+ *
+ * ```ts
+ * import { FontFamilyAlias, PinnedFontconfigRequest, PinnedFonts, pinnedFontconfig } from "@beep/pdf-tools"
+ *
+ * const fonts = PinnedFonts.make({
+ *   directory: "/fonts",
+ *   families: [FontFamilyAlias.make({ requested: "Arial", family: "Arial" })]
+ * })
+ * console.log(pinnedFontconfig(PinnedFontconfigRequest.make({ fonts, cacheDirectory: "/tmp/fc-cache" })))
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const pinnedFontconfig = ({ fonts, cacheDirectory }: PinnedFontconfigRequest): string =>
+  A.join(
+    [
+      `<?xml version="1.0"?>`,
+      `<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">`,
+      `<fontconfig>`,
+      `  <dir>${Html.escapeHtml(fonts.directory)}</dir>`,
+      `  <cachedir>${Html.escapeHtml(cacheDirectory)}</cachedir>`,
+      ...A.map(
+        fonts.families,
+        (alias) =>
+          `  <match target="pattern"><test name="family" qual="any"><string>${Html.escapeHtml(alias.requested)}</string></test><edit name="family" mode="assign" binding="strong"><string>${Html.escapeHtml(alias.family)}</string></edit></match>`
+      ),
+      `</fontconfig>`,
+      ``,
+    ],
+    "\n"
+  );
 
 /**
  * Technical knobs: executable names and the process kill grace period.
@@ -110,7 +176,10 @@ export class PdfToolsConfig extends S.Class<PdfToolsConfig>($I`PdfToolsConfig`)(
  *   inspect: () => Effect.die("not implemented"),
  *   measurePage: () => Effect.die("not implemented"),
  *   renderPng: () => Effect.die("not implemented"),
- *   pageText: () => Effect.die("not implemented")
+ *   pageText: () => Effect.die("not implemented"),
+ *   pageWords: () => Effect.die("not implemented"),
+ *   inkCoverage: () => Effect.die("not implemented"),
+ *   annotations: () => Effect.die("not implemented")
  * }
  * console.log(service)
  * ```
@@ -119,9 +188,12 @@ export class PdfToolsConfig extends S.Class<PdfToolsConfig>($I`PdfToolsConfig`)(
  * @since 0.0.0
  */
 export interface PdfToolsShape {
+  readonly annotations: (pdfPath: string) => Effect.Effect<ReadonlyArray<PdfAnnotation>, PdfToolsError>;
+  readonly inkCoverage: (request: InkCoverageRequest) => Effect.Effect<InkCoverage, PdfToolsError>;
   readonly inspect: (pdfPath: string) => Effect.Effect<PdfStructure, PdfToolsError>;
   readonly measurePage: (request: RasterRequest) => Effect.Effect<RasterMetrics, PdfToolsError>;
   readonly pageText: (request: PageTextRequest) => Effect.Effect<string, PdfToolsError>;
+  readonly pageWords: (request: PageTextRequest) => Effect.Effect<ReadonlyArray<TextBlock>, PdfToolsError>;
   readonly renderPng: (request: PngRequest) => Effect.Effect<string, PdfToolsError>;
   readonly svgToPdf: (request: SvgToPdfRequest) => Effect.Effect<SvgToPdfResult, PdfToolsError>;
 }
@@ -201,7 +273,30 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
     const dir = yield* fs
       .makeTempDirectoryScoped({ prefix: "beep-pdf-tools-" })
       .pipe(Effect.mapError(io("Could not create a temp directory.")));
-    const env = { SOURCE_DATE_EPOCH: `${request.sourceDateEpoch}` };
+    // Pinned fonts: rsvg-convert sees only the given directory, through a
+    // fontconfig file of its own.
+    const fontconfig = yield* O.match(request.fonts, {
+      onNone: () => Effect.succeed({}),
+      onSome: Effect.fnUntraced(function* (fonts) {
+        if (!(yield* fs.exists(fonts.directory).pipe(Effect.orElseSucceed(() => false)))) {
+          return yield* PdfToolsError.make({
+            reason: "invalid-request",
+            message: `The pinned font directory "${fonts.directory}" does not exist.`,
+          });
+        }
+        const file = path.join(dir, "fonts.conf");
+        yield* fs
+          .writeFileString(
+            file,
+            pinnedFontconfig(
+              PinnedFontconfigRequest.make({ fonts, cacheDirectory: path.join(dir, "fontconfig-cache") })
+            )
+          )
+          .pipe(Effect.mapError(io(`Could not write "${file}".`)));
+        return { FONTCONFIG_FILE: file };
+      }),
+    });
+    const env = { SOURCE_DATE_EPOCH: `${request.sourceDateEpoch}`, ...fontconfig };
     const pagePaths = yield* Effect.forEach(request.svgPaths, (svgPath, index) => {
       const pagePath = path.join(dir, `page-${index + 1}.pdf`);
       return run(
@@ -227,7 +322,7 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
     });
   }, Effect.scoped);
 
-  const inspect = Effect.fn("PdfTools.inspect")(function* (pdfPath: string) {
+  const loadDocument = Effect.fn("PdfTools.loadDocument")(function* (pdfPath: string) {
     const bytes = yield* fs
       .readFile(pdfPath)
       .pipe(Effect.mapError((cause) => PdfToolsError.fromUnknown("io", `Could not read "${pdfPath}".`, cause)));
@@ -235,44 +330,102 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
       try: () => PDFDocument.load(bytes, { ignoreEncryption: true, updateMetadata: false }),
       catch: (cause) => PdfToolsError.fromUnknown("parse", `pdf-lib could not parse "${pdfPath}".`, cause),
     });
+    return { bytes, doc };
+  });
+
+  const inspect = Effect.fn("PdfTools.inspect")(function* (pdfPath: string) {
+    const loaded = yield* loadDocument(pdfPath);
     return yield* Effect.try({
-      try: () => structureOf({ bytes, doc }),
+      try: () => structureOf(loaded),
       catch: (cause) => PdfToolsError.fromUnknown("parse", `Could not walk the structure of "${pdfPath}".`, cause),
     });
+  });
+
+  const annotations = Effect.fn("PdfTools.annotations")(function* (pdfPath: string) {
+    const { doc } = yield* loadDocument(pdfPath);
+    return yield* Effect.try({
+      try: () => annotationsOf(doc),
+      catch: (cause) => PdfToolsError.fromUnknown("parse", `Could not read the annotations of "${pdfPath}".`, cause),
+    });
+  });
+
+  const tempDir = fs
+    .makeTempDirectoryScoped({ prefix: "beep-pdf-tools-" })
+    .pipe(Effect.mapError((cause) => PdfToolsError.fromUnknown("io", "Could not create a temp directory.", cause)));
+
+  // Rasterise one page to `<prefix>.ppm` and read it back.
+  const rasterise = Effect.fn("PdfTools.rasterise")(function* (options: {
+    readonly pdfPath: string;
+    readonly page: number;
+    readonly dpi: number;
+    readonly antiAlias: boolean;
+    readonly prefix: string;
+  }) {
+    const page = `${options.page}`;
+    yield* run(
+      config.pdftoppmPath,
+      [
+        "-r",
+        `${options.dpi}`,
+        "-f",
+        page,
+        "-l",
+        page,
+        "-singlefile",
+        ...(options.antiAlias ? [] : ["-aa", "no", "-aaVector", "no"]),
+        path.resolve(options.pdfPath),
+        options.prefix,
+      ],
+      {},
+      `rasterising page ${page} at ${options.dpi} dpi`
+    );
+    return yield* fs
+      .readFile(`${options.prefix}.ppm`)
+      .pipe(Effect.mapError((cause) => PdfToolsError.fromUnknown("io", "Could not read the rendered PPM.", cause)));
   });
 
   const measurePage = Effect.fn("PdfTools.measurePage")(function* (rawRequest: RasterRequest) {
     const request = yield* validateRasterRequest(rawRequest).pipe(
       Effect.mapError((cause) => PdfToolsError.fromUnknown("invalid-request", "Invalid raster request.", cause))
     );
-    const dir = yield* fs
-      .makeTempDirectoryScoped({ prefix: "beep-pdf-tools-" })
-      .pipe(Effect.mapError((cause) => PdfToolsError.fromUnknown("io", "Could not create a temp directory.", cause)));
-    const prefix = path.join(dir, "page");
-    const page = `${request.page}`;
-    yield* run(
-      config.pdftoppmPath,
-      [
-        "-r",
-        `${request.dpi}`,
-        "-f",
-        page,
-        "-l",
-        page,
-        "-singlefile",
-        ...(request.antiAlias ? [] : ["-aa", "no", "-aaVector", "no"]),
-        path.resolve(request.pdfPath),
-        prefix,
-      ],
-      {},
-      `rasterising page ${page} at ${request.dpi} dpi`
-    );
-    const ppm = yield* fs
-      .readFile(`${prefix}.ppm`)
-      .pipe(Effect.mapError((cause) => PdfToolsError.fromUnknown("io", "Could not read the rendered PPM.", cause)));
+    const dir = yield* tempDir;
+    const ppm = yield* rasterise({
+      pdfPath: request.pdfPath,
+      page: request.page,
+      dpi: request.dpi,
+      antiAlias: request.antiAlias,
+      prefix: path.join(dir, "page"),
+    });
     return yield* Effect.try({
       try: () => measureP6({ bytes: ppm, dpi: request.dpi, blackThreshold: request.blackThreshold }),
       catch: (cause) => PdfToolsError.fromUnknown("parse", "Could not decode the rendered PPM.", cause),
+    });
+  }, Effect.scoped);
+
+  // Both pages render without anti-aliasing so an edge is ink or paper, never
+  // a gray that one export draws darker than the other.
+  const inkCoverage = Effect.fn("PdfTools.inkCoverage")(function* (rawRequest: InkCoverageRequest) {
+    const request = yield* validateInkCoverageRequest(rawRequest).pipe(
+      Effect.mapError((cause) => PdfToolsError.fromUnknown("invalid-request", "Invalid ink-coverage request.", cause))
+    );
+    const dir = yield* tempDir;
+    const base = yield* rasterise({
+      pdfPath: request.base.pdfPath,
+      page: request.base.page,
+      dpi: request.dpi,
+      antiAlias: false,
+      prefix: path.join(dir, "base"),
+    });
+    const marked = yield* rasterise({
+      pdfPath: request.marked.pdfPath,
+      page: request.marked.page,
+      dpi: request.dpi,
+      antiAlias: false,
+      prefix: path.join(dir, "marked"),
+    });
+    return yield* Effect.try({
+      try: () => inkCoverageOf({ base, marked, dilatePx: request.dilatePx, blackThreshold: COVERAGE_BLACK_THRESHOLD }),
+      catch: (cause) => PdfToolsError.fromUnknown("parse", "Could not decode the rendered PPMs.", cause),
     });
   }, Effect.scoped);
 
@@ -307,7 +460,35 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
     );
   });
 
-  return { svgToPdf, inspect, measurePage, renderPng, pageText } satisfies PdfToolsShape;
+  // Text blocks of exactly one page with their rectangles; `-bbox-layout`
+  // keeps side-by-side callouts apart, where `-layout` merges them into one line.
+  const pageWords = Effect.fn("PdfTools.pageWords")(function* (rawRequest: PageTextRequest) {
+    const request = yield* validatePageTextRequest(rawRequest).pipe(
+      Effect.mapError((cause) => PdfToolsError.fromUnknown("invalid-request", "Invalid page-words request.", cause))
+    );
+    const page = `${request.page}`;
+    const xhtml = yield* run(
+      config.pdftotextPath,
+      ["-bbox-layout", "-f", page, "-l", page, "-enc", "UTF-8", path.resolve(request.pdfPath), "-"],
+      {},
+      `extracting the text blocks of page ${page}`
+    );
+    return yield* Effect.try({
+      try: () => parseBboxLayout(xhtml),
+      catch: (cause) => PdfToolsError.fromUnknown("parse", "Could not parse the pdftotext -bbox-layout output.", cause),
+    });
+  });
+
+  return {
+    svgToPdf,
+    inspect,
+    measurePage,
+    renderPng,
+    pageText,
+    pageWords,
+    inkCoverage,
+    annotations,
+  } satisfies PdfToolsShape;
 });
 
 /**

@@ -5,7 +5,10 @@
  *
  * Structural tier (37 CFR 1.84(f), Patent Center PDF rules): header version
  * 1.1–1.6, no encryption, no layers, no annotations, every font embedded,
- * every page the same permitted size. Raster tier (1.84(g), (l), (m)): ink
+ * every page the same permitted size, and, for text labels, every embedded
+ * font one of the expected label families. Text tier: a page whose labels are
+ * embedded text carries `FIG. n` and `n/N` in its extracted text (a missing
+ * font makes the converter drop the text silently). Raster tier (1.84(g), (l), (m)): ink
  * inside the margins measured on the anti-aliased render; only pure black or
  * white pixels and no solid-black area measured on the non-anti-aliased
  * renders.
@@ -14,10 +17,11 @@
  * @since 0.0.0
  */
 
-import { A, O } from "@beep/utils";
+import { A, O, Str } from "@beep/utils";
 import { pipe } from "effect/Function";
+import * as Regex from "effect/RegExp";
 import { MARGINS_CM, pageSizePt } from "./Sheet.schemas.ts";
-import { SheetFinding } from "./Validation.schemas.ts";
+import { SheetFinding, SheetLabel } from "./Validation.schemas.ts";
 import type { SheetFormat } from "./Sheet.schemas.ts";
 import type { PageMetrics, PdfFacts, ValidationOptions } from "./Validation.schemas.ts";
 
@@ -28,6 +32,10 @@ const fileFinding = (code: SheetFinding["code"], message: string): SheetFinding 
 
 const pageFinding = (code: SheetFinding["code"], page: number, message: string): SheetFinding =>
   SheetFinding.make({ code, page: O.some(page), message });
+
+// Font names compared without case, spaces, or punctuation: `Times New Roman`
+// matches `TimesNewRomanPSMT`.
+const fontKey = (name: string): string => Str.replace(/[^a-z0-9]/g, "")(Str.toLowerCase(name));
 
 const within = (value: number, target: number, tolerance: number): boolean => Math.abs(value - target) <= tolerance;
 
@@ -78,6 +86,19 @@ export const structuralFindings = (input: {
     A.filter((font) => !font.embedded),
     A.map((font) => fileFinding("font-not-embedded", `Font "${font.name}" is not embedded.`))
   );
+  const expectedFamilies = A.map(options.expectedLabelFonts, fontKey);
+  const unexpected = A.isReadonlyArrayNonEmpty(expectedFamilies)
+    ? pipe(
+        facts.fonts,
+        A.filter((font) => !A.some(expectedFamilies, (family) => Str.includes(family)(fontKey(font.baseName)))),
+        A.map((font) =>
+          fileFinding(
+            "font-unexpected",
+            `Font "${font.name}" is none of the label families ${A.join(options.expectedLabelFonts, ", ")}.`
+          )
+        )
+      )
+    : [];
   const pageCount = pipe(
     options.expectedPages,
     O.filter((expected) => expected !== facts.pages.length),
@@ -111,7 +132,66 @@ export const structuralFindings = (input: {
   const distinct = pipe(formats, A.getSomes, A.dedupe);
   const mixed =
     A.length(distinct) > 1 ? [fileFinding("page-size-mixed", `Sheets mix formats: ${A.join(distinct, ", ")}.`)] : [];
-  return [...version, ...encrypted, ...layers, ...annotations, ...fonts, ...pageCount, ...noPages, ...sizes, ...mixed];
+  return [
+    ...version,
+    ...encrypted,
+    ...layers,
+    ...annotations,
+    ...fonts,
+    ...unexpected,
+    ...pageCount,
+    ...noPages,
+    ...sizes,
+    ...mixed,
+  ];
+};
+
+// Text of one label standing alone: a whole whitespace-separated run, so
+// `FIG. 1` does not match inside `FIG. 10`.
+const carries = (text: string, label: string): boolean =>
+  new RegExp(`(?:^|\\s)${Regex.escape(label)}(?:\\s|$)`).test(text);
+
+/**
+ * Findings from the extracted text of one page whose labels are embedded
+ * text: each expected label must be present.
+ *
+ * **Details**
+ *
+ * Page `n` of `N` must carry `FIG. n` when the figure label is text and
+ * `n/N` when the sheet number is. A converter that cannot find the label font
+ * draws nothing and still succeeds, so this is the rule that catches it.
+ *
+ * **Example** (A page without its sheet number)
+ *
+ * ```ts
+ * import { ValidationOptions, labelTextFindings } from "@beep/technical-drawing"
+ * import * as O from "effect/Option"
+ *
+ * const options = ValidationOptions.make({ expectedPages: O.none(), textLabels: ["figure", "sheet-number"] })
+ * console.log(labelTextFindings({ page: 1, pages: 8, text: "FIG. 1\n", options }).map((f) => f.code))
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const labelTextFindings = (input: {
+  readonly page: number;
+  readonly pages: number;
+  readonly text: string;
+  readonly options: ValidationOptions;
+}): ReadonlyArray<SheetFinding> => {
+  const { page, pages, text, options } = input;
+  const expected = A.map(options.textLabels, (label) =>
+    SheetLabel.$match(label, {
+      figure: () => `FIG. ${page}`,
+      "sheet-number": () => `${page}/${pages}`,
+    })
+  );
+  return pipe(
+    expected,
+    A.filter((label) => !carries(text, label)),
+    A.map((label) => pageFinding("label-missing", page, `The page text does not carry the label "${label}".`))
+  );
 };
 
 const cm = (pixels: number, dpi: number): number => (pixels / dpi) * 2.54;

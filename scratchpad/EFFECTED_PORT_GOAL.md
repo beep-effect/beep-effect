@@ -976,3 +976,16 @@ EFFECTED_PORT_COMPLETE
 - Session ledger rows through `bun run beep session note` at every checkpoint.
 - Commit history on `@lab/effected` with the `(effected-port S<n>)` suffix is
   the audit trail; `git log --grep effected-port` reconstructs progress.
+
+---
+
+## Port complete, 2026-10-14
+
+`bun run --cwd scratchpad audit:effected -- ledger --verify` printed `ledger: 29/29 done` on `main` at
+7df7305dd7, after #1659 merged as 58766950c5. It printed no `stale:`, `blocked` or `open:` line and
+exited 0. The CLI exits non-zero unless the verify report is `ok`, so the full result was `ok: true`.
+The work landed through #1592 (round 1 and S2), #1628 (S3, round 2 and the first round-3 modules) and
+#1659 (round 3 for the rest and the S5 close), with main-red fixes in #1597, #1601, #1621, #1631 and
+#1637. Review leftovers are ledgered per module in `scratchpad/effected/PORT_LEDGER.json`, including the
+cli `CliUiTest.live` race under parallel load. Friction receipts are in
+`scratchpad/effected/OPPORTUNITIES.md`.

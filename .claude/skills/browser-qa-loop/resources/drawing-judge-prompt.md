@@ -21,6 +21,12 @@ Pack directory: `{{PACK_DIR}}`
 6. When reference photos are present, they are ground truth for what the
    article has. When they are absent, judge internal consistency and the
    figure descriptions only, and do not invent features.
+7. What the design claims is the attorney's call, never yours. When a
+   feature is missing or present for claim reasons (a part left out, drawn
+   in broken lines, or shown only as context), or a reviewer request turns on
+   claim scope, report it as a question for the attorney: say what you see
+   and ask. Do not rule a part unclaimed, and do not propose adding or
+   removing it on claim grounds.
 
 ## Figures
 

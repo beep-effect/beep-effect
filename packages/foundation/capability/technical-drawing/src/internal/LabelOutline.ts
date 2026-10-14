@@ -134,6 +134,7 @@ interface OpenTypeFontLike {
     readonly advanceWidth?: number | undefined;
     readonly path: { readonly commands: ReadonlyArray<Readonly<Record<string, unknown>>> };
   };
+  readonly names?: Readonly<Record<string, Readonly<Record<string, string>> | undefined>> | undefined;
   readonly tables: { readonly os2?: { readonly sCapHeight?: number | undefined } | undefined };
   readonly unitsPerEm: number;
 }
@@ -295,15 +296,12 @@ const parserOf = (module: unknown): O.Option<(buffer: ArrayBuffer) => unknown> =
     O.map((m) => (buffer: ArrayBuffer) => (m as { readonly parse: (b: ArrayBuffer) => unknown }).parse(buffer))
   );
 
-/**
- * Outline the label alphabet of an operator-supplied TrueType file.
- *
- * @internal
- * @since 0.0.0
- */
-export const outlineFontFile = Effect.fnUntraced(function* (fontFile: string, bytes: Uint8Array) {
-  const failed = (message: string) =>
-    DrawingError.make({ reason: "font", message: `Label font "${fontFile}": ${message}` });
+const fontFailure = (fontFile: string) => (message: string) =>
+  DrawingError.make({ reason: "font", message: `Label font "${fontFile}": ${message}` });
+
+// Parse font bytes with opentype.js into the slice this module reads.
+const parseFont = Effect.fnUntraced(function* (fontFile: string, bytes: Uint8Array) {
+  const failed = fontFailure(fontFile);
   const module = yield* Effect.tryPromise({
     try: () => import(OPENTYPE_MODULE),
     catch: (cause) => DrawingError.fromUnknown("font", "Could not load the opentype.js font parser.", cause),
@@ -319,6 +317,36 @@ export const outlineFontFile = Effect.fnUntraced(function* (fontFile: string, by
   if (!isOpenTypeFontLike(font)) {
     return yield* failed("the parser returned no font.");
   }
+  return font;
+});
+
+/**
+ * Family and subfamily (style) names of a font file, from its `name` table
+ * (name IDs 1 and 2), English entry first.
+ *
+ * @internal
+ * @since 0.0.0
+ */
+export const fontNamesOf = Effect.fnUntraced(function* (fontFile: string, bytes: Uint8Array) {
+  const font = yield* parseFont(fontFile, bytes);
+  const name = (key: string): string =>
+    pipe(
+      O.fromUndefinedOr(font.names?.[key]),
+      O.flatMap((entries) => O.orElse(O.fromUndefinedOr(entries.en), () => A.head(R.values(entries)))),
+      O.getOrElse(() => "")
+    );
+  return { family: name("fontFamily"), subfamily: name("fontSubfamily") } as const;
+});
+
+/**
+ * Outline the label alphabet of an operator-supplied TrueType file.
+ *
+ * @internal
+ * @since 0.0.0
+ */
+export const outlineFontFile = Effect.fnUntraced(function* (fontFile: string, bytes: Uint8Array) {
+  const failed = fontFailure(fontFile);
+  const font = yield* parseFont(fontFile, bytes);
   const outlined = yield* Result.match(faceFromFont(font), {
     onFailure: (message) => failed(`${message}.`),
     onSuccess: Effect.succeed,

@@ -5,7 +5,7 @@
     "title": "Design Figure Review Loop",
     "status": "active",
     "created": "2026-10-13",
-    "updated": "2026-10-13",
+    "updated": "2026-10-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/design-figure-review-loop",
@@ -56,24 +56,34 @@
     }
   ],
   "phases": [
-    { "id": "P0", "name": "Admit", "status": "in-progress" },
+    { "id": "P0", "name": "Admit", "status": "complete" },
     {
       "id": "P1",
       "name": "Layout, margins, projection, plan facing",
-      "status": "in-progress"
+      "status": "complete"
     },
-    { "id": "P2", "name": "Outlined label typefaces", "status": "in-progress" },
+    { "id": "P2", "name": "Outlined label typefaces", "status": "complete" },
     {
       "id": "P3",
       "name": "Broken-line parts and multi-part fixture",
-      "status": "pending"
+      "status": "in-progress"
     },
     { "id": "P4", "name": "Opt-in contour shading", "status": "pending" },
-    { "id": "P5", "name": "Mailbox intake", "status": "pending" },
-    { "id": "P6", "name": "Review rounds from markup", "status": "pending" },
+    { "id": "P5", "name": "Mailbox intake", "status": "in-progress" },
+    {
+      "id": "P6",
+      "name": "Review rounds from markup",
+      "status": "in-progress"
+    },
     {
       "id": "P7",
       "name": "Corpus remodel and round-2 render",
+      "status": "in-progress"
+    },
+    { "id": "P7a", "name": "Embedded label text", "status": "pending" },
+    {
+      "id": "P7b",
+      "name": "Edge emphasis and corrugation overlay",
       "status": "pending"
     },
     { "id": "P8", "name": "Yeet: PRs to mergeable", "status": "pending" },

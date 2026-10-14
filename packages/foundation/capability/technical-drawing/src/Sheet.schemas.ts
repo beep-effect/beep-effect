@@ -306,8 +306,9 @@ const LabelTypefaceBase = LiteralKit(["stroke", "sans", "serif"]);
  * `stroke` is the single-stroke glyph set the sheets were first lettered
  * with. `sans` and `serif` are filled outlines with the character widths of
  * Arial and Times New Roman: a vendored subset of the label characters,
- * licensed OFL-1.1 (see the package's `licenses/OFL-1.1.txt`). Labels stay
- * outlines either way, so a sheet PDF embeds no font.
+ * licensed OFL-1.1 (see the package's `licenses/OFL-1.1.txt`). On the default
+ * `outline` route labels stay outlines either way, so a sheet PDF embeds no
+ * font; the `text` route (see {@link LabelRender}) sets them in a real font.
  *
  * **Example** (Read the typefaces)
  *
@@ -383,6 +384,63 @@ const LabelCapHeightCm = Fn({
 export const labelCapHeightCm: (style: typeof LabelCapHeightCm.inputSchema.Type) => number =
   LabelCapHeightCm.implementSync((style) => (style.sizePt * capPerEm(style.typeface)) / PT_PER_CM);
 
+const LabelRenderBase = LiteralKit(["outline", "text"]);
+
+/**
+ * How a sheet label reaches the PDF.
+ *
+ * **Details**
+ *
+ * `outline` (the default) draws the label as filled outlines or strokes, so a
+ * sheet embeds no font. `text` writes an SVG `<text>` element in a named font
+ * family; `rsvg-convert` then embeds a subset of that font, so the PDF
+ * carries real, searchable text. A `text` label needs an outlined typeface
+ * (`sans` or `serif`) and a font directory on the sheet options.
+ *
+ * **Example** (Read the routes)
+ *
+ * ```ts
+ * import { LabelRender } from "@beep/technical-drawing/Sheet.schemas"
+ *
+ * console.log(LabelRender.literals)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const LabelRender = LabelRenderBase.pipe(
+  $I.annoteSchema("LabelRender", {
+    description: "`outline` (filled outlines or strokes, no font) or `text` (embedded font text).",
+  }),
+  SchemaUtils.withLiteralKitStatics(LabelRenderBase)
+);
+
+/**
+ * Type for {@link LabelRender}.
+ *
+ * **Example** (Annotate a route)
+ *
+ * ```ts
+ * import type { LabelRender } from "@beep/technical-drawing/Sheet.schemas"
+ *
+ * const render: LabelRender = "text"
+ * console.log(render)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LabelRender = typeof LabelRender.Type;
+
+const AbsolutePath = S.NonEmptyString.check(
+  S.makeFilter(Str.startsWith("/"), {
+    identifier: $I`AbsolutePathCheck`,
+    title: "Absolute Path",
+    description: "A font location is an absolute path, so a render does not depend on its working directory.",
+    message: "Expected an absolute path",
+  })
+);
+
 const AbsoluteFontFile = S.NonEmptyString.check(
   S.makeFilter(Str.startsWith("/"), {
     identifier: $I`LabelFontFileAbsoluteCheck`,
@@ -402,7 +460,9 @@ const AbsoluteFontFile = S.NonEmptyString.check(
  * face of `typeface`) must reach 37 CFR 1.84(p)(3)'s 0.32 cm. `fontFile`
  * names a TrueType file (for example a licensed Arial) outlined at render
  * time instead of the vendored face; the render records its sha256 and checks
- * its own cap height. A `stroke` label takes no font file.
+ * its own cap height. A `stroke` label takes no font file. `render: "text"`
+ * writes the label as embedded text in `fontFamily` (default: the typeface's
+ * metric family), resolved from the sheet's `fontDirectory`.
  *
  * **Example** (The sheet number at 18 pt sans)
  *
@@ -426,6 +486,18 @@ export class LabelStyle extends S.Class<LabelStyle>($I`LabelStyle`)(
           "Absolute path of a TrueType file outlined instead of the vendored face. Never committed; its sha256 goes in the manifest.",
       })
     ),
+    render: LabelRender.pipe(
+      S.withConstructorDefault(Effect.succeed("outline" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("outline" as const)),
+      S.annotateKey({ description: "How the label reaches the PDF: outlines or embedded text. Defaults to `outline`." })
+    ),
+    fontFamily: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({
+        description:
+          "Font family a `text` label requests, for example `Arial`. Absent, the typeface's metric family: `Arial` for sans, `Times New Roman` for serif.",
+      })
+    ),
   }).check(
     S.makeFilter((style) => labelCapHeightCm(style) >= MIN_LETTER_HEIGHT_CM, {
       identifier: $I`LabelStyleCapHeightCheck`,
@@ -438,12 +510,60 @@ export class LabelStyle extends S.Class<LabelStyle>($I`LabelStyle`)(
       title: "Label Font File Typeface",
       description: "Only outlined typefaces read a font file.",
       message: "Expected no font file on a stroke label",
+    }),
+    S.makeFilter((style) => style.render === "outline" || style.typeface !== "stroke", {
+      identifier: $I`LabelStyleTextTypefaceCheck`,
+      title: "Label Text Typeface",
+      description: "A text label is set in a font, so it needs the sans or serif typeface.",
+      message: "Expected the sans or serif typeface on a text label",
+    }),
+    S.makeFilter((style) => style.render === "outline" || O.isNone(style.fontFile), {
+      identifier: $I`LabelStyleTextFontFileCheck`,
+      title: "Label Text Font File",
+      description: "A text label takes its font from the sheet's font directory, not from a font file.",
+      message: "Expected no font file on a text label",
+    }),
+    S.makeFilter((style) => style.render === "text" || O.isNone(style.fontFamily), {
+      identifier: $I`LabelStyleFontFamilyCheck`,
+      title: "Label Font Family",
+      description: "Only a text label requests a font family.",
+      message: "Expected no font family on an outline label",
     })
   ),
   $I.annote("LabelStyle", {
-    description: "Typeface, point size, and optional operator font file of one sheet label.",
+    description:
+      "Typeface, point size, optional operator font file, render route, and requested font family of one sheet label.",
   })
 ) {}
+
+/**
+ * Font family a label requests when it is rendered as text.
+ *
+ * **Details**
+ *
+ * The style's `fontFamily`, else the typeface's metric family: `Arial` for
+ * `sans`, `Times New Roman` for `serif` (and `stroke`, which a text label
+ * never uses).
+ *
+ * **Example** (The default sans family)
+ *
+ * ```ts
+ * import { LabelStyle, labelFontFamily } from "@beep/technical-drawing/Sheet.schemas"
+ *
+ * console.log(labelFontFamily(LabelStyle.make({ typeface: "sans", sizePt: 18, render: "text" }))) // "Arial"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const labelFontFamily = (style: LabelStyle): string =>
+  O.getOrElse(style.fontFamily, () =>
+    LabelTypeface.$match(style.typeface, {
+      stroke: () => "Times New Roman",
+      sans: () => "Arial",
+      serif: () => "Times New Roman",
+    })
+  );
 
 /**
  * Label faces resolved by the caller for `fontFile` label styles.
@@ -478,6 +598,66 @@ export class SheetLabelFaces extends S.Class<SheetLabelFaces>($I`SheetLabelFaces
   },
   $I.annote("SheetLabelFaces", {
     description: "Label faces loaded by the caller from fontFile label styles, per label.",
+  })
+) {}
+
+/**
+ * One family a PDF converter must bind: the family a label requests and the
+ * family name of the font file it resolved to.
+ *
+ * **Example** (Arial resolved to itself)
+ *
+ * ```ts
+ * import { LabelFontAlias } from "@beep/technical-drawing/Sheet.schemas"
+ *
+ * console.log(LabelFontAlias.make({ requested: "Arial", family: "Arial" }).family)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LabelFontAlias extends S.Class<LabelFontAlias>($I`LabelFontAlias`)(
+  {
+    requested: S.NonEmptyString.annotateKey({ description: "Family name the SVG `<text>` element requests." }),
+    family: S.NonEmptyString.annotateKey({ description: "Family name recorded in the resolved font file." }),
+  },
+  $I.annote("LabelFontAlias", {
+    description: "A requested label font family and the family name of the font file it resolved to.",
+  })
+) {}
+
+/**
+ * Fonts a PDF converter may use for text labels: one directory and the
+ * families bound inside it.
+ *
+ * **Details**
+ *
+ * The converter sees no font outside `directory` and binds each requested
+ * family to its resolved family, so the embedded font is a function of the
+ * directory's files alone.
+ *
+ * **Example** (One family)
+ *
+ * ```ts
+ * import { LabelFontAlias, SheetFonts } from "@beep/technical-drawing/Sheet.schemas"
+ *
+ * const fonts = SheetFonts.make({
+ *   directory: "/fonts",
+ *   families: [LabelFontAlias.make({ requested: "Arial", family: "Arial" })]
+ * })
+ * console.log(fonts.directory)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SheetFonts extends S.Class<SheetFonts>($I`SheetFonts`)(
+  {
+    directory: AbsolutePath.annotateKey({ description: "The only directory the converter reads fonts from." }),
+    families: S.Array(LabelFontAlias).annotateKey({ description: "Requested families and their resolved names." }),
+  },
+  $I.annote("SheetFonts", {
+    description: "Font directory and family bindings a PDF converter uses for text labels.",
   })
 ) {}
 
@@ -575,6 +755,13 @@ export class SheetOptions extends S.Class<SheetOptions>($I`SheetOptions`)(
           "Style of the `FIG. n` label. Absent, it is stroked at `letterHeightCm`, as before the option existed.",
       })
     ),
+    fontDirectory: S.OptionFromOptionalKey(AbsolutePath).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({
+        description:
+          "Absolute directory holding the TrueType/OpenType files `text` labels are set in. The PDF converter sees only this directory. Supplied by the operator, never committed.",
+      })
+    ),
     shadingWeightMm: S.Finite.check(
       S.isGreaterThanOrEqualTo(0.15, {
         identifier: $I`ShadingWeightCheck`,
@@ -638,6 +825,6 @@ export class SheetOptions extends S.Class<SheetOptions>($I`SheetOptions`)(
   },
   $I.annote("SheetOptions", {
     description:
-      "Page format, margin standard, stroke and shading widths, shading pitch range, lettering height, label gap and styles, and margin safety gap of a render.",
+      "Page format, margin standard, stroke and shading widths, shading pitch range, lettering height, label gap and styles, label font directory, and margin safety gap of a render.",
   })
 ) {}

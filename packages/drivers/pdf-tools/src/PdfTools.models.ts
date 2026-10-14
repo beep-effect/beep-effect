@@ -1,6 +1,7 @@
 /**
  * Request and result models for the PDF tools driver: SVG → PDF conversion,
- * PDF structure inspection, and page raster metrics.
+ * PDF structure inspection, page raster metrics, and the markup-reading verbs
+ * (text blocks, raster ink coverage, annotations).
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -10,6 +11,7 @@ import { $PdfToolsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $PdfToolsId.create("PdfTools.models");
 
@@ -141,6 +143,107 @@ export const Dpi = S.Int.check(
  */
 export type Dpi = typeof Dpi.Type;
 
+const AbsoluteDirectory = S.NonEmptyString.check(
+  S.makeFilter(Str.startsWith("/"), {
+    identifier: $I`AbsoluteFontDirectoryCheck`,
+    title: "Font Directory",
+    description: "A pinned font directory is an absolute path.",
+    message: "Expected an absolute font directory",
+  })
+);
+
+/**
+ * A font family the converter must bind: the family an SVG requests and the
+ * family name of the font file it resolves to.
+ *
+ * **Example** (Bind Arial)
+ *
+ * ```ts
+ * import { FontFamilyAlias } from "@beep/pdf-tools"
+ *
+ * console.log(FontFamilyAlias.make({ requested: "Arial", family: "Arial" }).family)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FontFamilyAlias extends S.Class<FontFamilyAlias>($I`FontFamilyAlias`)(
+  {
+    requested: S.NonEmptyString.annotateKey({ description: "Family name an SVG `font-family` requests." }),
+    family: S.NonEmptyString.annotateKey({ description: "Family name of the font file in the pinned directory." }),
+  },
+  $I.annote("FontFamilyAlias", {
+    description: "A requested font family and the pinned family it is bound to.",
+  })
+) {}
+
+/**
+ * Fonts `rsvg-convert` may use: one directory, nothing else, and the family
+ * bindings inside it.
+ *
+ * **Details**
+ *
+ * The driver writes a fontconfig file whose only font directory is
+ * `directory`, with a strong binding per alias, and runs `rsvg-convert` with
+ * `FONTCONFIG_FILE` pointing at it. System fonts are never visible, so the
+ * embedded fonts depend on the directory's files alone. A family the
+ * directory lacks draws nothing (rsvg-convert still exits 0); the caller's
+ * validator must check the page text.
+ *
+ * **Example** (Pin a directory)
+ *
+ * ```ts
+ * import { FontFamilyAlias, PinnedFonts } from "@beep/pdf-tools"
+ *
+ * const fonts = PinnedFonts.make({
+ *   directory: "/fonts",
+ *   families: [FontFamilyAlias.make({ requested: "Arial", family: "Arial" })]
+ * })
+ * console.log(fonts.directory)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PinnedFonts extends S.Class<PinnedFonts>($I`PinnedFonts`)(
+  {
+    directory: AbsoluteDirectory.annotateKey({ description: "The only directory fonts are read from." }),
+    families: S.Array(FontFamilyAlias).annotateKey({ description: "Requested families and their bindings." }),
+  },
+  $I.annote("PinnedFonts", {
+    description: "Font directory and family bindings an SVG to PDF conversion is pinned to.",
+  })
+) {}
+
+/**
+ * What a pinned fontconfig file is written from: the pinned fonts and the
+ * directory fontconfig may cache in for the run.
+ *
+ * **Example** (Request a config for one family)
+ *
+ * ```ts
+ * import { FontFamilyAlias, PinnedFontconfigRequest, PinnedFonts } from "@beep/pdf-tools"
+ *
+ * const fonts = PinnedFonts.make({
+ *   directory: "/fonts",
+ *   families: [FontFamilyAlias.make({ requested: "Arial", family: "Arial" })]
+ * })
+ * console.log(PinnedFontconfigRequest.make({ fonts, cacheDirectory: "/tmp/fc-cache" }).cacheDirectory)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PinnedFontconfigRequest extends S.Class<PinnedFontconfigRequest>($I`PinnedFontconfigRequest`)(
+  {
+    fonts: PinnedFonts.annotateKey({ description: "The font directory and family bindings to pin." }),
+    cacheDirectory: AbsoluteDirectory.annotateKey({ description: "Where fontconfig keeps its cache for this run." }),
+  },
+  $I.annote("PinnedFontconfigRequest", {
+    description: "Pinned fonts and the cache directory a fontconfig file is written from.",
+  })
+) {}
+
 /**
  * Convert one or more SVG files into one PDF, one page per SVG, in order.
  *
@@ -148,7 +251,8 @@ export type Dpi = typeof Dpi.Type;
  *
  * `sourceDateEpoch` is exported as `SOURCE_DATE_EPOCH` so cairo writes a fixed
  * `CreationDate`; the driver always sets it (default 0) so output bytes do not
- * depend on the wall clock.
+ * depend on the wall clock. `fonts` pins the fonts `<text>` elements are set
+ * in (see {@link PinnedFonts}); without it the host's fontconfig is used.
  *
  * **Example** (Two sheets into one PDF 1.6)
  *
@@ -185,9 +289,13 @@ export class SvgToPdfRequest extends S.Class<SvgToPdfRequest>($I`SvgToPdfRequest
       S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       S.annotateKey({ description: "Unix seconds used for the PDF creation date. Defaults to 0." })
     ),
+    fonts: S.OptionFromOptionalKey(PinnedFonts).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({ description: "Font directory and bindings for `<text>`. Absent, the host fontconfig is used." })
+    ),
   },
   $I.annote("SvgToPdfRequest", {
-    description: "SVG pages to convert into one PDF with a fixed version and creation date.",
+    description: "SVG pages to convert into one PDF with a fixed version, creation date, and optional pinned fonts.",
   })
 ) {}
 
@@ -262,7 +370,25 @@ export class PdfFont extends S.Class<PdfFont>($I`PdfFont`)(
   $I.annote("PdfFont", {
     description: "Font name and embedding status.",
   })
-) {}
+) {
+  /**
+   * The BaseFont name without its six-letter subset tag (`ABCDEF+`).
+   *
+   * **Example** (A subset font)
+   *
+   * ```ts
+   * import { PdfFont } from "@beep/pdf-tools"
+   *
+   * console.log(PdfFont.make({ name: "ABCDEF+ArialMT", embedded: true }).baseName) // "ArialMT"
+   * ```
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  get baseName(): string {
+    return Str.replace(/^[A-Z]{6}\+/, "")(this.name);
+  }
+}
 
 /**
  * Structural facts about a PDF file.
@@ -460,5 +586,202 @@ export class PageTextRequest extends S.Class<PageTextRequest>($I`PageTextRequest
   },
   $I.annote("PageTextRequest", {
     description: "One page of a PDF whose text is extracted.",
+  })
+) {}
+
+/**
+ * Rectangle on a PDF page in points, measured from the page's top-left corner
+ * (the `pdftotext -bbox-layout` convention).
+ *
+ * **Details**
+ *
+ * PDF annotation rectangles are stored bottom-left up; the driver converts
+ * them to this convention so text boxes and annotations share one frame.
+ *
+ * **Example** (A one-inch box one inch from the top-left corner)
+ *
+ * ```ts
+ * import { PdfRect } from "@beep/pdf-tools"
+ *
+ * console.log(PdfRect.make({ xMin: 72, yMin: 72, xMax: 144, yMax: 144 }).xMax)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PdfRect extends S.Class<PdfRect>($I`PdfRect`)(
+  {
+    xMin: S.Finite.annotateKey({ description: "Left edge, points from the page's left edge." }),
+    yMin: S.Finite.annotateKey({ description: "Top edge, points down from the page's top edge." }),
+    xMax: S.Finite.annotateKey({ description: "Right edge, points from the page's left edge." }),
+    yMax: S.Finite.annotateKey({ description: "Bottom edge, points down from the page's top edge." }),
+  },
+  $I.annote("PdfRect", {
+    description: "Rectangle in points from the page's top-left corner, as pdftotext reports it.",
+  })
+) {}
+
+/**
+ * One block of text on a page with its bounding rectangle.
+ *
+ * **Details**
+ *
+ * `text` keeps the words as extracted: words of one line joined by a single
+ * space, lines joined by a newline.
+ *
+ * **Example** (A two-line block)
+ *
+ * ```ts
+ * import { PdfRect, TextBlock } from "@beep/pdf-tools"
+ *
+ * const block = TextBlock.make({
+ *   text: "Rotate this view\nfront to the left",
+ *   rect: PdfRect.make({ xMin: 72, yMin: 80, xMax: 200, yMax: 104 })
+ * })
+ * console.log(block.text.split("\n").length)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TextBlock extends S.Class<TextBlock>($I`TextBlock`)(
+  {
+    text: S.String.annotateKey({ description: "Words joined by spaces, lines joined by newlines." }),
+    rect: PdfRect.annotateKey({ description: "Bounding rectangle of the block." }),
+  },
+  $I.annote("TextBlock", {
+    description: "A text block from `pdftotext -bbox-layout` and its rectangle.",
+  })
+) {}
+
+/**
+ * One page of one PDF file.
+ *
+ * **Example** (Page 3 of a sheet set)
+ *
+ * ```ts
+ * import { PdfPageRef } from "@beep/pdf-tools"
+ *
+ * console.log(PdfPageRef.make({ pdfPath: "sheets.pdf", page: 3 }).page)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PdfPageRef extends S.Class<PdfPageRef>($I`PdfPageRef`)(
+  {
+    pdfPath: S.NonEmptyString.annotateKey({ description: "PDF file." }),
+    page: PageNumber.annotateKey({ description: "One-based page." }),
+  },
+  $I.annote("PdfPageRef", {
+    description: "A PDF file and a one-based page in it.",
+  })
+) {}
+
+/**
+ * Request to measure how much of a base page's ink a marked-up page covers.
+ *
+ * **Details**
+ *
+ * Both pages are rasterised at `dpi` without anti-aliasing and compared with
+ * zero offset from the top-left corner. The marked page's ink is grown by
+ * `dilatePx` pixels in every direction first, so a re-export that moves a
+ * stroke by a fraction of a pixel still covers it.
+ *
+ * **Example** (Compare a reviewer page with sheet 2 at 36 dpi)
+ *
+ * ```ts
+ * import { InkCoverageRequest, PdfPageRef } from "@beep/pdf-tools"
+ *
+ * const request = InkCoverageRequest.make({
+ *   base: PdfPageRef.make({ pdfPath: "sheets.pdf", page: 2 }),
+ *   marked: PdfPageRef.make({ pdfPath: "reviewed.pdf", page: 1 }),
+ *   dpi: 36,
+ *   dilatePx: 2
+ * })
+ * console.log(request.dilatePx)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class InkCoverageRequest extends S.Class<InkCoverageRequest>($I`InkCoverageRequest`)(
+  {
+    base: PdfPageRef.annotateKey({ description: "Page whose ink must be covered (the sheet that was sent)." }),
+    marked: PdfPageRef.annotateKey({ description: "Page that may cover it (the page that came back)." }),
+    dpi: Dpi.annotateKey({ description: "Resolution both pages are rasterised at." }),
+    dilatePx: S.Natural.annotateKey({ description: "Pixels the marked ink is grown by before comparing." }),
+  },
+  $I.annote("InkCoverageRequest", {
+    description: "Two pages, a resolution, and a tolerance for a raster ink-coverage comparison.",
+  })
+) {}
+
+/**
+ * How much of a base page's ink a marked page covers.
+ *
+ * **Details**
+ *
+ * `coverage` is `coveredPixels / baseInkPixels`, and 0 for a blank base page.
+ * `markedInkPixels` counts the marked page's own ink before dilation, so a
+ * caller can tell a page that merely contains a sparse sheet from the page
+ * that sheet came back as.
+ *
+ * **Example** (Full coverage)
+ *
+ * ```ts
+ * import { InkCoverage } from "@beep/pdf-tools"
+ *
+ * const result = InkCoverage.make({ baseInkPixels: 400, coveredPixels: 400, markedInkPixels: 520, coverage: 1 })
+ * console.log(result.coverage)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class InkCoverage extends S.Class<InkCoverage>($I`InkCoverage`)(
+  {
+    baseInkPixels: S.Natural.annotateKey({ description: "Ink pixels on the base page." }),
+    coveredPixels: S.Natural.annotateKey({ description: "Base ink pixels the dilated marked ink covers." }),
+    markedInkPixels: S.Natural.annotateKey({ description: "Ink pixels on the marked page, before dilation." }),
+    coverage: S.Finite.annotateKey({ description: "coveredPixels / baseInkPixels; 0 for a blank base page." }),
+  },
+  $I.annote("InkCoverage", {
+    description: "Base ink, covered ink, marked ink, and the covered fraction of a raster comparison.",
+  })
+) {}
+
+/**
+ * One PDF annotation object (an Acrobat-style comment, highlight, or note).
+ *
+ * **Example** (A sticky note)
+ *
+ * ```ts
+ * import { PdfAnnotation, PdfRect } from "@beep/pdf-tools"
+ * import * as O from "effect/Option"
+ *
+ * const note = PdfAnnotation.make({
+ *   page: 1,
+ *   subtype: "Text",
+ *   rect: PdfRect.make({ xMin: 72, yMin: 72, xMax: 92, yMax: 92 }),
+ *   contents: O.some("Rotate this view"),
+ *   author: O.none()
+ * })
+ * console.log(note.subtype)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PdfAnnotation extends S.Class<PdfAnnotation>($I`PdfAnnotation`)(
+  {
+    page: PageNumber.annotateKey({ description: "One-based page the annotation sits on." }),
+    subtype: S.String.annotateKey({ description: "`/Subtype` name, such as Text, FreeText, or Highlight." }),
+    rect: PdfRect.annotateKey({ description: "`/Rect`, converted to points from the page's top-left corner." }),
+    contents: S.Option(S.String).annotateKey({ description: "`/Contents` text, when present." }),
+    author: S.Option(S.String).annotateKey({ description: "`/T` author, when present." }),
+  },
+  $I.annote("PdfAnnotation", {
+    description: "Page, subtype, rectangle, contents, and author of one PDF annotation.",
   })
 ) {}

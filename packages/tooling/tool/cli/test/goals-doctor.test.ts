@@ -1,7 +1,14 @@
 import { lintCommand } from "@beep/repo-cli";
 import {
+  CapabilityProjection,
+  capabilityDoctorFindings,
+  capabilityPacketFindings,
   classifyGoalDoctorFindings,
+  DuplicateCapabilityDeclaration,
   GoalDoctorFinding,
+  GoalManifest,
+  GraphCapabilityEdge,
+  GraphPacketRow,
   goalsCommand,
   PacketEventStoreLive,
 } from "@beep/repo-cli/test/Goals";
@@ -19,6 +26,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { ChildProcess } from "effect/process";
 import * as Result from "effect/Result";
 import * as Runtime from "effect/Runtime";
@@ -266,5 +274,94 @@ describe("classifyGoalDoctorFindings", () => {
     expect(result.introduced.length).toBe(1);
     expect(result.inherited.length).toBe(0);
     expect(result.resolved).toEqual([]);
+  });
+});
+
+describe("capabilityDoctorFindings", () => {
+  const packet = (packetId: string, status: GraphPacketRow["status"]) =>
+    GraphPacketRow.make({ packetId, status, executionCapable: true, title: packetId });
+  const edge = (packetId: string, capability: GraphCapabilityEdge["capability"]) =>
+    GraphCapabilityEdge.make({ packetId, capability });
+  const keysOf = (findings: ReadonlyArray<GoalDoctorFinding>) =>
+    A.map(findings, (item) => `${item.severity} ${item.key}`);
+
+  it("reports duplicates and reference provides as blocking and strands as advisory", () => {
+    const projection = CapabilityProjection.make({
+      packets: [
+        packet("builder", "completed-retained"),
+        packet("docs", "reference"),
+        packet("old", "superseded"),
+        packet("older", "superseded"),
+        packet("consumer", "active"),
+      ],
+      capabilities: ["box/driver", "kg/lookup", "m365/category"],
+      provides: [
+        edge("builder", "box/driver"),
+        edge("docs", "kg/lookup"),
+        edge("old", "m365/category"),
+        edge("older", "m365/category"),
+      ],
+      requires: [edge("consumer", "box/driver"), edge("consumer", "m365/category")],
+      duplicates: [
+        DuplicateCapabilityDeclaration.make({ packetId: "consumer", capability: "box/driver", edge: "requires" }),
+      ],
+    });
+
+    expect(keysOf(capabilityDoctorFindings(projection))).toEqual([
+      "blocking consumer capability-duplicate-declaration requires box/driver",
+      "blocking docs capability-reference-provides kg/lookup",
+      "advisory old capability-stranded m365/category",
+      "advisory older capability-stranded m365/category",
+    ]);
+  });
+
+  it("does not strand a capability that a buildable packet still provides", () => {
+    // Counterfactual: the same superseded provider is not stranded once the
+    // superseding packet re-declares the capability (D8).
+    const projection = CapabilityProjection.make({
+      packets: [packet("old", "superseded"), packet("successor", "active")],
+      capabilities: ["m365/category"],
+      provides: [edge("old", "m365/category"), edge("successor", "m365/category")],
+      requires: [],
+      duplicates: [],
+    });
+
+    expect(capabilityDoctorFindings(projection)).toEqual([]);
+  });
+
+  it("holds packets whose id does not match their directory out of the projection", () => {
+    const manifest = (id: string, provides: ReadonlyArray<GraphCapabilityEdge["capability"]>) =>
+      GoalManifest.make({
+        initiative: { id, status: "active", title: `Title ${id}` },
+        completionGate: COMPLETION_GATE,
+        executionCapable: true,
+        provides: [...provides],
+        requires: [],
+      });
+
+    // Two directories sharing an id (the collision that used to throw) and one
+    // single mismatched packet; the admitted reference packet still reports.
+    const findings = capabilityPacketFindings([
+      { slug: "copy-a", manifest: O.some(manifest("shared", ["box/driver"])) },
+      { slug: "copy-b", manifest: O.some(manifest("shared", [])) },
+      { slug: "renamed", manifest: O.some(manifest("old-name", [])) },
+      {
+        slug: "docs",
+        manifest: O.some(
+          GoalManifest.make({
+            ...manifest("docs", ["kg/lookup"]),
+            initiative: { id: "docs", status: "reference", title: "Docs" },
+          })
+        ),
+      },
+      { slug: "broken", manifest: O.none() },
+    ]);
+
+    expect(keysOf(findings)).toEqual([
+      "blocking copy-a capability-packet-id-mismatch shared",
+      "blocking copy-b capability-packet-id-mismatch shared",
+      "blocking renamed capability-packet-id-mismatch old-name",
+      "blocking docs capability-reference-provides kg/lookup",
+    ]);
   });
 });

@@ -227,6 +227,13 @@ is its whole job.
 - **PR 3 (after eyeball):** doctor findings for duplicate-declaration (ratchet),
   stranded-capability (advisory), reference-provides (ratchet), mapped into the
   E-slice's validation-requirement record.
+  Landed as the finding kinds `capability-duplicate-declaration`,
+  `capability-stranded`, and `capability-reference-provides`. They are computed by
+  `capabilityDoctorFindings` from the projection compiled over the manifests that
+  decode, so an undecodable manifest still reports only `manifest-invalid`. The
+  provider rows and the stranded predicate are shared with the catalog
+  (`capabilityProviderRows`, `isStrandedProviderSet`), so the doctor and
+  `goals catalog` cannot disagree.
 - Deferred by SPEC: HTML dashboard, respec --dry-run, scout --bootstrap (needs
   E's executor era), evidence-backed readiness (D9/D10), speedrun ghosts,
   substitution routes, bitemporal.

@@ -14,10 +14,11 @@
  *   `computedHash` provided.
  *
  * Migration from v1 is plan-first: {@link SkillsLockMigrationPlan} reports,
- * per skill, the disposition, the computed v2 entry, and every drifted path
- * classified as `matches-upstream-head` or `differs-from-upstream-head` against
- * the tracking ref's current upstream head (recorded as `upstreamHead`, the pin-bump target),
- * without writing anything.
+ * per skill, the disposition, the computed v2 entry, a pin proposal, and every
+ * drifted path classified against the skill's upstream path history (the
+ * newest revision whose bytes equal the installed file, or none of the
+ * examined revisions). The plan records the path-history head it classified
+ * against and seals everything into `planDigest`, without writing anything.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -211,44 +212,43 @@ export const SkillMigrationDisposition = LiteralKit(["vendored", "local", "unres
 export type SkillMigrationDisposition = typeof SkillMigrationDisposition.Type;
 
 /**
- * How a drifted installed file compares with the tracking ref's current upstream head.
+ * How a drifted installed file compares with the skill's upstream path history.
  *
  * **Details**
  *
- * Names only what the plan proves. `matches-upstream-head`: the installed bytes
- * (or absence) equal the same path at the tracking ref's current head, so the
- * floating updater pulled newer upstream content and the remedy is a pin bump.
- * `differs-from-upstream-head`: the file matches neither the pin nor the
- * current head. It may be a repo customization or a pull of an intermediate
- * upstream revision, so it becomes a conservatively labelled patch candidate
- * that the HITL hunk review classifies (B8), never an asserted local edit.
+ * Names only what the plan proves. `matches-upstream-revision`: the installed
+ * bytes and mode (or absence) equal the same path at a named revision of the
+ * tracking ref's path history, so the floating updater pulled that upstream
+ * content. `matches-no-examined-revision`: no examined revision carries these
+ * bytes, so the file is a patch candidate for the HITL hunk review (B8). When
+ * the row's path history is truncated, older revisions were not examined.
  *
  * **Example** (Check a drift class)
  *
  * ```ts
  * import { SkillDriftClass } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
  *
- * console.log(SkillDriftClass.is["matches-upstream-head"]("matches-upstream-head")) // true
+ * console.log(SkillDriftClass.is["matches-upstream-revision"]("matches-upstream-revision")) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const SkillDriftClass = LiteralKit(["matches-upstream-head", "differs-from-upstream-head"]).pipe(
+export const SkillDriftClass = LiteralKit(["matches-upstream-revision", "matches-no-examined-revision"]).pipe(
   $I.annoteSchema("SkillDriftClass", {
-    description: "Whether a drifted installed file equals the tracking ref's current upstream head.",
+    description: "Whether a drifted installed file equals the same path at some examined upstream path revision.",
   })
 );
 
 /**
- * How a drifted installed file compares with the tracking ref's current upstream head.
+ * How a drifted installed file compares with the skill's upstream path history.
  *
  * **Example** (Annotate a drift class)
  *
  * ```ts
  * import type { SkillDriftClass } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
  *
- * const drift: SkillDriftClass = "matches-upstream-head"
+ * const drift: SkillDriftClass = "matches-no-examined-revision"
  * console.log(drift)
  * ```
  *
@@ -258,32 +258,260 @@ export const SkillDriftClass = LiteralKit(["matches-upstream-head", "differs-fro
 export type SkillDriftClass = typeof SkillDriftClass.Type;
 
 /**
- * One drifted path of a vendored skill, classified.
+ * A drifted path whose installed bytes equal an upstream path revision.
  *
- * **Example** (Record a file that differs from the upstream head)
+ * **Example** (Record a file pulled from an older upstream revision)
  *
  * ```ts
- * import { SkillDriftRow } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { MatchesUpstreamRevisionDrift } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import * as S from "effect/Schema"
  *
- * const row = SkillDriftRow.make({ path: "SKILL.md", driftClass: "differs-from-upstream-head" })
- * console.log(row.driftClass)
+ * const row = S.decodeUnknownSync(MatchesUpstreamRevisionDrift)({
+ *   path: "SKILL.md",
+ *   driftClass: "matches-upstream-revision",
+ *   revision: "6cd3f4c65c361ab6554e06a77e6a0af9cf8b6e37",
+ * })
+ * console.log(row.revision.length) // 40
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class SkillDriftRow extends S.Class<SkillDriftRow>($I`SkillDriftRow`)(
+export class MatchesUpstreamRevisionDrift extends S.Class<MatchesUpstreamRevisionDrift>(
+  $I`MatchesUpstreamRevisionDrift`
+)(
   {
+    driftClass: S.tag("matches-upstream-revision"),
     path: S.String,
-    driftClass: SkillDriftClass,
+    revision: SkillGitRevision,
   },
-  $I.annote("SkillDriftRow", {
-    description: "One installed path that differs from the pinned upstream snapshot, with its drift class.",
+  $I.annote("MatchesUpstreamRevisionDrift", {
+    description: "A drifted path equal to the same path at the newest such upstream path revision.",
   })
 ) {}
 
 /**
- * A skill with a ratified seed: a full warehouse entry plus its classified drift.
+ * A drifted path whose installed bytes match no examined upstream path revision.
+ *
+ * **Example** (Record a repo-local file)
+ *
+ * ```ts
+ * import { MatchesNoExaminedRevisionDrift } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ *
+ * const row = MatchesNoExaminedRevisionDrift.make({ path: "SKILL.md" })
+ * console.log(row.driftClass) // "matches-no-examined-revision"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MatchesNoExaminedRevisionDrift extends S.Class<MatchesNoExaminedRevisionDrift>(
+  $I`MatchesNoExaminedRevisionDrift`
+)(
+  {
+    driftClass: S.tag("matches-no-examined-revision"),
+    path: S.String,
+  },
+  $I.annote("MatchesNoExaminedRevisionDrift", {
+    description: "A drifted path that equals the same path at no examined upstream path revision.",
+  })
+) {}
+
+/**
+ * One drifted path of a vendored skill, classified against its path history.
+ *
+ * **Example** (Narrow a drift row)
+ *
+ * ```ts
+ * import { SkillDriftRow } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.isSchema(SkillDriftRow)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const SkillDriftRow = S.Union([MatchesUpstreamRevisionDrift, MatchesNoExaminedRevisionDrift]).pipe(
+  $I.annoteSchema("SkillDriftRow", {
+    description: "One installed path that differs from the seed pin, classified against the upstream path history.",
+  })
+);
+
+/**
+ * One drifted path of a vendored skill, classified against its path history.
+ *
+ * **Example** (Annotate a drift row)
+ *
+ * ```ts
+ * import type { SkillDriftRow } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ *
+ * const pathOf = (row: SkillDriftRow): string => row.path
+ * console.log(typeof pathOf) // "function"
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SkillDriftRow = typeof SkillDriftRow.Type;
+
+/**
+ * The upstream path history a vendored row was classified against.
+ *
+ * **Details**
+ *
+ * `head` is the newest commit touching the skill's tree path at
+ * `trackingRef`; it is sealed into the plan digest, so a reviewed plan stops
+ * matching once upstream changes the skill. `revisionCount` revisions were
+ * listed; `truncated` says older history exists that was not examined.
+ *
+ * **Example** (Record a complete history window)
+ *
+ * ```ts
+ * import { SkillPathHistoryWindow } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import * as S from "effect/Schema"
+ *
+ * const window = S.decodeUnknownSync(SkillPathHistoryWindow)({
+ *   trackingRef: "main",
+ *   head: "91f21dfe1328585670275781b4525fff2507f917",
+ *   revisionCount: 3,
+ *   truncated: false,
+ * })
+ * console.log(window.revisionCount) // 3
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SkillPathHistoryWindow extends S.Class<SkillPathHistoryWindow>($I`SkillPathHistoryWindow`)(
+  {
+    trackingRef: S.String,
+    head: SkillGitRevision,
+    revisionCount: S.Natural,
+    truncated: S.Boolean,
+  },
+  $I.annote("SkillPathHistoryWindow", {
+    description:
+      "The path-history head, listed revision count, and truncation flag a vendored row was classified against.",
+  })
+) {}
+
+/**
+ * The installed tree equals the upstream tree at `revision`: pin it there.
+ *
+ * **Details**
+ *
+ * `revision` is the newest examined path revision whose complete mode-aware
+ * tree hash equals the installed tree's, or the seed pin itself when nothing
+ * drifted from it.
+ *
+ * **Example** (Propose a pristine pin)
+ *
+ * ```ts
+ * import { PristineAtRevisionPin } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import * as S from "effect/Schema"
+ *
+ * const pin = S.decodeUnknownSync(PristineAtRevisionPin)({
+ *   proposal: "pristine-at-revision",
+ *   revision: "91f21dfe1328585670275781b4525fff2507f917",
+ * })
+ * console.log(pin.proposal) // "pristine-at-revision"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PristineAtRevisionPin extends S.Class<PristineAtRevisionPin>($I`PristineAtRevisionPin`)(
+  {
+    proposal: S.tag("pristine-at-revision"),
+    revision: SkillGitRevision,
+  },
+  $I.annote("PristineAtRevisionPin", {
+    description: "The newest upstream revision whose whole skill tree equals the installed tree.",
+  })
+) {}
+
+/**
+ * No examined revision makes the installed tree pristine: keep the seed pin.
+ *
+ * **Details**
+ *
+ * The drift rows against the seed pin then carry the patch candidates: every
+ * `matches-no-examined-revision` file.
+ *
+ * **Example** (Keep the seed pin)
+ *
+ * ```ts
+ * import { KeepSeedPin } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import * as S from "effect/Schema"
+ *
+ * const pin = S.decodeUnknownSync(KeepSeedPin)({
+ *   proposal: "keep-seed-pin",
+ *   revision: "d6e773a562dc85c2a81b7c571f40ca2d81896679",
+ * })
+ * console.log(pin.proposal) // "keep-seed-pin"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KeepSeedPin extends S.Class<KeepSeedPin>($I`KeepSeedPin`)(
+  {
+    proposal: S.tag("keep-seed-pin"),
+    revision: SkillGitRevision,
+  },
+  $I.annote("KeepSeedPin", {
+    description: "The seed pin, kept because no examined upstream revision equals the installed tree.",
+  })
+) {}
+
+/**
+ * The pin a vendored skill should carry after migration.
+ *
+ * **Example** (Narrow a pin proposal)
+ *
+ * ```ts
+ * import { SkillPinProposal } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.isSchema(SkillPinProposal)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const SkillPinProposal = S.Union([PristineAtRevisionPin, KeepSeedPin]).pipe(
+  $I.annoteSchema("SkillPinProposal", {
+    description: "A pristine upstream revision to pin, or the kept seed pin.",
+  })
+);
+
+/**
+ * The pin a vendored skill should carry after migration.
+ *
+ * **Example** (Annotate a pin proposal)
+ *
+ * ```ts
+ * import type { SkillPinProposal } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ *
+ * const revisionOf = (pin: SkillPinProposal): string => pin.revision
+ * console.log(typeof revisionOf) // "function"
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SkillPinProposal = typeof SkillPinProposal.Type;
+
+/**
+ * A skill with a ratified seed: its warehouse entry, pin proposal, and classified drift.
+ *
+ * **Details**
+ *
+ * `entry` and `drift` are computed against the seed pin. `pin` proposes the
+ * newest pristine upstream revision when one exists; the lock write recomputes
+ * the entry at that pin. `pathHistory` is the history the drift was
+ * classified against.
  *
  * **Example** (Inspect the disposition tag)
  *
@@ -301,12 +529,13 @@ export class VendoredMigrationRow extends S.Class<VendoredMigrationRow>($I`Vendo
     disposition: S.tag("vendored"),
     skill: S.String,
     entry: VendoredSkillLockEntry,
+    pin: SkillPinProposal,
     drift: S.Array(SkillDriftRow),
-    upstreamHead: SkillGitRevision,
+    pathHistory: SkillPathHistoryWindow,
   },
   $I.annote("VendoredMigrationRow", {
     description:
-      "A seeded skill's computed warehouse entry, classified drift, and the upstream head it was compared with.",
+      "A seeded skill's computed warehouse entry, pin proposal, drift classified against the upstream path history, and that history's head.",
   })
 ) {}
 
@@ -346,8 +575,9 @@ export class LocalMigrationRow extends S.Class<LocalMigrationRow>($I`LocalMigrat
  * **Details**
  *
  * Covers a v1 `github` entry without a ratified seed (it keeps a local entry),
- * a missing or divergent install, and an upstream that cannot be read at the
- * pin or the head (no entry is computed). The note names the cause.
+ * a missing or divergent install (no entry is computed), and a seeded skill
+ * whose provenance or upstream cannot be read at the pin or along its path
+ * history (it keeps a local entry). The note names the cause.
  *
  * **Example** (Record an unresolved row)
  *
@@ -412,15 +642,23 @@ export const SkillMigrationRow = S.Union([VendoredMigrationRow, LocalMigrationRo
 export type SkillMigrationRow = typeof SkillMigrationRow.Type;
 
 /**
- * `skills-lock-migration-plan/v1`: the read-only v1-to-v2 lock migration report.
+ * `skills-lock-migration-plan/v2`: the read-only v1-to-v2 lock migration report.
+ *
+ * **Details**
+ *
+ * `planDigest` is the SHA-256 of the compact canonical JSON of the encoded
+ * `schemaVersion` and `rows`. Each vendored row carries the path-history head
+ * it was classified against, so the digest moves whenever upstream changes a
+ * skill, and a reviewed plan cannot be replayed against a moved upstream.
  *
  * **Example** (Construct an empty plan)
  *
  * ```ts
  * import { SkillsLockMigrationPlan } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { Sha256Hex } from "@beep/schema"
  *
- * const plan = SkillsLockMigrationPlan.make({ rows: [] })
- * console.log(plan.schemaVersion) // "skills-lock-migration-plan/v1"
+ * const plan = SkillsLockMigrationPlan.make({ planDigest: Sha256Hex.make("0".repeat(64)), rows: [] })
+ * console.log(plan.schemaVersion) // "skills-lock-migration-plan/v2"
  * ```
  *
  * @category models
@@ -428,11 +666,12 @@ export type SkillMigrationRow = typeof SkillMigrationRow.Type;
  */
 export class SkillsLockMigrationPlan extends S.Class<SkillsLockMigrationPlan>($I`SkillsLockMigrationPlan`)(
   {
-    schemaVersion: S.tag("skills-lock-migration-plan/v1"),
+    schemaVersion: S.tag("skills-lock-migration-plan/v2"),
+    planDigest: Sha256Hex,
     rows: S.Array(SkillMigrationRow),
   },
   $I.annote("SkillsLockMigrationPlan", {
-    description: "Read-only per-skill v1-to-v2 lock migration report, sorted by skill name.",
+    description: "Read-only per-skill v1-to-v2 lock migration report, sorted by skill name and sealed by its digest.",
   })
 ) {}
 

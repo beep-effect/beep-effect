@@ -142,7 +142,19 @@ zero seconds. Three decisions follow:
   `eslint.config.mjs`, `tsdoc.json` and the whole policy-pack configs package
   source (rule modules import helpers from `src/internal/eslint`): ESLint keys
   its own cache on the serialized config, which cannot see an edit inside an
-  in-repo rule module or its helpers, so the directory moves instead.
+  in-repo rule module or its helpers, so the directory moves instead. The key also
+  follows the flat config's static runtime imports/re-exports (including literal
+  `import()` and `require()` calls) through workspace source, hashing shared
+  config files, local plugin/rule helpers outside `repo-configs/src`, and owning
+  workspace manifests for package imports. Installed
+  ESLint, parser and plugin versions come from their resolved `package.json`,
+  including plugins without `meta` and arbitrary config namespace aliases.
+  Runtime, installed peer and optional dependency manifests of external config
+  packages are followed as well.
+  This is a conservative closure: both statically imported config profiles and
+  declared runtime dependencies contribute, even when the selected profile does
+  not execute them. Sorted relative paths, source contents and package identities
+  keep unchanged runs stable; unrelated workspace files do not enter the closure.
 
 ## Workspace overrides
 

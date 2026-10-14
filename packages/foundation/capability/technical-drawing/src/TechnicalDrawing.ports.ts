@@ -13,6 +13,7 @@ import type * as O from "effect/Option";
 import type { EmailConfirmation } from "./Approval.schemas.ts";
 import type { Camera, EdgeSet, ModelSpec, ModelSummary, ShadingPlan } from "./Geometry.schemas.ts";
 import type { EngineInfo } from "./Manifest.schemas.ts";
+import type { SheetFonts } from "./Sheet.schemas.ts";
 import type { DrawingError } from "./TechnicalDrawing.errors.ts";
 import type { PageMetrics, PdfFacts } from "./Validation.schemas.ts";
 
@@ -94,13 +95,23 @@ export interface PdfBackendShape {
     readonly antiAlias: boolean;
   }) => Effect.Effect<PageMetrics, DrawingError>;
   readonly pageText: (pdfPath: string, page: number) => Effect.Effect<string, DrawingError>;
-  readonly svgToPdf: (svgPaths: ReadonlyArray<string>, outputPath: string) => Effect.Effect<void, DrawingError>;
+  readonly svgToPdf: (
+    svgPaths: ReadonlyArray<string>,
+    outputPath: string,
+    fonts: O.Option<SheetFonts>
+  ) => Effect.Effect<void, DrawingError>;
 }
 
 /**
  * PDF backend port: converts sheet SVGs into one PDF (version ≤ 1.6, fixed
  * dates), reports a PDF's structure, measures rendered pages, and reads the
  * text of one page.
+ *
+ * **Details**
+ *
+ * With `fonts`, the converter reads fonts from that one directory only and
+ * binds each requested family to its resolved family, so text labels embed
+ * exactly the pinned files. Without it, sheets carry no text.
  *
  * **Example** (Reference the port)
  *

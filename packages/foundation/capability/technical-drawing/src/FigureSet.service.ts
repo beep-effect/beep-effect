@@ -7,28 +7,40 @@
  */
 
 import { $TechnicalDrawingId } from "@beep/identity/packages";
-import { A, O } from "@beep/utils";
+import { A, O, Str } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { ShadingPlan } from "./Geometry.schemas.ts";
 import { mirrorSegments, sameSegments } from "./Geometry.segments.ts";
-import { outlineFontFile } from "./internal/LabelOutline.ts";
-import { FigureRecord, LabelFontRecord, OmissionProof, RenderManifest, Sha256Hex } from "./Manifest.schemas.ts";
+import { fontNamesOf, outlineFontFile } from "./internal/LabelOutline.ts";
+import { sha256Hex } from "./Manifest.digest.ts";
+import { FigureRecord, FontPin, LabelFontRecord, OmissionProof, RenderManifest } from "./Manifest.schemas.ts";
 import { commonScale, composeSheet } from "./Sheet.compose.ts";
-import { MIN_LETTER_HEIGHT_CM, PT_PER_CM, PT_PER_MM, SheetLabelFaces, SheetOptions } from "./Sheet.schemas.ts";
+import {
+  LabelFontAlias,
+  labelFontFamily,
+  MIN_LETTER_HEIGHT_CM,
+  PT_PER_CM,
+  PT_PER_MM,
+  SheetFonts,
+  SheetLabelFaces,
+  SheetOptions,
+} from "./Sheet.schemas.ts";
 import { DrawingError } from "./TechnicalDrawing.errors.ts";
 import { GeometryEngine, PdfBackend } from "./TechnicalDrawing.ports.ts";
-import { marginFindings, purityFindings, structuralFindings } from "./Validation.rules.ts";
+import { labelTextFindings, marginFindings, purityFindings, structuralFindings } from "./Validation.rules.ts";
 import { ValidationOptions, ValidationReport } from "./Validation.schemas.ts";
 import { cameraForView, FigureSetSpec, PictorialProjection } from "./View.schemas.ts";
 import type { EdgeSet, Segment2 } from "./Geometry.schemas.ts";
 import type { LabelFace } from "./internal/LabelOutline.ts";
 import type { LabelStyle } from "./Sheet.schemas.ts";
+import type { SheetLabel } from "./Validation.schemas.ts";
 import type { FigureSpec, OmissionClaim, ViewName } from "./View.schemas.ts";
 
 const $I = $TechnicalDrawingId.create("FigureSet.service");
@@ -37,6 +49,21 @@ const encodeManifest = S.encodeUnknownEffect(S.fromJsonString(RenderManifest));
 const encoder = new TextEncoder();
 const MARGIN_DPI = 300;
 const PURITY_DPIS = [300, 600];
+const FONT_FILE = /\.(?:ttf|otf)$/i;
+
+// Family names compare without case: fontconfig matches them the same way.
+const sameFamily = (a: string, b: string): boolean => Str.toLowerCase(a) === Str.toLowerCase(b);
+
+// A label style rendered as embedded text, with the label it letters.
+const textLabelsOf = (sheet: SheetOptions): ReadonlyArray<{ readonly label: SheetLabel; readonly style: LabelStyle }> =>
+  pipe(
+    [
+      O.map(sheet.sheetNumberLabel, (style) => ({ label: "sheet-number" as const, style })),
+      O.map(sheet.figureLabel, (style) => ({ label: "figure" as const, style })),
+    ],
+    A.getSomes,
+    A.filter(({ style }) => style.render === "text")
+  );
 
 /**
  * Request to render a figure set.
@@ -100,20 +127,6 @@ export interface FigureSetShape {
   readonly validate: (pdfPath: string, options: ValidationOptions) => Effect.Effect<ValidationReport, DrawingError>;
 }
 
-// shared digest idiom with @beep/occt; no in-family home, future foundation capability candidate.
-// fallow-ignore-next-line code-duplication -- shared digest idiom; no in-family home, future foundation capability candidate
-const hexOf = (bytes: ArrayBuffer): string =>
-  pipe(
-    A.fromIterable(new Uint8Array(bytes)),
-    A.map((b) => b.toString(16).padStart(2, "0")),
-    A.join("")
-  );
-
-const sha256 = (bytes: Uint8Array): Effect.Effect<Sha256Hex> =>
-  Effect.promise(() => crypto.subtle.digest("SHA-256", bytes.slice().buffer)).pipe(
-    Effect.map((digest) => Sha256Hex.make(hexOf(digest)))
-  );
-
 // Shading pitch is a paper quantity: convert the sheet's mm range to model
 // units at the common scale (points per model unit), then project once more.
 const shadingFor = (input: {
@@ -165,7 +178,7 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
   const validate = Effect.fn("FigureSet.validate")(function* (pdfPath: string, options: ValidationOptions) {
     const resolved = path.resolve(pdfPath);
     const bytes = yield* fs.readFile(resolved).pipe(Effect.mapError(io(`Could not read "${resolved}".`)));
-    const pdfSha256 = yield* sha256(bytes);
+    const pdfSha256 = yield* sha256Hex(bytes);
     const facts = yield* pdf.inspect(resolved);
     // `A.range(1, 0)` is `[1]`, so an empty document needs its own branch.
     const pages = A.length(facts.pages) === 0 ? A.empty<number>() : A.range(1, A.length(facts.pages));
@@ -181,20 +194,30 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
         return [...marginFindings({ page, metrics: margins }), ...A.flatten(purity)];
       })
     );
+    // Text labels are checked in the extracted text, which a missing font leaves empty.
+    const textFindings = A.isReadonlyArrayNonEmpty(options.textLabels)
+      ? yield* Effect.forEach(pages, (page) =>
+          pdf
+            .pageText(resolved, page)
+            .pipe(Effect.map((text) => labelTextFindings({ page, pages: A.length(pages), text, options })))
+        )
+      : [];
     return ValidationReport.make({
       pdfSha256,
       pageCount: facts.pages.length,
-      findings: [...structuralFindings({ facts, options }), ...A.flatten(rasterFindings)],
+      findings: [...structuralFindings({ facts, options }), ...A.flatten(textFindings), ...A.flatten(rasterFindings)],
     });
   });
 
-  // Outline an operator label font file and check its cap height; its sha256 goes in the manifest.
-  const loadLabelFont = Effect.fnUntraced(function* (style: LabelStyle, fontFile: string) {
-    const bytes = yield* fs
+  const readFont = (fontFile: string) =>
+    fs
       .readFile(fontFile)
       .pipe(
         Effect.mapError((cause) => DrawingError.fromUnknown("font", `Could not read label font "${fontFile}".`, cause))
       );
+
+  // Outline a label font and check its cap height at the style's size.
+  const faceOf = Effect.fnUntraced(function* (style: LabelStyle, fontFile: string, bytes: Uint8Array) {
     const face = yield* outlineFontFile(fontFile, bytes);
     const capCm = (style.sizePt * face.capHeight) / face.unitsPerEm / PT_PER_CM;
     if (capCm < MIN_LETTER_HEIGHT_CM) {
@@ -203,7 +226,111 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
         message: `Label font "${fontFile}" at ${style.sizePt} pt has a cap height of ${capCm.toFixed(3)} cm, under 0.32 cm.`,
       });
     }
-    return { record: LabelFontRecord.make({ fontFile, sha256: yield* sha256(bytes) }), face };
+    return face;
+  });
+
+  // Outline an operator label font file; its sha256 goes in the manifest.
+  const loadLabelFont = Effect.fnUntraced(function* (style: LabelStyle, fontFile: string) {
+    const bytes = yield* readFont(fontFile);
+    const face = yield* faceOf(style, fontFile, bytes);
+    return { record: LabelFontRecord.make({ fontFile, sha256: yield* sha256Hex(bytes) }), face };
+  });
+
+  // Resolve every text label's family to the one Regular file of that family
+  // in the font directory (searched recursively, as fontconfig does). The
+  // files' own metrics place the labels; their hashes pin the PDF's fonts.
+  const resolveTextFonts = Effect.fnUntraced(function* (sheet: SheetOptions) {
+    const texts = textLabelsOf(sheet);
+    if (!A.isReadonlyArrayNonEmpty(texts)) {
+      return O.none<{
+        readonly fonts: SheetFonts;
+        readonly pins: ReadonlyArray<FontPin>;
+        readonly faces: SheetLabelFaces;
+        readonly labels: ReadonlyArray<SheetLabel>;
+      }>();
+    }
+    const directory = yield* O.match(sheet.fontDirectory, {
+      onNone: () =>
+        DrawingError.make({
+          reason: "font",
+          message: "Text labels need a font directory: set `fontDirectory` in the sheet options.",
+        }),
+      onSome: Effect.succeed,
+    });
+    const entries = yield* fs
+      .readDirectory(directory, { recursive: true })
+      .pipe(
+        Effect.mapError((cause) =>
+          DrawingError.fromUnknown("font", `Could not read the font directory "${directory}".`, cause)
+        )
+      );
+    const catalog = yield* Effect.forEach(
+      pipe(
+        entries,
+        A.filter((entry) => FONT_FILE.test(entry)),
+        A.sort(Order.String)
+      ),
+      Effect.fnUntraced(function* (entry: string) {
+        const file = path.join(directory, entry);
+        const bytes = yield* readFont(file);
+        return { file, bytes, ...(yield* fontNamesOf(file, bytes)) };
+      })
+    );
+    const resolve = Effect.fnUntraced(function* (requested: string) {
+      const matches = A.filter(
+        catalog,
+        (font) => sameFamily(font.family, requested) && sameFamily(font.subfamily, "Regular")
+      );
+      if (A.length(matches) > 1) {
+        return yield* DrawingError.make({
+          reason: "font",
+          message: `The font directory "${directory}" holds ${A.length(matches)} Regular files of "${requested}": ${A.join(
+            A.map(matches, (m) => m.file),
+            ", "
+          )}.`,
+        });
+      }
+      return yield* O.match(A.head(matches), {
+        onNone: () =>
+          DrawingError.make({
+            reason: "font",
+            message: `The font directory "${directory}" holds no Regular font of the family "${requested}".`,
+          }),
+        onSome: (font) => Effect.succeed({ requested, ...font }),
+      });
+    });
+    const resolved = yield* Effect.forEach(A.dedupe(A.map(texts, ({ style }) => labelFontFamily(style))), resolve);
+    const fontFor = (style: LabelStyle) =>
+      A.findFirst(resolved, (font) => font.requested === labelFontFamily(style)).pipe(
+        O.match({
+          onNone: () => DrawingError.make({ reason: "font", message: "A text label lost its resolved font." }),
+          onSome: (font) => faceOf(style, font.file, font.bytes),
+        })
+      );
+    const faceFor = (label: SheetLabel) =>
+      pipe(
+        A.findFirst(texts, (text) => text.label === label),
+        O.match({
+          onNone: () => Effect.succeedNone,
+          onSome: ({ style }) => Effect.asSome(fontFor(style)),
+        })
+      );
+    return O.some({
+      fonts: SheetFonts.make({
+        directory,
+        families: A.map(resolved, (font) => LabelFontAlias.make({ requested: font.requested, family: font.family })),
+      }),
+      pins: yield* Effect.forEach(resolved, (font) =>
+        Effect.map(sha256Hex(font.bytes), (digest) =>
+          FontPin.make({ family: font.requested, file: font.file, sha256: digest })
+        )
+      ),
+      faces: SheetLabelFaces.make({
+        sheetNumber: yield* faceFor("sheet-number"),
+        figure: yield* faceFor("figure"),
+      }),
+      labels: A.map(texts, (text) => text.label),
+    });
   });
 
   const labelFace = Effect.fnUntraced(function* (style: O.Option<LabelStyle>) {
@@ -220,7 +347,7 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
   const render = Effect.fn("FigureSet.render")(function* (request: RenderRequest) {
     const specPath = path.resolve(request.specPath);
     const specBytes = yield* fs.readFile(specPath).pipe(Effect.mapError(io(`Could not read "${specPath}".`)));
-    const specSha256 = yield* sha256(specBytes);
+    const specSha256 = yield* sha256Hex(specBytes);
     const spec = yield* decodeSpec(new TextDecoder().decode(specBytes)).pipe(
       Effect.mapError((cause) => DrawingError.fromUnknown("spec", `Invalid figure-set spec "${specPath}".`, cause))
     );
@@ -231,9 +358,18 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
     // Font files are read before projecting, so a bad one fails fast.
     const sheetNumberFont = yield* labelFace(sheet.sheetNumberLabel);
     const figureFont = yield* labelFace(sheet.figureLabel);
+    const textFonts = yield* resolveTextFonts(sheet);
+    const textFaces = O.map(textFonts, (t) => t.faces);
+    // A style is either outlined from a font file or set as text, never both.
     const faces = SheetLabelFaces.make({
-      sheetNumber: O.map(sheetNumberFont, (f) => f.face),
-      figure: O.map(figureFont, (f) => f.face),
+      sheetNumber: O.orElse(
+        O.map(sheetNumberFont, (f) => f.face),
+        () => O.flatMap(textFaces, (f) => f.sheetNumber)
+      ),
+      figure: O.orElse(
+        O.map(figureFont, (f) => f.face),
+        () => O.flatMap(textFaces, (f) => f.figure)
+      ),
     });
     const labelFonts = A.dedupeWith(
       [...O.toArray(O.map(sheetNumberFont, (f) => f.record)), ...O.toArray(O.map(figureFont, (f) => f.record))],
@@ -332,7 +468,7 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
           view: figure.view,
           description: figure.description,
           svgFile,
-          svgSha256: yield* sha256(svgBytes),
+          svgSha256: yield* sha256Hex(svgBytes),
           visibleSegments: A.length(edges.visible),
           shadingSegments: A.length(shadingLines),
           camera: A.get(cameras, index),
@@ -343,12 +479,25 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
     const pdfPath = path.join(outputDir, pdfFile);
     yield* pdf.svgToPdf(
       A.map(figures, (f) => path.join(outputDir, f.svgFile)),
-      pdfPath
+      pdfPath,
+      O.map(textFonts, (t) => t.fonts)
     );
     const pdfBytes = yield* fs.readFile(pdfPath).pipe(Effect.mapError(io(`Could not read "${pdfPath}".`)));
-    const pdfSha256 = yield* sha256(pdfBytes);
+    const pdfSha256 = yield* sha256Hex(pdfBytes);
     const validation = request.validate
-      ? O.some(yield* validate(pdfPath, ValidationOptions.make({ expectedPages: O.some(sheets) })))
+      ? O.some(
+          yield* validate(
+            pdfPath,
+            ValidationOptions.make({
+              expectedPages: O.some(sheets),
+              textLabels: O.match(textFonts, { onNone: A.empty, onSome: (t) => t.labels }),
+              expectedLabelFonts: O.match(textFonts, {
+                onNone: A.empty,
+                onSome: (t) => A.map(t.pins, (pin) => pin.family),
+              }),
+            })
+          )
+        )
       : O.none<ValidationReport>();
     const manifest = RenderManifest.make({
       title: spec.title,
@@ -365,6 +514,7 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
       approver: spec.approver,
       sheet: O.some(sheet),
       labelFonts,
+      fonts: O.match(textFonts, { onNone: A.empty, onSome: (t) => t.pins }),
     });
     const json = yield* encodeManifest(manifest).pipe(
       Effect.mapError((cause) => DrawingError.fromUnknown("io", "Could not encode the manifest.", cause))

@@ -23,7 +23,12 @@ describe("quality tsgo rule severities", () => {
   });
 
   it("accepts error rules and the declared-off stability rules", () => {
-    const severity = { floatingEffect: "error", experimentalApiUsage: "off", unstableApiUsage: "off" };
+    const severity = {
+      floatingEffect: "error",
+      apiStabilityLeak: "off",
+      experimentalApiUsage: "off",
+      unstableApiUsage: "off",
+    };
     expect(
       collectTsgoSeverityDiagnosticsForTesting({ plugin: pluginWith(severity), diagnosticSeverity: severity })
     ).toEqual({

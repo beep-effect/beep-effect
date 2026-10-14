@@ -369,10 +369,36 @@ export const evaluateCapabilityGraph = (projection: CapabilityProjection): Capab
   });
 };
 
-const providerRows = (
-  projection: CapabilityProjection,
-  capability: CapabilitySlug
-): ReadonlyArray<CapabilityProviderRow> => {
+/**
+ * Lists the declared providers of one capability with their packet status.
+ *
+ * **Details**
+ *
+ * One row per providing packet, sorted by packet id. `satisfies` is true only
+ * for a `completed-retained` provider (D8). The catalog, the explain report, and
+ * the goals doctor all read providers through this function, so they agree on
+ * every row.
+ *
+ * **Example** (List the providers of an undeclared capability)
+ *
+ * ```ts
+ * import { capabilityProviderRows } from "@beep/repo-cli/commands/Goals/Graph.projection"
+ * import { CapabilityProjection } from "@beep/repo-cli/commands/Goals/Graph.schemas"
+ *
+ * const projection = CapabilityProjection.make({ packets: [], capabilities: [], provides: [], requires: [], duplicates: [] })
+ * console.log(capabilityProviderRows(projection, "box/driver")) // []
+ * ```
+ *
+ * @param projection - Compiled capability projection.
+ * @param capability - Capability slug to look up.
+ * @returns The provider rows for that capability, sorted by packet id.
+ * @category read-models
+ * @since 0.0.0
+ */
+export const capabilityProviderRows: {
+  (capability: CapabilitySlug): (projection: CapabilityProjection) => ReadonlyArray<CapabilityProviderRow>;
+  (projection: CapabilityProjection, capability: CapabilitySlug): ReadonlyArray<CapabilityProviderRow>;
+} = dual(2, (projection: CapabilityProjection, capability: CapabilitySlug): ReadonlyArray<CapabilityProviderRow> => {
   const status = statusOf(projection);
   return pipe(
     projection.provides,
@@ -393,7 +419,32 @@ const providerRows = (
     ),
     A.sort(Order.mapInput(Order.String, (row: CapabilityProviderRow) => row.provider))
   );
-};
+});
+
+/**
+ * Whether a capability is stranded: it has providers, and every one is superseded.
+ *
+ * **Details**
+ *
+ * D8: a superseded provider never satisfies readiness, and the superseding packet
+ * must re-declare what it carries forward. A capability whose only declarers are
+ * superseded therefore has no route left to readiness.
+ *
+ * **Example** (A capability with no providers is not stranded)
+ *
+ * ```ts
+ * import { isStrandedProviderSet } from "@beep/repo-cli/commands/Goals/Graph.projection"
+ *
+ * console.log(isStrandedProviderSet([])) // false
+ * ```
+ *
+ * @param providers - Provider rows of one capability.
+ * @returns `true` when the rows are non-empty and all superseded.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isStrandedProviderSet = (providers: ReadonlyArray<CapabilityProviderRow>): boolean =>
+  A.isReadonlyArrayNonEmpty(providers) && A.every(providers, (row) => row.providerStatus === "superseded");
 
 const requirementRows = (
   projection: CapabilityProjection,
@@ -407,7 +458,7 @@ const requirementRows = (
       GoalRequirementRow.make({
         capability: edge.capability,
         satisfied: A.contains(answers.available, edge.capability),
-        providers: providerRows(projection, edge.capability),
+        providers: capabilityProviderRows(projection, edge.capability),
         fog: A.contains(answers.fog, edge.capability),
       })
     )
@@ -574,7 +625,7 @@ export const buildCatalogReport: {
   (projection: CapabilityProjection, answers: CapabilityGraphAnswers): CapabilityCatalogReport =>
     CapabilityCatalogReport.make({
       entries: A.map(projection.capabilities, (capability) => {
-        const providers = providerRows(projection, capability);
+        const providers = capabilityProviderRows(projection, capability);
         const consumers = pipe(
           projection.requires,
           A.filter((edge) => edge.capability === capability),
@@ -588,8 +639,7 @@ export const buildCatalogReport: {
           collision: A.length(providers) > 1,
           orphan: A.isReadonlyArrayNonEmpty(consumers) && A.isReadonlyArrayEmpty(providers),
           fog: A.contains(answers.fog, capability),
-          stranded:
-            A.isReadonlyArrayNonEmpty(providers) && A.every(providers, (row) => row.providerStatus === "superseded"),
+          stranded: isStrandedProviderSet(providers),
           referenceProviders: pipe(
             providers,
             A.filter((row) => row.providerStatus === "reference"),

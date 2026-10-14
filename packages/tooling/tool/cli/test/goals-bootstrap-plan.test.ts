@@ -499,6 +499,9 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
       "goal-md-oversize",
       "phases-terminal-but-active",
       "reflection-frontmatter-invalid",
+      "capability-duplicate-declaration",
+      "capability-packet-id-mismatch",
+      "capability-reference-provides",
     ];
 
     it("maps every blocking doctor finding kind to at least one validation requirement", () => {

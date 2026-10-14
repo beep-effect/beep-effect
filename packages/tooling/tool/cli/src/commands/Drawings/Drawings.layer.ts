@@ -8,7 +8,14 @@
 
 import { M365, M365GetMessageRequest } from "@beep/m365";
 import { Occt, ProjectionRequest } from "@beep/occt";
-import { PageTextRequest, PdfTools, RasterRequest, SvgToPdfRequest } from "@beep/pdf-tools";
+import {
+  FontFamilyAlias,
+  PageTextRequest,
+  PdfTools,
+  PinnedFonts,
+  RasterRequest,
+  SvgToPdfRequest,
+} from "@beep/pdf-tools";
 import {
   DrawingError,
   EmailAddress,
@@ -32,7 +39,7 @@ import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import type { M365Error } from "@beep/m365";
 import type { OcctError } from "@beep/occt";
-import type { Camera, ModelSpec, ShadingPlan } from "@beep/technical-drawing";
+import type { Camera, ModelSpec, ShadingPlan, SheetFonts } from "@beep/technical-drawing";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process";
@@ -73,8 +80,18 @@ const engineFromOcct = Effect.fn("DrawingsLayer.engineFromOcct")(function* () {
 const backendFromPdfTools = Effect.fn("DrawingsLayer.backendFromPdfTools")(function* () {
   const tools = yield* PdfTools;
   const pdf = (cause: unknown) => DrawingError.fromUnknown("pdf", "The PDF backend failed.", cause);
-  const svgToPdf = Effect.fn("DrawingsLayer.svgToPdf")(function* (svgPaths: ReadonlyArray<string>, outputPath: string) {
-    yield* tools.svgToPdf(SvgToPdfRequest.make({ svgPaths, outputPath })).pipe(Effect.mapError(pdf));
+  const svgToPdf = Effect.fn("DrawingsLayer.svgToPdf")(function* (
+    svgPaths: ReadonlyArray<string>,
+    outputPath: string,
+    fonts: O.Option<SheetFonts>
+  ) {
+    const pinned = O.map(fonts, (f) =>
+      PinnedFonts.make({
+        directory: f.directory,
+        families: A.map(f.families, (a) => FontFamilyAlias.make({ requested: a.requested, family: a.family })),
+      })
+    );
+    yield* tools.svgToPdf(SvgToPdfRequest.make({ svgPaths, outputPath, fonts: pinned })).pipe(Effect.mapError(pdf));
   });
   const inspect = Effect.fn("DrawingsLayer.inspect")(function* (pdfPath: string) {
     const structure = yield* tools.inspect(pdfPath).pipe(Effect.mapError(pdf));

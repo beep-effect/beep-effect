@@ -6,13 +6,14 @@
  */
 
 import * as A from "effect/Array";
+import * as Match from "effect/Match";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as jsonc from "jsonc-parser";
 import { SkillsLockMigrationPlan } from "./SkillsLock.schemas.ts";
 import type { SkillProvenanceReport } from "./Skills.schemas.ts";
-import type { VendoredMigrationRow } from "./SkillsLock.schemas.ts";
+import type { SkillMigrationRow, VendoredMigrationRow } from "./SkillsLock.schemas.ts";
 
 const encodeUnknownJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 
@@ -204,8 +205,10 @@ const encodeMigrationPlanJson = S.encodeResult(S.fromJsonString(SkillsLockMigrat
  * ```ts
  * import { renderSkillsLockMigrationPlanJson } from "@beep/repo-cli/commands/Skills/Skills.render"
  * import { SkillsLockMigrationPlan } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { Sha256Hex } from "@beep/schema"
  *
- * console.log(renderSkillsLockMigrationPlanJson(SkillsLockMigrationPlan.make({ rows: [] })))
+ * const plan = SkillsLockMigrationPlan.make({ planDigest: Sha256Hex.make("0".repeat(64)), rows: [] })
+ * console.log(renderSkillsLockMigrationPlanJson(plan).includes("skills-lock-migration-plan/v2")) // true
  * ```
  *
  * @param plan - Migration plan to render.
@@ -219,44 +222,76 @@ export const renderSkillsLockMigrationPlanJson = (plan: SkillsLockMigrationPlan)
   return `${jsonc.applyEdits(encoded, edits)}\n`;
 };
 
+const abbreviatedRevision = Str.slice(0, 10);
+
+const describePin = (row: VendoredMigrationRow): string =>
+  row.pin.proposal === "pristine-at-revision"
+    ? `pristine at ${abbreviatedRevision(row.pin.revision)} (proposed pin)`
+    : `no pristine revision; keeps seed pin ${abbreviatedRevision(row.pin.revision)}`;
+
+const describeDrift = (row: VendoredMigrationRow): string => {
+  const local = A.filter(row.drift, (drift) => drift.driftClass === "matches-no-examined-revision");
+  const pulled = A.length(A.filter(row.drift, (drift) => drift.driftClass === "matches-upstream-revision"));
+  const candidates = A.isReadonlyArrayEmpty(local)
+    ? ""
+    : ` (patch candidates: ${A.join(
+        A.map(local, (drift) => drift.path),
+        ", "
+      )})`;
+  return A.isReadonlyArrayEmpty(row.drift)
+    ? "no drift from seed pin"
+    : `drift from seed pin: ${pulled} match an upstream revision, ${A.length(local)} match no examined revision${candidates}`;
+};
+
+const describeHistory = (row: VendoredMigrationRow): string =>
+  `history: ${row.pathHistory.revisionCount} revision(s) at ${row.pathHistory.trackingRef}, head ${abbreviatedRevision(
+    row.pathHistory.head
+  )}${row.pathHistory.truncated ? ", truncated (older revisions not examined)" : ""}`;
+
 /**
  * Renders a lock migration plan as one line per skill.
+ *
+ * **Details**
+ *
+ * The headline gives the disposition counts and the plan digest. A vendored
+ * line names its pin proposal, its drift split by path-history class (listing
+ * the patch candidates), and the path history it was classified against,
+ * including whether that history was truncated.
  *
  * **Example** (Render an empty plan summary)
  *
  * ```ts
  * import { renderSkillsLockMigrationPlanSummary } from "@beep/repo-cli/commands/Skills/Skills.render"
  * import { SkillsLockMigrationPlan } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { Sha256Hex } from "@beep/schema"
  *
- * console.log(renderSkillsLockMigrationPlanSummary(SkillsLockMigrationPlan.make({ rows: [] })))
+ * const plan = SkillsLockMigrationPlan.make({ planDigest: Sha256Hex.make("0".repeat(64)), rows: [] })
+ * console.log(renderSkillsLockMigrationPlanSummary(plan).startsWith("skills lock-plan: 0 vendored")) // true
  * ```
  *
  * @param plan - Migration plan to render.
- * @returns Headline counts followed by one line per skill.
+ * @returns Headline counts and digest followed by one line per skill.
  * @category formatting
  * @since 0.0.0
  */
 export const renderSkillsLockMigrationPlanSummary = (plan: SkillsLockMigrationPlan): string => {
   const count = (disposition: string): number =>
     A.length(A.filter(plan.rows, (row) => row.disposition === disposition));
-  const describeDrift = (drift: VendoredMigrationRow["drift"]): string => {
-    const differs = A.length(A.filter(drift, (row) => row.driftClass === "differs-from-upstream-head"));
-    const matches = A.length(A.filter(drift, (row) => row.driftClass === "matches-upstream-head"));
-    return A.isReadonlyArrayEmpty(drift) ? "" : ` drift: ${differs} differ from upstream head, ${matches} match it`;
-  };
-  const lines = A.map(plan.rows, (row) => {
-    switch (row.disposition) {
-      case "vendored":
-        return `  ${row.skill}: vendored${describeDrift(row.drift)}`;
-      case "unresolved":
-        return `  ${row.skill}: unresolved (${row.note})`;
-      case "local":
-        return `  ${row.skill}: local`;
-    }
-  });
+  const lines = A.map(
+    plan.rows,
+    Match.type<SkillMigrationRow>().pipe(
+      Match.discriminatorsExhaustive("disposition")({
+        vendored: (row) =>
+          `  ${row.skill}: vendored; ${describePin(row)}; ${describeDrift(row)}; ${describeHistory(row)}`,
+        unresolved: (row) => `  ${row.skill}: unresolved (${row.note})`,
+        local: (row) => `  ${row.skill}: local`,
+      })
+    )
+  );
   return A.join(
     [
       `skills lock-plan: ${count("vendored")} vendored, ${count("local")} local, ${count("unresolved")} unresolved`,
+      `plan-digest: ${plan.planDigest}`,
       ...lines,
     ],
     "\n"

@@ -6,6 +6,7 @@ import {
   CorpusArchiveMoveOptions,
   CorpusCatalogOptions,
   CorpusCommandServiceLive,
+  CorpusExtractOcrCounts,
   CorpusExtractOptions,
   CorpusPageReadingRecordJson,
   CorpusProvenanceRecord,
@@ -1526,6 +1527,8 @@ const makeExtractResumeFixture = Effect.fn("CorpusTest.makeExtractResumeFixture"
     rawDir,
     readText,
     recognitionCalls,
+    installLanguages: (languages: ReadonlyArray<string>) =>
+      writeStub(ocrTesseractStub(callLog, languages), tesseractPath),
     run: (
       overrides: {
         readonly exportChildren?: boolean;
@@ -2234,6 +2237,60 @@ it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpu
       expect(resumed.alreadyCompleteCount).toBe(3);
       expect(resumed.failedCount).toBe(1);
       expect(resumed.ocrPageCount).toBe(4);
+    })
+  );
+
+  it.effect(
+    "decodes legacy OCR counts without missing models",
+    Effect.fnUntraced(function* () {
+      const counts = yield* S.decodeEffect(CorpusExtractOcrCounts)({ failedPageCount: 0, readPageCount: 1 });
+      assertNone(counts.missingLanguages);
+      expect(counts.completed).toBe(true);
+    })
+  );
+
+  it.effect(
+    "keeps missing models on resume and rereads Han pages when any missing model is installed",
+    Effect.fnUntraced(function* () {
+      const han = "pages=1 p1=han";
+      const fixture = yield* makeExtractResumeFixture([{ content: han, name: "notice.pdf" }]);
+      yield* fixture.run({ ocr: true });
+      const resumed = yield* fixture.run({ ocr: true });
+      expect(resumed.alreadyCompleteCount).toBe(1);
+      expect(yield* fixture.recognitionCalls()).toHaveLength(1);
+      expect(yield* fixture.readText("ocr/languages.json")).toContain('"missing":["chi_sim","chi_tra"]');
+
+      yield* fixture.installLanguages(["chi_sim", "eng", "osd"]);
+      const installed = yield* fixture.run({ ocr: true });
+      expect(installed.alreadyCompleteCount).toBe(0);
+      expect(yield* fixture.recognitionCalls()).toHaveLength(2);
+      expect(A.map(yield* fixture.pageRows(han), (row) => row.languages)).toEqual([["chi_sim", "eng"]]);
+      expect(yield* fixture.readText("ocr/languages.json")).toContain('"missing":["chi_tra"]');
+      expect((yield* fixture.run({ ocr: true })).alreadyCompleteCount).toBe(1);
+      expect(yield* fixture.readText("ocr/languages.json")).toContain('"missing":["chi_tra"]');
+    })
+  );
+
+  it.effect(
+    "retries an empty language plan while keeping sources that need no OCR settled",
+    Effect.fnUntraced(function* () {
+      const han = "pages=1 p1=han";
+      const fixture = yield* makeExtractResumeFixture(
+        [
+          { content: han, name: "notice.pdf" },
+          { content: "plain text", name: "note.txt" },
+        ],
+        ["osd"]
+      );
+      yield* fixture.run({ ocr: true });
+      expect(yield* fixture.recognitionCalls()).toHaveLength(0);
+      expect(yield* fixture.readText(`outcomes/${contentDigest(han)}.json`)).toContain('"ocrEnabled":false');
+      expect((yield* fixture.run({ ocr: true })).alreadyCompleteCount).toBe(1);
+      expect(yield* fixture.readText("ocr/languages.json")).toContain('"missing":["chi_sim","chi_tra","eng"]');
+      yield* fixture.installLanguages(["chi_sim", "eng", "osd"]);
+      expect((yield* fixture.run({ ocr: true })).alreadyCompleteCount).toBe(1);
+      expect(yield* fixture.recognitionCalls()).toHaveLength(1);
+      expect((yield* fixture.run({ ocr: true })).alreadyCompleteCount).toBe(2);
     })
   );
 

@@ -356,3 +356,102 @@ const causeFromUnknown = (cause: unknown): O.Option<string> =>
     A.findFirst((reader) => O.isSome(reader(cause))),
     O.flatMap((reader) => reader(cause))
   );
+
+/**
+ * Why an app-only environment setting was refused.
+ *
+ * **Details**
+ *
+ * `unresolved-reference` means the value still starts with `op://`: the
+ * process was started without `op run`, so the reference was never resolved.
+ *
+ * **Example** (Check a problem)
+ *
+ * ```ts
+ * import { M365EnvProblem } from "@beep/m365"
+ *
+ * console.log(M365EnvProblem.is["unresolved-reference"]("unresolved-reference")) // true
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const M365EnvProblem = LiteralKit(["missing", "unresolved-reference", "unreadable", "invalid"]).pipe(
+  $I.annoteSchema("M365EnvProblem", {
+    description: "Why an app-only environment setting of the Microsoft 365 driver was refused.",
+  })
+);
+
+/**
+ * Type for {@link M365EnvProblem}.
+ *
+ * **Example** (Type a problem)
+ *
+ * ```ts
+ * import type { M365EnvProblem } from "@beep/m365"
+ *
+ * const problem: M365EnvProblem = "missing"
+ * console.log(problem) // "missing"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export type M365EnvProblem = typeof M365EnvProblem.Type;
+
+const ENV_PROBLEM_TEXT: Record<M365EnvProblem, string> = {
+  missing: "is not set. Run the command through op run with an env file of op:// references",
+  "unresolved-reference": "is an unresolved 1Password reference. Run the command through op run",
+  unreadable: "could not be read",
+  invalid: "does not hold a valid value",
+};
+
+/**
+ * Failure to load the app-only lane settings from the environment.
+ *
+ * **Details**
+ *
+ * The message names the setting and never its value, so the error is safe to
+ * print even when the value is a private key.
+ *
+ * **Example** (Refuse an unresolved reference)
+ *
+ * ```ts
+ * import { M365EnvError } from "@beep/m365"
+ *
+ * const error = M365EnvError.of("M365_OUTBOX_CLIENT_ID", "unresolved-reference")
+ * console.log(error.message)
+ * // "M365_OUTBOX_CLIENT_ID is an unresolved 1Password reference. Run the command through op run."
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class M365EnvError extends S.TaggedError<M365EnvError>($I`M365EnvError`)(
+  "M365EnvError",
+  {
+    setting: S.String.annotateKey({ description: "Name of the environment variable at fault; never its value." }),
+    problem: M365EnvProblem.annotateKey({ description: "Why the setting was refused." }),
+    message: S.String.annotateKey({ description: "Operator-facing message naming the setting only." }),
+  },
+  $I.annoteError<M365EnvError>("M365EnvError", {
+    description: "Failure to load the Microsoft 365 app-only lane settings from the environment.",
+  })
+) {
+  /**
+   * Build the error for one setting and problem.
+   *
+   * **Example** (A missing setting)
+   *
+   * ```ts
+   * import { M365EnvError } from "@beep/m365"
+   *
+   * console.log(M365EnvError.of("M365_OUTBOX_MAILBOX", "missing").problem) // "missing"
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly of = (setting: string, problem: M365EnvProblem): M365EnvError =>
+    M365EnvError.make({ setting, problem, message: `${setting} ${ENV_PROBLEM_TEXT[problem]}.` });
+}

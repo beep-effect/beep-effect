@@ -1087,7 +1087,7 @@ const skillsLockPlanCommand = Command.make(
   {
     json: Flag.Boolean("json").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Print the skills-lock-migration-plan/v1 report as JSON")
+      Flag.withDescription("Print the skills-lock-migration-plan/v2 report as JSON")
     ),
   },
   Effect.fn("Skills.lockPlanCommand")(function* (options) {

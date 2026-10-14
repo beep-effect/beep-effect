@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` (P0 admission in progress, 2026-10-13)
+Status: `active` (P0-P2 merged in #1644; PR-D, PR-F, PR-G open; round-2 render in progress; attorney answers recorded 2026-10-14)
 
 Successor to [`goals/design-figure-generation`](../design-figure-generation/) (completed-retained
 2026-10-06). Opened by the attorney's 2026-10-10 review of the eight draft sheets. `SPEC.md` is the
@@ -39,15 +39,17 @@ deliverable) and Track B (tooling) run in parallel sibling lanes, Track C is doc
 
 | Phase | Track / PR | Items | Status | Goal | Exit criteria |
 | --- | --- | --- | --- | --- | --- |
-| P0 Admit | C / PR-A | all | in-progress | Admit this packet, reopen and re-graduate the exploration, predecessor pointers, widened D9. | `beep goals doctor` clean for the slug; semantic-delta clean; commit names the slug. |
-| P1 Layout, margins, projection, plan facing | A / PR-B | F1, F7, F8 | in-progress (local commit; merges through P8) | Spec-carried sheet options, `cfr-strict` margins, isometric pictorials, plan facing. | package-verify green; synthetic golden byte-identical; new camera tests. |
-| P2 Outlined label typefaces | A / PR-C | F2, F3 | in-progress (local commit; merges through P8) | Sans/serif outlined labels at stated point sizes, placed by ink box. | Composer sha256 golden; label-presence assertion on every sheet. |
-| P3 Broken-line parts and multi-part fixture | A / PR-D | F5, F6, F10 | pending | `Part` line style, overlap guard, generic egg-crate fixture with hosted WASM tests. | Hosted tests cover halving slots, a through joint, a broken part. |
+| P0 Admit | C / PR-A | all | complete (#1644) | Admit this packet, reopen and re-graduate the exploration, predecessor pointers, widened D9. | `beep goals doctor` clean for the slug; semantic-delta clean; commit names the slug. |
+| P1 Layout, margins, projection, plan facing | A / PR-B | F1, F7, F8 | complete (#1644; F ticks wait for P7) | Spec-carried sheet options, `cfr-strict` margins, isometric pictorials, plan facing. | package-verify green; synthetic golden byte-identical; new camera tests. |
+| P2 Outlined label typefaces | A / PR-C | F2, F3 | complete (#1644; outline route, superseded for the matter by P7a) | Sans/serif outlined labels at stated point sizes, placed by ink box. | Composer sha256 golden; label-presence assertion on every sheet. |
+| P3 Broken-line parts and multi-part fixture | A / PR-D | F5, F6, F10 | in-progress (#1648 open) | `Part` line style, overlap guard, generic egg-crate fixture with hosted WASM tests. | Hosted tests cover halving slots, a through joint, a broken part. |
 | P4 Opt-in contour shading | A / PR-E | F4 | pending | Lit-threshold probe first, then graded / surface-class shading as opt-ins. | Judge round on the probe; validator spacing rule. |
-| P5 Mailbox intake | B / PR-F | T1 | pending | `beep drawings intake` on the app-only lane into the corpus root. | One read-only proof call; sha manifest per attachment. |
-| P6 Review rounds from markup | B / PR-G | T2, T3 | pending | pdf-tools verbs, `ReviewRound` schemas, statement guard, judge claim-scope rule. | Statement refuses while required findings are open on the hash. |
-| P7 Corpus remodel and round-2 render | A / corpus only | F1-F10 | pending | Durable spec generator under the corpus, two byte-stable renders, judge round, F9 zoom check. | Round-2 set validator clean; zero open required review findings or an attorney-accepted deferral. |
-| P8 Yeet: PRs to mergeable | all | — | pending | Each PR-A..PR-G driven to mergeable through yeet. | `merge-ready: yes` per PR; zero unresolved threads. |
+| P5 Mailbox intake | B / PR-F | T1 | in-progress (#1649 open) | `beep drawings intake` on the app-only lane into the corpus root. | One read-only proof call; sha manifest per attachment. |
+| P6 Review rounds from markup | B / PR-G | T2, T3 | in-progress (#1650 open) | pdf-tools verbs, `ReviewRound` schemas, statement guard, judge claim-scope rule. | Statement refuses while required findings are open on the hash. |
+| P7 Corpus remodel and round-2 render | A / corpus only | F1-F10 | in-progress (remodel done; render running) | Durable spec generator under the corpus, two byte-stable renders, judge round, F9 zoom check. | Round-2 set validator clean; zero open required review findings or an attorney-accepted deferral. |
+| P7a Embedded label text | A / PR-K | F2, F3, L1 | pending | Labels as real text in a named font from the render host (Arial, Times New Roman for the matter), pinned fontconfig, font sha256 in the manifest, label-presence-as-text validator rule. | package-verify green; synthetic golden byte-identical; validator refuses a sheet missing either label as text. |
+| P7b Edge emphasis and corrugation overlay | A / PR-L | F6, E1, C1 | pending | A heavier line class for chosen edges (tab-in-slot) and a dashed unclaimed corrugation overlay on chosen exposed board edges, both off by default. | package-verify green; synthetic golden byte-identical; hosted tests for both. |
+| P8 Yeet: PRs to mergeable | all | — | pending | Each PR-A..PR-G, PR-K and PR-L driven to mergeable through yeet. | `merge-ready: yes` per PR; zero unresolved threads. |
 | P9 Close | C / PR-H | — | pending | Hash-only evidence, acceptance flips, reflection, `completed-retained`. | `beep lint reflection-artifacts` passes; manifest and README flipped. |
 
 ## Tracks and PRs
@@ -100,19 +102,31 @@ byte-identical until a deliberate re-record; the matter opts in through its corp
 - Schema: `ReviewFindingId` scoped by sheet-set hash, `MarkupNote` (verbatim text + rect), `SheetMatch` (unique winner ≥ 0.98 coverage, else refuse), `FindingScope` (sheet | all-sheets merge), `Disposition` tagged union (spec-change | code-change | decision | clarify | decline), `ReviewRound` with `reviewedSheetSetSha256`, `DeliveryRecord` written when the outbox draft is created.
 - Guards: `beep drawings statement` refuses while required findings are open on the same sheet-set hash; the judge pack takes `--review` and the judge prompt gains the claim-scope rule (claim questions go to the attorney, never an agent "unclaimed" ruling).
 
+### Track A — PR-K feat(technical-drawing): embedded label text (P7a: F2, F3, L1)
+- Attorney ruling 2026-10-14: labels are real text in Arial and Times New Roman, not outlines (reverses decision 4).
+- Schema: a text-embedding value on the label route beside the outline faces (default unchanged); `RenderManifest.labelFonts` records each embedded font file's sha256.
+- Host: the Microsoft core fonts installed on the render host, never committed; a pinned fontconfig so every render resolves the same files; the render refuses when a named font does not resolve to the pinned file.
+- Validator: a rule that each sheet carries its sheet number and FIG label as extractable text in the named font.
+- Reverse: the matter's label styles return to the outline route from #1644.
+
+### Track A — PR-L feat(occt, technical-drawing): edge emphasis and corrugation overlay (P7b: F6, E1, C1)
+- Attorney ruling 2026-10-14: the tab-in-slot edge is drawn heavier than ordinary visible edges; exposed board edges in the bottom views carry a dashed corrugation overlay as unclaimed matter (which edges is still to be confirmed).
+- Schema: an edge-emphasis line class on chosen edges and a corrugation overlay on chosen exposed board edges, both off by default; never shaded.
+- Verify: hosted tests on the generic crate fixture; synthetic golden byte-identical.
+
 ### Track C — PR-H docs(goals): evidence and closeout (P9)
 - `history/review-round-<n>/evidence.json` (hashes and counts only), acceptance flips, reflection, `completed-retained`. Outbound round-2 mail goes through the outbox draft and is sent only after explicit approval in chat.
 
 ### Optional — PR-I ci: librsvg on hosted runners so drawings-live goldens run hosted (and fix the stale skip comment).
 
 ## Sequencing
-PR-A first (docs, fast). PR-B then PR-C serially (both touch `Sheet.schemas.ts` / `Sheet.compose.ts`); PR-D and PR-E in their own lanes, rebased after PR-C; PR-F and PR-G in their own lanes (disjoint files). The corpus remodel starts at once against the lane build and does not wait for merges. The attorney questions went out on day 1 so answers land before the final render.
+PR-A first (docs, fast). PR-B then PR-C serially (both touch `Sheet.schemas.ts` / `Sheet.compose.ts`); PR-D and PR-E in their own lanes, rebased after PR-C; PR-F and PR-G in their own lanes (disjoint files). The corpus remodel starts at once against the lane build and does not wait for merges. The attorney questions went out on 2026-10-14, before the final render, and were answered the same morning.
 
 ## Decisions recorded in SPEC (agent-decided, each with a reverse path)
-1. Successor packet, not a reopen of the closed contract. 2. Defaults equal today; goldens move only in a deliberate re-record. 3. `cfr-strict` margins = per-side max of cm and inch; validator floor unchanged. 4. Labels outlined (vendored OFL subset by default, operator font file optional); PDFs stay font-free. 5. One orientation rule shared by the pictorials and the plans, consistent with the other figures (confirm with the attorney; the matter's choice is in the corpus inventory). 6. `shadingLitThreshold` 1 for the matter; graded/surface-class as opt-ins. 7. Broken lines mark unclaimed parts' visible edges only; hidden lines are never drawn. 8. The requested fastening features are shown (reverses the 2026-10-06 row). 9. The article is separate parts with contact geometry. 10. No changesets (private packages). 11. Review ids scoped by sheet-set hash; judge rounds restart per set.
+1. Successor packet, not a reopen of the closed contract. 2. Defaults equal today; goldens move only in a deliberate re-record. 3. `cfr-strict` margins = per-side max of cm and inch; validator floor unchanged. 4. Labels outlined (vendored OFL subset by default, operator font file optional); PDFs stay font-free. Reversed for the matter on 2026-10-14: embedded Arial and Times New Roman text (PR-K). 5. One orientation rule shared by the pictorials and the plans, consistent with the other figures (confirmed by the attorney 2026-10-14; the matter's choice is in the corpus inventory). 6. `shadingLitThreshold` 1 for the matter; graded/surface-class as opt-ins. 7. Broken lines mark unclaimed parts' visible edges only; hidden lines are never drawn. 8. The requested fastening features are shown (reverses the 2026-10-06 row). 9. The article is separate parts with contact geometry. 10. No changesets (private packages). 11. Review ids scoped by sheet-set hash; judge rounds restart per set.
 
 ## Questions only the attorney can answer
-Sent 2026-10-13; the draft is `<corpus>/ops/patent-drawing-pipeline/matter/round-2/questions-draft.md`. Topics: the orientation reference and description wording; dashed = unclaimed or hidden; the joint and clearance details of rows F6, F9 and F10; metric-compatible outlines versus supplied Arial/Times files. Defaults in the Decision Log hold until answered.
+Drafted 2026-10-13 (`<corpus>/ops/patent-drawing-pipeline/matter/round-2/questions-draft.md`), sent 2026-10-14 about 01:44Z, answered 02:09Z (`<corpus>/ops/patent-drawing-pipeline/matter/round-2/attorney-answers-2026-10-14.md`). Topics: the orientation reference and description wording; dashed = unclaimed or hidden; the joint and clearance details of rows F6, F9 and F10; metric-compatible outlines versus Arial/Times. The rulings are SPEC Decision Log rows of 2026-10-14. Still open: which part's bottom edge is drawn uncut in one bottom view (an example picture was sent), and which board edges carry the corrugation overlay.
 
 ## Execution Notes
 
@@ -147,7 +161,10 @@ bun run beep lint reflection-artifacts
 - 2026-10-13 — P1 (PR-B, local commit in `drawings-review-1`): `MarginStandard` (`cfr-cm`, `cfr-strict`), `SheetMargins`, `marginsCm`, `SheetOptions.margins` and `labelGapMm`; `PictorialProjection` on `FigureSpec`; `FigureSetSpec.pictorialAzimuthDeg`, `planFacing` (`ElevationView`) and `sheet`; `RenderManifest.sheet` and `FigureRecord.camera`; the render summary names the margin standard, a spec-supplied sheet, and each pictorial's projection. Every default reproduces the earlier output: the live lane re-rendered `synthetic-bracket` to the unchanged golden. The F1, F7 and F8 acceptance ticks wait for the round-2 render (P7), which opts in through the matter spec.
 - 2026-10-13 — P2 (PR-C, local commit in `drawings-review-1`): `LabelTypeface` (`stroke`, `sans`, `serif`), `LabelStyle` (cap height at least 0.32 cm; an absolute `fontFile` only on outlined faces), `SheetOptions.sheetNumberLabel` / `figureLabel`, `RenderManifest.labelFonts`, and `DrawingError` reason `font`. Outlined labels are one filled `label-outlines` path placed by the ink box of the glyph run, each label in its own band; sheets without label styles keep their stroked `labels` path byte for byte. The vendored OFL-1.1 subset, its generator command and source hashes are in [`research/label-glyphs.md`](research/label-glyphs.md); the operator `fontFile` route outlines through the same code and records the file's sha256. F2 and F3 ticks wait for the round-2 render (P7).
 - 2026-10-13 — Review fixes (lane `drawings-review-1`): the F-table, the matching SPEC acceptance and Decision Log rows, and the exploration's 2026-10-13 fastening-features decision now name requests at convention level; the reviewer's wording and matter readings moved to the corpus inventory. Glyph data and label faces are schemas (`LabelFace`, `SheetLabelFaces`, `labelCapHeightCm` as an `Fn`), so `lint:schema-first` passes for the package; the glyph generator is a committed package script with `generate:check`; the operator `fontFile` route has a hosted positive test (an in-test opentype.js font) and a two-face workstation drift test; an isometric pictorial without an azimuth looks along 45°.
+- 2026-10-14 — #1644 (PR-A, PR-B, PR-C: packet admission, spec-carried sheet options, isometric pictorials, outlined labels) merged 01:14Z; #1651 (technical-drawing: explicit ink-sample compare in the test square scan) merged 01:55Z. Open: #1648 (PR-D broken-line parts, crate fixture), #1649 (PR-F `beep drawings intake`), #1650 (PR-G review rounds from markup).
+- 2026-10-14 — P7: the corpus remodel is done (separate parts and joints per inventory rows F5, F6, F9, F10); the round-2 render is in progress.
+- 2026-10-14 — The attorney questions went out about 01:44Z and were answered at 02:09Z. Rulings recorded in the SPEC Decision Log: orientation confirmed; fastening tabs broken (unclaimed) in every view; lap overlap and board thickness at the stated values; tabs flush with a heavier tab-in-slot edge; corner gaps shown in the pictorials too; labels embedded as real Arial and Times New Roman text (reverses decision 4); a dashed corrugation overlay as unclaimed matter. New phases P7a (PR-K embedded label text) and P7b (PR-L edge emphasis and corrugation overlay). Open: the bottom-edge question (Q7) and the overlay's edge extent.
 
 ## Current blockers
 
-None for P0. Waiting, not blocking: the attorney's answers (defaults hold); the Entra registration whose RBAC scope covers the attorney's mailbox (PR-F open item).
+None. Waiting, not blocking: the attorney's reply on the bottom-edge question (Q7) and the corrugation overlay's edge extent; the filing-bound round-2 send waits for Q7. The Entra registration whose RBAC scope covers the attorney's mailbox (PR-F open item).

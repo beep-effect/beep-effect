@@ -1,9 +1,16 @@
 import {
+  FontFamilyAlias,
+  InkCoverageRequest,
   PageTextRequest,
+  PdfFont,
+  PdfPageRef,
   PdfTools,
   PdfToolsConfig,
   PdfToolsError,
+  PinnedFontconfigRequest,
+  PinnedFonts,
   PngRequest,
+  pinnedFontconfig,
   RasterRequest,
   SvgToPdfRequest,
 } from "@beep/pdf-tools";
@@ -23,7 +30,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import { TestClock } from "effect/testing";
-import { PDFDocument, StandardFonts } from "pdf-lib";
+import { PDFDocument, PDFHexString, PDFString, StandardFonts } from "pdf-lib";
 import type * as PlatformError from "effect/PlatformError";
 
 const encoder = new TextEncoder();
@@ -54,6 +61,58 @@ const ppmFixture = (() => {
   return out;
 })();
 
+// P6 raster of `width` × `height` white pixels with black ink at `inked`.
+const ppmOf = (width: number, height: number, inked: ReadonlyArray<readonly [number, number]>) => {
+  const header = encoder.encode(`P6\n${width} ${height}\n255\n`);
+  const pixels = new Uint8Array(width * height * 3).fill(255);
+  for (const [x, y] of inked) {
+    pixels.fill(0, (y * width + x) * 3, (y * width + x) * 3 + 3);
+  }
+  const out = new Uint8Array(header.length + pixels.length);
+  out.set(header, 0);
+  out.set(pixels, header.length);
+  return out;
+};
+
+// Base sheet: a three-pixel stroke on row 1 and a dot at (6,2). The marked
+// page carries the stroke one row lower (a re-export shift) and a dot at (7,0).
+const basePpm = ppmOf(8, 4, [
+  [1, 1],
+  [2, 1],
+  [3, 1],
+  [6, 2],
+]);
+const markedPpm = ppmOf(8, 4, [
+  [1, 2],
+  [2, 2],
+  [7, 0],
+]);
+const smallMarkedPpm = ppmOf(2, 2, [[1, 1]]);
+
+const bboxLayout = `<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><body><doc>
+  <page width="612.000000" height="792.000000">
+    <flow>
+      <block xMin="72.000000" yMin="84.500000" xMax="238.250000" yMax="108.000000">
+        <line xMin="72.000000" yMin="84.500000" xMax="238.250000" yMax="94.000000">
+          <word xMin="72.000000" yMin="84.500000" xMax="101.000000" yMax="94.000000">Rotate</word>
+          <word xMin="104.000000" yMin="84.500000" xMax="140.000000" yMax="94.000000">A&amp;B</word>
+        </line>
+        <line xMin="72.000000" yMin="98.000000" xMax="200.000000" yMax="108.000000">
+          <word xMin="72.000000" yMin="98.000000" xMax="120.000000" yMax="108.000000">&lt;left&gt;</word>
+          <word xMin="122.000000" yMin="98.000000" xMax="140.000000" yMax="108.000000">&#233;&#x2014;&quot;&apos;</word>
+        </line>
+      </block>
+      <block xMin="10" yMin="10" xMax="20" yMax="20"><line xMin="10" yMin="10" xMax="20" yMax="20"></line></block>
+    </flow>
+    <flow>
+      <block xMin="72" yMin="724.82" xMax="208.16" yMax="734.07">
+        <line xMin="72" yMin="724.82" xMax="208.16" yMax="734.07"><word xMin="72" yMin="724.82" xMax="208.16" yMax="734.07">(all</word><word xMin="72" yMin="724.82" xMax="208.16" yMax="734.07">sheets)</word></line>
+      </block>
+    </flow>
+  </page>
+</doc></body></html>
+`;
+
 // A minimal one-page PDF, the stand-in for rsvg-convert output.
 const blankPage = Effect.promise(() => PDFDocument.create({ updateMetadata: false })).pipe(
   Effect.flatMap((doc) => {
@@ -62,7 +121,7 @@ const blankPage = Effect.promise(() => PDFDocument.create({ updateMetadata: fals
   })
 );
 
-const makeHandle = (exitCode: number, stderr = ""): ChildProcessSpawner.ChildProcessHandle =>
+const makeHandle = (exitCode: number, stderr = "", stdout = ""): ChildProcessSpawner.ChildProcessHandle =>
   ChildProcessSpawner.makeHandle({
     all: Stream.empty,
     exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
@@ -73,7 +132,7 @@ const makeHandle = (exitCode: number, stderr = ""): ChildProcessSpawner.ChildPro
     pid: ChildProcessSpawner.ProcessId(1),
     stderr: stderr.length === 0 ? Stream.empty : Stream.succeed(encoder.encode(stderr)),
     stdin: Sink.drain,
-    stdout: Stream.empty,
+    stdout: stdout.length === 0 ? Stream.empty : Stream.succeed(encoder.encode(stdout)),
     unref: Effect.succeed(Effect.void),
   });
 
@@ -95,15 +154,28 @@ const fakeOutputs = (
     );
   }
   if (command.command === "pdftoppm" && !A.contains(command.args, "-png")) {
+    const source = A.get(command.args, A.length(command.args) - 2);
+    const fixtureFor = (prefix: string) =>
+      prefix.endsWith("/base")
+        ? basePpm
+        : prefix.endsWith("/marked")
+          ? O.exists(source, (pdf) => pdf.endsWith("small.pdf"))
+            ? smallMarkedPpm
+            : markedPpm
+          : ppmFixture;
     return pipe(
       A.last(command.args),
-      O.match({ onNone: () => Effect.void, onSome: (prefix) => fs.writeFile(`${prefix}.ppm`, ppmFixture) })
+      O.match({ onNone: () => Effect.void, onSome: (prefix) => fs.writeFile(`${prefix}.ppm`, fixtureFor(prefix)) })
     );
   }
   return Effect.void;
 };
 
-const makeFakeSpawnerLayer = (commands: Array<ChildProcess.StandardCommand>, exitCode = 0) =>
+const makeFakeSpawnerLayer = (
+  commands: Array<ChildProcess.StandardCommand>,
+  exitCode = 0,
+  fontconfigs: Array<string> = []
+) =>
   Layer.effect(
     ChildProcessSpawner.ChildProcessSpawner,
     Effect.gen(function* () {
@@ -118,7 +190,18 @@ const makeFakeSpawnerLayer = (commands: Array<ChildProcess.StandardCommand>, exi
             if (exitCode !== 0) {
               return makeHandle(exitCode, "tool stderr");
             }
+            // The pinned fontconfig file lives in a scoped temp directory: read it while it exists.
+            const fontconfig = command.options.env?.FONTCONFIG_FILE;
+            if (fontconfig !== undefined) {
+              fontconfigs[A.length(fontconfigs)] = yield* fs.readFileString(fontconfig);
+            }
             yield* fakeOutputs(fs, command);
+            if (command.command === "pdftotext" && A.contains(command.args, "-bbox-layout")) {
+              const broken = O.exists(A.get(command.args, A.length(command.args) - 2), (pdf) =>
+                pdf.endsWith("broken.pdf")
+              );
+              return makeHandle(0, "", broken ? "<html>no pages</html>" : bboxLayout);
+            }
             return makeHandle(0);
           })
         )
@@ -150,9 +233,9 @@ const HangingSpawner = Layer.succeed(
   )
 );
 
-const makeLayer = (commands: Array<ChildProcess.StandardCommand>, exitCode = 0) =>
+const makeLayer = (commands: Array<ChildProcess.StandardCommand>, exitCode = 0, fontconfigs: Array<string> = []) =>
   PdfTools.makeLayer().pipe(
-    Layer.provide(makeFakeSpawnerLayer(commands, exitCode)),
+    Layer.provide(makeFakeSpawnerLayer(commands, exitCode, fontconfigs)),
     Layer.provideMerge(NodeServices.layer)
   );
 
@@ -185,6 +268,87 @@ describe("@beep/pdf-tools service", () => {
         })
       );
     });
+  });
+
+  describe("svgToPdf with pinned fonts", () => {
+    const commands: Array<ChildProcess.StandardCommand> = [];
+    const fontconfigs: Array<string> = [];
+    it.layer(makeLayer(commands, 0, fontconfigs), { timeout: "30 seconds" })((it) => {
+      it.effect(
+        "runs rsvg-convert under a fontconfig file that sees only the pinned directory",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const dir = yield* fs.makeTempDirectoryScoped();
+          const fontDir = path.join(dir, "fonts & co");
+          yield* fs.makeDirectory(fontDir);
+          const tools = yield* PdfTools;
+          yield* tools.svgToPdf(
+            SvgToPdfRequest.make({
+              svgPaths: [path.join(dir, "a.svg")],
+              outputPath: path.join(dir, "out.pdf"),
+              fonts: O.some(
+                PinnedFonts.make({
+                  directory: fontDir,
+                  families: [FontFamilyAlias.make({ requested: "Arial", family: "Liberation Sans" })],
+                })
+              ),
+            })
+          );
+          expect(commands[0]?.options.env?.FONTCONFIG_FILE).toMatch(/fonts\.conf$/);
+          expect(commands[0]?.options.env?.SOURCE_DATE_EPOCH).toBe("0");
+          const config = fontconfigs[0] ?? "";
+          // the only <dir> is the pinned one, XML-escaped; no <include> pulls in the system config
+          expect(config.match(/<dir>/g)?.length).toBe(1);
+          expect(config).toContain(`<dir>${fontDir.replace("&", "&amp;")}</dir>`);
+          expect(config).not.toContain("<include");
+          expect(config).toContain(
+            `<test name="family" qual="any"><string>Arial</string></test><edit name="family" mode="assign" binding="strong"><string>Liberation Sans</string></edit>`
+          );
+        })
+      );
+
+      it.effect(
+        "refuses a pinned font directory that does not exist, before any tool runs",
+        Effect.fnUntraced(function* () {
+          const tools = yield* PdfTools;
+          const before = A.length(commands);
+          const error = yield* Effect.flip(
+            tools.svgToPdf(
+              SvgToPdfRequest.make({
+                svgPaths: ["a.svg"],
+                outputPath: "out.pdf",
+                fonts: O.some(PinnedFonts.make({ directory: "/nonexistent/beep-fonts", families: [] })),
+              })
+            )
+          );
+          assertInstanceOf(error, PdfToolsError);
+          expect(error.reason).toBe("invalid-request");
+          expect(A.length(commands)).toBe(before);
+        })
+      );
+    });
+
+    it.effect("writes the pinned fontconfig for every alias", () =>
+      Effect.sync(() => {
+        const config = pinnedFontconfig(
+          PinnedFontconfigRequest.make({
+            fonts: PinnedFonts.make({
+              directory: "/fonts",
+              families: [
+                FontFamilyAlias.make({ requested: "Arial", family: "Arial" }),
+                FontFamilyAlias.make({ requested: "Times New Roman", family: "Times New Roman" }),
+              ],
+            }),
+            cacheDirectory: "/cache",
+          })
+        );
+        expect(config).toContain("<cachedir>/cache</cachedir>");
+        expect(config.match(/<match target="pattern">/g)?.length).toBe(2);
+        expect(PdfFont.make({ name: "QWERTY+TimesNewRomanPSMT", embedded: true }).baseName).toBe("TimesNewRomanPSMT");
+        expect(PdfFont.make({ name: "Helvetica", embedded: false }).baseName).toBe("Helvetica");
+      })
+    );
   });
 
   describe("measurePage", () => {
@@ -281,6 +445,154 @@ describe("@beep/pdf-tools service", () => {
           assertInstanceOf(error, PdfToolsError);
           expect(error.reason).toBe("invalid-request");
           expect(commands.length).toBe(0);
+        })
+      );
+    });
+  });
+
+  describe("pageWords", () => {
+    const commands: Array<ChildProcess.StandardCommand> = [];
+    it.layer(makeLayer(commands), { timeout: "30 seconds" })((it) => {
+      it.effect(
+        "parses -bbox-layout blocks: words by space, lines by newline, entities decoded, empty blocks dropped",
+        Effect.fnUntraced(function* () {
+          const tools = yield* PdfTools;
+          const blocks = yield* tools.pageWords(PageTextRequest.make({ pdfPath: "reviewed.pdf", page: 2 }));
+          expect(blocks.map((b) => b.text)).toEqual(["Rotate A&B\n<left> é—\"'", "(all sheets)"]);
+          expect(blocks.map((b) => [b.rect.xMin, b.rect.yMin, b.rect.xMax, b.rect.yMax])).toEqual([
+            [72, 84.5, 238.25, 108],
+            [72, 724.82, 208.16, 734.07],
+          ]);
+          expect(commands[0]?.args.slice(0, 5)).toEqual(["-bbox-layout", "-f", "2", "-l", "2"]);
+        })
+      );
+
+      it.effect(
+        "reports parse when the output has no page",
+        Effect.fnUntraced(function* () {
+          const tools = yield* PdfTools;
+          const error = yield* Effect.flip(tools.pageWords(PageTextRequest.make({ pdfPath: "broken.pdf", page: 1 })));
+          assertInstanceOf(error, PdfToolsError);
+          expect(error.reason).toBe("parse");
+          expect(error.message).toBe("pdftotext -bbox-layout output has no page.");
+        })
+      );
+    });
+  });
+
+  describe("inkCoverage", () => {
+    const commands: Array<ChildProcess.StandardCommand> = [];
+    const request = (dilatePx: number, markedPdf = "reviewed.pdf") =>
+      InkCoverageRequest.make({
+        base: PdfPageRef.make({ pdfPath: "sheets.pdf", page: 3 }),
+        marked: PdfPageRef.make({ pdfPath: markedPdf, page: 1 }),
+        dpi: 36,
+        dilatePx,
+      });
+    it.layer(makeLayer(commands), { timeout: "30 seconds" })((it) => {
+      it.effect(
+        "covers base ink with the dilated marked ink, rasterising both pages without anti-aliasing",
+        Effect.fnUntraced(function* () {
+          const tools = yield* PdfTools;
+          const coverage = yield* tools.inkCoverage(request(1));
+          // the shifted stroke covers all three stroke pixels; the dot at (6,2) is two rows from (7,0)
+          expect([coverage.baseInkPixels, coverage.coveredPixels, coverage.markedInkPixels]).toEqual([4, 3, 3]);
+          expect(coverage.coverage).toBe(0.75);
+          const exact = yield* tools.inkCoverage(request(0));
+          expect([exact.coveredPixels, exact.coverage]).toEqual([0, 0]);
+          const wide = yield* tools.inkCoverage(request(2));
+          expect(wide.coverage).toBe(1);
+          const rasterOf = (prefix: string) =>
+            A.findFirst(commands, (command) => O.exists(A.last(command.args), (last) => last.endsWith(prefix)));
+          assertSome(
+            O.map(rasterOf("/base"), (command) => command.args.slice(0, 9)),
+            ["-r", "36", "-f", "3", "-l", "3", "-singlefile", "-aa", "no"]
+          );
+          assertSome(
+            O.map(rasterOf("/marked"), (command) => command.args.slice(2, 4)),
+            ["-f", "1"]
+          );
+        })
+      );
+
+      it.effect(
+        "counts base ink outside a smaller marked raster as uncovered",
+        Effect.fnUntraced(function* () {
+          const tools = yield* PdfTools;
+          const coverage = yield* tools.inkCoverage(request(1, "small.pdf"));
+          // the marked dot at (1,1) dilates over (0..2, 0..2) but the raster stops at 2 × 2
+          expect([coverage.baseInkPixels, coverage.coveredPixels, coverage.markedInkPixels]).toEqual([4, 1, 1]);
+          expect(coverage.coverage).toBe(0.25);
+        })
+      );
+
+      it.effect(
+        "rejects a negative dilation before spawning",
+        Effect.fnUntraced(function* () {
+          const tools = yield* PdfTools;
+          const before = commands.length;
+          const error = yield* Effect.flip(tools.inkCoverage({ ...request(0), dilatePx: -1 } as InkCoverageRequest));
+          expect(error.reason).toBe("invalid-request");
+          expect(commands.length).toBe(before);
+        })
+      );
+    });
+  });
+
+  describe("annotations", () => {
+    const commands: Array<ChildProcess.StandardCommand> = [];
+    it.layer(makeLayer(commands), { timeout: "30 seconds" })((it) => {
+      it.effect(
+        "reads annotation objects with rectangles in the top-left frame",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const dir = yield* fs.makeTempDirectoryScoped();
+          const file = path.join(dir, "comments.pdf");
+          const doc = yield* Effect.promise(() => PDFDocument.create());
+          doc.addPage([612, 792]);
+          const page = doc.addPage([612, 792]);
+          const note = doc.context.obj({
+            Type: "Annot",
+            Subtype: "Text",
+            Rect: [92, 720, 72, 700],
+            Contents: PDFString.of("Rotate this view"),
+            T: PDFHexString.fromText("Reviewer"),
+          });
+          const noRect = doc.context.obj({ Type: "Annot", Subtype: "Text", Contents: PDFString.of("lost") });
+          const highlight = doc.context.obj({ Type: "Annot", Subtype: "Highlight", Rect: [10, 10, 20, 30] });
+          page.node.addAnnot(doc.context.register(note));
+          page.node.addAnnot(doc.context.register(noRect));
+          page.node.addAnnot(doc.context.register(highlight));
+          yield* fs.writeFile(file, yield* Effect.promise(() => doc.save({ useObjectStreams: false })));
+          const tools = yield* PdfTools;
+          const annotations = yield* tools.annotations(file);
+          expect(annotations.map((a) => [a.page, a.subtype])).toEqual([
+            [2, "Text"],
+            [2, "Highlight"],
+          ]);
+          const first = annotations[0];
+          expect(
+            first === undefined ? [] : [first.rect.xMin, first.rect.yMin, first.rect.xMax, first.rect.yMax]
+          ).toEqual([72, 72, 92, 92]);
+          assertSome(first?.contents ?? O.none(), "Rotate this view");
+          assertSome(first?.author ?? O.none(), "Reviewer");
+          assertNone(annotations[1]?.contents ?? O.some("x"));
+          expect(commands.length).toBe(0);
+        })
+      );
+
+      it.effect(
+        "reports parse for a file pdf-lib cannot read",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const dir = yield* fs.makeTempDirectoryScoped();
+          const file = path.join(dir, "not.pdf");
+          yield* fs.writeFileString(file, "not a pdf");
+          const tools = yield* PdfTools;
+          const error = yield* Effect.flip(tools.annotations(file));
+          expect(error.reason).toBe("parse");
         })
       );
     });

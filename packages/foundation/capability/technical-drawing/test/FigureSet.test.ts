@@ -14,6 +14,8 @@ import {
   LabelStyle,
   LabelTypeface,
   labelCapHeightCm,
+  labelFontFamily,
+  labelTextFindings,
   ModelSpec,
   ModelSummary,
   marginFindings,
@@ -28,6 +30,7 @@ import {
   purityFindings,
   RenderManifest,
   RenderRequest,
+  SheetFonts,
   SheetMargins,
   SheetOptions,
   sameSegments,
@@ -104,13 +107,21 @@ const cleanMetrics = (dpi: number, antiAliased: boolean) =>
     largestBlackSquare: 4,
   });
 
+// the fake backend writes the fonts it was given as JSON, and a test reads them back
+const encodeSheetFonts = S.encodeEffect(S.fromJsonString(SheetFonts));
+const decodeJson = S.decodeEffect(S.fromJsonString(S.Unknown));
+
 const fakeBackend = Layer.effect(
   PdfBackend,
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     return PdfBackend.of({
-      svgToPdf: Effect.fnUntraced(function* (svgPaths, outputPath) {
+      svgToPdf: Effect.fnUntraced(function* (svgPaths, outputPath, fonts) {
         yield* fs.writeFileString(outputPath, `%PDF-1.6 fake ${A.length(svgPaths)} pages`);
+        // the pinned fonts land beside the fake PDF, so a test can read what the backend was given
+        if (O.isSome(fonts)) {
+          yield* fs.writeFileString(`${outputPath}.fonts.json`, yield* encodeSheetFonts(fonts.value));
+        }
       }, Effect.orDie),
       inspect: Effect.fnUntraced(function* (pdfPath) {
         const contents = yield* fs.readFileString(pdfPath);
@@ -560,6 +571,108 @@ describe("@beep/technical-drawing", () => {
       })
     );
 
+    it.effect(
+      "a text label needs an outlined typeface, takes no font file, and defaults to the metric family",
+      Effect.fnUntraced(function* () {
+        const decode = S.decodeUnknownEffect(LabelStyle);
+        const sans = yield* decode({ typeface: "sans", sizePt: 18, render: "text" });
+        expect(labelFontFamily(sans)).toBe("Arial");
+        expect(labelFontFamily(yield* decode({ typeface: "serif", sizePt: 24, render: "text" }))).toBe(
+          "Times New Roman"
+        );
+        expect(
+          labelFontFamily(
+            yield* decode({ typeface: "sans", sizePt: 18, render: "text", fontFamily: "Liberation Sans" })
+          )
+        ).toBe("Liberation Sans");
+        expect(LabelStyle.make({ typeface: "sans", sizePt: 18 }).render).toBe("outline");
+        yield* Effect.flip(decode({ typeface: "stroke", sizePt: 18, render: "text" }));
+        yield* Effect.flip(decode({ typeface: "sans", sizePt: 18, render: "text", fontFile: "/fonts/arial.ttf" }));
+        yield* Effect.flip(decode({ typeface: "sans", sizePt: 18, fontFamily: "Arial" }));
+        yield* Effect.flip(S.decodeEffect(SheetOptions)({ fontDirectory: "fonts" }));
+      })
+    );
+
+    it.effect(
+      "text labels are <text> elements in the requested family and point size, where the outlines would sit",
+      Effect.fnUntraced(function* () {
+        const text = SheetOptions.make({
+          ...styled,
+          sheetNumberLabel: O.some(LabelStyle.make({ typeface: "sans", sizePt: 18, render: "text" })),
+          figureLabel: O.some(LabelStyle.make({ typeface: "serif", sizePt: 24, render: "text" })),
+        });
+        const g = sheetGeometry(text);
+        const centreX = (g.sight.left + g.sight.right) / 2;
+        const svg = composeStyled(1, text);
+        expect(outlinesOf(svg)).toBe("");
+        expect(svg).not.toContain('id="labels"');
+        const elements = A.fromIterable(
+          svg.matchAll(
+            /<text x="([\d.]+)" y="([\d.]+)" font-family="([^"]+)" font-size="([\d.]+)" text-anchor="middle" fill="#000000">([^<]+)<\/text>/g
+          )
+        );
+        expect(A.map(elements, (m) => [m[3], m[4], m[5]])).toEqual([
+          ["Arial", "18.000", "1/8"],
+          ["Times New Roman", "24.000", "FIG. 1"],
+        ]);
+        for (const m of elements) {
+          expect(Number(m[1])).toBeCloseTo(centreX, 3);
+        }
+        // Baselines: the sheet number's ink top (about one cap height above its baseline)
+        // on the top label line, the FIG. ink bottom (the baseline) on the bottom one.
+        const [top, bottom] = A.map(elements, (m) => Number(m[2]));
+        expect(top! - g.labels.top).toBeGreaterThan(18 * 0.6);
+        expect(top! - g.labels.top).toBeLessThan(18 * 0.8);
+        expect(Math.abs(bottom! - g.labels.bottom)).toBeLessThan(0.5);
+        // the figure area is the outline route's: the bands measure the same face
+        expect(sheetGeometry(text).figure).toEqual(sheetGeometry(styled).figure);
+      })
+    );
+
+    it.effect(
+      "text rules: each page's text must carry its labels, and embedded fonts must be label families",
+      Effect.fnUntraced(function* () {
+        const options = ValidationOptions.make({
+          expectedPages: O.none(),
+          textLabels: ["figure", "sheet-number"],
+          expectedLabelFonts: ["Times New Roman", "Arial"],
+        });
+        expect(labelTextFindings({ page: 1, pages: 8, text: "1/8\n\nFIG. 1\n\f", options })).toEqual([]);
+        // FIG. 10 does not carry FIG. 1; 11/8 does not carry 1/8
+        expect(
+          A.map(labelTextFindings({ page: 1, pages: 8, text: "11/8\nFIG. 10\n", options }), (f) => [f.code, f.page])
+        ).toEqual([
+          ["label-missing", O.some(1)],
+          ["label-missing", O.some(1)],
+        ]);
+        expect(
+          labelTextFindings({
+            page: 2,
+            pages: 8,
+            text: "",
+            options: ValidationOptions.make({ expectedPages: O.none() }),
+          })
+        ).toEqual([]);
+        const facts = PdfFacts.make({
+          headerVersion: "1.6",
+          pages: [letter],
+          fonts: [
+            PdfFontFact.make({ name: "QWERTY+ArialMT", embedded: true }),
+            PdfFontFact.make({ name: "ASDFGH+TimesNewRomanPSMT", embedded: true }),
+            PdfFontFact.make({ name: "ZXCVBN+LiberationSans", embedded: true }),
+          ],
+          annotationCount: 0,
+          hasOptionalContent: false,
+          encrypted: false,
+        });
+        expect(PdfFontFact.make({ name: "ZXCVBN+LiberationSans", embedded: true }).baseName).toBe("LiberationSans");
+        const findings = structuralFindings({ facts, options });
+        expect(A.map(findings, (f) => f.code)).toEqual(["font-unexpected"]);
+        expect(findings[0]?.message).toContain("LiberationSans");
+        expect(structuralFindings({ facts, options: ValidationOptions.make({ expectedPages: O.none() }) })).toEqual([]);
+      })
+    );
+
     it.effect.prop(
       "property: a label style decodes exactly when its cap height reaches 0.32 cm",
       [LabelTypeface, S.Finite.check(S.isBetween({ minimum: 1, maximum: 40 }))],
@@ -893,6 +1006,110 @@ describe("@beep/technical-drawing", () => {
           // "1/1" in the box face: three 400 x 700 unit boxes, every corner a straight line
           expect(outlinesOf(svg)).toMatch(/^M[\d. LZM-]+$/);
           expect(inkBox(outlinesOf(svg)).maxY - inkBox(outlinesOf(svg)).minY).toBeCloseTo((18 * 700) / 1000, 2);
+        })
+      );
+
+      it.effect(
+        "sets text labels in a font resolved from the font directory, pins it for the backend, and records it",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const dir = yield* fs.makeTempDirectoryScoped();
+          const fontDirectory = path.join(dir, "fonts");
+          yield* fs.makeDirectory(path.join(fontDirectory, "nested"), { recursive: true });
+          const bytes = yield* labelAlphabetFont;
+          const fontFile = path.join(fontDirectory, "nested", "boxes.otf");
+          yield* fs.writeFile(fontFile, bytes);
+          yield* fs.writeFileString(path.join(fontDirectory, "README.txt"), "not a font");
+          const specPath = path.join(dir, "spec.json");
+          const textSheet = {
+            fontDirectory,
+            labelGapMm: 1,
+            sheetNumberLabel: { typeface: "sans", sizePt: 18, render: "text", fontFamily: "label boxes" },
+            figureLabel: { typeface: "serif", sizePt: 24, render: "text", fontFamily: "Label Boxes" },
+          };
+          yield* fs.writeFileString(
+            specPath,
+            spec(
+              [
+                { view: "front", description: "is a front elevation view" },
+                { view: "top-plan", description: "is a top plan view" },
+              ],
+              [],
+              { sheet: textSheet }
+            )
+          );
+          const service = yield* FigureSet;
+          const manifest = yield* service.render(RenderRequest.make({ specPath, outputDir: path.join(dir, "out") }));
+          const digest = yield* Effect.promise(() => crypto.subtle.digest("SHA-256", bytes.slice().buffer));
+          expect(A.map(manifest.fonts, (pin) => [pin.family, pin.file, pin.sha256])).toEqual([
+            ["label boxes", fontFile, Buffer.from(digest).toString("hex")],
+            ["Label Boxes", fontFile, Buffer.from(digest).toString("hex")],
+          ]);
+          expect(manifest.labelFonts).toEqual([]);
+          const pinned = yield* decodeJson(yield* fs.readFileString(path.join(dir, "out", "sheets.pdf.fonts.json")));
+          expect(pinned).toEqual({
+            directory: fontDirectory,
+            families: [
+              { requested: "label boxes", family: "Label Boxes" },
+              { requested: "Label Boxes", family: "Label Boxes" },
+            ],
+          });
+          const svg = yield* fs.readFileString(path.join(dir, "out", "fig-2.svg"));
+          expect(svg).toContain(
+            'font-family="label boxes" font-size="18.000" text-anchor="middle" fill="#000000">2/2</text>'
+          );
+          expect(svg).toContain(
+            'font-family="Label Boxes" font-size="24.000" text-anchor="middle" fill="#000000">FIG. 2</text>'
+          );
+          // The loaded face places the text: a 700-unit box glyph has its ink top 12.6 pt
+          // (18 pt × 0.7) above the baseline and its ink bottom on it.
+          const g = sheetGeometry(manifest.sheet.pipe(O.getOrThrow));
+          const ys = A.map(A.fromIterable(svg.matchAll(/<text x="[\d.]+" y="([\d.]+)"/g)), (m) => Number(m[1]));
+          expect(ys[0]).toBeCloseTo(g.labels.top + 12.6, 3);
+          expect(ys[1]).toBeCloseTo(g.labels.bottom, 3);
+          // the fake backend extracts no text, so the validator reports both labels missing on both pages
+          const codes = O.map(manifest.validation, (v) => A.map(v.findings, (f) => [f.code, f.page]));
+          assertSome(codes, [
+            ["label-missing", O.some(1)],
+            ["label-missing", O.some(1)],
+            ["label-missing", O.some(2)],
+            ["label-missing", O.some(2)],
+          ]);
+        })
+      );
+
+      it.effect(
+        "refuses text labels without a font directory or without a Regular file of the family",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const dir = yield* fs.makeTempDirectoryScoped();
+          const specPath = path.join(dir, "spec.json");
+          const service = yield* FigureSet;
+          const renderWith = Effect.fnUntraced(function* (sheet: Record<string, unknown>) {
+            yield* fs.writeFileString(
+              specPath,
+              spec([{ view: "front", description: "is a front elevation view" }], [], { sheet })
+            );
+            return yield* Effect.flip(
+              service.render(RenderRequest.make({ specPath, outputDir: path.join(dir, "out"), validate: false }))
+            );
+          });
+          const label = { typeface: "sans", sizePt: 18, render: "text" };
+          const noDirectory = yield* renderWith({ sheetNumberLabel: label });
+          expect(noDirectory.reason).toBe("font");
+          expect(noDirectory.message).toContain("fontDirectory");
+          yield* fs.writeFile(path.join(dir, "boxes.otf"), yield* labelAlphabetFont);
+          const noArial = yield* renderWith({ sheetNumberLabel: label, fontDirectory: dir });
+          expect(noArial.reason).toBe("font");
+          expect(noArial.message).toContain('no Regular font of the family "Arial"');
+          yield* fs.writeFile(path.join(dir, "boxes-copy.otf"), yield* labelAlphabetFont);
+          const twice = yield* renderWith({
+            sheetNumberLabel: { ...label, fontFamily: "Label Boxes" },
+            fontDirectory: dir,
+          });
+          expect(twice.message).toContain("2 Regular files");
         })
       );
 

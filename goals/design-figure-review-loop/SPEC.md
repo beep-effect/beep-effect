@@ -61,9 +61,12 @@ Higher sources outrank lower sources when they conflict.
   `bun run beep architecture`.
 - Every new field defaults to today's behaviour; `synthetic-bracket.golden.json` stays
   byte-identical until a deliberate re-record recorded in the Decision Log.
-- Sheet PDFs stay font-free: labels are outlined glyph paths. The default outlines come from a
-  vendored OFL-1.1 Liberation subset; an operator-supplied font file is read at render time, never
-  committed, and its sha256 goes in the manifest.
+- The matter's labels are real text: the sheet number in Arial and the FIG label in Times New
+  Roman, embedded in each sheet PDF from the Microsoft core fonts installed on the render host
+  through a pinned fontconfig (attorney ruling 2026-10-14, reversing decision 4). Font files are
+  never committed; each one's sha256 goes in the manifest. The outlined route stays the default for
+  every other spec: a vendored OFL-1.1 Liberation subset, or an operator-supplied font file read at
+  render time.
 - Broken lines (37 CFR 1.152) mark visible edges of unclaimed parts only; hidden lines are never
   drawn; unclaimed parts are never shaded.
 - A review round is never a sign-off. The predecessor's sign-off rules (verbatim approval line,
@@ -82,16 +85,17 @@ Higher sources outrank lower sources when they conflict.
 
 Attorney deliverable (round 2):
 
-- [ ] F1 — both pictorials render as isometric parallel projections from one shared azimuth, oriented by the agreed reference (corpus inventory row F1).
-- [ ] F2 — every sheet number is outlined at 18 pt in the sans face (or a supplied Arial file), centred between the side margins just below the top margin.
-- [ ] F3 — every FIG label is outlined at 24 pt in the serif face (or a supplied Times New Roman file).
+- [ ] F1 — both pictorials render as isometric parallel projections from one shared azimuth, oriented by the reference the attorney confirmed on 2026-10-14 (corpus inventory row F1).
+- [ ] F2 — every sheet number is set at 18 pt in Arial as embedded text (2026-10-14 ruling), centred between the side margins just below the top margin.
+- [ ] F3 — every FIG label is set at 24 pt in Times New Roman as embedded text (2026-10-14 ruling).
 - [ ] F4 — flat faces turned toward the viewer carry surface shading, lit faces included; a judge round on the probe render is ingested.
-- [ ] F5 — the requested hidden fastening features are shown where the reviewer marked (corpus inventory row F5).
-- [ ] F6 — each joint the reviewer marked shows how the parts meet, as the attorney confirms (corpus inventory row F6).
+- [ ] F5 — the requested hidden fastening features are shown where the reviewer marked, in broken lines (unclaimed) in every view where they appear (corpus inventory row F5; 2026-10-14 ruling).
+- [ ] F6 — each joint the reviewer marked shows how the parts meet as the attorney ruled on 2026-10-14: the lap overlap at the stated width, each tab flush in its slot with the tab-in-slot edge in the heavier line class, and nominal but distinctive corner gaps, pictorials included (corpus inventory row F6).
 - [ ] F7 — sheets compose to `cfr-strict` margins (1 in / 1 in / 5/8 in / 3/8 in or more) and the manifest records the standard.
-- [ ] F8 — both plan views take the agreed orientation by camera, never by page rotation (corpus inventory row F8).
+- [ ] F8 — both plan views take the orientation the attorney confirmed on 2026-10-14 by camera, never by page rotation (corpus inventory row F8).
 - [ ] F9 — the seam line the reviewer marked is gone, checked on a zoomed raster (corpus inventory row F9).
-- [ ] F10 — the joint, line-style and clearance details the reviewer marked are shown, in the line style the attorney names (corpus inventory row F10).
+- [ ] F10 — the joint, line-style and clearance details the reviewer marked are shown; the dashed style the reviewer asked for is the broken line for unclaimed matter (2026-10-14 ruling; corpus inventory row F10).
+- [ ] Q7 — the open bottom-edge question (which part's bottom edge is drawn uncut in a bottom view) is answered and applied, or the attorney accepts a deferral.
 - [ ] The round-2 set renders byte-identically twice, passes `beep drawings validate`, and has zero open required review findings or an attorney-accepted deferral for each open one.
 
 Tooling (review loop):
@@ -99,6 +103,12 @@ Tooling (review loop):
 - [ ] T1 — `beep drawings intake` pulls a message's attachments (from a message id, an Outlook link, or a conversation id) into the corpus root with a per-attachment sha256 record, refuses paths outside it, and replaces the throwaway script.
 - [ ] T2 — attorney markup PDFs (flattened, no `/Annots`) ingest into a schema-valid review round: each page matched to its sheet by a unique ink-coverage winner or refused, notes carried verbatim with their rectangles under the corpus root.
 - [ ] T3 — each review round records the sheet-set hash it reviewed; `beep drawings statement` refuses while required findings are open on that hash; the judge prompt routes claim-scope findings to the attorney as questions.
+
+Tooling (attorney rulings of 2026-10-14):
+
+- [ ] L1 — a text-embedding label route sets labels as real text in a named font resolved from the render host through a pinned fontconfig, records each font file's sha256 in the manifest, and a validator rule fails a sheet whose sheet number or FIG label is missing as extractable text in its named font; the outlined route stays the default and the synthetic golden is unchanged.
+- [ ] E1 — an edge-emphasis line class draws chosen edges (the tab-in-slot edge) heavier than ordinary visible edges; off by default, synthetic golden unchanged.
+- [ ] C1 — a corrugation overlay draws a dashed, unclaimed corrugation profile on chosen exposed board edges; never shaded, off by default, synthetic golden unchanged.
 
 Always:
 
@@ -138,6 +148,7 @@ in the Decision Log.
 
 | Date | Change | Owner | Rationale |
 | --- | --- | --- | --- |
+| 2026-10-14 | Constraint "Sheet PDFs stay font-free" replaced by the embedded-text rule for the matter; acceptance F1-F3, F5, F6, F8, F10 reworded to the 2026-10-14 rulings; Q7, L1, E1 and C1 added. | Agent, relaying the attorney | The attorney's answers to the round-1 questions. |
 | 2026-10-13 | The pre-admission PLAN draft was generalised at admission: counts, shape names and joint layouts of the live article were replaced with drawing-convention wording. | Agent (autonomy charter) | The repo is public and the design is unfiled; the corpus holds the specifics. |
 
 ## Decision Log
@@ -161,11 +172,22 @@ how to reverse, keep going.
 | 2026-10-13 | An isometric pictorial without a set azimuth looks along 45°, not the perspective's 39.8° bearing. | At 45° (mod 90°) the model's X, Y and Z axes foreshorten equally; 39.8° gave a trimetric view labelled isometric. Isometric is opt-in, so no golden moves. | Default the isometric azimuth back to the perspective bearing. |
 | 2026-10-13 | The label glyph generator is a committed package script with a `generate:check`, plus a workstation-gated drift test through the `fontFile` route. | A generator kept only in a git-ignored lane directory dies with the lane, so the committed outlines could not be re-derived. | Drop the script and keep only the recipe in `research/label-glyphs.md`. |
 | 2026-10-13 | Review finding ids are scoped by sheet-set hash; judge rounds restart per set. | Ids collided across fixtures (R2-01 meant two different findings). | Return to plain round-local ids. |
-| 2026-10-13 | Attorney questions sent 2026-10-13; the defaults above hold until answered. | Claim scope and wording belong to the attorney; work continues on defaults. | Each answer that differs becomes a spec change and a new row here. |
+| 2026-10-13 | Attorney questions drafted 2026-10-13 and sent 2026-10-14 about 01:44Z; the attorney answered at 02:09Z (rows of 2026-10-14 below). The defaults above held until then. | Claim scope and wording belong to the attorney; work continued on defaults. | Each answer that differs becomes a spec change and a new row here. |
 | 2026-10-13 | The agentic-cad D9 exception is widened to read-only mailbox intake into the corpus root for this packet (Exception Ledger); flagged to the operator asynchronously. | T1 needs the app-only mailbox lane on the workstation; the data already lands under the corpus root. | Remove the widening from agentic-cad SPEC and this ledger; intake falls back to the operator saving attachments by hand. |
+| 2026-10-14 | Attorney ruling, relayed: the shared orientation rule is confirmed. The point the left elevation faces is centred in both pictorials and sits at the page bottom of both plans. Figure descriptions are left to the attorney. | Confirms the 2026-10-13 orientation row (decision 5); the matter values live in the corpus spec. | Set a different azimuth or plan facing in the matter spec on a later ruling. |
+| 2026-10-14 | Attorney ruling, relayed: the fastening tabs are unclaimed and are drawn in broken lines in every view where they appear. The dashed style asked for in F10 means unclaimed, not hidden. | Confirms decision 7 (broken lines mark unclaimed visible edges, hidden lines never drawn) and decision 8 (the features are shown); reverses nothing. | Mark the tabs solid in the matter spec if the attorney later claims them. |
+| 2026-10-14 | Attorney ruling, relayed: the lap overlap is modelled at the width the attorney stated (value in the corpus answers file). | F6 asked to show the overlap; the attorney named its width. | Change the overlap width in the corpus spec generator. |
+| 2026-10-14 | Attorney ruling, relayed: each tab sits flush in its slot (no clearance gap), and the tab-in-slot edge is drawn in a heavier line class than ordinary visible edges; no separate slit-lip line. New tooling: an edge-emphasis line class, follow-up PR-L (P7b). | A flush contact draws as one line, so the heavier weight is what shows the tab inside the slot. Overrides decision 9's clearance sizing for this joint only. | Drop the emphasis class from the matter spec and restore the clearance gap. |
+| 2026-10-14 | Attorney ruling, relayed: the corner gaps stay nominal but distinctive enough to show which panel rests on which and that the tabs land in slots, and they are shown in the pictorials too. | The attorney asked for the gaps in every view where they appear. | Close the gaps or limit them to the plans in the corpus spec generator. |
+| 2026-10-14 | Attorney ruling, relayed: labels are embedded as real text in Arial (sheet number) and Times New Roman (FIG label). Reverses decision 4 (outlined labels, font-free PDFs) and, for this packet's matter, the predecessor's outlined-text law (Exception Ledger). Needs the Microsoft core fonts on the render host (never committed), a text-embedding label route with a pinned fontconfig, and a validator rule for label presence as text: follow-up PR-K (P7a). | The attorney declined outlines and asked for the named fonts as text. | Switch the matter's label styles back to the outline route (merged in #1644), which keeps the PDFs font-free. |
+| 2026-10-14 | Attorney ruling, relayed: the board thickness is modelled at the attorney's stated nominal (value in the corpus answers file). | The attorney gave the dimension the remodel lacked. | Change the thickness in the corpus spec generator. |
+| 2026-10-14 | Attorney ruling, relayed: exposed board edges in the bottom views carry a dashed corrugation overlay drawn as unclaimed matter. Whether it goes on every visible board edge or only some of them is still to be confirmed with the attorney. New tooling: a corrugation overlay, follow-up PR-L (P7b). | The attorney asked for it where the tooling can draw it; broken lines keep it out of the claim. | Remove the overlay from the matter spec; the tooling stays off by default. |
+| 2026-10-14 | Open: which part's bottom edge is drawn uncut in one bottom view waits for the attorney's reply to an example picture. The current model holds; the filing-bound send waits for the answer (Stop Conditions). | The attorney did not follow the question and asked for a picture, which was sent. | Replace this row with the ruling once it arrives. |
+| 2026-10-14 | Packet prose for the 2026-10-14 answers stays at drawing-convention level; the attorney's wording, values and figure numbers live in `<corpus>/ops/patent-drawing-pipeline/matter/round-2/attorney-answers-2026-10-14.md`. | The repo is public and the design is unfiled. | None: matter detail never returns to the repo. |
 
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | agentic-cad D9, widened (client-data processing only on the attorney's machine) | The predecessor's scope (`beep drawings` over one matter's drawing inputs and outputs under `BEEP_OPPOLD_CORPUS_ROOT`) plus `beep drawings intake`: read-only app-only mailbox reads of the matter's request and review messages, attachments written only under the corpus root; nothing in git | Agent-decided 2026-10-13 under the autonomy charter; operator flagged | The corpus home already lives on this workstation; the attorney reviews and signs off every sheet set (Model Rule 5.3 supervision) | The pipeline ships on the attorney's machine (agentic-cad P7 / gated `design-figure-desktop`), or the operator reverses the widening |
+| Predecessor outlined-text law (labels as outlined glyphs, sheet PDFs font-free) | This packet's live-matter sheets embed Arial and Times New Roman as text; every other spec and the synthetic fixtures stay outlined | Attorney ruling 2026-10-14, relayed by the agent | The attorney asked for the named fonts as real text | The attorney returns to outlines, or the predecessor's law is amended to allow embedded text |
