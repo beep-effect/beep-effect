@@ -106,3 +106,9 @@ Notable secondary-target coordination notes from routing:
 - LICENSING: `mike` is AGPL and `harvest-mcp` license is UNKNOWN → reimplement clean-room, do not vendor either.
 - `legalmind-ai#1` is Taiwan jurisdiction (not US IP) — adjacent reference shape only, do not adopt its field set verbatim for office-action/patent extraction.
 - Deterministic extractors must preserve the "a miss is an absent row, never a wrong fact" guarantee and the versioned re-extraction migration (doc-haus `VERSION` const) when ported.
+
+## 2026-10-14 — correction (knowledge doctor verdict)
+
+The `@beep/law-practice` name above is a package family, not a package. The domain
+models it refers to live in `@beep/law-practice-domain` (`packages/law-practice/`).
+The entry above is kept as captured.

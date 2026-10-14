@@ -9,7 +9,7 @@ beep-effect already owns the hard substrate — span-grounded extraction (`@beep
 ### Top ~12 highest-ROI items
 
 1. **OpenAPI→SDK+MCP codegen (Orval) for the 5 bare gov drivers** — `us-legal-tools` → `@beep/courtlistener|ecfr|dol|federal-register` + matching MCP tools. Turns four skeleton packages into generated, typed drivers in one stroke.
-2. **Court / jurisdiction controlled vocabulary** — `courts-db` → seed `@beep/law-practice` placeholder vocabularies + a court-string resolver. Unblocks every citation/venue feature.
+2. **Court / jurisdiction controlled vocabulary** — `courts-db` → seed `@beep/law-practice-domain` placeholder vocabularies + a court-string resolver. Unblocks every citation/venue feature.
 3. **eyecite-style citation + verbatim-span grounding** — `courtlistener`/`mike` → build the skeleton `@beep/courtlistener` citation-lookup driver as a hallucination guardrail feeding `Evidence`.
 4. **Layout-aware PDF extraction + OCR-need gating** — `doctor` (Free Law Project, BSD-2) → harden `@beep/file-processing` for scanned office actions and prior-art PDFs.
 5. **Deterministic contract/document-structure extraction with char offsets** — `doc-haus` → `@beep/langextract` + `@beep/nlp` Pattern; anti-inference extraction discipline from `TalentScore`.
@@ -495,13 +495,13 @@ links.append({"source": p["id"], "target": o["id"], "label": "obligated to", "st
 
 ### Provenance & evidence
 
-How the reference repos ground fallible LLM/NLP output into exact source spans, track candidate-vs-authoritative state, and carry lineage/confidence/origin metadata. beep already has the substrate (`@beep/provenance` `TextAnchor`, `@beep/langextract` `GroundedExtraction`, `@beep/epistemic` `CandidateClaim`/`Evidence`/`ClaimLifecycle`/`ClaimGate`) but only `UsageRecord` is persisted and the CourtListener driver is a bare skeleton — so most of these are persistence/lineage/legal-domain fills rather than net-new concepts.
+How the reference repos ground fallible LLM/NLP output into exact source spans, track candidate-vs-authoritative state, and carry lineage/confidence/origin metadata. beep already has the substrate (`@beep/provenance` `TextAnchor`, `@beep/langextract` `GroundedExtraction`, `@beep/epistemic-domain` `CandidateClaim`/`Evidence`/`ClaimLifecycle`/`ClaimGate`) but only `UsageRecord` is persisted and the CourtListener driver is a bare skeleton — so most of these are persistence/lineage/legal-domain fills rather than net-new concepts.
 
 #### Bitemporal, never-overwrite provenance edges
 relevance: direct · gap · recommend: adopt · P1
 `GraphEdge` carries real-world validity (`tvalid`/`tvalidEnd`), assertion history (`version`/`supersededBy`/`isLatest`), `sourceObservationIds` provenance, and an `EdgeContext` (confidence/alternatives) — with a hard "NEVER overwrite, always version" rule. This is a near-complete template for beep's planned bitemporal authority store: mirror the edge shape onto an epistemic fact/claim-edge schema so every accepted claim knows when it was true, where it came from, and what it superseded.
 - source: `agentmemory/src/types.ts:411-435`
-- beep-target: `@beep/epistemic` claim-edge schema + planned bitemporal instance store; `@beep/provenance` lineage fields
+- beep-target: `packages/epistemic/` claim-edge schema + planned bitemporal instance store; `@beep/provenance` lineage fields
 ```ts
 export interface GraphEdge {
   id: string; type: GraphEdgeType; sourceNodeId: string; targetNodeId: string;
@@ -525,7 +525,7 @@ check (source = any (array['upload','user_upload',
 relevance: direct · partial · recommend: port · P1
 A tool that proves a quote appears verbatim in stored source before it is presented: normalizes whitespace/curly-quotes (no case folding), keeps a normalized-index→raw-offset map so a match relocates to true char offsets, reconstructs text across chunk boundaries, and returns VERIFIED-with-location or NOT-FOUND — never a near match. beep's `TextAnchor` promises `text.slice(startChar,endChar)===quote` but has no verifier; this is the enforcement arm of "only proof crosses the wall."
 - source: `doc-haus/dochaus/tool/verify-quote.ts:37-56`
-- beep-target: `@beep/provenance` span verifier + `@beep/epistemic` ClaimGate (verbatim-grounding check)
+- beep-target: `@beep/provenance` span verifier + `@beep/epistemic-domain` ClaimGate (verbatim-grounding check)
 ```ts
 function normalizeWithMap(raw: string) {
   let out = ""; const map: number[] = []
@@ -538,7 +538,7 @@ function normalizeWithMap(raw: string) {
 relevance: direct · gap · recommend: adopt · P1
 A CourtListener research workflow whose hard rule is that final citations MUST be based on opinion text/snippets supplied IN THIS TURN — never from memory, metadata, search results, or verification output. This is beep's retrieval→logic wall expressed as an agent prompt contract: the LLM may search/verify (fallible) but may only assert once it holds the grounding span. Directly reusable as a prompt template for the agents slice / candidate→grounded pipeline.
 - source: `mike/backend/src/lib/legalSourcesTools/courtlistenerTools.ts:81-90`
-- beep-target: `@beep/agents` prompt templates; epistemic CandidateClaim→Evidence grounding contract
+- beep-target: `packages/agents/` prompt templates; epistemic CandidateClaim→Evidence grounding contract
 ```
 Final case citations must be based on opinion text or passage snippets
 supplied in this turn. Do not cite from memory, metadata, search results,
@@ -550,7 +550,7 @@ relevance: direct · partial · recommend: adopt · P1
 Two repos enforce span-grounded provenance at generation time: mike forces inline `[N]` markers tied to a `<CITATIONS>` JSON block where each ref carries `doc_id` + page (or `N-M` span) + EXACT verbatim quote with `[[PAGE_BREAK]]` tokens; research-squad's BAML `AddCitations` requires the synthesized text be reproduced 100% byte-identically (whitespace included) inside `<exact_text_with_citation>`, rejecting any divergence, and adds an LLM-judge `EvaluateCitationQuality` rubric. Together they define the prose-in/proof-out citation discipline beep should impose when an agent emits cited output.
 - source: `mike/backend/src/lib/chatTools.ts:120-136`
 - source: `research-squad/baml_src/agents/citations.baml:24-42`
-- beep-target: `@beep/agents` citation output contract; `@beep/langextract`/`@beep/epistemic` Evidence + GroundedExtraction.span
+- beep-target: `packages/agents/` citation output contract; `@beep/langextract`/`@beep/epistemic-domain` Evidence + GroundedExtraction.span
 ```jsonc
 <CITATIONS>
 [{"ref":1,"doc_id":"doc-0","quotes":[{"page":3,"quote":"exact verbatim text"}]},
@@ -646,7 +646,7 @@ return {"original_claims": sorted_claims[0], "final_claims": sorted_claims[-1],
 relevance: direct · partial · recommend: adopt · P2
 `extract_from_pdf` runs pdftotext first, repairs mojibake when OCR is off, else runs OCR and keeps whichever output is longer — tracking an `extracted_by_ocr` boolean lineage flag. beep's `@beep/file-processing` has the Strategy/Operation pipeline but no text-vs-OCR origin flag; that boolean ("human-rendered or OCR-guessed?") maps straight onto evidence provenance for downstream confidence.
 - source: `doctor/doctor/tasks.py:197-218`
-- beep-target: `@beep/file-processing` extraction provenance; `@beep/epistemic` GroundedExtraction origin flag
+- beep-target: `@beep/file-processing` extraction provenance; `packages/foundation/capability/langextract/src/Extraction` GroundedExtraction origin flag
 ```python
 if ocr_needed(path, content):
     success, ocr_content = await extract_by_ocr(path)
@@ -668,7 +668,7 @@ pdf_merger.add_metadata({"/CreationDate": "", "/ModDate": ""})
 relevance: adjacent · partial · recommend: adopt · P2
 `ClassifiedParameter` carries `classification`, `confidence` (0-1), `source` (`heuristic`|`llm`|`manual`|`consistency_analysis`), and metadata — a heuristic pass tags each item before LLM refinement, with a manual override path. beep's `GroundedExtraction`/`Evidence` carry confidence but no "how-derived" source enum; adding it gives the candidate→approved gate a provenance-of-derivation field.
 - source: `harvest-mcp/src/types/index.ts:187-242`
-- beep-target: `@beep/epistemic` CandidateClaim/GroundedExtraction confidence+source schema
+- beep-target: `@beep/epistemic-domain` CandidateClaim/GroundedExtraction confidence+source schema
 ```ts
 interface ClassifiedParameter {
   classification: ParameterClassification; confidence: number;
@@ -679,7 +679,7 @@ interface ClassifiedParameter {
 relevance: adjacent · gap · recommend: adopt · P2
 BAML `Source` models each retrieved source with `quality_score` (1-10), `authority_level` (high|medium|low), `is_primary_source`, `recency`, `potential_issues`, and `found_by_agent` provenance, paired with a `SourceQualityValidation`. beep's `Evidence` has only confidence; adapt this for grading `PriorArtReference`/cited authorities, where primary-source preference maps to legal authority weighting.
 - source: `research-squad/baml_src/types.baml:100-117`
-- beep-target: `@beep/epistemic` Evidence authority fields; law-practice PriorArtReference scoring
+- beep-target: `@beep/epistemic-domain` Evidence authority fields; law-practice PriorArtReference scoring
 ```baml
 class Source { quality_score int; authority_level "high"|"medium"|"low";
   is_primary_source bool; recency "current"|"recent"|"dated"|"outdated";
@@ -690,7 +690,7 @@ class Source { quality_score int; authority_level "high"|"medium"|"low";
 relevance: adjacent · partial · recommend: study · P2
 `validateToolInputEffect` validates each tool call against its domain schema, accepts optional provenance metadata (`sourceFile`, `lineNumber`, `timestamp`, `agentName`), and never fails (errors captured in the result) — splitting hard errors from soft warnings. Mirrors beep's need to attach line/char spans and SHACL-style severity (Violation vs Warning) to candidate claims; `@beep/semantic-web` already has a bounded SHACL but no source-line provenance on results.
 - source: `research-squad/src/validation/validators/tool-validator.effect.ts:36-45`
-- beep-target: `@beep/semantic-web` SHACL severity reporting; `@beep/epistemic` GroundedExtraction.span metadata
+- beep-target: `@beep/semantic-web` SHACL severity reporting; `packages/foundation/capability/langextract/src/Extraction` GroundedExtraction.span metadata
 ```ts
 export const validateToolInputEffect = (toolName, toolInput,
   metadata?: { sourceFile?: string; lineNumber?: number; timestamp?: string; agentName?: string }
@@ -701,7 +701,7 @@ export const validateToolInputEffect = (toolName, toolInput,
 relevance: direct · dup · recommend: study · P2
 The parse RPC streams a discriminated union of many `Partial` events (in-progress, fallible) and a single terminal `Complete` carrying the persisted, scored result — only `Complete` is written to the DB. beep already has `ClaimGate` + Effect Stream turn kernels, so this is confirmation of the shape rather than a gap: a clean reference for modeling ClaimLifecycle streaming where partial extractions surface to the UI but only approved claims cross into authority.
 - source: `TalentScore/packages/domain/src/api/resume/resume-rpc.ts:153-193`
-- beep-target: `@beep/epistemic` ClaimGate/ClaimLifecycle streaming; agents AssistantTurn stream
+- beep-target: `@beep/epistemic-domain` ClaimGate/ClaimLifecycle streaming; agents AssistantTurn stream
 ```ts
 const ParseEvent = Schema.Union(
   Schema.TaggedStruct("Partial",  { data: PartialResumeData }),
@@ -712,7 +712,7 @@ const ParseEvent = Schema.Union(
 relevance: direct · dup · recommend: study · P2
 `BaseUnmatchedCitation` is a persisted state machine (`NO_CITATION → FOUND → RESOLVED`, plus `FAILED_AMBIGUOUS`/`FAILED`) keeping eyecite-derived context (court_id, year, raw string) for unresolved parses. A real-world analog of beep's `ClaimLifecycle` candidate→approved gate; beep already has the lifecycle pattern, so this is a domain-specific reference for the CourtListener driver's resolution states.
 - source: `courtlistener/cl/citations/models.py:11-55`
-- beep-target: `@beep/epistemic` ClaimLifecycle; `@beep/courtlistener` citation-resolution status
+- beep-target: `@beep/epistemic-domain` ClaimLifecycle; `@beep/courtlistener` citation-resolution status
 ```python
 class BaseUnmatchedCitation(BaseCitation):
     NO_CITATION=1; FOUND=2; RESOLVED=3; FAILED_AMBIGUOUS=4; FAILED=5
@@ -723,7 +723,7 @@ class BaseUnmatchedCitation(BaseCitation):
 relevance: adjacent · partial · recommend: study · P3
 CUAD RoBERTa returns n-best candidate answers grounded into the source contract text, with `version_2_with_negative` + `null_score_diff_threshold` for "no answer found" handling. beep's `@beep/langextract` already does span grounding, but the n-best ranking + null-score thresholding is a clean reference for scoring fallible candidates before the candidate→approved gate.
 - source: `Legal-AI_Project/server/predict.py:108-127`
-- beep-target: `@beep/langextract`/`@beep/epistemic` candidate scoring (n-best + null threshold)
+- beep-target: `@beep/langextract`/`packages/epistemic/` candidate scoring (n-best + null threshold)
 ```python
 final_predictions = compute_predictions_logits(..., n_best_size=n_best_size,
     version_2_with_negative=True, null_score_diff_threshold=null_score_diff_threshold)
@@ -733,7 +733,7 @@ final_predictions = compute_predictions_logits(..., n_best_size=n_best_size,
 relevance: serendipitous · gap · recommend: reference · P3
 `DocketSources` decodes a record's full source mix from one integer via an additive bitmask (RECAP=1, SCRAPER=2, COLUMBIA=4, …, HARVARD=16) with all combinations 0-255 pre-enumerated. beep's typed PROV-O Evidence graph is richer, but this is a neat fast-filter index for "which upstream sources contributed."
 - source: `courtlistener/cl/search/docket_sources.py:10-47`
-- beep-target: `@beep/epistemic` Evidence source-mix fast-filter; PROV-O wasDerivedFrom index
+- beep-target: `@beep/epistemic-domain` Evidence source-mix fast-filter; PROV-O wasDerivedFrom index
 ```python
 DEFAULT=0; RECAP=1; SCRAPER=2; RECAP_AND_SCRAPER=3; COLUMBIA=4; IDB=8; HARVARD=16
 ```
@@ -742,7 +742,7 @@ DEFAULT=0; RECAP=1; SCRAPER=2; RECAP_AND_SCRAPER=3; COLUMBIA=4; IDB=8; HARVARD=1
 relevance: direct · gap · recommend: reference · P3
 `get_word` maps Tesseract per-word confidence + margin position into keep / blank-out / box-glyph decisions — a tuned recipe for separating reliable OCR from noise. Aligned with beep's retrieval/logic wall: low-confidence OCR must never silently become an authoritative fact. A reference if/when beep adds OCR to `@beep/file-processing`.
 - source: `doctor/doctor/lib/text_extraction.py:285-320`
-- beep-target: `@beep/epistemic` Evidence confidence for OCR-sourced candidate claims
+- beep-target: `@beep/epistemic-domain` Evidence confidence for OCR-sourced candidate claims
 ```python
 no_confidence=0; very_low_confidence=5; low_confidence=40
 if word_dict["left"]+word_dict["width"] < left_margin and conf < low_confidence:
@@ -897,9 +897,9 @@ Mined patterns for turning legal prose into grounded, candidate-gated facts. bee
 
 #### Deterministic regex contract/structure extraction with char offsets
 direct · partial · recommend: port · P1
-Pure-regex extraction of a contract's self-describing graph (defined terms, Section/Article cross-refs, party names + parenthetical roles, amendment recitals) where every row carries verbatim text + char offsets and NO model is in the loop, so a miss is an absent row, never a wrong fact — with a built-in versioned re-extraction migration. This is the deterministic LOGIC-side complement to beep's LLM-based `@beep/langextract`: port as a deterministic extractor module emitting `GroundedExtraction` spans into `epistemic.CandidateClaim`, and feed `@beep/law-practice` Claim/Distinction/party models.
+Pure-regex extraction of a contract's self-describing graph (defined terms, Section/Article cross-refs, party names + parenthetical roles, amendment recitals) where every row carries verbatim text + char offsets and NO model is in the loop, so a miss is an absent row, never a wrong fact — with a built-in versioned re-extraction migration. This is the deterministic LOGIC-side complement to beep's LLM-based `@beep/langextract`: port as a deterministic extractor module emitting `GroundedExtraction` spans into `epistemic.CandidateClaim`, and feed `@beep/law-practice-domain` Claim/Distinction/party models.
 - source: `doc-haus/services/ingest/src/structure.ts:13-49`
-- beep-target: @beep/langextract deterministic extractors (new) + epistemic GroundedExtraction; @beep/law-practice clause/party models
+- beep-target: @beep/langextract deterministic extractors (new) + langextract GroundedExtraction; @beep/law-practice-domain clause/party models
 ```ts
 export const VERSION = "2"
 const TERM = `[“"]([A-Z][^”"\n]{0,60}?)[”"]`
@@ -1021,9 +1021,9 @@ if (["q","query","search","text","term"].includes(nameLower))
 
 #### PACER/court document-number extraction from PDF header stamp
 direct · gap · recommend: port · P2
-`get_header_stamp` (pdfplumber font/position filter: LiberationSans or y0>750) isolates the court-applied header stamp, then regex-extracts the docket document number across `Document:`/`Doc:`/`DktEntry:` variants. beep has `@beep/file-processing` extraction but no header-stamp docket parser — port to ground a court filing to its docket entry, feeding `@beep/law-practice` docket/document-number fields and `@beep/provenance` source linkage.
+`get_header_stamp` (pdfplumber font/position filter: LiberationSans or y0>750) isolates the court-applied header stamp, then regex-extracts the docket document number across `Document:`/`Doc:`/`DktEntry:` variants. beep has `@beep/file-processing` extraction but no header-stamp docket parser — port to ground a court filing to its docket entry, feeding `@beep/law-practice-domain` docket/document-number fields and `@beep/provenance` source linkage.
 - source: `doctor/doctor/tasks.py:673-691`
-- beep-target: @beep/law-practice docket/document-number parsing; @beep/provenance source linkage
+- beep-target: @beep/law-practice-domain docket/document-number parsing; @beep/provenance source linkage
 ```python
 regex = r"Document:(.[0-9.\-.\#]+)|Doc:(.[0-9.\-.\#]+)|DktEntry:(.[0-9.\-.\#]+)"
 document_number_matches = re.findall(regex, header_stamp)
@@ -1031,9 +1031,9 @@ document_number_matches = re.findall(regex, header_stamp)
 
 #### Grounded-extraction grid with per-cell citations + status
 adjacent · partial · recommend: study · P2
-A relational model of grounded extraction at scale: `tabular_reviews.columns_config` defines the extraction schema, `tabular_cells` stores one value per (document, column) carrying `content`, a `citations` jsonb (provenance back to source), and a `status`. Each datum carries provenance + an approval status — close to beep's `GroundedExtraction` grid with spans and a candidate gate. Study as the persistence shape for an `@beep/law-practice` OfficeAction/Rejection extraction table over `epistemic.Evidence`.
+A relational model of grounded extraction at scale: `tabular_reviews.columns_config` defines the extraction schema, `tabular_cells` stores one value per (document, column) carrying `content`, a `citations` jsonb (provenance back to source), and a `status`. Each datum carries provenance + an approval status — close to beep's `GroundedExtraction` grid with spans and a candidate gate. Study as the persistence shape for an `@beep/law-practice-tables` OfficeAction/Rejection extraction table over `epistemic.Evidence`.
 - source: `mike/backend/schema.sql:619-628`
-- beep-target: @beep/langextract extraction grid; @beep/law-practice OfficeAction/Rejection extraction tables; epistemic Evidence/gate
+- beep-target: @beep/langextract extraction grid; @beep/law-practice-domain OfficeAction/Rejection extraction tables; epistemic Evidence/gate
 ```sql
 create table public.tabular_cells (
   document_id uuid references documents(id), column_index integer not null,
@@ -1108,9 +1108,9 @@ valid_from="ISO|unknown" valid_to="ISO|current"
 
 #### Court caption-line alignment normalization
 adjacent · gap · recommend: reference · P3
-`adjust_caption_lines` re-aligns the vertical separator column in legal captions, with documented per-jurisdiction separators (§ Texas, : NY, ) most courts). A concrete normalization that improves downstream parsing of styled captions in opinions/office actions. beep has no caption parsing — reference when adding `@beep/law-practice` caption/party parsing.
+`adjust_caption_lines` re-aligns the vertical separator column in legal captions, with documented per-jurisdiction separators (§ Texas, : NY, ) most courts). A concrete normalization that improves downstream parsing of styled captions in opinions/office actions. beep has no caption parsing — reference when adding `packages/law-practice/` caption/party parsing.
 - source: `doctor/doctor/lib/text_extraction.py:100-129`
-- beep-target: @beep/law-practice caption/party parsing normalization
+- beep-target: @beep/law-practice-domain caption/party parsing normalization
 ```python
 for separator in [r")", "§", ":"]:
     pattern = rf"(.* +{re.escape(separator)} .*\n)"
@@ -1304,7 +1304,7 @@ interface Challenge { trialNumber; type; petitioner; patentOwner; petitionFiling
 relevance: adjacent · gapStatus: partial · recommend: study · P3
 A derived composite assessment `verdict {riskLabel, rationale, signals{inForce, expirationDate, challengeCount, litigationCount, currentAssignee}}` + disclaimer — where the fallible AI-written rationale stays explicitly separable from the sound underlying signals. This mirrors beep's retrieval-vs-logic wall and epistemic candidate/claim separation (already a dup pattern), but beep has no FTO/risk assessment model. Study as the shape for an explainable composite where a candidate verdict cites its sound signal bundle.
 - source: `patent-search-mcp-server/src/tools/riskProfile.ts:42`
-- beep-target: `@beep/epistemic` candidate-verdict-over-signals pattern + a law-practice risk/FTO assessment model
+- beep-target: `packages/epistemic/` candidate-verdict-over-signals pattern + a law-practice risk/FTO assessment model
 ```ts
 verdict?: { riskLabel?; rationale?; signals?: { inForce?; expirationDate?; challengeCount?; litigationCount?; currentAssignee? } }
 ```
@@ -1324,7 +1324,7 @@ type:   'PATENT' | 'DESIGN'
 relevance: serendipitous · gapStatus: partial · recommend: study · P3
 `map_problem_to_sections()` maps free text to statute sections via a local JSON taxonomy (keyword lists → section/title/summary/severity, confidence 0.9) and falls back to an LLM (confidence 0.5) on no deterministic hit. The two-tier "deterministic-high-confidence then fallible-LLM-low-confidence" shape mirrors beep's retrieval→candidate model and epistemic confidence-on-candidates (pattern already present); the JSON taxonomy is a clean classification-lookup template. Dataset is Indian IPC/BNS — retarget to WIPO-IPC/CPC. Study for the lookup-table + confidence convention.
 - source: `LegalEase/backend/services/legal_mapping.py:26`
-- beep-target: `packages/law-practice/` classification taxonomy + `@beep/epistemic` confidence on candidates (WIPO-IPC retarget)
+- beep-target: `packages/law-practice/` classification taxonomy + `@beep/epistemic-domain` confidence on candidates (WIPO-IPC retarget)
 ```py
 out = { "section":..., "title":..., "summary":..., "severity":"unknown",
         "matched_keywords": matched, "confidence": 0.9 }  # else LLM fallback @ 0.5
@@ -1405,10 +1405,10 @@ Patterns mined from the reference repos that map onto beep-effect's Effect-v4 su
 
 #### Failure-vs-defect wall: retry recoverable errors, `Effect.die` on schema violations
 direct · partial · recommend: port · P1
-The canonical hard wall for ingesting fallible LLM output: BAML execution failures (rate-limit/timeout/network) are typed recoverable errors (`Effect.fail` + retry), but when the model's raw output fails `Schema.decodeUnknown` that is a DEFECT — `logError` then `Effect.die`, never coerce malformed output into the graph. research-squad also ships `isRetryableError`/`isDefect`/`getErrorMessage` classifier helpers over its tagged-error taxonomy. beep's `standards/effect-first-development.md` (EF-1) states "errors are data" but has no shared `decode -> die` helper or retryable/defect predicate; AnthropicTurnKernel currently *repairs* invalid blocks instead. Port this into a foundation error helper used by `@beep/nlp-mcp` and `@beep/epistemic` CandidateClaim ingestion so contract-violating proposals die rather than enter as candidates.
+The canonical hard wall for ingesting fallible LLM output: BAML execution failures (rate-limit/timeout/network) are typed recoverable errors (`Effect.fail` + retry), but when the model's raw output fails `Schema.decodeUnknown` that is a DEFECT — `logError` then `Effect.die`, never coerce malformed output into the graph. research-squad also ships `isRetryableError`/`isDefect`/`getErrorMessage` classifier helpers over its tagged-error taxonomy. beep's `standards/effect-first-development.md` (EF-1) states "errors are data" but has no shared `decode -> die` helper or retryable/defect predicate; AnthropicTurnKernel currently *repairs* invalid blocks instead. Port this into a foundation error helper used by `@beep/nlp-mcp` and `@beep/epistemic-domain` CandidateClaim ingestion so contract-violating proposals die rather than enter as candidates.
 - source: `research-squad/src/services/BamlClientService.ts:619-648`
 - source: `research-squad/src/domain/errors.ts:341-361`
-- beep-target: foundation typed-error helper (`isDefect`/`isRetryable` + `decodeOrDie`) across `@beep/nlp-mcp`, `@beep/epistemic` ingestion, LLM drivers
+- beep-target: foundation typed-error helper (`isDefect`/`isRetryable` + `decodeOrDie`) across `@beep/nlp-mcp`, `packages/epistemic/` ingestion, LLM drivers
 ```ts
 const parseResult = yield* Schema.decodeUnknown(outputSchema)(rawOutput).pipe(
   Effect.catchAll((parseError: ParseResult.ParseError) =>
@@ -1449,9 +1449,9 @@ export const WebSearchServiceLive = Layer.unwrapEffect(Effect.gen(function* () {
 
 #### Schema-first partial-vs-final models for streaming (`Schema.optionalWith`)
 direct · partial · recommend: adopt · P1
-Two parallel models: a strict `ResumeData` `Schema.Class` (all fields required) for the authoritative record, plus `PartialResumeData` where every scalar is `Schema.optionalWith(NullOr(...), { exact: true })` so progressively-filling streaming chunks validate even when half-empty. beep streams turns via incremental block scanning (`ScanState`/AssistantContent) but has no partial-schema for a `GroundedExtraction` that arrives field-by-field; the strict schema then gates the approved fact. Adopt the partial/strict pair for `@beep/langextract` GroundedExtraction and `@beep/epistemic` CandidateClaim so candidates validate incrementally while the authority schema stays strict. Note the branded-ID convention (`ResumeId = UUID.brand`) matches beep's `@beep/identity`.
+Two parallel models: a strict `ResumeData` `Schema.Class` (all fields required) for the authoritative record, plus `PartialResumeData` where every scalar is `Schema.optionalWith(NullOr(...), { exact: true })` so progressively-filling streaming chunks validate even when half-empty. beep streams turns via incremental block scanning (`ScanState`/AssistantContent) but has no partial-schema for a `GroundedExtraction` that arrives field-by-field; the strict schema then gates the approved fact. Adopt the partial/strict pair for `@beep/langextract` GroundedExtraction and `@beep/epistemic-domain` CandidateClaim so candidates validate incrementally while the authority schema stays strict. Note the branded-ID convention (`ResumeId = UUID.brand`) matches beep's `@beep/identity`.
 - source: `TalentScore/packages/domain/src/api/resume/resume-rpc.ts:109-140`
-- beep-target: `@beep/langextract` GroundedExtraction partial schema; `@beep/epistemic` CandidateClaim candidate-vs-approved pair
+- beep-target: `@beep/langextract` GroundedExtraction partial schema; `@beep/epistemic-domain` CandidateClaim candidate-vs-approved pair
 ```ts
 export class ResumeData extends Schema.Class<ResumeData>("ResumeData")({ name: Schema.String /*...*/ }) {}
 export const PartialResumeData = Schema.Struct({
@@ -1571,7 +1571,7 @@ def __getattr__(name):
 
 ### MCP server design
 
-beep already ships two working Effect-native MCP servers (`@beep/nlp-mcp`, `@beep/m365-mcp`) built on `effect/unstable/ai` `Tool`/`Toolkit` + `McpServer.layerStdio`, so the bare-scaffold lessons are dups. The high-value gaps the reference repos fill are: conditional/auth-gated tool registration, a shared multi-provider LLM fallback layer over the four LLM drivers, governance permission matrices, progressive-disclosure/context-reduction tactics, and OpenAPI->driver+MCP codegen for the bare CourtListener/eCFR/DOL/Federal-Register skeletons.
+beep already ships two working Effect-native MCP servers (`@beep/nlp-mcp`, `@beep/m365-mcp`) built on `effect/ai` `Tool`/`Toolkit` + `McpServer.layerStdio`, so the bare-scaffold lessons are dups. The high-value gaps the reference repos fill are: conditional/auth-gated tool registration, a shared multi-provider LLM fallback layer over the four LLM drivers, governance permission matrices, progressive-disclosure/context-reduction tactics, and OpenAPI->driver+MCP codegen for the bare CourtListener/eCFR/DOL/Federal-Register skeletons.
 
 #### Conditional, auth-gated tool registration (only expose tools whose credentials exist)
 What it is: registration that checks configured auth/tier before a tool is ever advertised, so the client never sees broken or unauthorized tools. beep's MCP servers register all tools unconditionally today; this is the cleanest fit for the multi-provider legal driver fleet where each source (CourtListener public, GovInfo/DOL keyed, USPTO keyed) has different credential needs. Port as Effect: build the `Toolkit` from the set of driver Layers whose Config resolved successfully, and tier-gate write-vs-read tools at the candidate→approved wall.
@@ -1612,7 +1612,7 @@ What it is: tool descriptions that teach the model when to call (USE WHEN / DO N
 - source: `screenpipe/packages/screenpipe-mcp/src/index.ts:286`
 - source: `patent-search-mcp-server/src/tools/claimChart.ts:39`
 - source: `us-legal-tools/packages/courtlistener-sdk/src/mcp/tool-schemas.zod.ts:15`
-- beep-target: `@beep/nlp-mcp` / `@beep/m365-mcp` tool-definition conventions; encode hints + USE WHEN prose in `effect/unstable/ai` `Tool` annotations and `effect/Schema` field descriptions
+- beep-target: `@beep/nlp-mcp` / `@beep/m365-mcp` tool-definition conventions; encode hints + USE WHEN prose in `effect/ai` `Tool` annotations and `effect/Schema` field descriptions
 - gapStatus: partial · recommend: adopt · P1
 ```ts
 description: "... USE WHEN: you need the actual text/content of a moment. "
@@ -1772,7 +1772,7 @@ function parseFilter(s) { const i = s.indexOf(" "); const name = s.slice(0,i);
 ```
 
 #### Minimal/hand-rolled MCP transport scaffold (client-compat reference)
-What it is: the bare structure of an MCP server — capabilities, `initialize`/`tools/list`/`tools/call`/`ping`, content[{type:text}] envelope, JSON-RPC error mapping, and crucially explicit empty `ListResources`/`ListPrompts` handlers some clients (Claude Desktop) require. beep already has working stdio servers via `effect/unstable/ai` `McpServer.layerStdio`, so this is a dup — keep only as a client-compat checklist and as a lightweight dependency-free transport reference if embedding inside a Tauri sidecar/Worker (pins protocolVersion 2025-06-18).
+What it is: the bare structure of an MCP server — capabilities, `initialize`/`tools/list`/`tools/call`/`ping`, content[{type:text}] envelope, JSON-RPC error mapping, and crucially explicit empty `ListResources`/`ListPrompts` handlers some clients (Claude Desktop) require. beep already has working stdio servers via `effect/ai` `McpServer.layerStdio`, so this is a dup — keep only as a client-compat checklist and as a lightweight dependency-free transport reference if embedding inside a Tauri sidecar/Worker (pins protocolVersion 2025-06-18).
 - source: `google-patents-mcp/src/index.ts:239`
 - source: `uspto-patents-mcp/src/mcp-server.ts:45`
 - beep-target: existing `@beep/nlp-mcp`/`@beep/m365-mcp` Server.ts (`McpServer.layerStdio`) — reference only; client-compat checklist + sidecar transport option
@@ -1799,13 +1799,13 @@ getInformation: tool({
 
 ### Governance & ops
 
-Patterns for the approval boundary, ethical/confidentiality walls, untrusted-input hardening, multi-provider secret handling, driver resilience, and deterministic CI/build governance. beep already has the candidate-vs-proof spine (`@beep/epistemic` ClaimGate/ClaimLifecycle, `SafeRemoteHost`, Effect `Redacted` config, `@beep/observability`, `turbo.json`, onepassword secret-refs) but lacks ethical-wall enforcement, output-side re-verification, prompt-injection/redaction defenses, a shared driver resilience+quota layer, and per-tenant identity middleware — most nuggets below are real gaps or thin partials.
+Patterns for the approval boundary, ethical/confidentiality walls, untrusted-input hardening, multi-provider secret handling, driver resilience, and deterministic CI/build governance. beep already has the candidate-vs-proof spine (`@beep/epistemic-domain` ClaimGate/ClaimLifecycle, `SafeRemoteHost`, Effect `Redacted` config, `@beep/observability`, `turbo.json`, onepassword secret-refs) but lacks ethical-wall enforcement, output-side re-verification, prompt-injection/redaction defenses, a shared driver resilience+quota layer, and per-tenant identity middleware — most nuggets below are real gaps or thin partials.
 
 #### Output-side citation re-verification ladder + matter-isolation ethical wall
-Re-checks every cited span against the LIVE file on the way OUT (exact -> re-anchor to nearest occurrence -> reject), fences generic file tools to the active matter directory, restricts webfetch to official primary sources, and frames documents as untrusted data. Near-complete blueprint for beep's candidate->proof gate plus conflict/ethical-wall and provenance-staleness handling: layer this onto `@beep/epistemic` ClaimGate using `@beep/provenance` TextAnchor (`isWellOrdered`/`startChar`/`endChar`) for the re-anchor step, and add a matter-scoped path fence in `@beep/law-practice-server`.
+Re-checks every cited span against the LIVE file on the way OUT (exact -> re-anchor to nearest occurrence -> reject), fences generic file tools to the active matter directory, restricts webfetch to official primary sources, and frames documents as untrusted data. Near-complete blueprint for beep's candidate->proof gate plus conflict/ethical-wall and provenance-staleness handling: layer this onto `@beep/epistemic-domain` ClaimGate using `@beep/provenance` TextAnchor (`isWellOrdered`/`startChar`/`endChar`) for the re-anchor step, and add a matter-scoped path fence in `@beep/law-practice-server`.
 relevance: direct · partial · recommend: port · P1
 - source: `doc-haus/dochaus/plugin/legal.ts:214`
-- beep-target: `@beep/epistemic` ClaimGate/ClaimLifecycle + `@beep/provenance` TextAnchor re-anchor; new matter-isolation ethical-wall fence in `@beep/law-practice-server`
+- beep-target: `@beep/epistemic-domain` ClaimGate/ClaimLifecycle + `@beep/provenance` TextAnchor re-anchor; new matter-isolation ethical-wall fence in `@beep/law-practice-server`
 ```ts
 async function verifyCitation(c: DocumentCitation) {
   const text = await liveText(c.docPath)
@@ -1828,11 +1828,11 @@ const PATTERN_RULES = [{ rule: "instruction-override",
 ```
 
 #### Candidate edit -> human accept/reject gate + validated lifecycle state machine
-Two complementary shapes for beep's candidate->approved spine: (1) a `document_edits` table persisting discrete pending edits (deleted/inserted text + `context_before/after` anchors + `change_id`) with a `status` CHECK ('pending'/'accepted'/'rejected') and `resolved_at`; and (2) an explicit `validTransitions` table with `canTransitionTo`/`getValidNextStates` guards enforced by a service. beep's `@beep/epistemic` ClaimLifecycle already implements the state-machine concept (dup), but the epistemic store is only partially persisted (Drizzle has UsageRecord only) — the edits table is the relational model to mirror for ClaimGateResult/ClaimLifecycle persistence with span anchors.
+Two complementary shapes for beep's candidate->approved spine: (1) a `document_edits` table persisting discrete pending edits (deleted/inserted text + `context_before/after` anchors + `change_id`) with a `status` CHECK ('pending'/'accepted'/'rejected') and `resolved_at`; and (2) an explicit `validTransitions` table with `canTransitionTo`/`getValidNextStates` guards enforced by a service. beep's `@beep/epistemic-domain` ClaimLifecycle already implements the state-machine concept (dup), but the epistemic store is only partially persisted (Drizzle has UsageRecord only) — the edits table is the relational model to mirror for ClaimGateResult/ClaimLifecycle persistence with span anchors.
 relevance: direct · partial · recommend: study · P1
 - source: `mike/backend/schema.sql:284`
 - source: `research-squad/src/domain/models/session.ts:65`
-- beep-target: `@beep/epistemic` ClaimLifecycle (existing state machine) + new `epistemic/tables` Drizzle gate table carrying span anchors
+- beep-target: `@beep/epistemic-domain` ClaimLifecycle (existing state machine) + new `epistemic/tables` Drizzle gate table carrying span anchors
 ```ts
 export const validTransitions = {
   initializing: ["planning","failed"], planning: ["executing","failed"],
@@ -1909,10 +1909,10 @@ function xmlVariants(t){ const node=t.replaceAll("&","&amp;").replaceAll("<","&l
 ```
 
 #### Governance bulk-delete with dry-run + filter-gated mutation + audit trail
-A `governance-bulk` op requiring at least one filter for non-dryRun, supporting type/date/quality filters, deleting in 50-item batches, and returning dryRun previews (`wouldDelete` + ids). Exactly what an attorney-facing workbench needs over the authoritative graph: previewable, filter-gated bulk mutations plus an audit trail. beep has ApprovalGate (stub) and ClaimGate but no previewable governance mutation surface — add to the governance/approval layer over `@beep/epistemic`.
+A `governance-bulk` op requiring at least one filter for non-dryRun, supporting type/date/quality filters, deleting in 50-item batches, and returning dryRun previews (`wouldDelete` + ids). Exactly what an attorney-facing workbench needs over the authoritative graph: previewable, filter-gated bulk mutations plus an audit trail. beep has ApprovalGate (stub) and ClaimGate but no previewable governance mutation surface — add to the governance/approval layer over `packages/epistemic/`.
 relevance: direct · gap · recommend: port · P2
 - source: `agentmemory/src/functions/governance.ts:54`
-- beep-target: beep governance/approval-gate bulk-mutation op + audit log over `@beep/epistemic` authoritative graph
+- beep-target: beep governance/approval-gate bulk-mutation op + audit log over `packages/epistemic/` authoritative graph
 ```ts
 const hasFilter = (data.type?.length) || data.dateFrom || data.qualityBelow !== undefined
 if (!hasFilter && !data.dryRun) return { error: "At least one filter required for non-dryRun" }
@@ -1933,10 +1933,10 @@ function assessQuality(stats, authErrors): "excellent"|"good"|"poor"|"empty" {
 ```
 
 #### Pre-pipeline research/triage decision gate with clarification path
-Schemas modeling a gate BEFORE expensive work: `needs_research` bool + reasoning, `requires_clarification` + `suggested_clarifications`, `estimated_complexity` enum, and an action enum (ask_clarifications | launch_research | simple_response). Maps to a "should this even enter the pipeline?" triage before extraction/reasoning runs — a complement to `@beep/epistemic` ClaimGate that decides whether to invoke retrieval at all.
+Schemas modeling a gate BEFORE expensive work: `needs_research` bool + reasoning, `requires_clarification` + `suggested_clarifications`, `estimated_complexity` enum, and an action enum (ask_clarifications | launch_research | simple_response). Maps to a "should this even enter the pipeline?" triage before extraction/reasoning runs — a complement to `@beep/epistemic-domain` ClaimGate that decides whether to invoke retrieval at all.
 relevance: adjacent · gap · recommend: study · P2
 - source: `research-squad/baml_src/types.baml:137`
-- beep-target: `@beep/epistemic` ClaimGate triage / pre-retrieval decision gate in agents use-cases
+- beep-target: `@beep/epistemic-domain` ClaimGate triage / pre-retrieval decision gate in agents use-cases
 ```baml
 class ResearchDecision {
   needs_research bool  reasoning string
@@ -2057,7 +2057,7 @@ Foundation-unblocking work leads each wave: the gov-driver codegen pass and cour
 - lawyergpt / legalmind-ai → ingestion/chunking — **port** char-span chunking + RAG ingest patterns (lawyergpt#1; legalmind-ai#2). _lawyergpt unknown-license: pattern-only._
 
 **Provenance & legal-NLP:**
-- agentmemory → `@beep/epistemic` — **adopt** four-tier memory schema w/ per-fact confidence (agentmemory#2, #6) and citation-graph node-link extraction (agentmemory#1).
+- agentmemory → `packages/epistemic/` — **adopt** four-tier memory schema w/ per-fact confidence (agentmemory#2, #6) and citation-graph node-link extraction (agentmemory#1).
 - doc-haus → `@beep/langextract`/`@beep/nlp` — **port** deterministic contract-structure extraction w/ char offsets (doc-haus#2, #3) + redline gate (governance doc-haus#4, #5).
 - TalentScore → `@beep/langextract` + `ClaimGate` — **adopt** anti-inference extraction discipline + typed-dimension scoring (TalentScore#1, #4, #7).
 - research-squad → provenance + Effect — **adopt** evidence-binding + Schedule retry + Layer provider selection + bounded fan-out (research-squad#1, #2, #3, #5, #7, #11).

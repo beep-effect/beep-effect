@@ -57,7 +57,7 @@ no transport of any kind.**
 | --- | --- |
 | `*.events.ts` in any slice | none (only `foundation/ui-system/dock/src/Dock.events.ts`) |
 | `*.event-handlers.ts` anywhere | **zero files repo-wide** |
-| `effect/unstable/eventlog` imports in any `src/` | **zero** — the only usage repo-wide is `packages/tooling/library/ai-metrics/test/eventlog-proof.test.ts:3-6`, an in-memory feasibility test in a tooling library |
+| `effect/eventlog` imports in any `src/` | **zero** — the only usage repo-wide is `packages/tooling/library/ai-metrics/test/eventlog-proof.test.ts:3-6`, an in-memory feasibility test in a tooling library |
 | `PubSub` in product code | only `packages/drivers/obs/src/ObsProtocol.service.ts:239,320,468,472` — a driver-local sliding PubSub for OBS websocket protocol frames; drivers may not depend on slices (`ARCHITECTURE.md:639-640`) |
 | Event bus / dispatcher / subscription registry service | none |
 | Outbox | `packages/documents/domain/src/entities/SyncOperation/SyncOperation.model.ts:146` is a **DMS file-push outbox** (queued push operations to a document-management mirror), not a domain-event outbox. `SyncOperation.repository.ts` and `packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts:1127` pump it FIFO for file sync only. Not reusable as event transport. |
@@ -91,7 +91,7 @@ So option A requires **everything in option B, plus transport**. Concretely:
    record, the `$SharedUseCasesId` identity composer, workspace/tsconfig/boundary
    registration, four first-CI governance gates).
 2. `packages/shared/use-cases/src/law-practice/events/…` — the event contract
-   built with `Event.make` from `effect/unstable/eventlog/Event`
+   built with `Event.make` from `effect/eventlog/Event`
    (`10-cross-slice-coordination.md:106-153` worked example).
 3. **A shared event-log runtime that does not exist and has no lawful home.**
    Needs an `EventLog.layer` + `EventGroup` registry + `EventLog.Identity` +

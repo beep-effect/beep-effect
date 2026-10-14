@@ -102,7 +102,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 44 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 64 | 678 | 18 | 36 |
 | 45 | `@beep/phoenix` | `packages/drivers/phoenix` | needs-remediation | 5 | 50 | 0 | 2 |
 | 46 | `@beep/duckdb` | `packages/drivers/duckdb` | needs-remediation | 6 | 28 | 0 | 4 |
-| 47 | `@beep/technical-drawing` | `packages/foundation/capability/technical-drawing` | needs-remediation | 12 | 88 | 0 | 77 |
+| 47 | `@beep/technical-drawing` | `packages/foundation/capability/technical-drawing` | needs-remediation | 15 | 115 | 0 | 100 |
 | 48 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | needs-remediation | 5 | 111 | 0 | 2 |
 | 49 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 312 | 13 | 77 |
 | 50 | `@beep/openai-compat` | `packages/drivers/openai-compat` | needs-remediation | 4 | 54 | 0 | 9 |
@@ -144,7 +144,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 86 | `@beep/runpod` | `packages/drivers/runpod` | needs-remediation | 7 | 203 | 0 | 1 |
 | 87 | `@beep/obs` | `packages/drivers/obs` | needs-remediation | 6 | 73 | 3 | 1 |
 | 88 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 28 | 177 | 0 | 14 |
-| 89 | `@beep/occt` | `packages/drivers/occt` | needs-remediation | 4 | 13 | 0 | 1 |
+| 89 | `@beep/occt` | `packages/drivers/occt` | clean | 4 | 13 | 0 | 0 |
 | 90 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 3 |
 | 91 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 73 | 1 | 34 |
 | 92 | `@beep/pacer` | `packages/drivers/pacer` | needs-remediation | 13 | 89 | 12 | 13 |
@@ -1837,9 +1837,27 @@ Export findings:
 Path: `packages/foundation/capability/technical-drawing`
 
 Export findings:
-- `src/FigureSet.service.ts:46` `RenderRequest` (class) - 1 example import violation(s)
-- `src/FigureSet.service.ts:83` `FigureSetShape` (interface) - 2 example import violation(s)
-- `src/FigureSet.service.ts:277` `FigureSet` (class) - 1 example import violation(s)
+- `src/Approval.rules.ts:50` `textLines` (const) - 1 example import violation(s)
+- `src/Approval.rules.ts:67` `authoredLines` (const) - 1 example import violation(s)
+- `src/Approval.rules.ts:118` `verifyConfirmation` (const) - 1 example import violation(s)
+- `src/Approval.schemas.ts:38` `approvalStatement` (const) - 1 example import violation(s)
+- `src/Approval.schemas.ts:56` `EmailAddress` (const) - 1 example import violation(s)
+- `src/Approval.schemas.ts:74` `EmailAddress` (type) - 1 example import violation(s)
+- `src/Approval.schemas.ts:102` `EmailConfirmation` (class) - 1 example import violation(s)
+- `src/Approval.schemas.ts:137` `PdfConfirmation` (class) - 1 example import violation(s)
+- `src/Approval.schemas.ts:174` `Confirmation` (const) - 1 example import violation(s)
+- `src/Approval.schemas.ts:197` `Confirmation` (type) - 2 example import violation(s)
+- `src/Approval.schemas.ts:220` `ApprovalRefusalReason` (const) - 1 example import violation(s)
+- `src/Approval.schemas.ts:243` `ApprovalRefusalReason` (type) - 1 example import violation(s)
+- `src/Approval.schemas.ts:277` `ApprovalRecord` (class) - 1 example import violation(s)
+- `src/Approval.service.ts:46` `ConfirmationSource` (const) - 1 example import violation(s)
+- `src/Approval.service.ts:82` `ConfirmationSource` (type) - 2 example import violation(s)
+- `src/Approval.service.ts:103` `SignRequest` (class) - 1 example import violation(s)
+- `src/Approval.service.ts:132` `SheetSetApprovalShape` (interface) - 1 example import violation(s)
+- `src/Approval.service.ts:273` `SheetSetApproval` (class) - 1 example import violation(s)
+- `src/FigureSet.service.ts:52` `RenderRequest` (class) - 1 example import violation(s)
+- `src/FigureSet.service.ts:92` `FigureSetShape` (interface) - 1 example import violation(s)
+- `src/FigureSet.service.ts:329` `FigureSet` (class) - 1 example import violation(s)
 - `src/Geometry.schemas.ts:37` `Vec3` (const) - 1 example import violation(s)
 - `src/Geometry.schemas.ts:58` `Vec3` (type) - 1 example import violation(s)
 - `src/Geometry.schemas.ts:74` `PositiveLength` (const) - 1 example import violation(s)
@@ -1850,50 +1868,55 @@ Export findings:
 - `src/Geometry.schemas.ts:228` `Cylinder` (class) - 1 example import violation(s)
 - `src/Geometry.schemas.ts:258` `Primitive` (const) - 1 example import violation(s)
 - `src/Geometry.schemas.ts:281` `Primitive` (type) - 2 example import violation(s)
-- `src/Geometry.schemas.ts:307` `Part` (class) - 1 example import violation(s)
-- `src/Geometry.schemas.ts:347` `LengthUnit` (const) - 1 example import violation(s)
-- `src/Geometry.schemas.ts:369` `LengthUnit` (type) - 1 example import violation(s)
-- `src/Geometry.schemas.ts:388` `ModelSpec` (class) - 1 example import violation(s)
-- `src/Geometry.schemas.ts:434` `Camera` (class) - 1 example import violation(s)
-- `src/Geometry.schemas.ts:467` `Segment2` (const) - 1 example import violation(s)
-- `src/Geometry.schemas.ts:488` `Segment2` (type) - 1 example import violation(s)
-- `src/Geometry.schemas.ts:511` `EdgeSet` (class) - 1 example import violation(s)
-- `src/Geometry.schemas.ts:535` `BoundingBox` (class) - 1 example import violation(s)
-- `src/Geometry.schemas.ts:565` `ModelSummary` (class) - 1 example import violation(s)
-- `src/Geometry.segments.ts:46` `canonicalSegments` (const) - 1 example import violation(s)
-- `src/Geometry.segments.ts:68` `mirrorSegments` (const) - 1 example import violation(s)
-- `src/Geometry.segments.ts:96` `sameSegments` (const) - 1 example import violation(s)
-- `src/Manifest.schemas.ts:30` `Sha256Hex` (const) - 1 example import violation(s)
-- `src/Manifest.schemas.ts:58` `Sha256Hex` (type) - 1 example import violation(s)
-- `src/Manifest.schemas.ts:74` `EngineInfo` (class) - 1 example import violation(s)
-- `src/Manifest.schemas.ts:103` `FigureRecord` (class) - 1 example import violation(s)
-- `src/Manifest.schemas.ts:131` `OmissionProof` (class) - 1 example import violation(s)
-- `src/Manifest.schemas.ts:170` `RenderManifest` (class) - 1 example import violation(s)
+- `src/Geometry.schemas.ts:310` `PartLineStyle` (const) - 1 example import violation(s)
+- `src/Geometry.schemas.ts:332` `PartLineStyle` (type) - 1 example import violation(s)
+- `src/Geometry.schemas.ts:368` `Part` (class) - 1 example import violation(s)
+- `src/Geometry.schemas.ts:416` `LengthUnit` (const) - 1 example import violation(s)
+- `src/Geometry.schemas.ts:438` `LengthUnit` (type) - 1 example import violation(s)
+- `src/Geometry.schemas.ts:457` `ModelSpec` (class) - 1 example import violation(s)
+- `src/Geometry.schemas.ts:503` `Camera` (class) - 1 example import violation(s)
+- `src/Geometry.schemas.ts:536` `Segment2` (const) - 1 example import violation(s)
+- `src/Geometry.schemas.ts:557` `Segment2` (type) - 1 example import violation(s)
+- `src/Geometry.schemas.ts:581` `EdgeSet` (class) - 1 example import violation(s)
+- `src/Geometry.schemas.ts:644` `ShadingPlan` (class) - 1 example import violation(s)
+- `src/Geometry.schemas.ts:673` `BoundingBox` (class) - 1 example import violation(s)
+- `src/Geometry.schemas.ts:709` `ModelSummary` (class) - 1 example import violation(s)
+- `src/Geometry.segments.ts:47` `canonicalSegments` (const) - 1 example import violation(s)
+- `src/Geometry.segments.ts:69` `mirrorSegments` (const) - 1 example import violation(s)
+- `src/Geometry.segments.ts:97` `sameSegments` (const) - 1 example import violation(s)
+- `src/Manifest.schemas.ts:32` `Sha256Hex` (const) - 1 example import violation(s)
+- `src/Manifest.schemas.ts:60` `Sha256Hex` (type) - 1 example import violation(s)
+- `src/Manifest.schemas.ts:76` `EngineInfo` (class) - 1 example import violation(s)
+- `src/Manifest.schemas.ts:105` `FigureRecord` (class) - 1 example import violation(s)
+- `src/Manifest.schemas.ts:143` `OmissionProof` (class) - 1 example import violation(s)
+- `src/Manifest.schemas.ts:182` `RenderManifest` (class) - 1 example import violation(s)
 - `src/Sheet.compose.ts:200` `labelWidthPt` (const) - 1 example import violation(s)
 - `src/Sheet.compose.ts:223` `strokeLabel` (const) - 1 example import violation(s)
 - `src/Sheet.compose.ts:263` `viewExtents` (const) - 1 example import violation(s)
 - `src/Sheet.compose.ts:303` `sheetGeometry` (const) - 1 example import violation(s)
 - `src/Sheet.compose.ts:338` `commonScale` (const) - 1 example import violation(s)
-- `src/Sheet.compose.ts:373` `composeSheet` (const) - 1 example import violation(s)
+- `src/Sheet.compose.ts:399` `composeSheet` (const) - 2 example import violation(s)
 - `src/Sheet.schemas.ts:31` `SheetFormat` (const) - 1 example import violation(s)
 - `src/Sheet.schemas.ts:53` `SheetFormat` (type) - 1 example import violation(s)
-- `src/Sheet.schemas.ts:70` `PT_PER_CM` (const) - missing @example
-- `src/Sheet.schemas.ts:78` `PT_PER_MM` (const) - missing @example
-- `src/Sheet.schemas.ts:94` `PagePoints` (class) - 1 example import violation(s)
-- `src/Sheet.schemas.ts:124` `pageSizePt` (const) - 1 example import violation(s)
-- `src/Sheet.schemas.ts:137` `MARGINS_CM` (const) - missing @example
-- `src/Sheet.schemas.ts:145` `MIN_LETTER_HEIGHT_CM` (const) - missing @example
-- `src/Sheet.schemas.ts:162` `SheetOptions` (class) - 1 example import violation(s)
+- `src/Sheet.schemas.ts:78` `PT_PER_CM` (const) - 1 example import violation(s)
+- `src/Sheet.schemas.ts:94` `PT_PER_MM` (const) - 1 example import violation(s)
+- `src/Sheet.schemas.ts:110` `PagePoints` (class) - 1 example import violation(s)
+- `src/Sheet.schemas.ts:140` `pageSizePt` (const) - 1 example import violation(s)
+- `src/Sheet.schemas.ts:161` `MARGINS_CM` (const) - 1 example import violation(s)
+- `src/Sheet.schemas.ts:177` `MIN_LETTER_HEIGHT_CM` (const) - 1 example import violation(s)
+- `src/Sheet.schemas.ts:195` `SheetOptions` (class) - 1 example import violation(s)
 - `src/TechnicalDrawing.errors.ts:31` `DrawingErrorReason` (const) - 1 example import violation(s)
 - `src/TechnicalDrawing.errors.ts:54` `DrawingErrorReason` (type) - 1 example import violation(s)
 - `src/TechnicalDrawing.errors.ts:78` `DrawingError` (class) - 1 example import violation(s)
-- `src/TechnicalDrawing.ports.ts:39` `GeometryEngineShape` (interface) - 2 example import violation(s)
-- `src/TechnicalDrawing.ports.ts:63` `GeometryEngine` (class) - 1 example import violation(s)
-- `src/TechnicalDrawing.ports.ts:85` `PdfBackendShape` (interface) - 2 example import violation(s)
-- `src/TechnicalDrawing.ports.ts:111` `PdfBackend` (class) - 1 example import violation(s)
+- `src/TechnicalDrawing.ports.ts:40` `GeometryEngineShape` (interface) - 1 example import violation(s)
+- `src/TechnicalDrawing.ports.ts:66` `GeometryEngine` (class) - 1 example import violation(s)
+- `src/TechnicalDrawing.ports.ts:88` `PdfBackendShape` (interface) - 1 example import violation(s)
+- `src/TechnicalDrawing.ports.ts:116` `PdfBackend` (class) - 1 example import violation(s)
+- `src/TechnicalDrawing.ports.ts:133` `MailReaderShape` (interface) - 1 example import violation(s)
+- `src/TechnicalDrawing.ports.ts:152` `MailReader` (class) - 1 example import violation(s)
 - `src/Validation.rules.ts:62` `structuralFindings` (const) - 1 example import violation(s)
-- `src/Validation.rules.ts:130` `marginFindings` (const) - 1 example import violation(s)
-- `src/Validation.rules.ts:184` `purityFindings` (const) - 1 example import violation(s)
+- `src/Validation.rules.ts:135` `marginFindings` (const) - 1 example import violation(s)
+- `src/Validation.rules.ts:189` `purityFindings` (const) - 1 example import violation(s)
 - `src/Validation.schemas.ts:30` `PdfPageSize` (class) - 1 example import violation(s)
 - `src/Validation.schemas.ts:54` `PdfFontFact` (class) - 1 example import violation(s)
 - `src/Validation.schemas.ts:86` `PdfFacts` (class) - 1 example import violation(s)
@@ -1902,18 +1925,18 @@ Export findings:
 - `src/Validation.schemas.ts:193` `FindingCode` (const) - 1 example import violation(s)
 - `src/Validation.schemas.ts:215` `FindingCode` (type) - 1 example import violation(s)
 - `src/Validation.schemas.ts:233` `SheetFinding` (class) - 1 example import violation(s)
-- `src/Validation.schemas.ts:259` `ValidationOptions` (class) - 1 example import violation(s)
-- `src/Validation.schemas.ts:291` `ValidationReport` (class) - 1 example import violation(s)
-- `src/View.schemas.ts:49` `ViewName` (const) - 1 example import violation(s)
-- `src/View.schemas.ts:71` `ViewName` (type) - 1 example import violation(s)
-- `src/View.schemas.ts:92` `isPerspectiveView` (const) - 1 example import violation(s)
-- `src/View.schemas.ts:108` `CameraForViewInput` (class) - 1 example import violation(s)
-- `src/View.schemas.ts:145` `cameraForView` (const) - 1 example import violation(s)
-- `src/View.schemas.ts:184` `FigureSpec` (class) - 1 example import violation(s)
-- `src/View.schemas.ts:217` `OmissionRelation` (const) - 1 example import violation(s)
-- `src/View.schemas.ts:239` `OmissionRelation` (type) - 1 example import violation(s)
-- `src/View.schemas.ts:256` `OmissionClaim` (class) - 1 example import violation(s)
-- `src/View.schemas.ts:295` `FigureSetSpec` (class) - 1 example import violation(s)
+- `src/Validation.schemas.ts:261` `ValidationOptions` (class) - 1 example import violation(s)
+- `src/Validation.schemas.ts:293` `ValidationReport` (class) - 1 example import violation(s)
+- `src/View.schemas.ts:50` `ViewName` (const) - 1 example import violation(s)
+- `src/View.schemas.ts:72` `ViewName` (type) - 1 example import violation(s)
+- `src/View.schemas.ts:93` `isPerspectiveView` (const) - 1 example import violation(s)
+- `src/View.schemas.ts:109` `CameraForViewInput` (class) - 1 example import violation(s)
+- `src/View.schemas.ts:146` `cameraForView` (const) - 1 example import violation(s)
+- `src/View.schemas.ts:185` `FigureSpec` (class) - 1 example import violation(s)
+- `src/View.schemas.ts:218` `OmissionRelation` (const) - 1 example import violation(s)
+- `src/View.schemas.ts:240` `OmissionRelation` (type) - 1 example import violation(s)
+- `src/View.schemas.ts:257` `OmissionClaim` (class) - 1 example import violation(s)
+- `src/View.schemas.ts:296` `FigureSetSpec` (class) - 1 example import violation(s)
 
 ### @beep/ffmpeg
 
@@ -2948,13 +2971,6 @@ Export findings:
 - `src/next/models/Routes.schema.ts:390` `Middleware` (const) - 1 example import violation(s)
 - `src/next/models/Shared.schema.ts:34` `FileSizeSuffix` (const) - 1 example import violation(s)
 - `src/next/models/Shared.schema.ts:88` `SizeLimit` (const) - 1 example import violation(s)
-
-### @beep/occt
-
-Path: `packages/drivers/occt`
-
-Export findings:
-- `src/Occt.service.ts:49` `OcctShape` (interface) - 1 example import violation(s)
 
 ### @beep/qa-capture
 

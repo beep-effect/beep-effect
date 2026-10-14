@@ -5,6 +5,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
+import typescript from "@typescript/native/package.json" with { type: "json" };
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
@@ -16,11 +17,20 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as jsonc from "jsonc-parser";
-import typescript from "typescript";
 
 const repoRoot = fileURLToPath(new URL("../../../../..", import.meta.url));
 const tscBinPath = fileURLToPath(new URL("../../../../../node_modules/.bin/tsc", import.meta.url));
 const tsgoBinPath = fileURLToPath(new URL("../../../../../node_modules/.bin/tsgo", import.meta.url));
+const tscRsBinPath = fileURLToPath(new URL("../../../../../node_modules/.bin/tsc-rs", import.meta.url));
+const rootManifestPath = fileURLToPath(new URL("../../../../../package.json", import.meta.url));
+
+// tsc-rs compiles the Effect rules of exactly one effect-tsgo release in, so the two catalog
+// pins move together (docs/runbooks/typescript-toolchain.md, "Version coupling with tsc-rs").
+const effectTsgoPortedByTscRs: Readonly<Record<string, string>> = { "0.6.0": "0.51.1" };
+const RootCatalog = S.Struct({
+  catalog: S.Struct({ "tsc-rs": S.String, "@effect/tsgo": S.String }),
+});
+const decodeRootCatalog = flow(S.decodeUnknownResult(S.fromJsonString(RootCatalog)), Result.getOrThrow);
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = Layer.mergeAll(PlatformLayer, NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(PlatformLayer)));
@@ -160,7 +170,24 @@ it.layer(TestLayer, { timeout: "10 seconds" })((it) => {
         expect(tsgo.exitCode, tsgoContext).toBe(0);
         expect(tsc.stdout, `${tscContext}; ${tsgoContext}`).toBe(tsgo.stdout);
         expect(tsc.stdout, tscContext).toMatch(/^Version 7\..*\+effect-tsgo\./u);
-        expect(typescript.version, "TypeScript API version").toMatch(/^6\./u);
+        expect(typescript.version, "TypeScript API version").toMatch(/^7\./u);
+      })
+    );
+    it.effect("runs the typecheck gates on the tsc-rs release that ports the pinned effect-tsgo", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tscRs = yield* runCommand(process.execPath, [tscRsBinPath, "--version"], repoRoot);
+        const context = `tsc-rs --version: stdout=${Str.takeLeft(tscRs.stdout, 2048)}; stderr=${Str.takeLeft(tscRs.stderr, 2048)}`;
+        expect(tscRs.exitCode, context).toBe(0);
+        // tsc-rs pins its own upstream TypeScript (7.1.0-dev.20261008.1 for 0.6.0) and does not
+        // carry the +effect-tsgo build suffix; the Effect rules are compiled in.
+        expect(tscRs.stdout, context).toMatch(/^Version 7\.1\.0-dev/u);
+        expect(tscRs.stdout, context).not.toContain("+effect-tsgo");
+        const { catalog } = decodeRootCatalog(yield* fs.readFileString(rootManifestPath));
+        expect(
+          effectTsgoPortedByTscRs[catalog["tsc-rs"]],
+          `tsc-rs ${catalog["tsc-rs"]} is not a release this test knows; add its effect-tsgo pair`
+        ).toBe(catalog["@effect/tsgo"]);
       })
     );
   });

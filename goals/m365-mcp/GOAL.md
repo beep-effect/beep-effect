@@ -27,7 +27,7 @@ built, stub against its service interface + a mock Layer and report the blocker.
 Scope:
 
 - In: `packages/drivers/m365-mcp/**` (depends on `@beep/m365`,
-  `effect/unstable/ai`, `@effect/platform-node`).
+  `effect/ai`, `@effect/platform-node`).
 - Out: any Graph logic of its own (delegate to `@beep/m365`); write tools;
   HTTP/SSE transport; Teams/Excel/Search tools; ingest wiring.
 

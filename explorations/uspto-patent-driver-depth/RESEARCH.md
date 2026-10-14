@@ -274,7 +274,7 @@ lines 41/60). This is the repo's own Effect-native codegen path — cited as the
 precedent the depth build deliberately does NOT follow for uspto.
 
 ### MCP composition — `@beep/nlp-mcp` (exists, reference for the gating pattern)
-`packages/drivers/nlp-mcp/src/Server.ts` uses `effect/unstable/ai/McpServer` (line 26)
+`packages/drivers/nlp-mcp/src/Server.ts` uses `effect/ai/McpServer` (line 26)
 with a **static** `Layer.mergeAll(McpServer.toolkit(NlpToolkit)…, McpServer.toolkit(
 StreamingToolkit)…)` over `McpServer.layerStdio` (lines 104–107). Registration is a
 build-time layer concern — the substrate to add conditional inclusion onto.

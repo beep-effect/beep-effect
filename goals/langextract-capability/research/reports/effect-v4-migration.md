@@ -10,7 +10,7 @@ Status: completed from Effect v4 upstream sources, local provider drivers, `@bee
 - Effect v4 service definitions use `Context.Service`; v3-style `Context.Tag`, `Effect.Tag`, `Effect.Service`, generated `.Default`, and inline `dependencies` do not match the current service pattern.
 - Effect v4 Schema has API changes from v3. Important migrations include `decodeUnknownEffect`, `decodeEffect`, `encodeEffect`, JSON string codecs, array-form unions/tuples, direct `Record(key, value)`, and `TaggedErrorClass`.
 - Effect v4 Schema supports schema-backed classes and `Schema.toArbitrary` for generated property tests.
-- `effect/unstable/ai/LanguageModel` is the provider-neutral AI service surface. Its service exposes `generateText`, `generateObject`, and `streamText`.
+- `effect/ai/LanguageModel` is the provider-neutral AI service surface. Its service exposes `generateText`, `generateObject`, and `streamText`.
 - Local provider drivers already build `LanguageModel.LanguageModel` layers from concrete provider clients.
 - `Stream` is first-class and already used in local drivers for provider response streaming.
 - `@effect/vitest` supports `it.effect`, layer-based tests, and schema-backed property tests through Effect test helpers.
@@ -20,7 +20,7 @@ Status: completed from Effect v4 upstream sources, local provider drivers, `@bee
 
 - Effect v4 service migration docs: `.repos/effect-v4/migration/services.md`.
 - Effect v4 schema migration docs: `.repos/effect-v4/migration/schema.md` and `.repos/effect-v4/packages/effect/SCHEMA.md`.
-- Effect v4 AI language-model service: `.repos/effect-v4/packages/effect/src/unstable/ai/LanguageModel.ts`.
+- Effect v4 AI language-model service: `.repos/effect-v4/packages/effect/src/ai/LanguageModel.ts`.
 - Effect v4 Stream source: `.repos/effect-v4/packages/effect/src/Stream.ts`.
 - Effect Vitest source: `.repos/effect-v4/packages/vitest/src/index.ts`.
 - Local provider adapters: `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts`, `packages/drivers/xai/src/XAiLanguageModel.service.ts`, and `packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts`.

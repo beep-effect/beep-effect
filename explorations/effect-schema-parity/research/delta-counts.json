@@ -276,11 +276,11 @@
     ]
   },
   "native_arbitrary": {
-    "pattern": "effect/unstable/arbitrary|\\bArbitrary\\.(?:schema|sampleEffect|checkEffect)\\b",
+    "pattern": "effect/Arbitrary|\\bArbitrary\\.(?:schema|sampleEffect|checkEffect)\\b",
     "matching_lines": 1626,
     "files": 342,
     "examples": [
-      "apps/labs/ciops/test/projection.test.ts:14:import * as Arbitrary from \"effect/unstable/arbitrary/Arbitrary\";",
+      "apps/labs/ciops/test/projection.test.ts:14:import * as Arbitrary from \"effect/Arbitrary\";",
       "apps/labs/ciops/test/projection.test.ts:59:const PendingRequestArbitrary = Arbitrary.schema(PendingRequest);",
       "apps/labs/ciops/test/projection.test.ts:75:  Arbitrary.schema(S.Array(PendingRequest).check(S.isMaxLength(12))).pipe("
     ]
@@ -290,7 +290,7 @@
     "matching_lines": 2007,
     "files": 355,
     "examples": [
-      "packages/agents/tables/test/ProviderInstanceTable.test.ts:16:import * as Arbitrary from \"effect/unstable/arbitrary/Arbitrary\";",
+      "packages/agents/tables/test/ProviderInstanceTable.test.ts:16:import * as Arbitrary from \"effect/Arbitrary\";",
       "packages/agents/tables/test/ProviderInstanceTable.test.ts:22:const ProviderInstanceArbitrary = Arbitrary.schema(DomainProviderInstance.ProviderInstance);",
       "packages/agents/tables/test/ProviderInstanceTable.test.ts:124:        Arbitrary.checkEffect("
     ]

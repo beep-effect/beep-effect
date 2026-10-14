@@ -1127,7 +1127,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { TString } from "@beep/types";
-import type * as Multipart_ from "effect/unstable/http/Multipart";
+import type * as Multipart_ from "effect/http/Multipart";
 import type { Get, Paths } from "type-fest";
 
 const BeepNamespace = S.Literal("@beep");

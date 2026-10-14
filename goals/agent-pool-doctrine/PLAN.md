@@ -21,7 +21,7 @@ operator's go for commit/PR. Worktree `cursor-agent-pool`, branch
      `.cursor/agents`; retire tsgo-045's duplicate recipe by citation.
 - **P2 Verify** — package-verify, deny-list transcript check, pulse rows in the evidence ledger from
   the dogfood run, docs wrap check.
-- **P3 Yeet** — `bun run beep yeet publish --start-pr-early --monitor --pr`; goal slug in the commit.
+- **P3 Yeet** — `bun run beep yeet publish --monitor --pr`; goal slug in the commit.
 - **P4 Close** — reflection via `/reflect agent-pool-doctrine`; flip status in the same PR.
 
 ## P4 Closeout Checklist

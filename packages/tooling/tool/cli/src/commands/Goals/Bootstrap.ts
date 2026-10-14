@@ -848,7 +848,21 @@ const fromExplorationFlag = Flag.String("from-exploration").pipe(
   Flag.optional,
   Flag.withDescription("Source exploration slug recorded as provenance")
 );
-const todayFlag = Flag.String("today").pipe(
+/**
+ * The `--today` flag shared by the plan-compiling commands.
+ *
+ * **Example** (Read the flag)
+ *
+ * ```ts
+ * import { planTodayFlag } from "@beep/repo-cli/commands/Goals/Bootstrap"
+ *
+ * console.log(typeof planTodayFlag) // "object"
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const planTodayFlag = Flag.String("today").pipe(
   Flag.optional,
   Flag.withDescription("Explicit ISO date (YYYY-MM-DD) for deterministic plans; defaults to the current date")
 );
@@ -875,7 +889,30 @@ const parseCapabilityList = (label: string, raw: O.Option<string>) =>
           )
   );
 
-const resolveToday = (raw: O.Option<string>) =>
+/**
+ * Resolves the explicit plan date from a `--today` flag value.
+ *
+ * **Details**
+ *
+ * An absent flag reads the current date, the only clock read on the plan
+ * path; a present value must already be an ISO date.
+ *
+ * **Example** (Resolve an explicit date)
+ *
+ * ```ts
+ * import { resolveToday } from "@beep/repo-cli/commands/Goals/Bootstrap"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * console.log(Effect.isEffect(resolveToday(O.some("2026-10-13")))) // true
+ * ```
+ *
+ * @param raw - The optional `--today` flag text.
+ * @returns Effect yielding a `YYYY-MM-DD` date, or a plan input error for malformed text.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const resolveToday = (raw: O.Option<string>) =>
   O.match(raw, {
     onNone: () => Effect.map(DateTime.now, DateTime.formatIsoDate),
     onSome: (text) =>
@@ -888,6 +925,56 @@ const decodeSlug = (raw: string) =>
   decodeGoalSlug(raw).pipe(
     Effect.mapError((issue) => GoalPlanInputError.new(`--slug "${raw}" is invalid: ${issue.message}`))
   );
+
+/**
+ * Prints any compiled plan and fails closed when it carries conflicts.
+ *
+ * **Details**
+ *
+ * The shared report-then-gate step behind the materialization and graduation
+ * plan commands: the rendering is printed first, then a non-zero conflict
+ * count raises a reported exit naming `label`.
+ *
+ * **Example** (Report a conflict-free plan)
+ *
+ * ```ts
+ * import { reportCompiledPlan } from "@beep/repo-cli/commands/Goals/Bootstrap"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = reportCompiledPlan({
+ *   json: false,
+ *   renderJson: Effect.succeed("{}"),
+ *   renderHuman: () => "plan-id: example",
+ *   conflictCount: 0,
+ *   label: "goals bootstrap",
+ * })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param report - The renderings, the conflict count, and the command label for the exit message.
+ * @returns Void when the count is zero; a reported non-zero exit otherwise.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const reportCompiledPlan = Effect.fn("Goals.reportCompiledPlan")(function* (report: {
+  readonly json: boolean;
+  readonly renderJson: Effect.Effect<string, S.SchemaError>;
+  readonly renderHuman: () => string;
+  readonly conflictCount: number;
+  readonly label: string;
+}) {
+  if (report.json) {
+    const rendered = yield* report.renderJson.pipe(
+      Effect.mapError((issue) => GoalPlanInputError.new(`Failed to encode the plan: ${issue.message}`))
+    );
+    yield* Console.log(rendered);
+  } else {
+    yield* Console.log(report.renderHuman());
+  }
+  if (report.conflictCount > 0) {
+    return yield* failWithReportedExit(`${report.label}: ${report.conflictCount} conflict(s).`);
+  }
+});
 
 /**
  * Prints a compiled plan and fails closed when it carries conflicts.
@@ -916,17 +1003,13 @@ export const reportMaterializationPlan = Effect.fn("Goals.reportMaterializationP
   plan: MaterializationPlan,
   json: boolean
 ) {
-  if (json) {
-    const rendered = yield* renderMaterializationPlanJson(plan).pipe(
-      Effect.mapError((issue) => GoalPlanInputError.new(`Failed to encode the plan: ${issue.message}`))
-    );
-    yield* Console.log(rendered);
-  } else {
-    yield* Console.log(renderMaterializationPlanHuman(plan));
-  }
-  if (A.isReadonlyArrayNonEmpty(plan.conflicts)) {
-    return yield* failWithReportedExit(`goals ${plan.mode}: ${A.length(plan.conflicts)} conflict(s).`);
-  }
+  return yield* reportCompiledPlan({
+    json,
+    renderJson: renderMaterializationPlanJson(plan),
+    renderHuman: () => renderMaterializationPlanHuman(plan),
+    conflictCount: A.length(plan.conflicts),
+    label: `goals ${plan.mode}`,
+  });
 });
 
 const runBootstrapPlan = Effect.fn("Goals.runBootstrapPlan")(function* (options: {
@@ -1002,7 +1085,7 @@ export const goalsBootstrapCommand = Command.make(
     provides: providesFlag,
     requires: requiresFlag,
     fromExploration: fromExplorationFlag,
-    today: todayFlag,
+    today: planTodayFlag,
     plan: planFlag,
     json: jsonFlag,
     write: materializeWriteFlag,

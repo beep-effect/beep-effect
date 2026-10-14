@@ -20,7 +20,7 @@ Right now I'm not sure what the best approach is. Two thoughts on the table:
 
 - Create an `@beep/m365` driver.
   - Pros: I control it; Effect-native adapter (I get telemetry, observability,
-    and logging); can be run through `effect/unstable/ai/McpServer`.
+    and logging); can be run through `effect/ai/McpServer`.
   - Cons: I have to own it and maintain it.
 
 - Run an M365 MCP server as part of the professional-desktop app (deploy the

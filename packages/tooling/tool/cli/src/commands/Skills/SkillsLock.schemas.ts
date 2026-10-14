@@ -18,7 +18,8 @@
  * drifted path classified against the skill's upstream path history (the
  * newest revision whose bytes equal the installed file, or none of the
  * examined revisions). The plan records the path-history head it classified
- * against and seals everything into `planDigest`, without writing anything.
+ * against and seals everything into `planDigest`. The plan writes nothing; a
+ * reviewed write replays it only when its digest still matches.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -334,7 +335,7 @@ export class MatchesNoExaminedRevisionDrift extends S.Class<MatchesNoExaminedRev
  */
 export const SkillDriftRow = S.Union([MatchesUpstreamRevisionDrift, MatchesNoExaminedRevisionDrift]).pipe(
   $I.annoteSchema("SkillDriftRow", {
-    description: "One installed path that differs from the seed pin, classified against the upstream path history.",
+    description: "One installed path that differs from the baseline pin, classified against the upstream path history.",
   })
 );
 
@@ -402,8 +403,9 @@ export class SkillPathHistoryWindow extends S.Class<SkillPathHistoryWindow>($I`S
  * **Details**
  *
  * `revision` is the newest examined path revision whose complete mode-aware
- * tree hash equals the installed tree's, or the seed pin itself when nothing
- * drifted from it.
+ * tree hash equals the installed tree's, or the baseline pin itself when
+ * nothing drifted from it. The baseline is the lock's own pin for an entry
+ * that is already vendored, otherwise the ratified seed's.
  *
  * **Example** (Propose a pristine pin)
  *
@@ -432,14 +434,17 @@ export class PristineAtRevisionPin extends S.Class<PristineAtRevisionPin>($I`Pri
 ) {}
 
 /**
- * No examined revision makes the installed tree pristine: keep the seed pin.
+ * No examined revision makes the installed tree pristine: keep the baseline pin.
  *
  * **Details**
  *
- * The drift rows against the seed pin then carry the patch candidates: every
- * `matches-no-examined-revision` file.
+ * The baseline is the lock's own pin for an entry that is already vendored,
+ * otherwise the ratified seed's. Every file that drifts from it becomes one
+ * `temporary-drift` patch in the entry's series; the
+ * `matches-no-examined-revision` rows are the ones no upstream revision
+ * explains.
  *
- * **Example** (Keep the seed pin)
+ * **Example** (Keep the baseline pin)
  *
  * ```ts
  * import { KeepSeedPin } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
@@ -461,7 +466,8 @@ export class KeepSeedPin extends S.Class<KeepSeedPin>($I`KeepSeedPin`)(
     revision: SkillGitRevision,
   },
   $I.annote("KeepSeedPin", {
-    description: "The seed pin, kept because no examined upstream revision equals the installed tree.",
+    description:
+      "The baseline pin (the lock's, else the seed's), kept because no examined revision equals the installed tree.",
   })
 ) {}
 
@@ -482,7 +488,7 @@ export class KeepSeedPin extends S.Class<KeepSeedPin>($I`KeepSeedPin`)(
  */
 export const SkillPinProposal = S.Union([PristineAtRevisionPin, KeepSeedPin]).pipe(
   $I.annoteSchema("SkillPinProposal", {
-    description: "A pristine upstream revision to pin, or the kept seed pin.",
+    description: "A pristine upstream revision to pin, or the kept baseline pin.",
   })
 );
 
@@ -508,10 +514,13 @@ export type SkillPinProposal = typeof SkillPinProposal.Type;
  *
  * **Details**
  *
- * `entry` and `drift` are computed against the seed pin. `pin` proposes the
- * newest pristine upstream revision when one exists; the lock write recomputes
- * the entry at that pin. `pathHistory` is the history the drift was
- * classified against.
+ * `drift` is classified against the baseline pin: the lock's own pin for an
+ * entry that is already vendored, otherwise the ratified seed's. `pin`
+ * proposes the newest pristine upstream revision when one exists, and `entry`
+ * is computed at that proposed pin (snapshot, license re-check, provenance,
+ * and the patch series of any file that still drifts), so the plan digest
+ * covers exactly what a write would put in the lock. `pathHistory` is the
+ * history the drift was classified against.
  *
  * **Example** (Inspect the disposition tag)
  *
@@ -570,6 +579,58 @@ export class LocalMigrationRow extends S.Class<LocalMigrationRow>($I`LocalMigrat
 ) {}
 
 /**
+ * Why a skill's migration row is unresolved.
+ *
+ * **Details**
+ *
+ * `no-ratified-seed`: a v1 `github` entry with no ratified resolution; it is
+ * written as `local` (contract 8). Every other cause blocks a lock write:
+ * `install-state` (a missing or divergent install, no entry computed),
+ * `provenance-unavailable` (the resolver refused, for example a license digest
+ * that moved at the proposed pin), and `upstream-unavailable` (the upstream
+ * cannot be read at the pin or along its path history).
+ *
+ * **Example** (Check a cause)
+ *
+ * ```ts
+ * import { SkillUnresolvedCause } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ *
+ * console.log(SkillUnresolvedCause.is["no-ratified-seed"]("no-ratified-seed")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const SkillUnresolvedCause = LiteralKit([
+  "no-ratified-seed",
+  "install-state",
+  "provenance-unavailable",
+  "upstream-unavailable",
+]).pipe(
+  $I.annoteSchema("SkillUnresolvedCause", {
+    description:
+      "Why a migration row is unresolved: no ratified seed (written local), or a cause that blocks a lock write.",
+  })
+);
+
+/**
+ * Why a skill's migration row is unresolved.
+ *
+ * **Example** (Annotate a cause)
+ *
+ * ```ts
+ * import type { SkillUnresolvedCause } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ *
+ * const cause: SkillUnresolvedCause = "upstream-unavailable"
+ * console.log(cause)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SkillUnresolvedCause = typeof SkillUnresolvedCause.Type;
+
+/**
  * A skill the plan cannot vendor: why, and its local identity when one exists.
  *
  * **Details**
@@ -577,14 +638,15 @@ export class LocalMigrationRow extends S.Class<LocalMigrationRow>($I`LocalMigrat
  * Covers a v1 `github` entry without a ratified seed (it keeps a local entry),
  * a missing or divergent install (no entry is computed), and a seeded skill
  * whose provenance or upstream cannot be read at the pin or along its path
- * history (it keeps a local entry). The note names the cause.
+ * history (it keeps a local entry). `cause` classifies it; the note names the
+ * detail. Only `no-ratified-seed` rows are writable.
  *
  * **Example** (Record an unresolved row)
  *
  * ```ts
  * import { UnresolvedMigrationRow } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
  *
- * const row = UnresolvedMigrationRow.make({ skill: "adhd", note: "no ratified resolution seed" })
+ * const row = UnresolvedMigrationRow.make({ skill: "adhd", cause: "no-ratified-seed", note: "no ratified resolution seed" })
  * console.log(row.disposition) // "unresolved"
  * ```
  *
@@ -595,6 +657,7 @@ export class UnresolvedMigrationRow extends S.Class<UnresolvedMigrationRow>($I`U
   {
     disposition: S.tag("unresolved"),
     skill: S.String,
+    cause: SkillUnresolvedCause,
     note: S.String,
     entry: S.optionalKey(LocalSkillLockEntry),
   },
@@ -642,14 +705,17 @@ export const SkillMigrationRow = S.Union([VendoredMigrationRow, LocalMigrationRo
 export type SkillMigrationRow = typeof SkillMigrationRow.Type;
 
 /**
- * `skills-lock-migration-plan/v2`: the read-only v1-to-v2 lock migration report.
+ * `skills-lock-migration-plan/v3`: the v1-to-v2 lock migration report.
  *
  * **Details**
  *
  * `planDigest` is the SHA-256 of the compact canonical JSON of the encoded
- * `schemaVersion` and `rows`. Each vendored row carries the path-history head
- * it was classified against, so the digest moves whenever upstream changes a
- * skill, and a reviewed plan cannot be replayed against a moved upstream.
+ * `schemaVersion`, `lockSha256`, and `rows`. Each vendored row carries the
+ * path-history head it was classified against and its entry at the proposed
+ * pin, and `lockSha256` is the digest of the `skills-lock.json` bytes the plan
+ * read, so the digest moves whenever upstream, the installed trees, the patch
+ * owners, or the lock change, and a reviewed plan cannot be replayed against
+ * any of them.
  *
  * **Example** (Construct an empty plan)
  *
@@ -657,8 +723,9 @@ export type SkillMigrationRow = typeof SkillMigrationRow.Type;
  * import { SkillsLockMigrationPlan } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
  * import { Sha256Hex } from "@beep/schema"
  *
- * const plan = SkillsLockMigrationPlan.make({ planDigest: Sha256Hex.make("0".repeat(64)), rows: [] })
- * console.log(plan.schemaVersion) // "skills-lock-migration-plan/v2"
+ * const digest = Sha256Hex.make("0".repeat(64))
+ * const plan = SkillsLockMigrationPlan.make({ planDigest: digest, lockSha256: digest, rows: [] })
+ * console.log(plan.schemaVersion) // "skills-lock-migration-plan/v3"
  * ```
  *
  * @category models
@@ -666,12 +733,187 @@ export type SkillMigrationRow = typeof SkillMigrationRow.Type;
  */
 export class SkillsLockMigrationPlan extends S.Class<SkillsLockMigrationPlan>($I`SkillsLockMigrationPlan`)(
   {
-    schemaVersion: S.tag("skills-lock-migration-plan/v2"),
+    schemaVersion: S.tag("skills-lock-migration-plan/v3"),
     planDigest: Sha256Hex,
+    lockSha256: Sha256Hex,
     rows: S.Array(SkillMigrationRow),
   },
   $I.annote("SkillsLockMigrationPlan", {
-    description: "Read-only per-skill v1-to-v2 lock migration report, sorted by skill name and sealed by its digest.",
+    description:
+      "Per-skill v1-to-v2 lock migration report over the lock bytes it read, sorted by skill name and sealed by its digest.",
+  })
+) {}
+
+/**
+ * One generated patch file: its repository path and bytes.
+ *
+ * **Example** (Hold a generated patch)
+ *
+ * ```ts
+ * import { SkillPatchFile } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ *
+ * const file = SkillPatchFile.make({
+ *   path: ".agents/skill-patches/oracle/0001-skill-md.patch",
+ *   bytes: new TextEncoder().encode("diff --git a/SKILL.md b/SKILL.md\n"),
+ * })
+ * console.log(file.path)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SkillPatchFile extends S.Class<SkillPatchFile>($I`SkillPatchFile`)(
+  {
+    path: S.String,
+    bytes: S.Uint8Array,
+  },
+  $I.annote("SkillPatchFile", {
+    description: "A generated skill patch: its repository-relative path and exact bytes.",
+  })
+) {}
+
+/**
+ * A migration plan plus the patch bytes its vendored entries name.
+ *
+ * **Details**
+ *
+ * The plan carries each patch's path and SHA-256; the write needs the bytes
+ * too, and computing them twice would fetch the pristine snapshots twice.
+ *
+ * **Example** (Construct empty artifacts)
+ *
+ * ```ts
+ * import { SkillsLockMigrationArtifacts, SkillsLockMigrationPlan } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { Sha256Hex } from "@beep/schema"
+ *
+ * const digest = Sha256Hex.make("0".repeat(64))
+ * const artifacts = SkillsLockMigrationArtifacts.make({
+ *   plan: SkillsLockMigrationPlan.make({ planDigest: digest, lockSha256: digest, rows: [] }),
+ *   patchFiles: [],
+ * })
+ * console.log(artifacts.patchFiles.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SkillsLockMigrationArtifacts extends S.Class<SkillsLockMigrationArtifacts>(
+  $I`SkillsLockMigrationArtifacts`
+)(
+  {
+    plan: SkillsLockMigrationPlan,
+    patchFiles: S.Array(SkillPatchFile),
+  },
+  $I.annote("SkillsLockMigrationArtifacts", {
+    description: "A sealed migration plan with the generated patch bytes its vendored entries reference.",
+  })
+) {}
+
+/**
+ * Whether a reviewed lock write changed the repository.
+ *
+ * **Details**
+ *
+ * `written`: the lock and patch tree were published. `already-applied`: the
+ * lock bytes and the patch tree already equal what the plan would write, so
+ * nothing was touched.
+ *
+ * **Example** (Check an outcome)
+ *
+ * ```ts
+ * import { SkillsLockWriteOutcome } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ *
+ * console.log(SkillsLockWriteOutcome.is["already-applied"]("already-applied")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const SkillsLockWriteOutcome = LiteralKit(["written", "already-applied"]).pipe(
+  $I.annoteSchema("SkillsLockWriteOutcome", {
+    description: "Whether a reviewed lock write published files or found them already applied.",
+  })
+);
+
+/**
+ * Whether a reviewed lock write changed the repository.
+ *
+ * **Example** (Annotate an outcome)
+ *
+ * ```ts
+ * import type { SkillsLockWriteOutcome } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ *
+ * const outcome: SkillsLockWriteOutcome = "written"
+ * console.log(outcome)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SkillsLockWriteOutcome = typeof SkillsLockWriteOutcome.Type;
+
+/**
+ * A file a lock write published (or found already in place), with its digest.
+ *
+ * **Example** (Record the lock file)
+ *
+ * ```ts
+ * import { SkillsLockWrittenFile } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { Sha256Hex } from "@beep/schema"
+ *
+ * const file = SkillsLockWrittenFile.make({ path: "skills-lock.json", sha256: Sha256Hex.make("0".repeat(64)) })
+ * console.log(file.path) // "skills-lock.json"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SkillsLockWrittenFile extends S.Class<SkillsLockWrittenFile>($I`SkillsLockWrittenFile`)(
+  {
+    path: S.String,
+    sha256: Sha256Hex,
+  },
+  $I.annote("SkillsLockWrittenFile", {
+    description: "A repository-relative file a skills-lock write published, with its SHA-256.",
+  })
+) {}
+
+/**
+ * `skills-lock-write-receipt/v1`: what a reviewed lock write did.
+ *
+ * **Example** (Construct a receipt)
+ *
+ * ```ts
+ * import { SkillsLockWriteReceipt, SkillsLockWrittenFile } from "@beep/repo-cli/commands/Skills/SkillsLock.schemas"
+ * import { Sha256Hex } from "@beep/schema"
+ *
+ * const digest = Sha256Hex.make("0".repeat(64))
+ * const receipt = SkillsLockWriteReceipt.make({
+ *   planDigest: digest,
+ *   outcome: "written",
+ *   lock: SkillsLockWrittenFile.make({ path: "skills-lock.json", sha256: digest }),
+ *   vendored: 0,
+ *   local: 0,
+ *   patches: [],
+ * })
+ * console.log(receipt.schemaVersion) // "skills-lock-write-receipt/v1"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SkillsLockWriteReceipt extends S.Class<SkillsLockWriteReceipt>($I`SkillsLockWriteReceipt`)(
+  {
+    schemaVersion: S.tag("skills-lock-write-receipt/v1"),
+    planDigest: Sha256Hex,
+    outcome: SkillsLockWriteOutcome,
+    lock: SkillsLockWrittenFile,
+    vendored: S.Natural,
+    local: S.Natural,
+    patches: S.Array(SkillsLockWrittenFile),
+  },
+  $I.annote("SkillsLockWriteReceipt", {
+    description: "The reviewed plan digest, outcome, lock digest, entry counts, and patch files of a lock write.",
   })
 ) {}
 

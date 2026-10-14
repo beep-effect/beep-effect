@@ -26,7 +26,7 @@ real MCP client does):
 
 1. A pure-JS effect-based MCP host cross-compiles to a single Windows x64 .exe
    with zero flags and answers the protocol correctly when compiled — the
-   effect `unstable/ai` MCP stdio layer survives `bun build --compile`.
+   effect `effect/ai` MCP stdio layer survives `bun build --compile`.
 2. Harness gotcha (recorded so nobody re-burns time): piping messages and
    closing stdin immediately yields silence — the server needs the pipe held
    open. Claude Desktop does this naturally; test harnesses must `sleep`

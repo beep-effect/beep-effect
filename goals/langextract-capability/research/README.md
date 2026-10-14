@@ -20,7 +20,7 @@ Write reports under [`reports/`](./reports/). Each report must distinguish:
 | `repo-reuse-audit.md` | Existing repo exports, `@beep/file-processing`, provider drivers, and duplicate risks. |
 | `nlp-fit-audit.md` | `@beep/nlp` fit for spans, provenance, chunks, handoff, graph, backend, tests, and consumer table updates. |
 | `effect-v3-reference.md` | Effect v3 reference clone modules, behavior, tests, docs, and drift. |
-| `effect-v4-migration.md` | `.repos/effect-v4` migration facts for Schema, Context, Layer, Stream, and `effect/unstable/ai`. |
+| `effect-v4-migration.md` | `.repos/effect-v4` migration facts for Schema, Context, Layer, Stream, and `effect/ai`. |
 | `architecture-boundaries.md` | Foundation capability gate, dependency direction, exports, and package README policy. |
 | `extraction-alignment.md` | Chunking, prompting, parsing, resolver/alignment, fuzzy matching, spans, and parity fixtures. |
 | `testing-quality.md` | Fake model, property tests, dtslint, docgen, repo export catalog, QRFL, yeet, and PR babysitting. |

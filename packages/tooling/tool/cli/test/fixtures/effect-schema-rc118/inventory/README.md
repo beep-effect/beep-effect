@@ -66,7 +66,7 @@ Changes from the `51d4a2f08a` snapshot: one new boolean field (`importable`), th
 
 `packages/effect/src/schema/index.ts` (`effect/schema`) is an auto-generated barrel of five `export * as` lines (`:12`, `:18`, `:24`, `:30`, `:36` at the pin: `Model`, `SchemaAOTCompiler`, `SchemaCompiler`, `SchemaJITCompiler`, `VariantSchema`). Every target is itself in the module list, so its members are inventoried once, under the target's own import path. The barrel contributes one `namespace` row per `export * as` line and nothing else. Extraction fails when a barrel names a target that is not in the module list, so a new upstream barrel member forces a module-list decision instead of silently dropping or duplicating rows.
 
-This replaces the `51d4a2f08a` behaviour, which expanded each namespace one level and repeated the target's API under the barrel path (74 rows under `effect/unstable/schema`, 28 under `effect/unstable/arbitrary`). The old `unstable/arbitrary/{index,Arbitrary}.ts` pair collapses into the single root `Arbitrary.ts` (`effect/Arbitrary`): upstream deleted the barrel in `061b9611d4` (#8382).
+This replaces the `51d4a2f08a` behaviour, which expanded each namespace one level and repeated the target's API under the barrel path (74 rows under `effect/schema`, 28 under `effect/Arbitrary`). The old `arbitrary/{index,Arbitrary}.ts` pair collapses into the single root `Arbitrary.ts` (`effect/Arbitrary`): upstream deleted the barrel in `061b9611d4` (#8382).
 
 ## Extraction boundary and gaps
 

@@ -198,7 +198,7 @@ every export uses `**Example** (Title)` with an observable result; no plain `Set
 ## Amendments (2026-09-15, review round 1)
 
 - Property tests use `Arbitrary.schema` / `Arbitrary.sampleEffect` from
-  `effect/unstable/arbitrary` with `it.effect.prop`. The installed Effect exports
+  `effect/Arbitrary` with `it.effect.prop`. The installed Effect exports
   neither `FastCheck` from `effect/testing` nor `Schema.toArbitrary`.
 - The verification list also requires `bun run beep lint effect-vitest`,
   `bunx oxlint --disable-nested-config <touched files>`, and

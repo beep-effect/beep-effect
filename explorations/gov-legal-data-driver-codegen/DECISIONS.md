@@ -48,7 +48,7 @@ generator.
 descriptors (the runpod boundary: `S.Class` models, `LiteralKit` enums,
 per-operation request DTOs, an operation-specs table) into package-private
 `src/_generated/*`. Everything transport — auth, retry, cache, rate-limit, and
-`Context.Service` wiring — stays **hand-authored** on `effect/unstable/http`,
+`Context.Service` wiring — stays **hand-authored** on `effect/http`,
 exactly as runpod splits `Runpod.generated.ts` from the hand-written
 `Runpod.service.ts`/`Runpod.config.ts`. In v1 this packet does **NOT** build a
 first-party OpenAPI→MCP-`Toolkit` generator (RESEARCH: `NOT FOUND` — the

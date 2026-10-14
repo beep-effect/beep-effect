@@ -1,3 +1,4 @@
+import { StreamingToolkit, StreamingToolkitHandlersLive } from "@beep/nlp-mcp";
 import { readJsonl, streamJsonl } from "@beep/nlp-mcp/Streaming/Jsonl";
 import {
   computeStats,
@@ -12,9 +13,11 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { assert } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 
 const TestLayer = Layer.merge(NodeFileSystem.layer, NodePath.layer);
 
@@ -53,3 +56,22 @@ it.layer(TestLayer)("streaming function dispatch", (it) => {
     })
   );
 });
+
+it.layer(StreamingToolkitHandlersLive.pipe(Layer.provideMerge(TestLayer), Layer.provideMerge(FetchHttpClient.layer)))(
+  "streaming pattern validation",
+  (it) => {
+    it.effect(
+      "returns structured failures for malformed and oversized caller-supplied regexes",
+      Effect.fnUntraced(function* () {
+        const toolkit = yield* StreamingToolkit;
+        for (const pattern of ["[", Str.repeat(1001)("a")]) {
+          const stream = yield* toolkit.handle("stream_filter_lines", { path: "unused.txt", pattern });
+          const results = yield* Stream.runCollect(stream);
+          const first = results[0];
+          assert.isDefined(first);
+          assert.strictEqual(first.isFailure, true);
+        }
+      })
+    );
+  }
+);

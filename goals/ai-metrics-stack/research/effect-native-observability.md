@@ -32,16 +32,16 @@ series and are less portable for backend dashboards.
 
 ## Unstable Modules
 
-`effect/unstable/observability` has useful ideas: a unified OTLP layer,
+`effect/observability` has useful ideas: a unified OTLP layer,
 resource config, export intervals, batching, retry handling, JSON/protobuf
 serialization, log/trace correlation, and Prometheus output. It should be a
 reference or later adapter, not the v1 deploy-critical path.
 
-`effect/unstable/devtools` is a local live-dev websocket protocol. It sends
+`effect/devtools` is a local live-dev websocket protocol. It sends
 Effect-native spans and metric snapshots, not OTLP. It should not be used for
 deploy-ready metrics.
 
-`effect/unstable/eventlog` is valuable for immutable events and replayable
+`effect/eventlog` is valuable for immutable events and replayable
 projections. For this initiative, use it only as an internal projection proof
 until its API risk is acceptable.
 

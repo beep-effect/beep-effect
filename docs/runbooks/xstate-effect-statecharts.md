@@ -179,8 +179,9 @@ Stately sign-in the first time it is used, and it must be listed in `enabledMcpj
 
 These were found while building the reference machine. Re-check them on each alpha bump.
 
-1. `@xstate/effect/atom` imports `effect/unstable/reactivity`, which Effect 4.0.0 ships as
-   `effect/reactivity`. `patches/@xstate%2Feffect@0.1.0-alpha.5.patch` rewrites the import.
+1. `@xstate/effect` 0.1.0-alpha.6 imports `effect/reactivity` natively, so it needs no import
+   rewrite. `patches/@xstate%2Feffect@0.1.0-alpha.6.patch` only replaces the `effectActionBrand`
+   unique-symbol key in two declaration files with the string key `"~xstate/effect/action"`.
 2. `@xstate/test/effect-schema` calls `Schema.toArbitrary`, which Effect 4.0.0 does not have.
    Use `eventsFromSchemas` from `@beep/xstate/test`, built on `effect/Arbitrary`.
 3. An event that crosses an actor boundary cannot be an internal event. That covers events from

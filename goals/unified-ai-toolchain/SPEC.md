@@ -37,7 +37,7 @@ The schema package is
 `@beep/ai-sync`.
 
 The V2 operator surface lives in the existing root repo CLI,
-`packages/tooling/tool/cli`, as `bun run beep ai-sync ...`.
+`packages/tooling/tool/cli`, as `beep ai-sync <command>`.
 
 The V3 canonical source file is `.ai-sync/project.jsonc`.
 

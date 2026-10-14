@@ -21,15 +21,15 @@
     "test": "bun run beep:test",
     "test:property": "bun run beep:test",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-    "beep:build": "bun run codegen && tsc -p tsconfig.json && bun run babel",
-    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:scripts && bun run beep:check:tests",
+    "beep:build": "bun run codegen && tsc-rs -p tsconfig.json && bun run babel",
+    "beep:check": "tsc-rs -p tsconfig.check.json && bun run beep:check:scripts && bun run beep:check:tests",
     "beep:docgen": "bunx --bun --no-install docgen",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-    "beep:check:scripts": "tsgo -p tsconfig.scripts.json --noEmit",
-    "beep:check:tests": "tsgo -p test/tsconfig.json --noEmit"
+    "beep:check:scripts": "tsc-rs -p tsconfig.scripts.json --noEmit",
+    "beep:check:tests": "tsc-rs -p test/tsconfig.json --noEmit"
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
@@ -53,6 +53,7 @@
     "@serwist/next": "catalog:",
     "@types/estree": "catalog:",
     "@types/node": "catalog:",
+    "@typescript/native": "catalog:",
     "next": "catalog:"
   },
   "peerDependencies": {

@@ -386,8 +386,9 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
         )}.`
       );
     }
-    const pages = yield* Effect.forEach(pdfPaths, (pdfPath) =>
-      Effect.gen(function* () {
+    const pages = yield* Effect.forEach(
+      pdfPaths,
+      Effect.fnUntraced(function* (pdfPath) {
         const bytes = yield* fs.readFile(pdfPath).pipe(Effect.mapError(fail(`Could not read "${pdfPath}".`)));
         const pdfSha256 = yield* sha256(bytes);
         const structure = yield* tools.inspect(pdfPath).pipe(Effect.mapError(fail(`Could not parse "${pdfPath}".`)));

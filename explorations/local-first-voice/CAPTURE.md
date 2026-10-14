@@ -21,7 +21,7 @@ captured across the conversation in the order it arrived):
 
 > and KV's
 
-> Also I'm open to running local models with effect/unstable/rpc controlling
+> Also I'm open to running local models with effect/rpc controlling
 > service workers for stuff liking @huggingface/transformers for efficient and
 > configurable browser based or local models that are good to run for TTS,
 > Transcription etc. Maybe web whisper?
@@ -40,6 +40,6 @@ later stages chewed on):
   (`/atom-reactivity-specialist`).
 - KV stores for persisted state.
 - Local/on-device models via `@huggingface/transformers` (Transformers.js),
-  driven by `effect/unstable/rpc` controlling a worker; "web whisper".
+  driven by `effect/rpc` controlling a worker; "web whisper".
 - Per-capability provider/model selection — pick the best option per voice
   feature, swap freely.

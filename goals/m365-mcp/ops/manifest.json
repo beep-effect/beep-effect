@@ -83,5 +83,5 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "mission": "Ship `@beep/m365-mcp`: expose the `@beep/m365` driver's read verbs as MCP tools via `effect/unstable/ai` (the `@beep/nlp-mcp` pattern), so beep's agents reach Microsoft 365 over a stdio MCP server while the app keeps typed errors, telemetry, and least-privilege scopes."
+  "mission": "Ship `@beep/m365-mcp`: expose the `@beep/m365` driver's read verbs as MCP tools via `effect/ai` (the `@beep/nlp-mcp` pattern), so beep's agents reach Microsoft 365 over a stdio MCP server while the app keeps typed errors, telemetry, and least-privilege scopes."
 }

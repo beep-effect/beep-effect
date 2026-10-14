@@ -7,7 +7,7 @@
 - The identity package dev dependency block contains `@beep/types`, `@effect/vitest`, `@types/node`, and `type-fest`. (packages/foundation/modeling/identity/package.json:29-34)
 - `src/Id.ts` imports runtime helpers from `effect`, `effect/Array`, `effect/Option`, `effect/Record`, `effect/Schema`, and `effect/String`. (packages/foundation/modeling/identity/src/Id.ts:28-33)
 - `src/Id.ts` imports `TString` from `@beep/types` as a type-only import. (packages/foundation/modeling/identity/src/Id.ts:34)
-- `src/Id.ts` imports `Multipart_` from `effect/unstable/http/Multipart` as a type-only import. (packages/foundation/modeling/identity/src/Id.ts:35)
+- `src/Id.ts` imports `Multipart_` from `effect/http/Multipart` as a type-only import. (packages/foundation/modeling/identity/src/Id.ts:35)
 - `src/Id.ts` imports `Get` and `Paths` from `type-fest` as a type-only import. (packages/foundation/modeling/identity/src/Id.ts:36)
 - `src/packages.ts` imports the local identity implementation as `Identity` from `./Id.ts`. (packages/foundation/modeling/identity/src/packages.ts:21)
 - `src/index.ts` re-exports `./Id.ts` and `./packages.ts` as the public barrel surface. (packages/foundation/modeling/identity/src/index.ts:31, packages/foundation/modeling/identity/src/index.ts:45)

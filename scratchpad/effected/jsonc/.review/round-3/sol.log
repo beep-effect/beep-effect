@@ -1310,8 +1310,8 @@ Built in wave 0, before any copy. Design order: schema → service → CLI.
 - Service: `Audit` (`Context.Service`) with `copy`, `parity`, `check`, `lint`,
   `test`, `docgen`, `audit`, `ledger` methods; `Effect.fn` everywhere;
   `effect/cli` for the command surface (installed 4.0.1 exports `./cli`,
-  `./http`, `./http-api`; there is no `./unstable/*` entry, so the
-  "effect/unstable/http" wording in the standing coding rules means these
+  `./http`, `./http-api`; there is no pre-#8354 namespace entry, so the
+  "effect/http" wording in the standing coding rules means these
   modules); `effect/ChildProcess` (or the
   platform spawner the repo already uses in `packages/tooling/tool/cli`) for
   subprocesses; no `node:http`, no native `Set`/`Map`.
@@ -26610,7 +26610,7 @@ exec
  succeeded in 0ms:
 goals/effect-vitest-canon/SPEC.md:19:adversarial review as requested. Authorship records must describe the actual agent.
 goals/effect-vitest-canon/SPEC.md:129:  for byte. Runtime proofs must also establish the installed dependency pair.
-goals/effect-vitest-canon/SPEC.md:159:containing Schemas or native Arbitrary values from effect/unstable/arbitrary.
+goals/effect-vitest-canon/SPEC.md:159:containing Schemas or native Arbitrary values from effect/Arbitrary.
 goals/effect-vitest-canon/SPEC.md:168:option does not inherit the CI floor. PR properties must retain the 400-run
 goals/effect-vitest-canon/SPEC.md:172:Effect; synchronous callbacks must not return Effect or Promise. Returning false,
 goals/effect-vitest-canon/SPEC.md:173:throwing or failing an Effect falsifies the property and triggers shrinking;
@@ -30939,19 +30939,17 @@ packages/effect/src/
 │   ├── TestConsole.ts
 │   ├── TestSchema.ts
 │   └── index.ts
-├── unstable/             # Experimental features (17 subdirectories)
-│   ├── ai/
-│   ├── cli/
-│   ├── cluster/
-│   ├── http/
-│   ├── httpapi/
-│   ├── persistence/
-│   ├── rpc/
-│   ├── schema/
-│   ├── sql/
-│   ├── workers/
-│   ├── workflow/
-│   └── ...
+├── ai/                   # `@stability unstable` modules live at top level too
+├── cli/                  # (ai, cli, cluster, http, http-api, persistence, rpc,
+├── cluster/              # schema, sql, workers, workflow, ...); see
+├── http/                 # effect-module-paths.md
+├── http-api/
+├── persistence/
+├── rpc/
+├── schema/
+├── sql/
+├── workers/
+├── workflow/
 ├── index.ts              # Main export file
 └── [module].ts           # 122+ top-level modules (flat structure)
 ```

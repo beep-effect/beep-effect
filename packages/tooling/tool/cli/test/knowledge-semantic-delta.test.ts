@@ -802,6 +802,54 @@ describe("knowledge semantic-delta negative controls", () => {
   });
 
   it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("only a whole-line assertion comment asserts; quoted, fenced, and mid-line markers are syntax", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "No assertion.\n" },
+            {
+              "docs/guide.md": A.join(
+                [
+                  "Write `<!-- beep:assert path-exists docs/quoted.md -->` to assert a path.",
+                  "```md",
+                  "<!-- beep:assert path-exists docs/fenced.md -->",
+                  "```",
+                  "Prose then <!-- beep:assert path-exists docs/mid-line.md --> mid-line.",
+                  "  <!-- beep:assert path-exists docs/missing.md -->  ",
+                  "",
+                ],
+                "\n"
+              ),
+            }
+          )
+        );
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId("failed-assertion", "base:docs/guide.md", "path-exists:docs/missing.md"),
+        ]);
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("an arrow chain of commands is not one command span", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "No command.\n" },
+            {
+              "docs/guide.md": A.join(
+                ["Run `bun run beep goals doctro → index --pr`.", "Run `bun run beep goals doctro -> index --pr`.", ""],
+                "\n"
+              ),
+            }
+          )
+        );
+        expect(introducedIds(report)).toEqual([]);
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
     it.effect("sanitizes archive-derived public fields without changing their raw identity preimage", () =>
       Effect.gen(function* () {
         const hostilePath = "docs/\u001B[31mguide.md";

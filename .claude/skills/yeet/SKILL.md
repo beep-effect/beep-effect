@@ -81,42 +81,11 @@ ps -eo pid,ppid,stat,etime,comm | rg 'bun|node|beep|turbo|gh|git' | rg -v 'rg|ps
 
 ## Canonical Commands
 
-### Detached durable jobs
-
-Use `--detach` for a proof expected to outlive the current repair loop. It runs
-as a transient systemd user service and reports completion or death through the
-checkout inbox. An unavailable user manager is an error.
-
-```bash
-bun run beep yeet verify --tier cheap-gates --detach
-bun run beep yeet publish --message "feat: describe change" --detach
-bun run beep yeet monitor --until-ready --detach
-bun run beep yeet job wait <jobId> --timeout "1 hour"
-bun run beep yeet job status <jobId> --ack
-bun run beep yeet job logs <jobId> --tail 100
-bun run beep yeet job cancel <jobId>
-```
-
-`repair`, `closeout`, and `monitor` also accept `--detach`. Use
-`--job-max-runtime "2 hours"` to set a systemd runtime ceiling; give one to a
-detached `monitor --until-ready` that may be abandoned, because a red does not
-end it. `--plan` and recursive detachment inside a job are rejected.
-`job wait` returns:
-
-| Exit | Outcome | Meaning |
-| --- | --- | --- |
-| 0 | `success` | The job settled green (a monitor ended `ready` or `merged`). |
-| 1 | `failure` | The job settled red: a proof failed, or a monitor ended `closed`, `settle-timeout`, or `poll-error-budget`. |
-| 2 | `wave` | A new wave landed on the monitor job's pull request: new P0 rows, new P1 `review-thread` or `pr-comment` rows, or a required red that came back red on a rerun of the same head. Optional reds never count. The job keeps running and the rows stay live (see Inbox). |
-| 3 | `terminated` | The job ended without a verdict (for example `cancelled`, `oom-killed`, `signal`, or `timeout`); re-submit it. |
-
-A `--timeout` expiry also exits 1 but leaves the job running. `job wait`
-acknowledges the job's own informational inbox row when the job settles and
-never acknowledges wave rows.
-Use `yeet inbox ack <id> --observed` to acknowledge a job result manually.
-The finalizer records abnormal deaths in the attempt journal; job records and
-logs remain under `.beep/yeet/jobs/`, with the newest 50 terminal jobs retained.
-
+Durable jobs: `--detach` runs `verify`, `publish`, `monitor`, `repair`, and
+`closeout` as transient systemd user services that outlive the tool-call cap;
+`bun run beep yeet job wait <jobId>` blocks on one and exits 0 green, 1 red,
+2 wave, 3 terminated. Flags, exit semantics, and the job journal:
+[`references/detached-jobs.md`](references/detached-jobs.md).
 
 - Repair local work:
 
@@ -175,10 +144,15 @@ bun run beep yeet publish --prove-first --message "type(scope): summary"
 bun run beep yeet ready
 ```
 
-  Under S11 (AGENTS.md "Mergeable"), when the only refusing red is inherited
-  from `main` and every review thread is answered, call final, flip with
-  `bun run beep yeet gh pr ready <n>`, and record each inherited red with its
-  attribution in the PR body.
+  Under S11 (AGENTS.md "Mergeable"), when the refusing red is inherited from
+  `main`, call final and attribute each inherited red (repeatable). The flip
+  records them in a marked "Inherited reds (S11)" section of the PR body
+  first, refuses if that write fails, and still requires every review thread
+  to be answered:
+
+```bash
+bun run beep yeet ready --inherited "<check name>=<attribution>"
+```
 
 - Publish exactly the staged index from a dirty worktree (unstaged/untracked
   residue is parked in a marked stash after the commit, the clean tree is
@@ -226,60 +200,12 @@ bun run beep yeet monitor
 provenance footer once before polling. This restores a missing or drifted footer
 without treating the PR body's public JSON twin as trusted state.
 
-- Resume the newest publishing agent recorded for a pull request:
-
-```bash
-bun run beep yeet resume 950
-```
-
-Pass `--list` to inspect every local agent, `--agent <n>` to select a newest-first
-entry, `--print` to inspect the local harness command, and `--force` only when a
-matching live Claude session should be forked deliberately. `--print` exposes
-workstation-local paths and session identifiers in the terminal; never paste its
-output into GitHub, a PR body, or another public surface. A workstation without a
-matching registry row or Claude `pr-link` transcript exits 4 and prints the native
-`claude --from-pr <n>` recovery hint.
-
 - Keep monitoring across pushes until the PR merges or closes. This announces
   readiness once per head, writes the `pr-merge-ready` inbox row, and keeps
   polling after the announcement:
 
 ```bash
 bun run beep yeet monitor --until-merged
-```
-
-- For stream consumers: emit one NDJSON row per PR state transition (typed `yeet-watch/v1` rows:
-  check transitions, thread open/resolve, new PR comments, mergeability, head
-  supersession) until the PR settles; exits non-zero on a required red, a closed
-  PR, a settle timeout, or a poll error. Optional reds remain in transition rows
-  and the `watch-ended.optionalFailing` count. Every observed red also appends a failure capsule —
-  derived from the failing check's own record — to
-  `<checkout>/.beep/inbox/failures.ndjson` (`yeet-inbox/v1`) and advances the
-  wave record at `.beep/inbox/dispatch.json` (`yeet-dispatch/v1`): first red
-  for a head opens the repair session, later reds queue with `headSha`+`lane`
-  (check name) dedup, a new push supersedes the wave. `--until-ready` writes
-  the same rows through the same convergence; see Inbox for the row kinds:
-
-```bash
-bun run beep yeet monitor --watch
-```
-
-- For stream consumers that need an event wake: the process **exits** on
-  the first actionable event batch — immediately when a required check fails (the
-  failure capsule is already durable when it exits, even while sibling checks
-  still run), and ~20 seconds after the first new PR comment so a review bot's
-  burst lands as one batch of `comment-posted` rows. Exit code 0 is a
-  comment-only wake; non-zero means a required red, a closed PR, a settle
-  timeout, or a poll error. Optional reds never trigger the event exit. The
-  comment cursor is a durable branch-scoped watermark shared with plain
-  `yeet monitor`, `status --remote`, and `closeout` (`--until-ready` and
-  `--until-merged` keep their own; see Comment replay), so relaunching after
-  acting loses nothing: a comment posted while no monitor was attached is the
-  next session's first row. Run it as a
-  blocking command and treat its exit as the signal to act:
-
-```bash
-bun run beep yeet monitor --watch --until-event
 ```
 
 - Reset the clone after a merge (prune refs, fast-forward `main`, delete the
@@ -298,15 +224,11 @@ bun run beep yeet sweep
 ```
 
 - From inside a linked worktree (a Claude Code `.claude/worktrees/<name>` lane
-  or a sibling `-worktrees` lane) the sweep above only fetch-prunes, because
-  `main` lives in the owning clone and the merged branch is checked out right
-  here. `--retire` is the post-merge closeout for that case: it archive-retires
-  this worktree (dirty files and unpushed commits preserved under the residue
-  root), deletes the branch, then sweeps the owning clone. A clone parked on a
-  branch other than `main` keeps that checkout: the sweep updates refs only,
-  because a `git switch` or `bun install` there could land under another
-  session's running verify (receipt 2026-09-28). It refuses until the PR is
-  MERGED and heads this branch, so running it early is safe:
+  or a sibling `-worktrees` lane) the plain sweep only fetch-prunes. `--retire`
+  is the post-merge closeout for that case: it archive-retires the worktree,
+  deletes the branch, then sweeps the owning clone. It refuses until the PR is
+  MERGED and heads this branch, so running it early is safe. Run it from inside
+  the lane, as the last command of the session:
 
 ```bash
 bun run beep yeet sweep --retire --plan
@@ -316,41 +238,9 @@ bun run beep yeet sweep --retire --plan
 CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"
 ```
 
-  Run it from inside the lane: `bun run beep` resolves the CLI from the
-  checkout it runs in, and the owning clone's `main` may still be behind the
-  merge and reject `--retire` as an unknown flag. The command steps its own
-  process out of the lane before removal; the trailing `cd` moves your shell
-  to the swept clone. The fence exempts the invoking session's own ancestry
-  and, when Claude Code names the session through `CLAUDE_PID`, everything
-  that session spawned into the lane (MCP servers, tool shells, background
-  jobs), so a desktop session retires its own lane. Run from inside the
-  lane, an idle Claude Desktop Terminal panel shell (the app starts one in
-  the session folder even when the panel is never opened) that stays quiet
-  until the deletion is left in place and the lane removed under it; the
-  report says to `cd ~` in that tab. Any other holder (a panel shell running
-  a command, any panel shell under `--lane`, an editor, another session)
-  still refuses it and is named in the error: `cd ~` in it (closing a panel
-  tab starts a new shell in the lane) or close it, then rerun. Outside Claude
-  Code, redirect the output to a file rather than piping it: the other stages
-  of a shell pipeline stand in the lane and count as holders. `--lane <path>`
-  retires a lane from elsewhere: the owning clone, or any sibling lane of
-  the same clone (a later session's lane at a current checkout). When only
-  the clone is at hand and its checkout predates `--retire`, run the lane's
-  own CLI from the clone:
-
-```bash
-cd <clone> && bun run <lane>/packages/tooling/tool/cli/src/bin.ts -- yeet sweep --retire --lane <lane>
-```
-
-  `--json` prints one document; `--branch` is refused with `--retire`. Both
-  the plan and the report name every goal packet the retired branch touched
-  whose lifecycle is still `active` and whose manifest carries no
-  `statusNote` or `blockedBy` saying why it stays open (`[yeet] packet still
-  active after merge: goals/<slug> …`, `activePackets` in JSON): that packet's
-  lifecycle flip belonged in the merged PR, so open the closeout PR before
-  moving on. `bun run beep goals doctor` applies the same deferral and keeps
-  flagging the packet as `active-after-merge` while a merge commit cites the
-  slug and nobody touches it.
+  Holder fences, the Claude Desktop Terminal panel shell, `--lane <path>`,
+  running the lane's own CLI from an older clone, and the active-packet
+  warning: [`references/sweep-retire.md`](references/sweep-retire.md).
 
 - Post and resolve the drafted review-thread replies for this branch's PR:
 
@@ -413,105 +303,18 @@ bun run beep quality profile detect
 bun run beep quality profile config workstation
 ```
 
-Use plan mode before long or risky runs when you need to inspect the shape:
-
-```bash
-bun run beep yeet repair --plan --json
-```
-
-```bash
-bun run beep yeet verify --plan --json
-```
-
-```bash
-bun run beep yeet verify --tier cheap-gates --plan --json
-```
-
-```bash
-bun run beep yeet verify --tier review-fix --plan --json
-```
-
-```bash
-bun run beep yeet publish --message "type(scope): summary" --plan --json
-```
-
-```bash
-bun run beep yeet status --remote --plan --json
-```
-
-```bash
-bun run beep yeet monitor --summary --plan --json
-```
-
-```bash
-bun run beep yeet closeout --plan --json
-```
-
-```bash
-bun run beep yeet sweep --plan --json
-```
-
-`yeet sweep --plan` is the sweep's own dry run, not the generic yeet plan: it
-prints the branch-deletion and ref-update steps with the git facts behind each
-one.
-
 ## Gates: cheap-gates before the push, hosted CI after
 
-Since 2026-10-05 (push-first-publish D1–D2) `yeet publish` gates the push on
-the cheap-gates tier and the head-install preflight only; hosted CI is the
-authoritative proof, and `bun run beep yeet verify` (full tier) is an
-on-demand tool for iterating on a red hosted lane locally, never an automatic
-publish step. The full tier's first step still runs the cheap-gates tier. This tier runs 12 deterministic gates in
-one collected wave, including config sync, tsgo rule parity, Effect imports,
-schema-first, goals checks, Knip, Fallow, publish-enabled changeset status, and the JSDoc
-ratchet against the committed inventory. It reports every failure before any
-build, lint, check, test, or docgen lane starts. `yeet repair` applies its
-deterministic fixers, runs the same collected tier, and stops before heavy
-feedback if a cheap gate still fails. The fixers end by regenerating the
-git-ignored local projections (`goals/INDEX.md`, `explorations/ATLAS.md`, and
-the generated README status regions). `goals:index-check` and
-`explore:atlas-check` refresh a stale ignored copy left behind by a pull in
-place (hosted lanes never carry those files, so that red was always
-local-only); drift in the tracked README status regions still fails
-`explore:atlas-check`.
-
-The full proof (`yeet verify`, or `publish --prove-first`) then dispatches
-the *hosted lane bodies themselves* — `beep ci lane`
-`check`, bare `lint`, `lint-policy`, bare `test-unit`, and `test-integration`,
-each with the affected shape used to select work in `check.yml`. Hosted Lint
-and Test Unit intersect that selected set with their deterministic package
-partitions; the bare commands retain the complete local proof contract. The
-full proof also runs the root build and bounded docgen (which compiles the
-fenced code in every titled `**Example** (Title)` section), the repo-wide tsgo
-test/smoke extras, and the secrets/security/SAST/Nix lanes. The command is
-literally the one CI runs, so a green `yeet verify` should predict green CI on
-the first push. What it does not
-yet replay is CI's *environment* (`CI=true`, blank PR secrets, PR cache posture)
-or the merged tree — use `verify --merged` for the tree.
-
-The full verify tier and every publish push path also run
-`publish:00-head-install-preflight`: a frozen-lockfile install in a detached,
-temporary worktree of committed `HEAD`. This catches lockfile/manifest state
-that is self-consistent only in the dirty working tree. The temporary worktree
-is always removed and pruned; a failure must be repaired by committing or
-restaging the required manifest and `bun.lock` state before retrying.
-
-The following cheaper commands are convenient inner-loop tools but are **NOT
-authoritative** — do not conclude "it's green" from them:
-
-- `bunx turbo run check --filter=<pkg>` (package-scoped) can pass while the
-  proof's `beep ci lane check` fails an effect-LSP rule (e.g.
-  `strictEffectProvide`/TS377032). Only the lane matches CI.
-- `bun run docgen:local ... --reuse-proof-manifest` skips recompiling
-  `**Example**` blocks when a source hash is unchanged, so it can miss a broken
-  example or an unresolved import subpath that full `bun run docgen` (and CI)
-  catches.
-- `bun run beep yeet verify --tier cheap-gates` proves only the first tier. It
-  never replaces the full proof.
-
-When in doubt, prove with `yeet verify` before trusting "green". Do not run
-it to unblock a publish: push, let hosted CI prove the head, and run the full
-tier only to reproduce a hosted red locally.
+`yeet publish` gates the push on the cheap-gates tier (12 deterministic gates
+in one collected wave: config sync, tsgo rule parity, Effect imports,
+schema-first, goals checks, Knip, Fallow, changeset status, JSDoc ratchet) and
+the head-install preflight (a frozen-lockfile install of committed `HEAD` in a
+temporary worktree). Hosted CI is the authoritative proof. `bun run beep yeet
+verify` (full tier) dispatches the hosted lane bodies locally and is on-demand:
+run it to reproduce a hosted red, never to unblock a publish. Package-scoped
+`turbo run check`, `docgen:local --reuse-proof-manifest`, and the cheap tier
+alone are inner-loop tools, not proof. Details, what the full proof does not
+replay, and plan mode: [`references/gates-and-proof.md`](references/gates-and-proof.md).
 
 ## CI / security fixes: validate against the CI token's permissions
 
@@ -521,145 +324,6 @@ the **actual CI token's permissions**, not just locally. A gate that reads, say,
 `security_and_analysis` will block every PR if the CI token cannot read it.
 Confirm the token scope (or fail *open* on a genuine permission error, distinct
 from a real security failure) before shipping such a fix.
-
-## Settle rule
-
-The monitor loops read the base branch ruleset once per head. They wait for every
-expected required context to report a terminal result. If an exact parent name
-is absent but `<context> (<variant>)` children report, the parent is tolerated
-and those children must finish. A missing parent with no children keeps waiting.
-If the ruleset read fails, one warning precedes fallback to the `--required`
-view. Optional reds never affect an exit code in any mode; under
-`--until-ready` an optional red is still a P1 `check-failed` inbox row, but it
-never hands back a wave. `--settle-timeout` defaults to
-30 minutes; it applies to `--until-ready`, `--until-merged`, and `--watch`, and
-it bounds registration only: the budget counts while no check has registered
-or an expected context is still missing, never while a registered required
-check is queued or running (that wait is GitHub's job timeout, not ours).
-Gate lines name `registration`, `required-pending`, `heavy-not-admitted`,
-`base-conflict`, `closeout-pending`, or `settle-timeout`, including missing and
-pending contexts. `base-conflict` means the base moved under the head (GitHub
-reports `CONFLICTING`/`DIRTY` and empties the check rollup): merge `origin/main`
-and push; the wait never spends the budget. Under `--until-ready` it is also a
-P0 `base-conflict` inbox row, and neither it nor a required red ends the loop
-(see Inbox). A context once seen registered for
-a head stays `pending` when one poll omits it, never `missing`. `heavy-not-admitted` is tier-2 admission (B8): the loop computes the
-heavy verdict every poll from the same function CI runs (`ready-for-heavy`
-label, docs-only diff) and, while the verdict is `hold` with `Heavy / *`
-contexts still open, moves them from `missing`/`pending` into a `gated` census
-bucket and prints
-`settle: heavy-not-admitted; gated: …; admit: gh pr edit --add-label ready-for-heavy; waited …`.
-Held time never counts toward `--settle-timeout`; the settle clock resets when
-the verdict changes, and the label admits within one poll. `skip-satisfied`
-(docs-only) settles once every lane reports a terminal outcome: `pass` when it
-passed without work on a hosted runner, `skip` where a lane is still skipped.
-A settled head does not time out while waiting for review closeout. The final
-readiness gate line includes the head timeline and push→ready wall clock when
-the push date is known. A `push→row→ack <sha7>: pushed …, red …, row …,
-injected …, acked …` line follows it (`-` for a stage not reached; `injected`
-is the first hook hand-off to any session), and the loop prints the same line
-when it leaves a head that never reached ready.
-
-## Inbox
-
-The checkout inbox, `<checkout>/.beep/inbox/`, is how Yeet hands pull request
-events to the session that owns them. The inbox hook
-(`.claude/hooks/yeet-inbox.sh`) injects unacknowledged P0 and P1 rows into
-that session at the next prompt or tool call, and P0 rows also hold Stop until
-they are acknowledged or superseded. The hook stamps each row's first hand-off
-to a session (`firstSeenAt` in its session file), which is the `injected`
-stage of the push→row→ack line. `bun run beep yeet inbox list --unacked`
-prints what is open, with each row's liveness.
-
-Vocabulary:
-
-- **checkout**: the repository root the inbox lives under. Rows, capsules,
-  and prose about them say checkout, never lane; inside a `check-failed`
-  capsule, `lane` is the failing check's name.
-- **inbox row**: one `yeet-inbox/v1` line in `failures.ndjson` with a kind, a
-  deterministic id, a severity (P0, P1, P2), and a capsule. It stays open
-  until an ack receipt under `acks/` resolves it or a push supersedes it.
-- **capsule**: a row's payload, the observed facts behind it: the pull request
-  number, the head SHA, and the kind's own fields (a red check's bucket,
-  state, link, and workflow; a `pr-comment` row's comment URL, author, and
-  excerpt).
-- **wave**: the new rows on one pull request that are in the wake set (every
-  P0 row, plus P1 `review-thread` and `pr-comment` rows) and neither
-  acknowledged nor superseded; `yeet job wait` returns them together with
-  exit 2. A required red that comes back red on a rerun of the same head
-  keeps its row id, so it is a new wave by its changed red set instead. The
-  wave record, `dispatch.json` (`yeet-dispatch/v1`), pins the head those rows
-  belong to and carries that head's required red set; a push re-pins it and
-  supersedes the previous head's rows.
-- **generation**: a `base-conflict` capsule's count of the earlier conflicts
-  on its head that the monitor acked `cleared`. The row id is keyed on (pull
-  request, head, generation), so a conflict that returns on the same head
-  after a `cleared` ack is generation + 1: a new row and a new wave. A push
-  starts the new head at generation 0. A receipt that no longer decodes also
-  advances it; a row acked any other way keeps that head's conflict closed
-  until a push, and the monitor says so once on stderr.
-- **owner session**: the harness session that submitted the monitor and waits
-  on it. A detached job forwards `CLAUDE_CODE_SESSION_ID` and
-  `CODEX_THREAD_ID`, so the pull request's session registry row names that
-  session's harness and id for `bun run beep yeet resume <pr>`. The woken
-  owner dispatches any fix itself; Yeet launches nothing.
-
-Dead-owner escalation (W9): a detached `--until-ready` job reads the pull
-request's session registry on each new wave. When no recorded owner is live
-(no row, a stale Claude session, or unknown, which counts as dead), it spawns
-`.claude/hooks/yeet-pr-wave-notifier.sh` once per wave (descriptor under
-`.beep/yeet/pr-wave-notifier/waves/`). The notifier sends a persistent
-notify-send (critical for P0, normal for P1) whose local body carries a
-one-line summary and `bun run beep yeet resume <pr>`, plus a generic ntfy post
-with no pull request content, and stops when the wave's rows are acked or a
-push supersedes them. A live owner gets nothing extra: the inbox hook carries
-the wave. The live probe reads Claude sessions only, so every Codex-attributed
-owner escalates until the resume-footer Codex live guard ships. Attached runs
-never escalate; their caller receives the wave itself.
-
-`--until-ready`, attached or detached, converges the status snapshot into rows
-on every poll; `--watch` does the same for checks, threads, and drift.
-`--until-merged` writes no wave rows.
-
-| Kind | Severity | Written when | Closes on |
-| --- | --- | --- | --- |
-| `check-failed` | P0 required, P1 optional | a check is red on the head | the next push, or an ack |
-| `base-conflict` | P0 | GitHub reports the head `CONFLICTING`/`DIRTY` (`--until-ready` only) | the next push, or the `cleared` ack the monitor writes when the same head reads mergeable again; a `CONFLICTING` read after `cleared` on the same head writes generation + 1 as a new row and wave |
-| `review-thread` | P1 | a thread is unresolved or owes a follow-up | an ack only; survives pushes |
-| `pr-comment` | P1 | a person's top-level comment lands after the window start (`--until-ready` only; see Comment replay) | an ack only; survives pushes |
-| `base-drift` | P2 | the head is `BEHIND` its base | the next push |
-
-`review-thread` and `pr-comment` rows are wave-exempt: a push never supersedes
-them, because the thread or comment still needs its answer on the next head.
-One open row is kept per thread. Acknowledge them once answered, for example
-with `bun run beep yeet inbox ack <id> --thread-url <url>`. Observation rows
-(`proof-job-finished`, `pr-merge-ready`) are injected too but never join a
-wave.
-
-- `job wait` returns only for rows on its own job's pull request, so two
-  monitors in one checkout on different pull requests never wake each
-  other's waiter. It never acknowledges the rows: the hook keeps injecting
-  them and a P0 keeps holding Stop until the fix lands.
-- A re-run of `job wait` on the same job skips the rows it already returned
-  and waits for new rows or for the job to settle. A red that stays the same
-  on the same head is not returned twice: push the fix. A rerun that comes
-  back red (a new job link on the same head, a spent flake rerun or a manual
-  `gh run rerun`) is a new wave, and the same row is returned again.
-- Optional reds never wake a waiter. An optional red, a rate-limited Vercel
-  deployment included, is a P1 `check-failed` row the hook injects, but it
-  never makes a wave for `job wait` or an attached `--until-ready`.
-- Rows already open count. The first `job wait` on a new job returns at once
-  on any open, not superseded wake-set row on the pull request, including one
-  an earlier monitor wrote.
-- A P0 row reads `unknown` while `dispatch.json` is missing or unreadable, and
-  it then holds Stop until an attributed ack.
-- `cleared` has no operator form: only the monitor writes it, and only for a
-  `base-conflict` row whose head it re-read as mergeable.
-
-Rollout: `review-thread` rows that an earlier wave superseded read live again
-under the wave-exempt rule. Clear the answered ones once: list them with
-`bun run beep yeet inbox list --unacked` and acknowledge each with
-`bun run beep yeet inbox ack <id> --thread-url <url>`.
 
 ## Mergeable PR Workflow
 
@@ -702,7 +366,7 @@ under the wave-exempt rule. Clear the answered ones once: list them with
    creates the draft PR, so a code PR is admitted to the heavy matrix from the
    first push. A PR that existed before the publish, or one whose label edit
    failed, holds at `heavy-not-admitted` until you add the label by hand (see
-   Merge Loop). Act on unresolved review threads through the reply
+   [`references/merge-loop.md`](references/merge-loop.md)). Act on unresolved review threads through the reply
    flow while the loop waits. The loop runs read-first closeout automatically
    after the required checks settle. `monitor --summary` remains a one-shot
    compact read.
@@ -753,102 +417,6 @@ on PR #1184 on 2026-09-22 — but its closeout thread gate stays opt-in behind
 `--bots`; ChatGPT has no app installed, so its gate reads "unknown" unless
 comments exist). Deep review is on-demand:
 `/code-review ultra` or an explicit `@codex review` mention.
-
-### Review thread states
-
-Closeout, `yeet status --remote`, `yeet monitor` and `yeet reply` read every
-thread's newest comment — selected as `comments(last: 1)`, so a thread longer
-than one comment page is classified from what was actually said last, not from
-whoever ended the first hundred — and classify each
-thread into one of four states by structure alone — who resolved it, who spoke
-last, and whether that speaker was a bot. No rule reads comment prose.
-
-- `unresolved` — gates. The thread was never resolved.
-- `resolved-answered` — nothing owed. A reviewer resolved their own thread, or
-  the author resolved it and the author spoke last, or the PR author or the
-  resolver is unknown (unknown is never a named blocker).
-- `resolved-follow-up` — **gates**. The author resolved the thread and a human
-  reviewer commented afterwards without an answer. `bun run beep yeet reply`
-  answers these: it posts the reply and leaves the thread resolved, because the
-  thread is already closed and re-resolving it would be a second write.
-- `resolved-acknowledged` — advisory. The last word after the author resolved
-  the thread came from a review bot confirming the fix. It is printed and
-  counted, never gating, and nothing is owed.
-
-`yeet status --remote` prints `review follow-ups: N …` (gating) and
-`review acknowledgements: N …` (advisory). Closeout carries the matching gate
-rows: `review-follow-ups` is blocked while the count is non-zero and emits one
-`pr-review` quality issue per thread, so `yeet closeout` exits non-zero;
-`review-advisories` always passes and only reports a number. `merge-ready`'s
-`threads-resolved` criterion is unresolved **plus** follow-ups, plus closeout
-issues a thread raised, and the `next command` it prints is
-`bun run beep yeet reply` only when live threads are the *only* thing holding
-the PR — every other merge-ready criterion holding. A red pipeline or a stale
-closeout keeps the command on that instead, because answering reviewers would
-not make the branch mergeable.
-
-No review bot's verdict gates `merge-ready`. The bots reviewing a PR rotate
-with the operator's quota (CodeRabbit, Greptile, ChatGPT, the openclaw
-reviewer, the operator's own Grok reviewer), so a bot that never posts must
-not hold a merge. Every reviewer, human or bot, gates the same way: through
-its review threads, which `threads-resolved` covers. Closeout's Greptile score
-and issue-count gates (`--require-greptile-*`, off by default) are advisory:
-they set `yeet closeout`'s own exit code and print on the
-`review-bot advisories (never block merge-ready)` line of `yeet status`. The
-`closeout-gates-passed` criterion that briefly held merges on them is retired;
-verdicts written while it existed decode against their remaining criteria.
-
-### Review bodies and advisories
-
-A review body — CodeRabbit's summary, a Greptile-format review — is read for its
-structural markers only: CodeRabbit's `Actionable comments posted: N`, its
-nitpick and outside-diff `<summary>` counts and its fix-prompt file/line items;
-Greptile's confidence score and its new findings. A Greptile-format body is
-recognised by a *named marker* — an author login containing `greptile`, a
-heading or bolded line naming Greptile, or the tokens `Greptile-format` /
-`Greptile-style` — or, failing that, by its *structure*: a confidence fraction
-together with a `P0:n P1:n P2:n` triplet or a `**NEW:**` marker, because the
-operator writes that format by hand and does not always name the tool. The word
-in running prose never counts; the marker rules are line-anchored so an aside
-like "greptile scored this 5/5" stays a plain body. Its new findings are the
-*maximum* per severity of the triplet and the `N×Pk` items listed after
-`**NEW:**` — never their sum, because the two notations are two readings of one
-round. A body
-finding that already opened an inline thread at the same path and line is not
-counted twice, and closeout reads only the newest body per author, so an older
-round is superseded rather than summed. Every one of these counts is advisory:
-they are printed with `(advisory)` and they never gate a merge.
-
-### Comment replay
-
-Every read-first surface replays the PR's comment stream before it reports:
-`yeet status --remote` (once it has a PR number), `yeet closeout`, and the first
-cycle of `yeet monitor --until-merged`. Replay prints each review comment, issue
-comment and review body newer than the saved position, then advances that
-position — so a reboot, a killed monitor or a session change no longer loses
-comments that arrived while nothing was watching. It prints
-`comment replay: N comment(s) since <watermark>`, or
-`comment replay: no watermark for #N; starting at <now>` on the first open,
-which spawns nothing and only records the position. Writing that cursor is the
-one write a read-first closeout makes; a failed read prints
-`comment replay unavailable: …` and leaves the position untouched rather than
-failing the closeout.
-
-Each consumer mode keeps its own position in `.beep/yeet/runs/<branch>/`:
-`--until-ready` in `monitor-comments.until-ready.json`, `--until-merged` in
-`monitor-comments.until-merged.json`, and every other reader (plain
-`yeet monitor`, `--watch`, `status --remote`, `closeout`) in the shared
-`monitor-comments.json`. A mode's first position starts at the later of its
-window start and the shared position, so its first run replays no history.
-
-`--until-ready` never prints the backlog. Each poll turns top-level comments
-(issue comments and review bodies) into P1 `pr-comment` rows when a person
-wrote them — not a bot, not the login the monitor runs as, not a deleted
-account — after the window start: the job's submit time for a detached run,
-the loop's start for an attached one. Older comments only advance the
-position; a comment posted between an earlier monitor's exit and this submit
-is the accepted miss. Inline review comments reach the inbox as
-`review-thread` rows instead.
 
 ## Push-First Publish
 
@@ -901,290 +469,18 @@ is a draft and nothing but the draft flag blocks it. That now means the owner
 flipped late: the window starts at the flip, so submit a new monitor after
 `yeet ready` and wait for `merge-ready: yes`.
 
-## REST-first GitHub operations (`yeet gh`)
+## References
 
-GitHub GraphQL is 5,000 points an hour per identity, shared by every session on
-the account; `gh pr view|edit|ready|merge|checks|comment` all spend it. REST has
-its own budget. Use `bun run beep yeet gh …` instead of those `gh pr` commands:
+Load these on demand; `SKILL.md` keeps the path, the references keep the depth.
 
-| Need | Command | Budget |
-| --- | --- | --- |
-| Gate view: draft, head, required checks, review window | `yeet gh pr status <n> [--threads]` | REST (`--threads`: guarded GraphQL) |
-| Label | `yeet gh pr label add\|remove <n> <label>` | REST |
-| Comment | `yeet gh pr comment <n> --body <text>` | REST |
-| Draft → ready | `yeet gh pr ready <n> [--no-wait]` | guarded GraphQL (no REST equivalent) |
-| Re-run failed / cancel queued runs on the head | `yeet gh checks rerun-failed\|cancel-queued <n>` | REST |
-| Merge at a pinned head | `yeet gh merge <n> --sha <sha10> [--tolerate <check>] [--force-window] [--dry-run]` | REST + guarded GraphQL thread read |
-| Budgets | `yeet gh rate-limit` | REST + one GraphQL point |
-
-- The guard probes `rateLimit { remaining resetAt }` (one point) before a
-  GraphQL-only call; below 25 points it waits until `resetAt` (at most 65
-  minutes) or, with `--no-wait`, exits 75. REST `/rate_limit` misreports the
-  GraphQL bucket, so the probe is the truth.
-- `merge` refuses unless the head equals `--sha`, the PR is open, not a draft,
-  and not conflicted, every required context's newest run is green, no other
-  check is red or pending (unless `--tolerate`d after attribution), the review
-  window (20 minutes after the later of "marked ready" and the head commit) has
-  passed, and the outstanding thread count is zero. A thread read that failed is
-  never zero. Exit 75 means hold (time can clear it); exit 1 means refused.
-- Alternate identity (its own rate-limit budget): `--token-ref op://…` or
-  `BEEP_GH_TOKEN_REF`, or a GitHub App installation token from
-  `BEEP_GH_APP_ID`, `BEEP_GH_APP_INSTALLATION_ID`, and `BEEP_GH_APP_KEY_REF`
-  (an `op://` reference to the PEM key). Tokens stay in-process and are never
-  printed. Default: the `gh` login.
-- `yeet publish|monitor` already use REST for the PR lookup, the
-  `ready-for-heavy` label, the provenance footer read/write, and the Greptile
-  re-trigger comment. Still GraphQL: review-thread resolution state and
-  replies (`closeout`, `reply`, `status`, `watch`).
-
-## Merge Loop
-
-`yeet monitor --until-merged`, `yeet sweep`, `yeet reply`, and `yeet merge` are
-the merge-loop porcelain. They read the clone and the PR; none of them plan
-turbo work, so they are cheap to run mid-loop.
-
-- **Heavy admission is applied at creation.** `yeet publish` labels the draft
-  PR `ready-for-heavy` when it creates it (push-first-publish D4), so the heavy
-  matrix starts with tier 1. `Heavy Admission` in `check.yml` still holds any
-  code PR without the label (`Heavy / *` stays "Expected", merge blocked): that
-  is a PR that already existed before the publish, or one whose label edit
-  failed. Only then run `bun run beep yeet gh pr label add <n> ready-for-heavy` (REST) yourself;
-  the held `monitor --until-ready` loop prints that exact command and does not
-  burn its settle budget. Never remove and re-add the label.
-  The label triggers `heavy-admit.yml`, which runs only the admission job and
-  the heavy matrix for that head; tier 1 is neither cancelled nor re-run.
-  Docs-only PRs (`docs/**`, `explorations/**`, `research/**`, `.changeset/*.md`,
-  any `*.md`, packet prose) need no label: every heavy lane passes without work on
-  a hosted runner and satisfies the ruleset. Removing the label changes nothing already reported;
-  cancel a heavy run from the Actions UI if it must stop.
-- `monitor --until-merged` re-reads status every poll, so a push landing
-  mid-session is picked up as the new budget scope. Job triage is job-level
-  and mid-run: a completed red job is classified on the poll after it
-  concludes, without waiting for the parent workflow run to finish. A failed
-  job whose log matches a known flake fingerprint (`ts2589-no-location`, CI
-  timeout) gets exactly one `gh run rerun --job <databaseId>` per job per head
-  SHA — never `--failed`, which would re-execute coexisting genuine reds; a
-  known flake inside an active parent run is deferred without spending its
-  allowance. Once the run completes, the loop attempts the rerun once. A
-  rejected rerun keeps that allowance spent so authentication, permission, or
-  stale-job failures cannot become an unbounded polling loop. A red whose log
-  has not materialized yet reports "awaiting log" and is reclassified next
-  poll. Anything else is reported as "needs code fix". The loop ends on MERGED
-  (after the sweep), on CLOSED, or when you interrupt it.
-- **Branch-deletion contract.** `sweep` deletes with `-d` when the branch is an
-  ancestor of `origin/main`. It uses `-D` only when the PR is MERGED **and** the
-  local tip still equals the PR's recorded head SHA **and** no worktree holds the
-  branch; remote deletion needs the same tip match. Any unmet precondition is a
-  skip-and-report, not a failure — unmerged local work is never force-deleted.
-- A sweep exits 0 whether every step ran or every step skipped: "merged, cleanup
-  skipped: `<reason>`" is a success. Authentication or repository-policy
-  failures are reported with the exact skipped cleanup step; checked-in Claude
-  and Codex settings no longer block preconditioned local or remote deletion.
-- `merge` never passes `--delete-branch`: it merges, confirms `MERGED` by bounded
-  poll, then hands the whole cleanup sequence to the worktree-aware sweep. The
-  sweep may auto-run on monitor's merged detection; the merge never auto-runs.
-
-### Reply drafts flow
-
-1. Read the outstanding threads out of `bun run beep yeet status --remote` —
-   both the `unresolved` list and the `review follow-ups` list. Each line carries
-   the GraphQL thread id, the REST comment id, the file location, the author, and
-   a first-line excerpt, so drafts are writable straight from that output without
-   a second REST pass. A follow-up line excerpts the reviewer's follow-up, not
-   the thread's opening comment, because that is what is unanswered.
-2. Write `.beep/yeet/reply-drafts.json` (`yeet-reply-drafts/v1`): `prNumber`
-   plus one draft per thread with a non-empty `body` and either the GraphQL
-   `threadId` (`PRRT_...`) or the numeric `commentId`; `resolve` defaults to
-   true.
-3. Run `bun run beep yeet reply`. Drafts are validated against the live threads
-   first, and each one is routed by the thread's state: an `unresolved` thread is
-   posted and resolved; a `resolved-follow-up` thread is posted with resolve
-   forced false, whatever the draft's `resolve` flag says, so the already-closed
-   thread is not re-resolved; a `resolved-answered`, `resolved-acknowledged` or
-   deleted thread is recorded `stale` and nothing is written for it. Each surviving draft is posted and resolved one at a time,
-   and a denied scope or rate limit becomes that draft's `failed` outcome with a
-   retry command rather than aborting the pass.
-4. Read `.beep/yeet/reply-report.json` (`yeet-reply-report/v1`) for the per-draft
-   outcomes. Either party can run the command; when the agent session lacks the
-   write scope, hand the operator the one command instead of pasted bodies.
-
-## Run Artifacts
-
-- Every non-plan Yeet run writes `.beep/yeet/runs/<branch>/verdict.json`
-  (`yeet-verdict/v1`): outcome, per-lane status, repair command for each
-  failed lane, packet paths, staged-only stash identity, and base-freshness
-  data. Read `yeet status` or the verdict before scanning logs. `yeet status`
-  is observational and writes `.beep/yeet/runs/<branch>/status.json` instead of
-  replacing the latest verdict.
-- Failure packets land under `.beep/yeet/packets/` with the quality-issue
-  index at `.beep/yeet/quality-issue-index.json`.
-- The proof shadow ledger is `<clone>/.beep/yeet/proof-ledger.ndjson` in the
-  owning clone, not in the lane: every worktree cut from one clone appends to
-  one shared sample, and `yeet sweep --retire` never deletes it (time-to-certainty
-  ruling 71). `bun run beep yeet proof-report` (`--json` for
-  `proof-shadow-report/v1`) reads it from any lane or the clone and names the
-  path it read. A red lane records its input digest as an observation (ruling
-  72), so a lane that fails on inputs the ledger would have reused shows up as
-  a disagreement; the report is shadow-only and never skips a lane.
-  `--since <iso-timestamp>` counts only rows recorded at or after that instant
-  toward the enforcement bar (ruling 80's flip condition) and prints the bound.
-- The cheap-gates tier includes `beep quality changeset-status --since
-  origin/main` (parity with hosted Repo Sanity). It enforces in-process: every
-  changed, versioned, publish-enabled (`private !== true`), non-ignored product
-  workspace must be named by a changeset **added in-branch** (the base backlog never counts, and empty
-  changesets satisfy nothing). Write real `"@pkg": patch` frontmatter for each
-  changed publish-enabled package; private workspaces and lab-only change sets
-  are ceremony-exempt. The graph guard rejects notes naming private workspaces.
-  Publication activation must deliberately establish release/versioning policy,
-  audit external contracts, and restore appropriate changeset requirements.
-
-## Failure Handling
-
-- If Yeet fails after creating a local commit but before pushing, fix the issue.
-  When you prove the exact current worktree with `bun run beep yeet verify`, you
-  may retry with `bun run beep yeet publish --amend --no-edit --reuse-verified`.
-  Yeet reuses only exact matching full-proof state; if the state is stale,
-  publish normally (push-first) instead of re-proving.
-- If the current clean commit was already verified and only the push was blocked
-  or skipped, prefer `bun run beep yeet publish --push-only --reuse-verified`.
-  Yeet still requires exact reusable proof state and a clean worktree, and it
-  pushes with `git push -u origin HEAD` so upstream branch naming cannot block
-  agent-created feature branches.
-- A red job lost to a dead runner ("lost communication with the server") is
-  re-run automatically by the hosted `Rerun Runner Loss` workflow, one job per
-  attempt, at most 3 times per job and only while the head is current; check
-  the run's `run_attempt` (`gh run view <id> --json attempt`) and its
-  `Rerun Runner Loss` summary before re-running it by hand.
-- There is no pre-push git hook; `yeet publish` runs the cheap-gates tier and
-  the head-install preflight itself before pushing, and hosted CI proves the
-  head after. (The former pre-push catalog hook was removed with the
-  repo-exports catalog.)
-- If Yeet refuses untracked, unstaged, or newly generated paths, inspect the
-  paths and decide whether they belong in the reviewed publish intent.
-- Full proofs use machine-wide weighted admission as the sole current-version
-  concurrency authority (ship-velocity D1). New tickets and leases identify
-  `scheduler-origin-concurrency/v1`; state written before this migration
-  decodes as `legacy-origin-lock/v1`, and same-origin legacy state drains first.
-  The first current contender then atomically installs a persistent
-  `yeet-proof-lock/v4`
-  retirement marker at the former per-origin lock path. Previous v3 clients
-  cannot decode that marker and therefore fail closed instead of racing a
-  current proof. Current clients recognize the marker and may overlap when
-  machine capacity permits. Hosts below the scheduler memory envelope retain
-  single-proof execution through one machine-wide `scheduler-fallback.lock`.
-- The `yeet-proof-lock/v4` marker is a permanent compatibility fence, not stale
-  owner state. Never reap or delete it during routine repair. Its legacy
-  decoders and v3 acquisition test seams remain until a future CLI generation
-  floor makes pre-v4 proof binaries non-runnable and a seven-day fleet audit
-  observes no legacy ticket or lease; the exact removal gate is recorded in
-  `goals/ship-velocity/research/d1-admission-scheduler.md`.
-- Origin paths still hash a canonical host/repository identity into an opaque
-  path under the machine temporary directory, so equivalent SCP, SSH, HTTPS,
-  and Git origin URLs share one coordinator even when `.git`, trailing
-  slashes, user info, or default ports differ; unparseable origins use their
-  trimmed raw text, and the path never contains the remote URL. A stale v3
-  owner is replaced by the v4 marker through the existing observation-bound
-  compare-and-swap reaper. Legacy v2 and unreadable state remain fail-closed.
-- A contender enqueues a durable ticket under
-  `$XDG_RUNTIME_DIR/beep/admit/` and waits
-  with a visible progress line (position, tokens active/capacity, holders,
-  MemAvailable watermark). One token is ~5 GiB; capacity is
-  `min(10, floor((MemAvailable − 10) / 5))` with a hard admission floor at
-  15 GiB free. Weights: full proof 3, merged preview 5, review-fix 1 (at most
-  3 concurrent). Publish proofs queue with priority; a waiting verify ages up
-  to equal priority after 2 minutes, and running work is never preempted.
-  Leases record pid plus `/proc` start time and heartbeat every 5 seconds;
-  dead or pid-reused state is reaped automatically, and malformed state is
-  quarantined visibly. Inspect with `bun run beep quality scheduler status`
-  and repair with `bun run beep quality scheduler reap [--apply]` (dry-run by
-  default). `Ctrl-C` while queued removes the ticket. Admission transitions
-  are journaled best-effort to `$XDG_RUNTIME_DIR/beep/admit/journal.ndjson`
-  (ring-buffered NDJSON; admitted and released events keyed by ticket nonce
-  and pid), so granted queue-wait survives lease release.
-  `verify --tier review-fix` remains the cheaper loop lane while a full proof
-  is active (one token, never the origin lock); `--tier cheap-gates` takes
-  neither admission nor the lock.
-- The cheap tier always collects every lane failure. The later full proof uses
-  its versioned economics seed to run short gates before expensive gates. Under
-  the default fail-fast policy, a precise red stops launching subsequent lanes;
-  imprecise reds remain diagnostic and do not stop the plan. Unlaunched lanes
-  are recorded as `not-run-early-stop`, and already-running work is never
-  cancelled. `--no-fail-fast` (or the compatibility spelling `--collect-all`)
-  requests the complete diagnostic picture. Fix every reported lane before
-  retrying. A lane added to `githubCheckPrePushLanes` (`GithubChecks.ts`),
-  directly or through a lane group it composes, needs a gate-order seed row and
-  cost-source entry under the time-to-certainty ruling 76 seeding rule, or
-  `gate-order-handoff.test.ts` fails. The runtime pre-push check still
-  assembles its own copy of that list in `Quality.command.ts` until a follow-up
-  PR adopts `githubCheckPrePushLanes`, so a lane group added only there escapes
-  the fixture and runs last.
-- Failure packets are written for proof/commit/publish/monitor step failures,
-  publish-intent refusals (untracked/unstaged/partially staged paths), and
-  stale-base refusals. Intent refusals print a summarized path list on stderr;
-  the full list lives in the packet. Known sub-lane hints cover typos,
-  terse-effect, every cheap gate, docgen, changeset status, secrets, SAST,
-  security, and Nix. Hint selection follows the lane-run record: a tier lane's
-  `repairCommand` in `verdict.json` is its first red inner lane's repair
-  command, and each red inner lane carries its own (the catalog hint for its
-  exact lane id, else a known marker inside that lane's own output segment,
-  else the lane's recorded launch command). The failure packet
-  (`quality-issue-index.json`, the per-package packet, the inbox capsule)
-  follows the same record: a wrapper step's raw issue takes its sub-category,
-  category, message, and remediation from its first red inner lane. A red
-  inner lane that yields no repair command (no catalog hint, no marker in its
-  own segment, no recorded launch command) gives the tier lane the wrapper's
-  own command instead. Broad log scanning of the whole wrapper output is only
-  the fallback when the record names no red inner lane, which includes
-  wrappers that emitted no record at all. Prefer the suggested repair command
-  in `yeet status`, the packet, or `verdict.json` over rerunning the whole
-  loop blindly.
-- Root composite lanes prefer streaming accumulation where child commands are
-  independent. For example, root `lint` streams the Turbo/Biome aggregate and
-  then still runs repo-law policy lints, so one lint-family failure does not
-  hide sibling lint findings.
-- The root docgen lint check uses package-local docgen proof manifests. A
-  package with a current `.beep/docgen/proof.json` can skip duplicate docgen
-  metadata analysis; missing or stale manifests fall back to the normal check.
-- Terse-effect output separates `blocking`, `rewritable`, and `informational`
-  files. Use `--write` only for the rewritable helper subset; manual candidates
-  still need direct edits.
-- If there is no open PR for `yeet monitor`, create the draft PR first or run
-  `bun run audit:github pre-push` as the full local fallback.
-- If `yeet closeout` reports Greptile score/issues as unknown, Greptile has not
-  reviewed the head (often no quota). It is advisory and does not block
-  `merge-ready`; rerun Greptile with `--retrigger-greptile` only when the user
-  wants that GitHub write.
-- Do not weaken GitHub check names, hosted PR checks, or manual fallback lanes
-  to make a branch appear green faster.
-
-### Read a failed job's log without waiting for the run
-
-Never wait for the whole workflow run to finish before reading a red job.
-`gh run view --job <id> --log` and `--log-failed` refuse while the run is in
-progress ("run … is still in progress; logs will be available when it is
-complete"); that is `gh` behaviour, not a GitHub Actions limit. The per-job
-endpoint serves a completed job's full log mid-run, and `yeet monitor` already
-falls back to it.
-
-```bash
-# Job ids for the PR head (`.id` is the job id; after a rerun take the latest by completed_at).
-gh api "repos/<owner>/<repo>/commits/<sha>/check-runs?per_page=100" \
-  --jq '.check_runs[] | [.id, .name, .status, .conclusion, .completed_at] | @tsv'
-
-# Full log of one completed job, ANSI colour and hyperlink escapes stripped.
-gh api --allow-escape-sequences "repos/<owner>/<repo>/actions/jobs/<job_id>/logs" \
-  | perl -pe 's/\e\[[0-9;?]*[0-9A-Za-z]|\e\][^\a\e]*(?:\a|\e\\)//g' > "<scratch>/job-<job_id>.log"
-
-# Annotations (error lines with file/line), also readable mid-run.
-gh api "repos/<owner>/<repo>/check-runs/<job_id>/annotations"
-```
-
-- `--allow-escape-sequences` is required. Without it `gh api` writes nothing
-  to stdout and prints only "the response contains terminal escape sequences;
-  pass --allow-escape-sequences to output it anyway" on stderr, so with stderr
-  discarded the log looks empty.
-- A job that is itself still running has no downloadable log through the API;
-  only the web UI streams it. Wait for that job, not for the run.
-- Rerun only jobs of the run for the PR's current head. `gh run rerun --job <id>`
-  on an older head's run re-queues that run, and the branch concurrency group
-  then cancels the current head's run.
+| Read | When |
+| --- | --- |
+| [`references/detached-jobs.md`](references/detached-jobs.md) | submitting or waiting on a `--detach` job |
+| [`references/gates-and-proof.md`](references/gates-and-proof.md) | a cheap gate is red, reproducing a hosted red locally, plan mode |
+| [`references/monitor-and-inbox.md`](references/monitor-and-inbox.md) | monitor exits, `--watch` rows, resume, settle rule, inbox rows and waves |
+| [`references/review-threads.md`](references/review-threads.md) | thread states, review bodies, comment replay, `yeet reply` drafts |
+| [`references/merge-loop.md`](references/merge-loop.md) | heavy admission label, job triage, branch-deletion contract |
+| [`references/gh-rest.md`](references/gh-rest.md) | any GitHub call: `yeet gh` instead of `gh pr` |
+| [`references/sweep-retire.md`](references/sweep-retire.md) | `sweep --retire` refusals and holders |
+| [`references/run-artifacts.md`](references/run-artifacts.md) | verdict, packets, proof ledger, changeset gate |
+| [`references/failure-handling.md`](references/failure-handling.md) | any failed publish, proof, or hosted job, reading a red job's log mid-run |

@@ -62,7 +62,7 @@ home fits.
 - `@beep/provenance` — `packages/foundation/modeling/provenance` — TextAnchor
   char-offset anchors, claim provenance.
 - `@beep/mcp-kit` — `packages/foundation/capability/mcp-kit` — MCP host kit on
-  `effect/unstable/ai` Tool/Toolkit/McpServer.
+  `effect/ai` Tool/Toolkit/McpServer.
 - Ontology slice agent surface + stateless fingerprint-CAS + budgets —
   `packages/ontology/use-cases/src/tools/{OntologyToolkit,OntologyToolService}.ts`,
   `packages/ontology/server/src/tools/OntologyToolHandlers.ts`. Compare vs
@@ -104,7 +104,7 @@ One `###` section per item in your `research/<area>.md`:
 - **Proposed beep home:** <existing pkg path> | NET-NEW `foundation/<kind>/<name>` | `drivers/<name>` | `<slice>/<role>` | design-reference → <existing pkg>
 - **beep overlap & design delta:** <existing beep cite + what theirs does better/worse> | NOT FOUND
 - **Goal linkage:** <goal slugs + why> | none
-- **v3→v4 notes:** <migration hazards: Effect.Service→v4 service pattern, @effect/ai→effect/unstable/ai, Schema API drift, platform deps>
+- **v3→v4 notes:** <migration hazards: Effect.Service→v4 service pattern, @effect/ai→effect/ai, Schema API drift, platform deps>
 - **Effort:** S | M | L
 - **Verdict hint:** port-now | adapt-improve | design-reference | skip (advisory — final verdict happens in evaluation)
 ```

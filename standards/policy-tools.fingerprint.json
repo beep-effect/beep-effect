@@ -68,6 +68,8 @@
     "packages/foundation/primitive/data/src/**",
     "packages/tooling/library/ai-metrics/package.json",
     "packages/tooling/library/ai-metrics/src/**",
+    "packages/tooling/library/ai-sync/package.json",
+    "packages/tooling/library/ai-sync/src/**",
     "packages/tooling/library/qa-capture/package.json",
     "packages/tooling/library/qa-capture/src/**",
     "packages/tooling/library/repo-utils/package.json",

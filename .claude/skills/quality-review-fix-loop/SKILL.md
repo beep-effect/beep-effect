@@ -5,8 +5,9 @@ description: >
   reviewer panel, fixer-agent routing, waivers, zero required blockers. Use
   when asked to run repo quality, fix all warnings/errors, close an
   initiative, or loop reviewers/fixers until no required findings remain.
-version: 0.1.0
-status: active
+metadata:
+  version: "0.1.0"
+  status: active
 ---
 
 # Quality Review Fix Loop

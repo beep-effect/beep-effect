@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "harness-the-harness",
+    "title": "Harness the Harness: Claude Code for Lawyers Without the Setup",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/practice-gateway"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-14",
+    "updated": "2026-10-14"
+  }
+}

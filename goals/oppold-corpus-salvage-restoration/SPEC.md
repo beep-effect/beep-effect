@@ -1056,3 +1056,198 @@ and its own freeze record. Follow up with sanitized failure-stage/class
 evidence and a synthetic failing-GIF fixture. Reversal: revert these packet
 decisions while retaining all families, ledgers, outputs, claims and manifests.
 See history/p2/2026-10-14-first-wave-stop.md for aggregate evidence.
+
+
+### 2026-10-14: Run 17 resumes ordinals 6-9 with family 5 retained as failed
+
+The orchestrator accepts the family-5 diagnosis and explicitly authorizes
+continuing the SAME frozen wave with ordinals 6-9, one admitted family at
+a time. This supersedes the preceding continuation prohibition, preserving
+its historical evidence. Family 5 remains sealed-failure and is never retried
+or counted as accepted. Its ledger digest remains
+`dda98f8c7088589dffdc463935455b7474fad7ab4738cf8feaab749dd1d3031c`.
+Four accepted families and one failed family are sealed; four remain unstarted.
+
+Renewed preflight matches all nine source, engine, launcher, membership,
+policy and frozen-code identities. Earlier ledger hashes remain unchanged.
+P0 counts remain 755 directories, 10,696 files, four inherited losses, one
+preflight and one seal. Capacity is 417,086,545,920 free bytes. Both admitted
+real sandbox smokes pass; four focused tests pass, 78 skipped, 4.93 seconds.
+The full sixty-second continuation interval precedes the final capacity and
+state recheck and ordinal 6 submission. Retain ratio 4, attempt 7,200,000 ms,
+family 43,200,000 ms, total output 2,147,483,648 bytes and 100 GB floor.
+Stop and diagnose any further sealed failure. No engine or launcher change.
+
+Decision: continue the remaining authorized ordinals, retaining family 5 as
+failed. Reversal: revert packet decisions while retaining every immutable
+ledger, output, claim and manifest. Family-5 parser-exception recovery is a
+separate future engine PR and separately frozen execution after this wave.
+P2 remains in-progress; eighteen larger occurrences and estate/recycle/DOC
+obligations remain open. Never merge from this worker.
+
+
+### 2026-10-14: family 6 accepted under the unchanged first-wave freeze
+
+Family 6 result zero and accepted seal reconcile 6,091 children: 5,735 engine,
+178 repair-copy and 178 Tika children. Both derived digest sets match all
+178 distinct repaired digests. Dispositions: 217 repaired occurrences,
+220 unsupported, zero unchanged. Zero warnings, exceptions, interruptions
+or unaccounted children. Input 190,989,312 bytes; output 496,830,967 bytes
+(2.601354818x); attempt 5,724,191 ms, family 5,756,397 ms. Retained ceilings
+and all nine frozen identities hold; earlier ledger digests remain unchanged.
+Six sealed: five accepted, family 5 retained as sealed-failure.
+
+Decision: continue ordinal 7 under Run 17 and standing Runs 12+/13+ only after
+renewed admitted smokes/focused proof, a full sixty-second interval and the
+100 GB floor. No integration of newer main source during this frozen wave.
+Stop and diagnose any further sealed failure; never retry a sealed family.
+Reversal: revert packet decisions while retaining all ledgers, output, claims
+and immutable manifests. P2 remains in-progress; family-5 recovery follows
+as a separate engine PR and newly frozen execution. Eighteen larger inputs
+and estate/recycle/DOC obligations remain open; PR7 follows the terminal wave.
+
+
+### 2026-10-14: further sealed failure stops the bounded wave at family 7
+
+Run 17's continuation authorization requires stopping at any further
+sealed failure. Family 7 result 1 and immutable failure seal meet that
+condition. Seven families sealed: five accepted, two failed (5 and 7);
+ordinals 8-9 remain unstarted. Family 7 retained 910,603,343 output bytes
+from 354,026,496 input bytes (2.572133310x). Family elapsed 7,211,513 ms;
+no store pass or terminal child rows. Partial repair evidence is 288 repaired
+occurrences / 245 digests, 217 unsupported, with 246 copies and 245 Tika files.
+A 2,280,873-byte PDF copy lacks second-pass output near the attempt time cap.
+Elapsed-budget exhaustion is strongly supported by timing and code, but
+the generic exception catch prevents exact cause attribution. This is not
+an approved parser exception or an accepted store. Earlier seals, all nine
+freeze records, launcher and engine identities remain intact.
+
+Decision: stop, diagnose and publish aggregate evidence; no ordinal 8 launch,
+sealed-family retry or engine/launcher change. P2 stays in-progress.
+Reversal: revert packet decisions while retaining all ledgers, output,
+claims and manifests. Further continuation or recovery needs an orchestrator
+ruling. Family-5 separate recovery and eighteen larger occurrences remain
+deferred. Evidence: history/p2/2026-10-14-family-07-stop.md.
+
+
+### 2026-10-14: authorized continuation held by execution-code identity
+
+The orchestrator's 05:55Z ruling authorizes ordinals 8 and 9, retaining
+family 7 as sealed-failure with attachment-repair elapsed-budget exhaustion
+(exact cause unresolved; raw attempt output retained). Family 5 remains
+sealed-failure; both recoveries belong to a separate post-wave engine PR
+and newly frozen executions. This supersedes the earlier continuation stop.
+
+Renewed inspection finds a distinct pre-launch blocker. The previous
+publication integration imported #1636's Array.every substitutions in
+RestorationTransformations. All nine pre-launch manifests retain code head
+6eb3d036771e868768846b3c56a5aafac69c3b2b; the unchanged launcher executes
+the current checkout rather than an isolated frozen source tree. Its code
+identity therefore cannot be reported as matching the governing freeze.
+The source delta is inherited, not a new lane edit; no behavioral defect
+is claimed. Engine versions, script and membership digests still match.
+
+Decision: do not launch ordinal 8 until the orchestrator reconciles the
+continuation ruling with the unchanged code-freeze requirement. Do not
+rewrite a manifest, restore source files, alter the frozen launcher or
+assert that a smoke test establishes source identity. Seven families remain
+sealed: five accepted and two failed; ordinals 8 and 9 are unstarted.
+Reversal: revert this documentation decision while retaining every ledger,
+output, claim and immutable manifest. P2 remains in-progress.
+
+
+### 2026-10-14: ordinals 8–9 freeze amendment under the 06:25Z fallback
+
+The orchestrator explicitly permits a freeze amendment when the unchanged
+launcher cannot execute from another worktree. Inspection proves that it
+unconditionally changes directory to the corpus-restore lane before invoking
+bun. Starting that launcher from an execution-only worktree would therefore
+still execute this lane. Altering the launcher or shadowing command resolution
+would change its frozen identity. No execution-only worktree was created.
+
+Decision: use the ruling's fallback for unstarted ordinals 8 and 9 in this
+lane, before either family-run-start. Original code head remains
+6eb3d036771e868768846b3c56a5aafac69c3b2b in every immutable manifest.
+Amended execution source is the restoration source at 17f42f572f4563289e07dc9d0affd9f6aa875e76.
+Attached identity delta: history/evidence/p2-first-wave-2026-10-14-freeze-amendment.patch
+(SHA-256 dfc0f6c519ad5c2f2dfb477032fdedee77e8e42aecc83878d76b8b0ef4a26bf2). It contains two inherited
+#1636 native-array-to-Effect-Array.every substitutions, in signatureExtension
+and isCompoundFileBinary. Restoration command, schemas and base writer source
+are unchanged; libpff source is unchanged. No behavior equivalence is claimed.
+This amendment governs only the two unstarted families; all earlier seals
+retain their actual execution identities. The execution commit will be recorded
+in the handoff immediately before launch, with this source delta unchanged.
+
+The launcher, nine manifests, engine versions, membership, policy identities
+and ceilings remain unchanged: ratio 4, attempt 7,200,000 ms, family
+43,200,000 ms, output 2,147,483,648 bytes, 100,000,000,000-byte floor.
+Five families are accepted; families 5 and 7 remain sealed failures.
+Separate post-wave recovery covers their parser and elapsed-budget classes;
+no sealed family is retried. Reversal: revert this documentation amendment
+before launch; after launch retain all ledgers, claims, output and manifests
+and revert only the documentation decision. No source or launcher edit.
+
+
+### 2026-10-14: further sealed failure stops the wave at family 8
+
+Family 8 result 1, one unapproved engine-failure, expected/terminal one.
+Retained output 1,037,230,305 bytes from 436,306,944 input bytes
+(2.377294974x); family elapsed 2,996,198 ms, within both time ceilings.
+Partial dispositions: 109 repaired occurrences / 95 distinct digests,
+95 unsupported, zero unchanged; 96 copies and 95 Tika outputs. No store
+or child passes, warnings or interruptions. The unmatched 196,192-byte PDF
+copy reproduces Tika exit 1 and empty stdout with TikaException/IOException
+counts in the read-only frozen sandbox. Attribution is input-sensitive
+parser failure; input corruption and precise original cause are unproven.
+Ledger SHA-256 93e49e56ba8c4941ebaf4e33fd227340d5a31e3a8baa31b95cb2a7b8d9b1d60d.
+Retained attempt/family digests independently rehash to the ledger values.
+
+Eight seals: five accepted, families 5/7/8 failed; ordinal 9 unstarted.
+The 06:25Z amendment was committed before ordinal 8 ran at
+ce71e3cb88971dc0d2cfe9f7b0fd829164d859ac; immutable manifests retain
+6eb3d036771e868768846b3c56a5aafac69c3b2b. No source equivalence is claimed.
+Decision: stop at this further failure, diagnose and publish evidence;
+no ordinal 9 launch, sealed-family retry or exception approval. P2 stays
+in-progress, P3 pending. Families 5/7 recovery remains separately ruled;
+family 8 adds a PDF parser recovery item requiring a separate scope/freeze.
+Reversal: revert documentation decisions while retaining every ledger,
+output, claim and immutable manifest. Full record:
+history/p2/2026-10-14-family-08-stop.md.
+
+### 2026-10-14: ordinal 9 continues under the existing freeze amendment
+
+The orchestrator's 08:35:38Z ruling authorizes ordinal 9 immediately after
+family 8's sealed failure. Decision: launch only the ninth membership member
+with the unchanged launcher and the committed 06:25Z fallback amendment.
+The restoration source at preflight head 62c3d311bde9be5097b53438064e25be15a40146
+has no diff from the amendment's source. No engine, launcher, membership,
+ceiling or immutable manifest changes. No behavior equivalence to the
+original manifest codeHead is claimed. PR #1696 is merged; its branch is
+retained for local launch evidence, with a separate record PR after sealing.
+
+Eight existing seals remain immutable: five accepted and three failures
+(5, 7 and 8). P2 remains in-progress. After ordinal 9 seals, write one bounded
+recovery amendment for those three failed engine occurrences, naming the
+next fallback engine in the recorded chain. Commit the amendment and obtain
+the orchestrator's explicit approved reply before recovery launch. An
+occurrence that still fails on the input-sensitive PDF second pass receives
+an unsupported disposition with retained evidence; no third attempt.
+Eighteen larger occurrences and estate/recycle/DOC gates remain open for P3.
+Reversal: revert this documentation decision while retaining every ledger,
+output, claim and immutable manifest. No sealed family is retried here.
+
+
+### 2026-10-14: ninth seal ends the first bounded wave
+
+Nine sealed: five accepted, failures 5/7/8/9. Ordinal 9 result one,
+one unapproved engine-failure, zero store/child passes or warnings.
+Input 456,877,056 bytes; retained output 1,177,728,174 bytes; family
+elapsed 7,222,485 ms. Timing supports attachment-repair elapsed-budget
+exhaustion; exact cause unresolved. All runtime policies, source metadata
+and frozen engine/launcher identities match. Accepted families reconcile
+19,438 children. P2 stays in-progress. See the terminal wave record.
+Decision: publish the ninth record separately; no sealed-family retry.
+The bounded recovery amendment covers only 5/7/8 and remains blocked: no
+recorded next extraction-engine chain was found, so the orchestrator must
+bind it and approve before launch. Family 9 needs a scope decision.
+Reversal: revert decisions while retaining all corpus artifacts/manifests.

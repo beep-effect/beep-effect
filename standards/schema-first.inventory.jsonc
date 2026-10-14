@@ -220,6 +220,22 @@
       "reason": "Live obs-websocket connection handle, not data: events is a Stream, subscribeEvents is a scoped Effect, and request is an Effectful call. Only the hello and identified payloads are schema-backed (ObsHello, ObsIdentified); the handle itself has no decode or persistence boundary."
     },
     {
+      "file": "packages/drivers/occt/src/internal/kernel.ts",
+      "symbol": "BuiltModel",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/occt",
+      "reason": "Internal kernel carrier of replicad WASM shape handles (optional solid and broken-line Shape3D compounds); not data, never encoded or persisted."
+    },
+    {
+      "file": "packages/drivers/occt/src/internal/kernel.ts",
+      "symbol": "BuiltPart",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/occt",
+      "reason": "Internal kernel carrier of replicad WASM shape handles (one Shape3D plus its line style); not data, never encoded or persisted."
+    },
+    {
       "file": "packages/drivers/wink/src/Wink.service.ts",
       "symbol": "WinkEngineRuntimeState",
       "kind": "exported-type-literal",
@@ -1048,6 +1064,16 @@
       "line": 15,
       "owner": "@beep/repo-cli",
       "reason": "Turbo input regression encodes fixed JSON fixture documents and decodes turbo summaries through S.fromJsonString codecs; the schemas are external turbo shapes exercised against real output, not domain schemas with a round-trip law."
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/explore-graduate-write.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 51,
+      "owner": "@beep/repo-cli",
+      "reason": "Graduation write and crash-recovery regression decodes the receipts the CLI prints and the manifest it rewrites through S.fromJsonString codecs; the codec calls read real command output from temporary repositories and assert no schema law, so schema-derived arbitrary coverage does not apply."
     },
     {
       "file": "packages/tooling/tool/cli/test/research-library-acquisition.test.ts",

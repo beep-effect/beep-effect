@@ -1849,12 +1849,14 @@
           "@beep/effect-drizzle",
           "@beep/fc-runs",
           "@beep/pglite",
+          "@beep/repo-utils",
           "@beep/test-runner"
         ],
         "allowTypeOnly": [
           "@beep/effect-drizzle",
           "@beep/fc-runs",
           "@beep/pglite",
+          "@beep/repo-utils",
           "@beep/test-runner"
         ]
       },
@@ -3581,6 +3583,7 @@
       {
         "from": "@beep/repo-cli",
         "allow": [
+          "@beep/ai-sync",
           "@beep/chalk",
           "@beep/colors",
           "@beep/duckdb",
@@ -3618,6 +3621,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/ai-sync",
           "@beep/chalk",
           "@beep/colors",
           "@beep/duckdb",

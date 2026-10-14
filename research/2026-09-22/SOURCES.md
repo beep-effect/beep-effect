@@ -54,8 +54,8 @@ to be available in fall 2026.
 - https://github.com/Effect-TS/effect/pull/8365 — merged 2026-09-22T11:39:04Z (`httpapi` → `http-api`)
 - https://github.com/Effect-TS/effect/pull/8336 — OPEN staging `effect@4.0.0-rc.118`
 ```
-#8354 migration: effect/unstable/http → effect/http;
-effect/unstable/ai/LanguageModel → effect/ai/LanguageModel.
+#8354 migration: modules move to top-level paths, e.g. effect/http and
+effect/ai/LanguageModel (mapping: .patterns/effect-module-paths.md).
 Old paths are not retained.
 ```
 

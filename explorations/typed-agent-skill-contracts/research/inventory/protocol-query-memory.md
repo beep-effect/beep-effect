@@ -18,7 +18,7 @@ no intent-to-context routing manifest or transcript-order gate. The closest prot
 
 ### Raw Effect HTTP and typed API clients
 
-- `effect/unstable/http` is the common client substrate. Representative production consumers
+- `effect/http` is the common client substrate. Representative production consumers
   include `@beep/tika`, whose engine probes `/version`, builds a typed PUT request, enforces status,
   timeout, and a streaming output budget
   (`packages/drivers/tika/src/Tika.server.ts:165`), and `@beep/epistemic-client`, whose NDJSON RPC
@@ -32,7 +32,7 @@ no intent-to-context routing manifest or transcript-order gate. The closest prot
   request auth, native rate limiting, jittered transient retry, and observable rate-limit state
   (`packages/foundation/capability/api-transport/src/Transport.ts:382`). It is a transport policy,
   not endpoint discovery, OAuth, or a credential lifecycle.
-- `effect/unstable/httpapi` has two production typed client families. `@beep/govinfo` defines
+- `effect/http-api` has two production typed client families. `@beep/govinfo` defines
   `GovinfoApi`/search contracts and derives its client with `HttpApiClient.make`, applying the shared
   transport (`packages/drivers/govinfo/src/Govinfo.service.ts:113`). `@beep/pacer` defines five PCL
   endpoints in `PclHttpApiGroup` and aggregates them in `PclHttpApi`
@@ -73,7 +73,7 @@ no intent-to-context routing manifest or transcript-order gate. The closest prot
 
 ## 2. MCP and AI wiring
 
-- Effect v4 `unstable/ai` is established production infrastructure. For example,
+- Effect v4 `effect/ai` is established production infrastructure. For example,
   `@beep/ontology-use-cases` defines schema-typed `Tool.make` declarations through one helper and
   assembles full/read-only/mutation/publish `Toolkit.make` variants
   (`packages/ontology/use-cases/src/tools/OntologyToolkit.ts:692`, `:713`, `:881`, `:902`, `:920`,

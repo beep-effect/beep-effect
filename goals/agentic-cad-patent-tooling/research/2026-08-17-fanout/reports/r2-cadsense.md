@@ -86,7 +86,7 @@ Root scripts route through `scripts/dev-runner.ts` rather than raw turbo for `de
 
 1. User stores Onshape API keys via `onshape.setupConnection` (`packages/contracts/src/rpc.ts:176-183`, `packages/contracts/src/onshape.ts:161-166`).
 2. `OnshapeWorkspace` (Context.Service contract at `apps/server/src/onshape/Services/OnshapeWorkspace.ts:32-59`) lists/indexes documents and `syncProject`s them.
-3. Live layer talks to Onshape REST v10 via `effect/unstable/http` (`apps/server/src/onshape/Layers/OnshapeWorkspace.ts:19-20`).
+3. Live layer talks to Onshape REST v10 via `effect/http` (`apps/server/src/onshape/Layers/OnshapeWorkspace.ts:19-20`).
 4. Preferred export is **color-preserving 3MF** to `onshape-sync/current.3mf` (`packages/shared/src/cad.ts:40-47`, `apps/server/src/onshape/Layers/OnshapeWorkspace.ts:56-59`, `327-347`).
 5. Fallback chain, documented in comments: STL (geometry-only), OBJ+MTL (materials, async ZIP bundle), STEP (CAD-accurate, slower) (`packages/shared/src/cad.ts:45-47`, `OnshapeWorkspace.ts:284-302`, `416-417`).
 6. Assembly 3MF: `POST /api/v10/assemblies/d/{doc}/{wvm}/{id}/e/{el}/translations` (`OnshapeWorkspace.ts:386-395`). Part studio 3MF: `/api/v10/partstudios/.../translations` (`OnshapeWorkspace.ts:397-405`). OBJ: `/export/obj` (`OnshapeWorkspace.ts:419-438`).
@@ -240,10 +240,10 @@ These are **not** CadSense MCP. They are typed clients for the *hosted* agents' 
 | Runtime | Bun preferred, Node fallback | `package.json:83-87`; HTTP chooses `BunHttpServer` if `typeof Bun !== "undefined"` else `NodeHttpServer` + `node:http.createServer` (`apps/server/src/server.ts:104-125`). Same for platform services (`:128-137`) and SQLite (`apps/server/src/persistence/Layers/Sqlite.ts:18-30`). |
 | Tooling | bun workspaces + catalog, turbo 2, oxlint, oxfmt, mise (`node 24.13.1`, `bun 1.3.9` — slightly behind packageManager) | `package.json`, `.mise.toml:1-3` |
 | TS | ESNext / NodeNext, `erasableSyntaxOnly`, `verbatimModuleSyntax`, `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` | `tsconfig.base.json:3-14` |
-| Effect | **v4 beta 59, catalog-wide** | `package.json:11-19`. `Context.Service`, `Layer`, `Effect.fn` / `Effect.fnUntraced`, `effect/unstable/{http,rpc,cli,sql,process}`. |
-| HTTP | `effect/unstable/http` (`HttpRouter`, `HttpServer`) | `apps/server/src/server.ts:3`, `apps/server/src/http.ts` |
-| RPC | `effect/unstable/rpc` `Rpc.make` + `RpcGroup` | `packages/contracts/src/rpc.ts:1-3` |
-| CLI | `effect/unstable/cli` `Command.make` | `apps/server/src/bin.ts:5-21` |
+| Effect | **v4 beta 59, catalog-wide** | `package.json:11-19`. `Context.Service`, `Layer`, `Effect.fn` / `Effect.fnUntraced`, `effect/{http,rpc,cli,sql,process}`. |
+| HTTP | `effect/http` (`HttpRouter`, `HttpServer`) | `apps/server/src/server.ts:3`, `apps/server/src/http.ts` |
+| RPC | `effect/rpc` `Rpc.make` + `RpcGroup` | `packages/contracts/src/rpc.ts:1-3` |
+| CLI | `effect/cli` `Command.make` | `apps/server/src/bin.ts:5-21` |
 | Persistence | SQLite WAL via `@effect/sql-sqlite-bun` or a Node client | `Sqlite.ts:18-39` |
 | Web | React 19, Vite 8, TanStack Router + Query, Tailwind 4, React Compiler, Base UI | `apps/web/package.json:15-46`, `apps/web/vite.config.ts:1-5` |
 | State | **Zustand** for chat/thread bookkeeping (`apps/web/src/store.ts:27`); **`@effect/atom-react`** for RPC/server/diagnostics atoms (`apps/web/src/rpc/atomRegistry.ts:1-8`, `wsConnectionState.ts:1`) | Split brain, documented in store comments (`store.ts:50-76`) |

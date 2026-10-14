@@ -108,6 +108,9 @@
   "ignorePatterns": [
     // The GitHub Copilot Impeccable tree mirrors the analyzed Claude Code source.
     ".github/skills/impeccable/**",
+    // Vendored upstream skill tree (shadcn showcase assets and scripts) pinned by
+    // skills-lock.json; beep skills update rewrites it byte-for-byte from upstream.
+    ".claude/skills/shadcn/**",
     // Claude Code launches these by path from .claude/settings.json (the two
     // graft shims and the repo-owned loader); no import graph reaches them.
     ".claude/helpers/**",
@@ -359,7 +362,11 @@
     // Vendored Impeccable scripts keep their upstream shape; dependency graph
     // analysis above must not opt that vendor tree into authored-code cloning.
     // The two graft shims are one-line delegations to the repo-owned loader.
-    "ignore": [".claude/skills/impeccable/**", ".claude/helpers/**"]
+    "ignore": [
+      ".claude/skills/impeccable/**",
+      ".claude/skills/shadcn/**",
+      ".claude/helpers/**"
+    ]
   },
   "health": {
     // Complexity ceilings — ratified 2026-07-30 (law in standards/effect-laws-v1.md;
@@ -376,7 +383,11 @@
     // while its module graph remains visible to dead-code dependency analysis.
     // The graft shims are generated; the loader's platform trust checks are
     // security-boundary code kept whole rather than split for a ceiling.
-    "ignore": [".claude/skills/impeccable/**", ".claude/helpers/**"],
+    "ignore": [
+      ".claude/skills/impeccable/**",
+      ".claude/skills/shadcn/**",
+      ".claude/helpers/**"
+    ],
     "thresholdOverrides": [
       {
         "files": [

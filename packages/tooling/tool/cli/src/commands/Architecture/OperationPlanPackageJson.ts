@@ -107,7 +107,7 @@ export const renderPackageJsonOperation = Effect.fn(function* (operation: WriteP
     scripts: {
       ...scaffoldPackageScripts("library", ["lint:fix", "test:integration"]),
       babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-      "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+      "beep:check:tests": "tsc-rs -p tsconfig.test.json --noEmit",
       coverage: "bunx vitest run --coverage --exclude=test/integration/**",
     },
     exports: packageExportMapFor(operation.role, operation.exports, false),

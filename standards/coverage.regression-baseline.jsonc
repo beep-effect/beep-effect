@@ -19853,6 +19853,30 @@
             "branches": 4,
             "functions": 7
           }
+        },
+        "packages/drivers/pdf-tools/src/internal/coverage.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 85,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 3,
+            "functions": 0
+          }
+        },
+        "packages/drivers/pdf-tools/src/internal/words.ts": {
+          "lines": 96.96,
+          "statements": 97.22,
+          "branches": 68.18,
+          "functions": 92.3,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 7,
+            "functions": 1
+          }
         }
       }
     },
@@ -27834,6 +27858,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Skills/Skills.seeds.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Skills/Skills.service.ts": {
           "lines": 80.67,
           "statements": 80.84,
@@ -27844,6 +27880,18 @@
             "statements": 41,
             "branches": 23,
             "functions": 12
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Skills/SkillsLock.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Skills/index.ts": {
@@ -30856,6 +30904,54 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Explore/Graduate.ts": {
+          "lines": 95.76,
+          "statements": 95.9,
+          "branches": 92.85,
+          "functions": 90.56,
+          "uncovered": {
+            "lines": 5,
+            "statements": 5,
+            "branches": 2,
+            "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Skills/internal/SkillFrontmatterCheck.ts": {
+          "lines": 96.15,
+          "statements": 96.15,
+          "branches": 83.33,
+          "functions": 85.71,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 2,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.domain.ts": {
+          "lines": 96.47,
+          "statements": 96.73,
+          "branches": 86.81,
+          "functions": 96.21,
+          "uncovered": {
+            "lines": 8,
+            "statements": 8,
+            "branches": 12,
+            "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.evaluators.ts": {
+          "lines": 98.26,
+          "statements": 98.37,
+          "branches": 96.05,
+          "functions": 96.51,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 3,
+            "functions": 3
           }
         }
       }
@@ -36418,6 +36514,18 @@
             "statements": 9,
             "branches": 13,
             "functions": 8
+          }
+        },
+        "packages/foundation/capability/technical-drawing/src/Shading.rules.ts": {
+          "lines": 93.47,
+          "statements": 94.11,
+          "branches": 87.75,
+          "functions": 91.3,
+          "uncovered": {
+            "lines": 19,
+            "statements": 19,
+            "branches": 18,
+            "functions": 10
           }
         }
       }

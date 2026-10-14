@@ -8,8 +8,9 @@ description: >
   capture will not start, produces no events, records a black window, or you
   must pick a recording lane. The loop protocol itself lives in
   `browser-qa-loop`; this skill is the machinery under it.
-version: 0.2.0
-status: active
+metadata:
+  version: "0.2.0"
+  status: active
 ---
 
 # QA Session Ops

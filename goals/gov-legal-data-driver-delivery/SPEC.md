@@ -99,7 +99,7 @@ entry below supersedes it.
 **Inherited, still binding (predecessor SPEC):**
 
 - **Q2 generated boundary** — codegen never emits transport: no
-  `effect/unstable/http`, `Config`, `Context`, `Cache`, `Schedule`,
+  `effect/http`, `Config`, `Context`, `Cache`, `Schedule`,
   `transformClient`, `mapRequest`, `withRateLimiter`, `retryTransient`, or
   auth-header symbols under `src/_generated/*` (ripgrep-verified).
 - **Q5 auth families** — CourtListener `Authorization: Token <key>` (literal

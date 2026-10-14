@@ -21,7 +21,7 @@ lands, from the receipt at `$HOME/.local/state/beep/refs/last-refresh.json`;
 | P0 Research | complete | Grill and census (2026-09-25). | `research/2026-09-25-0{0,1,2}-*.md` recorded; R1–R14 locked. |
 | P1 Implement | complete | Slices S1–S4 below, in order. | `SPEC.md` acceptance criteria met. |
 | P2 Verify | complete | Run the verification matrix and capture evidence under `history/`. | Green, or blockers documented with command output. |
-| P3 Yeet: PR to mergeable | complete | `bun run beep yeet publish --start-pr-early --monitor --pr`; drive to mergeable. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P3 Yeet: PR to mergeable | complete | `bun run beep yeet publish --monitor --pr`; drive to mergeable. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | complete | Closeout reflection, packet state flip. | Reflection exists and lints; README/manifest updated; first two scheduled nights recorded. The first clean scheduled night's readback is an operator follow-up in `research/OPPORTUNITIES.md`. |
 
 ### Operator path inputs

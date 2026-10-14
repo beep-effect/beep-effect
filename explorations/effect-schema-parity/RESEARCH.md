@@ -21,7 +21,7 @@ upstream now covers.
 | [Upstream SCHEMA.md](https://github.com/Effect-TS/effect/blob/main/packages/effect/SCHEMA.md) (7,223 lines, 216 KB) | The v4 Schema reference. Top-level sections: Schema, Design Philosophy, Runtime Performance, Defining Elementary Schemas, Defining Composite Schemas, Declaring Custom Types, Validation, Constructors, Transformations. The "Runtime Performance" section benchmarks against the public `schema-benchmarks` suite (Valibot, Zod). Checks are `.check()` runtime constraints that can report multiple issues; every schema exposes `make` with defaults/refinements/branding; transformations compose `Getter`s via `decodeTo`/`decode`. No top-level section covers JSON Schema, Standard Schema, arbitraries, or `ErrorClass`/`TaggedError`; those live in module JSDoc, which is why the symbol inventory (below) is needed. | Fetched `https://raw.githubusercontent.com/Effect-TS/effect/refs/heads/main/packages/effect/SCHEMA.md` (GitHub's rendered view at `https://github.com/Effect-TS/effect/blob/main/packages/effect/SCHEMA.md` failed to render server-side but reports the same size) |
 | `migration/schema.md` (repo root) | v3 -> v4 migration guide: summary table (auto / semi-auto / manual / removed), rename notes (`*FromSelf`, `Date` encoded contract), structural changes (`Record`, `Union`, `Tuple`, `pick`/`omit`, `extend`), transformation patterns (`transform`, `transformOrFail`, `filter`, optional fields via `decodeTo`), specialized APIs (`validate*` removed, `Data` removed, manual `rename`/`split`). | Fetched `https://github.com/Effect-TS/effect/blob/main/migration/schema.md` |
 | Commit `657254b821` "Optimize Schema initialization (#8196)" | 14 files, +279/-41. `make` uses `Object.assign` for standard props instead of always `Object.defineProperties`; `Suspend` thunk memoized with `??=`; `SchemaParser.makeEffect` compiles parsers lazily; `Objects` duplicate detection via a `Set`; adds creation benchmarks (2/32/256-field objects, template literals, encoded records). Consumer action: none required; the win is automatic on the next effect bump that includes it. rc.115 predates it (rc.115 = 2026-09-11 tag; commit = 2026-09-11 on main after the tag, see the delta lane). | Fetched `https://github.com/Effect-TS/effect/commit/657254b821` |
-| Commit `46d83101e8` "Move unstable HTTP schemas to Schema (#7553)" | 15 files, +421/-330 (tim-smart). Moves `Cookie`, `Cookies`, `Headers`, `UrlParams` schemas plus their record / JSON-field helpers from `effect/unstable/http` onto `effect/Schema`. | Fetched `https://github.com/Effect-TS/effect/commit/46d83101e8` |
+| Commit `46d83101e8` "Move unstable HTTP schemas to Schema (#7553)" | 15 files, +421/-330 (tim-smart). Moves `Cookie`, `Cookies`, `Headers`, `UrlParams` schemas plus their record / JSON-field helpers from `effect/http` onto `effect/Schema`. | Fetched `https://github.com/Effect-TS/effect/commit/46d83101e8` |
 | Effect blog "Effect v4 Beta: June Updates" (2026-06-30) | Confirms upstream treats type-level cost as a first-class target: "Improved Schema type-level performance, reducing compile-time overhead for large schema definitions." Also: `Schema.toCodecStringTree` lost `keepDeclarations`; wrappers expose `source`; URL schema decoding adopted `URL.canParse`. | Fetched `https://effect.website/blog/effect-v4beta-june-recap/` |
 
 Not usable: `https://effect-ts-effect-smol.mintlify.app/migration/schema` returns
@@ -50,7 +50,7 @@ authority.
 | File | What it holds | Size |
 |------|---------------|------|
 | `packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory/` | The knowledge layer: `schema-inventory/v1` JSONL rows, INDEX and README, moved here from this packet's research inventory directory in goal P1 (2026-09-29); generator, verifier and prompt generator are `bun run beep lint effect-schema-inventory` | 2,232 rows / 998 KB (was 2,105 rows / 853 KB at `51d4a2f08a`) |
-| `research/2026-09-28-inventory-refresh.md` | Reopen: inventory regenerated at `inventoryPin` `e5f7d12af9` (D4), module moves out of `unstable/`, generator and verifier repairs | 19 KB |
+| `research/2026-09-28-inventory-refresh.md` | Reopen: inventory regenerated at `inventoryPin` `e5f7d12af9` (D4), module moves to top-level paths (#8354), generator and verifier repairs | 19 KB |
 | `research/2026-09-28-schemautils-census.md` + `research/tools/census-schemautils.py` | Reopen: every SchemaUtils export with upstream equivalent, consumer counts per scope, DELETE / ADAPT / KEEP and phase (32 / 4 / 3); D10 finding that the per-AST parser cache predates the compilers | 28 KB |
 | `research/2026-09-28-compiler-evaluation.md` + `research/tools/spike-{harness,bulk-schemas,bulk,recursive}.ts` | Reopen: interpreter vs selective JIT vs AOT spikes (D6): about 3.7x on transformation-free wire structs, 1.2–1.4x on classes and transformed rows, no gain on Pandoc; fallback nodes, CSP and repo-fit answers; the draft that the operator ruled DEFER | 24 KB |
 | `research/retirement-A-F.md`, `research/retirement-G-Z.md` | Per-concept retirement audit of every top-level `@beep/schema` concept (137) with upstream citations, consumer counts, dispositions and migration recipes | 43 + 54 KB |
@@ -81,7 +81,7 @@ authority.
 - **Two extractors collided (historical, resolved).** During research two
   generations of the inventory lane ran at once; the survivor keyed by
   `(module, symbol, kind)` while the research verifier was written for a
-  unique-symbol contract, so that verifier failed on `effect/unstable/arbitrary`
+  unique-symbol contract, so that verifier failed on `effect/Arbitrary`
   rows. A single-writer reconcile aligned generator, verifier, INDEX and README
   on 2026-09-28. Current status: the inventory is verified. Local
   `bun run beep lint effect-schema-inventory --check` reproduces the fixture
@@ -139,8 +139,8 @@ statics facades go to `S.decodeSync`, `withConstructorDefault`,
 
 UNSURE (all six are the same conflict): `HttpMethod` (2), `HttpStatus` (11),
 `MimeType` (4), `Jsonl` (0), `Toml` (2), `Yaml` (4) have same-intent upstream
-coverage only in Role B modules (`unstable/http/HttpMethod.ts`, `HttpStatus.ts`,
-`Mime.ts`, `unstable/encoding/Ndjson.ts`, `Toml.ts`, `Yaml.ts`). DECISIONS
+coverage only in Role B modules (`http/HttpMethod.ts`, `HttpStatus.ts`,
+`Mime.ts`, `encoding/Ndjson.ts`, `Toml.ts`, `Yaml.ts`). DECISIONS
 "Module list roles" excludes Role B as adoption targets; DECISIONS
 "Equivalence test" says same intent retires. Align must pick one.
 

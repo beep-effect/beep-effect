@@ -59,8 +59,8 @@ product authority.
 - The pilot is reviewed 2026-08-20 on cross-CLI recall, codegraph replacing
   grep-storms, and zero store corruption; the fallback on failure is Layer-1
   file memory alone.
-- An Effect-native `@beep/memory` port of basic-memory's store model plus
-  Graphiti's temporal schema is recorded as medium-term intent, not
+- An Effect-native port (a proposed @beep/memory package) of basic-memory's
+  store model plus Graphiti's temporal schema is recorded as medium-term intent, not
   scheduled work.
 - Origin: `goals/shared-memory-code-kg-wiring`
 
@@ -232,7 +232,7 @@ standard trustworthy on a cold read.
 - `goals/file-processing-capability` status corrected `pending-implementation → active`
   (the capability + tika/libpff drivers are built; P1 underway). A broader
   goal-status-vocabulary normalization is a separate, **deferred** cleanup.
-- The live residue (`@beep/repo-codegraph`, `EffectCapabilityKG.ts`) is retained as
+- The live residue (the since-retired @beep/repo-codegraph package, `EffectCapabilityKG.ts`) is retained as
   **narrow dev tooling**, not a product moat.
 - The 2026-04-15 / 2026-05-12 entries below stand as dated history, unedited.
 

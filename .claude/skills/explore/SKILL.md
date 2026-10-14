@@ -6,8 +6,9 @@ description: >
   `/explore`, a new fuzzy idea or brainstorm to capture, "crystallize this",
   "help me break down this vision", decomposing a vision into goal packets,
   triaging explorations/INBOX.md, or resuming any packet under explorations/.
-version: 0.2.0
-status: active
+metadata:
+  version: "0.3.0"
+  status: active
 ---
 
 # Explore
@@ -34,7 +35,16 @@ procedure, not a copy of the convention.
 1. Read the packet manifest, then the packet `README.md`, then only the
    artifacts the current stage needs (smallest relevant set).
 2. Work the stage per the behavior table below.
-3. **Always close the loop before ending**: update manifest (`stage`,
+3. **Operator needed -> `/grill-with-docs`, never a stop** (operator ruling
+   2026-10-14). When the packet needs the operator (align-stage questions, a
+   direction decision, a shape review, a definition-of-ready gap), do not end
+   the session with a prose summary or a closeout prompt. Load the
+   `grill-with-docs` skill and run its workflow: frontier rounds via
+   AskUserQuestion, recommended answer first, each settled answer logged in
+   the packet `DECISIONS.md`. Keep driving align -> shape -> decompose ->
+   graduate until the packet is graduated, parked, or killed (no-go). Only
+   that terminal state gets the guided-closeout prompt.
+4. **Always close the loop before ending**: update manifest (`stage`,
    `openQuestions`, `updated`), rewrite the packet README's "Next Open
    Question" and append a dated Trail line, then run
    `bun run beep explore atlas --write`. Never hand-edit the marked README
@@ -61,20 +71,24 @@ each in-repo brick the packet composes. Never fabricate a URL — cite the
 RESEARCH.md section when none exists on disk. Register it in manifest
 `exploration.sources`.
 
-**align** — Run the `/grilling` discipline over the decision tree: work the
+**align** — Run the `grill-with-docs` workflow (the `/grilling` discipline
+plus repo doctrine cross-checks) over the decision tree: work the
 frontier in rounds (every currently-unblocked question per round, via
 AskUserQuestion, recommended answer first with reasoning); explore the
 codebase instead of asking when the repo can answer. After each settled
 round, append dated entries to `DECISIONS.md` (Question / Answer /
 Rationale, including rejected options) and sync manifest `openQuestions` to
 the remaining frontier. Deferred questions are logged DEFERRED with reason,
-not silently dropped.
+not silently dropped. When the round closes, start the next round or move
+to shape in the same session; an open frontier is never a reason to stop.
 
 **shape** — Draft `BRIEF.md` (problem, appetite, solution sketch, rabbit
 holes, no-gos) from capture + research + decisions, at fat-marker fidelity —
 concrete enough to decompose, rough enough to leave design latitude. Iterate
 in review loops with the user. Exit only when they confirm it matches the
-picture in their head.
+picture in their head. Each review loop is a `grill-with-docs` round
+(AskUserQuestion, recommended revision first), not a hand-back for the user
+to read later; log shape calls in `DECISIONS.md`.
 
 **decompose** — Build `MAP.md`: candidate goal packets (slug, mission,
 dependencies), sequencing with rationale, the first vertical slice, inherited
@@ -84,7 +98,7 @@ an existing brick.
 
 **graduate** — Check the four-point definition-of-ready from
 `explorations/README.md`; if any point fails, name it and drop back to the
-owning stage. Then, per approved candidate: scaffold `goals/<slug>/` from
+owning stage, grilling the operator on the gap when only they can close it. Then, per approved candidate: scaffold `goals/<slug>/` from
 `goals/_template/` (per `goals/README.md` rules, GOAL.md launcher included);
 seed `SPEC.md` from the brief (no-gos -> non-goals, rabbit holes ->
 constraints, DECISIONS -> decision log) with back-links to the exploration,
@@ -110,6 +124,11 @@ the Atlas writer after the manifest and authored README changes.
 - Align asks in frontier rounds per `/grilling`: batch every
   currently-unblocked question, never a question whose prerequisite is still
   open this round.
+- Needing the operator is never a stopping point (ruling 2026-10-14). Switch
+  into `grill-with-docs` and keep going until the packet is graduated, parked,
+  or killed; do not hand back a prose recap or a closeout prompt mid-pipeline.
+  The guided closeout belongs to the terminal state, or to a hold the operator
+  chose in a grill round.
 - `CAPTURE.md` is append-only; never tidy it.
 - Provenance is load-bearing: keep `research/SOURCES.md` current from research
   on, and never fabricate a source/URL/license — cite the on-disk RESEARCH

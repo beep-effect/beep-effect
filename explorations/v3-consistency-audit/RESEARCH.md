@@ -91,7 +91,7 @@ zones). NET-NEW: the audit rule set, the report/baseline schemas, the lane.
   2026-08-27); packet README `Stage`/`Status` regions are generated too.
 - effect v4 `Rpc.make(tag, { payload, success, error, defect, stream })` — the
   option key is `error`; `Failure` is the member name only
-  (`.repos/effect/packages/effect/src/unstable/rpc/Rpc.ts` L902-913).
+  (`.repos/effect/packages/effect/src/rpc/Rpc.ts` L902-913).
 - Role-member renames change every deep named import (724 sites repo-wide);
   the codemod must rewrite import sites to namespace access in the same PR.
 - Coverage directories mirror `src/` and pollute naive counts; every walker

@@ -3,12 +3,16 @@ import {
   BootstrapInput,
   compileAdoptionPlan,
   compileMaterializationPlan,
+  GoalPlanOperationalError,
   goalsCommand,
+  listGoalPackets,
   MaterializationPlan,
   PacketEventStoreLive,
   PlanEntry,
   publishBootstrapPlan,
   readPacketSnapshot,
+  replacePinnedFile,
+  sha256Hex,
 } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
@@ -22,7 +26,9 @@ import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
@@ -114,6 +120,64 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           expect(String(exit)).toContain("already exists");
           expect(yield* fs.readDirectory("goals/fresh-goal")).toEqual(["NOTES.md"]);
           expect(yield* listGoals).toEqual(["fresh-goal"]);
+        })
+      )
+    );
+
+    it.effect("recovers from a crashed attempt: stale stages are swept and an empty claim is reclaimed", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const plan = yield* compileMaterializationPlan(input, []);
+          const ownStage = `goals/.staging-${Str.slice(-16)(plan.planId)}`;
+          // A crash after staging (own digest), a foreign attempt's stage, and a crash
+          // between claim and rename (empty slug directory).
+          yield* writeProjectFile(`${ownStage}/README.md`, "half-written\n");
+          yield* writeProjectFile("goals/.staging-0000000000000000/GOAL.md", "foreign\n");
+          yield* fs.makeDirectory("goals/fresh-goal", { recursive: true });
+
+          // E11: the inventory does not count the abandoned claim as a packet.
+          expect(A.map(yield* listGoalPackets(), (record) => record.slug)).toEqual([]);
+
+          const receipt = yield* publishBootstrapPlan(plan);
+          expect(receipt.slug).toBe("fresh-goal");
+          expect(yield* listGoals).toEqual(["fresh-goal"]);
+          expect(A.map(yield* listGoalPackets(), (record) => record.slug)).toEqual(["fresh-goal"]);
+        })
+      )
+    );
+
+    it.effect("keeps a packet whose directory cannot be listed in the permissive inventory", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* writeProjectFile("goals/locked-goal/README.md", "# Locked\n");
+          yield* fs.makeDirectory("goals/abandoned", { recursive: true });
+          // An unlistable directory is not an abandoned claim.
+          yield* fs.chmod("goals/locked-goal", 0o111);
+          const slugs = A.map(yield* listGoalPackets(), (record) => record.slug);
+          yield* fs.chmod("goals/locked-goal", 0o755);
+          expect(slugs).toEqual(["locked-goal"]);
+        })
+      )
+    );
+
+    it.effect("names every stale stage it could not remove instead of failing later", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const plan = yield* compileMaterializationPlan(input, []);
+          yield* writeProjectFile("goals/.staging-0000000000000000/GOAL.md", "foreign\n");
+          // A read-only goals/ makes the stale stage unremovable.
+          yield* fs.chmod("goals", 0o555);
+          const exit = yield* Effect.exit(publishBootstrapPlan(plan));
+          yield* fs.chmod("goals", 0o755);
+          exit.pipe(Exit.isFailure, assertTrue);
+          expect(String(exit)).toContain("could not remove stale staging directory goals/.staging-0000000000000000");
+          expect(yield* listGoals).toEqual([".staging-0000000000000000"]);
         })
       )
     );
@@ -225,6 +289,59 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           expect(yield* listGoals).toEqual(["fresh-goal"]);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
+
+  describe("replacePinnedFile", { concurrent: false }, () => {
+    it.effect("refuses a lost generation lock and removes the staged replacement", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const preImage = '{"version":0}\n';
+          yield* writeProjectFile("pinned/state.json", preImage);
+          const preImageDigest = yield* sha256Hex(preImage);
+          const refused = yield* Effect.flip(
+            replacePinnedFile(
+              "pinned/state.json",
+              preImageDigest,
+              Effect.fnUntraced(function* () {
+                yield* fs
+                  .remove("pinned/state.json.lock")
+                  .pipe(Effect.mapError(GoalPlanOperationalError.new("Could not remove the fixture generation lock.")));
+                return '{"version":1}\n';
+              })
+            )
+          );
+          strictEqual(refused._tag, "GoalPlanOperationalError");
+          expect(refused.message).toContain("Refusing to replace pinned/state.json");
+          strictEqual(yield* fs.readFileString("pinned/state.json"), preImage);
+          expect(yield* fs.readDirectory("pinned")).toEqual(["state.json"]);
+        })
+      ).pipe(TestClock.withLive)
+    );
+
+    it.effect("serializes two writers of one pre-image into one replacement and one refusal", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const preImage = '{"version":0}\n';
+          yield* writeProjectFile("pinned/state.json", preImage);
+          const preImageDigest = yield* sha256Hex(preImage);
+          const writer = (version: number) =>
+            Effect.result(
+              replacePinnedFile("pinned/state.json", preImageDigest, () => Effect.succeed(`{"version":${version}}\n`))
+            );
+          const outcomes = yield* Effect.all([writer(1), writer(2)], { concurrency: "unbounded" });
+          const successes = A.filter(outcomes, Result.isSuccess);
+          strictEqual(A.length(successes), 1);
+          strictEqual(A.length(A.filter(outcomes, Result.isFailure)), 1);
+          const finalDigest = yield* sha256Hex(yield* fs.readFileString("pinned/state.json"));
+          strictEqual(successes[0]?.success.afterDigest, finalDigest);
+          expect(yield* fs.readDirectory("pinned")).toEqual(["state.json"]);
+        })
+      ).pipe(TestClock.withLive)
     );
   });
 });

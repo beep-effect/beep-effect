@@ -304,3 +304,65 @@ empty stdout and TikaException. All frozen identities and retained ceilings
 hold; no terminal children or store pass were published for family 5.
 The wave is stopped; ordinal 6 must not launch and family 5 must not retry.
 P2 remains in-progress. See history/p2/2026-10-14-first-wave-stop.md.
+
+
+**Run 17 continuation 2026-10-14:** the orchestrator supersedes the preceding
+ordinal-6 prohibition and authorizes ordinals 6-9 with the SAME frozen launcher.
+Four accepted families plus family 5 sealed-failure are retained. Renewed
+admitted preflight and the full sixty-second interval precede ordinal 6;
+stop and diagnose any further sealed failure. Family 5 is not retried or
+accepted. Separate parser-exception recovery follows the wave. P2 incomplete.
+
+Ordinal 6 submitted 2026-10-14T01:07:39Z after full interval and capacity
+417,793,134,592 bytes. Unit beep-heavy-corpus-restore-p2-2026-10-13-6.service;
+five of nine sealed, four accepted plus family 5 failed. Driver resumes
+after unit 6 ends; 7-9 unstarted. Runtime acceptance is pending.
+
+
+### 2026-10-14: first bounded wave stops again at family 7
+
+Seven of nine sealed, five accepted and two failed (5 and 7). Ordinals 8-9
+remain unstarted under Run 17's further-failure stop rule. P2 remains
+in-progress; family-7 elapsed-budget diagnosis is qualified by lost exception
+cause. See history/p2/2026-10-14-family-07-stop.md. No retry or next launch.
+
+
+**Continuation 2026-10-14 06:26Z:** ordinal 8 submitted as the sole detached
+wave family unit after the 06:25Z fallback freeze amendment, renewed admitted
+smokes/focused proof, sixty seconds and 407,447,691,264 free bytes. Seven
+sealed: five accepted, families 5 and 7 failed; ordinal 9 unstarted.
+Immutable manifests and launcher unchanged; execution source delta recorded
+before launch. Standing driver reconciles ordinal 8 after its unit ends.
+P2 remains in-progress; separate failed-family recovery and larger estate
+obligations remain open. Never retry a sealed family.
+
+
+### 2026-10-14: first bounded wave stops at family 8
+
+Eight families sealed: five accepted (1-4 and 6), three failed (5, 7, 8).
+Family 8 result 1, one unapproved engine-failure. The unmatched PDF repair
+copy reproduces a nonzero/empty frozen Tika second pass; precise original
+cause remains unavailable. Bytes and time fit their ceilings. Ordinal 9
+is unstarted; no next launch or retry. Publish the aggregate stop record
+and await orchestrator continuation/recovery scope. P2 remains in-progress.
+Separate family-5/7 recovery, the new family-8 parser follow-up, eighteen
+larger occurrences and estate/recycle/DOC gates remain open.
+See history/p2/2026-10-14-family-08-stop.md.
+
+
+**Authorized continuation 2026-10-14 08:35:38Z:** ordinal 9 launched once
+at 08:42:20Z under the unchanged launcher and committed fallback amendment.
+Eight prior families sealed: five accepted, three failures (5/7/8).
+Driver reconciles the ninth seal before its separate record PR. One bounded
+recovery amendment for 5/7/8 follows; commit it and obtain the orchestrator's
+approved reply before recovery launch. Repeated PDF second-pass failure is
+unsupported, with no third attempt. Eighteen larger occurrences and
+estate/recycle/DOC gates remain open for P3; P2 remains in-progress.
+
+
+**Terminal wave 2026-10-14:** nine sealed, five accepted, four failed
+(5/7/8/9). Ordinal 9 timing supports attachment-repair elapsed-budget
+exhaustion. No retry. Publish the separate terminal record and bounded
+5/7/8 recovery amendment; next extraction-engine binding and orchestrator
+approval required before launch. Family 9 needs explicit recovery scope.
+Eighteen larger occurrences and estate/recycle/DOC gates remain open for P3.

@@ -15,6 +15,11 @@
  * There is no `--force`. The merge gate, not this flip, waits for green checks
  * and for the review window.
  *
+ * Under S11 (operator ruling 2026-10-09, AGENTS.md "Mergeable") a required red
+ * inherited from `main` does not hold the flip once the owner attributes it
+ * with `--inherited "<check>=<attribution>"`; the attribution is written to
+ * the PR body before the flip, and a failed write refuses the flip.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -25,16 +30,19 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { flipPullRequestReady } from "./GhOps.ts";
+import { flipPullRequestReady, recordInheritedRedsInPullRequestBody, withYeetGh } from "./GhOps.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
+import { decodeAttributedCheckFlags, parseAttributedCheck } from "./MergeGate.ts";
 import { YEET_READY_COMMAND } from "./MonitorPolicy.ts";
 import { findLiveReadyMonitorJob } from "./ProofJob.ts";
 import { ProofJobLauncher } from "./ProofJobLauncher.ts";
@@ -93,6 +101,49 @@ export const YeetReadyGateCriterion = LiteralKit(["pr-open", "no-required-red", 
 export type YeetReadyGateCriterion = typeof YeetReadyGateCriterion.Type;
 
 /**
+ * A required check whose red is inherited from `main`, attributed by the owner
+ * and recorded under S11 before the flip.
+ *
+ * **Example** (Attribute an inherited red)
+ *
+ * ```ts
+ * import { YeetReadyInheritedRed } from "@beep/repo-cli/test/Yeet"
+ *
+ * const red = YeetReadyInheritedRed.make({ check: "Lint", attribution: "red on main since 2c1cb448ba, fix in #1477" })
+ * console.log(red.check) // "Lint"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetReadyInheritedRed extends S.Class<YeetReadyInheritedRed>($I`YeetReadyInheritedRed`)(
+  { check: S.NonEmptyString, attribution: S.NonEmptyString },
+  $I.annote("YeetReadyInheritedRed", {
+    description: "A required check red inherited from main, attributed and recorded under S11 before the ready flip.",
+  })
+) {}
+
+/**
+ * Parse one `--inherited "<check>=<attribution>"` argument, split on the first `=`.
+ *
+ * **Example** (Parse an inherited red)
+ *
+ * ```ts
+ * import { parseYeetReadyInheritedRed } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isSome(parseYeetReadyInheritedRed("Lint=red on main since 2c1cb448ba"))) // true
+ * console.log(O.isNone(parseYeetReadyInheritedRed("Lint"))) // true
+ * ```
+ *
+ * @param value - One `--inherited` argument.
+ * @returns The inherited red, or none when the form is wrong.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const parseYeetReadyInheritedRed = parseAttributedCheck((fields) => YeetReadyInheritedRed.make(fields));
+
+/**
  * The pull request read the flip decides on: the live remote summary and the
  * merge-readiness verdict derived from the same read.
  *
@@ -125,13 +176,19 @@ export class YeetReadyPullRequestRead extends S.Class<YeetReadyPullRequestRead>(
 /**
  * The gate passed on a draft: flip it.
  *
+ * **Details**
+ *
+ * `inherited` holds the S11 attributions the flip applied: those naming a
+ * required check that is failing on the read head. They are recorded in the
+ * PR body before the flip.
+ *
  * **Example** (Describe a flip decision)
  *
  * ```ts
  * import { YeetReadyGateFlip } from "@beep/repo-cli/test/Yeet"
  * import * as O from "effect/Option"
  *
- * const decision = YeetReadyGateFlip.make({ prNumber: 42, headSha: O.some("abc1234") })
+ * const decision = YeetReadyGateFlip.make({ prNumber: 42, headSha: O.some("abc1234"), inherited: [] })
  * console.log(decision._tag) // "flip"
  * ```
  *
@@ -140,7 +197,7 @@ export class YeetReadyPullRequestRead extends S.Class<YeetReadyPullRequestRead>(
  */
 export class YeetReadyGateFlip extends S.TaggedClass<YeetReadyGateFlip>($I`YeetReadyGateFlip`)(
   "flip",
-  { prNumber: S.Finite, headSha: S.Option(S.String) },
+  { prNumber: S.Finite, headSha: S.Option(S.String), inherited: S.Array(YeetReadyInheritedRed) },
   $I.annote("YeetReadyGateFlip", {
     description: "The content-final gate holds on a draft pull request; flip it to ready.",
   })
@@ -257,21 +314,47 @@ export class YeetReadyGateRefused extends S.TaggedError<YeetReadyGateRefused>($I
   override readonly [Runtime.errorExitCode] = 1;
 }
 
+const inheritedRedsEquivalence = S.toEquivalence(S.Array(YeetReadyInheritedRed));
+
 const countOf = (value: number | undefined): number => value ?? 0;
 
 const failingRequiredChecks = (remote: YeetStatusRemote) =>
   A.filter(remote.checks, (check) => check.required && check.outcome === "fail");
 
-// A required check known to be red on the current head. Pending and unread
-// checks are not red: the flip happens before hosted CI finishes.
-const noRequiredRed = (remote: YeetStatusRemote): boolean =>
-  countOf(remote.failingRequiredCheckCount) === 0 && A.isReadonlyArrayEmpty(failingRequiredChecks(remote));
+const failingRequiredNames = (remote: YeetStatusRemote): HashSet.HashSet<string> =>
+  HashSet.fromIterable(A.map(failingRequiredChecks(remote), (check) => check.name));
 
-const readyGateCriterionHolds = (read: YeetReadyPullRequestRead, criterion: YeetReadyGateCriterion): boolean =>
+// The attributions naming a required check that is failing on this head.
+const appliedInherited = (
+  remote: YeetStatusRemote,
+  inherited: ReadonlyArray<YeetReadyInheritedRed>
+): ReadonlyArray<YeetReadyInheritedRed> => {
+  const failing = failingRequiredNames(remote);
+  return A.filter(inherited, (red) => HashSet.has(failing, red.check));
+};
+
+// A required check known to be red on the current head. Pending and unread
+// checks are not red: the flip happens before hosted CI finishes. Under S11 a
+// red attributed with --inherited does not count, but only when every red is
+// named: a census that counts more failing required checks than it names
+// fails closed, because an unnamed red cannot be attributed.
+const noRequiredRed = (remote: YeetStatusRemote, inherited: ReadonlyArray<YeetReadyInheritedRed>): boolean => {
+  const failing = failingRequiredChecks(remote);
+  const count = countOf(remote.failingRequiredCheckCount);
+  if (A.isReadonlyArrayEmpty(inherited)) return count === 0 && A.isReadonlyArrayEmpty(failing);
+  const attributed = HashSet.fromIterable(A.map(inherited, (red) => red.check));
+  return count <= A.length(failing) && A.every(failing, (check) => HashSet.has(attributed, check.name));
+};
+
+const readyGateCriterionHolds = (
+  read: YeetReadyPullRequestRead,
+  inherited: ReadonlyArray<YeetReadyInheritedRed>,
+  criterion: YeetReadyGateCriterion
+): boolean =>
   O.exists(read.mergeReady, (ready) =>
     YeetReadyGateCriterion.$match(criterion, {
       "pr-open": () => mergeReadyCriterionHolds(ready.criteria, "pr-open"),
-      "no-required-red": () => noRequiredRed(read.remote),
+      "no-required-red": () => noRequiredRed(read.remote, inherited),
       "threads-resolved": () => mergeReadyCriterionHolds(ready.criteria, "threads-resolved"),
     })
   );
@@ -287,7 +370,7 @@ const blockerDetail = (blocker: YeetReadyGateCriterion, remote: YeetStatusRemote
       const names = A.map(failingRequiredChecks(remote), (check) => check.name);
       const count = Num.max(countOf(remote.failingRequiredCheckCount), A.length(names));
       const named = A.isReadonlyArrayNonEmpty(names) ? ` (${A.join(names, ", ")})` : Str.empty;
-      return `${count} required check(s) are failing on head ${O.getOrElse(remote.headSha, () => "unknown")}${named}; a red required check means the content is not final. Pending checks and optional lanes do not hold the flip`;
+      return `${count} required check(s) are failing on head ${O.getOrElse(remote.headSha, () => "unknown")}${named}; a red required check means the content is not final. Pending checks and optional lanes do not hold the flip; under S11, attribute a red inherited from main with --inherited "<check>=<attribution>"`;
     }),
     Match.when(
       "threads-resolved",
@@ -308,6 +391,10 @@ const blockerDetail = (blocker: YeetReadyGateCriterion, remote: YeetStatusRemote
  * as already ready. Hosted checks that are still pending, and optional lanes
  * in any state, never block: the flip is due at content-final.
  *
+ * `inherited` (S11) lets `no-required-red` hold when every failing required
+ * check is attributed; a flip carries the attributions that named a failing
+ * check, and the rest are dropped.
+ *
  * **Example** (A missing pull request is blocked on pr-open)
  *
  * ```ts
@@ -324,38 +411,50 @@ const blockerDetail = (blocker: YeetReadyGateCriterion, remote: YeetStatusRemote
  * ```
  *
  * @param read - The live pull request summary and its merge-readiness verdict.
+ * @param inherited - S11 attributions for required reds inherited from `main`.
  * @returns Flip, already-ready, or the first blocker.
  * @category utilities
  * @since 0.0.0
  */
-export const decideYeetReadyGate = (read: YeetReadyPullRequestRead): YeetReadyGateDecision => {
-  const blocker = A.findFirst(
-    YeetReadyGateCriterion.literals,
-    (criterion) => !readyGateCriterionHolds(read, criterion)
-  );
-  // A pull request that is no longer a draft has nothing to flip, whatever
-  // its checks and threads say: the verb must be idempotent, so a thread that
-  // lands right after the flip reads as `already-ready`, never as a pending
-  // flip an agent might wait on.
-  // Only an OPEN pull request can be "already ready": `gh pr view` also
-  // returns CLOSED and MERGED ones, and those still refuse on `pr-open`.
-  const alreadyReady = O.filter(
-    O.fromUndefinedOr(read.remote.number),
-    () => read.remote.isDraft === false && read.remote.state === "OPEN"
-  );
-  if (O.isSome(alreadyReady)) return YeetReadyGateAlreadyReady.make({ prNumber: alreadyReady.value });
-  return pipe(
-    O.fromUndefinedOr(read.remote.number),
-    O.filter(() => O.isNone(blocker)),
-    O.match({
-      onNone: () => {
-        const unmet = O.getOrElse(blocker, () => YeetReadyGateCriterion.literals[0]);
-        return YeetReadyGateBlocked.make({ blocker: unmet, detail: blockerDetail(unmet, read.remote) });
-      },
-      onSome: (prNumber): YeetReadyGateDecision => YeetReadyGateFlip.make({ prNumber, headSha: read.remote.headSha }),
-    })
-  );
-};
+export const decideYeetReadyGate: {
+  (inherited?: ReadonlyArray<YeetReadyInheritedRed>): (read: YeetReadyPullRequestRead) => YeetReadyGateDecision;
+  (read: YeetReadyPullRequestRead, inherited?: ReadonlyArray<YeetReadyInheritedRed>): YeetReadyGateDecision;
+} = dual(
+  (args) => P.hasProperty(args[0], "remote"),
+  (read: YeetReadyPullRequestRead, inherited: ReadonlyArray<YeetReadyInheritedRed> = []): YeetReadyGateDecision => {
+    const blocker = A.findFirst(
+      YeetReadyGateCriterion.literals,
+      (criterion) => !readyGateCriterionHolds(read, inherited, criterion)
+    );
+    // A pull request that is no longer a draft has nothing to flip, whatever
+    // its checks and threads say: the verb must be idempotent, so a thread that
+    // lands right after the flip reads as `already-ready`, never as a pending
+    // flip an agent might wait on.
+    // Only an OPEN pull request can be "already ready": `gh pr view` also
+    // returns CLOSED and MERGED ones, and those still refuse on `pr-open`.
+    const alreadyReady = O.filter(
+      O.fromUndefinedOr(read.remote.number),
+      () => read.remote.isDraft === false && read.remote.state === "OPEN"
+    );
+    if (O.isSome(alreadyReady)) return YeetReadyGateAlreadyReady.make({ prNumber: alreadyReady.value });
+    return pipe(
+      O.fromUndefinedOr(read.remote.number),
+      O.filter(() => O.isNone(blocker)),
+      O.match({
+        onNone: () => {
+          const unmet = O.getOrElse(blocker, () => YeetReadyGateCriterion.literals[0]);
+          return YeetReadyGateBlocked.make({ blocker: unmet, detail: blockerDetail(unmet, read.remote) });
+        },
+        onSome: (prNumber): YeetReadyGateDecision =>
+          YeetReadyGateFlip.make({
+            prNumber,
+            headSha: read.remote.headSha,
+            inherited: appliedInherited(read.remote, inherited),
+          }),
+      })
+    );
+  }
+);
 
 const readPullRequestForReady = Effect.fn("Yeet.readPullRequestForReady")(function* (context: RepoRunContext) {
   const snapshot = yield* collectYeetStatus(context, true);
@@ -378,8 +477,9 @@ const findLiveMonitorForReady = (
     Effect.catch(() => Effect.succeedNone)
   );
 
-const markReadyThroughBudget = (prNumber: number) =>
-  flipPullRequestReady(prNumber).pipe(
+const markReadyThroughBudget = (prNumber: number, confirmedHead: string) =>
+  flipPullRequestReady(prNumber, confirmedHead).pipe(
+    withYeetGh(O.none()),
     Effect.mapError((cause) =>
       YeetCommandError.make({
         message: `could not mark pull request #${prNumber} ready for review: ${cause.message}`,
@@ -389,10 +489,24 @@ const markReadyThroughBudget = (prNumber: number) =>
     )
   );
 
+// S11 requires non-empty attributions; empty-section cleanup is best effort.
+const recordInheritedThroughRest = (prNumber: number, entries: ReadonlyArray<YeetReadyInheritedRed>, headSha: string) =>
+  recordInheritedRedsInPullRequestBody(prNumber, entries, headSha).pipe(
+    Effect.mapError((cause) =>
+      YeetCommandError.make({
+        message: A.isReadonlyArrayNonEmpty(entries)
+          ? `yeet ready refused: could not record the inherited reds in the body of #${prNumber} (${cause.message}); S11 requires the record before the flip`
+          : `could not reconcile the inherited-reds section in the body of #${prNumber} (${cause.message})`,
+        exitCode: 1,
+      })
+    )
+  );
+
 interface YeetReadyGateDependencies {
   readonly findMonitor?: typeof findLiveMonitorForReady;
   readonly markReady?: (
-    prNumber: number
+    prNumber: number,
+    confirmedHead: string
   ) => Effect.Effect<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
   readonly read?: (
     context: RepoRunContext
@@ -401,7 +515,45 @@ interface YeetReadyGateDependencies {
     YeetCommandError,
     Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   >;
+  readonly recordInherited?: (
+    prNumber: number,
+    entries: ReadonlyArray<YeetReadyInheritedRed>,
+    headSha: string
+  ) => Effect.Effect<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
 }
+
+const recordAndConfirmInherited = Effect.fn("Yeet.recordAndConfirmInherited")(function* (
+  context: RepoRunContext,
+  dependencies: YeetReadyGateDependencies,
+  confirmation: YeetReadyGateFlip,
+  inherited: ReadonlyArray<YeetReadyInheritedRed>,
+  headSha: string
+) {
+  const applied = confirmation.inherited;
+  const record = (dependencies.recordInherited ?? recordInheritedThroughRest)(confirmation.prNumber, applied, headSha);
+  yield* A.isReadonlyArrayNonEmpty(applied)
+    ? record
+    : record.pipe(
+        Effect.catchTag("YeetCommandError", (cause) =>
+          Console.log(`[yeet] warning: ${cause.message}; continuing the ready flip with no applied inherited reds`)
+        )
+      );
+  // Recording takes time; confirm the whole gate against the recorded head and
+  // attributions before allowing the caller to flip.
+  const afterRecord = decideYeetReadyGate(yield* (dependencies.read ?? readPullRequestForReady)(context), inherited);
+  if (
+    afterRecord._tag !== "flip" ||
+    !O.contains(afterRecord.headSha, headSha) ||
+    !inheritedRedsEquivalence(afterRecord.inherited, applied)
+  ) {
+    return yield* YeetCommandError.make({
+      message: A.isReadonlyArrayNonEmpty(applied)
+        ? `yeet ready refused: the pull request changed while recording inherited reds; re-run \`${YEET_READY_COMMAND}\` so the current state is gated and recorded.`
+        : `yeet ready refused: the pull request changed while reconciling the inherited-reds section; re-run \`${YEET_READY_COMMAND}\` so the current state is gated.`,
+      exitCode: 1,
+    });
+  }
+});
 
 /**
  * Read the branch's pull request and flip it from draft to ready at content-final.
@@ -413,7 +565,14 @@ interface YeetReadyGateDependencies {
  * checks, or its threads. A blocked decision fails with
  * {@link YeetReadyGateRefused}; a failed flip (the GraphQL-only
  * `markPullRequestReadyForReview`, spent through the budget guard) fails with
- * `YeetCommandError`.
+ * `YeetCommandError`. With S11 `inherited` attributions, a flip first records
+ * the applied ones in the PR body (REST), and a failed record refuses the flip
+ * with `YeetCommandError`. A second confirmation after the body write requires
+ * the same head, a passing gate, and the same applied attributions before flipping.
+ * When no reds apply, stale-section cleanup is best effort: an existing section
+ * is rewritten to a head-pinned None record, but a failed read or write only
+ * warns. An empty set without a section adds nothing. The post-record gate
+ * confirmation still requires the same head and passing checks and threads.
  *
  * **Example** (Build the gate effect)
  *
@@ -424,21 +583,32 @@ interface YeetReadyGateDependencies {
  * ```
  *
  * @param context - Repo context of the branch whose pull request is flipped.
- * @param dependencies - Injectable pull request read and ready flip for tests.
+ * @param dependencies - Injectable pull request read, inherited-red record and ready flip for tests.
+ * @param inherited - Parsed S11 `--inherited` attributions.
  * @returns The decision the gate acted on.
  * @category workflows
  * @since 0.0.0
  */
 export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
   context: RepoRunContext,
-  dependencies: YeetReadyGateDependencies = {}
+  dependencies: YeetReadyGateDependencies = {},
+  inherited: ReadonlyArray<YeetReadyInheritedRed> = []
 ): Effect.fn.Return<
   YeetReadyGateDecision,
   YeetCommandError | YeetReadyGateRefused,
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const read = yield* (dependencies.read ?? readPullRequestForReady)(context);
-  const decision = decideYeetReadyGate(read);
+  const decision = decideYeetReadyGate(read, inherited);
+  const failing = failingRequiredNames(read.remote);
+  yield* Effect.forEach(
+    A.filter(inherited, (red) => !HashSet.has(failing, red.check)),
+    (red) =>
+      Console.log(
+        `[yeet] note: --inherited ${red.check} is not a failing required check on this head; ignored (optional reds never hold the flip)`
+      ),
+    { discard: true }
+  );
   yield* YeetReadyGateDecision.match(decision, {
     blocked: (blocked) =>
       Effect.fail(
@@ -454,7 +624,10 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       // or a new thread can land in between, even on the same head, so take
       // the whole gate read again immediately before the flip and require the
       // same verdict on the same head.
-      const confirmation = decideYeetReadyGate(yield* (dependencies.read ?? readPullRequestForReady)(context));
+      const confirmation = decideYeetReadyGate(
+        yield* (dependencies.read ?? readPullRequestForReady)(context),
+        inherited
+      );
       const sameHead = O.getOrElse(headSha, () => "unknown");
       if (confirmation._tag !== "flip" || !O.contains(confirmation.headSha, sameHead)) {
         const reason = YeetReadyGateDecision.match(confirmation, {
@@ -468,11 +641,18 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
           exitCode: 1,
         });
       }
+      // S11: the attributions the confirmation applied are written before the
+      // flip; a failed non-empty write refuses it. Empty-section cleanup warns.
+      const applied = confirmation.inherited;
+      yield* recordAndConfirmInherited(context, dependencies, confirmation, inherited, sameHead);
       // markPullRequestReadyForReview is GraphQL-only; the default flip spends it
       // through the GraphQL budget guard, waiting for the hourly reset when the
       // shared budget is spent instead of failing the way `gh pr ready` did.
-      yield* (dependencies.markReady ?? markReadyThroughBudget)(prNumber);
+      yield* (dependencies.markReady ?? markReadyThroughBudget)(prNumber, sameHead);
       yield* Console.log(`[yeet] pull request #${prNumber} flipped from draft to ready for review`);
+      if (A.isReadonlyArrayNonEmpty(applied)) {
+        yield* Console.log(`[yeet] recorded ${A.length(applied)} inherited red(s) in the PR body`);
+      }
       yield* Console.log(
         `[yeet] the review window starts now: the merge gate opens no sooner than the review window (default ${Duration.toMinutes(YEET_REVIEW_WINDOW_DEFAULT)} minutes) after this flip or the last push, whichever is later; do not merge in this step`
       );
@@ -495,6 +675,10 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
 /**
  * Run `yeet ready` for the checked-out branch.
  *
+ * **Details**
+ *
+ * A malformed `--inherited` value is refused before anything is read.
+ *
  * **Example** (Build the command effect)
  *
  * ```ts
@@ -503,12 +687,13 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
  * console.log(typeof runYeetReady) // "function"
  * ```
  *
- * @param options - Base, head, and packet directory for the run context.
+ * @param options - Base, head, packet directory, and the raw `--inherited` values.
  * @returns An Effect that completes after the flip or the already-ready report.
  * @category use-cases
  * @since 0.0.0
  */
 export const runYeetReady = Effect.fn("Yeet.runYeetReady")(function* (options: YeetReadyOptions) {
+  const inherited = yield* decodeAttributedCheckFlags("inherited", options.inherited, parseYeetReadyInheritedRed);
   const context = yield* hydrateYeetReadOnlyContext(options);
-  yield* runYeetReadyGate(context);
+  yield* runYeetReadyGate(context, {}, inherited);
 });

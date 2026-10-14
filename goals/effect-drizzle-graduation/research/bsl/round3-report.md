@@ -38,7 +38,7 @@ absence. The Drizzle `$inferInsert` exclusion for identity-always did not change
 ### Installed `GeneratedByDb` discrepancy
 
 The brief expected installed `Model.GeneratedByDb` to include update. In beta.104 it does not:
-`node_modules/effect/src/unstable/schema/Model.ts:204-230` defines only select and json and its
+`node_modules/effect/src/schema/Model.ts:204-230` defines only select and json and its
 documentation explicitly says update is omitted. BSL therefore cannot literally align with
 that helper while also satisfying `SqlModel.makeRepository`'s id constraint. The implemented
 identity-always policy follows the deliverable's repository-compatibility requirement and uses

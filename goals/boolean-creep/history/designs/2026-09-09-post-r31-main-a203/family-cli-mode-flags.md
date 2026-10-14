@@ -100,7 +100,7 @@ must not escape the CLI layer. `resolveRunMode` remains precedence-based for
 and selects `check`, then `dry-run`, then `sync`.
 
 Effect v4 validation: the required `.repos/effect` checkout is present and was
-checked at `packages/effect/src/unstable/cli/Flag.ts:156-182,1001-1020` and
+checked at `packages/effect/src/cli/Flag.ts:156-182,1001-1020` and
 `Param.ts:545-579`. `Flag.choice(name, options)` parses one valued flag directly
 to a literal, while `Flag.orElse` composes alternative parsers rather than
 collapsing two independently accepted legacy boolean spellings. Replacing the

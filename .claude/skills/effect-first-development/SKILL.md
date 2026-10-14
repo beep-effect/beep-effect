@@ -4,8 +4,9 @@ description: >
   Canonical Effect-first development guide for this repo. Trigger on: new features,
   refactors, bug fixes, API boundaries, typed errors, Option usage, schema decoding,
   service wiring, and test authoring.
-version: 0.1.0
-status: active
+metadata:
+  version: "0.1.0"
+  status: active
 ---
 
 # Effect-First Development (Canonical)

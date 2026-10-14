@@ -1,0 +1,13 @@
+diff --git a/design-system.md b/design-system.md
+index 9ed11e93e7e8..0f4c23b4b8e9 100644
+--- a/design-system.md
++++ b/design-system.md
+@@ -28,7 +28,7 @@
+ | App name  | Derived from the brand in DESIGN.md | Kebab-case.                                                                                                                              |
+ | Base      | `base`                              | Pass `--base` when no preset code is given. Use `radix` only when the user asks. `info --json` after init decides `render` vs `asChild`. |
+ 
+-If the DESIGN.md path can't be read (macOS privacy blocks `~/Downloads` and `~/Desktop` for some hosts), ask the user to copy it into the working directory. Don't guess its contents.
++If the DESIGN.md path can't be read (macOS privacy blocks access to the Downloads and Desktop folders on some hosts), ask the user to copy it into the working directory. Don't guess its contents.
+ 
+ ---
+ 

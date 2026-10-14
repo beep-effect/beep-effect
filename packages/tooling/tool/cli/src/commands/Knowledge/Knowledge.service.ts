@@ -56,7 +56,7 @@ import {
   knowledgeDocumentLines,
   knowledgeInlineSpans,
   knowledgeLengthPrefix,
-  knowledgeLineMatches,
+  knowledgePathAssertion,
   knowledgeSha256Hex,
   normalizeKnowledgeRepoPath,
   scanKnowledgeRefsTree,
@@ -82,7 +82,12 @@ import type { ChildProcessSpawner } from "effect/process";
 import type { CapturedStreams } from "../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 import type { KnowledgeStaticCommandTree } from "./Knowledge.command-surface.ts";
-import type { KnowledgeInlineSpan, KnowledgeRefsReport, KnowledgeTreeOracle } from "./Knowledge.refs.ts";
+import type {
+  KnowledgeInlineSpan,
+  KnowledgePathAssertion,
+  KnowledgeRefsReport,
+  KnowledgeTreeOracle,
+} from "./Knowledge.refs.ts";
 import type {
   KnowledgeCommandProbeResult,
   KnowledgeFindingSeverity,
@@ -458,20 +463,15 @@ const brokenPathAt = (
   );
 
 const assertionCandidate = (
-  match: RegExpExecArray,
+  assertion: KnowledgePathAssertion,
   lineNumber: number,
   documentPath: string,
   documentId: string,
   entries: ReadonlyArray<KnowledgeTrackedEntry>
-): O.Option<KnowledgeFindingCandidate> => {
-  const raw = match[1];
-  if (!P.isString(raw)) {
-    return O.none();
-  }
-  return O.map(brokenPathAt(raw, documentPath, entries), (repoPath) =>
-    failedAssertionCandidate(documentId, documentPath, repoPath, lineNumber, match.index + 1)
+): O.Option<KnowledgeFindingCandidate> =>
+  O.map(brokenPathAt(assertion.path, documentPath, entries), (repoPath) =>
+    failedAssertionCandidate(documentId, documentPath, repoPath, lineNumber, assertion.column)
   );
-};
 
 const commandOccurrence = (
   inline: KnowledgeInlineSpan,
@@ -530,10 +530,13 @@ const extractLineFindings = (
   entries: ReadonlyArray<KnowledgeTrackedEntry>,
   gitRefNames: HashSet.HashSet<string>
 ): readonly [ReadonlyArray<KnowledgeFindingCandidate>, ReadonlyArray<KnowledgeCommandOccurrence>] => {
-  const assertions = knowledgeLineMatches(/<!-- beep:assert path-exists ([^\s]+) -->/gu, lineText);
   const inlines = knowledgeInlineSpans(lineText);
   const candidates = A.appendAll(
-    A.getSomes(A.map(assertions, (match) => assertionCandidate(match, lineNumber, documentPath, documentId, entries))),
+    O.toArray(
+      O.flatMap(knowledgePathAssertion(lineText), (assertion) =>
+        assertionCandidate(assertion, lineNumber, documentPath, documentId, entries)
+      )
+    ),
     A.getSomes(
       A.map(inlines, (inline) =>
         inlinePathCandidate(inline, lineNumber, documentPath, documentId, entries, gitRefNames)
@@ -1381,7 +1384,11 @@ export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle
   scratchRoot: string,
   trackedEntries: ReadonlyArray<KnowledgeTrackedEntry>,
   runtimeExecutable = process.execPath
-) {
+): Effect.fn.Return<
+  KnowledgeArchiveOracle,
+  KnowledgeOperationalError,
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const runtime = yield* Effect.context<

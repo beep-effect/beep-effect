@@ -253,6 +253,8 @@
         "packages/foundation/primitive/data/src/**",
         "packages/tooling/library/ai-metrics/package.json",
         "packages/tooling/library/ai-metrics/src/**",
+        "packages/tooling/library/ai-sync/package.json",
+        "packages/tooling/library/ai-sync/src/**",
         "packages/tooling/library/qa-capture/package.json",
         "packages/tooling/library/qa-capture/src/**",
         "packages/tooling/library/repo-utils/package.json",
@@ -1192,6 +1194,25 @@
         "!{.patterns,standards,.claude/skills,docs,goals}/**/.repos/**",
         "!{.patterns,standards,.claude/skills,docs,goals}/**/generated/**",
         "!{.patterns,standards,.claude/skills,docs,goals}/**/_generated/**"
+      ]
+    },
+    "//#lint:retired-effect-paths": {
+      "cache": false,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "**/*",
+        "!.git/**",
+        "!**/.git/**",
+        "!graft/**",
+        "!.repos/**",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**"
       ]
     },
     "//#lint:ecosystem-polarity": {

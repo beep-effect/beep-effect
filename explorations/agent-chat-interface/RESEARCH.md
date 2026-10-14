@@ -94,7 +94,7 @@ so findings transfer directly. Handoff:
   string-escape-aware JSON array-element scanner (property-tested in
   `test/scanChunk.test.ts`), and schema-decoded per block via
   `AnthropicStructuredOutput.toCodecAnthropic` (upstream in
-  `effect/unstable/ai`). Retries: ExecutionPlan wraps *acquisition only*
+  `effect/ai`). Retries: ExecutionPlan wraps *acquisition only*
   (`server/Anthropic.ts`), gated on `AiError.isRetryable`.
 - **Pure Lexical schemas** (`shared/lexical-schema.ts`): serialized
   editor-state tagged unions import only `effect` — direct evidence a

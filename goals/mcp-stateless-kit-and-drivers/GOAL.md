@@ -20,7 +20,7 @@ contract:
 Read those first, then `AGENTS.md`, `CLAUDE.md`, and
 `explorations/effect-mcp-2026-07-28/{BRIEF,MAP,DECISIONS}.md`. Higher-priority repo
 standards outrank packet prose when they conflict. Validate every Effect API
-against `node_modules/effect/dist/unstable/ai/**` or `.repos/effect`, never
+against `node_modules/effect/dist/ai/**` or `.repos/effect`, never
 from priors.
 
 Scope:

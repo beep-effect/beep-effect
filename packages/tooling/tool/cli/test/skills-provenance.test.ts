@@ -22,33 +22,46 @@ import {
   LocalSkillLockEntry,
   planSkillsLockMigration,
   renderSkillsLockMigrationPlanSummary,
+  renderUnifiedHunks,
+  resolveCodeownersOwner,
   resolveSkillProvenance,
   SkillDriftRow,
   SkillGitRevision,
+  SkillPatchOwnerSource,
   SkillPathHistory,
   SkillPathHistoryWindow,
   SkillPinProposal,
+  SkillsLockDocument,
+  SkillsLockWriteRefusal,
   SkillUpstreamContent,
   SkillUpstreamContentError,
   SkillUpstreamContentFile,
   SkillUpstreamContentSource,
+  SkillUpstreamContentSourceLive,
+  skillPatchOwnerSourceFromCodeowners,
   skillResolutionSeeds,
   VendoredSkillLockEntry,
+  writeSkillsLockMigration,
 } from "@beep/repo-cli/commands/Skills";
+import { stagedPatchPath } from "@beep/repo-cli/test/Skills";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
+import { describe, expect, layer } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
+import { HttpClient, HttpClientResponse } from "effect/http";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { SkillMigrationRow, VendoredMigrationRow } from "@beep/repo-cli/commands/Skills";
@@ -61,7 +74,11 @@ const emptyDigest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b785
 const hashBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
-const TestLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+const TestLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  Layer.succeed(SkillPatchOwnerSource, skillPatchOwnerSourceFromCodeowners("* @kriegcloud\n"))
+);
 
 const pinnedHistory = S.decodeEffect(SkillPathHistory)({
   revisions: [PINNED_SHADCN_REVISION],
@@ -403,7 +420,7 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock migration plan", (it) =
         Effect.provideService(SkillUpstreamContentSource, source)
       );
 
-      expect(plan.schemaVersion).toBe("skills-lock-migration-plan/v2");
+      expect(plan.schemaVersion).toBe("skills-lock-migration-plan/v3");
       expect(A.map(plan.rows, (row) => [row.skill, row.disposition, row.entry?._tag])).toEqual([
         ["adhd", "unresolved", "local"],
         ["shadcn", "vendored", "vendored"],
@@ -426,8 +443,14 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock migration plan", (it) =
           truncated: false,
         });
       }
-      // The walk stops at the first pristine revision: REVISION_1 is never loaded.
-      expect(loaded).toEqual([PINNED_SHADCN_REVISION, REVISION_3, REVISION_2]);
+      // The walk stops at the first pristine revision: REVISION_1 is never loaded. The entry
+      // is then recomputed at the proposed pin, which loads REVISION_2 once more.
+      expect(loaded).toEqual([PINNED_SHADCN_REVISION, REVISION_3, REVISION_2, REVISION_2]);
+      if (O.isSome(shadcn)) {
+        expect(shadcn.value.entry.upstream.sourceRevision).toBe(REVISION_2);
+        expect(shadcn.value.entry.patches.required).toBe(false);
+        expect(shadcn.value.entry.effective.treeHash).toBe(shadcn.value.entry.snapshot.treeHash);
+      }
       expect(renderSkillsLockMigrationPlanSummary(plan)).toContain("pristine at 2222222222 (proposed pin)");
       expect(yield* fs.readFileString(path.join(repoRoot, "skills-lock.json"))).toBe(SKILLS_LOCK_V1_FIXTURE);
     })
@@ -467,7 +490,10 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock migration plan", (it) =
         expect(shadcn.value.entry.patches.required).toBe(true);
       }
       const summary = renderSkillsLockMigrationPlanSummary(plan);
-      expect(summary).toContain("no pristine revision; keeps seed pin 91f21dfe13");
+      expect(summary).toContain("no pristine revision; keeps current pin 91f21dfe13");
+      expect(summary).toContain(
+        "patches: .agents/skill-patches/shadcn/0001-skill-md.patch, .agents/skill-patches/shadcn/0002-rules-composition-md.patch"
+      );
       expect(summary).toContain(
         "1 match an upstream revision, 1 match no examined revision (patch candidates: SKILL.md)"
       );
@@ -617,11 +643,11 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock migration plan", (it) =
     })
   );
 
-  it.effect("refuses a lock that is not skills-lock/v1", () =>
+  it.effect("refuses a lock that is neither skills-lock/v1 nor skills-lock/v2", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "skills-lock-plan-bad-" });
-      yield* writeFixtureFile(repoRoot, "skills-lock.json", textEncoder.encode('{"version": 2, "skills": {}}\n'));
+      yield* writeFixtureFile(repoRoot, "skills-lock.json", textEncoder.encode('{"version": 3, "skills": {}}\n'));
       const exit = yield* Effect.exit(
         planSkillsLockMigration(repoRoot).pipe(
           Effect.provideService(
@@ -636,61 +662,417 @@ layer(TestLayer, { timeout: "60 seconds" })("skills lock migration plan", (it) =
         )
       );
       exit.pipe(Exit.isFailure, assertTrue);
-      expect(String(exit)).toContain("is not a skills-lock/v1 document");
+      expect(String(exit)).toContain("is neither a skills-lock/v1 nor a skills-lock/v2 document");
     })
   );
 });
 
-layer(TestLayer)("skills provenance service", (it) => {
+const abbreviated = Str.slice(0, 12);
+
+/** A repo whose shadcn install carries one repo-local line on top of the pinned tree. */
+const installLocallyEditedRepo = Effect.fn("SkillsLockWriteTest.installLocallyEditedRepo")(function* (
+  repoRoot: string
+) {
+  const texts = yield* fixtureTexts();
+  const installed = { skill: `${texts.skill}\nRepo-local note.\n`, composition: texts.pinned.composition };
+  yield* installFixtureRepo(repoRoot, installed);
+  const { source } = yield* makeHistorySource({
+    trees: [[PINNED_SHADCN_REVISION, texts.pinned]],
+    history: [PINNED_SHADCN_REVISION],
+    truncated: false,
+  });
+  return { source, texts, installed };
+});
+
+const refusalReason = (error: { readonly _tag: string }): string =>
+  S.is(SkillsLockWriteRefusal)(error) ? error.reason : error._tag;
+
+layer(TestLayer, { timeout: "60 seconds" })("skills lock write", (it) => {
+  it.effect("renders separated unified-diff hunks with Git range syntax and the no-newline marker", () =>
+    Effect.sync(() => {
+      expect(renderUnifiedHunks("a\nb\nc\nd\ne\nf\ng\nh\ni\nj\n", "a\nB\nc\nd\ne\nf\ng\nh\ni\nJ")).toEqual([
+        "@@ -1,5 +1,5 @@",
+        " a",
+        "-b",
+        "+B",
+        " c",
+        " d",
+        " e",
+        "@@ -7,4 +7,4 @@",
+        " g",
+        " h",
+        " i",
+        "-j",
+        "+J",
+        "\\ No newline at end of file",
+      ]);
+      expect(renderUnifiedHunks("", "only\n")).toEqual(["@@ -0,0 +1 @@", "+only"]);
+      expect(renderUnifiedHunks("same\n", "same\n")).toEqual([]);
+    })
+  );
+
+  it.effect("resolves CODEOWNERS owners with last-match semantics", () =>
+    Effect.sync(() => {
+      const codeowners = A.join(
+        [
+          "# Single-operator laboratory.",
+          "* @kriegcloud",
+          "/.claude/skills/ @skills",
+          "*.yaml @yaml-owner",
+          "docs/** @docs",
+          ".claude/skills/oracle/agents/",
+          "/.agents/ @agents @kriegcloud # trailing comment",
+          "",
+        ],
+        "\n"
+      );
+      const owner = (repoPath: string) => O.getOrNull(resolveCodeownersOwner(codeowners, repoPath));
+      expect(owner(".claude/skills/oracle/SKILL.md")).toBe("@skills");
+      expect(owner(".claude/skills/teach/notes.yaml")).toBe("@yaml-owner");
+      // The last matching line names no owner, so the path is deliberately unowned.
+      expect(owner(".claude/skills/oracle/agents/openai.yaml")).toBeNull();
+      // `docs/**` has an inner slash, so it is anchored to the root.
+      expect(owner("packages/docs/guide.md")).toBe("@kriegcloud");
+      expect(owner("docs/guides/guide.md")).toBe("@docs");
+      expect(owner(".agents/skill-patches/oracle/0001-skill-md.patch")).toBe("@agents @kriegcloud");
+      expect(owner("README.md")).toBe("@kriegcloud");
+    })
+  );
+
+  it.effect("refuses a missing or stale --expect and a conflicted plan, writing nothing", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "skills-lock-write-refuse-" });
+      const { source } = yield* installLocallyEditedRepo(repoRoot);
+      const write = (expect: O.Option<string>) =>
+        writeSkillsLockMigration(repoRoot, expect).pipe(
+          Effect.provideService(SkillUpstreamContentSource, source),
+          Effect.flip
+        );
+
+      expect(refusalReason(yield* write(O.none()))).toBe("missing-expect");
+      expect(refusalReason(yield* write(O.some("0".repeat(64))))).toBe("digest-mismatch");
+
+      // A license that moved makes the seeded row unresolved, which a write cannot settle.
+      const texts = yield* fixtureTexts();
+      const relicensed = yield* makeHistorySource({
+        trees: [[PINNED_SHADCN_REVISION, texts.pinned]],
+        history: [PINNED_SHADCN_REVISION],
+        truncated: false,
+        licenseText: "Relicensed.\n",
+      });
+      const conflicted = yield* planSkillsLockMigration(repoRoot).pipe(
+        Effect.provideService(SkillUpstreamContentSource, relicensed.source)
+      );
+      const refusal = yield* writeSkillsLockMigration(repoRoot, O.some(conflicted.planDigest)).pipe(
+        Effect.provideService(SkillUpstreamContentSource, relicensed.source),
+        Effect.flip
+      );
+      expect(refusalReason(refusal)).toBe("conflicted-plan");
+      expect(refusal.message).toContain("shadcn (provenance-unavailable");
+
+      expect(yield* fs.readFileString(path.join(repoRoot, "skills-lock.json"))).toBe(SKILLS_LOCK_V1_FIXTURE);
+      expect(yield* fs.exists(path.join(repoRoot, ".agents/skill-patches"))).toBe(false);
+    })
+  );
+
+  it.effect("writes the v2 lock and the patch series, then reports a replay as already applied", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "skills-lock-write-" });
+      const { source, texts, installed } = yield* installLocallyEditedRepo(repoRoot);
+      const provide = Effect.provideService(SkillUpstreamContentSource, source);
+
+      const reviewed = yield* planSkillsLockMigration(repoRoot).pipe(provide);
+      const receipt = yield* writeSkillsLockMigration(repoRoot, O.some(reviewed.planDigest)).pipe(provide);
+
+      expect(receipt.outcome).toBe("written");
+      expect([receipt.vendored, receipt.local]).toEqual([1, 2]);
+      const patchPath = ".agents/skill-patches/shadcn/0001-skill-md.patch";
+      expect(A.map(receipt.patches, (patch) => patch.path)).toEqual([patchPath]);
+
+      const lockText = yield* fs.readFileString(path.join(repoRoot, "skills-lock.json"));
+      expect(receipt.lock.sha256).toBe(yield* hashBytes(textEncoder.encode(lockText)));
+      const lock = yield* decodeSkillsLockDocumentJson(lockText);
+      expect(A.map(R.toEntries(lock.skills), ([skill, entry]) => [skill, entry._tag])).toEqual([
+        ["adhd", "local"],
+        ["shadcn", "vendored"],
+        ["yeet", "local"],
+      ]);
+      const shadcn = lock.skills.shadcn;
+      expect(shadcn?._tag === "vendored" ? shadcn.patches.series : []).toEqual([
+        {
+          path: patchPath,
+          sha256: receipt.patches[0]?.sha256,
+          label: "temporary-drift",
+          owner: "@kriegcloud",
+          dropCondition: "Drop when upstream contains an equivalent change.",
+        },
+      ]);
+
+      // Golden: one hunk with three lines of context, against the pristine snapshot.
+      const upstreamSha = yield* hashBytes(textEncoder.encode(texts.skill));
+      const installedSha = yield* hashBytes(textEncoder.encode(installed.skill));
+      const patchText = yield* fs.readFileString(path.join(repoRoot, patchPath));
+      expect(patchText).toBe(
+        A.join(
+          [
+            "diff --git a/SKILL.md b/SKILL.md",
+            `index ${abbreviated(upstreamSha)}..${abbreviated(installedSha)} 100644`,
+            "--- a/SKILL.md",
+            "+++ b/SKILL.md",
+            "@@ -6,3 +6,5 @@",
+            " # Shadcn fixture",
+            " ",
+            " Compose primitives before adding abstractions.",
+            "+",
+            "+Repo-local note.",
+            "",
+          ],
+          "\n"
+        )
+      );
+      expect(receipt.patches[0]?.sha256).toBe(yield* hashBytes(textEncoder.encode(patchText)));
+      expect(A.sort(yield* fs.readDirectory(path.join(repoRoot, ".agents")), Str.Order)).toEqual([
+        "skill-patches",
+        "skills",
+      ]);
+      expect(A.filter(yield* fs.readDirectory(repoRoot), Str.startsWith("skills-lock.json."))).toEqual([]);
+
+      // The lock moved, so the reviewed digest no longer matches; the replanned digest is a no-op.
+      const replanned = yield* planSkillsLockMigration(repoRoot).pipe(provide);
+      expect(replanned.planDigest).not.toBe(reviewed.planDigest);
+      const stale = yield* writeSkillsLockMigration(repoRoot, O.some(reviewed.planDigest)).pipe(provide, Effect.flip);
+      expect(refusalReason(stale)).toBe("digest-mismatch");
+      const replay = yield* writeSkillsLockMigration(repoRoot, O.some(replanned.planDigest)).pipe(provide);
+      expect(replay.outcome).toBe("already-applied");
+      expect(replay.lock).toEqual(receipt.lock);
+      expect(replay.patches).toEqual(receipt.patches);
+      expect((yield* planSkillsLockMigration(repoRoot).pipe(provide)).planDigest).toBe(replanned.planDigest);
+      expect(yield* fs.readFileString(path.join(repoRoot, "skills-lock.json"))).toBe(lockText);
+    })
+  );
+
+  it.effect("leaves no partial file when the lock rename fails", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "skills-lock-write-atomic-" });
+      const { source } = yield* installLocallyEditedRepo(repoRoot);
+      // An earlier patch tree that the write swaps aside must come back on failure.
+      yield* writeFixtureFile(repoRoot, ".agents/skill-patches/shadcn/0001-old.patch", textEncoder.encode("old\n"));
+      const lockPath = path.join(repoRoot, "skills-lock.json");
+      const failingRename: FileSystem.FileSystem = {
+        ...fs,
+        rename: (from, to) =>
+          to === lockPath
+            ? Effect.fail(
+                PlatformError.systemError({
+                  _tag: "PermissionDenied",
+                  module: "FileSystem",
+                  method: "rename",
+                  pathOrDescriptor: to,
+                })
+              )
+            : fs.rename(from, to),
+      };
+      const provide = Effect.provideService(SkillUpstreamContentSource, source);
+      const reviewed = yield* planSkillsLockMigration(repoRoot).pipe(provide);
+
+      const error = yield* writeSkillsLockMigration(repoRoot, O.some(reviewed.planDigest)).pipe(
+        provide,
+        Effect.provideService(FileSystem.FileSystem, failingRename),
+        Effect.flip
+      );
+
+      expect(error.message).toContain("Failed to publish skills-lock.json");
+      expect(yield* fs.readFileString(lockPath)).toBe(SKILLS_LOCK_V1_FIXTURE);
+      expect(yield* fs.readDirectory(path.join(repoRoot, ".agents/skill-patches/shadcn"))).toEqual(["0001-old.patch"]);
+      expect(A.sort(yield* fs.readDirectory(path.join(repoRoot, ".agents")), Str.Order)).toEqual([
+        "skill-patches",
+        "skills",
+      ]);
+      expect(A.filter(yield* fs.readDirectory(repoRoot), Str.startsWith("skills-lock.json."))).toEqual([]);
+    })
+  );
+
+  it.effect("removes a first-time patch tree when the lock rename fails", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "skills-lock-write-first-" });
+      const { source } = yield* installLocallyEditedRepo(repoRoot);
+      // No earlier patch tree: the newly published one must not outlive the failed lock rename.
+      const lockPath = path.join(repoRoot, "skills-lock.json");
+      const failingRename: FileSystem.FileSystem = {
+        ...fs,
+        rename: (from, to) =>
+          to === lockPath
+            ? Effect.fail(
+                PlatformError.systemError({
+                  _tag: "PermissionDenied",
+                  module: "FileSystem",
+                  method: "rename",
+                  pathOrDescriptor: to,
+                })
+              )
+            : fs.rename(from, to),
+      };
+      const provide = Effect.provideService(SkillUpstreamContentSource, source);
+      const reviewed = yield* planSkillsLockMigration(repoRoot).pipe(provide);
+
+      const error = yield* writeSkillsLockMigration(repoRoot, O.some(reviewed.planDigest)).pipe(
+        provide,
+        Effect.provideService(FileSystem.FileSystem, failingRename),
+        Effect.flip
+      );
+
+      expect(error.message).toContain("Failed to publish skills-lock.json");
+      expect(yield* fs.readFileString(lockPath)).toBe(SKILLS_LOCK_V1_FIXTURE);
+      expect(yield* fs.exists(path.join(repoRoot, ".agents/skill-patches"))).toBe(false);
+    })
+  );
+
+  it.effect("refuses a vendored lock key that is not a single safe path segment, staging nothing", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "skills-lock-write-unsafe-key-" });
+      const { source } = yield* installLocallyEditedRepo(repoRoot);
+      const provide = Effect.provideService(SkillUpstreamContentSource, source);
+      const reviewed = yield* planSkillsLockMigration(repoRoot).pipe(provide);
+      yield* writeSkillsLockMigration(repoRoot, O.some(reviewed.planDigest)).pipe(provide);
+      // Hand-edit the v2 lock: the drifted vendored shadcn entry now sits under a climbing key,
+      // and its install moves to where that key resolves, so planning reaches the patch builder.
+      const unsafeKey = "../../outside";
+      const lockPath = path.join(repoRoot, "skills-lock.json");
+      const lock = yield* decodeSkillsLockDocumentJson(yield* fs.readFileString(lockPath));
+      const shadcn = lock.skills.shadcn;
+      assertTrue(shadcn !== undefined);
+      const edited = SkillsLockDocument.make({
+        version: 2,
+        skills: R.set(R.remove(lock.skills, "shadcn"), unsafeKey, shadcn),
+      });
+      yield* fs.writeFileString(lockPath, `${yield* encodeSkillsLockDocumentJson(edited)}\n`);
+      const escaped = path.join(repoRoot, ".claude/skills", unsafeKey);
+      yield* fs.rename(path.join(repoRoot, ".claude/skills/shadcn"), escaped);
+      const lockBefore = yield* fs.readFileString(lockPath);
+
+      const plan = yield* planSkillsLockMigration(repoRoot).pipe(provide);
+      const row = O.getOrThrow(A.findFirst(plan.rows, (candidate) => candidate.skill === unsafeKey));
+      const refusal = yield* writeSkillsLockMigration(repoRoot, O.some(plan.planDigest)).pipe(provide, Effect.flip);
+
+      expect(row).toMatchObject({
+        disposition: "unresolved",
+        cause: "provenance-unavailable",
+        note: `provenance-unavailable: Skill key "${unsafeKey}" is not a single safe path segment; refusing to place its patches.`,
+      });
+      expect(refusalReason(refusal)).toBe("conflicted-plan");
+      expect(yield* fs.readFileString(lockPath)).toBe(lockBefore);
+      expect(yield* fs.readDirectory(path.join(repoRoot, ".agents/skill-patches"))).toEqual(["shadcn"]);
+      expect(A.sort(yield* fs.readDirectory(escaped), Str.Order)).toEqual(["SKILL.md", "assets", "rules"]);
+    })
+  );
+
+  it.effect("refuses to stage a patch path that resolves outside the patch root", () =>
+    Effect.gen(function* () {
+      const stage = "/repo/.agents/.skill-patches.staging-0123456789abcdef";
+
+      const inside = yield* stagedPatchPath(stage, ".agents/skill-patches/shadcn/0001-skill-md.patch");
+      const climbing = yield* stagedPatchPath(stage, ".agents/skill-patches/../../outside/0001.patch").pipe(
+        Effect.flip
+      );
+      const sibling = yield* stagedPatchPath(stage, ".agents/other/0001.patch").pipe(Effect.flip);
+
+      expect(inside).toBe(`${stage}/shadcn/0001-skill-md.patch`);
+      expect(climbing.message).toBe(
+        "Refusing to stage .agents/skill-patches/../../outside/0001.patch: it resolves outside .agents/skill-patches."
+      );
+      expect(sibling.message).toContain("it resolves outside .agents/skill-patches");
+    })
+  );
+
+  it.effect("resolves provenance from a vendored lock entry instead of the seed", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "skills-lock-write-provenance-" });
+      const texts = yield* fixtureTexts();
+      const pulled = { skill: `${texts.skill}\nUpstream revision 2.\n`, composition: texts.localComposition };
+      const { source, loaded } = yield* makeHistorySource({
+        trees: [
+          [PINNED_SHADCN_REVISION, texts.pinned],
+          [REVISION_2, pulled],
+        ],
+        history: [REVISION_2],
+        truncated: false,
+      });
+      yield* installFixtureRepo(repoRoot, pulled);
+      const provide = Effect.provideService(SkillUpstreamContentSource, source);
+      const reviewed = yield* planSkillsLockMigration(repoRoot).pipe(provide);
+      yield* writeSkillsLockMigration(repoRoot, O.some(reviewed.planDigest)).pipe(provide);
+      loaded.length = 0;
+
+      const report = yield* resolveSkillProvenance("shadcn", repoRoot).pipe(provide);
+
+      // The seed still pins PINNED_SHADCN_REVISION; the lock pins REVISION_2, and the lock wins.
+      expect(loaded).toEqual([REVISION_2]);
+      expect(report.entry.upstream.sourceRevision).toBe(REVISION_2);
+      expect(report.driftPaths).toEqual([]);
+    })
+  );
+});
+
+layer(TestLayer, { timeout: "60 seconds" })("skills provenance service", (it) => {
   it.effect("detects text drift while proving the exact pin and unchanged binary asset", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "skills-provenance-" });
-        const skillText = yield* readFixtureText("shadcn/upstream/SKILL.md");
-        const localComposition = yield* readFixtureText("shadcn/local/rules/composition.md");
-        const pngBytes = yield* readFixtureBinary("shadcn/upstream/assets/example.png.hex");
-        const source = yield* makeFixtureSource();
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "skills-provenance-" });
+      const skillText = yield* readFixtureText("shadcn/upstream/SKILL.md");
+      const localComposition = yield* readFixtureText("shadcn/local/rules/composition.md");
+      const pngBytes = yield* readFixtureBinary("shadcn/upstream/assets/example.png.hex");
+      const source = yield* makeFixtureSource();
 
-        yield* writeFixtureFile(repoRoot, ".claude/skills/shadcn/SKILL.md", textEncoder.encode(skillText));
-        yield* writeFixtureFile(
-          repoRoot,
-          ".claude/skills/shadcn/rules/composition.md",
-          textEncoder.encode(localComposition)
-        );
-        yield* writeFixtureFile(repoRoot, ".claude/skills/shadcn/assets/example.png", pngBytes);
-        yield* fs.makeDirectory(path.join(repoRoot, ".agents"), { recursive: true });
-        yield* fs.symlink("../.claude/skills", path.join(repoRoot, ".agents/skills"));
+      yield* writeFixtureFile(repoRoot, ".claude/skills/shadcn/SKILL.md", textEncoder.encode(skillText));
+      yield* writeFixtureFile(
+        repoRoot,
+        ".claude/skills/shadcn/rules/composition.md",
+        textEncoder.encode(localComposition)
+      );
+      yield* writeFixtureFile(repoRoot, ".claude/skills/shadcn/assets/example.png", pngBytes);
+      yield* fs.makeDirectory(path.join(repoRoot, ".agents"), { recursive: true });
+      yield* fs.symlink("../.claude/skills", path.join(repoRoot, ".agents/skills"));
 
-        const report = yield* resolveSkillProvenance("shadcn", repoRoot).pipe(
-          Effect.provideService(SkillUpstreamContentSource, source)
-        );
+      const report = yield* resolveSkillProvenance("shadcn", repoRoot).pipe(
+        Effect.provideService(SkillUpstreamContentSource, source)
+      );
 
-        expect(report.entry.upstream.sourceRevision).toBe("91f21dfe1328585670275781b4525fff2507f917");
-        expect(report.entry.snapshot.fileCount).toBe(3);
-        expect(A.map(report.entry.snapshot.manifest, (file) => file.path)).toEqual([
-          "SKILL.md",
-          "assets/example.png",
-          "rules/composition.md",
-        ]);
-        expect(report.entry.snapshot.manifest[1]?.sha256).toHaveLength(64);
-        expect(report.entry.provenance.status).toBe("exact");
-        expect(report.entry.provenance.confidence).toBe("high");
-        expect(report.entry.provenance.matchedFileCount).toBe(2);
-        expect(report.entry.provenance.upstreamFileCount).toBe(3);
-        expect(report.driftPaths).toEqual(["rules/composition.md"]);
-        expect(report.entry.patches.required).toBe(true);
-        expect(report.entry.patches.series).toHaveLength(1);
-        expect(report.entry.patches.series[0]?.label).toBe("temporary-drift");
-        expect(report.entry.patches.series[0]?.path).toBe("patches/0001-local-drift.patch");
-        expect(report.entry.effective.installedTargets).toEqual([".claude/skills/shadcn", ".agents/skills/shadcn"]);
-        expect(report.entry.effective.installedTreeHash).toHaveLength(64);
-        expect(report.entry.effective.treeHash).not.toBe(report.entry.snapshot.treeHash);
-        expect(yield* fs.exists(path.join(repoRoot, "skills-lock.json"))).toBe(false);
-        expect(yield* fs.exists(path.join(repoRoot, "patches"))).toBe(false);
-      })
-    )
+      expect(report.entry.upstream.sourceRevision).toBe("91f21dfe1328585670275781b4525fff2507f917");
+      expect(report.entry.snapshot.fileCount).toBe(3);
+      expect(A.map(report.entry.snapshot.manifest, (file) => file.path)).toEqual([
+        "SKILL.md",
+        "assets/example.png",
+        "rules/composition.md",
+      ]);
+      expect(report.entry.snapshot.manifest[1]?.sha256).toHaveLength(64);
+      expect(report.entry.provenance.status).toBe("exact");
+      expect(report.entry.provenance.confidence).toBe("high");
+      expect(report.entry.provenance.matchedFileCount).toBe(2);
+      expect(report.entry.provenance.upstreamFileCount).toBe(3);
+      expect(report.driftPaths).toEqual(["rules/composition.md"]);
+      expect(report.entry.patches.required).toBe(true);
+      expect(report.entry.patches.series).toHaveLength(1);
+      expect(report.entry.patches.series[0]?.label).toBe("temporary-drift");
+      expect(report.entry.patches.series[0]?.path).toBe(".agents/skill-patches/shadcn/0001-rules-composition-md.patch");
+      expect(report.entry.patches.series[0]?.owner).toBe("@kriegcloud");
+      expect(report.entry.effective.installedTargets).toEqual([".claude/skills/shadcn", ".agents/skills/shadcn"]);
+      expect(report.entry.effective.installedTreeHash).toHaveLength(64);
+      expect(report.entry.effective.treeHash).not.toBe(report.entry.snapshot.treeHash);
+      expect(yield* fs.exists(path.join(repoRoot, "skills-lock.json"))).toBe(false);
+      expect(yield* fs.exists(path.join(repoRoot, ".agents/skill-patches"))).toBe(false);
+    })
   );
 
   it.effect("records symlinks as mode 120000 link text instead of following them", () =>
@@ -739,42 +1121,51 @@ layer(TestLayer)("skills provenance service", (it) => {
   );
 
   it.effect("renders header-only patch sections for empty added and deleted files", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "skills-provenance-empty-" });
-        const skillText = yield* readFixtureText("shadcn/upstream/SKILL.md");
-        const source = yield* makeStubSource([
-          SkillUpstreamContentFile.make({ path: "SKILL.md", mode: "100644", bytes: textEncoder.encode(skillText) }),
-          SkillUpstreamContentFile.make({ path: "removed-empty.md", mode: "100644", bytes: new Uint8Array() }),
-        ]);
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "skills-provenance-empty-" });
+      const skillText = yield* readFixtureText("shadcn/upstream/SKILL.md");
+      const source = yield* makeStubSource([
+        SkillUpstreamContentFile.make({ path: "SKILL.md", mode: "100644", bytes: textEncoder.encode(skillText) }),
+        SkillUpstreamContentFile.make({ path: "removed-empty.md", mode: "100644", bytes: new Uint8Array() }),
+      ]);
 
-        yield* writeFixtureFile(repoRoot, ".claude/skills/shadcn/SKILL.md", textEncoder.encode(skillText));
-        yield* writeFixtureFile(repoRoot, ".claude/skills/shadcn/added-empty.md", new Uint8Array());
-        yield* linkAgentsTarget(repoRoot);
+      yield* writeFixtureFile(repoRoot, ".claude/skills/shadcn/SKILL.md", textEncoder.encode(skillText));
+      yield* writeFixtureFile(repoRoot, ".claude/skills/shadcn/added-empty.md", new Uint8Array());
+      yield* linkAgentsTarget(repoRoot);
 
-        const report = yield* resolveSkillProvenance("shadcn", repoRoot).pipe(
-          Effect.provideService(SkillUpstreamContentSource, source)
-        );
+      const report = yield* resolveSkillProvenance("shadcn", repoRoot).pipe(
+        Effect.provideService(SkillUpstreamContentSource, source)
+      );
 
-        expect(report.driftPaths).toEqual(["added-empty.md", "removed-empty.md"]);
-        // What `git diff` emits for a zero-byte add or delete: mode and index headers, no hunk.
-        const expectedPatch = A.join(
-          [
-            "diff --git a/added-empty.md b/added-empty.md",
-            "new file mode 100644",
-            `index 000000000000..${Str.slice(0, 12)(emptyDigest)}`,
-            "diff --git a/removed-empty.md b/removed-empty.md",
-            "deleted file mode 100644",
-            `index ${Str.slice(0, 12)(emptyDigest)}..000000000000`,
-            "",
-          ],
-          "\n"
-        );
+      expect(report.driftPaths).toEqual(["added-empty.md", "removed-empty.md"]);
+      // What `git diff` emits for a zero-byte add or delete: mode and index headers, no hunk.
+      const addedPatch = A.join(
+        [
+          "diff --git a/added-empty.md b/added-empty.md",
+          "new file mode 100644",
+          `index 000000000000..${Str.slice(0, 12)(emptyDigest)}`,
+          "",
+        ],
+        "\n"
+      );
+      const deletedPatch = A.join(
+        [
+          "diff --git a/removed-empty.md b/removed-empty.md",
+          "deleted file mode 100644",
+          `index ${Str.slice(0, 12)(emptyDigest)}..000000000000`,
+          "",
+        ],
+        "\n"
+      );
 
-        expect(report.entry.patches.series[0]?.sha256).toBe(yield* hashBytes(textEncoder.encode(expectedPatch)));
-      })
-    )
+      expect(A.map(report.entry.patches.series, (patch) => patch.path)).toEqual([
+        ".agents/skill-patches/shadcn/0001-added-empty-md.patch",
+        ".agents/skill-patches/shadcn/0002-removed-empty-md.patch",
+      ]);
+      expect(report.entry.patches.series[0]?.sha256).toBe(yield* hashBytes(textEncoder.encode(addedPatch)));
+      expect(report.entry.patches.series[1]?.sha256).toBe(yield* hashBytes(textEncoder.encode(deletedPatch)));
+    })
   );
 
   it.effect("rejects a snapshot whose fileCount disagrees with its manifest length", () =>
@@ -1150,4 +1541,64 @@ layer(TestLayer)("skills provenance service", (it) => {
       })
     )
   );
+});
+
+describe("live pinned skill transport", () => {
+  let historyText = `[{"sha":"${PINNED_SHADCN_REVISION}"}]`;
+  let treeText =
+    '{"tree":[{"path":"skills/shadcn/SKILL.md","mode":"100644","type":"blob","sha":"same-blob"},{"path":"skills/shadcn/rules/shared.md","mode":"100644","type":"blob","sha":"same-blob"},{"path":"LICENSE.md","mode":"100644","type":"blob","sha":"license-blob"}],"truncated":false}';
+  const rawRequests = A.empty<string>();
+  const client = HttpClient.make((request, url) =>
+    Effect.sync(() => {
+      const expectedAuthorization = url.hostname === "api.github.com" ? "Bearer synthetic-test-token" : undefined;
+      expect(request.headers.authorization === expectedAuthorization).toBe(true);
+      if (Str.endsWith("/commits")(url.pathname)) {
+        expect(url.searchParams.get("path")).toBe("skills/shadcn");
+        expect(url.searchParams.get("per_page")).toBe("100");
+        return HttpClientResponse.fromWeb(
+          request,
+          new Response(historyText, { headers: { link: '<https://api.github.com/next>; rel="next"' } })
+        );
+      }
+      if (Str.includes("/git/trees/")(url.pathname)) {
+        expect(url.pathname).toContain(PINNED_SHADCN_REVISION);
+        return HttpClientResponse.fromWeb(request, new Response(treeText));
+      }
+      rawRequests.push(url.pathname);
+      expect(url.pathname).toContain(PINNED_SHADCN_REVISION);
+      return HttpClientResponse.fromWeb(request, new Response("fixture bytes"));
+    })
+  );
+  const TransportLayer = SkillUpstreamContentSourceLive.pipe(
+    Layer.provide(Layer.succeed(HttpClient.HttpClient, client)),
+    Layer.provide(
+      Layer.succeed(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ GITHUB_TOKEN: "synthetic-test-token" }))
+    ),
+    Layer.provideMerge(TestLayer)
+  );
+  layer(TransportLayer)((it) => {
+    it.effect("bounds path history, distinguishes absence from unavailability, and caches pinned blobs", () =>
+      Effect.gen(function* () {
+        const upstream = yield* SkillUpstreamContentSource;
+        const resolution = (yield* findSkillResolutionSeed("shadcn")).pipe(O.getOrThrow);
+        const history = yield* upstream.listPathHistory(resolution);
+        expect(history.revisions).toEqual([PINNED_SHADCN_REVISION]);
+        expect(history.truncated).toBe(true);
+        const content = yield* upstream.load(resolution);
+        expect(A.map(content.files, (file) => file.path)).toEqual(["SKILL.md", "rules/shared.md"]);
+        const firstFetches = A.length(rawRequests);
+        expect(firstFetches).toBeGreaterThan(0);
+        yield* upstream.load(resolution);
+        expect(A.length(rawRequests)).toBe(firstFetches);
+        historyText = "[]";
+        expect((yield* Effect.flip(upstream.listPathHistory(resolution))).reason).toBe("path-absent");
+        historyText = "invalid-json";
+        expect((yield* Effect.flip(upstream.listPathHistory(resolution))).reason).toBe("unavailable");
+        treeText = '{"tree":[],"truncated":true}';
+        expect((yield* Effect.flip(upstream.load(resolution))).reason).toBe("unavailable");
+        treeText = '{"tree":[],"truncated":false}';
+        expect((yield* Effect.flip(upstream.load(resolution))).reason).toBe("path-absent");
+      })
+    );
+  });
 });

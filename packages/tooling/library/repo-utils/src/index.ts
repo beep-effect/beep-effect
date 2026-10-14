@@ -528,3 +528,18 @@ export {
    */
   workspaceGlobsFrom,
 } from "./Workspaces.ts";
+
+/**
+ * Scoped TypeScript 7 programmatic access.
+ *
+ * **Example** (Import TsNativeApi)
+ *
+ * ```ts
+ * import { TsNativeApi } from "@beep/repo-utils/TsNativeApi"
+ * console.log(TsNativeApi)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./TsNativeApi.ts";

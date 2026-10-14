@@ -10,7 +10,7 @@ evidence record the graduated goal SPEC should cite.
 
 1. **Effect pin is `4.0.0-beta.92`, not beta.91** (root `package.json:158`;
    `.repos/effect-v4/packages/effect/package.json:4`). All verified behaviors
-   identical in both `node_modules/effect/src/unstable/ai/*` and the subtree.
+   identical in both `node_modules/effect/src/ai/*` and the subtree.
 2. **NLP capability path** is `packages/foundation/capability/nlp-processing`
    (`@beep/nlp-processing`) — RESEARCH's `foundation/capability/nlp` shorthand
    is stale. Its `src/Tools/NlpToolkit.ts` is the toolkit `@beep/nlp-mcp`
@@ -19,7 +19,7 @@ evidence record the graduated goal SPEC should cite.
    derives from external research (Claude Code `MAX_MCP_OUTPUT_TOKENS`).
    `documentBag` itself: `packages/drivers/uspto/src/Uspto.service.ts:116,327`.
 
-## Effect `unstable/ai` internals (Q6/Q7 substrate) — all CONFIRMED
+## Effect `effect/ai` internals (Q6/Q7 substrate) — all CONFIRMED
 
 - **`failureMode:"return"` ships as `isError:false`.** `McpServer.ts:717-728`
   `Effect.matchCause`: `onFailure → CallToolResult({isError:true,…})`,

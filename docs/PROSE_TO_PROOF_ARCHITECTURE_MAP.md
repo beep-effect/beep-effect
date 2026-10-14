@@ -45,7 +45,7 @@ entailment** (vectors + an LLM, revisable guesses); **right of it, everything do
 | **Persisted epistemic store** | Claims/evidence survive restarts | `@beep/epistemic-tables` (Drizzle), local **PGlite** in the desktop app | **Have** (tables) |
 | **Chat / agent turns** | Ask the workbench in natural language | `@beep/agents-{domain,client,server,use-cases}`; `ChatRpcs`, `AnthropicTurnKernel`, `FixtureTurnKernel` | **Have** (today's app) |
 | **Workspace / threads / tasks / approvals** | The practice's containers and work items | `@beep/workspace-{domain,server,use-cases}`; `@beep/shared-domain` | **Have** (slices) |
-| **Law-specific overlays** | Clients, matters, IP assets, filings, docket | `@beep/law-practice` (domain; thin) + `goals/ip-law-knowledge-graph` | **Specced / partial** |
+| **Law-specific overlays** | Clients, matters, IP assets, filings, docket | `@beep/law-practice-domain` (domain; thin) + `goals/ip-law-knowledge-graph` | **Specced / partial** |
 | **Graph projection (Cypher traversal)** | Walk the practice graph fast | FalkorDB, fed from accepted claims — `goals/ip-law-knowledge-graph/SPEC.md` (ADR-002), `goals/trustgraph-port` | **Specced** |
 | **Ask & check (GraphRAG + conflicts)** | Q&A and cross-matter conflict checks | BeepGraph retrieval shell — `docs/BEEPGRAPH_ARCHITECTURE.md` | **Specced** |
 | **Reasoner (entailment)** | Compute what *follows*, soundly | OWL 2 EL/RL reasoning over the TBox (§4) | **Build** |

@@ -13,7 +13,7 @@ MCP host-construction kit — credential-keyed toolkit composition
 (`gate: none|soft|hard`), structured `api_key_required` envelope, tier-gate
 dispatch wrapper (fail-closed, refusal-as-value), progressive field-tier
 projection, and span/annotation hygiene helpers — built natively on
-`effect/unstable/ai` and proven by fixture tests.
+`effect/ai` and proven by fixture tests.
 
 ## Launch
 
@@ -50,7 +50,7 @@ inherited from main's chronic-red baseline, documented in `PLAN.md` P3).
 
 - P0 (2026-07-01):
   [`history/2026-07-01-p0-verification.md`](./history/2026-07-01-p0-verification.md)
-  — all six pinned `effect/unstable/ai` internals confirmed against resolved
+  — all six pinned `effect/ai` internals confirmed against resolved
   `effect@4.0.0-beta.92` (no decision-invalidating drift), plus the
   `create-package` wiring checklist.
 - P1 (2026-07-01): `packages/foundation/capability/mcp-kit` built — seven

@@ -393,7 +393,7 @@ const REAL_APP_DOC_TEMPLATE_PAIRS: ReadonlyArray<TemplateSpecPair> = [
 
 const CHECK_TSCONFIG_TEMPLATE_PAIR: TemplateSpecPair = ["tsconfig.check.json.hbs", "tsconfig.check.json"];
 
-// Scaffolds whose `build` is the `noEmit` check (`tsgo -p tsconfig.check.json`)
+// Scaffolds whose `build` is the `noEmit` check (`tsc-rs -p tsconfig.check.json`)
 // write nothing to disk, so they declare `build.outputs: []`; otherwise Turbo
 // warns "no output files found" on every root build.
 const NOEMIT_TURBO_TEMPLATE_PAIR: TemplateSpecPair = ["app-noemit-turbo.json.hbs", "turbo.json"];
@@ -1896,7 +1896,7 @@ const serviceAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLab
   ...baseManifest,
   scripts: appBaseScripts(
     portlessDev(portlessLabel, "sh -c 'bun --watch src/main.ts'"),
-    "tsgo -p tsconfig.check.json",
+    "tsc-rs -p tsconfig.check.json",
     lab
   ),
   dependencies: {
@@ -1960,11 +1960,11 @@ type PackageScriptsKind = Exclude<ScriptsPackageKind, "lab">;
 const packageScripts = (kind: PackageScriptsKind, withStoriesTsconfig: boolean) => ({
   ...scaffoldPackageScripts(kind, ["lint:fix", "test:integration", "docgen"]),
   babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-  "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+  "beep:check:tests": "tsc-rs -p tsconfig.test.json --noEmit",
   ...(withStoriesTsconfig
     ? {
-        "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories",
-        "beep:check:stories": "tsc -p tsconfig.stories.json --noEmit",
+        "beep:check": "tsc-rs -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories",
+        "beep:check:stories": "tsc-rs -p tsconfig.stories.json --noEmit",
       }
     : {}),
   coverage: "bunx vitest run --coverage --exclude=test/integration/**",
@@ -1977,8 +1977,8 @@ const packageScripts = (kind: PackageScriptsKind, withStoriesTsconfig: boolean) 
  *
  * ```ts
  * import { CreatePackageScripts } from "@beep/repo-cli/commands/CreatePackage"
- * const scripts = CreatePackageScripts.app("portless api.beep bun src/main.ts", "tsgo -p tsconfig.check.json", false)
- * console.log(scripts["beep:build"]) // "tsgo -p tsconfig.check.json"
+ * const scripts = CreatePackageScripts.app("portless api.beep bun src/main.ts", "tsc-rs -p tsconfig.check.json", false)
+ * console.log(scripts["beep:build"]) // "tsc-rs -p tsconfig.check.json"
  * ```
  *
  * @internal

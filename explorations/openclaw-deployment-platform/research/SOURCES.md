@@ -104,7 +104,7 @@ Full table with per-brick usage lives in [`../RESEARCH.md`](../RESEARCH.md)
   `infra/src/AIMetrics.ts` target/command patterns; `@beep/onepassword-cli`;
   `@beep/shared-domain` `OnePasswordReference` value; `@beep/schema` kits;
   `@beep/identity` composers; driver-local concurrent stdout/stderr/exit
-  collection over `effect/unstable/process`.
+  collection over `effect/process`.
 - reuse later (migration phase): `@beep/tailscale`.
 - NET-NEW: `packages/drivers/openclaw` (schema + CLI wrapper + health probe);
   target-agnostic renderer layer; local-vs-remote executor abstraction over

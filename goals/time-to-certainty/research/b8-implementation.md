@@ -164,7 +164,7 @@ Not run (left for the orchestrator's proof): `bun run beep quality test-tsgo`, s
    unrelated never-registering context — the exact hole B7's timeout closes. With a heavy
    family present the two definitions coincide.
 3. **Command lives in `CiAdmission.ts`, not `HeavyAdmission.ts`.** Keeps the module Settle
-   imports free of `effect/unstable/cli`, `findRepoRoot`, and Config; both are exported from the
+   imports free of `effect/cli`, `findRepoRoot`, and Config; both are exported from the
    `Ci` barrel.
 4. **The monitor's merge-base diff does not fetch.** `origin/<base>...HEAD` on the local
    remote-tracking ref is a merge-base diff, so a stale ref still yields the head's own changes;

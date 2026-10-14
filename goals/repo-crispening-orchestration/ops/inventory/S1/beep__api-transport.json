@@ -41,7 +41,7 @@
     "roiRank": 0,
     "exception": {
       "reason": "Port-interface carve-out (SPEC Non-Goals fence 1): capability handle with function members and an Effect-typed accessor over HttpClient runtime state; already durably ledgered at standards/schema-first.inventory.jsonc:547-553 ('Interface contains non-schema signals such as function members or runtime handles'), matching detectInterfaceReason's typeLiteralMembersUnsafe screen.",
-      "boundary": "Capability handle returned by makeApiTransport over effect/unstable/http HttpClient."
+      "boundary": "Capability handle returned by makeApiTransport over effect/http HttpClient."
     }
   },
   {
@@ -56,7 +56,7 @@
     "roiRank": 0,
     "exception": {
       "reason": "Capability-constructor / 3rd-party-boundary-adapter escape hatch for SFV4-fn-schema: an Effect-returning constructor whose output is runtime handles (HttpClient transformer + Ref-backed Effect accessor) cannot carry an Fn/EffectSchema contract; schema-as-truth applies to the RateLimitSnapshot data it exposes, which is already an S.Class.",
-      "boundary": "effect/unstable/http HttpClient + effect/unstable/persistence RateLimiter adapter seam; requires RateLimiterStore context."
+      "boundary": "effect/http HttpClient + effect/persistence RateLimiter adapter seam; requires RateLimiterStore context."
     }
   }
 ]

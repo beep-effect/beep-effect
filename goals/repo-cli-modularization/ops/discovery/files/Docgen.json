@@ -44,7 +44,7 @@
       },
       {
         "name": "Git process exec + scope resolution",
-        "description": "Spawns git via effect/unstable/process ChildProcess to collect changed files and resolves the --package/--all/--changed-files/affected scope policy into workspace package targets.",
+        "description": "Spawns git via effect/process ChildProcess to collect changed files and resolves the --package/--all/--changed-files/affected scope policy into workspace package targets.",
         "locEstimate": 160,
         "keySymbols": [
           "runGitLines",
@@ -298,7 +298,7 @@
       },
       {
         "name": "Child-process docgen execution",
-        "description": "Spawns bun against packages/tooling/tool/docgen/src/bin.ts via effect/unstable/process ChildProcess, folds stdout/stderr stream, maps failures into DocgenGenerationResult, counts generated .md modules (lines 1868-2010).",
+        "description": "Spawns bun against packages/tooling/tool/docgen/src/bin.ts via effect/process ChildProcess, folds stdout/stderr stream, maps failures into DocgenGenerationResult, counts generated .md modules (lines 1868-2010).",
         "keySymbols": [
           "runDocgenForPackage",
           "runDocgenForPackageEffect",

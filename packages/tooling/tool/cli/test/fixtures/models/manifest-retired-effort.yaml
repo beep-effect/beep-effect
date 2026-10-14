@@ -1,0 +1,16 @@
+version: beep-models/v1
+bindings:
+  - role: research.web
+    surface: grok-cli
+    modelId: grok-4.5
+    effort: max
+targets:
+  - id: retired.grok
+    root: repo
+    path: locators.env
+    optional: false
+    locators:
+      - _tag: env-key
+        binding: { role: research.web, surface: grok-cli, field: model }
+        render: { _tag: verbatim }
+        key: GROK_RETIRED_MODEL

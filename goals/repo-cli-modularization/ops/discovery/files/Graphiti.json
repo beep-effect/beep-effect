@@ -292,7 +292,7 @@
       {
         "targetFile": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyResponses.ts",
         "role": "render",
-        "contents": "proxyErrorResponse and proxyHealthResponse duals, ProxyErrorResponseOptions, matchHttpClientErrorToRes/mapHttpClientErrorToResponse, addProxyHeaders. Depends only on ProxySchemas (ProxyErrorPayload/ProxyHealthPayload/ProxyLane) and effect/unstable/http."
+        "contents": "proxyErrorResponse and proxyHealthResponse duals, ProxyErrorResponseOptions, matchHttpClientErrorToRes/mapHttpClientErrorToResponse, addProxyHeaders. Depends only on ProxySchemas (ProxyErrorPayload/ProxyHealthPayload/ProxyLane) and effect/http."
       },
       {
         "targetFile": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyServices.ts",

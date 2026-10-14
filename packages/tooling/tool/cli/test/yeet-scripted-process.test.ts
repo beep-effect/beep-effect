@@ -1320,7 +1320,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
       _tag: "blocked",
       blocker: "no-required-red",
       detail:
-        "1 required check(s) are failing on head unknown; a red required check means the content is not final. Pending checks and optional lanes do not hold the flip",
+        '1 required check(s) are failing on head unknown; a red required check means the content is not final. Pending checks and optional lanes do not hold the flip; under S11, attribute a red inherited from main with --inherited "<check>=<attribution>"',
     });
     // Every criterion holds, yet the read carries no pull request number to
     // flip: the gate refuses on its first criterion instead of guessing one.
@@ -1335,18 +1335,19 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
     });
   });
 
-  it.effect("flips the draft when its own status read holds the gate, twice", () =>
+  it.effect("flips the draft after three status reads with an injected body recorder", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-ready-flip-" });
       const commands = yield* makeCommands;
       const flips = yield* Ref.make<ReadonlyArray<number>>([]);
       const decision = yield* runYeetReadyGate(contextAt(root), {
+        recordInherited: () => Effect.void,
         markReady: (prNumber) => Ref.update(flips, A.append(prNumber)),
       }).pipe(withProcesses(greenDraft, commands));
       expect(decision).toMatchObject({ _tag: "flip", prNumber: 7 });
       const ran = yield* Ref.get(commands);
-      expect(A.length(A.filter(ran, Str.startsWith("gh pr view --json id,number")))).toBe(2);
+      expect(A.length(A.filter(ran, Str.startsWith("gh pr view --json id,number")))).toBe(3);
       expect(yield* Ref.get(flips)).toEqual([7]);
     })
   );
@@ -1361,6 +1362,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
       yield* fs.writeFileString(path.join(root, ".beep", "yeet", "jobs"), "not a directory");
       const commands = yield* makeCommands;
       const decision = yield* runYeetReadyGate(contextAt(root), {
+        recordInherited: () => Effect.void,
         markReady: () => Effect.void,
         read: () => Effect.succeed(readOf(remoteOf())),
       }).pipe(withProcesses([], commands));
@@ -1404,6 +1406,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
       });
       const asked = yield* Ref.make<ReadonlyArray<number>>([]);
       const decision = yield* runYeetReadyGate(contextAt("/repo"), {
+        recordInherited: () => Effect.void,
         markReady: () => Effect.void,
         findMonitor: (_context, prNumber) => Ref.update(asked, A.append(prNumber)).pipe(Effect.as(O.some(monitor))),
         read: () => Effect.succeed(readOf(remoteOf())),
@@ -1441,7 +1444,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready native repo 
       const fs = yield* FileSystem.FileSystem;
       const packetDir = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-ready-command-" });
       const commands = yield* makeCommands;
-      const error = yield* runYeetReady(YeetReadyOptions.make({ base: "origin/main", head: "HEAD", packetDir })).pipe(
+      const error = yield* runYeetReady(
+        YeetReadyOptions.make({ base: "origin/main", head: "HEAD", packetDir, inherited: [] })
+      ).pipe(
         Effect.flip,
         withProcesses(
           [

@@ -295,7 +295,7 @@ Repo-wide search for STEP / OCCT / glTF / mesh CAD APIs in product `packages/` a
 
 ## 4. ATOM / STATE LAYER
 
-Canonical stack: `@effect/atom-react` hooks + `effect/unstable/reactivity` `Atom` / `AtomRpc` / `AsyncResult` + an app or slice `Atom.context` runtime.
+Canonical stack: `@effect/atom-react` hooks + `effect/reactivity` `Atom` / `AtomRpc` / `AsyncResult` + an app or slice `Atom.context` runtime.
 
 ### Hooks a panel is allowed to use
 

@@ -66,7 +66,7 @@
 
    Claim: `RESEARCH.md:60` and `research/ssrf-and-fetch-hardening.md:32-38` say `@effect/platform-node` exposes an Undici `Dispatcher` layer and that the built-in redirect helper should not be used for untrusted redirects.
 
-   Verification: `node_modules/@effect/platform-node/src/NodeHttpClient.ts:89-120` defines the `Dispatcher` service and dispatcher layers; `:142-160` sends requests through `dispatcher.request(...)` without redirect-following options; `node_modules/effect/src/unstable/http/HttpClient.ts:1840-1882` implements `followRedirects` by repeatedly calling `HttpClientRequest.setUrl` on the same request, which preserves the original headers and does not re-run an SSRF guard.
+   Verification: `node_modules/@effect/platform-node/src/NodeHttpClient.ts:89-120` defines the `Dispatcher` service and dispatcher layers; `:142-160` sends requests through `dispatcher.request(...)` without redirect-following options; `node_modules/effect/src/http/HttpClient.ts:1840-1882` implements `followRedirects` by repeatedly calling `HttpClientRequest.setUrl` on the same request, which preserves the original headers and does not re-run an SSRF guard.
 
    Keep: build a guarded `HttpClient` transform plus custom dispatcher, and explicitly avoid `HttpClient.followRedirects` for untrusted URLs.
 

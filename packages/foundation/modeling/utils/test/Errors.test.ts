@@ -67,8 +67,11 @@ class OptionalDualInputMappedError {
     (message: string, options?: OptionalDualInputMappedErrorOptions): (source: string) => OptionalDualInputMappedError;
   } = dual(
     3,
-    (source: string, message: string, { exitCode } = {}): OptionalDualInputMappedError =>
-      new OptionalDualInputMappedError(source, message, exitCode)
+    (
+      source: string,
+      message: string,
+      { exitCode }: OptionalDualInputMappedErrorOptions = {}
+    ): OptionalDualInputMappedError => new OptionalDualInputMappedError(source, message, exitCode)
   );
 }
 

@@ -418,15 +418,18 @@ export class YeetRunOptions extends S.Class<YeetRunOptions>($I`YeetRunOptions`)(
  * The flip reads the branch's pull request through the same status read the
  * readiness monitor uses, so it needs only the coordinates that locate the
  * checkout's run artifacts. It has no `--force`: the gate (every review thread
- * answered, required checks green on the current head) is the whole contract
- * (push-first-publish D10).
+ * answered, no required check known red on the current head, D11) is the whole contract
+ * (push-first-publish D10). `inherited` holds raw values passed to
+ * `--inherited "<check>=<attribution>"`: under S11, a required red inherited from
+ * `main` that is attributed this way does not hold the flip, and is recorded
+ * in the PR body before it.
  *
  * **Example** (Construct ready options)
  *
  * ```ts
  * import { YeetReadyOptions } from "@beep/repo-cli/commands/Yeet"
  *
- * const options = YeetReadyOptions.make({ base: "origin/main", head: "HEAD", packetDir: ".beep/yeet" })
+ * const options = YeetReadyOptions.make({ base: "origin/main", head: "HEAD", packetDir: ".beep/yeet", inherited: [] })
  * console.log(options.base) // "origin/main"
  * ```
  *
@@ -438,6 +441,7 @@ export class YeetReadyOptions extends S.Class<YeetReadyOptions>($I`YeetReadyOpti
     base: S.String,
     head: S.String,
     packetDir: S.String,
+    inherited: S.Array(S.String),
   },
   $I.annote("YeetReadyOptions", {
     description: "Options accepted by yeet ready, which flips a draft pull request to ready under the D10 gate.",

@@ -109,7 +109,7 @@
       "sha256": "6f0370d783609a81bb7df6471f738ffac7516eda4750edfd94650b52c7aeb2d6"
     },
     {
-      "file": "~/YeeBois/projects/beep-effect9/node_modules/effect/src/unstable/reactivity/AsyncResult.ts",
+      "file": "~/YeeBois/projects/beep-effect9/node_modules/effect/src/reactivity/AsyncResult.ts",
       "sha256": "555cd0aaf079790729591e18b4e7afd82e1cb72e4b0b7dd41c9834bc2af5358c"
     }
   ],

@@ -122,13 +122,13 @@ pkg: @beep/api-transport (packages/foundation/capability/api-transport)
 path: packages/foundation/capability/api-transport/src/Transport.ts (ApiAuth L56-76; RateLimitSnapshot L136-162; makeApiTransport L261-292)
 symbols: ApiAuth, RateLimitSnapshot, ApiTransportOptions, ApiTransport, makeApiTransport
 
-The single shared egress wrapper: composes ApiAuth (query-param / token-header / api-key-header / none, Redacted keys) → HttpClient.withRateLimiter keyed per source (effect/unstable/persistence RateLimiter, parses X-RateLimit-* and retries 429) → jittered exponential retryTransient → observable RateLimitSnapshot. Sandbox composition: destination-aware egress policy would slot in as one more transformClient stage here — every keyed driver already routes through this seam.
+The single shared egress wrapper: composes ApiAuth (query-param / token-header / api-key-header / none, Redacted keys) → HttpClient.withRateLimiter keyed per source (effect/persistence RateLimiter, parses X-RateLimit-* and retries 429) → jittered exponential retryTransient → observable RateLimitSnapshot. Sandbox composition: destination-aware egress policy would slot in as one more transformClient stage here — every keyed driver already routes through this seam.
 
 *caveats:* No destination/host filtering, no deny-by-default egress, no per-principal buckets; RateLimiterError is converted to a defect; keyless drivers can still use FetchHttpClient directly.
 
 ### [13] Child-process execution abstraction + repo law banning raw process APIs
-pkg: effect/unstable/process consumers + @beep/repo-cli laws
-path: Spawner service: effect/unstable/process ChildProcessSpawner with Bun/Node layers wired in packages/tooling/tool/cli/src/bin-main.ts (L193-238) and packages/tooling/tool/docgen/src/bin.ts (L19); driver consumers packages/drivers/{tailscale/src/Tailscale.service.ts L149-218, libpff/src/Libpff.pffexport.ts L219-221, ai-provider-cli/src/AiProviderCli.service.ts L285-320, acp/src/AcpClient.service.ts L684-691, ffmpeg/src/FFmpeg.service.ts}; ban law packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts (NODE_RUNTIME_IMPORTS incl. node:child_process L75)
+pkg: effect/process consumers + @beep/repo-cli laws
+path: Spawner service: effect/process ChildProcessSpawner with Bun/Node layers wired in packages/tooling/tool/cli/src/bin-main.ts (L193-238) and packages/tooling/tool/docgen/src/bin.ts (L19); driver consumers packages/drivers/{tailscale/src/Tailscale.service.ts L149-218, libpff/src/Libpff.pffexport.ts L219-221, ai-provider-cli/src/AiProviderCli.service.ts L285-320, acp/src/AcpClient.service.ts L684-691, ffmpeg/src/FFmpeg.service.ts}; ban law packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts (NODE_RUNTIME_IMPORTS incl. node:child_process L75)
 symbols: ChildProcessSpawner, ChildProcessHandle, BunChildProcessSpawner.layer, NodeChildProcessSpawner.layer, NoNativeRuntime
 
 All agent-adjacent spawning already flows through one injectable service (ChildProcessSpawner) and a lint law bans direct node:child_process imports — the ideal choke point for a default-deny exec authority: replace/wrap the spawner layer with a policy-checking implementation and the whole repo inherits it.

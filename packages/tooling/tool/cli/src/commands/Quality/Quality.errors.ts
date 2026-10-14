@@ -157,7 +157,11 @@ export class QualityScriptCommandError extends S.TaggedError<QualityScriptComman
     (message: string, opts?: QualityScriptCommandErrorOptions): (cause: unknown) => QualityScriptCommandError;
   } = dual(
     3,
-    (cause, message, { command, exitCode } = {}): QualityScriptCommandError =>
+    (
+      cause: unknown,
+      message: string,
+      { command, exitCode }: QualityScriptCommandErrorOptions = {}
+    ): QualityScriptCommandError =>
       QualityScriptCommandError.make({
         cause,
         message,

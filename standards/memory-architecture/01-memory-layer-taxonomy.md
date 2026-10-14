@@ -83,7 +83,7 @@ This document defines the four memory layers required by the project's agent mem
 
 **What gets it wrong:** Any approach that embeds code into vectors and searches semantically. The paper proves this will degrade. Code has deterministic structure -- use it.
 
-**Concrete implementation (historical):** repo-memory v0 (Tauri desktop app, Effect runtime, ts-morph indexing, deterministic retrieval with citations, 15 query classes, durable workflows) was the learning vehicle and is **archived** (`archive/pre-repo-architecture-automation-2026-04-27`; see `90-archaeology-pruned-repo-intel.md` in `explorations/atlas-synthesis/`). The live residue is **narrow dev tooling** (`@beep/repo-codegraph`, `EffectCapabilityKG.ts`), not a product moat.
+**Concrete implementation (historical):** repo-memory v0 (Tauri desktop app, Effect runtime, ts-morph indexing, deterministic retrieval with citations, 15 query classes, durable workflows) was the learning vehicle and is **archived** (`archive/pre-repo-architecture-automation-2026-04-27`; see `90-archaeology-pruned-repo-intel.md` in `explorations/atlas-synthesis/`). The live residue is **narrow dev tooling** (the since-retired @beep/repo-codegraph package, `EffectCapabilityKG.ts`), not a product moat.
 
 **Consolidation strategy:** Not needed -- deterministic data doesn't degrade. Re-index when code changes.
 

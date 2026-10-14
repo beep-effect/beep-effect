@@ -56,6 +56,14 @@ Motion/interaction (each maps to a `lens` value in your output):
 - `cursor-affordance` — the rendered cursor indicator disagrees with the
   expected affordance (e.g. col-resize over a sash).
 
+## Judge routing
+
+<!-- beep-models:begin qa-judge -->
+| Role | Surface | Model | Effort |
+| --- | --- | --- | --- |
+| qa.judge | claude-code | `claude-opus-5-5` | — |
+<!-- beep-models:end qa-judge -->
+
 ## Output contract
 
 Your FINAL message must be exactly:

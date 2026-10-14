@@ -10,7 +10,7 @@ design session that authored this packet. Paths were spot-verified on
 - Tauri 2 + Vite + React shell; only product surface is the chat command
   surface (thread list, rich-text composer, streamed turns).
 - Dual transport: bun sidecar over HTTP (`127.0.0.1:3939`) or Tauri-IPC ndjson
-  socket. `src/transport/TauriIpcSocket.ts` is a full `effect/unstable/socket`
+  socket. `src/transport/TauriIpcSocket.ts` is a full `effect/socket`
   implementation over Tauri events and is the only module allowed to import
   `@tauri-apps/api` — the app-local framework-wrapper precedent D9 follows.
 - State via `@effect/atom-react` (`src/runtime/ProfessionalAtomRuntime.ts`).

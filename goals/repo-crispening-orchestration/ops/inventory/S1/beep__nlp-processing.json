@@ -50,7 +50,7 @@
     "line": 24,
     "symbol": "TOOL_PARAMETER_NAMES",
     "smell": "Positional-argument ordering invariant for tool parameter schemas lives in a stringly-keyed Partial<Record<...>> beside the schemas; a renamed tool or parameter silently drifts to the Struct.keys fallback in parameterNamesForTool (lines 64-78) instead of failing.",
-    "proposedTarget": "Carry parameter ordering on the schemas themselves (per-tool annotation on parametersSchema, or rely on declared field order of each S.Class) so the ordering cannot diverge from the schema; judgment because Tool.make schemas are the shared source consumed by effect/unstable/ai.",
+    "proposedTarget": "Carry parameter ordering on the schemas themselves (per-tool annotation on parametersSchema, or rely on declared field order of each S.Class) so the ordering cannot diverge from the schema; judgment because Tool.make schemas are the shared source consumed by effect/ai.",
     "confidence": 0.5,
     "mechanization": "judgment",
     "roiRank": 10,

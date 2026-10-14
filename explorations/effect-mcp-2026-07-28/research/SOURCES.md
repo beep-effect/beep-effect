@@ -11,10 +11,10 @@
 
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
-| `effect-mcp-server` | MCP server runtime, `registerToolkit`, `layerHttp` SSE conversion | Effect-TS/effect `a7a71921de` | `effect:packages/effect/src/unstable/ai/McpServer.ts` (see lanes 10-u1, 11-u2, 20-r1) | adapter API | port with attribution (MIT) |
-| `effect-mcp-runtime` | protocol selection, `selectStatefulProtocol`, header contract | Effect-TS/effect `a7a71921de` | `effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts` | stateless runtime | reference |
-| `effect-mcp-2026` | `v2026_07_28` adapter and schema | Effect-TS/effect `a7a71921de` | `effect:packages/effect/src/unstable/ai/internal/mcpProtocol/v2026_07_28.ts`, `.../mcpSchema/v2026_07_28.ts` | wire semantics | reference |
-| `effect-mcp-tests` | 2026-only conformance, protocol adapters, MRTR, security suites | Effect-TS/effect `a7a71921de` | `effect:packages/effect/test/unstable/ai/McpServer/**` | executable docs | port test harness patterns with attribution |
+| `effect-mcp-server` | MCP server runtime, `registerToolkit`, `layerHttp` SSE conversion | Effect-TS/effect `a7a71921de` | `effect:packages/effect/src/ai/McpServer.ts` (see lanes 10-u1, 11-u2, 20-r1) | adapter API | port with attribution (MIT) |
+| `effect-mcp-runtime` | protocol selection, `selectStatefulProtocol`, header contract | Effect-TS/effect `a7a71921de` | `effect:packages/effect/src/ai/internal/mcpRuntime.ts` | stateless runtime | reference |
+| `effect-mcp-2026` | `v2026_07_28` adapter and schema | Effect-TS/effect `a7a71921de` | `effect:packages/effect/src/ai/internal/mcpProtocol/v2026_07_28.ts`, `.../mcpSchema/v2026_07_28.ts` | wire semantics | reference |
+| `effect-mcp-tests` | 2026-only conformance, protocol adapters, MRTR, security suites | Effect-TS/effect `a7a71921de` | `effect:packages/effect/test/ai/McpServer/**` | executable docs | port test harness patterns with attribution |
 | `effect-mcp-docs` | `MCP.md`, migration notes and annotations, changesets | Effect-TS/effect `a7a71921de` | `effect:packages/effect/MCP.md`, `migration/**`, `.changeset/*.md` | guidance gaps (G8) | reference |
 | `effect-sql-pg` | timestamp `Date` decode, unknown-OID text decode | Effect-TS/effect `a7a71921de` | `effect:packages/sql/pg/src/PgTypes.ts` | snapshot blast radius | reference |
 | `effect-core-align` | `Effect.isEffect`, `Stream.scan`, `orElseSucceed`, `ByteSize.Input` | Effect-TS/effect `a7a71921de` | `effect:packages/effect/src/{Effect,Stream,ByteSize}.ts` | snapshot blast radius | reference |

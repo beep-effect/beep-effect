@@ -830,11 +830,11 @@
         "Shared Effect dispatch Layer owning user-key>env>CLI precedence + Layer.orElse graceful fallback across @beep/{anthropic,openai-compat,xai,venice-ai}",
         "Per-provider OWN env-driven default-model resolution so a fallback never inherits an incompatible model name",
         "Typed PROVIDER_REGISTRY + prefix auto-detect + structured api_key_required/setupInstructions errors",
-        "Declarative resilience-strategy config (round-robin / ordered-fallback / named retry-policy) re-expressed over effect/unstable/ai",
+        "Declarative resilience-strategy config (round-robin / ordered-fallback / named retry-policy) re-expressed over effect/ai",
         "response_model -> effect/Schema-validated structured output binding"
       ],
       "alreadyCovered": [
-        "The four per-provider LLM drivers already exist (anthropic/openai-compat/xai/venice-ai); effect/unstable/ai Toolkit likely abstracts per-provider tool dispatch (mike#10 study)"
+        "The four per-provider LLM drivers already exist (anthropic/openai-compat/xai/venice-ai); effect/ai Toolkit likely abstracts per-provider tool dispatch (mike#10 study)"
       ],
       "proposedSlug": "multi-provider-llm-dispatch-fallback",
       "rationale": "GOLD_SYNTHESIS flags a shared multi-provider dispatch Layer as a real gap: the four LLM drivers exist but no Layer owns user-key>env precedence + graceful fallback + per-provider default-model resolution. Adjacent to but distinct from mcp-auth-gated-registration (MCP-side credential-keyed registration) and ingestion-security (secret storage).",

@@ -7,11 +7,11 @@ here are the minimum needed to show a doc/code mismatch or a missing demonstrati
 
 Sources read: `packages/effect/MCP.md`, `migration/v3-to-v4.md` (MCP-bearing spans),
 `migration/annotations/effect__ai__McpSchema.yaml`, `migration/annotations/effect__ai__McpServer.yaml`,
-JSDoc on `unstable/ai/{McpServer,McpSchema,McpProtocol,Tool,Toolkit}.ts`,
+JSDoc on `ai/{McpServer,McpSchema,McpProtocol,Tool,Toolkit}.ts`,
 `.changeset/mcp-prompt-titles.md`, `.changeset/mcp-server-instructions.md`,
 `.changeset/strict-mcp-tool-inputs.md`, `.changeset/modern-mice-discover.md`,
-`.changeset/pre/*mcp*.md`, `packages/effect/test/unstable/ai/McpServer/**`,
-`packages/effect/typetest/unstable/ai/McpServer.tst.ts`.
+`.changeset/pre/*mcp*.md`, `packages/effect/test/ai/McpServer/**`,
+`packages/effect/typetest/ai/McpServer.tst.ts`.
 
 Timeline that explains most of the staleness:
 
@@ -45,16 +45,16 @@ At `a7a71921de` the public type is five versions:
 export type ProtocolVersion = "2024-11-05" | "2025-03-26" | "2025-06-18" | "2025-11-25" | "2026-07-28"
 ```
 
-Cite: `effect:packages/effect/src/unstable/ai/McpProtocol.ts:25`. Stateless is carved out as
+Cite: `effect:packages/effect/src/ai/McpProtocol.ts:25`. Stateless is carved out as
 `Exclude<ProtocolVersion, "2026-07-28">`
-(`effect:packages/effect/src/unstable/ai/McpProtocol.ts:33`). The barrel exports
+(`effect:packages/effect/src/ai/McpProtocol.ts:33`). The barrel exports
 `v2026_07_28` and `v2025_11_25`
-(`effect:packages/effect/src/unstable/ai/McpProtocol.ts:196`,
-`effect:packages/effect/src/unstable/ai/McpProtocol.ts:204`).
+(`effect:packages/effect/src/ai/McpProtocol.ts:196`,
+`effect:packages/effect/src/ai/McpProtocol.ts:204`).
 
 The typetest asserts the same five-member union and that `v2026_07_28.runtime` is
 `StatelessRuntimeDescriptor`
-(`effect:packages/effect/typetest/unstable/ai/McpServer.tst.ts:102-115`).
+(`effect:packages/effect/typetest/ai/McpServer.tst.ts:102-115`).
 
 A reader who copies `MCP.md` ships a June 2025 stdio server. Working assumption G4
 (`v2026_07_28` only) is invisible in Effect's prose.
@@ -78,7 +78,7 @@ not typecheck against current `Logger`.
 
 `layerStdio` **Details** say the layer "supplies request-scoped `McpRequestContext` and legacy
 `McpServerClient` services to handlers"
-(`effect:packages/effect/src/unstable/ai/McpServer.ts:1417-1422`).
+(`effect:packages/effect/src/ai/McpServer.ts:1417-1422`).
 
 The migration annotation for `McpSchema.McpServerClient` says the opposite for July:
 
@@ -90,15 +90,15 @@ Cite: `effect:migration/annotations/effect__ai__McpSchema.yaml:19-21`.
 The typetest is titled "should not claim that stateless handlers receive the legacy client
 service" and shows that a resource handler yielding `McpServerClient` keeps
 `McpServerClient` in the layer's requirements
-(`effect:packages/effect/typetest/unstable/ai/McpServer.tst.ts:145-152`).
+(`effect:packages/effect/typetest/ai/McpServer.tst.ts:145-152`).
 
 The mixed-protocol HTTP test
 "should omit a legacy client when a toolkit registered in a session handles a stateless request"
 asserts `hasSession: false` on a `v2026_07_28` call
-(`effect:packages/effect/test/unstable/ai/McpServer/ProtocolAdapters.test.ts:822-893`).
+(`effect:packages/effect/test/ai/McpServer/ProtocolAdapters.test.ts:822-893`).
 
 `McpServerClient.protocolVersion` is typed as `StatefulProtocolVersion`
-(`effect:packages/effect/src/unstable/ai/McpSchema.ts:2849-2851`), which excludes `"2026-07-28"`.
+(`effect:packages/effect/src/ai/McpSchema.ts:2849-2851`), which excludes `"2026-07-28"`.
 
 ### 1.4 Documented elicitation uses `McpServer.elicit`, which cannot run on a 2026-07-28-only server
 
@@ -110,16 +110,16 @@ requirement is `McpServerClient`:
 ) => Effect.Effect<S["Type"], ElicitationDeclined, McpServerClient | S["DecodingServices"]>
 ```
 
-Cite: `effect:packages/effect/src/unstable/ai/McpServer.ts:2435-2441`. The implementation
-calls `client.elicit` on the reverse client (`effect:packages/effect/src/unstable/ai/McpServer.ts:2446-2454`).
+Cite: `effect:packages/effect/src/ai/McpServer.ts:2435-2441`. The implementation
+calls `client.elicit` on the reverse client (`effect:packages/effect/src/ai/McpServer.ts:2446-2454`).
 
 On the July adapter, direct reverse operations including `elicitation/create` fail with
 `McpReverseOperationUnsupported`
-(`effect:packages/effect/test/unstable/ai/McpServer/ProtocolAdapters.test.ts:1288-1341`).
+(`effect:packages/effect/test/ai/McpServer/ProtocolAdapters.test.ts:1288-1341`).
 July elicitation is an `InputRequired` result that the client retries with `inputResponses`
 (see §2.4). `McpSchema.McpRequestContext` JSDoc already warns it "does not imply an
 initialized session or support for server-initiated requests"
-(`effect:packages/effect/src/unstable/ai/McpSchema.ts:2814-2819`).
+(`effect:packages/effect/src/ai/McpSchema.ts:2814-2819`).
 
 This is a **decision-challenge** to G4. A `v2026_07_28`-only server cannot execute the
 elicitation recipe Effect publishes. Mixed lists remain the only way to keep
@@ -132,9 +132,9 @@ Nothing in `MCP.md` mentions `server/discover`, request metadata, or the removal
 `initialize`. The July conformance test
 "should return method not found when the removed initialize method is requested" expects
 HTTP 404 and `METHOD_NOT_FOUND_ERROR_CODE`
-(`effect:packages/effect/test/unstable/ai/McpServer/v2026_07_28.test.ts:131-138`).
+(`effect:packages/effect/test/ai/McpServer/v2026_07_28.test.ts:131-138`).
 Discovery without a session is the replacement
-(`effect:packages/effect/test/unstable/ai/McpServer/v2026_07_28.test.ts:80-88`).
+(`effect:packages/effect/test/ai/McpServer/v2026_07_28.test.ts:80-88`).
 
 G4 (`v2026_07_28` only) therefore collides with every in-repo launcher that still sends
 `initialize`. That is a client-handshake fact for lanes 11-u2 and 21-r2. This lane records
@@ -159,11 +159,11 @@ The conformance test
 "distinguishes malformed requests from tool validation errors by protocol revision"
 implements that split: `2024-11-05` / `2025-03-26` / `2025-06-18` decode a protocol error;
 newer revisions decode `isError: true` with no `structuredContent`
-(`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/ToolsTest.ts:339-376`).
+(`effect:packages/effect/test/ai/McpServer/McpConformance/ToolsTest.ts:339-376`).
 The toolkit helper still constructs `InvalidParams` internally
-(`effect:packages/effect/src/unstable/ai/McpServer.ts:1852-1853`). The July adapter then
+(`effect:packages/effect/src/ai/McpServer.ts:1852-1853`). The July adapter then
 catches `InvalidToolInput` and returns `isError: true`
-(`effect:packages/effect/src/unstable/ai/internal/mcpProtocol/v2026_07_28.ts:629-637`).
+(`effect:packages/effect/src/ai/internal/mcpProtocol/v2026_07_28.ts:629-637`).
 
 The migration sentence is true of the helper's internal error and false of the 2025-11-25
 and 2026-07-28 wire.
@@ -183,25 +183,25 @@ That is still true for June and November: ProtocolAdapters
 revisions omit `outputSchema` and `structuredContent` for `"shared"` and `"json-array"`,
 then asserts July lists `{ type: "string" }` / array schemas and returns
 `structuredContent: "shared-result"` and `["array", null]`
-(`effect:packages/effect/test/unstable/ai/McpServer/ProtocolAdapters.test.ts:1495-1551`).
+(`effect:packages/effect/test/ai/McpServer/ProtocolAdapters.test.ts:1495-1551`).
 July conformance
 "should return primitive structured content when declared by the tool" asserts
 `structuredContent === "called"`
-(`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/ToolsTest.ts:436-441`).
+(`effect:packages/effect/test/ai/McpServer/McpConformance/ToolsTest.ts:436-441`).
 The typetest accepts a scalar `outputSchema`
-(`effect:packages/effect/typetest/unstable/ai/McpServer.tst.ts:31-37`).
+(`effect:packages/effect/typetest/ai/McpServer.tst.ts:31-37`).
 
 The toolkit test "omits structured content for null and array tool results" is a June-default
 client (`makeServerLayer` defaults to `[v2025_06_18]`, initialize `"9999-01-01"`)
-(`effect:packages/effect/test/unstable/ai/McpServer/TestUtils/McpServerLayer.ts:29`,
-`effect:packages/effect/test/unstable/ai/McpServer/McpServer.test.ts:144`,
-`effect:packages/effect/test/unstable/ai/McpServer/McpServer.test.ts:1683-1704`).
+(`effect:packages/effect/test/ai/McpServer/TestUtils/McpServerLayer.ts:29`,
+`effect:packages/effect/test/ai/McpServer/McpServer.test.ts:144`,
+`effect:packages/effect/test/ai/McpServer/McpServer.test.ts:1683-1704`).
 It does not restore the unqualified changeset sentence.
 
 ### 1.8 `McpServer.toolkit` JSDoc still says `AiToolkit`
 
 The layer helper is documented as "Registers an `AiToolkit` with the `McpServer`"
-(`effect:packages/effect/src/unstable/ai/McpServer.ts:1934-1938`). The export is
+(`effect:packages/effect/src/ai/McpServer.ts:1934-1938`). The export is
 `Toolkit.Toolkit`. `MCP.md` and the rest of the v4 surface use `Toolkit`.
 
 ### 1.9 `MCP.md` HTTP sentence is narrower than `layerHttp` JSDoc, and neither shows 2026
@@ -212,24 +212,24 @@ adapters" (`effect:packages/effect/MCP.md:85-88`). There is no `layerHttp` code 
 `layerHttp` JSDoc at `a7a71921de` is the better document: POST JSON-RPC, 202 for
 notification-only, 400 for routing-header and version errors, 404 for unknown modern
 methods, 405 for other HTTP methods, Origin default-deny, no GET SSE, no historical
-two-endpoint HTTP+SSE (`effect:packages/effect/src/unstable/ai/McpServer.ts:1512-1534`).
+two-endpoint HTTP+SSE (`effect:packages/effect/src/ai/McpServer.ts:1512-1534`).
 It still never names `v2026_07_28`, `server/discover`, or `subscriptions/listen`.
 
 `McpProtocol.v2024_11_05` **Details** correctly match the HTTP compatibility claim
-(`effect:packages/effect/src/unstable/ai/McpProtocol.ts:222-230`). That is not a
+(`effect:packages/effect/src/ai/McpProtocol.ts:222-230`). That is not a
 contradiction. The gap is that `MCP.md` treats that paragraph as the whole HTTP story.
 
 ### 1.10 What is not a contradiction
 
 `MCP.md` is right that `protocols` takes adapters, not version strings
 (`effect:packages/effect/MCP.md:81-82`). The typetest rejects `protocols: ["2025-06-18"]`
-and empty arrays (`effect:packages/effect/typetest/unstable/ai/McpServer.tst.ts:67-80`).
+and empty arrays (`effect:packages/effect/typetest/ai/McpServer.tst.ts:67-80`).
 
 `MCP.md` is right that `v2024_11_05` on `layerHttp` is not historical two-endpoint HTTP+SSE
 (`effect:packages/effect/MCP.md:83-86`,
-`effect:packages/effect/src/unstable/ai/McpServer.ts:1530-1534`).
+`effect:packages/effect/src/ai/McpServer.ts:1530-1534`).
 
-Import paths in `MCP.md` (`effect/unstable/ai`, `@effect/platform-node`) match v4.
+Import paths in `MCP.md` (`effect/ai`, `@effect/platform-node`) match v4.
 
 `McpServer.elicit` on a June-pinned server, which is what `MCP.md` actually constructs, is
 internally consistent. The break is using that page as a 2026-07-28 guide.
@@ -245,118 +245,118 @@ JSDoc **Example** census for the five named modules:
   `rg` for `@example` / `**Example` in those three files is empty.
 - `Tool.ts` and `Toolkit.ts` have many **Example** blocks. They are provider/toolkit
   examples, not MCP server construction. The `Tool.Strict` example disables provider
-  JSON-schema strictness (`effect:packages/effect/src/unstable/ai/Tool.ts:1860-1881`) and
+  JSON-schema strictness (`effect:packages/effect/src/ai/Tool.ts:1860-1881`) and
   does not mention MCP excess-property rejection.
 
 ### 2.1 Stdio server on `v2026_07_28`
 
 | Kind | Where |
 | --- | --- |
-| Prose / JSDoc example | **Doc-gap.** `MCP.md` stdio samples pin `v2025_06_18`. `layerStdio` has **When to use** / **Details** and no **Example** (`effect:packages/effect/src/unstable/ai/McpServer.ts:1409-1428`). |
-| Test | `v2026_07_28.test.ts` "should exchange self-contained newline-delimited requests over stdio" uses `makeMcpStdioHarness(protocol)` with `protocol = McpProtocol.v2026_07_28`, sends `server/discover`, asserts `supportedVersions: ["2026-07-28"]` (`effect:packages/effect/test/unstable/ai/McpServer/v2026_07_28.test.ts:29`, `effect:packages/effect/test/unstable/ai/McpServer/v2026_07_28.test.ts:215-239`). |
-| Test | `McpServer.test.ts` describe `"stdio"` / "should deliver stateless request notifications over stdio" (`effect:packages/effect/test/unstable/ai/McpServer/McpServer.test.ts:2477-2506`). |
-| Harness | `makeMcpStdioHarness` builds `McpServer.layerStdio({ name, version, protocols })` (`effect:packages/effect/test/unstable/ai/McpServer/TestUtils/McpStdioHarness.ts:97-101`). |
-| Typetest | `layerStdio` is callable with a non-empty `protocols` array. The fixture in that file is `[v2025_11_25]`, not July (`effect:packages/effect/typetest/unstable/ai/McpServer.tst.ts:12-16`, `effect:packages/effect/typetest/unstable/ai/McpServer.tst.ts:49-52`). |
+| Prose / JSDoc example | **Doc-gap.** `MCP.md` stdio samples pin `v2025_06_18`. `layerStdio` has **When to use** / **Details** and no **Example** (`effect:packages/effect/src/ai/McpServer.ts:1409-1428`). |
+| Test | `v2026_07_28.test.ts` "should exchange self-contained newline-delimited requests over stdio" uses `makeMcpStdioHarness(protocol)` with `protocol = McpProtocol.v2026_07_28`, sends `server/discover`, asserts `supportedVersions: ["2026-07-28"]` (`effect:packages/effect/test/ai/McpServer/v2026_07_28.test.ts:29`, `effect:packages/effect/test/ai/McpServer/v2026_07_28.test.ts:215-239`). |
+| Test | `McpServer.test.ts` describe `"stdio"` / "should deliver stateless request notifications over stdio" (`effect:packages/effect/test/ai/McpServer/McpServer.test.ts:2477-2506`). |
+| Harness | `makeMcpStdioHarness` builds `McpServer.layerStdio({ name, version, protocols })` (`effect:packages/effect/test/ai/McpServer/TestUtils/McpStdioHarness.ts:97-101`). |
+| Typetest | `layerStdio` is callable with a non-empty `protocols` array. The fixture in that file is `[v2025_11_25]`, not July (`effect:packages/effect/typetest/ai/McpServer.tst.ts:12-16`, `effect:packages/effect/typetest/ai/McpServer.tst.ts:49-52`). |
 
 ### 2.2 `layerHttp` server
 
 | Kind | Where |
 | --- | --- |
-| Prose / JSDoc example | **Doc-gap** for a copy-paste HTTP server. `MCP.md` mentions `layerHttp` in one paragraph and never shows `path`, `allowedOrigins`, or POST. `layerHttp` JSDoc is the real HTTP guide (`effect:packages/effect/src/unstable/ai/McpServer.ts:1512-1552`). |
-| Test harness | `makeServerLayer` is `McpServer.layerHttp({ path: "/mcp", protocols, allowedOrigins: ["https://allowed.example"], instructions, extensions })` (`effect:packages/effect/test/unstable/ai/McpServer/TestUtils/McpServerLayer.ts:24-32`). Almost every HTTP test, including the whole `v2026_07_28.test.ts` conformance layer, goes through it. |
-| Test | July lifecycle "should discover the server when no initialization or session exists" POSTs through that HTTP harness (`effect:packages/effect/test/unstable/ai/McpServer/v2026_07_28.test.ts:80-88`). |
-| Typetest | `layerHttp` requires `path` and accepts `allowedOrigins` (`effect:packages/effect/typetest/unstable/ai/McpServer.tst.ts:53-57`). |
+| Prose / JSDoc example | **Doc-gap** for a copy-paste HTTP server. `MCP.md` mentions `layerHttp` in one paragraph and never shows `path`, `allowedOrigins`, or POST. `layerHttp` JSDoc is the real HTTP guide (`effect:packages/effect/src/ai/McpServer.ts:1512-1552`). |
+| Test harness | `makeServerLayer` is `McpServer.layerHttp({ path: "/mcp", protocols, allowedOrigins: ["https://allowed.example"], instructions, extensions })` (`effect:packages/effect/test/ai/McpServer/TestUtils/McpServerLayer.ts:24-32`). Almost every HTTP test, including the whole `v2026_07_28.test.ts` conformance layer, goes through it. |
+| Test | July lifecycle "should discover the server when no initialization or session exists" POSTs through that HTTP harness (`effect:packages/effect/test/ai/McpServer/v2026_07_28.test.ts:80-88`). |
+| Typetest | `layerHttp` requires `path` and accepts `allowedOrigins` (`effect:packages/effect/typetest/ai/McpServer.tst.ts:53-57`). |
 
 ### 2.3 Handler reading `McpRequestContext`
 
 | Kind | Where |
 | --- | --- |
-| JSDoc example | **Doc-gap.** `McpRequestContext` has **Details**, no **Example** (`effect:packages/effect/src/unstable/ai/McpSchema.ts:2814-2835`). `MCP.md` never names the service. |
-| Typetest | "should expose protocol-neutral request facts without a session service" (`effect:packages/effect/typetest/unstable/ai/McpServer.tst.ts:19-28`). "should expose multi-round-trip input through the request context" (`effect:packages/effect/typetest/unstable/ai/McpServer.tst.ts:154-177`). |
-| Test | `McpServer.test.ts` "should provide the neutral request service to handlers" (`effect:packages/effect/test/unstable/ai/McpServer/McpServer.test.ts:1323-1345`). |
-| Test | July "should preserve caller metadata alongside authoritative protocol facts" via `RequestMetadataTool` (`effect:packages/effect/test/unstable/ai/McpServer/v2026_07_28.test.ts:406-437`). |
-| Test | ProtocolAdapters "should omit a legacy client..." and "should use the current HTTP request when another request registered the resource" (`effect:packages/effect/test/unstable/ai/McpServer/ProtocolAdapters.test.ts:822-898`). |
+| JSDoc example | **Doc-gap.** `McpRequestContext` has **Details**, no **Example** (`effect:packages/effect/src/ai/McpSchema.ts:2814-2835`). `MCP.md` never names the service. |
+| Typetest | "should expose protocol-neutral request facts without a session service" (`effect:packages/effect/typetest/ai/McpServer.tst.ts:19-28`). "should expose multi-round-trip input through the request context" (`effect:packages/effect/typetest/ai/McpServer.tst.ts:154-177`). |
+| Test | `McpServer.test.ts` "should provide the neutral request service to handlers" (`effect:packages/effect/test/ai/McpServer/McpServer.test.ts:1323-1345`). |
+| Test | July "should preserve caller metadata alongside authoritative protocol facts" via `RequestMetadataTool` (`effect:packages/effect/test/ai/McpServer/v2026_07_28.test.ts:406-437`). |
+| Test | ProtocolAdapters "should omit a legacy client..." and "should use the current HTTP request when another request registered the resource" (`effect:packages/effect/test/ai/McpServer/ProtocolAdapters.test.ts:822-898`). |
 | Migration | `McpServer.McpServer` note: registration callbacks use `McpRequestContext`; `McpServerClient` only for initialized stateful requests (`effect:migration/v3-to-v4.md:4959`, `effect:migration/annotations/effect__ai__McpSchema.yaml:19-21`). |
 
 ### 2.4 MRTR elicitation
 
 | Kind | Where |
 | --- | --- |
-| JSDoc example | **Doc-gap.** `InputRequired` has **When to use** / **Details**, no **Example** (`effect:packages/effect/src/unstable/ai/McpSchema.ts:2681-2693`). `McpServer.elicit` JSDoc describes form-mode reverse elicitation only (`effect:packages/effect/src/unstable/ai/McpServer.ts:2423-2430`). `MCP.md` shows the reverse helper, not MRTR. |
-| Test | `v2026_07_28.test.ts` "should treat an empty elicitation capability as form support": `tools/call` on `MrtrToolName` returns `resultType: "input_required"` with `elicitation/create` (`effect:packages/effect/test/unstable/ai/McpServer/v2026_07_28.test.ts:592-629`). |
-| Test | `MultiRoundTripTest.ts` "should return input_required and then complete when prompts/get is retried with client input" (`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/MultiRoundTripTest.ts:107-167`). |
-| Typetest | constructing `InputRequired` with `inputRequests` or `requestState`; empty `{}` is not constructable (`effect:packages/effect/typetest/unstable/ai/McpServer.tst.ts:154-177`). |
+| JSDoc example | **Doc-gap.** `InputRequired` has **When to use** / **Details**, no **Example** (`effect:packages/effect/src/ai/McpSchema.ts:2681-2693`). `McpServer.elicit` JSDoc describes form-mode reverse elicitation only (`effect:packages/effect/src/ai/McpServer.ts:2423-2430`). `MCP.md` shows the reverse helper, not MRTR. |
+| Test | `v2026_07_28.test.ts` "should treat an empty elicitation capability as form support": `tools/call` on `MrtrToolName` returns `resultType: "input_required"` with `elicitation/create` (`effect:packages/effect/test/ai/McpServer/v2026_07_28.test.ts:592-629`). |
+| Test | `MultiRoundTripTest.ts` "should return input_required and then complete when prompts/get is retried with client input" (`effect:packages/effect/test/ai/McpServer/McpConformance/MultiRoundTripTest.ts:107-167`). |
+| Typetest | constructing `InputRequired` with `inputRequests` or `requestState`; empty `{}` is not constructable (`effect:packages/effect/typetest/ai/McpServer.tst.ts:154-177`). |
 | Changeset | **Doc-gap.** `.changeset/modern-mice-discover.md` is one sentence and does not mention MRTR (`effect:.changeset/modern-mice-discover.md:5`). |
 
 ### 2.5 `subscriptions/listen`
 
 | Kind | Where |
 | --- | --- |
-| JSDoc example | **Doc-gap** (no code sample). `v2026_07_28` **Details** do name the method: "When the selected transport supports server notifications, discovery advertises change-notification capabilities and `subscriptions/listen` delivers the requested notifications over the long-lived response" (`effect:packages/effect/src/unstable/ai/McpProtocol.ts:181-191`). `MCP.md` does not mention subscriptions. |
-| Test | `SubscriptionsTest.ts` suite, composed from `v2026_07_28.test.ts:74`. Names include "should advertise supported subscription capabilities when features are registered" (`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/SubscriptionsTest.ts:154-165`), "should deliver a change notification when its kind is requested" (`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/SubscriptionsTest.ts:386-415`), "should deliver a resource update when its URI is subscribed" (`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/SubscriptionsTest.ts:417`). |
-| Test | `McpServer.test.ts` mixed HTTP "should isolate request notifications across mixed HTTP protocols" POSTs `subscriptions/listen` (`effect:packages/effect/test/unstable/ai/McpServer/McpServer.test.ts:782-801`). |
+| JSDoc example | **Doc-gap** (no code sample). `v2026_07_28` **Details** do name the method: "When the selected transport supports server notifications, discovery advertises change-notification capabilities and `subscriptions/listen` delivers the requested notifications over the long-lived response" (`effect:packages/effect/src/ai/McpProtocol.ts:181-191`). `MCP.md` does not mention subscriptions. |
+| Test | `SubscriptionsTest.ts` suite, composed from `v2026_07_28.test.ts:74`. Names include "should advertise supported subscription capabilities when features are registered" (`effect:packages/effect/test/ai/McpServer/McpConformance/SubscriptionsTest.ts:154-165`), "should deliver a change notification when its kind is requested" (`effect:packages/effect/test/ai/McpServer/McpConformance/SubscriptionsTest.ts:386-415`), "should deliver a resource update when its URI is subscribed" (`effect:packages/effect/test/ai/McpServer/McpConformance/SubscriptionsTest.ts:417`). |
+| Test | `McpServer.test.ts` mixed HTTP "should isolate request notifications across mixed HTTP protocols" POSTs `subscriptions/listen` (`effect:packages/effect/test/ai/McpServer/McpServer.test.ts:782-801`). |
 
 ### 2.6 Non-object structured output
 
 | Kind | Where |
 | --- | --- |
-| JSDoc example | **Doc-gap.** `CallToolResult.structuredContent` is `optional(Schema.Json)` (`effect:packages/effect/src/unstable/ai/McpSchema.ts:1692-1695`) with no example of a string or array value. `MCP.md` tool samples use `success: Schema.String` / `Schema.Number` and never mention `structuredContent`. |
-| Typetest | "should accept scalar tool output schemas while keeping inputs object-rooted" (`effect:packages/effect/typetest/unstable/ai/McpServer.tst.ts:31-37`). |
-| Test | ProtocolAdapters "should project non-object JSON Toolkit outputs only for the July protocol" (`effect:packages/effect/test/unstable/ai/McpServer/ProtocolAdapters.test.ts:1495-1551`). |
-| Test | ToolsTest.statelessModernSuite "should list a non-object output schema when the tool declares one" and "should return primitive structured content when declared by the tool" (`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/ToolsTest.ts:416-441`). |
+| JSDoc example | **Doc-gap.** `CallToolResult.structuredContent` is `optional(Schema.Json)` (`effect:packages/effect/src/ai/McpSchema.ts:1692-1695`) with no example of a string or array value. `MCP.md` tool samples use `success: Schema.String` / `Schema.Number` and never mention `structuredContent`. |
+| Typetest | "should accept scalar tool output schemas while keeping inputs object-rooted" (`effect:packages/effect/typetest/ai/McpServer.tst.ts:31-37`). |
+| Test | ProtocolAdapters "should project non-object JSON Toolkit outputs only for the July protocol" (`effect:packages/effect/test/ai/McpServer/ProtocolAdapters.test.ts:1495-1551`). |
+| Test | ToolsTest.statelessModernSuite "should list a non-object output schema when the tool declares one" and "should return primitive structured content when declared by the tool" (`effect:packages/effect/test/ai/McpServer/McpConformance/ToolsTest.ts:416-441`). |
 | Stale changeset | `.changeset/pre/mcp-structured-content-object.md` (see §1.7). |
 
 ### 2.7 Strict tool
 
 | Kind | Where |
 | --- | --- |
-| JSDoc example | **Doc-gap for MCP.** `Tool.Strict` **Example** (Disabling strict JSON schema mode) is the provider `strict: false` flag (`effect:packages/effect/src/unstable/ai/Tool.ts:1860-1881`). It does not mention MCP `additionalProperties: false` or excess-property rejection. |
+| JSDoc example | **Doc-gap for MCP.** `Tool.Strict` **Example** (Disabling strict JSON schema mode) is the provider `strict: false` flag (`effect:packages/effect/src/ai/Tool.ts:1860-1881`). It does not mention MCP `additionalProperties: false` or excess-property rejection. |
 | Changeset | `.changeset/strict-mcp-tool-inputs.md` is the MCP-facing write-up (`effect:.changeset/strict-mcp-tool-inputs.md:5-13`). |
-| Test | "advertises closed strict input schemas with escaped identifiers" (`effect:packages/effect/test/unstable/ai/McpServer/McpServer.test.ts:1446-1463`). |
-| Test | "validates strict return-mode arguments before invoking the handler and decodes them once" (`effect:packages/effect/test/unstable/ai/McpServer/McpServer.test.ts:1465-1499`). Fixture: `StrictObjectTool` `.annotate(Tool.Strict, true)` (`effect:packages/effect/test/unstable/ai/McpServer/McpServer.test.ts:50-56`). |
-| Test | "dies on strict raw JSON Schema tools before registering any tools" (`effect:packages/effect/test/unstable/ai/McpServer/McpServer.test.ts:1502-1527`). |
+| Test | "advertises closed strict input schemas with escaped identifiers" (`effect:packages/effect/test/ai/McpServer/McpServer.test.ts:1446-1463`). |
+| Test | "validates strict return-mode arguments before invoking the handler and decodes them once" (`effect:packages/effect/test/ai/McpServer/McpServer.test.ts:1465-1499`). Fixture: `StrictObjectTool` `.annotate(Tool.Strict, true)` (`effect:packages/effect/test/ai/McpServer/McpServer.test.ts:50-56`). |
+| Test | "dies on strict raw JSON Schema tools before registering any tools" (`effect:packages/effect/test/ai/McpServer/McpServer.test.ts:1502-1527`). |
 | Migration | `registerToolkit` / `toolkit` notes mention strict tools (`effect:migration/v3-to-v4.md:4975`, `effect:migration/v3-to-v4.md:4981`). |
 
 ### 2.8 Declared failure in error and return modes
 
 | Kind | Where |
 | --- | --- |
-| JSDoc example | **Doc-gap in MCP modules.** `Toolkit` **Example** (Reading a handler failure's origin) shows `failureMode: "error"` and `Toolkit.FailureOrigin` (`effect:packages/effect/src/unstable/ai/Toolkit.ts:241-278`). It is not an MCP `isError` example. `CallToolResult` **Details** quote the spec rule that tool errors SHOULD be `isError: true` rather than protocol errors (`effect:packages/effect/src/unstable/ai/McpSchema.ts:1678-1684`). `MCP.md` tools only show `Effect.succeed`. |
+| JSDoc example | **Doc-gap in MCP modules.** `Toolkit` **Example** (Reading a handler failure's origin) shows `failureMode: "error"` and `Toolkit.FailureOrigin` (`effect:packages/effect/src/ai/Toolkit.ts:241-278`). It is not an MCP `isError` example. `CallToolResult` **Details** quote the spec rule that tool errors SHOULD be `isError: true` rather than protocol errors (`effect:packages/effect/src/ai/McpSchema.ts:1678-1684`). `MCP.md` tools only show `Effect.succeed`. |
 | Changeset | `.changeset/strict-mcp-tool-inputs.md:9` and `.changeset/pre/report-mcp-tool-failures.md:5`. |
-| Test | Fixtures: `PublicFailureTool` (Error instance, default error mode) and `StructuredFailureTool` (`failureMode: "error"`) (`effect:packages/effect/test/unstable/ai/McpServer/McpServer.test.ts:58-71`). |
-| Test | "returns schema-validated messages for declared handler failures" (`effect:packages/effect/test/unstable/ai/McpServer/McpServer.test.ts:1707-1721`). |
-| Test | "encodes declared non-Error failures without structured content or internal diagnostics" (`effect:packages/effect/test/unstable/ai/McpServer/McpServer.test.ts:1724-1736`). |
-| Test | `"distinguishes ${origin} failures from decoding failures in ${failureMode} mode"` loops `handler/error`, `handler/return`, encoding, invalid-result (`effect:packages/effect/test/unstable/ai/McpServer/McpServer.test.ts:1756-1816`). Error mode uses `Error.message`; return mode uses the encoded payload. |
-| Test | Conformance "MUST return tool execution failures with isError" (`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/ToolsTest.ts:240-245`). |
+| Test | Fixtures: `PublicFailureTool` (Error instance, default error mode) and `StructuredFailureTool` (`failureMode: "error"`) (`effect:packages/effect/test/ai/McpServer/McpServer.test.ts:58-71`). |
+| Test | "returns schema-validated messages for declared handler failures" (`effect:packages/effect/test/ai/McpServer/McpServer.test.ts:1707-1721`). |
+| Test | "encodes declared non-Error failures without structured content or internal diagnostics" (`effect:packages/effect/test/ai/McpServer/McpServer.test.ts:1724-1736`). |
+| Test | `"distinguishes ${origin} failures from decoding failures in ${failureMode} mode"` loops `handler/error`, `handler/return`, encoding, invalid-result (`effect:packages/effect/test/ai/McpServer/McpServer.test.ts:1756-1816`). Error mode uses `Error.message`; return mode uses the encoded payload. |
+| Test | Conformance "MUST return tool execution failures with isError" (`effect:packages/effect/test/ai/McpServer/McpConformance/ToolsTest.ts:240-245`). |
 
 ### 2.9 Resources and prompts with titles
 
 | Kind | Where |
 | --- | --- |
-| JSDoc example | **Doc-gap.** `McpServer.prompt` / `registerPrompt` accept `title?: string` (`effect:packages/effect/src/unstable/ai/McpServer.ts:2268`, `effect:packages/effect/src/unstable/ai/McpServer.ts:2405`) with no **Example**. `McpServer.resource` / `registerResource` option types omit `title` (`effect:packages/effect/src/unstable/ai/McpServer.ts:2003-2016`, `effect:packages/effect/src/unstable/ai/McpServer.ts:2183-2195`) even though `McpSchema.Resource.title` exists (`effect:packages/effect/src/unstable/ai/McpSchema.ts:913`). `MCP.md` resource and prompt samples have `name` only. |
+| JSDoc example | **Doc-gap.** `McpServer.prompt` / `registerPrompt` accept `title?: string` (`effect:packages/effect/src/ai/McpServer.ts:2268`, `effect:packages/effect/src/ai/McpServer.ts:2405`) with no **Example**. `McpServer.resource` / `registerResource` option types omit `title` (`effect:packages/effect/src/ai/McpServer.ts:2003-2016`, `effect:packages/effect/src/ai/McpServer.ts:2183-2195`) even though `McpSchema.Resource.title` exists (`effect:packages/effect/src/ai/McpSchema.ts:913`). `MCP.md` resource and prompt samples have `name` only. |
 | Changeset | Prompt titles only: `.changeset/mcp-prompt-titles.md:5`. No matching resource-title changeset. |
-| Test (prompts) | Fixtures register `McpServer.prompt({ name: "TestPrompt", title: "Test prompt", ... })` (`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/McpConformanceFixtures.ts:517-520`). PromptsTest "SCHEMA preserves prompt names, titles, descriptions, and arguments" asserts `title === "Test prompt"` except on `2024-11-05` / `2025-03-26` (`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/PromptsTest.ts:91-112`). |
-| Test (tools, not resources) | ProtocolAdapters low-level `McpSchema.Tool({ title: "Canonical title", annotations: { title: "Legacy annotation title" } })` and "should prefer the canonical title when projecting March annotations" (`effect:packages/effect/test/unstable/ai/McpServer/ProtocolAdapters.test.ts:323-334`, `effect:packages/effect/test/unstable/ai/McpServer/ProtocolAdapters.test.ts:1367`). |
-| Test (resource_link, not `McpServer.resource`) | `title: "Linked resource"` on a `resource_link` content block (`effect:packages/effect/test/unstable/ai/McpServer/ProtocolAdapters.test.ts:505-509`). |
-| Resource helper demo | **Doc-gap.** No test in `packages/effect/test/unstable/ai/McpServer` calls `McpServer.resource({ title: ... })`. Resource icons are demonstrated via the low-level registry (`effect:packages/effect/test/unstable/ai/McpServer/ProtocolAdapters.test.ts:1736-1741`). |
+| Test (prompts) | Fixtures register `McpServer.prompt({ name: "TestPrompt", title: "Test prompt", ... })` (`effect:packages/effect/test/ai/McpServer/McpConformance/McpConformanceFixtures.ts:517-520`). PromptsTest "SCHEMA preserves prompt names, titles, descriptions, and arguments" asserts `title === "Test prompt"` except on `2024-11-05` / `2025-03-26` (`effect:packages/effect/test/ai/McpServer/McpConformance/PromptsTest.ts:91-112`). |
+| Test (tools, not resources) | ProtocolAdapters low-level `McpSchema.Tool({ title: "Canonical title", annotations: { title: "Legacy annotation title" } })` and "should prefer the canonical title when projecting March annotations" (`effect:packages/effect/test/ai/McpServer/ProtocolAdapters.test.ts:323-334`, `effect:packages/effect/test/ai/McpServer/ProtocolAdapters.test.ts:1367`). |
+| Test (resource_link, not `McpServer.resource`) | `title: "Linked resource"` on a `resource_link` content block (`effect:packages/effect/test/ai/McpServer/ProtocolAdapters.test.ts:505-509`). |
+| Resource helper demo | **Doc-gap.** No test in `packages/effect/test/ai/McpServer` calls `McpServer.resource({ title: ... })`. Resource icons are demonstrated via the low-level registry (`effect:packages/effect/test/ai/McpServer/ProtocolAdapters.test.ts:1736-1741`). |
 
 `Tool.Title` **Example** (Annotating a tool title) exists
-(`effect:packages/effect/src/unstable/ai/Tool.ts:1716-1728`) and is a provider/MCP-hint
+(`effect:packages/effect/src/ai/Tool.ts:1716-1728`) and is a provider/MCP-hint
 annotation, not `McpServer.resource` / `McpServer.prompt`.
 
 ### 2.10 Server `instructions`
 
 | Kind | Where |
 | --- | --- |
-| JSDoc example | **Doc-gap.** `run` / `layer` / `layerStdio` / `layerHttp` all take `instructions?: string` (`effect:packages/effect/src/unstable/ai/McpServer.ts:677`, `effect:packages/effect/src/unstable/ai/McpServer.ts:1376`, `effect:packages/effect/src/unstable/ai/McpServer.ts:1433`, `effect:packages/effect/src/unstable/ai/McpServer.ts:1545`) with no **Example**. `MCP.md` never passes `instructions`. `InitializeResult.instructions` has field docs (`effect:packages/effect/src/unstable/ai/McpSchema.ts:772-779`). |
+| JSDoc example | **Doc-gap.** `run` / `layer` / `layerStdio` / `layerHttp` all take `instructions?: string` (`effect:packages/effect/src/ai/McpServer.ts:677`, `effect:packages/effect/src/ai/McpServer.ts:1376`, `effect:packages/effect/src/ai/McpServer.ts:1433`, `effect:packages/effect/src/ai/McpServer.ts:1545`) with no **Example**. `MCP.md` never passes `instructions`. `InitializeResult.instructions` has field docs (`effect:packages/effect/src/ai/McpSchema.ts:772-779`). |
 | Changeset | `.changeset/mcp-server-instructions.md:5`. |
-| Test | Conformance fixtures: `makeServerLayer({ instructions: "Follow the test server instructions.", ... })` (`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/McpConformanceFixtures.ts:548-551`). |
-| Test | LifecycleTest "returns configured server instructions" (`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/LifecycleTest.ts:17-22`). |
-| Test | July "should discover the server when no initialization or session exists" asserts the same string on `server/discover` (`effect:packages/effect/test/unstable/ai/McpServer/v2026_07_28.test.ts:80-88`). |
+| Test | Conformance fixtures: `makeServerLayer({ instructions: "Follow the test server instructions.", ... })` (`effect:packages/effect/test/ai/McpServer/McpConformance/McpConformanceFixtures.ts:548-551`). |
+| Test | LifecycleTest "returns configured server instructions" (`effect:packages/effect/test/ai/McpServer/McpConformance/LifecycleTest.ts:17-22`). |
+| Test | July "should discover the server when no initialization or session exists" asserts the same string on `server/discover` (`effect:packages/effect/test/ai/McpServer/v2026_07_28.test.ts:80-88`). |
 
 ### 2.11 Adjacent gaps (not in the required map, recorded because they sit on the same page)
 
-- `websiteUrl` and `icons` are constructor options (`effect:packages/effect/src/unstable/ai/McpServer.ts:1378-1379`) and are tested ("should expose implementation metadata and descriptor icons when supported by the protocol", `effect:packages/effect/test/unstable/ai/McpServer/ProtocolAdapters.test.ts:1713-1750`). `.changeset/pre/add-mcp-icons.md` covers icons. `MCP.md` is silent.
+- `websiteUrl` and `icons` are constructor options (`effect:packages/effect/src/ai/McpServer.ts:1378-1379`) and are tested ("should expose implementation metadata and descriptor icons when supported by the protocol", `effect:packages/effect/test/ai/McpServer/ProtocolAdapters.test.ts:1713-1750`). `.changeset/pre/add-mcp-icons.md` covers icons. `MCP.md` is silent.
 - `.changeset/modern-mice-discover.md` is the only 2026-07-28 changeset and does not mention statelessness, `server/discover`, dropped `initialize`, MRTR, or `subscriptions/listen`.
 - `.changeset/pre/add-mcp-2025-11-25-protocol.md` tells the reader to add `McpProtocol.v2025_11_25`. `MCP.md` never does.
 - Migration examples for `layer` / `layerHttp` / `layerStdio` / `run` all still say `[McpProtocol.v2025_06_18]` (`effect:migration/annotations/effect__ai__McpServer.yaml:1-14`, `effect:migration/v3-to-v4.md:4961-4967`).

@@ -126,7 +126,7 @@ reason found in commit bodies, `osv-scanner.toml`, or repo docs.
 | `@effect/platform-node-shared@4.0.2` | Effect platform stack | `NodeFileSystem.js` `write`/`writeAllChunk` pass `0, buffer.length` explicitly; family since #1047 (03faddd538), re-keyed in #1234 | no written exit condition found; record upstream issue/fix version |
 | `drizzle-orm@1.0.0-rc.5-ab785fc` | drizzle drivers | #1234 (308a3855aa): declaration patch pointing the Effect adapter at `effect/sql/SqlError` | drizzle release built against the current Effect module layout |
 | `effect@4.0.2` | everything on Effect | #1234 body: Bun/JSC `Error` own `line`/`column`/`sourceURL`/`originalLine`/`originalColumn` break `Equal`/`Hash.structure`; "retire the patch with the effect bump that carries the upstream fix" | effect release with upstream fix |
-| `@xstate/effect@0.1.0-alpha.6` | `apps/professional-desktop` statecharts | #1387 (6cbe90d5c1): `/atom` entry imports `effect/unstable/reactivity`, moved to `effect/reactivity`; also string-keyed action brand for declaration emit | upstream publish of the fix |
+| `@xstate/effect@0.1.0-alpha.6` | `apps/professional-desktop` statecharts | #1387 (6cbe90d5c1): `/atom` entry imports `effect/reactivity`, moved to `effect/reactivity`; also string-keyed action brand for declaration emit | upstream publish of the fix |
 
 ### OSV scanner exceptions (`osv-scanner.toml`), expiring in 7 days
 

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "claim-element-graph",
+    "title": "Claim Element Graph",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/claim-element-antecedent-check"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-14",
+    "updated": "2026-10-14"
+  }
+}

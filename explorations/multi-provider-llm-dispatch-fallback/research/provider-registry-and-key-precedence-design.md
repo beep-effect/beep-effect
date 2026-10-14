@@ -12,7 +12,7 @@ Scope: design a typed `PROVIDER_REGISTRY` + user-key>env>CLI key-precedence as a
 - **`Config.orElse(() => fallbackConfig)` is the key-precedence primitive.** Its doc states it "catches **all** `ConfigError`s (not just missing data)" and the fallback receives the error and returns a new `Config` — distinct from `Config.withDefault`, which only fills missing data. So `userKeyConfig.pipe(Config.orElse(() => envKeyConfig))` expresses "try user-supplied key, else env" with typed `ConfigError` propagation. (in-repo: `node_modules/effect/dist/Config.d.ts` lines 278-300, 407)
 - **`ConfigProvider.orElse` + `ConfigProvider.layer` is the cleaner "precedence as an Effect Layer" expression.** A user/CLI key map can be wrapped as a `ConfigProvider` and chained `ConfigProvider.orElse(envProvider)`, then handed to the runtime via `ConfigProvider.layer(self): Layer.Layer<never, E, ...>`. `ConfigProvider.constantCase` normalizes lookup keys (e.g. `openai.apiKey` → `OPENAI_API_KEY`). This lets the whole user>env>CLI chain be a single provided Layer rather than imperative precedence code. (in-repo: `node_modules/effect/dist/ConfigProvider.d.ts` lines 355, 584, 744)
 - Config building blocks confirmed present in beta.91: `Config.redacted` (wraps value in `Redacted<string>`), `Config.option` (`Config<A> → Config<Option<A>>`), `Config.withDefault`, `Config.nested`, `Config.map`, `Config.mapOrFail`. (in-repo: `node_modules/effect/dist/Config.d.ts` lines 120, 199, 407, 500, 1275; effect docs https://effect.website/docs/configuration/)
-- **`effect/unstable/ai` ships in beta.91** with `LanguageModel`, `Model`, `Tool`, `Toolkit`, `Response`, `AiError`, `OpenAiStructuredOutput`, `AnthropicStructuredOutput`. The dispatch Layer should target `LanguageModel.LanguageModel` as its universal provider interface (what `ExecutionPlan` steps provide), exactly as the four drivers already do. (in-repo: `node_modules/effect/dist/unstable/ai/`)
+- **`effect/ai` ships in beta.91** with `LanguageModel`, `Model`, `Tool`, `Toolkit`, `Response`, `AiError`, `OpenAiStructuredOutput`, `AnthropicStructuredOutput`. The dispatch Layer should target `LanguageModel.LanguageModel` as its universal provider interface (what `ExecutionPlan` steps provide), exactly as the four drivers already do. (in-repo: `node_modules/effect/dist/ai/`)
 
 ### How the four drivers already expose provider Layers (the registry's `factory` target)
 
@@ -47,7 +47,7 @@ Primary / in-repo (authoritative for the runtime being built against):
 - `node_modules/effect/dist/Config.d.ts` — `orElse`/`option`/`withDefault`/`redacted`/`nested`
 - `node_modules/effect/dist/ConfigProvider.d.ts` — `orElse`/`constantCase`/`layer`
 - `node_modules/effect/dist/Layer.d.ts` — confirms `orElse` absent; `catchCause`/`catchTag`/`provide` present
-- `node_modules/effect/dist/unstable/ai/` — LanguageModel/Model/Tool/Toolkit/AiError surface
+- `node_modules/effect/dist/ai/` — LanguageModel/Model/Tool/Toolkit/AiError surface
 - `packages/drivers/xai/src/XAi.service.ts`, `.../XAiLanguageModel.service.ts`, `.../XAi.config.ts`
 - `packages/drivers/anthropic/src/Anthropic.config.ts`, `.../Anthropic.errors.ts`
 - `packages/drivers/venice-ai/src/VeniceAI.service.ts`, `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts`

@@ -123,13 +123,17 @@ const httpMain = (): Layer.Layer<never, DesktopStartupError | ServeError> => {
 
 // IPC transport: ndjson rpc frames ride stdin/stdout (bridged to the webview by
 // the Tauri Rust shell). Logs are pinned to stderr so they never interleave with
-// the stdout frame stream the bridge parses.
+// the stdout frame stream the bridge parses. `mergeWithExisting: false` drops the
+// default stdout console logger; `Logger.tracerLogger` is re-added so log lines
+// still land as events on the current span.
 const ipcMain = (): Layer.Layer<never, DesktopStartupError> =>
   DesktopRpcServer.pipe(
     Layer.provide(RpcServer.layerProtocolStdio),
     Layer.provide(SidecarStdioLive),
     Layer.provide(RpcSerialization.layerNdjson),
-    Layer.provide(Logger.layer([Logger.withConsoleError(Logger.formatLogFmt)], { mergeWithExisting: false }))
+    Layer.provide(
+      Logger.layer([Logger.withConsoleError(Logger.formatLogFmt), Logger.tracerLogger], { mergeWithExisting: false })
+    )
   );
 
 const Main = (ipcTransport ? ipcMain() : httpMain()).pipe(

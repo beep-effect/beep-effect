@@ -1,0 +1,4 @@
+beep-heavy: all 5 slots busy, waiting
+$ bun run packages/tooling/tool/cli/src/bin.ts -- quality package-verify @beep/effect-drizzle
+pkg-verify @beep/effect-drizzle (~/YeeBois/projects/beep-effect3-worktrees/ts7-tstyche8/packages/ecosystem/effect-drizzle)
+  ok audit 15.0s   ok docgen 4.0s

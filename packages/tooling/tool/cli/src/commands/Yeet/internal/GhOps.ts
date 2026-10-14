@@ -32,7 +32,7 @@ import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
@@ -57,6 +57,8 @@ import {
   readGithubReviewThreads,
   selectGithubIdentity,
 } from "../../../internal/github/index.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
+import { parsePrProvenanceFooter } from "./Provenance.ts";
 import {
   deriveYeetReviewThreadState,
   YeetReviewThreadNewestComment,
@@ -69,9 +71,11 @@ import type { ChildProcessSpawner } from "effect/process";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import type {
   GithubIdentityError,
+  GithubRestShape,
   GithubReviewThreads,
   GraphqlBudgetExhausted,
 } from "../../../internal/github/index.ts";
+import type { YeetReadyInheritedRed } from "./ReadyGate.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/GhOps");
 
@@ -597,30 +601,250 @@ export const withYeetGh =
     ).pipe(Effect.scoped);
 
 /**
- * Flip a draft pull request to ready through the GraphQL budget guard, reading
- * its node id over REST. Already-ready is success.
+ * Flip a draft pull request on its confirmed head after the GraphQL budget wait.
+ * Already-ready is success when the head still matches.
+ *
+ * **Gotchas**
+ *
+ * The REST head read runs after the budget guard allows the operation, immediately
+ * before the mutation. A push between that read and the mutation remains possible:
+ * GitHub's `markPullRequestReadyForReview` has no expected-head parameter. A changed
+ * head refuses with `YeetCommandError`; rerun the full gate and attribution path.
  *
  * **Example** (Build the flip)
  *
  * ```ts
  * import { flipPullRequestReady } from "@beep/repo-cli/test/Yeet"
  * import * as Effect from "effect/Effect";
- * console.log(Effect.isEffect(flipPullRequestReady(42))) // true
+ * console.log(Effect.isEffect(flipPullRequestReady(42, "abc1234def"))) // true
  * ```
  *
  * @param prNumber - Which pull request to flip.
- * @returns Nothing; an already-ready pull request is left alone.
+ * @param confirmedHead - Head already confirmed by the full gate and attribution record.
+ * @returns Nothing; an already-ready pull request on the confirmed head is left alone.
  * @category commands
  * @since 0.0.0
  */
-export const flipPullRequestReady = (prNumber: number) =>
-  withYeetGh(O.none())(
-    Effect.gen(function* () {
-      const rest = yield* GithubRest;
-      const pr = yield* rest.pullRequest(prNumber);
-      if (pr.draft) yield* markPullRequestReady(pr.nodeId, GraphqlBudgetPolicy.default);
-    })
+export const flipPullRequestReady = Effect.fn("YeetGh.flipPullRequestReady")(function* (
+  prNumber: number,
+  confirmedHead: string
+) {
+  const rest = yield* GithubRest;
+  const budget = yield* GraphqlBudget;
+  const client = yield* GitHubClient;
+  const flipConfirmed = Effect.fnUntraced(function* () {
+    const pr = yield* rest.pullRequest(prNumber);
+    if (!Str.Equivalence(pr.headSha, confirmedHead)) {
+      return yield* YeetCommandError.make({
+        message: `yeet ready refused: the head changed during the GraphQL budget wait (confirmed ${confirmedHead}, live ${pr.headSha}). Re-run \`bun run beep yeet ready\` so the current state is gated and recorded.`,
+        exitCode: 1,
+      });
+    }
+    if (pr.draft) {
+      yield* client
+        .graphql(markPullRequestReadyDocument, { pullRequestId: pr.nodeId })
+        .pipe(Effect.mapError(graphqlErrorToGitHubError));
+    }
+  });
+  yield* flipConfirmed().pipe(budget.guard("markPullRequestReadyForReview", GraphqlBudgetPolicy.default));
+});
+
+const inheritedRedsStart = "<!-- yeet-inherited-reds:start -->";
+const inheritedRedsEnd = "<!-- yeet-inherited-reds:end -->";
+
+const markerCount = (marker: string, body: string): number => A.length(Str.split(marker)(body)) - 1;
+
+/**
+ * Upsert the marked "Inherited reds (S11)" section of a pull request body.
+ *
+ * **Details**
+ *
+ * An existing section between the `yeet-inherited-reds` markers is replaced.
+ * The heading pins the record to the head. An empty list rewrites an existing
+ * section to an explicit None record; a body without markers stays unchanged.
+ * Otherwise the section goes immediately before the provenance footer (its
+ * `---` rule included) when the body has one, else it is appended after one
+ * blank line. Everything outside the section is kept as it was.
+ *
+ * **Gotchas**
+ *
+ * Only no markers, or exactly one start marker followed by exactly one end
+ * marker, is spliced. Anything else (an orphan or repeated marker left by a
+ * hand edit) returns `None`, because guessing a span there could delete text
+ * a person wrote; the caller refuses instead.
+ *
+ * **Example** (Append the section to a plain body)
+ *
+ * ```ts
+ * import { spliceYeetInheritedRedsSection, YeetReadyInheritedRed } from "@beep/repo-cli/test/Yeet"
+ *
+ * import * as O from "effect/Option"
+ *
+ * const body = spliceYeetInheritedRedsSection("Summary", [
+ *   YeetReadyInheritedRed.make({ check: "Lint", attribution: "red on main since 2c1cb448ba" }),
+ * ], "abc1234def")
+ * console.log(O.exists(body, (text) => text.includes("- `Lint`: red on main since 2c1cb448ba"))) // true
+ * ```
+ *
+ * @param body - The current pull request body.
+ * @param headSha - Head commit described by the record.
+ * @param entries - The inherited reds to record, in order.
+ * @returns The reconciled body, or `None` when its markers are malformed.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const spliceYeetInheritedRedsSection: {
+  (entries: ReadonlyArray<YeetReadyInheritedRed>, headSha: string): (body: string) => O.Option<string>;
+  (body: string, entries: ReadonlyArray<YeetReadyInheritedRed>, headSha: string): O.Option<string>;
+} = dual(3, (body: string, entries: ReadonlyArray<YeetReadyInheritedRed>, headSha: string): O.Option<string> => {
+  const section = A.join(
+    [
+      inheritedRedsStart,
+      `## Inherited reds (S11) at ${Str.slice(0, 10)(headSha)}`,
+      "",
+      ...A.match(entries, {
+        onEmpty: () => ["None: no required check is red on this head."],
+        onNonEmpty: A.map((entry) => `- \`${entry.check}\`: ${entry.attribution}`),
+      }),
+      inheritedRedsEnd,
+    ],
+    "\n"
   );
+  const starts = markerCount(inheritedRedsStart, body);
+  const ends = markerCount(inheritedRedsEnd, body);
+  if (starts === 0 && ends === 0) {
+    if (A.isReadonlyArrayEmpty(entries)) return O.some(body);
+    return O.some(
+      O.match(parsePrProvenanceFooter(body), {
+        onNone: () => `${Str.trimEnd(body)}${Str.isEmpty(Str.trim(body)) ? "" : "\n\n"}${section}\n`,
+        onSome: ({ start }) => {
+          const before = Str.trimEnd(Str.slice(0, start)(body));
+          return `${before}${Str.isEmpty(before) ? "" : "\n\n"}${section}\n\n${Str.slice(start)(body)}`;
+        },
+      })
+    );
+  }
+  // Exactly one start before exactly one end is a section; anything else is a
+  // hand edit this splice refuses to guess about.
+  return starts === 1 && ends === 1
+    ? O.flatMap(Str.indexOf(inheritedRedsStart)(body), (start) =>
+        O.map(
+          O.filter(Str.indexOf(inheritedRedsEnd)(body), (end) => end > start),
+          (end) => `${Str.slice(0, start)(body)}${section}${Str.slice(end + Str.length(inheritedRedsEnd))(body)}`
+        )
+      )
+    : O.none();
+});
+
+const writeAndVerifyInheritedReds = Effect.fn("YeetGh.writeAndVerifyInheritedReds")(function* (
+  rest: Pick<GithubRestShape, "pullRequest" | "updatePullRequest">,
+  prNumber: number,
+  source: string,
+  body: string
+) {
+  if (!Str.Equivalence(source, body)) yield* rest.updatePullRequest(prNumber, { body });
+  const readback = (yield* rest.pullRequest(prNumber)).body;
+  if (!Str.Equivalence(readback, body)) {
+    return yield* YeetCommandError.make({
+      message: `the body of #${prNumber} drifted while recording inherited reds; re-run yeet ready to record against the latest body`,
+      exitCode: 1,
+    });
+  }
+});
+
+/**
+ * Upsert the inherited-red section against a stable REST body snapshot.
+ *
+ * **Details**
+ *
+ * An empty list rewrites an existing section to a head-pinned None record through
+ * the same bounded write path; it adds no section to a body without markers.
+ * Re-splices concurrent edits up to three times before refusing without a write.
+ * A REST PATCH has no conditional-write guarantee: an edit between the last read
+ * and PATCH can still be overwritten. Readback detects subsequent drift and
+ * refuses the ready flip; it cannot recover an edit overtaken by the PATCH.
+ *
+ * **Example** (Use the selected REST service)
+ *
+ * ```ts
+ * import { GithubRest } from "@beep/repo-cli/test/SharedInternals"
+ * import { recordInheritedRedsWithRest } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ * const recording = GithubRest.use((rest) => recordInheritedRedsWithRest(rest, 42, [], "abc1234def"))
+ * console.log(Effect.isEffect(recording)) // true
+ * ```
+ *
+ * @param rest - Selected REST transport, injectable for concurrent-edit tests.
+ * @param prNumber - Pull request whose marked section is updated.
+ * @param headSha - Head commit described by the record.
+ * @param entries - Required-check attributions to persist.
+ * @returns Nothing after a stable write and matching readback.
+ * @category commands
+ * @since 0.0.0
+ */
+export const recordInheritedRedsWithRest = Effect.fn("YeetGh.recordInheritedRedsWithRest")(function* (
+  rest: Pick<GithubRestShape, "pullRequest" | "updatePullRequest">,
+  prNumber: number,
+  entries: ReadonlyArray<YeetReadyInheritedRed>,
+  headSha: string
+) {
+  let source = (yield* rest.pullRequest(prNumber)).body;
+  for (let round = 0; round < 3; round += 1) {
+    const body = spliceYeetInheritedRedsSection(source, entries, headSha);
+    if (O.isNone(body)) {
+      return yield* YeetCommandError.make({
+        message: `the body of #${prNumber} has unmatched or repeated yeet-inherited-reds markers; repair them by hand first`,
+        exitCode: 1,
+      });
+    }
+    const fresh = (yield* rest.pullRequest(prNumber)).body;
+    if (!Str.Equivalence(source, fresh)) {
+      source = fresh;
+      continue;
+    }
+    return yield* writeAndVerifyInheritedReds(rest, prNumber, source, body.value);
+  }
+  return yield* YeetCommandError.make({
+    message: `the body of #${prNumber} changed during all three inherited-red reconciliation rounds; nothing was written`,
+    exitCode: 1,
+  });
+});
+
+/**
+ * Record S11 inherited reds through the selected GitHub REST identity.
+ *
+ * **Details**
+ *
+ * Uses {@link recordInheritedRedsWithRest} to preserve edits observed before
+ * the PATCH and fail closed on malformed markers, persistent contention or
+ * readback drift. An edit between the final read and PATCH remains a race
+ * because the GitHub body update is not an atomic compare-and-swap.
+ *
+ * **Example** (Build the record)
+ *
+ * ```ts
+ * import { recordInheritedRedsInPullRequestBody, YeetReadyInheritedRed } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect";
+ * const record = recordInheritedRedsInPullRequestBody(42, [
+ *   YeetReadyInheritedRed.make({ check: "Lint", attribution: "red on main since 2c1cb448ba" }),
+ * ], "abc1234def")
+ * console.log(Effect.isEffect(record)) // true
+ * ```
+ *
+ * @param prNumber - Which pull request to record on.
+ * @param headSha - Head commit described by the record.
+ * @param entries - The inherited reds to record.
+ * @returns Nothing once the body is written and verified.
+ * @category commands
+ * @since 0.0.0
+ */
+export const recordInheritedRedsInPullRequestBody = Effect.fn("YeetGh.recordInheritedRedsInPullRequestBody")(function* (
+  prNumber: number,
+  entries: ReadonlyArray<YeetReadyInheritedRed>,
+  headSha: string
+) {
+  return yield* recordInheritedRedsWithRest(yield* GithubRest, prNumber, entries, headSha);
+}, withYeetGh(O.none()));
 
 const report = (exitCode: number) => (message: string) => failWithReportedExit(message, exitCode);
 

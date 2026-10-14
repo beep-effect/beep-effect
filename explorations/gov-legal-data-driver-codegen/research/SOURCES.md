@@ -171,7 +171,7 @@ RESEARCH.md In-Repo Capability Inventory).
 | DOL driver | `packages/drivers/dol` | **NET-NEW** (bare skeleton) |
 | Federal Register driver | `packages/drivers/federal-register` | **NET-NEW** (bare skeleton) |
 | GovInfo driver | `packages/drivers/govinfo` | **extend** — PARTIAL: Search HttpApi domain contract + value models scaffolded; add client/auth(api.data.gov)/retry/cache |
-| RunPod driver | `packages/drivers/runpod` | **reuse precedent** — checked-in `openapi.json` + `scripts/generate.ts` bespoke renderer over `effect/unstable/http` |
+| RunPod driver | `packages/drivers/runpod` | **reuse precedent** — checked-in `openapi.json` + `scripts/generate.ts` bespoke renderer over `effect/http` |
 | ACP driver | `packages/drivers/acp` | **reuse precedent** — library-driven + pinned remote-spec download codegen |
 | USPTO driver | `packages/drivers/uspto` | **reference / extend-elsewhere** — hand-rolled Redacted-header auth; depth extension routed to `uspto-patent-driver-depth` |
 | M365 driver | `packages/drivers/m365` | **reference** — Retry-After-honoring + status→error mapping precedent |

@@ -69,7 +69,7 @@ Keep the derivation inline so the existing `lookupState` supplies the precise `A
 The ready-phase guard on `options` is required for behavior preservation.
 Effect's live `AsyncResult` model explicitly allows a `Success` value with
 `waiting: true` during refresh
-(`node_modules/effect/src/unstable/reactivity/AsyncResult.ts:49-54,230-258`).
+(`node_modules/effect/src/reactivity/AsyncResult.ts:49-54,230-258`).
 The current `settled && AsyncResult.isSuccess` expression hides those stale
 options while the new query is waiting. Testing `isSuccess` alone would show
 the previous query's candidates under the new query and is therefore not an

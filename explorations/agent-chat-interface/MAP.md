@@ -54,7 +54,7 @@ branch-on-edit, local persistence, usage capture. Depends on (a) + (b).
 
 | Component | Capability basis |
 | --- | --- |
-| Streaming turn kernel in agents-slice server (forced-tool structured output, `scanChunk` block extraction, per-block decode) | port of proof `server/AssistantTurn.ts` + `test/scanChunk.test.ts` (property tests); `AnthropicStructuredOutput.toCodecAnthropic` (`effect/unstable/ai`, catalog) |
+| Streaming turn kernel in agents-slice server (forced-tool structured output, `scanChunk` block extraction, per-block decode) | port of proof `server/AssistantTurn.ts` + `test/scanChunk.test.ts` (property tests); `AnthropicStructuredOutput.toCodecAnthropic` (`effect/ai`, catalog) |
 | Fixture agent behind the same kernel interface | runtime data-loop fixtures retained in the goal packet; SDK contracts `GetContextPacket`/`ProposeCandidateOutputSet` (`@beep/agent-capability-use-cases/public`) |
 | Sidecar lifecycle + app-local runtime `Layer.ts` in `apps/professional-desktop` | **NET-NEW** for this app; port of proof `scripts/build-sidecar.ts` + `src-tauri/src/lib.rs` (bun-compiled `externalBin`, spawn/kill, app-data DB path) |
 | Chat UI: thread list, composer, streamed block rendering, edit-as-branch (version-selector UX), cancel-in-flight | `@beep/editor` from (a); AtomRpc patterns from proof `src/atoms.ts` (`Atom.family`, `Reactivity.mutation`, `Atom.kvs` drafts, AtomRegistry interrupt-cleanup lesson); existing `@effect/atom-react` usage in `apps/professional-desktop/src/App.tsx` |

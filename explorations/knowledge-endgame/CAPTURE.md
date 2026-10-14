@@ -35,7 +35,7 @@ the law-practice work & goals. Existing packets that fold into it:
 The vision lies at the intersection of those packets and:
 
 - `@beep/docgen`, storybook & effect api spec tooling
-  (`unstable/httpapi/HttpApiScalar.ts`)
+  (`http-api/HttpApiScalar.ts`)
 - the "Identity as IRI" scratch note
 - the local LemmaScript clone (path in the provenance ledger)
 - the goals & explorations system itself

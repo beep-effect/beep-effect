@@ -10,11 +10,10 @@
  * very first `check` run is expected to report the `xhigh` and `high` copies
  * as `stale` rather than silently adopting them.
  *
- * Since the 2026-10-01 policy the two orchestrator chains are explicit:
- * `child.heavy` = `claude-opus-5-5` (the explicit id; the `opus` alias is not
- * a pin) for Claude Code, `codex.heavy` = `gpt-6.1-sol` medium for Codex, and
- * the shared fallbacks `fallback.cursor` (`claude-opus-5-5` on the Cursor
- * seat) then `fallback.grok` (`grok-4.7` medium on grok-build).
+ * The 2026-10-14 rulings pin Fable 5.1 orchestration, Opus 5.5 children,
+ * GPT-6.1-Sol medium Codex work, the Cursor medium id, and Grok 4.7 research.
+ * Separate review-panel sessions use Astra, Fable, and Grok at xhigh; Muse is
+ * opt-in only, and Junie launch and volume routes sit outside fallback chains.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -79,18 +78,25 @@ const binding = (
 
 const codexDefault = O.some("Codex default since 2026-10-01; Codex uses only GPT-6.1-Sol for substantive work.");
 const cursorFallback = O.some(
-  "Step 2 of both chains since 2026-10-01; absent from --list-models yet accepted, effort medium baked in."
-);
-const fableProxyOrchestrator = O.some(
-  "claudep keeps Fable: CLIProxyAPI cannot route claude-opus-5-5 (registry gap); operator decision pending."
+  "Step 2 of both chains; the listed id reports Claude Opus 5.5 300K Medium (verified 2026-10-14)."
 );
 const grokFallback = O.some("Step 3 of both chains since 2026-10-01; the grok CLI reports grok-4.7-build.");
-const opusDefault = O.some(
-  "Claude Code default and every sub-agent, delegation, and Workflow child; explicit id, never the opus alias."
+const opusChildren = O.some(
+  "Every Claude sub-agent, delegation, and Workflow child; explicit id, never the opus alias."
 );
-const opusProxyGap = O.some(
-  "Same route for proxy sessions; unknown-model until the CLIProxyAPI registry lists claude-opus-5-5 (absent 2026-09-27)."
+const opusProxy = O.some("Proxy sessions route claude-opus-5-5 since 2026-10-14 (CLIProxyAPI /v1/models lists it).");
+const fableOrchestrator = O.some(
+  "Operator ruling 2026-10-14: Fable 5.1 orchestrates at medium; every child stays claude-opus-5-5."
 );
+const reviewPanel = O.some(
+  "Independent review panel member; a session separate from the orchestrator, effort passed at launch."
+);
+const museOptIn = O.some("claudem; opt-in only, never part of a fallback chain.");
+const junieDefault = O.some("Interactive launch default (~/.junie/settings.json modelForLaunch).");
+const junieVolume = O.some(
+  "Spend-down volume route on the JetBrains AI Pro pool; outside the fallback chains; Junie never delegates onward."
+);
+const x47 = O.some("x_search injection verified on grok-4.7 through CLIProxyAPI 2026-10-14.");
 
 const at = (role: RoutingRole, surface: RoutingSurface, field: LocatorField): LocatorBinding =>
   LocatorBinding.make({ role, surface, field });
@@ -189,40 +195,39 @@ const agentRollout = (id: string, path: string): ModelSyncTarget =>
   ]);
 
 const seedBindings: ReadonlyArray<ModelBinding> = [
-  binding("child.heavy", "claude-code", "claude-opus-5-5", O.none(), [], opusDefault),
-  binding("child.heavy", "proxy-workflow", "claude-opus-5-5", O.none(), [], opusProxyGap),
-  binding("codex.heavy", "codex-cli", "gpt-6.1-sol", O.some("medium"), ["gpt-6-astra", "gpt-5.6-sol"], codexDefault),
-  binding("codex.heavy", "codex-plugin", "gpt-6.1-sol", O.some("medium"), ["gpt-6-astra", "gpt-5.6-sol"], codexDefault),
-  binding(
-    "codex.heavy",
-    "proxy-workflow",
-    "gpt-6.1-sol",
-    O.some("medium"),
-    ["gpt-6-astra", "gpt-5.6-sol"],
-    codexDefault
-  ),
+  binding("child.heavy", "claude-code", "claude-opus-5-5", O.none(), [], opusChildren),
+  binding("child.heavy", "proxy-workflow", "claude-opus-5-5", O.none(), [], opusProxy),
+  binding("codex.heavy", "codex-cli", "gpt-6.1-sol", O.some("medium"), ["gpt-6-sol", "gpt-5.6-sol"], codexDefault),
+  binding("codex.heavy", "codex-plugin", "gpt-6.1-sol", O.some("medium"), ["gpt-6-sol", "gpt-5.6-sol"], codexDefault),
+  binding("codex.heavy", "proxy-workflow", "gpt-6.1-sol", O.some("medium"), ["gpt-6-sol", "gpt-5.6-sol"], codexDefault),
   binding(
     "codex.heavy",
     "jetbrains-codex",
     "gpt-6.1-sol",
     O.some("medium"),
-    ["gpt-6-astra", "gpt-5.6-sol"],
+    ["gpt-6-sol", "gpt-5.6-sol"],
     codexDefault
   ),
-  binding("codex.plan", "codex-cli", "gpt-6.1-sol", O.some("medium"), ["gpt-6-astra"], codexDefault),
-  binding("fallback.cursor", "cursor-seat", "claude-opus-5-5", O.none(), [], cursorFallback),
+  binding("codex.plan", "codex-cli", "gpt-6.1-sol", O.some("medium"), ["gpt-6-sol"], codexDefault),
+  binding("fallback.cursor", "cursor-seat", "claude-opus-5-5-medium", O.none(), [], cursorFallback),
   binding("fallback.grok", "grok-cli", "grok-4.7", O.some("medium"), [], grokFallback),
-  binding("child.lightweight", "proxy-workflow", "gpt-5.6-luna", O.none()),
-  binding("research.web", "grok-cli", "grok-4.6", O.some("xhigh"), ["grok-4.5"]),
-  binding("research.web", "proxy-workflow", "grok-4.6", O.none(), ["grok-4.5"]),
-  binding("orchestrator", "claude-code", "claude-opus-5-5", O.some("medium"), ["claude-fable-5-1"], opusDefault),
-  binding("orchestrator", "proxy-workflow", "claude-fable-5-1", O.none(), [], fableProxyOrchestrator),
+  binding("child.lightweight", "proxy-workflow", "gpt-6-luna", O.none(), ["gpt-5.6-luna"]),
+  binding("research.web", "grok-cli", "grok-4.7", O.some("xhigh"), ["grok-4.6", "grok-4.5"], x47),
+  binding("research.web", "proxy-workflow", "grok-4.7", O.none(), ["grok-4.6", "grok-4.5"], x47),
+  binding("orchestrator", "claude-code", "claude-fable-5-1", O.some("medium"), [], fableOrchestrator),
+  binding("orchestrator", "proxy-workflow", "claude-fable-5-1", O.none(), [], fableOrchestrator),
+  binding("review.panel", "codex-cli", "gpt-6-astra", O.some("xhigh"), [], reviewPanel),
+  binding("review.panel", "claude-code", "claude-fable-5-1", O.some("xhigh"), [], reviewPanel),
+  binding("review.panel", "grok-cli", "grok-4.7", O.some("xhigh"), [], reviewPanel),
+  binding("muse.opt-in", "proxy-workflow", "muse-wonder-1.0", O.some("medium"), ["muse-spark-1.3"], museOptIn),
+  binding("junie.default", "junie-cli", "gemini-3-flash-preview", O.none(), [], junieDefault),
+  binding("junie.volume", "junie-cli", "claude-opus-5-5", O.none(), [], junieVolume),
   binding("cursor.volume", "cursor-seat", "composer-2.5", O.none()),
-  binding("cursor.review", "cursor-seat", "claude-opus-5-thinking-high", O.none()),
+  binding("cursor.review", "cursor-seat", "claude-opus-5-5-high", O.none(), ["claude-opus-5-thinking-high"]),
   binding("cursor.mechanical", "cursor-seat", "composer-2.5", O.none()),
-  binding("qa.judge", "claude-code", "claude-opus-5-5", O.none(), [], opusDefault),
-  binding("graft.deep", "proxy-workflow", "claude-opus-5", O.none()),
-  binding("jsdoc.migrate-titles", "grok-cli", "grok-4.6", O.none(), ["grok-4.5"]),
+  binding("qa.judge", "claude-code", "claude-opus-5-5", O.none(), [], opusChildren),
+  binding("graft.deep", "proxy-workflow", "claude-opus-5-5", O.none(), ["claude-opus-5"]),
+  binding("jsdoc.migrate-titles", "grok-cli", "grok-4.7", O.none(), ["grok-4.6", "grok-4.5"]),
   binding("deprecated.routable", "proxy-workflow", "gpt-daybreak-blue-latest", O.none()),
 ];
 
@@ -232,14 +237,44 @@ const seedSuperseded: ReadonlyArray<SupersededModel> = [
   SupersededModel.make({
     id: modelId("gpt-5.6-sol"),
     retiredAt,
-    replacedBy: O.some(modelId("gpt-6-astra")),
+    replacedBy: O.some(modelId("gpt-6.1-sol")),
     note: O.some("Superseded as the token-heavy Codex default on 2026-09-08."),
   }),
   SupersededModel.make({
-    id: modelId("gpt-6-astra"),
-    retiredAt: DateTime.makeUnsafe("2026-10-01T00:00:00Z"),
+    id: modelId("gpt-6-sol"),
+    retiredAt: DateTime.makeUnsafe("2026-10-14T00:00:00Z"),
     replacedBy: O.some(modelId("gpt-6.1-sol")),
-    note: O.some("Superseded as the Codex default by the 2026-10-01 model defaults policy."),
+    note: O.some("Previous-generation workhorse per the Codex catalog; picker drift 2026-10-14."),
+  }),
+  SupersededModel.make({
+    id: modelId("grok-4.6"),
+    retiredAt: DateTime.makeUnsafe("2026-10-14T00:00:00Z"),
+    replacedBy: O.some(modelId("grok-4.7")),
+    note: O.none(),
+  }),
+  SupersededModel.make({
+    id: modelId("gpt-5.6-luna"),
+    retiredAt: DateTime.makeUnsafe("2026-10-14T00:00:00Z"),
+    replacedBy: O.some(modelId("gpt-6-luna")),
+    note: O.none(),
+  }),
+  SupersededModel.make({
+    id: modelId("claude-opus-5"),
+    retiredAt: DateTime.makeUnsafe("2026-10-14T00:00:00Z"),
+    replacedBy: O.some(modelId("claude-opus-5-5")),
+    note: O.none(),
+  }),
+  SupersededModel.make({
+    id: modelId("claude-opus-5-thinking-high"),
+    retiredAt: DateTime.makeUnsafe("2026-10-14T00:00:00Z"),
+    replacedBy: O.some(modelId("claude-opus-5-5-high")),
+    note: O.none(),
+  }),
+  SupersededModel.make({
+    id: modelId("muse-spark-1.3"),
+    retiredAt: DateTime.makeUnsafe("2026-10-14T00:00:00Z"),
+    replacedBy: O.some(modelId("muse-wonder-1.0")),
+    note: O.none(),
   }),
   SupersededModel.make({
     id: modelId("grok-4.5"),
@@ -385,6 +420,18 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
       key: "GRAFT_MODEL",
     },
   ]),
+  target("home.junie.settings", "home", "$HOME/.junie/settings.json", true, [
+    {
+      _tag: "json-key",
+      binding: at("junie.default", "junie-cli", "model"),
+      render: verbatim,
+      pointer: ["modelForLaunch"],
+      fallbacks: [],
+    },
+  ]),
+  target("home.junie.agents-md", "home", "$HOME/.junie/AGENTS.md", true, [
+    block("routing-doctrine", allBindings, true),
+  ]),
   target("home.zshrc", "home", "$HOME/.zshrc", true, [
     {
       _tag: "shell-assign",
@@ -406,6 +453,13 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
       render: verbatim,
       variable: "--model",
       within: O.some("claudep"),
+    },
+    {
+      _tag: "shell-assign",
+      binding: at("muse.opt-in", "proxy-workflow", "model-effort-suffix"),
+      render: verbatim,
+      variable: "--model",
+      within: O.some("claudem"),
     },
     {
       _tag: "shell-assign",
@@ -474,8 +528,8 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
  *
  * **Details**
  *
- * Twenty-one bindings cover the routing concepts the census named; the targets
- * are the repo rows of ruling 9 plus the home rows of ruling 7 and the
+ * Twenty-seven bindings cover the routing concepts the census named; the targets
+ * reflect the 2026-10-14 rulings and are the repo rows of ruling 9 plus the home rows of ruling 7 and the
  * `$HOME` sweep. Home paths are written `$HOME/…` rather than absolute, so the
  * file stays portable and safe to read aloud.
  *
@@ -485,7 +539,7 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
  * import { seedModelsManifest } from "@beep/repo-cli/commands/Models"
  *
  * console.log(seedModelsManifest.version) // "beep-models/v1"
- * console.log(seedModelsManifest.bindings.length) // 21
+ * console.log(seedModelsManifest.bindings.length) // 27
  * ```
  *
  * @category models

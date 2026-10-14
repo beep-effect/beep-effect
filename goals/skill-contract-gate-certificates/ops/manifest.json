@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "skill-contract-gate-certificates",
+    "packetId": "goal-packet/v1:2d786567d221f96a9ff9d82336df5c3be963cb26f283b52027861e198ccf07f0",
+    "title": "Skill Contract Gate Certificates",
+    "status": "active",
+    "created": "2026-10-14",
+    "updated": "2026-10-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/skill-contract-gate-certificates",
+  "lifecycle": "active",
+  "mission": "Skill Contract Gate Certificates (graduated from explorations/typed-agent-skill-contracts).",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/typed-agent-skill-contracts",
+    "graduated": "2026-10-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/skill-contract-gate-certificates/README.md",
+    "goals/skill-contract-gate-certificates/SPEC.md",
+    "goals/skill-contract-gate-certificates/PLAN.md",
+    "goals/skill-contract-gate-certificates/GOAL.md",
+    "goals/skill-contract-gate-certificates/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/skill-contract-gate-certificates/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/skill-contract-gate-certificates/GOAL.md)\" -le 4000",
+    "jq . goals/skill-contract-gate-certificates/ops/manifest.json",
+    "rg -n \"skill-contract-gate-certificates|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/skill-contract-gate-certificates",
+    "git diff --check -- goals/skill-contract-gate-certificates",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

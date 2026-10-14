@@ -61,7 +61,7 @@ for the Findings DB and candidates for the upstream lane (DECISIONS D16).
     Bowman, Feng 2024, "LLM Evaluators Recognize and Favor Their Own Generations"
     https://arxiv.org/abs/2404.13076 ; Yang et al. 2023 (rephrased-sample contamination)
     https://arxiv.org/abs/2311.04850
-  - S3 embeddings — `Effect-TS/effect` main `.repos/effect/packages/effect/src/unstable/ai/EmbeddingModel.ts`
+  - S3 embeddings — `Effect-TS/effect` main `.repos/effect/packages/effect/src/ai/EmbeddingModel.ts`
     and `.repos/effect/packages/ai/openai/src/OpenAiEmbeddingModel.ts` (reference checkout, 02a5146d69);
     OpenAI `POST /embeddings` wire format
     https://raw.githubusercontent.com/openai/openai-openapi/master/openapi.yaml
@@ -93,7 +93,7 @@ for the Findings DB and candidates for the upstream lane (DECISIONS D16).
 | Embedded Postgres + ORM | `@beep/pglite`, `@beep/postgres` | reuse (storage bake-off; pgvector-on-PGlite convergence) |
 | Property graph in-memory | `effect/Graph` (Effect v4) | reuse candidate |
 | LLM providers / agent chat | agents slice (`@beep/agents-client` etc.) | already-have (LLM multiplexing auto-parked, D10) |
-| Embeddings (S3-rev, one row; M3) | contract `effect/unstable/ai` `EmbeddingModel` (4.0.0-rc.111) + shipped `@effect/ai-openai` `OpenAiEmbeddingModel` (`.model()` when `Dimensions` is needed; `.layer` yields `EmbeddingModel` only; verified in `.repos/effect/packages/ai/openai/src/OpenAiEmbeddingModel.ts`) wrapped by a new `@beep/openai` driver mirroring `@beep/anthropic` — its own goal packet `openai-driver`; lab owns `EmbeddingVector` + `ModelIdentity` | reuse contract + Layer; NET-NEW = thin driver only. Superseded: a hand-written `EmbeddingModel.make` Layer over `@beep/venice-ai` `createEmbedding` (S3, rejected) |
+| Embeddings (S3-rev, one row; M3) | contract `effect/ai` `EmbeddingModel` (4.0.0-rc.111) + shipped `@effect/ai-openai` `OpenAiEmbeddingModel` (`.model()` when `Dimensions` is needed; `.layer` yields `EmbeddingModel` only; verified in `.repos/effect/packages/ai/openai/src/OpenAiEmbeddingModel.ts`) wrapped by a new `@beep/openai` driver mirroring `@beep/anthropic` — its own goal packet `openai-driver`; lab owns `EmbeddingVector` + `ModelIdentity` | reuse contract + Layer; NET-NEW = thin driver only. Superseded: a hand-written `EmbeddingModel.make` Layer over `@beep/venice-ai` `createEmbedding` (S3, rejected) |
 | effect-ontology shapes (`ProviderMetadata`, `toReifiedTriples`, `Timeline`, `QuadDelta`, `ProvenanceUri`) | `scratchpad/effect-ontology` — non-importable | borrow-shape / pattern-only per `effect-ontology-map.md` (S6) |
 | Reasoning oracle (test-time) | `apps/labs/semantica/test/helpers/EyeOracleChild.ts` + `apps/labs/semantica/scripts/generate-g-entailment.ts` (restricted EYE 11.24.5 via `eyereasoner` 21.1.18, MIT; 64 KiB input / 1 MiB output caps) — shipped by `semantica-canary` C2 | reuse (was NET-NEW wiring; MAP v1.1 extends the generator for `g-entailment-rules/v1`) |
 | Local practice-KG precedent (PGlite + DuckDB + read-only MCP) | `apps/practice-kg-mcp` | pattern |

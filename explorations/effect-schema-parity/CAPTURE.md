@@ -54,7 +54,7 @@ dated heading at the bottom.
 - The repo is on `effect@4.0.0-rc.115` (root catalog + `bun.lock`). There are
   zero schema-relevant upstream commits between rc.115 and main. The
   interesting window is rc.112..main: 28 commits touching `Schema*.ts`,
-  `JsonSchema.ts`, `unstable/schema/`, `SCHEMA.md`, `migration/schema.md`.
+  `JsonSchema.ts`, `schema/`, `SCHEMA.md`, `migration/schema.md`.
 - `migration/schema.md` lives at the effect repo root, not under
   the upstream Effect package directory.
 - `@beep/schema` (`packages/foundation/modeling/schema`, 271 source files) is
@@ -105,56 +105,56 @@ A  packages/effect/src/SchemaRepresentation.ts
 A  packages/effect/src/SchemaTransformation.ts
 A  packages/effect/src/StandardSchema.ts
 A  packages/effect/src/JsonSchema.ts
-A  packages/effect/src/unstable/schema/index.ts
-A  packages/effect/src/unstable/schema/VariantSchema.ts
-A  packages/effect/src/unstable/schema/Model.ts
-A  packages/effect/src/unstable/arbitrary/index.ts
-A  packages/effect/src/unstable/arbitrary/Arbitrary.ts
+A  packages/effect/src/schema/index.ts
+A  packages/effect/src/schema/VariantSchema.ts
+A  packages/effect/src/schema/Model.ts
+A  packages/effect/src/Arbitrary.ts
+A  packages/effect/src/Arbitrary.ts
 A  packages/effect/SCHEMA.md
 A  migration/schema.md
-B  packages/effect/src/unstable/ai/McpSchema.ts
-B  packages/effect/src/unstable/ai/AnthropicStructuredOutput.ts
-B  packages/effect/src/unstable/ai/Prompt.ts
-B  packages/effect/src/unstable/ai/Tool.ts
-B  packages/effect/src/unstable/ai/Toolkit.ts
-B  packages/effect/src/unstable/ai/Response.ts
-B  packages/effect/src/unstable/devtools/DevToolsSchema.ts
-B  packages/effect/src/unstable/encoding/Yaml.ts
-B  packages/effect/src/unstable/encoding/Toml.ts
-B  packages/effect/src/unstable/encoding/SchemaBinary.ts
-B  packages/effect/src/unstable/encoding/Ini.ts
-B  packages/effect/src/unstable/encoding/Ndjson.ts
-B  packages/effect/src/unstable/http/Mime.ts
-B  packages/effect/src/unstable/http/HttpStatus.ts
-B  packages/effect/src/unstable/http/HttpIncomingMessage.ts
-B  packages/effect/src/unstable/http/HttpClientError.ts
-B  packages/effect/src/unstable/http/HttpServerRespondable.ts
-B  packages/effect/src/unstable/http/HttpBody.ts
-B  packages/effect/src/unstable/http/HttpTraceContext.ts
-B  packages/effect/src/unstable/http/Multipart.ts
-B  packages/effect/src/unstable/http/HttpServerRequest.ts
-B  packages/effect/src/unstable/http/HttpClientRequest.ts
-B  packages/effect/src/unstable/http/HttpStaticServer.ts
-B  packages/effect/src/unstable/http/HttpMethod.ts
-B  packages/effect/src/unstable/http/MultipartParser.ts
-B  packages/effect/src/unstable/http/HttpServerError.ts
-B  packages/effect/src/unstable/http/Headers.ts
-B  packages/effect/src/unstable/http/HttpServerResponse.ts
-B  packages/effect/src/unstable/http/HttpClientResponse.ts
-B  packages/effect/src/unstable/http/Template.ts
-B  packages/effect/src/unstable/http/Url.ts
-B  packages/effect/src/unstable/http/UrlParams.ts
-B  packages/effect/src/unstable/httpapi/HttpApiSchema.ts
-B  packages/effect/src/unstable/net/NetAddress.ts
-B  packages/effect/src/unstable/net/IpInterface.ts
-B  packages/effect/src/unstable/net/IpNetwork.ts
-B  packages/effect/src/unstable/observability/OtlpSerialization.ts
-B  packages/effect/src/unstable/rpc/RpcSchema.ts
-B  packages/effect/src/unstable/sql/SqlSchema.ts
+B  packages/effect/src/ai/McpSchema.ts
+B  packages/effect/src/ai/AnthropicStructuredOutput.ts
+B  packages/effect/src/ai/Prompt.ts
+B  packages/effect/src/ai/Tool.ts
+B  packages/effect/src/ai/Toolkit.ts
+B  packages/effect/src/ai/Response.ts
+B  packages/effect/src/devtools/DevToolsSchema.ts
+B  packages/effect/src/encoding/Yaml.ts
+B  packages/effect/src/encoding/Toml.ts
+B  packages/effect/src/encoding/SchemaBinary.ts
+B  packages/effect/src/encoding/Ini.ts
+B  packages/effect/src/encoding/Ndjson.ts
+B  packages/effect/src/http/Mime.ts
+B  packages/effect/src/http/HttpStatus.ts
+B  packages/effect/src/http/HttpIncomingMessage.ts
+B  packages/effect/src/http/HttpClientError.ts
+B  packages/effect/src/http/HttpServerRespondable.ts
+B  packages/effect/src/http/HttpBody.ts
+B  packages/effect/src/http/HttpTraceContext.ts
+B  packages/effect/src/http/Multipart.ts
+B  packages/effect/src/http/HttpServerRequest.ts
+B  packages/effect/src/http/HttpClientRequest.ts
+B  packages/effect/src/http/HttpStaticServer.ts
+B  packages/effect/src/http/HttpMethod.ts
+B  packages/effect/src/http/MultipartParser.ts
+B  packages/effect/src/http/HttpServerError.ts
+B  packages/effect/src/http/Headers.ts
+B  packages/effect/src/http/HttpServerResponse.ts
+B  packages/effect/src/http/HttpClientResponse.ts
+B  packages/effect/src/http/Template.ts
+B  packages/effect/src/http/Url.ts
+B  packages/effect/src/http/UrlParams.ts
+B  packages/effect/src/http-api/HttpApiSchema.ts
+B  packages/effect/src/net/NetAddress.ts
+B  packages/effect/src/net/IpInterface.ts
+B  packages/effect/src/net/IpNetwork.ts
+B  packages/effect/src/observability/OtlpSerialization.ts
+B  packages/effect/src/rpc/RpcSchema.ts
+B  packages/effect/src/sql/SqlSchema.ts
 
 ### Upstream hint list: schema-relevant commits rc.112..main
 
-`git -C .repos/effect log effect@4.0.0-rc.112..main -- 'packages/effect/src/Schema*.ts' packages/effect/src/JsonSchema.ts packages/effect/src/unstable/schema packages/effect/SCHEMA.md migration/schema.md`
+`git -C .repos/effect log effect@4.0.0-rc.112..main -- 'packages/effect/src/Schema*.ts' packages/effect/src/JsonSchema.ts packages/effect/src/schema packages/effect/SCHEMA.md migration/schema.md`
 
 - 657254b821 2026-09-11 Optimize Schema initialization (#8196)  <- performance lane lead
 - 482b7d7eb0 2026-09-10 feat(SchemaRepresentation): improve JSON Schema imports (#8169)

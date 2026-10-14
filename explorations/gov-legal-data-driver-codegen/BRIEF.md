@@ -46,7 +46,7 @@ Fat-marker, keyed to the resolved decisions:
 - **Hand-authored transport boundary (Q2).** Codegen emits **only** effect/Schema
   value models + operation descriptors into package-private `src/_generated/*`. All
   transport — auth, retry, cache, rate-limit, `Context.Service` — stays
-  hand-authored on `effect/unstable/http`, mirroring runpod's `Runpod.generated.ts`
+  hand-authored on `effect/http`, mirroring runpod's `Runpod.generated.ts`
   vs `Runpod.service.ts` split. No first-party OpenAPI→MCP-Toolkit generator in v1.
 - **One shared transformer / three auth families (Q5, Q6).** A single
   auth+retry+cache+rate-limit transformer over three auth families — CourtListener

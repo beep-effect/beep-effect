@@ -9,13 +9,12 @@ digests while retaining the originals.
 
 ## Next action
 
-The first bounded P2 wave is stopped at family 5's sealed failure.
-Four families are accepted and reconciled; ordinals 6-9 remain unstarted.
-The unmatched GIF repair copy reproduces Tika exit 1 and empty stdout under
-the frozen sandbox. Retain every ledger, output, claim and freeze record.
-Do not launch another member or retry the sealed family. The orchestrator
-owns any separately frozen recovery decision. P2 remains in-progress; P3
-pending. See the terminal wave record and dated handoff.
+The first bounded wave ended: nine sealed, five accepted, failures 5/7/8/9.
+Publish ordinal 9's separate terminal record. The committed bounded 5/7/8
+recovery amendment requires a next extraction-engine binding and the
+orchestrator's approved reply before launch; family 9 needs a scope ruling.
+P2 stays in-progress, P3 pending. Eighteen larger occurrences and
+estate/recycle/DOC gates remain open for P3. Never retry a sealed family.
 
 ## Launcher
 
@@ -41,6 +40,43 @@ ingestion v2, enrichment v2, and practice-kg bundle v2 remain gated MAP
 re-entry points. The solo-practice corpus kit remains deferred.
 
 ## Latest evidence
+
+2026-10-14: Ordinal 9 sealed failure, result one, one unapproved engine-failure.
+Input 456,877,056 bytes; retained output 1,177,728,174 bytes; family elapsed
+7,222,485 ms. Timing supports attachment-repair elapsed-budget exhaustion;
+exact cause unresolved. Nine sealed: five accepted, four failed. Accepted
+families reconcile 19,438 children. Frozen policies and identities match.
+See history/p2/2026-10-14-first-wave-terminal.md and the bounded recovery amendment.
+
+
+2026-10-14: Ordinal 9 launched at 08:42:20Z after both admitted sandbox
+smokes, four focused tests and the full sixty-second interval. Capacity
+403,566,137,344 bytes. Eight prior seals, policy identities and ledger hashes
+unchanged. Execution source matches the existing fallback amendment;
+no accepted ordinal-9 outcome or runtime-policy match is claimed yet.
+Knowledge refs has one attributed inherited documentation gate from #1685.
+
+
+2026-10-14: Family 8 sealed failure, result 1 and one unapproved engine-failure.
+Retained output 1,037,230,305 bytes from 436,306,944 input bytes; family
+elapsed 2,996,198 ms, within retained ceilings. Partial dispositions: 109
+repaired occurrences / 95 distinct digests, 95 unsupported, zero unchanged.
+96 copies and 95 Tika outputs; the unmatched PDF copy reproduces Tika exit
+1, empty stdout and TikaException/IOException counts. No accepted store
+or child rows. Retained digests independently match; eight sealed, five
+accepted and three failed, ordinal 9 unstarted. No retry or next launch.
+See history/p2/2026-10-14-family-08-stop.md.
+
+2026-10-14: Family 7 sealed failure, result 1 and one unapproved engine-failure.
+Retained output 910,603,343 bytes from 354,026,496 input bytes (2.572133310x).
+Family elapsed 7,211,513 ms; no accepted store or terminal child rows.
+Partial dispositions: 288 repaired occurrences / 245 distinct digests,
+217 unsupported; 246 repair copies and 245 Tika files. One unmatched PDF
+copy near the attempt time cap supports elapsed-budget exhaustion; exact
+cause is unresolved because the generic catch discarded it. Five accepted,
+two failed, two unstarted; no next launch or retry.
+See history/p2/2026-10-14-family-07-stop.md.
+
 
 2026-10-14: First bounded wave stopped at family 5. Result 1, one unapproved
 engine-failure, zero store or terminal child passes, zero warnings and

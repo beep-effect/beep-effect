@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "tsc-rs-gates",
+    "packetId": "goal-packet/v1:70c676808d32ed2581490782001925dd5ec183b424f944cfbfd381be9581a6c2",
+    "title": "Run the typecheck and build gates on tsc-rs",
+    "status": "completed-retained",
+    "created": "2026-10-14",
+    "updated": "2026-10-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/tsc-rs-gates",
+  "lifecycle": "completed-retained",
+  "mission": "Move beep-effect's typecheck and build gates from the Effect-patched tsgo to tsc-rs (pingdotgg/ts-rust), keeping @effect/tsgo for editors; measured 3.7x faster at half the peak RSS with identical diagnostics on 2026-10-13.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/tsc-rs-gates/README.md",
+    "goals/tsc-rs-gates/SPEC.md",
+    "goals/tsc-rs-gates/PLAN.md",
+    "goals/tsc-rs-gates/GOAL.md",
+    "goals/tsc-rs-gates/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/tsc-rs-gates/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/tsc-rs-gates/GOAL.md)\" -le 4000",
+    "jq . goals/tsc-rs-gates/ops/manifest.json",
+    "rg -n \"tsc-rs-gates|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/tsc-rs-gates",
+    "git diff --check -- goals/tsc-rs-gates",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

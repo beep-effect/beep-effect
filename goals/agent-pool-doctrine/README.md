@@ -9,9 +9,10 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 ## Mission
 
 Make the model defaults and per-orchestrator fallback chains binding — Codex on `gpt-6.1-sol`
-medium and Claude Code on `claude-opus-5-5` medium, each falling back to the Cursor agent on Opus
-5.5 and then to grok-build on `grok-4.7` (policy of 2026-10-01, which superseded the 2026-09-24
-Opus-only order) — and make the Cursor lane a measurable, structurally guarded pool: pulse hooks,
+medium, the Claude Code orchestrator on `claude-fable-5-1` medium with every Claude child on
+`claude-opus-5-5` medium, each chain falling back to the Cursor agent on Opus 5.5 and then to
+grok-build on `grok-4.7` (policy of 2026-10-01, amended 2026-10-14 with the review panel, Muse
+opt-in and the Junie volume pool) — and make the Cursor lane a measurable, structurally guarded pool: pulse hooks,
 a committed deny list, and a runbook every orchestrator can copy from.
 
 ## Launch
@@ -31,7 +32,10 @@ a committed deny list, and a runbook every orchestrator can copy from.
 5. [`research/SOURCES.md`](./research/SOURCES.md) - carried source ledger; primary is the exploration.
 6. [`history/2026-10-01-fallback-chains.md`](./history/2026-10-01-fallback-chains.md) - the
    2026-10-01 policy, verified identifiers, and the Junie open decision.
-7. [`../../explorations/cursor-agent-pool/`](../../explorations/cursor-agent-pool/) - BRIEF, DECISIONS
+7. [`history/2026-10-14-routing-refresh.md`](./history/2026-10-14-routing-refresh.md) - the
+   2026-10-14 amendment: Fable orchestrator, `review.panel`, `muse.opt-in`, Junie volume pool and
+   its accounts meter (closes the Junie open decision).
+8. [`../../explorations/cursor-agent-pool/`](../../explorations/cursor-agent-pool/) - BRIEF, DECISIONS
    D1–D21, RESEARCH with the hooks smoke test and the Codex meter proof.
 
 ## Current Phase

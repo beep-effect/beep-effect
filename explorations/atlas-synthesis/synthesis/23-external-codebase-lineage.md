@@ -71,9 +71,9 @@ artifact. Files opened:
 - **`effect-v4-ai-chat-sync.md`** — the architecture report. Designs a
   Claude-web-style chat with **edit-rewrites-history** (soft-truncate via a
   pure `foldThread` projection), CRDT-like cross-device draft sync on
-  `effect/unstable/eventlog` (UUIDv7 total order + pure folds = convergence),
+  `effect/eventlog` (UUIDv7 total order + pure folds = convergence),
   shared cross-device undo as journal events, durable assistant turns via
-  `effect/unstable/{cluster,workflow}`, and **stratified structured outputs**
+  `effect/{cluster,workflow}`, and **stratified structured outputs**
   (`AssistantContent` block→inline union → `assistantContentToLexical` lift into
   the recursive Lexical tree). The edit/branch + projection model here is the
   blueprint for `desktop-chat-surface`'s "edit-as-branch."
@@ -207,7 +207,7 @@ The port mirrors the Python tree almost subsystem-for-subsystem across
   `runtime/`.
 - `packages/client/src/` — Effect-first RPC client: `rpc/contract.ts`,
   `socket/effect-rpc-client.ts`, `models/{messages,Triple,namespaces}.ts`.
-- `packages/{cli,mcp,workbench}` — CLI, native `effect/unstable/ai/McpServer`
+- `packages/{cli,mcp,workbench}` — CLI, native `effect/ai/McpServer`
   MCP, and a React workbench on `@effect/atom`.
 
 **How far the port got** (from `EFFECT_NATIVE_STATUS.md` and the GOAL1.md
@@ -215,7 +215,7 @@ handoff): Phases 0–6 of a 7-phase strict "effect-native" plan are described as
 complete on `ts-port-effect-v4` — production surfaces are Effect-first across
 backend/pubsub, messaging, processor/runtime, flow services, gateway, CLI, and
 service runners; Fastify/Commander/Zod removed; gateway rebuilt on
-`effect/unstable/{httpapi,http,rpc}`; CLI on `effect/unstable/cli`; data across
+`effect/{http-api,http,rpc}`; CLI on `effect/cli`; data across
 wire/persistence/domain boundaries converted to `S.Class`/`S.TaggedUnion`; a
 ratcheting `check-effect-laws.ts` + native-class inventory gate; the law
 baseline reported empty with one documented host-boundary exemption. Standing

@@ -35,7 +35,7 @@ anything else.
 ## Solution Sketch
 
 **`@beep/mcp-kit`** at `packages/foundation/capability/mcp-kit` (Q4; ≥2
-consumers at landing per Q4b), built natively on `effect/unstable/ai` (Q3),
+consumers at landing per Q4b), built natively on `effect/ai` (Q3),
 pinned to MCP `2025-06-18`:
 
 - **`SourceAuth` gate registry** — schema-first per-source record
@@ -65,7 +65,7 @@ the kit via the `nlp-mcp` `Layer.mergeAll` seam, plus retrofitting
 
 ## Rabbit Holes
 
-- `effect/unstable/ai` is beta (`4.0.0-beta.92`) — the annotation API and MCP
+- `effect/ai` is beta (`4.0.0-beta.92`) — the annotation API and MCP
   wire-mapping may shift; pin and re-verify the internals cited in
   [reviews/2026-07-01-codex-verification.md](./reviews/2026-07-01-codex-verification.md)
   at implementation time.

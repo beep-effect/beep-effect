@@ -476,7 +476,7 @@ export class DocgenQualityWorkerEvalRunnerResult extends S.Class<DocgenQualityWo
  * ```ts
  * import type { DocgenQualityWorkerEvalRunnerInput } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
- * const input: Pick<DocgenQualityWorkerEvalRunnerInput, "model"> = { model: "qwen3-coder" }
+ * const input: Pick<DocgenQualityWorkerEvalRunnerInput, "model"> = { model: "gpt-6.1-sol" }
  * console.log(input.model)
  * ```
  *
@@ -511,7 +511,7 @@ export class DocgenQualityWorkerEvalRunnerInput extends S.Class<DocgenQualityWor
  *   Effect.succeed({ finalResponse: JSON.stringify({ model: input.model }) })
  * const result = Effect.runSync(
  *   runner({
- *     model: "gpt-5.4-mini",
+ *     model: "gpt-6.1-sol",
  *     provider: "codex",
  *     prompt: "Score this JSDoc packet.",
  *     workingDirectory: "/tmp/beep-jsdoc-eval"
@@ -552,7 +552,7 @@ type PacketCandidate = {
  * ```ts
  * import type { AnalyzeDocgenQualityWorkerEvalOptions } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
- * const options: Pick<AnalyzeDocgenQualityWorkerEvalOptions, "model"> = { model: "qwen3-coder" }
+ * const options: Pick<AnalyzeDocgenQualityWorkerEvalOptions, "model"> = { model: "gpt-6.1-sol" }
  * console.log(options.model)
  * ```
  *
@@ -1240,7 +1240,7 @@ export const defaultQualityWorkerEvalReasoningEffort = (): DocgenQualityWorkerEv
  *   Effect.flatMap((report) =>
  *     analyzeDocgenQualityWorkerEval({
  *       codexSdkVersion: "example-sdk",
- *       model: "gpt-5.4-mini",
+ *       model: "gpt-6.1-sol",
  *       packetLimit: 0,
  *       provider: "codex",
  *       report,
@@ -1361,7 +1361,7 @@ export const analyzeDocgenQualityWorkerEval = Effect.fn("DocgenQualityWorkerEval
  *   Effect.flatMap((report) =>
  *     analyzeDocgenQualityWorkerEval({
  *       codexSdkVersion: "example-sdk",
- *       model: "gpt-5.4-mini",
+ *       model: "gpt-6.1-sol",
  *       packetLimit: 0,
  *       provider: "codex",
  *       report,

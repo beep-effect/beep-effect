@@ -150,7 +150,7 @@ decompose refines it into the MAP capability table.
 | `Extractor` → `EvidenceBatch` | C0 | hosted LLM (LangExtract shape) **and** pattern (Wink) under one gold probe | `@beep/langextract`, `@beep/nlp-processing` (both carry known defects — see rabbit holes) | local models |
 | `Ledger` (system of record) | C0 | PGlite, append-only | `@beep/pglite`, `@beep/postgres`, `@beep/provenance` | — |
 | `ProviderCache` | C0 | content-addressed on-disk cache keyed by provider/model/prompt/input hash | NET-NEW | — |
-| `EmbeddingModel` (from `effect/unstable/ai`) → `EmbeddingVector` | C1 | `@effect/ai-openai` `OpenAiEmbeddingModel.layer` through a new `@beep/openai` driver mirroring `@beep/anthropic` (S3-rev) | Layer ships in `@effect/ai-openai` rc.111 (root dep); **NET-NEW = the thin driver package** + the lab's `ModelIdentity` wrapper (borrow effect-ontology `ProviderMetadata` dimension invariant, add revision/artifactHash) | Venice/xAI via openai-compat later; Snowflake/ONNX local lane |
+| `EmbeddingModel` (from `effect/ai`) → `EmbeddingVector` | C1 | `@effect/ai-openai` `OpenAiEmbeddingModel.layer` through a new `@beep/openai` driver mirroring `@beep/anthropic` (S3-rev) | Layer ships in `@effect/ai-openai` rc.111 (root dep); **NET-NEW = the thin driver package** + the lab's `ModelIdentity` wrapper (borrow effect-ontology `ProviderMetadata` dimension invariant, add revision/artifactHash) | Venice/xAI via openai-compat later; Snowflake/ONNX local lane |
 | `VectorIndex` | C1 | DuckDB exact kNN, dimension-keyed tables | `@beep/duckdb` (has **no** vector surface; the lab does exact kNN in SQL app-locally) | pgvector-on-PGlite (contingent runner-up), ANN |
 | `RdfProjection` | C1 | Oxigraph rebuild-from-ledger per run | `packages/drivers/oxigraph`, `@beep/rdf`, `@beep/semantic-web` | persistent store |
 | `Reasoner` (runtime) → `InferenceEvent` | C2 | ρdf closure: rdfs2, 3, 5, 7, 9, 11 as `RdfsRule` values + one SKOS broader-transitivity rule, naive fixpoint (S5) | NET-NEW (small), v3 `rete` audit vocabulary as seed | v3 Rete salvage and NET-NEW certified-rules spike (ablated on `G-entailment/rules`) |
@@ -219,7 +219,7 @@ Each is patched here or graduates as an explicit constraint the goal packet inhe
    code: `@beep/langextract` takes an injected `LanguageModel` and four hosted Layers exist.
 4. **Embeddings lane: contract exists, Layer does not.** G6 routes M1 embeddings "via the agents
    slice"; live search finds no `EmbeddingModel` Layer anywhere in `packages/**/src` or `apps`.
-   The contract itself is Effect's own: `effect/unstable/ai/EmbeddingModel` (v4 rc.111 —
+   The contract itself is Effect's own: `effect/ai/EmbeddingModel` (v4 rc.111 —
    `embed`/`embedMany`, `EmbedResponse`, `Dimensions`, `EmbeddingRequest` resolver). Patch: the
    lab builds one hosted Layer with `EmbeddingModel.make({ embedMany })` over `@beep/venice-ai`'s
    existing `createEmbedding` operation (any openai-compat provider is one more Layer), and

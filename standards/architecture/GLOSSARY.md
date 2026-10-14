@@ -268,7 +268,7 @@ A flat public `@beep/schema/<Concept>` module that owns one reusable
 domain-agnostic schema concept or concept family. Consumers import it as a
 namespace and use role members such as `Schema`, `Input`, or `FromInput`.
 Concept modules use PascalCase exact subpaths; retired lowercase topical
-subpaths such as `@beep/schema/color` are not compatibility surfaces.
+subpaths such as @beep/schema/color are not compatibility surfaces.
 
 ## Schema Flat Facade
 

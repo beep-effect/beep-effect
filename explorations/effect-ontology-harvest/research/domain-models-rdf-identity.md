@@ -62,7 +62,7 @@
 - **Proposed beep home:** design-reference → `packages/documents/domain`
 - **beep overlap & design delta:** Beep's file-processing substrate already models runtime-neutral source artifacts and materialized references with digest, MIME, size, optional bytes/text, and path (`packages/foundation/capability/file-processing/src/Artifact/index.ts:298-399`); its editor attachment model explicitly remains ephemeral UI state rather than a persisted wire model (`packages/foundation/ui-system/editor/src/chat/attachment-model.ts:263-313`). Core-v2's useful delta is the asset-versus-owner-context split and ordered manifest, while beep's generic artifacts are the stronger reusable binary substrate.
 - **Goal linkage:** `agentic-professional-runtime` — multimodal evidence needs stable artifacts plus document-specific context.
-- **v3→v4 notes:** Compose existing `ContentDigest`, image MIME, bytes, artifact, and Option schemas; keep owner manifests in the documents slice and convert to `effect/unstable/ai` prompt parts only at the AI boundary rather than storing base64 in the domain.
+- **v3→v4 notes:** Compose existing `ContentDigest`, image MIME, bytes, artifact, and Option schemas; keep owner manifests in the documents slice and convert to `effect/ai` prompt parts only at the AI boundary rather than storing base64 in the domain.
 - **Effort:** M
 - **Verdict hint:** design-reference
 

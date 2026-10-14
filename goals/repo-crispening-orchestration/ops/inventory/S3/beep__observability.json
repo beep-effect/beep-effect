@@ -5,7 +5,7 @@
     "line": 166,
     "symbol": "endpointErrorSchemas",
     "smell": "endpointErrorSchemas manually iterates endpoint.middlewares and casts each middleware as unknown as HttpApiMiddleware.AnyService to read service.error. Effect v4 already centralizes this exact middleware-key cast and de-duplication in HttpApiEndpoint.getErrorSchemas.",
-    "proposedTarget": "Import HttpApiEndpoint as a value from effect/unstable/httpapi and replace endpointErrorSchemas with HttpApiEndpoint.getErrorSchemas(endpoint). The sibling endpointSuccessSchemas helper can likewise use HttpApiEndpoint.getSuccessSchemas(endpoint). Effect v4 exports the namespace from .repos/effect-v4/packages/effect/src/unstable/httpapi/index.ts:25 and defines getErrorSchemas/getSuccessSchemas at .repos/effect-v4/packages/effect/src/unstable/httpapi/HttpApiEndpoint.ts:227-241.",
+    "proposedTarget": "Import HttpApiEndpoint as a value from effect/http-api and replace endpointErrorSchemas with HttpApiEndpoint.getErrorSchemas(endpoint). The sibling endpointSuccessSchemas helper can likewise use HttpApiEndpoint.getSuccessSchemas(endpoint). Effect v4 exports the namespace from .repos/effect-v4/packages/effect/src/http-api/index.ts:25 and defines getErrorSchemas/getSuccessSchemas at .repos/effect-v4/packages/effect/src/http-api/HttpApiEndpoint.ts:227-241.",
     "confidence": 0.9,
     "mechanization": "codemod",
     "roiRank": 3.6,
@@ -40,7 +40,7 @@
     "mechanization": "judgment",
     "roiRank": 0,
     "exception": {
-      "reason": "DevToolsSchema.Request.WithoutPing is currently Span | SpanEvent | MetricsSnapshot (verified in .repos/effect-v4/packages/effect/src/unstable/devtools/DevToolsSchema.ts:484-514). The code intentionally handles span-bearing requests separately and lets the remaining MetricsSnapshot update the metrics slot; the RelayState annotation keeps future request tags from silently fitting that field.",
+      "reason": "DevToolsSchema.Request.WithoutPing is currently Span | SpanEvent | MetricsSnapshot (verified in .repos/effect-v4/packages/effect/src/devtools/DevToolsSchema.ts:484-514). The code intentionally handles span-bearing requests separately and lets the remaining MetricsSnapshot update the metrics slot; the RelayState annotation keeps future request tags from silently fitting that field.",
       "boundary": "experimental devtools relay state ingestion"
     }
   }

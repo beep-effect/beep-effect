@@ -1692,7 +1692,7 @@ Shared item fields for R1-002..R1-073 unless overridden: `round` 1, `reviewer` j
 - `affectedFiles`: effect-ontology/Service/WorkflowPersistence.ts:34,81,105,128
 - `symbol`: StorageKeyValueStoreLive, WorkflowPersistenceLive, WorkflowPersistenceTest, WorkflowPersistenceMemory
 - `kind`: value
-- `evidence`: All `console.log(layer)`. `export { Persistence } from "effect/unstable/persistence"` is a true re-export — do not document it.
+- `evidence`: All `console.log(layer)`. `export { Persistence } from "effect/persistence"` is a true re-export — do not document it.
 - `impact`: Live vs Test vs Memory choice is untaught.
 - `suggestedFix`: Show Layer.provide of Memory/Test onto a tiny persist/get, or compose the layer with WorkflowEngine. Mention the `workflow-state/` prefix already in Details.
 - `recommendedSkillOrAgent`: jsdoc-annotation-specialist

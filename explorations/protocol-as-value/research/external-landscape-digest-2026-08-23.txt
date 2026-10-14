@@ -244,18 +244,18 @@ SRC: Updating workers to newer versions (Golem docs) — https://learn.golem.clo
 LIC: BUSL-1.1
 REL: Golem's snapshot pair is a migration morphism between two component versions — the closest any engine gets to treating an upgrade as a typed transformation of state rather than a replay gamble.
 
-CLAIM: In Effect v4's workflow engine (effect/unstable/workflow), an Activity is 'an Effect with a stable name and schemas for its success and error values,' and the engine will 'execute it, store its result, or replay that result during a workflow run' — the replay model re-runs the whole workflow body with activities returning persisted results.
-SRC: Repo check: ~/YeeBois/dev/effect-smol/packages/effect/src/unstable/workflow/Activity.ts (module doc, lines 1-10, 28-48)
+CLAIM: In Effect v4's workflow engine (effect/workflow), an Activity is 'an Effect with a stable name and schemas for its success and error values,' and the engine will 'execute it, store its result, or replay that result during a workflow run' — the replay model re-runs the whole workflow body with activities returning persisted results.
+SRC: Repo check: ~/YeeBois/dev/effect-smol/packages/effect/src/workflow/Activity.ts (module doc, lines 1-10, 28-48)
 LIC: MIT (effect-smol LICENSE)
 REL: Establishes the local engine's replay model for the field map: Restate-style re-execution, but with schema-typed activity boundaries — the 'most type-safe' engine in the comparison set.
 
 CLAIM: The Effect cluster engine keys persisted activity results by execution ID plus activity NAME only: ClusterWorkflowEngine.ts builds `const activityId = ${instance.executionId}/${activity.name}` (line 510) and persists replies under `activityPrimaryKey(options.activity.name, options.attempt)` (line 239); the in-memory engine likewise uses `${instance.executionId}/${activity.name}/${attempt}` (WorkflowEngine.ts line 693). DurableDeferred results are keyed by `deferred.name` (line 554).
-SRC: Repo check: ~/YeeBois/dev/effect-smol/packages/effect/src/unstable/cluster/ClusterWorkflowEngine.ts and ~/YeeBois/dev/effect-smol/packages/effect/src/unstable/workflow/WorkflowEngine.ts
+SRC: Repo check: ~/YeeBois/dev/effect-smol/packages/effect/src/cluster/ClusterWorkflowEngine.ts and ~/YeeBois/dev/effect-smol/packages/effect/src/workflow/WorkflowEngine.ts
 LIC: MIT
 REL: VERIFIES claim (b): activity identity is exactly a string name. There is no history-position check and no recorded-name mismatch detection in the lookup path, so a renamed activity is a cache miss — on resume the workflow body re-runs and the renamed activity re-executes its side effects silently. The most type-safe engine has the least-checked effect identity.
 
 CLAIM: Effect workflow execution identity is already a content digest — of the payload, not the code: executionId = SHA-256 (truncated to 16 bytes hex) of `${workflow._tag}-${idempotencyKey(payload)}` (Workflow.ts line 317, makeHashDigest in internal/crypto.ts).
-SRC: Repo check: ~/YeeBois/dev/effect-smol/packages/effect/src/unstable/workflow/Workflow.ts line 317 and ~/YeeBois/dev/effect-smol/packages/effect/src/unstable/workflow/internal/crypto.ts
+SRC: Repo check: ~/YeeBois/dev/effect-smol/packages/effect/src/workflow/Workflow.ts line 317 and ~/YeeBois/dev/effect-smol/packages/effect/src/workflow/internal/crypto.ts
 LIC: MIT
 REL: The engine already digest-names the (tag, payload) pair but leaves the code side of identity as bare strings — exactly the asymmetry the protocol-as-value thesis proposes to close by digest-naming the protocol/topology too.
 
@@ -532,8 +532,8 @@ CLAIM: A geometry-as-data precedent exists inside the CLI: RegistrationGeometry.
 SRC: packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts
 REL: Shows the repo already models 'which surfaces exist and who may write them' as a closed typed value — a small-scale instance of topology-one-level-above-the-participants.
 
-CLAIM: effect/unstable/workflow and effect/unstable/cluster are imported ONLY in scratchpad/effect-ontology (WorkflowOrchestrator.ts imports {Workflow, WorkflowEngine} from 'effect/unstable/workflow'; DurableActivities.ts and StreamingExtractionActivity.ts import Activity; ClusterRuntime.ts imports {ShardingConfig, SingleRunner} from 'effect/unstable/cluster'). rg over packages/**/*.ts returns zero hits.
-SRC: scratchpad/effect-ontology/Service/WorkflowOrchestrator.ts, scratchpad/effect-ontology/Runtime/ClusterRuntime.ts (+ rg 'unstable/workflow|unstable/cluster' packages)
+CLAIM: effect/workflow and effect/cluster are imported ONLY in scratchpad/effect-ontology (WorkflowOrchestrator.ts imports {Workflow, WorkflowEngine} from 'effect/workflow'; DurableActivities.ts and StreamingExtractionActivity.ts import Activity; ClusterRuntime.ts imports {ShardingConfig, SingleRunner} from 'effect/cluster'). rg over packages/**/*.ts returns zero hits.
+SRC: scratchpad/effect-ontology/Service/WorkflowOrchestrator.ts, scratchpad/effect-ontology/Runtime/ClusterRuntime.ts (+ rg 'workflow|cluster' packages)
 REL: The durable-workflow substrate the protocol value would orchestrate is spiked in scratchpad only; production packages have no workflow engine seam yet, so the protocol layer can be designed before any engine API ossifies.
 
 CLAIM: goals/effect-v4-workflow-engine-spike is lifecycle 'active' (ops/manifest.json) and targets a persistence-backed WorkflowEngine.makeUnsafe adapter in packages/drivers/workflow — a package that does NOT exist (ls packages/drivers/ lists 47 drivers, no 'workflow'). @effect/cluster is not a dependency anywhere: bun.lock's only 'cluster' hit is cluster-key-slot via @redis/client.
@@ -560,7 +560,7 @@ CLAIM: Multi-agent coordination surfaces that would consume a protocol value: go
 SRC: goals/fleet-mirror/README.md; explorations/fleet-coordination/README.md + research/T6-cross-session-messaging.md; packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts
 REL: The fleet's future push/pull messaging rung is exactly an async multi-agent topology with no typed protocol yet — the most concrete in-repo consumer for a digest-named global type.
 
-CLAIM: Four in-repo MCP servers are built on effect/unstable/ai/McpServer — packages/drivers/uspto-mcp, gov-legal-mcp, m365-mcp, nlp-mcp (each Server.ts + bin.ts; uspto Server.ts imports McpProtocol and McpServer from effect/unstable/ai) — plus MCP tool surfaces in packages/law-practice/server/src/Tools.ts and packages/ontology/config/src/McpConfig.ts; and the agents slice (packages/agents/{domain,client,server,tables,use-cases}) carries Agent/Skill/ProviderInstance entities and the AgentTurnKernel streaming port (packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.kernel.ts).
+CLAIM: Four in-repo MCP servers are built on effect/ai/McpServer — packages/drivers/uspto-mcp, gov-legal-mcp, m365-mcp, nlp-mcp (each Server.ts + bin.ts; uspto Server.ts imports McpProtocol and McpServer from effect/ai) — plus MCP tool surfaces in packages/law-practice/server/src/Tools.ts and packages/ontology/config/src/McpConfig.ts; and the agents slice (packages/agents/{domain,client,server,tables,use-cases}) carries Agent/Skill/ProviderInstance entities and the AgentTurnKernel streaming port (packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.kernel.ts).
 SRC: packages/drivers/uspto-mcp/src/Server.ts; packages/law-practice/server/src/Tools.ts; packages/agents/domain/src/entities/; explorations/effect-ontology-harvest/research/workflow-cluster-streaming.md (AssistantTurn.kernel.ts citation)
 REL: These are the live agent endpoints whose per-endpoint schemas exist today with no global type above them — the surfaces a protocol value would GENERATE (endpoint contracts) and AUDIT (journal recomputation).
 

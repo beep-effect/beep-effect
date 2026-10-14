@@ -43,7 +43,7 @@
     "490 changed source bindings still require review; no tuple qualified."
   ],
   "processImportReview": {
-    "authority": "Exact byte comparison after replacing effect/unstable/process with effect/process; prior bytes checked against archived source hashes",
+    "authority": "Exact byte comparison after replacing effect/process with effect/process; prior bytes checked against archived source hashes",
     "paths": [
       "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
       "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",

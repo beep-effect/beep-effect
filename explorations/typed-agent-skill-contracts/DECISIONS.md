@@ -230,3 +230,22 @@ implementer. Waiting for protocol-as-value was rejected (it is at `shape` with n
 unbounded block); leaving the digest question to P1 was rejected (invites exactly the
 competing-encoding drift the premise check warned about). Waves 2/3/4/6 coordination with
 protocol-as-value is recorded in `MAP.md` §Cross-packet coordination.
+
+## 2026-10-14 — Amendment J becomes candidate 7, `skill-contract-gate-certificates` (orchestrator ruling)
+
+**Question:** Does Amendment J graduate as a new `skill-contract-gate-certificates` goal, or
+amend an existing later-wave candidate? (The sole open question since the 2026-08-26 reopen.)
+
+**Answer:** A new candidate-7 goal, `skill-contract-gate-certificates`. The exploration
+graduates with it and the existing `goals/skill-contract-kernel`, through
+`beep explore graduate --write` (the knowledge-surface-automation E17 self-hosting proof).
+
+**Rationale:** `MAP.md` §Amendment J re-entry rules out reopening the closed kernel goal
+(candidate 1), and candidate 3 cannot absorb the work without a MAP amendment. The work has
+its own fixed first consumer (one certificate-producing QA judge settlement) and its own
+first slice, so it stands as its own goal. The binding decompose inputs in §Amendment J
+re-entry carry into that goal unchanged.
+
+**Reversal:** A later MAP amendment folds the work into a better home. The goal is then
+marked superseded with a pointer to that home, never deleted, and `links.goals` in
+`ops/manifest.json` keeps the history.

@@ -1067,3 +1067,64 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned SPAR acquisition",
     })
   );
 });
+
+it.layer(CommandTestLayer)("IANA timezone archive projection", (it) => {
+  it.effect(
+    "preserves aliases, deduplicates zones, and excludes pseudo-zones in both generated artifacts",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-iana-fixture-" });
+      const archive = path.join(root, "tzdata.tar");
+      yield* fs.writeFileString(path.join(root, "version"), "2026-fixture\n");
+      yield* fs.writeFileString(
+        path.join(root, "northamerica"),
+        "Zone America/New_York -5:00 - EST\nLink America/New_York US/Eastern\nZone posixrules 0 - UTC\nZone posix/UTC 0 - UTC\n"
+      );
+      yield* fs.writeFileString(
+        path.join(root, "zone1970.tab"),
+        "# country coordinates zone\nUS\t+404251-0740023\tAmerica/New_York\nFR\t+4852+00220\tEurope/Paris\ninvalid\n"
+      );
+      const emptyRegions = [
+        "africa",
+        "antarctica",
+        "asia",
+        "australasia",
+        "backward",
+        "etcetera",
+        "europe",
+        "factory",
+        "southamerica",
+      ];
+      yield* Effect.forEach(emptyRegions, (region) => fs.writeFileString(path.join(root, region), ""));
+      yield* Effect.sync(() =>
+        createTar({ cwd: root, file: archive, sync: true }, [
+          "version",
+          "northamerica",
+          "zone1970.tab",
+          ...emptyRegions,
+        ])
+      );
+      const bytes = yield* fs.readFile(archive);
+      const target = O.getOrThrow(A.findFirst(syncDataTargets, (entry) => entry.id === "iana-timezones"));
+      const projection = yield* target.acquire.pipe(
+        Effect.provideService(
+          HttpClient.HttpClient,
+          makeWebHandlerClient(() => new Response(new Uint8Array(bytes)))
+        )
+      );
+      expect(projection.recordCount).toBe(4);
+      expect(projection.summary).toContain("tzdb 2026-fixture");
+      const generated = O.getOrThrow(A.findFirst(projection.files, (file) => file.path.endsWith("iana-timezones.ts")));
+      expect(generated.content).toContain("US/Eastern");
+      expect(generated.content).toContain("Europe/Paris");
+      expect(generated.content).not.toContain("posixrules");
+      expect(generated.content).not.toContain("posix/UTC");
+      const canonical = O.getOrThrow(
+        A.findFirst(projection.files, (file) => file.path.endsWith("iana-timezones.data.json"))
+      );
+      expect(canonical.content).toContain('"America/New_York"');
+      expect(canonical.content).toContain('"UTC"');
+    })
+  );
+});

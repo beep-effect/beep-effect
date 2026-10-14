@@ -10,7 +10,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/src/internal/cli/Flags.ts",
-      "purpose": "Shared effect/unstable/cli flag definitions. Currently only the standard --json flag.",
+      "purpose": "Shared effect/cli flag definitions. Currently only the standard --json flag.",
       "keyExports": ["jsonFlag (Flag.boolean(\"json\") with description)"]
     },
     {
@@ -48,7 +48,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts",
-      "purpose": "Subprocess execution for plan steps via effect/unstable/process ChildProcess: captures merged stdout+stderr bounded to 512KiB (with truncation notice), optionally streams live, persists raw output to file, maps spawn failures to @beep/repo-utils DomainError. Non-zero exit codes are values, not errors.",
+      "purpose": "Subprocess execution for plan steps via effect/process ChildProcess: captures merged stdout+stderr bounded to 512KiB (with truncation notice), optionally streams live, persists raw output to file, maps spawn failures to @beep/repo-utils DomainError. Non-zero exit codes are values, not errors.",
       "keyExports": [
         "runRepoCommandCapture(command, args, cwd, env?)",
         "runRepoCommandStreamingCapture(...)",

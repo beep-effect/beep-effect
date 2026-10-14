@@ -54,10 +54,10 @@ Boolean Option values, rather than an inferred object manufactured for the
 inventory or a relocation to the callback parameter.
 
 Each domain is None / Some(false) / Some(true). The installed Effect v4
-Flag API at `node_modules/effect/src/unstable/cli/Flag.ts:59-76` documents
+Flag API at `node_modules/effect/src/cli/Flag.ts:59-76` documents
 positive and negative Boolean flags; `optional` at 775 preserves omission
 as an Option. The local Effect reference agrees at
-`.repos/effect/packages/effect/src/unstable/cli/Flag.ts:59-76,600`, with
+`.repos/effect/packages/effect/src/cli/Flag.ts:59-76,600`, with
 capitalized constructor spelling in that reference. This audit does not
 substitute that spelling into the frozen product source.
 
@@ -219,8 +219,8 @@ that the live inventory cannot change concurrently.
 | `packages/tooling/tool/cli/test/create-package-lab.test.ts` | `d6fa0d3a5a9dc21ad0c65ecb375662e687721a654738d4b7600528a4053818d9` |
 | `data/design-refresh-2026-09-09-r28-cli-first-owners.md` | `611d6d0bc3ad5dd378b7680a79cf4622d60d45cbbfb7eef0b6b72c5d2e9b8f02` |
 | `data/design-refresh-2026-09-09-r28-observability-docgen.md` | `7d861e0f6370c5010e68a464828b16b725eb18f276eeb6e1eb5e444c27626aa7` |
-| `.repos/effect/packages/effect/src/unstable/cli/Flag.ts` | `176ac1bf637200cec7bbf12b87168cca55c762b1e018d67c233069ebc7eb889d` |
-| `node_modules/effect/src/unstable/cli/Flag.ts` | `4f4f45fdb2976d5bd2c072bef3e24d4db414b6b77b1e3c5e7980d57cf76bb824` |
+| `.repos/effect/packages/effect/src/cli/Flag.ts` | `176ac1bf637200cec7bbf12b87168cca55c762b1e018d67c233069ebc7eb889d` |
+| `node_modules/effect/src/cli/Flag.ts` | `4f4f45fdb2976d5bd2c072bef3e24d4db414b6b77b1e3c5e7980d57cf76bb824` |
 
 Product source/fixture bytes were checked against frozen HEAD. The local
 Effect reference and installed dependency are supporting API evidence,

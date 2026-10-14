@@ -134,6 +134,12 @@ const scanGoalPacket = Effect.fn("Goals.scanGoalPacket")(function* (
   const readStat = fs.stat(packetPath).pipe(Effect.asSome);
   const stat = yield* mode === "strict" ? readStat : readStat.pipe(Effect.orElseSucceed(O.none));
   if (O.isNone(stat) || stat.value.type !== "Directory") return O.none<GoalPacketRecord>();
+  // E11: an empty slug directory is an abandoned publish claim, not a packet.
+  // Only a directory that lists successfully as empty is hidden; one that cannot be
+  // listed is still a packet (permissive mode reports it, strict mode fails).
+  const readEntries = fs.readDirectory(packetPath);
+  const listed = yield* mode === "strict" ? Effect.asSome(readEntries) : Effect.option(readEntries);
+  if (O.exists(listed, A.isReadonlyArrayEmpty)) return O.none<GoalPacketRecord>();
 
   const manifestPath = path.join(packetPath, "ops", "manifest.json");
   const readmePath = path.join(packetPath, "README.md");
@@ -452,4 +458,48 @@ export const goalManifestPhases = (manifest: GoalManifest): ReadonlyArray<GoalPh
     return A.empty<GoalPhase>();
   }
   return isPhaseArray(phases) ? phases : R.values(phases);
+};
+
+/**
+ * Reads the phase ids a goal manifest declares, in either phase shape.
+ *
+ * **Details**
+ *
+ * Array-form phases contribute their explicit `id`. Record-form phases are keyed by
+ * phase id, so an entry without its own `id` uses its record key (for example `p1`).
+ *
+ * **Example** (Read record-keyed phase ids)
+ *
+ * ```ts
+ * import { goalManifestPhaseIds } from "@beep/repo-cli/commands/Goals/Inventory"
+ * import { GoalManifest } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * const manifest = GoalManifest.make({
+ *   initiative: { id: "demo", status: "active", title: "Demo" },
+ *   completionGate: {
+ *     operator: "yeet",
+ *     requiresPullRequest: true,
+ *     requiresMergeable: true,
+ *     statement: "Ship via yeet.",
+ *     grandfathered: false,
+ *   },
+ *   phases: { p1: { status: "pending" } },
+ * })
+ *
+ * console.log(goalManifestPhaseIds(manifest)) // ["p1"]
+ * ```
+ *
+ * @param manifest - A decoded goal manifest.
+ * @returns Explicit phase ids, with record keys standing in for record entries that omit one.
+ * @category getters
+ * @since 0.0.0
+ */
+export const goalManifestPhaseIds = (manifest: GoalManifest): ReadonlyArray<string> => {
+  const phases = manifest.phases;
+  if (phases === undefined) {
+    return A.empty<string>();
+  }
+  return isPhaseArray(phases)
+    ? A.getSomes(A.map(phases, (phase) => O.fromUndefinedOr(phase.id)))
+    : A.map(R.toEntries(phases), ([key, phase]) => phase.id ?? key);
 };

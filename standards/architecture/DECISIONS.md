@@ -622,7 +622,9 @@ The product-facing shared entity vocabulary (`BaseEntity`, `EntityId`,
 organization scoping, actor provenance, source facets, schema versioning, and
 row versioning.
 
-The generic persistence kernel belongs in `@beep/schema/EntitySchema`.
+The generic persistence kernel belonged in the @beep/schema/EntitySchema
+subpath, since retired with the legacy entity stack in #720 (the ProductEntity
+kit replaced it).
 Persisted entities are schema classes whose decoded side is domain language and
 whose encoded side is the persistence row shape. Entity-specific `.model.ts`
 files inline rich `fields` and storage-neutral `persisted` descriptors together
@@ -639,7 +641,7 @@ publish metadata-only Drizzle table definitions for shared product tables, but
 they do not own live database execution, transactions, repository helpers,
 migrations, seeders, or driver runtime capability.
 
-The old `EntityMixin` and `@beep/shared-tables/table/Table.make` APIs are
+The old `EntityMixin` and @beep/shared-tables/table/Table.make APIs are
 retired and should be deleted/replaced instead of migrated forward.
 
 Rationale:
@@ -894,8 +896,8 @@ public concept.
 Former topical suites are represented by leaf concept modules, not broad suite
 aggregators. Import `@beep/schema/EvmAddress`, `@beep/schema/DomReactNode`, or
 `@beep/schema/HttpHeaders` directly instead of importing retired aggregators
-such as `@beep/schema/Blockchain`, `@beep/schema/Dom`, or
-`@beep/schema/Http`. Promote source concepts rather than every exported symbol;
+such as @beep/schema/Blockchain, @beep/schema/Dom, or
+@beep/schema/Http. Promote source concepts rather than every exported symbol;
 for example, `HttpStatus` remains one concept module rather than a public
 subpath per status literal.
 
@@ -922,10 +924,10 @@ Decision:
 The `@beep/schema` topology migration is closed around PascalCase exact concept
 modules. Lowercase topical source directories and public subpaths are retired:
 do not restore paths such as `src/color/`, `src/http/`,
-`@beep/schema/color`, or `@beep/schema/http/headers`. Public package exports for
+@beep/schema/color, or @beep/schema/http/headers. Public package exports for
 schema concepts point at concept indexes only; role files under
 `src/<Concept>/` are private source topology. Legacy acronym casing subpaths
-such as `@beep/schema/ExpectCT` and `@beep/schema/XSSProtection` are retired in
+such as @beep/schema/ExpectCT and @beep/schema/XSSProtection are retired in
 favor of canonical concept casing (`ExpectCt`, `XssProtection`).
 
 The package root remains a curated flat facade for common helpers and migration
@@ -1429,7 +1431,8 @@ fields only and ignores `Error` runtime metadata. `$I.annoteError` returns
 identity metadata and documentation extras and installs no hook; the
 `adoptDeclaredFieldsEquivalence` and `declaredFieldsEquivalence` helpers are
 deleted. A field that must not take part in identity declares an always-equal
-equivalence on its own schema (`Defect` from `@beep/schema`, or
+equivalence on its own schema (the Defect wrapper from @beep/schema, since
+retired in #1347 for `S.Defect` with `S.overrideToEquivalence`, or
 `S.Unknown.annotate({ toEquivalence: () => () => true })` for a local opaque
 payload); nothing is excluded at the class.
 
@@ -1496,8 +1499,8 @@ equivalence to the `toEquivalence` hook, so the per-class `*Fields` constant,
 `annoteClass<S.declare<Self>, ...>` type arguments were re-deriving what the hook
 receives; across ~390 declarations they also registered as Fallow clones, grew a
 consumer bundle, and produced a base-type cycle under docgen's `tsc`. Opaque
-causes use `Defect` from `@beep/schema`, whose schema declares an always-true
-equivalence, instead of per-class exclusion. The detector accepts the
+causes use the Defect wrapper from @beep/schema (retired in #1347), whose
+schema declares an always-true equivalence, instead of per-class exclusion. The detector accepts the
 `annoteError` call as the compliant form.
 
 ## 2026-08-24: Local Coverage Baseline Regeneration Holds Unchanged Packages

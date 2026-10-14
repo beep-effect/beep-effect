@@ -69,7 +69,7 @@ The Instant team is joining OpenAI. Instant Cloud runs until August 31st, 2027. 
 - URL: https://github.com/Effect-TS/effect/pull/7524
 - Kind: github / axis: effect
 ```
-Add platform-neutral IPv4, IPv6, resolved internet, Unix path, and portable socket address values under effect/unstable/net/Net. Add effect/Schema codecs and migrate HTTP/socket server address models. State: OPEN. updatedAt: 2026-08-30T13:07:04Z.
+Add platform-neutral IPv4, IPv6, resolved internet, Unix path, and portable socket address values under effect/net/Net. Add effect/Schema codecs and migrate HTTP/socket server address models. State: OPEN. updatedAt: 2026-08-30T13:07:04Z.
 ```
 
 ## f-effect-05 — Effect #7514: in-place TLS socket upgrade

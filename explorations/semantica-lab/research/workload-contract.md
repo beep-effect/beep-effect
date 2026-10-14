@@ -73,7 +73,7 @@ professional-desktop knows the portability bill. Tier-D numbers never park a can
 ## Models (G6)
 
 LLM extraction runs hosted through the existing `LanguageModel` driver Layers. Embeddings run
-hosted through an `effect/unstable/ai` `EmbeddingModel` Layer: `@effect/ai-openai`'s shipped
+hosted through an `effect/ai` `EmbeddingModel` Layer: `@effect/ai-openai`'s shipped
 `OpenAiEmbeddingModel.layer`, composed through a new `@beep/openai` driver that mirrors
 `@beep/anthropic` (S3-rev). Local-model machinery (ONNX runtimes, GPU
 lanes, model downloads) stays a parked candidate, not an M1 workstream.

@@ -551,8 +551,8 @@ Built in wave 0, before any copy. Design order: schema → service → CLI.
 - Service: `Audit` (`Context.Service`) with `copy`, `parity`, `check`, `lint`,
   `test`, `docgen`, `audit`, `ledger` methods; `Effect.fn` everywhere;
   `effect/cli` for the command surface (installed 4.0.1 exports `./cli`,
-  `./http`, `./http-api`; there is no `./unstable/*` entry, so the
-  "effect/unstable/http" wording in the standing coding rules means these
+  `./http`, `./http-api`; there is no pre-#8354 namespace entry, so the
+  "effect/http" wording in the standing coding rules means these
   modules); `effect/ChildProcess` (or the
   platform spawner the repo already uses in `packages/tooling/tool/cli`) for
   subprocesses; no `node:http`, no native `Set`/`Map`.

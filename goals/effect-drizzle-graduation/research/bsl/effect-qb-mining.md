@@ -38,7 +38,7 @@ The public renderer accepts only a `DialectCompatiblePlan` and preserves the inf
 
 ### Effect version
 
-It is on **Effect v4 beta**, specifically peer dependency `effect@4.0.0-beta.98`, not Effect v3 (`packages/querybuilder/package.json:63-68`). The workspace pins the same Effect beta across `effect`, Platform, and SQL adapters and uses the native TypeScript preview compiler (`package.json:20-46`). Runtime code imports v4 `effect/Schema` and `effect/unstable/sql/SqlClient`, for example in the executor (`packages/querybuilder/src/internal/executor.ts:1-8`).
+It is on **Effect v4 beta**, specifically peer dependency `effect@4.0.0-beta.98`, not Effect v3 (`packages/querybuilder/package.json:63-68`). The workspace pins the same Effect beta across `effect`, Platform, and SQL adapters and uses the native TypeScript preview compiler (`package.json:20-46`). Runtime code imports v4 `effect/Schema` and `effect/sql/SqlClient`, for example in the executor (`packages/querybuilder/src/internal/executor.ts:1-8`).
 
 ### Maturity and test posture
 
@@ -248,7 +248,7 @@ There is no current EntityId convention, automatic FK derivation, or relations g
 
 Current effect-qb source is **not VariantSchema-aware**. Its variant union is literally only `"select" | "insert" | "update"`, and it constructs each result with `Schema.Struct` (`packages/querybuilder/src/internal/schema-derivation.ts:14-17`, `packages/querybuilder/src/internal/schema-derivation.ts:149-195`). No `VariantSchema` occurs in the current querybuilder source tree.
 
-There is a design note claiming the v4 migration decision was to retain `effect/unstable/schema/VariantSchema`, and the note correctly inventories Model's six variants and useful helpers (`docs/effect-v4-schema-model.md:1-25`). But the note's recommendation to “keep” `schema-derivation.ts` on VariantSchema does not describe the audited implementation (`docs/effect-v4-schema-model.md:91-104`). Treat it as historical intent, not current capability.
+There is a design note claiming the v4 migration decision was to retain `effect/schema/VariantSchema`, and the note correctly inventories Model's six variants and useful helpers (`docs/effect-v4-schema-model.md:1-25`). But the note's recommendation to “keep” `schema-derivation.ts` on VariantSchema does not describe the audited implementation (`docs/effect-v4-schema-model.md:91-104`). Treat it as historical intent, not current capability.
 
 This is a clear BSL advantage. BSL creates `select`, `insert`, `update`, `json`, `jsonCreate`, and `jsonUpdate` from one variant family and returns an actual `VariantSchema.Class` (`scratchpad/bsl/factory.ts:39-49`, `scratchpad/bsl/factory.ts:121-127`, `scratchpad/bsl/factory.ts:165-223`). effect-qb can inspire SQL metadata rules, but not BSL's model-variant architecture.
 

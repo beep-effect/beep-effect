@@ -6,8 +6,9 @@ description: >
   worth codifying. Produces a schema-valid
   `goals/<slug>/history/reflections/<YYYY-MM-DD>-<agent>.md` enforced by
   `bun run beep lint reflection-artifacts`.
-version: 0.1.0
-status: active
+metadata:
+  version: "0.1.0"
+  status: active
 ---
 
 # Reflect

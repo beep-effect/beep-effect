@@ -7,7 +7,7 @@
       "sha256": "64fd6ccdc79fa7c5376604166d6fc60c82faa917b815ff576a4174dd4eb987e0"
     },
     {
-      "file": "node_modules/effect/src/unstable/http/HttpRouter.ts",
+      "file": "node_modules/effect/src/http/HttpRouter.ts",
       "sha256": "a4919a7b36e78edf4f512ebe4c0ee19866e5447ac0fdbb2de2e6fd0e1684a5b0"
     },
     {

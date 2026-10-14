@@ -59,7 +59,7 @@ semantics, and generic multi-device replication.
 
 | Component | Exact live capability | Disposition |
 | --- | --- | --- |
-| Durable queue definition/worker | `node_modules/effect/src/unstable/workflow/DurableQueue.ts` | **Reuse after prerequisite proof.** Supplies schema, deterministic `idempotencyKey`, persisted queue processing, worker concurrency, and `WorkflowEngine`/`PersistedQueueFactory` requirements. |
+| Durable queue definition/worker | `node_modules/effect/src/workflow/DurableQueue.ts` | **Reuse after prerequisite proof.** Supplies schema, deterministic `idempotencyKey`, persisted queue processing, worker concurrency, and `WorkflowEngine`/`PersistedQueueFactory` requirements. |
 | Workflow persistence adapter | `packages/drivers/workflow` | **NET-NEW in sibling goal.** This directory is the placement selected by `effect-v4-workflow-engine-spike`; consume only after its evidence lands. |
 | Projection dispatch schemas/ports/RPC | `packages/epistemic/use-cases` | **NET-NEW.** Existing slice/package, no current dispatch/status/subscription contract. |
 | Intent/projection/cursor tables | `packages/epistemic/tables` | **NET-NEW.** Existing slice/package, no current projection-dispatch persistence. |

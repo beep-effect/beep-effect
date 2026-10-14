@@ -128,7 +128,7 @@ Tsconfig check template keeps current compiler switches/rootRelative and omits
 module/moduleResolution overrides. Root sync mirrors owner project references;
 missing references mean empty list. Do not revert upstream output while changing
 only the selector. Existing Command uses current Argument.String/Flag.String/
-Flag.Boolean RC APIs; no API downgrade. Tests now use effect/unstable/arbitrary.
+Flag.Boolean RC APIs; no API downgrade. Tests now use effect/Arbitrary.
 
 ## Guard-deletion accounting
 

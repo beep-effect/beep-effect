@@ -20,7 +20,7 @@ beep-effect: this lane checkout. No installs, builds, or tests were run.
 
 ## 1. Header contract table
 
-Effect HTTP header names are stored lowercase (`effect:packages/effect/src/unstable/http/Headers.ts:1-7`,
+Effect HTTP header names are stored lowercase (`effect:packages/effect/src/http/Headers.ts:1-7`,
 `:48-61`). Wire names in tests and the spec are mixed-case; comparison is case-insensitive
 ([RFC 9110 field names](https://datatracker.ietf.org/doc/html/rfc9110#name-field-names);
 [2026-07-28 Streamable HTTP — Case Sensitivity](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http)).
@@ -34,8 +34,8 @@ mcp-method
 mcp-name
 ```
 
-(`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:27-30`,
-`effect:packages/effect/src/unstable/ai/McpServer.ts:646-647`)
+(`effect:packages/effect/src/ai/internal/mcpRuntime.ts:27-30`,
+`effect:packages/effect/src/ai/McpServer.ts:646-647`)
 
 Sidecar CORS on `/mcp` (`repo:apps/professional-desktop/server/OntologyMcpTransport.ts:100-105`):
 
@@ -45,7 +45,7 @@ Sidecar CORS on `/mcp` (`repo:apps/professional-desktop/server/OntologyMcpTransp
 | `allowedMethods` | `POST`, `OPTIONS` |
 | `allowedHeaders` | `authorization`, `content-type`, `mcp-protocol-version`, `mcp-session-id` |
 | `exposedHeaders` | `mcp-protocol-version`, `mcp-session-id` |
-| `credentials` | unset → `false` (`effect:packages/effect/src/unstable/http/HttpMiddleware.ts:339`) |
+| `credentials` | unset → `false` (`effect:packages/effect/src/http/HttpMiddleware.ts:339`) |
 
 `/rpc` on the same sidecar is a different CORS contract: `allowedOrigins: ["*"]`,
 `allowedHeaders: ["*"]` (`repo:apps/professional-desktop/server/main.ts:73-78`). That
@@ -55,26 +55,26 @@ wildcard does **not** apply to `/mcp`.
 
 | Header (wire) | Required by Effect 2026-07-28? | In sidecar `allowedHeaders`? | Browser-origin consequence |
 | --- | --- | --- | --- |
-| `Content-Type: application/json` | Yes. First media type must be `application/json` or HTTP 415 (`effect:packages/effect/src/unstable/ai/McpServer.ts:1595-1597`; conformance `effect:packages/effect/test/unstable/ai/McpServer/McpConformance/TransportsTest.ts:537-555`). Case-insensitive; `Application/JSON; charset=utf-8` accepted. | Yes (`content-type`) | CORS-safelisted only for a few form types; `application/json` **forces a preflight**. Listed, so preflight can succeed. |
-| `Accept: application/json, text/event-stream` | Yes. Both types required or HTTP 406 (`effect:packages/effect/src/unstable/ai/McpServer.ts:1598-1601`; `:556-559` of the same test). `*/*` is **not** enough. | No | `Accept` is CORS-safelisted. Preflight is not blocked by its absence from `allowedHeaders`. |
-| `MCP-Protocol-Version` | Yes for every stateless request. Missing → HTTP 400 HeaderMismatch `"MCP-Protocol-Version header is required"` (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:228-229`). Must equal `_meta.io.modelcontextprotocol/protocolVersion` (`:241-243`). Spec: [Protocol Version Header](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http). | Yes (`mcp-protocol-version`) | Preflight can succeed. |
-| `Mcp-Method` | Yes. Must equal JSON-RPC `method` (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:268-270`). Spec table: required for all requests. | **No** | **Breaks browser-origin clients.** A cross-origin `fetch` that sets `Mcp-Method` is non-simple. The preflight `Access-Control-Request-Headers` includes it; the allow-list does not; the browser never sends the POST. |
-| `Mcp-Name` | Yes for `tools/call` and `prompts/get` (`params.name`) and `resources/read` (`params.uri`); other methods skip it (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:49-58`, `:272-278`). Base64 sentinel `=?base64?…?=` is decoded before compare (`effect:packages/effect/src/unstable/ai/internal/mcpProtocol.ts:45-59`). | **No** | **Breaks browser-origin `tools/call` / `resources/read` / `prompts/get`.** Same preflight failure as `Mcp-Method`. |
-| `Mcp-Session-Id` | Ignored on 2026-07-28. Conformance: sending `Mcp-Session-Id: ignored-modern-session` still 200, and the response does not echo a session id (`effect:packages/effect/test/unstable/ai/McpServer/v2026_07_28.test.ts:117-128`; `effect:packages/effect/test/unstable/ai/McpServer/ProtocolAdapters.test.ts:981-987`). Spec: ignore it, do not mint or echo. | Yes (`mcp-session-id`) | Harmless leftover from the stateful pin. Does not help 2026-07-28. |
+| `Content-Type: application/json` | Yes. First media type must be `application/json` or HTTP 415 (`effect:packages/effect/src/ai/McpServer.ts:1595-1597`; conformance `effect:packages/effect/test/ai/McpServer/McpConformance/TransportsTest.ts:537-555`). Case-insensitive; `Application/JSON; charset=utf-8` accepted. | Yes (`content-type`) | CORS-safelisted only for a few form types; `application/json` **forces a preflight**. Listed, so preflight can succeed. |
+| `Accept: application/json, text/event-stream` | Yes. Both types required or HTTP 406 (`effect:packages/effect/src/ai/McpServer.ts:1598-1601`; `:556-559` of the same test). `*/*` is **not** enough. | No | `Accept` is CORS-safelisted. Preflight is not blocked by its absence from `allowedHeaders`. |
+| `MCP-Protocol-Version` | Yes for every stateless request. Missing → HTTP 400 HeaderMismatch `"MCP-Protocol-Version header is required"` (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:228-229`). Must equal `_meta.io.modelcontextprotocol/protocolVersion` (`:241-243`). Spec: [Protocol Version Header](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http). | Yes (`mcp-protocol-version`) | Preflight can succeed. |
+| `Mcp-Method` | Yes. Must equal JSON-RPC `method` (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:268-270`). Spec table: required for all requests. | **No** | **Breaks browser-origin clients.** A cross-origin `fetch` that sets `Mcp-Method` is non-simple. The preflight `Access-Control-Request-Headers` includes it; the allow-list does not; the browser never sends the POST. |
+| `Mcp-Name` | Yes for `tools/call` and `prompts/get` (`params.name`) and `resources/read` (`params.uri`); other methods skip it (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:49-58`, `:272-278`). Base64 sentinel `=?base64?…?=` is decoded before compare (`effect:packages/effect/src/ai/internal/mcpProtocol.ts:45-59`). | **No** | **Breaks browser-origin `tools/call` / `resources/read` / `prompts/get`.** Same preflight failure as `Mcp-Method`. |
+| `Mcp-Session-Id` | Ignored on 2026-07-28. Conformance: sending `Mcp-Session-Id: ignored-modern-session` still 200, and the response does not echo a session id (`effect:packages/effect/test/ai/McpServer/v2026_07_28.test.ts:117-128`; `effect:packages/effect/test/ai/McpServer/ProtocolAdapters.test.ts:981-987`). Spec: ignore it, do not mint or echo. | Yes (`mcp-session-id`) | Harmless leftover from the stateful pin. Does not help 2026-07-28. |
 | `Authorization: Bearer …` | Not an MCP header. Sidecar requires it on every non-OPTIONS request (`repo:apps/professional-desktop/server/RpcSessionAuth.ts:66-73`, `:88-114`). | Yes (`authorization`) | Preflight can succeed. `credentials: false` is compatible: a custom `Authorization` header does not need `Access-Control-Allow-Credentials`. |
-| `Origin` | Effect: if **present**, must be in `allowedOrigins` or HTTP 403 empty (`effect:packages/effect/src/unstable/ai/McpServer.ts:1729-1735`, `:1525-1528`). Missing Origin is allowed (non-browser). Spec: [Security & Endpoint](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http) — if present and invalid, MUST 403. | N/A (browsers send it; not a CORS-allowed request header) | Sidecar Origin middleware is **stricter** than Effect: missing Origin is denied (see §2). |
-| `Mcp-Param-{name}` | Only if a tool schema carries `x-mcp-header`. Effect compares `mcp-param-${annotation.toLowerCase()}` to the argument (`effect:packages/effect/src/unstable/ai/internal/mcpProtocol/v2026_07_28.ts:602-613`). Spec: clients MUST mirror annotated params. | **No** | **Would break** any browser-origin `tools/call` against an `x-mcp-header` tool. **NOT FOUND** in beep-effect tool schemas today (`x-mcp-header` / `Mcp-Param` only appear in `explorations/effect-mcp-2026-07-28/research/13-s1-spec-delta.md`). |
+| `Origin` | Effect: if **present**, must be in `allowedOrigins` or HTTP 403 empty (`effect:packages/effect/src/ai/McpServer.ts:1729-1735`, `:1525-1528`). Missing Origin is allowed (non-browser). Spec: [Security & Endpoint](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http) — if present and invalid, MUST 403. | N/A (browsers send it; not a CORS-allowed request header) | Sidecar Origin middleware is **stricter** than Effect: missing Origin is denied (see §2). |
+| `Mcp-Param-{name}` | Only if a tool schema carries `x-mcp-header`. Effect compares `mcp-param-${annotation.toLowerCase()}` to the argument (`effect:packages/effect/src/ai/internal/mcpProtocol/v2026_07_28.ts:602-613`). Spec: clients MUST mirror annotated params. | **No** | **Would break** any browser-origin `tools/call` against an `x-mcp-header` tool. **NOT FOUND** in beep-effect tool schemas today (`x-mcp-header` / `Mcp-Param` only appear in `explorations/effect-mcp-2026-07-28/research/13-s1-spec-delta.md`). |
 
-HeaderMismatch code is `-32020` (`effect:packages/effect/src/unstable/ai/McpSchema.ts:595`).
-Unsupported protocol version is `-32022` (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:33`, `:254-266`).
+HeaderMismatch code is `-32020` (`effect:packages/effect/src/ai/McpSchema.ts:595`).
+Unsupported protocol version is `-32022` (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:33`, `:254-266`).
 
 ### 1.2 Response headers
 
 | Header / content type | 2025-06-18 (current sidecar) | 2026-07-28 | In sidecar `exposedHeaders`? | Browser-origin consequence |
 | --- | --- | --- | --- | --- |
-| `Content-Type: application/json` | Single JSON-RPC response (`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/TransportsTest.ts:261-267`, `:562-570`) | Same | Not listed (CORS-safelisted response header) | Readable. |
-| `Content-Type: text/event-stream` | Notifications, streams, or multi-message bodies (`effect:packages/effect/src/unstable/ai/McpServer.ts:1610-1616`, `:1708-1726`) | Same, including `subscriptions/listen` (`:439` of `mcpRuntime.ts`) | Not listed (not a CORS-safelisted response header) | **JS in a browser cannot read the SSE `Content-Type` via `get()` unless exposed.** EventSource / fetch streaming may still consume the body; `headers.get("content-type")` is opaque. |
-| `MCP-Protocol-Version` echo | Stateful initialize and subsequent session responses set `mcp-protocol-version` (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:504-510`; `effect:packages/effect/src/unstable/ai/McpServer.ts:1040-1048`; conformance replay `TransportsTest.ts:413-423`) | The session pre-response handler runs only when `prepared.binding` is defined (`McpServer.ts:1040`). Stateless admission sets `binding: undefined` (`mcpRuntime.ts:280`). Conformance for 2026-07-28 asserts `Mcp-Session-Id` is null and does **not** assert a protocol-version echo (`v2026_07_28.test.ts:85-88`, `:117-128`). | Yes | Exposing a header the 2026-07-28 server likely never sets is a no-op. |
+| `Content-Type: application/json` | Single JSON-RPC response (`effect:packages/effect/test/ai/McpServer/McpConformance/TransportsTest.ts:261-267`, `:562-570`) | Same | Not listed (CORS-safelisted response header) | Readable. |
+| `Content-Type: text/event-stream` | Notifications, streams, or multi-message bodies (`effect:packages/effect/src/ai/McpServer.ts:1610-1616`, `:1708-1726`) | Same, including `subscriptions/listen` (`:439` of `mcpRuntime.ts`) | Not listed (not a CORS-safelisted response header) | **JS in a browser cannot read the SSE `Content-Type` via `get()` unless exposed.** EventSource / fetch streaming may still consume the body; `headers.get("content-type")` is opaque. |
+| `MCP-Protocol-Version` echo | Stateful initialize and subsequent session responses set `mcp-protocol-version` (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:504-510`; `effect:packages/effect/src/ai/McpServer.ts:1040-1048`; conformance replay `TransportsTest.ts:413-423`) | The session pre-response handler runs only when `prepared.binding` is defined (`McpServer.ts:1040`). Stateless admission sets `binding: undefined` (`mcpRuntime.ts:280`). Conformance for 2026-07-28 asserts `Mcp-Session-Id` is null and does **not** assert a protocol-version echo (`v2026_07_28.test.ts:85-88`, `:117-128`). | Yes | Exposing a header the 2026-07-28 server likely never sets is a no-op. |
 | `Mcp-Session-Id` | Minted at `initialize` as UUIDv4 (`mcpRuntime.ts:501-509`; `TransportsTest.ts:306-327`) | Not minted; ignored if sent (see §1.1) | Yes | Leftover. Browser JS cannot read a header that is not there. |
 | `Allow: POST` | 405 on GET/PUT/PATCH/DELETE/OPTIONS when Origin is allowed (`McpServer.ts:1555-1568`; `TransportsTest.ts:285-302`, `:573-580`) | Same | Not listed | Browser JS cannot read `Allow`. Irrelevant if the client is POST-only. |
 | `X-Accel-Buffering: no` | Spec SHOULD on SSE ([Receiving Messages](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http)). | **NOT FOUND** in `toServerSentEvents` (`McpServer.ts:1708-1726`). | No | Reverse-proxy buffering risk. Not a CORS issue. |
@@ -117,11 +117,11 @@ only HTTP security proof for Origin/bearer.
 
 `layerHttp` registers GET, PUT, PATCH, DELETE, and OPTIONS as `methodNotAllowed`
 (HTTP 405, `Allow: POST`) **if** Origin is allowed; attacker Origin on those
-methods is HTTP 403 empty (`effect:packages/effect/src/unstable/ai/McpServer.ts:1555-1568`,
+methods is HTTP 403 empty (`effect:packages/effect/src/ai/McpServer.ts:1555-1568`,
 `:1591-1594`). POST is the only implemented MCP method (`:1591`).
 
 HEAD is not registered. `HttpRouter.asHttpEffect` retries HEAD as GET
-(`effect:packages/effect/src/unstable/http/HttpRouter.ts:199-201`), so HEAD
+(`effect:packages/effect/src/http/HttpRouter.ts:199-201`), so HEAD
 follows the GET 405/403 path.
 
 Conformance (stateful suite and 2026-07-28 `statelessModernSuite`):
@@ -135,7 +135,7 @@ Conformance (stateful suite and 2026-07-28 `statelessModernSuite`):
 | OPTIONS | 405 on Effect's own server (no CORS middleware) | 403 |
 
 Allowed-origin positive control in the Effect suite is
-`https://allowed.example` (`effect:packages/effect/test/unstable/ai/McpServer/TestUtils/McpServerLayer.ts:30`;
+`https://allowed.example` (`effect:packages/effect/test/ai/McpServer/TestUtils/McpServerLayer.ts:30`;
 `TransportsTest.ts:432-437`). Default `allowedOrigins` is empty: any present
 Origin is 403 unless the caller passed a list (`McpServer.ts:1729-1735`,
 `:1525-1528`). The sidecar **does** pass the desktop list (`OntologyMcpTransport.ts:181-185`).
@@ -189,14 +189,14 @@ some `RpcClient`s). In-repo tests always send `origin: allowedOrigin`
 ### 2.3 OPTIONS: CORS 204 vs Effect 403/405
 
 `HttpMiddleware.cors` short-circuits OPTIONS to HTTP 204 with CORS headers and
-does not call the inner app (`effect:packages/effect/src/unstable/http/HttpMiddleware.ts:447-451`).
+does not call the inner app (`effect:packages/effect/src/http/HttpMiddleware.ts:447-451`).
 The sidecar comment relies on that: "No explicit OPTIONS route… `HttpMiddleware.cors`
 in `security` short-circuits every OPTIONS request with a 204 plus CORS headers
 before any route handler is reached" (`OntologyMcpTransport.ts:258-262`).
 
 Middleware composition is `origin.combine(auth).combine(cors)` (`:95-107`).
 `combine` keeps the first function as `layerFn` and stacks later middleware as
-dependencies (`effect:packages/effect/src/unstable/http/HttpRouter.ts:1003-1016`,
+dependencies (`effect:packages/effect/src/http/HttpRouter.ts:1003-1016`,
 `:988-998`). `HttpMiddleware.cors` short-circuits OPTIONS to 204 without calling
 the inner app (`HttpMiddleware.ts:447-451`). The sidecar comment states that
 this 204 happens for **every** OPTIONS before any route handler
@@ -247,7 +247,7 @@ binding to an appropriate interface and installing authentication"
 (`McpServer.ts:1527-1528`). Effect provides Origin (DNS-rebinding), media-type
 gates, and header/body admission. It does **not** provide bearer auth, rate
 limits, or body-size limits. **NOT FOUND** in
-`effect:packages/effect/src/unstable/ai/McpServer.ts` and `internal/mcpRuntime.ts`:
+`effect:packages/effect/src/ai/McpServer.ts` and `internal/mcpRuntime.ts`:
 rate-limit, max body bytes, replay nonce.
 
 ### 3.1 What the app provides
@@ -353,7 +353,7 @@ Happy-path tool calls emit no host log, which matches doctrine §4.
 `:42-55`):
 
 - `clientId` — "one **protocol exchange**, not one session". HTTP mints it per
-  request (`effect:packages/effect/src/unstable/rpc/RpcServer.ts:1074`, `:1097`).
+  request (`effect:packages/effect/src/rpc/RpcServer.ts:1074`, `:1097`).
 - `sessionId` — `mcp-session-id` header, `None` when absent. Populated in
   `sanitizedToolkit` from `HttpServerRequest` (`SanitizedSpan.ts:199-202`,
   `:304-322`).
@@ -468,7 +468,7 @@ Stdio G9 hosts: option N/K are enough; `client:0` already joins a process.
 
 ## Sources
 
-- Effect: `packages/effect/src/unstable/ai/McpServer.ts`, `internal/mcpRuntime.ts`, `internal/mcpProtocol.ts`, `internal/mcpProtocol/v2026_07_28.ts`, `unstable/http/HttpMiddleware.ts`, `unstable/http/HttpRouter.ts`, `unstable/http/Headers.ts`, `unstable/rpc/RpcServer.ts`
+- Effect: `packages/effect/src/ai/McpServer.ts`, `internal/mcpRuntime.ts`, `internal/mcpProtocol.ts`, `internal/mcpProtocol/v2026_07_28.ts`, `http/HttpMiddleware.ts`, `http/HttpRouter.ts`, `http/Headers.ts`, `rpc/RpcServer.ts`
 - Effect tests: `McpConformance/TransportsTest.ts`, `v2026_07_28.test.ts`, `ProtocolAdapters.test.ts`, `TestUtils/McpServerLayer.ts`
 - Spec: https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http
 - Repo: `apps/professional-desktop/server/OntologyMcpTransport.ts`, `RpcSessionAuth.ts`, `main.ts`, `src/runtime/Observability.ts`, `test/integration/ontology-mcp-http.test.ts`, `test/integration/support/ontology-mcp-harness.ts`

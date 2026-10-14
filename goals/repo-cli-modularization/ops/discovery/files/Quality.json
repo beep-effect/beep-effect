@@ -18,7 +18,7 @@
       },
       {
         "name": "Child-process execution helpers",
-        "description": "Generic spawn/stream/exit-code machinery over effect/unstable/process plus git helpers (currentBranch, ensureOriginMain). Lines ~455-537, 641-731.",
+        "description": "Generic spawn/stream/exit-code machinery over effect/process plus git helpers (currentBranch, ensureOriginMain). Lines ~455-537, 641-731.",
         "keySymbols": [
           "runStep",
           "collectOutput",

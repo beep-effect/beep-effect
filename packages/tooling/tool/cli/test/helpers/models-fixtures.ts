@@ -106,3 +106,21 @@ export const FixtureCatalogSourcesWithoutProxy = Layer.effect(
     });
   })
 );
+
+/**
+ * Only Cursor answers, so unrelated surfaces have no availability evidence.
+ *
+ * @internal
+ */
+export const FixtureCatalogSourcesCursorOnly = Layer.effect(
+  ModelsCatalogSources,
+  Effect.map(readFixtureLayers(), (fixtures) =>
+    ModelsCatalogSources.of({
+      fetchUpstream: Effect.succeed(fixtures.upstream),
+      readCodexCache: constant(Effect.succeedNone),
+      readGrokCache: constant(Effect.succeedNone),
+      listCursorModels: Effect.succeedSome(fixtures.cursor),
+      listProxyModels: constant(Effect.succeedNone),
+    })
+  )
+);

@@ -44,7 +44,7 @@ violation.)
 
 **Deferred (explicitly not part of this goal)**
 
-- `@beep/utils/Number.ts` / native `Number` migration.
+- `packages/foundation/modeling/utils/src/Number.ts` / native `Number` migration.
 - Schema modeling for JSON sites that lack a schema (those are flagged, not
   authored here).
 - Native `Math.random()` / randomness migration (tracked by the skill, not here).

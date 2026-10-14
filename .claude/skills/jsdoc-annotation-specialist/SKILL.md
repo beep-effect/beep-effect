@@ -4,8 +4,9 @@ description: >
   JSDoc/TSDoc and schema annotation compliance: Effect-style section grammar,
   kind-aware Examples, described @see, $I.annote/$I.annoteSchema gaps, TSDoc
   violations, docgen failures, and documentation post-passes on exported symbols.
-version: 0.3.0
-status: active
+metadata:
+  version: "0.3.0"
+  status: active
 ---
 
 # JSDoc Annotation Specialist

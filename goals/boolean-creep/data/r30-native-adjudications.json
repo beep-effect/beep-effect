@@ -160,7 +160,7 @@
           "note": "Actual instantiated HttpRouter.serve options own both disableListenLog and disableLogger. Effect reference HttpRouter.ts1236-1237 declares both independently; reader1265 controls request logger, reader1279 controls address logging."
         },
         {
-          "file": ".repos/effect/packages/effect/src/unstable/http/HttpRouter.ts",
+          "file": ".repos/effect/packages/effect/src/http/HttpRouter.ts",
           "line": 1236,
           "sha256": "64b0a93f6672ee0879a71d1ec3b174ecf86e8f65ca3b963885d0439998664ec9",
           "note": "Independent logger and address-log options; current Effect reference source inspected."

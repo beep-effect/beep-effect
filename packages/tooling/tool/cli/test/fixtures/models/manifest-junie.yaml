@@ -1,0 +1,16 @@
+version: beep-models/v1
+bindings:
+  - role: junie.default
+    surface: junie-cli
+    modelId: gemini-3-flash-preview
+    effort: medium
+targets:
+  - id: junie.env
+    root: repo
+    path: locators.env
+    optional: false
+    locators:
+      - _tag: env-key
+        binding: { role: junie.default, surface: junie-cli, field: model }
+        render: { _tag: verbatim }
+        key: JUNIE_MODEL

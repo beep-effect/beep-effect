@@ -66,7 +66,7 @@ authority for what this packet absorbs vs leaves).
     changes a pointer gesture surface requires a live-browser pass before
     review sign-off. jsdom green is not click-works green; new pointer wiring
     must respect the `pressStartsOnButton` guard pattern
-    (`@beep/dock-react/internal/DropCompiler.ts`).
+    (`packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts`).
 
 ## M1 — dock capabilities (branch `feat/dock-capabilities-m1`)
 

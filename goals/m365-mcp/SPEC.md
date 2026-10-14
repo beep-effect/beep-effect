@@ -4,7 +4,7 @@
 
 Deliver `@beep/m365-mcp` (at `packages/drivers/m365-mcp`): an Effect-native MCP
 server that exposes the `@beep/m365` driver's read verbs as MCP tools via
-`effect/unstable/ai`. Tools are defined with `Tool.make` (schema-first
+`effect/ai`. Tools are defined with `Tool.make` (schema-first
 input/output), handlers implement `Tool.HandlersFor<…>` and delegate to the
 `@beep/m365` service, mounted with `McpServer.toolkit` into a `makeServerLayer`
 over `McpServer.layerStdio`, with a `bin` entrypoint. `failureMode: "return"`
@@ -37,7 +37,7 @@ Higher sources outrank lower sources when they conflict.
 ## Target Surfaces
 
 - `packages/drivers/m365-mcp/**` (new package `@beep/m365-mcp`).
-- Depends on `@beep/m365` (workspace), `effect/unstable/ai`, `@effect/platform-node`.
+- Depends on `@beep/m365` (workspace), `effect/ai`, `@effect/platform-node`.
 
 ## Constraints
 

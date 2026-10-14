@@ -102,7 +102,7 @@ The H1-syncpack-held-back sweep did not exist, so this file was written fresh.
 | Rule | Line | Declared reason (`packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts` `tsgoDisabledRules`) | Parked by |
 |---|---|---|---|
 | `experimentalApiUsage` | 143 | "Experimental-tagged Effect APIs are adopted deliberately…" | `886de7a261` (#1367, 2026-10-01) via `git log -S '"experimentalApiUsage": "off"'` |
-| `unstableApiUsage` | 229 | "The repository builds on effect/unstable/* modules by design…" | `886de7a261` (#1367, 2026-10-01) |
+| `unstableApiUsage` | 229 | "The repository builds on `@stability unstable` Effect modules by design…" | `886de7a261` (#1367, 2026-10-01) |
 
 Both rules are permanent design waivers enforced by `beep quality tsgo-rules`. Neither waits on a ratchet, so the "parked off pending a one-rule-per-PR ratchet" hold is empty at head. Earlier `"off"` history in this file: `447ea2eb60` (2026-05-16, "enable all effect tsgo diagnostics") and `0c25ebdd55` / `90847441c6` / `3dcf77a7f9` (2026-02..04). Commits `4cb63ad058`, `90c199a25f` and `b1aa7e320c` have zero `"off"` entries.
 

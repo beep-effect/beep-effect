@@ -3,7 +3,7 @@
 **Locked constraints this lane treats as fixed** (from the SPEC.md Decision Log (D1–D14)):
 
 - Root is `apps/labs/*` (zero-root-churn glob).
-- v1 variants: **nextjs + vite + service**. Service = pure Effect server on `effect/unstable/httpapi`.
+- v1 variants: **nextjs + vite + service**. Service = pure Effect server on `effect/http-api`.
 - Tauri is **phase 2** on the same abstraction.
 - Portless namespace: `<name>.labs.beep.localhost`.
 - Per-lab Postgres schema, dropped on delete.
@@ -205,7 +205,7 @@ CI: `.github/workflows/check.yml` verify matrix is repo-wide turbo (`lint`, `che
 | CSS | `postcss.config.mjs` re-exports `@beep/ui/postcss.config` (`:1`). `globals.css` starts `@import "@beep/ui/styles/globals.css"` (`src/app/globals.css:1`). |
 | Env/secrets | Effect `Config` / `Config.redacted` via `OipRuntimeConfig.ts` (`:61-101`). Layout reads `NODE_ENV`, `NEXT_PUBLIC_REACT_GRAB`, `VERCEL`, `NEXT_PUBLIC_ENABLE_VERCEL_INSIGHTS` (`layout.tsx:24-49`). Contact service uses HubSpot + redacted readers (`ContactSubmission.service.ts:8-21`). **Lab template should copy the Config/Redacted pattern, not HubSpot/Vercel.** |
 | @beep/* | `@beep/ui`, `@beep/schema`, `@beep/utils`, `@beep/identity`, `@beep/repo-configs`, `@beep/hubspot`, `@beep/sanity`. Runtime `@effect/atom-react`. Dev: `@beep/repo-utils`, `@beep/test-utils`. Identity: `$OipWebId` (`packages.ts:103`, `:872`). |
-| Entry layers | UI: `@beep/ui` + local components. Atom: `src/runtime/OipAtomProvider.tsx` (`RegistryProvider` + `useAtomMount`). HttpApi **already used** as a Next route bridge: `ContactHttpApiRoute.ts` imports `HttpApiBuilder` from `effect/unstable/httpapi` (`:10-17`). That is a **Next-hosted** httpapi, not the standalone service variant. |
+| Entry layers | UI: `@beep/ui` + local components. Atom: `src/runtime/OipAtomProvider.tsx` (`RegistryProvider` + `useAtomMount`). HttpApi **already used** as a Next route bridge: `ContactHttpApiRoute.ts` imports `HttpApiBuilder` from `effect/http-api` (`:10-17`). That is a **Next-hosted** httpapi, not the standalone service variant. |
 | Turbo/CI | No app-local `turbo.json`. Participates in root turbo `build` (`.next/**` outputs, `NEXT_PUBLIC_*` env — `turbo.json:34-66`). Coverage-ratcheted. `vercel.json`. Ceremony **on**. |
 | Lab takeaway | Clone: portless wrap, App Router, `defineBeepNextConfig` + `allowedDevOrigins: ["<name>.labs.beep.localhost"]`, `tsconfig.next.json`, `@beep/ui` CSS + postcss, Effect Config, `tsgo -b`, vitest, biome. Do **not** clone PWA/Sanity/HubSpot/Vercel/MDX/serwist. |
 
@@ -222,7 +222,7 @@ CI: `.github/workflows/check.yml` verify matrix is repo-wide turbo (`lint`, `che
 | CSS | Same postcss re-export as oip-web (`postcss.config.mjs:1`). `src/main.tsx` imports `./styles/globals.css` + dock CSS (`:1-2`). |
 | Env/secrets | Vite `envPrefix: ["VITE_", "TAURI_"]` (`vite.config.ts:136`). Sidecar: `CHAT_AGENT`, `CHAT_TRANSPORT` (`http` \| `ipc`), `CHAT_SIDECAR_PORT`, `ONTOLOGY_WORKSPACE_ROOT` under `.beep/professional-desktop/`, `AI_ANTHROPIC_API_KEY` (`server/main.ts:8-20`, `package.json:19-20`). Renderer pulls observability via Tauri `invoke` (`src/main.tsx:29-40`). Turbo pass-through includes `PORTLESS_*`, `CHAT_TRANSPORT`, ontology flags (`turbo.json:19-30`). |
 | @beep/* | Composition root: agents / documents / epistemic / ontology / workspace slices + dock, editor, graph-3d, pglite, postgres, identity, ui, schema, observability, mcp-kit, … (`package.json:42-96`). Identity: `$ProfessionalDesktopId` (`packages.ts:84`). |
-| Entry layers | Renderer: `src/main.tsx` → `ProfessionalAtomProvider` + theme. Server: `RpcServer` + `HttpRouter` from `effect/unstable/rpc` and `effect/unstable/http` (`server/main.ts:39-41`) — **RPC, not HttpApi**. Rust: `src-tauri` with plugins (dialog, log, opener, shell, updater), `externalBin: ["binaries/sidecar"]`, updater pubkey (`tauri.conf.json:29-45`). Cargo edition 2021, extra `cc`/`pkg-config` for the youtube referrer C extension (`Cargo.toml:12-28`). |
+| Entry layers | Renderer: `src/main.tsx` → `ProfessionalAtomProvider` + theme. Server: `RpcServer` + `HttpRouter` from `effect/rpc` and `effect/http` (`server/main.ts:39-41`) — **RPC, not HttpApi**. Rust: `src-tauri` with plugins (dialog, log, opener, shell, updater), `externalBin: ["binaries/sidecar"]`, updater pubkey (`tauri.conf.json:29-45`). Cargo edition 2021, extra `cc`/`pkg-config` for the youtube referrer C extension (`Cargo.toml:12-28`). |
 | Turbo/CI | App-local `turbo.json` only tweaks `check` inputs (`apps/professional-desktop/turbo.json:4-12`). Dedicated CI: rust cache, sidecar IPC job, `release-desktop.yml`. Coverage-ratcheted. |
 | Lab takeaway | **v1 vite** = this portless Vite idiom minus rust/sidecar/slice fan-in. **v1 service** ≠ this sidecar (wrong protocol). **P3 tauri** = template + this `devUrl`/`beforeDevCommand` pattern, **not** this product. |
 
@@ -428,7 +428,7 @@ Verified real: 14 Handlebars files + generated `package.json`. Covers:
 | --- | --- | --- |
 | `scratchpad/claudecode/` | Ported Claude-runtime schemas + tests | own `biome.jsonc`, `tsconfig.json`, `vitest.config.ts`; scripts on the scratchpad package (`package.json:11-15`) |
 | `scratchpad/codemode/` | Interpreter / OpenAPI / stdlib spike | typechecked via root scratchpad tsconfig |
-| `scratchpad/effect-ontology/` | **Full port** of effect-ontology (Domain/Service/Runtime/HttpServer, SQL under `Runtime/Persistence/`) | own biome + vitest + `tsgo -p effect-ontology/tsconfig.json` (`package.json:8-18`). Uses `effect/unstable/http` (`Runtime/HttpServer.ts:14`), **not** the locked httpapi service shape. This is the **closest existing "service lab"** and it is **outside** `apps/` on purpose. |
+| `scratchpad/effect-ontology/` | **Full port** of effect-ontology (Domain/Service/Runtime/HttpServer, SQL under `Runtime/Persistence/`) | own biome + vitest + `tsgo -p effect-ontology/tsconfig.json` (`package.json:8-18`). Uses `effect/http` (`Runtime/HttpServer.ts:14`), **not** the locked httpapi service shape. This is the **closest existing "service lab"** and it is **outside** `apps/` on purpose. |
 | `scratchpad/dockview-demo/` | Vite + React demo for `@beep/dock-react` | README says `bunx vite scratchpad/dockview-demo` at **`http://localhost:5199`** (`dockview-demo/README.md:12`) — **raw localhost, no portless**. |
 | `scratchpad/graph-3d-bench/` | Headless bench | README **does** document `portless graph3d-bench.beep …` (`graph-3d-bench/README.md:13`) — optional, not a package script. |
 | `scratchpad/bubbles/`, `computable-layout/`, `template/` | Isolated schema/layout spikes | tests beside source |
@@ -444,7 +444,7 @@ Root `scratchpad/tsconfig.json` extends `../tsconfig.base.json`, `include: ["**/
 | Knip | `ignore: scratchpad/**` + `ignoreWorkspaces: ["scratchpad"]` (`knip.jsonc:73,185`) | Analyzed (except ceremony) |
 | Fallow / dead-code | `ignorePatterns: scratchpad/**` (`.fallowrc.jsonc:73`) | Lint-policy applies |
 | Portless dev-server law | dockview-demo uses `localhost:5199`; most spikes have no `dev` script | **Required** `<name>.labs.beep.localhost:1355` |
-| Schema-first / effect-first | Mixed: some folders are careful, effect-ontology is a bulk port with its own biome and `effect/unstable/http` | Full code laws |
+| Schema-first / effect-first | Mixed: some folders are careful, effect-ontology is a bulk port with its own biome and `effect/http` | Full code laws |
 | Import boundaries / fallow.boundaries | `@beep/scratchpad` is a special node in generated boundaries | Lab apps are normal workspace members with UI/server import rules |
 | Identity | One catch-all `$ScratchpadId` for the whole tree | **Per-lab** composer under labs namespace |
 | create-package / delete-package | Hand-grown; no variant; no manifest | create/delete + manifest |

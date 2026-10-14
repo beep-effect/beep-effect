@@ -236,14 +236,14 @@ loses its teeth on the first concept large enough to hurt).
 ## 2026-09-14 — Role B modules may be retirement targets
 
 **Question:** HttpMethod, HttpStatus, MimeType, Jsonl, Toml, and Yaml are
-covered only by Role B modules (`effect/unstable/http/*`,
-`effect/unstable/encoding/*`), which the module-roles decision excluded as
+covered only by Role B modules (`effect/http/*`,
+`effect/encoding/*`), which the module-roles decision excluded as
 comparison targets. Which decision bends?
 
 **Answer:** Module-roles bends. That decision scoped the inventory mining to
 Role A; it was never a statement that Role B cannot replace a local concept.
 All six retire. Recorded losses: MimeType's closed category schema becomes a
-lookup (`unstable/http/Mime.ts` has no schema); Jsonl's call shape becomes the
+lookup (`http/Mime.ts` has no schema); Jsonl's call shape becomes the
 Ndjson stream/channel shape; HttpStatus's named codecs become value-module
 lookups. Each loss is a consumer adaptation, not a reason to keep the concept.
 
@@ -533,7 +533,7 @@ experimental JIT and AOT compilers"; first release `effect@4.0.0-rc.116`):
 compiled decoders, `internal/schema/compilerRegistry.ts:33`),
 `SchemaJITCompiler` (runtime codegen through `globalThis.Function`) and
 `SchemaAOTCompiler` (emits a self-installing ES module). The repo now runs a
-`main` snapshot, and the whole `packages/effect/src/unstable/` tree is gone.
+`main` snapshot, and the whole `packages/effect/src/` tree is gone.
 Does this reopen the packet, and on what terms?
 
 **Answer:** Yes. A new MAP re-entry gate, "upstream ships a schema compiler
@@ -547,7 +547,7 @@ pin, so the lookahead delta is none at 2026-09-28. At the pin
 `packages/effect/src/schema/` holds nine files including the three
 compilers and their subfolders, `internal/schema/` holds 19 files including
 `codegen.ts`, `compilerRegistry.ts` and `interpreter.ts`, and
-`packages/effect/src/unstable/` does not exist. Both nightly units
+`packages/effect/src/` does not exist. Both nightly units
 (`beep-graft-deep-refresh.service`, `beep-refs-refresh.service`) were
 inactive. The run is bound by ten decisions:
 

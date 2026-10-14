@@ -57,7 +57,7 @@ JSON-RPC `tools/list` boot probe.
 
 ### Deviation from plan: line-based JSONL, not `Ndjson`
 
-The plan named `effect/unstable/encoding/Ndjson` for JSONL. The actual port parses
+The plan named `effect/encoding/Ndjson` for JSONL. The actual port parses
 line-by-line on top of `TextStream.streamLines` with
 `S.decodeResult(S.UnknownFromJsonString)` — this gives per-line `Result` outcomes,
 which the error-collecting tools (`stream_read_jsonl` w/ `collectErrors`,

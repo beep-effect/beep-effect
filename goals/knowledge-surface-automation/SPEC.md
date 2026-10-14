@@ -155,6 +155,20 @@ command, assertion) proving only semantic additions surface.
 Authoring note (ratified doc-fix, not a normalizer change): the scanner probes every inline
 `bun run beep` span as a real command, so placeholder tails are written `<command>`, never
 `...` — a bare ellipsis resolves to no subcommand and reports `unknown-beep-command`.
+A command that does not exist yet is written in prose as `beep <cmd>` (the #1154 Stage-1
+spelling), never as an inline span that starts with `bun run beep`: only such spans are
+probed, so the planned spelling is never read as a command. The doctor has no `planned`
+span class (orchestrator ruling on the C Stage-2 report, 2026-10-14, recorded in
+`./research/p1-fp-eyeball-verdicts.md`).
+The same prose spelling covers `@beep/*` names that do not resolve on purpose. A proposed
+package that does not exist yet, and a package, subpath, or symbol named only to say it is
+retired, removed, or must not be imported, is written as plain prose without a code span:
+"a proposed @beep/foo package", "the retired @beep/schema/color subpath", "do not import
+@beep/schema/Dom". The symbols evaluator reads only inline code spans, so prose names are
+never checked against the tree. The prohibition keeps its full wording; only the code span
+goes. The doctor has no `planned` or `retired` span class and no reader rule for either
+(orchestrator ruling on the C PR 2b report, 2026-10-14, recorded in the same file). A
+`@beep/*` code span always names something that resolves in the tree.
 
 **Stage 2 — full `beep knowledge doctor`, hardened against gaming from day one:**
 
@@ -327,6 +341,31 @@ Each entry names its record, which carries the reason and the reversal path.
   leases, causal grouping, append-only promotions file): `research/p4-knowledge-doctor-design.md`.
 - 2026-10-14 — #1626 round-3 follow-ups recorded as K12 (narrow promotion-row admission)
   and E12 (publish sweeps stale staging directories): the two design docs.
+- 2026-10-14 — Workstream B lock write B12–B15 (every drifted file of a kept pin is a
+  line-level `temporary-drift` patch, no pristine-snapshot disk cache, the write is a
+  digest-sealed fixed point, every installed skill gets a plan row):
+  `research/p4-skills-warehouse-design.md`.
 - 2026-10-14 — Workstream C Stage-2 PR 1 deviations (line-based historical-marker
   block scope, three-verdict counterfactual harness, multi-failure `Failed`, gating
   mode refuses until a sealed baseline exists): `research/p4-report-knowledge-doctor.md`.
+- 2026-10-14 — Workstream E-3 graduation E13–E17 (one graduation plan that reuses the
+  bootstrap child plans, children published before the exploration flips, provenance as
+  the resume journal, events only for opted-in packets, self-hosting by a real
+  graduation): `research/p4-explore-graduate-design.md`.
+- 2026-10-14 — Workstream E-3c E18 (an opted-in but empty exploration stream gets its
+  `packet-created` genesis before the graduation events, and the trace is regenerated);
+  E17 self-hosting ran on `typed-agent-skill-contracts` after the orchestrator ruled
+  Amendment J a new goal: `research/p4-explore-graduate-design.md`.
+- 2026-10-14 — Workstream E-3c E19 (#1688 review): graduation events owed to an
+  opted-in exploration are staged in `ops/.graduation-pending.json` before the
+  manifest flips, and `explore graduate --resume-events` replays them after a crash
+  between the flip and the append: `research/p4-explore-graduate-design.md`.
+- 2026-10-14 — Workstream B materialize, clearing house and the P5 update train B16–B22
+  (one writer feeds both targets, verify before write, Renovate git-refs per skill,
+  conflicts fail CI while clean replays merge, append-only hunk ledger, the first ritual
+  is the operator's HITL classification): `research/p5-warehouse-update-train-design.md`.
+- 2026-10-14 — Workstream B-4 materialize B24–B27 (the clearing house resolves targets
+  physically, so the `.agents/skills` symlink collapses both targets onto one tree;
+  stages live in a sibling `.skills-materialize/` work directory; local drift fails
+  `materialize` in both modes; the applier is exact and never fuzzes):
+  `research/p5-warehouse-update-train-design.md`.

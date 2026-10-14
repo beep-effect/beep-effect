@@ -9,7 +9,7 @@ facts. Challenges to those assumptions are labeled `decision-challenge`.
 
 Public `McpSchema.ts` is the authoring surface, not the dated wire contract.
 Wire decode/encode for this revision is
-`effect:packages/effect/src/unstable/ai/internal/mcpSchema/v2026_07_28.ts`.
+`effect:packages/effect/src/ai/internal/mcpSchema/v2026_07_28.ts`.
 
 ---
 
@@ -24,36 +24,36 @@ Wire decode/encode for this revision is
   registered; they share that one session table. `selectStatefulProtocol`
   matches by offered `protocolVersion`, else falls back to the **first
   stateful** adapter
-  (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:182-187`,
+  (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:182-187`,
   `:193-209`).
 - Stateless adapters: **at most one**. A second `runtime._tag === "Stateless"`
   fails **Layer construction** with
   `Cause.IllegalArgumentError("MCP runtime supports at most one stateless protocol")`
-  (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:198-208`).
+  (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:198-208`).
   This is not a per-request error.
 - Duplicate versions fail in the registry:
   `Duplicate MCP protocol version: <version>`
-  (`effect:packages/effect/src/unstable/ai/internal/mcpProtocolRegistry.ts:52-59`).
+  (`effect:packages/effect/src/ai/internal/mcpProtocolRegistry.ts:52-59`).
   Empty lists fail with `MCP protocol declaration must contain at least one MCP protocol`
   (`:45-48`).
 
 `McpProtocol.v2026_07_28` is the only shipped `StatelessRuntimeDescriptor`
-(`effect:packages/effect/src/unstable/ai/McpProtocol.ts:122-128`, `:196`;
-`effect:packages/effect/src/unstable/ai/internal/mcpProtocol/v2026_07_28.ts:664-671`).
+(`effect:packages/effect/src/ai/McpProtocol.ts:122-128`, `:196`;
+`effect:packages/effect/src/ai/internal/mcpProtocol/v2026_07_28.ts:664-671`).
 Its transport policy is `{ jsonRpc: { acceptsBatches: false }, http: {} }`
 (no `requiresVersionHeader`).
 
 Handlers are installed under namespaced RPC tags
 `@effect/mcp/<url-encoded-version>/` and incoming methods are re-prefixed after
 the adapter is chosen
-(`effect:packages/effect/src/unstable/ai/internal/mcpProtocolRegistry.ts:12-14`,
+(`effect:packages/effect/src/ai/internal/mcpProtocolRegistry.ts:12-14`,
 `:61-78`).
 
 ### HTTP matching (`selectHttpProtocol` + `admitHttp`)
 
 Header names are lower-cased constants: `mcp-protocol-version`, `mcp-method`,
 `mcp-name`, `mcp-session-id`
-(`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:27-33`). HTTP
+(`effect:packages/effect/src/ai/internal/mcpRuntime.ts:27-33`). HTTP
 headers are already normalized to lowercase by Effect `Headers`.
 
 Metadata keys:
@@ -79,7 +79,7 @@ Once classified as stateless, admission requires **all** of:
 
 | Check | HTTP | JSON-RPC |
 | --- | --- | --- |
-| `MCP-Protocol-Version` present | 400 | `HEADER_MISMATCH_ERROR_CODE` (`-32020`), `MCP-Protocol-Version header is required` (`:61-65`, `:228-229`; constant `effect:packages/effect/src/unstable/ai/McpSchema.ts:595`) |
+| `MCP-Protocol-Version` present | 400 | `HEADER_MISMATCH_ERROR_CODE` (`-32020`), `MCP-Protocol-Version header is required` (`:61-65`, `:228-229`; constant `effect:packages/effect/src/ai/McpSchema.ts:595`) |
 | `_meta` present and protocol-version claim is a string (except `notifications/cancelled`) | 400 | `INVALID_PARAMS_ERROR_CODE` (`-32602`), `Required request metadata is missing` (`:231-239`; constant `McpSchema.ts:557`) |
 | header version equals `_meta` version (cancelled may omit `_meta`; if present it must match) | 400 | header-mismatch `MCP-Protocol-Version header does not match request metadata` (`:241-243`) |
 | `_meta["io.modelcontextprotocol/clientCapabilities"]` is an object (except cancelled) | 400 | `-32602`, `io.modelcontextprotocol/clientCapabilities request metadata is required` (`:244-252`) |
@@ -90,7 +90,7 @@ Once classified as stateless, admission requires **all** of:
 `Mcp-Name` decoding: printable ASCII (`[\t\x20-\x7e]*`) is used as-is; values
 wrapped in a Base64 sentinel are decoded; a wrapper that fails decode is not a
 literal fallback inside the sentinel pair
-(`effect:packages/effect/src/unstable/ai/internal/mcpProtocol.ts:45-60`). An
+(`effect:packages/effect/src/ai/internal/mcpProtocol.ts:45-60`). An
 **unmatched** Base64-looking string (incomplete wrapper) is treated as a
 literal (test in §10).
 
@@ -98,7 +98,7 @@ On success: `{ _tag: "Accepted", binding: undefined, protocol: statelessProtocol
 (`mcpRuntime.ts:280`). **No session is created.** `Mcp-Session-Id` is not
 consulted on the stateless path. A 2026-only server ignores a caller-supplied
 `Mcp-Session-Id` on an otherwise valid modern request
-(`effect:packages/effect/test/unstable/ai/McpServer/v2026_07_28.test.ts:117-128`).
+(`effect:packages/effect/test/ai/McpServer/v2026_07_28.test.ts:117-128`).
 
 If the request is **not** classified stateless (legacy / mixed-list):
 
@@ -128,15 +128,15 @@ If the request is **not** classified stateless (legacy / mixed-list):
   `Method not found: <method>` (`:427-435`; `McpSchema.ts:545`);
 - `subscriptions/listen` is flagged `isSubscription: true` (`:438-439`);
 - notification-only (no `id`) is `acknowledge: true` → POST handler returns
-  empty **202** (`effect:packages/effect/src/unstable/ai/McpServer.ts:1618-1620`).
+  empty **202** (`effect:packages/effect/src/ai/McpServer.ts:1618-1620`).
 
 ### Stdio matching
 
 Stdio does **not** run `selectHttpProtocol` / `admitHttp`. Framing is
 newline-delimited JSON-RPC (`mcpStdioSerialization`,
-`effect:packages/effect/src/unstable/ai/McpServer.ts:1449-1510`). The JSON-RPC
+`effect:packages/effect/src/ai/McpServer.ts:1449-1510`). The JSON-RPC
 decoder copies `method` onto `Request.tag` with **no allowlist**
-(`effect:packages/effect/src/unstable/rpc/RpcSerialization.ts:316-323`).
+(`effect:packages/effect/src/rpc/RpcSerialization.ts:316-323`).
 
 Protocol selection happens in `prepareRequest`
 (`mcpRuntime.ts:308-362`):
@@ -164,14 +164,14 @@ messages update `selectedProtocol` via `selectStatefulProtocol`
 ### What a `v2026_07_28`-only server answers to `initialize`
 
 `initialize` is **not** in `ClientRequestRpcs` / `handlerRpcs`
-(`effect:packages/effect/src/unstable/ai/internal/mcpSchema/v2026_07_28.ts:614-630`;
-`effect:packages/effect/src/unstable/ai/internal/mcpProtocol/v2026_07_28.ts:292`,
+(`effect:packages/effect/src/ai/internal/mcpSchema/v2026_07_28.ts:614-630`;
+`effect:packages/effect/src/ai/internal/mcpProtocol/v2026_07_28.ts:292`,
 `:364-661`).
 
 **HTTP, modern headers + `_meta`:** classified stateless, then `admitHttp`
 returns HTTP **404** + JSON-RPC `-32601` `Method not found: initialize`
 (`mcpRuntime.ts:427-435`; pinned
-`effect:packages/effect/test/unstable/ai/McpServer/v2026_07_28.test.ts:131-138`).
+`effect:packages/effect/test/ai/McpServer/v2026_07_28.test.ts:131-138`).
 
 **HTTP, bare legacy `initialize` (no version header / no `_meta`):** classified
 stateless because `stateful === undefined`, then header-mismatch HTTP **400**
@@ -184,7 +184,7 @@ headerless JSON-RPC request; pinned `:158-180`, including a body whose
 classified stateless. On a 2026-only server the stateless classification
 usually wins first, so the 404/400-header paths above dominate. Mixed-list
 servers use this 400 for initialize-with-session
-(`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/TransportsTest.ts:360`).
+(`effect:packages/effect/test/ai/McpServer/McpConformance/TransportsTest.ts:360`).
 
 **Stdio, no protocol-version `_meta`:** `prepareRequest` yields ProtocolError
 `-32022`
@@ -192,7 +192,7 @@ servers use this 400 for initialize-with-session
 (`mcpRuntime.ts:319-326`). There is no HTTP status; the JSON-RPC error is
 written on stdout. The stdio harness never sends `initialize` on a Stateless
 adapter — it sends `server/discover` instead
-(`effect:packages/effect/test/unstable/ai/McpServer/TestUtils/McpStdioHarness.ts:250-257`).
+(`effect:packages/effect/test/ai/McpServer/TestUtils/McpStdioHarness.ts:250-257`).
 The `-32022` stdio-initialize path is therefore **code-backed**; a dedicated
 stdio test name was **not found** in the files listed in this lane's brief.
 
@@ -210,7 +210,7 @@ lists with at most one stateless adapter. On a mixed list
   (`isInitialize && stateful !== undefined`). It is handled by the first
   stateful adapter. Offering `protocolVersion: "2026-07-28"` still negotiates
   **stateful** `2025-11-25` and mints `Mcp-Session-Id`
-  (`effect:packages/effect/test/unstable/ai/McpServer/ProtocolAdapters.test.ts:704-721`).
+  (`effect:packages/effect/test/ai/McpServer/ProtocolAdapters.test.ts:704-721`).
 - A modern request with 2026 `_meta` ignores a recognized legacy session
   (`:725-740`).
 - G4 is **implementable**. Mixed lists are the thing that **keeps `initialize`
@@ -224,7 +224,7 @@ lists with at most one stateless adapter. On a mixed list
 ### Request
 
 RPC `server/discover`. Payload is `RequestParams` = `{ _meta: RequestMetaObject }`
-(`effect:packages/effect/src/unstable/ai/internal/mcpSchema/v2026_07_28.ts:66-78`,
+(`effect:packages/effect/src/ai/internal/mcpSchema/v2026_07_28.ts:66-78`,
 `:368-382`). `RequestMetaObject` requires:
 
 - `io.modelcontextprotocol/protocolVersion: string`
@@ -272,7 +272,7 @@ Then:
 `RpcServer.Protocol.supportsNotifications` is true
 (`McpServer.ts:806-813`). Stdio and Streamable HTTP both set
 `supportsNotifications: true`
-(`effect:packages/effect/src/unstable/rpc/RpcServer.ts:1206`, `:1403`).
+(`effect:packages/effect/src/rpc/RpcServer.ts:1206`, `:1403`).
 A custom protocol with `supportsNotifications: false` advertises
 `listChanged: false` / `subscribe: false` and rejects `subscriptions/listen`
 (§7).
@@ -289,7 +289,7 @@ On a features-empty 2026 stdio server, discover returns
 - `description`, `websiteUrl`, `icons` are **not** top-level DiscoverResult
   fields. They live on `Implementation` inside
   `_meta["io.modelcontextprotocol/serverInfo"]`
-  (`effect:packages/effect/src/unstable/ai/internal/mcpSchema/v2025_11_25.ts:32-37`,
+  (`effect:packages/effect/src/ai/internal/mcpSchema/v2025_11_25.ts:32-37`,
   re-exported by the 2026 schema; encoded via `encodeImplementation` in
   `projectCompleteResult` `v2026_07_28.ts:213-223`, `:89-97`).
 - `Implementation` fields are optional; omitted values are not forced present.
@@ -297,7 +297,7 @@ On a features-empty 2026 stdio server, discover returns
 The conformance harness's `initialize()` for Stateless adapters **rewrites**
 `server/discover` into a synthetic `InitializeResult` with
 `serverInfo: { name, version }` only
-(`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/McpConformance.ts:40-47`,
+(`effect:packages/effect/test/ai/McpServer/McpConformance/McpConformance.ts:40-47`,
 `:263-288`). That harness shape is **not** the wire DiscoverResult.
 
 ---
@@ -313,7 +313,7 @@ The conformance harness's `initialize()` for Stateless adapters **rewrites**
 Framer uses `RpcSerialization.ndjson` (`includesFraming: true`) then a JSON-RPC
 parser (`McpServer.ts:1459-1488`). `makeNdjson` splits on `\n`, `JSON.parse`s
 each line, and holds a remainder buffer
-(`effect:packages/effect/src/unstable/rpc/RpcSerialization.ts:142-191`).
+(`effect:packages/effect/src/rpc/RpcSerialization.ts:142-191`).
 Encode appends `\n` (`McpServer.ts:1504-1505`).
 
 **Content-Length framing is not implemented.** No `Content-Length` token
@@ -328,7 +328,7 @@ Pinned by
 `TransportsTest.ts` "SCENARIO parses UTF-8 JSON-RPC records split across input chunks"
 and the 2026 clone
 "should reconstruct a UTF-8 stdio message when its bytes arrive in separate chunks"
-(`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/TransportsTest.ts:58`,
+(`effect:packages/effect/test/ai/McpServer/McpConformance/TransportsTest.ts:58`,
 `:488`).
 
 Default max buffer: `defaultMaxBufferSize` in `RpcSerialization.ts` (not
@@ -440,7 +440,7 @@ match; no wildcard. Applied to every MCP route including 405 handlers
 (`:584`).
 
 The test harness defaults `allowedOrigins: ["https://allowed.example"]`
-(`effect:packages/effect/test/unstable/ai/McpServer/TestUtils/McpServerLayer.ts:30`).
+(`effect:packages/effect/test/ai/McpServer/TestUtils/McpServerLayer.ts:30`).
 That is harness-only, not the production default.
 
 ### `Mcp-Session-Id`
@@ -460,7 +460,7 @@ stateless and **do not** echo a session header
 ### Fields
 
 Public service
-(`effect:packages/effect/src/unstable/ai/McpSchema.ts:2824-2835`):
+(`effect:packages/effect/src/ai/McpSchema.ts:2824-2835`):
 
 | Field | Type | Who mints it |
 | --- | --- | --- |
@@ -809,7 +809,7 @@ Streamable HTTP without sessions.
 
 ## 10. Test map
 
-Files: `packages/effect/test/unstable/ai/McpServer/v2026_07_28.test.ts`
+Files: `packages/effect/test/ai/McpServer/v2026_07_28.test.ts`
 (also **loads** the named conformance suites below),
 `McpProtocol.test.ts`, `ProtocolAdapters.test.ts`, `McpServer.test.ts`,
 `McpSchema.test.ts`,

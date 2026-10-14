@@ -179,7 +179,7 @@ Goal 1 executes against, cited by row and amendment id, one line each.
 | Gold labels (S2) | Gold-proposer provider family ≠ extraction provider family as a schema refinement on `EvalRun`; spot-checked fraction committed in `gold/v1`. |
 | Lab shape (S4) | `--app-kind tauri`, one local `cargo check`, `src-tauri` frozen through C0-C2, hand-written headless entry + runtime layer. |
 | Storage (B1, A1) | park-pending-canary; first probe bundle = PGlite ledger SoR + DuckDB exact vector + derived graph tables + Oxigraph rebuild-from-ledger. |
-| Embeddings (S3-rev, M3) | Contract `effect/unstable/ai` `EmbeddingModel`; Layer = `@effect/ai-openai` `OpenAiEmbeddingModel` through the `openai-driver` packet; `.model()` where `Dimensions` is needed. |
+| Embeddings (S3-rev, M3) | Contract `effect/ai` `EmbeddingModel`; Layer = `@effect/ai-openai` `OpenAiEmbeddingModel` through the `openai-driver` packet; `.model()` where `Dimensions` is needed. |
 | Input (M1) | PDF first probe = `@beep/doc-text`; breaker retry = direct `unpdf` text items with `disableNormalization: true`; MuPDF parked. |
 | Spans (M1) | Compose, not build: `CanonicalText` = `ResolvedSourceText`; spans = `TextAnchor`; tripwire = `verifyTextAnchor`; NET-NEW shrinks to `EvidenceBatch`, `ModelIdentity`, `ConflictWitness`. |
 | Reasoning (S5, S8, G3/G5) | EYE is the C2 oracle, not the runtime; runtime = ρdf closure (rdfs2, 3, 5, 7, 9, 11) + one SKOS broader-transitivity rule; gate = closure equality + per-`InferenceEvent` rule validation. |

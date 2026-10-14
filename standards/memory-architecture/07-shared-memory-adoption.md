@@ -191,7 +191,7 @@ is structured knowledge, this layer is eventually worth owning. Recorded
 intent only — it is not scheduled work and no part of this adoption:
 
 - Port basic-memory's store model (markdown as source of truth, SQLite FTS as
-  materialization) to `@beep/memory` with `S.Class` note schemas, `LiteralKit`
+  materialization) to a proposed @beep/memory package with `S.Class` note schemas, `LiteralKit`
   for note kinds and folders, Effect `HashMap` graph views, and an
   `effect/http` MCP server.
 - Port Graphiti's bi-temporal validity intervals on edges as the temporal

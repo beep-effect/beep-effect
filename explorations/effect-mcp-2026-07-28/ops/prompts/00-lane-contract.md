@@ -29,7 +29,7 @@ suppress such evidence, and never soften a finding because it conflicts with an 
 - Code search: both checkouts carry a `graft` index. With the checkout root as cwd, prefer
   `graft ask "<question>" --source`, `graft grep "<literal>"`, `graft callers <symbol>`,
   `graft skeleton <file>`; fall back to `rg`.
-- beep-effect targets Effect v4 (`effect/unstable/ai/*`). Never reason from Effect v3 or
+- beep-effect targets Effect v4 (`effect/ai/*`). Never reason from Effect v3 or
   `@effect/ai` v3 APIs.
 - Known result (orchestrator spike, 2026-09-16): pinning all 16 effect-family catalog entries to
   pkg.pr.new `a7a71921de` installs cleanly; repo-wide `turbo run check` then fails only on

@@ -203,14 +203,14 @@ on 2026-06-29.
   `Config.option`, `ConfigProvider.orElse`, `ConfigProvider.layer`,
   `constantCase`) — the key-precedence primitives. Verified present in
   `node_modules/effect/dist/{Config,ConfigProvider}.d.ts`.
-- **`effect/unstable/ai`** surface present: `LanguageModel` (with
+- **`effect/ai`** surface present: `LanguageModel` (with
   `generateObject`), `Model` (provides `ProviderName`+`ModelName`), `AiError`
   (normalized `isRetryable` taxonomy + provider-directed backoff), `Toolkit`/`Tool`,
   `OpenAiStructuredOutput`, `AnthropicStructuredOutput` — verified
-  `ls node_modules/effect/dist/unstable/ai/`. **`AiError.RateLimitError` carries an
+  `ls node_modules/effect/dist/ai/`. **`AiError.RateLimitError` carries an
   optional `retryAfter: Duration` and is always retryable; the top-level `AiError`
   delegates `isRetryable` and `retryAfter` to the underlying reason** (verified
-  `node_modules/effect/src/unstable/ai/AiError.ts`, 2026-06-29) — so resilience
+  `node_modules/effect/src/ai/AiError.ts`, 2026-06-29) — so resilience
   policy must make `retryAfter` first-class: keep
   `while: AiError.isAiError(e) && e.isRetryable` as the advance gate, but have
   schedule construction consult `error.retryAfter` when present instead of keying on
@@ -313,13 +313,13 @@ single-provider plan for a multi-provider one.
   `gemini` entry is net-new driver work (non-bearer `x-goog-api-key` auth + 2026
   key transition → highest-maintenance; defer past V1).
 - **NOT FOUND**: a `GeminiStructuredOutput` transformer in vendored
-  `effect/unstable/ai` (only OpenAI + Anthropic) — so the Gemini empty-`properties`
+  `effect/ai` (only OpenAI + Anthropic) — so the Gemini empty-`properties`
   normalization is documented-but-not-needed unless a Gemini driver is added.
 
 ## Constraints
 
 **Deprecations / dated moving targets:**
-- `effect/unstable/ai` is in the explicitly-`unstable` namespace and the repo is
+- `effect/ai` is in the explicitly-`unstable` namespace and the repo is
   on a **beta** (`4.0.0-beta.91`); `ExecutionPlan`, `Model.make`, and the
   `AiError` union may shift before GA. Pinned beta current as of 2026-06-29.
 - **`Schedule.compose`/`.intersect`/`.union` removed in v4** → use `either`/`both`.
@@ -445,7 +445,7 @@ recommendations, the 2026-07-14 locked decisions control.
   provides a `Context` or `Layer` plus optional `attempts`, `while`, and
   `schedule`; no wrapper engine is needed. Provider-neutral structured output
   remains available through
-  `.repos/effect-v4/packages/effect/src/unstable/ai/LanguageModel.ts`
+  `.repos/effect-v4/packages/effect/src/ai/LanguageModel.ts`
   (`generateObject`).
 - Anthropic public barrel: `packages/drivers/anthropic/src/index.ts`; its live
   language-model constructors and plan are exported from

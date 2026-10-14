@@ -8,7 +8,8 @@
    root) + `session register add|list [--json|--markdown]`.
 3. `MergeGateRead` → `decideMergeGate` (pure) → `readMergeGate` (gh REST + one GraphQL) →
    `executeMergeGate` (squash via `gh api`), exposed as `yeet merge-gate <pr> <sha>
-   [--tolerate "<check>=<attribution>"] [--force-window] [--dry-run]`.
+   [--tolerate "<check>=<attribution>"] [--force-window] [--relaxed] [--dry-run]`; S11's ready
+   flip is `yeet ready --inherited "<check>=<attribution>"` (2026-10-14).
 4. `orchestrate` skill: files, smart-zone rules, take-over, run table, hand-off, trigger.
 5. `HANDOFF.template.md`.
 6. Tests from recorded fixtures (`test/fixtures/yeet-merge-gate/`, PR #1459 at 212fe39b4f).

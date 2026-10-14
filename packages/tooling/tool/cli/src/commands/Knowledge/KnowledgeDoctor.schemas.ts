@@ -10,8 +10,14 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { GoalStatus } from "../Goals/Goals.schemas.ts";
 import { KnowledgeCommitSha, KnowledgeRefSurface } from "./Knowledge.refs.ts";
-import { KnowledgeFinding, KnowledgeFindingCandidate, KnowledgeFindingLocation } from "./Knowledge.schemas.ts";
+import {
+  KnowledgeFinding,
+  KnowledgeFindingCandidate,
+  KnowledgeFindingId,
+  KnowledgeFindingLocation,
+} from "./Knowledge.schemas.ts";
 import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
 
@@ -65,6 +71,12 @@ export type KnowledgeSpanClass = typeof KnowledgeSpanClass.Type;
  * `<!-- beep:assert path-exists ... -->` marker, `command` an inline `bun run beep` span, and
  * `generated-fence` the opening delimiter of a fence whose info string carries `beep:generated=`.
  *
+ * The domain forms: `packet-status` is a `goals/<slug>` span followed by a lifecycle word span,
+ * `packet-phase` the phase id that opens a packet README's `## Current Phase` section, `symbol` an
+ * inline `@beep/*` package or subpath span, `symbol-export` an identifier span written as imported
+ * from an `@beep/*` span, and `skill` one installed or locked skill, synthesized from the tree rather
+ * than read from prose.
+ *
  * **Example** (Recognize a command span form)
  *
  * ```ts
@@ -76,7 +88,17 @@ export type KnowledgeSpanClass = typeof KnowledgeSpanClass.Type;
  * @category models
  * @since 0.0.0
  */
-export const KnowledgeSpanForm = LiteralKit(["path", "path-assertion", "command", "generated-fence"]).pipe(
+export const KnowledgeSpanForm = LiteralKit([
+  "path",
+  "path-assertion",
+  "command",
+  "generated-fence",
+  "packet-status",
+  "packet-phase",
+  "symbol",
+  "symbol-export",
+  "skill",
+]).pipe(
   $I.annoteSchema("KnowledgeSpanForm", {
     description: "Syntactic form of one extracted knowledge reference span.",
   })
@@ -104,7 +126,7 @@ export type KnowledgeSpanForm = typeof KnowledgeSpanForm.Type;
  * @category models
  * @since 0.0.0
  */
-export const KnowledgeEvaluatorId = LiteralKit(["paths", "commands"]).pipe(
+export const KnowledgeEvaluatorId = LiteralKit(["paths", "commands", "symbols", "packet-status", "skills-local"]).pipe(
   $I.annoteSchema("KnowledgeEvaluatorId", {
     description: "Identifier of one witness-bearing knowledge-doctor evaluator.",
   })
@@ -371,6 +393,92 @@ export class ProducerWitness extends S.TaggedClass<ProducerWitness>($I`ProducerW
 ) {}
 
 /**
+ * Witness that a goal-packet manifest decodes and holds one field.
+ *
+ * **Details**
+ *
+ * `field` is `initiative.status` for a lifecycle claim and `phases.<id>` for a phase claim.
+ * Removing the witness drops exactly that field from the packet facts the evaluators read.
+ *
+ * **Example** (Witness a packet lifecycle)
+ *
+ * ```ts
+ * import { ManifestFieldWitness } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ *
+ * const witness = ManifestFieldWitness.make({ slug: "goals-doctor", field: "initiative.status" })
+ *
+ * console.log(witness.field) // "initiative.status"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ManifestFieldWitness extends S.TaggedClass<ManifestFieldWitness>($I`ManifestFieldWitness`)(
+  "ManifestFieldWitness",
+  { slug: S.String, field: S.String },
+  $I.annote("ManifestFieldWitness", {
+    description: "A decoded goal-packet manifest field that resolved a packet claim.",
+  })
+) {}
+
+/**
+ * Witness that a workspace file exposes one export.
+ *
+ * **Details**
+ *
+ * For a package manifest the export is an `exports` map key (`.` or `./Sub`); for the root
+ * `tsconfig.json` it is a `paths` alias; for a source file it is a declared or re-exported
+ * identifier. Map keys start with `.` or `@` and identifiers never do, so one witness shape covers
+ * all three, and removing it drops exactly that export from that file.
+ *
+ * **Example** (Witness an exported identifier)
+ *
+ * ```ts
+ * import { ExportWitness } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ *
+ * const witness = ExportWitness.make({
+ *   packageName: "@beep/schema",
+ *   file: "packages/foundation/modeling/schema/src/LiteralKit.ts",
+ *   exportName: "LiteralKit",
+ * })
+ *
+ * console.log(witness.exportName) // "LiteralKit"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ExportWitness extends S.TaggedClass<ExportWitness>($I`ExportWitness`)(
+  "ExportWitness",
+  { packageName: S.String, file: S.String, exportName: S.String },
+  $I.annote("ExportWitness", {
+    description: "An exports-map key, path alias, or exported identifier of one workspace file.",
+  })
+) {}
+
+/**
+ * Witness that `skills-lock.json` records one skill.
+ *
+ * **Example** (Witness a lock entry)
+ *
+ * ```ts
+ * import { LockEntryWitness } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ *
+ * console.log(LockEntryWitness.make({ skill: "yeet" })._tag) // "LockEntryWitness"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LockEntryWitness extends S.TaggedClass<LockEntryWitness>($I`LockEntryWitness`)(
+  "LockEntryWitness",
+  { skill: S.String },
+  $I.annote("LockEntryWitness", {
+    description: "A skills-lock entry that resolved a skill span.",
+  })
+) {}
+
+/**
  * Any resolution witness an evaluator may cite.
  *
  * **Example** (Discriminate a witness)
@@ -384,10 +492,18 @@ export class ProducerWitness extends S.TaggedClass<ProducerWitness>($I`ProducerW
  * @category models
  * @since 0.0.0
  */
-export const ResolutionWitness = S.Union([TreeEntryWitness, CommandNodeWitness, ProducerWitness]).pipe(
+export const ResolutionWitness = S.Union([
+  TreeEntryWitness,
+  CommandNodeWitness,
+  ProducerWitness,
+  ManifestFieldWitness,
+  ExportWitness,
+  LockEntryWitness,
+]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("ResolutionWitness", {
-    description: "A tree entry, command node, or producer output that proves one span resolved.",
+    description:
+      "A tree entry, command node, producer output, manifest field, export, or lock entry that proves one span resolved.",
   })
 );
 
@@ -398,6 +514,253 @@ export const ResolutionWitness = S.Union([TreeEntryWitness, CommandNodeWitness, 
  * @since 0.0.0
  */
 export type ResolutionWitness = typeof ResolutionWitness.Type;
+
+/**
+ * Whether a goal packet's manifest is present and decodes.
+ *
+ * **Example** (Recognize a decoded manifest)
+ *
+ * ```ts
+ * import { KnowledgePacketManifestState } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ *
+ * console.log(KnowledgePacketManifestState.is.decoded("decoded")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const KnowledgePacketManifestState = LiteralKit(["decoded", "missing", "invalid"]).pipe(
+  $I.annoteSchema("KnowledgePacketManifestState", {
+    description: "Whether a goal packet's ops/manifest.json is decoded, missing, or invalid.",
+  })
+);
+
+/**
+ * Whether a goal packet's manifest is present and decodes.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type KnowledgePacketManifestState = typeof KnowledgePacketManifestState.Type;
+
+/**
+ * The packet facts packet claims are checked against, read from one tree.
+ *
+ * **Details**
+ *
+ * `status` is the manifest's `initiative.status` and `phaseIds` its phase ids, both present only for
+ * a decoded manifest. A missing or invalid manifest is a goals-doctor finding; the claims beneath it
+ * fail with that finding as their cause.
+ *
+ * **Example** (Describe an active packet)
+ *
+ * ```ts
+ * import { KnowledgePacketFacts } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ * import * as O from "effect/Option"
+ *
+ * const facts = KnowledgePacketFacts.make({
+ *   slug: "goals-doctor",
+ *   manifestPath: "goals/goals-doctor/ops/manifest.json",
+ *   manifest: "decoded",
+ *   status: O.some("active"),
+ *   phaseIds: ["P0", "P1"],
+ * })
+ *
+ * console.log(facts.phaseIds.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KnowledgePacketFacts extends S.Class<KnowledgePacketFacts>($I`KnowledgePacketFacts`)(
+  {
+    slug: S.String,
+    manifestPath: S.String,
+    manifest: KnowledgePacketManifestState,
+    status: S.OptionFromOptionalKey(GoalStatus),
+    phaseIds: S.Array(S.String),
+  },
+  $I.annote("KnowledgePacketFacts", {
+    description: "One goal packet's manifest state, lifecycle status, and phase ids as read from a tree.",
+  })
+) {}
+
+/**
+ * One entry point a workspace manifest exposes: an `exports` key or a `tsconfig.json` path alias.
+ *
+ * **Details**
+ *
+ * `target` is the repository path the key resolves to; it is absent when the map blocks the key
+ * with `null`. A key may carry one `*` wildcard, matched like Node's subpath patterns.
+ *
+ * **Example** (Describe the root export)
+ *
+ * ```ts
+ * import { KnowledgePackageEntrypoint } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ * import * as O from "effect/Option"
+ *
+ * const entry = KnowledgePackageEntrypoint.make({ key: ".", target: O.some("packages/x/src/index.ts") })
+ *
+ * console.log(entry.key) // "."
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KnowledgePackageEntrypoint extends S.Class<KnowledgePackageEntrypoint>($I`KnowledgePackageEntrypoint`)(
+  {
+    key: S.String,
+    target: S.OptionFromOptionalKey(S.String),
+  },
+  $I.annote("KnowledgePackageEntrypoint", {
+    description: "An exports-map key or path alias and the repository path it resolves to, if any.",
+  })
+) {}
+
+/**
+ * One `@beep/*` workspace package as read from a tracked `package.json`.
+ *
+ * **Example** (Describe a package without an exports map)
+ *
+ * ```ts
+ * import { KnowledgeWorkspacePackage } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ *
+ * const pkg = KnowledgeWorkspacePackage.make({
+ *   name: "@beep/demo",
+ *   manifestPath: "apps/demo/package.json",
+ *   root: "apps/demo",
+ *   entrypoints: [],
+ * })
+ *
+ * console.log(pkg.root) // "apps/demo"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KnowledgeWorkspacePackage extends S.Class<KnowledgeWorkspacePackage>($I`KnowledgeWorkspacePackage`)(
+  {
+    name: S.String,
+    manifestPath: S.String,
+    root: S.String,
+    entrypoints: S.Array(KnowledgePackageEntrypoint),
+  },
+  $I.annote("KnowledgeWorkspacePackage", {
+    description: "A workspace package name, manifest path, root, and exports-map entry points.",
+  })
+) {}
+
+/**
+ * The exports one source file declares itself, plus the files it re-exports wholesale.
+ *
+ * **Details**
+ *
+ * `names` come from a declaration scan (`export const|function|class|interface|type|enum|namespace`,
+ * `export { a, b as c }`, `export * as ns from`), never from the compiler. `stars` are the repository
+ * paths of relative `export * from` targets that exist in the tree.
+ *
+ * **Example** (Describe a barrel)
+ *
+ * ```ts
+ * import { KnowledgeFileExports } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ *
+ * const exports = KnowledgeFileExports.make({ file: "src/index.ts", names: [], stars: ["src/a.ts"] })
+ *
+ * console.log(exports.stars) // [ "src/a.ts" ]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KnowledgeFileExports extends S.Class<KnowledgeFileExports>($I`KnowledgeFileExports`)(
+  {
+    file: S.String,
+    names: S.Array(S.String),
+    stars: S.Array(S.String),
+  },
+  $I.annote("KnowledgeFileExports", {
+    description: "Identifiers one source file exports itself and the files it star re-exports.",
+  })
+) {}
+
+/**
+ * One skills-lock entry, normalized across lock versions 1 and 2.
+ *
+ * **Details**
+ *
+ * `revision` is the pinned upstream revision (v2 `upstream.sourceRevision`) or the floating v1
+ * `ref`; `licensed` records whether a `SkillLicense` is on the entry. A local skill needs neither.
+ * `line` is the 1-based line of the entry's key in `skills-lock.json`.
+ *
+ * **Example** (Describe a local skill)
+ *
+ * ```ts
+ * import { KnowledgeSkillLockFacts } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ * import * as O from "effect/Option"
+ *
+ * const facts = KnowledgeSkillLockFacts.make({
+ *   skill: "yeet",
+ *   sourceType: "local",
+ *   source: O.none(),
+ *   revision: O.none(),
+ *   licensed: false,
+ *   installedTargets: [".claude/skills/yeet"],
+ *   line: O.some(3),
+ * })
+ *
+ * console.log(facts.sourceType) // "local"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KnowledgeSkillLockFacts extends S.Class<KnowledgeSkillLockFacts>($I`KnowledgeSkillLockFacts`)(
+  {
+    skill: S.String,
+    sourceType: S.String,
+    source: S.OptionFromOptionalKey(S.String),
+    revision: S.OptionFromOptionalKey(S.String),
+    licensed: S.Boolean,
+    installedTargets: S.Array(S.String),
+    line: S.OptionFromOptionalKey(S.Natural),
+  },
+  $I.annote("KnowledgeSkillLockFacts", {
+    description: "One skills-lock entry's source type, upstream, revision, license presence, and targets.",
+  })
+) {}
+
+/**
+ * The skill facts the hermetic skills evaluator reads from one tree.
+ *
+ * **Details**
+ *
+ * `installed` lists every `.claude/skills/<name>` directory that tracks a `SKILL.md`, the same rule
+ * `skills update` uses; `lockVersion` is absent when the tree has no `skills-lock.json`.
+ *
+ * **Example** (A tree without skills)
+ *
+ * ```ts
+ * import { KnowledgeSkillsFacts } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ * import * as O from "effect/Option"
+ *
+ * const facts = KnowledgeSkillsFacts.make({ lockVersion: O.none(), entries: [], installed: [] })
+ *
+ * console.log(facts.installed.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KnowledgeSkillsFacts extends S.Class<KnowledgeSkillsFacts>($I`KnowledgeSkillsFacts`)(
+  {
+    lockVersion: S.OptionFromOptionalKey(S.Literals([1, 2])),
+    entries: S.Array(KnowledgeSkillLockFacts),
+    installed: S.Array(S.String),
+  },
+  $I.annote("KnowledgeSkillsFacts", {
+    description: "Normalized skills-lock entries plus the installed skill directories of one tree.",
+  })
+) {}
 
 /**
  * One failure an evaluator found in a span, with the identity of its cause.
@@ -746,11 +1109,199 @@ export class KnowledgeSpanCounts extends S.Class<KnowledgeSpanCounts>($I`Knowled
 ) {}
 
 /**
+ * How a path left the tree's history: deleted outright, or renamed away.
+ *
+ * **Example** (Recognize a rename)
+ *
+ * ```ts
+ * import { KnowledgePathChange } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ *
+ * console.log(KnowledgePathChange.is.renamed("renamed")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const KnowledgePathChange = LiteralKit(["deleted", "renamed"]).pipe(
+  $I.annoteSchema("KnowledgePathChange", {
+    description: "Whether a commit deleted a path or renamed it away.",
+  })
+);
+
+/**
+ * How a path left the tree's history.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type KnowledgePathChange = typeof KnowledgePathChange.Type;
+
+/**
+ * One path a commit deleted or renamed away, read from `git log --diff-filter=DR`.
+ *
+ * **Example** (A rename with its new path)
+ *
+ * ```ts
+ * import { KnowledgePathRemoval } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ * import * as O from "effect/Option"
+ *
+ * const removal = KnowledgePathRemoval.make({
+ *   path: "docs/old.md",
+ *   commit: "1111111111111111111111111111111111111111",
+ *   subject: "docs: move the guide",
+ *   change: "renamed",
+ *   renamedTo: O.some("docs/new.md"),
+ * })
+ *
+ * console.log(removal.change) // "renamed"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KnowledgePathRemoval extends S.Class<KnowledgePathRemoval>($I`KnowledgePathRemoval`)(
+  {
+    path: S.String,
+    commit: KnowledgeCommitSha,
+    subject: S.String,
+    change: KnowledgePathChange,
+    renamedTo: S.OptionFromOptionalKey(S.String),
+  },
+  $I.annote("KnowledgePathRemoval", {
+    description: "A path a commit deleted or renamed away, with the commit's subject and any rename target.",
+  })
+) {}
+
+/**
+ * The authoring commit of a cause group's root: the commit that removed the missing target.
+ *
+ * **Details**
+ *
+ * `removedPath` is the path the commit removed, which is the target itself or, for a directory
+ * target, a file under it. `repairTarget` is the rename lineage's proposal for where the target went;
+ * prose is never rewritten from it automatically.
+ *
+ * **Example** (Attribute a deleted file)
+ *
+ * ```ts
+ * import { KnowledgeRootAttribution } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ * import * as O from "effect/Option"
+ *
+ * const attribution = KnowledgeRootAttribution.make({
+ *   commit: "1111111111111111111111111111111111111111",
+ *   subject: "chore: drop the old guide",
+ *   change: "deleted",
+ *   removedPath: "docs/old.md",
+ *   repairTarget: O.none(),
+ * })
+ *
+ * console.log(attribution.change) // "deleted"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KnowledgeRootAttribution extends S.Class<KnowledgeRootAttribution>($I`KnowledgeRootAttribution`)(
+  {
+    commit: KnowledgeCommitSha,
+    subject: S.String,
+    change: KnowledgePathChange,
+    removedPath: S.String,
+    repairTarget: S.OptionFromOptionalKey(S.String),
+  },
+  $I.annote("KnowledgeRootAttribution", {
+    description: "The commit that removed a cause group's missing target, plus any rename repair proposal.",
+  })
+) {}
+
+/**
+ * Findings that share one cause: a missing target, or a delegated domain finding.
+ *
+ * **Details**
+ *
+ * `rootOrigin` is `delegated` when a delegated domain finding carries the group's `causeKey`; `root`
+ * is then that finding's id and `dependents` are the owned findings it explains. Otherwise the cause
+ * is a target the knowledge doctor owns (a path, command node, export, or manifest claim), `root` is
+ * absent, and `dependents` are every finding naming it. Dependents are sorted by id.
+ *
+ * **Example** (One deleted file cited twice)
+ *
+ * ```ts
+ * import { KnowledgeCauseGroup } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ * import * as O from "effect/Option"
+ *
+ * const group = KnowledgeCauseGroup.make({
+ *   causeKey: "path:docs/old.md",
+ *   rootOrigin: "owned",
+ *   root: O.none(),
+ *   dependents: [
+ *     "knowledge-finding/v1:1111111111111111111111111111111111111111111111111111111111111111",
+ *     "knowledge-finding/v1:2222222222222222222222222222222222222222222222222222222222222222",
+ *   ],
+ *   attribution: O.none(),
+ * })
+ *
+ * console.log(group.dependents.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KnowledgeCauseGroup extends S.Class<KnowledgeCauseGroup>($I`KnowledgeCauseGroup`)(
+  {
+    causeKey: S.String,
+    rootOrigin: KnowledgeFindingOrigin,
+    root: S.OptionFromOptionalKey(KnowledgeFindingId),
+    dependents: S.Array(KnowledgeFindingId),
+    attribution: S.OptionFromOptionalKey(KnowledgeRootAttribution),
+  },
+  $I.annote("KnowledgeCauseGroup", {
+    description:
+      "Every finding sharing one cause key, its delegated root when one exists, and the root's authoring commit.",
+  })
+) {}
+
+/**
+ * Whether the scanned tree's Git history was available for root attribution.
+ *
+ * **Details**
+ *
+ * `unavailable` (a shallow clone, or no readable history) leaves every group unattributed; the report
+ * itself never fails on missing history.
+ *
+ * **Example** (Recognize available history)
+ *
+ * ```ts
+ * import { KnowledgeRootHistory } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ *
+ * console.log(KnowledgeRootHistory.is.available("available")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const KnowledgeRootHistory = LiteralKit(["available", "unavailable"]).pipe(
+  $I.annoteSchema("KnowledgeRootHistory", {
+    description: "Whether Git history was available to attribute cause-group roots.",
+  })
+);
+
+/**
+ * Whether the scanned tree's Git history was available for root attribution.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type KnowledgeRootHistory = typeof KnowledgeRootHistory.Type;
+
+/**
  * The read-only `knowledge doctor --report` document.
  *
  * **Details**
  *
- * Findings are sorted by `findingId`, so two runs over one tree encode to identical bytes.
+ * Findings are sorted by `findingId` and cause groups by `causeKey`, so two runs over one tree encode
+ * to identical bytes. `findings` keeps every finding, delegated ones included; `groups` collapses
+ * them into causal roots.
  * `uncheckedOptionCount` totals option tokens on resolved commands whose declared options are not
  * statically derivable; a non-zero count is lost coverage, never a pass.
  *
@@ -770,6 +1321,8 @@ export class KnowledgeSpanCounts extends S.Class<KnowledgeSpanCounts>($I`Knowled
  *     unclassified: 0,
  *   }),
  *   uncheckedOptionCount: 0,
+ *   rootHistory: "available",
+ *   groups: [],
  *   findings: [],
  * })
  *
@@ -787,10 +1340,12 @@ export class KnowledgeDoctorReport extends S.Class<KnowledgeDoctorReport>($I`Kno
     mode: S.Literal("report"),
     spanCounts: KnowledgeSpanCounts,
     uncheckedOptionCount: S.Natural,
+    rootHistory: KnowledgeRootHistory,
+    groups: S.Array(KnowledgeCauseGroup),
     findings: S.Array(KnowledgeDoctorFinding),
   },
   $I.annote("KnowledgeDoctorReport", {
-    description: "Read-only knowledge-doctor report: span-class totals and every classified finding.",
+    description: "Read-only knowledge-doctor report: span-class totals, causal groups, and every classified finding.",
   })
 ) {}
 
@@ -818,6 +1373,8 @@ export class KnowledgeDoctorReport extends S.Class<KnowledgeDoctorReport>($I`Kno
  *     unclassified: 0,
  *   }),
  *   uncheckedOptionCount: 0,
+ *   rootHistory: "available",
+ *   groups: [],
  *   findings: [],
  * })
  *

@@ -1390,7 +1390,7 @@ was attempted under the marker-only amendment.
 - Evidence: installed Effect `4.0.0-rc.113` and `.repos/effect` have neither
   `FastCheck` in `effect/testing` nor `Schema.toArbitrary`; test execution reported an undefined export.
 - Decision: retain generated round-trip coverage using the current
-  `Arbitrary.schema` and `Arbitrary.sampleEffect` from `effect/unstable/arbitrary`.
+  `Arbitrary.schema` and `Arbitrary.sampleEffect` from `effect/Arbitrary`.
   Use `Order.flip`, confirmed in the same reference, for newest-first records.
 - Prevention: pin brief API spellings to the checkout's installed Effect version.
 
@@ -1531,7 +1531,7 @@ was attempted under the marker-only amendment.
 ## 2026-09-16 — B7 arbitrary API drift
 
 - **Doing:** implementing the brief's generated schema round-trips.
-- **Evidence:** neither the designated Effect v4 reference nor installed `effect/Schema` exports `toArbitrary`; the reference exports `Arbitrary.schema` and `Arbitrary.sampleEffect` from `effect/unstable/arbitrary/Arbitrary`.
+- **Evidence:** neither the designated Effect v4 reference nor installed `effect/Schema` exports `toArbitrary`; the reference exports `Arbitrary.schema` and `Arbitrary.sampleEffect` from `effect/Arbitrary`.
 - **Would have prevented it:** specify the current v4 arbitrary API in implementation briefs. Use that API for the same generated round-trip proof.
 
 ## 2026-09-16 — B7 package audit repeats sandbox shim failure
@@ -1750,7 +1750,7 @@ in the law command's flag help to prevent a vacuous success from looking like pr
 ## 2026-09-16 — B7 arbitrary API drift
 
 - **Doing:** implementing the brief's generated schema round-trips.
-- **Evidence:** neither the designated Effect v4 reference nor installed `effect/Schema` exports `toArbitrary`; the reference exports `Arbitrary.schema` and `Arbitrary.sampleEffect` from `effect/unstable/arbitrary/Arbitrary`.
+- **Evidence:** neither the designated Effect v4 reference nor installed `effect/Schema` exports `toArbitrary`; the reference exports `Arbitrary.schema` and `Arbitrary.sampleEffect` from `effect/Arbitrary`.
 - **Would have prevented it:** specify the current v4 arbitrary API in implementation briefs. Use that API for the same generated round-trip proof.
 
 ## 2026-09-16 — B7 package audit repeats sandbox shim failure

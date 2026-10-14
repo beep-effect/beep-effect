@@ -18,7 +18,7 @@ remain as research provenance, not as the current adoption premise.
 ### Effect v4 workflow-module capability inventory
 
 The authoritative vendored surface is
-`.repos/effect-v4/packages/effect/src/unstable/workflow/`:
+`.repos/effect-v4/packages/effect/src/workflow/`:
 
 - `Workflow.ts` defines typed workflows, execution/poll/resume operations,
   deterministic execution ids derived from workflow identity and payload, and
@@ -51,7 +51,7 @@ behavioral compatibility proof.
 
 - `packages/foundation/capability/api-transport/src/Transport.ts` already
   composes authentication, `HttpClient.withRateLimiter`, native
-  `effect/unstable/persistence/RateLimiter`, and
+  `effect/persistence/RateLimiter`, and
   `HttpClient.retryTransient` with a jittered exponential `Schedule`.
 - `packages/foundation/capability/api-transport/README.md` records that this
   transport was incubated in GovInfo and promoted after a congruent eCFR
@@ -73,7 +73,7 @@ schema-helper / generic-selector pre-draft is superseded.
 
 The single most load-bearing external fact: **the repo compiles against `effect@4.0.0-beta.91`**
 (the effect-smol line), not the v3 documented on effect.website. Effect v4 is explicitly beta —
-"breaking changes may occur," and new APIs ship under `effect/unstable/*` to "experiment … without
+"breaking changes may occur," and new APIs ship as `@stability unstable` modules (`effect/ai`, `effect/http`, …) to "experiment … without
 committing to long-term stability too early"
 ([effect.website/blog/effect-v4beta-launch-to-may-recap](https://effect.website/blog/effect-v4beta-launch-to-may-recap/)).
 Several CAPTURE seed snippets are v2/v3-flavored gold-corpus code and **will not typecheck as-written** —
@@ -98,7 +98,7 @@ so several v3→v4 renames below were established by adversarial diff of two pri
 - Raw: [research/schedule-retry-policy-library-design.md](research/schedule-retry-policy-library-design.md).
 
 ### Resilience stack beyond retry (gov-data drivers)
-- **Rate limiting — already shipped.** v4 ships `effect/unstable/persistence/RateLimiter` (`consume({ key, limit, window, algorithm: "fixed-window"|"token-bucket", onExceeded: "delay"|"fail" })` → `ConsumeResult`; `RateLimitExceeded` carries `{ retryAfter, key, limit, remaining }`), with `layerStoreMemory` + `layerStoreRedis` stores, an **adaptive** phase machine, and HTTP wiring `HttpClient.withRateLimiter` (auto-honors `retry-after`, auto-retries 429). This is **structurally identical** to the Juris.AI#5 hand-rolled quota-manager — reuse, do not port. v4 also ships `HttpClient.retryTransient({ retryOn, while, schedule, times })`. (Vendored `.d.ts` primary; acknowledged in the [v4 recap](https://effect.website/blog/effect-v4beta-launch-to-may-recap/).)
+- **Rate limiting — already shipped.** v4 ships `effect/persistence/RateLimiter` (`consume({ key, limit, window, algorithm: "fixed-window"|"token-bucket", onExceeded: "delay"|"fail" })` → `ConsumeResult`; `RateLimitExceeded` carries `{ retryAfter, key, limit, remaining }`), with `layerStoreMemory` + `layerStoreRedis` stores, an **adaptive** phase machine, and HTTP wiring `HttpClient.withRateLimiter` (auto-honors `retry-after`, auto-retries 429). This is **structurally identical** to the Juris.AI#5 hand-rolled quota-manager — reuse, do not port. v4 also ships `HttpClient.retryTransient({ retryOn, while, schedule, times })`. (Vendored `.d.ts` primary; acknowledged in the [v4 recap](https://effect.website/blog/effect-v4beta-launch-to-may-recap/).)
 - **Circuit breaker — genuinely none.** Effect core has **no** circuit breaker in any version; the request is [effect#2843 "Add Circuit Breaker"](https://github.com/Effect-TS/effect/issues/2843), **open since 2024-05-24**, no maintainer decision. References: [Cockatiel v4.0.0](https://github.com/connor4312/cockatiel) (MIT, zero deps, Promise-based) and [opossum v10.0.0](https://github.com/nodeshift/opossum) (Apache-2.0, zero deps, EventEmitter/Promise). Both incur an `Effect.tryPromise`+`AbortSignal` interop tax that erases typed-error/`Cause` fidelity → recommendation is to **clean-room a ~80–150-line state machine (closed → open → half-open) as a `Ref`-held Effect Layer from the documented behavioral spec/tests**, not adopt a dep. LICENSE GUARD: do **not** line-translate Cockatiel/opossum source — a close translation stays a derivative work and would still obligate carrying the upstream MIT/Apache-2.0 notice even with no dependency adopted; implement from behavior, or preserve notices if any source is copied.
 - **Bulkhead pools — primitives exist.** v4 ships `Semaphore` (`withPermitsIfAvailable` for fail-fast) and `PartitionedSemaphore<K>` (per-key permit pool, round-robin release) — reuse primitives, net-new is only a thin pool Layer + typed `BulkheadRejected`.
 - **Served-while-open cache — net-new glue.** v4 `Cache`/`ScopedCache`/`PersistedCache` are memoization/request-coalescing only; none serve last-known-good while a breaker is OPEN. Must be co-designed with the breaker Layer.
@@ -112,7 +112,7 @@ so several v3→v4 renames below were established by adversarial diff of two pri
 beep-effect already owns most of the substrate; net-new is **consolidation + two gaps**, not invention. All paths verified via `rg`/`ls` on 2026-06-29 against the working tree.
 
 **Vendored authority (the contract that matters):**
-- `effect@4.0.0-beta.91` pinned at root `package.json` (`"effect": "4.0.0-beta.91"`; drivers consume via `catalog:`). Vendored source: `.repos/effect-v4/packages/effect/src/{Layer,Schedule,Cause,Result}.ts` (verified present). Type-def surface for `unstable/*`: `node_modules/effect/dist/unstable/persistence/RateLimiter.d.ts`, `node_modules/effect/dist/unstable/http/HttpClient.d.ts`, `node_modules/effect/dist/{Semaphore,PartitionedSemaphore,Cache,Schedule}.d.ts` (all present). `node_modules/effect/dist/RateLimiter.d.ts` **NOT FOUND** (confirms the v3 top-level single-limiter is gone; only the per-key `unstable/persistence` variant ships).
+- `effect@4.0.0-beta.91` pinned at root `package.json` (`"effect": "4.0.0-beta.91"`; drivers consume via `catalog:`). Vendored source: `.repos/effect-v4/packages/effect/src/{Layer,Schedule,Cause,Result}.ts` (verified present). Type-def surface for `unstable/*`: `node_modules/effect/dist/persistence/RateLimiter.d.ts`, `node_modules/effect/dist/http/HttpClient.d.ts`, `node_modules/effect/dist/{Semaphore,PartitionedSemaphore,Cache,Schedule}.d.ts` (all present). `node_modules/effect/dist/RateLimiter.d.ts` **NOT FOUND** (confirms the v3 top-level single-limiter is gone; only the per-key `effect/persistence` variant ships).
 
 **Documented laws (reuse, don't re-document):**
 - `standards/effect-first-development.md:659` — **EF-27** "Parallel fan-out needs explicit concurrency" (verified).
@@ -129,8 +129,8 @@ beep-effect already owns most of the substrate; net-new is **consolidation + two
 - `Layer.unwrapEffect` usages: **0 / NOT FOUND** (confirms the v3 spelling is absent). But `Layer.unwrap` (the v4 name) is in active use across `packages/tooling/test-kit/test-utils/src/SqlTest.ts` (6 call sites incl. the switch-based lazy selector at `:1340`), `packages/drivers/m365/src/M365.service.ts:1176` (`static readonly layer: Layer.Layer<M365, M365Error> = Layer.unwrap(…)` — the **typed-error-at-config-boundary** precedent, verified), `packages/drivers/postgres/test/.../Postgres.pglite.test.ts`, `packages/drivers/drizzle/test/.../Drizzle.pglite.test.ts`, `packages/foundation/capability/observability/src/experimental/server/OtlpPacketLab.ts`. Net-new = a shared provider-agnostic `Context.Service` tag + one selector, mirroring proven shapes.
 
 **Error toolkit (host for generic helpers):**
-- `@beep/schema` (`packages/foundation/modeling/schema/src/index.ts`) — already exports `CauseTaggedError` (:49), `StatusCauseError` (:326), `StatusCauseTaggedErrorClass` (:331), `TaggedErrorClass` (:341) (verified). Depends on `effect` core only (no `effect/unstable/ai`) → correct home for AI-free `decodeOrDie`/`isDefect`/`getErrorMessage`. The `isRetryable`-over-`AiError` predicate belongs with the retry-policy module (LLM scope), to avoid coupling foundation to the AI module.
-- `effect/unstable/ai/AiError` (vendored `.repos/effect-v4/.../AiError.ts:100,388`) already ships `get isRetryable()` + `isAiError(u)` per-reason — the shared LLM predicate is a thin re-export, not a fresh classifier. It **also** ships a typed `get retryAfter(): Duration.Duration | undefined` (`AiError.ts:1486`) that delegates to the reason's `retryAfter` — `RateLimitError.retryAfter: Schema.optional(Schema.Duration)` (`AiError.ts:372`) — so the Retry-After-honoring `Schedule.modifyDelay` extractor can read a parsed `Duration` today (verified, Codex gate-1; resolves the prior "only `isRetryable`?" open item). Only the *raw* provider reset header (vs. the parsed `Duration`) remains provider-specific and still needs inspection. Non-AI driver precedent: `packages/drivers/m365-mcp/src/M365Handlers.ts:35` `isRetryableM365Error = (e) => e.reason === "throttled" || e.reason === "transport"` (verified) — a generic helper should *compose* these, not replace them.
+- `@beep/schema` (`packages/foundation/modeling/schema/src/index.ts`) — already exports `CauseTaggedError` (:49), `StatusCauseError` (:326), `StatusCauseTaggedErrorClass` (:331), `TaggedErrorClass` (:341) (verified). Depends on `effect` core only (no `effect/ai`) → correct home for AI-free `decodeOrDie`/`isDefect`/`getErrorMessage`. The `isRetryable`-over-`AiError` predicate belongs with the retry-policy module (LLM scope), to avoid coupling foundation to the AI module.
+- `effect/ai/AiError` (vendored `.repos/effect-v4/.../AiError.ts:100,388`) already ships `get isRetryable()` + `isAiError(u)` per-reason — the shared LLM predicate is a thin re-export, not a fresh classifier. It **also** ships a typed `get retryAfter(): Duration.Duration | undefined` (`AiError.ts:1486`) that delegates to the reason's `retryAfter` — `RateLimitError.retryAfter: Schema.optional(Schema.Duration)` (`AiError.ts:372`) — so the Retry-After-honoring `Schedule.modifyDelay` extractor can read a parsed `Duration` today (verified, Codex gate-1; resolves the prior "only `isRetryable`?" open item). Only the *raw* provider reset header (vs. the parsed `Duration`) remains provider-specific and still needs inspection. Non-AI driver precedent: `packages/drivers/m365-mcp/src/M365Handlers.ts:35` `isRetryableM365Error = (e) => e.reason === "throttled" || e.reason === "transport"` (verified) — a generic helper should *compose* these, not replace them.
 
 **Decode→die precedents (the genuine surface):**
 - `packages/epistemic/use-cases/src/ClaimProjection/ClaimProjection.ts:60-61` — `S.decodeUnknownSync(ClaimProjectionView)({…})` re-decoding "known-good plain numbers" into branded `NonNegativeInt` (verified); throw=die is correct here. Same shape in `packages/workspace/tables/src/entities/*/.../*.converters.ts` and law-practice use-case decoders.
@@ -158,7 +158,7 @@ beep-effect already owns most of the substrate; net-new is **consolidation + two
 - `Schedule.compose`/`union`/`intersect`/`whileInput`/`whileOutput`/`check`/`recurWhile` → **absent** in beta.91; bound a count with `Schedule.both(Schedule.recurs(n))` (intersection, takes the **max** delay) or `attempts`/`times` on `ExecutionPlan`/`retry`. The seed's `Schedule.exponential(...).pipe(Schedule.compose(Schedule.recurs(2)))` will not compile.
 - `Cause.isDie`/`isDieType` (3.x, whole-`Cause`) → in v4 detection is at `Reason<E>` level (`Cause.isDieReason`); write `isDefect` against beta.91.
 - v3→v4 helper aliases on any lifted seed code: `Effect.zipRight → andThen`, `Effect.zipLeft → tap`.
-- `effect/unstable/RateLimiter` namespace is **explicitly unstable** — API may shift across betas; pin and re-verify on each `effect` bump. v3 top-level `effect/RateLimiter` is gone (single in-memory limiter → per-key store-backed).
+- `effect/persistence/RateLimiter` namespace is **explicitly unstable** — API may shift across betas; pin and re-verify on each `effect` bump. v3 top-level `effect/RateLimiter` is gone (single in-memory limiter → per-key store-backed).
 - `docs.anthropic.com/en/api/rate-limits` now **301-redirects** to `platform.claude.com/docs/en/api/rate-limits` (observed 2026-06-29); `anthropic-fast-*` / `529` behaviors are research-preview and may change.
 - `Idempotency-Key` is an **expired/archived Internet-Draft (-07), never an RFC** (datatracker IESG state "Expired", observed 2026-06-29) — cite as an expired I-D (not an active WG draft), do not assume stable header semantics.
 - Known soundness bug: `retry` `while`-refinement narrowing is **unsound with an attempt cap** ([effect-smol#1982](https://github.com/Effect-TS/effect-smol/issues/1982)) — keep post-plan error types pinned explicitly (the kernel already casts).

@@ -53,11 +53,11 @@
       "sha256": "5e3b27a25a53fa0b799fe2667d39b2f5371a15a8c69d21af58e9823557111e1b"
     },
     {
-      "path": "node_modules/effect/src/unstable/reactivity/AtomRegistry.ts",
+      "path": "node_modules/effect/src/reactivity/AtomRegistry.ts",
       "sha256": "f5f6b89fb37e03522b4a093d8ddb7ad996d50340edca3ec633f2c0ece8fde4ca"
     },
     {
-      "path": "node_modules/effect/src/unstable/reactivity/Atom.ts",
+      "path": "node_modules/effect/src/reactivity/Atom.ts",
       "sha256": "bd9bd5d6a84c30aee6a146f0c0338ed2f73a80ea584001e95060ccbf28f34d71"
     },
     {

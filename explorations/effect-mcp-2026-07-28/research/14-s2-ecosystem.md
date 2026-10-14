@@ -48,23 +48,23 @@ CLI `1.0.34` (`3736acbc8658`).
    ([https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http#backward-compatibility](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http#backward-compatibility))
 5. **Effect `v2026_07_28`-only rejects `initialize`.**
    `selectStatefulProtocol` keeps only `runtime._tag === "Stateful"` adapters
-   (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:182-187`).
+   (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:182-187`).
    With no stateful adapter, `prepareRequest` for `initialize` fails with
    `ProtocolError` code `-32022` and message
    `"initialize is not supported by the configured MCP protocols (requested '<offeredVersion>')"`
    **without** `data.supported`
-   (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:33`,
-   `effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:319-326`).
+   (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:33`,
+   `effect:packages/effect/src/ai/internal/mcpRuntime.ts:319-326`).
    The version-mismatch path on an already-stateless request **does** attach
    `data: { supported, requested }`
-   (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:341-346`).
+   (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:341-346`).
    Stdio uses the same selector
-   (`effect:packages/effect/src/unstable/ai/McpServer.ts:1484-1486`).
+   (`effect:packages/effect/src/ai/McpServer.ts:1484-1486`).
    Mixed lists are an upstream cap of “at most one stateless adapter”
-   (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:193-209`).
+   (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:193-209`).
    A 2026 adapter **does** implement `server/discover`
-   (`effect:packages/effect/src/unstable/ai/internal/mcpProtocol/v2026_07_28.ts:466-477`,
-   `effect:packages/effect/src/unstable/ai/internal/mcpSchema/v2026_07_28.ts:378-382`).
+   (`effect:packages/effect/src/ai/internal/mcpProtocol/v2026_07_28.ts:466-477`,
+   `effect:packages/effect/src/ai/internal/mcpSchema/v2026_07_28.ts:378-382`).
 6. **In-repo first messages (21-r2).** Every repo-owned harness sends
    `initialize` with `protocolVersion: "2025-06-18"`. The only `.mcp.json`
    in-repo server is nlp-mcp stdio (`repo:.mcp.json`). Those facts are 21-r2’s;
@@ -112,7 +112,7 @@ the “Legacy × Modern” failure cell for every default-stdio agent in §1.
 The spec’s dual-era **server** “selects its behavior from how the client
 opens”: modern `_meta` → stateless; `initialize` → legacy session. Effect
 already encodes that as a mixed protocol list with at most one stateless
-adapter (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:193-209`).
+adapter (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:193-209`).
 The official TS server entry `createMcpHandler` / `serveStdio` defaults to
 serving **both** eras (`legacy: 'stateless'`), and `legacy: 'reject'` is the
 G4 analogue
@@ -183,7 +183,7 @@ Effect G4:
 - **stdio `prepareRequest`:** `-32022` and
   `"initialize is not supported by the configured MCP protocols..."`,
   **no** `data.supported`
-  (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:322-326`).
+  (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:322-326`).
 - **HTTP:** an `initialize` JSON-RPC request with an `id` is classified as
   a *stateless* request; missing `MCP-Protocol-Version` then returns
   **HTTP 400** and `-32020` HeaderMismatch (21-r2 /
@@ -191,7 +191,7 @@ Effect G4:
 - The *other* `-32022` path (wrong `_meta` version on a request that
   already has modern metadata) **does** attach
   `data: { supported, requested }`
-  (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:341-346`).
+  (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:341-346`).
 
 **Decision-challenge:** a G4 Effect HTTP server will **fail**
 `sep-2575-http-server-method-not-found-404-initialize` until initialize

@@ -111,7 +111,7 @@ re-verified before code relies on them.
 ### 4. TypeScript toolchain (the "build" path)
 
 - **Recommended: raw HTTP + Schema + types-only.** Call Graph REST `v1.0`
-  directly via `effect/unstable/http` `FetchHttpClient` + `effect/Schema`
+  directly via `effect/http` `FetchHttpClient` + `effect/Schema`
   decoding, pulling request/response **types** (not runtime) from
   `@microsoft/microsoft-graph-types` (v2.43.x, 0 runtime deps). Mirrors the
   existing `@beep/hubspot` driver and keeps one transport for uniform spans/
@@ -152,7 +152,7 @@ re-verified before code relies on them.
 
 Build a thin native `@beep/m365` Effect driver wrapping only the verbs the
 product needs (ingest files, read mail/calendar, write-back), and expose it as
-the repo's **own** MCP server via `effect/unstable/ai/McpServer` + `Tool.make` /
+the repo's **own** MCP server via `effect/ai/McpServer` + `Tool.make` /
 `Toolkit` (the `@beep/nlp-mcp` model). The repo already ships both ingredients
 (`@beep/box` driver pattern + `@beep/nlp-mcp` server pattern), so this is
 incremental, not greenfield. The MCP no-token-passthrough rule and scope
@@ -174,13 +174,13 @@ before composing.
 - **HAVE** — `@beep/box` (`packages/drivers/box`): driver pattern — `S.Class`
   config with `S.Redacted` secrets + `Config.redacted`, `Box.errors.ts`,
   `Context.Service` + Layer factories. Closest structural analogue.
-- **HAVE** — `@beep/hubspot`: canonical raw-HTTP driver — `effect/unstable/http`
+- **HAVE** — `@beep/hubspot`: canonical raw-HTTP driver — `effect/http`
   `FetchHttpClient` + `Schema` decoding + bearer token. The D2 precedent.
 - **HAVE** — `@beep/nlp-mcp` (`packages/drivers/nlp-mcp/src/Server.ts`):
-  Effect-native MCP — `effect/unstable/ai/McpServer`, `Tool.make` / `Toolkit`,
+  Effect-native MCP — `effect/ai/McpServer`, `Tool.make` / `Toolkit`,
   `makeServerLayer` over `McpServer.layerStdio`, `failureMode: "return"` →
   `AiToolError`; spans annotate counts/sizes, never raw content. The D1 precedent.
-- **HAVE** — `effect/unstable/http` (`FetchHttpClient`,
+- **HAVE** — `effect/http` (`FetchHttpClient`,
   `HttpClientRequest.bearerToken`/`setHeader`,
   `HttpClientResponse.filterStatusOk`); `S.Redacted` / `Config.redacted` /
   `Redacted.value` for secrets.

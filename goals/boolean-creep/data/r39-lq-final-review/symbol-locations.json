@@ -7719,7 +7719,7 @@
     "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts",
     "symbol": "ARBITRARY_MODULES",
     "line": 50,
-    "declaration": "const ARBITRARY_MODULES = [\"effect/unstable/arbitrary\", \"effect/unstable/arbitrary/Arbitrary\"];"
+    "declaration": "const ARBITRARY_MODULES = [\"effect/Arbitrary\", \"effect/Arbitrary\"];"
   },
   {
     "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts",

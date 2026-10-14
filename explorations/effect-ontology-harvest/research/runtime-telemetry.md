@@ -18,7 +18,7 @@
 - **Proposed beep home:** design-reference → `apps/*/src/runtime/Layer.ts`; app code may export app-specific live and test Layers, while slice test fixtures remain slice-owned (`standards/architecture/05-layer-composition.md:152-171`).
 - **beep overlap & design delta:** Confirmed present: professional-desktop's `RuntimeTest` swaps the live kernel, stores, usage sink, and document service for fixture/in-memory Layers (`apps/professional-desktop/src/runtime/Layer.ts:189-212`). Effect-ontology's broader config and dependency fixture is useful when an app needs a closed `ManagedRuntime`, but beep's current test graph is smaller and follows the same boundary.
 - **Goal linkage:** `agentic-professional-runtime` — the initiative explicitly starts with a deterministic fixture agent and an app-level contract harness (`goals/agentic-professional-runtime/README.md:84-100`).
-- **v3→v4 notes:** Rewrite the v3 `@effect/ai` response mocks against `effect/unstable/ai`, keep `ManagedRuntime` disposal explicit, and migrate `ConfigProvider.fromMap`/`Layer.setConfigProvider` to the v4 `ConfigProvider.fromUnknown` plus `ConfigProvider.layer` pattern already used by ontology config tests (`packages/@core-v2/src/Runtime/TestRuntime.ts:19-22,49-102,234-246`; `packages/ontology/config/src/layer.ts:22-46`).
+- **v3→v4 notes:** Rewrite the v3 `@effect/ai` response mocks against `effect/ai`, keep `ManagedRuntime` disposal explicit, and migrate `ConfigProvider.fromMap`/`Layer.setConfigProvider` to the v4 `ConfigProvider.fromUnknown` plus `ConfigProvider.layer` pattern already used by ontology config tests (`packages/@core-v2/src/Runtime/TestRuntime.ts:19-22,49-102,234-246`; `packages/ontology/config/src/layer.ts:22-46`).
 - **Effort:** M
 - **Verdict hint:** design-reference
 
@@ -29,7 +29,7 @@
 - **Proposed beep home:** design-reference → `apps/*/src/runtime/Layer.ts`; cluster selection is deployment-specific final wiring, not a reason to create a global runtime package (`standards/architecture/05-layer-composition.md:152-171,185-197`).
 - **beep overlap & design delta:** NOT FOUND after live source/barrel searches for `@effect/cluster`, `SingleRunner`, or a cluster runtime. Beep does have app-specific Live/Test composition (`apps/professional-desktop/src/runtime/Layer.ts:175-212`), so a future cluster variant should extend that ownership ladder rather than introduce a cross-slice God Layer.
 - **Goal linkage:** none
-- **v3→v4 notes:** Move the split `@effect/cluster` imports to the target's `effect/unstable/cluster` surface, retain the external SQL-client requirement, model connection URLs with redacted config, and replace native prefix/conditional dispatch with Effect string and match helpers (`packages/@core-v2/src/Runtime/ClusterRuntime.ts:31-33,80-134`).
+- **v3→v4 notes:** Move the split `@effect/cluster` imports to the target's `effect/cluster` surface, retain the external SQL-client requirement, model connection URLs with redacted config, and replace native prefix/conditional dispatch with Effect string and match helpers (`packages/@core-v2/src/Runtime/ClusterRuntime.ts:31-33,80-134`).
 - **Effort:** M
 - **Verdict hint:** design-reference
 
@@ -40,7 +40,7 @@
 - **Proposed beep home:** `packages/ontology/server`; keep concept/package composition local and publish one slice Layer for the app (`standards/architecture/05-layer-composition.md:30-49,152-171`).
 - **beep overlap & design delta:** Confirmed present: `SessionServerLayer` composes ontology use-cases with Turtle, file-store, reasoner, SPARQL, and validation Layers inside the ontology server package, then exports it as `OntologyServerLive` (`packages/ontology/server/src/aggregates/Session/Session.layer.ts:134-173`; `packages/ontology/server/src/Layer.ts:1-9`). Effect-ontology's construction-order note and open test bundles are worth retaining; its aggregate workflow registry is explicitly contrary to beep's God-Layer rejection (`standards/architecture/05-layer-composition.md:13-49,185-197`).
 - **Goal linkage:** `ontology-agent-surface` — the goal requires thin ontology handlers proven against the real engine stack, which benefits from one published slice-owned server Layer (`goals/ontology-agent-surface/README.md:9-14`).
-- **v3→v4 notes:** Rebuild `.Default`/`Effect.Service` dependencies as explicit `Context.Service` contracts and boundary-owned Layers, migrate split workflow APIs to `effect/unstable/workflow`, and use v4 `ConfigProvider.fromUnknown`/`ConfigProvider.layer` for open test graphs (`standards/architecture/05-layer-composition.md:56-150`; `packages/ontology/config/src/layer.ts:22-46`). Do not reproduce the 589-line composition registry.
+- **v3→v4 notes:** Rebuild `.Default`/`Effect.Service` dependencies as explicit `Context.Service` contracts and boundary-owned Layers, migrate split workflow APIs to `effect/workflow`, and use v4 `ConfigProvider.fromUnknown`/`ConfigProvider.layer` for open test graphs (`standards/architecture/05-layer-composition.md:56-150`; `packages/ontology/config/src/layer.ts:22-46`). Do not reproduce the 589-line composition registry.
 - **Effort:** M
 - **Verdict hint:** design-reference
 
@@ -84,7 +84,7 @@
 - **Proposed beep home:** design-reference → `packages/foundation/capability/observability`, composed from `apps/*/src/runtime/Layer.ts` (`standards/architecture/12-observability.md:230-234`).
 - **beep overlap & design delta:** Confirmed present and stronger: `@beep/observability` merges runtime metrics with effect-native OTLP logs, metrics, traces, resource metadata, export intervals, and shutdown control (`packages/foundation/capability/observability/src/server/Layer.ts:42-80`). Professional-desktop already gates native OTLP from standard environment config and composes it at the app root (`apps/professional-desktop/src/runtime/Observability.ts:27-50,91-104`; `apps/professional-desktop/src/runtime/Layer.ts:175-187`).
 - **Goal linkage:** none
-- **v3→v4 notes:** Do not port v3 `@effect/opentelemetry/OtlpTracer` or `@effect/platform/HttpClient`; reuse beep's v4 `effect/unstable/observability/Otlp` and `effect/unstable/http` wiring, schema-backed config, and `Duration` values (`packages/@core-v2/src/Telemetry/Tracing.ts:11-13,44-62`; `apps/professional-desktop/src/runtime/Observability.ts:21-49`).
+- **v3→v4 notes:** Do not port v3 `@effect/opentelemetry/OtlpTracer` or `@effect/platform/HttpClient`; reuse beep's v4 `effect/observability/Otlp` and `effect/http` wiring, schema-backed config, and `Duration` values (`packages/@core-v2/src/Telemetry/Tracing.ts:11-13,44-62`; `apps/professional-desktop/src/runtime/Observability.ts:21-49`).
 - **Effort:** S
 - **Verdict hint:** skip
 
@@ -95,7 +95,7 @@
 - **Proposed beep home:** design-reference → `packages/foundation/capability/observability`; concrete ontology/LLM/cache metric names stay with their owning slice or adapter under beep's attribute-ownership rules (`standards/architecture/12-observability.md:30-56`).
 - **beep overlap & design delta:** Confirmed present and stronger: beep wraps native Effect metrics for timers, workflow outcomes, and span annotations (`packages/foundation/capability/observability/src/Metric.ts:153-190,200-360`) and exposes native v4 Prometheus formatting through an HTTP Layer (`packages/foundation/capability/observability/src/server/Prometheus.ts:35-69`). Harvest only the bounded metric vocabulary; do not port the Ref store or handwritten exposition.
 - **Goal linkage:** none
-- **v3→v4 notes:** A literal port would require `Effect.Service`→`Context.Service`, but the better v4 adaptation deletes the service in favor of `Metric` instruments and `effect/unstable/observability/PrometheusMetrics`, using `Effect.fn` wrappers where reusable behavior is warranted (`packages/@core-v2/src/Telemetry/Metrics.ts:103-315`; `packages/foundation/capability/observability/src/Metric.ts:1-29,222-293`).
+- **v3→v4 notes:** A literal port would require `Effect.Service`→`Context.Service`, but the better v4 adaptation deletes the service in favor of `Metric` instruments and `effect/observability/PrometheusMetrics`, using `Effect.fn` wrappers where reusable behavior is warranted (`packages/@core-v2/src/Telemetry/Metrics.ts:103-315`; `packages/foundation/capability/observability/src/Metric.ts:1-29,222-293`).
 - **Effort:** S
 - **Verdict hint:** design-reference
 

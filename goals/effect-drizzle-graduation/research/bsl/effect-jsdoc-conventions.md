@@ -86,7 +86,7 @@ rg --glob '*.ts' --glob '*.tsx' \
 The one `Security` section belongs to HTTP response compression and documents a
 BREACH-style information leak. It is a justified domain-risk section, not a
 general fifth slot to add mechanically
-(`.repos/effect/packages/effect/src/unstable/http/HttpMiddleware.ts:410`).
+(`.repos/effect/packages/effect/src/http/HttpMiddleware.ts:410`).
 
 Other bold-leading phrases found by a looser grep are inline callouts such as
 `**Important:**`, `**Warning**`, and `**Note**`; they carry prose on the same line
@@ -355,7 +355,7 @@ There are 3,603 JSDoc import statements. The import forms are:
 - 3,084 value imports like `import { Effect, Schema } from "<legacy-effect-barrel>"`;
 - 104 type-only root imports like `import type { Types } from "<legacy-effect-barrel>"`;
 - 414 imports from public unstable/testing entrypoints such as
-  `effect/unstable/sql` or `effect/testing`;
+  `effect/sql` or `effect/testing`;
 - one namespace import from `fast-check`;
 - zero relative imports;
 - zero `import * as X from "<legacy-effect-barrel>"` examples.

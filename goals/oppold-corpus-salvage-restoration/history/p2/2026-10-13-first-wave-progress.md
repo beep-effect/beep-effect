@@ -316,3 +316,47 @@ above are historical. No wave unit remains active; do not launch ordinal 6
 or retry family 5. P2 stays in-progress. The terminal record is
 history/p2/2026-10-14-first-wave-stop.md, with aggregate diagnosis and retained
 identities. All output, ledgers, claims and immutable manifests remain intact.
+
+
+## Ordinal 9 launched under the standing continuation ruling
+
+Submission 2026-10-14T08:42:20Z; started 08:42:20.121Z, approximately
+121 ms after the recorded whole-second submission time. Exact queue
+latency is not known at millisecond precision. Unit:
+beep-heavy-corpus-restore-p2-2026-10-13-9.service, active/running with
+MemoryMax 34,359,738,368 bytes. Result stamp absent; one private-log line
+at observation. No private log or journal lines read. No other wave unit
+active. Full sixty-second interval completed; capacity before submission
+403,566,137,344 bytes. Execution head:
+91256cfd1bf4fa7c428b9d568f7a5192c210dd9e. Its restoration/libpff source
+matches the committed 06:25Z fallback amendment exactly. No engine,
+launcher, membership, policy or immutable manifest changed. Original
+manifest codeHead and amendment source identity remain distinct.
+
+Ledger relative to corpus home:
+`staging/restoration/runs/t7-salvage-2026-08-10-p2-2026-10-13-wave-09/ledgers/mail/slice.jsonl`.
+Eight of nine sealed: five accepted, three failed. The ninth family is
+running; no acceptance, child reconciliation or runtime-policy match is
+claimed until its ledger is available. The standing one-family-per-run
+ruling supersedes the original wait-until-inactive mechanics: driver waits
+for this exact unit and relaunches this lane; no worker-owned gate started.
+
+Next run: read ordinal 9's result stamp and ledger through aggregate-only
+projections; reconcile identity, policy, seal, child and repair digest pairs,
+ceilings, byte/time amplification and ledger digest. Diagnose any further
+failure before other work; never retry a sealed family. Publish its own
+record PR after integrating main while no family is active; do not re-push
+merged #1696. Then write one bounded recovery amendment for 5/7/8 naming
+the recorded next fallback engine and new freeze records; commit it and
+wait for the orchestrator's approved reply before recovery launch. If an
+occurrence still fails on the input-sensitive PDF second pass, disposition
+unsupported with retained evidence and no third attempt. Eighteen larger
+occurrences and estate/recycle/DOC gates remain open for P3.
+
+No package edited. Package-verify and source hosted-parity lanes not run
+(docs-only). Both admitted smokes and four focused tests passed. Doctor
+has zero blockers and same three unrelated advisories; index, manifest,
+launcher size, reflection-artifacts, whitespace and commit hooks pass.
+Knowledge refs failed with one inherited live gated observation from #1685,
+attributed against integrated main with the cached-ref correction above.
+Graft saved approximately 77,830 tokens across two retrievals.

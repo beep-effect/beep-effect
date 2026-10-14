@@ -1,0 +1,45 @@
+{
+  "title": "Synthetic crate",
+  "model": {
+    "units": "mm",
+    "parts": [
+      {
+        "name": "long-wall",
+        "add": [{ "kind": "box", "min": [-40, -2, 0], "max": [40, 2, 40] }],
+        "subtract": [{ "kind": "box", "min": [-2, -3, 20], "max": [2, 3, 41] }]
+      },
+      {
+        "name": "cross-wall",
+        "add": [{ "kind": "box", "min": [-2, -30, 0], "max": [2, 30, 40] }],
+        "subtract": [{ "kind": "box", "min": [-3, -2, -1], "max": [3, 2, 20] }]
+      },
+      {
+        "name": "lid",
+        "add": [{ "kind": "box", "min": [0, -30, 40], "max": [40, 30, 43] }],
+        "subtract": [{ "kind": "box", "min": [20, -2, 39], "max": [30, 2, 44] }]
+      },
+      {
+        "name": "tab",
+        "add": [{ "kind": "box", "min": [20, -2, 40], "max": [30, 2, 46] }],
+        "lineStyle": "broken"
+      }
+    ]
+  },
+  "figures": [
+    {
+      "view": "top-perspective",
+      "description": "is a top, front and left side perspective view of a crate showing my new design"
+    },
+    {
+      "view": "bottom-perspective",
+      "description": "is a bottom, front and left side perspective view thereof"
+    },
+    { "view": "top-plan", "description": "is a top plan view thereof" },
+    { "view": "bottom-plan", "description": "is a bottom plan view thereof" },
+    { "view": "front", "description": "is a front elevation view thereof" },
+    { "view": "rear", "description": "is a rear elevation view thereof" },
+    { "view": "left", "description": "is a left side elevation view thereof" },
+    { "view": "right", "description": "is a right side elevation view thereof" }
+  ],
+  "omissions": []
+}

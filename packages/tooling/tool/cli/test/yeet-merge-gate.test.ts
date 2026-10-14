@@ -1,5 +1,7 @@
 import {
   decideMergeGate,
+  MERGE_GATE_S11_DEFAULT_ATTRIBUTION,
+  MergeGateCheckAtMerge,
   MergeGateCheckRun,
   MergeGateCommandOptions,
   MergeGateHold,
@@ -20,11 +22,14 @@ import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -38,6 +43,8 @@ import threadsFixture from "./fixtures/yeet-merge-gate/threads.json" with { type
 import openThreadsFixture from "./fixtures/yeet-merge-gate/threads-open.json" with { type: "json" };
 import timelineFixture from "./fixtures/yeet-merge-gate/timeline.json" with { type: "json" };
 import type { MergeGateOptions } from "@beep/repo-cli/test/Yeet";
+
+const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 // Recorded 2026-10-06 from merged PR #1459 (head 212fe39b4f): 16 required
 // contexts on main, all 33 check runs green, one ready_for_review event, the
@@ -87,6 +94,7 @@ const options = (overrides: Partial<MergeGateOptions> = {}): MergeGateOptions =>
   now: windowClosed,
   tolerate: [],
   forceWindow: false,
+  relaxed: false,
   ...overrides,
 });
 
@@ -276,6 +284,117 @@ describe("yeet merge-gate decision", () => {
   });
 });
 
+describe("yeet merge-gate --relaxed decision (S11)", () => {
+  const coverage = "Heavy / Coverage Regression";
+  const relaxed = (overrides: Partial<MergeGateOptions> = {}) => options({ relaxed: true, ...overrides });
+  const atMergeOf = (decision: ReturnType<typeof decideMergeGate>) =>
+    decision._tag === "merge" ? decision.atMerge : [];
+
+  it("merges over a required red and records it with the default attribution", () => {
+    const decision = decideMergeGate({
+      read: read({ checkRuns: withRun("Lint", { conclusion: "failure" }) }),
+      options: relaxed(),
+    });
+    expect(decision._tag).toBe("merge");
+    if (decision._tag === "merge") expect(decision.relaxed).toBe(true);
+    expect(atMergeOf(decision)).toEqual([
+      MergeGateCheckAtMerge.make({
+        check: "Lint",
+        state: "red",
+        required: true,
+        attribution: MERGE_GATE_S11_DEFAULT_ATTRIBUTION,
+      }),
+    ]);
+  });
+
+  it("uses the --tolerate attribution for a required red", () => {
+    const attribution = "inherited: red on main since 2c1cb448ba, fix in #1477";
+    const decision = decideMergeGate({
+      read: read({ checkRuns: withRun("Lint", { conclusion: "failure" }) }),
+      options: relaxed({ tolerate: [MergeGateTolerance.make({ check: "Lint", attribution })] }),
+    });
+    expect(A.map(atMergeOf(decision), (entry) => entry.attribution)).toEqual([attribution]);
+  });
+
+  it("records a pending and an unregistered required context as pending", () => {
+    const runs = A.filter(withRun("Lint", { status: "in_progress", conclusion: null }), (run) => run.name !== "Knip");
+    expect(requiredContexts).toContain("Knip");
+    const decision = decideMergeGate({ read: read({ checkRuns: runs }), options: relaxed() });
+    expect(decision._tag).toBe("merge");
+    expect(A.map(atMergeOf(decision), (entry) => [entry.check, entry.state, entry.required])).toEqual([
+      ["Knip", "pending", true],
+      ["Lint", "pending", true],
+    ]);
+  });
+
+  it("orders required checks first, then by name, and keeps optional ones", () => {
+    const runs = A.map(withRun(coverage, { conclusion: "failure" }), (run) =>
+      run.name === "Lint" ? MergeGateCheckRun.make({ ...run, conclusion: "failure" }) : run
+    );
+    const decision = decideMergeGate({ read: read({ checkRuns: runs }), options: relaxed() });
+    expect(A.map(atMergeOf(decision), (entry) => [entry.check, entry.required])).toEqual([
+      ["Lint", true],
+      [coverage, false],
+    ]);
+  });
+
+  it("still holds when not one required context has run on the head (no CI evidence)", () => {
+    const decision = decideMergeGate({ read: read({ checkRuns: [] }), options: relaxed() });
+    expect(holdReason(decision)).toBe("required-pending");
+    if (decision._tag === "hold") expect(decision.detail).toContain("never without CI evidence");
+  });
+
+  it("records nothing when every check is green, and nothing outside relaxed mode", () => {
+    expect(atMergeOf(decideMergeGate({ read: read(), options: relaxed() }))).toEqual([]);
+    const strict = decideMergeGate({
+      read: read({ checkRuns: withRun(coverage, { conclusion: "failure" }) }),
+      options: options({ tolerate: [MergeGateTolerance.make({ check: coverage, attribution: "inherited" })] }),
+    });
+    expect(strict._tag === "merge" ? [strict.relaxed, strict.atMerge] : []).toEqual([false, []]);
+  });
+
+  it.each([
+    ["a moved head", "head-moved", read(), { wantSha: "0000000000" }],
+    ["a draft", "draft", read({ draft: true }), {}],
+    ["a base conflict", "conflicting", read({ mergeableState: "dirty" }), {}],
+    ["an unreadable ruleset", "required-contexts-unknown", read({ requiredContexts: O.none() }), {}],
+    ["a ruleset with no required checks", "required-contexts-unknown", read({ requiredContexts: O.some([]) }), {}],
+    ["an open review window", "review-window-open", read({ window: openWindow }), {}],
+    [
+      "an unknown review window",
+      "review-window-unknown",
+      read({ window: YeetReviewWindowUnknown.make({ reason: "not read" }) }),
+      {},
+    ],
+    ["an unresolved thread", "threads-unresolved", read({ unresolvedThreads: O.some(1) }), {}],
+    ["an unknown thread count", "threads-unknown", read({ unresolvedThreads: O.none() }), {}],
+  ] as const)("still holds on %s", (_name, reason, gateRead, overrides) => {
+    const redRead = MergeGateRead.make({ ...gateRead, checkRuns: withRun("Lint", { conclusion: "failure" }) });
+    expect(holdReason(decideMergeGate({ read: redRead, options: relaxed(overrides) }))).toBe(reason);
+  });
+
+  it("renders a relaxed merge with its reds and pending checks", () => {
+    const runs = A.filter(
+      A.map(withRun("Lint", { conclusion: "failure" }), (run) =>
+        run.name === coverage ? MergeGateCheckRun.make({ ...run, status: "queued", conclusion: null }) : run
+      ),
+      (run) => run.name !== "Knip"
+    );
+    const line = renderMergeGateDecision(
+      decideMergeGate({
+        read: read({ checkRuns: runs }),
+        options: relaxed({ tolerate: [MergeGateTolerance.make({ check: coverage, attribution: "rate limited" })] }),
+      })
+    );
+    expect(line).toMatch(/^#1459 GATE-MET \(S11\) at 212fe39b4f \(window \d+s\)/u);
+    expect(line).toContain(` reds at merge: Lint [${MERGE_GATE_S11_DEFAULT_ATTRIBUTION}]`);
+    expect(line).toContain(
+      ` pending at merge: Knip [${MERGE_GATE_S11_DEFAULT_ATTRIBUTION}]; ${coverage} [rate limited]`
+    );
+    expect(line).not.toContain("tolerated:");
+  });
+});
+
 // A scripted `gh` whose answers are the recorded fixtures, routed by argv; the
 // merge PUT is captured so the test proves what would have been sent.
 const encoder = new TextEncoder();
@@ -301,8 +420,13 @@ interface ScriptedAnswer {
 }
 
 interface GhScript {
+  readonly additionalActiveRuns?: boolean;
+  readonly cancelFailId?: number;
+  readonly checkRuns?: unknown;
+  readonly commentExit?: number;
   readonly mergeResponse: string;
   readonly pull?: unknown;
+  readonly queuedExit?: number;
   readonly rulesExit: number;
   readonly spawnFails?: boolean;
   readonly threads?: unknown;
@@ -314,7 +438,7 @@ const defaultScript: GhScript = {
   threadsExit: 0,
   windowExit: 0,
   rulesExit: 0,
-  mergeResponse: JSON.stringify({ merged: true, sha: "feedfacefeedfacefeedfacefeedfacefeedface", message: "ok" }),
+  mergeResponse: encodeJson({ merged: true, sha: "feedfacefeedfacefeedfacefeedfacefeedface", message: "ok" }),
 };
 
 const context = RepoRunContext.make({
@@ -328,19 +452,55 @@ const context = RepoRunContext.make({
   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
 });
 
+const workflowRunPages = (additionalActiveRuns: GhScript["additionalActiveRuns"]) => [
+  {
+    workflow_runs: [
+      { id: 11, head_sha: pullFixture.head.sha, status: "queued" },
+      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress" },
+      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress" },
+      { id: 13, head_sha: pullFixture.head.sha, status: "in_progress" },
+      { id: 14, head_sha: "0".repeat(40), status: "waiting" },
+      { id: 19, head_sha: pullFixture.head.sha, status: "completed" },
+    ],
+  },
+  ...(additionalActiveRuns === true
+    ? [
+        {
+          workflow_runs: A.map(["waiting", "requested", "pending", "future_status"], (status, index) => ({
+            id: 15 + index,
+            head_sha: pullFixture.head.sha,
+            status,
+          })),
+        },
+      ]
+    : []),
+];
+
 // The recorded answer for each `gh` call, matched on a fragment of its argv, first match wins.
 const ghAnswers = (script: GhScript): ReadonlyArray<readonly [string, ScriptedAnswer]> => [
   ["/merge", { exitCode: 0, output: script.mergeResponse }],
+  // S11 post-merge steps: the PR comment, the leftover-run listings, and each cancel.
+  [`/issues/${pullFixture.number}/comments`, { exitCode: script.commentExit ?? 0, output: "{}" }],
+  // Run 14 belongs to another head; the server-side filter should not return it, and the gate never cancels it.
+  [
+    "/actions/runs?",
+    {
+      exitCode: script.queuedExit ?? 0,
+      output: encodeJson(workflowRunPages(script.additionalActiveRuns)),
+    },
+  ],
+  [`/runs/${script.cancelFailId ?? -1}/cancel`, { exitCode: 1, output: "cancel refused" }],
+  ["/cancel", { exitCode: 0, output: "" }],
   // The review-window reader asks through --jq: timeline rows as `<event>\t<instant>`, suites as instants.
   [
     "/timeline",
     { exitCode: script.windowExit, output: `${timelineFixture[0]?.event ?? "ready_for_review"}\t${readyAtIso}\n` },
   ],
   ["/check-suites", { exitCode: script.windowExit, output: A.join(suiteInstants, "\n") }],
-  ["graphql", { exitCode: script.threadsExit, output: JSON.stringify(script.threads ?? threadsFixture) }],
-  ["rules/branches/", { exitCode: script.rulesExit, output: JSON.stringify(rulesFixture) }],
-  ["/check-runs", { exitCode: 0, output: JSON.stringify([checkRunsFixture]) }],
-  [`/pulls/${pullFixture.number}`, { exitCode: 0, output: JSON.stringify(script.pull ?? pullFixture) }],
+  ["graphql", { exitCode: script.threadsExit, output: encodeJson(script.threads ?? threadsFixture) }],
+  ["rules/branches/", { exitCode: script.rulesExit, output: encodeJson(rulesFixture) }],
+  ["/check-runs", { exitCode: 0, output: encodeJson([script.checkRuns ?? checkRunsFixture]) }],
+  [`/pulls/${pullFixture.number}`, { exitCode: 0, output: encodeJson(script.pull ?? pullFixture) }],
 ];
 
 const answerFor = (script: GhScript, command: string, line: string): ScriptedAnswer =>
@@ -396,6 +556,7 @@ const commandOptions = (overrides: Partial<ConstructorParameters<typeof MergeGat
     sha: headSha,
     tolerate: [],
     forceWindow: false,
+    relaxed: false,
     dryRun: true,
     ...overrides,
   });
@@ -498,6 +659,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
             wantSha: headSha,
             tolerate: [],
             forceWindow: false,
+            relaxed: false,
             dryRun: false,
           }).pipe(Effect.flip)
         );
@@ -508,6 +670,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
             wantSha: headSha,
             tolerate: [],
             forceWindow: true,
+            relaxed: false,
             dryRun: false,
           })
         );
@@ -556,6 +719,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
             wantSha: headSha.slice(0, 10),
             tolerate: [],
             forceWindow: false,
+            relaxed: false,
             dryRun: true,
           });
           expect(decision._tag).toBe("merge");
@@ -572,6 +736,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
             wantSha: headSha,
             tolerate: [],
             forceWindow: false,
+            relaxed: false,
             dryRun: false,
           });
           const merge = A.findFirst(yield* Ref.get(calls), Str.includes("/merge"));
@@ -588,7 +753,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
 
     it.effect("GitHub declining the merge is a failure, never a silent pass", () =>
       withScriptedGh(
-        { ...defaultScript, mergeResponse: JSON.stringify({ merged: false, message: "Head branch was modified" }) },
+        { ...defaultScript, mergeResponse: encodeJson({ merged: false, message: "Head branch was modified" }) },
         () =>
           Effect.gen(function* () {
             const failure = yield* runMergeGate(context, {
@@ -596,6 +761,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
               wantSha: headSha,
               tolerate: [],
               forceWindow: false,
+              relaxed: false,
               dryRun: false,
             }).pipe(Effect.flip);
             expect(failure.message).toContain("Head branch was modified");
@@ -611,11 +777,160 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
             wantSha: "0000000000",
             tolerate: [],
             forceWindow: false,
+            relaxed: false,
             dryRun: false,
           }).pipe(Effect.flip);
           expect(failure.message).toContain("HOLD head-moved");
           expect(failure.exitCode).toBe(1);
           expect(yield* mergeWasSent(calls)).toBe(false);
+        })
+      )
+    );
+
+    const lintRed = {
+      check_runs: A.map(checkRunsFixture.check_runs, (run) =>
+        run.name === "Lint" ? { ...run, conclusion: "failure" } : run
+      ),
+    };
+    const relaxedRun = (dryRun: boolean, forceWindow = false) =>
+      runMergeGate(context, {
+        prNumber: pullFixture.number,
+        wantSha: headSha,
+        tolerate: [],
+        forceWindow,
+        relaxed: true,
+        dryRun,
+      });
+    const indexOf = (lines: ReadonlyArray<string>, fragment: string) =>
+      O.getOrElse(A.findFirstIndex(lines, Str.includes(fragment)), () => -1);
+
+    it.effect("a relaxed merge comments with the reds and cancels the head's leftover runs after merging", () =>
+      withScriptedGh({ ...defaultScript, checkRuns: lintRed }, (calls) =>
+        Effect.gen(function* () {
+          expect((yield* relaxedRun(false))._tag).toBe("merge");
+          const lines = yield* Ref.get(calls);
+          const mergeAt = indexOf(lines, "/merge");
+          const commentAt = indexOf(lines, `/issues/${pullFixture.number}/comments`);
+          expect(mergeAt).toBeGreaterThanOrEqual(0);
+          expect(commentAt).toBeGreaterThan(mergeAt);
+          const comment = lines[commentAt] ?? "";
+          expect(comment).toContain("-X POST");
+          expect(comment).toContain("yeet merge-gate (S11): merged 212fe39b4f as feedfacefe.");
+          expect(comment).toContain(`reds at merge: Lint [${MERGE_GATE_S11_DEFAULT_ATTRIBUTION}]`);
+          expect(comment).toContain('Merged under operator ruling S11 (AGENTS.md "Mergeable")');
+          expect(indexOf(lines, `head_sha=${headSha}&per_page=100`)).toBeGreaterThan(mergeAt);
+          // A duplicate run in the listing is cancelled once.
+          expect(A.filter(lines, Str.includes("/cancel"))).toEqual(
+            A.map([11, 12, 13], (id) => `gh api -X POST repos/{owner}/{repo}/actions/runs/${id}/cancel`)
+          );
+          expect(comment).toContain("review window elapsed");
+          const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+          expect(printed).toContain("GATE-MET (S11)");
+          expect(printed).toContain("cancelled 3 of 3 active workflow run(s) on 212fe39b4f");
+        })
+      )
+    );
+
+    it.effect("cancels every active status across pages while retaining the head guard", () =>
+      withScriptedGh({ ...defaultScript, additionalActiveRuns: true }, (calls) =>
+        Effect.gen(function* () {
+          expect((yield* relaxedRun(false))._tag).toBe("merge");
+          const lines = yield* Ref.get(calls);
+          const listings = A.filter(lines, Str.includes("/actions/runs?"));
+          expect(listings).toHaveLength(1);
+          expect(listings[0]).toContain("per_page=100");
+          expect(A.every(listings, Str.includes("--paginate --slurp"))).toBe(true);
+          expect(A.filter(lines, Str.includes("/cancel"))).toEqual(
+            A.map([11, 12, 13, 15, 16, 17, 18], (id) => `gh api -X POST repos/{owner}/{repo}/actions/runs/${id}/cancel`)
+          );
+        })
+      )
+    );
+
+    it.effect("a relaxed merge with a forced window says so in the lasting comment", () =>
+      withScriptedGh({ ...defaultScript, checkRuns: lintRed }, (calls) =>
+        Effect.gen(function* () {
+          expect((yield* relaxedRun(false, true))._tag).toBe("merge");
+          const lines = yield* Ref.get(calls);
+          const comment = lines[indexOf(lines, `/issues/${pullFixture.number}/comments`)] ?? "";
+          expect(comment).toContain("review window forced (a fix that unblocks main)");
+          expect(comment).not.toContain("review window elapsed");
+        })
+      )
+    );
+
+    it.effect("a failed paginated run listing only warns after the merge", () =>
+      withScriptedGh({ ...defaultScript, checkRuns: lintRed, queuedExit: 1 }, (calls) =>
+        Effect.gen(function* () {
+          expect((yield* relaxedRun(false))._tag).toBe("merge");
+          const lines = yield* Ref.get(calls);
+          expect(A.filter(lines, Str.includes("/cancel"))).toEqual([]);
+          const warned = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+          expect(warned).toContain("[yeet] warning: listing the merged head's workflow runs failed after the merge");
+          const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+          expect(printed).toContain("cancelled 0 of 0 active workflow run(s)");
+        })
+      )
+    );
+
+    it.effect("one failed cancel only warns; the other runs are still cancelled and the count says so", () =>
+      withScriptedGh({ ...defaultScript, checkRuns: lintRed, cancelFailId: 12 }, (calls) =>
+        Effect.gen(function* () {
+          expect((yield* relaxedRun(false))._tag).toBe("merge");
+          const lines = yield* Ref.get(calls);
+          expect(A.filter(lines, Str.includes("/cancel"))).toHaveLength(3);
+          expect(A.some(lines, Str.includes("/runs/14/cancel"))).toBe(false);
+          const warned = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+          expect(warned).toContain("[yeet] warning: cancelling a leftover workflow run failed after the merge");
+          const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+          expect(printed).toContain("cancelled 2 of 3 active workflow run(s)");
+        })
+      )
+    );
+
+    it.effect("a failed S11 comment only warns: the merge already happened and the runs are still cancelled", () =>
+      withScriptedGh({ ...defaultScript, commentExit: 1 }, (calls) =>
+        Effect.gen(function* () {
+          expect((yield* relaxedRun(false))._tag).toBe("merge");
+          const lines = yield* Ref.get(calls);
+          expect(A.filter(lines, Str.includes("/cancel"))).toHaveLength(3);
+          const warned = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+          expect(warned).toContain("[yeet] warning: the S11 merge comment failed after the merge");
+        })
+      )
+    );
+
+    it.effect("a relaxed dry run, and a strict merge, neither comment nor cancel", () =>
+      Effect.gen(function* () {
+        const postMerge = (lines: ReadonlyArray<string>) =>
+          A.filter(lines, (line) => Str.includes("/comments")(line) || Str.includes("actions/runs")(line));
+        const dryRun = yield* withScriptedGh({ ...defaultScript, checkRuns: lintRed }, (calls) =>
+          relaxedRun(true).pipe(Effect.andThen(Ref.get(calls)))
+        );
+        expect(A.some(dryRun, Str.includes("/merge"))).toBe(false);
+        expect(postMerge(dryRun)).toEqual([]);
+        const strict = yield* withScriptedGh(defaultScript, (calls) =>
+          runMergeGate(context, {
+            prNumber: pullFixture.number,
+            wantSha: headSha,
+            tolerate: [],
+            forceWindow: false,
+            relaxed: false,
+            dryRun: false,
+          }).pipe(Effect.andThen(Ref.get(calls)))
+        );
+        expect(A.some(strict, Str.includes("/merge"))).toBe(true);
+        expect(postMerge(strict)).toEqual([]);
+      })
+    );
+
+    it.effect("the command passes --relaxed through to the gate", () =>
+      withScriptedGh({ ...defaultScript, checkRuns: lintRed }, () =>
+        Effect.gen(function* () {
+          yield* runYeetMergeGate(commandOptions({ relaxed: true, tolerate: ["Lint=inherited: red on main"] }));
+          const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+          expect(printed).toContain("GATE-MET (S11)");
+          expect(printed).toContain("reds at merge: Lint [inherited: red on main]");
         })
       )
     );

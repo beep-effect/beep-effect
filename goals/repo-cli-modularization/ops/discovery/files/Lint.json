@@ -116,7 +116,7 @@
       },
       {
         "name": "Command wiring",
-        "description": "runSchemaFirstLint end-to-end pipeline and the effect/unstable/cli Command definition with the --write flag.",
+        "description": "runSchemaFirstLint end-to-end pipeline and the effect/cli Command definition with the --write flag.",
         "locEstimate": 60,
         "keySymbols": [
           "runSchemaFirstLint",

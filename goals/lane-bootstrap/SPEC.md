@@ -42,7 +42,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] `bun run beep worktree add demo-lane` from any seat creates `<fleet>/lanes/demo-lane`, a registry row with the owning seat, a populated `node_modules` with hardlinked files, and a `.turbo` that resolves to the shared cache dir.
+- [ ] `beep worktree add demo-lane` from any seat creates `<fleet>/lanes/demo-lane`, a registry row with the owning seat, a populated `node_modules` with hardlinked files, and a `.turbo` that resolves to the shared cache dir.
 - [ ] The same command succeeds on a fleet with no `seats/ops`, seeding graft from the owning seat.
 - [ ] A worktree created by the desktop app under `.claude/worktrees` appears in the registry with role `adopted` after one fleet scan.
 - [ ] `bun run beep quality package-verify @beep/repo-cli` passes.

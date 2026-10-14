@@ -7,8 +7,9 @@ PR B-3a from two live runs, `bun run beep skills lock-plan --json` and
 and the installed `.claude/skills` and `.agents/skills` trees. Both runs set
 `GITHUB_TOKEN` from the operator's `gh` login, because the path-history walk spends one
 REST request per examined revision and exceeds the 60-request unauthenticated hourly
-budget. Nothing was written. The `--write --expect` lock flip and the patch series are
-PR B-3b.
+budget. Nothing was written by B-3a. PR B-3b then wrote the lock flip and the patch
+series from this classification; its receipt and the post-write plans are in
+"Write receipt (B-3b)" at the end.
 
 The 2026-10-13 version of this report classified drift against the tracking ref's
 current head. Its verdict (`p1-fp-eyeball-verdicts.md`, "Workstream B lock plan")
@@ -61,3 +62,44 @@ refuses a skill whose license digest moved.
    `temporary-drift` patch series.
 2. The turborepo ruling (keep upstream) and the `adhd` resolution task stand as
    recorded in the 2026-10-14 verdict.
+
+## Write receipt (B-3b)
+
+Run on 2026-10-14 in the B-3b worktree with `GITHUB_TOKEN` from the operator's `gh`
+login. The plan schema is now `skills-lock-migration-plan/v3`: it seals the digest of
+the lock bytes it read and each vendored entry at its proposed pin, and it covers the
+two installed skills the v1 lock never named (`closeout`, `orchestrate`, B15).
+
+1. `bun run beep skills lock-plan --json` over the v1 lock (`lockSha256`
+   `9d798c5ff6b311e716b3eeab94c1d57adb0b4d0ed4aa8b2ed149e5a3d1f2b4ff`): 6 vendored,
+   30 local, 1 unresolved (`adhd`, `no-ratified-seed`, written as `local`), `planDigest`
+   `1185e31402639d881e42577d2f84fea90b9390698a47ad535d821f7426607251`. Every
+   pristine row's license re-verified at its proposed pin.
+2. `bun run beep skills lock-plan --write --expect 1185e314…7251` returned:
+
+   | Field | Value |
+   | --- | --- |
+   | outcome | `written` |
+   | `skills-lock.json` | `version: 2`, SHA-256 `21b48129a203b03b3ebb36fafc5efdf13dd1e011ad78e772399ccd8116f624df` |
+   | entries | 6 vendored, 31 local |
+   | `.agents/skill-patches/oracle/0001-skill-md.patch` | `f372350a05de1ad843d211b5b9e9d6131d6538dd61f821ef2aaa8f85c5d05d81` |
+   | `.agents/skill-patches/oracle/0002-agents-openai-yaml.patch` | `377459f6f5ce60198c70b6398153f1062b08b7c54cf5c6821b345c98e95d6298` |
+
+   Vendored pins: `grill-me` `fcf0071560`, `portless` `c7f38a6f33`, `shadcn`
+   `c257f688cf`, `teach` `321658273c`, `turborepo` `b19f6a59cc` (pristine, no patches),
+   and `oracle` `d6e773a562` with the two-patch series above (`temporary-drift`, owner
+   `@kriegcloud` from the merge-base CODEOWNERS, drop condition "upstream contains an
+   equivalent change"). The series replays: applying both patches with `git apply` to
+   the fetched `skills/oracle` tree at `d6e773a562` yields the installed tree byte for
+   byte. No file under `.claude/skills` or `.agents/skills` changed.
+3. Idempotency (B14). The next plan over the v2 lock has `planDigest`
+   `ce5af08296283cf8a7adb2e0fd491872e065af11188b3ac37b2a0ff200c78d23` (6 vendored,
+   31 local, 0 unresolved). Its rows differ from step 1 only where the baseline moved to
+   the lock's pin: the five pristine skills now show no drift, and `adhd` is a plain
+   `local` row. Its entries equal the written lock. `--write --expect ce5af082…8d23`
+   reported `already-applied` and wrote nothing; `--write --expect 1185e314…7251`
+   refused with `digest-mismatch`; a third plan repeated `ce5af082…8d23`.
+4. `bun run beep skills update --check` over the v2 lock skips the six vendored skills,
+   reports no lock drift, and reports one inherited drift: `.codex/config.toml` does not
+   list `closeout` and `orchestrate` (unchanged on `main`). `--skill shadcn` refuses with
+   the pinned-bump route.

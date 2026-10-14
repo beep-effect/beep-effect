@@ -11,6 +11,18 @@ If a question can be answered by exploring the codebase or architecture docs, ex
 
 Treat this repo's architecture docs as target doctrine. If current code disagrees with the docs, surface the disagreement as possible drift unless the docs explicitly mark the rule as transitional compatibility or cleanup-on-touch.
 
+## Escalation path from `/explore`
+
+This skill is where an `/explore` session goes when an exploration packet
+needs the operator (align questions, direction calls, shape reviews,
+definition-of-ready gaps); the explore session never stops there (ruling
+2026-10-14). In that mode the packet's own `DECISIONS.md` is the decision
+surface: log each settled round there (Question / Answer / Rationale) and sync
+manifest `openQuestions`. Touch the architecture docs below only when a round
+changes architecture-wide doctrine. Keep running rounds and advancing the
+packet stages until it is graduated, parked, or killed; the guided closeout
+prompt comes after that.
+
 </what-to-do>
 
 <supporting-info>

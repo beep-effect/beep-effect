@@ -90,7 +90,7 @@ verdict tables:
   `@beep/provenance` verified anchors, `@beep/epistemic-*` claim gate, `@beep/exiftool` XMP
   stamping.
 - [`inventory/protocol-query-memory.md`](./inventory/protocol-query-memory.md) — ports
-  3/5/6/7/8/10: `effect/unstable/http(api)` clients/servers, `@beep/api-transport`,
+  3/5/6/7/8/10: `effect/http(api)` clients/servers, `@beep/api-transport`,
   `@beep/m365` OAuth/PKCE, MCP/`@beep/mcp-kit`/`@beep/acp`, `@beep/semantic-web` + ontology
   SPARQL path, `beep qa` pipeline, `@beep/ai-sync` skill/config schemas, memory wiring.
 

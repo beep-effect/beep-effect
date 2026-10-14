@@ -18,6 +18,9 @@ what comes next, and the merge gate is a CLI command rather than a scratchpad sc
 - `packages/tooling/tool/cli/src/commands/Session/` (role, register schemas and service, commands).
 - `packages/tooling/tool/cli/src/commands/Yeet/internal/MergeGate.ts` and the `merge-gate`
   subcommand.
+- `packages/tooling/tool/cli/src/commands/Yeet/internal/ReadyGate.ts` and `GhOps.ts`
+  (`recordInheritedRedsInPullRequestBody`, `spliceYeetInheritedRedsSection`) for the S11
+  `yeet ready --inherited` flip.
 - `.claude/skills/orchestrate/` (SKILL.md, HANDOFF.template.md, gate.sh).
 - `AGENTS.md` Autonomy (one pointer line).
 
@@ -59,3 +62,29 @@ what comes next, and the merge gate is a CLI command rather than a scratchpad sc
 | Register row shape | `owns` is a list of strings and `state` a four-value domain (`active`, `blocked`, `unreachable`, `retired`); free text goes in `note`, the human label in `name`. | The first hand-written `REGISTER.jsonl` (2026-10-06) used an object for `owns` and prose for `state`; a successor cannot filter prose, and "retired" must be machine-readable for rows to drop out. | Widen `state` or add fields under a new `schemaVersion`. |
 | Gate decision shape | `decideMergeGate` folds four checks (structural, checks, window, threads) with `O.firstSomeOf`; first hold wins. | Keeps each criterion readable on its own and under the repo's cognitive ceiling; the order is the hand-run gate's. | Reorder the list. |
 | Relayed rulings | The orchestrate skill quotes two operator rulings of 2026-10-06 verbatim: Codex delegation ("delegate work to codex using GPT 6 Sol", recorded as `gpt-6.1-sol` medium with "Codex edits, owner commits") and REST first ("Use rest api & gh secret." / "in op."), with GraphQL behind a budget guard and `beep yeet gh` on `@effected/github` as the planned home. | Quoting avoids paraphrase drift; the model id and the commit rule are the skill's gloss, marked as such. | Edit the quotes if the operator restates them. |
+| S11 relaxed gate | `yeet merge-gate <pr> <sha> --relaxed` replaces `merge-gate-relaxed4.sh` in the CLI: the head, draft and conflict holds, the ruleset failing closed, the review window and the thread re-read all stay, and a head on which not one required context has run still holds (no CI evidence, the #1502 mode); otherwise red and pending checks, required ones included, never hold and are recorded with their attribution (the `--tolerate` text, else the S11 default) in the merge line and one PR comment; after the merge the head's active workflow runs are cancelled across all pages. The comment and the cancels are best effort and only warn; only runs whose `head_sha` is the merged head are cancelled. Deliberate differences from the script: GitHub's PUT decides an unknown mergeability (the script waited for it), the squash commit message is not set from the PR body, and outstanding threads use the stricter AGENTS.md count. | Operator ruling S11 (2026-10-09), standing repo-wide since 2026-10-13 (AGENTS.md "Mergeable"); S11 merges ran through an out-of-repo script the successor could not see or test. | Drop the flag; the strict gate is unchanged. |
+| S11 ready flip | `yeet ready --inherited "<check>=<attribution>"` (repeatable): a failing required check that is attributed this way does not hold the flip; the applied attributions are written to a marked "Inherited reds (S11)" section of the PR body before the flip, a failed write refuses the flip, and a census that counts more failing required checks than it names still refuses. Round-one body-race repair uses the approved bounded REST fallback (three fresh-read/re-splice rounds, then refusal) rather than generalizing the subprocess-based provenance writer; readback and a post-record ready confirmation fail closed. Every flip reconciles the section, pinning the heading to the head and rewriting an older record to explicit "None: no required check is red on this head." when no inherited reds apply; an empty set without an existing section adds nothing. Empty-set cleanup is best effort: body read/write failures warn and the flip proceeds after gate confirmation; non-empty applied attributions remain fail-closed. | S11 requires each inherited red to be recorded; PRs were leaving draft through a bare `gh pr ready` with the record written by hand. | Revert the inherited-red flag and marked-section recorder together; the default flip currently attempts best-effort stale-section cleanup, so dropping only the flag does not remove that body reconciliation. |
+| Ownership (2026-10-14) | The two S11 flags were built by the stacked-pr-adoption follow-up session under operator ruling S23 ("I want things done"), routed by the orchestrator while this packet's owner was not live. They stay in this packet's surface: `MergeGate.ts` is a Target Surface. | Keeps the merge gate's contract in one packet. | Move the rows to the packet that takes the gate over. |
+| Private CLI release notes (2026-10-14) | Keep the S11 change in this packet without a Changesets release note while `@beep/repo-cli` is private. | The worker brief requested a patch note, but hosted Repo Sanity on #1678 rejected it: private workspaces must not accumulate release notes. The package's release policy governs the ceremony; all seven locked design decisions remain intact. | Add the patch note when a separate publication-activation change makes the workspace publish-enabled. |
+
+### S11 round-one review guards (2026-10-14)
+
+The merged head cancellation census uses one paginated REST listing with
+`head_sha` and `per_page=100`. Only decoded runs on the merged head whose status
+is not `completed` are cancelled, including future non-terminal statuses.
+Listing and each cancellation remain independently best effort.
+
+The inherited-red record uses the amendment's bounded REST fallback: re-read
+immediately before writing, re-splice changed text for up to three rounds, then
+refuse without writing if it never stabilizes. A matching REST readback is
+required after the write. Generalizing the provenance protocol would also
+change its subprocess capture, artifact files and GraphQL history transport
+into the selected `GithubRest` service, broadening this review wave beyond its
+body update. Leave that extraction to a separate transport change.
+
+After recording, a full ready-gate confirmation requires an unchanged head and
+unchanged applied attributions. The remaining interval between the last body
+read and PATCH is not atomic: an overtaken concurrent edit cannot be recovered
+by readback alone. This limitation is documented on both recording exports.
+Reversal: restore the previous cancellation listing and remove the bounded body
+reconciliation, readback and post-record ready confirmation.

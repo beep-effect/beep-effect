@@ -65,13 +65,13 @@
     "line": 302,
     "symbol": "isDestructive",
     "smell": "`Context.getOrElse(tool.annotations, AiTool.Destructive, () => true)` — a getOrElse-as-default tell, audited as a defaults candidate.",
-    "proposedTarget": "None: keep as-is. `Tool.Destructive` is a Context.Reference whose own defaultValue is constTrue (verified .repos/effect-v4/packages/effect/src/unstable/ai/Tool.ts:1764-1766), so `Context.get` would already resolve it; the explicit `() => true` deliberately restates the fail-closed security default in this module's source (comment lines 295-300) instead of inheriting it silently from a 3rd-party definition. Removing it weakens the visible trust boundary for zero behavior change.",
+    "proposedTarget": "None: keep as-is. `Tool.Destructive` is a Context.Reference whose own defaultValue is constTrue (verified .repos/effect-v4/packages/effect/src/ai/Tool.ts:1764-1766), so `Context.get` would already resolve it; the explicit `() => true` deliberately restates the fail-closed security default in this module's source (comment lines 295-300) instead of inheriting it silently from a 3rd-party definition. Removing it weakens the visible trust boundary for zero behavior change.",
     "confidence": 0.9,
     "mechanization": "judgment",
     "roiRank": 0,
     "exception": {
       "reason": "The default duplicates the 3rd-party Context.Reference's own defaultValue purely to keep the fail-closed gate default explicit and reviewable at the enforcement point — a fence-4-style trust-boundary guard, not a schema-modelable data default.",
-      "boundary": "3rd-party effect/unstable/ai Tool annotation Context + fail-closed security-gate default (fence 4: no trust-boundary weakening)"
+      "boundary": "3rd-party effect/ai Tool annotation Context + fail-closed security-gate default (fence 4: no trust-boundary weakening)"
     }
   },
   {
@@ -80,13 +80,13 @@
     "line": 218,
     "symbol": "registerSanitizedToolkit",
     "smell": "`structuredContent: P.isObject(result.encodedResult) ? result.encodedResult : undefined` — the `v ? v : undefined` tell, audited; nearby lines 182-191 (`Context.getOrUndefined` for `_meta`, `O.getOrUndefined` for the optional title spread) are the same family.",
-    "proposedTarget": "None: keep as-is. `CallToolResult.structuredContent` is upstream's `optional(Schema.Any)` field (verified .repos/effect-v4/packages/effect/src/unstable/ai/McpSchema.ts:1526-1529) where undefined means omit-on-wire, and the whole registration loop deliberately mirrors upstream `McpServer.registerToolkit` because upstream offers no dispatch-wrapping seam (module JSDoc lines 233-248). Diverging from the mirrored upstream shape here adds drift risk for zero invariant gain.",
+    "proposedTarget": "None: keep as-is. `CallToolResult.structuredContent` is upstream's `optional(Schema.Any)` field (verified .repos/effect-v4/packages/effect/src/ai/McpSchema.ts:1526-1529) where undefined means omit-on-wire, and the whole registration loop deliberately mirrors upstream `McpServer.registerToolkit` because upstream offers no dispatch-wrapping seam (module JSDoc lines 233-248). Diverging from the mirrored upstream shape here adds drift risk for zero invariant gain.",
     "confidence": 0.85,
     "mechanization": "judgment",
     "roiRank": 0,
     "exception": {
       "reason": "`undefined` feeds a 3rd-party optional wire-schema field whose contract is undefined-means-omit, inside a block that intentionally mirrors upstream registerToolkit line-for-line; not a domain helper returning nullish.",
-      "boundary": "3rd-party effect/unstable/ai McpSchema.CallToolResult wire contract + upstream McpServer.registerToolkit mirror"
+      "boundary": "3rd-party effect/ai McpSchema.CallToolResult wire contract + upstream McpServer.registerToolkit mirror"
     }
   }
 ]

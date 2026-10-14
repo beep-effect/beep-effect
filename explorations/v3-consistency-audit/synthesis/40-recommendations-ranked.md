@@ -217,7 +217,7 @@
 - **Sketch:** effect v4 already carries the primitive —
   `Rpc.make(tag, { payload, success, error })`, `RpcGroup.make(...)`,
   `group.toLayer(...)`, `RpcClient.make(group)`
-  (`.repos/effect/packages/effect/src/unstable/rpc/`); a thin `Contract`
+  (`.repos/effect/packages/effect/src/rpc/`); a thin `Contract`
   concept module in `@beep/schema` (`Contract.make({ Payload, Success,
   Failure })` → the `Rpc` with the three schemas as statics, `implement` as a
   typed identity helper) replaces v3's `W.Wrapper`. It is a sibling of

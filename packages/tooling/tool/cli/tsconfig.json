@@ -90,6 +90,9 @@
       "path": "../../library/ai-metrics/tsconfig.json"
     },
     {
+      "path": "../../library/ai-sync/tsconfig.json"
+    },
+    {
       "path": "../../library/qa-capture/tsconfig.json"
     },
     {

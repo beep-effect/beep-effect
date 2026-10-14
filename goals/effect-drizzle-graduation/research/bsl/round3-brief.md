@@ -29,10 +29,10 @@ and the source before writing anything. All prior conventions stand:
 
 ## Verified source facts (do NOT re-derive; cite paths if you need more)
 
-- `effect/unstable/schema/VariantSchema.Field` extends `Pipeable`
-  (`node_modules/effect/src/unstable/schema/VariantSchema.ts:105`), so
+- `effect/schema/VariantSchema.Field` extends `Pipeable`
+  (`node_modules/effect/src/schema/VariantSchema.ts:105`), so
   `Model.DateTimeUpdate.pipe(pg.timestamp())` is legal input to BSL combinators.
-- `effect/unstable/schema/Model.ts`:
+- `effect/schema/Model.ts`:
   - `DateTimeInsert` = `Field({ select: DateTimeUtcFromString, insert: DateTimeWithNow,
     json })` — **no update member**: createdAt is un-updatable by construction.
   - `DateTimeUpdate` = `Field({ select, insert: WithNow, update: WithNow, json })` —
@@ -41,7 +41,7 @@ and the source before writing anything. All prior conventions stand:
   - `GeneratedByDb` exists in installed beta.104 (`Model.ts:204/226`) — check its
     exact variant membership and align (expected: absent from insert, present in
     update as row locator, present in select/json).
-- `effect/unstable/sql/SqlModel.makeRepository(Model, { tableName, spanPrefix,
+- `effect/sql/SqlModel.makeRepository(Model, { tableName, spanPrefix,
   idColumn, softDeleteColumn? })` (`SqlModel.ts:33`): requires
   `Id extends keyof S["Type"] & keyof S["update"]["Type"] & keyof S["fields"]`, and
   its update statement is `sql.update(request, [idColumn])` — **idColumn is excluded

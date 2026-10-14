@@ -19,13 +19,6 @@ type Binary<B, R> = {
 };
 
 /**
- * Dot product.
- *
- * @internal
- */
-export const dot: Binary<V3, number> = dual(2, (a: V3, b: V3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
-
-/**
  * Cross product.
  *
  * @internal
@@ -49,10 +42,3 @@ export const add: Binary<V3, V3> = dual(2, (a: V3, b: V3): V3 => [a[0] + b[0], a
  * @internal
  */
 export const scale: Binary<number, V3> = dual(2, (a: V3, k: number): V3 => [a[0] * k, a[1] * k, a[2] * k]);
-
-/**
- * Unit vector, or the input unchanged when its length is zero.
- *
- * @internal
- */
-export const unit = (a: V3): V3 => scale(a, 1 / (Math.hypot(a[0], a[1], a[2]) || 1));

@@ -23,7 +23,7 @@ durable projector work; and a scoped queue/stream carries only a best-effort
 ### Effect v4 `DurableQueue` accounting
 
 The pinned live source is
-`node_modules/effect/src/unstable/workflow/DurableQueue.ts`. `make` defines a
+`node_modules/effect/src/workflow/DurableQueue.ts`. `make` defines a
 schema-backed payload and caller-supplied deterministic `idempotencyKey`;
 `process` offers encoded work through `PersistedQueue`; and `worker` runs a
 bounded-concurrency handler. The worker layer requires both `WorkflowEngine`
@@ -199,18 +199,18 @@ is genuinely net-new; its primitives, transport, and authority boundary are not.
 **Streaming server-push transport — ALREADY EXISTS, proven.**
 - `@beep/agents-use-cases` — `packages/agents/use-cases/src/processes/Chat/Chat.rpc.ts`:
   `SendMessageRpc`/`EditMessageRpc` declared `stream: true` (lines 93–122) in the
-  `ChatRpcs` `RpcGroup` (line 140), imported from `effect/unstable/rpc/Rpc` +
+  `ChatRpcs` `RpcGroup` (line 140), imported from `effect/rpc/Rpc` +
   `RpcGroup`. A proven server→client streaming RPC surface; a
   `SubscribeProjectionEvents` RPC lands as a sibling.
 - `@beep/professional-desktop` — `apps/professional-desktop/src/transport/IpcChatClient.ts`:
   client transport is `RpcClient.layerProtocolSocket()` over ndjson framing on a
-  Tauri IPC socket (`effect/unstable/rpc`, lines 15/31). No new client transport
+  Tauri IPC socket (`effect/rpc`, lines 15/31). No new client transport
   needed.
 - WebSocket fan-out substrate (if a real WS is ever needed instead of Tauri IPC):
   `@beep/observability` — `packages/foundation/capability/observability/src/server/DevTools.ts`
-  uses `effect/unstable/socket/Socket` `layerWebSocket` (lines 10, 95–96).
+  uses `effect/socket/Socket` `layerWebSocket` (lines 10, 95–96).
 - Effect-beta RPC **server** transports are present in this repo's Effect
-  (`node_modules/effect/dist/unstable/rpc/RpcServer.d.ts`): `layerProtocolSocketServer`,
+  (`node_modules/effect/dist/rpc/RpcServer.d.ts`): `layerProtocolSocketServer`,
   `layerProtocolWebsocket`, `layerProtocolHttp`, `layerProtocolStdio` — resolves
   the raw research's UNVERIFIED item on server export names.
 
@@ -238,7 +238,7 @@ is genuinely net-new; its primitives, transport, and authority boundary are not.
   2026-06-29). Available primitive, pattern not yet exercised here — first user.
 
 **Client projection-refresh substrate — ALREADY EXISTS.**
-- `@effect/atom-react` (v4.0.0-beta.91) + `effect/unstable/reactivity` `Atom` are
+- `@effect/atom-react` (v4.0.0-beta.91) + `effect/reactivity` `Atom` are
   wired in `apps/professional-desktop/src/runtime/ProfessionalAtomRuntime.ts`
   (and the chat UI under `apps/professional-desktop/src/chat/ui/*`). The client
   side that consumes the subscription stream and invalidates UI projections is
@@ -258,7 +258,7 @@ connection.
 | Path | Event sources it covers | Cross-window / server-originated? | Why insufficient alone |
 | --- | --- | --- | --- |
 | Atom RPC `reactivityKeys` / `Reactivity.mutation` / `invalidateUnsafe` (`packages/agents/client/src/Chat.atoms.ts:144,181,200,494,529`) | Client-local: invalidates UI projections after a mutation the *same window* issued | No — same process, same window | Cannot deliver an invalidation that originated on the server post-commit or in another window |
-| `SqlClient.reactive` / `reactiveMailbox` (`node_modules/effect/dist/unstable/sql/SqlClient.d.ts:43,48`) | Re-runs a query as a `Stream`/`Queue` when its declared keys are invalidated | No — keyed off in-process Reactivity | A reactive *re-query* primitive; still needs something to push the invalidation across connections |
+| `SqlClient.reactive` / `reactiveMailbox` (`node_modules/effect/dist/sql/SqlClient.d.ts:43,48`) | Re-runs a query as a `Stream`/`Queue` when its declared keys are invalidated | No — keyed off in-process Reactivity | A reactive *re-query* primitive; still needs something to push the invalidation across connections |
 | `PgliteClient.listen` / `notify` (`packages/drivers/pglite/src/PgliteClient.service.ts`; `@effect/sql-pglite` `listen`/`notify`, SqlError-typed Stream) | Postgres-channel pub/sub within one PGlite instance | Only within that single PGlite sidecar process | Terminates inside the DB process; does not reach a separate desktop renderer connection, and PGlite is single-writer |
 | Custom `EventStreamHub` (NET-NEW) | Server-originated, post-commit, fanned to every live desktop connection of a user | Yes — explicit per-`UserId` targeted fan-out across N windows/connections | (This is the unique remit the three above leave uncovered) |
 
@@ -317,9 +317,9 @@ but the concrete code must be `Queue` + `Stream.fromQueue`. `PubSub` (module
 `effect/PubSub`) is the stable broadcast fallback if Queue semantics churn.
 
 **Import convention (Effect v4, LOCKED by repo law).** Imports are
-`effect/unstable/…` for rpc (`effect/unstable/rpc/{Rpc,RpcGroup}`, `RpcClient`,
-`RpcServer`), sockets (`effect/unstable/socket/Socket`), and reactivity
-(`effect/unstable/reactivity`); root `effect` for core combinators
+top-level module paths for rpc (`effect/rpc/{Rpc,RpcGroup}`, `RpcClient`,
+`RpcServer`), sockets (`effect/socket/Socket`), and reactivity
+(`effect/reactivity`); root `effect` for core combinators
 (`MutableHashMap`, `SynchronizedRef`, `Queue`, `PubSub`). Matches the existing
 `Chat.rpc.ts` / `IpcChatClient.ts` / `ProfessionalAtomRuntime.ts` imports and the
 `effect-v4-imports` skill.

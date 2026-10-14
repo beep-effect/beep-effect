@@ -1,0 +1,59 @@
+$ tstyche --config tstyche.config.json --root .
+···· TSTyche 8.0.0-beta.0 at ~/YeeBois/projects/beep-effect3-worktrees/ts7-tstyche8/packages/ecosystem/effect-drizzle
+
+adds TypeScript 5.9.3 to ~/YeeBois/projects/beep-effect3-worktrees/ts7-tstyche8/tmp/ts7-tstyche8/store/typescript@5.9.3
+uses TypeScript 5.9.3 with baseline TSConfig
+
+pass ./typetests/contracts.tst.ts
+  + derives Drizzle select and insert contracts
+  + keeps generated and defaulted fields in the intended model variants
+  + preserves resolved metadata algebra
+  + exports declaration-portable metadata and PostgreSQL column carriers
+  + infers dialect kits and their invariant fields
+  + preserves migrated PostgreSQL fixture compile contracts
+  + preserves migrated SQLite fixture compile contracts
+  + pins public PostgreSQL diagnostic literals
+  + pins public SQLite diagnostic literals
+  + pins PostgreSQL carrier and modifier diagnostics
+  + pins public SQL-name and table-extra diagnostics
+  + pins the intentionally absent SQLite array surface
+
+adds TypeScript 6.0.3 to ~/YeeBois/projects/beep-effect3-worktrees/ts7-tstyche8/tmp/ts7-tstyche8/store/typescript@6.0.3
+uses TypeScript 6.0.3 with baseline TSConfig
+
+pass ./typetests/contracts.tst.ts
+  + derives Drizzle select and insert contracts
+  + keeps generated and defaulted fields in the intended model variants
+  + preserves resolved metadata algebra
+  + exports declaration-portable metadata and PostgreSQL column carriers
+  + infers dialect kits and their invariant fields
+  + preserves migrated PostgreSQL fixture compile contracts
+  + preserves migrated SQLite fixture compile contracts
+  + pins public PostgreSQL diagnostic literals
+  + pins public SQLite diagnostic literals
+  + pins PostgreSQL carrier and modifier diagnostics
+  + pins public SQL-name and table-extra diagnostics
+  + pins the intentionally absent SQLite array surface
+
+adds TypeScript 7.1.0-dev.20261014.1 to ~/YeeBois/projects/beep-effect3-worktrees/ts7-tstyche8/tmp/ts7-tstyche8/store/typescript@7.1.0-dev.20261014.1
+uses TypeScript 7.1.0-dev.20261014.1 with baseline TSConfig
+
+pass ./typetests/contracts.tst.ts
+  + derives Drizzle select and insert contracts
+  + keeps generated and defaulted fields in the intended model variants
+  + preserves resolved metadata algebra
+  + exports declaration-portable metadata and PostgreSQL column carriers
+  + infers dialect kits and their invariant fields
+  + preserves migrated PostgreSQL fixture compile contracts
+  + preserves migrated SQLite fixture compile contracts
+  + pins public PostgreSQL diagnostic literals
+  + pins public SQLite diagnostic literals
+  + pins PostgreSQL carrier and modifier diagnostics
+  + pins public SQL-name and table-extra diagnostics
+  + pins the intentionally absent SQLite array surface
+
+Targets:    3 passed, 3 total
+Test files: 3 passed, 3 total
+Tests:      36 passed, 36 total
+Assertions: 234 passed, 234 total
+Duration:   7.6s

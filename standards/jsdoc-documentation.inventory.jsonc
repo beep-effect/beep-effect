@@ -188555,9 +188555,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 12,
-        "publicModuleCount": 12,
-        "publicExportCount": 88
+        "sourceFileCount": 15,
+        "publicModuleCount": 15,
+        "publicExportCount": 115
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -188567,14 +188567,14 @@
       },
       "counts": {
         "openModules": 0,
-        "openExports": 77,
-        "missingExportExamples": 4,
+        "openExports": 100,
+        "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 77,
+        "exampleImportFindings": 104,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
@@ -188592,10 +188592,76 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 77
+          "no-root-package-import": 104
         }
       },
       "modules": [
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Approval.rules.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.rules.ts",
+          "line": 1,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-rules-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Approval.schemas.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.schemas.ts",
+          "line": 1,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-schemas-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 10,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Approval.service.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.service.ts",
+          "line": 1,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-service-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 5,
+          "remediationStatus": "resolved"
+        },
         {
           "docKind": "packageDocumentation",
           "filePath": "src/FigureSet.service.ts",
@@ -188637,7 +188703,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 20,
+          "exportCount": 23,
           "remediationStatus": "resolved"
         },
         {
@@ -188769,7 +188835,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 4,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -188857,18 +188923,554 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 11,
+          "exportCount": 14,
           "remediationStatus": "resolved"
         }
       ],
       "exports": [
         {
+          "symbolName": "textLines",
+          "exportKind": "const",
+          "filePath": "src/Approval.rules.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.rules.ts",
+          "line": 50,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-rules-ts-50-textlines",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "authoredLines",
+          "exportKind": "const",
+          "filePath": "src/Approval.rules.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.rules.ts",
+          "line": 67,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-rules-ts-67-authoredlines",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "ConfirmationCheck",
+          "exportKind": "type",
+          "filePath": "src/Approval.rules.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.rules.ts",
+          "line": 76,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-rules-ts-76-confirmationcheck",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "verifyConfirmation",
+          "exportKind": "const",
+          "filePath": "src/Approval.rules.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.rules.ts",
+          "line": 118,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-rules-ts-118-verifyconfirmation",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "approvalStatement",
+          "exportKind": "const",
+          "filePath": "src/Approval.schemas.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.schemas.ts",
+          "line": 38,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-schemas-ts-38-approvalstatement",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "EmailAddress",
+          "exportKind": "const",
+          "filePath": "src/Approval.schemas.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.schemas.ts",
+          "line": 56,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-schemas-ts-56-emailaddress",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "EmailAddress",
+          "exportKind": "type",
+          "filePath": "src/Approval.schemas.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.schemas.ts",
+          "line": 74,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-schemas-ts-74-emailaddress",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "EmailConfirmation",
+          "exportKind": "class",
+          "filePath": "src/Approval.schemas.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.schemas.ts",
+          "line": 102,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-schemas-ts-102-emailconfirmation",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "PdfConfirmation",
+          "exportKind": "class",
+          "filePath": "src/Approval.schemas.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.schemas.ts",
+          "line": 137,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-schemas-ts-137-pdfconfirmation",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "Confirmation",
+          "exportKind": "const",
+          "filePath": "src/Approval.schemas.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.schemas.ts",
+          "line": 174,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-schemas-ts-174-confirmation",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "Confirmation",
+          "exportKind": "type",
+          "filePath": "src/Approval.schemas.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.schemas.ts",
+          "line": 197,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-schemas-ts-197-confirmation",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            },
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "ApprovalRefusalReason",
+          "exportKind": "const",
+          "filePath": "src/Approval.schemas.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.schemas.ts",
+          "line": 220,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-schemas-ts-220-approvalrefusalreason",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "ApprovalRefusalReason",
+          "exportKind": "type",
+          "filePath": "src/Approval.schemas.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.schemas.ts",
+          "line": 243,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-schemas-ts-243-approvalrefusalreason",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "ApprovalRecord",
+          "exportKind": "class",
+          "filePath": "src/Approval.schemas.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.schemas.ts",
+          "line": 277,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-schemas-ts-277-approvalrecord",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "ConfirmationSource",
+          "exportKind": "const",
+          "filePath": "src/Approval.service.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.service.ts",
+          "line": 46,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-service-ts-46-confirmationsource",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "ConfirmationSource",
+          "exportKind": "type",
+          "filePath": "src/Approval.service.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.service.ts",
+          "line": 82,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-service-ts-82-confirmationsource",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            },
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "SignRequest",
+          "exportKind": "class",
+          "filePath": "src/Approval.service.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.service.ts",
+          "line": 103,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-service-ts-103-signrequest",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "SheetSetApprovalShape",
+          "exportKind": "interface",
+          "filePath": "src/Approval.service.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.service.ts",
+          "line": 132,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-service-ts-132-sheetsetapprovalshape",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "SheetSetApproval",
+          "exportKind": "class",
+          "filePath": "src/Approval.service.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Approval.service.ts",
+          "line": 273,
+          "anchor": "packages-foundation-capability-technical-drawing-src-approval-service-ts-273-sheetsetapproval",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
           "symbolName": "RenderRequest",
           "exportKind": "class",
           "filePath": "src/FigureSet.service.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/FigureSet.service.ts",
-          "line": 46,
-          "anchor": "packages-foundation-capability-technical-drawing-src-figureset-service-ts-46-renderrequest",
+          "line": 52,
+          "anchor": "packages-foundation-capability-technical-drawing-src-figureset-service-ts-52-renderrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -188895,8 +189497,8 @@
           "exportKind": "interface",
           "filePath": "src/FigureSet.service.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/FigureSet.service.ts",
-          "line": 83,
-          "anchor": "packages-foundation-capability-technical-drawing-src-figureset-service-ts-83-figuresetshape",
+          "line": 100,
+          "anchor": "packages-foundation-capability-technical-drawing-src-figureset-service-ts-100-figuresetshape",
           "currentTags": [
             "@category",
             "@since"
@@ -188910,11 +189512,6 @@
               "example": 1,
               "rule": "no-root-package-import",
               "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
-            },
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
             }
           ],
           "unsafeExampleViolations": [],
@@ -188928,8 +189525,8 @@
           "exportKind": "class",
           "filePath": "src/FigureSet.service.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/FigureSet.service.ts",
-          "line": 277,
-          "anchor": "packages-foundation-capability-technical-drawing-src-figureset-service-ts-277-figureset",
+          "line": 343,
+          "anchor": "packages-foundation-capability-technical-drawing-src-figureset-service-ts-343-figureset",
           "currentTags": [
             "@category",
             "@since"
@@ -189237,12 +189834,68 @@
           "remediationStatus": "open"
         },
         {
+          "symbolName": "PartLineStyle",
+          "exportKind": "const",
+          "filePath": "src/Geometry.schemas.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.schemas.ts",
+          "line": 310,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-310-partlinestyle",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "PartLineStyle",
+          "exportKind": "type",
+          "filePath": "src/Geometry.schemas.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.schemas.ts",
+          "line": 332,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-332-partlinestyle",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
           "symbolName": "Part",
           "exportKind": "class",
           "filePath": "src/Geometry.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.schemas.ts",
-          "line": 307,
-          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-307-part",
+          "line": 368,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-368-part",
           "currentTags": [
             "@category",
             "@since"
@@ -189269,8 +189922,8 @@
           "exportKind": "const",
           "filePath": "src/Geometry.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.schemas.ts",
-          "line": 347,
-          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-347-lengthunit",
+          "line": 416,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-416-lengthunit",
           "currentTags": [
             "@category",
             "@since"
@@ -189297,8 +189950,8 @@
           "exportKind": "type",
           "filePath": "src/Geometry.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.schemas.ts",
-          "line": 369,
-          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-369-lengthunit",
+          "line": 438,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-438-lengthunit",
           "currentTags": [
             "@category",
             "@since"
@@ -189325,8 +189978,8 @@
           "exportKind": "class",
           "filePath": "src/Geometry.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.schemas.ts",
-          "line": 388,
-          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-388-modelspec",
+          "line": 457,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-457-modelspec",
           "currentTags": [
             "@category",
             "@since"
@@ -189353,8 +190006,8 @@
           "exportKind": "class",
           "filePath": "src/Geometry.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.schemas.ts",
-          "line": 434,
-          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-434-camera",
+          "line": 503,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-503-camera",
           "currentTags": [
             "@category",
             "@since"
@@ -189381,8 +190034,8 @@
           "exportKind": "const",
           "filePath": "src/Geometry.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.schemas.ts",
-          "line": 467,
-          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-467-segment2",
+          "line": 536,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-536-segment2",
           "currentTags": [
             "@category",
             "@since"
@@ -189409,8 +190062,8 @@
           "exportKind": "type",
           "filePath": "src/Geometry.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.schemas.ts",
-          "line": 488,
-          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-488-segment2",
+          "line": 557,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-557-segment2",
           "currentTags": [
             "@category",
             "@since"
@@ -189437,8 +190090,36 @@
           "exportKind": "class",
           "filePath": "src/Geometry.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.schemas.ts",
-          "line": 511,
-          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-511-edgeset",
+          "line": 581,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-581-edgeset",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "ShadingPlan",
+          "exportKind": "class",
+          "filePath": "src/Geometry.schemas.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.schemas.ts",
+          "line": 644,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-644-shadingplan",
           "currentTags": [
             "@category",
             "@since"
@@ -189465,8 +190146,8 @@
           "exportKind": "class",
           "filePath": "src/Geometry.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.schemas.ts",
-          "line": 535,
-          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-535-boundingbox",
+          "line": 673,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-673-boundingbox",
           "currentTags": [
             "@category",
             "@since"
@@ -189493,8 +190174,8 @@
           "exportKind": "class",
           "filePath": "src/Geometry.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.schemas.ts",
-          "line": 565,
-          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-565-modelsummary",
+          "line": 709,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-schemas-ts-709-modelsummary",
           "currentTags": [
             "@category",
             "@since"
@@ -189521,8 +190202,8 @@
           "exportKind": "const",
           "filePath": "src/Geometry.segments.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.segments.ts",
-          "line": 46,
-          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-segments-ts-46-canonicalsegments",
+          "line": 47,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-segments-ts-47-canonicalsegments",
           "currentTags": [
             "@category",
             "@since"
@@ -189549,8 +190230,8 @@
           "exportKind": "const",
           "filePath": "src/Geometry.segments.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.segments.ts",
-          "line": 68,
-          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-segments-ts-68-mirrorsegments",
+          "line": 69,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-segments-ts-69-mirrorsegments",
           "currentTags": [
             "@category",
             "@since"
@@ -189577,8 +190258,8 @@
           "exportKind": "const",
           "filePath": "src/Geometry.segments.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Geometry.segments.ts",
-          "line": 96,
-          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-segments-ts-96-samesegments",
+          "line": 97,
+          "anchor": "packages-foundation-capability-technical-drawing-src-geometry-segments-ts-97-samesegments",
           "currentTags": [
             "@category",
             "@since"
@@ -189605,8 +190286,8 @@
           "exportKind": "const",
           "filePath": "src/Manifest.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Manifest.schemas.ts",
-          "line": 30,
-          "anchor": "packages-foundation-capability-technical-drawing-src-manifest-schemas-ts-30-sha256hex",
+          "line": 32,
+          "anchor": "packages-foundation-capability-technical-drawing-src-manifest-schemas-ts-32-sha256hex",
           "currentTags": [
             "@category",
             "@since"
@@ -189633,8 +190314,8 @@
           "exportKind": "type",
           "filePath": "src/Manifest.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Manifest.schemas.ts",
-          "line": 58,
-          "anchor": "packages-foundation-capability-technical-drawing-src-manifest-schemas-ts-58-sha256hex",
+          "line": 60,
+          "anchor": "packages-foundation-capability-technical-drawing-src-manifest-schemas-ts-60-sha256hex",
           "currentTags": [
             "@category",
             "@since"
@@ -189661,8 +190342,8 @@
           "exportKind": "class",
           "filePath": "src/Manifest.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Manifest.schemas.ts",
-          "line": 74,
-          "anchor": "packages-foundation-capability-technical-drawing-src-manifest-schemas-ts-74-engineinfo",
+          "line": 76,
+          "anchor": "packages-foundation-capability-technical-drawing-src-manifest-schemas-ts-76-engineinfo",
           "currentTags": [
             "@category",
             "@since"
@@ -189689,8 +190370,8 @@
           "exportKind": "class",
           "filePath": "src/Manifest.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Manifest.schemas.ts",
-          "line": 103,
-          "anchor": "packages-foundation-capability-technical-drawing-src-manifest-schemas-ts-103-figurerecord",
+          "line": 105,
+          "anchor": "packages-foundation-capability-technical-drawing-src-manifest-schemas-ts-105-figurerecord",
           "currentTags": [
             "@category",
             "@since"
@@ -189717,8 +190398,8 @@
           "exportKind": "class",
           "filePath": "src/Manifest.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Manifest.schemas.ts",
-          "line": 131,
-          "anchor": "packages-foundation-capability-technical-drawing-src-manifest-schemas-ts-131-omissionproof",
+          "line": 143,
+          "anchor": "packages-foundation-capability-technical-drawing-src-manifest-schemas-ts-143-omissionproof",
           "currentTags": [
             "@category",
             "@since"
@@ -189745,8 +190426,8 @@
           "exportKind": "class",
           "filePath": "src/Manifest.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Manifest.schemas.ts",
-          "line": 170,
-          "anchor": "packages-foundation-capability-technical-drawing-src-manifest-schemas-ts-170-rendermanifest",
+          "line": 182,
+          "anchor": "packages-foundation-capability-technical-drawing-src-manifest-schemas-ts-182-rendermanifest",
           "currentTags": [
             "@category",
             "@since"
@@ -189913,8 +190594,8 @@
           "exportKind": "const",
           "filePath": "src/Sheet.compose.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Sheet.compose.ts",
-          "line": 373,
-          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-compose-ts-373-composesheet",
+          "line": 399,
+          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-compose-ts-399-composesheet",
           "currentTags": [
             "@category",
             "@since"
@@ -189926,6 +190607,11 @@
           "exampleImportViolations": [
             {
               "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            },
+            {
+              "example": 2,
               "rule": "no-root-package-import",
               "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
             }
@@ -189997,19 +190683,23 @@
           "exportKind": "const",
           "filePath": "src/Sheet.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Sheet.schemas.ts",
-          "line": 70,
-          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-schemas-ts-70-pt-per-cm",
+          "line": 78,
+          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-schemas-ts-78-pt-per-cm",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
@@ -190021,19 +190711,23 @@
           "exportKind": "const",
           "filePath": "src/Sheet.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Sheet.schemas.ts",
-          "line": 78,
-          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-schemas-ts-78-pt-per-mm",
+          "line": 94,
+          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-schemas-ts-94-pt-per-mm",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
@@ -190045,8 +190739,8 @@
           "exportKind": "class",
           "filePath": "src/Sheet.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Sheet.schemas.ts",
-          "line": 94,
-          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-schemas-ts-94-pagepoints",
+          "line": 110,
+          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-schemas-ts-110-pagepoints",
           "currentTags": [
             "@category",
             "@since"
@@ -190073,8 +190767,8 @@
           "exportKind": "const",
           "filePath": "src/Sheet.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Sheet.schemas.ts",
-          "line": 124,
-          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-schemas-ts-124-pagesizept",
+          "line": 140,
+          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-schemas-ts-140-pagesizept",
           "currentTags": [
             "@category",
             "@since"
@@ -190101,19 +190795,23 @@
           "exportKind": "const",
           "filePath": "src/Sheet.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Sheet.schemas.ts",
-          "line": 137,
-          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-schemas-ts-137-margins-cm",
+          "line": 161,
+          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-schemas-ts-161-margins-cm",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
@@ -190125,19 +190823,23 @@
           "exportKind": "const",
           "filePath": "src/Sheet.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Sheet.schemas.ts",
-          "line": 145,
-          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-schemas-ts-145-min-letter-height-cm",
+          "line": 177,
+          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-schemas-ts-177-min-letter-height-cm",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
@@ -190149,8 +190851,8 @@
           "exportKind": "class",
           "filePath": "src/Sheet.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Sheet.schemas.ts",
-          "line": 162,
-          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-schemas-ts-162-sheetoptions",
+          "line": 211,
+          "anchor": "packages-foundation-capability-technical-drawing-src-sheet-schemas-ts-211-sheetoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -190261,8 +190963,8 @@
           "exportKind": "interface",
           "filePath": "src/TechnicalDrawing.ports.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/TechnicalDrawing.ports.ts",
-          "line": 39,
-          "anchor": "packages-foundation-capability-technical-drawing-src-technicaldrawing-ports-ts-39-geometryengineshape",
+          "line": 40,
+          "anchor": "packages-foundation-capability-technical-drawing-src-technicaldrawing-ports-ts-40-geometryengineshape",
           "currentTags": [
             "@category",
             "@since"
@@ -190276,11 +190978,6 @@
               "example": 1,
               "rule": "no-root-package-import",
               "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
-            },
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
             }
           ],
           "unsafeExampleViolations": [],
@@ -190294,8 +190991,8 @@
           "exportKind": "class",
           "filePath": "src/TechnicalDrawing.ports.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/TechnicalDrawing.ports.ts",
-          "line": 63,
-          "anchor": "packages-foundation-capability-technical-drawing-src-technicaldrawing-ports-ts-63-geometryengine",
+          "line": 66,
+          "anchor": "packages-foundation-capability-technical-drawing-src-technicaldrawing-ports-ts-66-geometryengine",
           "currentTags": [
             "@category",
             "@since"
@@ -190322,8 +191019,8 @@
           "exportKind": "interface",
           "filePath": "src/TechnicalDrawing.ports.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/TechnicalDrawing.ports.ts",
-          "line": 85,
-          "anchor": "packages-foundation-capability-technical-drawing-src-technicaldrawing-ports-ts-85-pdfbackendshape",
+          "line": 88,
+          "anchor": "packages-foundation-capability-technical-drawing-src-technicaldrawing-ports-ts-88-pdfbackendshape",
           "currentTags": [
             "@category",
             "@since"
@@ -190337,11 +191034,6 @@
               "example": 1,
               "rule": "no-root-package-import",
               "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
-            },
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
             }
           ],
           "unsafeExampleViolations": [],
@@ -190355,8 +191047,64 @@
           "exportKind": "class",
           "filePath": "src/TechnicalDrawing.ports.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/TechnicalDrawing.ports.ts",
-          "line": 111,
-          "anchor": "packages-foundation-capability-technical-drawing-src-technicaldrawing-ports-ts-111-pdfbackend",
+          "line": 116,
+          "anchor": "packages-foundation-capability-technical-drawing-src-technicaldrawing-ports-ts-116-pdfbackend",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "MailReaderShape",
+          "exportKind": "interface",
+          "filePath": "src/TechnicalDrawing.ports.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/TechnicalDrawing.ports.ts",
+          "line": 133,
+          "anchor": "packages-foundation-capability-technical-drawing-src-technicaldrawing-ports-ts-133-mailreadershape",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the @beep/technical-drawing package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "MailReader",
+          "exportKind": "class",
+          "filePath": "src/TechnicalDrawing.ports.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/TechnicalDrawing.ports.ts",
+          "line": 152,
+          "anchor": "packages-foundation-capability-technical-drawing-src-technicaldrawing-ports-ts-152-mailreader",
           "currentTags": [
             "@category",
             "@since"
@@ -190411,8 +191159,8 @@
           "exportKind": "const",
           "filePath": "src/Validation.rules.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Validation.rules.ts",
-          "line": 130,
-          "anchor": "packages-foundation-capability-technical-drawing-src-validation-rules-ts-130-marginfindings",
+          "line": 135,
+          "anchor": "packages-foundation-capability-technical-drawing-src-validation-rules-ts-135-marginfindings",
           "currentTags": [
             "@category",
             "@since"
@@ -190439,8 +191187,8 @@
           "exportKind": "const",
           "filePath": "src/Validation.rules.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Validation.rules.ts",
-          "line": 184,
-          "anchor": "packages-foundation-capability-technical-drawing-src-validation-rules-ts-184-purityfindings",
+          "line": 189,
+          "anchor": "packages-foundation-capability-technical-drawing-src-validation-rules-ts-189-purityfindings",
           "currentTags": [
             "@category",
             "@since"
@@ -190691,8 +191439,8 @@
           "exportKind": "class",
           "filePath": "src/Validation.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Validation.schemas.ts",
-          "line": 259,
-          "anchor": "packages-foundation-capability-technical-drawing-src-validation-schemas-ts-259-validationoptions",
+          "line": 261,
+          "anchor": "packages-foundation-capability-technical-drawing-src-validation-schemas-ts-261-validationoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -190719,8 +191467,8 @@
           "exportKind": "class",
           "filePath": "src/Validation.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/Validation.schemas.ts",
-          "line": 291,
-          "anchor": "packages-foundation-capability-technical-drawing-src-validation-schemas-ts-291-validationreport",
+          "line": 293,
+          "anchor": "packages-foundation-capability-technical-drawing-src-validation-schemas-ts-293-validationreport",
           "currentTags": [
             "@category",
             "@since"
@@ -190747,8 +191495,8 @@
           "exportKind": "const",
           "filePath": "src/View.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/View.schemas.ts",
-          "line": 49,
-          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-49-viewname",
+          "line": 50,
+          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-50-viewname",
           "currentTags": [
             "@category",
             "@since"
@@ -190775,8 +191523,8 @@
           "exportKind": "type",
           "filePath": "src/View.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/View.schemas.ts",
-          "line": 71,
-          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-71-viewname",
+          "line": 72,
+          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-72-viewname",
           "currentTags": [
             "@category",
             "@since"
@@ -190803,8 +191551,8 @@
           "exportKind": "const",
           "filePath": "src/View.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/View.schemas.ts",
-          "line": 92,
-          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-92-isperspectiveview",
+          "line": 93,
+          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-93-isperspectiveview",
           "currentTags": [
             "@category",
             "@since"
@@ -190831,8 +191579,8 @@
           "exportKind": "class",
           "filePath": "src/View.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/View.schemas.ts",
-          "line": 108,
-          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-108-cameraforviewinput",
+          "line": 109,
+          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-109-cameraforviewinput",
           "currentTags": [
             "@category",
             "@since"
@@ -190859,8 +191607,8 @@
           "exportKind": "const",
           "filePath": "src/View.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/View.schemas.ts",
-          "line": 145,
-          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-145-cameraforview",
+          "line": 146,
+          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-146-cameraforview",
           "currentTags": [
             "@category",
             "@since"
@@ -190887,8 +191635,8 @@
           "exportKind": "class",
           "filePath": "src/View.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/View.schemas.ts",
-          "line": 184,
-          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-184-figurespec",
+          "line": 185,
+          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-185-figurespec",
           "currentTags": [
             "@category",
             "@since"
@@ -190915,8 +191663,8 @@
           "exportKind": "const",
           "filePath": "src/View.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/View.schemas.ts",
-          "line": 217,
-          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-217-omissionrelation",
+          "line": 218,
+          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-218-omissionrelation",
           "currentTags": [
             "@category",
             "@since"
@@ -190943,8 +191691,8 @@
           "exportKind": "type",
           "filePath": "src/View.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/View.schemas.ts",
-          "line": 239,
-          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-239-omissionrelation",
+          "line": 240,
+          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-240-omissionrelation",
           "currentTags": [
             "@category",
             "@since"
@@ -190971,8 +191719,8 @@
           "exportKind": "class",
           "filePath": "src/View.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/View.schemas.ts",
-          "line": 256,
-          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-256-omissionclaim",
+          "line": 257,
+          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-257-omissionclaim",
           "currentTags": [
             "@category",
             "@since"
@@ -190999,8 +191747,8 @@
           "exportKind": "class",
           "filePath": "src/View.schemas.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/View.schemas.ts",
-          "line": 295,
-          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-295-figuresetspec",
+          "line": 296,
+          "anchor": "packages-foundation-capability-technical-drawing-src-view-schemas-ts-296-figuresetspec",
           "currentTags": [
             "@category",
             "@since"
@@ -191023,12 +191771,78 @@
           "remediationStatus": "open"
         },
         {
-          "symbolName": "export * from \"./FigureSet.service.ts\";",
+          "symbolName": "export * from \"./Approval.rules.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/index.ts",
           "line": 16,
-          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-16-export-from-figureset-service-ts",
+          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-16-export-from-approval-rules-ts",
+          "currentTags": [
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Approval.schemas.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/index.ts",
+          "line": 23,
+          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-23-export-from-approval-schemas-ts",
+          "currentTags": [
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Approval.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/index.ts",
+          "line": 30,
+          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-30-export-from-approval-service-ts",
+          "currentTags": [
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./FigureSet.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/capability/technical-drawing/src/index.ts",
+          "line": 37,
+          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-37-export-from-figureset-service-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -191049,8 +191863,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/index.ts",
-          "line": 23,
-          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-23-export-from-geometry-schemas-ts",
+          "line": 44,
+          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-44-export-from-geometry-schemas-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -191071,8 +191885,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/index.ts",
-          "line": 30,
-          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-30-export-from-geometry-segments-ts",
+          "line": 51,
+          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-51-export-from-geometry-segments-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -191093,8 +191907,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/index.ts",
-          "line": 37,
-          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-37-export-from-manifest-schemas-ts",
+          "line": 58,
+          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-58-export-from-manifest-schemas-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -191115,8 +191929,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/index.ts",
-          "line": 44,
-          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-44-export-from-sheet-compose-ts",
+          "line": 65,
+          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-65-export-from-sheet-compose-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -191137,8 +191951,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/index.ts",
-          "line": 51,
-          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-51-export-from-sheet-schemas-ts",
+          "line": 72,
+          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-72-export-from-sheet-schemas-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -191159,8 +191973,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/index.ts",
-          "line": 58,
-          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-58-export-from-technicaldrawing-errors-ts",
+          "line": 79,
+          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-79-export-from-technicaldrawing-errors-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -191181,8 +191995,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/index.ts",
-          "line": 65,
-          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-65-export-from-technicaldrawing-ports-ts",
+          "line": 86,
+          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-86-export-from-technicaldrawing-ports-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -191203,8 +192017,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/index.ts",
-          "line": 72,
-          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-72-export-from-validation-rules-ts",
+          "line": 93,
+          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-93-export-from-validation-rules-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -191225,8 +192039,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/index.ts",
-          "line": 79,
-          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-79-export-from-validation-schemas-ts",
+          "line": 100,
+          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-100-export-from-validation-schemas-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -191247,8 +192061,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/technical-drawing/src/index.ts",
-          "line": 86,
-          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-86-export-from-view-schemas-ts",
+          "line": 107,
+          "anchor": "packages-foundation-capability-technical-drawing-src-index-ts-107-export-from-view-schemas-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -321610,7 +322424,7 @@
       "packageName": "@beep/occt",
       "packagePath": "packages/drivers/occt",
       "topoOrder": 89,
-      "status": "needs-remediation",
+      "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 4,
@@ -321625,14 +322439,14 @@
       },
       "counts": {
         "openModules": 0,
-        "openExports": 1,
+        "openExports": 0,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 1,
+        "exampleImportFindings": 0,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
@@ -321650,7 +322464,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 1
+          "no-root-package-import": 0
         }
       },
       "modules": [
@@ -321811,12 +322625,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  BoundingBox,\n  Box,\n  Camera,\n  Cylinder,\n  EdgeSet,\n  LengthUnit,\n  ModelSpec,\n  ModelSummary,\n  Part,\n  PositiveLength,\n  Primitive,\n  Prism,\n  Rotation,\n  Segment2,\n  Vec3,\n} from \"@beep/technical-drawing\";",
+          "symbolName": "export {\n  BoundingBox,\n  Box,\n  Camera,\n  Cylinder,\n  EdgeSet,\n  LengthUnit,\n  ModelSpec,\n  ModelSummary,\n  Part,\n  PartLineStyle,\n  PositiveLength,\n  Primitive,\n  Prism,\n  Rotation,\n  Segment2,\n  ShadingPlan,\n  Vec3,\n} from \"@beep/technical-drawing\";",
           "exportKind": "re-export",
           "filePath": "src/Occt.models.ts",
           "repoPath": "packages/drivers/occt/src/Occt.models.ts",
           "line": 23,
-          "anchor": "packages-drivers-occt-src-occt-models-ts-23-export-boundingbox-box-camera-cylinder-edgeset-lengthunit-modelspec-modelsummary-part-positivelength-primitive-prism-rotation-segment2-vec3-from-beep-technical-drawing",
+          "anchor": "packages-drivers-occt-src-occt-models-ts-23-export-boundingbox-box-camera-cylinder-edgeset-lengthunit-modelspec-modelsummary-part-partlinestyle-positivelength-primitive-prism-rotation-segment2-shadingplan-vec3-from-beep-technical-drawing",
           "currentTags": [
             "@since",
             "@category"
@@ -321837,8 +322651,8 @@
           "exportKind": "class",
           "filePath": "src/Occt.models.ts",
           "repoPath": "packages/drivers/occt/src/Occt.models.ts",
-          "line": 61,
-          "anchor": "packages-drivers-occt-src-occt-models-ts-61-projectionrequest",
+          "line": 63,
+          "anchor": "packages-drivers-occt-src-occt-models-ts-63-projectionrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -321859,8 +322673,8 @@
           "exportKind": "const",
           "filePath": "src/Occt.models.ts",
           "repoPath": "packages/drivers/occt/src/Occt.models.ts",
-          "line": 101,
-          "anchor": "packages-drivers-occt-src-occt-models-ts-101-kernelvariant",
+          "line": 107,
+          "anchor": "packages-drivers-occt-src-occt-models-ts-107-kernelvariant",
           "currentTags": [
             "@category",
             "@since"
@@ -321881,8 +322695,8 @@
           "exportKind": "type",
           "filePath": "src/Occt.models.ts",
           "repoPath": "packages/drivers/occt/src/Occt.models.ts",
-          "line": 123,
-          "anchor": "packages-drivers-occt-src-occt-models-ts-123-kernelvariant",
+          "line": 129,
+          "anchor": "packages-drivers-occt-src-occt-models-ts-129-kernelvariant",
           "currentTags": [
             "@category",
             "@since"
@@ -321903,8 +322717,8 @@
           "exportKind": "class",
           "filePath": "src/Occt.models.ts",
           "repoPath": "packages/drivers/occt/src/Occt.models.ts",
-          "line": 140,
-          "anchor": "packages-drivers-occt-src-occt-models-ts-140-kernelinfo",
+          "line": 146,
+          "anchor": "packages-drivers-occt-src-occt-models-ts-146-kernelinfo",
           "currentTags": [
             "@category",
             "@since"
@@ -321925,8 +322739,8 @@
           "exportKind": "interface",
           "filePath": "src/Occt.service.ts",
           "repoPath": "packages/drivers/occt/src/Occt.service.ts",
-          "line": 49,
-          "anchor": "packages-drivers-occt-src-occt-service-ts-49-occtshape",
+          "line": 53,
+          "anchor": "packages-drivers-occt-src-occt-service-ts-53-occtshape",
           "currentTags": [
             "@category",
             "@since"
@@ -321935,26 +322749,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "Occt",
           "exportKind": "class",
           "filePath": "src/Occt.service.ts",
           "repoPath": "packages/drivers/occt/src/Occt.service.ts",
-          "line": 145,
-          "anchor": "packages-drivers-occt-src-occt-service-ts-145-occt",
+          "line": 156,
+          "anchor": "packages-drivers-occt-src-occt-service-ts-156-occt",
           "currentTags": [
             "@category",
             "@since"

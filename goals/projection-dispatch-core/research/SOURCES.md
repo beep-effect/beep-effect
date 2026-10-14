@@ -54,7 +54,7 @@ than an external web claim; it is recorded below.
 
 | Capability | Exact path | Disposition |
 | --- | --- | --- |
-| Effect v4 durable queue | `node_modules/effect/src/unstable/workflow/DurableQueue.ts` | reuse only after sibling persistence/crash proof; supplies deterministic key, persisted processing, worker concurrency, and adapter requirements |
+| Effect v4 durable queue | `node_modules/effect/src/workflow/DurableQueue.ts` | reuse only after sibling persistence/crash proof; supplies deterministic key, persisted processing, worker concurrency, and adapter requirements |
 | Workflow persistence spike | `goals/effect-v4-workflow-engine-spike` and future `packages/drivers/workflow` | hard prerequisite; consume adapter and evidence, never duplicate |
 | Epistemic contracts | `packages/epistemic/use-cases` | extend with NET-NEW dispatch/status/RPC schemas and ports |
 | Epistemic persistence | `packages/epistemic/tables` | extend with NET-NEW intent/projection/cursor tables and atomic authority binding |

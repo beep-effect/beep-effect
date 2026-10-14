@@ -114,6 +114,36 @@ const attempt = <A>(
     catch: (cause) => DirectoryHandleError.make({ message: `${operation} failed for ${path}`, operation, path, cause }),
   });
 
+/**
+ * Removes a directory only when it is empty, as one atomic syscall.
+ *
+ * **Details**
+ *
+ * `rmdir` fails on a non-empty directory, so content written by a concurrent
+ * creator is never deleted: there is no gap between checking emptiness and
+ * removing. The `FileSystem` service only offers `rm`, which either refuses
+ * every directory or removes it recursively.
+ *
+ * **Example** (Try to remove a directory that may hold files)
+ *
+ * ```ts
+ * import { removeEmptyDirectory } from "@beep/repo-cli/internal/repo-run/DirectoryHandle"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(removeEmptyDirectory("goals/abandoned-claim"))) // true
+ * ```
+ *
+ * @param path - Directory to remove.
+ * @returns `true` when the directory was removed; `false` when it was absent, not empty, or not removable.
+ * @category file-system
+ * @since 0.0.0
+ */
+export const removeEmptyDirectory = (path: string): Effect.Effect<boolean> =>
+  attempt("rmdir", path, () => nodeFs().rmdirSync(path)).pipe(
+    Effect.as(true),
+    Effect.orElseSucceed(() => false)
+  );
+
 const closeQuietly = (fd: number): Effect.Effect<void> =>
   Effect.ignore(attempt("close", heldPath(fd), () => nodeFs().closeSync(fd)));
 

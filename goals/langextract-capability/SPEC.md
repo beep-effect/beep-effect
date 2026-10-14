@@ -51,7 +51,7 @@ Higher sources outrank lower sources when they conflict.
 ## Constraints
 
 - `@beep/langextract` must stay provider-neutral and may use injected
-  `effect/unstable/ai/LanguageModel` services rather than importing provider
+  `effect/ai/LanguageModel` services rather than importing provider
   drivers directly.
 - Foundation packages must not depend on drivers, slices, product apps, or
   provider-specific runtime config.
@@ -82,7 +82,7 @@ explicit change:
   span and provenance invariants are the expected near-fit promotions.
 - Concrete provider drivers, provider SDKs, provider env/config, live provider
   smoke tests, CLI, rendering, and visualization remain out of scope.
-- The service consumes injected `effect/unstable/ai/LanguageModel.LanguageModel`
+- The service consumes injected `effect/ai/LanguageModel.LanguageModel`
   and translates AI/schema/alignment failures into package typed errors.
 - V1 public source offsets are JavaScript string indices.
 - Streaming is deferred unless exposed as schema-backed LangExtract domain

@@ -38,7 +38,7 @@ inventory reports.
 | https://github.com/OpenLinkSoftware/ai-agent-skills | MIT (verified 2026-08-10) | port-with-attribution | contract shapes, gate lists, evidence-ladder semantics, receipt field sets |
 | https://github.com/microsoft/agent-governance-toolkit | MIT (verified 2026-08-13) | port-with-attribution | ACS fail-closed evaluation discipline, intervention vocabulary, evidence bounds, audit-record separation |
 | https://github.com/in-toto/attestation | Apache-2.0 (verified 2026-08-13) | interop + vocabulary adoption | Statement/predicate/envelope split; inspections ≈ re-extraction; SLSA VSA shape for gate summaries |
-| https://github.com/Effect-TS/effect-smol | MIT | substrate (extend, don't compete) | `Tool`/`Toolkit` typed invocation substrate (`effect/unstable/ai`) |
+| https://github.com/Effect-TS/effect-smol | MIT | substrate (extend, don't compete) | `Tool`/`Toolkit` typed invocation substrate (`effect/ai`) |
 
 ## 3. External research sources
 
@@ -56,7 +56,7 @@ Implementation-load-bearing subset:
   https://github.com/in-toto/attestation/blob/main/spec/README.md (Apache-2.0);
   SLSA VSA — https://slsa.dev/spec/v1.1/verification_summary (Community Spec License 1.0).
 - Effect AI Tool/Toolkit —
-  https://raw.githubusercontent.com/Effect-TS/effect-smol/main/packages/effect/src/unstable/ai/Tool.ts (MIT).
+  https://raw.githubusercontent.com/Effect-TS/effect/74d19304da077d98cc6dcb294c71e253365f272f/packages/effect/src/ai/Tool.ts (MIT).
 
 ## 4. In-repo capability references
 

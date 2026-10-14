@@ -330,8 +330,8 @@ then grilled. The 22 fetched-and-verified primary sources behind S1–S5 are lis
   the spot-checked fraction is committed as a number in `gold/v1`. Zero new code:
   `@beep/langextract` takes an injected `LanguageModel`; anthropic/xai/venice-ai/openai-compat
   Layers exist. (Rejected: informal spot-check; same model "fine for a lab".)
-- **S3 (embeddings; amends G6 wording).** Contract = `effect/unstable/ai` `EmbeddingModel`
-  (effect 4.0.0-rc.111; verified in `node_modules/effect/src/unstable/ai/EmbeddingModel.ts`).
+- **S3 (embeddings; amends G6 wording).** Contract = `effect/ai` `EmbeddingModel`
+  (effect 4.0.0-rc.111; verified in `node_modules/effect/src/ai/EmbeddingModel.ts`).
   No Layer exists in-repo. Benjamin prefers OpenAI over Venice; Anthropic has no embeddings
   API. M1 Layer = a new `POST /embeddings` operation + `makeEmbeddingModelFromProvider` in
   `@beep/openai-compat` (its client already defaults to `https://api.openai.com/v1`); Venice/

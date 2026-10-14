@@ -57,7 +57,7 @@ export class CodexCommandError extends S.TaggedError<CodexCommandError>($I`Codex
     (message: string, opts?: CodexCommandErrorOptions): (cause: unknown) => CodexCommandError;
   } = dual(
     3,
-    (cause: unknown, message: string, { exitCode } = {}): CodexCommandError =>
+    (cause: unknown, message: string, { exitCode }: CodexCommandErrorOptions = {}): CodexCommandError =>
       CodexCommandError.make({
         cause,
         message,

@@ -40,7 +40,7 @@ editing. **Two gates to settle here:**
    add a `DEVTOOLS`-gated layer composing `@beep/observability/server`
    `layerFilteredDevTools({ url, shouldPublish })`; `Layer.mergeAll` it with the
    existing OTLP layer. Compose the existing capability — do NOT hand-roll
-   `effect/unstable/devtools` `DevTools.layer()` in the app.
+   `effect/devtools` `DevTools.layer()` in the app.
 2. **App `RegistryProvider`** — new app-local atom provider mirroring
    `apps/oip-web/src/runtime/OipAtomProvider.tsx` (RegistryProvider +
    `useAtomMount` of the browser runtime); wrap the root in

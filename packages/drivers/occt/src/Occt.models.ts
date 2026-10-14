@@ -30,6 +30,7 @@ export {
   ModelSpec,
   ModelSummary,
   Part,
+  PartLineStyle,
   PositiveLength,
   Primitive,
   Prism,

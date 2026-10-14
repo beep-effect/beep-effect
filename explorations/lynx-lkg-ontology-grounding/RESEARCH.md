@@ -126,7 +126,7 @@ package source**; M2/M3/M4 milestone gating is binding.
   (append-only facts; no stored "duty satisfied" state).
 - **Vocabulary constants** — `@beep/rdf` `Vocab/*` for SKOS, DCTerms, PROV, OWL,
   RDF(S), XSD, OA, generated from the `@beep/identity` `CoreVocab` registry.
-- **Language tags** — `LanguageTag` in `@beep/rdf/Rdf.ts` plus a generated IANA
+- **Language tags** — `LanguageTag` in `packages/foundation/modeling/rdf/src/Rdf.ts` plus a generated IANA
   BCP-47 registry and validator in `@beep/html` [verified 2026-08-06].
 
 **NOT FOUND (gaps this packet can legitimately speak to):**

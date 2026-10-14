@@ -173,7 +173,7 @@ the agent-facing-laws principle). Migrating output only (the codegen mine).
 ## D8 — Title pass is a repo pipeline step against the local proxy
 
 `beep quality jsdoc-migrate titles` calls `http://127.0.0.1:8317` with model `grok-4.5` via
-`effect/unstable/http`, appending to `titles.jsonl` with per-anchor resume.
+`effect/http`, appending to `titles.jsonl` with per-anchor resume.
 
 **Why.** The proxy is what bills the Grok plan rather than API credits — a direct xAI API call
 would defeat the purpose. A native Workflow caps at 1,000 agents per run and one call per file is

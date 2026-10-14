@@ -44,7 +44,7 @@ blocker with evidence rather than widening or narrowing the scope silently.
    (`.repos/effect` in the main clone `~/YeeBois/projects/beep-effect3` if the worktree lacks the
    symlink), never from memory. Renames that already bit this packet: `Config.String` (not
    `Config.string`); the fast-check bridge is gone — property tests use
-   `import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"`, `Arbitrary.schema(Model)`,
+   `import * as Arbitrary from "effect/Arbitrary"`, `Arbitrary.schema(Model)`,
    `Arbitrary.checkEffect(Arbitrary.all([...]), property, fcRuns(n))` from `@beep/test-utils`, and
    assert `result._tag === "Passed"` (pattern: `test/agent-effectiveness-command.test.ts`).
 

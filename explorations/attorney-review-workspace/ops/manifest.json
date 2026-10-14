@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "attorney-review-workspace",
+    "title": "Attorney Review Workspace",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/review-verdict-envelope"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-14",
+    "updated": "2026-10-14"
+  }
+}

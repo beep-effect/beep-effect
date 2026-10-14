@@ -8,14 +8,14 @@ Status: completed from packet files, architecture standards, export catalog, `@b
 
 - The packet asks for `@beep/langextract` as an Effect v4 provider-neutral foundation capability for structured extraction with source-grounded spans.
 - The packet explicitly excludes provider SDK adapters, provider env/config, live provider smoke tests, CLI, rendering, visualization, and V1 driver placement.
-- The packet allows an injected `effect/unstable/ai/LanguageModel`, but forbids concrete provider driver imports from the foundation package.
+- The packet allows an injected `effect/ai/LanguageModel`, but forbids concrete provider driver imports from the foundation package.
 - Repo standards outrank packet prose when they conflict.
 - `foundation/capability` is the last generic destination. It requires specific-home-first proof, no product semantics, no external engine/SDK wrapper role, no tooling/UI role, and consumer or platform-capability proof.
 - Drivers own external boundary wrappers, SDK/client wrappers, provider runtime configuration, retry/rate-limit behavior, and test layers around external systems.
 - Foundation packages must not depend on product slices, app packages, or concrete drivers.
 - `@beep/nlp` already exists as a foundation capability and already owns product-neutral span/provenance/handoff vocabulary.
 - Existing provider-specific language-model construction lives in drivers and adapts provider clients into Effect AI `LanguageModel` layers.
-- `@beep/nlp` already imports `effect/unstable/ai` for driver-neutral tool contracts, which supports the packet's narrow allowance for injected `LanguageModel`.
+- `@beep/nlp` already imports `effect/ai` for driver-neutral tool contracts, which supports the packet's narrow allowance for injected `LanguageModel`.
 
 ## Evidence
 
@@ -37,7 +37,7 @@ Status: completed from packet files, architecture standards, export catalog, `@b
 
 1. Place `@beep/langextract` at `packages/foundation/capability/langextract` only for the provider-neutral substrate.
 2. Allow dependencies on `effect`, `@beep/schema`, `@beep/identity`, `@beep/utils`, `@beep/nlp`, and possibly `@beep/observability`.
-3. Allow `effect/unstable/ai/LanguageModel` only as an injected service requirement or constructor dependency.
+3. Allow `effect/ai/LanguageModel` only as an injected service requirement or constructor dependency.
 4. Disallow dependencies on provider drivers, provider SDKs, apps, product slices, env/config loaders, CLI packages, and visualization/rendering packages.
 5. Use a small explicit public export surface. Candidate subpaths: root, `Target`, `Extraction`, `Alignment`, `Service`, and `Handoff` if it adapts to `@beep/nlp/Handoff`.
 6. Block `./internal/*` from package exports.

@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "practice-kg-mcp-strict-tier",
+    "packetId": "goal-packet/v1:5b9d2d7f5575884a8bffacf17fcf6467a5f1fd1ceccd44e69db1f2c1a3f22bc2",
+    "title": "Practice KG MCP Strict Telemetry Tier",
+    "status": "active",
+    "created": "2026-10-14",
+    "updated": "2026-10-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/practice-kg-mcp-strict-tier",
+  "lifecycle": "active",
+  "mission": "Shape-only telemetry for practice-kg-mcp on the attorney workstation: serializer gate, on-PC HMAC salt, encrypted spool, fail-closed tier, canary proof.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/observability-palantiri",
+    "graduated": "2026-10-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/practice-kg-mcp-strict-tier/README.md",
+    "goals/practice-kg-mcp-strict-tier/SPEC.md",
+    "goals/practice-kg-mcp-strict-tier/PLAN.md",
+    "goals/practice-kg-mcp-strict-tier/GOAL.md",
+    "goals/practice-kg-mcp-strict-tier/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/practice-kg-mcp-strict-tier/GOAL.md"
+    }
+  ],
+  "provides": ["observability/strict-tier"],
+  "requires": ["observability/kernel-catalog"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Gate",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Spool + tier",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Proof",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Yeet",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/practice-kg-mcp-strict-tier/GOAL.md)\" -le 4000",
+    "jq . goals/practice-kg-mcp-strict-tier/ops/manifest.json",
+    "rg -n \"practice-kg-mcp-strict-tier|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/practice-kg-mcp-strict-tier",
+    "git diff --check -- goals/practice-kg-mcp-strict-tier",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

@@ -52,6 +52,10 @@ const RoutingRoleKit = LiteralKit([
   "research.routine",
   "jsdoc.migrate-titles",
   "deprecated.routable",
+  "review.panel",
+  "muse.opt-in",
+  "junie.default",
+  "junie.volume",
 ]);
 
 /**
@@ -65,7 +69,12 @@ const RoutingRoleKit = LiteralKit([
  * string literal to its own key verbatim, so `RoutingRoleIs["codex.heavy"]`
  * is a real derived guard. `cursor.never` is a deny list rather than a pin,
  * and `deprecated.routable` names ids kept routable by local alias config that
- * the upstream catalog cannot see.
+ * the upstream catalog cannot see. `review.panel` runs an independent
+ * three-model review panel in sessions separate from the orchestrator.
+ * `muse.opt-in` routes Meta Muse through CLIProxyAPI by explicit opt-in only,
+ * never in a fallback chain. `junie.default` is the interactive launch default;
+ * `junie.volume` spends down the JetBrains AI Pro pool outside quota-failure
+ * fallback chains.
  *
  * **Example** (Guard a routing role)
  *
@@ -135,6 +144,7 @@ const RoutingSurfaceKit = LiteralKit([
   "grok-cli",
   "claude-code",
   "jetbrains-codex",
+  "junie-cli",
 ]);
 
 /**
@@ -264,6 +274,7 @@ export const SurfaceEffortDomain: HashMap.HashMap<
   ["codex-cli", effortSet("low", "medium", "high", "xhigh", "max", "ultra")],
   ["codex-plugin", effortSet("low", "medium", "high", "xhigh", "max", "ultra")],
   ["proxy-workflow", effortSet("minimal", "low", "medium", "high", "xhigh", "max")],
+  ["junie-cli", effortSet("low", "medium", "high")],
   ["cursor-seat", effortSet()],
   ["grok-cli", effortSet("low", "medium", "high", "xhigh")],
   ["claude-code", effortSet("low", "medium", "high", "xhigh", "max")],

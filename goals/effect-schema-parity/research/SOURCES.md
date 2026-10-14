@@ -18,7 +18,7 @@ Never fabricate a URL; cite the on-disk section when none exists.
 
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
-| `inv-role-a` | Role A schema surfaces (24 modules (12 root + 9 schema/** + 3 internal/schema provenance-only)) | Effect-TS/effect | `packages/effect/src/Schema*.ts`, `JsonSchema.ts`, `StandardSchema.ts`, `schema/*` (was `unstable/schema/*`), root `Arbitrary.ts` (was `unstable/arbitrary/*`) (rows carry `file:line`) | adoption targets | reference (consume upstream; never vendored) |
+| `inv-role-a` | Role A schema surfaces (24 modules (12 root + 9 schema/** + 3 internal/schema provenance-only)) | Effect-TS/effect | `packages/effect/src/Schema*.ts`, `JsonSchema.ts`, `StandardSchema.ts`, `schema/*` (was `schema/*`), root `Arbitrary.ts` (was `arbitrary/*`) (rows carry `file:line`) | adoption targets | reference (consume upstream; never vendored) |
 | `role-b` | Role B idiom exemplars (39 modules) | Effect-TS/effect | `explorations/effect-schema-parity/CAPTURE.md` module list; `research/idiom-role-b.json` | idiom rubric; six may replace local concepts (group G) | reference |
 | `hint-28` | rc.112..main schema commits | Effect-TS/effect | `explorations/effect-schema-parity/research/upstream-delta.md` per-commit `path:line` | delta | reference |
 | `docs` | `packages/effect/SCHEMA.md`, `migration/schema.md` | Effect-TS/effect | repo root / `packages/effect/` | doctrine | reference |

@@ -11,7 +11,7 @@ Status: `in-progress` (P1 started 2026-09-22 with PR 1; graduated 2026-09-22).
 | P0 Research | complete | Done in the exploration (ten lanes, Gate B, Gate C; rc.117 on `main`). | `explorations/effect-mcp-2026-07-28/RESEARCH.md` and `research/verification/README.md`. |
 | P1 Implement | in-progress | Four PRs below; PR 1 published 2026-09-22 from lane `mcp-stateless-kit` (branch `feat/mcp-stateless-kit-pr1`). | Acceptance criteria met per PR. |
 | P2 Verify | pending | package-verify per package, conformance per host, capture record. | Green or blockers documented. |
-| P3 Yeet: PR to mergeable | pending | `bun run beep yeet publish --start-pr-early --monitor --pr` per PR; goal slug in each commit. | `mergeStateStatus` CLEAN; zero unresolved threads. |
+| P3 Yeet: PR to mergeable | pending | `bun run beep yeet publish --monitor --pr` per PR; goal slug in each commit. | `mergeStateStatus` CLEAN; zero unresolved threads. |
 | P4 Close | pending | Reflection and status flip in the final PR. | Reflection exists; `bun run beep goals set-status mcp-stateless-kit-and-drivers completed-retained`. |
 
 ## PR train
@@ -76,7 +76,7 @@ Status: `in-progress` (P1 started 2026-09-22 with PR 1; graduated 2026-09-22).
 
 ## Execution Notes
 
-- Validate every Effect API against `node_modules/effect/dist/unstable/ai/**`; the frozen research
+- Validate every Effect API against `node_modules/effect/dist/ai/**`; the frozen research
   predates Effect#8326. The npm package ships no tests: the conformance sources come from the
   reference clone (`.repos/effect`).
 - Record Goal B's start checkpoint ("PR 1 merged") in this README so Goal B can overlap PR 2–4.

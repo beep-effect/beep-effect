@@ -102,7 +102,7 @@ fixture office-action.pdf|.docx        ← BRICK: clean fixture in spike fixture
    **porting the v3 `EvidenceSpan` char-offset primitive** into `Evidence`
    (`32 amendment` §"speed-to-MVP": port the thin slice, not the engine). PROV-O
    provenance is epistemic-owned and already live in `@beep/semantic-web` +
-   `@beep/rdf/Vocab/Prov.ts` (`51 §2.2`).
+   `packages/foundation/modeling/rdf/src/Vocab/Prov.ts` (`51 §2.2`).
 
 2. **`law-practice-office-action-spike`** — the **IP-LAW VERTICAL + the loop
    wiring** (law-practice slice). Owns: `OfficeAction` / `Claim` / `Rejection`

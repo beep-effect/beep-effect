@@ -791,6 +791,13 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     rootTaskLane(repoRoot, "lint:effect-imports-markdown", "lint:effect-imports-markdown")
   ),
   githubCheckLane(
+    "lint:retired-effect-paths",
+    "cheap-gates",
+    "repo-quality",
+    "preflight",
+    rootTaskLane(repoRoot, "lint:retired-effect-paths", "lint:retired-effect-paths")
+  ),
+  githubCheckLane(
     "lint:schema-first",
     "cheap-gates",
     "repo-quality",

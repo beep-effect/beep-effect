@@ -92,7 +92,7 @@ Candidates still apply. Deferred questions with owners are in
   MAP gate "upstream ships a schema compiler surface" fired: effect PR #7908
   (`c19c63fb71`, first release rc.116) shipped `SchemaCompiler`,
   `SchemaJITCompiler` and `SchemaAOTCompiler`, and the repo moved to the
-  main snapshot `e5f7d12af9` (rc.118 line) where `unstable/` is gone. Ten
+  main snapshot `e5f7d12af9` (rc.118 line) where every module sits at its top-level path (#8354). Ten
   decisions (D1–D10) recorded in `DECISIONS.md`; research lanes refresh the
   inventory at the catalog pin, census every `SchemaUtils` export, and spike
   the compilers; the verdict waits for the operator at align. The parity

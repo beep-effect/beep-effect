@@ -8,7 +8,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
 
-Make every in-scope `effect/unstable/process` consumer own its process lifetime,
+Make every in-scope `effect/process` consumer own its process lifetime,
 stdio, exit status, timeout escalation, and platform layer explicitly while
 restoring the repo CLI's existing `StepExec` / `GitExec` boundary.
 

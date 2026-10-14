@@ -92,6 +92,13 @@ copied).
 - The shared writer cannot take an agent-kind override without behaviour change for Claude rows.
 - The lane needs `--sandbox disabled` to complete (stop; report the blocked path; never disable).
 
+## Decision Log
+
+| Date | Decision | Reason | Reversal |
+| --- | --- | --- | --- |
+| 2026-10-14 | R1–R9 of the routing refresh (Fable orchestrator with Opus children, `gpt-6-astra` as `review.panel`, `grok-4.7` research, `muse.opt-in`, `gpt-6-luna` lightweight, Cursor `-medium`/`-high` ids, Junie volume pool, Junie accounts meter). | Operator rulings in a grilling session over a live routing audit; full table in [`history/2026-10-14-routing-refresh.md`](./history/2026-10-14-routing-refresh.md). | Per-row reversal in that record; re-adopt the seed with `beep models init --adopt`. |
+| 2026-10-14 | R10: the accounts poller reuses the Junie access token (cached, then stored) and refreshes in memory only after a 401/403, aborts on a rotated refresh token, and never writes the credential back. | Junie persists a stale access token; JetBrains does not rotate refresh tokens (verified: keyring item unmodified since 2026-09-25 across refreshes; refresh response returned the same token). | Drop the Junie provider from `AccountProvider`. |
+
 ## Exception Ledger
 
 None yet.

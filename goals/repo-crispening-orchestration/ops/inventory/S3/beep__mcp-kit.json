@@ -26,7 +26,7 @@
     "roiRank": 0,
     "exception": {
       "reason": "Faithful mirror of upstream registerToolkit's own cast: effect-v4 McpServer.ts:684-688 does `yield* (toolkit as any as Effect.Effect<Toolkit.WithHandler<Tools>, never, Exclude<Tool.HandlersFor<Tools>, McpServerClient>>)`. Toolkit's Effect-yieldable typing is an upstream type-system limit no Effect narrowing primitive can express, and this module exists only because upstream offers no dispatch-wrapping seam (it must mirror the registration loop verbatim). The mcp-kit cast is the same shape with `unknown` instead of `any`.",
-      "boundary": "upstream effect/unstable/ai McpServer.registerToolkit mirror -- type-system limit at the Toolkit yield"
+      "boundary": "upstream effect/ai McpServer.registerToolkit mirror -- type-system limit at the Toolkit yield"
     }
   },
   {
@@ -55,7 +55,7 @@
     "mechanization": "judgment",
     "roiRank": 0,
     "exception": {
-      "reason": "Upstream Tool#annotate returns the widened Tool<Name, Config, Requirements>, not the caller's T (verified .repos/effect-v4/packages/effect/src/unstable/ai/Tool.ts:341: annotate<I, S>(tag, value): Tool<Name, Config, Requirements>), so preserving the caller's specific tool type through a generic <T extends AiTool.Any>(tool: T) => T combinator requires the re-narrow; annotations do not change Name/Config/Requirements, so it is sound, and both sites carry comments documenting exactly this. No Effect narrowing primitive (P.*, S.is, Match) can express generic-identity preservation across an upstream-widening method.",
+      "reason": "Upstream Tool#annotate returns the widened Tool<Name, Config, Requirements>, not the caller's T (verified .repos/effect-v4/packages/effect/src/ai/Tool.ts:341: annotate<I, S>(tag, value): Tool<Name, Config, Requirements>), so preserving the caller's specific tool type through a generic <T extends AiTool.Any>(tool: T) => T combinator requires the re-narrow; annotations do not change Name/Config/Requirements, so it is sound, and both sites carry comments documenting exactly this. No Effect narrowing primitive (P.*, S.is, Match) can express generic-identity preservation across an upstream-widening method.",
       "boundary": "type-system limit at the upstream Tool#annotate return type (ToolAnnotations.ts:84 and TierGate.ts:446)"
     }
   },

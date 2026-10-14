@@ -148,20 +148,98 @@ export const ExplorationProjectionAuthority = LiteralKit(["event-stream", "manif
  */
 export type ExplorationProjectionAuthority = typeof ExplorationProjectionAuthority.Type;
 
-class ExplorationManifestEntry extends S.Class<ExplorationManifestEntry>($I`ExplorationManifestEntry`)(
+/**
+ * Packet links an exploration manifest records.
+ *
+ * **Details**
+ *
+ * Only `goals` is modeled: graduation appends its children there. Other link
+ * keys (`docs`, `supersededBy`) are stripped on decode and survive only
+ * through byte-preserving edits.
+ *
+ * **Example** (Read graduated goal links)
+ *
+ * ```ts
+ * import { ExplorationManifestLinks } from "@beep/repo-cli/commands/Explore"
+ *
+ * const links = ExplorationManifestLinks.make({ goals: ["goals/skill-contract-kernel"] })
+ * console.log(links.goals.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ExplorationManifestLinks extends S.Class<ExplorationManifestLinks>($I`ExplorationManifestLinks`)(
+  {
+    goals: S.Array(S.String),
+  },
+  $I.annote("ExplorationManifestLinks", {
+    description: "Goal packet links recorded by an exploration manifest.",
+  })
+) {}
+
+/**
+ * Exploration manifest fields the projector and graduation planner consume.
+ *
+ * **Example** (Construct a decompose-stage entry)
+ *
+ * ```ts
+ * import { ExplorationManifestEntry } from "@beep/repo-cli/commands/Explore"
+ *
+ * const entry = ExplorationManifestEntry.make({
+ *   slug: "typed-agent-skill-contracts",
+ *   title: "Typed Agent Skill Contracts",
+ *   status: "active",
+ *   stage: "decompose",
+ *   updated: "2026-08-26",
+ * })
+ * console.log(entry.stage) // "decompose"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ExplorationManifestEntry extends S.Class<ExplorationManifestEntry>($I`ExplorationManifestEntry`)(
   {
     slug: PacketSlug,
     title: S.NonEmptyString,
     status: ExplorationStatus,
     stage: ExplorationStage,
     updated: S.NonEmptyString,
+    links: S.optionalKey(ExplorationManifestLinks),
   },
   $I.annote("ExplorationManifestEntry", {
     description: "Manifest adoption fields and navigation metadata consumed by the exploration projector.",
   })
 ) {}
 
-class ExplorationManifest extends S.Class<ExplorationManifest>($I`ExplorationManifest`)(
+/**
+ * Minimal `exploration-manifest/v1` contract read from `ops/manifest.json`.
+ *
+ * **Example** (Decode a manifest value)
+ *
+ * ```ts
+ * import { ExplorationManifest } from "@beep/repo-cli/commands/Explore"
+ * import * as S from "effect/Schema"
+ *
+ * const manifest = {
+ *   schemaVersion: "exploration-manifest/v1",
+ *   exploration: {
+ *     slug: "cache-posture",
+ *     title: "Cache posture",
+ *     status: "active",
+ *     stage: "shape",
+ *     updated: "2026-08-27",
+ *   },
+ * }
+ * const decoded = S.decodeUnknownOption(ExplorationManifest)(manifest)
+ * console.log(decoded._tag) // "Some"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ExplorationManifest extends S.Class<ExplorationManifest>($I`ExplorationManifest`)(
   {
     schemaVersion: S.Literal("exploration-manifest/v1"),
     exploration: ExplorationManifestEntry,

@@ -20,7 +20,7 @@
     }
   ],
   "changes": [
-    "Bootstrap dynamic CLI imports move from effect/unstable/cli to effect/cli; no other bootstrap body changes in this comparison.",
+    "Bootstrap dynamic CLI imports move to effect/cli (#8354); no other bootstrap body changes in this comparison.",
     "Lint command imports the moved CLI API and changes the native-fetch diagnostic to name effect/http. The diagnostic bytes change even though violation selection does not change here.",
     "Root ESLint global ignores add the disposable Vitest instrumentation .runtime-* path.",
     "The alias projection adds @beep/repo-cli/commands/HarnessLedger and changes no existing alias."

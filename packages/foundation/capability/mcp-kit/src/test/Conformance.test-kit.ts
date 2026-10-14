@@ -2,7 +2,7 @@
  * Conformance runner for MCP `2026-07-28` hosts built on the kit — a test-only
  * surface (`@beep/mcp-kit/test/Conformance`).
  *
- * Port of the host-relevant arms of Effect's `test/unstable/ai/McpServer`
+ * Port of the host-relevant arms of Effect's `test/ai/McpServer`
  * conformance suite at `effect@4.0.0-rc.117` (`v2026_07_28.test.ts`,
  * `McpConformance/{BaseProtocol,Transports,Tools,Prompts}Test.ts`,
  * `TestUtils/{McpHttpHarness,McpStdioHarness}.ts`), driven through

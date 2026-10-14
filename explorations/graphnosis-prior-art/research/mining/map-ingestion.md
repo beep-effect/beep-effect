@@ -243,7 +243,7 @@ how that gate is specified. Effort M.
   `LangExtractError.fromReason("model-generation-failed" | "model-generation-timeout" | …)`
   channel, never a throw (`Service/index.ts:283-303,311`).
 - Caller-owned network call: the LLM is `LanguageModel.LanguageModel` from
-  `effect/unstable/ai`, resolved from context (`Service/index.ts:278`) — Effect layers give
+  `effect/ai`, resolved from context (`Service/index.ts:278`) — Effect layers give
   this for free and *more* strongly than Graphnosis's convention, since the pure core can
   be tested with a stub layer.
 - Additive-only writes + tally: `LangExtractDiagnostics{alignedCount, candidateCount,

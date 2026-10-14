@@ -80,7 +80,7 @@ Higher sources outrank lower when they conflict.
 ### Observability, devtooling & UX gaps
 - Sidecar **Effect DevTools** layer, `DEVTOOLS`-gated, composing the existing
   `@beep/observability/server` `layerFilteredDevTools` (compose the capability;
-  do NOT hand-roll `effect/unstable/devtools` `DevTools.layer()` in the app).
+  do NOT hand-roll `effect/devtools` `DevTools.layer()` in the app).
 - App-local **`RegistryProvider`** mirroring `apps/oip-web/src/runtime/OipAtomProvider.tsx`, wrapping the app root.
 - **Error toasts** for failed turns via the existing `@beep/ui` sonner — surfaced
   from the app/UI layer (NOT from `@beep/agents-client`, which must not import `@beep/ui`).

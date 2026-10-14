@@ -40,7 +40,7 @@
     "mechanization": "judgment",
     "roiRank": 11,
     "exception": {
-      "reason": "This is a thin sanitized wrapper over Effect's own `PrometheusMetrics.layerHttp` contract, whose `HttpOptions.path` and whole options argument are optional and default `/metrics` upstream (verified .repos/effect-v4/packages/effect/src/unstable/observability/PrometheusMetrics.ts:59-64 and :175-190).",
+      "reason": "This is a thin sanitized wrapper over Effect's own `PrometheusMetrics.layerHttp` contract, whose `HttpOptions.path` and whole options argument are optional and default `/metrics` upstream (verified .repos/effect-v4/packages/effect/src/observability/PrometheusMetrics.ts:59-64 and :175-190).",
       "boundary": "third-party Effect PrometheusMetrics.HttpOptions adapter"
     }
   },

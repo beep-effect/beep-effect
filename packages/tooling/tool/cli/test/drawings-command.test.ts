@@ -1,17 +1,26 @@
-import { DrawingsCommandError, drawingsCommand, renderManifestSummary } from "@beep/repo-cli/commands/Drawings";
+import {
+  DrawingsCommandError,
+  drawingsCommand,
+  PdfBackendToolsLive,
+  renderManifestSummary,
+} from "@beep/repo-cli/commands/Drawings";
 import {
   BoundingBox,
   Camera,
+  DrawingError,
   EngineInfo,
   FigureRecord,
+  LabelFontAlias,
   ModelSummary,
+  PdfBackend,
   RenderManifest,
+  SheetFonts,
   SheetOptions,
 } from "@beep/technical-drawing";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertInstanceOf } from "@effect/vitest/utils";
+import { assertInstanceOf, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as Effect from "effect/Effect";
@@ -20,11 +29,66 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as TestConsole from "effect/testing/TestConsole";
+import { PDFDocument, StandardFonts } from "pdf-lib";
 
 // Command-level coverage that needs no native PDF tools: every case fails or
 // prints before a tool would run, so it holds on hosted runners too.
 const runDrawings = Command.runWith(drawingsCommand, { version: "0.0.0" });
 const TestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
+
+it.layer(PdfBackendToolsLive.pipe(Layer.provideMerge(NodeServices.layer)), { timeout: "30 seconds" })((it) => {
+  it.effect(
+    "maps real PDF page and font facts through the drawing backend adapter",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const dir = yield* fs.makeTempDirectoryScoped();
+      const pdfPath = path.join(dir, "facts.pdf");
+      const doc = yield* Effect.promise(() => PDFDocument.create({ updateMetadata: false }));
+      const font = yield* Effect.promise(() => doc.embedFont(StandardFonts.Helvetica));
+      doc.addPage([612, 792]).drawText("adapter fixture", { font });
+      yield* fs.writeFile(pdfPath, yield* Effect.promise(() => doc.save({ useObjectStreams: false })));
+      const backend = yield* PdfBackend;
+      const facts = yield* backend.inspect(pdfPath);
+      deepStrictEqual(
+        A.map(facts.pages, (page) => [page.widthPt, page.heightPt]),
+        [[612, 792]]
+      );
+      deepStrictEqual(
+        A.map(facts.fonts, (entry) => [entry.name, entry.embedded]),
+        [["Helvetica", false]]
+      );
+      expect(facts.annotationCount).toBe(0);
+      expect(facts.encrypted).toBe(false);
+    })
+  );
+
+  it.effect(
+    "forwards pinned font settings to the PDF driver and preserves a missing-directory failure",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const dir = yield* fs.makeTempDirectoryScoped();
+      const fontDirectory = path.join(dir, "missing-fonts");
+      const backend = yield* PdfBackend;
+      const error = yield* Effect.flip(
+        backend.svgToPdf(
+          [path.join(dir, "sheet.svg")],
+          path.join(dir, "out.pdf"),
+          O.some(
+            SheetFonts.make({
+              directory: fontDirectory,
+              families: [LabelFontAlias.make({ requested: "Arial", family: "Label Boxes" })],
+            })
+          )
+        )
+      );
+      assertInstanceOf(error, DrawingError);
+      expect(error.reason).toBe("pdf");
+      expect(O.getOrThrow(error.cause)).toContain(`The pinned font directory "${fontDirectory}" does not exist.`);
+    })
+  );
+});
 
 const logged = TestConsole.logLines.pipe(Effect.map((lines) => A.join(A.map(lines, String), "\n")));
 

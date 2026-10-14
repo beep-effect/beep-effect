@@ -172,7 +172,7 @@
     "fileCount": 3,
     "totalLoc": 1114,
     "violations": [
-      "Skills/Skills.command.ts (960 LOC): near-monolith mixing at least four concerns \u2014 schema classes (RemoteSkillSource, SkillLockEntry, SkillLockFile, GitHubTree*, CodexSkills*), GitHub HTTP fetch/lockfile business logic (fetchResponseBytes, fetchGitHubTree via effect/unstable/http), Console rendering, and the Command tree",
+      "Skills/Skills.command.ts (960 LOC): near-monolith mixing at least four concerns \u2014 schema classes (RemoteSkillSource, SkillLockEntry, SkillLockFile, GitHubTree*, CodexSkills*), GitHub HTTP fetch/lockfile business logic (fetchResponseBytes, fetchGitHubTree via effect/http), Console rendering, and the Command tree",
       "Missing Skills.schemas.ts \u2014 ~10 S.Class schemas defined inline in the command file",
       "Missing Skills.service.ts \u2014 GitHub sync/lockfile operations are free functions in the command file instead of a Context.Service contract + live layer"
     ],

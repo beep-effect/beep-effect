@@ -40,6 +40,14 @@ export default [
     ".claude/skills/graft/**",
     ".grok/**",
     ".github/skills/impeccable/**",
+    // Vendored skills stay byte-exact upstream (skills-lock.json `vendored`
+    // entries; knowledge-surface-automation design B23).
+    ".claude/skills/grill-me/**",
+    ".claude/skills/oracle/**",
+    ".claude/skills/portless/**",
+    ".claude/skills/shadcn/**",
+    ".claude/skills/teach/**",
+    ".claude/skills/turborepo/**",
     "infra/lambda/**/build/**",
     "packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**",
   ]),

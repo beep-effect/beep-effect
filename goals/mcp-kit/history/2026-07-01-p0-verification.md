@@ -1,6 +1,6 @@
 # P0 Verification — 2026-07-01
 
-Scope: re-verify the pinned `effect/unstable/ai` internals named in `SPEC.md`
+Scope: re-verify the pinned `effect/ai` internals named in `SPEC.md`
 Constraints / `GOAL.md` "Key design facts" against the installed workspace
 source, and produce the concrete new-package wiring checklist for
 `packages/foundation/capability/mcp-kit`. No files outside this report were
@@ -12,13 +12,13 @@ The workspace resolves `effect@4.0.0-beta.92` (root `package.json:158`, root
 `bun.lock:4358`, `node_modules/effect/package.json` `"version": "4.0.0-beta.92"`
 — pin matches `SPEC.md` exactly). `node_modules/effect` is a real materialized
 package directory (not a symlink into `.repos/effect-v4`). A diff of
-`node_modules/effect/src/unstable/ai/McpServer.ts` against
-`.repos/effect-v4/packages/effect/src/unstable/ai/McpServer.ts` shows the two
+`node_modules/effect/src/ai/McpServer.ts` against
+`.repos/effect-v4/packages/effect/src/ai/McpServer.ts` shows the two
 trees have **drifted from each other** (JSDoc reformatting on unrelated
 overloads — resource-registration doc blocks gained multi-line param
 formatting in one but not the other). None of the diffed hunks touch the
 areas this packet depends on. Per the task instruction ("verify against what
-the workspace actually resolves"), **`node_modules/effect/src/unstable/ai/*`
+the workspace actually resolves"), **`node_modules/effect/src/ai/*`
 is the authority used below**, not the `.repos/effect-v4` subtree. This
 tree-divergence itself is worth a maintenance note (see Open Risks) but does
 not affect any claim.
@@ -50,7 +50,7 @@ Secondary, non-blocking observation: the `.repos/effect-v4` subtree text no
 longer matches what `node_modules/effect` actually resolves (see Resolution
 note above). This doesn't threaten any decision here since node_modules is
 authoritative for what actually builds/runs, but P1 implementers should keep
-using `node_modules/effect/src/unstable/ai/*` as the reference, not
+using `node_modules/effect/src/ai/*` as the reference, not
 `.repos/effect-v4`, if they need to re-read source during implementation.
 
 ## New-Package Wiring Checklist

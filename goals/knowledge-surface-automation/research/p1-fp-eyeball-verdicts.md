@@ -150,3 +150,143 @@ subagent, with the orchestrator ruling on ask 2.
 3. **adhd: queued.** The report alone cannot settle it (NEEDS-EVIDENCE), but the
    reviewer verified the installed file matches `UditAkhourii/adhd@55ed38514c` (a single
    MIT file). Its resolution seed is a bounded follow-up task (about one hour).
+
+## Workstream C knowledge doctor — `p4-report-knowledge-doctor.md` (recorded 2026-10-14)
+
+**Verdict: ask 1 accepted; ask 2 ruled (no `planned` class); ask 3 partial.**
+Independent reviewer: an Opus 5.5 subagent run by the orchestrator session, read-only on
+`main`. The orchestrator session ruled on ask 2. The full review is kept outside the repo
+in the orchestrator's gate records. The fixes land in C Stage-2 PR 2.
+
+1. **Assertion inside inline code: ACCEPTED as a true FP class.** The live corpus had four
+   markers, all syntax documentation (one blocking `failed-assertion` in this packet's
+   `SPEC.md`, three advisory) and no real assertion. Both readers ran the same unanchored
+   pattern over raw prose, so the Stage-1 extractor (refs and semantic delta) is fixed in
+   the same PR. A marker now asserts only when it is a whole HTML-comment line outside
+   fences: quoted in an inline code span, written mid-line, or behind a quote or list
+   prefix, it asserts nothing. This is stricter than the grammar's "an HTML comment
+   outside fences"; the reason and reversal are design decision K13.
+2. **Planned commands: RULED, no `planned` span class.** The premise failed: 10 of the 16
+   spans name commands that existed and were removed (`laws dual-arity` 5, `reuse
+   clones` 2, `quality repo-exports-catalog` 2, `graphiti proxy` 1). They are rot and
+   belong to the baseline burn-down with candidates 6–7. The 6 `ai-sync` spans (deferred
+   V2 plans) and line 45 of `goals/lane-bootstrap/SPEC.md` (`worktree add`, the one genuinely
+   planned command) are re-spelled as prose `beep <cmd>`, the #1154 Stage-1 spelling,
+   which is not a command span. The packet `SPEC.md` authoring note now records that
+   spelling. Reversal: a K-decision adding a `planned` class; nothing depends on its
+   absence, so reversing costs one doc change.
+3. **Candidates 3–7: PARTIAL.**
+   - 3 (`…` tails, 3 spans): accepted; rewritten to `<command>`.
+   - 4 (`worktree add`): rejected. It is not a typo for `worktree new`; it is the command
+     `goals/lane-bootstrap` exists to build (see ask 2).
+   - 5 (13 unknown options): split. Accepted 8: `yeet publish --start-pr-early` (7,
+     removed by push-first #1427; the flag is dropped from the spans) and
+     `qa extract --round` (1, in the live browser-qa-loop skill; now `--session` with the
+     round directory). Rejected 5: every `yeet repair --pr` span is the arrow-chain
+     pipeline `repair → verify → publish --pr → monitor`, and `--pr` belongs to
+     `publish`. That is a fifth FP class (arrow-chain notation). The shared command-span
+     eligibility now treats a whitespace-delimited `→` like a shell operator (`->` was
+     already excluded through `>`), so neither stage reads such a chain as one command,
+     while an arrow inside a single argument (a quoted description) does not disqualify
+     the invocation.
+   - 6 (530 broken paths) and 7 (unclassified spans): accepted as the baseline and K9
+     classification burn-down; not rewritten here.
+
+Reviewer riders carried forward: the `verified` span class counts spans the evaluators
+checked, failing ones included (rename or document it before the report becomes a gate
+input), and whether `goals/*/ops/reports/` is archival must be decided before PR 4 seals
+a baseline.
+
+## Workstream C knowledge doctor PR 2b — domain evaluators (recorded 2026-10-14)
+
+**Verdict: asks 4 and 6 accepted, ask 5 answered with doc rewrites, ask 7 rejected; risk 1
+ruled.** Reviews candidates 8–14 of the PR 2b section of `p4-report-knowledge-doctor.md`.
+That section lands with #1690; this record precedes it on `main`. Independent reviewer: an
+Opus 5.5 reviewer run by the orchestrator session (fp-review-E), read-only on the #1690
+head. The orchestrator session ruled on risk 1. The full review is kept outside the repo in
+the orchestrator's gate records. The live `unknown-beep-symbol` counts matched the report
+exactly (241 package, 81 subpath, 6 export findings across 136 documents and 100 causes).
+
+1. **Ask 4, candidate 8 (proposed package names): ACCEPTED, premise corrected; no
+   `planned` class.** About 141 of the ~190 findings name packages that existed and were
+   deleted (the CourtListener, DOL and Federal Register drivers removed in #680, the
+   protobuf driver removed in #690, the canvas family, repo-codegraph, docgen and others).
+   They are rot, not plans. 49 never existed, and only 5 of those sit in active packets.
+   Proposed names are written as prose without a code span (the `SPEC.md` authoring note
+   now records the spelling). The rot is retargeted or sealed into the PR 4 baseline; it is
+   not rewritten here. The HEAD check on `explorations/` stays: those documents make
+   current-state claims, and the rot shows the check catching real decay.
+2. **Ask 5, candidates 9 and 12: doc rewrite for both; both reader changes REJECTED.** A
+   family read (a directory under `packages/` resolves as a package) would hide real
+   staleness, because some family names were once packages, and some names are both a
+   package and a family. An "extension tail means a package-relative path" read has two
+   roots (package root and `src/`), misreads role files and member prose, and would still
+   leave 2 true positives. Applied here:
+   - candidate 9 (42 spans): family names written as packages become the real package
+     (`@beep/epistemic-domain`, `@beep/law-practice-domain`, `@beep/law-practice-tables`,
+     the law-practice use-cases and server packages) where one is meant, or the family
+     directory (`packages/epistemic/`, `packages/law-practice/`, `packages/agents/`)
+     where the family is meant. Most are in `explorations/_gold-intake/GOLD_SYNTHESIS.md`.
+     One negation ("there is no @beep/agents package") takes the prose spelling.
+   - candidate 12 (7 spans): file-shaped specifiers become repo-relative paths, for
+     example `packages/foundation/modeling/rdf/src/Vocab/Prov.ts`, so the paths evaluator
+     checks each against a real tree entry. The 2 true positives (the untracked
+     schema Int.ts and CommonTextSchemas.ts sources cited in
+     `goals/standards-remediation/ops/reports/`) are untouched baseline material. The
+     remaining 2 of the 11 belong to ask 7: the role-file subpath is a prohibition and the
+     `Table.make` subpath is historical narration.
+3. **Ask 6, candidates 10 and 14: 14 ACCEPTED; 10 PARTIAL.** All 14 skill findings match
+   the report (6 floating sources, 6 missing licenses, 2 lock-coverage drifts: `closeout`
+   and `orchestrate` are installed but unlocked). B-3b's v2 migration plus a lock refresh
+   fixes them. Of the 13 standards package findings, 9 are illustrative examples in the
+   onboarding, testing and cross-slice chapters. The other 4 in
+   `standards/memory-architecture/` are not illustrative: two name the deleted
+   repo-codegraph package and two a proposed memory package that never existed. They are
+   respelled as prose ("the since-retired @beep/repo-codegraph package", "a proposed
+   @beep/memory package"), not deleted, because they record decisions about removed or
+   unbuilt things. Rider: the illustrative chapters also carry illustrative broken paths
+   among the 530; a fix for them must write the slice placeholder paths as prose, or the
+   chapter stays red.
+4. **Ask 7, candidates 11 and 13: both archival rules REJECTED.** The report's split was
+   wrong: 22 of the 27 standards symbol findings are prohibitions ("retired, do not
+   import", "not compatibility surfaces"): 9 in `standards/ARCHITECTURE.md`, 5 in
+   `standards/architecture/07-non-slice-families.md`, 1 in
+   `standards/architecture/GLOSSARY.md`, 7 in `standards/architecture/DECISIONS.md`. A doc
+   "fix" that deleted them would strip binding guidance. The true positives are the other
+   5, rewritten here: `09-errors-across-boundaries.md` (the Opaque wrappers were retired in
+   #1347 while the chapter still said they "retire with" it), the `Defect` wrapper twice
+   and the `EntitySchema` subpath (retired in #720) in the architecture `DECISIONS.md`, and
+   the historical `Table.make` subpath there. A filename rule for `DECISIONS.md` would cover
+   93 tracked files, silence 34 path findings in exploration decision logs, take them out
+   of Stage 1, and still miss `04-decision-log.md`. Making `ops/handoffs/` archival would
+   silence live runbooks of active packets (`openclaw-workstation-agent`,
+   `ci-fleet-endgame`); dated handoffs are already archival under each packet's history/handoffs directory.
+   Candidate 13 is fixed instead: `goals/ai-metrics-stack/ops/handoffs/HANDOFF_P7E_CLOSEOUT.md`
+   now reads "lifecycle was `active`", which the packet-status claim grammar stops at.
+
+**Orchestrator ruling on risk 1 (prohibition and "retired" references).** Same shape as the
+C-report ask 2 ruling: no new span class and no reader rule. A prohibition or retirement
+note that names a surface which no longer exists is written in prose without a code span,
+recorded in the same `SPEC.md` authoring note as `beep <cmd>` and the proposed-package
+spelling. Either path keeps the guidance text. This PR applies the prose spelling to the 22
+prohibitions, removing only the code spans so each still reads as a prohibition. The bulk
+fallback, if a later prohibition cannot be respelled safely, is a named baseline group in
+PR 4 (reason: prohibition-of-retired-surface), not an edit made under time pressure.
+
+**Follow-ups for PR 3 and PR 4 (risks 2–5):**
+
+- Risk 2: the counterfactual harness proves only the resolve side. Add failure-path
+  fixtures for the export search that stops silently at 256 files and then reports "does
+  not export", and for a package-level `export * from "@beep/…"` that is never followed.
+  Today's 6 export failures are all real, but that is luck, not coverage.
+- Risk 3: the K9 unclassified worklist grew 56% (19,370 to about 30,200). The report's
+  "mostly turbo task ids" is wrong: about 38% of symbol spans carry `#`, and most of those
+  sit in one packet. Report unclassified counts per evaluator and per file, and plan
+  per-file historical markers as the bulk tool.
+- Risk 4: "verified = checked, not passed" is half done. The schema doc now says "always
+  checked", but the report's verified count still includes about 883 failing spans and
+  does not say so.
+- Risk 5: `packet-status` checks only 3 lifecycle claims across the corpus, and the narrow
+  claim grammar's recall is unmeasured. The paths evaluator also reads branch names as
+  paths (a "branch `goals/…`" span in an active runbook); that FP class needs its own fix,
+  which an `ops/handoffs/` archival rule would only have hidden.

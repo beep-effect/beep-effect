@@ -62,14 +62,56 @@ const Golden = S.fromJsonString(
       volume: S.Finite,
       faceCount: S.Natural,
       edgeCount: S.Natural,
+      // goldens recorded before the overlap count stay byte-identical
+      partOverlaps: S.Natural.pipe(S.withDecodingDefaultTypeKey(Effect.succeed(0))),
     }),
-    figures: S.Array(S.Struct({ figure: S.Natural, view: S.String, svgSha256: S.String, visibleSegments: S.Natural })),
-    shadedSegments: S.Array(S.Natural),
+    figures: S.Array(
+      S.Struct({
+        figure: S.Natural,
+        view: S.String,
+        svgSha256: S.String,
+        visibleSegments: S.Natural,
+        brokenSegments: S.Natural.pipe(S.withDecodingDefaultTypeKey(Effect.succeed(0))),
+      })
+    ),
+    shadedSegments: S.Array(S.Natural).pipe(S.withDecodingDefaultTypeKey(Effect.succeed([]))),
   })
 );
 const decodeGolden = S.decodeUnknownEffect(Golden);
 const repoRoot = new URL("../../../../../", import.meta.url).pathname;
 const goldenPath = new URL("./fixtures/drawings/synthetic-bracket.golden.json", import.meta.url).pathname;
+const crateGoldenPath = new URL("./fixtures/drawings/synthetic-crate.golden.json", import.meta.url).pathname;
+
+// Render a golden's spec twice and check the first run against the golden,
+// the second against the first, and the validator.
+const renderAgainstGolden = Effect.fnUntraced(function* (path: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const paths = yield* Path.Path;
+  const figureSet = yield* FigureSet;
+  const golden = yield* fs.readFileString(path).pipe(Effect.flatMap(decodeGolden));
+  const specPath = paths.join(repoRoot, golden.spec);
+  const dir = yield* fs.makeTempDirectoryScoped();
+  const first = yield* figureSet.render(RenderRequest.make({ specPath, outputDir: paths.join(dir, "a") }));
+  const second = yield* figureSet.render(RenderRequest.make({ specPath, outputDir: paths.join(dir, "b") }));
+  expect(first.scale).toBe(golden.scale);
+  expect(first.model).toEqual(golden.model);
+  expect(
+    A.map(first.figures, (f) => ({
+      figure: f.figure,
+      view: f.view,
+      svgSha256: f.svgSha256,
+      visibleSegments: f.visibleSegments,
+      brokenSegments: f.brokenSegments,
+    }))
+  ).toEqual(golden.figures);
+  expect(second.figures).toEqual(first.figures);
+  expect(second.pdfSha256).toBe(first.pdfSha256);
+  assertSome(
+    O.map(first.validation, (v) => [v.pageCount, v.findings.length]),
+    [8, 0]
+  );
+  return { first, outputDir: paths.join(dir, "a") };
+});
 
 const LiveLayer = Layer.mergeAll(FigureSetLive, PdfTools.makeLayer()).pipe(Layer.provideMerge(NodeServices.layer));
 
@@ -80,30 +122,39 @@ describe("beep drawings live", () => {
       (context) =>
         Effect.gen(function* () {
           if (yield* skipWithoutTools(context)) return;
+          const { first } = yield* renderAgainstGolden(goldenPath);
+          // the bracket has no broken-line parts and no overlapping parts
+          expect(A.map(first.figures, (f) => f.brokenSegments)).toEqual(A.makeBy(8, () => 0));
+          expect(first.model.partOverlaps).toBe(0);
+        })
+    );
+
+    it.effect(
+      "renders the synthetic crate with a dashed broken-line tab to the committed goldens, byte-stable, validator clean",
+      (context) =>
+        Effect.gen(function* () {
+          if (yield* skipWithoutTools(context)) return;
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const figureSet = yield* FigureSet;
-          const golden = yield* fs.readFileString(goldenPath).pipe(Effect.flatMap(decodeGolden));
-          const specPath = path.join(repoRoot, golden.spec);
-          const dir = yield* fs.makeTempDirectoryScoped();
-          const first = yield* figureSet.render(RenderRequest.make({ specPath, outputDir: path.join(dir, "a") }));
-          const second = yield* figureSet.render(RenderRequest.make({ specPath, outputDir: path.join(dir, "b") }));
-          expect(first.scale).toBe(golden.scale);
-          expect(first.model).toEqual(golden.model);
-          expect(
-            A.map(first.figures, (f) => ({
-              figure: f.figure,
-              view: f.view,
-              svgSha256: f.svgSha256,
-              visibleSegments: f.visibleSegments,
-            }))
-          ).toEqual(golden.figures);
-          expect(second.figures).toEqual(first.figures);
-          expect(second.pdfSha256).toBe(first.pdfSha256);
-          assertSome(
-            O.map(first.validation, (v) => [v.pageCount, v.findings.length]),
-            [8, 0]
-          );
+          const { first, outputDir } = yield* renderAgainstGolden(crateGoldenPath);
+          // zero-clearance halving slots, lid and tab: parts touch, none overlap
+          expect(first.model.partOverlaps).toBe(0);
+          // the tab shows above the lid in every view but the two from below
+          const shows = A.map(first.figures, (f) => [f.view, f.brokenSegments > 0] as const);
+          expect(shows).toEqual([
+            ["top-perspective", true],
+            ["bottom-perspective", false],
+            ["top-plan", true],
+            ["bottom-plan", false],
+            ["front", true],
+            ["rear", true],
+            ["left", true],
+            ["right", true],
+          ]);
+          const topPlan = yield* fs.readFileString(path.join(outputDir, "fig-3.svg"));
+          const bottomPlan = yield* fs.readFileString(path.join(outputDir, "fig-4.svg"));
+          expect(topPlan).toContain('stroke-dasharray="8.504 4.252"');
+          expect(bottomPlan).not.toContain('id="broken"');
         })
     );
 

@@ -177,7 +177,7 @@ None are invented.
 **Effect v4 + MCP framework (the ground we build on)**
 - Effect Tool Use docs — <https://effect.website/docs/ai/tool-use/>
 - Effect Configuration docs — <https://effect.website/docs/configuration/>
-- Effect `Tool.ts` (v3 API ref, v4 ground truth is `node_modules/effect/src/unstable/ai/*`) — <https://effect-ts.github.io/effect/ai/ai/Tool.ts.html>
+- Effect `Tool.ts` (v3 API ref, v4 ground truth is `node_modules/effect/src/ai/*`) — <https://effect-ts.github.io/effect/ai/ai/Tool.ts.html>
 - Effect `Layer.ts` (v3 — `Layer.orElse` is stale) — <https://effect-ts.github.io/effect/effect/Layer.ts.html>
 - MCP spec, server/tools (2025-06-18, installed target) — <https://modelcontextprotocol.io/specification/2025-06-18/server/tools>
 - MCP spec, server/tools (2025-11-25, NOT spoken by beta.91) — <https://modelcontextprotocol.io/specification/2025-11-25/server/tools>

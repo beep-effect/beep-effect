@@ -10,6 +10,7 @@ import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { HatchAxis, ShadingStyle } from "./Geometry.schemas.ts";
 import { SANS_FACE, SERIF_FACE } from "./internal/LabelGlyphs.ts";
 import { LabelFace } from "./internal/LabelOutline.ts";
 
@@ -663,7 +664,16 @@ export class SheetFonts extends S.Class<SheetFonts>($I`SheetFonts`)(
 
 /**
  * Sheet options of a render: format, margin standard, line weight, lettering,
- * label gap and label styles, inner safety gap.
+ * label gap and label styles, inner safety gap, shading pitches, and the
+ * broken-line dash pattern.
+ *
+ * **Gotchas**
+ *
+ * Round caps eat half the line weight from each end of a dash. When
+ * `brokenGapMm - lineWeightMm` falls under 0.4 mm the broken layer is drawn
+ * with a gap of `lineWeightMm + 0.4` instead (see `drawnBrokenGapMm` in the composer),
+ * so a broken (unclaimed) outline never prints as a solid line and a heavy
+ * line weight stays usable on a sheet without broken lines.
  *
  * **Example** (Defaults)
  *
@@ -819,12 +829,85 @@ export class SheetOptions extends S.Class<SheetOptions>($I`SheetOptions`)(
       S.withDecodingDefaultTypeKey(Effect.succeed(0.55)),
       S.annotateKey({
         description:
-          "Exposure above which a face stays unshaded. Defaults to 0.55, just below a face seen square-on (1/√3 under the 45° light), so plans and elevations stay line drawings and only oblique faces are shaded.",
+          "Exposure above which a face stays unshaded under the uniform style. Defaults to 0.55, just below a face seen square-on (1/√3 under the 45° light), so plans and elevations stay line drawings and only oblique faces are shaded. Graded shading ignores it.",
+      })
+    ),
+    shadingStyle: ShadingStyle.pipe(
+      S.withConstructorDefault(Effect.succeed("uniform" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("uniform" as const)),
+      S.annotateKey({
+        description:
+          "Shading line spacing: `uniform` (the default, evenly spaced, lit faces blank) or `graded` (every visible planar face, lines from the shadow edge).",
+      })
+    ),
+    shadingAxis: HatchAxis.pipe(
+      S.withConstructorDefault(Effect.succeed("longest-edge" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("longest-edge" as const)),
+      S.annotateKey({
+        description:
+          "Shading line direction: `longest-edge` (the default) or `surface-class` (walls vertical; inclined and level faces along their darkest major edge).",
+      })
+    ),
+    shadingMinFaceSpanMm: S.Finite.check(
+      S.isGreaterThanOrEqualTo(0, {
+        identifier: $I`ShadingMinFaceSpanMmCheck`,
+        title: "Shading Minimum Face Span",
+        description: "A face narrower than this on the sheet is a sliver and gets no shading lines.",
+        message: "Expected a non-negative minimum face span",
+      })
+    ).pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
+      S.annotateKey({
+        description:
+          "Width in mm on the sheet below which a face (a thin board edge, a tab root) gets no shading lines. Defaults to 0 (no slivers).",
+      })
+    ),
+    shadingMinStrokeMm: S.Finite.check(
+      S.isGreaterThanOrEqualTo(0, {
+        identifier: $I`ShadingMinStrokeMmCheck`,
+        title: "Shading Minimum Stroke",
+        description: "A shading stroke shorter than this on the sheet is not drawn.",
+        message: "Expected a non-negative minimum stroke length",
+      })
+    ).pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
+      S.annotateKey({
+        description:
+          "Length in mm on the sheet below which a shading stroke (a chord near a face's pointed corner) is dropped. Defaults to 0 (every chord is drawn).",
+      })
+    ),
+    brokenDashMm: S.Finite.check(
+      S.isGreaterThanOrEqualTo(1, {
+        identifier: $I`BrokenDashCheck`,
+        title: "Broken-Line Dash",
+        description: "Dashes shorter than 1 mm read as dots once the sheet is reduced to two-thirds.",
+        message: "Expected a broken-line dash of at least 1 mm",
+      })
+    ).pipe(
+      S.withConstructorDefault(Effect.succeed(3)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(3)),
+      S.annotateKey({ description: "Dash length of broken (unclaimed) lines, in mm on the sheet. Defaults to 3." })
+    ),
+    brokenGapMm: S.Finite.check(
+      S.isGreaterThanOrEqualTo(0.75, {
+        identifier: $I`BrokenGapCheck`,
+        title: "Broken-Line Gap",
+        description: "Gaps narrower than 0.75 mm close up once round line caps and two-thirds reduction are applied.",
+        message: "Expected a broken-line gap of at least 0.75 mm",
+      })
+    ).pipe(
+      S.withConstructorDefault(Effect.succeed(1.5)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(1.5)),
+      S.annotateKey({
+        description:
+          "Gap between dashes of broken (unclaimed) lines, in mm on the sheet, measured before the round caps. Defaults to 1.5.",
       })
     ),
   },
   $I.annote("SheetOptions", {
     description:
-      "Page format, margin standard, stroke and shading widths, shading pitch range, lettering height, label gap and styles, label font directory, and margin safety gap of a render.",
+      "Page format, margin standard, stroke and shading widths, shading pitch range, style, axis, sliver width and minimum stroke, broken-line dash pattern, lettering height, label gap and styles, label font directory, and margin safety gap of a render.",
   })
 ) {}

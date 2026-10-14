@@ -2,7 +2,7 @@
 
 Repo root: the current working directory. Do not assume an absolute path.
 
-Outcome: every in-scope `effect/unstable/process` consumer explicitly owns
+Outcome: every in-scope `effect/process` consumer explicitly owns
 stdio, scope, exit semantics, timeout escalation, and platform provisioning,
 with compatible repo CLI calls routed through `StepExec` / `GitExec`.
 
@@ -18,7 +18,7 @@ Then read root/package `AGENTS.md` files and the governing architecture docs.
 
 Scope:
 
-- In: current TypeScript consumers of `effect/unstable/process`, canonical repo
+- In: current TypeScript consumers of `effect/process`, canonical repo
   CLI runners, affected platform layers, tests, changesets, and this packet.
 - Out: native `Bun.spawn` / `node:child_process`, new dependencies, a new
   process facade/package, speculative export adoption, and unrelated cleanup.

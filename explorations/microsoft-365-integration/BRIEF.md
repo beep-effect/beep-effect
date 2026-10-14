@@ -40,7 +40,7 @@ Entra app (delegated, auth-code + PKCE)
       │  Context.Service + Layer · M365Error typed errors · S.Redacted secrets ·
       │  OTel spans (counts/sizes, never raw content)
       ▼
-@beep/m365-mcp  ──  effect/unstable/ai (Tool.make · McpServer.layerStdio)  ──►
+@beep/m365-mcp  ──  effect/ai (Tool.make · McpServer.layerStdio)  ──►
       agents in apps/professional-desktop
 
 (future) m365-document-ingest:  content → @beep/tika / @beep/langextract →

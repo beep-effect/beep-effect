@@ -56,7 +56,7 @@
     "roiRank": 12,
     "exception": {
       "reason": "This object is shaped for Effect AI's `AiError.NetworkError` request metadata contract; it is an adapter fallback from Venice diagnostics into a third-party error type.",
-      "boundary": "effect/unstable/ai NetworkError adapter boundary"
+      "boundary": "effect/ai NetworkError adapter boundary"
     }
   },
   {

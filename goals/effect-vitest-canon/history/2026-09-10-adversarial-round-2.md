@@ -136,7 +136,7 @@ Original JSONL evidence cites `quality-scheduler.test.ts:18-20`. The sealed sour
 | `packages/vitest/package.json` | complete; peer vitest `>=5 <6`. |
 | `packages/effect/src/testing/TestClock.ts` | L1–80 module docs; L490–581 `adjust`/`setTime`/`withLive`. No `advance` export. |
 | `packages/effect/src/Clock.ts` | L1–130 interface including `currentTimeMillis` and `monotonicTimeNanos`. |
-| `packages/effect/src/unstable/arbitrary/Arbitrary.ts` | L1–80; L530–549 `checkEffect`. |
+| `packages/effect/src/Arbitrary.ts` | L1–80; L530–549 `checkEffect`. |
 | `packages/effect/src/Layer.ts` | L2295–2324 `mock`. |
 | `packages/effect/src/Effect.ts` | L4698–4703 `sleep`. |
 | `packages/effect/src/FileSystem.ts` | L140–191 `exists`/`makeTempDirectoryScoped`; L655–674 stub object (charter “service at 663” is this stub `exists()`, not the service). |

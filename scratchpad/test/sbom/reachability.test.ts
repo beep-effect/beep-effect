@@ -19,7 +19,11 @@ import { fileURLToPath } from "node:url";
 import { assert, describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as S from "effect/Schema";
-import * as Ts from "typescript";
+import * as Ts from "@typescript/native/unstable/ast";
+import { TsNativeApi, TsNativeConfig } from "@beep/repo-utils/TsNativeApi";
+import { NodeServices } from "@effect/platform-node";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "effected", "sbom");
 
@@ -30,11 +34,13 @@ const Manifest = S.Struct({
 });
 
 /** Every runtime import or re-export, ignoring prose, string contents and type-only edges. */
-const runtimeSpecifiers = (source: string): ReadonlyArray<string> => {
+const nativeLayer = TsNativeApi.layer(TsNativeConfig.make({ cwd: process.cwd(), tsconfig: "tsconfig.json" })).pipe(Layer.provide(NodeServices.layer));
+const runtimeSpecifiers = Effect.fn("runtimeSpecifiers")(function* (source: string) {
 	// Vendored siblings expose a larger graph than upstream's bare package edges.
 	// Parse declarations so an exported class's error message containing `from`
 	// cannot become a phantom dependency, and comment tokens cannot hide imports.
-	const file = Ts.createSourceFile("reachability.ts", source, Ts.ScriptTarget.Latest, true, Ts.ScriptKind.TS);
+	const api = yield* TsNativeApi;
+	const file = yield* api.parseSource("reachability.ts", source);
 	const specifiers: Array<string> = [];
 	for (const statement of file.statements) {
 		if (!Ts.isImportDeclaration(statement) && !Ts.isExportDeclaration(statement)) continue;
@@ -48,10 +54,10 @@ const runtimeSpecifiers = (source: string): ReadonlyArray<string> => {
 		specifiers.push(specifier.text);
 	}
 	return specifiers;
-};
+}, Effect.scoped);
 
 /** Runtime files and bare specifiers, including the lab's vendored sibling modules. */
-const reachableImports = (entry: string): { readonly files: ReadonlySet<string>; readonly bare: ReadonlySet<string> } => {
+const reachableImports = Effect.fn("reachableImports")(function* (entry: string) {
 	const seen = new Set<string>();
 	const bare = new Set<string>();
 	const queue = [resolve(SRC, entry)];
@@ -59,7 +65,7 @@ const reachableImports = (entry: string): { readonly files: ReadonlySet<string>;
 		const file = queue.pop();
 		if (file === undefined || seen.has(file)) continue;
 		seen.add(file);
-		for (const specifier of runtimeSpecifiers(readFileSync(file, "utf8"))) {
+		for (const specifier of (yield* runtimeSpecifiers(readFileSync(file, "utf8")))) {
 			if (specifier.startsWith(".")) {
 				queue.push(resolve(dirname(file), specifier.replace(/\.js$/, ".ts")));
 			} else {
@@ -68,13 +74,12 @@ const reachableImports = (entry: string): { readonly files: ReadonlySet<string>;
 		}
 	}
 	return { files: seen, bare };
-};
+});
 
 /** Every bare (non-relative) specifier reachable at runtime from `entry`. */
-const reachableBareImports = (entry: string): ReadonlySet<string> => reachableImports(entry).bare;
+const reachableBareImports = Effect.fn("reachableBareImports")(function* (entry: string) { return (yield* reachableImports(entry)).bare; });
 
-const reachesSigstore = (entry: string): boolean =>
-	[...reachableBareImports(entry)].some((specifier) => specifier.startsWith("@sigstore/"));
+const reachesSigstore = Effect.fn("reachesSigstore")(function* (entry: string) { return [...(yield* reachableBareImports(entry))].some((specifier) => specifier.startsWith("@sigstore/")); });
 
 /** Everything a consumer can reach without ever naming the signer. */
 const PURE_MODULES = [
@@ -89,7 +94,7 @@ const PURE_MODULES = [
 ];
 
 describe("bundle reachability", () => {
-	it("the walker does not lose imports after a /*-bearing token in prose", () => {
+	it.effect("the walker does not lose imports after a /*-bearing token in prose", Effect.fnUntraced(function* () {
 		// The stripper's own regression test, self-contained rather than relying on
 		// the real sources. Every other assertion here happens to discriminate only
 		// because this package's prose contains `@sigstore/*` in a line comment;
@@ -112,51 +117,51 @@ describe("bundle reachability", () => {
 			'import type { Package } from "@effected/package-json";',
 			'export type { Person } from "@effected/package-json";',
 		].join("\n");
-		assert.deepStrictEqual([...runtimeSpecifiers(fixture)], ["effect", "../../effected/spdx/index.ts"]);
-	});
+		assert.deepStrictEqual([...(yield* runtimeSpecifiers(fixture))], ["effect", "../../effected/spdx/index.ts"]);
+	}, Effect.scoped, Effect.provide(nativeLayer)));
 
-	it("the signer DOES reach @sigstore/*", () => {
+	it.effect("the signer DOES reach @sigstore/*", Effect.fnUntraced(function* () {
 		// The control. Without it, every assertion below could pass because the
 		// walker is broken rather than because the edge is absent — the classic
 		// test that cannot fail.
-		assert.isTrue(reachesSigstore("SigstoreSigner.ts"));
-	});
+		assert.isTrue((yield* reachesSigstore("SigstoreSigner.ts")));
+	}, Effect.scoped, Effect.provide(nativeLayer)));
 
-	it("no pure module reaches @sigstore/*", () => {
+	it.effect("no pure module reaches @sigstore/*", Effect.fnUntraced(function* () {
 		for (const entry of PURE_MODULES) {
-			assert.isFalse(reachesSigstore(entry), `${entry} reaches @sigstore/* — the signer's dependency has leaked`);
+			assert.isFalse((yield* reachesSigstore(entry)), `${entry} reaches @sigstore/* — the signer's dependency has leaked`);
 		}
-	});
+	}, Effect.scoped, Effect.provide(nativeLayer)));
 
-	it("the bundle VALUE is reachable without the signer", () => {
+	it.effect("the bundle VALUE is reachable without the signer", Effect.fnUntraced(function* () {
 		// `SigstoreBundle` and `IdentityToken` are their own modules precisely so a
 		// verifier — or anything that merely stores or forwards a bundle — can name
 		// the shape without loading Fulcio's transport.
-		assert.deepStrictEqual([...reachableBareImports("SigstoreBundle.ts")].sort(), ["@beep/identity/packages", "effect/Schema"]);
-		assert.deepStrictEqual([...reachableBareImports("IdentityToken.ts")].sort(), [
+		assert.deepStrictEqual([...(yield* reachableBareImports("SigstoreBundle.ts"))].sort(), ["@beep/identity/packages", "effect/Schema"]);
+		assert.deepStrictEqual([...(yield* reachableBareImports("IdentityToken.ts"))].sort(), [
 			"@beep/identity/packages", "effect/Context", "effect/Effect", "effect/Layer", "effect/Predicate", "effect/Redacted", "effect/Schema",
 		]);
-	});
+	}, Effect.scoped, Effect.provide(nativeLayer)));
 
-	it("the SBOM half reaches only effect and the kit packages it derives from", () => {
+	it.effect("the SBOM half reaches only effect and the kit packages it derives from", Effect.fnUntraced(function* () {
 		// D9: upstream's bare @effected/spdx edge is a relative edge in the lab.
 		// Check that sibling explicitly, alongside the complete external closure.
 		for (const entry of ["Sbom.ts", "SbomMetadataSource.ts"]) {
-			const { files } = reachableImports(entry);
+			const { files } = yield* reachableImports(entry);
 			assert.isTrue(files.has(resolve(SRC, "..", "spdx", "index.ts")), `${entry} derives from the lab SPDX module`);
 			assert.isFalse(
 				files.has(resolve(SRC, "..", "package-json", "index.ts")),
 				`${entry} must not drag package-json's runtime IO in`,
 			);
 		}
-		assert.deepStrictEqual([...reachableBareImports("Sbom.ts")].sort(), [
+		assert.deepStrictEqual([...(yield* reachableBareImports("Sbom.ts"))].sort(), [
 			"@beep/identity/packages", "@beep/schema/LiteralKit", "effect/Array", "effect/Effect", "effect/FileSystem",
 			"effect/Function", "effect/HashMap", "effect/HashSet", "effect/Match", "effect/MutableHashSet", "effect/Option",
 			"effect/Order", "effect/Record", "effect/Result", "effect/Schema", "effect/SchemaIssue",
 			"effect/SchemaTransformation", "effect/String",
 		]);
 		assert.deepStrictEqual(
-			[...reachableBareImports("SbomMetadataSource.ts")].sort(),
+			[...(yield* reachableBareImports("SbomMetadataSource.ts"))].sort(),
 			[
 				"@beep/identity/packages", "@beep/schema/LiteralKit", "effect/Array", "effect/Effect", "effect/HashMap",
 				"effect/HashSet", "effect/Match", "effect/MutableHashSet", "effect/Option", "effect/Record", "effect/Result",
@@ -164,9 +169,9 @@ describe("bundle reachability", () => {
 			],
 			"SbomMetadataSource reads `Package` as a TYPE only — a value import would drag package-json's IO in",
 		);
-	});
+	}, Effect.scoped, Effect.provide(nativeLayer)));
 
-	it("the statement and provenance models reach nothing but effect", () => {
+	it.effect("the statement and provenance models reach nothing but effect", Effect.fnUntraced(function* () {
 		// This is what lets a VERIFIER depend on the shapes alone.
 		for (const entry of ["InTotoStatement.ts", "SlsaProvenance.ts", "NtiaReport.ts"]) {
 			const expected = entry === "InTotoStatement.ts"
@@ -174,28 +179,28 @@ describe("bundle reachability", () => {
 				: entry === "NtiaReport.ts"
 					? ["@beep/identity/packages", "@beep/schema/LiteralKit", "effect/Schema", "effect/String"]
 					: ["@beep/identity/packages", "effect/Schema"];
-			assert.deepStrictEqual([...reachableBareImports(entry)].sort(), expected, entry);
+			assert.deepStrictEqual([...(yield* reachableBareImports(entry))].sort(), expected, entry);
 		}
-	});
+	}, Effect.scoped, Effect.provide(nativeLayer)));
 
-	it("the entry point reaches the signer, and that is correct", () => {
+	it.effect("the entry point reaches the signer, and that is correct", Effect.fnUntraced(function* () {
 		// `src/index.ts` re-exports `SigstoreSigner`, so of course it reaches
 		// Sigstore. Asserting otherwise would be asserting the package does not
 		// ship its own signer. The property that matters is the one above: the
 		// pure modules are reachable WITHOUT it, so a bundler that sees only
 		// `Sbom.generate` can drop the rest.
-		assert.isTrue(reachesSigstore("index.ts"));
-	});
+		assert.isTrue(yield* reachesSigstore("index.ts"));
+	}, Effect.scoped, Effect.provide(nativeLayer)));
 
-	it("the package declares itself side-effect free", () => {
+	it.effect("the package declares itself side-effect free", Effect.fnUntraced(function* () {
 		// The other half of the mechanism: without this a bundler must assume
 		// evaluating an unreferenced module matters, and keeps it.
 		const manifest: unknown = JSON.parse(readFileSync(resolve(SRC, "package.json"), "utf8"));
 		assertTrue(S.is(Manifest)(manifest));
 		assert.strictEqual(manifest.sideEffects, false);
-	});
+	}, Effect.scoped, Effect.provide(nativeLayer)));
 
-	it("every runtime dependency is declared", () => {
+	it.effect("every runtime dependency is declared", Effect.fnUntraced(function* () {
 		// A package you import but do not declare is how a peer closure rots.
 		const manifest: unknown = JSON.parse(readFileSync(resolve(SRC, "package.json"), "utf8"));
 		assertTrue(S.is(Manifest)(manifest));
@@ -203,7 +208,7 @@ describe("bundle reachability", () => {
 			...Object.keys(manifest.dependencies ?? {}),
 			...Object.keys(manifest.peerDependencies ?? {}),
 		]);
-		for (const specifier of reachableBareImports("index.ts")) {
+		for (const specifier of (yield* reachableBareImports("index.ts"))) {
 			// A `node:` builtin is not a package and can never appear in a manifest.
 			if (specifier.startsWith("node:")) continue;
 			const packageName = specifier.startsWith("@")
@@ -211,9 +216,9 @@ describe("bundle reachability", () => {
 				: specifier.split("/")[0];
 			assert.isTrue(declared.has(packageName ?? specifier), `${specifier} is imported but not declared`);
 		}
-	});
+	}, Effect.scoped, Effect.provide(nativeLayer)));
 
-	it("no module reaches a namespace object that would collapse the split", () => {
+	it.effect("no module reaches a namespace object that would collapse the split", Effect.fnUntraced(function* () {
 		// The single easiest way to destroy this property is a convenience object
 		// — `Sbom = { generate, sign }` — which makes every SBOM consumer reachable
 		// to Fulcio's HTTP stack silently. The entry point re-exports free-standing
@@ -232,5 +237,5 @@ describe("bundle reachability", () => {
 			const source = readFileSync(resolve(SRC, entry), "utf8");
 			assert.notInclude(source, "./SigstoreSigner.ts", `${entry} imports the signer module`);
 		}
-	});
+	}, Effect.scoped, Effect.provide(nativeLayer)));
 });

@@ -43,7 +43,7 @@ Out of scope for v1:
 
 - product/runtime customer AI analytics
 - replacing `@beep/observability` as the runtime observability package
-- making `effect/unstable/eventlog` the only deploy-safe raw source of record
+- making `effect/eventlog` the only deploy-safe raw source of record
 - exposing raw prompt or transcript bodies in observability UIs
 - public internet access to the metrics stack
 - requiring measured provider/gateway token, cost, latency, or tool-call

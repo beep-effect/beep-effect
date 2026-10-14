@@ -301,14 +301,14 @@ packages/foundation/modeling/schema/src/Color/
 ```
 
 Only the concept index is public. Role files are source topology. Public
-consumers should not import `@beep/schema/Color/Color.hex` or similar role
+consumers should not import @beep/schema/Color/Color.hex or similar role
 subpaths. Utility namespaces such as `SchemaUtils` are the exception: when a
 helper is itself the public concept, helper leaves may stay public. Former
 topical suites are represented by PascalCase leaf concept modules and flat
 exact public subpaths. Lowercase topical source and public paths such as
-`src/color/`, `src/http/`, `@beep/schema/color`, and
-`@beep/schema/http/headers` are retired topology, not compatibility surfaces.
-Suite aggregate modules such as `@beep/schema/Dom` and `@beep/schema/Http` are
+`src/color/`, `src/http/`, @beep/schema/color, and
+@beep/schema/http/headers are retired topology, not compatibility surfaces.
+Suite aggregate modules such as @beep/schema/Dom and @beep/schema/Http are
 retired; import leaf concept modules such as `@beep/schema/DomReactNode` and
 `@beep/schema/HttpHeaders` instead.
 

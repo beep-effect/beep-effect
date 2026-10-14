@@ -107,7 +107,7 @@ all possible array/turn values. Existing array constraints remain: Empty has
 two empty arrays; Loading has no timeline turns; Failed/Ready can retain
 empty or populated arrays. Failure with previous Success must not lose
 content. The local Effect v4 reference at
-`.repos/effect/packages/effect/src/unstable/reactivity/AsyncResult.ts:416-422`
+`.repos/effect/packages/effect/src/reactivity/AsyncResult.ts:416-422`
 returns previous Success values on Failure and None on Initial; `217-223`
 constructs Initial with waiting default false. These are API evidence, not
 additional campaign corpus files.
@@ -319,7 +319,7 @@ evidence, not census corpus. The Effect reference is separately hashed.
 | `apps/professional-desktop/test/optimistic-user-turn.test.tsx` | `9a7a257990ce02627c50bc8670d4fe78f1a1781a122cfa282963e828ceb74d42` |
 | `apps/professional-desktop/test/composer-policy.test.ts` | `a806964c1a059ad07df8249c9fb47770f34dbc99be9b21bd0a967dd11d42c312` |
 | `apps/professional-desktop/test/dock-shell.test.tsx` | `b4c374f628e25b93869808c03da2028ed1f5ae08d82356ea856bc91c35ef8117` |
-| `.repos/effect/packages/effect/src/unstable/reactivity/AsyncResult.ts` (reference) | `acece66051b92124e453ddc3e4edfc0009955efe822071559c0d02f125af68c4` |
+| `.repos/effect/packages/effect/src/reactivity/AsyncResult.ts` (reference) | `acece66051b92124e453ddc3e4edfc0009955efe822071559c0d02f125af68c4` |
 
 Current designs were read only; their baseline hashes are transcript
 `b74ffaa30546df1dcea2b906f8b1cba22d6e68b043720aa1489926955ba9b890`,

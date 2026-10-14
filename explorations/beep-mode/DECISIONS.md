@@ -144,7 +144,7 @@ for gesture-bearing UI; (4) worktree hygiene: preserve operator work, keep
 publication authority explicit; (5) friction receipts at the moment of
 friction; (6) packet lifecycle closes in the same PR as the work.
 
-**Rationale:** Machine-enforced laws (Effect collections, `effect/unstable/http`,
+**Rationale:** Machine-enforced laws (Effect collections, `effect/http`,
 `LiteralKit`) already have lints; restating them as principles violates
 Encode Lessons in Structure. Rejected in this round: an effect-native
 vocabulary pointer principle; a delegation/quota-routing principle; working-

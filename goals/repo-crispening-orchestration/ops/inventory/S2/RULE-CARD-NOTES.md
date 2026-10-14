@@ -23,7 +23,7 @@
 
 - Missing `SchemaUtils.withNoneDefault` on `S.OptionFromOptionalKey(...)` fields is a high-signal S2 pattern. This batch found it across `@beep/semantic-web` service contracts (`services/jsonld-document.ts:86`, `services/shacl-validation.ts:77`, `services/sparql-query.ts:75`, etc.).
 - Presentation defaults should not be treated like schema defaults. Examples: `packages/foundation/modeling/md/src/Md.render.ts:268` renders absent code-fence language as an empty info string; `packages/foundation/capability/semantic-web/src/adapters/jsonld-document.ts:416` uses empty sort-key pieces for absent `@type` / `@language`.
-- Third-party option bags need a boundary exception when the local wrapper is intentionally thin. Example: `packages/foundation/capability/observability/src/server/Prometheus.ts:52` mirrors Effect v4 `PrometheusMetrics.HttpOptions` and `/metrics` default behavior from `.repos/effect-v4/packages/effect/src/unstable/observability/PrometheusMetrics.ts:59-64` and `:175-190`.
+- Third-party option bags need a boundary exception when the local wrapper is intentionally thin. Example: `packages/foundation/capability/observability/src/server/Prometheus.ts:52` mirrors Effect v4 `PrometheusMetrics.HttpOptions` and `/metrics` default behavior from `.repos/effect-v4/packages/effect/src/observability/PrometheusMetrics.ts:59-64` and `:175-190`.
 
 ---
 

@@ -16,6 +16,7 @@ DECISIONS.md, research/inventory/ verdict tables.
 | 4 | `browser-lease-capabilities` | Fresh-ref epochs, exclusive tab leases with fencing, capability-scoped default-off browser action set, human-handoff protocol state for the beep qa loop. | 1 (gates) | candidate |
 | 5 | `memory-routing-manifest` | Intent→context routing manifest as schema-validated data (extending `@beep/ai-sync`), plus the transcript-audit gate proving memory reads preceded first response; SKILL.md projections for `.claude/skills` become kernel-backed here. | 1 (contract root, projection) | candidate |
 | 6 | `fleet-protocol-contracts` | A2A/ActivityPub typed protocol clients with discovery-before-invocation phase typing; credential-chain state machine; shared OAuth/PKCE service. | 1 (evidence types) | candidate |
+| 7 | `skill-contract-gate-certificates` | Amendment J: digest-bound gate certificates on the `@beep/skill-contract` kernel (in-toto Statement envelope, EARL/ACT outcomes, explicit reach, apply-by-id plan); first slice is one certificate-producing QA judge settlement. | 1 | **GRADUATED 2026-10-14** → [`goals/skill-contract-gate-certificates/`](../../goals/skill-contract-gate-certificates/) |
 
 ## Sequencing rationale
 
@@ -72,10 +73,10 @@ Binding inputs for decompose:
 - apply-by-id is a separate digest-bound plan with stale/unknown-id refusal;
 - the first slice is one certificate-producing QA judge settlement.
 
-The open decomposition choice is whether this becomes candidate 7,
-`skill-contract-gate-certificates`, or amends an existing later-wave candidate.
-It does not amend candidate 1 after closure, and candidate 3's current Yeet and
-bounded-recovery mission must not absorb it without an explicit MAP amendment.
+Resolved 2026-10-14 (DECISIONS): this becomes candidate 7,
+`skill-contract-gate-certificates`, a new goal. It does not amend candidate 1
+after closure, and candidate 3's current Yeet and bounded-recovery mission does
+not absorb it.
 
 ## First vertical slice (inside goal 1)
 

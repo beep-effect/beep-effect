@@ -65,7 +65,7 @@ Higher sources outrank lower sources when they conflict.
   `tool_choice`, `disable_parallel_tool_use`); extract blocks from
   `input_json_delta` via `scanChunk` (port its property tests,
   proof `test/scanChunk.test.ts`); decode per block via
-  `AnthropicStructuredOutput.toCodecAnthropic` (`effect/unstable/ai`).
+  `AnthropicStructuredOutput.toCodecAnthropic` (`effect/ai`).
 - Streaming deltas are ephemeral wire format; only completed blocks persist
   as Message content (md-aligned AST). Cancel-in-flight via fiber
   interruption must leave no partial assistant row (proof-proven; rpc stream

@@ -796,3 +796,139 @@ What would prevent this: preserve a sanitized exception class and execution
 stage at the failure boundary, with a synthetic nonzero/empty GIF second-pass
 fixture. This is a follow-up, not authorization to change the frozen wave,
 approve an exception, retry a sealed family or launch ordinal 6.
+
+
+### 2026-10-14: API shell omitted the user-manager environment
+
+Doing: renewed wave continuation preflight after the accepted family-5 diagnosis.
+Evidence: the first read-only systemctl probe reported the user-bus environment
+was not defined. Standard XDG runtime and D-Bus variables restored command
+access; both admitted real sandbox smokes passed. No configuration changed.
+Prevention: forward user-manager environment into the API command surface,
+as the lane launcher already does. This was a shell precondition, not a
+family engine failure; no live family was launched before it was repaired.
+
+
+## 2026-10-14: larger bounded member reaches the attachment-repair time limit
+
+- Doing: reconcile the frozen first wave's seventh family after its unit ended.
+- Evidence: result 1, one unapproved engine-failure, family elapsed
+  7,211,513 ms near the 7,200,000-ms attempt cap; 246 repair copies and
+  245 Tika outputs, one unmatched 2,280,873-byte PDF copy. Terminal
+  failure cause was replaced with a generic message by pstFailureTerminal.
+- Prevention: preserve a sanitized failure stage and exception class in the
+  terminal row, and size repair-time ceilings using repair counts and tree-hash
+  costs for larger members. The current wave's rules and engines stay frozen.
+- Action: recorded the qualified elapsed-budget diagnosis, retained all output,
+  stopped before ordinal 8. No cause approval or sealed-family retry.
+
+## 2026-10-14: stop-record integration overlaps an earlier squash merge
+
+- Doing: merge main once after all family units ended, before evidence publication.
+- Evidence: four packet conflicts in PLAN, README, the handoff and manifest.
+  Main carried the earlier family-5 stop; this branch had the later authorized
+  continuation, family-6 acceptance and family-7 stop.
+- Prevention: integrate packet-only history from completed evidence PRs promptly
+  when the frozen execution permits it. Preserve dated decisions on both sides.
+- Action: retained this branch's newer packet records, including the earlier
+  family-5 evidence, and updated current status to the further sealed failure.
+
+
+## 2026-10-14: publication integration changed the frozen wave source
+
+- Doing: resume ordinal 8 under the 05:55Z continuation ruling.
+- Evidence: the previous stop-publication merge imported #1636, replacing
+  native array predicates in RestorationTransformations signature detection
+  with Effect Array.every. All nine immutable manifests still identify
+  code head 6eb3d036771e868768846b3c56a5aafac69c3b2b. The frozen launcher
+  executes this checkout, whose restoration source differs from that head.
+- Prevention: separate evidence publication integration from a still-frozen
+  execution checkout, or provide an explicit source-identity transition
+  before resuming the remaining members.
+- Action: stop before ordinal 8 without modifying source, the launcher,
+  manifests or corpus artifacts. Report the freeze mismatch to the orchestrator.
+
+
+## 2026-10-14: frozen launcher pins the evidence checkout
+
+- Doing: implement the 06:25Z frozen-worktree continuation ruling.
+- Evidence: the immutable launcher unconditionally changes directory to the
+  evidence lane before executing bun; another starting directory cannot
+  select the frozen checkout.
+- Prevention: declare an execution-root parameter before freezing a launcher.
+- Action: use the explicitly authorized pre-launch freeze-amendment fallback,
+  attach the restoration source delta, keep the launcher and manifests intact.
+
+
+## 2026-10-14: PDF second pass fails inside retained wave bounds
+
+- Doing: reconcile ordinal 8 after its admitted family unit ended.
+- Evidence: result 1, one unapproved engine-failure, 96 repair copies and
+  95 Tika outputs. The unmatched 196,192-byte PDF copy reproduces exit 1,
+  empty stdout, one TikaException and two IOException matches inside the
+  frozen read-only sandbox. Family elapsed 2,996,198 ms and retained bytes
+  1,037,230,305 fit their ceilings. The generic terminal catch loses the cause.
+- Prevention: preserve sanitized failure stage and exception class, and cover
+  nonzero/empty PDF extraction with a synthetic fixture before another freeze.
+- Action: record qualified input-sensitive parser attribution, retain output,
+  stop before ordinal 9 and publish aggregate evidence. No retry or approval.
+
+
+## 2026-10-14: family-8 stop publication repeats packet squash conflicts
+
+- Doing: integrate main after all family units ended, before evidence publication.
+- Evidence: four conflicts in PLAN, README, the handoff and manifest. Main
+  carries the merged family-7 stop; this branch retains the pre-launch freeze
+  amendment, family-8 launch and the later sealed-failure record.
+- Prevention: give wave evidence a stable publication base while execution
+  identity is separately frozen. Do not change an active execution checkout.
+- Action: retained this branch's newer packet records as the brief rules,
+  preserving earlier family-5/7 evidence. No family unit was running.
+
+
+## 2026-10-14: GraphQL depletion obscures a successfully published stop PR
+
+- Doing: mark the new evidence PR ready after Yeet publication passed.
+- Evidence: PR #1696 exists at the exact pushed head by REST, but yeet ready
+  reported no open PR; a direct read exposed GraphQL rate exhaustion.
+- Prevention: distinguish an unavailable discovery read from an absent PR,
+  and retain the successfully created PR number for ready handling.
+- Action: explicit `beep yeet gh pr ready 1696` waited for the budget reset
+  and succeeded. Subsequent complete thread read has zero threads; REST
+  confirms ready at the exact published head. No readiness proof is claimed.
+  Cancelled the worker-owned monitor and observed its terminal inbox row
+  before the sealed-failure handoff. No running worker-owned gate remains.
+
+
+## 2026-10-14: inherited knowledge-reference gate during ordinal-9 preflight
+
+- Doing: renew packet proof before the explicitly authorized ninth launch.
+- Evidence: knowledge refs at e8c520d65a exits one with one live gated
+  external-mirror-reference in .claude/skills/shadcn/design-system.md:31
+  (home-relative Desktop reference). That file matches origin/main and was
+  not edited by this lane. Doctor and index remain clean.
+- Prevention: resolve the inherited reference in its owning documentation lane.
+- Action: attribute the red as inherited, retain the measured result and
+  continue the authorized launch; no unrelated skill edit or link creation.
+
+
+Attribution correction: the cached origin/main ref predates the integrated
+#1685 skill commit. The affected file differs from that stale ref; it matches
+integrated main commit 96f1f5087beb2b937c640843d502ada843b82958 exactly,
+with no lane edit. The earlier statement that it matches origin/main is
+withdrawn. Inherited provenance is #1685, verified by the empty diff from
+that integrated main commit. No fix or base merge inside the frozen launch.
+
+
+### 2026-10-14: ninth elapsed stop and missing recovery engine binding
+
+- Work: reconcile the ninth bounded family and write the recovery amendment.
+- Evidence: result one; one unapproved engine-failure; family 7,222,485 ms;
+  unmatched PDF repair copy modified after the attempt ceiling. The terminal
+  catch discards its cause; no precise parser status is available.
+- Prevention: retain sanitized exception classes and stage/remaining-budget
+  evidence at the failing boundary, including hashing time before extraction.
+- Recovery friction: the ruling refers to a recorded extraction-engine chain,
+  but packet/source discovery finds only the current Java/Tika second pass.
+  Prevention: name the ordered engine ids, versions, format coverage and
+  ledger contract in the scope ruling. No substitute or recovery launched.

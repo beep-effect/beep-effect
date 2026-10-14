@@ -149,6 +149,12 @@ directory: `rm -r ~/.local/state/beep/docket-intake-first-run`.
 - [ ] Decision: keep the entries (attorney reviews them) or run `undo`.
 - [ ] Result line and decision sent to the orchestrator session.
 
+## After the first run
+
+To keep the service running, install it as a user service from a pinned
+deploy checkout: [practice services](practice-services.md). It reuses this
+environment file through `op run`, plus the service's own settings.
+
 ## Exit codes
 
 | Code | Meaning |

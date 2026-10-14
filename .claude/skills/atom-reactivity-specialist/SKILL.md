@@ -7,8 +7,9 @@ description: >
   implementing mutations with reactivity key invalidation, or reviewing
   frontend code for Atom compliance. Covers effect/reactivity and
   @effect/atom-react.
-version: 0.1.0
-status: active
+metadata:
+  version: "0.1.0"
+  status: active
 ---
 
 # Atom + Reactivity Specialist

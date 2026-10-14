@@ -4,7 +4,7 @@
 
 ```
 Beep Effect kits: tip is effect@4.0.0-rc.117 (rc.116 shipped Sep 18 via #8201;
-#8336 stages rc.118). SchemaJIT #7908 merged; #8354 removed effect/unstable/*
+#8336 stages rc.118). SchemaJIT #7908 merged; #8354 moved modules to top-level paths (`.patterns/effect-module-paths.md`)
 compat paths; #8365 renamed effect/httpapi → effect/http-api. Draft a migration
 checklist for beep HttpApi + schema consumers: import remaps, @unstable markers,
 whether to pin rc.117 now vs wait for rc.118, and smoke tests for MCP 2026-07-28

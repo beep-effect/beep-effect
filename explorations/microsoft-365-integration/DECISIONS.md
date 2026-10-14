@@ -14,7 +14,7 @@ off-the-shelf M365 MCP server run as a sidecar, or both?
 
 **Answer:** HYBRID. Build a thin native `@beep/m365` Effect driver that wraps
 only the Graph verbs the product needs, and expose it as the repo's *own* MCP
-server via `effect/unstable/ai/McpServer` + `Tool.make` / `Toolkit` (the
+server via `effect/ai/McpServer` + `Tool.make` / `Toolkit` (the
 `@beep/nlp-mcp` model).
 
 **Rationale:** Owning the driver keeps OpenTelemetry spans, typed errors,
@@ -34,7 +34,7 @@ may serve as a short-term coverage bridge or reference implementation.
 **Question:** Raw HTTP, the fluent Graph client, or the Kiota SDK for calling
 Microsoft Graph from the driver?
 
-**Answer:** Raw HTTP. Call Graph REST `v1.0` directly via `effect/unstable/http`
+**Answer:** Raw HTTP. Call Graph REST `v1.0` directly via `effect/http`
 `FetchHttpClient` + `effect/Schema` decoding, pulling request/response **types**
 (not runtime) from `@microsoft/microsoft-graph-types`; use `@azure/msal-node`
 for OAuth.

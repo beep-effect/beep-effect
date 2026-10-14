@@ -74,14 +74,14 @@ not ship graduation, `ops/materialization.json`, rematerialization/capsules, the
 - **E11 — empty slug directories are abandoned claims.** Reason: a crash between claim
   and rename otherwise leaves an empty `goals/<slug>` that the inventory scan counts as a
   packet and that blocks every retry (review on #1626). An empty-only `rmdir` cannot
-  destroy data. Implementation rides the next E PR (the executor merged in #1632 without
-  it). Reverse: replace with a claim marker file if a platform no-replace rename appears.
+  destroy data. Implemented in the E11/E12 crash-recovery PR: publish reclaims an empty slug
+  directory, and the inventory scan skips empty slug directories. Reverse: replace with a claim marker file if a platform no-replace rename appears.
 - **E12 — publish sweeps stale staging directories first.** Before staging, publish
   recursively removes every `goals/.staging-*` directory: foreign digests, and its own
   digest left by a crashed earlier attempt. A staging directory is never published
   content. Combined with E11, a crash at any point between staging and rename no longer
   blocks a retry. Reason: E11's empty-only `rmdir` cannot clear a fully populated stage
-  (review round 3 on #1626). Implementation rides the next E PR with E11. Reverse:
+  (review round 3 on #1626). Implemented with E11 in the crash-recovery PR. Reverse:
   per-attempt unique staging names, if concurrent publishers ever become supported.
 - **E10 — receipts printed, not yet persisted.** Reason: `ops/materialization.json`
   belongs with rematerialization/capsules (E-3), which needs per-region hashes the

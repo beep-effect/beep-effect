@@ -3952,7 +3952,7 @@
           "title": "Optional LLM passes: pure prompt-in/parse-out, metadata-only writes, prompt-version cache key",
           "beepStatus": "partial",
           "proof": [
-            "packages/foundation/capability/langextract/src/Service/index.ts:249-259 buildPrompt \u2014 exported pure function; :283-311 parseModelOutput returns typed LangExtractError, never throws; :278 the LLM is effect/unstable/ai LanguageModel resolved from context, so the network call is layer-owned",
+            "packages/foundation/capability/langextract/src/Service/index.ts:249-259 buildPrompt \u2014 exported pure function; :283-311 parseModelOutput returns typed LangExtractError, never throws; :278 the LLM is effect/ai LanguageModel resolved from context, so the network call is layer-owned",
             "packages/foundation/capability/langextract/src/Service/index.ts:315-322 LangExtractDiagnostics{alignedCount, candidateCount, promptChars, unalignedCount} \u2014 the cache-hit/call/failure tally idiom",
             "packages/documents/server/src/aggregates/Document/FilingDecisionHeuristic.ts (deterministic tier, deterministicConfidence = 1) vs FilingDecisionLlm.ts (opt-in paid tier, threshold + timeout) \u2014 the $0-path-first split as Layers",
             "rg -n 'CACHE_VERSION|CacheEnvelope|cacheOnly|PROMPT_VERSION' --glob 'packages/**/src/**'  -> 0 hits",

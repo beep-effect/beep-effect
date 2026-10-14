@@ -197,7 +197,7 @@ Already present to compose against (verified via `rg`/`ls`, 2026-06-29):
   exercising header forwarding and content-length bounding. Pattern reference for
   a bounded, TTL-aware edge.
 - **HTTP route / response shapes are idiomatic** — `HttpApiEndpoint` from
-  `effect/unstable/httpapi` is used by `@beep/govinfo`
+  `effect/http-api` is used by `@beep/govinfo`
   (`packages/drivers/govinfo/src/domain/contracts/Search/Search.http.ts:4`);
   `HttpServerResponse` server precedents live in `@beep/observability`
   (`packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts`,

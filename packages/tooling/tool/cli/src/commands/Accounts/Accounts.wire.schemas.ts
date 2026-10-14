@@ -14,6 +14,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import { Base64Url } from "effect/encoding";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -703,3 +704,135 @@ export const codexSignedInEmail = (auth: CodexCliAuth): O.Option<AccountLabel> =
     O.flatMap(IdTokenClaimsJson.decodeOption),
     O.map((claims) => claims.email)
   );
+
+/**
+ * JetBrains account credentials read from Junie secure storage.
+ *
+ * **Example** (Reject incomplete input)
+ *
+ * ```ts
+ * import { JunieStoredCredentialJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(JunieStoredCredentialJson.decodeOption("not-json"))) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class JunieStoredCredential extends S.Class<JunieStoredCredential>($I`JunieStoredCredential`)(
+  {
+    jbAccount: S.Struct({
+      access_token: S.RedactedFromValue(S.NonEmptyString),
+      refresh_token: S.RedactedFromValue(S.NonEmptyString),
+      expires_in: S.Finite,
+      email: S.OptionFromOptionalKey(S.NonEmptyString),
+      name: S.OptionFromOptionalKey(S.NonEmptyString),
+      id_token: S.NonEmptyString.pipe(S.RedactedFromValue, S.OptionFromOptionalKey),
+    }),
+  },
+  $I.annote("JunieStoredCredential", { description: "JetBrains account credentials read from Junie secure storage." })
+) {}
+
+/**
+ * JSON-string codec for {@link JunieStoredCredential}.
+ *
+ * **Example** (Reject malformed text)
+ *
+ * ```ts
+ * import { JunieStoredCredentialJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(JunieStoredCredentialJson.decodeOption("not-json"))) // true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const JunieStoredCredentialJson = JsonStringCodec(JunieStoredCredential);
+
+/**
+ * An in-memory JetBrains OAuth refresh response.
+ *
+ * **Example** (Reject incomplete input)
+ *
+ * ```ts
+ * import { JunieRefreshBodyJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(JunieRefreshBodyJson.decodeOption("not-json"))) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class JunieRefreshBody extends S.Class<JunieRefreshBody>($I`JunieRefreshBody`)(
+  {
+    access_token: S.RedactedFromValue(S.NonEmptyString),
+    refresh_token: S.NonEmptyString.pipe(S.RedactedFromValue, S.OptionFromOptionalKey),
+    expires_in: S.Finite,
+    id_token: S.NonEmptyString.pipe(S.RedactedFromValue, S.OptionFromOptionalKey),
+  },
+  $I.annote("JunieRefreshBody", { description: "An in-memory JetBrains OAuth refresh response." })
+) {}
+
+/**
+ * JSON-string codec for {@link JunieRefreshBody}.
+ *
+ * **Example** (Reject malformed text)
+ *
+ * ```ts
+ * import { JunieRefreshBodyJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(JunieRefreshBodyJson.decodeOption("not-json"))) // true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const JunieRefreshBodyJson = JsonStringCodec(JunieRefreshBody);
+
+/**
+ * The direct Junie balance response; absent fields do not imply zero.
+ *
+ * **Example** (Reject incomplete input)
+ *
+ * ```ts
+ * import { JunieAuthTestBodyJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(JunieAuthTestBodyJson.decodeOption("not-json"))) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class JunieAuthTestBody extends S.Class<JunieAuthTestBody>($I`JunieAuthTestBody`)(
+  {
+    active: S.OptionFromNullOr(S.Boolean).pipe(S.withDecodingDefaultKey(Effect.succeed(null))),
+    authType: S.OptionFromNullOr(S.String).pipe(S.withDecodingDefaultKey(Effect.succeed(null))),
+    balanceLeft: S.OptionFromNullOr(S.Finite).pipe(S.withDecodingDefaultKey(Effect.succeed(null))),
+    balanceUnit: S.OptionFromNullOr(S.String).pipe(S.withDecodingDefaultKey(Effect.succeed(null))),
+    licenseType: S.OptionFromNullOr(S.String).pipe(S.withDecodingDefaultKey(Effect.succeed(null))),
+    meta: S.Record(S.String, S.Unknown).pipe(S.OptionFromNullOr, S.withDecodingDefaultKey(Effect.succeed(null))),
+  },
+  $I.annote("JunieAuthTestBody", { description: "The direct Junie balance response; absent fields do not imply zero." })
+) {}
+
+/**
+ * JSON-string codec for {@link JunieAuthTestBody}.
+ *
+ * **Example** (Reject malformed text)
+ *
+ * ```ts
+ * import { JunieAuthTestBodyJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(JunieAuthTestBodyJson.decodeOption("not-json"))) // true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const JunieAuthTestBodyJson = JsonStringCodec(JunieAuthTestBody);

@@ -135,7 +135,7 @@ Pure functions (no services): `normaliseContacts`, `buildClientDocketPairs`,
 
 | # | Date | Decision | Why |
 | --- | --- | --- | --- |
-| D1 | 2026-10-06 | Build the identification passes as repository tooling: a `DocumentIdentification` slice in `@beep/law-practice` use-cases and server, and an `apps/practice-identify` command. | Operator: "ideally this isn't one off & we have dedicated tooling for it in the repo after." The mail-tagging slice and app are the precedent. |
+| D1 | 2026-10-06 | Build the identification passes as repository tooling: a `DocumentIdentification` slice in `@beep/law-practice-use-cases` and `@beep/law-practice-server`, and an `apps/practice-identify` command. | Operator: "ideally this isn't one off & we have dedicated tooling for it in the repo after." The mail-tagging slice and app are the precedent. |
 | D2 | 2026-10-06 | Match on (client number, docket) pairs only. | The attorney's note: the same docket numbers live under different client-number folders. 77 of 673 dockets in the pairs appear under more than one client. |
 | D3 | 2026-10-06 | Measure on documents the attorney filed himself, with a fixed 20% hold-out by content hash, filters fitted on the 80% only, and the identical-copy signal off while scoring. | An earlier 92% figure was fitted on machine-attributed files; on his own filing the explicit-reference tier is 99.8% and the 21 "errors" were run-1 attributions the document's own reference contradicts. |
 | D4 | 2026-10-06 | Extraction by an extractor and a separate critic, each party and docket quoted verbatim; only critic-confirmed items count. | Same adversarial pattern as docket intake; token matching alone misattributed letterhead and the attorney's own name. |

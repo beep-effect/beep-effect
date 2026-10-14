@@ -746,15 +746,15 @@ Only `@beep/schema/<Concept>` is public for concept modules. Role files are
 source topology, not public import paths. Former topical suites are represented
 by PascalCase leaf concept modules and flat exact public subpaths. Lowercase
 topical source and public paths such as `src/color/`, `src/http/`,
-`@beep/schema/color`, and `@beep/schema/http/headers` are retired topology, not
+@beep/schema/color, and @beep/schema/http/headers are retired topology, not
 compatibility surfaces. Suite aggregate modules such as
-`@beep/schema/Blockchain`, `@beep/schema/Dom`, `@beep/schema/Http`,
-`@beep/schema/Location`, and `@beep/schema/Person` are retired; import leaf
+@beep/schema/Blockchain, @beep/schema/Dom, @beep/schema/Http,
+@beep/schema/Location, and @beep/schema/Person are retired; import leaf
 concept modules such as `@beep/schema/EvmAddress`,
 `@beep/schema/DomReactNode`, and `@beep/schema/HttpHeaders` instead. `Csv` is a
 same-concept schema module and does not re-export sibling CSV parser,
 formatter, option, or error modules. Retired acronym casing aliases such as
-`@beep/schema/ExpectCT` and `@beep/schema/XSSProtection` are not public exports;
+@beep/schema/ExpectCT and @beep/schema/XSSProtection are not public exports;
 use the canonical concept casing (`ExpectCt`, `XssProtection`). `SchemaUtils`
 and similar utility namespaces may expose helper leaves when the helper itself
 is the public concept, for example `@beep/schema/SchemaUtils/collectAnnotationsAt`.

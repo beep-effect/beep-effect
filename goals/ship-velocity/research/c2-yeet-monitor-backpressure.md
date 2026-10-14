@@ -284,7 +284,7 @@ can erase multi-failure evidence and turn checks into cancelled noise.
 (`head-changed`, `check-failed`, `check-passed`, `comment-opened`,
 `thread-opened`, `thread-resolved`, `mergeability-changed`, `merge-ready-changed`,
 `rate-limited`, `watch-error`) and a `Stream` of normalized snapshots. Use
-`effect/unstable/http` `HttpClient` with the already-provided Bun client layer
+`effect/http` `HttpClient` with the already-provided Bun client layer
 (`packages/tooling/tool/cli/src/bin-main.ts:91-106`), not native `fetch` or
 `node:http`. Keep GitHub auth redacted and injected; parse responses through
 schemas. Maintain an in-memory map keyed by `(PR, headSha, kind, stableId)` and

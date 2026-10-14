@@ -20,8 +20,8 @@ reproduces the corpus for implementation. Lane reports and Gate B verdicts live 
 
 | Source | License | Disposition |
 | --- | --- | --- |
-| `effect@4.0.0-rc.117` (`node_modules/effect/dist/unstable/ai/**`) | MIT | installed truth for every API claim |
-| Effect clone `effect:packages/effect/src/unstable/ai/**`, `effect:packages/effect/test/unstable/ai/McpServer/**` | MIT | reference; conformance harness port |
+| `effect@4.0.0-rc.117` (`node_modules/effect/dist/ai/**`) | MIT | installed truth for every API claim |
+| Effect clone `effect:packages/effect/src/ai/**`, `effect:packages/effect/test/ai/McpServer/**` | MIT | reference; conformance harness port |
 | Effect-TS/effect#7265, #8228, #8242, #8326 | MIT | changelog evidence |
 | MCP specification 2026-07-28 (modelcontextprotocol.io) | CC-BY-4.0 (docs) | protocol reference |
 

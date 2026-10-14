@@ -17,7 +17,7 @@ TTL), `repo:apps/professional-desktop/test/integration/execution-authority.pglit
 decision logs and specs in `repo:goals/ontology-agent-surface/` and any `agent-execution-authority`
 packet under `repo:goals/` or `repo:explorations/`, `repo:standards/architecture/03-driver-boundaries.md`,
 `09-errors-across-boundaries.md`, `12-observability.md`; Effect `McpRequestContext`, MRTR, and
-stateless admission (`effect:packages/effect/src/unstable/ai/McpSchema.ts`,
+stateless admission (`effect:packages/effect/src/ai/McpSchema.ts`,
 `internal/mcpRuntime.ts`).
 
 **Report sections:**

@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "practice-claude-mod",
+    "packetId": "goal-packet/v1:c4c647ae310aa0fc4a0a4da7849a5dcddc01dad1f54b04e69bb41cb4ddbb59e5",
+    "title": "Practice Claude Code Mod",
+    "status": "active",
+    "created": "2026-10-14",
+    "updated": "2026-10-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/practice-claude-mod",
+  "lifecycle": "active",
+  "mission": "Ship one Claude Code plugin from apps/practice-claude-mod that gives the attorney's sessions plain-language practice-kg tool rows, Right/Wrong verdict capture, a current-matter band with a visible timer, and five ported firm skills, tested on the operator machine and delivered to the attorney's PC by directory marketplace.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/claude-mods-law-practice",
+    "graduated": "2026-10-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/practice-claude-mod/README.md",
+    "goals/practice-claude-mod/SPEC.md",
+    "goals/practice-claude-mod/PLAN.md",
+    "goals/practice-claude-mod/GOAL.md",
+    "goals/practice-claude-mod/research/SOURCES.md",
+    "explorations/claude-mods-law-practice/BRIEF.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/claude-mods-law-practice/RESEARCH.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/practice-claude-mod/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/practice-claude-mod/GOAL.md)\" -le 4000",
+    "jq . goals/practice-claude-mod/ops/manifest.json",
+    "rg -n \"practice-claude-mod|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/practice-claude-mod",
+    "git diff --check -- goals/practice-claude-mod",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep quality package-verify @beep/practice-claude-mod",
+    "claude plugin validate apps/practice-claude-mod/dist/plugin",
+    "claude plugin test apps/practice-claude-mod/dist/plugin"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

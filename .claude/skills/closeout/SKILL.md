@@ -73,6 +73,9 @@ Prefer these, so prompts read the same across sessions:
 
 - Not a substitute for `/grill-with-docs`: direction-setting decisions are
   grilled first; the closeout prompt carries the remaining frontier.
+- Not an exploration exit: an `/explore` packet that needs the operator
+  switches into `/grill-with-docs` and keeps going; closeout comes only once
+  the packet is graduated, parked, or killed.
 - Not a permission laundering path: an action the harness denied is reported
   as denied, never offered as an option for the operator to "approve" on your
   behalf.

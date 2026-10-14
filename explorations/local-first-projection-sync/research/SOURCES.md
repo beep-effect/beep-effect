@@ -133,7 +133,7 @@ All URLs below are reproduced from this packet's own
 Paths were rescanned on 2026-07-14. The ratified design composes these bricks:
 
 - Effect v4 durable queue —
-  `node_modules/effect/src/unstable/workflow/DurableQueue.ts` — **reuse after
+  `node_modules/effect/src/workflow/DurableQueue.ts` — **reuse after
   prerequisite proof** (`idempotencyKey`, persisted processing, worker
   concurrency, `WorkflowEngine` and `PersistedQueueFactory` requirements).
 - Workflow persistence adapter — `packages/drivers/workflow` — **NET-NEW in

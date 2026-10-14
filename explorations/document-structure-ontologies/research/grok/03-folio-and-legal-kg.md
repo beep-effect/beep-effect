@@ -250,7 +250,7 @@ folio-mcp README links: **folio-api** (REST server implementation), **folio-enri
 
 **Implication:** beep-effect (Effect-TS monorepo) will not get a first-party TS SDK. Integration paths:
 
-1. Call public HTTPS API via Effect HTTP client (`effect/unstable/http`).
+1. Call public HTTPS API via Effect HTTP client (`effect/http`).
 2. Optionally run `folio-mcp` as a sibling MCP process for coding agents (not in-process TS).
 3. Ingest a **vetted JSON-LD/TTL slice** into `@beep/ontology` TaxonomyLoader (preferred for offline professional desktop).
 4. Port a thin TS schema for FOLIO concept records (mirroring API JSON) — not a full OWL reasoner.
@@ -594,7 +594,7 @@ Name sketch: `beep-ontology-mcp` or `beep-taxonomy` (stdio + optional HTTP). Bac
 - Concept record as `S.Class` with `IRIReference`, optional SKOS fields, `vendorSliceId`, `license`.
 - Errors as tagged unions (`TaxonomyConceptNotFound` already exists — reuse).
 - Prefer `effect/HashMap` / `HashSet` for registries.
-- HTTP to FOLIO (if bridged) via `effect/unstable/http`, never `node:http`.
+- HTTP to FOLIO (if bridged) via `effect/http`, never `node:http`.
 - **Do not** load unvetted 18k OWL at runtime in the desktop app without a pin + license attribution row; prefer **curated slices** (IP Law subtree + UTBMS PA\* + USPTO + Prior Art + document types of interest).
 - MCP server can be a thin Python or TS host; given monorepo language, **TS Effect MCP** is preferable long-term; short-term **spawn folio-mcp** only for exploratory coding sessions.
 

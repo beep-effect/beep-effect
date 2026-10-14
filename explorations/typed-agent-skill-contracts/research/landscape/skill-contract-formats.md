@@ -152,17 +152,17 @@ LangChain is MIT ([repository license](https://github.com/langchain-ai/langchain
 
 **Reference only:** support adapters for Pydantic/JSON Schema input declarations and LangGraph trace/state carriers, but do not inherit the asymmetric “validated input, flexible output” boundary.
 
-## 8. Effect AI Toolkit (`effect/unstable/ai`)
+## 8. Effect AI Toolkit (`effect/ai`)
 
 ### Contract scope
 
-Effect v4's `Tool` already provides most of the typed invocation substrate this packet needs: name/description, Effect Schema parameters, success schema, failure schema, failure mode, typed handler requirements, annotations, and static or parameter-sensitive approval. `Toolkit` groups tools and derives handlers whose parameter, success, failure, and service types follow from those schemas. *Validated 2026-08-13 against the repository's checked-in pinned source — `.repos/effect` @ effect `4.0.0-rc.108`: `.repos/effect/packages/effect/src/unstable/ai/Tool.ts` (success/failure `Schema.Constraint`s, `failureMode`, static boolean or `NeedsApprovalFunction` approval) and `.repos/effect/packages/effect/src/unstable/ai/Toolkit.ts` (parameter decode, result encode, `AiError` wrapping); that pinned tree is authoritative for `@beep/skill-contract` integration.* (Upstream fetched copies: [Tool source](https://raw.githubusercontent.com/Effect-TS/effect-smol/main/packages/effect/src/unstable/ai/Tool.ts), [Toolkit source](https://raw.githubusercontent.com/Effect-TS/effect-smol/main/packages/effect/src/unstable/ai/Toolkit.ts).)
+Effect v4's `Tool` already provides most of the typed invocation substrate this packet needs: name/description, Effect Schema parameters, success schema, failure schema, failure mode, typed handler requirements, annotations, and static or parameter-sensitive approval. `Toolkit` groups tools and derives handlers whose parameter, success, failure, and service types follow from those schemas. *Validated 2026-08-13 against the repository's checked-in pinned source — `.repos/effect` @ effect `4.0.0-rc.108`: `.repos/effect/packages/effect/src/ai/Tool.ts` (success/failure `Schema.Constraint`s, `failureMode`, static boolean or `NeedsApprovalFunction` approval) and `.repos/effect/packages/effect/src/ai/Toolkit.ts` (parameter decode, result encode, `AiError` wrapping); that pinned tree is authoritative for `@beep/skill-contract` integration.* (Upstream fetched copies: [Tool source](https://raw.githubusercontent.com/Effect-TS/effect/74d19304da077d98cc6dcb294c71e253365f272f/packages/effect/src/ai/Tool.ts), [Toolkit source](https://raw.githubusercontent.com/Effect-TS/effect/74d19304da077d98cc6dcb294c71e253365f272f/packages/effect/src/ai/Toolkit.ts).)
 
 It does not natively model a gate registry, severity/applicability, evidence receipts, authoritative-artifact re-extraction, retry budgets, compensations, or an evidence ladder. `success` means the handler returned a value matching the success schema; it does not mean an external effect reached a domain-specific semantic state.
 
 ### Enforcement
 
-`Toolkit` runtime-decodes unknown parameters before handler invocation, executes the typed handler, and encodes results against the success schema—or the success/failure/AiError union when failure mode is `return`. Invalid parameters and invalid/unencodable handler results become typed `AiError` reasons. This is materially stronger and more symmetric than common function-tool wrappers ([Toolkit source](https://raw.githubusercontent.com/Effect-TS/effect-smol/main/packages/effect/src/unstable/ai/Toolkit.ts)).
+`Toolkit` runtime-decodes unknown parameters before handler invocation, executes the typed handler, and encodes results against the success schema—or the success/failure/AiError union when failure mode is `return`. Invalid parameters and invalid/unencodable handler results become typed `AiError` reasons. This is materially stronger and more symmetric than common function-tool wrappers ([Toolkit source](https://raw.githubusercontent.com/Effect-TS/effect/74d19304da077d98cc6dcb294c71e253365f272f/packages/effect/src/ai/Toolkit.ts)).
 
 ### License
 
@@ -228,8 +228,8 @@ Microsoft Agent Governance Toolkit is MIT ([repository license](https://github.c
 - https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/tools/base.py — license: MIT — disposition: reference-only
 - https://reference.langchain.com/python/langchain-core/tools/base/BaseTool — license: UNVERIFIED documentation; repository code MIT — disposition: reference-only
 - https://github.com/langchain-ai/langchain/blob/master/LICENSE — license: MIT — disposition: reference-only
-- https://raw.githubusercontent.com/Effect-TS/effect-smol/main/packages/effect/src/unstable/ai/Tool.ts — license: MIT — disposition: interop-target
-- https://raw.githubusercontent.com/Effect-TS/effect-smol/main/packages/effect/src/unstable/ai/Toolkit.ts — license: MIT — disposition: interop-target
+- https://raw.githubusercontent.com/Effect-TS/effect/74d19304da077d98cc6dcb294c71e253365f272f/packages/effect/src/ai/Tool.ts — license: MIT — disposition: interop-target
+- https://raw.githubusercontent.com/Effect-TS/effect/74d19304da077d98cc6dcb294c71e253365f272f/packages/effect/src/ai/Toolkit.ts — license: MIT — disposition: interop-target
 - https://raw.githubusercontent.com/Effect-TS/effect-smol/main/LICENSE — license: MIT — disposition: reference-only
 - https://github.com/microsoft/agent-governance-toolkit/blob/main/policy-engine/spec/SPECIFICATION.md — license: MIT — disposition: port-with-attribution
 - https://github.com/microsoft/agent-governance-toolkit/blob/main/policy-engine/spec/agt/AGT-EVIDENCE-1.0.md — license: MIT — disposition: port-with-attribution

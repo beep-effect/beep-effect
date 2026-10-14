@@ -33,7 +33,7 @@ Ship `beep quality jsdoc-migrate` with `extract`, `titles`, `apply`, `verify` in
 3. Both clauses of the conservation law and the quarantine path (SPEC §5.3) — content conservation
    plus the closed tag-rewrite allowlist — with the schema-versioned proof manifest.
 4. `apply` — text-surgical rewrite by byte offset. Never let ts-morph reformat a block.
-5. `titles` — `effect/unstable/http` against `http://127.0.0.1:8317`, model `grok-4.5`,
+5. `titles` — `effect/http` against `http://127.0.0.1:8317`, model `grok-4.5`,
    append-only with per-anchor resume and retry only on schema-invalid returns.
 6. Fixture corpus covering every block shape the codemod recognises, including the pathological
    ones: unfenced example, multi-example block, `@remarks` + `@example`, multi-paragraph lead.

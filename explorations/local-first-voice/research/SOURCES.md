@@ -85,7 +85,7 @@ follow-ons; they are not dependencies of `voice-composer-slice`.
 | Composer seam | `apps/professional-desktop/src/chat/ui/Composer.tsx`; `packages/foundation/ui-system/editor/src/chat/chat-composer.tsx` | Reuse for controls and transcript insertion. |
 | Chat cancellation precedent | `packages/agents/client/src/Chat.atoms.ts` | Reuse Reactivity/`AtomRegistry` cleanup pattern. |
 | Audio event-to-stream precedent | `packages/drivers/box/src/Box.streaming.ts` | Reference scoped event release pattern. |
-| Effect browser/runtime primitives | `.repos/effect-v4/packages/platform-browser`; `.repos/effect-v4/packages/effect/src/unstable/rpc` | Re-verify live APIs before implementation; use only outside AudioWorklet realm. |
+| Effect browser/runtime primitives | `.repos/effect-v4/packages/platform-browser`; `.repos/effect-v4/packages/effect/src/rpc` | Re-verify live APIs before implementation; use only outside AudioWorklet realm. |
 
 ## 6. Cross-links
 

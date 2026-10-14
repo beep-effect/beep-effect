@@ -184,7 +184,7 @@ the thesis closes.
   `packages/**/src`.
 - The `drivers/workflow` landing zone is reserved by
   `goals/effect-v4-workflow-engine-spike` (active) but the package is not
-  created; zero `effect/unstable/workflow`|`cluster` imports
+  created; zero `effect/workflow`|`cluster` imports
   outside `scratchpad/effect-ontology`; no `@effect/cluster` in bun.lock.
 - **No single canonical-JSON owner** — 3+ independent encoders (epistemic
   CanonicalJson.ts, PacketCore PacketDigest.ts, OpenclawRender.ts, plus

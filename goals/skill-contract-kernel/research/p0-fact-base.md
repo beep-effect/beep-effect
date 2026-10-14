@@ -166,23 +166,23 @@ Both checkout authority and root catalog say `effect` is `4.0.0-rc.111`
   wrapper: `LiteralKit` exposes `toTaggedUnion` (`packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:632-680`)
   and builds `S.Struct({ [tag]: S.tag(literal), ...caseFields })` then calls `S.toTaggedUnion`
   (`:796-819`). That is the verdict implementation template.
-- **Effect AI public extension surface:** `effect/unstable/ai` currently namespace-exports exact
-  modules `Tool` and `Toolkit` (`.repos/effect/packages/effect/src/unstable/ai/index.ts:87-95`). A
+- **Effect AI public extension surface:** `effect/ai` currently namespace-exports exact
+  modules `Tool` and `Toolkit` (`.repos/effect/packages/effect/src/ai/index.ts:87-95`). A
   later adapter may use `Tool.make`, `Tool.Tool`, `Tool.Any`, `Tool.Name`, `Tool.Parameters`,
   `Tool.ParametersEncoded`, `Tool.Success`, `Tool.Failure`, `Tool.Result`, and the public schema fields
   `parametersSchema/successSchema/failureSchema`; `Tool.make` accepts description, parameters,
   success, failure, failureMode, dependencies, and needsApproval
-  (`.repos/effect/packages/effect/src/unstable/ai/Tool.ts:197-355,651-867,1204-1275`). It may compose
+  (`.repos/effect/packages/effect/src/ai/Tool.ts:197-355,651-867,1204-1275`). It may compose
   with `Toolkit.make`, `Toolkit.Toolkit`, `Toolkit.Any`, `Toolkit.Tools`, `Toolkit.HandlersFrom`,
   `Toolkit.WithHandler`, instance `.of/.toHandlers/.toLayer`, and `Toolkit.merge`
-  (`.repos/effect/packages/effect/src/unstable/ai/Toolkit.ts:65-104,134-224,496-498,571-584`).
+  (`.repos/effect/packages/effect/src/ai/Toolkit.ts:65-104,134-224,496-498,571-584`).
 - **Must avoid in the kernel:** do not duplicate Tool parameter/result/failure codecs, handler
   dispatch, approval, or toolkit composition; wrap their schema-valid handler result with gates, as
   the packet's authority says (`goals/skill-contract-kernel/research/SOURCES.md:28-41`). Do not base the
   contract on `Tool.dynamic`, `Tool.providerDefined`, `AnyDynamic`, `AnyProviderDefined`, or
   `unsafeSecureJsonParse`: those are provider/runtime or unsafe parsing surfaces, not a schemas-only
-  contract (`.repos/effect/packages/effect/src/unstable/ai/Tool.ts:666-689,1326-1422,1988-1988`).
-  Recommendation: no `effect/unstable/ai` import in P1's kernel slice; expose a later adapter in a
+  contract (`.repos/effect/packages/effect/src/ai/Tool.ts:666-689,1326-1422,1988-1988`).
+  Recommendation: no `effect/ai` import in P1's kernel slice; expose a later adapter in a
   capability/tooling consumer so rc churn cannot infect the persisted contract schema.
 
 ## 4. Package scaffold and first-PR governance

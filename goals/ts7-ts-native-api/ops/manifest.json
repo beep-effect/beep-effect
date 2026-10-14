@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "ts7-ts-native-api",
+    "packetId": "goal-packet/v1:5e52220a3e714eea85809f09a52c62240b460d1e2d57ce6453f7686d07e6ff71",
+    "title": "TsNativeApi service and TypeScript 7 walker port",
+    "status": "completed-retained",
+    "created": "2026-10-14",
+    "updated": "2026-10-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/ts7-ts-native-api",
+  "lifecycle": "completed-retained",
+  "mission": "Port every first-party classic typescript API import onto a TsNativeApi service over TypeScript 7's unstable API",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Orchestrator owns publication, merge, reflection and packet completion; lane leaves lifecycle active.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/ts7-ts-native-api/README.md",
+    "goals/ts7-ts-native-api/SPEC.md",
+    "goals/ts7-ts-native-api/PLAN.md",
+    "goals/ts7-ts-native-api/GOAL.md",
+    "goals/ts7-ts-native-api/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/ts7-ts-native-api/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Orchestrator: publish and merge",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Orchestrator: reflection and closeout",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "bun run beep quality package-verify @beep/repo-utils",
+    "bun run beep quality package-verify @beep/effect-drizzle",
+    "bun run beep quality package-verify @beep/repo-configs",
+    "bun run check",
+    "node goals/effect-schema-parity/research/tools/facet-census.ts",
+    "git diff --check",
+    "jq . goals/ts7-ts-native-api/ops/manifest.json"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

@@ -1,0 +1,16 @@
+$ tstyche --config tstyche.config.json --root .
+Error: The TypeScript version '7.1.0-dev.20261008.1' is not supported.
+
+Use the '--list' command line option to inspect the list of supported versions.
+
+  2 |   "$schema": "../../../node_modules/tstyche/schemas/config.json",
+  3 |   "testFileMatch": ["typetests/**/*.tst.ts"],
+  4 |   "target": "5.9.3 || 6.0.3 || 7.1.0-dev.20261008.1",
+    |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  5 |   "tsconfig": "tsconfig.test.json"
+  6 | }
+  7 |
+
+      at ./tstyche.config.json:4:13
+
+error: script "beep:type-test" exited with code 1

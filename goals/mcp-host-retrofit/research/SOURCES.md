@@ -50,7 +50,7 @@ hosts onto the kit's already-ported deliverables.
 | `StreamingToolkit` | `packages/drivers/nlp-mcp/src/StreamingTools.ts` | **retrofit target** — zero four-hint annotations today |
 | `nlp-mcp` server wiring | `packages/drivers/nlp-mcp/src/Server.ts:101-107` | **retrofit target** — `Layer.mergeAll` seam, span-wrapper insertion point |
 | `m365-mcp` tool annotations | `packages/drivers/m365-mcp/src/M365Tools.ts:100-103` (and repeated per tool) | **retrofit target** — inline `.annotate(...)` chains to migrate to the kit helper |
-| Raw-`parameters` span leak | `node_modules/effect/src/unstable/ai/Toolkit.ts:263-265` | **doctrine violation this goal fixes** (`12-observability.md` §3) |
+| Raw-`parameters` span leak | `node_modules/effect/src/ai/Toolkit.ts:263-265` | **doctrine violation this goal fixes** (`12-observability.md` §3) |
 | `@beep/mcp-kit` `SanitizedSpan`/`ToolAnnotations`/`TierGate` | `packages/foundation/capability/mcp-kit/src/*.ts` | **consume** — this goal's only dependency for kit-pattern logic |
 
 ## 5. Cross-links & provenance

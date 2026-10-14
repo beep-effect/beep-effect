@@ -2949,6 +2949,7 @@ const policyMediumTasks = [
   "lint:circular",
   "lint:effect-imports",
   "lint:effect-imports-markdown",
+  "lint:retired-effect-paths",
   "lint:tsconfig-overlay",
   "lint:package-test-typecheck",
   "lint:effect-vitest",
@@ -3031,11 +3032,12 @@ class EslintInputPackage extends S.Class<EslintInputPackage>($I`EslintInputPacka
 
 // Nested module-format markers are not package identities. A failed decode means
 // discovery must keep walking; filesystem failures still fail input collection.
-const decodeEslintInputPackageOption = S.decodeUnknownOption(S.fromJsonString(EslintInputPackage));
+const EslintInputPackageJson = S.fromJsonString(EslintInputPackage);
+const decodeEslintInputPackageOption = S.decodeUnknownOption(EslintInputPackageJson);
 
 const rootEslintModuleSpecifier = Match.type<ts.Node>().pipe(
   Match.when(ts.isImportDeclaration, (node) =>
-    node.importClause?.isTypeOnly === true ? O.none<ts.Node>() : O.some(node.moduleSpecifier)
+    node.importClause?.phaseModifier === ts.SyntaxKind.TypeKeyword ? O.none<ts.Node>() : O.some(node.moduleSpecifier)
   ),
   Match.when(ts.isExportDeclaration, (node) =>
     node.isTypeOnly ? O.none<ts.Node>() : O.fromUndefinedOr(node.moduleSpecifier)
@@ -3160,9 +3162,7 @@ class RootEslintInputs extends Context.Service<RootEslintInputs, RootEslintInput
           const manifestFile = yield* packageFile(file);
           if (HashSet.has(visited, manifestFile)) continue;
           visited = HashSet.add(visited, manifestFile);
-          const manifest = yield* S.decodeEffect(S.fromJsonString(EslintInputPackage))(
-            yield* fs.readFileString(manifestFile)
-          );
+          const manifest = yield* S.decodeEffect(EslintInputPackageJson)(yield* fs.readFileString(manifestFile));
           // Root-relative resolution identity distinguishes multiple installed copies without
           // hashing checkout-specific absolute paths. Traverse declared runtime dependencies
           // too: an external shared config can load plugins indirectly.

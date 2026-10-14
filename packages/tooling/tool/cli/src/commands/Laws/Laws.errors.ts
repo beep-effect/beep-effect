@@ -145,3 +145,37 @@ export class TerseEffectRulesPersistenceError extends S.TaggedError<TerseEffectR
     TerseEffectRulesPersistenceError.new(messageWithCause(message, cause))
   );
 }
+
+/**
+ * Failure raised when the retired Effect path law cannot list or read the tracked files.
+ *
+ * **Example** (Read a retired Effect paths execution error)
+ *
+ * ```ts
+ * import { RetiredEffectPathsExecutionError } from "@beep/repo-cli/commands/Laws/Laws.errors"
+ *
+ * const error = RetiredEffectPathsExecutionError.new("Could not list tracked files.")
+ * console.log(error.message)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class RetiredEffectPathsExecutionError extends S.TaggedError<RetiredEffectPathsExecutionError>(
+  $I`RetiredEffectPathsExecutionError`
+)(
+  "RetiredEffectPathsExecutionError",
+  {
+    message: S.String,
+  },
+  $I.annoteError<RetiredEffectPathsExecutionError>("RetiredEffectPathsExecutionError", {
+    description: "The retired Effect module path law could not list or read the git-tracked files.",
+  })
+) {
+  static readonly new = (message: string): RetiredEffectPathsExecutionError =>
+    RetiredEffectPathsExecutionError.make({ message });
+
+  static readonly mapError = Err.mapCauseError<RetiredEffectPathsExecutionError, [message: string]>((cause, message) =>
+    RetiredEffectPathsExecutionError.new(messageWithCause(message, cause))
+  );
+}

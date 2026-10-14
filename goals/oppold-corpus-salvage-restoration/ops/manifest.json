@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/oppold-corpus-salvage-restoration",
   "lifecycle": "active",
-  "statusNote": "2026-10-14: P0/P1/P4 complete; P2 in-progress, first bounded wave stopped. Four accepted families, family 5 sealed one unapproved engine-failure, ordinals 6-9 unstarted. Frozen Tika second-pass reproduction fails on the unmatched GIF copy; no next launch or retry. Remaining estate/recycle/DOC gates open; P3 pending, lifecycle active.",
+  "statusNote": "2026-10-14: P0/P1/P4 complete; P2 in-progress, first wave ended with nine sealed: five accepted, failures 5/7/8/9 retained. Ordinal 9 timing supports elapsed-budget exhaustion; exact cause unresolved. Separate terminal record and bounded 5/7/8 recovery amendment await publication. Recovery requires explicit next extraction-engine binding and approved orchestrator reply; family 9 needs a scope ruling. Eighteen larger occurrences and estate/recycle/DOC gates remain open for P3. P3 pending, lifecycle active.",
   "mission": "Preserve and verify the current T7 salvage state, then restore mail, reconcile all three recycle volumes, and convert distinct legacy-Word digests with originals retained.",
   "executionCapable": true,
   "reflectionRequired": true,

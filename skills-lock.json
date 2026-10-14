@@ -1,192 +1,736 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
     "adhd": {
-      "source": "UditAkhourii/adhd",
-      "sourceType": "github",
-      "computedHash": "80f91a41407324331584093cba54c260bc17402f8777923a70d6550d045bb972",
-      "ref": "main",
-      "skillPath": "skills/adhd/SKILL.md"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/adhd",
+        ".agents/skills/adhd"
+      ],
+      "installedTreeHash": "91f1a3d559b6a3c1c243d7e08e11130b575c1025368e181f3143c496c9caad7b"
     },
     "atom-reactivity-specialist": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "15f5519fbdefddec8f1a8e06341419f32ab3204cf576bab6db4f6eefe67986f1"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/atom-reactivity-specialist",
+        ".agents/skills/atom-reactivity-specialist"
+      ],
+      "installedTreeHash": "1a1f6a97778421a322c83fcbd812add005e7007ddd6cfb39babab5e66e274189"
     },
     "browser-qa-loop": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "a1e2ff3f1b3b94861fdea7c6d9c558f4d9e3a9625aa6ad1e2a3978e5b0317653"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/browser-qa-loop",
+        ".agents/skills/browser-qa-loop"
+      ],
+      "installedTreeHash": "53b3ccd44193cd1989157c3477fc8d5ecc55635fd07d702701420b397510bb5d"
+    },
+    "closeout": {
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/closeout",
+        ".agents/skills/closeout"
+      ],
+      "installedTreeHash": "d6e2fd64dd44dff89cf4c95a4a4a0b8f3827351e07f00dd14f2dc904b5f2d631"
     },
     "codex-findings": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "9754f631d271a9d7c95365b2ef676270dce7b1ce8472b443eba2d3f47ce9de18"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/codex-findings",
+        ".agents/skills/codex-findings"
+      ],
+      "installedTreeHash": "f68576d572152f1229693b8e83a8687296afd584fcbcba6b4932c1df8c3084b1"
     },
     "crispen": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "cfd09849b6706978404885c537c311349fdd3b301523bfbe980bcc3d8cbe7296"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/crispen",
+        ".agents/skills/crispen"
+      ],
+      "installedTreeHash": "c111373fc6d77f010a6f7bcd941a10a576922a83adb77d0b2de1fa35db4bbb58"
     },
     "effect-first-development": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "f62f9c4f1f02604cb8c4b184285548f8aba7e105c70399369ef6a9e182d6ef11"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/effect-first-development",
+        ".agents/skills/effect-first-development"
+      ],
+      "installedTreeHash": "e4a013c6cc1b5fc120959b916493326d95cf9b0723f59173d608b913d6f67ab7"
     },
     "explore": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "43552a34cf79097bc82dcecf2a39103f5a62bbfd6d11722533fe63b979ceb90f"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/explore",
+        ".agents/skills/explore"
+      ],
+      "installedTreeHash": "5c9be0bc9e03ad6572ec45537163331194896c91310b0835b3933fc4a3a7e8c6"
     },
     "graft": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "cc6964408e6eb4dd132693b9a8d1ffddd36c8334584aac63187ceaf723143996"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/graft",
+        ".agents/skills/graft"
+      ],
+      "installedTreeHash": "29fb832863ed616988037c294d37d1f869f69bd12bb825c44bdd8480329dfdd8"
     },
     "grill-me": {
-      "source": "mattpocock/skills",
+      "_tag": "vendored",
       "sourceType": "github",
-      "computedHash": "377842b54ad96c6c52a9c4f533870d0576d495603dc1d738b4fa2c523f1eddf6",
-      "ref": "main",
-      "skillPath": "skills/productivity/grill-me/SKILL.md"
+      "upstream": {
+        "repository": "mattpocock/skills",
+        "repositoryUrl": "https://github.com/mattpocock/skills",
+        "treePath": "skills/productivity/grill-me",
+        "entryPath": "skills/productivity/grill-me/SKILL.md",
+        "trackingRef": "main",
+        "sourceRevision": "fcf0071560d32913c9d4f820e0d7ca467c881619",
+        "observedHeadRevision": "2ab958093e83e0ec752e6c1c5932da465bf23e0c",
+        "observedPathRevision": "cbf6db4233c7e4202abaf79643f7ab395c75a2df"
+      },
+      "snapshot": {
+        "algorithm": "sha256",
+        "treeHash": "bf87b6f1c732bad9d52460815d56873e2e01ddb085c426695acd2ab40a7c7bac",
+        "fileCount": 2,
+        "manifestHash": "f715a2f86696a1b108a50ae7a7dd3720b5ee02daf6502601203f14231bfe5d24",
+        "manifest": [
+          {
+            "path": "SKILL.md",
+            "mode": "100644",
+            "sha256": "caaf8b8de1684f96e26b28f3c29189db5c89cce4b73e1c93d86164f66ef88637"
+          },
+          {
+            "path": "agents/openai.yaml",
+            "mode": "100644",
+            "sha256": "c061e39c3e0f9d865fb1b97556d485704af2a8a58f4b8221a8917a5c2074a32b"
+          }
+        ]
+      },
+      "license": {
+        "spdxId": "MIT",
+        "path": "LICENSE",
+        "sha256": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"
+      },
+      "provenance": {
+        "status": "exact",
+        "confidence": "high",
+        "matchedFileCount": 2,
+        "upstreamFileCount": 2,
+        "evidence": [
+          "exact-tree",
+          "path-history"
+        ]
+      },
+      "patches": {
+        "required": false,
+        "patchSetHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "series": []
+      },
+      "effective": {
+        "treeHash": "bf87b6f1c732bad9d52460815d56873e2e01ddb085c426695acd2ab40a7c7bac",
+        "installedTargets": [
+          ".claude/skills/grill-me",
+          ".agents/skills/grill-me"
+        ],
+        "installedTreeHash": "73d8c7d89c4dd3dbddeb9690b9fe3fb8ab9ab43ff778dc1c3fe5bc7d7e35a5ab"
+      }
     },
     "grill-with-docs": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "3e4649223efcbc43fb8917b9a54fe1a2699045d2803701b8735f8e9799584a44"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/grill-with-docs",
+        ".agents/skills/grill-with-docs"
+      ],
+      "installedTreeHash": "9067e73e3c7c22daa7070b2f86963063621a6a8a8ceac91b54129d51c2a7910a"
     },
     "grilling": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "59cc708a2a58f236634f0190f07e93f6360dab5dd1219e224ad2c0639b1da148"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/grilling",
+        ".agents/skills/grilling"
+      ],
+      "installedTreeHash": "8d809eba0d8649c228d722bc8f46dd679e1319b8a524487a9fb377a4117cedc9"
     },
     "impeccable": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "70b3196805127f1f6c43c1e2d716fbbf46d5e5a7f5c987fc70bcae9fde26178a"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/impeccable",
+        ".agents/skills/impeccable"
+      ],
+      "installedTreeHash": "5dab8a635bb62f5ff63d769d5c38ffbce7447ba7de220deea69d6f8efe2a6057"
     },
     "jsdoc-annotation-specialist": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "3a92878a2892f36b6bd471ccb510c5cd2418a0c031eb50a6683907cea08916c6"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/jsdoc-annotation-specialist",
+        ".agents/skills/jsdoc-annotation-specialist"
+      ],
+      "installedTreeHash": "c0adf04d19a92fe1eb658a2f83a1da8edab732aab2eb9ed4e1de241d9dc30265"
     },
     "motion-evidence-review": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "c311c1f22327836a68aca7f337031d3e922dc4fa873aea48636f63ba18fd736e"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/motion-evidence-review",
+        ".agents/skills/motion-evidence-review"
+      ],
+      "installedTreeHash": "fed3078781365445e48ef480df7f6e5a6c3a41d54c5ca9dd1cecbf6bac0023d7"
     },
     "onepassword-secret-refs": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "e7005edfc843ed1ef5eb2f87e5c532c6432ac4bc52a03c3f519e179eb0af4eca"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/onepassword-secret-refs",
+        ".agents/skills/onepassword-secret-refs"
+      ],
+      "installedTreeHash": "9d500c9ffd716b0b91338d6c867ab162cf1e1e6ed3f08b48b0a5e7a3bbe6281e"
     },
     "ontology-architect": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "e023f9d0f3d9840b7a7bec5fbcc00e9f446d5f6830dd8baa3e32f68675f385de"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/ontology-architect",
+        ".agents/skills/ontology-architect"
+      ],
+      "installedTreeHash": "f4cebaaa810ecbc8cece5d383616645ae891ca5006dc7fdd4f0c000cd014145e"
     },
     "ontology-conceptualizer": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "02023a1a09aa6339d31a9f66b89d53d1e0f7253385cfcd66da231a47bcd77d39"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/ontology-conceptualizer",
+        ".agents/skills/ontology-conceptualizer"
+      ],
+      "installedTreeHash": "702ba3d74482fb1041761f8b2ed828fbca2ac6f8a1089e0d9d2e96b51baf480c"
     },
     "ontology-curator": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "54074c9250fd8ce0e531bb921e65928dc4be569a663d3526f83c3a6ae14314fc"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/ontology-curator",
+        ".agents/skills/ontology-curator"
+      ],
+      "installedTreeHash": "4192ecc0a7475de037759647e5de0b6172fda93fb8f4a9b665db5721953d6fdf"
     },
     "ontology-foundational-auditor": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "e213c581b93ded622360d43c209b65db0eefd2e8a562e23bc020581ee785b326"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/ontology-foundational-auditor",
+        ".agents/skills/ontology-foundational-auditor"
+      ],
+      "installedTreeHash": "f70bbd3a22489153e843c21bedd64bd84d2f3dd7288459062c5f100b83f48994"
     },
     "ontology-mapper": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "1706510343aa9dfa03a038cc53c2f2acfacfd03fef2d79bac54c3f484f8000e6"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/ontology-mapper",
+        ".agents/skills/ontology-mapper"
+      ],
+      "installedTreeHash": "97c0f4bc6cdf3595090d838c5648dc8847e2648be87acf0f06ba57041741e58d"
     },
     "ontology-requirements": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "ce922da3c0a07264d72cea45e48c17c8b164cbc868392543b3b941bc8727c826"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/ontology-requirements",
+        ".agents/skills/ontology-requirements"
+      ],
+      "installedTreeHash": "e978dd3ff137d18d85571b15ddbdc2c0f21a2704b84d90b1306b5b0359bb6400"
     },
     "ontology-scout": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "0adf3178a1c478941e484f36406bc8a319ab3506824b1396db62589f37b4dcbe"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/ontology-scout",
+        ".agents/skills/ontology-scout"
+      ],
+      "installedTreeHash": "78a7a70f4c6660f9a7e6e013fead5819bc957c451548b91f7e9661e8e56cd201"
     },
     "ontology-validator": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "427418eb3c0105fc16f096bb8f8d3e20b6c836dba1b1e27552785d34a9eeabaf"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/ontology-validator",
+        ".agents/skills/ontology-validator"
+      ],
+      "installedTreeHash": "bc701d5593991b209978b2b814a230c1335d87915eb252e1937faa8e355e76f6"
     },
     "oracle": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "ac366ef57f570a6e8464eb7d7f0b813bc1b6db48ea4345536ff33fd516ecf04a"
+      "_tag": "vendored",
+      "sourceType": "github",
+      "upstream": {
+        "repository": "steipete/oracle",
+        "repositoryUrl": "https://github.com/steipete/oracle",
+        "treePath": "skills/oracle",
+        "entryPath": "skills/oracle/SKILL.md",
+        "trackingRef": "main",
+        "sourceRevision": "d6e773a562dc85c2a81b7c571f40ca2d81896679",
+        "observedHeadRevision": "68b8c51b0ee04f03a4d2cfea932a40df71393591",
+        "observedPathRevision": "a61381734c61e63315c8070707ce0834f39cd168"
+      },
+      "snapshot": {
+        "algorithm": "sha256",
+        "treeHash": "eaffc27f85895bf53d9f25726b03e4b7ecb3210719a5f010efbb0db4e4b93f68",
+        "fileCount": 1,
+        "manifestHash": "73de0c7371f251dea0e5c0cc153479435572099af9af08fb60360e06e93512c4",
+        "manifest": [
+          {
+            "path": "SKILL.md",
+            "mode": "100644",
+            "sha256": "c2cbe8b94b435f3ccd972e1eaedb83b829f8802b3db3b9b893d666871b67ec21"
+          }
+        ]
+      },
+      "license": {
+        "spdxId": "MIT",
+        "path": "LICENSE",
+        "sha256": "14293556b79940745123d0160c71d27ed0e9fe9b8a848093f3ed78f4853caafe"
+      },
+      "provenance": {
+        "status": "inferred",
+        "confidence": "medium",
+        "matchedFileCount": 0,
+        "upstreamFileCount": 1,
+        "evidence": [
+          "package-owner",
+          "path-history"
+        ]
+      },
+      "patches": {
+        "required": true,
+        "patchSetHash": "1856cf93d78cf389c601f76f4b23192ba2fd144867af9053d97004e11ae0ddec",
+        "series": [
+          {
+            "path": ".agents/skill-patches/oracle/0001-skill-md.patch",
+            "sha256": "f372350a05de1ad843d211b5b9e9d6131d6538dd61f821ef2aaa8f85c5d05d81",
+            "label": "temporary-drift",
+            "owner": "@kriegcloud",
+            "dropCondition": "Drop when upstream contains an equivalent change."
+          },
+          {
+            "path": ".agents/skill-patches/oracle/0002-agents-openai-yaml.patch",
+            "sha256": "377459f6f5ce60198c70b6398153f1062b08b7c54cf5c6821b345c98e95d6298",
+            "label": "temporary-drift",
+            "owner": "@kriegcloud",
+            "dropCondition": "Drop when upstream contains an equivalent change."
+          }
+        ]
+      },
+      "effective": {
+        "treeHash": "d418f7015d527e462b602d0f8924e77f782f279fc0b2f218d2ba273f29b44c6a",
+        "installedTargets": [
+          ".claude/skills/oracle",
+          ".agents/skills/oracle"
+        ],
+        "installedTreeHash": "ad34afc04f23051fa7089fb88bb5c22cffc5b8f548fb377f0c52f818ef402755"
+      }
+    },
+    "orchestrate": {
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/orchestrate",
+        ".agents/skills/orchestrate"
+      ],
+      "installedTreeHash": "6a8d30811f4d310d9c7d048caa68d569c079391620d1fc1b2f6ddf1a88e31dca"
     },
     "portless": {
-      "source": "vercel-labs/portless",
+      "_tag": "vendored",
       "sourceType": "github",
-      "computedHash": "2972b9c0443da5ed45dcf6cf85f531927ef84f11aa9bd8b664bc335f9af252ec",
-      "ref": "main",
-      "skillPath": "skills/portless/SKILL.md"
+      "upstream": {
+        "repository": "vercel-labs/portless",
+        "repositoryUrl": "https://github.com/vercel-labs/portless",
+        "treePath": "skills/portless",
+        "entryPath": "skills/portless/SKILL.md",
+        "trackingRef": "main",
+        "sourceRevision": "7abf4df5d939fe3b527a120e20bc270c681c3536",
+        "observedHeadRevision": "d42c741ac67d20a0b6e1f8f5b4192136de34fa03",
+        "observedPathRevision": "15ef06434c81523b1b24db2d52a17caf31edecf1"
+      },
+      "snapshot": {
+        "algorithm": "sha256",
+        "treeHash": "f4819715245bd25ca351c5f64d93c8b1a286557948d6ed67144c1ce0ee3d7079",
+        "fileCount": 1,
+        "manifestHash": "be8057b05d6d507a5d8c1067721e739974c7daec6a1369a0ae6705dae52fbb5f",
+        "manifest": [
+          {
+            "path": "SKILL.md",
+            "mode": "100644",
+            "sha256": "ecfc40b1e8e216cb60037401ffae8e4adfca524f9a65740637687ee37cb76a2a"
+          }
+        ]
+      },
+      "license": {
+        "spdxId": "Apache-2.0",
+        "path": "LICENSE",
+        "sha256": "014bb31e83d5c2e76aea1cc6e82217346ab41362f32cb355ad0f5c10aa0aeaff"
+      },
+      "provenance": {
+        "status": "exact",
+        "confidence": "high",
+        "matchedFileCount": 1,
+        "upstreamFileCount": 1,
+        "evidence": [
+          "historical-import",
+          "path-history"
+        ]
+      },
+      "patches": {
+        "required": false,
+        "patchSetHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "series": []
+      },
+      "effective": {
+        "treeHash": "f4819715245bd25ca351c5f64d93c8b1a286557948d6ed67144c1ce0ee3d7079",
+        "installedTargets": [
+          ".claude/skills/portless",
+          ".agents/skills/portless"
+        ],
+        "installedTreeHash": "577de2f8f00bcaf3f88ab1033e62dc104691c88b40b37cbb758e5489f15126da"
+      }
     },
     "qa-session-ops": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "f11c0e8f24ebbd85834bf6a0cdb81f48569fd7d11ac59593b5500b3cb67fa86e"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/qa-session-ops",
+        ".agents/skills/qa-session-ops"
+      ],
+      "installedTreeHash": "04e92a41ae1bceea06a08fc1d390d7dc601cc2b5ddf932f9673abfa31a30e27d"
     },
     "quality-review-fix-loop": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "57260fe53eb760b8acb111a11814ebb61198db155caa24900498e827064273aa"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/quality-review-fix-loop",
+        ".agents/skills/quality-review-fix-loop"
+      ],
+      "installedTreeHash": "3e5f8582b241d9665b7fb982042a2eb7f6bd3507434bd5e1c1aef1c082f7e24a"
     },
     "reflect": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "9d10bba8e06073adb65f46a0e0350eccb31c6f77576f04a57a4e7d0586466beb"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/reflect",
+        ".agents/skills/reflect"
+      ],
+      "installedTreeHash": "e2ae4a428c536575906b8fcdad56c7ac992e243073128345c3276572cd7c7ae4"
     },
     "schema-first-development": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "b6cee420ede9ada6284ead0d8c629a4e3ab988ac5d6fc17f82c61dabdd7a870c"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/schema-first-development",
+        ".agents/skills/schema-first-development"
+      ],
+      "installedTreeHash": "9a943edb54a3a418302e1faf7b6537373529c270a797174221f729e84f5fd824"
     },
     "shadcn": {
-      "source": "shadcn-ui/ui",
+      "_tag": "vendored",
       "sourceType": "github",
-      "computedHash": "0ea96a1b3b711138dc26b476b640af12050bf3e025ab0fd2ed34ba7009f0cbf4",
-      "ref": "main",
-      "skillPath": "skills/shadcn/SKILL.md"
+      "upstream": {
+        "repository": "shadcn-ui/ui",
+        "repositoryUrl": "https://github.com/shadcn-ui/ui",
+        "treePath": "skills/shadcn",
+        "entryPath": "skills/shadcn/SKILL.md",
+        "trackingRef": "main",
+        "sourceRevision": "2d3f1cd436b18ea12f24130de4df781355925b08",
+        "observedHeadRevision": "cb2bcd88d93b2f9bddb030e9136f1f8773e7eac4",
+        "observedPathRevision": "6cd3f4c65c361ab6554e06a77e6a0af9cf8b6e37"
+      },
+      "snapshot": {
+        "algorithm": "sha256",
+        "treeHash": "2eb9d12b66677456fcff9d4cbd6247d8bbb9d0935ee61354f1f4f66b23496987",
+        "fileCount": 21,
+        "manifestHash": "34078436a7f93e3c35261b79b2fb286d410093e2f5a0eb32facfee4518e46834",
+        "manifest": [
+          {
+            "path": "SKILL.md",
+            "mode": "100644",
+            "sha256": "0185f715bc985deca4223be426f898aa17f7d1a297a9857dfa79055e473bc34d"
+          },
+          {
+            "path": "agents/openai.yml",
+            "mode": "100644",
+            "sha256": "35db91b1eef58b2abe01da9b88577de5a44e233b740cd93d692ddeeadd2afe4d"
+          },
+          {
+            "path": "assets/shadcn-small.png",
+            "mode": "100644",
+            "sha256": "0ecc62d682727f68fc4937eed19960c706714fa084d44f63028d611ae02bf3d7"
+          },
+          {
+            "path": "assets/shadcn.png",
+            "mode": "100644",
+            "sha256": "7d60ad6fec4d89a0d44ba5a3c9283d2fea0047af5467f9227040e20d927d39b7"
+          },
+          {
+            "path": "assets/showcase/color-pair.tsx",
+            "mode": "100644",
+            "sha256": "6028f0b677912216822fdaf76ae6b8863c429916ed4a9626b73f4de4506f8ee4"
+          },
+          {
+            "path": "assets/showcase/preview-states.css",
+            "mode": "100644",
+            "sha256": "8d9e3cec24dd01b11c5ba12196d0376a131797d9ad247ea624e66eb8bbf61b0e"
+          },
+          {
+            "path": "assets/showcase/state-matrix.tsx",
+            "mode": "100644",
+            "sha256": "07794119fe05ff735358b3f8ca30a8297617ab64dfb3901dce4d89fe5f443458"
+          },
+          {
+            "path": "cli.md",
+            "mode": "100644",
+            "sha256": "a381e35bf36fe7bb851952c13707e01e82434fd7a4a4e53f6df26c6370838904"
+          },
+          {
+            "path": "customization.md",
+            "mode": "100644",
+            "sha256": "a19e81c78843df255e85755e52659268d793845add845b34ad8091f62bff3af9"
+          },
+          {
+            "path": "design-system-page.md",
+            "mode": "100644",
+            "sha256": "c541d661af159548744be3e27f79e7da710ab83f9afd448a4346f7ff1531d328"
+          },
+          {
+            "path": "design-system.md",
+            "mode": "100644",
+            "sha256": "9ed11e93e7e80e34c8795d5ba82e5420ca905e8e9949fef79cbe9239184fd06b"
+          },
+          {
+            "path": "evals/evals.json",
+            "mode": "100644",
+            "sha256": "e82c747326a5c21e37a1c962274d36b1bfebb3e6602ee368b98e2dba5db18369"
+          },
+          {
+            "path": "mcp.md",
+            "mode": "100644",
+            "sha256": "8d696b4e45b7d0e337367248513bd9acebe8f3bcfd7b748c775e5a337c8f38c8"
+          },
+          {
+            "path": "registry.md",
+            "mode": "100644",
+            "sha256": "4f239be36bd2b58e17047db1ca80ab7da00e15a8b73242e5e4d50d113c4caa05"
+          },
+          {
+            "path": "rules/base-vs-radix.md",
+            "mode": "100644",
+            "sha256": "2b2deb47d004285220c1fc6b38bb2edc2d0ccbcdafd031b0b189d5d8ed0d1ba8"
+          },
+          {
+            "path": "rules/chat.md",
+            "mode": "100644",
+            "sha256": "de29c12524a27578a59ecf8c95ea939278c1a3572a3706bfc99f6f92cb770b7b"
+          },
+          {
+            "path": "rules/composition.md",
+            "mode": "100644",
+            "sha256": "f282df828d83a91132a846ddb62eea149a7c7c94822e9ca88cfddf85af01aa41"
+          },
+          {
+            "path": "rules/forms.md",
+            "mode": "100644",
+            "sha256": "29593e14381e34626f8e0e9c15c59f3394b92a0623af6a6ec94585400123853c"
+          },
+          {
+            "path": "rules/icons.md",
+            "mode": "100644",
+            "sha256": "d4a58266648872d9ee07d0c2368843a1cb88b8253b7f528dd7bda9d68b6c2535"
+          },
+          {
+            "path": "rules/styling.md",
+            "mode": "100644",
+            "sha256": "f88fbd72dff862805b786dc7d7e4c74c83030fc278c5b97c993e4e665001798c"
+          },
+          {
+            "path": "scripts/showcase-coverage.mjs",
+            "mode": "100644",
+            "sha256": "fb593e0806414d23b51354a46881f0b2873afc226bda0926a22f83cbd60af2fa"
+          }
+        ]
+      },
+      "license": {
+        "spdxId": "MIT",
+        "path": "LICENSE.md",
+        "sha256": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f"
+      },
+      "provenance": {
+        "status": "exact",
+        "confidence": "high",
+        "matchedFileCount": 20,
+        "upstreamFileCount": 21,
+        "evidence": [
+          "exact-tree",
+          "path-history"
+        ]
+      },
+      "patches": {
+        "required": true,
+        "patchSetHash": "00d0170bb5ed45fefbce83b9bf3ea4efd3ed7f89d31db95157e7ea6ff160077d",
+        "series": [
+          {
+            "path": ".agents/skill-patches/shadcn/0001-design-system-md.patch",
+            "sha256": "a49c6b5e0c728a1f222c5edfc870e66aad89c6f5e874f5da42002461c923fd93",
+            "label": "temporary-drift",
+            "owner": "@kriegcloud",
+            "dropCondition": "Drop when upstream contains an equivalent change."
+          }
+        ]
+      },
+      "effective": {
+        "treeHash": "de03aa45be748f5ebdfaac750a55c194deca42f93a44adbb0dd5ff10b4ce97c2",
+        "installedTargets": [
+          ".claude/skills/shadcn",
+          ".agents/skills/shadcn"
+        ],
+        "installedTreeHash": "c6d530b267827e14c51c1cc4fbacd35b3276677a6c2e8f4d409d4faba06cbe87"
+      }
     },
     "sparql-expert": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "0dc474eb4e852d2b13c5ed6c1c5dff1b839da17bf1a6578e9d4bd7605b09d4af"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/sparql-expert",
+        ".agents/skills/sparql-expert"
+      ],
+      "installedTreeHash": "c84b809a2ca039720af161fc122a9a7a86c3287fda859a80c4a87fc27f7751bc"
     },
     "teach": {
-      "source": "mattpocock/skills",
+      "_tag": "vendored",
       "sourceType": "github",
-      "computedHash": "b4438df65216e092d352a7bcebe2860eb0b62eb29747e0d4468eabe057396f58",
-      "ref": "main",
-      "skillPath": "skills/productivity/teach/SKILL.md"
+      "upstream": {
+        "repository": "mattpocock/skills",
+        "repositoryUrl": "https://github.com/mattpocock/skills",
+        "treePath": "skills/productivity/teach",
+        "entryPath": "skills/productivity/teach/SKILL.md",
+        "trackingRef": "main",
+        "sourceRevision": "ad5400b930b297b0c0cb231ff1ffe42a7da666aa",
+        "observedHeadRevision": "2ab958093e83e0ec752e6c1c5932da465bf23e0c",
+        "observedPathRevision": "aa024cb1954fedbc8221967c080fa40b9867f994"
+      },
+      "snapshot": {
+        "algorithm": "sha256",
+        "treeHash": "1d012501be45ba8bcec7987b9feb535e4e27d166d173954a6998e8939bd880e2",
+        "fileCount": 6,
+        "manifestHash": "8f44b221b8426872646ab17a6723b825acb2c8a04be877976edd7f28e2967933",
+        "manifest": [
+          {
+            "path": "GLOSSARY-FORMAT.md",
+            "mode": "100644",
+            "sha256": "9b99859ec28437668130d8f2ce5a342938970f8a1ed4fd38c3eab4f4b5fff210"
+          },
+          {
+            "path": "LEARNING-RECORD-FORMAT.md",
+            "mode": "100644",
+            "sha256": "701fa34b6748aa89e6c960ffb815257f481a7d77fb2900f9028f7edf3fdd6052"
+          },
+          {
+            "path": "MISSION-FORMAT.md",
+            "mode": "100644",
+            "sha256": "8cacbb3c0644d3ae0ea4965564797099401a6930a23f7cf462918576587f2418"
+          },
+          {
+            "path": "RESOURCES-FORMAT.md",
+            "mode": "100644",
+            "sha256": "e9cacf34026e11a8d1c8f9de88abe5bcbf654f4ebdb25cae8c0de0d5f48f44ec"
+          },
+          {
+            "path": "SKILL.md",
+            "mode": "100644",
+            "sha256": "550482c2d674b085c9043b87bfdc14a8f2ec453c736119e7fcbb1e9332bffeba"
+          },
+          {
+            "path": "agents/openai.yaml",
+            "mode": "100644",
+            "sha256": "5856f3ae8aec742f1499c640aecdd5f1d6af5fa210a7c6ec794de8263a6f733f"
+          }
+        ]
+      },
+      "license": {
+        "spdxId": "MIT",
+        "path": "LICENSE",
+        "sha256": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"
+      },
+      "provenance": {
+        "status": "exact",
+        "confidence": "high",
+        "matchedFileCount": 6,
+        "upstreamFileCount": 6,
+        "evidence": [
+          "exact-tree",
+          "path-history"
+        ]
+      },
+      "patches": {
+        "required": false,
+        "patchSetHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "series": []
+      },
+      "effective": {
+        "treeHash": "1d012501be45ba8bcec7987b9feb535e4e27d166d173954a6998e8939bd880e2",
+        "installedTargets": [
+          ".claude/skills/teach",
+          ".agents/skills/teach"
+        ],
+        "installedTreeHash": "5648a9a1cdcc740400b58276f5a1feb482f5febac42863aea2cf8ef99d57bc62"
+      }
     },
     "turborepo": {
-      "source": "vercel/turborepo",
+      "_tag": "vendored",
       "sourceType": "github",
-      "computedHash": "75a529569bbb5a4823f4ee4fdd6d78a71a2f2b2c647264b5c8710bde60a43aa9",
-      "ref": "main",
-      "skillPath": "skills/turborepo/SKILL.md"
+      "upstream": {
+        "repository": "vercel/turborepo",
+        "repositoryUrl": "https://github.com/vercel/turborepo",
+        "treePath": "skills/turborepo",
+        "entryPath": "skills/turborepo/SKILL.md",
+        "trackingRef": "main",
+        "sourceRevision": "b19f6a59ccd89ef98cae5e4d8b30e89489fc00f1",
+        "observedHeadRevision": "c6fbc97bb8841f9c87d106af2d89ce11e97ea56c",
+        "observedPathRevision": "adbfec74ea17f718b44d24cdf0094eb8141ce9b4"
+      },
+      "snapshot": {
+        "algorithm": "sha256",
+        "treeHash": "8a37f7ea705acbc581f96226fad5e6f1b8be90503a339f9340fd2896d344bb69",
+        "fileCount": 1,
+        "manifestHash": "9a7a22809adadf868c59c8174fde880aef5e2d2f1848e6588e9cace93ac4df75",
+        "manifest": [
+          {
+            "path": "SKILL.md",
+            "mode": "100644",
+            "sha256": "e475e520f1822f0de4ca5fbbfd37906949db67d35b038f2b8a76ef4c95c13c53"
+          }
+        ]
+      },
+      "license": {
+        "spdxId": "MIT",
+        "path": "LICENSE",
+        "sha256": "f7ac4712aa30551de5b97b30215010515d783638107f207bcce32a85bfffc05e"
+      },
+      "provenance": {
+        "status": "exact",
+        "confidence": "high",
+        "matchedFileCount": 1,
+        "upstreamFileCount": 1,
+        "evidence": [
+          "historical-import",
+          "path-history"
+        ]
+      },
+      "patches": {
+        "required": false,
+        "patchSetHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "series": []
+      },
+      "effective": {
+        "treeHash": "8a37f7ea705acbc581f96226fad5e6f1b8be90503a339f9340fd2896d344bb69",
+        "installedTargets": [
+          ".claude/skills/turborepo",
+          ".agents/skills/turborepo"
+        ],
+        "installedTreeHash": "8af2fdcf2f57a392975d1322f862c2deb27174d0dee88356b8d11b9b126e3869"
+      }
     },
     "unslop": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "d79d894b3566ccad8bfcdcf8eb68474a815b28398b0a4feff3bb17ec86f90e90"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/unslop",
+        ".agents/skills/unslop"
+      ],
+      "installedTreeHash": "94f4301d065429357b097b195bf4275660c0faab54dbc6cd97ef2f9620e143d4"
     },
     "yeet": {
-      "source": "repo-local",
-      "sourceType": "local",
-      "computedHash": "710c494cbf6bc3ba904677d497da13e8fdd9c08e009a8c08553f8d54e4dc42ea"
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/yeet",
+        ".agents/skills/yeet"
+      ],
+      "installedTreeHash": "ee99bf7b95520225bee1e8f54273a62fe328a3bfda00e781d4fd0f561817d013"
     }
   }
 }

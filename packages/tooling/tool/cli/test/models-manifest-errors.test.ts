@@ -7,6 +7,8 @@ import {
   ModelsManifestError,
   ModelsManifestStore,
   ModelsManifestStoreLive,
+  RoutingRole,
+  RoutingSurface,
   seedModelsManifest,
 } from "@beep/repo-cli/commands/Models";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -18,6 +20,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as S from "effect/Schema";
 
 // Every `beep models` error carries a `mapError` that wraps the upstream cause
 // with a message and an optional origin; the command-boundary error folds the
@@ -82,9 +85,27 @@ describe("models errors", () => {
   );
 });
 
+describe("routing vocabulary", () => {
+  it("accepts the review panel, Muse, and Junie roles and surface", () => {
+    for (const role of ["review.panel", "muse.opt-in", "junie.default", "junie.volume"]) {
+      expect(S.is(RoutingRole)(role)).toBe(true);
+    }
+    expect(S.is(RoutingSurface)("junie-cli")).toBe(true);
+    expect(A.length(seedModelsManifest.bindings)).toBe(27);
+    expect(A.length(seedModelsManifest.superseded)).toBe(10);
+    expect(A.some(seedModelsManifest.superseded, (model) => model.id === "gpt-6-astra")).toBe(false);
+  });
+});
+
 describe("surface effort domain", () => {
   it("answers in both data-first and data-last form", () => {
     expect(isEffortAllowedOnSurface("codex-cli", "xhigh")).toBe(true);
+    for (const effort of ["low", "medium", "high"] as const) {
+      expect(isEffortAllowedOnSurface("junie-cli", effort)).toBe(true);
+    }
+    for (const effort of ["minimal", "xhigh", "max", "ultra"] as const) {
+      expect(isEffortAllowedOnSurface("junie-cli", effort)).toBe(false);
+    }
     expect(isEffortAllowedOnSurface("ultra")("proxy-workflow")).toBe(false);
     expect(isEffortAllowedOnSurface("cursor-seat", "low")).toBe(false);
     expect(isEffortAllowedOnSurface("minimal")("proxy-workflow")).toBe(true);

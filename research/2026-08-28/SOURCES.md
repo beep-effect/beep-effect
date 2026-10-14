@@ -76,7 +76,7 @@ honor onExcessProperty: "error" across the exact single, batch, stateful diction
 - Kind: `github`
 
 ```
-packages/effect/src/unstable/ai/McpServer.ts decided whether a toolkit result was structured with: structuredContent: typeof result.encodedResult === "object" ? result.encodedResult : undefined. typeof also reports "object" for null and for arrays. A tool whose success schema encoded to either shape put a non-object into structuredContent, which MCP requires to be a JSON object.
+packages/effect/src/ai/McpServer.ts decided whether a toolkit result was structured with: structuredContent: typeof result.encodedResult === "object" ? result.encodedResult : undefined. typeof also reports "object" for null and for arrays. A tool whose success schema encoded to either shape put a non-object into structuredContent, which MCP requires to be a JSON object.
 ```
 
 ### f-effect-03 — Effect Socket is now pull-based with TLS constructors

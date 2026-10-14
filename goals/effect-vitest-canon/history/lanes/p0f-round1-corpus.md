@@ -60,11 +60,11 @@ Group totals may overlap where an input has multiple roles. Manifest totals are 
 
 - Assembly integrity PASS: all copied before/snapshot/after hashes and terminal live hashes match; references match; selection metadata remained unchanged; sample count is exactly 20; all 92 baseline rows match existing JSONL projections. Installed Effect/Vitest are rc.112; installed Vitest4.1.11; all three installed Effect Vitest source files match the pinned copy. Manifest/generated-artifact digest checks pass. Corpus files/directories are read-only.
 - Input completeness is **not passed**: the supplied pinned extraction lacks the five full upstream helper bodies below, corroborating grounding-2 lines25–28. No retained cache copy was found. Root must recover the exact pinned bodies before claiming all requested upstream inputs are present; use a new versioned corpus rather than altering this seal. No approval requirement or waiver is invented.
-  - `packages/effect/test/unstable/eventlog/SqlEventLogServerUnencryptedStorageTest.ts` (pinned-effect-rc112).
-  - `packages/effect/test/unstable/persistence/KeyValueStoreTest.ts` (pinned-effect-rc112).
-  - `packages/effect/test/unstable/persistence/PersistedCacheTest.ts` (pinned-effect-rc112).
-  - `packages/effect/test/unstable/persistence/PersistedQueueTest.ts` (pinned-effect-rc112).
-  - `packages/effect/test/unstable/persistence/SqlCleanupTest.ts` (pinned-effect-rc112).
+  - `packages/effect/test/eventlog/SqlEventLogServerUnencryptedStorageTest.ts` (pinned-effect-rc112).
+  - `packages/effect/test/persistence/KeyValueStoreTest.ts` (pinned-effect-rc112).
+  - `packages/effect/test/persistence/PersistedCacheTest.ts` (pinned-effect-rc112).
+  - `packages/effect/test/persistence/PersistedQueueTest.ts` (pinned-effect-rc112).
+  - `packages/effect/test/persistence/SqlCleanupTest.ts` (pinned-effect-rc112).
 - Packet ambiguity retained: README still says P0c in progress/older census, while PLAN and later receipts advance to P0f. Root should reconcile or explicitly frame this for Grok; this lane changed no packet doctrine/state.
 - Graft guidance was absent in primary and loaded from the filesystem checkout; two existing cards were read directly. No CLI/init/refresh/build ran outside ownership. Numeric estimate: 0, with 0 CLI retrieval calls.
 - Commands: report creation, metadata selection, assembly planning, JSONL equality, bounded import-reference indexing, snapshot capture and final digest/permission validation all exited0. Initial memory/local guidance and missing-reference searches returned no matches; one guessed Quality/internal/Tasks.ts path was absent and resolved to the existing Quality/Tasks.ts. No tests/builds/installs/package checks/coverage/scanner/model/Grok/git commands ran.

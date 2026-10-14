@@ -14,12 +14,12 @@
 ### B2 — Existing PGlite / SQL / Atom reactivity route is not evaluated
 **Claim:** "the build-it path (per-user registry + streaming RPC over the existing transport) is the right size; every buy-it sync engine assumes a shared Postgres + multi-device fan-out that is an explicit no-go at one user." (`RESEARCH.md`, "Net external read")
 
-**Claim:** "`@effect/atom-react` (v4.0.0-beta.91) + `effect/unstable/reactivity` `Atom` are wired in `apps/professional-desktop/src/runtime/ProfessionalAtomRuntime.ts` ... The client side that consumes the subscription stream and invalidates UI projections is the existing Atom runtime." (`RESEARCH.md`, "Client projection-refresh substrate — ALREADY EXISTS")
+**Claim:** "`@effect/atom-react` (v4.0.0-beta.91) + `effect/reactivity` `Atom` are wired in `apps/professional-desktop/src/runtime/ProfessionalAtomRuntime.ts` ... The client side that consumes the subscription stream and invalidates UI projections is the existing Atom runtime." (`RESEARCH.md`, "Client projection-refresh substrate — ALREADY EXISTS")
 
 **Problem:** The research jumps from "Atom runtime exists" to "custom hub is right-sized" without comparing the repo's existing reactive-query path. Local proof:
 
 ```text
-$ rg -n "reactiveMailbox|reactive:" node_modules/effect/dist/unstable/sql/SqlClient.d.ts
+$ rg -n "reactiveMailbox|reactive:" node_modules/effect/dist/sql/SqlClient.d.ts
 40: * Use the Reactivity service from @effect/experimental to create a reactive
 43:    readonly reactive: <A, E, R>(keys: ..., effect: Effect.Effect<A, E, R>) => Stream.Stream<A, E, R>;
 48:    readonly reactiveMailbox: <A, E, R>(keys: ..., effect: Effect.Effect<A, E, R>) => Effect.Effect<Queue.Dequeue<A, E>, never, R | Scope.Scope>;

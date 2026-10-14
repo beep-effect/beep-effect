@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `decompose`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Spine graduated 2026-08-13 ([`goals/skill-contract-kernel/`](../../goals/skill-contract-kernel/),
@@ -12,6 +12,9 @@ merged via PR #694); status flipped 2026-08-24 per the graduation contract.
 **Reopened at `decompose` 2026-08-26** by packet-system-redesign D22/D24:
 Amendment J belongs to the next `@beep/skill-contract` version and this
 exploration owns its shape pass. The completed kernel goal stays closed.
+**Graduated again 2026-10-14**: Amendment J became candidate 7,
+[`goals/skill-contract-gate-certificates/`](../../goals/skill-contract-gate-certificates/),
+published with `beep explore graduate --write`.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -26,13 +29,9 @@ evidence layer into beep's epistemic/citation-span/QA stacks.
 
 ## Next Open Question
 
-Determine Amendment J's exact candidate boundary: a new
-`skill-contract-gate-certificates` goal or an amendment to an existing later
-wave. The fixed shape is a digest-bound in-toto Statement envelope, EARL/ACT's
-five outcomes, explicit complete/incomplete/unknown reach, producer-side
-exclusion of inconclusive checks from aggregate success, and a separate
-apply-by-id plan. The fixed first consumer is one certificate-producing QA
-judge settlement. See `MAP.md` §Amendment J re-entry.
+None. Amendment J's boundary was settled 2026-10-14 (DECISIONS): a new
+`skill-contract-gate-certificates` goal carries the binding inputs from
+`MAP.md` §Amendment J re-entry. Waves 2–6 remain re-entry points in `MAP.md`.
 
 ## Read This First
 
@@ -46,6 +45,11 @@ judge settlement. See `MAP.md` §Amendment J re-entry.
 
 ## Trail
 
+- 2026-10-14: Amendment J ruled a new candidate-7 goal (orchestrator ruling,
+  DECISIONS). Graduated through `beep explore graduate --write --expect
+  graduation-plan/v1:f7be2ea5…`: published `goals/skill-contract-gate-certificates`,
+  kept `goals/skill-contract-kernel` as already published, flipped status to
+  `graduated` and stage to `graduate`.
 - 2026-08-26: reopened at `decompose` by packet-system-redesign D22/D24.
   Amendment J moved out of packet-core/candidate 6 and into this exploration's
   existing `@beep/skill-contract` authority. Exact goal/candidate placement is

@@ -294,7 +294,7 @@ assignments scoped to the one mailbox: `Application Mail.ReadWrite`,
 - **Hygiene.** Fixtures use `example.test` addresses and synthetic bytes. No
   real mail content, client name or tenant id enters the repository.
 - **Effect v4**, `LiteralKit` for literal domains, `HashMap`/`HashSet`,
-  `effect/unstable/http`, `Effect.fn` for effectful functions, typed errors.
+  `effect/http`, `Effect.fn` for effectful functions, typed errors.
 - **Tool annotations.** `send_draft` and `delete_draft` are marked
   destructive and open-world so a harness asks before running them.
 

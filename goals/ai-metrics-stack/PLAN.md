@@ -72,7 +72,7 @@ Status: completed
 - Export through stable `@effect/opentelemetry/NodeSdk.layer` for v1, with a
   trace-only `@beep/observability` Node SDK helper using protobuf OTLP HTTP
   exporters for Phoenix smoke targets.
-- Keep `effect/unstable/observability` and `effect/unstable/devtools` as later
+- Keep `effect/observability` and `effect/devtools` as later
   or experimental references.
 - Added generated local Phoenix compose smoke target and kept Langfuse, Opik,
   and PostHog behind install/export contracts instead of backend-specific

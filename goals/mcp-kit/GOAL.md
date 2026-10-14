@@ -30,7 +30,7 @@ Scope:
   no third-party MCP runtime, no persistence schema changes, no MCP
   `2025-11-25` reliance.
 
-Key design facts (verified 2026-07-01; re-verify at P0 — `effect/unstable/ai`
+Key design facts (verified 2026-07-01; re-verify at P0 — `effect/ai`
 is beta, pin `effect@4.0.0-beta.92`, MCP protocol `2025-06-18`):
 
 - `McpServer` ships `failureMode:"return"` typed failures as
@@ -80,7 +80,7 @@ bun run beep yeet verify
 Stop and report before changing public API, schema, data migration, auth,
 infra, security behavior, dependencies, lockfiles, generated files, or
 destructive state unless `SPEC.md` explicitly requires it. Stop if the
-verified `effect/unstable/ai` internals above have drifted in a way that
+verified `effect/ai` internals above have drifted in a way that
 invalidates a resolved decision.
 
 Done only when acceptance passes and verification is complete, or when a

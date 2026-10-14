@@ -26,7 +26,7 @@
     "roiRank": 4,
     "exception": {
       "reason": "This is adapter hardening around Effect AI/OpenAI structured-output schema conversion; the empty object is an OpenAI JSON Schema payload fallback, not a package domain default.",
-      "boundary": "effect/unstable/ai Tool JSON schema adapter"
+      "boundary": "effect/ai Tool JSON schema adapter"
     }
   },
   {
@@ -56,7 +56,7 @@
     "roiRank": 6,
     "exception": {
       "reason": "These keys belong to Effect AI's response/usage metadata contract; the OpenAI-compatible provider has no corresponding values, so the adapter must leave them absent.",
-      "boundary": "effect/unstable/ai Response adapter contract"
+      "boundary": "effect/ai Response adapter contract"
     }
   },
   {

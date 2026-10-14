@@ -24,6 +24,9 @@ front end) and from the private out-of-repo knowledge vault managed by the
 
 - **Packets are immutable after merge.** Corrections land as later packets,
   never as edits to shipped ones.
+  Exception (operator ruling 2026-10-14): retired Effect module paths are
+  rewritten in place everywhere, packets included
+  (`.patterns/effect-module-paths.md`).
 - **Truth vs derived:** per-packet `claims.jsonl` plus `research/ledger/` are
   the source of truth; every index/digest (exclusion digest, DuckDB catalog)
   is derived at run start, rebuildable, and never committed.

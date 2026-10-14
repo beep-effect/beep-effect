@@ -16,7 +16,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { A, O, pipe, Str } from "@beep/utils";
+import { A, O, pipe, Str, thunkFalse } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -37,6 +37,7 @@ import {
   renderPacketTraceFile,
 } from "../Goals/PacketCore/PacketFold.ts";
 import { PACKET_TRACE_SEGMENTS } from "../Goals/PacketCore/PacketTransitionWriter.ts";
+import { GRADUATION_PENDING_SEGMENTS } from "./Graduate.schemas.ts";
 import type { GoalDoctorFindingKind } from "../Goals/Doctor.ts";
 import type {
   PacketDerivedState,
@@ -295,6 +296,29 @@ const fleetLintFindings = Effect.fn("Explore.fleetLintFindings")(function* () {
   );
 });
 
+// E19: a leftover pending-events sidecar means a graduation stopped between
+// the manifest flip and the stream append.
+const graduationPendingFindings = Effect.fn("Explore.graduationPendingFindings")(function* (
+  root: PacketRoot,
+  slug: string,
+  packetPath: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const sidecar = path.join(packetPath, ...GRADUATION_PENDING_SEGMENTS);
+  const present =
+    PacketRoot.is.explorations(root) && (yield* fs.exists(sidecar).pipe(Effect.orElseSucceed(thunkFalse)));
+  return present
+    ? A.of(
+        finding(
+          slug,
+          "packet-graduation-pending",
+          `${sidecar} records graduation events the stream has not received; run \`bun run beep explore graduate ${slug} --resume-events\`.`
+        )
+      )
+    : A.empty<GoalDoctorFinding>();
+});
+
 const scanRootStreams = Effect.fn("Explore.scanRootStreams")(function* (root: PacketRoot) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -317,6 +341,7 @@ const scanRootStreams = Effect.fn("Explore.scanRootStreams")(function* (root: Pa
     const result = yield* streamFindings(root, slug, packetPath);
     summaries = A.append(summaries, derivedSummary(root, slug, result.derived));
     findings = A.appendAll(findings, result.findings);
+    findings = A.appendAll(findings, yield* graduationPendingFindings(root, slug, packetPath));
   }
   return { streams, summaries, findings };
 });

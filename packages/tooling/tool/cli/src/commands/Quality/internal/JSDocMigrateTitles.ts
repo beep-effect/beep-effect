@@ -108,13 +108,13 @@ export const defaultJSDocMigrateProxyUrl = "http://127.0.0.1:8317";
  * ```ts
  * import { defaultJSDocMigrateTitlesModel } from "@beep/repo-cli/test/Quality"
  *
- * console.log(defaultJSDocMigrateTitlesModel) // "grok-4.5"
+ * console.log(defaultJSDocMigrateTitlesModel) // "grok-4.7"
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const defaultJSDocMigrateTitlesModel = "grok-4.5";
+export const defaultJSDocMigrateTitlesModel = "grok-4.7";
 
 /**
  * Build the title-pass prompt for one file's pending blocks.

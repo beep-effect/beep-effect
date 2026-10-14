@@ -92,10 +92,10 @@ or is marked **NET-NEW**.
   parses `lib/client.d.ts`, `.d.ts` files, and `lib/managers/*.d.ts`. The Q1
   tier-3 fallback.
 - **Native Effect v4 transport primitives** (`effect@4.0.0-beta.91`) —
-  `HttpClient.withRateLimiter` (`node_modules/effect/dist/unstable/http/HttpClient.d.ts:743`),
+  `HttpClient.withRateLimiter` (`node_modules/effect/dist/http/HttpClient.d.ts:743`),
   `HttpClient.retryTransient` (`:602`), `Cache.makeWith({ timeToLive })`
   (`node_modules/effect/dist/Cache.d.ts:155`), `HttpApiClient` `transformClient`
-  option (`node_modules/effect/dist/unstable/httpapi/HttpApiClient.d.ts:135,176`),
+  option (`node_modules/effect/dist/http-api/HttpApiClient.d.ts:135,176`),
   `Config.redacted` (`node_modules/effect/dist/Config.d.ts:1095`; in-driver
   precedent: runpod + uspto `*.service.ts`). The Q5 substrate — composition, not
   reimplementation.

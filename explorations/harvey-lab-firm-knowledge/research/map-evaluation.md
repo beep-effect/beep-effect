@@ -669,7 +669,7 @@ RubricResult      = { score: 0|1, allPass: boolean, nCriteria, nPassed,
 JudgeProfile      = LiteralKit("single", "dual")   // dual carries per-judge results
 ```
 
-with the judge itself a `Context.Service` over `effect/unstable/http` (never
+with the judge itself a `Context.Service` over `effect/http` (never
 `node:http`), criterion fan-out as a bounded `Effect.forEach({ concurrency })`,
 and the salvage parser as a `S.Codec` decode with a fallback branch rather than
 a try/except ladder. Judge-provider routing belongs in a `LiteralKit` domain

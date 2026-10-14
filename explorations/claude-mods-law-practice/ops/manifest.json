@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "claude-mods-law-practice",
+    "title": "Claude Code Mods for the Law Practice",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md", "research/repo-inventory.md"],
+    "links": {
+      "goals": ["goals/practice-claude-mod"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-14",
+    "updated": "2026-10-14"
+  }
+}

@@ -28,7 +28,7 @@ Scope:
 - Out: write verbs/scopes; MCP exposure (`goals/m365-mcp`); Teams/Excel-content;
   Search API; ingest wiring/matter mapping/persistence; any other slice.
 
-Reuse (do not reinvent): `@beep/hubspot` (raw HTTP via `effect/unstable/http`
+Reuse (do not reinvent): `@beep/hubspot` (raw HTTP via `effect/http`
 `FetchHttpClient` + `HttpClientRequest` bearer + `effect/Schema` decode +
 `LiteralKit` errors), `@beep/box` (config/service/errors split + `S.Redacted`),
 `@beep/identity` composer keys.

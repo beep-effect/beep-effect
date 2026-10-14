@@ -111,7 +111,7 @@
           // installed compiler exactly, and every entry is "error" unless
           // `tsgoDisabledRules` in the Quality command declares it "off" with a reason.
           // Declared off: experimentalApiUsage, unstableApiUsage and apiStabilityLeak (the repo
-          // builds on `effect/unstable/*` by design).
+          // builds on `@stability unstable` Effect modules by design).
           "abortControllerInEffect": "error",
           "acquireReleaseDisposable": "error",
           "allOfMapToForEach": "error",

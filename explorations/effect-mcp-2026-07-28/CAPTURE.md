@@ -47,7 +47,7 @@ Grounding facts gathered before the grill (orchestrator, read-only):
   `a7a71921de` and for `769f6046a2` (#8242).
 - Local Effect clone (`$HOME/YeeBois/dev/effect`, remotes `origin` Effect-TS/effect and `fork`
   beep-effect/effect) is at `a7a71921de`; `effect@4.0.0-rc.115..a7a71921de` is 32 commits and
-  +4027/-1010 lines under `effect:packages/effect/src/unstable/{ai,rpc}`.
+  +4027/-1010 lines under `effect:packages/effect/src/{ai,rpc}`.
 - Pending changesets on upstream main: 29 besides the MCP ones, including sql-pg `timestamp` and
   `timestamptz` decoding as `Date`, sql-pg unknown OIDs decoding as text, the Effect/Stream API
   alignment (#8256), strict `ByteSize.Input`, HttpApi literal action suffixes, and file response

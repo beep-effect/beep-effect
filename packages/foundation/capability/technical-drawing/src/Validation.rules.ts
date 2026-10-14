@@ -11,7 +11,8 @@
  * font makes the converter drop the text silently). Raster tier (1.84(g), (l), (m)): ink
  * inside the margins measured on the anti-aliased render; only pure black or
  * white pixels and no solid-black area measured on the non-anti-aliased
- * renders.
+ * renders. Shading tier (1.84(m)): side-by-side shading lines on a sheet stay
+ * at least the minimum spacing apart, measured on the render's own vectors.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -20,8 +21,10 @@
 import { A, O, Str } from "@beep/utils";
 import { pipe } from "effect/Function";
 import * as Regex from "effect/RegExp";
+import { nearestOutlineDistance, sideBySideGap } from "./Shading.rules.ts";
 import { MARGINS_CM, pageSizePt } from "./Sheet.schemas.ts";
 import { SheetFinding, SheetLabel } from "./Validation.schemas.ts";
+import type { Segment2, ShadingCoverage } from "./Geometry.schemas.ts";
 import type { SheetFormat } from "./Sheet.schemas.ts";
 import type { PageMetrics, PdfFacts, ValidationOptions } from "./Validation.schemas.ts";
 
@@ -294,4 +297,200 @@ export const purityFindings = (input: {
         ]
       : [];
   return [...impure, ...solid];
+};
+
+/**
+ * Findings from the shading lines of one sheet, in mm on the sheet: side by
+ * side lines closer than the minimum spacing read as a solid black area.
+ *
+ * **Details**
+ *
+ * Two lines are side by side when they run within 2° of each other and
+ * overlap along their length by more than the minimum spacing. One finding
+ * per sheet names the number of close pairs and the closest gap.
+ *
+ * **Example** (Two lines 0.3 mm apart)
+ *
+ * ```ts
+ * import { Segment2, ValidationOptions, shadingSpacingFindings } from "@beep/technical-drawing"
+ * import * as O from "effect/Option"
+ *
+ * const segmentsMm = [Segment2.make([0, 0, 10, 0]), Segment2.make([0, 0.3, 10, 0.3])]
+ * console.log(shadingSpacingFindings({ page: 1, segmentsMm, options: ValidationOptions.make({ expectedPages: O.none() }) }).map((f) => f.code))
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const shadingSpacingFindings = (input: {
+  readonly page: number;
+  readonly segmentsMm: ReadonlyArray<Segment2>;
+  readonly options: ValidationOptions;
+}): ReadonlyArray<SheetFinding> => {
+  const { page, segmentsMm, options } = input;
+  const minSpacing = options.minShadingSpacingMm;
+  const gaps = pipe(
+    segmentsMm,
+    A.flatMap((a, i) =>
+      pipe(
+        A.drop(segmentsMm, i + 1),
+        A.map((b) => sideBySideGap({ first: a, second: b, minSpacing })),
+        A.getSomes
+      )
+    )
+  );
+  return A.isReadonlyArrayNonEmpty(gaps)
+    ? [
+        pageFinding(
+          "shading-spacing",
+          page,
+          `${A.length(gaps)} pair(s) of shading lines sit closer than ${minSpacing} mm; the closest are ${Math.min(...gaps).toFixed(2)} mm apart.`
+        ),
+      ]
+    : [];
+};
+
+/**
+ * Findings for shading that was planned but never drawn: a face given lines
+ * whose every stroke the hidden-line and legibility passes removed is a
+ * `shading-lost-face`, since a reviewer would otherwise meet a bare face the
+ * manifest counts as shaded.
+ *
+ * **Example** (One lost face on page 2)
+ *
+ * ```ts
+ * import { ShadingCoverage } from "@beep/technical-drawing"
+ * import { shadingCoverageFindings } from "@beep/technical-drawing/Validation.rules"
+ *
+ * const coverage = ShadingCoverage.make({ shadedFaces: 3, skippedFaces: [], lostFaces: 1 })
+ * console.log(shadingCoverageFindings({ page: 2, coverage }).map((f) => f.code)) // ["shading-lost-face"]
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const shadingCoverageFindings = (input: {
+  readonly page: number;
+  readonly coverage: ShadingCoverage;
+}): ReadonlyArray<SheetFinding> =>
+  input.coverage.lostFaces > 0
+    ? [
+        pageFinding(
+          "shading-lost-face",
+          input.page,
+          `${input.coverage.lostFaces} face(s) planned shading lines but drew none after hidden-line removal and the legibility pass.`
+        ),
+      ]
+    : [];
+
+/**
+ * Findings for shading strokes that touch or nearly touch an outline: every
+ * stroke end must stand at least `minShadingSpacingMm` from the nearest
+ * outline segment, and no stroke may run beside an outline closer than that,
+ * or the stroke reads as part of the outline.
+ *
+ * **Example** (A stroke ending on the outline)
+ *
+ * ```ts
+ * import { Segment2, ValidationOptions } from "@beep/technical-drawing"
+ * import { shadingOutlineClearanceFindings } from "@beep/technical-drawing/Validation.rules"
+ * import * as O from "effect/Option"
+ *
+ * const options = ValidationOptions.make({ expectedPages: O.none() })
+ * const outlineMm = [Segment2.make([0, 0, 0, 40])]
+ * const shadingMm = [Segment2.make([0.1, 10, 20, 10])]
+ * console.log(shadingOutlineClearanceFindings({ page: 1, shadingMm, outlineMm, options }).length) // 1
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const shadingOutlineClearanceFindings = (input: {
+  readonly page: number;
+  readonly shadingMm: ReadonlyArray<Segment2>;
+  readonly outlineMm: ReadonlyArray<Segment2>;
+  readonly options: ValidationOptions;
+}): ReadonlyArray<SheetFinding> => {
+  const floor = input.options.minShadingSpacingMm;
+  const nearest = (x: number, y: number): number => nearestOutlineDistance({ x, y, outlines: input.outlineMm });
+  const close = pipe(
+    input.shadingMm,
+    A.flatMap((s) => [nearest(s[0], s[1]), nearest(s[2], s[3])]),
+    A.filter((d) => d < floor)
+  );
+  const beside = pipe(
+    input.shadingMm,
+    A.flatMap((s) =>
+      pipe(
+        input.outlineMm,
+        A.map((o) => sideBySideGap({ first: s, second: o, minSpacing: floor })),
+        A.getSomes
+      )
+    )
+  );
+  const ends = A.isReadonlyArrayNonEmpty(close)
+    ? [
+        `${A.length(close)} stroke end(s) sit closer than ${floor} mm to an outline (closest ${Math.min(...close).toFixed(2)} mm)`,
+      ]
+    : [];
+  const sides = A.isReadonlyArrayNonEmpty(beside)
+    ? [
+        `${A.length(beside)} stroke(s) run beside an outline closer than ${floor} mm (closest ${Math.min(...beside).toFixed(2)} mm)`,
+      ]
+    : [];
+  const parts = [...ends, ...sides];
+  return A.isReadonlyArrayNonEmpty(parts)
+    ? [pageFinding("shading-outline-clearance", input.page, `${A.join(parts, "; ")}.`)]
+    : [];
+};
+
+/**
+ * Findings for a shading stroke that runs alone beside a parallel outline:
+ * within `loneLineOffsetMm` of it, overlapping it along half the stroke's
+ * length, with no companion stroke within `loneLineCompanionMm`. Such a
+ * stroke reads as a doubled edge rather than shading.
+ *
+ * **Example** (One stroke 1.5 mm inside a wall edge, no companion)
+ *
+ * ```ts
+ * import { Segment2, ValidationOptions } from "@beep/technical-drawing"
+ * import { shadingLoneLineFindings } from "@beep/technical-drawing/Validation.rules"
+ * import * as O from "effect/Option"
+ *
+ * const options = ValidationOptions.make({ expectedPages: O.none() })
+ * const outlineMm = [Segment2.make([0, 0, 0, 40])]
+ * console.log(shadingLoneLineFindings({ page: 1, shadingMm: [Segment2.make([1.5, 5, 1.5, 35])], outlineMm, options }).length) // 1
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const shadingLoneLineFindings = (input: {
+  readonly page: number;
+  readonly shadingMm: ReadonlyArray<Segment2>;
+  readonly outlineMm: ReadonlyArray<Segment2>;
+  readonly options: ValidationOptions;
+}): ReadonlyArray<SheetFinding> => {
+  const { loneLineOffsetMm: offset, loneLineCompanionMm: companion, minShadingSpacingMm: minSpacing } = input.options;
+  const beside = (a: Segment2, b: Segment2, maxGap: number): boolean =>
+    O.isSome(
+      sideBySideGap({ first: a, second: b, minSpacing, maxGap, minOverlap: Math.hypot(a[2] - a[0], a[3] - a[1]) / 2 })
+    );
+  const lone = pipe(
+    input.shadingMm,
+    A.filter(
+      (s) =>
+        A.some(input.outlineMm, (e) => beside(s, e, offset)) &&
+        !A.some(input.shadingMm, (other) => other !== s && beside(s, other, companion))
+    )
+  );
+  return A.isReadonlyArrayNonEmpty(lone)
+    ? [
+        pageFinding(
+          "shading-lone-line",
+          input.page,
+          `${A.length(lone)} shading stroke(s) run alone within ${offset} mm of a parallel outline with no companion within ${companion} mm; they read as doubled edges.`
+        ),
+      ]
+    : [];
 };

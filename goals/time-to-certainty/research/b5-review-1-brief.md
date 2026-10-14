@@ -85,7 +85,7 @@ Read first: `research/b5-brief.md`, rulings 35–40 in `research/decisions.md`,
 7. **Docs — brief amendments** (`research/b5-brief.md`; PRRT_kwDOPbO_N86ixLRb and
    PRRT_kwDOPbO_N86ixLRh). Append `## Amendments (2026-09-15, review round 1)`: (a) the
    arbitrary API is `Arbitrary.schema` / `Arbitrary.sampleEffect` from
-   `effect/unstable/arbitrary` with `it.effect.prop` (installed Effect exports neither
+   `effect/Arbitrary` with `it.effect.prop` (installed Effect exports neither
    `FastCheck` from `effect/testing` nor `Schema.toArbitrary`); (b) the verification list gains
    `bun run beep lint effect-vitest`, `bunx oxlint --disable-nested-config <touched files>` and
    `bun run beep quality test-tsgo`. Do not rewrite the original stage text.

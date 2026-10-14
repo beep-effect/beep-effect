@@ -195,6 +195,9 @@
       "path": "../../drivers/pglite/tsconfig.json"
     },
     {
+      "path": "../../tooling/library/repo-utils/tsconfig.json"
+    },
+    {
       "path": "../../tooling/test-kit/fc-runs/tsconfig.json"
     },
     {

@@ -31,7 +31,7 @@ const $I = $RepoCliId.create("commands/Accounts/Accounts.schemas");
  * @category models
  * @since 0.0.0
  */
-export const AccountProvider = LiteralKit(["claude", "codex", "muse", "grok"]).pipe(
+export const AccountProvider = LiteralKit(["claude", "codex", "muse", "grok", "junie"]).pipe(
   $I.annoteSchema("AccountProvider", { description: "Subscription provider whose plan limits are polled." })
 );
 
@@ -115,6 +115,8 @@ export type AccountLabel = typeof AccountLabel.Type;
  * One account: its provider, label, and the file its usage comes from. For a
  * polled provider that is the local proxy's stored login, which the proxy keeps
  * refreshed and the poller only reads; for a snapshot it is the snapshot file.
+ * Junie uses its home directory as the secure-storage namespace; its display
+ * label may be an account name containing spaces.
  *
  * **Example** (Make an account)
  *
@@ -129,7 +131,7 @@ export type AccountLabel = typeof AccountLabel.Type;
  * @since 0.0.0
  */
 export class AccountRef extends S.Class<AccountRef>($I`AccountRef`)(
-  { provider: AccountProviderName, label: AccountLabel, source: S.String },
+  { provider: AccountProviderName, label: S.NonEmptyString, source: S.String },
   $I.annote("AccountRef", { description: "An account and the file its usage comes from." })
 ) {}
 
@@ -338,7 +340,7 @@ export class AccountUsage extends S.Class<AccountUsage>($I`AccountUsage`)(
  * @category models
  * @since 0.0.0
  */
-export const AccountSection = LiteralKit(["claude", "codex", "supergrok", "muse", "other"]).pipe(
+export const AccountSection = LiteralKit(["claude", "codex", "supergrok", "muse", "junie", "other"]).pipe(
   $I.annoteSchema("AccountSection", {
     description: "The provider panel an account is ranked in.",
   })
@@ -359,6 +361,7 @@ const sectionOfProvider: Readonly<Record<string, AccountSection>> = {
   cursor: "supergrok",
   "grok-bot": "supergrok",
   muse: "muse",
+  junie: "junie",
 };
 
 /**
@@ -623,6 +626,9 @@ const restarted = (window: UsageWindow): UsageWindow =>
 type OkOutcome = (typeof AccountUsageOutcome.cases.Ok)["Type"];
 
 const rankOk = (now: DateTime.Utc, usage: AccountUsage, ok: OkOutcome): AccountRanking => {
+  if (usage.account.provider === "junie" && A.some(ok.credits, (credit) => credit.remaining <= 0)) {
+    return unavailable(usage);
+  }
   const lapsed = hasResetBy(now);
   const estimated = O.isSome(ok.asOf) && A.some(ok.windows, lapsed);
   if (!estimated) return rankWindows(now, usage, ok.windows, ok.asOf, false);
@@ -753,7 +759,7 @@ export const rankAccounts: {
     A.sort(A.map(usages, rankAccount(now)), mostUrgentFirst)
 );
 
-const sectionOrder: ReadonlyArray<AccountSection> = ["claude", "codex", "supergrok", "muse", "other"];
+const sectionOrder: ReadonlyArray<AccountSection> = ["claude", "codex", "supergrok", "muse", "junie", "other"];
 
 const isSignedIn =
   (signedIn: ReadonlyArray<SignedInLogin>) =>

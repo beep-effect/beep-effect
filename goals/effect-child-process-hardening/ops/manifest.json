@@ -83,7 +83,7 @@
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",
-    "The implementation would exceed the effect/unstable/process consumer scope.",
+    "The implementation would exceed the effect/process consumer scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, publication, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ]

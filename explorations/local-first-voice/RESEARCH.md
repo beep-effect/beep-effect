@@ -169,7 +169,7 @@ Discovery key: ✅ exists · 🆕 NOT FOUND (net-new).
   `AudioWorklet` wrapper → the hand-roll surface.
 
 ### Effect worker / RPC primitives — verified in `.repos/effect-v4` ✅ (unused 🆕)
-- `effect/unstable/rpc`: `Rpc.make(..., { stream: true })`, `RpcGroup.make`,
+- `effect/rpc`: `Rpc.make(..., { stream: true })`, `RpcGroup.make`,
   `RpcServer.layerProtocolWorkerRunner`, `RpcClient.layerProtocolWorker` —
   transport-agnostic, **streams over a Worker** (`platform-browser/test/RpcWorker.test.ts`).
   `Worker.makePoolSerialized` does **not** exist; RPC is the canonical path.

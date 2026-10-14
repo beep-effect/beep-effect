@@ -6,7 +6,7 @@ the closeout PR.
 
 ## Where the packet stands
 
-- `goals/ai-metrics-stack`: lifecycle `active`, 6/8 phases (P0–P5 complete, P6 + P7
+- `goals/ai-metrics-stack`: lifecycle was `active`, 6/8 phases (P0–P5 complete, P6 + P7
   in-progress, `currentTargetPhase: P6c` in `ops/manifest.json`).
 - The manifest's `nextAction` / `knownGaps` are **stale**: they describe a pinned proof
   worktree (`beep-effect-worktrees/ai-metrics-p6-proof`) with data under the main

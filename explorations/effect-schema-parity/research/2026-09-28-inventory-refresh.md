@@ -30,9 +30,8 @@ Of the 144,649-byte growth, 66,960 bytes come from widening every row's `sha`
 from 10 to 40 characters (30 bytes × 2,232 rows, D4), not from new rows. With a
 10-character `sha` the same rows total 931,049 bytes.
 
-Reconciliation, by identity `(module, symbol, kind)` after mapping old module
-paths to their new homes (`effect/unstable/schema/*` → `effect/schema/*`,
-`effect/unstable/arbitrary/Arbitrary` → `effect/Arbitrary`):
+Reconciliation, by identity `(module, symbol, kind)` after mapping each module path to its
+current home (`.patterns/effect-module-paths.md`):
 
 | Bucket | Rows |
 | --- | ---: |
@@ -44,7 +43,7 @@ paths to their new homes (`effect/unstable/schema/*` → `effect/schema/*`,
 Removed rows split into upstream API changes (21 rows: six Schema filters, six
 revivers, seven SchemaGetter rows, two SchemaTransformation rows) and the barrel
 dedupe (100 rows: 72 expanded `Model.*`/`VariantSchema.*` rows under the old
-`effect/unstable/schema` barrel plus the 28-row `effect/unstable/arbitrary`
+`effect/schema` barrel plus the 28-row `effect/Arbitrary`
 barrel). Added rows split into upstream additions to already-inventoried
 modules (137) and modules newly in scope (111).
 
@@ -68,12 +67,12 @@ surviving rows is small:
 | `effect/SchemaGetter` | 57 | 72 | 22 | 7 | `Getter` became a union type |
 | `effect/SchemaTransformation` | 61 | 62 | 3 | 2 | `make` → `makeTransformation` |
 | `effect/SchemaRepresentation` | 219 | 223 | 10 | 6 | reviver renames + code points |
-| `effect/Arbitrary` | 69 | 77 | 8 | 0 | old `effect/unstable/arbitrary/Arbitrary` |
+| `effect/Arbitrary` | 69 | 77 | 8 | 0 | old `effect/Arbitrary` |
 | `effect/JsonSchema` | 27 | 27 | 0 | 0 | |
 | `effect/Equivalence` | — | 20 | 20 | — | newly in scope (existed at old pin) |
 | `effect/StandardSchema` | 30 | 30 | 0 | 0 | |
 | `effect/ChannelSchema` | — | 8 | 8 | — | newly in scope (existed at old pin) |
-| `effect/schema` | 74 | 5 | 3 | 72 | old `effect/unstable/schema` barrel; dedupe |
+| `effect/schema` | 74 | 5 | 3 | 72 | old `effect/schema` barrel; dedupe |
 | `effect/schema/Model` | 55 | 55 | 0 | 0 | path move only |
 | `effect/schema/VariantSchema` | 47 | 47 | 0 | 0 | path move only |
 | `effect/schema/SchemaCompiler` | — | 19 | 19 | — | new upstream (#7908) |
@@ -85,7 +84,7 @@ surviving rows is small:
 | `effect/internal/schema/codegen` | — | 11 | 11 | — | provenance only, `importable:false` |
 | `effect/internal/schema/compilerRegistry` | — | 25 | 25 | — | provenance only, `importable:false` |
 | `effect/internal/schema/interpreter` | — | 3 | 3 | — | provenance only, `importable:false` |
-| `effect/unstable/arbitrary` (retired) | 28 | — | — | 28 | barrel deleted upstream (#8382) |
+| `effect/Arbitrary` (retired) | 28 | — | — | 28 | barrel deleted upstream (#8382) |
 
 The `effect/schema` barrel now carries five `namespace` rows. Two survive from
 the old barrel (`Model`, `VariantSchema`) and three are new
@@ -169,32 +168,31 @@ The grounding report's "541 → 598" is the first measure.
 `CAPTURE.md` lists 55 paths: 16 Role A (14 `.ts`, plus `packages/effect/SCHEMA.md`
 and `migration/schema.md`) and 39 Role B. Every one resolved at the pin with
 `git -C .repos/effect cat-file -e e5f7d12af9abef188f7dc39b0207af1801b03ffd:<new path>`.
-`migration/schema.md` is relative to the effect repo root. Rule: drop
-`unstable/` from the path.
+`migration/schema.md` is relative to the effect repo root. Rule: the
+#8354 top-level move (`.patterns/effect-module-paths.md`).
 
-| Old path (under `packages/effect/`) | Role | New path | How |
-| --- | --- | --- | --- |
-| `src/{Schema,SchemaAST,SchemaGetter,SchemaParser,SchemaIssue,SchemaRepresentation,SchemaTransformation,StandardSchema,JsonSchema}.ts` | A (9) | unchanged | exists |
-| `SCHEMA.md`; `migration/schema.md` (effect repo root) | A (2) | unchanged | exists |
-| `src/unstable/schema/index.ts` | A | `src/schema/index.ts` | rule; `1b4461ec3a` (#8354) `R085` |
-| `src/unstable/schema/VariantSchema.ts` | A | `src/schema/VariantSchema.ts` | rule; #8354 `R095` |
-| `src/unstable/schema/Model.ts` | A | `src/schema/Model.ts` | rule; #8354 `R094` |
-| `src/unstable/arbitrary/index.ts` | A | deleted; folded into `src/Arbitrary.ts` | exception: #8354 `R085` to `src/arbitrary/index.ts`, then `061b9611d4` (#8382) `D` |
-| `src/unstable/arbitrary/Arbitrary.ts` | A | `src/Arbitrary.ts` | exception: #8354 `R095` to `src/arbitrary/Arbitrary.ts`, then #8382 `R097` to root |
-| `src/unstable/ai/{McpSchema,AnthropicStructuredOutput,Prompt,Tool,Toolkit,Response}.ts` | B (6) | `src/ai/…` | rule |
-| `src/unstable/devtools/DevToolsSchema.ts` | B | `src/devtools/DevToolsSchema.ts` | rule |
-| `src/unstable/encoding/{Yaml,Toml,SchemaBinary,Ini,Ndjson}.ts` | B (5) | `src/encoding/…` | rule |
-| `src/unstable/http/{Mime,HttpStatus,HttpIncomingMessage,HttpClientError,HttpServerRespondable,HttpBody,HttpTraceContext,Multipart,HttpServerRequest,HttpClientRequest,HttpStaticServer,HttpMethod,MultipartParser,HttpServerError,Headers,HttpServerResponse,HttpClientResponse,Template,Url,UrlParams}.ts` | B (20) | `src/http/…` | rule |
-| `src/unstable/httpapi/HttpApiSchema.ts` | B | `src/http-api/HttpApiSchema.ts` | exception: #8354 `R095` to `src/httpapi/`, then `62b2ea97fe` (#8365) `R097` to `src/http-api/` |
-| `src/unstable/net/{NetAddress,IpInterface,IpNetwork}.ts` | B (3) | `src/net/…` | rule |
-| `src/unstable/observability/OtlpSerialization.ts` | B | `src/observability/OtlpSerialization.ts` | rule |
-| `src/unstable/rpc/RpcSchema.ts` | B | `src/rpc/RpcSchema.ts` | rule |
-| `src/unstable/sql/SqlSchema.ts` | B | `src/sql/SqlSchema.ts` | rule |
+| Path at pin (under `packages/effect/`) | Role | How |
+| --- | --- | --- |
+| `src/{Schema,SchemaAST,SchemaGetter,SchemaParser,SchemaIssue,SchemaRepresentation,SchemaTransformation,StandardSchema,JsonSchema}.ts` | A (9) | exists |
+| `SCHEMA.md`; `migration/schema.md` (effect repo root) | A (2) | exists |
+| `src/schema/index.ts` | A | rule; `1b4461ec3a` (#8354) `R085` |
+| `src/schema/VariantSchema.ts` | A | rule; #8354 `R095` |
+| `src/schema/Model.ts` | A | rule; #8354 `R094` |
+| `src/Arbitrary.ts` (the former `arbitrary/index.ts` barrel is folded in) | A | exception: #8354 `R085` to `src/arbitrary/index.ts`, then `061b9611d4` (#8382) `D` |
+| `src/Arbitrary.ts` | A | exception: #8354 `R095` to `src/arbitrary/Arbitrary.ts`, then #8382 `R097` to root |
+| `src/ai/{McpSchema,AnthropicStructuredOutput,Prompt,Tool,Toolkit,Response}.ts` | B (6) | rule |
+| `src/devtools/DevToolsSchema.ts` | B | rule |
+| `src/encoding/{Yaml,Toml,SchemaBinary,Ini,Ndjson}.ts` | B (5) | rule |
+| `src/http/{Mime,HttpStatus,HttpIncomingMessage,HttpClientError,HttpServerRespondable,HttpBody,HttpTraceContext,Multipart,HttpServerRequest,HttpClientRequest,HttpStaticServer,HttpMethod,MultipartParser,HttpServerError,Headers,HttpServerResponse,HttpClientResponse,Template,Url,UrlParams}.ts` | B (20) | rule |
+| `src/http-api/HttpApiSchema.ts` | B | exception: #8354 `R095` to `src/httpapi/`, then `62b2ea97fe` (#8365) `R097` to `src/http-api/` |
+| `src/net/{NetAddress,IpInterface,IpNetwork}.ts` | B (3) | rule |
+| `src/observability/OtlpSerialization.ts` | B | rule |
+| `src/rpc/RpcSchema.ts` | B | rule |
+| `src/sql/SqlSchema.ts` | B | rule |
 
 Tally: 55 of 55 resolve (15 Role A `OK` via `cat-file`, `migration/schema.md`
-also `OK` in the effect repo, 39 Role B `OK`). `git ls-tree <pin>
-packages/effect/src/unstable` prints nothing. Neither
-`src/unstable/arbitrary/index.ts` nor `src/arbitrary/index.ts` exists at the pin.
+also `OK` in the effect repo, 39 Role B `OK`). No pre-#8354 module directory remains at the pin, and
+`src/arbitrary/index.ts` does not exist there.
 
 ## Upstream commits `51d4a2f08a..e5f7d12af9`
 
@@ -203,12 +201,12 @@ Pathspec, quoted for zsh:
 ```sh
 git -C .repos/effect log --format='%h %ad %s' --date=short 51d4a2f08a..e5f7d12af9 -- \
   'packages/effect/src/Schema*.ts' packages/effect/src/schema packages/effect/src/internal/schema \
-  packages/effect/src/unstable/schema packages/effect/SCHEMA.md
+  packages/effect/src/schema packages/effect/SCHEMA.md
 ```
 
 This gives 27 commits. Dropping `packages/effect/SCHEMA.md` gives 26, because
 `b5404c92eb` touches only `SCHEMA.md` among these paths. Dropping
-`packages/effect/src/unstable/schema` as well still gives 26.
+`packages/effect/src/schema` as well still gives 26.
 
 | Commit | Date | Subject |
 | --- | --- | --- |
@@ -241,7 +239,7 @@ This gives 27 commits. Dropping `packages/effect/SCHEMA.md` gives 26, because
 | `755e863a79` | 2026-09-12 | Restrict ByteSize string inputs to canonical integer quantities (#8212) |
 
 Commits that touch the other inventoried root modules (`Arbitrary.ts`, the old
-`unstable/arbitrary`, `JsonSchema.ts`, `StandardSchema.ts`, `Equivalence.ts`,
+`effect/Arbitrary`, `JsonSchema.ts`, `StandardSchema.ts`, `Equivalence.ts`,
 `ChannelSchema.ts`) but not the pathspec above: `061b9611d4` (#8382, Arbitrary
 to root), `f75468a135` (#8367, Arbitrary global defaults) and `8f420bb3dc`
 (#8221, `Arbitrary.array`).

@@ -65,7 +65,7 @@
       },
       {
         "name": "Process execution (bun lockfile)",
-        "description": "Spawns `bun install --lockfile-only` through effect/unstable/process ChildProcess with inherit stdio and exit-code handling.",
+        "description": "Spawns `bun install --lockfile-only` through effect/process ChildProcess with inherit stdio and exit-code handling.",
         "keySymbols": ["refreshBunLockfile"],
         "locEstimate": 25
       },

@@ -10,6 +10,7 @@ This directory provides reusable solutions and best practices for Effect TypeScr
 
 - **[effect-library-development.md](./effect-library-development.md)** - Fundamental patterns for Effect library development
 - **[module-organization.md](./module-organization.md)** - Module structure, exports, and naming conventions
+- **[effect-module-paths.md](./effect-module-paths.md)** - Current Effect module import paths and the retired `unstable` mapping
 - **[error-handling.md](./error-handling.md)** - Structured error management with Effect
 
 ### Documentation Patterns

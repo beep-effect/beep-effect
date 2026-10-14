@@ -20,7 +20,7 @@ reproduces the corpus for implementation.
 
 | Source | License | Disposition |
 | --- | --- | --- |
-| `effect@4.0.0-rc.117` (`node_modules/effect/dist/unstable/{ai,http}/**`) | MIT | installed truth |
+| `effect@4.0.0-rc.117` (`node_modules/effect/dist/{ai,http}/**`) | MIT | installed truth |
 | MCP specification 2026-07-28, security and transport sections | CC-BY-4.0 (docs) | Origin/OPTIONS rules |
 
 ## Exploration lanes to read

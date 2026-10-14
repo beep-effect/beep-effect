@@ -189,6 +189,12 @@ Mechanics, per approved candidate goal:
   into the packet `README.md`, syncing the manifest, and running the Atlas
   writer — that is what makes cold-session resume instant. Never hand-edit the
   marked README Stage/Status region.
+- Needing the operator does not end an exploration session (ruling
+  2026-10-14). Align questions, direction calls, shape reviews, and
+  definition-of-ready gaps go through a `/grill-with-docs` workflow (frontier
+  rounds, recommended answer first, packet `DECISIONS.md` updated each round)
+  that keeps driving the packet until it is graduated, parked, or killed. The
+  guided-closeout prompt comes only at that terminal state.
 - `ATLAS.md` is an ignored local D3 projection, never doctrine or tracked
   GitHub truth. Load-bearing prose belongs in `docs/product/`, packet
   `DECISIONS.md`/Trail, or a goal packet.

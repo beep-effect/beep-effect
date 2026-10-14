@@ -172,7 +172,7 @@ schemas are read back from the ASTs passed to `install` at runtime.
 
 ### Takeaway
 Authored by Giulio Canti (@gcanti) in PR #7908, merged 2026-09-18 (first in `effect@4.0.0-rc.116`, moved
-from `effect/unstable/schema/*` to `effect/schema/*` in PR #8354 on 2026-09-22). The stated workflow is:
+from `effect/schema/*` to `effect/schema/*` in PR #8354 on 2026-09-22). The stated workflow is:
 JIT via a side-effect import at app startup; AOT via a build script calling `Build.build` (or
 `compile`) and importing the generated file at startup. Goals stated by the PR: faster decoding
 through the existing APIs, one shared registry, graceful fallback, and a CSP/no-eval path (AOT); bundle
@@ -212,8 +212,8 @@ size was measured as a cost, not a goal.
   `CHANGELOG.md` (local checkout `~/YeeBois/references/effect/effect/packages/effect/CHANGELOG.md`)
 - The 4.0 stable release note (PR #8633, @IMax153) lists "Optional JIT and AOT schema compilers are
   available as experimental modules." — `CHANGELOG.md L335` (local checkout `~/YeeBois/references/effect/effect/packages/effect/CHANGELOG.md`)
-- Follow-up commits touching the compilers: #8406 Tim (stability annotations), #8354 Tim (move from
-  `unstable/`), #8423 fml09 (onExcessProperty non-enumerable fix), #8430 and #8451 Florien Lazaro
+- Follow-up commits touching the compilers: #8406 Tim (stability annotations), #8354 Tim (move to top-level
+  module paths), #8423 fml09 (onExcessProperty non-enumerable fix), #8430 and #8451 Florien Lazaro
   (stop re-proving emittability / re-analysing sub-schemas), #8555 Florien Lazaro (union candidate
   parsers resolved once), #8597 Riccardo Romoli / @Ceereals (inline checked sources of JIT
   transformations; fixes issue #8595), #8810 Sebastian Lorenz 2026-10-06 (fix suspended compiled Struct

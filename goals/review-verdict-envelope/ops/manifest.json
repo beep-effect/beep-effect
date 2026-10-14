@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "review-verdict-envelope",
+    "packetId": "goal-packet/v1:830e6b149d107ef00937e7e3dcc030cdb70ae1cf2cd4321ec1b1faa632abafc6",
+    "title": "Review Verdict Envelope",
+    "status": "active",
+    "created": "2026-10-14",
+    "updated": "2026-10-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/review-verdict-envelope",
+  "lifecycle": "active",
+  "mission": "Give every producer that needs the attorney's judgement one review envelope (ReviewItem, SourceRef, VerdictRow) with a ReviewQueue and a VerdictProjector to ClaimDisposition, backed by spike evidence that decides the practice-claude-mod review pane.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/attorney-review-workspace",
+    "graduated": "2026-10-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/review-verdict-envelope/README.md",
+    "goals/review-verdict-envelope/SPEC.md",
+    "goals/review-verdict-envelope/PLAN.md",
+    "goals/review-verdict-envelope/GOAL.md",
+    "goals/review-verdict-envelope/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/review-verdict-envelope/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Evidence",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Schema",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Services + projector",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Handoff",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/review-verdict-envelope/GOAL.md)\" -le 4000",
+    "jq . goals/review-verdict-envelope/ops/manifest.json",
+    "rg -n \"review-verdict-envelope|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/review-verdict-envelope",
+    "git diff --check -- goals/review-verdict-envelope",
+    "bun run beep goals doctor",
+    "bun run beep quality package-verify @beep/law-practice-domain",
+    "bun run beep quality package-verify @beep/law-practice-use-cases",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

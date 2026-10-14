@@ -24,6 +24,9 @@
     name = "browser-qa-loop"
     enabled = true
   [[skills.config]]
+    name = "closeout"
+    enabled = true
+  [[skills.config]]
     name = "codex-findings"
     enabled = true
   [[skills.config]]
@@ -85,6 +88,9 @@
     enabled = true
   [[skills.config]]
     name = "oracle"
+    enabled = true
+  [[skills.config]]
+    name = "orchestrate"
     enabled = true
   [[skills.config]]
     name = "portless"

@@ -5,7 +5,7 @@ running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
 Outcome: a repeatable, measured way to say which client and docket a practice
-document belongs to. A `DocumentIdentification` slice in `@beep/law-practice`
+document belongs to. A `DocumentIdentification` slice in `packages/law-practice/`
 (schemas, service contracts, pure resolver and evaluator, adapters) and an
 `apps/practice-identify` command that runs contacts, index, uspto, resolve and
 evaluate over private inputs, with precision per confidence tier measured on

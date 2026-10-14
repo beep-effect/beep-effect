@@ -205,7 +205,7 @@ If a group has children and the next word matches none, emit
 `Command.runWith(rootCommand, { version: "0.0.0" })([...path, "--help"])`.
 
 The structural precheck is mandatory: Effect v4 processes the global Help action
-before ordinary parse errors (`.repos/effect/packages/effect/src/unstable/cli/Command.ts:1601-1647`),
+before ordinary parse errors (`.repos/effect/packages/effect/src/cli/Command.ts:1601-1647`),
 so a subprocess exit code from `bad-subcommand --help` alone is not an oracle.
 The precheck still uses the actual command object, not a second registry, and the
 Help action never reaches a command handler.

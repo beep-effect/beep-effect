@@ -21,7 +21,7 @@ exists), scaffolded through
 
 Observable end state: a consumer provides the driver's Layers and obtains
 `LanguageModel.LanguageModel`, or `EmbeddingModel.EmbeddingModel` together with
-`EmbeddingModel.Dimensions`, from `effect/unstable/ai` without importing
+`EmbeddingModel.Dimensions`, from `effect/ai` without importing
 `@effect/ai-openai` itself. No engine code is written anywhere; the driver adds
 config, errors, Layer composition, docs, and tests.
 
@@ -118,7 +118,7 @@ Cite `.repos/effect/packages/ai/openai/src` (Effect-TS/effect main at
   `Layer<OpenAiClient, ConfigError, HttpClient>`; the client posts to
   `/responses` and `/embeddings` under `https://api.openai.com/v1`.
 - `EmbeddingModel.Dimensions` is `Context.Service<Dimensions, number>` in
-  `effect/unstable/ai/EmbeddingModel`.
+  `effect/ai/EmbeddingModel`.
 
 ### Config
 

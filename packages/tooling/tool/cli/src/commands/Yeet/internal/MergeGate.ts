@@ -7,10 +7,12 @@
  * This is the CLI home of the gate the orchestrator session ran by hand on
  * 2026-10-06 (`merge.sh <pr> <sha10>`). The decision is a pure function of a
  * {@link MergeGateRead} so it can be tested from recorded GitHub payloads;
- * {@link readMergeGate} is the only place that talks to `gh`, and
- * {@link executeMergeGate} the only place that writes. Every unknown fails
- * closed: an unreadable ruleset, a GraphQL thread count that did not come
- * back, a missing head commit time, a required context with no check run.
+ * {@link readMergeGate} is the only read the decision depends on, and
+ * {@link executeMergeGate} the only place that merges. After an S11 merge the
+ * gate also lists and cancels the merged head's leftover runs and posts a
+ * comment, all best effort. Every unknown fails closed: an unreadable ruleset,
+ * a GraphQL thread count that did not come back, a missing head commit time,
+ * and, in strict mode, a required context with no check run.
  *
  * **Gotchas**
  *
@@ -18,6 +20,13 @@
  * rate-limited Vercel deploy) is never tolerated by name alone. The caller
  * passes `--tolerate "<check>=<attribution>"` after reading the run, and the
  * attribution is echoed in the merge line so the hand-off log carries it.
+ *
+ * `--relaxed` is the S11 merge (operator ruling 2026-10-09, AGENTS.md
+ * "Mergeable"): no red or pending check holds, required ones included, but the
+ * structural, ruleset, window and thread holds stay, and a head on which not
+ * one required context has run still holds. Every check that was not green is
+ * recorded with its attribution in the merge line and in a PR comment, and the
+ * merged head's leftover workflow runs are cancelled.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -32,6 +41,7 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -80,8 +90,9 @@ export class MergeGateCheckRun extends S.Class<MergeGateCheckRun>($I`MergeGateCh
 ) {}
 
 /**
- * A non-required check the orchestrator tolerates red or pending, with the
- * attribution that justifies it.
+ * A check the orchestrator tolerates red or pending, with the attribution that
+ * justifies it: non-required checks only, unless the gate is `--relaxed` (S11),
+ * where it attributes required checks too.
  *
  * **Example** (Tolerate an inherited coverage red)
  *
@@ -101,9 +112,43 @@ export class MergeGateCheckRun extends S.Class<MergeGateCheckRun>($I`MergeGateCh
 export class MergeGateTolerance extends S.Class<MergeGateTolerance>($I`MergeGateTolerance`)(
   { check: S.NonEmptyString, attribution: S.NonEmptyString },
   $I.annote("MergeGateTolerance", {
-    description: "A non-required check tolerated red or pending, with the attribution that justifies it.",
+    description:
+      "A check tolerated red or pending with its attribution: non-required only, unless the gate is relaxed (S11).",
   })
 ) {}
+
+/**
+ * Build a parser for one `"<check>=<attribution>"` flag value: split on the
+ * first `=`, trim both sides, refuse an empty side. `--tolerate` and
+ * `yeet ready --inherited` share this form.
+ *
+ * **Example** (Parse an attributed check into a tolerance)
+ *
+ * ```ts
+ * import { MergeGateTolerance, parseAttributedCheck } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const parse = parseAttributedCheck((fields) => MergeGateTolerance.make(fields))
+ * console.log(O.getOrThrow(parse("Lint = red on main since 2c1cb448ba")).check) // "Lint"
+ * console.log(O.isNone(parse("Lint"))) // true
+ * ```
+ *
+ * @param make - Builds the model from the trimmed check name and attribution.
+ * @returns A parser that yields none when there is no `=` or either side is empty.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const parseAttributedCheck =
+  <A>(make: (fields: { readonly check: string; readonly attribution: string }) => A) =>
+  (value: string): O.Option<A> =>
+    Str.indexOf("=")(value).pipe(
+      O.map((separator) => ({
+        check: Str.trim(Str.slice(0, separator)(value)),
+        attribution: Str.trim(Str.slice(separator + 1)(value)),
+      })),
+      O.filter(({ check, attribution }) => Str.isNonEmpty(check) && Str.isNonEmpty(attribution)),
+      O.map(make)
+    );
 
 /**
  * Parse one `--tolerate "<check>=<attribution>"` argument.
@@ -123,15 +168,133 @@ export class MergeGateTolerance extends S.Class<MergeGateTolerance>($I`MergeGate
  * @category models
  * @since 0.0.0
  */
-export const parseMergeGateTolerance = (value: string): O.Option<MergeGateTolerance> => {
-  const separator = value.indexOf("=");
-  if (separator < 0) return O.none();
-  const check = Str.trim(value.slice(0, separator));
-  const attribution = Str.trim(value.slice(separator + 1));
-  return Str.isEmpty(check) || Str.isEmpty(attribution)
-    ? O.none()
-    : O.some(MergeGateTolerance.make({ check, attribution }));
-};
+export const parseMergeGateTolerance = parseAttributedCheck((fields) => MergeGateTolerance.make(fields));
+
+const AttributedCheckJson = S.fromJsonString(S.String);
+const encodeAttributedCheckJson = S.encodeEffect(AttributedCheckJson);
+
+/**
+ * Decode every value of one repeatable `"<check>=<attribution>"` flag, or
+ * refuse naming each malformed value before anything is read.
+ *
+ * **Example** (Decode the tolerances)
+ *
+ * ```ts
+ * import { decodeAttributedCheckFlags, parseMergeGateTolerance } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const tolerances = decodeAttributedCheckFlags("tolerate", ["Lint=flake"], parseMergeGateTolerance)
+ * console.log(Effect.isEffect(tolerances)) // true
+ * ```
+ *
+ * @param flag - The flag name, without the leading dashes, for the refusal.
+ * @param values - The raw flag values.
+ * @param parse - The parser for one value.
+ * @returns The parsed values, or a `YeetCommandError` naming the malformed ones.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const decodeAttributedCheckFlags = Effect.fnUntraced(function* <A>(
+  flag: string,
+  values: ReadonlyArray<string>,
+  parse: (value: string) => O.Option<A>
+): Effect.fn.Return<ReadonlyArray<A>, YeetCommandError> {
+  const parsed = A.map(values, parse);
+  const malformed = A.filter(A.zip(values, parsed), ([, value]) => O.isNone(value));
+  if (A.isReadonlyArrayNonEmpty(malformed)) {
+    const quoted = yield* Effect.forEach(malformed, ([value]) =>
+      encodeAttributedCheckJson(value).pipe(
+        Effect.mapError(YeetCommandError.new("Failed to encode a malformed attributed check."))
+      )
+    );
+    return yield* YeetCommandError.make({
+      message: `--${flag} needs "<check name>=<attribution>"; got ${A.join(quoted, ", ")}.`,
+      exitCode: 1,
+    });
+  }
+  return A.getSomes(parsed);
+});
+
+/**
+ * Whether a check that did not hold an S11 merge was red or still pending.
+ *
+ * **Example** (Narrow a state)
+ *
+ * ```ts
+ * import { MergeGateCheckState } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(MergeGateCheckState.is.red("red")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const MergeGateCheckState = LiteralKit(["red", "pending"]).pipe(
+  $I.annoteSchema("MergeGateCheckState", {
+    description: "Whether a check that was not green at an S11 merge was red or still pending.",
+  })
+);
+
+/**
+ * Whether a check that was not green at an S11 merge was red or still pending.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MergeGateCheckState = typeof MergeGateCheckState.Type;
+
+/**
+ * One check that was not green when an S11 (`--relaxed`) merge went through.
+ *
+ * **Details**
+ *
+ * `required` is membership in the base ruleset's contexts; `attribution` is
+ * the matching `--tolerate` text, else {@link MERGE_GATE_S11_DEFAULT_ATTRIBUTION}.
+ *
+ * **Example** (A required red recorded at merge)
+ *
+ * ```ts
+ * import { MergeGateCheckAtMerge } from "@beep/repo-cli/test/Yeet"
+ *
+ * const entry = MergeGateCheckAtMerge.make({
+ *   check: "Lint",
+ *   state: "red",
+ *   required: true,
+ *   attribution: "inherited: red on main since 2c1cb448ba, fix in #1477",
+ * })
+ * console.log(entry.state) // "red"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MergeGateCheckAtMerge extends S.Class<MergeGateCheckAtMerge>($I`MergeGateCheckAtMerge`)(
+  {
+    check: S.NonEmptyString,
+    state: MergeGateCheckState,
+    required: S.Boolean,
+    attribution: S.NonEmptyString,
+  },
+  $I.annote("MergeGateCheckAtMerge", {
+    description: "One check that was not green when an S11 merge went through, with its attribution.",
+  })
+) {}
+
+/**
+ * The attribution an S11 merge records for a check no `--tolerate` named.
+ *
+ * **Example** (Read the default attribution)
+ *
+ * ```ts
+ * import { MERGE_GATE_S11_DEFAULT_ATTRIBUTION } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(MERGE_GATE_S11_DEFAULT_ATTRIBUTION.startsWith("S11:")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const MERGE_GATE_S11_DEFAULT_ATTRIBUTION = "S11: unattributed at merge; the same-day fix PR burns it down";
 
 /**
  * Everything the gate decides on, read once from GitHub at a point in time.
@@ -245,6 +408,11 @@ export class MergeGateHold extends S.TaggedClass<MergeGateHold>($I`MergeGateHold
 /**
  * The gate is met: merge at this head with this squash title.
  *
+ * **Details**
+ *
+ * `atMerge` lists every check that was not green when a `relaxed` (S11) gate
+ * was met, required first and then by name; it is empty when not relaxed.
+ *
  * **Example** (A met gate)
  *
  * ```ts
@@ -256,6 +424,8 @@ export class MergeGateHold extends S.TaggedClass<MergeGateHold>($I`MergeGateHold
  *   commitTitle: "fix: x (#7)",
  *   windowAgeSeconds: 1260,
  *   tolerated: [],
+ *   relaxed: false,
+ *   atMerge: [],
  * })
  * console.log(met._tag) // "merge"
  * ```
@@ -271,6 +441,8 @@ export class MergeGateMerge extends S.TaggedClass<MergeGateMerge>($I`MergeGateMe
     commitTitle: S.NonEmptyString,
     windowAgeSeconds: S.Finite,
     tolerated: S.Array(MergeGateTolerance),
+    relaxed: S.Boolean,
+    atMerge: S.Array(MergeGateCheckAtMerge),
   },
   $I.annote("MergeGateMerge", { description: "The merge gate is met at a pinned head." })
 ) {}
@@ -314,13 +486,21 @@ export type MergeGateDecision = typeof MergeGateDecision.Type;
  * definition governs both. `forceWindow` exists for one case only: a fix that
  * unblocks `main`. The ruling text is in `feedback-review-window-before-merge`;
  * the flag is recorded in the merge line so the hand-off log shows every override.
+ * `relaxed` is the S11 merge: no red or pending check holds, and `tolerate`
+ * may then attribute required checks too.
  *
  * **Example** (State the caller's assertions)
  *
  * ```ts
  * import { MergeGateOptions } from "@beep/repo-cli/test/Yeet"
  * import * as DateTime from "effect/DateTime";
- * const options = MergeGateOptions.make({ wantSha: "abc", now: DateTime.makeUnsafe(0), tolerate: [], forceWindow: false })
+ * const options = MergeGateOptions.make({
+ *   wantSha: "abc",
+ *   now: DateTime.makeUnsafe(0),
+ *   tolerate: [],
+ *   forceWindow: false,
+ *   relaxed: false,
+ * })
  * console.log(options.forceWindow) // false
  * ```
  *
@@ -333,6 +513,7 @@ export class MergeGateOptions extends S.Class<MergeGateOptions>($I`MergeGateOpti
     now: S.DateTimeUtcFromString,
     tolerate: S.Array(MergeGateTolerance),
     forceWindow: S.Boolean,
+    relaxed: S.Boolean,
   },
   $I.annote("MergeGateOptions", { description: "What the caller asserts when it asks the gate." })
 ) {}
@@ -415,55 +596,112 @@ const runsHold = (
 const isPending = (run: MergeGateCheckRun): boolean => run.status !== "completed";
 const isRed = (run: MergeGateCheckRun): boolean => !goodConclusion(run.conclusion);
 
+// The ruleset is how the gate tells required from optional, so an unreadable
+// or empty one holds in both modes, relaxed included.
+const requiredContextsStep = (read: MergeGateRead): Result.Result<ReadonlyArray<string>, MergeGateHold> =>
+  O.match(read.requiredContexts, {
+    onNone: () =>
+      Result.fail(
+        hold(read.prNumber, "required-contexts-unknown", "base ruleset unreadable; never evaluate the gate without it")
+      ),
+    onSome: (contexts) =>
+      A.isReadonlyArrayNonEmpty(contexts)
+        ? Result.succeed(contexts)
+        : Result.fail(
+            hold(
+              read.prNumber,
+              "required-contexts-unknown",
+              "base ruleset requires no status checks; no CI evidence to gate on"
+            )
+          ),
+  });
+
 // Required contexts must be registered, complete and green; every other check
 // must be too unless the caller attributed it with --tolerate.
 const checksHold = (
   { read, options }: MergeGateInput,
-  latest: HashMap.HashMap<string, MergeGateCheckRun>
+  latest: HashMap.HashMap<string, MergeGateCheckRun>,
+  contexts: ReadonlyArray<string>
+): O.Option<MergeGateHold> => {
+  const required = HashSet.fromIterable(contexts);
+  const tolerated = HashSet.fromIterable(A.map(options.tolerate, (tolerance) => tolerance.check));
+  const runs = latest.pipe(HashMap.values, A.fromIterable);
+  const requiredRuns = A.filter(runs, (run) => HashSet.has(required, run.name));
+  const optionalRuns = A.filter(runs, (run) => !HashSet.has(required, run.name) && !HashSet.has(tolerated, run.name));
+  const missing = A.filter(contexts, (context) => !HashMap.has(latest, context));
+  return O.firstSomeOf([
+    holdWhen(
+      A.isReadonlyArrayNonEmpty(missing),
+      read.prNumber,
+      "required-pending",
+      `required context(s) not registered on the head: ${A.join(missing, ", ")}`
+    ),
+    runsHold(A.filter(requiredRuns, isPending), read.prNumber, "required-pending", "required still running"),
+    runsHold(A.filter(requiredRuns, isRed), read.prNumber, "required-red", "required red"),
+    runsHold(
+      A.filter(optionalRuns, isPending),
+      read.prNumber,
+      "pending",
+      'still running, pass --tolerate "<check>=<attribution>" to merge over it'
+    ),
+    runsHold(A.filter(optionalRuns, isRed), read.prNumber, "red", "red, attribute it before tolerating"),
+  ]);
+};
+
+// S11 merges over failing jobs, never without CI evidence: when not one
+// required context has registered a run on the head (CI never fired, as on an
+// informally stacked PR), relaxed mode holds like strict mode does.
+const relaxedEvidenceHold = (
+  { read }: MergeGateInput,
+  latest: HashMap.HashMap<string, MergeGateCheckRun>,
+  contexts: ReadonlyArray<string>
 ): O.Option<MergeGateHold> =>
-  O.match(read.requiredContexts, {
-    onNone: () =>
-      O.some(
-        hold(read.prNumber, "required-contexts-unknown", "base ruleset unreadable; never evaluate the gate without it")
+  holdWhen(
+    !A.some(contexts, (context) => HashMap.has(latest, context)),
+    read.prNumber,
+    "required-pending",
+    `no required context has run on the head (${A.join(contexts, ", ")}); S11 merges over failing jobs, never without CI evidence`
+  );
+
+const atMergeOrder = Order.combine(
+  Order.mapInput(Order.flip(Order.Boolean), (entry: MergeGateCheckAtMerge) => entry.required),
+  Order.mapInput(Order.String, (entry: MergeGateCheckAtMerge) => entry.check)
+);
+
+// S11: nothing about the checks holds, so record every one that is not green.
+// An unregistered required context and a run still going are pending; a
+// completed run with a bad conclusion is red. --tolerate supplies the
+// attribution for required and optional checks alike.
+const checksAtMerge = (
+  { options }: MergeGateInput,
+  latest: HashMap.HashMap<string, MergeGateCheckRun>,
+  contexts: ReadonlyArray<string>
+): ReadonlyArray<MergeGateCheckAtMerge> => {
+  const required = HashSet.fromIterable(contexts);
+  const atMerge = (check: string, state: MergeGateCheckState) =>
+    MergeGateCheckAtMerge.make({
+      check,
+      state,
+      required: HashSet.has(required, check),
+      attribution: A.findFirst(options.tolerate, (tolerance) => tolerance.check === check).pipe(
+        O.map((tolerance) => tolerance.attribution),
+        O.getOrElse(() => MERGE_GATE_S11_DEFAULT_ATTRIBUTION)
       ),
-    onSome: (contexts) => {
-      if (!A.isReadonlyArrayNonEmpty(contexts)) {
-        return O.some(
-          hold(
-            read.prNumber,
-            "required-contexts-unknown",
-            "base ruleset requires no status checks; no CI evidence to gate on"
-          )
-        );
-      }
-      const required = HashSet.fromIterable(contexts);
-      const tolerated = HashSet.fromIterable(A.map(options.tolerate, (tolerance) => tolerance.check));
-      const runs = latest.pipe(HashMap.values, A.fromIterable);
-      const requiredRuns = A.filter(runs, (run) => HashSet.has(required, run.name));
-      const optionalRuns = A.filter(
-        runs,
-        (run) => !HashSet.has(required, run.name) && !HashSet.has(tolerated, run.name)
-      );
-      const missing = A.filter(contexts, (context) => !HashMap.has(latest, context));
-      return O.firstSomeOf([
-        holdWhen(
-          A.isReadonlyArrayNonEmpty(missing),
-          read.prNumber,
-          "required-pending",
-          `required context(s) not registered on the head: ${A.join(missing, ", ")}`
-        ),
-        runsHold(A.filter(requiredRuns, isPending), read.prNumber, "required-pending", "required still running"),
-        runsHold(A.filter(requiredRuns, isRed), read.prNumber, "required-red", "required red"),
-        runsHold(
-          A.filter(optionalRuns, isPending),
-          read.prNumber,
-          "pending",
-          'still running, pass --tolerate "<check>=<attribution>" to merge over it'
-        ),
-        runsHold(A.filter(optionalRuns, isRed), read.prNumber, "red", "red, attribute it before tolerating"),
-      ]);
-    },
-  });
+    });
+  const unregistered = A.filter(A.dedupe(contexts), (context) => !HashMap.has(latest, context));
+  const notGreen = latest.pipe(
+    HashMap.values,
+    A.fromIterable,
+    A.filter((run) => isPending(run) || isRed(run))
+  );
+  return A.sort(
+    [
+      ...A.map(unregistered, (context) => atMerge(context, "pending")),
+      ...A.map(notGreen, (run) => atMerge(run.name, isPending(run) ? "pending" : "red")),
+    ],
+    atMergeOrder
+  );
+};
 
 // An unknown window always holds; an open one holds unless the caller forced
 // it. Otherwise the step yields how long the window has run, for the merge line.
@@ -509,6 +747,12 @@ const threadsHold = (read: MergeGateRead): O.Option<MergeGateHold> =>
  * the cheap structural refusals first and the two judgment calls (window,
  * threads) last, matching the hand-run gate.
  *
+ * With `relaxed` (S11) a red or pending check never holds; every check that
+ * is not green is recorded in `atMerge` instead. Relaxed mode still holds when
+ * not one required context has registered a run on the head (no CI evidence).
+ * Every other criterion, the ruleset included, holds exactly as it does
+ * without it.
+ *
  * **Example** (A draft never merges)
  *
  * ```ts
@@ -530,7 +774,7 @@ const threadsHold = (read: MergeGateRead): O.Option<MergeGateHold> =>
  * })
  * const decision = decideMergeGate({
  *   read,
- *   options: { wantSha: "abc", now: DateTime.makeUnsafe(0), tolerate: [], forceWindow: false },
+ *   options: { wantSha: "abc", now: DateTime.makeUnsafe(0), tolerate: [], forceWindow: false, relaxed: true },
  * })
  * console.log(decision._tag) // "hold"
  * ```
@@ -543,10 +787,16 @@ const threadsHold = (read: MergeGateRead): O.Option<MergeGateHold> =>
 export const decideMergeGate = (input: MergeGateInput): MergeGateDecision => {
   const { read, options } = input;
   const latest = latestRunPerName(read.checkRuns);
+  const contexts = requiredContextsStep(read);
   const window = windowStep(input);
   return O.firstSomeOf([
     structuralHold(input),
-    checksHold(input, latest),
+    // The ruleset holds in both modes; relaxed mode only needs one required run.
+    Result.match(contexts, {
+      onFailure: O.some,
+      onSuccess: (required) =>
+        options.relaxed ? relaxedEvidenceHold(input, latest, required) : checksHold(input, latest, required),
+    }),
     Result.getFailure(window),
     threadsHold(read),
   ]).pipe(
@@ -556,16 +806,62 @@ export const decideMergeGate = (input: MergeGateInput): MergeGateDecision => {
           prNumber: read.prNumber,
           headSha: read.headSha,
           commitTitle: `${read.title} (#${read.prNumber})`,
-          // Every hold above is None here, so the window step succeeded.
+          // Every hold above is None here, so the ruleset and window steps succeeded.
           windowAgeSeconds: Result.getOrThrow(window),
           tolerated: A.filter(options.tolerate, (tolerance) => HashMap.has(latest, tolerance.check)),
+          relaxed: options.relaxed,
+          atMerge: options.relaxed ? checksAtMerge(input, latest, Result.getOrThrow(contexts)) : [],
         })
     )
   );
 };
 
+const attributedList = (
+  label: string,
+  entries: ReadonlyArray<MergeGateTolerance | MergeGateCheckAtMerge>
+): O.Option<string> =>
+  A.isReadonlyArrayNonEmpty(entries)
+    ? O.some(
+        `${label}: ${A.join(
+          A.map(entries, (entry) => `${entry.check} [${entry.attribution}]`),
+          "; "
+        )}`
+      )
+    : O.none();
+
+// The non-empty "reds at merge" and "pending at merge" lists, in that order.
+const atMergeLists = (atMerge: ReadonlyArray<MergeGateCheckAtMerge>): ReadonlyArray<string> =>
+  A.getSomes([
+    attributedList(
+      "reds at merge",
+      A.filter(atMerge, (entry) => entry.state === "red")
+    ),
+    attributedList(
+      "pending at merge",
+      A.filter(atMerge, (entry) => entry.state === "pending")
+    ),
+  ]);
+
+const suffixed = (lists: ReadonlyArray<string>): string =>
+  A.join(
+    A.map(lists, (list) => ` ${list}`),
+    ""
+  );
+
+const renderMerge = (decision: MergeGateMerge): string => {
+  const met = `at ${decision.headSha.slice(0, 10)} (window ${decision.windowAgeSeconds}s)`;
+  return decision.relaxed
+    ? `#${decision.prNumber} GATE-MET (S11) ${met}${suffixed(atMergeLists(decision.atMerge))}`
+    : `#${decision.prNumber} GATE-MET ${met}${suffixed(A.getSomes([attributedList("tolerated", decision.tolerated)]))}`;
+};
+
 /**
  * Render a decision as the one line the hand-off log keeps.
+ *
+ * **Details**
+ *
+ * A relaxed (S11) merge renders as `GATE-MET (S11)` followed by the checks
+ * that were red, then those still pending, each with its attribution.
  *
  * **Example** (Render a hold)
  *
@@ -584,14 +880,7 @@ export const decideMergeGate = (input: MergeGateInput): MergeGateDecision => {
 export const renderMergeGateDecision = (decision: MergeGateDecision): string =>
   decision._tag === "hold"
     ? `#${decision.prNumber} HOLD ${decision.reason}: ${decision.detail}`
-    : `#${decision.prNumber} GATE-MET at ${decision.headSha.slice(0, 10)} (window ${decision.windowAgeSeconds}s)${
-        A.isReadonlyArrayNonEmpty(decision.tolerated)
-          ? ` tolerated: ${A.join(
-              A.map(decision.tolerated, (tolerance) => `${tolerance.check} [${tolerance.attribution}]`),
-              "; "
-            )}`
-          : ""
-      }`;
+    : renderMerge(decision);
 
 const GhPull = S.Struct({
   number: S.Finite,
@@ -630,11 +919,15 @@ const GhThreads = S.Struct({
   }),
 });
 const GhMergeResult = S.Struct({ merged: S.Boolean, sha: S.optionalKey(S.String), message: S.optionalKey(S.String) });
+const GhWorkflowRuns = S.Struct({
+  workflow_runs: S.Array(S.Struct({ id: S.Finite, head_sha: S.String, status: S.String })),
+});
 
 const decodePull = S.decodeUnknownEffect(S.fromJsonString(GhPull));
 const decodeCheckRunPages = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhCheckRuns)));
 const decodeThreads = S.decodeUnknownEffect(S.fromJsonString(GhThreads));
 const decodeMergeResult = S.decodeUnknownEffect(S.fromJsonString(GhMergeResult));
+const decodeWorkflowRunPages = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhWorkflowRuns)));
 
 // AGENTS.md "Mergeable": an unresolved thread, or one the author resolved
 // that a human commented on afterwards, still owes a reply. Same rule as
@@ -851,7 +1144,14 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
  * ```ts
  * import { MergeGateRunOptions } from "@beep/repo-cli/test/Yeet"
  *
- * const run = MergeGateRunOptions.make({ prNumber: 7, wantSha: "abc", tolerate: [], forceWindow: false, dryRun: true })
+ * const run = MergeGateRunOptions.make({
+ *   prNumber: 7,
+ *   wantSha: "abc",
+ *   tolerate: [],
+ *   forceWindow: false,
+ *   relaxed: false,
+ *   dryRun: true,
+ * })
  * console.log(run.dryRun) // true
  * ```
  *
@@ -864,10 +1164,86 @@ export class MergeGateRunOptions extends S.Class<MergeGateRunOptions>($I`MergeGa
     wantSha: S.NonEmptyString,
     tolerate: S.Array(MergeGateTolerance),
     forceWindow: S.Boolean,
+    relaxed: S.Boolean,
     dryRun: S.Boolean,
   },
   $I.annote("MergeGateRunOptions", { description: "One merge-gate invocation." })
 ) {}
+
+// Best-effort steps after a merge print a warning and never fail the command:
+// the merge already happened.
+const warnAfterMerge = (what: string) => (error: YeetCommandError) =>
+  Console.error(`[yeet] warning: ${what} failed after the merge; continuing: ${error.message}`);
+
+const s11MergeComment = (decision: MergeGateMerge, merged: MergeGateMerged, windowForced: boolean): string =>
+  A.join(
+    [
+      `yeet merge-gate (S11): merged ${decision.headSha.slice(0, 10)} as ${merged.mergeSha.slice(0, 10)}.`,
+      ...atMergeLists(decision.atMerge),
+      `Merged under operator ruling S11 (AGENTS.md "Mergeable"): threads addressed, no conflict, ${
+        windowForced ? "review window forced (a fix that unblocks main)" : "review window elapsed"
+      }. Owner: \`bun run beep yeet sweep --retire\` from the lane.`,
+    ],
+    "\n\n"
+  );
+
+const postS11MergeComment = Effect.fn("Yeet.postS11MergeComment")(function* (
+  context: RepoRunContext,
+  decision: MergeGateMerge,
+  merged: MergeGateMerged,
+  windowForced: boolean
+) {
+  yield* gh(context, `gh api comment #${decision.prNumber}`, [
+    "api",
+    "-X",
+    "POST",
+    `repos/{owner}/{repo}/issues/${decision.prNumber}/comments`,
+    "-f",
+    `body=${s11MergeComment(decision, merged, windowForced)}`,
+  ]);
+  yield* Console.log(`[yeet] recorded the S11 merge in a comment on #${decision.prNumber}`);
+});
+
+// Only decoded non-terminal runs on the merged head are cancelled. Listing
+// and each cancellation are independently best effort after the merge.
+const cancelMergedHeadRuns = Effect.fn("Yeet.cancelMergedHeadRuns")(function* (
+  context: RepoRunContext,
+  headSha: string
+) {
+  const pages = yield* gh(context, "gh api merged head runs", [
+    "api",
+    `repos/{owner}/{repo}/actions/runs?head_sha=${headSha}&per_page=100`,
+    "--paginate",
+    "--slurp",
+  ]).pipe(
+    Effect.flatMap((output) => decodeOrFail("the merged head's workflow runs", decodeWorkflowRunPages, output)),
+    Effect.catch((error) =>
+      warnAfterMerge("listing the merged head's workflow runs")(error).pipe(
+        Effect.as(A.empty<typeof GhWorkflowRuns.Type>())
+      )
+    )
+  );
+  const runIds = A.dedupe(
+    A.flatMap(pages, (page) =>
+      A.map(
+        A.filter(page.workflow_runs, (run) => run.head_sha === headSha && run.status !== "completed"),
+        (run) => run.id
+      )
+    )
+  );
+  const [cancelled, failures] = yield* Effect.partition(runIds, (runId) =>
+    gh(context, `gh api cancel run ${runId}`, [
+      "api",
+      "-X",
+      "POST",
+      `repos/{owner}/{repo}/actions/runs/${runId}/cancel`,
+    ])
+  );
+  yield* Effect.forEach(failures, warnAfterMerge("cancelling a leftover workflow run"), { discard: true });
+  yield* Console.log(
+    `[yeet] cancelled ${A.length(cancelled)} of ${A.length(runIds)} active workflow run(s) on ${headSha.slice(0, 10)}`
+  );
+});
 
 /**
  * Read, decide, print, and merge unless the gate held or `--dry-run` was passed.
@@ -875,8 +1251,13 @@ export class MergeGateRunOptions extends S.Class<MergeGateRunOptions>($I`MergeGa
  * **Details**
  *
  * A hold exits non-zero with the routed reason so a background waiter can
- * loop on it; a merge prints the merge sha and any tolerated attribution. The
- * window override is printed whenever it was used.
+ * loop on it; a merge prints the merge sha and any tolerated attribution (a
+ * relaxed merge prints its at-merge lists instead). The
+ * window override is printed whenever it was used. After a relaxed (S11)
+ * merge it posts one PR comment recording the checks that were not green and
+ * cancels the merged head's active workflow runs across all pages; both are
+ * best effort, so a failure prints a warning and the command still succeeds.
+ * A dry run does neither.
  *
  * **Example** (Build the gate effect)
  *
@@ -901,6 +1282,7 @@ export const runMergeGate = Effect.fn("Yeet.runMergeGate")(function* (
       now: read.readAt,
       tolerate: options.tolerate,
       forceWindow: options.forceWindow,
+      relaxed: options.relaxed,
     },
   });
   yield* Console.log(
@@ -915,6 +1297,12 @@ export const runMergeGate = Effect.fn("Yeet.runMergeGate")(function* (
   }
   const merged = yield* executeMergeGate(context, decision);
   yield* Console.log(`[yeet] MERGED #${merged.prNumber} -> ${merged.mergeSha.slice(0, 10)} "${merged.commitTitle}"`);
+  if (decision.relaxed) {
+    yield* postS11MergeComment(context, decision, merged, options.forceWindow).pipe(
+      Effect.catch(warnAfterMerge("the S11 merge comment"))
+    );
+    yield* cancelMergedHeadRuns(context, decision.headSha);
+  }
   return decision;
 });
 
@@ -934,6 +1322,7 @@ export const runMergeGate = Effect.fn("Yeet.runMergeGate")(function* (
  *   sha: "212fe39b4f",
  *   tolerate: [],
  *   forceWindow: false,
+ *   relaxed: false,
  *   dryRun: true,
  * })
  * console.log(options.pr) // 1459
@@ -951,6 +1340,7 @@ export class MergeGateCommandOptions extends S.Class<MergeGateCommandOptions>($I
     sha: S.String,
     tolerate: S.Array(S.String),
     forceWindow: S.Boolean,
+    relaxed: S.Boolean,
     dryRun: S.Boolean,
   },
   $I.annote("MergeGateCommandOptions", { description: "Parsed yeet merge-gate flags before tolerances are decoded." })
@@ -980,23 +1370,14 @@ export class MergeGateCommandOptions extends S.Class<MergeGateCommandOptions>($I
  * @since 0.0.0
  */
 export const runYeetMergeGate = Effect.fn("Yeet.runMergeGateCommand")(function* (options: MergeGateCommandOptions) {
-  const parsed = A.map(options.tolerate, parseMergeGateTolerance);
-  const malformed = A.filter(A.zip(options.tolerate, parsed), ([, tolerance]) => O.isNone(tolerance));
-  if (A.isReadonlyArrayNonEmpty(malformed)) {
-    return yield* YeetCommandError.make({
-      message: `--tolerate needs "<check name>=<attribution>"; got ${A.join(
-        A.map(malformed, ([value]) => JSON.stringify(value)),
-        ", "
-      )}.`,
-      exitCode: 1,
-    });
-  }
+  const tolerate = yield* decodeAttributedCheckFlags("tolerate", options.tolerate, parseMergeGateTolerance);
   const context = yield* hydrateYeetReadOnlyContext(options);
   yield* runMergeGate(context, {
     prNumber: options.pr,
     wantSha: options.sha,
-    tolerate: A.getSomes(parsed),
+    tolerate,
     forceWindow: options.forceWindow,
+    relaxed: options.relaxed,
     dryRun: options.dryRun,
   });
 });

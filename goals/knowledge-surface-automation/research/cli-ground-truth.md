@@ -223,7 +223,7 @@ symlink to `../.claude/skills`; its check/write logic is at
 
 ## 3. CLI framework and canonical authoring pattern
 
-Commands use `Command`, `Argument`, and `Flag` from `effect/unstable/cli`. The root command is a
+Commands use `Command`, `Argument`, and `Flag` from `effect/cli`. The root command is a
 static `Command.make("beep-cli")` plus `Command.withSubcommands([...])`
 (`packages/tooling/tool/cli/src/commands/Root.ts:9-36,51-82`). A new top-level family therefore
 requires all of:

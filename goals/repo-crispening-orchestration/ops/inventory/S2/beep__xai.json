@@ -56,7 +56,7 @@
     "roiRank": 11,
     "exception": {
       "reason": "This object is shaped for Effect AI's `AiError.NetworkError` request metadata contract; it is an adapter fallback from xAI diagnostics into a third-party error type, not a schema-modeled xAI domain invariant.",
-      "boundary": "effect/unstable/ai NetworkError adapter boundary"
+      "boundary": "effect/ai NetworkError adapter boundary"
     }
   }
 ]

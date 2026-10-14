@@ -78,7 +78,7 @@ helpers in `@beep/schema`; keep the `AiError.isRetryable` predicate LLM-scoped.
 
 **Quota limiter (Juris.AI#5) — P2, governance-ops.**
 The hand-rolled keyed sliding-window quota tracker is **structurally identical**
-to v4's shipped `effect/unstable/persistence/RateLimiter`
+to v4's shipped `effect/persistence/RateLimiter`
 (`consume({ key, limit, window, algorithm })` + `RateLimitExceeded.retryAfter`)
 — **reuse the built-in, do not port** the JS. Net-new is only the
 store-selection (`layerStoreMemory` vs `layerStoreRedis`) + per-provider
@@ -113,7 +113,7 @@ courts-db's *data tables* would require BSD attribution.
 | Repo | Tier | License | Port discipline | What we take |
 | --- | --- | --- | --- | --- |
 | research-squad | T1 | MIT | port-with-attribution (permissive) | Schedule retry policies (#3), `Layer.unwrap`-style provider selection (#5), bounded fan-out + recovery (#11), failure-vs-defect split (#2), error-taxonomy predicates (#7) |
-| Juris.AI | T2 | MIT | port-with-attribution (permissive) — but superseded by v4 built-in | keyed sliding-window quota concept (#5); reuse `effect/unstable/.../RateLimiter` instead of porting |
+| Juris.AI | T2 | MIT | port-with-attribution (permissive) — but superseded by v4 built-in | keyed sliding-window quota concept (#5); reuse `effect/persistence/RateLimiter` instead of porting |
 | uspto_pfw_mcp | T1 | MIT | port-with-attribution (permissive) for behavior; CB itself clean-roomed | resilience blueprint (#5): circuit breaker, retry budget, served-while-open cache, bulkhead |
 | courts-db | T1 | BSD-2-Clause | reference-only (concept); data-table vendoring needs BSD attribution | lazy reference-data load concept (#9) |
 
@@ -204,7 +204,7 @@ RESEARCH In-Repo Inventory). Marked reuse / extend / NET-NEW.
 | `@beep/nlp-mcp` (batch-extraction fan-out consumer) | `packages/drivers/nlp-mcp` | **reuse / extend** — consuming surface for the degraded-batch combinator |
 | `standards/effect-first-development.md` (laws EF-25/26/27/31) | `standards/effect-first-development.md` | **reuse** — documented laws; do not re-document |
 | `.patterns/error-handling.md` | `.patterns/error-handling.md` | **reuse** — error-handling pattern reference |
-| `effect/unstable/persistence/RateLimiter`, `Semaphore`, `PartitionedSemaphore`, `Cache` (v4 built-ins) | `node_modules/effect/dist/unstable/*`, vendored `.repos/effect-v4` | **reuse** — present but unused in repo; adopt rather than port Juris.AI#5 |
+| `effect/persistence/RateLimiter`, `Semaphore`, `PartitionedSemaphore`, `Cache` (v4 built-ins) | `node_modules/effect/dist/*`, vendored `.repos/effect-v4` | **reuse** — present but unused in repo; adopt rather than port Juris.AI#5 |
 | `goals/effect-native-migration` (native-JS-type migration) | `goals/effect-native-migration` | **out-of-scope sibling** — NOT runtime orchestration |
 
 ---

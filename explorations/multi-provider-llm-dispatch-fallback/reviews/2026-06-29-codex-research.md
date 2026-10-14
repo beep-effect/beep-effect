@@ -17,7 +17,7 @@
   Fix | Update the raw note and any derived shape language to `Layer.unwrap(effectProducingLayer)`. If round-robin remains in scope, compile a tiny `Layer.unwrap` provider-selection spike before treating the pattern as settled.
 
 - **Claim** | `RESEARCH.md` / Runtime fallback engine: `Schedule` is the retry-policy vocabulary and `AiError` supplies a normalized `isRetryable` taxonomy.
-  Why wrong | This is incomplete for rate limits. `node_modules/effect/src/unstable/ai/AiError.ts` defines `RateLimitError` with optional `retryAfter`, marks it retryable, and the top-level `AiError` delegates `retryAfter`. A design that only keys on `isRetryable` can ignore provider-directed backoff and retry earlier than requested.
+  Why wrong | This is incomplete for rate limits. `node_modules/effect/src/ai/AiError.ts` defines `RateLimitError` with optional `retryAfter`, marks it retryable, and the top-level `AiError` delegates `retryAfter`. A design that only keys on `isRetryable` can ignore provider-directed backoff and retry earlier than requested.
   Fix | Extend the resilience strategy notes so `RateLimitError.retryAfter` is first-class. Keep `while: AiError.isAiError(error) && error.isRetryable` as the gate, but let schedule construction consult `error.retryAfter` when present.
 
 - **Claim** | `RESEARCH.md` / Structured output + constraints: "`@effect/ai-anthropic` may still emulate via forced tool-call ... verify the vendored build."
@@ -37,4 +37,4 @@
 - The claimed `@beep/*` package aliases all exist and have `src/index.ts` barrels: `@beep/anthropic`, `@beep/openai-compat`, `@beep/xai`, `@beep/venice-ai`, `@beep/schema`, `@beep/onepassword-cli`, and `@beep/ai-provider-cli`.
 - `@beep/schema` publicly exports `TaggedErrorClass` and `LiteralKit`; the Venice driver uses `LiteralKit` plus `S.toTaggedUnion` in the cited error-reason modeling pattern.
 - No existing multi-provider dispatch Layer / registry was found for `ProviderRegistry|dispatchLanguageModel|fallbackChain|LanguageModelRouter|PROVIDER_REGISTRY` across `packages/`.
-- No vendored Effect `CircuitBreaker` or `RateLimiter` module was found; no Gemini driver exists under `packages/drivers`, and `effect/unstable/ai` ships OpenAI and Anthropic structured-output transformers but no Gemini transformer.
+- No vendored Effect `CircuitBreaker` or `RateLimiter` module was found; no Gemini driver exists under `packages/drivers`, and `effect/ai` ships OpenAI and Anthropic structured-output transformers but no Gemini transformer.

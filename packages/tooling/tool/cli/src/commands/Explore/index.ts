@@ -26,3 +26,18 @@ export * from "./Check.ts";
  * @since 0.0.0
  */
 export * from "./Explore.command.ts";
+export * from "./Explore.errors.ts";
+/**
+ * Exploration graduation plan schemas.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Graduate.schemas.ts";
+/**
+ * Exploration graduation plan compiler and command.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Graduate.ts";

@@ -2,7 +2,7 @@
 
 ## Objective
 
-All in-scope `effect/unstable/process` consumers must explicitly own opened
+All in-scope `effect/process` consumers must explicitly own opened
 stdio, process scope, exit semantics, and timeout cleanup. Compatible repo CLI
 commands must route through the existing internal `StepExec` / `GitExec`
 boundary, and aggregate platform layers must not be paired with redundant
@@ -31,7 +31,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
-- Current TypeScript consumers of `effect/unstable/process` under `apps/` and
+- Current TypeScript consumers of `effect/process` under `apps/` and
   `packages/`.
 - `packages/tooling/tool/cli/src/internal/process/StepExec.ts` and
   `internal/repo-run/GitExec.ts`.

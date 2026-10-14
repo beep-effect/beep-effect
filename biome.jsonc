@@ -27,6 +27,18 @@
       // GitHub Copilot; keep upstream bundles outside authored repo formatting.
       "!.claude/skills/impeccable",
       "!.github/skills/impeccable",
+      // Vendored skills (every `vendored` entry in skills-lock.json) must stay
+      // byte-exact upstream so the lock can pin them pristine (design B23);
+      // `.agents` is excluded above, and the skills-command test fails when a
+      // vendored target is missing here. `skills-lock.json` is written only by
+      // `beep skills`, whose rendering is the canonical byte form.
+      "!.claude/skills/grill-me",
+      "!.claude/skills/oracle",
+      "!.claude/skills/portless",
+      "!.claude/skills/shadcn",
+      "!.claude/skills/teach",
+      "!.claude/skills/turborepo",
+      "!skills-lock.json",
       // Graft-generated wiring (the two shims and the skill files) is written by
       // `graft init`; the repo-owned graft-loader.cjs beside the shims is linted.
       "!.claude/helpers/graft-hooks.cjs",

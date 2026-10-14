@@ -1,0 +1,20 @@
+{
+  "previous": "479887b2dd97420ea7935a40f76b43a208b510fd83523da89baa31383a726160",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (chore/retire-effect-unstable-paths)",
+    "reason": "Record the uncached //#lint:retired-effect-paths root computation and attribute the shared root scripts-digest change to its added root script; no other command, input, output, env, dependency edge or cache flag changes, and no qualification is granted.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/retired-effect-paths-baseline-review.md",
+      "sha256": "881804d315631e1d134af841496c4cb973f7133eb0da7b65e61f63eb93a7625b"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

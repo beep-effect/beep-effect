@@ -162,7 +162,7 @@ owns *decisions and research* (D2).
   reference sheet, 22 verified primary
   sources) and grilled in two rounds. Settled: probe-denominated circuit breaker instead of a
   calendar (S1); gold-proposer provider ≠ extractor provider as a schema refinement (S2);
-  embeddings = `effect/unstable/ai` `EmbeddingModel` with OpenAI through a new `/embeddings`
+  embeddings = `effect/ai` `EmbeddingModel` with OpenAI through a new `/embeddings`
   op + factory in `@beep/openai-compat` (S3; Anthropic has no embeddings API); tauri + frozen
   crate + hand-written `server/` runtime (S4); C2 runtime = ρdf closure + SKOS rule, G-entailment
   split rdfs/rules (S5). Contract → v1.3. Loop back to research: the `scratchpad/effect-ontology`
@@ -177,7 +177,7 @@ owns *decisions and research* (D2).
   roster with cited bricks (all verified live: `@beep/pglite`/`duckdb`/`rdf`/`provenance`/
   `langextract`/`nlp-processing`/`file-processing`, drivers oxigraph/shacl/n3/wink/tika), 13
   rabbit holes, no-gos. Live-source corrections while shaping: no `EmbeddingModel` Layer exists
-  in-repo but the contract is Effect's own (`effect/unstable/ai`, rc.111) and `@beep/venice-ai`
+  in-repo but the contract is Effect's own (`effect/ai`, rc.111) and `@beep/venice-ai`
   has `createEmbedding` — NET-NEW shrinks to one Layer; no EYE driver exists (oracle wiring is
   NET-NEW). Drafted the 36 Rosetta `tbd` cells (`research/glossary-rosetta-draft.md`). O5's
   clone-skill read discharged (generic task-selection stub, nothing load-bearing). Awaiting

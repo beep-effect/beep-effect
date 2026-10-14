@@ -13,7 +13,7 @@ upstream replacement when beep-effect moves to the snapshot and to `McpProtocol.
 `repo:packages/drivers/m365-mcp/test/SanitizedSpan.test.ts`;
 `repo:standards/jsdoc-documentation.inventory.jsonc` entries for `@beep/mcp-kit`; the Effect
 source at `a7a71921de` for every API the kit touches
-(`effect:packages/effect/src/unstable/ai/{McpServer,McpSchema,Tool,Toolkit}.ts`).
+(`effect:packages/effect/src/ai/{McpServer,McpSchema,Tool,Toolkit}.ts`).
 
 **Report sections:**
 1. Kit anatomy: each module (`SanitizedSpan`, `McpCaller`, `TierGate`, `ApiKeyRequired`,

@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "fleet-telemetry-tailnet",
+    "packetId": "goal-packet/v1:e6920eac1b2e0fa78d27f9fe06546347e7b78ad58c4bb87af5b026accfbcd5e8",
+    "title": "Fleet Telemetry on the Tailnet",
+    "status": "active",
+    "created": "2026-10-14",
+    "updated": "2026-10-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/fleet-telemetry-tailnet",
+  "lifecycle": "active",
+  "mission": "Tier-aware ingest gateway, scrape/push topology, enrollment gate (D1 trigger), tag and Funnel proposals, and generated fleet dashboards.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/observability-palantiri",
+    "graduated": "2026-10-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/fleet-telemetry-tailnet/README.md",
+    "goals/fleet-telemetry-tailnet/SPEC.md",
+    "goals/fleet-telemetry-tailnet/PLAN.md",
+    "goals/fleet-telemetry-tailnet/GOAL.md",
+    "goals/fleet-telemetry-tailnet/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/fleet-telemetry-tailnet/GOAL.md"
+    }
+  ],
+  "provides": ["observability/fleet-pipeline", "observability/enrollment-gate"],
+  "requires": ["observability/attribute-registry"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Gateway",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Proposals",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Enrollment + dashboards",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Yeet",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/fleet-telemetry-tailnet/GOAL.md)\" -le 4000",
+    "jq . goals/fleet-telemetry-tailnet/ops/manifest.json",
+    "rg -n \"fleet-telemetry-tailnet|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/fleet-telemetry-tailnet",
+    "git diff --check -- goals/fleet-telemetry-tailnet",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

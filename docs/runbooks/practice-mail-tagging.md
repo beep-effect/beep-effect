@@ -17,25 +17,22 @@ bun run apps/practice-mail-tagging/src/bin.ts <command>
 
 The examples shorten that to `practice-mail-tagging <command>`.
 
-## Current status: attachment filing is blocked on Box storage
+## Attachment filing and Box storage
 
-Box refuses every new upload from the service account with HTTP 403: the
-account's storage allocation is smaller than what it already holds. Moves and
-renames still work, and Outlook categories do not use Box at all, so tagging
-is unaffected. Filing stays blocked until the operator raises the allocation
-in the Box Admin Console.
+Box refused every upload from the service account with HTTP 403 while the
+account's storage allocation was smaller than what it already held. That
+block was lifted: on 2026-10-14 the allocation was effectively unlimited
+(about 28 GB used). Check `users/me` (`space_amount`, `space_used`) before a
+large upload run anyway.
 
-Until then, run the job with filing switched off by data, not by code: point
-`PRACTICE_MAIL_TAGGING_FOLDER_MAP_PATH` at a file that contains only `[]`.
-Every attachment is then skipped as `no-folder` before any download or Box
-call, and the run report says how many were skipped. Do not run with the real
-folder map while the block stands: the job treats a 403 on upload as a failed
-run, so the first routable attachment stops the pass before its message is
-tagged.
-
-When the allocation is raised, point the setting back at the real map. The
-skipped attachments are not filed retroactively by the job; a later pass only
-sees new mail.
+If the block comes back, run the job with filing switched off by data, not by
+code: point `PRACTICE_MAIL_TAGGING_FOLDER_MAP_PATH` at a file that contains
+only `[]`. Every attachment is then skipped as `no-folder` before any download
+or Box call, and the run report says how many were skipped. Do not run with
+the real folder map while uploads are refused: the job treats a 403 on upload
+as a failed run, so the first routable attachment stops the pass before its
+message is tagged. Skipped attachments are not filed retroactively; a later
+pass only sees new mail.
 
 ## Operator checklist for the first apply
 
@@ -227,13 +224,17 @@ Do these in order. Do not enable the unit before step 6.
 
    ```bash
    cp apps/practice-mail-tagging/deploy/practice-mail-tagging.service ~/.config/systemd/user/
-   # edit the three REPLACE_ values in the copy
+   # edit the REPLACE_ values in the copy
    systemctl --user daemon-reload
    systemctl --user enable --now practice-mail-tagging.service
    journalctl --user -u practice-mail-tagging.service -f
    ```
 
-   Nothing in the repository installs or starts this unit.
+   Nothing in the repository installs or starts this unit. Run it from a
+   pinned deploy checkout, not a working clone, and resolve the environment
+   file with `op run` as the sample does:
+   [practice services](practice-services.md) has the steps, upgrades and
+   removal.
 
 7. **Attended writes once the unit runs.** From now on, stop the unit before
    any attended writing command (`apply --yes`, `undo --run <runId> --yes`)

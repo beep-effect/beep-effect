@@ -19,50 +19,50 @@ clients this lane owns. Runtime detail remains 11-u2's.
 
 1. **Stateful selection ignores a stateless-only list.**
    `selectStatefulProtocol` keeps only adapters whose `runtime._tag === "Stateful"`
-   (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:182-187`).
+   (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:182-187`).
 2. **A `v2026_07_28`-only server rejects `initialize` on the prepare path**
    with `ProtocolError` code `UNSUPPORTED_PROTOCOL_VERSION_ERROR_CODE` (`-32022`)
    and message
    `"initialize is not supported by the configured MCP protocols (requested '<offeredVersion>')"`
-   (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:33`,
-   `effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:319-326`).
+   (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:33`,
+   `effect:packages/effect/src/ai/internal/mcpRuntime.ts:319-326`).
 3. **Stdio takes the same `initialize` path.** The stdio codec calls
    `selectStatefulProtocol` when the frame is `initialize`
-   (`effect:packages/effect/src/unstable/ai/McpServer.ts:1484-1486`).
+   (`effect:packages/effect/src/ai/McpServer.ts:1484-1486`).
 4. **HTTP is stricter before that error is reached.** Header names are
    lower-cased `mcp-session-id`, `mcp-protocol-version`, `mcp-method`,
-   `mcp-name` (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:27-30`).
+   `mcp-name` (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:27-30`).
    On a stateless-only server, an `initialize` JSON-RPC request with an `id`
    is classified as a stateless request
-   (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:218-226`).
+   (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:218-226`).
    Missing `MCP-Protocol-Version` then returns HTTP 400
    `"MCP-Protocol-Version header is required"` with
    `HEADER_MISMATCH_ERROR_CODE` `-32020`
-   (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:228-230`,
-   `effect:packages/effect/src/unstable/ai/McpSchema.ts:595`).
+   (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:228-230`,
+   `effect:packages/effect/src/ai/McpSchema.ts:595`).
    Stateless HTTP also requires `_meta["io.modelcontextprotocol/protocolVersion"]`,
    `_meta["io.modelcontextprotocol/clientCapabilities"]`, `Mcp-Method` matching
    the JSON-RPC method, and `Mcp-Name` for `tools/call` / `prompts/get`
-   (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:31-32`,
-   `effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:231-278`).
+   (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:31-32`,
+   `effect:packages/effect/src/ai/internal/mcpRuntime.ts:231-278`).
 5. **Mixed lists are an upstream feature, not a beep invention.** Effect
    allows at most one stateless adapter in the list
-   (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:193-209`).
+   (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:193-209`).
    **This contradicts G4 as the only viable pin.** Labelled
    `decision-challenge` below.
 6. **Public `McpSchema.ClientRpcs` is still the stateful group.** It includes
    `Initialize` and does not include `server/discover`
-   (`effect:packages/effect/src/unstable/ai/McpSchema.ts:2982-2995`,
-   `effect:packages/effect/src/unstable/ai/McpSchema.ts:3034`).
+   (`effect:packages/effect/src/ai/McpSchema.ts:2982-2995`,
+   `effect:packages/effect/src/ai/McpSchema.ts:3034`).
    The 2026 adapter's client group is `Discover`, `Complete`, prompts,
    resources, `SubscriptionsListen`, `CallTool`, `ListTools` — no
-   `initialize` (`effect:packages/effect/src/unstable/ai/internal/mcpSchema/v2026_07_28.ts:378-382`,
-   `effect:packages/effect/src/unstable/ai/internal/mcpSchema/v2026_07_28.ts:614-625`).
+   `initialize` (`effect:packages/effect/src/ai/internal/mcpSchema/v2026_07_28.ts:378-382`,
+   `effect:packages/effect/src/ai/internal/mcpSchema/v2026_07_28.ts:614-625`).
    That 2026 group is `@internal`. Reverse-client methods on 2026 fail
    (`roots/list`, `sampling/createMessage`, `elicitation/create`)
-   (`effect:packages/effect/src/unstable/ai/internal/mcpProtocol/v2026_07_28.ts:683-687`).
+   (`effect:packages/effect/src/ai/internal/mcpProtocol/v2026_07_28.ts:683-687`).
 7. **Effect's generic `RpcClient` HTTP protocol does not set the 2026 routing
-   headers.** A repo-wide search of `packages/effect/src/unstable/{rpc,ai}`
+   headers.** A repo-wide search of `packages/effect/src/{rpc,ai}`
    finds `mcp-method` / `MCP-Protocol-Version` / `Mcp-Name` only in
    `mcpRuntime.ts` (server-side). In-repo HTTP clients that use
    `RpcClient.layerProtocolHttp` therefore cannot satisfy the 2026 header
@@ -381,7 +381,7 @@ Rewriting in-repo clients to speak 2026 requires, at minimum:
 
 There is no public Effect helper in `McpProtocol.ts` that builds a 2026
 `RpcClient` (the public module exports adapters, not a 2026 client group;
-`effect:packages/effect/src/unstable/ai/McpProtocol.ts:196`). How beep should
+`effect:packages/effect/src/ai/McpProtocol.ts:196`). How beep should
 obtain that group is a grill question.
 
 ---

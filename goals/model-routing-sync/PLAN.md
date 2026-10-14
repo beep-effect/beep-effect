@@ -55,7 +55,7 @@ through Yeet before reporting the goal complete.
 - **P2 Verify** — `bun run beep quality package-verify @beep/repo-cli --quick`, a `check` run whose
   report names all seven known live conflicts, and an idempotence proof once S2 exists (two `write`
   runs, second reports `changed: 0`).
-- **P3 Yeet** — `bun run beep yeet publish --start-pr-early --monitor --pr`; goal slug in the commit
+- **P3 Yeet** — `bun run beep yeet publish --monitor --pr`; goal slug in the commit
   message.
 - **P4 Close** — reflection via `/reflect model-routing-sync`; flip status in the same PR.
 

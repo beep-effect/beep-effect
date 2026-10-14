@@ -94,7 +94,7 @@ Additional locked constraints:
 - The harness must kill the process at controlled boundaries and start a fresh
   process against the same store. `layerMemory` may appear only as a negative
   control; graceful shutdown alone is insufficient.
-- Because `effect/unstable/workflow` is unstable, an Effect upgrade must trigger
+- Because `effect/workflow` is unstable, an Effect upgrade must trigger
   both a compile-time fixture over the consumed contract and the behavioral
   kill/restart suite. Drift fails close to the version bump with actionable
   evidence.

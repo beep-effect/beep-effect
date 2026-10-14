@@ -698,7 +698,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import type * as Config from "effect/Config";
 import type * as Crypto from "effect/Crypto";
-import type * as LanguageModel from "effect/unstable/ai/LanguageModel";
+import type * as LanguageModel from "effect/ai/LanguageModel";
 
 const IrToLawLayer = Layer.succeed(IrToLaw, IrToLaw.of(makeIrToLaw()));
 const FileProcessingLayer = makeFileProcessingServiceLayer([TikaFileProcessingEngine]);
@@ -1936,7 +1936,7 @@ import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
-import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlClient from "effect/sql/SqlClient";
 
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 const migrationsFolder = fileURLToPath(new URL("../../drizzle", import.meta.url));
@@ -2142,7 +2142,7 @@ const expectedVerificationTriggers: ReadonlyArray<string> = [
   the tables `DbSchema`, `{ makeDrizzle, migrate }` from `@beep/postgres`,
   `{ makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo }` from
   `@beep/test-utils`, `{ describe, expect, layer }` from `@effect/vitest`,
-  `* as SqlClient from "effect/unstable/sql/SqlClient"`.
+  `* as SqlClient from "effect/sql/SqlClient"`.
 - **PGlite instance:** `Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }))`.
   The `btree_gist` extension import is **required even for a law-practice test**,
   because `migrate` replays the *entire* drizzle folder including the epistemic

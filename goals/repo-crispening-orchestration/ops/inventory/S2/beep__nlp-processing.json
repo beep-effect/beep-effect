@@ -70,8 +70,8 @@
     "mechanization": "judgment",
     "roiRank": 9,
     "exception": {
-      "reason": "Tool.getDescription returns `string | undefined` by 3rd-party contract (verified .repos/effect-v4/packages/effect/src/unstable/ai/Tool.ts:1596), and ExportedTool is an external positional-adapter surface whose consumers expect a plain string.",
-      "boundary": "3rd-party (effect/unstable/ai Tool) return type + external adapter contract"
+      "reason": "Tool.getDescription returns `string | undefined` by 3rd-party contract (verified .repos/effect-v4/packages/effect/src/ai/Tool.ts:1596), and ExportedTool is an external positional-adapter surface whose consumers expect a plain string.",
+      "boundary": "3rd-party (effect/ai Tool) return type + external adapter contract"
     }
   },
   {

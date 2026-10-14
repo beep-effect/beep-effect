@@ -10,9 +10,9 @@ stale, or contradicted by the code?
 
 **Primary sources:** `effect:packages/effect/MCP.md`, `migration/v3-to-v4.md`,
 `migration/annotations/effect__ai__Mcp*.yaml`, JSDoc `**Example**` blocks on exports in
-`unstable/ai/{McpServer,McpSchema,McpProtocol,Tool,Toolkit}.ts`, `.changeset/*.md`,
-`.changeset/pre/*mcp*.md`, `effect:packages/effect/test/unstable/ai/McpServer/**`, and
-`effect:packages/effect/typetest/unstable/ai/McpServer.tst.ts`.
+`ai/{McpServer,McpSchema,McpProtocol,Tool,Toolkit}.ts`, `.changeset/*.md`,
+`.changeset/pre/*mcp*.md`, `effect:packages/effect/test/ai/McpServer/**`, and
+`effect:packages/effect/typetest/ai/McpServer.tst.ts`.
 
 **Report sections:**
 1. Contradictions first: statements in `MCP.md`, `migration/v3-to-v4.md`, and JSDoc that

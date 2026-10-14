@@ -100,6 +100,9 @@ storybook-static/
 .claude/scheduled_tasks.lock
 # Worktree-isolated agent sessions materialize transient checkouts here
 .claude/worktrees/
+# `beep skills materialize` stages and set-aside trees (left only by a run that died mid-publish)
+.claude/.skills-materialize/
+.agents/.skills-materialize/
 
 # Local code-index cache only (MCP + Codex config are beep-sync managed/committed)
 .code-index/

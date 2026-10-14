@@ -17,6 +17,7 @@ import { printLines } from "../../internal/cli/Printer.ts";
 import { PacketEventStoreLive } from "../Goals/PacketCore/PacketEventStore.ts";
 import { exploreAtlasCommand } from "./Atlas.ts";
 import { runExploreCheck } from "./Check.ts";
+import { exploreGraduateCommand } from "./Graduate.ts";
 
 const checkFlag = Flag.Boolean("check").pipe(
   Flag.withDefault(false),
@@ -47,10 +48,11 @@ export const exploreCommand = Command.make(
     return yield* printLines([
       "Explore commands:",
       "- bun run beep explore --check   fold packet event streams; report forks, integrity issues, stale traces (advisory)",
+      "- bun run beep explore graduate <exploration> --goal <slug>=<title> --plan [--json] | --write --expect <planId>   plan or replay a graduation",
     ]);
   })
 ).pipe(
   Command.withDescription("Read-only packet-stream checks over explorations and goals (advisory)"),
-  Command.withSubcommands([exploreAtlasCommand]),
+  Command.withSubcommands([exploreAtlasCommand, exploreGraduateCommand]),
   Command.provide(PacketEventStoreLive)
 );

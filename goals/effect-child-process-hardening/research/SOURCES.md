@@ -12,13 +12,13 @@ Installed `effect`, `@effect/platform-node`, and `@effect/platform-bun` versions
 | Source | Location | Use |
 | --- | --- | --- |
 | Child-process guide | `.repos/effect/ai-docs/src/60_child-process/` | Command construction, collection, streaming, pipelines, scoped execution, and platform layers |
-| Command API | `.repos/effect/packages/effect/src/unstable/process/ChildProcess.ts` | Command options, stdio defaults, env/shell gotchas, pipelines, and transformations |
-| Spawner API | `.repos/effect/packages/effect/src/unstable/process/ChildProcessSpawner.ts` | Service helpers, handle lifecycle, exit status, streams, kill, and custom descriptors |
-| Public barrel | `.repos/effect/packages/effect/src/unstable/process/index.ts` | Export inventory |
+| Command API | `.repos/effect/packages/effect/src/process/ChildProcess.ts` | Command options, stdio defaults, env/shell gotchas, pipelines, and transformations |
+| Spawner API | `.repos/effect/packages/effect/src/process/ChildProcessSpawner.ts` | Service helpers, handle lifecycle, exit status, streams, kill, and custom descriptors |
+| Public barrel | `.repos/effect/packages/effect/src/process/index.ts` | Export inventory |
 | Node/Bun adapters | `.repos/effect/packages/platform-{node,bun}/src/*ChildProcessSpawner.ts` | Platform entrypoints |
 | Shared backend | `.repos/effect/packages/platform-node-shared/src/NodeChildProcessSpawner.ts` | Actual stdio defaults, scoped finalizer, process-group kill, and forced escalation |
-| Command tests | `.repos/effect/packages/effect/test/unstable/process/ChildProcess.test.ts` | Command composition and option behavior |
-| Spawner tests | `.repos/effect/packages/effect/test/unstable/process/ChildProcessSpawnerTest.ts` | Concurrent draining, large output, interruption, process groups, force kill, and unref |
+| Command tests | `.repos/effect/packages/effect/test/process/ChildProcess.test.ts` | Command composition and option behavior |
+| Spawner tests | `.repos/effect/packages/effect/test/process/ChildProcessSpawnerTest.ts` | Concurrent draining, large output, interruption, process groups, force kill, and unref |
 
 The Effect repository is MIT-licensed. This implementation uses the public API
 and repository-local patterns; it does not vendor upstream code.

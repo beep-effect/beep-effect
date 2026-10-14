@@ -298,9 +298,9 @@
     "wave": "P2",
     "wedgeHint": "multi-provider-llm-dispatch-fallback",
     "goldSynthesisSection": "mcp-design — single-source tool schema adapted per provider (GOLD_SYNTHESIS §MCP-design)",
-    "rationale": "Define tools once, dispatch per provider (Claude/Gemini normalization) is part of the multi-provider dispatch concern; routed there as a study item — but effect/unstable/ai Toolkit likely already abstracts provider tool formats, so verify before building.",
+    "rationale": "Define tools once, dispatch per provider (Claude/Gemini normalization) is part of the multi-provider dispatch concern; routed there as a study item — but effect/ai Toolkit likely already abstracts provider tool formats, so verify before building.",
     "cautions": [
-      "effect/unstable/ai Toolkit may already provide single-source->per-provider tool dispatch (potential DUP) — verify against the vendored effect-v4 AI module first",
+      "effect/ai Toolkit may already provide single-source->per-provider tool dispatch (potential DUP) — verify against the vendored effect-v4 AI module first",
       "recommendation study"
     ]
   },

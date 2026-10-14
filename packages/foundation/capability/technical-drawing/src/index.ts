@@ -64,6 +64,20 @@ export * from "./Manifest.digest.ts";
  */
 export * from "./Manifest.schemas.ts";
 /**
+ * Pure 1.84(m) surface-shading rules.
+ *
+ * @since 0.0.0
+ * @category utilities
+ */
+export * from "./Shading.rules.ts";
+/**
+ * Surface-shading facts, classes, tones, and treatments.
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export * from "./Shading.schemas.ts";
+/**
  * Sheet composition.
  *
  * @since 0.0.0

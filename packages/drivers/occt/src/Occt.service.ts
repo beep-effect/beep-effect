@@ -18,7 +18,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as replicad from "replicad";
 import opencascade from "replicad-opencascadejs";
-import { buildCompound, project, summarize } from "./internal/kernel.ts";
+import { buildCompound, buildParts, compoundParts, countOverlaps, project, summarize } from "./internal/kernel.ts";
 import { OcctError } from "./Occt.errors.ts";
 import { KernelInfo, ModelSpec, ProjectionRequest } from "./Occt.models.ts";
 import type { OpenCascadeInstance } from "replicad-opencascadejs";
@@ -105,9 +105,16 @@ const makeService = Effect.fn("Occt.makeService")(function* () {
     const solid = yield* validateModelSpec(rawModel).pipe(
       Effect.mapError((cause) => OcctError.fromUnknown("invalid-request", "Invalid model spec.", cause))
     );
-    const built = yield* build(solid);
+    const parts = yield* Effect.try({
+      try: () => buildParts(solid),
+      catch: (cause) => OcctError.fromUnknown("solid-build", "The kernel could not build the solid.", cause),
+    });
+    // Overlaps read the part shapes, which compounding disposes, so count first.
     return yield* Effect.try({
-      try: () => summarize(built),
+      try: () => {
+        const partOverlaps = countOverlaps(parts);
+        return summarize({ built: compoundParts(parts), partOverlaps });
+      },
       catch: (cause) => OcctError.fromUnknown("solid-build", "The kernel could not measure the solid.", cause),
     });
   });
@@ -119,8 +126,7 @@ const makeService = Effect.fn("Occt.makeService")(function* () {
     const built = yield* build(request.solid);
     return yield* Effect.forEach(request.cameras, (camera) =>
       Effect.try({
-        try: () =>
-          project({ oc, compound: built.compound, camera, withHidden: request.withHidden, shading: request.shading }),
+        try: () => project({ oc, built, camera, withHidden: request.withHidden, shading: request.shading }),
         catch: (cause) => OcctError.fromUnknown("projection", "Hidden-line removal failed.", cause),
       })
     );

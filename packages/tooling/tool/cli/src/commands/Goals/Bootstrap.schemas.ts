@@ -756,6 +756,7 @@ const VALIDATION_REQUIREMENTS_BY_FINDING_KIND: Readonly<
   "packet-stream-integrity": [],
   "packet-trace-stale": [],
   "packet-trace-missing": [],
+  "packet-graduation-pending": [],
   "packet-fleet-duplicate-slug": [],
   "packet-fleet-dependency-cycle": [],
   "packet-fleet-unreachable": [],

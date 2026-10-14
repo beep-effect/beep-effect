@@ -22,45 +22,45 @@ Count command: `rg -c '^B  ' explorations/effect-schema-parity/CAPTURE.md` => **
 
 | Upstream module | Matching lines | Initial evidence locations |
 |---|---:|---|
-| `packages/effect/src/unstable/ai/McpSchema.ts` | 398 | `packages/effect/src/unstable/ai/McpSchema.ts:21`; `packages/effect/src/unstable/ai/McpSchema.ts:40` |
-| `packages/effect/src/unstable/ai/AnthropicStructuredOutput.ts` | 5 | `packages/effect/src/unstable/ai/AnthropicStructuredOutput.ts:14`; `packages/effect/src/unstable/ai/AnthropicStructuredOutput.ts:20` |
-| `packages/effect/src/unstable/ai/Prompt.ts` | 239 | `packages/effect/src/unstable/ai/Prompt.ts:18`; `packages/effect/src/unstable/ai/Prompt.ts:40` |
-| `packages/effect/src/unstable/ai/Tool.ts` | 149 | `packages/effect/src/unstable/ai/Tool.ts:21`; `packages/effect/src/unstable/ai/Tool.ts:142` |
-| `packages/effect/src/unstable/ai/Toolkit.ts` | 21 | `packages/effect/src/unstable/ai/Toolkit.ts:23`; `packages/effect/src/unstable/ai/Toolkit.ts:43` |
-| `packages/effect/src/unstable/ai/Response.ts` | 289 | `packages/effect/src/unstable/ai/Response.ts:17`; `packages/effect/src/unstable/ai/Response.ts:165` |
-| `packages/effect/src/unstable/devtools/DevToolsSchema.ts` | 93 | `packages/effect/src/unstable/devtools/DevToolsSchema.ts:15`; `packages/effect/src/unstable/devtools/DevToolsSchema.ts:25` |
-| `packages/effect/src/unstable/encoding/Yaml.ts` | 0 | No matches |
-| `packages/effect/src/unstable/encoding/Toml.ts` | 0 | No matches |
-| `packages/effect/src/unstable/encoding/SchemaBinary.ts` | 98 | `packages/effect/src/unstable/encoding/SchemaBinary.ts:2`; `packages/effect/src/unstable/encoding/SchemaBinary.ts:32` |
-| `packages/effect/src/unstable/encoding/Ini.ts` | 0 | No matches |
-| `packages/effect/src/unstable/encoding/Ndjson.ts` | 27 | `packages/effect/src/unstable/encoding/Ndjson.ts:16`; `packages/effect/src/unstable/encoding/Ndjson.ts:117` |
-| `packages/effect/src/unstable/http/Mime.ts` | 0 | No matches |
-| `packages/effect/src/unstable/http/HttpStatus.ts` | 0 | No matches |
-| `packages/effect/src/unstable/http/HttpIncomingMessage.ts` | 14 | `packages/effect/src/unstable/http/HttpIncomingMessage.ts:19`; `packages/effect/src/unstable/http/HttpIncomingMessage.ts:61` |
-| `packages/effect/src/unstable/http/HttpClientError.ts` | 5 | `packages/effect/src/unstable/http/HttpClientError.ts:14`; `packages/effect/src/unstable/http/HttpClientError.ts:302` |
-| `packages/effect/src/unstable/http/HttpServerRespondable.ts` | 1 | `packages/effect/src/unstable/http/HttpServerRespondable.ts:89` |
-| `packages/effect/src/unstable/http/HttpBody.ts` | 3 | `packages/effect/src/unstable/http/HttpBody.ts:23`; `packages/effect/src/unstable/http/HttpBody.ts:349` |
-| `packages/effect/src/unstable/http/HttpTraceContext.ts` | 0 | No matches |
-| `packages/effect/src/unstable/http/Multipart.ts` | 22 | `packages/effect/src/unstable/http/Multipart.ts:29`; `packages/effect/src/unstable/http/Multipart.ts:290` |
-| `packages/effect/src/unstable/http/HttpServerRequest.ts` | 27 | `packages/effect/src/unstable/http/HttpServerRequest.ts:24`; `packages/effect/src/unstable/http/HttpServerRequest.ts:197` |
-| `packages/effect/src/unstable/http/HttpClientRequest.ts` | 2 | `packages/effect/src/unstable/http/HttpClientRequest.ts:26`; `packages/effect/src/unstable/http/HttpClientRequest.ts:735` |
-| `packages/effect/src/unstable/http/HttpStaticServer.ts` | 0 | No matches |
-| `packages/effect/src/unstable/http/HttpMethod.ts` | 0 | No matches |
-| `packages/effect/src/unstable/http/MultipartParser.ts` | 0 | No matches |
-| `packages/effect/src/unstable/http/HttpServerError.ts` | 0 | No matches |
-| `packages/effect/src/unstable/http/Headers.ts` | 0 | No matches |
-| `packages/effect/src/unstable/http/HttpServerResponse.ts` | 3 | `packages/effect/src/unstable/http/HttpServerResponse.ts:25`; `packages/effect/src/unstable/http/HttpServerResponse.ts:319` |
-| `packages/effect/src/unstable/http/HttpClientResponse.ts` | 10 | `packages/effect/src/unstable/http/HttpClientResponse.ts:17`; `packages/effect/src/unstable/http/HttpClientResponse.ts:103` |
-| `packages/effect/src/unstable/http/Template.ts` | 0 | No matches |
-| `packages/effect/src/unstable/http/Url.ts` | 0 | No matches |
-| `packages/effect/src/unstable/http/UrlParams.ts` | 0 | No matches |
-| `packages/effect/src/unstable/httpapi/HttpApiSchema.ts` | 99 | `packages/effect/src/unstable/httpapi/HttpApiSchema.ts:14`; `packages/effect/src/unstable/httpapi/HttpApiSchema.ts:23` |
-| `packages/effect/src/unstable/net/NetAddress.ts` | 0 | No matches |
-| `packages/effect/src/unstable/net/IpInterface.ts` | 0 | No matches |
-| `packages/effect/src/unstable/net/IpNetwork.ts` | 0 | No matches |
-| `packages/effect/src/unstable/observability/OtlpSerialization.ts` | 0 | No matches |
-| `packages/effect/src/unstable/rpc/RpcSchema.ts` | 10 | `packages/effect/src/unstable/rpc/RpcSchema.ts:16`; `packages/effect/src/unstable/rpc/RpcSchema.ts:29` |
-| `packages/effect/src/unstable/sql/SqlSchema.ts` | 20 | `packages/effect/src/unstable/sql/SqlSchema.ts:17`; `packages/effect/src/unstable/sql/SqlSchema.ts:33` |
+| `packages/effect/src/ai/McpSchema.ts` | 398 | `packages/effect/src/ai/McpSchema.ts:21`; `packages/effect/src/ai/McpSchema.ts:40` |
+| `packages/effect/src/ai/AnthropicStructuredOutput.ts` | 5 | `packages/effect/src/ai/AnthropicStructuredOutput.ts:14`; `packages/effect/src/ai/AnthropicStructuredOutput.ts:20` |
+| `packages/effect/src/ai/Prompt.ts` | 239 | `packages/effect/src/ai/Prompt.ts:18`; `packages/effect/src/ai/Prompt.ts:40` |
+| `packages/effect/src/ai/Tool.ts` | 149 | `packages/effect/src/ai/Tool.ts:21`; `packages/effect/src/ai/Tool.ts:142` |
+| `packages/effect/src/ai/Toolkit.ts` | 21 | `packages/effect/src/ai/Toolkit.ts:23`; `packages/effect/src/ai/Toolkit.ts:43` |
+| `packages/effect/src/ai/Response.ts` | 289 | `packages/effect/src/ai/Response.ts:17`; `packages/effect/src/ai/Response.ts:165` |
+| `packages/effect/src/devtools/DevToolsSchema.ts` | 93 | `packages/effect/src/devtools/DevToolsSchema.ts:15`; `packages/effect/src/devtools/DevToolsSchema.ts:25` |
+| `packages/effect/src/encoding/Yaml.ts` | 0 | No matches |
+| `packages/effect/src/encoding/Toml.ts` | 0 | No matches |
+| `packages/effect/src/encoding/SchemaBinary.ts` | 98 | `packages/effect/src/encoding/SchemaBinary.ts:2`; `packages/effect/src/encoding/SchemaBinary.ts:32` |
+| `packages/effect/src/encoding/Ini.ts` | 0 | No matches |
+| `packages/effect/src/encoding/Ndjson.ts` | 27 | `packages/effect/src/encoding/Ndjson.ts:16`; `packages/effect/src/encoding/Ndjson.ts:117` |
+| `packages/effect/src/http/Mime.ts` | 0 | No matches |
+| `packages/effect/src/http/HttpStatus.ts` | 0 | No matches |
+| `packages/effect/src/http/HttpIncomingMessage.ts` | 14 | `packages/effect/src/http/HttpIncomingMessage.ts:19`; `packages/effect/src/http/HttpIncomingMessage.ts:61` |
+| `packages/effect/src/http/HttpClientError.ts` | 5 | `packages/effect/src/http/HttpClientError.ts:14`; `packages/effect/src/http/HttpClientError.ts:302` |
+| `packages/effect/src/http/HttpServerRespondable.ts` | 1 | `packages/effect/src/http/HttpServerRespondable.ts:89` |
+| `packages/effect/src/http/HttpBody.ts` | 3 | `packages/effect/src/http/HttpBody.ts:23`; `packages/effect/src/http/HttpBody.ts:349` |
+| `packages/effect/src/http/HttpTraceContext.ts` | 0 | No matches |
+| `packages/effect/src/http/Multipart.ts` | 22 | `packages/effect/src/http/Multipart.ts:29`; `packages/effect/src/http/Multipart.ts:290` |
+| `packages/effect/src/http/HttpServerRequest.ts` | 27 | `packages/effect/src/http/HttpServerRequest.ts:24`; `packages/effect/src/http/HttpServerRequest.ts:197` |
+| `packages/effect/src/http/HttpClientRequest.ts` | 2 | `packages/effect/src/http/HttpClientRequest.ts:26`; `packages/effect/src/http/HttpClientRequest.ts:735` |
+| `packages/effect/src/http/HttpStaticServer.ts` | 0 | No matches |
+| `packages/effect/src/http/HttpMethod.ts` | 0 | No matches |
+| `packages/effect/src/http/MultipartParser.ts` | 0 | No matches |
+| `packages/effect/src/http/HttpServerError.ts` | 0 | No matches |
+| `packages/effect/src/http/Headers.ts` | 0 | No matches |
+| `packages/effect/src/http/HttpServerResponse.ts` | 3 | `packages/effect/src/http/HttpServerResponse.ts:25`; `packages/effect/src/http/HttpServerResponse.ts:319` |
+| `packages/effect/src/http/HttpClientResponse.ts` | 10 | `packages/effect/src/http/HttpClientResponse.ts:17`; `packages/effect/src/http/HttpClientResponse.ts:103` |
+| `packages/effect/src/http/Template.ts` | 0 | No matches |
+| `packages/effect/src/http/Url.ts` | 0 | No matches |
+| `packages/effect/src/http/UrlParams.ts` | 0 | No matches |
+| `packages/effect/src/http-api/HttpApiSchema.ts` | 99 | `packages/effect/src/http-api/HttpApiSchema.ts:14`; `packages/effect/src/http-api/HttpApiSchema.ts:23` |
+| `packages/effect/src/net/NetAddress.ts` | 0 | No matches |
+| `packages/effect/src/net/IpInterface.ts` | 0 | No matches |
+| `packages/effect/src/net/IpNetwork.ts` | 0 | No matches |
+| `packages/effect/src/observability/OtlpSerialization.ts` | 0 | No matches |
+| `packages/effect/src/rpc/RpcSchema.ts` | 10 | `packages/effect/src/rpc/RpcSchema.ts:16`; `packages/effect/src/rpc/RpcSchema.ts:29` |
+| `packages/effect/src/sql/SqlSchema.ts` | 20 | `packages/effect/src/sql/SqlSchema.ts:17`; `packages/effect/src/sql/SqlSchema.ts:33` |
 
 ## Existing detectors — already gated, not new proposals
 
@@ -133,7 +133,7 @@ Count command: `node explorations/effect-schema-parity/research/idiom-census.mjs
 
 | Dimension | Evidence / decision |
 |---|---|
-| Idiomatic form | `Schema.Literals`, `.literals`, `.members`, `.pick`, `.transform`, `.mapMembers`: upstream `packages/effect/src/Schema.ts:4768`; Role B literal domain: `packages/effect/src/unstable/ai/Response.ts:2268`. |
+| Idiomatic form | `Schema.Literals`, `.literals`, `.members`, `.pick`, `.transform`, `.mapMembers`: upstream `packages/effect/src/Schema.ts:4768`; Role B literal domain: `packages/effect/src/ai/Response.ts:2268`. |
 | Found / qualification | LiteralKit already calls `S.Literals` (`packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:784`). Its added `Enum`, `is`, `$match`, `thunk`, `HashSet`, mapping and tagged-union conveniences are real additions (`:639`, `:786`), not features all supplied by upstream Literals. |
 | Detector sketch and existing-gate boundary | Resolve imports to LiteralKit; trace each produced schema’s static-member consumers. Report upstream-overlapping domain construction separately from adaptations of custom statics. Existing SFV4-static-api prefers LiteralKit; amend its remediation in the same migration, do not add another switch rule. |
 | Examples / controls | `apps/labs/api-docs/src/Catalog.models.ts:32`; `apps/labs/api-docs/src/Catalog.models.ts:48`; `apps/labs/ciops/src/projection/Replay.ts:49` |
@@ -161,7 +161,7 @@ Count command: `node explorations/effect-schema-parity/research/idiom-census.mjs
 
 | Dimension | Evidence / decision |
 |---|---|
-| Idiomatic form | `withConstructorDefault` and `withDecodingDefaultTypeKey`: upstream `packages/effect/src/Schema.ts:5651`, `:5747`, `:5769`; missing/undefined decision tree `migration/schema.md:512`; Role B `packages/effect/src/unstable/ai/Prompt.ts:146`. |
+| Idiomatic form | `withConstructorDefault` and `withDecodingDefaultTypeKey`: upstream `packages/effect/src/Schema.ts:5651`, `:5747`, `:5769`; missing/undefined decision tree `migration/schema.md:512`; Role B `packages/effect/src/ai/Prompt.ts:146`. |
 | Found / qualification | withKeyDefaults already composes upstream defaults (`packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:69`); withEncodeDefault and optionalKeyWithDefault hand-compose optionalKey/decodeTo/SchemaGetter.withDefault. |
 | Detector sketch and existing-gate boundary | Resolve calls to named local default helpers; classify missing key, explicit undefined, null, decoded default, encoded default and constructor default separately. Existing SFV4-defaults catches parameter defaults, not wrapper retirement. |
 | Examples / controls | `apps/oip-web/src/components/HeroVideo.tsx:58`; `apps/oip-web/src/components/HeroVideo.tsx:59`; `apps/professional-desktop/src/runtime/Migrations.ts:94` |
@@ -189,7 +189,7 @@ Count command: `node explorations/effect-schema-parity/research/idiom-census.mjs
 
 | Dimension | Evidence / decision |
 |---|---|
-| Idiomatic form | Role B HTTP boundary uses decodeUnknownEffect: upstream `packages/effect/src/unstable/http/HttpIncomingMessage.ts:123`; SQL `packages/effect/src/unstable/sql/SqlSchema.ts:123`. Sync is also idiomatic in `packages/effect/src/unstable/ai/Prompt.ts:1921`. |
+| Idiomatic form | Role B HTTP boundary uses decodeUnknownEffect: upstream `packages/effect/src/http/HttpIncomingMessage.ts:123`; SQL `packages/effect/src/sql/SqlSchema.ts:123`. Sync is also idiomatic in `packages/effect/src/ai/Prompt.ts:1921`. |
 | Found / qualification | Repo sync decoder definitions include database row converters; many census lines are executable documentation, not hot-path calls. Presence of decodeUnknownSync alone is not a defect. |
 | Detector sketch and existing-gate boundary | AST/dataflow: find a sync decoder applied to external input inside Effect.gen/sync/map callbacks; determine whether throws are caught into the intended typed error. Hoisted decoder creation is not application. Existing boundary-codec only catches JSON.parse. |
 | Examples / controls | `packages/documents/tables/src/entities/SyncOperation/SyncOperation.converters.ts:52`; `packages/documents/tables/src/entities/SyncItem/SyncItem.converters.ts:52`; `packages/documents/tables/src/entities/SyncCursor/SyncCursor.converters.ts:52` |
@@ -203,7 +203,7 @@ Count command: `node explorations/effect-schema-parity/research/idiom-census.mjs
 
 | Dimension | Evidence / decision |
 |---|---|
-| Idiomatic form | Explicit Codec<T,E> at cycles: upstream `packages/effect/SCHEMA.md:2108`; Role B `packages/effect/src/unstable/devtools/DevToolsSchema.ts:138` and `:146`. |
+| Idiomatic form | Explicit Codec<T,E> at cycles: upstream `packages/effect/SCHEMA.md:2108`; Role B `packages/effect/src/devtools/DevToolsSchema.ts:138` and `:146`. |
 | Found / qualification | Html/Md recursive codecs correctly specify Type and Encoded. Generated ACP/runpod sources suspend many field references; whether each needs a cycle/declaration-order break is UNVERIFIED. |
 | Detector sketch and existing-gate boundary | AST: build declaration dependency SCCs; retain suspension for actual cycles or initialization order. Flag single-parameter Codec<T> only if encoded type differs, and annotations that erase required decoding/encoding services. Do not require removing explicit Codec annotations. |
 | Examples / controls | `packages/foundation/modeling/html/src/Html.model.ts:90`; `packages/foundation/modeling/md/src/Md.model.ts:309`; `packages/drivers/acp/src/_generated/schema.gen.ts:3794` |
@@ -231,7 +231,7 @@ Count command: `node explorations/effect-schema-parity/research/idiom-census.mjs
 
 | Dimension | Evidence / decision |
 |---|---|
-| Idiomatic form | `Schema.mutable(Schema.Array(element))` is idiomatic; Role B `packages/effect/src/unstable/sql/SqlSchema.ts:41`. Array-node encodings are forbidden, element encodings allowed: `packages/effect/src/Schema.ts:4638`. |
+| Idiomatic form | `Schema.mutable(Schema.Array(element))` is idiomatic; Role B `packages/effect/src/sql/SqlSchema.ts:41`. Array-node encodings are forbidden, element encodings allowed: `packages/effect/src/Schema.ts:4638`. |
 | Found / qualification | Inspected mutable uses follow Array then mutable; no misuse was established. A blanket mutable ban would reject upstream SQL itself. |
 | Detector sketch and existing-gate boundary | Future AST rule: flag mutable after an array-node encoding, not an encoded element. Resolve aliases and pipe order; runtime AST check can verify encoding presence. |
 | Examples / controls | `packages/agents/server/src/AssistantTurn/ScanState.ts:108`; `packages/foundation/modeling/utils/src/Array.ts:50`; `packages/tooling/policy-pack/repo-configs/src/next/models/Compiler.schema.ts:15` |
@@ -329,7 +329,7 @@ Count command: `node explorations/effect-schema-parity/research/idiom-census.mjs
 
 | Dimension | Evidence / decision |
 |---|---|
-| Idiomatic form | Public decoder functions: upstream `packages/effect/src/Schema.ts:1473`, `:1668`, `:1811`; Role B hoisted decoder `packages/effect/src/unstable/http/HttpIncomingMessage.ts:123`. |
+| Idiomatic form | Public decoder functions: upstream `packages/effect/src/Schema.ts:1473`, `:1668`, `:1811`; Role B hoisted decoder `packages/effect/src/http/HttpIncomingMessage.ts:123`. |
 | Found / qualification | withCodecStatics exposes upstream runners as selected object statics; it already intentionally omits legacy/JSON-string/Standard Schema conveniences (`packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:49`). |
 | Detector sketch and existing-gate boundary | Resolve wrapper imports and follow selected static names plus all classStatics consumers. The census covers withCodecStatics call spelling only, not the complete adjacent active packet surface. |
 | Examples / controls | `apps/labs/ciops/src/projection/Schemas.ts:66`; `apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts:699`; `apps/labs/lejeune-bolt-workbench/src/domain/Bundle.ts:1470` |
@@ -357,7 +357,7 @@ Count command: `node explorations/effect-schema-parity/research/idiom-census.mjs
 
 | Dimension | Evidence / decision |
 |---|---|
-| Idiomatic form | `Schema.Error` and `Schema.TaggedError`: upstream `packages/effect/src/Schema.ts:14141`, `:14201`; Role B `packages/effect/src/unstable/http/HttpClientError.ts:302`. |
+| Idiomatic form | `Schema.Error` and `Schema.TaggedError`: upstream `packages/effect/src/Schema.ts:14141`, `:14201`; Role B `packages/effect/src/http/HttpClientError.ts:302`. |
 | Found / qualification | InvalidPatternError and ScribeConnectionFailure use Data.TaggedError. Remaining matches are plain Error examples in ArtifactIo JSDoc. Schema.ErrorClass is not an export in this checkout. |
 | Detector sketch and existing-gate boundary | AST: resolve extends symbol to Data.TaggedError, Data.Error or global Error; flag when a serializable/domain contract is required. Data.TaggedError itself is valid Effect, not inherently broken. |
 | Examples / controls | `packages/drivers/nlp-mcp/src/StreamingHandlers.ts:49`; `packages/foundation/ui-system/ui/src/hooks/use-scribe.ts:173`; `packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts:82` The ArtifactIo entry is JSDoc, not a runtime class; only the first two inspected entries are source error declarations. |
@@ -385,7 +385,7 @@ Count command: `node explorations/effect-schema-parity/research/idiom-census.mjs
 
 | Dimension | Evidence / decision |
 |---|---|
-| Idiomatic form | Emit via `Schema.toJsonSchemaDocument` (`packages/effect/src/Schema.ts:14463`); import via `SchemaRepresentation.fromJsonSchemaDocument` (`packages/effect/src/SchemaRepresentation.ts:2880`); Role B emits then rewrites in `packages/effect/src/unstable/ai/AnthropicStructuredOutput.ts:61`. |
+| Idiomatic form | Emit via `Schema.toJsonSchemaDocument` (`packages/effect/src/Schema.ts:14463`); import via `SchemaRepresentation.fromJsonSchemaDocument` (`packages/effect/src/SchemaRepresentation.ts:2880`); Role B emits then rewrites in `packages/effect/src/ai/AnthropicStructuredOutput.ts:61`. |
 | Found / qualification | @beep/schema JSONSchema is a typed lossless draft document codec, not merely an emitter (`packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts:1`, `:376`, `:419`). codegen-kit already imports effect/JsonSchema and adds flattening transforms. |
 | Detector sketch and existing-gate boundary | AST: separate schema emission, raw-document validation, representation import, and provider/codegen postprocessing. Namespace census is a broad review surface containing import strings/JSDoc. Name overlap cannot prove substitute semantics. |
 | Examples / controls | `packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts:376`; `packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts:419`; `packages/tooling/library/codegen-kit/src/internal/transforms.ts:79` |
@@ -399,7 +399,7 @@ Count command: `node explorations/effect-schema-parity/research/idiom-census.mjs
 
 | Dimension | Evidence / decision |
 |---|---|
-| Idiomatic form | Native `Arbitrary.schema`, map, filter, flatMap, all: upstream `packages/effect/src/unstable/arbitrary/Arbitrary.ts:346`, `:383`, `:404`, `:459`, `:485`. |
+| Idiomatic form | Native `Arbitrary.schema`, map, filter, flatMap, all: upstream `packages/effect/src/Arbitrary.ts:346`, `:383`, `:404`, `:459`, `:485`. |
 | Found / qualification | Inspected Contradiction and highlight/page companions already compose native Arbitrary. Custom dependency-aware generators are not obsolete just because native derivation exists. |
 | Detector sketch and existing-gate boundary | AST: resolve imports; distinguish old fast-check adapters from native all/map/filter composition. Compare generated cross-field invariants against schema checks before proposing derivation-only replacement. Existing arbitrary-tests gate covers test presence, not generator minimality. |
 | Examples / controls | `packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts:1533`; `packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.rpc.ts:598`; `packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.rpc.ts:629` |
@@ -413,7 +413,7 @@ Count command: `node explorations/effect-schema-parity/research/idiom-census.mjs
 
 | Dimension | Evidence / decision |
 |---|---|
-| Idiomatic form | Model is built on VariantSchema.make with database/JSON variants: upstream `packages/effect/src/unstable/schema/Model.ts:35`; generic variants `packages/effect/src/unstable/schema/VariantSchema.ts:349`; FieldOption `Model.ts:337`. |
+| Idiomatic form | Model is built on VariantSchema.make with database/JSON variants: upstream `packages/effect/src/schema/Model.ts:35`; generic variants `packages/effect/src/schema/VariantSchema.ts:349`; FieldOption `Model.ts:337`. |
 | Found / qualification | effect-drizzle already imports/uses upstream VariantSchema; its Field carries additional database metadata. The observed code does not support a claim that variants were recreated instead of adopted. |
 | Detector sketch and existing-gate boundary | AST: detect parallel select/insert/update schemas with repeated fields, then exclude wrappers using VariantSchema and database metadata. Namespace-only census proves adoption surface, not complete duplication census. |
 | Examples / controls | `packages/ecosystem/effect-drizzle/src/sqlite/model.ts:17`; `packages/ecosystem/effect-drizzle/src/pg/derive.ts:48`; `packages/ecosystem/effect-drizzle/src/core/Field.ts:20` |
@@ -427,7 +427,7 @@ Count command: `node explorations/effect-schema-parity/research/idiom-census.mjs
 
 | Dimension | Evidence / decision |
 |---|---|
-| Idiomatic form | Branding remains official (`packages/effect/SCHEMA.md:2683`). Opaque preserves plain values; Class introduces a prototype and instance behavior (`:3552`, `:3563`). Role B freely uses Struct (`packages/effect/src/unstable/devtools/DevToolsSchema.ts:25`). |
+| Idiomatic form | Branding remains official (`packages/effect/SCHEMA.md:2683`). Opaque preserves plain values; Class introduces a prototype and instance behavior (`:3552`, `:3563`). Role B freely uses Struct (`packages/effect/src/devtools/DevToolsSchema.ts:25`). |
 | Found / qualification | Brand census is mainly primitive domains. It does not establish a Struct-plus-brand anti-idiom; no blanket replacement is supported. |
 | Detector sketch and existing-gate boundary | AST: inspect brand input and consumer requirements: opaque identity, instance behavior, prototype and constructor expectations. Existing exported-Struct gate is repo doctrine, not upstream universal preference. |
 | Examples / controls | `apps/labs/api-docs/src/Catalog.models.ts:88`; `apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts:45`; `apps/labs/lejeune-bolt-workbench/src/domain/Ontology.ts:94` |
@@ -469,7 +469,7 @@ Count command: `node explorations/effect-schema-parity/research/idiom-census.mjs
 
 | Dimension | Evidence / decision |
 |---|---|
-| Idiomatic form | `Schema.toEncoded` is a projection (`packages/effect/src/Schema.ts:2541`); HTTP boundary decodes the actual codec (`packages/effect/src/unstable/http/HttpIncomingMessage.ts:123`); encoded-side representations are discussed at `packages/effect/SCHEMA.md:5850`. |
+| Idiomatic form | `Schema.toEncoded` is a projection (`packages/effect/src/Schema.ts:2541`); HTTP boundary decodes the actual codec (`packages/effect/src/http/HttpIncomingMessage.ts:123`); encoded-side representations are discussed at `packages/effect/SCHEMA.md:5850`. |
 | Found / qualification | Tool success schemas sometimes use S.toEncoded on a domain class; other occurrences deliberately compare wire identities or validate serialized fixtures. Neither use is automatically incorrect. |
 | Detector sketch and existing-gate boundary | AST/dataflow: trace toEncoded outputs into Tool/RPC/HTTP contracts and determine whether the caller returns Type instances or Encoded values. Flag loss of a required transformation, not ordinary projection. |
 | Examples / controls | `packages/foundation/capability/nlp-processing/src/Tools/Tokenize.ts:69`; `packages/foundation/capability/nlp-processing/src/Tools/LearnCorpus.ts:89`; `apps/labs/semantica/src/canary/Gold.ts:268` |

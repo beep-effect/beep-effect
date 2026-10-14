@@ -99,7 +99,7 @@ choice, and cost control at +100–400ms; local models are pipeline-only anyway.
 
 **Question:** Inference-worker control plane (driving Transformers.js in the worker)?
 
-**Answer:** **`effect/unstable/rpc` over `BrowserWorker`** — streaming partial
+**Answer:** **`effect/rpc` over `BrowserWorker`** — streaming partial
 transcripts/TTS frames, AtomRpc bridge, Scope-based model teardown.
 
 **Rationale:** Recommended over *hand-rolled `postMessage`* (rebuild streaming,

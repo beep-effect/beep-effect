@@ -306,9 +306,36 @@ dedicated GitHub App token, the same unprovisioned prerequisite that keeps
   adversarial fixtures, and `knowledge doctor --report --json`. Also the committed
   `research/p4-report-knowledge-doctor.md`: full-corpus run with annotated candidate FPs
   per class, span-class counts, and the unclassified worklist. Nothing seals.
-- **PR 2:** the domain evaluators (goals packet core on a tree reader,
-  `evaluateSkillsLocal` with licenses, `@beep/*` symbols), with parity tests. Report-only.
-- **PR 3:** causal grouping plus root attribution in the report.
+- **PR 2 (landed scope):** the FP fixes the PR 1 report's verdict accepted
+  (`research/p1-fp-eyeball-verdicts.md`, Workstream C knowledge doctor): whole-line
+  assertion markers (K13) and arrow-chain command-span eligibility, both shared by
+  Stage 1 and Stage 2, plus the accepted doc fixes and the planned-command spelling note.
+  Report-only.
+- **PR 2b (landed scope):** the domain evaluators, report-only. The doctor tree gains
+  `domain`, the packet, workspace-package, and skill facts derived from tree bytes (K14).
+  `packet-status` checks two claim sources, both read through
+  `readKnowledgeGoalPacketRecords` (the tree-reader twin of `listGoalPackets`): lifecycle
+  claims against the manifest's `initiative.status`, and the phase id that opens the
+  packet README's `## Current Phase` section against the manifest's declared phase ids,
+  where a record-form phase without an explicit `id` uses its record key (K15). `symbols` resolves `@beep/*` packages, subpaths, and imported identifiers
+  through workspace manifests, `exports` maps, root `tsconfig.json` aliases, and a
+  declaration scan of barrels (K16). `skills-local` (`evaluateSkillsLocal`, which needs
+  nothing from its environment) checks lock coverage, source pinning, and license
+  presence over both lock versions (K17). Every evaluator passes the counterfactual
+  harness, and parity tests pin the tree readers to the live-filesystem readers.
+  Deferred: refactoring `packetFindings` itself onto the tree reader and listing
+  delegated goals-doctor findings in the report (both with PR 3's causal roots), and
+  codex-config and agents-mirror drift (K17).
+- **PR 3 (landed scope):** causal grouping plus root attribution, report-only. The goals
+  packet core (`goalPacketFindings`, formerly the private `packetFindings`) reads
+  packet-adjacent files through a `GoalPacketReader`; `goals doctor` keeps its filesystem
+  reader and its output is byte-identical, while the doctor tree derives the
+  goals-doctor findings from tree bytes and lists them as `delegated` (K18, K19). The
+  report gains one cause group per distinct `causeKey` with its delegated root, its
+  dependents, and its authoring commit from the tree's deleted and renamed paths, plus
+  `rootHistory` (K20–K22). The human output lists roots by dependent count. Also: a
+  command span keeps an arrow or other composition character that sits inside a quoted
+  argument (K23, the #1676 round-3 follow-up).
 - **PR 4:** baseline/identity/lease schemas, `check`, the seal guard, `verify-mint`,
   `leases`, and `knowledge:doctor` wired report-only into the quality lane. Yeet's verify
   step reads `leases --json` (warning only).
@@ -318,7 +345,7 @@ dedicated GitHub App token, the same unprovisioned prerequisite that keeps
   row to `goals/knowledge-doctor.promotions.jsonc` (never touching the sealed baseline).
   The next CI mint reads the promotion at its SHA and admits that kind's inherited keys.
 
-## Decisions (K1..K12)
+## Decisions (K1..K23)
 
 - **K1 Witness-mandatory evaluators.** Reason: makes the counterfactual test total;
   vacuous passes cannot be represented. Reverse: if some evaluator legitimately cannot
@@ -371,3 +398,102 @@ dedicated GitHub App token, the same unprovisioned prerequisite that keeps
   Reason: without these rules any branch could append a promotion and reopen the
   laundering route the seal closed (review round 3 on #1626). Reverse: relax the
   single-file rule only if promotions start being minted by the CI App.
+- **K13 An assertion is a whole comment line.** A `beep:assert path-exists` marker asserts
+  only when the whole prose line is the HTML comment, indented by at most three spaces and
+  followed only by spaces or tabs. Four spaces or a tab of indentation make a CommonMark
+  indented code block, which is syntax and asserts nothing. One shared reader serves
+  Stage 1 and Stage 2. Reason: the grammar's "an HTML
+  comment outside fences" already excludes inline code (whose text is literal), but a
+  mid-line or list-prefixed marker would still be ambiguous, and the live corpus had four
+  quoted markers and no real one (C PR 1 report, verdict 2026-10-14). Reverse: widen the
+  reader to quote and list containers if a real assertion ever needs one; no live marker
+  depends on the narrow form.
+- **K14 Domain facts live on the doctor tree, derived from tree bytes.** The tree carries
+  a `domain` record (goal packets, `@beep/*` workspace packages with their entry points,
+  root `tsconfig.json` path aliases, per-file export scans, and normalized skills-lock
+  entries). Live trees memoize it for one scan; an overlay of a manifest-field, export,
+  or lock-entry witness removes exactly that fact, and hiding a tree entry re-derives the
+  domain from the remaining entries. Workspace packages are the root package plus the
+  manifests the root `workspaces` globs name, which matches `resolveWorkspaceDirs` (a
+  parity test). Reason: domain evaluators get the same honest counterfactuals as paths
+  and commands, with no filesystem read. Reverse: if a domain fact cannot be derived
+  from bytes, add a tree field for it and an overlay rule, as `commandTree` does.
+- **K15 Packet claims use a narrow grammar.** A lifecycle claim is a `goals/<slug>` span
+  followed on the same line by a lifecycle-word span with only present-tense connective
+  text between them (`(`, `is`, `now`, `currently`, `lifecycle`, `status`, `stays`,
+  `remains`, an arrow). `was`, `both`, and any other word end the claim. A phase claim
+  is the phase id that opens a packet README's `## Current Phase` section. A plain
+  `goals/<slug>` reference stays with the paths evaluator, since one evaluator owns each
+  span. All drift reports as `packet-status-claim-drift`, with the subject prefix
+  (`packet-status:` or `packet-phase:`) naming the claim, and a claim under a missing or
+  invalid manifest fails with the goals-doctor finding as its cause. Reason: in
+  report-only mode, precision first; a past-tense or plural status line is not a current
+  claim. Reverse: widen the grammar when the FP eyeball finds true claims it misses.
+- **K16 Symbol spans are specifiers, and identifiers need an import shape.** A symbol
+  span is an inline `@beep/<pkg>[/<subpath>]` span, optionally suffixed `#<task>` (a
+  Turborepo task id, checked for its package only). Globs (`@beep/*`) are not
+  references. An identifier is checked only when written `` `Name` from `@beep/...` ``,
+  and it resolves by a declaration scan of the target file and the files it star
+  re-exports relatively (`export *` from a package is not followed). Subpaths resolve
+  through `exports` (exact key, then the longest wildcard key, `null` blocks) and then a
+  root `tsconfig.json` alias. All drift reports as `unknown-beep-symbol`, with the
+  subject prefix (`beep-package:`, `beep-subpath:`, `beep-export:`) naming the level.
+  Reason: a scan with no compiler stays hermetic and fast, and the import shape is the
+  only prose form that names an identifier unambiguously. Reverse: check task names
+  against `package.json` scripts, or admit the `in` connective, if the eyeball asks.
+- **K17 Skills are tree spans, and config drift stays with `skills update`.** The
+  evaluator contract gains an optional `treeSpans`: the skills evaluator synthesizes one
+  span per locked or installed skill (`.claude/skills/<name>/SKILL.md`) instead of
+  reading prose. Both lock versions are read (v2 `SkillsLockDocument`, then v1
+  `SkillLockFile`). The kinds are the reserved `skill-lock-coverage-drift`,
+  `unresolvable-skill-source`, and `floating-github-skill-source`, plus the new
+  `skill-license-unrecorded`. `.codex/config.toml` and the `.agents/skills` mirror are
+  whole-file facts with no span; `skills update --check` owns them. `evaluateSkillsLocal`
+  requires nothing from its environment, which a compile-time assertion in the tests
+  pins. Reason: the contract stays one outcome per span, and K4's single owner holds.
+  Reverse: add a config-entry witness tag if a per-skill config claim becomes worth
+  checking.
+- **K18 Delegated goals-doctor findings are one kind.** Each goals-doctor finding the
+  tree's bytes determine is listed as a `delegated-goals-doctor-finding` with origin
+  `delegated`, the goals doctor's severity, a message prefixed with its goals-doctor kind,
+  and the cause key `goals-doctor:<kind>:<slug>[:<detail>]` as its subject, located at the
+  packet directory. Reason: K10 extends the kind domain additively, and mirroring 27
+  goals-doctor kinds would duplicate a domain the goals doctor owns (K4). Reverse: add
+  per-kind mirror kinds if a consumer needs to filter delegated findings by goals-doctor
+  kind.
+- **K19 The delegated set is the packet core plus capability findings.** It is
+  `goalPacketFindings` over every packet record, read through a tree-backed
+  `GoalPacketReader`, followed by `capabilityPacketFindings`. All three Git-history
+  advisories are excluded: `stale-active` and `active-after-merge` per contract 6, and
+  `completion-gate-unsatisfied` too, because it reads merge subjects rather than the tree.
+  Reason: the doctor's output must be a function of the SHA. Reverse: admit the completion
+  gate once PR 4 scopes history reads to `mintedAt`.
+- **K20 One group per cause key; a missing packet is a missing path.** A group is rooted
+  at the delegated finding that carries its cause key, when one exists, and at the missing
+  target otherwise; its dependents are the owned findings with that key, sorted by id,
+  and groups are sorted by key, so grouping is independent of discovery order. A claim
+  about a packet that does not exist now uses `path:goals/<slug>`, the same key as a
+  plain reference to that directory. Reason: one deleted packet was otherwise two roots
+  (live run: `packet:nope` and `path:goals/nope`). Reverse: restore `packet:<slug>` if
+  packet identity ever stops being its directory.
+- **K21 Attribution reads the scanned commit's full path-removal history.** Roots whose
+  key names a path (`path:`, `goals-doctor:manifest-missing:`) are attributed to the
+  newest commit in `git log --diff-filter=DR -M` that deleted or renamed away that path
+  or a file under it; a rename proposes a repair target, and prose is never rewritten.
+  A shallow clone or an unreadable log sets `rootHistory: unavailable` and leaves groups
+  unattributed; it never fails the report. Reason: there is no `mintedAt` until PR 4,
+  and attribution is evidence, not a gate (contract 13 fail-closed applies to gating
+  inputs). Reverse: bound the walk to `mintedAt..HEAD` once the baseline exists, and
+  fail closed then if gating starts to depend on it.
+- **K22 The report stays `knowledge-doctor/v1`.** `groups` and `rootHistory` are
+  additive; nothing persists reports yet and older readers ignore the new fields. Reason:
+  a version bump is for consumers that must reject the new shape (the K10 rule). Reverse:
+  bump to `knowledge-doctor/v2` when PR 4's `check` becomes the first persisted consumer,
+  if it must reject reports without groups.
+- **K23 Composition characters count only outside quoted arguments.** A command span is
+  rejected for `|`, `;`, `&`, `<`, `>`, an arrow, or a comment only when the character
+  sits outside complete single- or double-quoted arguments; `$(` is rejected anywhere,
+  because the shell expands it inside double quotes. An unterminated quote leaves the
+  span rejected. Shared by Stage 1 and Stage 2. Reason: `--description "Doc → KG"` is one
+  command, and the #1676 review asked for it. Reverse: return to the unquoted check if a
+  real chain hides an arrow inside quotes.

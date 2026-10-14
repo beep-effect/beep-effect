@@ -214,7 +214,7 @@ p95 tail.
   cannot catch a coverage-runtime defect. `Bun.spawn*` does not deliver stdin in
   a vitest worker under coverage — measured, `cat` echoed empty for TypedArray,
   `spawnSync`, and `Bun.file` alike. Spawn through `ChildProcess` from
-  `effect/unstable/process`.
+  `effect/process`.
 - **In jq, absence of output is not absence of success.** This bit three times
   in one PR: `capture()` on no-match, `def f($a)` desugaring to an iterating
   binding, and `//` over an empty file. Default in shell, where an empty string

@@ -14,7 +14,7 @@ Status: completed from export-catalog search, packet files, standards, and sourc
 - `@beep/nlp/Core/Document.ts` already defines a document model with `id`, `text`, `tokens`, `sentences`, and helpers such as token range lookup.
 - `@beep/file-processing/Extraction` already has a `TextSpan`, but its offsets are explicitly byte or character offsets supplied by an engine. It is not a canonical source-grounded NLP character span.
 - Provider-specific language model construction already lives in driver packages such as `@beep/openai-compat`, `@beep/xai`, and `@beep/venice-ai`.
-- Existing drivers adapt provider clients into `effect/unstable/ai/LanguageModel` layers; `@beep/langextract` can consume that injected service without importing drivers.
+- Existing drivers adapt provider clients into `effect/ai/LanguageModel` layers; `@beep/langextract` can consume that injected service without importing drivers.
 
 ## Evidence
 

@@ -50,7 +50,7 @@ const documentToolbarDocumentAtom = Atom.make((get) =>
 )
 ```
 
-Use the existing effect/unstable/reactivity Atom module in this UI file alongside AsyncResult. Atom reads both facts through the same registry context and creates no stored state or write API. The schema is a derived local carrier, not persisted state.
+Use the existing effect/reactivity Atom module in this UI file alongside AsyncResult. Atom reads both facts through the same registry context and creates no stored state or write API. The schema is a derived local carrier, not persisted state.
 
 Extract one private projector documentToolbarStateFromInput taking DocumentToolbarInput. It derives a local sessionOpen answer from `!DocumentToolbarDocument.is.closed(input.document)` solely for action gating. Badge is an exhaustive DocumentToolbarDocument.$match with the three exact existing labels and variants; hint is present only for closed. For the existing output design's final state, open/save/preview use its existing DocumentToolbarActionState and sessionActionState exactly once. Do not construct a second sessionOpen/dirty record inside this projector.
 

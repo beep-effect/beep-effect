@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "webapp-and-ci-telemetry",
+    "packetId": "goal-packet/v1:d88eb833f02484b8ce66dbc71d1f39072075824c6b987d59d70ffd2b1b5b295b",
+    "title": "Web App and CI Telemetry",
+    "status": "active",
+    "created": "2026-10-14",
+    "updated": "2026-10-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/webapp-and-ci-telemetry",
+  "lifecycle": "active",
+  "mission": "@vercel/otel + Effect bridge for oip-web and todox (no drains), Turborepo/CI spans from run summaries, dev-loop LGTM sink, WebStorm note.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/observability-palantiri",
+    "graduated": "2026-10-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/webapp-and-ci-telemetry/README.md",
+    "goals/webapp-and-ci-telemetry/SPEC.md",
+    "goals/webapp-and-ci-telemetry/PLAN.md",
+    "goals/webapp-and-ci-telemetry/GOAL.md",
+    "goals/webapp-and-ci-telemetry/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/webapp-and-ci-telemetry/GOAL.md"
+    }
+  ],
+  "provides": ["observability/web-ci-telemetry"],
+  "requires": ["observability/attribute-registry"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Web",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "CI",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Dev loop",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Yeet",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/webapp-and-ci-telemetry/GOAL.md)\" -le 4000",
+    "jq . goals/webapp-and-ci-telemetry/ops/manifest.json",
+    "rg -n \"webapp-and-ci-telemetry|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/webapp-and-ci-telemetry",
+    "git diff --check -- goals/webapp-and-ci-telemetry",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

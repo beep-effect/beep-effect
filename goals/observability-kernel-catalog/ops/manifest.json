@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "observability-kernel-catalog",
+    "packetId": "goal-packet/v1:f78e9cb87337fbf98582676d16728883cfd5a82626162872d1afd9a6376eebd2",
+    "title": "Observability Kernel and Instrumentation Catalog",
+    "status": "active",
+    "created": "2026-10-14",
+    "updated": "2026-10-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/observability-kernel-catalog",
+  "lifecycle": "active",
+  "mission": "Fix @beep/observability defects, split kernel from server wiring, and ship the instrumentation catalog (names, metrics, events, beep.* v2 registry, EmitterContext, TelemetryTier).",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/observability-palantiri",
+    "graduated": "2026-10-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/observability-kernel-catalog/README.md",
+    "goals/observability-kernel-catalog/SPEC.md",
+    "goals/observability-kernel-catalog/PLAN.md",
+    "goals/observability-kernel-catalog/GOAL.md",
+    "goals/observability-kernel-catalog/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/observability-kernel-catalog/GOAL.md"
+    }
+  ],
+  "provides": [
+    "observability/kernel-catalog",
+    "observability/attribute-registry"
+  ],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Defects + split",
+      "status": "in-progress"
+    },
+    {
+      "id": "P2",
+      "name": "Catalog + registry",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Migrate",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Yeet",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/observability-kernel-catalog/GOAL.md)\" -le 4000",
+    "jq . goals/observability-kernel-catalog/ops/manifest.json",
+    "rg -n \"observability-kernel-catalog|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/observability-kernel-catalog",
+    "git diff --check -- goals/observability-kernel-catalog",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

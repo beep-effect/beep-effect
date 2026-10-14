@@ -76,7 +76,7 @@ merged_at=2026-09-05T07:22:53Z. Settle unreleased formats on V1 before alpha.54.
 - URL: https://github.com/Effect-TS/effect/pull/7908
 - Kind: github / axis: effect
 ```
-state=open draft=true; updated_at=2026-09-05T08:59:39Z; +5448/-603. Import effect/unstable/schema/SchemaJITCompiler/enable; SchemaParser APIs unchanged. Not in any published RC.
+state=open draft=true; updated_at=2026-09-05T08:59:39Z; +5448/-603. Import effect/schema/SchemaJITCompiler/enable; SchemaParser APIs unchanged. Not in any published RC.
 ```
 
 ## f-effect-08 -- Refute: Instant Cloud sunset 2027-08-31 still holds (live 2026-09-05)

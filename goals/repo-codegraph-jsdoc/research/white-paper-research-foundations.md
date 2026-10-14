@@ -150,7 +150,7 @@ binding a unique identifier to a service interface. **Key rules**: tag identifie
 
 **Schema.Class** defines both a schema and an opaque TypeScript type simultaneously. Constructors validate properties (throwing `ParseError` on invalid input), and instances get automatic hashing and equality via `Data.Class`. **Schema.TaggedClass** adds a `_tag` discriminant field automatically. **Schema.Literal/Literals** creates simple string/number alternatives. **Schema.tag()** adds discriminant fields to structs. **.annotate()** adds metadata (JSON Schema annotations, custom metadata) to schemas.
 
-Key v4 changes: `Schema.TaggedError` → `Schema.TaggedErrorClass`; `Schema.Codec<A, I, R>` is the new dual encode/decode type; `Model.Class` from `effect/unstable/schema` added.
+Key v4 changes: `Schema.TaggedError` → `Schema.TaggedErrorClass`; `Schema.Codec<A, I, R>` is the new dual encode/decode type; `Model.Class` from `effect/schema` added.
 
 ### Vertical slice architecture
 

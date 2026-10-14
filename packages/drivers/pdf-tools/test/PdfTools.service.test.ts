@@ -15,7 +15,7 @@ import {
   SvgToPdfRequest,
 } from "@beep/pdf-tools";
 import { it } from "@beep/test-runner";
-import { A } from "@beep/utils";
+import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
@@ -24,6 +24,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -88,6 +89,7 @@ const markedPpm = ppmOf(8, 4, [
   [7, 0],
 ]);
 const smallMarkedPpm = ppmOf(2, 2, [[1, 1]]);
+const blankPpm = ppmOf(8, 4, []);
 
 const bboxLayout = `<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><body><doc>
   <page width="612.000000" height="792.000000">
@@ -157,7 +159,9 @@ const fakeOutputs = (
     const source = A.get(command.args, A.length(command.args) - 2);
     const fixtureFor = (prefix: string) =>
       prefix.endsWith("/base")
-        ? basePpm
+        ? O.exists(source, Str.endsWith("blank.pdf"))
+          ? blankPpm
+          : basePpm
         : prefix.endsWith("/marked")
           ? O.exists(source, (pdf) => pdf.endsWith("small.pdf"))
             ? smallMarkedPpm
@@ -197,10 +201,14 @@ const makeFakeSpawnerLayer = (
             }
             yield* fakeOutputs(fs, command);
             if (command.command === "pdftotext" && A.contains(command.args, "-bbox-layout")) {
-              const broken = O.exists(A.get(command.args, A.length(command.args) - 2), (pdf) =>
-                pdf.endsWith("broken.pdf")
+              const output = Match.value(O.getOrElse(A.get(command.args, A.length(command.args) - 2), () => "")).pipe(
+                Match.when(Str.endsWith("broken.pdf"), () => "<html>no pages</html>"),
+                Match.when(Str.endsWith("invalid-coordinate.pdf"), () =>
+                  Str.replace('xMin="72.000000"', 'xMin="not-a-number"')(bboxLayout)
+                ),
+                Match.orElse(() => bboxLayout)
               );
-              return makeHandle(0, "", broken ? "<html>no pages</html>" : bboxLayout);
+              return makeHandle(0, "", output);
             }
             return makeHandle(0);
           })
@@ -477,6 +485,19 @@ describe("@beep/pdf-tools service", () => {
           expect(error.message).toBe("pdftotext -bbox-layout output has no page.");
         })
       );
+
+      it.effect(
+        "refuses a block with a nonnumeric coordinate instead of returning a malformed rectangle",
+        Effect.fnUntraced(function* () {
+          const tools = yield* PdfTools;
+          const error = yield* Effect.flip(
+            tools.pageWords(PageTextRequest.make({ pdfPath: "invalid-coordinate.pdf", page: 1 }))
+          );
+          assertInstanceOf(error, PdfToolsError);
+          expect(error.reason).toBe("parse");
+          expect(error.message).toBe("A pdftotext block has no numeric xMin.");
+        })
+      );
     });
   });
 
@@ -534,6 +555,23 @@ describe("@beep/pdf-tools service", () => {
           const error = yield* Effect.flip(tools.inkCoverage({ ...request(0), dilatePx: -1 } as InkCoverageRequest));
           expect(error.reason).toBe("invalid-request");
           expect(commands.length).toBe(before);
+        })
+      );
+
+      it.effect(
+        "reports zero coverage for a blank base page without dividing by zero",
+        Effect.fnUntraced(function* () {
+          const tools = yield* PdfTools;
+          const coverage = yield* tools.inkCoverage(
+            InkCoverageRequest.make({
+              base: PdfPageRef.make({ pdfPath: "blank.pdf", page: 1 }),
+              marked: PdfPageRef.make({ pdfPath: "reviewed.pdf", page: 1 }),
+              dpi: 36,
+              dilatePx: 0,
+            })
+          );
+          expect([coverage.baseInkPixels, coverage.coveredPixels, coverage.markedInkPixels]).toEqual([0, 0, 3]);
+          expect(coverage.coverage).toBe(0);
         })
       );
     });

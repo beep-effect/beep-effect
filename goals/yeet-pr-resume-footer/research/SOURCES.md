@@ -19,7 +19,7 @@
 
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
-| effect-smol (`.repos/effect`) | MIT | validate every API against the checkout | `effect/unstable/process` ChildProcess `inherit` stdio + `cwd`; `FileSystem` append; `Config`/`ConfigProvider` |
+| effect-smol (`.repos/effect`) | MIT | validate every API against the checkout | `effect/process` ChildProcess `inherit` stdio + `cwd`; `FileSystem` append; `Config`/`ConfigProvider` |
 
 ## 3. External research sources
 

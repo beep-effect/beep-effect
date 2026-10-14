@@ -31,7 +31,7 @@ vendored Effect contract and repo persistence capabilities.
 
 ## 2. Effect v4 workflow module paths
 
-Authoritative live source: `.repos/effect-v4/packages/effect/src/unstable/workflow/`.
+Authoritative live source: `.repos/effect-v4/packages/effect/src/workflow/`.
 
 | Module | Recorded contract used by the spike | Disposition |
 | --- | --- | --- |

@@ -15,7 +15,7 @@ is read-only and therefore does **not** clear the write-wall gate.
 
 | Slug | Mission | Depends on | Capabilities cited |
 | --- | --- | --- | --- |
-| `mcp-kit` | Build `@beep/mcp-kit` (`packages/foundation/capability/mcp-kit`): credential-keyed `Toolkit` composition (`Config.option`-gated, folded `Layer.merge`), `api_key_required` envelope, `SourceAuth` gate registry (schemas inline), progressive field-tier projector + columnar reshaper, sanitized-span wrapper, four-hint annotation helper, `tools/call` tier-gate dispatch wrapper (`ClaimGate`-shaped, refusal-as-value), `EnabledWhen` list-filter helper. | none | NET-NEW on `effect/unstable/ai` `{Tool,Toolkit,McpServer}` (beta.92); reuse `@beep/schema` `$I` identity composer (`packages/foundation/modeling/identity/src/Id.ts`), `ClaimGate` pattern (`packages/epistemic/use-cases/src/ClaimGate/ClaimGate.ports.ts:42-47`), `UsageRecord.metadata` jsonb (`packages/epistemic/domain/src/entities/UsageRecord/UsageRecord.model.ts:95-97`) |
+| `mcp-kit` | Build `@beep/mcp-kit` (`packages/foundation/capability/mcp-kit`): credential-keyed `Toolkit` composition (`Config.option`-gated, folded `Layer.merge`), `api_key_required` envelope, `SourceAuth` gate registry (schemas inline), progressive field-tier projector + columnar reshaper, sanitized-span wrapper, four-hint annotation helper, `tools/call` tier-gate dispatch wrapper (`ClaimGate`-shaped, refusal-as-value), `EnabledWhen` list-filter helper. | none | NET-NEW on `effect/ai` `{Tool,Toolkit,McpServer}` (beta.92); reuse `@beep/schema` `$I` identity composer (`packages/foundation/modeling/identity/src/Id.ts`), `ClaimGate` pattern (`packages/epistemic/use-cases/src/ClaimGate/ClaimGate.ports.ts:42-47`), `UsageRecord.metadata` jsonb (`packages/epistemic/domain/src/entities/UsageRecord/UsageRecord.model.ts:95-97`) |
 | `uspto-mcp` | Minimal `*-mcp` host wiring `@beep/uspto` through the kit; proves credential-gating, `api_key_required`, and field tiers against real ODP data + the 25k `documentBag` ceiling. Seeds the future dedicated gov-legal MCP host. | `mcp-kit` | `@beep/uspto` Shape-C key-optional (`Uspto.service.ts:249-255,398`); `nlp-mcp` `Layer.mergeAll` seam (`packages/drivers/nlp-mcp/src/Server.ts:101-107`) |
 | `mcp-host-retrofit` | Adopt the kit's sanitized-span wrapper + four-hint annotation helper in `@beep/nlp-mcp` and `@beep/m365-mcp`; fixes the live span leak (`Toolkit.ts:263-265` vs `12-observability.md` §3) and the hint asymmetry; satisfies the `foundation/capability` ≥2-consumer gate. | `mcp-kit` | `@beep/nlp-mcp`, `@beep/m365-mcp`, `@beep/nlp-processing` `Tools/` |
 | `mcp-write-wall` (follow-on) | Prove the tier-gate / candidate→approved wall against a real write-capable host, with `UsageRecord.metadata` audit end-to-end. | `mcp-kit` + a write-capable host | `ClaimGate` (`@beep/epistemic-use-cases`); kit dispatch wrapper |
@@ -45,7 +45,7 @@ These four bullets become the graduated goals' executable acceptance tests.
 
 ## Open Risks Inherited From The Brief
 
-- `effect/unstable/ai` beta churn — pin beta.92; re-verify
+- `effect/ai` beta churn — pin beta.92; re-verify
   `McpServer.ts:717-728` / `Toolkit.ts:263-265,364-366` / `McpServer.ts:336-341`
   at implementation time.
 - CourtListener auth contradiction — locked `soft`; do not hard-code either

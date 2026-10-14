@@ -319,7 +319,7 @@ prototypes fail.
 | Discord driver | `packages/drivers/discord` | Not needed — channel config is just OpenClaw config + a bot-token secret ref | out of scope |
 | Schema kits | `@beep/schema` (`LiteralKit`, `SchemaUtils.withKeyDefaults`/`withNoneDefault`/`withStatics`, `TaggedErrorClass`, `Model.Class`) | Everything schema-shaped in driver + stack | reuse |
 | Identity composers | `@beep/identity` (`$InfraId`, `$I.create`/`annote`/`annoteSchema`; new `$OpenclawId` needed) | Driver + stack identity | reuse/extend |
-| Process plumbing | `effect/unstable/process` `ChildProcess`/`ChildProcessSpawner`; driver-local concurrent stream folds with `Effect.all` | openclaw CLI wrapper | reuse |
+| Process plumbing | `effect/process` `ChildProcess`/`ChildProcessSpawner`; driver-local concurrent stream folds with `Effect.all` | openclaw CLI wrapper | reuse |
 | Vendored-subtree readiness | `.gitleaks.toml` allowlists `.repos/openclaw/**` | Deferred vendoring trigger (decision 11) | ready |
 
 **NOT FOUND** (net-new candidates):

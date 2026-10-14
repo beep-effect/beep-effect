@@ -10,7 +10,7 @@ analyses the changesets without installing anything.
 - All 16 effect-family catalog entries in `package.json` rewritten from `4.0.0-rc.115` to
   `https://pkg.pr.new/Effect-TS/effect/<package>@a7a71921de`; pkg.pr.new answered HTTP 200 for every
   one. `bun install` succeeded; the installed `effect` still reports version `4.0.0-rc.115` but
-  ships `McpProtocol.v2026_07_28` in `dist/unstable/ai/McpProtocol.d.ts`.
+  ships `McpProtocol.v2026_07_28` in `dist/ai/McpProtocol.d.ts`.
 - Hosts were left on `McpProtocol.v2025_06_18`, so every result below measures the snapshot bump
   alone (working assumption G7's first PR), not the protocol flip.
 - Every command ran with turbo's remote cache disabled (`--cache=local:rw`).
@@ -79,8 +79,8 @@ Mechanism (orchestrator reading, to be confirmed by Gate B and lane 21-r2):
   sending `accept: application/json, text/event-stream`.
 - Since #7265, `McpServer.layerHttp` rewrites a response as Server-Sent Events whenever the request
   is a subscription, the RPC response body is a stream, or the buffered body holds more than one
-  newline-separated message (`effect:packages/effect/src/unstable/ai/McpServer.ts:1609-1616`,
-  framing in `toServerSentEvents` at `effect:packages/effect/src/unstable/ai/McpServer.ts:1707-1727`).
+  newline-separated message (`effect:packages/effect/src/ai/McpServer.ts:1609-1616`,
+  framing in `toServerSentEvents` at `effect:packages/effect/src/ai/McpServer.ts:1707-1727`).
   The rewrite was introduced by commit `a2c4154cf8` (#7265).
 - A JSON-RPC codec cannot decode `data: ...` frames, so the in-repo client fails. This happens on
   the session protocol `v2025_06_18`, before any move to 2026-07-28.

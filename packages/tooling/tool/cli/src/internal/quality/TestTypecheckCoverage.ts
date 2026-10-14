@@ -48,7 +48,7 @@ const recursiveGlobSegment = "**";
 const scriptReferencePattern =
   /\bbun\s+run\s+(?:(?:--(?:cwd|config|env-file)\s+\S+|--?[\w-]+(?:=\S+)?)\s+)*([\w:.-]+)/gu;
 const projectFlagPattern = /(?:^|\s)(?:-p|--project|-b|--build)(?:=|\s+)([^\s]+)/gu;
-const typescriptProgramPattern = /^\s*(?:(?:env\s+)?(?:[^\s=]+=[^\s]+\s+)*)(?:bunx\s+)?(?:tsgo|tsc)\b/u;
+const typescriptProgramPattern = /^\s*(?:(?:env\s+)?(?:[^\s=]+=[^\s]+\s+)*)(?:bunx\s+)?(?:tsgo|tsc-rs|tsc)\b/u;
 const commandSeparatorPattern = /&&|\|\||;|\|/u;
 const defaultProjectFileName = "tsconfig.json";
 const checkScriptName = "check";

@@ -20,7 +20,7 @@ gate() {
 
 run family-cli-mode-flags \
   'Write ONE document at goals/boolean-creep/designs/family-cli-mode-flags.md: a shared family design followed by a full per-instance section (all 9 parts) for each of the 10 brief records.' \
-  'FAMILY NOTE: all 10 instances are exclusive/implied CLI mode flags. The repo already ships collapse infrastructure at packages/tooling/tool/cli/src/internal/cli/RunMode.ts (resolveRunModeFromFlags, runModeFlagsConflict) — the family design must reuse or extend it, and check whether the effect v4 unstable/cli Flag layer supports parsing straight to a literal (validate against .repos/effect). Several target literals already exist (BakeMode, SkillsRunMode, TsconfigSyncMode, SyncDataRunMode). docgen-local-json-requires-plan is the one implication variant (json => plan), target option-literal.'
+  'FAMILY NOTE: all 10 instances are exclusive/implied CLI mode flags. The repo already ships collapse infrastructure at packages/tooling/tool/cli/src/internal/cli/RunMode.ts (resolveRunModeFromFlags, runModeFlagsConflict) — the family design must reuse or extend it, and check whether the effect v4 cli Flag layer supports parsing straight to a literal (validate against .repos/effect). Several target literals already exist (BakeMode, SkillsRunMode, TsconfigSyncMode, SyncDataRunMode). docgen-local-json-requires-plan is the one implication variant (json => plan), target option-literal.'
 gate
 
 run tooling "$per_id" \

@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "harness-emitters-all-providers",
+    "packetId": "goal-packet/v1:b323838eee84f5b10e1a65d3f4d262f03da00dc9ed49cb603fa23992eea5d964",
+    "title": "Harness Emitters for All Providers",
+    "status": "active",
+    "created": "2026-10-14",
+    "updated": "2026-10-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/harness-emitters-all-providers",
+  "lifecycle": "active",
+  "mission": "Every agent harness emits beep.* v2 attributed telemetry (native, hook, wrapper, proxy, transcript) with a completeness check.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/observability-palantiri",
+    "graduated": "2026-10-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/harness-emitters-all-providers/README.md",
+    "goals/harness-emitters-all-providers/SPEC.md",
+    "goals/harness-emitters-all-providers/PLAN.md",
+    "goals/harness-emitters-all-providers/GOAL.md",
+    "goals/harness-emitters-all-providers/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/harness-emitters-all-providers/GOAL.md"
+    }
+  ],
+  "provides": ["observability/harness-emitters"],
+  "requires": ["observability/attribute-registry"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Probes",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Attrs",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Emitters",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Completeness",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Yeet",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/harness-emitters-all-providers/GOAL.md)\" -le 4000",
+    "jq . goals/harness-emitters-all-providers/ops/manifest.json",
+    "rg -n \"harness-emitters-all-providers|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/harness-emitters-all-providers",
+    "git diff --check -- goals/harness-emitters-all-providers",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

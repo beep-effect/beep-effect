@@ -144,7 +144,7 @@ agent harness, consistent with `p4: DONE`.
 | `Extraction` | `src/Extraction/index.ts` | 372 | `LangExtractResult`, `LangExtractError`, `LangExtractErrorReason` (6-variant), request/parser contracts |
 | `Alignment` | `src/Alignment/index.ts` | 269 | `alignCandidates` — source-grounded span alignment |
 | `Handoff` | `src/Handoff/index.ts` | 152 | `toAnnotatedDocument` → emits the `@beep/nlp` Handoff IR |
-| `Service` | `src/Service/index.ts` | 182 | `LangExtractService` with `extract(request) → Effect<LangExtractResult, LangExtractError>`, backed by `effect/unstable/ai/LanguageModel`, 30s timeout |
+| `Service` | `src/Service/index.ts` | 182 | `LangExtractService` with `extract(request) → Effect<LangExtractResult, LangExtractError>`, backed by `effect/ai/LanguageModel`, 30s timeout |
 | `index` | `src/index.ts` | 42 | barrel |
 
 ~1,131 src LOC total, with tests (`test/{Alignment,Extraction,Service}.test.ts`)

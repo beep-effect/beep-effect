@@ -7,8 +7,9 @@ description: >
   reviewing QA evidence, writing a vision-judge finding, reproducing a finding
   from a session's artifacts, or auditing an old round's evidence in a goal
   packet or PR.
-version: 0.1.0
-status: active
+metadata:
+  version: "0.1.0"
+  status: active
 ---
 
 # Motion Evidence Review

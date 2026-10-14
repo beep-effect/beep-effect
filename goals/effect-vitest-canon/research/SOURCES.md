@@ -90,11 +90,11 @@ Report: [2026-09-08-grounding-2.md](./2026-09-08-grounding-2.md).
 - [Reported source 19](https://github.com/Effect-TS/effect/tree/2600f62f4532026928454dcea8d1c48557b3f942/packages/vitest)
 - [Reported source 20](https://raw.githubusercontent.com/Effect-TS/effect/2600f62f4532026928454dcea8d1c48557b3f942/LICENSE)
 - [Reported source 21](https://raw.githubusercontent.com/Effect-TS/effect/2600f62f4532026928454dcea8d1c48557b3f942/packages/effect/LICENSE)
-- [Reported source 22](https://raw.githubusercontent.com/Effect-TS/effect/2600f62f4532026928454dcea8d1c48557b3f942/packages/effect/test/unstable/eventlog/SqlEventLogServerUnencryptedStorageTest.ts)
-- [Reported source 23](https://raw.githubusercontent.com/Effect-TS/effect/2600f62f4532026928454dcea8d1c48557b3f942/packages/effect/test/unstable/persistence/KeyValueStoreTest.ts)
-- [Reported source 24](https://raw.githubusercontent.com/Effect-TS/effect/2600f62f4532026928454dcea8d1c48557b3f942/packages/effect/test/unstable/persistence/PersistedCacheTest.ts)
-- [Reported source 25](https://raw.githubusercontent.com/Effect-TS/effect/2600f62f4532026928454dcea8d1c48557b3f942/packages/effect/test/unstable/persistence/PersistedQueueTest.ts)
-- [Reported source 26](https://raw.githubusercontent.com/Effect-TS/effect/2600f62f4532026928454dcea8d1c48557b3f942/packages/effect/test/unstable/persistence/SqlCleanupTest.ts)
+- [Reported source 22](https://raw.githubusercontent.com/Effect-TS/effect/74d19304da077d98cc6dcb294c71e253365f272f/packages/effect/test/eventlog/SqlEventLogServerUnencryptedStorageTest.ts)
+- [Reported source 23](https://raw.githubusercontent.com/Effect-TS/effect/74d19304da077d98cc6dcb294c71e253365f272f/packages/effect/test/persistence/KeyValueStoreTest.ts)
+- [Reported source 24](https://raw.githubusercontent.com/Effect-TS/effect/74d19304da077d98cc6dcb294c71e253365f272f/packages/effect/test/persistence/PersistedCacheTest.ts)
+- [Reported source 25](https://raw.githubusercontent.com/Effect-TS/effect/74d19304da077d98cc6dcb294c71e253365f272f/packages/effect/test/persistence/PersistedQueueTest.ts)
+- [Reported source 26](https://raw.githubusercontent.com/Effect-TS/effect/74d19304da077d98cc6dcb294c71e253365f272f/packages/effect/test/persistence/SqlCleanupTest.ts)
 - [Reported source 27](https://raw.githubusercontent.com/Effect-TS/effect/main/packages/effect/test/FileSystem.test-utils.ts)
 - [Reported source 28](https://www.npmjs.com/package/@effect/vitest)
 
@@ -226,7 +226,7 @@ internal runner source and README match the archived tagged files byte for byte.
 The 100-entry graph covers every direct export and README heading.
 
 - [Pinned Vitest source](https://github.com/Effect-TS/effect/tree/d3b837aee836f35d625d55205f7d6e61305fc198/packages/vitest)
-- [Pinned native Arbitrary implementation](https://github.com/Effect-TS/effect/blob/d3b837aee836f35d625d55205f7d6e61305fc198/packages/effect/src/unstable/arbitrary/Arbitrary.ts)
+- [Pinned native Arbitrary implementation](https://github.com/Effect-TS/effect/blob/74d19304da077d98cc6dcb294c71e253365f272f/packages/effect/src/Arbitrary.ts)
 
 The installed package declares Vitest >=5 <6; main supplies Vitest 4.1.11.
 The active integration receipt tracks this compatibility decision separately

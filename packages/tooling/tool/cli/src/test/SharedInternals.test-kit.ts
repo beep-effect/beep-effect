@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+export * from "../commands/Skills/internal/SkillFrontmatterCheck.ts";
 export * from "../internal/cli/EnvConfig.ts";
 export * from "../internal/cli/Jsonc.ts";
 export * from "../internal/cli/Labs/index.ts";
@@ -13,6 +14,7 @@ export * from "../internal/GlobPattern.ts";
 export * from "../internal/github/index.ts";
 export * from "../internal/quality/SchemaFirstPolicyFinding.ts";
 export * from "../internal/quality/TestTypecheckCoverage.ts";
+export * from "../internal/schema/Frontmatter.ts";
 export * from "../internal/schema/JsonCodec.ts";
 export * from "../internal/schema/TextCodec.ts";
 export * from "../internal/schema/Uuid.ts";

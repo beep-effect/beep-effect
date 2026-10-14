@@ -99,7 +99,7 @@ bun run beep research capture https://www.instantdb.com/essays/instant_team_join
 
 ### f-effect-04 — Effect #7524: Schema codecs for platform-neutral socket addresses
 
-Effect #7524 (OPEN, opened/updated 2026-08-30) adds platform-neutral IPv4, IPv6, resolved internet, Unix path, and portable socket address values under effect/unstable/net/Net, plus effect/Schema codecs, and migrates HTTP/socket server address models. In-tree work that unpublished rc.113 would absorb. Relevant to beep box-driver / openai-driver sockets; do not assume it until an RC cuts.
+Effect #7524 (OPEN, opened/updated 2026-08-30) adds platform-neutral IPv4, IPv6, resolved internet, Unix path, and portable socket address values under effect/net/Net, plus effect/Schema codecs, and migrates HTTP/socket server address models. In-tree work that unpublished rc.113 would absorb. Relevant to beep box-driver / openai-driver sockets; do not assume it until an RC cuts.
 
 ```
 bun run beep research capture https://github.com/Effect-TS/effect/pull/7524 --tags effect,effect-v4,schema,socket,net

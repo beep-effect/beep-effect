@@ -149,7 +149,7 @@ floor + 15–18 min turbo compute at **0 cache hits**; test lanes carry
 - **Asymmetric turbo cache** on the provisioned
   `beep-turbo-cache-832907639880` bucket: trusted (merged) code writes; PR
   code gets read-only via short-lived pre-signed GETs from an Effect-native
-  mint Lambda (`effect/unstable/http`, sibling of CiRunners.ts). Projected:
+  mint Lambda (`effect/http`, sibling of CiRunners.ts). Projected:
   leaf/mid-slice PR Check/Build/Docgen 18–20 → ~6–9 min; core-package PR
   ~11–14 min; Test Integration ~19 → ~13–15; Coverage 20+ → ~15–17. Bonus:
   the same pull porcelain serves free ubuntu-24.04 lanes — a cached Check

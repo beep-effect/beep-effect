@@ -2,30 +2,37 @@
 #
 # Nothing installs this file. Copy it to ~/.config/systemd/user/ by hand, and
 # only after the first-run sequence in docs/runbooks/practice-mail-tagging.md.
+# Install steps, the deploy checkout, upgrades and removal:
+# docs/runbooks/practice-services.md.
 # Replace every REPLACE_ value first: systemd does not expand them.
 
 [Unit]
 Description=Practice mail tagging: Outlook categories by matter and attachment filing
 Documentation=https://github.com/kriegcloud/beep-effect/blob/main/docs/runbooks/practice-mail-tagging.md
-After=network-online.target
+After=network-online.target docket-intake.service
 Wants=network-online.target
 
 [Service]
 Type=exec
-# PLACEHOLDER: absolute path of the beep-effect checkout the job runs from.
+# PLACEHOLDER: absolute path of the deploy checkout the job runs from.
 WorkingDirectory=/REPLACE_WITH_CHECKOUT_PATH
-# PLACEHOLDER: the environment file shared with docket-intake (mode 0600).
-# apps/practice-mail-tagging/.env.example lists every variable it must carry.
-EnvironmentFile=/REPLACE_WITH_SHARED_ENV_FILE
-# PLACEHOLDER: absolute path of the bun binary; a user unit has no mise shims.
-ExecStart=/REPLACE_WITH_BUN_PATH run apps/practice-mail-tagging/src/bin.ts watch --yes
+# The op shim must come before /usr/bin on PATH.
+Environment=PATH=/REPLACE_WITH_HOME/.local/bin:/REPLACE_WITH_HOME/.local/share/mise/shims:/usr/bin:/bin
+# PLACEHOLDERS: the op shim, the environment file (mode 0600), the bun shim.
+# apps/practice-mail-tagging/.env.example lists every variable the file must
+# carry. Credentials in it are op:// references, so op run resolves it. Do not
+# use EnvironmentFile= for a file of references: systemd passes each one
+# through as a literal string. op run exits with the job's own exit code, so
+# the codes below still apply.
+ExecStart=/REPLACE_WITH_HOME/.local/bin/op run --env-file=/REPLACE_WITH_ENV_FILE -- /REPLACE_WITH_BUN_PATH run apps/practice-mail-tagging/src/bin.ts watch --yes
 Restart=on-failure
 RestartSec=5min
 # 2 = a write was not confirmed, 3 = a provider throttled the job. Neither is
 # fixed by a restart, and restarting on 3 would hammer the provider.
+# 78 = the op shim could not resolve the references.
 # 4 = an attended command holds the state-directory lock; it is left out on
 # purpose, so systemd retries after RestartSec once that command has finished.
-RestartPreventExitStatus=2 3
+RestartPreventExitStatus=2 3 78
 MemoryHigh=1536M
 MemoryMax=2G
 Slice=agent-runs.slice

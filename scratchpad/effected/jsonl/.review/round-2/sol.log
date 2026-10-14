@@ -18540,8 +18540,8 @@ Built in wave 0, before any copy. Design order: schema → service → CLI.
 - Service: `Audit` (`Context.Service`) with `copy`, `parity`, `check`, `lint`,
   `test`, `docgen`, `audit`, `ledger` methods; `Effect.fn` everywhere;
   `effect/cli` for the command surface (installed 4.0.1 exports `./cli`,
-  `./http`, `./http-api`; there is no `./unstable/*` entry, so the
-  "effect/unstable/http" wording in the standing coding rules means these
+  `./http`, `./http-api`; there is no pre-#8354 namespace entry, so the
+  "effect/http" wording in the standing coding rules means these
   modules); `effect/ChildProcess` (or the
   platform spawner the repo already uses in `packages/tooling/tool/cli`) for
   subprocesses; no `node:http`, no native `Set`/`Map`.
@@ -23534,19 +23534,17 @@ packages/effect/src/
 │   ├── TestConsole.ts
 │   ├── TestSchema.ts
 │   └── index.ts
-├── unstable/             # Experimental features (17 subdirectories)
-│   ├── ai/
-│   ├── cli/
-│   ├── cluster/
-│   ├── http/
-│   ├── httpapi/
-│   ├── persistence/
-│   ├── rpc/
-│   ├── schema/
-│   ├── sql/
-│   ├── workers/
-│   ├── workflow/
-│   └── ...
+├── ai/                   # `@stability unstable` modules live at top level too
+├── cli/                  # (ai, cli, cluster, http, http-api, persistence, rpc,
+├── cluster/              # schema, sql, workers, workflow, ...); see
+├── http/                 # effect-module-paths.md
+├── http-api/
+├── persistence/
+├── rpc/
+├── schema/
+├── sql/
+├── workers/
+├── workflow/
 ├── index.ts              # Main export file
 └── [module].ts           # 122+ top-level modules (flat structure)
 ```
@@ -27397,7 +27395,7 @@ judgment specified by D14. Cheap pure stubs remain exempt.
 ### 1.3 `it.prop` at rc.113
 
 Sync it.prop, it.effect.prop and it.live.prop all accept tuple or record inputs
-containing Schemas or native Arbitrary values from effect/unstable/arbitrary.
+containing Schemas or native Arbitrary values from effect/Arbitrary.
 FastCheck Arbitraries and the old fastCheck option are unsupported. The option
 is arbitrary: Arbitrary.CheckOptions, with runs, seed, replay, size, maxDiscards
 and maxShrinks. Preserve generator constraints and failure/shrinking semantics
@@ -27468,7 +27466,7 @@ tests, ~10 min under coverage), `apps/professional-desktop` 57, `tooling/library
   `packages/sql/pg/test/*.test.ts` files (`it.layer(PgContainer.layer, { timeout: "30 seconds" })`,
   per-test connections inside the shared container), [upstream NodeFileSystem.test.ts](https://github.com/Effect-TS/effect/blob/d3b837aee836f35d625d55205f7d6e61305fc198/packages/platform/node-shared/test/NodeFileSystem.test.ts)
   (cheap layer provided per test, `Deferred` + `Effect.forkChild` + `TestClock.withLive` for
-  watch tests), [upstream SqlCleanupTest.ts](https://github.com/Effect-TS/effect/blob/d3b837aee836f35d625d55205f7d6e61305fc198/packages/effect/test/unstable/persistence/SqlCleanupTest.ts) (`Effect.repeat` +
+  watch tests), [upstream SqlCleanupTest.ts](https://github.com/Effect-TS/effect/blob/74d19304da077d98cc6dcb294c71e253365f272f/packages/effect/test/persistence/SqlCleanupTest.ts) (`Effect.repeat` +
   `Effect.timeout` + `TestClock.withLive` wait helper), and
   [upstream FileSystem.test-utils.ts](https://github.com/Effect-TS/effect/blob/d3b837aee836f35d625d55205f7d6e61305fc198/packages/effect/test/FileSystem.test-utils.ts) (`testLayer`, 565 lines at rc.113).
   The shared helper now ports all 36 registrations, including the new

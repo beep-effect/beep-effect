@@ -551,7 +551,7 @@ no member law: 7 `.rpc.ts` files export per-op *prefixed* symbols
 are hand-typed factories (`makeWorkItemHttpHandlers`). Effect v4 supplies the
 primitive: `Rpc.make(tag, { payload, success, error, defect, stream })`
 exposes `payloadSchema` / `successSchema` / `errorSchema`; `RpcGroup.make`,
-`.toLayer`, `RpcClient.make` (`.repos/effect/packages/effect/src/unstable/rpc/`).
+`.toLayer`, `RpcClient.make` (`.repos/effect/packages/effect/src/rpc/`).
 The option key is `error`, not `failure`: `Failure` is the member name,
 `error: Failure` the wiring. Codegen: `add role --file-role rpc --op Get` emits one
 contract file, one handler file and one `Rpcs` entry from invariant symbols.

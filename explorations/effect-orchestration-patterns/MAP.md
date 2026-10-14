@@ -77,8 +77,8 @@ with tests or an explicit documented contract:
 
 | Component | Existing capability or disposition |
 | --- | --- |
-| Typed workflow and deterministic execution identity | Reuse `.repos/effect-v4/packages/effect/src/unstable/workflow/Workflow.ts`. |
-| Retryable/keyed activities | Reuse `.repos/effect-v4/packages/effect/src/unstable/workflow/Activity.ts`. |
+| Typed workflow and deterministic execution identity | Reuse `.repos/effect-v4/packages/effect/src/workflow/Workflow.ts`. |
+| Retryable/keyed activities | Reuse `.repos/effect-v4/packages/effect/src/workflow/Activity.ts`. |
 | Durable timer, acknowledgment, and queued work | Reuse `DurableClock.ts`, `DurableDeferred.ts`, and `DurableQueue.ts` in the same vendored workflow directory. |
 | Engine/proxy contracts | Reuse `WorkflowEngine.ts`, `WorkflowProxy.ts`, and `WorkflowProxyServer.ts`; no cluster dependency. |
 | Official-source auth, limiter, and jittered transient retry | Extend `packages/foundation/capability/api-transport/src/Transport.ts`; live GovInfo/eCFR adoption is recorded in its README. |

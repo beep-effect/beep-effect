@@ -59,7 +59,7 @@ P0-P2 (2026-07-01): see `PLAN.md` phase table. Added `@beep/mcp-kit`'s new
 17 `StreamingToolkit` tools and 11 `M365Tools` tools carry
 `annotateFourHints`; tier-gate recorded not-applicable (see `PLAN.md` P0
 finding). New proof tests green in `mcp-kit`, `nlp-mcp`, `m365-mcp`; existing
-suites unchanged. `@beep/mcp-kit/README.md` consumer table updated to
+suites unchanged. `packages/foundation/capability/mcp-kit/README.md` consumer table updated to
 **Landed** for both hosts.
 
 ## Notes

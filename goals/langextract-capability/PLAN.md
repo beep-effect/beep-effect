@@ -25,7 +25,7 @@ Each lane is read-only and writes one report under `research/reports/`.
 | `repo-reuse-audit.md` | Repo export catalog, `@beep/file-processing`, provider drivers, existing helpers, duplicate risks. |
 | `nlp-fit-audit.md` | `@beep/nlp` `Core`, `Handoff`, `Graph`, `Backend`, tests, consumer table, and promotion needs. |
 | `effect-v3-reference.md` | The cloned Effect v3 port at `/home/elpresidank/YeeBois/ontology_research/ontology_ts_repos/effect-langextract`. |
-| `effect-v4-migration.md` | `.repos/effect-v4`, v4 Schema, Context, Layer, Stream, and `effect/unstable/ai` differences. |
+| `effect-v4-migration.md` | `.repos/effect-v4`, v4 Schema, Context, Layer, Stream, and `effect/ai` differences. |
 | `architecture-boundaries.md` | Foundation capability gate, provider-neutral scope, dependencies, exports, and package README policy. |
 | `extraction-alignment.md` | Chunking, prompting, parsing, resolver/alignment, fuzzy matching, span invariants, and parity fixtures. |
 | `testing-quality.md` | Fake language model, property tests, dtslint, docgen, export catalog, QRFL, yeet, and PR babysitting. |
@@ -48,7 +48,7 @@ required findings.
 ## Accepted Implementation Direction
 
 - Keep `@beep/langextract` provider-neutral and consume only injected
-  `effect/unstable/ai/LanguageModel` services.
+  `effect/ai/LanguageModel` services.
 - Promote near-fit generic span/provenance primitives into `@beep/nlp` before
   exposing LangExtract output.
 - Keep extraction targets, prompt/output contracts, parser state, alignment

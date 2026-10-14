@@ -55,10 +55,11 @@ so it stays payload and two errors that differ only in their defect compare
 equal, and a local opaque field does the same with
 `S.Unknown.pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))`.
 `SchemaUtils.alwaysEquivalent` is the one shared always-true equivalence thunk;
-do not repeat `() => () => true` at the field. `Defect` and
-`OpaqueUnknown` from `@beep/schema` wrap exactly these forms; they retire with
-the Opaque concept (goal `effect-schema-parity`), and the schema-first rule
-`SFV4-opaque-wrapper` tracks the remaining uses on its occurrence backlog.
+do not repeat `() => () => true` at the field. The former Defect and
+OpaqueUnknown wrappers from @beep/schema wrapped exactly these forms; they were
+retired with the Opaque concept in #1347 (goal `effect-schema-parity`), so fields
+spell the forms above directly. The schema-first rule `SFV4-opaque-wrapper`
+tracked their uses until that retirement.
 Excluding a field from equivalence at the class is not a pattern; the field's
 schema says whether it participates. Tests consume `S.toEquivalence(ErrorClass)`
 and never install test-local overrides.

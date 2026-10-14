@@ -110,7 +110,7 @@ Block `./internal/*` and avoid wildcard canonical exports.
 Use Effect v4 service and layer patterns:
 
 - define `LangExtract` with `Context.Service`;
-- consume an injected `effect/unstable/ai/LanguageModel.LanguageModel`;
+- consume an injected `effect/ai/LanguageModel.LanguageModel`;
 - wire explicit layers with `Layer.effect` or `Layer.succeed`;
 - translate AI and schema errors into LangExtract tagged errors;
 - keep concrete provider layers in drivers or app composition.

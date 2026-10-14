@@ -12,14 +12,14 @@ Where source contradicts them, the claim is tagged `decision-challenge`.
 Read-only git on the Effect clone at `a7a71921de`; beep-effect checkout used only
 for consumer-impact citations. Commands:
 
-- `git log --oneline effect@4.0.0-rc.115..a7a71921de -- packages/effect/src/unstable/ai packages/effect/src/unstable/rpc`
+- `git log --oneline effect@4.0.0-rc.115..a7a71921de -- packages/effect/src/ai packages/effect/src/rpc`
 - `git log --name-only` over the same range plus `.changeset`, `migration/annotations`, typetests
 - `git diff --stat` of `McpServer.ts`, `McpSchema.ts`, `McpProtocol.ts`, `Tool.ts`, `Toolkit.ts`, `RpcServer.ts`, `RpcSerialization.ts`, `McpServer.tst.ts`
 - Named-export inventory from `git show <rev>:<path>` on both sides
 - `graft grep` for beep-effect `McpProtocol` / `McpServerClient` / `layerStdio` / `Tool.Strict` and Effect `getStrictMode`
 - Direct `git show` of option/handler types, changesets, migration YAML, typetests, and MCP tests
 
-Commits in range that touch `packages/effect/src/unstable/ai` or `.../unstable/rpc` (3):
+Commits in range that touch `packages/effect/src/ai` or `.../rpc` (3):
 
 | SHA | Date | Subject |
 | --- | --- | --- |
@@ -42,18 +42,18 @@ exports.
 Diffstat for owned modules (`effect@4.0.0-rc.115..a7a71921de`):
 
 ```
- packages/effect/src/unstable/ai/McpProtocol.ts          |  115 +-
- packages/effect/src/unstable/ai/McpSchema.ts            |  303 +++-
- packages/effect/src/unstable/ai/McpServer.ts            | 1641 +++++++++++---------
- packages/effect/src/unstable/ai/Tool.ts                 |   19 +
- packages/effect/src/unstable/ai/Toolkit.ts              |   87 +-
- packages/effect/src/unstable/rpc/RpcSerialization.ts    |    4 +-
- packages/effect/src/unstable/rpc/RpcServer.ts           |   18 +-
- packages/effect/typetest/unstable/ai/McpServer.tst.ts   |   81 +-
+ packages/effect/src/ai/McpProtocol.ts          |  115 +-
+ packages/effect/src/ai/McpSchema.ts            |  303 +++-
+ packages/effect/src/ai/McpServer.ts            | 1641 +++++++++++---------
+ packages/effect/src/ai/Tool.ts                 |   19 +
+ packages/effect/src/ai/Toolkit.ts              |   87 +-
+ packages/effect/src/rpc/RpcSerialization.ts    |    4 +-
+ packages/effect/src/rpc/RpcServer.ts           |   18 +-
+ packages/effect/typetest/ai/McpServer.tst.ts   |   81 +-
  8 files changed, 1410 insertions(+), 858 deletions(-)
 ```
 
-`packages/effect/typetest/unstable/ai/Tool.tst.ts` is **unchanged** in this range
+`packages/effect/typetest/ai/Tool.tst.ts` is **unchanged** in this range
 (empty `git diff --stat`).
 
 MCP-related changesets added in range (all `"effect": patch`):
@@ -232,7 +232,7 @@ MCP now wraps `jsonRpc` in a local `mcpJsonRpcSerialization` (`effect:.../McpSer
 
 > When `true`, providers that support strict mode will send `strict: true` to the model API (e.g. OpenAI's Structured Outputs). When `false`, `strict: false` is sent. When `undefined` (default), the provider's global configuration determines the behavior (`Config.strictJsonSchema` for OpenAI).
 
-Evidence: `effect:packages/effect/src/unstable/ai/Tool.ts:1860-1908`. Call sites:
+Evidence: `effect:packages/effect/src/ai/Tool.ts:1860-1908`. Call sites:
 
 - OpenAI: `Tool.getStrictMode(tool) ?? config.strictJsonSchema ?? true` then `strict` on the function tool (`effect:packages/ai/openai/src/OpenAiLanguageModel.ts:2768-2775`).
 - Anthropic: same ternary, only if `capabilities.supportsStructuredOutput` (`effect:packages/ai/anthropic/src/AnthropicLanguageModel.ts:1331-1340`).
@@ -248,7 +248,7 @@ MCP treats **only the literal `true`** as strict:
 const strict = Tool.getStrictMode(tool) === true
 ```
 
-(`effect:packages/effect/src/unstable/ai/McpServer.ts:1828`). Then:
+(`effect:packages/effect/src/ai/McpServer.ts:1828`). Then:
 
 1. If `strict` and the tool is `Tool.dynamic` with raw `jsonSchema` → `Effect.die("McpServer cannot strictly validate the raw JSON Schema…")` **before any tool in that toolkit is registered** (`:1830-1833`; test `:1502-1527`).
 2. Decode options `{ onExcessProperty: "error" }` when strict, else `undefined` (`:1835`), passed as the 4th `Toolkit.handle` argument (`:1888`).
@@ -270,7 +270,7 @@ The two meanings diverge on the default. An MCP tool with no annotation is open 
 
 ## 5. Type-level evidence
 
-### 5.1 `McpServer.tst.ts` (`effect:packages/effect/typetest/unstable/ai/McpServer.tst.ts`)
+### 5.1 `McpServer.tst.ts` (`effect:packages/effect/typetest/ai/McpServer.tst.ts`)
 
 Added in this range:
 
@@ -291,7 +291,7 @@ The typetest still constructs servers with `protocols: [McpProtocol.v2025_11_25]
 
 ### 5.2 `Tool.tst.ts`
 
-Empty diff in this range. The file covers `FailureResult` / `ExecutionFailure` and `Tool.make` defaults (`effect:packages/effect/typetest/unstable/ai/Tool.tst.ts:1-56`). It does **not** mention `FailureOrigin`, `HandlerResult.failureOrigin`, or `Tool.Strict`. Type-level evidence for those additions is therefore **missing** from `Tool.tst.ts`.
+Empty diff in this range. The file covers `FailureResult` / `ExecutionFailure` and `Tool.make` defaults (`effect:packages/effect/typetest/ai/Tool.tst.ts:1-56`). It does **not** mention `FailureOrigin`, `HandlerResult.failureOrigin`, or `Tool.Strict`. Type-level evidence for those additions is therefore **missing** from `Tool.tst.ts`.
 
 ---
 

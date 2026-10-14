@@ -60,7 +60,7 @@
       "status": "done",
       "blockedBy": ["jcm-004"],
       "title": "beep quality jsdoc-migrate titles",
-      "detail": "effect/unstable/http against http://127.0.0.1:8317 with model grok-4.5 — never node:http, and never the xAI API directly (that bills credits instead of the plan). Returns data only: { anchor, title, remarks: details|gotchas, leadEnd }. Append-only titles.jsonl with per-anchor resume and retry only on schema-invalid returns. Resume skips an anchor only when its record is present AND its sourceHash still matches the current block — a bare anchor-present check would silently reuse a stale title after an upstream edit. Not a Workflow: the 1,000-agent cap is below the 1,935 files."
+      "detail": "effect/http against http://127.0.0.1:8317 with model grok-4.5 — never node:http, and never the xAI API directly (that bills credits instead of the plan). Returns data only: { anchor, title, remarks: details|gotchas, leadEnd }. Append-only titles.jsonl with per-anchor resume and retry only on schema-invalid returns. Resume skips an anchor only when its record is present AND its sourceHash still matches the current block — a bare anchor-present check would silently reuse a stale title after an upstream edit. Not a Workflow: the 1,000-agent cap is below the 1,935 files."
     },
     {
       "id": "jcm-007",

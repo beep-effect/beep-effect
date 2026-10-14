@@ -66,7 +66,7 @@ medium) ran before the packet was scaffolded. Full briefs live in
   ingest, source-discovery, forwarder, derived-storage (DuckDB/Parquet),
   privacy/redaction, encrypted archive, OTLP projection, scorecards,
   mirror, retention. REUSE as-is for revival + mining.
-- `bun run beep ai-metrics …` CLI
+- `bun run beep ai-metrics <command>` CLI
   (`packages/tooling/tool/cli/src/commands/AIMetrics/`) — sources discover,
   forwarder run/timer, otlp export, report weekly, label, benchmark, mirror,
   retention. REUSE.

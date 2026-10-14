@@ -9,7 +9,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 ## Mission
 
 Ship `@beep/m365-mcp`: expose the `@beep/m365` driver's read verbs as MCP tools
-via `effect/unstable/ai` (the `@beep/nlp-mcp` pattern), so beep's agents reach
+via `effect/ai` (the `@beep/nlp-mcp` pattern), so beep's agents reach
 Microsoft 365 over a stdio MCP server while the app keeps typed errors,
 telemetry, and least-privilege scopes.
 

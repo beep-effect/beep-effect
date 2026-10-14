@@ -30,19 +30,17 @@ packages/effect/src/
 │   ├── TestConsole.ts
 │   ├── TestSchema.ts
 │   └── index.ts
-├── unstable/             # Experimental features (17 subdirectories)
-│   ├── ai/
-│   ├── cli/
-│   ├── cluster/
-│   ├── http/
-│   ├── httpapi/
-│   ├── persistence/
-│   ├── rpc/
-│   ├── schema/
-│   ├── sql/
-│   ├── workers/
-│   ├── workflow/
-│   └── ...
+├── ai/                   # `@stability unstable` modules live at top level too
+├── cli/                  # (ai, cli, cluster, http, http-api, persistence, rpc,
+├── cluster/              # schema, sql, workers, workflow, ...); see
+├── http/                 # effect-module-paths.md
+├── http-api/
+├── persistence/
+├── rpc/
+├── schema/
+├── sql/
+├── workers/
+├── workflow/
 ├── index.ts              # Main export file
 └── [module].ts           # 122+ top-level modules (flat structure)
 ```

@@ -78,7 +78,7 @@ URLs, ~30 X post citations) lives in the exploration's ledger and legs:
   `@beep/onepassword-cli` (CLI wrapper style); `OnePasswordReference`
   (`packages/shared/domain/src/values/OnePasswordReference`); `@beep/schema`
   kits; `@beep/identity` composers; driver-local concurrent
-  stdout/stderr/exit collection over `effect/unstable/process`.
+  stdout/stderr/exit collection over `effect/process`.
 - NET-NEW: `packages/drivers/openclaw` (desired-intent schema, render
   adapter, CLI wrapper, probes); OpenClawGeneration engine; workstation
   applicator; drift audit.

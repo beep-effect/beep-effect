@@ -151,7 +151,7 @@ Higher sources outrank lower sources when they conflict.
 - **Lab code laws (D2):** generated lab code satisfies typecheck,
   lint-policy, schema-first/effect-first rules, and portless
   (`http://<name>.labs.beep.localhost:1355`, D1). Service variant uses
-  `effect/unstable/httpapi` — never `node:http`.
+  `effect/http-api` — never `node:http`.
 - **Lab manifest is a schema** (D9): LiteralKit disposition
   `active | promote | expired`; decoded, never hand-parsed.
 - **Identity (D8):** labs register real composers under a mechanically
@@ -252,7 +252,7 @@ packet.
 | D1 | Naming | `apps/labs/*`; glossary term "lab app"; portless `<name>.labs.beep.localhost`; NOT "experiments" (doctrine-11 collision). Command stays `beep delete-package`. |
 | D2 | Law posture | Code laws full (typecheck, lint-policy, schema-first/effect-first, import boundaries, portless). Ceremony exempt by path-scoped construction: docgen coverage, coverage ratchet, changesets, storybook. Lab CI lanes not required-check blockers. |
 | D3 | Delete scope | General command, any workspace package/app; refuses on reverse dependencies (leaf-only guard); slice packages defer to doctrine-11 retirement. |
-| D4 | Variants v1 | nextjs + vite + service (pure Effect `effect/unstable/httpapi` server). Tauri = phase 2 (P3) with a toolchain/CI spike, landing as a variant on the same AppKind abstraction. |
+| D4 | Variants v1 | nextjs + vite + service (pure Effect `effect/http-api` server). Tauri = phase 2 (P3) with a toolchain/CI spike, landing as a variant on the same AppKind abstraction. |
 | D5 | Registration | Zero-root-churn hard requirement: one-time `apps/labs/*` glob + path-scoped gate entries; afterward create/delete touches no shared config by hand. |
 | D6 | Substrate | Registration geometry as schema (`RegistrationSurface`); create = forward interpreter, delete = inverse, doctor = declared-vs-actual diff / residue detection. |
 | D7 | Doctor rollout | Tool first (on-demand + delete post-verify); CI/yeet gate is a follow-on decision after it runs quiet. |

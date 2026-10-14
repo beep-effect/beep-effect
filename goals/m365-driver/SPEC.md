@@ -51,7 +51,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Constraints
 
-- Raw HTTP via `effect/unstable/http` `FetchHttpClient` + `HttpClientRequest`
+- Raw HTTP via `effect/http` `FetchHttpClient` + `HttpClientRequest`
   bearer token; decode every response with `effect/Schema`. Do NOT adopt the
   fluent Graph client or the Kiota SDK runtime; pull TYPES only from
   `@microsoft/microsoft-graph-types`.

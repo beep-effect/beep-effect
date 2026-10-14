@@ -188,7 +188,7 @@ The `@beep/*` bricks this dispatch Layer composes (from bundle `secondaryTargets
 | `@beep/nlp-mcp` (Tool/Toolkit single-source tool schema) | `packages/drivers/nlp-mcp` | **reuse** (tool-schema, supersedes `mike#10`) |
 | `@beep/agents/server` consumer (`AnthropicTurnKernel.ts:129` `Stream.withExecutionPlan`) | `packages/agents/server` | **extend** (first consumer; swap single→multi-provider plan) |
 | `@beep/langextract` capability | `packages/foundation/capability/langextract` | **reuse** (downstream extraction consumer) |
-| `effect/unstable/ai` — `LanguageModel.generateObject`, `OpenAiStructuredOutput`, `AnthropicStructuredOutput`, `AiError` (`isRetryable`/`retryAfter`), `Model`, `Toolkit`/`Tool` | vendored `effect@4.0.0-beta.91` | **reuse** (engine + structured output; drops netNew #5) |
+| `effect/ai` — `LanguageModel.generateObject`, `OpenAiStructuredOutput`, `AnthropicStructuredOutput`, `AiError` (`isRetryable`/`retryAfter`), `Model`, `Toolkit`/`Tool` | vendored `effect@4.0.0-beta.91` | **reuse** (engine + structured output; drops netNew #5) |
 | `ExecutionPlan` (`make`/`merge`/`CurrentMetadata`) + `Effect.withExecutionPlan`/`Stream.withExecutionPlan` | vendored `effect` | **reuse** (ordered-fallback engine — replaces dead `Layer.orElse`) |
 | `Config`/`ConfigProvider` (`orElse`, `redacted`, `constantCase`, `layer`) | vendored `effect` | **reuse** (key precedence primitives) |
 | `Schedule` (`exponential`/`spaced`/`recurs`/`jittered`/`either`/`both`) | vendored `effect` | **reuse** (retry-policy vocabulary; `compose`/`intersect`/`union` removed in v4) |

@@ -26,6 +26,8 @@ import {
   NoNativeRuntimeRulesOptions,
   runNoNativeRuntimeRules,
 } from "./NoNativeRuntime.ts";
+import { RetiredEffectPathsOptions } from "./RetiredEffectPaths.model.ts";
+import { formatRetiredEffectPathFinding, runRetiredEffectPaths } from "./RetiredEffectPaths.ts";
 import { runTerseEffectRules, TerseEffectRulesOptions } from "./TerseEffect.ts";
 
 const $I = $RepoCliId.create("commands/Laws/Laws.command");
@@ -562,6 +564,54 @@ const lawsFrozenGrantSetCommand = Command.make(
 ).pipe(Command.withDescription("Check FrozenGrantSet.make stays inside its defining module"));
 
 /**
+ * CLI command for the retired Effect module path law.
+ *
+ * **Example** (Reference the retired-effect-paths subcommand)
+ *
+ * ```ts
+ * console.log("lawsRetiredEffectPathsCommand")
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+const lawsRetiredEffectPathsCommand = Command.make(
+  "retired-effect-paths",
+  {
+    check: Flag.Boolean("check").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Fail when any git-tracked text file contains a retired Effect module path")
+    ),
+    json: Flag.Boolean("json").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Emit the complete law summary as schema-shaped JSON")
+    ),
+  },
+  Effect.fn(function* ({ check, json }) {
+    const summary = yield* runRetiredEffectPaths(
+      RetiredEffectPathsOptions.make({ cwd: process.cwd(), strictCheck: check })
+    );
+
+    if (json) {
+      yield* printCommandJson(summary);
+    } else {
+      yield* Console.log(`[effect-governance-retired-effect-paths] mode=${check ? "check" : "report"}`);
+      yield* Console.log(`[effect-governance-retired-effect-paths] scanned_files=${summary.scannedFiles}`);
+      yield* Console.log(`[effect-governance-retired-effect-paths] skipped_binary_files=${summary.skippedBinaryFiles}`);
+      yield* Console.log(`[effect-governance-retired-effect-paths] allowlisted_files=${summary.allowlistedFiles}`);
+      yield* Console.log(`[effect-governance-retired-effect-paths] findings=${summary.findings.length}`);
+      for (const finding of summary.findings) {
+        yield* Console.log(formatRetiredEffectPathFinding(finding));
+      }
+    }
+
+    if (summary.strictFailure) {
+      return yield* failWithReportedExit("effect-governance-retired-effect-paths: check failed.");
+    }
+  })
+).pipe(Command.withDescription("Check git-tracked text files for retired Effect module paths"));
+
+/**
  * CLI command for repo-local native runtime governance checks.
  *
  * **Example** (Reference the native-runtime subcommand)
@@ -676,6 +726,7 @@ export const lawsCommand = Command.make("laws", {}, () =>
     "- bun run beep laws native-runtime --check",
     "- bun run beep laws effect-fn --check",
     "- bun run beep laws frozen-grant-set --check",
+    "- bun run beep laws retired-effect-paths --check",
     "- bun run beep laws terse-effect --check",
     "- bun run beep laws terse-effect --write",
     "- bun run beep laws allowlist-check",
@@ -687,6 +738,7 @@ export const lawsCommand = Command.make("laws", {}, () =>
     lawsNativeRuntimeCommand,
     lawsEffectFnCommand,
     lawsFrozenGrantSetCommand,
+    lawsRetiredEffectPathsCommand,
     lawsTerseEffectCommand,
     lawsAllowlistCheckCommand,
   ])

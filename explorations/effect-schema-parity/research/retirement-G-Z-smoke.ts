@@ -1,3 +1,4 @@
+import * as A from "../../../.repos/effect/packages/effect/src/Arbitrary.ts";
 import * as D from "../../../.repos/effect/packages/effect/src/DateTime.ts";
 import * as E from "../../../.repos/effect/packages/effect/src/Effect.ts";
 import * as JS from "../../../.repos/effect/packages/effect/src/JsonSchema.ts";
@@ -5,7 +6,6 @@ import * as P from "../../../.repos/effect/packages/effect/src/Predicate.ts";
 import * as S from "../../../.repos/effect/packages/effect/src/Schema.ts";
 import * as G from "../../../.repos/effect/packages/effect/src/SchemaGetter.ts";
 import * as SR from "../../../.repos/effect/packages/effect/src/SchemaRepresentation.ts";
-import * as A from "../../../.repos/effect/packages/effect/src/unstable/arbitrary/Arbitrary.ts";
 
 const checks: { name: string; value: unknown }[] = [];
 function check(name: string, ok: boolean, value: unknown) {

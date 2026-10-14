@@ -17,7 +17,7 @@ order, nlp-mcp last behind the live capture.
    (`sanitizedToolkit` / `registerSanitizedToolkit`), `McpCaller.ts` (JSDoc rewritten to transport
    facts), `TierGate.ts`,
    `ApiKeyRequired.ts`, `ToolkitComposition.ts`, `FieldTier.ts`, `Version.ts`; upstream source
-   `effect:packages/effect/src/unstable/ai/McpServer.ts` (`registerToolkit`) as installed in
+   `effect:packages/effect/src/ai/McpServer.ts` (`registerToolkit`) as installed in
    `node_modules/effect`. NET-NEW: the protocol-list helper, the named error translator
    (D-projection), the dual-read of `McpServerClient` / `McpRequestContext` (the 2025
    `mcp-session-id` read stays until Goal B deletes it), and the product-neutral dispatch anchor
@@ -30,7 +30,7 @@ order, nlp-mcp last behind the live capture.
    JSON-RPC client construction in the same harness and in
    `goals/ontology-agent-surface/ops/live-mcp-client.ts`, the stdio conversation test in
    `packages/drivers/m365-mcp/test/Server.test.ts`, Effect's conformance harness
-   (`effect:packages/effect/test/unstable/ai/McpServer/**`).
+   (`effect:packages/effect/test/ai/McpServer/**`).
 3. S2/S3 host cutover in order: `packages/drivers/m365-mcp`, `packages/drivers/uspto-mcp`,
    `packages/drivers/gov-legal-mcp`, `packages/law-practice/server` (+ `apps/practice-kg-mcp`),
    then `packages/drivers/nlp-mcp`. Each: protocol pin through the helper, `instructions`,

@@ -66,7 +66,7 @@
 - class: law   severity: backlog
 - standard: D3 (every third-party runtime dep gets a ledger backlog row naming its Effect-native replacement candidate)   evidence: Ledger row w5-github-actions: newDeps `[{"name":"@azure/storage-blob","kind":"runtime","spec":"^12.33.0","replacement":null}]`, backlog: []; README.md:339-341 "Dependency backlog: None".
 - failure: The one third-party runtime dependency has no replacement candidate recorded, so the D3 decision point cannot be scheduled.
-- fix: Add a ledger backlog row for @azure/storage-blob naming the candidate (effect/unstable/http HttpClient against the Azure Blob REST surface, reusing the signing shape already in internal/sigv4.ts) and mirror it under README Port notes → Dependency backlog.
+- fix: Add a ledger backlog row for @azure/storage-blob naming the candidate (effect/http HttpClient against the Azure Blob REST surface, reusing the signing shape already in internal/sigv4.ts) and mirror it under README Port notes → Dependency backlog.
 
 ### fable-1-11
 - file: scratchpad/effected/github-actions/internal/ieeeNumber.ts:16

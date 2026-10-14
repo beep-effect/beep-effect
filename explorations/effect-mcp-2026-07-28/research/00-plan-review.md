@@ -17,11 +17,11 @@ source claims against the Effect clone before accepting them.
 
 With a protocol list of only `McpProtocol.v2026_07_28`, an `initialize` request is rejected:
 `selectStatefulProtocol` considers only stateful adapters
-(`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:181-186`), and the runtime then
+(`effect:packages/effect/src/ai/internal/mcpRuntime.ts:181-186`), and the runtime then
 fails with "initialize is not supported by the configured MCP protocols"
-(`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:319-326`). The stdio codec takes the
-same path (`effect:packages/effect/src/unstable/ai/McpServer.ts:1484-1487`). Effect permits mixed
-lists with at most one stateless adapter (`effect:packages/effect/src/unstable/ai/internal/mcpRuntime.ts:193-209`).
+(`effect:packages/effect/src/ai/internal/mcpRuntime.ts:319-326`). The stdio codec takes the
+same path (`effect:packages/effect/src/ai/McpServer.ts:1484-1487`). Effect permits mixed
+lists with at most one stateless adapter (`effect:packages/effect/src/ai/internal/mcpRuntime.ts:193-209`).
 Whether in-repo launchers (agents started through `.mcp.json`, test harnesses) still work under G4
 therefore depends on whether their clients speak 2026-07-28. That is now an explicit research
 question, not an assumption.

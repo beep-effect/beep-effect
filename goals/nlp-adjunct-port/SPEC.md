@@ -31,7 +31,7 @@ corpus dedup pass.
    existing `TransformText`/`TextSimilarity`/`Tversky`/`BowCosine`.
 4. **Streaming:** full 17-tool suite over 4 modules (`TextStream`, `Jsonl`,
    `DatasetLoader`, `Pipeline`) ported into `@beep/nlp-mcp`, mounted as a second
-   toolkit, using `effect/unstable/encoding/Ndjson` + `effect/FileSystem` +
+   toolkit, using `effect/encoding/Ndjson` + `effect/FileSystem` +
    `@effect/platform-node` (no new dependencies).
 5. **Trace/data hygiene:** streaming tools read local files by path — never put raw
    file content into span attributes or metric dimensions (wink law); tests use

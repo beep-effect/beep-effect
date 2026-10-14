@@ -123,7 +123,7 @@ const toDevToolsParentSpan = (parent: O.Option<Tracer.AnySpan>): O.Option<DevToo
             traceId,
             name,
             sampled,
-            attributes,
+            attributes: new Map(attributes),
             status: toDevToolsSpanStatus(status),
             parent: toDevToolsParentSpan(parent),
           })),
@@ -138,13 +138,93 @@ const toDevToolsSpan = (span: Tracer.Span): DevToolsSchema.Span => ({
   traceId: span.traceId,
   name: span.name,
   sampled: span.sampled,
-  attributes: span.attributes,
+  attributes: new Map(span.attributes),
   status: toDevToolsSpanStatus(span.status),
   parent: toDevToolsParentSpan(span.parent),
 });
 
+const makeFilteredDevToolsTracer = Effect.fnUntraced(function* (shouldPublish: DevToolsSpanFilter) {
+  const client = yield* DevToolsClient.DevToolsClient;
+  const currentTracer = yield* Effect.tracer;
+
+  return Tracer.make({
+    span(spanOptions) {
+      const span = currentTracer.span(spanOptions);
+
+      if (!shouldPublish(span.name)) {
+        return span;
+      }
+
+      client.sendUnsafe(toDevToolsSpan(span));
+
+      const originalEvent = span.event;
+      span.event = function (this: Tracer.Span, name, startTime, attributes) {
+        client.sendUnsafe({
+          _tag: "SpanEvent",
+          traceId: span.traceId,
+          spanId: span.spanId,
+          name,
+          startTime,
+          attributes,
+        });
+        return originalEvent.call(this, name, startTime, attributes);
+      };
+
+      const originalEnd = span.end;
+      span.end = function (this: Tracer.Span, endTime, exit) {
+        originalEnd.call(this, endTime, exit);
+        client.sendUnsafe(toDevToolsSpan(span));
+      };
+
+      return span;
+    },
+    context: currentTracer.context,
+  });
+});
+
+/**
+ * Install a tracer that mirrors selected spans to an existing `DevToolsClient`.
+ *
+ * **Details**
+ *
+ * The tracer wraps whichever tracer is current when the layer is built, so
+ * provide the exporting tracer (for example OTLP) underneath this layer. For
+ * every span accepted by `shouldPublish` it sends the start snapshot, each
+ * span event, and the final snapshot when the span ends; rejected spans send
+ * nothing. Attribute maps are copied so later mutation does not leak into a
+ * snapshot already queued for the client.
+ *
+ * **Example** (Mirror HTTP spans to a provided client)
+ *
+ * ```typescript
+ * import { layerFilteredDevToolsTracer } from "@beep/observability/server"
+ * import { Str } from "@beep/utils"
+ * import * as DevToolsClient from "effect/devtools/DevToolsClient"
+ * import * as Layer from "effect/Layer"
+ *
+ * const TracerLive = layerFilteredDevToolsTracer((name: string) => Str.startsWith(name, "Http.")).pipe(
+ *   Layer.provide(Layer.succeed(DevToolsClient.DevToolsClient, DevToolsClient.DevToolsClient.of({ sendUnsafe: () => {} })))
+ * )
+ * console.log(TracerLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const layerFilteredDevToolsTracer = (
+  shouldPublish: DevToolsSpanFilter
+): Layer.Layer<never, never, DevToolsClient.DevToolsClient> =>
+  Layer.effect(Tracer.Tracer, makeFilteredDevToolsTracer(shouldPublish));
+
 /**
  * Mirror only selected spans to the Effect devtools websocket.
+ *
+ * **Details**
+ *
+ * Publishes span starts, span events, and span ends for spans accepted by
+ * `shouldPublish`, matching upstream `DevToolsClient.layerTracer` for those
+ * spans. Provide the exporting tracer underneath this layer so devtools wraps it
+ * instead of replacing it.
  *
  * **Example** (Layer publishing all spans)
  *
@@ -167,26 +247,5 @@ export const layerFilteredDevTools = (options: LayerFilteredDevToolsOptions): La
     Layer.provide(Socket.layerWebSocketConstructorGlobal)
   );
 
-  return Layer.effect(
-    Tracer.Tracer,
-    Effect.gen(function* () {
-      const client = yield* DevToolsClient.DevToolsClient;
-      const currentTracer = yield* Effect.tracer;
-
-      return Tracer.make({
-        span(spanOptions) {
-          const span = currentTracer.span(spanOptions);
-
-          if (!options.shouldPublish(span.name)) {
-            return span;
-          }
-
-          client.sendUnsafe(toDevToolsSpan(span));
-
-          return span;
-        },
-        context: currentTracer.context,
-      });
-    })
-  ).pipe(Layer.provide(socketClientLayer));
+  return layerFilteredDevToolsTracer(options.shouldPublish).pipe(Layer.provide(socketClientLayer));
 };

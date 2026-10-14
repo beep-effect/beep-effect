@@ -165,7 +165,7 @@ You are resuming the `mcp-auth-gated-registration` exploration packet (Gold-Inta
 
 ## Read first (ground-truth before acting)
 - `explorations/mcp-auth-gated-registration/DECISIONS.md` - the 7 pre-drafted, still-OPEN align questions (recommendation + rationale each); your work this session.
-- `explorations/mcp-auth-gated-registration/RESEARCH.md` - cited prior art + in-repo substrate; read the synthesis AND the per-theme `research/*.md` it links (effect v4 `Tool`/`Toolkit`/`McpServer` ground truth lives in `node_modules/effect/src/unstable/ai/`).
+- `explorations/mcp-auth-gated-registration/RESEARCH.md` - cited prior art + in-repo substrate; read the synthesis AND the per-theme `research/*.md` it links (effect v4 `Tool`/`Toolkit`/`McpServer` ground truth lives in `node_modules/effect/src/ai/`).
 - `explorations/mcp-auth-gated-registration/CAPTURE.md` - 28 nuggets, netNew build list (#1-#5), alreadyCovered (do NOT re-scaffold), cautions (PatentsView sunset, licensing).
 - `explorations/mcp-auth-gated-registration/ops/manifest.json` - stage `research`, `openQuestions`, links.
 - `packages/drivers/nlp-mcp`, `packages/drivers/m365-mcp`, `packages/drivers/uspto` - the live hosts/driver to compose against (`@beep/uspto` is the Shape C `apiKey: Option<Redacted>` precedent).
@@ -175,13 +175,13 @@ You are resuming the `mcp-auth-gated-registration` exploration packet (Gold-Inta
 - `/explore mcp-auth-gated-registration` - drive/resume the pipeline; closes the loop (manifest, README Trail, ATLAS).
 - `/grill-with-docs mcp-auth-gated-registration` - the align engine: close ONE branch-closing question at a time, recommended answer first.
 - `repo-symbol-discovery` - capability-cited reuse: verify `ClaimGate` (`@beep/epistemic-use-cases`), `UsageRecord` (`@beep/epistemic-tables`), `Config.redacted`/`Config.option`, and the `nlp-mcp` `Layer.mergeAll` seam before inventing.
-- `effect-v4-imports` - v4 `Layer.unwrap`/`Layer.catch` dynamic layer folding + `effect/unstable/ai` import hygiene for the conditional-composition spike.
+- `effect-v4-imports` - v4 `Layer.unwrap`/`Layer.catch` dynamic layer folding + `effect/ai` import hygiene for the conditional-composition spike.
 
 ## Task this session
 Run align: close the 7 open DECISIONS questions in order via `/grill-with-docs`, folding each resolution back into `DECISIONS.md` (Status: decided) and syncing manifest `openQuestions`. Then advance shape (`BRIEF.md`) -> decompose (`MAP.md`) -> graduate. STOP after the codex spec-gate folds back, before writing any product code. Open questions to close, verbatim:
 - Q1: Patterns-only kit vs also building the gov-legal MCP host and drivers?
 - Q2: New dedicated gov-legal/USPTO MCP package (reusing the seam) vs extending NLP/M365?
-- Q3: Native `effect/unstable/ai` vs wrap a third-party MCP framework?
+- Q3: Native `effect/ai` vs wrap a third-party MCP framework?
 - Q4: Where the kit lives — new `@beep/mcp-kit` driver package vs `foundation/capability` vs inline?
 - Q5: Per-source auth model (`gate none|soft|hard`) + tool-vanish (build-time) vs graceful-degrade (call-time)?
 - Q6: `api_key_required` wire channel — success-with-error-JSON vs `tools/call` `isError:true` wrapper?
@@ -191,7 +191,7 @@ Run align: close the 7 open DECISIONS questions in order via `/grill-with-docs`,
 - NON-INVASIVE: do not edit `goals/nlp-adjunct-port`, `goals/m365-mcp`, or the `explorations/uspto-patent-driver-depth` / `explorations/gov-legal-data-driver-codegen` siblings; cross-link, never absorb. This packet is patterns-only per CAPTURE.
 - CAPABILITY-CITED BEFORE INVENTING: compose existing bricks — the `nlp-mcp`/`m365-mcp` `Toolkit`+`layerStdio` scaffold, `@beep/uspto` Shape C, `ClaimGate` refusal-as-value, `UsageRecord` — confirmed via `repo-symbol-discovery`/`rg` before any net-new helper.
 - GROUND-TRUTH at action time: the gold `finalBeepTarget` hint is STALE; re-resolve every path against the live tree. The user edits this same git tree in parallel — surface unexplained out-of-scope changes, never revert them.
-- v4 substrate: build native to `effect@4.0.0-beta.91` `effect/unstable/ai`; the bundled `McpServer` speaks MCP `2025-06-18` (not `2025-11-25`) — any newer-spec reliance needs an effect-upgrade+reverify task first.
+- v4 substrate: build native to `effect@4.0.0-beta.91` `effect/ai`; the bundled `McpServer` speaks MCP `2025-06-18` (not `2025-11-25`) — any newer-spec reliance needs an effect-upgrade+reverify task first.
 - Secrets are `op://` refs via `onepassword-secret-refs`; model auth off the optional-secret class (`Config.redacted(...).pipe(Config.option)`) — a missing key makes the host Layer fail-fast or the tool degrade, never a committed key.
 - CLOSE THE LOOP: update `ops/manifest.json` (stage/openQuestions/updated), README Trail + Next-Open-Question, and `explorations/ATLAS.md` (single-writer) every session.
 - Codex spec-gate via `codex:codex-rescue` after `SPEC.md`; fold critique before graduating.
@@ -281,7 +281,7 @@ You are resuming the `effect-orchestration-patterns` exploration packet (Gold-In
 - `/grill-with-docs effect-orchestration-patterns` - close one branch-closing DECISIONS question at a time, recommended-answer-first, grounded against repo law.
 - `/explore effect-orchestration-patterns` - pipeline driver; advance research -> shape and close the loop.
 - `repo-symbol-discovery` - capability-cited reuse: confirm the named reuse targets (`@beep/utils` `SqlTest.ts` `PgConnectRetryPolicy`, `@beep/schema` `TaggedErrorClass`/`CauseTaggedError`, anthropic `ExecutionPlan`, `ai-provider-cli` `LiteralKit`+`.$match`) BEFORE inventing any helper.
-- `effect-v4-imports` - validate `Layer.unwrap` / `Config.literals` / `effect/unstable/persistence/RateLimiter` against the vendored beta.91 surface.
+- `effect-v4-imports` - validate `Layer.unwrap` / `Config.literals` / `effect/persistence/RateLimiter` against the vendored beta.91 surface.
 
 ## Task this session
 Drive `/grill-with-docs` to resolve all 7 open forks (capture each ruling back into `DECISIONS.md` as `Status: decided`), then advance the packet research -> shape (author `BRIEF.md`). STOP after BRIEF.md is shaped — await user sign-off before decompose (`MAP.md`). Open forks to close, verbatim:
@@ -687,7 +687,7 @@ You are resuming the `local-first-projection-sync` exploration packet (Gold-Inta
 - `/explore local-first-projection-sync` - drive/resume the pipeline (research -> align -> shape); owns the close-the-loop bookkeeping.
 - `/grill-with-docs local-first-projection-sync` - the align engine: close ONE branch-closing DECISIONS question at a time, recommended answer first.
 - `repo-symbol-discovery` - before ratifying any "build" answer, re-confirm the cited reuse targets still exist (`EventStreamHub`/`notifyUser` NOT FOUND; `SynchronizedRef` NOT FOUND in any `src`; `MutableHashMap` proven; `ChatRpcs` streaming RPC; `ThreadStore` write boundary).
-- `effect-v4-imports` - the fan-out primitive is Effect `4.0.0-beta.91`: there is NO `effect/Mailbox`; map to `Queue` + `Stream.fromQueue`, `effect/unstable/rpc` imports.
+- `effect-v4-imports` - the fan-out primitive is Effect `4.0.0-beta.91`: there is NO `effect/Mailbox`; map to `Queue` + `Stream.fromQueue`, `effect/rpc` imports.
 
 ## Task this session
 Resume ALIGN. Walk Q1-Q7 in order, recommended answer first; on each ratify/amend/reject flip its `Status` to `resolved <date>` with final Answer + Rationale (incl. rejected options) and clear it from `manifest.json` openQuestions. STOP after the open questions are resolved (or the user signs off) — do NOT write `BRIEF.md` / advance to shape until align is closed and the user approves.

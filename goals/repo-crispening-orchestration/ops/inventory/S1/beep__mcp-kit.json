@@ -79,14 +79,14 @@
     "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
     "line": 186,
     "symbol": "ToolCallRequest",
-    "smell": "Exported interface describing the gate's dispatch request — surface-level match, audited and rejected: `tool` is a live effect/unstable/ai Tool runtime handle (AiTool.Any with annotations Context), not data.",
+    "smell": "Exported interface describing the gate's dispatch request — surface-level match, audited and rejected: `tool` is a live effect/ai Tool runtime handle (AiTool.Any with annotations Context), not data.",
     "proposedTarget": "None — runtime-handle/port carve-out (fence 1); matches detectInterfaceReason's non-schema-signals screen.",
     "confidence": 0.3,
     "mechanization": "judgment",
     "roiRank": 0,
     "exception": {
       "reason": "Port-interface carve-out: carries a 3rd-party runtime handle (AiTool.Any, whose annotations are a Context/ServiceMap) that has no schema representation; the schema-representable projection of this request (tool name, toolCallId, outcome) is already captured by the TierGateAuditRecord S.Class.",
-      "boundary": "effect/unstable/ai Tool dispatch seam consumed by TierGateShape.evaluate and dispatchWithTierGate."
+      "boundary": "effect/ai Tool dispatch seam consumed by TierGateShape.evaluate and dispatchWithTierGate."
     }
   },
   {
@@ -214,14 +214,14 @@
     "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
     "line": 219,
     "symbol": "registerSanitizedToolkit",
-    "smell": "Raw JSON.stringify(result.encodedResult) into CallToolResult content text — textual boundary-codec surface hit. Audited and rejected: this line byte-for-byte mirrors upstream McpServer.registerToolkit's CallToolResult mapping (effect/unstable/ai/McpServer.ts:717-734), which sanitizedToolkit must replicate because upstream offers no dispatch-wrapping seam.",
-    "proposedTarget": "None while the upstream mirror is required. If effect/unstable/ai ever grows a dispatch-wrapping hook, this whole hand-mirrored registration loop (including the stringify) should be deleted in favor of wrapping upstream registration.",
+    "smell": "Raw JSON.stringify(result.encodedResult) into CallToolResult content text — textual boundary-codec surface hit. Audited and rejected: this line byte-for-byte mirrors upstream McpServer.registerToolkit's CallToolResult mapping (effect/ai/McpServer.ts:717-734), which sanitizedToolkit must replicate because upstream offers no dispatch-wrapping seam.",
+    "proposedTarget": "None while the upstream mirror is required. If effect/ai ever grows a dispatch-wrapping hook, this whole hand-mirrored registration loop (including the stringify) should be deleted in favor of wrapping upstream registration.",
     "confidence": 0.2,
     "mechanization": "judgment",
     "roiRank": 0,
     "exception": {
       "reason": "3rd-party boundary-adapter escape hatch: `encodedResult` is already the schema-ENCODED output of the toolkit's own success schema (encoding happens upstream in Toolkit dispatch), so no validation is bypassed — the stringify only mirrors the wire envelope upstream produces for content[].text parity. Diverging from upstream's exact mapping would be a behavior change in a module whose contract is 'same registration semantics, only the span wrapping differs'.",
-      "boundary": "Hand-mirrored McpServer.registerToolkit loop (upstream effect/unstable/ai offers no dispatch-wrapping seam; mirror verified against McpServer.ts:711-758)."
+      "boundary": "Hand-mirrored McpServer.registerToolkit loop (upstream effect/ai offers no dispatch-wrapping seam; mirror verified against McpServer.ts:711-758)."
     }
   }
 ]

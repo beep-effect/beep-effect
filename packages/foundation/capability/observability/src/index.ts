@@ -11,12 +11,12 @@
  * ```ts
  * import * as Cause from "effect/Cause";
  * import * as Effect from "effect/Effect";
- * import { classifyCause, layerConsoleLogger } from "@beep/observability"
+ * import { LoggingConfig, classifyCause, layerConsoleLogger } from "@beep/observability"
  *
  * const classification = classifyCause(Cause.fail(new Error("boom")))
  *
  * const program = Effect.logInfo("classified failure", { classification }).pipe(
- *   Effect.provide(layerConsoleLogger({ format: "pretty", minLogLevel: "Info" }))
+ *   Effect.provide(layerConsoleLogger(LoggingConfig.make({ format: "pretty", minLogLevel: "Info" })))
  * )
  *
  * Effect.runPromise(program)

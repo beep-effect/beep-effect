@@ -51,7 +51,7 @@ Direct ONNX Runtime claims or reuse remain **NEEDS-REVERIFICATION** before P1.
 | Cancellation | `packages/agents/client/src/Chat.atoms.ts` | Reactivity/`AtomRegistry` lifecycle precedent. |
 | Audio event release | `packages/drivers/box/src/Box.streaming.ts` | Scoped event/stream cleanup precedent. |
 | Existing voice drivers | `packages/drivers/xai`; `packages/drivers/venice-ai` | Follow-on evidence only; not slice dependencies. |
-| Browser worker/RPC | `.repos/effect-v4/packages/platform-browser`; `.repos/effect-v4/packages/effect/src/unstable/rpc` | Re-verify APIs; Effect remains outside AudioWorklet. |
+| Browser worker/RPC | `.repos/effect-v4/packages/platform-browser`; `.repos/effect-v4/packages/effect/src/rpc` | Re-verify APIs; Effect remains outside AudioWorklet. |
 
 ## 4. Cross-links
 

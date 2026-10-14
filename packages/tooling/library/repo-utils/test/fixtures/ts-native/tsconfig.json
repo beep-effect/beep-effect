@@ -1,0 +1,4 @@
+{
+  "compilerOptions": { "noLib": true, "noResolve": true, "types": [] },
+  "files": ["input.ts"]
+}

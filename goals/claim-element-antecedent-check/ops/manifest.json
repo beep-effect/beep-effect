@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "claim-element-antecedent-check",
+    "packetId": "goal-packet/v1:9fe9e77b7dd3034d3481d4847f740d689cd6fb1d49eefb41ab47958b09127263",
+    "title": "Claim Element Antecedent Check",
+    "status": "active",
+    "created": "2026-10-14",
+    "updated": "2026-10-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/claim-element-antecedent-check",
+  "lifecycle": "active",
+  "mission": "Give patent claims a span-anchored element tree and an advisory, deterministic §112(b) antecedent-basis and dependency self-check whose findings reach the attorney as claim-finding review items, measured on public USPTO claims with strict structural equality.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/claim-element-graph",
+    "graduated": "2026-10-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/claim-element-antecedent-check/README.md",
+    "goals/claim-element-antecedent-check/SPEC.md",
+    "goals/claim-element-antecedent-check/PLAN.md",
+    "goals/claim-element-antecedent-check/GOAL.md",
+    "goals/claim-element-antecedent-check/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/claim-element-antecedent-check/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Schema",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Service contract",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Deterministic implementation + USPTO adapter + labelled set",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Review items + evaluation",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/claim-element-antecedent-check/GOAL.md)\" -le 4000",
+    "jq . goals/claim-element-antecedent-check/ops/manifest.json",
+    "rg -n \"claim-element-antecedent-check|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/claim-element-antecedent-check",
+    "git diff --check -- goals/claim-element-antecedent-check",
+    "bun run beep goals doctor",
+    "bun run beep quality package-verify @beep/law-practice-domain",
+    "bun run beep quality package-verify @beep/law-practice-use-cases",
+    "bun run beep quality package-verify @beep/law-practice-server",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Graduated 2026-10-14 from explorations/claim-element-graph; P0-P2 are open to start; P3 waits on review-verdict-envelope P1 (ReviewItem / VerdictRow schema)."
+}

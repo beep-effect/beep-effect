@@ -8,8 +8,9 @@ description: >
   Option-ifying nullish fields. NOT for authoring new schemas or domain models
   (use schema-first-development).
 argument-hint: "[lite|full|ultra]"
-version: 0.2.0
-status: active
+metadata:
+  version: "0.2.0"
+  status: active
 ---
 
 # Crispen

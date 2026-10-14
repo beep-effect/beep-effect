@@ -34,7 +34,7 @@ from `explorations/effect-mcp-2026-07-28` (`BRIEF.md`; rulings in `DECISIONS.md`
 3. `explorations/effect-mcp-2026-07-28/RESEARCH.md` §2 (adapter semantics) and §3.1–3.2 (kit, hosts); the lane reports
    `research/10-u1-api-delta.md`, `11-u2-stateless-runtime.md`, `12-u3-effect-guidance.md`,
    `14-s2-ecosystem.md`, `20-r1-mcp-kit.md`, `21-r2-hosts.md` for `file:line` evidence.
-4. The installed Effect source (`node_modules/effect/dist/unstable/ai/**`) for every API claim;
+4. The installed Effect source (`node_modules/effect/dist/ai/**`) for every API claim;
    the Effect reference clone (`.repos/effect`, provisioned by `scripts/setup-effect-ref.sh`) for
    the conformance test sources, which the npm package does not ship.
 5. This `SPEC.md`, then `PLAN.md`, then `GOAL.md`.
@@ -62,7 +62,7 @@ from `explorations/effect-mcp-2026-07-28` (`BRIEF.md`; rulings in `DECISIONS.md`
   `apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts`; the stdio NDJSON
   helper (Node entry) sending `discover` first.
 - `packages/foundation/capability/mcp-kit/test/**` — conformance runner (test-only surface)
-  ported from the reference clone's `effect:packages/effect/test/unstable/ai/McpServer/**`
+  ported from the reference clone's `effect:packages/effect/test/ai/McpServer/**`
   (inventory: lane 11-u2 §10); coverage ratchet for `SanitizedSpan`; the tests named in the
   verification matrix.
 - `packages/foundation/capability/mcp-kit/README.md` — consumer table naming every importer

@@ -6,7 +6,7 @@ Ship `@beep/mcp-kit` at `packages/foundation/capability/mcp-kit`: the reusable
 MCP host-construction kit (credential-keyed toolkit composition, structured
 `api_key_required` envelope, tier-gate dispatch wrapper, progressive
 field-tier projection, span/annotation hygiene helpers) built natively on
-`effect/unstable/ai`, proven by fixture tests, with its consumer plan recorded
+`effect/ai`, proven by fixture tests, with its consumer plan recorded
 in the package README.
 
 Graduated 2026-07-01 from
@@ -98,7 +98,7 @@ Higher sources outrank lower sources when they conflict.
 
 <!-- Seeded from BRIEF.md Rabbit Holes + resolved DECISIONS. -->
 
-- **Effect pin:** `effect@4.0.0-beta.92`, `effect/unstable/ai` is beta — at P0
+- **Effect pin:** `effect@4.0.0-beta.92`, `effect/ai` is beta — at P0
   re-verify the internals this kit depends on against the installed source
   (`McpServer.ts:717-728` isError semantics; `McpServer.ts:255-262`/`:1450`
   EnabledWhen list-only; `Toolkit.ts:263-265` span parameters;
@@ -132,7 +132,7 @@ Back-links, not copies — rationale lives in the exploration:
 
 | Decision | Where |
 | --- | --- |
-| Q1 kit-only scope; Q2 USPTO proving host; Q3 native `effect/unstable/ai`; Q4 `foundation/capability` home; Q4b satisfy ≥2-consumer gate; Q5 `none\|soft\|hard` hybrid gating; Q6 success-JSON channel @ 2025-06-18; Q7 two-layer wall + `UsageRecord.metadata` audit | [`explorations/mcp-auth-gated-registration/DECISIONS.md`](../../explorations/mcp-auth-gated-registration/DECISIONS.md) |
+| Q1 kit-only scope; Q2 USPTO proving host; Q3 native `effect/ai`; Q4 `foundation/capability` home; Q4b satisfy ≥2-consumer gate; Q5 `none\|soft\|hard` hybrid gating; Q6 success-JSON channel @ 2025-06-18; Q7 two-layer wall + `UsageRecord.metadata` audit | [`explorations/mcp-auth-gated-registration/DECISIONS.md`](../../explorations/mcp-auth-gated-registration/DECISIONS.md) |
 | Code-fact verification (all confirmed; effect pin beta.92) | [`reviews/2026-07-01-codex-verification.md`](../../explorations/mcp-auth-gated-registration/reviews/2026-07-01-codex-verification.md) |
 
 ## Acceptance Criteria
@@ -171,7 +171,7 @@ Back-links, not copies — rationale lives in the exploration:
 - Required source files are missing or materially contradictory.
 - The implementation would exceed named scope (e.g. pulling the USPTO host or
   host retrofits into this packet).
-- `effect/unstable/ai` internals have shifted from the verified baseline in a
+- `effect/ai` internals have shifted from the verified baseline in a
   way that invalidates a resolved decision — stop and report; the affected
   decision reopens in the exploration.
 - Verification requires credentials, cost, destructive side effects, or policy

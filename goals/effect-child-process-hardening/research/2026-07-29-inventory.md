@@ -1,4 +1,4 @@
-# `effect/unstable/process` Inventory — 2026-07-29
+# `effect/process` Inventory — 2026-07-29
 
 ## Baseline
 

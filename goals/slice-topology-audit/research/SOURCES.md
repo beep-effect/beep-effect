@@ -17,7 +17,7 @@
 | `v4-slices` | Live slice packages | this repo | `packages/{agents,architecture-lab,documents,epistemic,law-practice,ontology,shared,workspace}/**` | conformance census (exploration `synthesis/00`, 110 rows) | measured |
 | `v4-cli` | Architecture command + gates | this repo | `packages/tooling/tool/cli/src/commands/{Architecture,Lint,Laws,Quality,Fallow,Ci}/**` | hook points and reusable bricks (§4) | extend |
 | `v4-proof` | Canonical slice factory | this repo | `goals/canonical-slice-factory/{README,SPEC,PLAN}.md`, `packages/architecture-lab/**`, `commands/Architecture/internal/AcceptedProofManifest.ts` L130-847 | the accepted proof and its nine divergences (exploration `synthesis/15`) | extend |
-| `effect-v4-rpc` | effect v4 `unstable/rpc` | `.repos/effect` (symlink to the local effect checkout) | `packages/effect/src/unstable/rpc/{Rpc.ts L902,RpcGroup.ts L402,RpcClient.ts L631}` | `Rpc.make(tag, { payload, success, error })`, `RpcGroup.make`, `group.toLayer`, `RpcClient.make` | reuse (primitive under the `Contract` kit) |
+| `effect-v4-rpc` | effect v4 `effect/rpc` | `.repos/effect` (symlink to the local effect checkout) | `packages/effect/src/rpc/{Rpc.ts L902,RpcGroup.ts L402,RpcClient.ts L631}` | `Rpc.make(tag, { payload, success, error })`, `RpcGroup.make`, `group.toLayer`, `RpcClient.make` | reuse (primitive under the `Contract` kit) |
 
 ## 2. Upstream repositories & licenses
 

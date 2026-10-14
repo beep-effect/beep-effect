@@ -68,7 +68,7 @@
       "name": "Broken-line parts and multi-part fixture",
       "status": "in-progress"
     },
-    { "id": "P4", "name": "Opt-in contour shading", "status": "pending" },
+    { "id": "P4", "name": "Opt-in contour shading", "status": "in-progress" },
     { "id": "P5", "name": "Mailbox intake", "status": "in-progress" },
     {
       "id": "P6",

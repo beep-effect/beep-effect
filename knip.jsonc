@@ -6,7 +6,14 @@
     "packages/**": {
       // Top-level source modules are public wildcard exports in flat-uniform packages.
       // Directory barrels are discovered from each package's export map.
-      "entry": ["src/*.ts"]
+      "entry": ["src/*.ts"],
+      // The typecheck lanes run `tsc-rs -p tsconfig.check.json` / `tsconfig.test.json`
+      // (goals/tsc-rs-gates). Knip's TypeScript plugin only follows `-p` behind the `tsc`
+      // and `tsgo` binaries, so name the project files here or `types` such as
+      // `bun-types` in tsconfig.test.json are reported unused.
+      "typescript": {
+        "config": ["tsconfig.json", "tsconfig.*.json", "test/tsconfig.json"]
+      }
     },
     "packages/ecosystem/effect-drizzle": {
       // These consumers are invoked out of band: tstyche discovers the contract file,
@@ -188,11 +195,22 @@
   // CLI flag in every package's build script, which knip can't trace.
   // statelyai is the Stately CLI (`bunx statelyai scan|open`, see
   // docs/runbooks/xstate-effect-statecharts.md): a binary, never an import.
+  // @beep/tsgo-shim provides the `tsgo` bin that `beep quality test-tsgo`, `tsgo-smoke`
+  // and the Effect compiler policy test spawn from node_modules/.bin; since the gates
+  // moved to tsc-rs (goals/tsc-rs-gates) no root script names it.
   "ignoreDependencies": [
+    "@beep/tsgo-shim",
+    // The root install owns the TypeScript 7 package that `prepare` patches with
+    // effect-tsgo and that provides the root `tsc` bin; workspaces that import its
+    // unstable API declare their own `@typescript/native` (goals/ts7-ts-native-api).
+    "@typescript/native",
     "@effect/language-service",
     "babel-plugin-annotate-pure-calls",
     "statelyai"
   ],
+  // Root projects compile through `tsc-rs -p tsconfig.configs.json` (`check:configs`),
+  // which the TypeScript plugin does not follow; list the project files instead.
+  "typescript": { "config": ["tsconfig.json", "tsconfig.*.json"] },
   // op = 1Password CLI, beep-cli = repo CLI bin, portless = dev proxy, and uv = the
   // system Python project runner — binaries not provided as resolvable dependency imports.
   // readlink is a POSIX/coreutils system binary (root `instructions:drift` script), never an

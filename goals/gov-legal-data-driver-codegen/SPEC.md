@@ -78,7 +78,7 @@ are `packages/drivers/govinfo` and `packages/drivers/ecfr` only.
   (runpod `RunpodRawRequest`) for spec drift.
 - **Hand-authored transport boundary (Q2).** Codegen never emits auth, retry,
   cache, rate-limit, or `Context.Service` wiring — those stay hand-authored on
-  `effect/unstable/http`, mirroring runpod's `Runpod.generated.ts` vs
+  `effect/http`, mirroring runpod's `Runpod.generated.ts` vs
   `Runpod.service.ts` split.
 - **Official-publisher data sourcing (default rule); NEVER PatentsView.** The
   default is to ingest only from official US-Gov publishers: GovInfo/eCFR/FedReg
@@ -143,7 +143,7 @@ Each criterion is falsifiable and maps 1-to-1 to a row in the Verification Matri
       spike is **mandatory even if FedReg is the selected keyless driver**.
 - [ ] **AC#5 — generated boundary.** Codegen output under `src/_generated/*` is
       Schema value models + operation descriptors only. Banned set (asserted by
-      ripgrep over `src/_generated/*`): imports from `effect/unstable/http`,
+      ripgrep over `src/_generated/*`): imports from `effect/http`,
       `Config`, `Context`, `Cache`, `Schedule`, and any `transformClient`,
       `mapRequest`, `withRateLimiter`, `retryTransient`, or auth-header symbol.
 - [ ] **AC#6 — CI drift wiring.** A CI `git diff --exit-code` codegen-drift check
@@ -206,7 +206,7 @@ closed.
 | Q | Decision | Resolution |
 | --- | --- | --- |
 | Q1 | Codegen engine | **Tiered**, not one global generator. `@effect/openapi-generator` (MIT, pinned `4.0.0-beta.91`, the acp path) where a clean spec exists (GovInfo; eCFR Swagger-2.0 **behind a generator spike**); runpod-style bespoke renderer over a checked-in spec for CourtListener/DOL; box `.d.ts` parser as 3rd fallback. NO Orval/axios/Zod; do not vendor MPL `openapi-to-effect`. |
-| Q2 | Codegen boundary | Codegen emits **only** effect/Schema value models + operation descriptors into `src/_generated/*`. ALL transport (auth/retry/cache/rate-limit/`Context.Service`) stays **hand-authored** on `effect/unstable/http` (runpod `*.generated` vs `*.service` split). NO first-party OpenAPI→MCP-Toolkit generator in v1. |
+| Q2 | Codegen boundary | Codegen emits **only** effect/Schema value models + operation descriptors into `src/_generated/*`. ALL transport (auth/retry/cache/rate-limit/`Context.Service`) stays **hand-authored** on `effect/http` (runpod `*.generated` vs `*.service` split). NO first-party OpenAPI→MCP-Toolkit generator in v1. |
 | Q3 | MCP target | A new `packages/drivers/gov-legal-mcp` **sibling** (m365-mcp/nlp-mcp precedent) is **DEFERRED** to a named follow-on goal gated behind ≥2 proven drivers — NOT v1. Carries the generated-tool-name collision contract. |
 | Q4 | First slice | **Finish `@beep/govinfo` first** (do not restart — Search HttpApi contract + value models exist). Slice 2 = a keyless driver (eCFR or FedReg). CourtListener + DOL **last**. |
 | Q5 | Shared client | **ONE** transformer over **THREE** auth families (CourtListener Token-header; api.data.gov `api_key` query param for GovInfo; agency-native `X-API-KEY` for DOL), via `HttpApiClient.make`'s `transformClient` (govinfo) + `HttpClient.mapRequest` (raw drivers), on native primitives (`HttpClient.withRateLimiter`, `HttpClient.retryTransient` with `Schedule.exponential` ⊕ jittered, `Cache.makeWith({ timeToLive })`). Secrets via `Config.redacted` per driver. |

@@ -26,7 +26,30 @@ const slugAllowedCharactersPattern = /^[a-z0-9-]+$/;
 const doesNotStartWithHyphen = (value: unknown): boolean => P.isString(value) && !Str.startsWith(value, "-");
 const doesNotEndWithHyphen = (value: unknown): boolean => P.isString(value) && !Str.endsWith(value, "-");
 
-const SlugChecks = S.makeFilterGroup(
+/**
+ * Filter group behind {@link Slug}: lowercase ASCII letters, digits, and single
+ * hyphen separators with no leading or trailing hyphen.
+ *
+ * **Details**
+ *
+ * Exported so other kebab-case identifier schemas (for example an Agent Skills
+ * `name`) reuse the same checks without taking the `Slug` brand.
+ *
+ * **Example** (Reuse the checks on a length-capped identifier)
+ *
+ * ```ts
+ * import { SlugChecks } from "@beep/schema"
+ * import * as S from "effect/Schema"
+ *
+ * const ShortSlug = S.NonEmptyString.check(SlugChecks, S.isMaxLength(8))
+ * console.log(S.is(ShortSlug)("pdf-tool")) // true
+ * console.log(S.is(ShortSlug)("PDF-tool")) // false
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const SlugChecks = S.makeFilterGroup(
   [
     S.isPattern(slugAllowedCharactersPattern, {
       identifier: $I`SlugAllowedCharactersCheck`,

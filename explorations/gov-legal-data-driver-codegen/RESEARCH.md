@@ -60,7 +60,7 @@ retry/backoff + token-bucket rate limiter) is largely native in
 - **Native rate limiting.** v4 has NO top-level `RateLimiter` (the v3
   `effect/RateLimiter` is gone — contrast
   https://effect-ts.github.io/effect/effect/RateLimiter.ts.html); the only one
-  is `effect/unstable/persistence/RateLimiter` (algorithm `"fixed-window" |
+  is `effect/persistence/RateLimiter` (algorithm `"fixed-window" |
   "token-bucket"`, `window`, `limit`, per-call `tokens`, in-process
   `layerStoreMemory`). `HttpClient.withRateLimiter` applies it per request,
   honors `Retry-After` in **both** RFC 9110 forms (`delay-seconds` and
@@ -79,7 +79,7 @@ retry/backoff + token-bucket rate limiter) is largely native in
   `timeToLive(exit, key)` function — the hook for the uspto-patents-mcp "+10%
   random TTL jitter to avoid stampede" plus shorter negative-cache TTLs on
   failure `Exit`s; the static `Cache.make` form cannot do either.
-- **Native MCP server.** `effect/unstable/ai/McpServer` (`layerStdio` routes
+- **Native MCP server.** `effect/ai/McpServer` (`layerStdio` routes
   logs to stderr to keep stdout pure JSON-RPC; `toolkit`/`registerToolkit`)
   plus `Toolkit`/`Tool.make` ARE the MCP target — not
   `@modelcontextprotocol/sdk`. The same `Tool`/`Toolkit` abstraction also drives
@@ -245,7 +245,7 @@ open questions** — appetite and sequencing must size the net-new work, not jus
   over package.json deps returns only a test fixture under
   `packages/tooling/library/repo-utils/test/fixtures/mock-monorepo` — confirmed).
 - **Hand-written transport is the boundary codegen does NOT cross.** runpod
-  ships `packages/drivers/runpod/src/Runpod.service.ts` (on `effect/unstable/http`
+  ships `packages/drivers/runpod/src/Runpod.service.ts` (on `effect/http`
   `HttpClient` + `FetchHttpClient`, with a `RunpodRawRequest` escape hatch for
   endpoints ahead of the checked-in spec) and `packages/drivers/runpod/src/Runpod.config.ts`
   (`apiKey` as `S.optionalKey(S.String.pipe(S.RedactedFromValue))`, never
@@ -268,7 +268,7 @@ open questions** — appetite and sequencing must size the net-new work, not jus
   (`SearchResult`, `PackageInfo`, `GranuleMetadata`, `SearchBody`,
   `SearchResponse`, etc. under `src/domain/values/`) and one `Search` HttpApi
   contract (`src/domain/contracts/Search/{Search.contract.ts,Search.http.ts}` —
-  `HttpApiEndpoint.post("search","/search",…)` from `effect/unstable/httpapi`,
+  `HttpApiEndpoint.post("search","/search",…)` from `effect/http-api`,
   Failure as `S.toTaggedUnion` of bad-request/not-found/internal-error). "Finish
   govinfo" = tighten placeholder `/** change me */` annotations + **add the
   missing client/config/auth(api_key query)/retry/cache layer** on top of the
@@ -298,10 +298,10 @@ open questions** — appetite and sequencing must size the net-new work, not jus
   tool-naming casings: `Tool.make("Tokenize",…)` (nlp) and
   `Tool.make("m365_list_drives",…)` (m365, the per-driver-prefix pattern).
 - **Shared HTTP-client primitives are all present in `effect@4.0.0-beta.91`**
-  (confirmed pinned, `package.json:157`): `effect/unstable/http`
+  (confirmed pinned, `package.json:157`): `effect/http`
   (`FetchHttpClient`, `HttpClient.mapRequest`/`filterStatusOk`/`retryTransient`/
   `withRateLimiter`/`catchTag`, `HttpClientRequest.setHeader`/`bearerToken`),
-  `effect/unstable/persistence/RateLimiter`, `effect/Cache`, `Redacted`,
+  `effect/persistence/RateLimiter`, `effect/Cache`, `Redacted`,
   `Config.redacted`, and the `HttpApiClient.make(api, { transformClient })` seam
   — the single generalization point that lets one shared
   auth+retry+cache+rate-limit transformer serve both raw-client drivers and the
@@ -386,8 +386,8 @@ open questions** — appetite and sequencing must size the net-new work, not jus
   https://data.uspto.gov/support/transition-guide/patentsview). Any patents
   driver must be **ODP-only, NEVER PatentsView**.
 - **Effect v4 beta churn:** `effect` + `@effect/openapi-generator` both pinned
-  `4.0.0-beta.91`; `unstable/` modules (`http`, `ai/McpServer`, `cli`,
-  `persistence/RateLimiter`) "may receive breaking changes in minor releases"
+  `4.0.0-beta.91`; `@stability unstable` modules (`effect/http`, `effect/ai/McpServer`,
+  `effect/cli`, `effect/persistence/RateLimiter`) "may receive breaking changes in minor releases"
   (https://github.com/Effect-TS/effect-smol/blob/main/MIGRATION.md). Pin exact
   versions in the codegen template; the acp generator already pins both upstream
   release and effect version.
@@ -407,7 +407,7 @@ open questions** — appetite and sequencing must size the net-new work, not jus
   us-gov-open-data-mcp's license was "unverified."** Both are legally copyable
   with attribution — the "do not copy" constraint is **architectural** (the donor
   value is the *pipeline/pattern*, not the Orval/axios/Zod or plain-TS runtime;
-  port onto Effect/`@effect/openapi-generator`/`effect/Schema`/`effect/unstable/httpapi`),
+  port onto Effect/`@effect/openapi-generator`/`effect/Schema`/`effect/http-api`),
   reinforced by standing repo law to avoid Orval/axios/Zod.
 - **AVOID vendoring or copying MPL-2.0** `fortanix/openapi-to-effect` source
   unless Legal accepts file-level MPL obligations. MPL-2.0 is *file-level* weak

@@ -1,14 +1,14 @@
 # conditional-credential-keyed-toolkit-composition
 
-Scope: How to build an `effect/unstable/ai` Toolkit/MCP surface from only the driver Layers whose Effect `Config` resolved (CourtListener optional vs USPTO/GovInfo/DOL keyed), the Effect-idiomatic conditional-inclusion shape, and whether it works without re-scaffolding the two existing beep MCP servers.
+Scope: How to build an `effect/ai` Toolkit/MCP surface from only the driver Layers whose Effect `Config` resolved (CourtListener optional vs USPTO/GovInfo/DOL keyed), the Effect-idiomatic conditional-inclusion shape, and whether it works without re-scaffolding the two existing beep MCP servers.
 
 ## Findings
 
 ### The Effect AI Toolkit/MCP primitives (primary source: installed `effect@4.0.0-beta.91`)
 
-- The repo runs **`effect@4.0.0-beta.91`** and both MCP drivers import from `effect/unstable/ai` (not `@effect/ai`). Verified: `node_modules/effect/package.json` (`"version": "4.0.0-beta.91"`) and `packages/drivers/m365-mcp/src/M365Tools.ts` / `packages/drivers/nlp-mcp/src/StreamingTools.ts` both `import { Tool, Toolkit } from "effect/unstable/ai"`. Source of all API claims below: `node_modules/effect/src/unstable/ai/Toolkit.ts` and `.../McpServer.ts` (vendored source, authoritative for this version).
+- The repo runs **`effect@4.0.0-beta.91`** and both MCP drivers import from `effect/ai` (not `@effect/ai`). Verified: `node_modules/effect/package.json` (`"version": "4.0.0-beta.91"`) and `packages/drivers/m365-mcp/src/M365Tools.ts` / `packages/drivers/nlp-mcp/src/StreamingTools.ts` both `import { Tool, Toolkit } from "effect/ai"`. Source of all API claims below: `node_modules/effect/src/ai/Toolkit.ts` and `.../McpServer.ts` (vendored source, authoritative for this version).
 
-- **`Toolkit.make(...tools)`** is the primary constructor (variadic array of `Tool.make` defs → `Toolkit<ToolsByName<Tools>>`). **`Toolkit.merge(...toolkits)`** combines tools from multiple toolkits into one; later toolkits override on name conflict; **`Toolkit.empty`** is documented as "a default toolkit value that can be extended with `merge`." At runtime `merge` is just a loop over `toolkit.tools` (so a dynamically-built list works), but its *type* `MergedTools<Toolkits>` requires the toolkits to be statically known to stay fully typed. Source: `node_modules/effect/src/unstable/ai/Toolkit.ts` L437-554.
+- **`Toolkit.make(...tools)`** is the primary constructor (variadic array of `Tool.make` defs → `Toolkit<ToolsByName<Tools>>`). **`Toolkit.merge(...toolkits)`** combines tools from multiple toolkits into one; later toolkits override on name conflict; **`Toolkit.empty`** is documented as "a default toolkit value that can be extended with `merge`." At runtime `merge` is just a loop over `toolkit.tools` (so a dynamically-built list works), but its *type* `MergedTools<Toolkits>` requires the toolkits to be statically known to stay fully typed. Source: `node_modules/effect/src/ai/Toolkit.ts` L437-554.
 
 - A `Toolkit` is itself an `Effect<WithHandler<Tools>, never, Tool.HandlersFor<Tools>>`; handlers are attached via **`toolkit.toLayer(handlers)` → `Layer<Tool.HandlersFor<Tools>, EX, …>`** (or `toHandlers`). Handler context is keyed by **`tool.id`** (`context.set(tool.id, …)`), so each toolkit must have its own handlers provided. Source: `Toolkit.ts` L60-99, L384-404.
 
@@ -62,8 +62,8 @@ Scope: How to build an `effect/unstable/ai` Toolkit/MCP surface from only the dr
 
 ## Sources
 
-- `node_modules/effect/src/unstable/ai/Toolkit.ts` (effect@4.0.0-beta.91, vendored — `make`, `merge`, `empty`, `toLayer`, handler-by-`tool.id`, per-call `handle`)
-- `node_modules/effect/src/unstable/ai/McpServer.ts` (`toolkit`, `registerToolkit`, `layerStdio`, annotation propagation)
+- `node_modules/effect/src/ai/Toolkit.ts` (effect@4.0.0-beta.91, vendored — `make`, `merge`, `empty`, `toLayer`, handler-by-`tool.id`, per-call `handle`)
+- `node_modules/effect/src/ai/McpServer.ts` (`toolkit`, `registerToolkit`, `layerStdio`, annotation propagation)
 - `node_modules/effect/src/Layer.ts` (`unwrap` L1498, `catch`/`catchTag`/`catchCause` L3192-3558, `merge`/`mergeAll`/`empty`)
 - `node_modules/effect/src/Config.ts` (`option`, `orElse`, `withDefault`, `redacted`)
 - `packages/drivers/nlp-mcp/src/Server.ts`, `packages/drivers/m365-mcp/src/Server.ts` + `M365Tools.ts` (in-repo composition + annotation precedent)

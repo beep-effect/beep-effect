@@ -95,7 +95,7 @@ Titles and URLs as they appear in the exploration ledger; nothing added.
     https://arxiv.org/abs/2311.04850
   - S3 embeddings — `Effect-TS/effect` main at 02a5146d69 (the Effect
     reference checkout): `EmbeddingModel.ts` under the effect package's
-    unstable/ai directory and `OpenAiEmbeddingModel.ts` under the ai/openai
+    ai directory and `OpenAiEmbeddingModel.ts` under the ai/openai
     package; OpenAI `POST /embeddings` wire format
     https://raw.githubusercontent.com/openai/openai-openapi/master/openapi.yaml
   - S4 lab shape — Tauri v2 process model
@@ -130,7 +130,7 @@ Bricks the canary composes, with the stage that first touches them.
 | Witness / ledger precedents (M1) | `@beep/epistemic-domain` ([`packages/epistemic/domain`](../../../packages/epistemic/domain)) — `ContradictionCandidate`, `Activity`, `UsageRecord`, `Confidence` | C0 | pattern for `ConflictWitness` and the `ProvenanceEvent` write model |
 | Ledger (SoR) | `@beep/pglite` ([`packages/drivers/pglite`](../../../packages/drivers/pglite)), `@beep/postgres`; `@beep/rdf` ([`packages/foundation/modeling/rdf`](../../../packages/foundation/modeling/rdf)) Prov `ObjectRef`/`ProvBundle`/`Activity`/`Entity`; `@beep/schema` `UnitInterval` | C0 | reuse; DDL lives in the lab |
 | Eval report discipline | `qa-inventory/v1` in [`packages/tooling/tool/cli/src/commands/Qa/JudgeCheck.ts`](../../../packages/tooling/tool/cli/src/commands/Qa/JudgeCheck.ts) | C0 | pattern for the lab-local `EvalReport`/`EvalRun` |
-| Embeddings (S3-rev, M3) | contract `effect/unstable/ai` `EmbeddingModel` (4.0.0-rc.111) + shipped `@effect/ai-openai` `OpenAiEmbeddingModel` (`.model()` when `Dimensions` is needed) wrapped by the sibling `openai-driver` packet; lab owns `EmbeddingVector` + `ModelIdentity` | C1 | reuse contract + Layer; NET-NEW = the thin driver only, in its own packet |
+| Embeddings (S3-rev, M3) | contract `effect/ai` `EmbeddingModel` (4.0.0-rc.111) + shipped `@effect/ai-openai` `OpenAiEmbeddingModel` (`.model()` when `Dimensions` is needed) wrapped by the sibling `openai-driver` packet; lab owns `EmbeddingVector` + `ModelIdentity` | C1 | reuse contract + Layer; NET-NEW = the thin driver only, in its own packet |
 | Embedded analytics | `@beep/duckdb` ([`packages/drivers/duckdb`](../../../packages/drivers/duckdb)) — no vector surface; exact kNN is SQL in the lab | C1 | reuse |
 | RDF projection | [`packages/drivers/oxigraph`](../../../packages/drivers/oxigraph) (`Oxigraph.sparql.ts`, `Oxigraph.errors.ts`), `@beep/semantic-web` ([`packages/foundation/capability/semantic-web`](../../../packages/foundation/capability/semantic-web)) | C1 | reuse; every call under an Effect-level timeout |
 | Ontology slice (shared spine, D13) | [`packages/ontology`](../../../packages/ontology); SKOS schemes from [`goals/semantic-foundation`](../../semantic-foundation/README.md) | C2 | reuse/extend |

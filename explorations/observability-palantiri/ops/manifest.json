@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "observability-palantiri",
+    "title": "Observability Palantiri",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/observability-kernel-catalog",
+        "goals/palantiri-parcels",
+        "goals/practice-kg-mcp-strict-tier",
+        "goals/fleet-telemetry-tailnet",
+        "goals/harness-emitters-all-providers",
+        "goals/webapp-and-ci-telemetry"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-14",
+    "updated": "2026-10-14"
+  }
+}

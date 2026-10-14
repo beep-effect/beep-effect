@@ -156,7 +156,7 @@ judgment specified by D14. Cheap pure stubs remain exempt.
 ### 1.3 `it.prop` at rc.113
 
 Sync it.prop, it.effect.prop and it.live.prop all accept tuple or record inputs
-containing Schemas or native Arbitrary values from effect/unstable/arbitrary.
+containing Schemas or native Arbitrary values from effect/Arbitrary.
 FastCheck Arbitraries and the old fastCheck option are unsupported. The option
 is arbitrary: Arbitrary.CheckOptions, with runs, seed, replay, size, maxDiscards
 and maxShrinks. Preserve generator constraints and failure/shrinking semantics
@@ -227,7 +227,7 @@ tests, ~10 min under coverage), `apps/professional-desktop` 57, `tooling/library
   `packages/sql/pg/test/*.test.ts` files (`it.layer(PgContainer.layer, { timeout: "30 seconds" })`,
   per-test connections inside the shared container), [upstream NodeFileSystem.test.ts](https://github.com/Effect-TS/effect/blob/d3b837aee836f35d625d55205f7d6e61305fc198/packages/platform/node-shared/test/NodeFileSystem.test.ts)
   (cheap layer provided per test, `Deferred` + `Effect.forkChild` + `TestClock.withLive` for
-  watch tests), [upstream SqlCleanupTest.ts](https://github.com/Effect-TS/effect/blob/d3b837aee836f35d625d55205f7d6e61305fc198/packages/effect/test/unstable/persistence/SqlCleanupTest.ts) (`Effect.repeat` +
+  watch tests), [upstream SqlCleanupTest.ts](https://github.com/Effect-TS/effect/blob/74d19304da077d98cc6dcb294c71e253365f272f/packages/effect/test/persistence/SqlCleanupTest.ts) (`Effect.repeat` +
   `Effect.timeout` + `TestClock.withLive` wait helper), and
   [upstream FileSystem.test-utils.ts](https://github.com/Effect-TS/effect/blob/d3b837aee836f35d625d55205f7d6e61305fc198/packages/effect/test/FileSystem.test-utils.ts) (`testLayer`, 565 lines at rc.113).
   The shared helper now ports all 36 registrations, including the new
@@ -474,7 +474,7 @@ false-positive escape hatch (`status: exception` + `reason`), and the KG `replac
 
 ## 8. Delivery rules (repeat in every lane and every PR)
 
-- Yeet is the only publish path: `bun run beep yeet publish --start-pr-early --monitor --pr --message "..."`,
+- Yeet is the only publish path: `bun run beep yeet publish --monitor --pr --message "..."`,
   then `bun run beep yeet monitor` until `merge-ready: yes`; answer every review thread via
   `bun run beep yeet reply`; never merge unless Benjamin asks.
 - Merge `origin/main` into the branch before every publish (stale-base guard); never force-push.

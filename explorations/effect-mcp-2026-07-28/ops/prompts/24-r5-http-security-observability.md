@@ -8,9 +8,9 @@ Effect runtime facts belong to 11-u2; cite them briefly.
 middleware, CORS allow/expose lists, bearer security middleware, span and metric names),
 `repo:apps/professional-desktop/server/**` wiring around it, `repo:packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts`,
 `repo:standards/architecture/12-observability.md`, `repo:standards/architecture/06-configuration-boundaries.md`;
-Effect `effect:packages/effect/src/unstable/ai/McpServer.ts` (`layerHttp`, `allowedOrigins`,
+Effect `effect:packages/effect/src/ai/McpServer.ts` (`layerHttp`, `allowedOrigins`,
 `spanPrefix` values), `internal/mcpRuntime.ts` (HTTP header admission),
-`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/TransportsTest.ts` (security suite).
+`effect:packages/effect/test/ai/McpServer/McpConformance/TransportsTest.ts` (security suite).
 
 **Report sections:**
 1. Header contract table: every header a 2026-07-28 HTTP request and response uses in Effect

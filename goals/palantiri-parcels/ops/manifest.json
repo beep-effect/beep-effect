@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "palantiri-parcels",
+    "packetId": "goal-packet/v1:eadd2070a75e4ca7aa2900704d94184899a07b42bd011c25f8388a4165678f2c",
+    "title": "Palantiri Parcels",
+    "status": "active",
+    "created": "2026-10-14",
+    "updated": "2026-10-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/palantiri-parcels",
+  "lifecycle": "active",
+  "mission": "Agent-facing Palantiri: schema-typed, freshness-checked parcels served through beep palantiri and palantiri-mcp, starting with account headroom.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/observability-palantiri",
+    "graduated": "2026-10-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/palantiri-parcels/README.md",
+    "goals/palantiri-parcels/SPEC.md",
+    "goals/palantiri-parcels/PLAN.md",
+    "goals/palantiri-parcels/GOAL.md",
+    "goals/palantiri-parcels/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/palantiri-parcels/GOAL.md"
+    }
+  ],
+  "provides": ["observability/parcels", "observability/quota-gauge"],
+  "requires": ["observability/attribute-registry"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Slice",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Parcels",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "MCP + session",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Yeet",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/palantiri-parcels/GOAL.md)\" -le 4000",
+    "jq . goals/palantiri-parcels/ops/manifest.json",
+    "rg -n \"palantiri-parcels|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/palantiri-parcels",
+    "git diff --check -- goals/palantiri-parcels",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

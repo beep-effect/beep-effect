@@ -31,6 +31,7 @@ import { parse } from "jsonc-parser";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { makePolicyFindingLogger } from "../../internal/cli/PolicyFindingLogger.ts";
+import { extractFrontmatter } from "../../internal/schema/Frontmatter.ts";
 import { decodeYamlTextWith } from "../../internal/schema/TextCodec.ts";
 import { GoalStatus } from "../Goals/Goals.schemas.ts";
 
@@ -161,20 +162,6 @@ const { log: logPolicyFinding } = makePolicyFindingLogger({
 });
 
 const decodeFrontmatter = decodeYamlTextWith(S.decodeUnknownEffect(ReflectionFrontmatter));
-
-const normalizeFrontmatterNewlines = Str.replace(/\r\n/g, "\n");
-
-const extractFrontmatter = (raw: string): O.Option<string> => {
-  const normalized = normalizeFrontmatterNewlines(raw);
-  if (!Str.startsWith("---")(normalized)) {
-    return O.none();
-  }
-  const rest = Str.slice(3)(normalized);
-  return pipe(
-    Str.indexOf("\n---")(rest),
-    O.map((endIndex) => Str.trim(Str.slice(0, endIndex)(rest)))
-  );
-};
 
 const frontmatterIsValid = (raw: string): Effect.Effect<boolean> =>
   O.match(extractFrontmatter(raw), {

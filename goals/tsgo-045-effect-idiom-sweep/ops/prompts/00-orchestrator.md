@@ -72,7 +72,7 @@ via `cursor-agent -p`, after a smoke test.
    least `@beep/repo-cli`, `@beep/identity`, `@beep/doc-text`,
    `@beep/effect-drizzle`, `@beep/db-admin`, `@beep/professional-desktop`, and
    any app whose tsconfig profile restates the plugin block). Publish with
-   `bun run beep yeet publish --start-pr-early --monitor --pr`, answer every
+   `bun run beep yeet publish --monitor --pr`, answer every
    review thread, reach `merge-ready: yes`. Benjamin merges.
 
 **P2 Rule cards and inventory (Codex discovery lanes).**

@@ -139,7 +139,7 @@ const explicitKind = (input: string): O.Option<readonly [OutlookItemKind, string
     Str.match(TAGGED_INPUT_PATTERN)(input),
     O.flatMap((found) => {
       const kind = found[1];
-      return S.is(OutlookItemKind)(kind) ? O.some([kind, found[2] ?? ""] as const) : O.none();
+      return S.is(OutlookItemKind)(kind) ? O.some([kind, Str.slice(kind.length + 1)(input)] as const) : O.none();
     })
   );
 

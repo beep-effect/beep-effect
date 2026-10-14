@@ -55,7 +55,7 @@
     "mechanization": "judgment",
     "roiRank": 0,
     "exception": {
-      "reason": "RpcServer.Protocol requires clientIds: Effect<ReadonlySet<number>> (.repos/effect-v4/packages/effect/src/unstable/rpc/RpcServer.ts:843). This package deliberately supplies a minimal singleton facade instead of widening the crispening wave into a native Set migration, which SPEC fence 7 assigns to effect-native-migration.",
+      "reason": "RpcServer.Protocol requires clientIds: Effect<ReadonlySet<number>> (.repos/effect-v4/packages/effect/src/rpc/RpcServer.ts:843). This package deliberately supplies a minimal singleton facade instead of widening the crispening wave into a native Set migration, which SPEC fence 7 assigns to effect-native-migration.",
       "boundary": "Effect RPC server protocol interop plus native-collection migration fence"
     }
   },
@@ -70,7 +70,7 @@
     "mechanization": "judgment",
     "roiRank": 0,
     "exception": {
-      "reason": "RpcSerialization.makeUnsafe returns an unparameterized Parser (.repos/effect-v4/packages/effect/src/unstable/rpc/RpcSerialization.ts:32-36), and Effect's own RPC implementations cast parser.decode(data) to the expected encoded-message array at .repos/effect-v4/packages/effect/src/unstable/rpc/RpcServer.ts:1048 and 1258. The cast is wrapped in Effect.try and normalized to AcpProtocolParseError, so no local schema/matcher primitive can narrow it more honestly here.",
+      "reason": "RpcSerialization.makeUnsafe returns an unparameterized Parser (.repos/effect-v4/packages/effect/src/rpc/RpcSerialization.ts:32-36), and Effect's own RPC implementations cast parser.decode(data) to the expected encoded-message array at .repos/effect-v4/packages/effect/src/rpc/RpcServer.ts:1048 and 1258. The cast is wrapped in Effect.try and normalized to AcpProtocolParseError, so no local schema/matcher primitive can narrow it more honestly here.",
       "boundary": "Effect RPC ndjson parser interop / trust-boundary parse normalization"
     }
   }

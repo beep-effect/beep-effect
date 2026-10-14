@@ -115,7 +115,7 @@ bun run beep research capture https://github.com/garden-co/jazz/pull/2583 --tags
 
 ### f-effect-06 -- Effect #7908 SchemaJITCompiler: experimental opt-in runtime schema compiler (draft, open)
 
-Effect-TS/effect#7908 (Schema compiler) opened by gcanti near window edge (created 2026-09-03T13:47:44Z) and heavily updated in-window through 2026-09-05T08:59:39Z. Draft PR (+5448/-603, 50 files, 33 commits, label 4.0) introduces experimental opt-in SchemaJITCompiler under effect/unstable/schema: import enable inst...
+Effect-TS/effect#7908 (Schema compiler) opened by gcanti near window edge (created 2026-09-03T13:47:44Z) and heavily updated in-window through 2026-09-05T08:59:39Z. Draft PR (+5448/-603, 50 files, 33 commits, label 4.0) introduces experimental opt-in SchemaJITCompiler under effect/schema: import enable inst...
 
 ```
 bun run beep research capture https://github.com/Effect-TS/effect/pull/7908 --tags effect,schema,jit,effect-v4

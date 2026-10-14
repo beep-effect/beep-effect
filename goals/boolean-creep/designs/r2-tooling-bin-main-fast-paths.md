@@ -133,7 +133,7 @@ args and lint-only fix. Existing bypass flags and lint-policy detection may retu
 None. Keep the original argv array (including arbitrary argument strings/order)
 and runQualityTask inputs, BaseLayers scope and Console service. CI retains its
 minimal Command root/version/description, CiLayers with FsUtilsLive and scoped
-execution. Default272-293 retains parallel imports of repo-utils, unstable/cli,
+execution. Default272-293 retains parallel imports of repo-utils, cli,
 Root and QualityScheduler; DerivedLayers includes FsUtilsLive, TSMorphServiceLive
 and MemoryStatsLive, merged with BaseLayers. Do not hoist these heavy imports.
 

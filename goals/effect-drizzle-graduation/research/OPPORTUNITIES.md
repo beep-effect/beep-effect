@@ -57,6 +57,15 @@ done, the evidence, what would have prevented it.
   proof, not a tstyche assertion run.
 - **Prevented by:** nothing local — upstream tstyche target support. Track
   its releases and widen the target matrix when a stable 7.x target lands.
+- **2026-10-14 follow-up — resolved for native 7.1 assertion coverage:**
+  tstyche 8.0.0-beta.0 passes unchanged assertions on `5.9.3 || 6.0.3 || next`
+  (next = 7.1.0-dev.20261014.1): 3 targets, 36 tests, 234 assertions passed.
+  The beta still excludes 7.0.2 and rejects exact 7.1.0-dev.20261008.1; this
+  supersedes the earlier target with the orchestrator's 7.1 ruling. Pin an
+  exact supported 7.1 beta/stable when listed; next remains a moving target.
+  Evidence: `goals/ts7-tstyche8-type-tests/history/type-test-next.log`.
+  The hosted matrix keeps the two exact targets; `next` runs on demand with
+  `beep:type-test --target next` so `beep:check` stays reproducible.
 
 ## 2026-08-11 — `bunx --bun vitest` shadows `node` for child processes
 

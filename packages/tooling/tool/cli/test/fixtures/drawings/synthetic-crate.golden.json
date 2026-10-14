@@ -1,0 +1,72 @@
+{
+  "spec": "packages/foundation/capability/technical-drawing/test/fixtures/synthetic-crate.spec.json",
+  "scale": 5.5169,
+  "model": {
+    "boundingBox": {
+      "min": [-40, -30, 0],
+      "max": [40, 30, 46]
+    },
+    "volume": 29080,
+    "faceCount": 36,
+    "edgeCount": 84,
+    "partOverlaps": 0
+  },
+  "figures": [
+    {
+      "figure": 1,
+      "view": "top-perspective",
+      "svgSha256": "733b3d68bcf2dc225d10721e5f12dba912e85d2dfda31e864754051858e000fb",
+      "visibleSegments": 31,
+      "brokenSegments": 7
+    },
+    {
+      "figure": 2,
+      "view": "bottom-perspective",
+      "svgSha256": "8d903938cfdf2e2d9ec06e709602b4e9e96b7ac647d8a1133f95e24538ead4db",
+      "visibleSegments": 31,
+      "brokenSegments": 0
+    },
+    {
+      "figure": 3,
+      "view": "top-plan",
+      "svgSha256": "4902a99edfdb631620e5c255d4844897522a4eea8b3fae9c24d8de8d972b6cd7",
+      "visibleSegments": 11,
+      "brokenSegments": 4
+    },
+    {
+      "figure": 4,
+      "view": "bottom-plan",
+      "svgSha256": "e22287f3c97e5647da16c0b03f05ea6198677373152c90a362c005071a696d2c",
+      "visibleSegments": 16,
+      "brokenSegments": 0
+    },
+    {
+      "figure": 5,
+      "view": "front",
+      "svgSha256": "93fd25b9e2effefb814b5dc9211c5aa344b055aa090c0f941e79705a13b8ba6c",
+      "visibleSegments": 13,
+      "brokenSegments": 3
+    },
+    {
+      "figure": 6,
+      "view": "rear",
+      "svgSha256": "a657cd3031827dc5d2f059711b6b721a9edd3c7bd5c464e608a51bd7bb5d79ed",
+      "visibleSegments": 13,
+      "brokenSegments": 3
+    },
+    {
+      "figure": 7,
+      "view": "left",
+      "svgSha256": "a711207e33e2fef1dc81066f94296d5d572da8e217e03f99a5aa868ad1423af4",
+      "visibleSegments": 13,
+      "brokenSegments": 3
+    },
+    {
+      "figure": 8,
+      "view": "right",
+      "svgSha256": "db0e409671ad9d22c8c743ea607df9764b43c5e844411c89344d3280c67da17b",
+      "visibleSegments": 12,
+      "brokenSegments": 3
+    }
+  ]
+}

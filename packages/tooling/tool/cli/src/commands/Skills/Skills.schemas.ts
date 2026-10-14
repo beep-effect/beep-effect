@@ -698,7 +698,7 @@ export class SkillProvenance extends S.Class<SkillProvenance>($I`SkillProvenance
  * import * as S from "effect/Schema"
  *
  * const patch = S.decodeUnknownSync(SkillPatch)({
- *   path: "patches/0001-local-drift.patch",
+ *   path: ".agents/skill-patches/portless/0001-skill-md.patch",
  *   sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  *   label: "repo-adaptation",
  *   owner: "repo-cli",
@@ -1421,7 +1421,7 @@ export const encodeSkillProvenance: {
  * import * as Effect from "effect/Effect";
  * const patch = Effect.runSync(
  *   decodeSkillPatch({
- *     path: "patches/0001-local-drift.patch",
+ *     path: ".agents/skill-patches/portless/0001-skill-md.patch",
  *     sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  *     label: "temporary-drift",
  *     owner: "repo-cli",
@@ -1449,7 +1449,7 @@ export const decodeSkillPatch: {
  * import * as Effect from "effect/Effect";
  * const patch = Effect.runSync(
  *   decodeSkillPatch({
- *     path: "patches/0001-local-drift.patch",
+ *     path: ".agents/skill-patches/portless/0001-skill-md.patch",
  *     sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  *     label: "temporary-drift",
  *     owner: "repo-cli",

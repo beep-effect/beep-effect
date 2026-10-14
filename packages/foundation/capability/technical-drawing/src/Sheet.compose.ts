@@ -564,15 +564,62 @@ const letter = (input: {
   });
 };
 
+// Smallest visible gap between broken-line dashes, after the round caps eat
+// half the line weight from each side. 0.4 mm survives two-thirds reduction.
+// The tolerance keeps decimal inputs such as 0.8 + 0.4 against 1.2 on the
+// right side of the floor despite binary rounding.
+const MIN_VISIBLE_BROKEN_GAP_MM = 0.4;
+const GAP_TOLERANCE_MM = 1e-9;
+
+/**
+ * The gap the broken (unclaimed) layer is drawn with, in mm on the sheet: the
+ * options' `brokenGapMm`, widened to `lineWeightMm + 0.4` when the round caps
+ * of that line weight would otherwise close it.
+ *
+ * **Details**
+ *
+ * Round caps add half the line weight to each end of every dash, so the
+ * visible gap is the drawn gap minus the line weight. The law is applied here,
+ * where a broken layer is emitted, rather than on every `SheetOptions`: a
+ * heavy line weight stays usable on a solid-only sheet, and an unclaimed
+ * outline never prints as a solid line.
+ *
+ * **Example** (A heavy weight widens the default gap)
+ *
+ * ```ts
+ * import { SheetOptions, drawnBrokenGapMm } from "@beep/technical-drawing"
+ *
+ * console.log(drawnBrokenGapMm(SheetOptions.make({ lineWeightMm: 1.2 }))) // 1.6
+ * console.log(drawnBrokenGapMm(SheetOptions.make({}))) // 1.5
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const drawnBrokenGapMm = (options: SheetOptions): number => {
+  const floor = options.lineWeightMm + MIN_VISIBLE_BROKEN_GAP_MM;
+  return options.brokenGapMm >= floor - GAP_TOLERANCE_MM ? options.brokenGapMm : floor;
+};
+
 /**
  * Compose one sheet.
  *
  * **Details**
  *
- * Stroke labels go in the stroked `labels` path; outlined labels go in one
- * filled `label-outlines` path; text labels are `<text>` elements after them.
- * A sheet without label styles is byte-equal to one composed before label
- * styles existed.
+ * Layers are emitted in drawing order: labels, shading, broken lines, then
+ * the figure outlines. Stroke labels go in the stroked `labels` path;
+ * outlined labels go in one filled `label-outlines` path; text labels are
+ * `<text>` elements after them. The view is centred on the extents of the
+ * outlines and the broken lines together. The shading, broken, and
+ * label-outline layers are written only when non-empty, so a sheet without
+ * them (and without label styles) is byte-identical to one composed before
+ * those layers existed.
+ *
+ * **Gotchas**
+ *
+ * SVG restarts the dash pattern at every subpath, and each segment is its own
+ * subpath, so a curved broken edge sampled into short segments reads as a
+ * row of short dashes.
  *
  * **Example** (A sheet with one segment)
  *
@@ -585,12 +632,25 @@ const letter = (input: {
  * console.log(svg.startsWith("<svg"))
  * ```
  *
+ * **Example** (A sheet with a broken-line part)
+ *
+ * ```ts
+ * import { SheetOptions, composeSheet } from "@beep/technical-drawing"
+ *
+ * const svg = composeSheet({
+ *   segments: [[0, 0, 40, 0]], shading: [], broken: [[10, 5, 30, 5]],
+ *   figure: 1, sheet: 1, sheets: 1, scale: 5, options: SheetOptions.make({})
+ * })
+ * console.log(svg.includes("stroke-dasharray"))
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
 export const composeSheet = (input: {
   readonly segments: ReadonlyArray<Segment2>;
   readonly shading: ReadonlyArray<Segment2>;
+  readonly broken?: ReadonlyArray<Segment2> | undefined;
   readonly figure: number;
   readonly sheet: number;
   readonly sheets: number;
@@ -599,9 +659,10 @@ export const composeSheet = (input: {
   readonly faces?: SheetLabelFaces | undefined;
 }): string => {
   const { segments, scale, options } = input;
+  const broken = input.broken ?? A.empty<Segment2>();
   const { page, sight, labels: anchors, lettering, figure } = geometryOf(options, input.faces ?? NO_FACES);
   const stroke = options.lineWeightMm * PT_PER_MM;
-  const extents = viewExtents(segments);
+  const extents = viewExtents([...segments, ...broken]);
   const drawnW = (extents.maxX - extents.minX) * scale;
   const drawnH = (extents.maxY - extents.minY) * scale;
   const originX = (figure.left + figure.right) / 2 - drawnW / 2;
@@ -648,6 +709,10 @@ export const composeSheet = (input: {
     A.length(input.shading) === 0
       ? []
       : [`<path id="shading" d="${pathOf(input.shading)}" ${attrsFor(options.shadingWeightMm * PT_PER_MM)}/>`];
+  // the gap widens with a heavy line weight so the round caps never close it
+  const dash = `${r3(options.brokenDashMm * PT_PER_MM)} ${r3(drawnBrokenGapMm(options) * PT_PER_MM)}`;
+  const brokenLayer =
+    A.length(broken) === 0 ? [] : [`<path id="broken" d="${pathOf(broken)}" ${attrs} stroke-dasharray="${dash}"/>`];
   // Each label layer is emitted only when it has marks, so a sheet without
   // label styles keeps exactly the one stroked `labels` path it always had.
   const labelLayers = [
@@ -660,6 +725,7 @@ export const composeSheet = (input: {
       `<svg xmlns="http://www.w3.org/2000/svg" width="${r3(page.width)}pt" height="${r3(page.height)}pt" viewBox="0 0 ${r3(page.width)} ${r3(page.height)}">`,
       ...labelLayers,
       ...shadingLayer,
+      ...brokenLayer,
       `<path id="figure" d="${figurePath}" ${attrs}/>`,
       "</svg>",
       "",

@@ -1,0 +1,35 @@
+# Sample systemd USER unit for the docket intake polling loop.
+#
+# Nothing installs this file. Copy it to ~/.config/systemd/user/ by hand, and
+# only after docs/runbooks/docket-intake-first-run.md. Install steps, the
+# deploy checkout, upgrades and removal: docs/runbooks/practice-services.md.
+# Replace every REPLACE_ value first: systemd does not expand them.
+
+[Unit]
+Description=Docket intake: OA mail to reviewed tentative Outlook docket entries
+Documentation=https://github.com/kriegcloud/beep-effect/blob/main/docs/runbooks/practice-services.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+# PLACEHOLDER: absolute path of the deploy checkout the service runs from.
+WorkingDirectory=/REPLACE_WITH_CHECKOUT_PATH
+# The op shim must come before /usr/bin on PATH.
+Environment=PATH=/REPLACE_WITH_HOME/.local/bin:/REPLACE_WITH_HOME/.local/share/mise/shims:/usr/bin:/bin
+# The environment file holds op:// references, so op run resolves it. Do not
+# use EnvironmentFile= for it: systemd would pass each reference through as a
+# literal string and the service stops at start with
+# "Graph path identifiers must be non-empty ...".
+# PLACEHOLDERS: the op shim, the environment file (mode 0600), the bun shim.
+ExecStart=/REPLACE_WITH_HOME/.local/bin/op run --env-file=/REPLACE_WITH_ENV_FILE -- /REPLACE_WITH_BUN_PATH run apps/docket-intake/src/bin.ts run
+Restart=on-failure
+RestartSec=5min
+# 78 = the op shim could not resolve the references. A restart does not fix it.
+RestartPreventExitStatus=78
+MemoryHigh=1536M
+MemoryMax=2G
+Slice=agent-runs.slice
+
+[Install]
+WantedBy=default.target

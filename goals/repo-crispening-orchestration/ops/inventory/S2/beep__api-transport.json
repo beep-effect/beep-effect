@@ -56,7 +56,7 @@
     "roiRank": 0,
     "exception": {
       "reason": "Indexing the Headers record yields `string | undefined` and native `RegExp.exec` returns `RegExpMatchArray | null`; the checks are the narrowest possible handling of those foreign contracts, not leaked schema invariants.",
-      "boundary": "3rd-party: effect/unstable/http Headers record index access + native RegExp.exec API"
+      "boundary": "3rd-party: effect/http Headers record index access + native RegExp.exec API"
     }
   }
 ]

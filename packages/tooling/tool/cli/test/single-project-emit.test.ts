@@ -90,7 +90,7 @@ const compilerArguments = (words: ReadonlyArray<string>): O.Option<ReadonlyArray
       O.getOrElse(() => remaining.length)
     );
     const command = commandBasename(words[index++] ?? "");
-    if (command === "tsc" || command === "tsgo") {
+    if (command === "tsc" || command === "tsc-rs" || command === "tsgo") {
       return O.some(A.drop(words, index));
     }
     const next = Match.value(command).pipe(
@@ -134,7 +134,7 @@ const compilerArguments = (words: ReadonlyArray<string>): O.Option<ReadonlyArray
 };
 
 const containsCompilerBuildTokens = (text: string): boolean =>
-  /(?:^|[\s/"'=(`])(?:tsc|tsgo)(?=\s|["')`]|$)/u.test(text) &&
+  /(?:^|[\s/"'=(`])(?:tsc-rs|tsc|tsgo)(?=\s|["')`]|$)/u.test(text) &&
   /(?:^|[\s"'=])(?:-b|--build|--force)(?=\s|["')`<>\\;&|]|$)/u.test(text);
 
 // Known launchers distinguish executable arguments from their own option values.
@@ -213,6 +213,9 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
         "tsc -b",
         "tsgo -b",
         "tsc -b tsconfig.json",
+        "tsc-rs -b",
+        "tsc-rs -b tsconfig.json",
+        "tsc-rs -p tsconfig.json --force",
         "tsgo --build",
         "tsc --force",
         "tsgo -p tsconfig.json --force",
@@ -232,6 +235,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
       for (const script of [
         "tsc -p tsconfig.json",
         "tsgo -p tsconfig.check.json && bun run beep:check:tests",
+        "tsc-rs -p tsconfig.check.json && bun run beep:check:tests",
+        "tsc-rs -p tsconfig.json && bun run babel",
         "tsc -p tsconfig.json && echo -b",
         "echo -b && tsgo -p tsconfig.json",
         'echo "tsc -b"',
@@ -246,6 +251,9 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
         "echo tsc -b",
         "other-tsc -b",
         "tsc -- -b",
+        "tsc-rs -- -b",
+        "env FOO=x tsc-rs -- --force",
+        "pnpm exec tsc-rs -- -b",
         'echo "ready && tsgo -b"',
       ]) {
         expect(violatesSingleProjectEmit(script), script).toBe(false);
@@ -272,6 +280,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
         "bunx tsc --force",
         "npx --no-install tsc -b packages/foo",
         "pnpm exec tsc -b .",
+        "pnpm exec tsc-rs -b .",
+        "bunx tsc-rs --force",
         "pnpm tsc -b .",
         "npm x tsc -b",
         "npm --loglevel silent exec tsc -b .",

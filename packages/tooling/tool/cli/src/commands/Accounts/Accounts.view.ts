@@ -95,6 +95,7 @@ const sectionTitle: Readonly<Record<AccountSection, string>> = {
   codex: "Codex",
   supergrok: "SuperGrok Heavy",
   muse: "Muse",
+  junie: "JetBrains AI",
   other: "Other",
 };
 

@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "ts7-tstyche8-type-tests",
+    "packetId": "goal-packet/v1:5b4f8d89e249cfe3311523674621f797c16a9ac255f5d88cbd033bb44f015c16",
+    "title": "effect-drizzle type tests on tstyche 8 with a TypeScript 7 target",
+    "status": "completed-retained",
+    "created": "2026-10-14",
+    "updated": "2026-10-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/ts7-tstyche8-type-tests",
+  "lifecycle": "completed-retained",
+  "mission": "Move @beep/effect-drizzle's tstyche type tests to 8.0.0-beta.0 so the lane no longer needs typescript@6",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "The Claude orchestrator reviews, commits, publishes and closes the packet after merge; this implementation lane never runs Yeet or completes the packet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/ts7-tstyche8-type-tests/README.md",
+    "goals/ts7-tstyche8-type-tests/SPEC.md",
+    "goals/ts7-tstyche8-type-tests/PLAN.md",
+    "goals/ts7-tstyche8-type-tests/GOAL.md",
+    "goals/ts7-tstyche8-type-tests/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/ts7-tstyche8-type-tests/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/ts7-tstyche8-type-tests/GOAL.md)\" -le 4000",
+    "jq . goals/ts7-tstyche8-type-tests/ops/manifest.json",
+    "rg -n \"ts7-tstyche8-type-tests|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/ts7-tstyche8-type-tests",
+    "git diff --check -- goals/ts7-tstyche8-type-tests",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Never silently use tstyche 7.2.5; follow the 2026-10-14 exact-dev / next / explicit legacy-only ruling and record errors.",
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

@@ -508,7 +508,7 @@ const TsgoDisabledRuleName = LiteralKit(["apiStabilityLeak", "experimentalApiUsa
  *
  * const disabled = TsgoDisabledRule.make({
  *   rule: "unstableApiUsage",
- *   reason: "The repo builds on effect/unstable/* modules by design.",
+ *   reason: "The repo builds on @stability unstable Effect modules by design.",
  * })
  * console.log(disabled.rule) // => "unstableApiUsage"
  * ```
@@ -534,8 +534,8 @@ export class TsgoDisabledRule extends S.Class<TsgoDisabledRule>($I`TsgoDisabledR
  * All three entries are the stability rules: `experimentalApiUsage` and `unstableApiUsage` (from
  * `@effect/tsgo` 0.47) flag every import of an API tagged `@stability experimental` or
  * `@stability unstable`, and `apiStabilityLeak` (0.50) flags every untagged export whose types
- * expose one. This repository builds on `effect/unstable/*` (HTTP, HttpApi, CLI, and friends) on
- * purpose.
+ * expose one. This repository builds on Effect's `@stability unstable` modules (`effect/http`,
+ * `effect/http-api`, `effect/cli`, and friends) on purpose.
  *
  * **Example** (Read the disabled rule names)
  *
@@ -554,7 +554,7 @@ export const tsgoDisabledRules: readonly [TsgoDisabledRule, TsgoDisabledRule, Ts
   TsgoDisabledRule.make({
     rule: "apiStabilityLeak",
     reason:
-      "Untagged @beep exports count as stable, and they expose effect/unstable/* types by design, so nearly every export would be reported.",
+      "Untagged @beep exports count as stable, and they expose @stability unstable Effect types by design, so nearly every export would be reported.",
   }),
   TsgoDisabledRule.make({
     rule: "experimentalApiUsage",
@@ -562,7 +562,7 @@ export const tsgoDisabledRules: readonly [TsgoDisabledRule, TsgoDisabledRule, Ts
   }),
   TsgoDisabledRule.make({
     rule: "unstableApiUsage",
-    reason: "The repository builds on effect/unstable/* modules by design, so every import would be reported.",
+    reason: "The repository builds on @stability unstable Effect modules by design, so every import would be reported.",
   }),
 ];
 

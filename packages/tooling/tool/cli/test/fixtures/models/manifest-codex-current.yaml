@@ -1,0 +1,16 @@
+version: beep-models/v1
+bindings:
+  - role: codex.heavy
+    surface: codex-cli
+    modelId: gpt-6.1-sol
+    effort: medium
+targets:
+  - id: codex.env
+    root: repo
+    path: locators.env
+    optional: false
+    locators:
+      - _tag: env-key
+        binding: { role: codex.heavy, surface: codex-cli, field: model }
+        render: { _tag: verbatim }
+        key: CODEX_MODEL

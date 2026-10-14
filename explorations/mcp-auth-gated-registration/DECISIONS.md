@@ -48,9 +48,9 @@ neither exercises the optional-secret credential-keyed path.
 credential path); fixture-only proof (never exercises real credential
 resolution or the real token ceiling).
 
-## Q3: Native `effect/unstable/ai`, or wrap a third-party MCP framework?
+## Q3: Native `effect/ai`, or wrap a third-party MCP framework?
 
-**Decision (2026-07-01): Reimplement native to `effect/unstable/ai`.** No
+**Decision (2026-07-01): Reimplement native to `effect/ai`.** No
 third-party MCP runtime; port prior-art *shapes* into Effect idiom only.
 
 **Rationale:** The runtime is chosen — both servers run `{Tool, Toolkit}` +
@@ -58,7 +58,7 @@ third-party MCP runtime; port prior-art *shapes* into Effect idiom only.
 2026-07-01) — and the kit's gating depends on Effect's typed
 `Toolkit`/`Layer`/`Config` substrate. Licensing gravity independently forbids
 copying (MIT sources are port-to-idiom; `screenpipe` NOASSERTION and `mike`
-AGPL are clean-room only). Inherited constraint: `effect/unstable/ai` is beta —
+AGPL are clean-room only). Inherited constraint: `effect/ai` is beta —
 pin + re-verify the internals at implementation time.
 
 **Rejected:** wrapping `@modelcontextprotocol/sdk`/FastMCP-style (forks the

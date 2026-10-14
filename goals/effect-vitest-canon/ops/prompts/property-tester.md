@@ -62,7 +62,7 @@ import { assertTrue } from "@effect/vitest/utils"
 import * as Effect from "effect/Effect";
 import * as Number from "effect/Number";
 import * as Schema from "effect/Schema";
-import { Arbitrary } from "effect/unstable/arbitrary"
+import * as Arbitrary from "effect/Arbitrary";
 
 it.effect("integer", Effect.fnUntraced(function* () {
   const result = yield* Arbitrary.checkEffect(

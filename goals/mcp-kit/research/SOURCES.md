@@ -94,7 +94,7 @@ Load-bearing subset (full list in the exploration ledger §3):
 
 | Capability | Path | Role |
 |------------|------|------|
-| `effect/unstable/ai` `{Tool, Toolkit, McpServer, McpSchema}` @ beta.92 | `node_modules/effect/src/unstable/ai` (subtree: `.repos/effect-v4`) | **build on** — verified internals in the 2026-07-01 review |
+| `effect/ai` `{Tool, Toolkit, McpServer, McpSchema}` @ beta.92 | `node_modules/effect/src/ai` (subtree: `.repos/effect-v4`) | **build on** — verified internals in the 2026-07-01 review |
 | `Layer.mergeAll` seam precedent | `packages/drivers/nlp-mcp/src/Server.ts:101-107` | **mirror** — composition shape the kit's helper generalizes |
 | Four-hint annotation precedent | `packages/drivers/m365-mcp/src/M365Tools.ts` | **mirror** — the #5 helper's reference |
 | Optional-secret idiom (7 drivers, no shared helper) | `packages/drivers/uspto/src/Uspto.service.ts:398` et al. | **consolidate** — `SourceAuth` registry reads this class |

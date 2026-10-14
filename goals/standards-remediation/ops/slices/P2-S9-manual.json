@@ -24,7 +24,7 @@
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/mcp-kit",
-      "reason": "The `tool` field carries an effect/unstable/ai Tool value (method members such as annotate/setSuccess/setFailure), a runtime handle rather than pure data; not schema-modelable."
+      "reason": "The `tool` field carries an effect/ai Tool value (method members such as annotate/setSuccess/setFailure), a runtime handle rather than pure data; not schema-modelable."
     },
     {
       "file": "packages/foundation/modeling/nlp/src/Ontology/Kind.ts",

@@ -79,7 +79,7 @@ What v4 *does* claim, separately, is that **module implementations got smaller**
 
 That 70→20 kB number is about rewritten modules, not about changing import style. It also asserts Effect “has always been tree-shakable” — i.e. the *library* is marked for shaking; whether a given *import form* actually shakes still depends on the bundler (the Importing Effect page).
 
-v4’s other packaging story is consolidation: `@effect/platform`, `@effect/rpc`, `@effect/cluster`, etc. now live under `effect` / `effect/unstable/*`. That **increases** what a root barrel *could* pull in if a bundler or runtime follows every re-export. Unstable modules are on explicit subpaths (`effect/unstable/http`, …) and are not the same as `import { Effect } from "<legacy-effect-barrel>"`, but they do enlarge the package surface TypeScript and Vite pre-bundling see.
+v4’s other packaging story is consolidation: `@effect/platform`, `@effect/rpc`, `@effect/cluster`, etc. now live under `effect` at top-level subpaths (`effect/rpc`, `effect/cluster`, …). That **increases** what a root barrel *could* pull in if a bundler or runtime follows every re-export. Unstable modules are on explicit subpaths (`effect/http`, …) and are not the same as `import { Effect } from "<legacy-effect-barrel>"`, but they do enlarge the package surface TypeScript and Vite pre-bundling see.
 
 ### 1.4 What official docs do *not* say
 
@@ -110,7 +110,7 @@ v4’s other packaging story is consolidation: `@effect/platform`, `@effect/rpc`
 - `"sideEffects": []` in both source `package.json` and the published package.
 - Source (effect-smol era and current `Effect-TS/effect` main) also lists `"sideEffects": []`.
 - Build still runs Babel `annotate-pure-calls` (`pnpm babel` / `build-annotate`) so intra-package calls get `#__PURE__`.
-- Unstable modules live on **explicit subpaths** (`effect/unstable/http`, …) and are **not** re-exported from the root barrel. The root barrel is the stable stdlib only.
+- Unstable modules live on **explicit subpaths** (`effect/http`, …) and are **not** re-exported from the root barrel. The root barrel is the stable stdlib only.
 - `publishConfig.exports` also sets `"./index": null` and `"./*/index": null` so there is one canonical specifier per module.
 
 v3 source `package.json` on the `v3` branch does **not** declare `sideEffects` at the workspace source; the published tarball does (`sideEffects: []`). v4 declares it in source.
@@ -375,7 +375,7 @@ So: **if you are writing Effect, you do not import from `"effect"`. If you are t
 
 1. **Production frontend bytes on Rollup, Webpack 5+, Rspack, Rolldown.** Effect ships `sideEffects: []` and `#__PURE__` on internal calls. Docs explicitly bless Rollup and Webpack 5. Rspack lazy-barrel supports `export * as`. Arnaldi: user code should rely on those bundlers; he expected Rspack not to need a barrel rewrite. Atlassian's de-barrel: “slight drop in bundle size (though we were hoping for more).” **Do not sell the migration as a gzip win for a Vite/Rspack SPA.**
 
-2. **v4 packaging did not “solve” named barrels — and did not need to, for Rollup-class tools.** v4 made *modules smaller* (70→20 kB) and moved experimental APIs off the root barrel onto `effect/unstable/*`. The root barrel is still a generated `export * as` list. The esbuild caveat is unchanged in v4 docs.
+2. **v4 packaging did not “solve” named barrels — and did not need to, for Rollup-class tools.** v4 made *modules smaller* (70→20 kB) and moved experimental APIs off the root barrel onto explicit `@stability unstable` subpaths (`effect/http`, `effect/rpc`, …). The root barrel is still a generated `export * as` list. The esbuild caveat is unchanged in v4 docs.
 
 3. **Per-function shaking inside `Effect.ts` / top-level `Schema.Struct` in *your* modules / static Layer fields on classes.** Import style does not fix these. #5967 (closed not planned) and tsgo#471 are the real leftover byte leaks.
 

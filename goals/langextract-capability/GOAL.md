@@ -52,7 +52,7 @@ Hard reuse gate:
 
 Architecture gate:
 
-- `@beep/langextract` may use injected `effect/unstable/ai/LanguageModel`
+- `@beep/langextract` may use injected `effect/ai/LanguageModel`
   services, but it must not import concrete provider drivers.
 - Stop if research shows the foundation capability route is invalid without a
   standards decision.

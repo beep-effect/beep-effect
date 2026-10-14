@@ -10,7 +10,7 @@ Prior: `research/2026-09-17` / PR #1171 (merged 2026-09-21). Status: **partial**
 - **Effect tip broke hard:** `#8201` MERGED 2026-09-18 → `effect@4.0.0-rc.116` on npm; tip already **`4.0.0-rc.117`** (published 2026-09-21). Open `#8336` stages **rc.118**.
 - **SchemaJIT `#7908` MERGED** 2026-09-18 (gcanti) — experimental JIT/AOT on main.
 - **Effect MCP publish-gap closed:** `#7265` adapter now reachable via published rc.116+.
-- **`#8354` MERGED** 2026-09-22 — `effect/unstable/*` → top-level `effect/*` (no compat exports; `@unstable` retained). SchemaJIT import paths move with it.
+- **`#8354` MERGED** 2026-09-22 — modules moved to top-level `effect/*` paths (no compat exports; `@stability unstable` retained; mapping in `.patterns/effect-module-paths.md`). SchemaJIT import paths move with it.
 - **`#8365` MERGED** 2026-09-22 — `effect/httpapi` → `effect/http-api`.
 - **jazz-tools alpha tip → `2.0.0-alpha.56`** (published 2026-09-21); prior alpha.55 HOLD broken.
 - **Zero canary tip → `1.11.0-canary.11`** (was `1.10.0-canary.22`).
@@ -59,7 +59,7 @@ OpenAI’s Astra for Law entry (Sep 17) is the largest in-window competitor move
 
 ### Effect-TS / schema-first / local-first
 
-This was an Effect release week: rc.116 cut, tip to rc.117, SchemaJIT landed, unstable modules promoted to top-level paths, HttpApi path renamed. Kits should plan an import migration (`unstable/` drop; `http-api` rename) against rc.117+ / forthcoming rc.118. Jazz and Zero tips advanced; Evolu 8.11.0 and Instant sunset HOLDs unchanged; drizzle Effect-v4 TaggedError gap still open.
+This was an Effect release week: rc.116 cut, tip to rc.117, SchemaJIT landed, unstable modules promoted to top-level paths, HttpApi path renamed. Kits should plan an import migration (top-level paths; `http-api` rename) against rc.117+ / forthcoming rc.118. Jazz and Zero tips advanced; Evolu 8.11.0 and Instant sunset HOLDs unchanged; drizzle Effect-v4 TaggedError gap still open.
 
 ### Agents / MCP / skills
 
