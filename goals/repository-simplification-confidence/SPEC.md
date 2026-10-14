@@ -959,3 +959,60 @@ remain authoritative.
 | Decision | Reason and evidence | Reversal |
 | --- | --- | --- |
 | Bind the requested root proof to a reviewed integration candidate. Use a stale-base publication override only after reviewing the overlapping base changes and proving a clean three-way merge; hosted checks and the review window still gate that published head. | Concurrent main changes repeatedly superseded qualified test and inventory waves during dependency repair. A fixed candidate keeps each proof attributable without replacing later base work. No requested root command, coverage floor, or hosted check is waived. | Merge the newer base into the candidate, resolve any conflict, and rerun the affected qualification before another push. |
+
+### 2026-10-14 — metadata-only stale-base publication
+
+Publish the reviewed shared repair candidate when a newer main change overlaps only
+its aggregate inventory and `git merge-tree` proves the exact staged tree merges
+cleanly. The explore-graduation addition changes distinct source files and adds its
+own inventory entry; it does not overlap the repair's source. Preserve the candidate
+and let hosted checks prove its exact head. Reverse this choice by merging main if a
+source overlap, base conflict, or hosted failure establishes an integration need.
+
+### 2026-10-14 — retain the published repair floors during baseline integration
+
+Resolve the #1666 baseline conflict against its published `61c955b43d` rows,
+preserving every incumbent package/file cell and document policy field. Main's
+#1692 baseline changes must not replace those floors with lower measurements.
+Admit only the independently reviewed, newly measured frontmatter-check identity
+through the canonical writer and verify structural equality of all incumbent
+fields. Restore failures introduced by newly integrated source with meaningful
+tests. Reversal is a separately reviewed baseline-policy change; a fresh hosted
+failure alone does not authorize lowering the existing rows.
+
+### 2026-10-14 — clean test-fixture overlap after content qualification
+
+Publish #1666's qualified `0a5520c740` candidate with the explicit stale-base
+override after reviewing main's #1671 shading addition. The overlapping paths
+are the FigureSet test fixture and aggregate test inventory; the exact candidate
+merges cleanly with `609cea86c5` through `git merge-tree`. Its production additions
+are in files this correction wave does not edit. Hosted acceptance of the new
+head and tested merge ref remains mandatory, with every existing floor retained.
+Reverse by integrating main and qualifying the affected paths if hosted evidence
+or a subsequent actual conflict establishes an integration need.
+
+### 2026-10-14 — publish the completed correction without another reviewer panel
+
+The operator directed publication and merge of #1666 and explicitly declined
+another quality-review-fix panel. No reviewer agents were started. Admit the
+three genuine identities added by main's shading and knowledge-doctor changes
+from their passing focused coverage reports through the canonical writer.
+Select only those new file rows and prove structural equality of every incumbent
+field. The shading regression restores its existing floor; no prior row or
+policy is lowered. Publish the complete post-conflict wave and retain fresh
+hosted acceptance, thread closure, and the review window as the merge gates.
+Reverse an admission by removing its new row and extending the corresponding
+tests before publication of a replacement wave.
+
+### 2026-10-14 — consolidate the newly completed main diagnostics
+
+The operator merged #1666 at `7a42f17d0d` while three checks were pending.
+Subsequent results cleared every earlier coverage site but exposed malformed
+Knowledge evaluator JSDoc, three further unseeded CLI file identities, and the
+preserved Skills command line floor. Own one separate repair on main for those
+diagnostics and the retired module paths introduced by #1713. Admit only the
+three new rows that match both hosted and passing focused measurements; prove
+every incumbent field unchanged. Restore the command floor with a real CLI
+refusal regression. Integrate the landed follow-up into the dependency branch
+before its final root proof. Reversal is a revert of that repair through a PR;
+the intentional dependency versions remain separate and preserved.
