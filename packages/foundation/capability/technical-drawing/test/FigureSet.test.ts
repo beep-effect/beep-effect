@@ -7,12 +7,17 @@ import {
   DrawingError,
   EdgeSet,
   EngineInfo,
+  FigureRecord,
   FigureSet,
   GeometryEngine,
   InkBounds,
+  LabelStyle,
+  LabelTypeface,
+  labelCapHeightCm,
   ModelSpec,
   ModelSummary,
   marginFindings,
+  marginsCm,
   mirrorSegments,
   PageMetrics,
   Part,
@@ -23,8 +28,10 @@ import {
   purityFindings,
   RenderManifest,
   RenderRequest,
+  SheetMargins,
   SheetOptions,
   sameSegments,
+  sheetGeometry,
   structuralFindings,
   ValidationOptions,
 } from "@beep/technical-drawing";
@@ -32,7 +39,7 @@ import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertInstanceOf, assertSome } from "@effect/vitest/utils";
+import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
@@ -135,9 +142,9 @@ const fakeBackend = Layer.effect(
 );
 
 const spec = (
-  figures: ReadonlyArray<{ view: string; description: string }>,
+  figures: ReadonlyArray<{ view: string; description: string; projection?: string }>,
   omissions: ReadonlyArray<unknown> = [],
-  extra: Readonly<Record<string, string>> = {}
+  extra: Readonly<Record<string, unknown>> = {}
 ) =>
   JSON.stringify({
     ...extra,
@@ -147,8 +154,196 @@ const spec = (
     omissions,
   });
 
+// A label-alphabet font built in-test with opentype.js (the package's own parser), so the
+// operator fontFile route runs on every runner without a committed font: each inked
+// glyph is a 400 x 700 box on a 1000-unit em, the space is blank.
+const OPENTYPE_MODULE = ["opentype", "js"].join(".");
+interface OpenTypeBuilder {
+  readonly Font: new (options: Readonly<Record<string, unknown>>) => { toArrayBuffer(): ArrayBuffer };
+  readonly Glyph: new (options: Readonly<Record<string, unknown>>) => unknown;
+  readonly Path: new () => {
+    moveTo(x: number, y: number): void;
+    lineTo(x: number, y: number): void;
+    close(): void;
+  };
+}
+const labelAlphabetFont = Effect.gen(function* () {
+  const module: { readonly default?: OpenTypeBuilder } & Partial<OpenTypeBuilder> = yield* Effect.promise(
+    () => import(OPENTYPE_MODULE)
+  );
+  const opentype: OpenTypeBuilder = module.Font === undefined ? module.default! : (module as OpenTypeBuilder);
+  const glyph = (char: string) => {
+    const outline = new opentype.Path();
+    if (char !== " ") {
+      outline.moveTo(50, 0);
+      outline.lineTo(450, 0);
+      outline.lineTo(450, 700);
+      outline.lineTo(50, 700);
+      outline.close();
+    }
+    return new opentype.Glyph({
+      name: `u${char.charCodeAt(0)}`,
+      unicode: char.charCodeAt(0),
+      advanceWidth: 500,
+      path: outline,
+    });
+  };
+  const notdef = new opentype.Glyph({ name: ".notdef", advanceWidth: 500, path: new opentype.Path() });
+  const font = new opentype.Font({
+    familyName: "Label Boxes",
+    styleName: "Regular",
+    unitsPerEm: 1000,
+    ascender: 800,
+    descender: -200,
+    glyphs: [notdef, ...A.map(A.fromIterable("0123456789FIG./ "), glyph)],
+  });
+  return new Uint8Array(font.toArrayBuffer());
+});
+
 const makeLayer = () =>
   FigureSet.layer.pipe(Layer.provide(Layer.merge(fakeEngine, fakeBackend)), Layer.provideMerge(NodeServices.layer));
+
+// Outline path helpers for the label tests: exact ink extrema of an SVG path
+// made of M/L/Q/Z, and the largest all-ink square of its nonzero fill.
+type Pt = readonly [number, number];
+const pathPieces = (d: string): ReadonlyArray<ReadonlyArray<Pt>> => {
+  const tokens = d.match(/[MLQZ]|-?\d+(?:\.\d+)?/g) ?? [];
+  const pieces: Array<Array<Pt>> = [];
+  let at: Pt = [0, 0];
+  let start: Pt = [0, 0];
+  let i = 0;
+  const next = () => Number(tokens[i++]);
+  while (i < tokens.length) {
+    const command = tokens[i++];
+    if (command === "M") {
+      at = [next(), next()];
+      start = at;
+    } else if (command === "L") {
+      const to: Pt = [next(), next()];
+      pieces.push([at, to]);
+      at = to;
+    } else if (command === "Q") {
+      const control: Pt = [next(), next()];
+      const to: Pt = [next(), next()];
+      pieces.push([at, control, to]);
+      at = to;
+    } else {
+      pieces.push([at, start]);
+      at = start;
+    }
+  }
+  return pieces;
+};
+const quadAt = (p: ReadonlyArray<Pt>, t: number): Pt => [
+  (1 - t) * (1 - t) * p[0]![0] + 2 * (1 - t) * t * p[1]![0] + t * t * p[2]![0],
+  (1 - t) * (1 - t) * p[0]![1] + 2 * (1 - t) * t * p[1]![1] + t * t * p[2]![1],
+];
+const flatten = (d: string): ReadonlyArray<readonly [Pt, Pt]> =>
+  A.flatMap(pathPieces(d), (piece) =>
+    piece.length === 2
+      ? [[piece[0]!, piece[1]!] as const]
+      : A.map(A.range(0, 31), (k) => [quadAt(piece, k / 32), quadAt(piece, (k + 1) / 32)] as const)
+  );
+const inkBox = (d: string, keep: (piece: ReadonlyArray<Pt>) => boolean = () => true) => {
+  const kept: ReadonlyArray<ReadonlyArray<Pt>> = A.filter(pathPieces(d), (piece: ReadonlyArray<Pt>) => keep(piece));
+  const points = A.flatMap(
+    kept,
+    (piece): ReadonlyArray<Pt> => (piece.length === 2 ? piece : A.map(A.range(0, 2000), (k) => quadAt(piece, k / 2000)))
+  );
+  // Reduce instead of spreading: a label's sampled outline has hundreds of
+  // thousands of points, more than one call can take as arguments.
+  return A.reduce(
+    points,
+    {
+      minX: Number.POSITIVE_INFINITY,
+      minY: Number.POSITIVE_INFINITY,
+      maxX: Number.NEGATIVE_INFINITY,
+      maxY: Number.NEGATIVE_INFINITY,
+    },
+    (box, p) => ({
+      minX: Math.min(box.minX, p[0]),
+      minY: Math.min(box.minY, p[1]),
+      maxX: Math.max(box.maxX, p[0]),
+      maxY: Math.max(box.maxY, p[1]),
+    })
+  );
+};
+// Largest all-ink square (in points) of the nonzero fill, sampled every `step` points.
+type Crossing = readonly [number, number];
+// Where the outline edges cross the scanline `y`, sorted by x, with the winding direction.
+const rowCrossings = (edges: ReadonlyArray<readonly [Pt, Pt]>, y: number): ReadonlyArray<Crossing> =>
+  A.sort(
+    A.flatMap(
+      edges,
+      ([[x0, y0], [x1, y1]]): ReadonlyArray<Crossing> =>
+        (y0 <= y && y1 > y) || (y1 <= y && y0 > y)
+          ? [[x0 + ((y - y0) / (y1 - y0)) * (x1 - x0), y1 > y0 ? 1 : -1] as const]
+          : []
+    ),
+    (a: Crossing, b: Crossing) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)
+  );
+// Nonzero-winding ink test for each sampled column of one scanline.
+const rowInk = (
+  crossings: ReadonlyArray<Crossing>,
+  minX: number,
+  cols: number,
+  step: number
+): ReadonlyArray<boolean> => {
+  let winding = 0;
+  let k = 0;
+  return A.makeBy(cols, (c) => {
+    const x = minX + (c + 0.5) * step;
+    while (k < crossings.length && crossings[k]![0] <= x) {
+      winding += crossings[k]![1];
+      k++;
+    }
+    return winding !== 0;
+  });
+};
+// Dynamic-programming square sizes for one row given the previous row's sizes.
+const rowSquares = (ink: ReadonlyArray<boolean>, previous: ReadonlyArray<number>): ReadonlyArray<number> => {
+  const current: Array<number> = [];
+  for (let c = 0; c < ink.length; c++) {
+    current[c] = ink[c] ? 1 + Math.min(previous[c] ?? 0, current[c - 1] ?? 0, previous[c - 1] ?? 0) : 0;
+  }
+  return current;
+};
+const largestInkSquarePt = (d: string, step: number): number => {
+  const edges = flatten(d);
+  const box = inkBox(d);
+  const cols = Math.ceil((box.maxX - box.minX) / step) + 1;
+  const rows = Math.ceil((box.maxY - box.minY) / step) + 1;
+  let previous: ReadonlyArray<number> = A.makeBy(cols, () => 0);
+  let best = 0;
+  for (let r = 0; r < rows; r++) {
+    const y = box.minY + (r + 0.5) * step;
+    const current = rowSquares(rowInk(rowCrossings(edges, y), box.minX, cols, step), previous);
+    best = Math.max(
+      best,
+      A.reduce(current, 0, (acc, size) => Math.max(acc, size))
+    );
+    previous = current;
+  }
+  return best * step;
+};
+const outlinesOf = (svg: string): string => /<path id="label-outlines" d="([^"]*)"/.exec(svg)?.[1] ?? "";
+const sha256Hex = (text: string) =>
+  Effect.promise(() => crypto.subtle.digest("SHA-256", new TextEncoder().encode(text))).pipe(
+    Effect.map((digest) =>
+      A.join(
+        A.map(A.fromIterable(new Uint8Array(digest)), (b) => b.toString(16).padStart(2, "0")),
+        ""
+      )
+    )
+  );
+const styled = SheetOptions.make({
+  margins: "cfr-strict",
+  labelGapMm: O.some(1),
+  sheetNumberLabel: O.some(LabelStyle.make({ typeface: "sans", sizePt: 18 })),
+  figureLabel: O.some(LabelStyle.make({ typeface: "serif", sizePt: 24 })),
+});
+const composeStyled = (n: number, options: SheetOptions = styled) =>
+  composeSheet({ segments: square, shading: [], figure: n, sheet: n, sheets: 8, scale: 20, options });
 
 describe("@beep/technical-drawing", () => {
   describe("pure sheet and rule helpers", () => {
@@ -209,6 +404,182 @@ describe("@beep/technical-drawing", () => {
           O.map(persp.focus, (f) => Math.round(f)),
           Math.round(2.5 * Math.hypot(40, 30, 20))
         );
+      })
+    );
+
+    it.effect(
+      "cameras: the default perspective keeps the original eye, bit for bit",
+      Effect.fnUntraced(function* () {
+        const box = BoundingBox.make({ min: [0, 0, 0], max: [40, 30, 20] });
+        const focus = O.some(Math.max(Math.hypot(40, 30, 20) * 2.5, 1));
+        expect(cameraForView({ view: "top-perspective", box })).toEqual(
+          Camera.make({ eye: [-1, -1.2, 0.85], up: [0, 0, 1], target: [20, 15, 10], focus })
+        );
+        expect(cameraForView({ view: "bottom-perspective", box, projection: "perspective" })).toEqual(
+          Camera.make({ eye: [-1, -1.2, -0.85], up: [0, 0, 1], target: [20, 15, 10], focus })
+        );
+        // a set azimuth swings the eye about +Z, keeping its reach and height
+        const swung = cameraForView({ view: "top-perspective", box, azimuthDeg: O.some(90) });
+        expect(swung.eye[0]).toBeCloseTo(-Math.hypot(1, 1.2), 12);
+        expect(swung.eye[1]).toBeCloseTo(0, 12);
+        expect(swung.eye[2]).toBe(0.85);
+      })
+    );
+
+    it.effect(
+      "cameras: an isometric pictorial has no focus, up +Z, and the isometric elevation",
+      Effect.fnUntraced(function* () {
+        const box = BoundingBox.make({ min: [0, 0, 0], max: [40, 30, 20] });
+        const top = cameraForView({ view: "top-perspective", box, projection: "isometric", azimuthDeg: O.some(30) });
+        const bottom = cameraForView({
+          view: "bottom-perspective",
+          box,
+          projection: "isometric",
+          azimuthDeg: O.some(30),
+        });
+        assertNone(top.focus);
+        assertNone(bottom.focus);
+        expect(top.up).toEqual([0, 0, 1]);
+        const el = Math.atan(1 / Math.SQRT2);
+        expect(top.eye[0]).toBeCloseTo(-Math.sin(Math.PI / 6) * Math.cos(el), 12);
+        expect(top.eye[1]).toBeCloseTo(-Math.cos(Math.PI / 6) * Math.cos(el), 12);
+        expect(top.eye[2]).toBeCloseTo(Math.sin(el), 12);
+        expect(bottom.eye[2]).toBeCloseTo(-Math.sin(el), 12);
+        // 35.264° above the horizon
+        expect((Math.asin(top.eye[2] / Math.hypot(...top.eye)) * 180) / Math.PI).toBeCloseTo(35.264, 3);
+        // without an azimuth the isometric eye looks along 45°, so the model's X, Y and Z foreshorten equally
+        const iso = cameraForView({ view: "top-perspective", box, projection: "isometric" });
+        expect(iso.eye[0]).toBeCloseTo(iso.eye[1], 12);
+        expect(Math.abs(iso.eye[0])).toBeCloseTo(Math.abs(iso.eye[2]), 12);
+      })
+    );
+
+    it.effect(
+      "cameras: both plans share the up vector planFacing sets, front by default",
+      Effect.fnUntraced(function* () {
+        const box = BoundingBox.make({ min: [0, 0, 0], max: [40, 30, 20] });
+        expect(cameraForView({ view: "top-plan", box })).toEqual(Camera.make({ eye: [0, 0, 1], up: [0, 1, 0] }));
+        expect(cameraForView({ view: "bottom-plan", box })).toEqual(Camera.make({ eye: [0, 0, -1], up: [0, 1, 0] }));
+        const top = cameraForView({ view: "top-plan", box, planFacing: "left" });
+        const bottom = cameraForView({ view: "bottom-plan", box, planFacing: "left" });
+        expect(top.up).toEqual([1, 0, 0]);
+        expect(bottom.up).toEqual(top.up);
+        expect(cameraForView({ view: "top-plan", box, planFacing: "rear" }).up).toEqual([0, -1, 0]);
+        // elevations ignore the plan facing
+        expect(cameraForView({ view: "left", box, planFacing: "right" })).toEqual(
+          Camera.make({ eye: [-1, 0, 0], up: [0, 0, 1] })
+        );
+      })
+    );
+
+    it.effect(
+      "sheet geometry: cfr-strict takes the larger of the cm and inch margins; the label gap moves the labels",
+      Effect.fnUntraced(function* () {
+        expect(marginsCm("cfr-cm")).toEqual(SheetMargins.make({ top: 2.5, left: 2.5, right: 1.5, bottom: 1 }));
+        const strict = marginsCm("cfr-strict");
+        expect([strict.top, strict.left, strict.bottom]).toEqual([2.54, 2.54, 1]);
+        expect(strict.right).toBeCloseTo(1.5875, 12);
+        const g = sheetGeometry(SheetOptions.make({ margins: "cfr-strict", safetyMm: 0 }));
+        expect(g.sight.left).toBeCloseTo(72, 9);
+        expect(g.sight.top).toBeCloseTo(72, 9);
+        expect(g.sight.right).toBeCloseTo(612 - 45, 9);
+        expect(g.sight.bottom).toBeCloseTo(792 - 72 / 2.54, 9);
+        // default: the labels sit at the safety gap, exactly where they always did
+        const d = sheetGeometry(SheetOptions.make({}));
+        expect(d.labels.top).toBe(d.sight.top);
+        expect(d.labels.bottom).toBe(d.sight.bottom);
+        expect(d.figure.top).toBe(d.sight.top + 2 * d.cap);
+        const gap = sheetGeometry(SheetOptions.make({ margins: "cfr-strict", labelGapMm: O.some(1) }));
+        expect(gap.labels.top).toBeCloseTo(72 + 72 / 25.4, 9);
+        expect(gap.figure.top).toBeGreaterThanOrEqual(gap.sight.top);
+        const svg = composeSheet({
+          segments: square,
+          shading: [],
+          figure: 1,
+          sheet: 1,
+          sheets: 8,
+          scale: 20,
+          options: SheetOptions.make({ margins: "cfr-strict", labelGapMm: O.some(1) }),
+        });
+        const ys = A.map([...svg.matchAll(/[ML](-?\d+\.\d+) (-?\d+\.\d+)/g)], (m) => Number(m[2]));
+        expect(Math.min(...ys)).toBeCloseTo(72 + 72 / 25.4, 2);
+        expect(Math.max(...ys)).toBeCloseTo(792 - 72 / 2.54 - 72 / 25.4, 2);
+      })
+    );
+
+    it.effect(
+      "outlined labels: one filled path, byte-stable, and no stroked label path",
+      Effect.fnUntraced(function* () {
+        const svg = composeStyled(3);
+        expect(svg).toBe(composeStyled(3));
+        expect(svg).toContain('<path id="label-outlines" d="M');
+        expect(svg).toContain('fill="#000000" stroke="none"/>');
+        expect(svg).not.toContain('<path id="labels"');
+        expect(yield* sha256Hex(svg)).toBe("dcfb8611b16781c15f0caf34506a913c44d795e88ce09fc01e6a33bb2b1f6112");
+        // without label styles the sheet keeps its single stroked label path
+        const plain = composeStyled(3, SheetOptions.make({}));
+        expect(plain).toContain('<path id="labels" d="M');
+        expect(plain).not.toContain("label-outlines");
+      })
+    );
+
+    it.effect(
+      "outlined labels sit by their ink box on every sheet: number below the top margin, FIG above the bottom",
+      Effect.fnUntraced(function* () {
+        const g = sheetGeometry(styled);
+        const centreX = (g.sight.left + g.sight.right) / 2;
+        for (const n of A.range(1, 8)) {
+          const svg = composeStyled(n);
+          const d = outlinesOf(svg);
+          expect(d.length).toBeGreaterThan(0);
+          const ink = inkBox(d);
+          // "n/8": the slash rises above the cap height, and the ink top still lands on the label line
+          expect(Math.abs(ink.minY - g.labels.top)).toBeLessThan(0.01);
+          expect(Math.abs(ink.maxY - g.labels.bottom)).toBeLessThan(0.01);
+          // the sheet number is centred between the side margins
+          const top = inkBox(d, (piece) => piece[0]![1] < g.page.height / 2);
+          expect(Math.abs((top.minX + top.maxX) / 2 - centreX)).toBeLessThan(0.01);
+          // the figure area keeps clear of both labels
+          expect(g.figure.top).toBeGreaterThan(ink.minY + 18 * 0.7);
+          expect(g.figure.bottom).toBeLessThan(ink.maxY - 24 * 0.6);
+        }
+      })
+    );
+
+    it.effect(
+      "a label style needs a 0.32 cm cap height; only outlined faces take an absolute font file",
+      Effect.fnUntraced(function* () {
+        const decode = S.decodeUnknownEffect(LabelStyle);
+        expect(labelCapHeightCm({ typeface: "sans", sizePt: 18 })).toBeCloseTo(0.437, 3);
+        expect(labelCapHeightCm({ typeface: "serif", sizePt: 24 })).toBeCloseTo(0.554, 3);
+        yield* decode({ typeface: "sans", sizePt: 18, fontFile: "/fonts/arial.ttf" });
+        yield* Effect.flip(decode({ typeface: "sans", sizePt: 12 }));
+        yield* Effect.flip(decode({ typeface: "serif", sizePt: 13 }));
+        yield* Effect.flip(decode({ typeface: "stroke", sizePt: 18, fontFile: "/fonts/arial.ttf" }));
+        yield* Effect.flip(decode({ typeface: "sans", sizePt: 18, fontFile: "fonts/arial.ttf" }));
+      })
+    );
+
+    it.effect.prop(
+      "property: a label style decodes exactly when its cap height reaches 0.32 cm",
+      [LabelTypeface, S.Finite.check(S.isBetween({ minimum: 1, maximum: 40 }))],
+      ([typeface, sizePt]) =>
+        Effect.gen(function* () {
+          const decoded = yield* Effect.isSuccess(S.decodeEffect(LabelStyle)({ typeface, sizePt }));
+          expect(decoded).toBe(labelCapHeightCm({ typeface, sizePt }) >= 0.32);
+        }),
+      { arbitrary: { runs: 200 } }
+    );
+
+    it.effect(
+      "outlined label stems stay under the 1.5 mm solid-black limit",
+      Effect.fnUntraced(function* () {
+        // Measured: 0.84 mm on every sheet at this 0.04 mm sampling (0.86 mm at 0.02 mm), serif 24 pt and sans 18 pt.
+        const step = 0.04 * (72 / 25.4);
+        for (const n of A.range(1, 8)) {
+          const squareMm = (largestInkSquarePt(outlinesOf(composeStyled(n)), step) * 25.4) / 72;
+          expect(squareMm).toBeLessThan(1.5);
+        }
       })
     );
 
@@ -415,6 +786,172 @@ describe("@beep/technical-drawing", () => {
           // 0.2 mm shading under 0.35 mm outlines
           expect(shadedSvg).toContain('stroke-width="0.567"');
           expect(shadedSvg).toContain('stroke-width="0.992"');
+        })
+      );
+
+      it.effect(
+        "records the effective sheet and cameras; a spec's sheet wins over the request's",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const dir = yield* fs.makeTempDirectoryScoped();
+          const specPath = path.join(dir, "spec.json");
+          const service = yield* FigureSet;
+          yield* fs.writeFileString(
+            specPath,
+            spec(
+              [
+                { view: "top-perspective", description: "is a top view", projection: "isometric" },
+                { view: "top-plan", description: "is a top plan view" },
+              ],
+              [{ omitted: "bottom-perspective", shown: "top-perspective", relation: "identical" }],
+              { pictorialAzimuthDeg: 30, planFacing: "left", sheet: { format: "a4", margins: "cfr-strict" } }
+            )
+          );
+          const manifest = yield* service.render(
+            RenderRequest.make({ specPath, outputDir: path.join(dir, "out"), validate: false })
+          );
+          assertSome(
+            O.map(manifest.sheet, (sheet) => [sheet.format, sheet.margins]),
+            ["a4", "cfr-strict"]
+          );
+          const cameras = A.map(manifest.figures, (f) => O.getOrThrow(f.camera));
+          assertNone(cameras[0]!.focus);
+          expect(cameras[1]!.up).toEqual([1, 0, 0]);
+          const svg = yield* fs.readFileString(path.join(dir, "out", "fig-1.svg"));
+          expect(svg).toContain('width="595.276pt"');
+          // the manifest round-trips, and a manifest written before these fields still decodes
+          const written = yield* fs.readFileString(path.join(dir, "out", "manifest.json"));
+          expect(yield* S.decodeEffect(RenderManifestJson)(written)).toEqual(manifest);
+          const legacy = yield* S.encodeEffect(RenderManifestJson)(
+            RenderManifest.make({
+              ...manifest,
+              sheet: O.none(),
+              figures: A.map(manifest.figures, (f) => FigureRecord.make({ ...f, camera: O.none() })),
+            })
+          );
+          expect(legacy).not.toContain('"sheet"');
+          expect(legacy).not.toContain('"camera"');
+          const old = yield* S.decodeEffect(RenderManifestJson)(legacy);
+          assertNone(old.sheet);
+          assertNone(old.figures[0]!.camera);
+          assertNone(old.figures[1]!.camera);
+        })
+      );
+
+      it.effect(
+        "refuses a label font file that is not a font",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const dir = yield* fs.makeTempDirectoryScoped();
+          const fontFile = path.join(dir, "not-a-font.ttf");
+          yield* fs.writeFileString(fontFile, "not a font");
+          const specPath = path.join(dir, "spec.json");
+          yield* fs.writeFileString(
+            specPath,
+            spec([{ view: "front", description: "is a front elevation view" }], [], {
+              sheet: { figureLabel: { typeface: "serif", sizePt: 24, fontFile } },
+            })
+          );
+          const service = yield* FigureSet;
+          const error = yield* Effect.flip(
+            service.render(RenderRequest.make({ specPath, outputDir: path.join(dir, "out"), validate: false }))
+          );
+          expect(error.reason).toBe("font");
+          // the parser loaded and rejected the bytes: a failed opentype.js import has another message
+          expect(error.message).toContain("could not be parsed");
+          expect(error.message).not.toContain("Could not load");
+        })
+      );
+
+      it.effect(
+        "outlines an operator font file on every runner and records its sha256",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const dir = yield* fs.makeTempDirectoryScoped();
+          const bytes = yield* labelAlphabetFont;
+          const fontFile = path.join(dir, "boxes.otf");
+          yield* fs.writeFile(fontFile, bytes);
+          const specPath = path.join(dir, "spec.json");
+          yield* fs.writeFileString(
+            specPath,
+            spec([{ view: "front", description: "is a front elevation view" }], [], {
+              sheet: { sheetNumberLabel: { typeface: "sans", sizePt: 18, fontFile } },
+            })
+          );
+          const service = yield* FigureSet;
+          const manifest = yield* service.render(
+            RenderRequest.make({ specPath, outputDir: path.join(dir, "out"), validate: false })
+          );
+          const digest = yield* Effect.promise(() => crypto.subtle.digest("SHA-256", bytes.slice().buffer));
+          expect(A.map(manifest.labelFonts, (f) => [f.fontFile, f.sha256])).toEqual([
+            [fontFile, Buffer.from(digest).toString("hex")],
+          ]);
+          const svg = yield* fs.readFileString(path.join(dir, "out", "fig-1.svg"));
+          // "1/1" in the box face: three 400 x 700 unit boxes, every corner a straight line
+          expect(outlinesOf(svg)).toMatch(/^M[\d. LZM-]+$/);
+          expect(inkBox(outlinesOf(svg)).maxY - inkBox(outlinesOf(svg)).minY).toBeCloseTo((18 * 700) / 1000, 2);
+        })
+      );
+
+      it.effect("re-derives both vendored faces from their source fonts through the supplied-font path", (context) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          // Workstation-only: hosted runners do not install the source fonts of the vendored faces.
+          // Byte-equal sheets prove the committed glyph data still matches its recorded sources.
+          const sansFile = "/usr/share/fonts/liberation/LiberationSans-Regular.ttf";
+          const serifFile = "/usr/share/fonts/liberation/LiberationSerif-Regular.ttf";
+          if (!(yield* fs.exists(sansFile)) || !(yield* fs.exists(serifFile))) {
+            context.skip(`Missing ${sansFile} or ${serifFile}`);
+            return;
+          }
+          const dir = yield* fs.makeTempDirectoryScoped();
+          const service = yield* FigureSet;
+          const render = Effect.fnUntraced(function* (name: string, sheet: Record<string, unknown>) {
+            const specPath = path.join(dir, `${name}.json`);
+            yield* fs.writeFileString(
+              specPath,
+              spec([{ view: "front", description: "is a front elevation view" }], [], { sheet })
+            );
+            const manifest = yield* service.render(
+              RenderRequest.make({ specPath, outputDir: path.join(dir, name), validate: false })
+            );
+            return { manifest, svg: yield* fs.readFileString(path.join(dir, name, "fig-1.svg")) };
+          });
+          const vendored = yield* render("vendored", {
+            sheetNumberLabel: { typeface: "sans", sizePt: 18 },
+            figureLabel: { typeface: "serif", sizePt: 24 },
+          });
+          const supplied = yield* render("supplied", {
+            sheetNumberLabel: { typeface: "sans", sizePt: 18, fontFile: sansFile },
+            figureLabel: { typeface: "serif", sizePt: 24, fontFile: serifFile },
+          });
+          expect(supplied.svg).toBe(vendored.svg);
+          expect(vendored.manifest.labelFonts).toEqual([]);
+          expect(A.map(supplied.manifest.labelFonts, (f) => [f.fontFile, f.sha256])).toEqual([
+            [sansFile, "baccc64becc3eb7d104b7c84d99f5314a0a1f896e2b3ea6c2f22fc08d2003bee"],
+            [serifFile, "86b9ea1c2f41bed9d7c09ccad4abc2894b33df5de60e5bbbece5d48610911870"],
+          ]);
+        })
+      );
+
+      it.effect(
+        "rejects an isometric projection on a plan or elevation",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const dir = yield* fs.makeTempDirectoryScoped();
+          const specPath = path.join(dir, "spec.json");
+          const service = yield* FigureSet;
+          yield* fs.writeFileString(
+            specPath,
+            spec([{ view: "front", description: "is a front elevation view", projection: "isometric" }])
+          );
+          const error = yield* Effect.flip(service.render(RenderRequest.make({ specPath, outputDir: dir })));
+          expect(error.reason).toBe("spec");
         })
       );
 

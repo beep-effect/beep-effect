@@ -34,12 +34,14 @@ Use this command for execution-capable sessions:
 5. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger (inherited from the exploration).
 6. [`../../explorations/patent-drawing-pipeline/`](../../explorations/patent-drawing-pipeline/) - source exploration: BRIEF, DECISIONS, MAP.
 7. [`../agentic-cad-patent-tooling/`](../agentic-cad-patent-tooling/) - sibling goal owning the OCCT driver, 1.84 compositor (P5), and CAD domain.
+8. [`../design-figure-review-loop/`](../design-figure-review-loop/) - successor: the attorney's round-1 review and the review loop.
 
 ## Current Phase
 
-P2 — slice 1. The pipeline runs end to end on the synthetic fixture
-(`bun run beep drawings render --spec packages/foundation/capability/technical-drawing/test/fixtures/synthetic-bracket.spec.json --out <dir>`);
-the live matter still needs its measured `spec.json` under the corpus root.
+Closed (`completed-retained`, 2026-10-06). The attorney reviewed the live sheets on 2026-10-10;
+that review, the round-2 render, mailbox intake and review rounds are carried by the successor
+[`goals/design-figure-review-loop`](../design-figure-review-loop/). Do not reopen this packet for
+them.
 
 ## Latest Evidence
 
@@ -59,5 +61,6 @@ the live matter still needs its measured `spec.json` under the corpus root.
   as a configured external corpus root; the repo carries a synthetic fixture article.
 - Shared bricks with agentic-cad are owned by whichever packet lands them
   first (`packages/drivers/*` per its D7); never duplicated.
-- The live matter's description and sketch disagree on a base-geometry
-  detail; measure the article before modelling.
+- The live matter was modelled from the request sketch with nominal proportions (SPEC Decision
+  Log 2026-10-06); caliper measurement was ruled unnecessary because the description states the
+  design is scale-independent.

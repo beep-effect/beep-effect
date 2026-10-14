@@ -7,8 +7,11 @@
 
 import { $TechnicalDrawingId } from "@beep/identity/packages";
 import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+import { O, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { SANS_FACE, SERIF_FACE } from "./internal/LabelGlyphs.ts";
+import { LabelFace } from "./internal/LabelOutline.ts";
 
 const $I = $TechnicalDrawingId.create("Sheet.schemas");
 
@@ -176,8 +179,311 @@ export const MARGINS_CM = { top: 2.5, left: 2.5, right: 1.5, bottom: 1.0 } as co
  */
 export const MIN_LETTER_HEIGHT_CM = 0.32;
 
+const INCH_MARGINS_CM = { top: 2.54, left: 2.54, right: 0.625 * 2.54, bottom: 0.375 * 2.54 } as const;
+
+const MarginStandardBase = LiteralKit(["cfr-cm", "cfr-strict"]);
+
 /**
- * Sheet options of a render: format, line weight, lettering, inner safety gap.
+ * Margin standard a sheet is laid out to.
+ *
+ * **Details**
+ *
+ * 37 CFR 1.84(g) states each minimum margin twice, in centimetres and in
+ * inches, and the two figures differ slightly. `cfr-cm` is the centimetre
+ * column ({@link MARGINS_CM}: 2.5 / 2.5 / 1.5 / 1.0 cm). `cfr-strict` takes,
+ * per side, the larger of the two (2.54 / 2.54 / 1.5875 / 1.0 cm), so a strict
+ * sheet satisfies both columns and still passes the validator's centimetre
+ * floor.
+ *
+ * **Example** (Read the standards)
+ *
+ * ```ts
+ * import { MarginStandard } from "@beep/technical-drawing/Sheet.schemas"
+ *
+ * console.log(MarginStandard.literals)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const MarginStandard = MarginStandardBase.pipe(
+  $I.annoteSchema("MarginStandard", {
+    description:
+      "`cfr-cm` (the 1.84(g) centimetre minimums) or `cfr-strict` (per side, the larger of the centimetre and inch minimums).",
+  }),
+  SchemaUtils.withLiteralKitStatics(MarginStandardBase)
+);
+
+/**
+ * Type for {@link MarginStandard}.
+ *
+ * **Example** (Annotate a standard)
+ *
+ * ```ts
+ * import type { MarginStandard } from "@beep/technical-drawing/Sheet.schemas"
+ *
+ * const standard: MarginStandard = "cfr-strict"
+ * console.log(standard)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MarginStandard = typeof MarginStandard.Type;
+
+/**
+ * Page margins of a sheet, in centimetres.
+ *
+ * **Example** (The centimetre minimums)
+ *
+ * ```ts
+ * import { SheetMargins } from "@beep/technical-drawing/Sheet.schemas"
+ *
+ * console.log(SheetMargins.make({ top: 2.5, left: 2.5, right: 1.5, bottom: 1 }))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SheetMargins extends S.Class<SheetMargins>($I`SheetMargins`)(
+  {
+    top: PositiveFinite.annotateKey({ description: "Top margin in cm." }),
+    left: PositiveFinite.annotateKey({ description: "Left margin in cm." }),
+    right: PositiveFinite.annotateKey({ description: "Right margin in cm." }),
+    bottom: PositiveFinite.annotateKey({ description: "Bottom margin in cm." }),
+  },
+  $I.annote("SheetMargins", {
+    description: "Top, left, right, and bottom page margins of a sheet in centimetres.",
+  })
+) {}
+
+const MarginsCm = Fn({ input: MarginStandard, output: SheetMargins }).pipe(
+  $I.annoteSchema("MarginsCm", {
+    description: "Schema-backed page margins of a margin standard in centimetres.",
+  })
+);
+
+/**
+ * Page margins of a margin standard, in centimetres.
+ *
+ * **Details**
+ *
+ * `cfr-cm` returns {@link MARGINS_CM}. `cfr-strict` returns, per side, the
+ * larger of {@link MARGINS_CM} and the 1.84(g) inch figures (1 in, 1 in,
+ * 5/8 in, 3/8 in). {@link MARGINS_CM} stays the validator's floor.
+ *
+ * **Example** (Strict margins)
+ *
+ * ```ts
+ * import { marginsCm } from "@beep/technical-drawing/Sheet.schemas"
+ *
+ * console.log(marginsCm("cfr-strict").right) // 1.5875
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const marginsCm: (standard: MarginStandard) => SheetMargins = MarginsCm.implementSync((standard) =>
+  MarginStandard.$match(standard, {
+    "cfr-cm": () => SheetMargins.make(MARGINS_CM),
+    "cfr-strict": () =>
+      SheetMargins.make({
+        top: Math.max(MARGINS_CM.top, INCH_MARGINS_CM.top),
+        left: Math.max(MARGINS_CM.left, INCH_MARGINS_CM.left),
+        right: Math.max(MARGINS_CM.right, INCH_MARGINS_CM.right),
+        bottom: Math.max(MARGINS_CM.bottom, INCH_MARGINS_CM.bottom),
+      }),
+  })
+);
+
+const LabelTypefaceBase = LiteralKit(["stroke", "sans", "serif"]);
+
+/**
+ * Typeface of a sheet label.
+ *
+ * **Details**
+ *
+ * `stroke` is the single-stroke glyph set the sheets were first lettered
+ * with. `sans` and `serif` are filled outlines with the character widths of
+ * Arial and Times New Roman: a vendored subset of the label characters,
+ * licensed OFL-1.1 (see the package's `licenses/OFL-1.1.txt`). Labels stay
+ * outlines either way, so a sheet PDF embeds no font.
+ *
+ * **Example** (Read the typefaces)
+ *
+ * ```ts
+ * import { LabelTypeface } from "@beep/technical-drawing/Sheet.schemas"
+ *
+ * console.log(LabelTypeface.literals)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const LabelTypeface = LabelTypefaceBase.pipe(
+  $I.annoteSchema("LabelTypeface", {
+    description:
+      "`stroke` (single-stroke glyphs), `sans` (Arial-metric outlines), or `serif` (Times New Roman-metric outlines).",
+  }),
+  SchemaUtils.withLiteralKitStatics(LabelTypefaceBase)
+);
+
+/**
+ * Type for {@link LabelTypeface}.
+ *
+ * **Example** (Annotate a typeface)
+ *
+ * ```ts
+ * import type { LabelTypeface } from "@beep/technical-drawing/Sheet.schemas"
+ *
+ * const typeface: LabelTypeface = "serif"
+ * console.log(typeface)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LabelTypeface = typeof LabelTypeface.Type;
+
+// The stroke glyphs borrow the sans cap height, so one size reads alike in both.
+const capPerEm = (typeface: LabelTypeface): number =>
+  LabelTypeface.$match(typeface, {
+    stroke: () => SANS_FACE.capHeight / SANS_FACE.unitsPerEm,
+    sans: () => SANS_FACE.capHeight / SANS_FACE.unitsPerEm,
+    serif: () => SERIF_FACE.capHeight / SERIF_FACE.unitsPerEm,
+  });
+
+const LabelCapHeightCm = Fn({
+  input: S.Struct({
+    typeface: LabelTypeface.annotateKey({ description: "Typeface of the label." }),
+    sizePt: PositiveFinite.annotateKey({ description: "Font size in points." }),
+  }),
+  output: S.Finite,
+}).pipe(
+  $I.annoteSchema("LabelCapHeightCm", {
+    description: "Schema-backed cap height in centimetres of a label typeface at a point size.",
+  })
+);
+
+/**
+ * Cap height in centimetres of a typeface at a point size, from the vendored
+ * face's metrics.
+ *
+ * **Example** (Sans at 18 pt)
+ *
+ * ```ts
+ * import { labelCapHeightCm } from "@beep/technical-drawing/Sheet.schemas"
+ *
+ * console.log(labelCapHeightCm({ typeface: "sans", sizePt: 18 }).toFixed(3)) // about 0.437
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const labelCapHeightCm: (style: typeof LabelCapHeightCm.inputSchema.Type) => number =
+  LabelCapHeightCm.implementSync((style) => (style.sizePt * capPerEm(style.typeface)) / PT_PER_CM);
+
+const AbsoluteFontFile = S.NonEmptyString.check(
+  S.makeFilter(Str.startsWith("/"), {
+    identifier: $I`LabelFontFileAbsoluteCheck`,
+    title: "Label Font File",
+    description:
+      "A label font file is named by an absolute path, so a render does not depend on its working directory.",
+    message: "Expected an absolute font file path",
+  })
+);
+
+/**
+ * Typeface and size of one sheet label, with an optional operator font file.
+ *
+ * **Details**
+ *
+ * `sizePt` is the font size in points. Its cap height (from the vendored
+ * face of `typeface`) must reach 37 CFR 1.84(p)(3)'s 0.32 cm. `fontFile`
+ * names a TrueType file (for example a licensed Arial) outlined at render
+ * time instead of the vendored face; the render records its sha256 and checks
+ * its own cap height. A `stroke` label takes no font file.
+ *
+ * **Example** (The sheet number at 18 pt sans)
+ *
+ * ```ts
+ * import { LabelStyle } from "@beep/technical-drawing/Sheet.schemas"
+ *
+ * console.log(LabelStyle.make({ typeface: "sans", sizePt: 18 }).sizePt)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LabelStyle extends S.Class<LabelStyle>($I`LabelStyle`)(
+  S.Struct({
+    typeface: LabelTypeface.annotateKey({ description: "Typeface of the label." }),
+    sizePt: PositiveFinite.annotateKey({ description: "Font size in points." }),
+    fontFile: S.OptionFromOptionalKey(AbsoluteFontFile).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({
+        description:
+          "Absolute path of a TrueType file outlined instead of the vendored face. Never committed; its sha256 goes in the manifest.",
+      })
+    ),
+  }).check(
+    S.makeFilter((style) => labelCapHeightCm(style) >= MIN_LETTER_HEIGHT_CM, {
+      identifier: $I`LabelStyleCapHeightCheck`,
+      title: "Label Cap Height",
+      description: "37 CFR 1.84(p)(3) requires lettering at least 0.32 cm high.",
+      message: "Expected a label size whose cap height is at least 0.32 cm",
+    }),
+    S.makeFilter((style) => style.typeface !== "stroke" || O.isNone(style.fontFile), {
+      identifier: $I`LabelStyleFontFileCheck`,
+      title: "Label Font File Typeface",
+      description: "Only outlined typefaces read a font file.",
+      message: "Expected no font file on a stroke label",
+    })
+  ),
+  $I.annote("LabelStyle", {
+    description: "Typeface, point size, and optional operator font file of one sheet label.",
+  })
+) {}
+
+/**
+ * Label faces resolved by the caller for `fontFile` label styles.
+ *
+ * **Details**
+ *
+ * A style whose `fontFile` is set needs its outlines loaded first (the
+ * figure-set renderer does this); an entry here replaces the vendored face of
+ * that label's typeface. Without an entry the vendored face is used.
+ *
+ * **Example** (No overrides)
+ *
+ * ```ts
+ * import { SheetLabelFaces } from "@beep/technical-drawing/Sheet.schemas"
+ *
+ * console.log(SheetLabelFaces.make({}).figure._tag) // "None"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SheetLabelFaces extends S.Class<SheetLabelFaces>($I`SheetLabelFaces`)(
+  {
+    figure: S.OptionFromOptionalKey(LabelFace).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({ description: "Face replacing the vendored one for the FIG. n label." })
+    ),
+    sheetNumber: S.OptionFromOptionalKey(LabelFace).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({ description: "Face replacing the vendored one for the n/N sheet number." })
+    ),
+  },
+  $I.annote("SheetLabelFaces", {
+    description: "Label faces loaded by the caller from fontFile label styles, per label.",
+  })
+) {}
+
+/**
+ * Sheet options of a render: format, margin standard, line weight, lettering,
+ * label gap and label styles, inner safety gap.
  *
  * **Example** (Defaults)
  *
@@ -233,6 +539,41 @@ export class SheetOptions extends S.Class<SheetOptions>($I`SheetOptions`)(
       S.withConstructorDefault(Effect.succeed(3)),
       S.withDecodingDefaultTypeKey(Effect.succeed(3)),
       S.annotateKey({ description: "Clearance kept inside the 1.84 margins, in mm. Defaults to 3." })
+    ),
+    margins: MarginStandard.pipe(
+      S.withConstructorDefault(Effect.succeed("cfr-cm" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("cfr-cm" as const)),
+      S.annotateKey({ description: "Margin standard the sheet is laid out to. Defaults to `cfr-cm`." })
+    ),
+    labelGapMm: S.OptionFromOptionalKey(
+      S.Finite.check(
+        S.isGreaterThanOrEqualTo(0, {
+          identifier: $I`LabelGapCheck`,
+          title: "Label Gap",
+          description: "Gap between a page margin and the nearest label ink.",
+          message: "Expected a non-negative label gap",
+        })
+      )
+    ).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({
+        description:
+          "Gap in mm between the top margin and the sheet number's ink top, and between the bottom margin and the `FIG. n` ink bottom. Absent, the labels sit at the safety gap, as before the option existed.",
+      })
+    ),
+    sheetNumberLabel: S.OptionFromOptionalKey(LabelStyle).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({
+        description:
+          "Style of the `n/N` sheet number. Absent, it is stroked at `letterHeightCm`, as before the option existed.",
+      })
+    ),
+    figureLabel: S.OptionFromOptionalKey(LabelStyle).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({
+        description:
+          "Style of the `FIG. n` label. Absent, it is stroked at `letterHeightCm`, as before the option existed.",
+      })
     ),
     shadingWeightMm: S.Finite.check(
       S.isGreaterThanOrEqualTo(0.15, {
@@ -297,6 +638,6 @@ export class SheetOptions extends S.Class<SheetOptions>($I`SheetOptions`)(
   },
   $I.annote("SheetOptions", {
     description:
-      "Page format, stroke and shading widths, shading pitch range, lettering height, and margin safety gap of a render.",
+      "Page format, margin standard, stroke and shading widths, shading pitch range, lettering height, label gap and styles, and margin safety gap of a render.",
   })
 ) {}

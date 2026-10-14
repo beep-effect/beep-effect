@@ -117,6 +117,12 @@
     "packages/drivers/xai": {
       "ignoreDependencies": ["@types/ws", "ws"]
     },
+    "packages/foundation/capability/technical-drawing": {
+      // The operator label-font route loads opentype.js through a non-literal dynamic
+      // import, so its typings (which reference the DOM library) stay out of the
+      // package's type program. Knip cannot see that import.
+      "ignoreDependencies": ["opentype.js"]
+    },
     "packages/ontology/client": {
       "ignoreDependencies": ["@vitest/browser"]
     },

@@ -26054,13 +26054,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/goals-materialize.test.ts:12:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/goals-materialize.test.ts:14:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/goals-materialize.test.ts",
-      "line": 12,
-      "endLine": 12,
+      "line": 14,
+      "endLine": 14,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",

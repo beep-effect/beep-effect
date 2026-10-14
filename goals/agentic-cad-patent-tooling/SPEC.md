@@ -190,6 +190,18 @@ off by the attorney before use (the Model Rule 5.3 supervision D9 exists
 for). The exception is recorded in that goal's Exception Ledger and ends when
 the pipeline ships on Machine A (P7). D9 is otherwise unchanged.
 
+**D9 exception widened (agent-decided, 2026-10-13).** The successor goal
+`goals/design-figure-review-loop` inherits the exception above and adds one
+path: `beep drawings intake` reads the matter's request and review messages
+read-only on the app-only mailbox lane and writes their attachments only under
+the same corpus root, with a sha256 record per attachment. Nothing else is
+admitted, nothing enters git, and attorney review and sign-off still gate every
+sheet set. Decided under the autonomy charter (AGENTS.md "Autonomy") and
+flagged to the operator for asynchronous review; recorded in that goal's
+Decision Log and Exception Ledger. Reverse path: delete this paragraph and the
+successor's ledger row; intake then falls back to the operator saving
+attachments under the corpus root by hand. The removal condition is unchanged.
+
 **CUDA changes the optional tiers, not the plan.** With an NVIDIA card the
 photogrammetry rule-out reverses — **Meshroom/AliceVision's CUDA-gated
 depth-map step is satisfied**, so it joins COLMAP as an option. But 8 GB caps
@@ -265,7 +277,8 @@ rather than confidentiality arguments:
   validator covers design sheets; utility certification stays out.
 - Replacing the human illustrator.
 - Design-patent shading grammar (`37 CFR 1.152`) — materially different rules;
-  owned by `goals/design-figure-generation` slice 2.
+  owned by `goals/design-figure-generation` slice 2 and its successor
+  `goals/design-figure-review-loop`.
 
 ## Constraints
 

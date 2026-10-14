@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "design-figure-review-loop",
+    "title": "Design Figure Review Loop",
+    "status": "active",
+    "created": "2026-10-13",
+    "updated": "2026-10-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/design-figure-review-loop",
+  "lifecycle": "active",
+  "mission": "Answer the attorney's round-1 design-figure review with a round-2 sheet set and add mailbox intake plus hash-keyed review rounds to beep drawings.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/patent-drawing-pipeline",
+    "graduated": "2026-10-13"
+  },
+  "relatedPackets": [
+    {
+      "id": "design-figure-generation",
+      "relation": "predecessor",
+      "notes": "Completed-retained 2026-10-06 (#1439). This packet reverses its 2026-10-06 unclaimed-fastening-features row and promotes its carried lit-threshold and label-font follow-ups; its sign-off rules stay in force."
+    },
+    {
+      "id": "agentic-cad-patent-tooling",
+      "relation": "sibling",
+      "notes": "Owns D9; its scoped D9 exception was widened on 2026-10-13 to cover this packet's mailbox intake into the corpus root."
+    }
+  ],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/design-figure-review-loop/README.md",
+    "goals/design-figure-review-loop/SPEC.md",
+    "goals/design-figure-review-loop/PLAN.md",
+    "goals/design-figure-review-loop/GOAL.md",
+    "goals/design-figure-review-loop/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/design-figure-review-loop/GOAL.md"
+    }
+  ],
+  "phases": [
+    { "id": "P0", "name": "Admit", "status": "in-progress" },
+    {
+      "id": "P1",
+      "name": "Layout, margins, projection, plan facing",
+      "status": "in-progress"
+    },
+    { "id": "P2", "name": "Outlined label typefaces", "status": "in-progress" },
+    {
+      "id": "P3",
+      "name": "Broken-line parts and multi-part fixture",
+      "status": "pending"
+    },
+    { "id": "P4", "name": "Opt-in contour shading", "status": "pending" },
+    { "id": "P5", "name": "Mailbox intake", "status": "pending" },
+    { "id": "P6", "name": "Review rounds from markup", "status": "pending" },
+    {
+      "id": "P7",
+      "name": "Corpus remodel and round-2 render",
+      "status": "pending"
+    },
+    { "id": "P8", "name": "Yeet: PRs to mergeable", "status": "pending" },
+    { "id": "P9", "name": "Close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/design-figure-review-loop/GOAL.md)\" -le 4000",
+    "jq . goals/design-figure-review-loop/ops/manifest.json",
+    "rg -n \"design-figure-review-loop|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/design-figure-review-loop",
+    "git diff --check -- goals/design-figure-review-loop",
+    "bun run beep goals doctor",
+    "bun run beep explore atlas --check",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation.",
+    "Any step would commit client material (geometry, photos, markup text, renders) to the repo.",
+    "A filing-bound send would go out before a question it depends on is answered."
+  ]
+}

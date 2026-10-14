@@ -293,9 +293,8 @@ export const writeReviewedPlan = Effect.fn("Goals.writeReviewedPlan")(function* 
     );
   }
   const receipt = yield* plan.mode === "bootstrap" ? publishBootstrapPlan(plan) : applyAdoptionPlan(plan);
-  const encoded = yield* S.encodeUnknownEffect(MaterializationReceipt)(receipt).pipe(
-    Effect.mapError((issue) => GoalPlanOperationalError.new("Failed to encode the materialization receipt.")(issue))
-  );
+  // The receipt was just constructed from its own schema, so encoding cannot fail.
+  const encoded = yield* S.encodeEffect(MaterializationReceipt)(receipt).pipe(Effect.orDie);
   yield* Console.log(Str.trimEnd(canonicalJsonTextPretty(encoded)));
   return receipt;
 });

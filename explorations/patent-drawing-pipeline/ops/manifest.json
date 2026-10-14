@@ -8,11 +8,14 @@
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": ["goals/design-figure-generation"],
+      "goals": [
+        "goals/design-figure-generation",
+        "goals/design-figure-review-loop"
+      ],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-10-05",
-    "updated": "2026-10-05"
+    "updated": "2026-10-13"
   }
 }

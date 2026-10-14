@@ -20,9 +20,10 @@ validator → attorney sign-off) instead of a one-off.
 
 ## Next Open Question
 
-None — graduated. Promised-now goal: [`goals/design-figure-generation`](../../goals/design-figure-generation/).
-Gated candidates (`design-figure-intake`, `design-figure-desktop`) stay in
-[`MAP.md`](./MAP.md); a fired gate reopens this packet at `decompose`.
+None — graduated. Promised-now goals: [`goals/design-figure-generation`](../../goals/design-figure-generation/)
+(completed-retained) and its successor [`goals/design-figure-review-loop`](../../goals/design-figure-review-loop/).
+Gated candidates (`design-figure-intake`, narrowed to the photo-to-DXF on-ramp, and
+`design-figure-desktop`) stay in [`MAP.md`](./MAP.md); a fired gate reopens this packet at `decompose`.
 
 ## Read This First
 
@@ -43,3 +44,8 @@ Gated candidates (`design-figure-intake`, `design-figure-desktop`) stay in
   `DECISIONS.md`, topology resolved by doctrine); BRIEF.md drafted; stopped
   at shape; operator confirmed the brief; MAP.md written; graduated into
   `goals/design-figure-generation` (agentic-cad Out list amended to point there).
+- 2026-10-13: the `design-figure-intake` gate fired (#1456 added attachment
+  reads to `@beep/m365`; the attorney's review arrived as attachments).
+  Reopened at `decompose`; five dated entries in `DECISIONS.md`; MAP gained
+  `design-figure-review-loop` and narrowed `design-figure-intake`; graduated
+  the successor goal the same day.

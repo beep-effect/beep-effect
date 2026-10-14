@@ -224,6 +224,10 @@
     // statelyai is the Stately CLI (`bunx statelyai scan|open`, see
     // docs/runbooks/xstate-effect-statecharts.md): invoked as a binary, never imported.
     "statelyai",
+    // opentype.js: @beep/technical-drawing loads the font parser for its operator font-file
+    // route through a non-literal dynamic import, so its DOM-typed declarations stay out of
+    // the type program (same ignore in knip.jsonc); fallow cannot trace that import.
+    "opentype.js",
     "babel-plugin-transform-next-use-client",
     "@babel/plugin-transform-export-namespace-from",
     "@babel/plugin-transform-modules-commonjs",

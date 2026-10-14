@@ -164,3 +164,65 @@ server for the pipeline service composition); operator command →
 golden sheets → the owning package's `test/` fixtures. Exact package names
 are settled at graduation via `bun run beep create-package` /
 `bun run beep architecture`.
+
+## 2026-10-13 — intake gate fired; packet reopened at decompose
+
+**Question:** The `design-figure-intake` gate in `MAP.md` reads "a second live matter arrives or
+the m365 driver gains attachment reads". Has it fired, and what does that reopen?
+
+**Answer:** Yes. #1456 added `listMessageAttachments` and `downloadMessageAttachment` to
+`@beep/m365`, and the attorney's 2026-10-10 review of the live sheets arrived as Outlook
+attachments. The packet reopened at `decompose`, gained the candidate
+`design-figure-review-loop` (round-2 deliverable plus intake and review rounds), and graduated it
+the same day. This supersedes the DEFERRED part of the 2026-10-05 intake entry for mailbox
+attachment intake; the hand-authored spec route and the photo-to-DXF deferral stand.
+
+**Rationale:** The README re-entry rule sends a fired gate back through `decompose` rather than
+spawning a goal directly. Rejected: reopening `goals/design-figure-generation` (closed and merged).
+
+## 2026-10-13 — perspective replaced by isometric for FIG 1-2
+
+**Question:** The attorney asked for isometric pictorials. Does that reopen the kernel decision?
+
+**Answer:** No. FIG 1 and FIG 2 move to a parallel projection at the isometric elevation from one
+shared azimuth; a camera without a focus point is already orthographic in the kernel. The
+perspective route stays available as the default for other matters. The 2026-10-05 kernel decision
+stands.
+
+**Rationale:** Filing practice and the attorney's request, with no new kernel work. Rejected:
+dropping perspective from the pipeline.
+
+## 2026-10-13 — shading scope widened to flat and lit faces
+
+**Question:** The 2026-10-05 shading decision hatched faces by exposure, leaving square-on and lit
+faces blank (lit threshold 0.55). The attorney asked for surface shading on flat surfaces.
+
+**Answer:** Widen the scope: faces turned toward the viewer are shaded, lit faces included
+(threshold 1 in the matter spec), with graded and surface-class shading as opt-ins after a probe.
+The generator decision and the vendor shading-only fallback stand.
+
+**Rationale:** The markup was made on the unshaded set, and flat-face shading was already a
+carried follow-up. Rejected: leaving lit faces blank.
+
+## 2026-10-13 — broken lines mean unclaimed matter only
+
+**Question:** How does the pipeline draw dashed lines the review asks for?
+
+**Answer:** Broken lines mark the visible edges of unclaimed parts only (37 CFR 1.152, MPEP
+1503.02). Hidden lines are never drawn, and unclaimed parts are never shaded. Whether a given
+dashed request means unclaimed or hidden goes to the attorney as a question.
+
+**Rationale:** Rule-bound semantics designed into the part schema rather than left to rendering.
+Rejected: a hidden-line style for surfaces behind opaque board.
+
+## 2026-10-13 — interior fastening features are shown
+
+**Question:** The predecessor left the interior fastening features out as unclaimed. Does that
+stand?
+
+**Answer:** No. The attorney asked to see them (row F5 of the corpus review inventory); they are
+shown. Claim scope is the attorney's call, and the judge prompt now routes such findings to the
+attorney as questions.
+
+**Rationale:** The live judge had raised the omission as P1 and the attorney confirmed it.
+Rejected: keeping the agent's "unclaimed" ruling.

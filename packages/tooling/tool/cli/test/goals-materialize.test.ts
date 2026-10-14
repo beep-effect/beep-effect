@@ -4,7 +4,9 @@ import {
   compileAdoptionPlan,
   compileMaterializationPlan,
   goalsCommand,
+  MaterializationPlan,
   PacketEventStoreLive,
+  PlanEntry,
   publishBootstrapPlan,
   readPacketSnapshot,
 } from "@beep/repo-cli/test/Goals";
@@ -20,6 +22,7 @@ import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
@@ -72,6 +75,28 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
           expect(String(exit)).toContain("a conflicted plan never writes");
           expect(yield* fs.readDirectory("goals/fresh-goal")).toEqual([]);
           expect(yield* listGoals).toEqual(["fresh-goal"]);
+        })
+      )
+    );
+
+    it.effect("refuses a plan whose staged manifest does not decode and publishes nothing", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.makeDirectory("goals", { recursive: true });
+          const plan = yield* compileMaterializationPlan(input, []);
+          // Simulate a tampered plan: the manifest payload is JSON but not a GoalManifest.
+          const tampered = MaterializationPlan.make({
+            ...plan,
+            entries: A.map(plan.entries, (entry) =>
+              Str.endsWith("ops/manifest.json")(entry.path) ? PlanEntry.make({ ...entry, payload: "{}\n" }) : entry
+            ),
+          });
+          const exit = yield* Effect.exit(publishBootstrapPlan(tampered));
+          exit.pipe(Exit.isFailure, assertTrue);
+          expect(String(exit)).toContain("does not decode");
+          expect(yield* listGoals).toEqual([]);
         })
       )
     );

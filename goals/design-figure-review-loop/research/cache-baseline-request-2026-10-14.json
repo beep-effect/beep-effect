@@ -1,0 +1,20 @@
+{
+  "previous": "f558044892bb4a3a1f5e99b5678c27b24c4c2f1992e40b754f18c1d657729947",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (design-figure-review-loop, feat/design-figure-review-1)",
+    "reason": "Re-record the legacy cache posture of @beep/technical-drawing after its package scripts block gained the committed glyph generator (beep:check also type-checks scripts/; generate and generate:check) and the opentype.js dependency. No task command, cache flag, input, output or global configuration changed; no qualification is granted.",
+    "basis": {
+      "path": "goals/design-figure-review-loop/research/cache-baseline-review-2026-10-14.md",
+      "sha256": "3dd317b1dfd22473ffb6290878d7512904da6d03a1ce8d48915e41fd99ce152e"
+    }
+  },
+  "subjects": ["@beep/technical-drawing"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

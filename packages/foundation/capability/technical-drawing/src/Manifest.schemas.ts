@@ -9,7 +9,8 @@ import { $TechnicalDrawingId } from "@beep/identity/packages";
 import { EmailString } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { ModelSummary } from "./Geometry.schemas.ts";
+import { Camera, ModelSummary } from "./Geometry.schemas.ts";
+import { SheetOptions } from "./Sheet.schemas.ts";
 import { ValidationReport } from "./Validation.schemas.ts";
 import { ViewName } from "./View.schemas.ts";
 
@@ -115,9 +116,16 @@ export class FigureRecord extends S.Class<FigureRecord>($I`FigureRecord`)(
       S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       S.annotateKey({ description: "Surface-shading segments drawn. Defaults to 0." })
     ),
+    camera: S.OptionFromOptionalKey(Camera).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({
+        description:
+          "Camera the figure was projected with. Absent on manifests rendered before design-figure review round 1.",
+      })
+    ),
   },
   $I.annote("FigureRecord", {
-    description: "FIG. number, view, description, sheet file, hash, and segment count of one figure.",
+    description: "FIG. number, view, description, sheet file, hash, segment counts, and camera of one figure.",
   })
 ) {}
 
@@ -144,6 +152,32 @@ export class OmissionProof extends S.Class<OmissionProof>($I`OmissionProof`)(
   },
   $I.annote("OmissionProof", {
     description: "Outcome of checking one omission claim against the projections.",
+  })
+) {}
+
+/**
+ * An operator label font file a render outlined, with its sha256.
+ *
+ * **Example** (A recorded font file)
+ *
+ * ```ts
+ * import { LabelFontRecord } from "@beep/technical-drawing/Manifest.schemas"
+ *
+ * console.log(LabelFontRecord.make({ fontFile: "/fonts/arial.ttf", sha256: "00" }).fontFile)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LabelFontRecord extends S.Class<LabelFontRecord>($I`LabelFontRecord`)(
+  {
+    fontFile: S.NonEmptyString.annotateKey({
+      description: "Absolute path of the font file, as the sheet options name it.",
+    }),
+    sha256: Sha256Hex.annotateKey({ description: "SHA-256 of the font file bytes the labels were outlined from." }),
+  },
+  $I.annote("LabelFontRecord", {
+    description: "Path and SHA-256 of an operator label font file outlined by a render.",
   })
 ) {}
 
@@ -200,9 +234,23 @@ export class RenderManifest extends S.Class<RenderManifest>($I`RenderManifest`)(
           "Approver recorded in the spec this set was rendered from; the only address `drawings sign` accepts. Absent when the spec names none.",
       })
     ),
+    sheet: S.OptionFromOptionalKey(SheetOptions).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({
+        description:
+          "Effective sheet options of the render (the spec's, else the request's). Absent on manifests rendered before design-figure review round 1.",
+      })
+    ),
+    labelFonts: S.Array(LabelFontRecord).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.withDecodingDefaultTypeKey(Effect.succeed([])),
+      S.annotateKey({
+        description: "Operator font files the labels were outlined from, with their hashes. Empty for vendored faces.",
+      })
+    ),
   },
   $I.annote("RenderManifest", {
     description:
-      "Spec hash, engine, model facts, scale, figures, omission proofs, PDF hash, validation, and recorded approver of a render.",
+      "Spec hash, engine, model facts, scale, figures, omission proofs, PDF hash, validation, recorded approver, effective sheet options, and label font files of a render.",
   })
 ) {}

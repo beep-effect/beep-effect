@@ -17,16 +17,19 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { ShadingPlan } from "./Geometry.schemas.ts";
 import { mirrorSegments, sameSegments } from "./Geometry.segments.ts";
-import { FigureRecord, OmissionProof, RenderManifest, Sha256Hex } from "./Manifest.schemas.ts";
+import { outlineFontFile } from "./internal/LabelOutline.ts";
+import { FigureRecord, LabelFontRecord, OmissionProof, RenderManifest, Sha256Hex } from "./Manifest.schemas.ts";
 import { commonScale, composeSheet } from "./Sheet.compose.ts";
-import { PT_PER_MM, SheetOptions } from "./Sheet.schemas.ts";
+import { MIN_LETTER_HEIGHT_CM, PT_PER_CM, PT_PER_MM, SheetLabelFaces, SheetOptions } from "./Sheet.schemas.ts";
 import { DrawingError } from "./TechnicalDrawing.errors.ts";
 import { GeometryEngine, PdfBackend } from "./TechnicalDrawing.ports.ts";
 import { marginFindings, purityFindings, structuralFindings } from "./Validation.rules.ts";
 import { ValidationOptions, ValidationReport } from "./Validation.schemas.ts";
-import { cameraForView, FigureSetSpec } from "./View.schemas.ts";
+import { cameraForView, FigureSetSpec, PictorialProjection } from "./View.schemas.ts";
 import type { EdgeSet, Segment2 } from "./Geometry.schemas.ts";
-import type { FigureSpec, OmissionClaim } from "./View.schemas.ts";
+import type { LabelFace } from "./internal/LabelOutline.ts";
+import type { LabelStyle } from "./Sheet.schemas.ts";
+import type { FigureSpec, OmissionClaim, ViewName } from "./View.schemas.ts";
 
 const $I = $TechnicalDrawingId.create("FigureSet.service");
 const decodeSpec = S.decodeUnknownEffect(S.fromJsonString(FigureSetSpec));
@@ -55,7 +58,10 @@ export class RenderRequest extends S.Class<RenderRequest>($I`RenderRequest`)(
     outputDir: S.NonEmptyString.annotateKey({ description: "Directory for sheet SVGs, the PDF, and the manifest." }),
     sheet: SheetOptions.pipe(
       S.withConstructorDefault(Effect.succeed(SheetOptions.make({}))),
-      S.annotateKey({ description: "Sheet options. Defaults to Letter, 0.35 mm, 0.45 cm lettering." })
+      S.annotateKey({
+        description:
+          "Sheet options. Defaults to Letter, 0.35 mm, 0.45 cm lettering. A spec that carries its own `sheet` wins wholesale over these.",
+      })
     ),
     validate: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
@@ -111,23 +117,32 @@ const sha256 = (bytes: Uint8Array): Effect.Effect<Sha256Hex> =>
 // Shading pitch is a paper quantity: convert the sheet's mm range to model
 // units at the common scale (points per model unit), then project once more.
 const shadingFor = (input: {
-  readonly request: RenderRequest;
+  readonly shade: boolean;
+  readonly sheet: SheetOptions;
   readonly scale: number;
   readonly project: (plan: ShadingPlan) => Effect.Effect<ReadonlyArray<EdgeSet>, DrawingError>;
 }): Effect.Effect<ReadonlyArray<EdgeSet>, DrawingError> => {
-  const { request, scale } = input;
-  if (!request.shade) {
+  const { sheet, scale } = input;
+  if (!input.shade) {
     return Effect.succeed([]);
   }
   const toModel = (mm: number) => (mm * PT_PER_MM) / scale;
   return input.project(
     ShadingPlan.make({
-      minPitch: toModel(request.sheet.shadingMinPitchMm),
-      maxPitch: toModel(Math.max(request.sheet.shadingMaxPitchMm, request.sheet.shadingMinPitchMm)),
-      litThreshold: request.sheet.shadingLitThreshold,
+      minPitch: toModel(sheet.shadingMinPitchMm),
+      maxPitch: toModel(Math.max(sheet.shadingMaxPitchMm, sheet.shadingMinPitchMm)),
+      litThreshold: sheet.shadingLitThreshold,
     })
   );
 };
+
+// An omitted pictorial is projected like the figure it is claimed from.
+const projectionOf = (spec: FigureSetSpec, view: ViewName): PictorialProjection =>
+  pipe(
+    A.findFirst(spec.figures, (f) => f.view === view),
+    O.map((f) => f.projection),
+    O.getOrElse(() => PictorialProjection.Enum.perspective)
+  );
 
 const proveOmission = (claim: OmissionClaim, shown: EdgeSet, omitted: EdgeSet): OmissionProof =>
   OmissionProof.make({
@@ -173,6 +188,35 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
     });
   });
 
+  // Outline an operator label font file and check its cap height; its sha256 goes in the manifest.
+  const loadLabelFont = Effect.fnUntraced(function* (style: LabelStyle, fontFile: string) {
+    const bytes = yield* fs
+      .readFile(fontFile)
+      .pipe(
+        Effect.mapError((cause) => DrawingError.fromUnknown("font", `Could not read label font "${fontFile}".`, cause))
+      );
+    const face = yield* outlineFontFile(fontFile, bytes);
+    const capCm = (style.sizePt * face.capHeight) / face.unitsPerEm / PT_PER_CM;
+    if (capCm < MIN_LETTER_HEIGHT_CM) {
+      return yield* DrawingError.make({
+        reason: "font",
+        message: `Label font "${fontFile}" at ${style.sizePt} pt has a cap height of ${capCm.toFixed(3)} cm, under 0.32 cm.`,
+      });
+    }
+    return { record: LabelFontRecord.make({ fontFile, sha256: yield* sha256(bytes) }), face };
+  });
+
+  const labelFace = Effect.fnUntraced(function* (style: O.Option<LabelStyle>) {
+    const file = pipe(
+      style,
+      O.flatMap((s) => O.map(s.fontFile, (fontFile) => ({ style: s, fontFile })))
+    );
+    return yield* O.match(file, {
+      onNone: () => Effect.succeed(O.none<{ readonly record: LabelFontRecord; readonly face: LabelFace }>()),
+      onSome: ({ style: s, fontFile }) => Effect.asSome(loadLabelFont(s, fontFile)),
+    });
+  });
+
   const render = Effect.fn("FigureSet.render")(function* (request: RenderRequest) {
     const specPath = path.resolve(request.specPath);
     const specBytes = yield* fs.readFile(specPath).pipe(Effect.mapError(io(`Could not read "${specPath}".`)));
@@ -182,8 +226,32 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
     );
     const info = yield* engine.info;
     const model = yield* engine.summarize(spec.model);
-    const views = [...A.map(spec.figures, (f) => f.view), ...A.map(spec.omissions, (o) => o.omitted)];
-    const cameras = A.map(views, (view) => cameraForView({ view, box: model.boundingBox }));
+    // The spec's own sheet options win wholesale; the manifest records the ones used.
+    const sheet = O.getOrElse(spec.sheet, () => request.sheet);
+    // Font files are read before projecting, so a bad one fails fast.
+    const sheetNumberFont = yield* labelFace(sheet.sheetNumberLabel);
+    const figureFont = yield* labelFace(sheet.figureLabel);
+    const faces = SheetLabelFaces.make({
+      sheetNumber: O.map(sheetNumberFont, (f) => f.face),
+      figure: O.map(figureFont, (f) => f.face),
+    });
+    const labelFonts = A.dedupeWith(
+      [...O.toArray(O.map(sheetNumberFont, (f) => f.record)), ...O.toArray(O.map(figureFont, (f) => f.record))],
+      (a, b) => a.fontFile === b.fontFile
+    );
+    const views = [
+      ...A.map(spec.figures, (f) => ({ view: f.view, projection: f.projection })),
+      ...A.map(spec.omissions, (o) => ({ view: o.omitted, projection: projectionOf(spec, o.shown) })),
+    ];
+    const cameras = A.map(views, ({ view, projection }) =>
+      cameraForView({
+        view,
+        box: model.boundingBox,
+        projection,
+        azimuthDeg: spec.pictorialAzimuthDeg,
+        planFacing: spec.planFacing,
+      })
+    );
     const projected = yield* engine.project(spec.model, cameras, O.none());
     const edgesOf = (index: number): Effect.Effect<EdgeSet, DrawingError> =>
       pipe(
@@ -223,9 +291,10 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
             });
       })
     );
-    const scale = commonScale({ views: A.map(figureEdges, (e) => e.visible), options: request.sheet });
+    const scale = commonScale({ views: A.map(figureEdges, (e) => e.visible), options: sheet, faces });
     const shading = yield* shadingFor({
-      request,
+      shade: request.shade,
+      sheet,
       scale,
       project: (plan) => engine.project(spec.model, A.take(cameras, A.length(spec.figures)), O.some(plan)),
     });
@@ -250,7 +319,8 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
           sheet: index + 1,
           sheets,
           scale,
-          options: request.sheet,
+          options: sheet,
+          faces,
         });
         const svgFile = `fig-${index + 1}.svg`;
         const svgBytes = encoder.encode(svg);
@@ -265,6 +335,7 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
           svgSha256: yield* sha256(svgBytes),
           visibleSegments: A.length(edges.visible),
           shadingSegments: A.length(shadingLines),
+          camera: A.get(cameras, index),
         });
       })
     );
@@ -292,6 +363,8 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
       pdfSha256,
       validation,
       approver: spec.approver,
+      sheet: O.some(sheet),
+      labelFonts,
     });
     const json = yield* encodeManifest(manifest).pipe(
       Effect.mapError((cause) => DrawingError.fromUnknown("io", "Could not encode the manifest.", cause))

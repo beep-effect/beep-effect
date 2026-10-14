@@ -1,24 +1,31 @@
 /**
  * Pure sheet composition: place one projected view on a 37 CFR 1.84 sheet as
- * a deterministic SVG with stroke-lettered `n/N` and `FIG. n` labels.
+ * a deterministic SVG with `n/N` and `FIG. n` labels.
  *
  * **Details**
  *
- * Lettering is drawn from a small single-stroke glyph table (digits, `F`,
- * `I`, `G`, `.`, `/`), so a sheet needs no font and embeds none: every mark
- * on the page is a uniform-width black stroke. Coordinates are rounded to
- * three decimals and segments keep the engine's canonical order, so equal
- * geometry yields byte-equal SVG.
+ * Without a label style, lettering is drawn from a small single-stroke glyph
+ * table (digits, `F`, `I`, `G`, `.`, `/`). A label style switches a label to
+ * the same stroke table at a point size, or to filled sans or serif outlines.
+ * Either way a sheet needs no font and embeds none. Outlined labels are
+ * placed by the ink box of the glyph run: the sheet number's ink top sits on
+ * the label line under the top margin, the `FIG. n` ink bottom on the one over
+ * the bottom margin. Coordinates are rounded to three decimals and segments
+ * keep the engine's canonical order, so equal geometry yields byte-equal SVG.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { A, N } from "@beep/utils";
+import { A, N, O } from "@beep/utils";
 import { pipe } from "effect/Function";
-import { MARGINS_CM, PT_PER_CM, PT_PER_MM, pageSizePt } from "./Sheet.schemas.ts";
+import * as Match from "effect/Match";
+import { SANS_FACE, SERIF_FACE } from "./internal/LabelGlyphs.ts";
+import { alphabetSpan } from "./internal/LabelOutline.ts";
+import { LabelTypeface, marginsCm, PT_PER_CM, PT_PER_MM, pageSizePt, SheetLabelFaces } from "./Sheet.schemas.ts";
 import type { Segment2 } from "./Geometry.schemas.ts";
-import type { SheetOptions } from "./Sheet.schemas.ts";
+import type { InkBox, LabelFace } from "./internal/LabelOutline.ts";
+import type { LabelStyle, SheetOptions } from "./Sheet.schemas.ts";
 
 type Polyline = ReadonlyArray<readonly [number, number]>;
 
@@ -279,14 +286,99 @@ export const viewExtents = (
   };
 };
 
+// How one label is lettered: the original stroke at `letterHeightCm`, the
+// stroke table at a style's size, or a filled outline face.
+type LabelLettering =
+  | { readonly _tag: "legacy"; readonly cap: number }
+  | { readonly _tag: "stroke"; readonly cap: number; readonly halfStroke: number }
+  | { readonly _tag: "outline"; readonly face: LabelFace; readonly scale: number };
+
+const letteringOf = (
+  style: O.Option<LabelStyle>,
+  override: O.Option<LabelFace>,
+  options: SheetOptions
+): LabelLettering =>
+  O.match(style, {
+    onNone: (): LabelLettering => ({ _tag: "legacy", cap: options.letterHeightCm * PT_PER_CM }),
+    onSome: (s): LabelLettering => {
+      const outline = (vendored: LabelFace): LabelLettering => {
+        const face = O.getOrElse(override, () => vendored);
+        return { _tag: "outline", face, scale: s.sizePt / face.unitsPerEm };
+      };
+      return LabelTypeface.$match(s.typeface, {
+        stroke: (): LabelLettering => ({
+          _tag: "stroke",
+          cap: (s.sizePt * SANS_FACE.capHeight) / SANS_FACE.unitsPerEm,
+          halfStroke: (options.lineWeightMm * PT_PER_MM) / 2,
+        }),
+        sans: () => outline(SANS_FACE),
+        serif: () => outline(SERIF_FACE),
+      });
+    },
+  });
+
+// Height every label of a lettering fits in, whatever its digits: the band
+// under the top margin (and over the bottom one) is twice this.
+const letteringExtent = (lettering: LabelLettering): number =>
+  Match.valueTags(lettering, {
+    legacy: ({ cap }) => cap,
+    stroke: ({ cap, halfStroke }) => cap + 2 * halfStroke,
+    outline: ({ face, scale }) => {
+      const [low, high] = alphabetSpan(face);
+      return (high - low) * scale;
+    },
+  });
+
+const NO_FACES = SheetLabelFaces.make({});
+
+const geometryOf = (options: SheetOptions, faces: SheetLabelFaces) => {
+  const page = pageSizePt(options.format);
+  const margins = marginsCm(options.margins);
+  const safety = options.safetyMm * PT_PER_MM;
+  const labelGap = O.getOrElse(options.labelGapMm, () => options.safetyMm) * PT_PER_MM;
+  const cap = options.letterHeightCm * PT_PER_CM;
+  const lettering = {
+    sheetNumber: letteringOf(options.sheetNumberLabel, faces.sheetNumber, options),
+    figure: letteringOf(options.figureLabel, faces.figure, options),
+  };
+  const sight = {
+    left: margins.left * PT_PER_CM + safety,
+    top: margins.top * PT_PER_CM + safety,
+    right: page.width - margins.right * PT_PER_CM - safety,
+    bottom: page.height - margins.bottom * PT_PER_CM - safety,
+  };
+  // Ink top of the sheet number and ink bottom of `FIG. n`.
+  const labels = {
+    top: margins.top * PT_PER_CM + labelGap,
+    bottom: page.height - margins.bottom * PT_PER_CM - labelGap,
+  };
+  const figure = {
+    left: sight.left,
+    top: Math.max(sight.top, labels.top + letteringExtent(lettering.sheetNumber) * 2),
+    right: sight.right,
+    bottom: Math.min(sight.bottom, labels.bottom - letteringExtent(lettering.figure) * 2),
+  };
+  return { page, cap, sight, labels, lettering, figure } as const;
+};
+
 /**
  * Geometry of the sight (drawable area) of a sheet, in points, SVG y down.
  *
  * **Details**
  *
- * The sight is the page minus the 1.84(g) margins and the safety gap. The
- * figure area is the sight minus the sheet-number band at the top and the
- * `FIG. n` band at the bottom.
+ * The sight is the page minus the margins of `options.margins` and the
+ * safety gap. The sheet number's ink top sits `labelGapMm` below the top
+ * margin and the `FIG. n` ink bottom `labelGapMm` above the bottom margin
+ * (`labels`); without a label gap both sit at the safety gap. The figure area
+ * is the sight minus the sheet-number band at the top and the `FIG. n` band
+ * at the bottom; each band is twice the height its label style's alphabet
+ * spans, so the figure area is the same on every sheet of a set.
+ *
+ * **Gotchas**
+ *
+ * A label style with a `fontFile` is measured here with the vendored face of
+ * its typeface; {@link commonScale} and {@link composeSheet} take the loaded
+ * faces through their `faces` input.
  *
  * **Example** (Letter sight)
  *
@@ -300,25 +392,7 @@ export const viewExtents = (
  * @category utilities
  * @since 0.0.0
  */
-export const sheetGeometry = (options: SheetOptions) => {
-  const page = pageSizePt(options.format);
-  const safety = options.safetyMm * PT_PER_MM;
-  const cap = options.letterHeightCm * PT_PER_CM;
-  const band = cap * 2;
-  const sight = {
-    left: MARGINS_CM.left * PT_PER_CM + safety,
-    top: MARGINS_CM.top * PT_PER_CM + safety,
-    right: page.width - MARGINS_CM.right * PT_PER_CM - safety,
-    bottom: page.height - MARGINS_CM.bottom * PT_PER_CM - safety,
-  };
-  const figure = {
-    left: sight.left,
-    top: sight.top + band,
-    right: sight.right,
-    bottom: sight.bottom - band,
-  };
-  return { page, cap, sight, figure } as const;
-};
+export const sheetGeometry = (options: SheetOptions) => geometryOf(options, NO_FACES);
 
 /**
  * Largest scale (points per model unit) at which every view fits the figure
@@ -338,9 +412,10 @@ export const sheetGeometry = (options: SheetOptions) => {
 export const commonScale = (input: {
   readonly views: ReadonlyArray<ReadonlyArray<Segment2>>;
   readonly options: SheetOptions;
+  readonly faces?: SheetLabelFaces | undefined;
 }): number => {
   const { views, options } = input;
-  const { figure } = sheetGeometry(options);
+  const { figure } = geometryOf(options, input.faces ?? NO_FACES);
   const stroke = options.lineWeightMm * PT_PER_MM;
   const areaW = figure.right - figure.left - stroke;
   const areaH = figure.bottom - figure.top - stroke;
@@ -353,8 +428,107 @@ export const commonScale = (input: {
   return Math.floor(raw * 1e4) / 1e4;
 };
 
+// Ink box of a glyph run in font units, pen at 0, y up; blank glyphs add none.
+const runInk = (face: LabelFace, text: string): InkBox => {
+  const placed = A.reduce(A.fromIterable(text), { pen: 0, boxes: A.empty<InkBox>() }, (acc, char) => {
+    const glyph = face.glyphs[char];
+    return glyph === undefined
+      ? acc
+      : {
+          pen: acc.pen + glyph.advance,
+          boxes: A.isReadonlyArrayNonEmpty(glyph.commands)
+            ? A.append(acc.boxes, [acc.pen + glyph.ink[0], glyph.ink[1], acc.pen + glyph.ink[2], glyph.ink[3]] as const)
+            : acc.boxes,
+        };
+  });
+  return A.isReadonlyArrayNonEmpty(placed.boxes)
+    ? [
+        Math.min(...A.map(placed.boxes, (b) => b[0])),
+        Math.min(...A.map(placed.boxes, (b) => b[1])),
+        Math.max(...A.map(placed.boxes, (b) => b[2])),
+        Math.max(...A.map(placed.boxes, (b) => b[3])),
+      ]
+    : [0, 0, 0, 0];
+};
+
+// SVG path of a glyph run with its pen origin at (x, baseline), SVG y down.
+const runPath = (input: {
+  readonly face: LabelFace;
+  readonly text: string;
+  readonly scale: number;
+  readonly x: number;
+  readonly baseline: number;
+}): string => {
+  const { face, scale, x, baseline } = input;
+  const at = (pen: number, gx: number, gy: number) => `${r3(x + (pen + gx) * scale)} ${r3(baseline - gy * scale)}`;
+  return A.reduce(A.fromIterable(input.text), { pen: 0, d: "" }, (acc, char) => {
+    const glyph = face.glyphs[char];
+    if (glyph === undefined) {
+      return acc;
+    }
+    const d = pipe(
+      glyph.commands,
+      A.map((c) =>
+        c[0] === "Q"
+          ? `Q${at(acc.pen, c[1], c[2])} ${at(acc.pen, c[3], c[4])}`
+          : c[0] === "Z"
+            ? "Z"
+            : `${c[0]}${at(acc.pen, c[1], c[2])}`
+      ),
+      A.join("")
+    );
+    return { pen: acc.pen + glyph.advance, d: acc.d + d };
+  }).d;
+};
+
+type LetteredLabel = { readonly strokes: ReadonlyArray<Polyline>; readonly fill: string };
+
+// Letter one label centred at `centreX`, its ink edge on `edge`: the ink top
+// for the sheet number (`anchor: "top"`), the ink bottom for `FIG. n`.
+const letter = (input: {
+  readonly lettering: LabelLettering;
+  readonly text: string;
+  readonly centreX: number;
+  readonly edge: number;
+  readonly anchor: "top" | "bottom";
+}): LetteredLabel => {
+  const { lettering, text, centreX, edge, anchor } = input;
+  const stroked = (cap: number, baseline: number): LetteredLabel => ({
+    strokes: strokeLabel({
+      text,
+      x: centreX - labelWidthPt({ text, capHeightPt: cap }) / 2,
+      y: baseline,
+      capHeightPt: cap,
+    }),
+    fill: "",
+  });
+  return Match.valueTags(lettering, {
+    legacy: ({ cap }) => stroked(cap, anchor === "top" ? edge + cap : edge),
+    stroke: ({ cap, halfStroke }) => stroked(cap, anchor === "top" ? edge + halfStroke + cap : edge - halfStroke),
+    outline: ({ face, scale }): LetteredLabel => {
+      const [xMin, yMin, xMax, yMax] = runInk(face, text);
+      return {
+        strokes: [],
+        fill: runPath({
+          face,
+          text,
+          scale,
+          x: centreX - ((xMin + xMax) / 2) * scale,
+          baseline: anchor === "top" ? edge + yMax * scale : edge + yMin * scale,
+        }),
+      };
+    },
+  });
+};
+
 /**
  * Compose one sheet.
+ *
+ * **Details**
+ *
+ * Stroke labels go in the stroked `labels` path; outlined labels go in one
+ * filled `label-outlines` path. A sheet without label styles is byte-equal to
+ * one composed before label styles existed.
  *
  * **Example** (A sheet with one segment)
  *
@@ -378,9 +552,10 @@ export const composeSheet = (input: {
   readonly sheets: number;
   readonly scale: number;
   readonly options: SheetOptions;
+  readonly faces?: SheetLabelFaces | undefined;
 }): string => {
   const { segments, scale, options } = input;
-  const { page, cap, sight, figure } = sheetGeometry(options);
+  const { page, sight, labels: anchors, lettering, figure } = geometryOf(options, input.faces ?? NO_FACES);
   const stroke = options.lineWeightMm * PT_PER_MM;
   const extents = viewExtents(segments);
   const drawnW = (extents.maxX - extents.minX) * scale;
@@ -402,17 +577,24 @@ export const composeSheet = (input: {
       A.join("")
     );
   const figurePath = pathOf(segments);
-  const sheetLabel = `${input.sheet}/${input.sheets}`;
-  const figLabel = `FIG. ${input.figure}`;
-  const centred = (text: string, y: number) =>
-    strokeLabel({
-      text,
-      x: (sight.left + sight.right) / 2 - labelWidthPt({ text, capHeightPt: cap }) / 2,
-      y,
-      capHeightPt: cap,
-    });
-  const labels = [...centred(sheetLabel, sight.top + cap), ...centred(figLabel, sight.bottom)];
+  const centreX = (sight.left + sight.right) / 2;
+  const sheetNumber = letter({
+    lettering: lettering.sheetNumber,
+    text: `${input.sheet}/${input.sheets}`,
+    centreX,
+    edge: anchors.top,
+    anchor: "top",
+  });
+  const figLabel = letter({
+    lettering: lettering.figure,
+    text: `FIG. ${input.figure}`,
+    centreX,
+    edge: anchors.bottom,
+    anchor: "bottom",
+  });
+  const labels = [...sheetNumber.strokes, ...figLabel.strokes];
   const labelPath = pipe(labels, A.map(polylinePath), A.join(""));
+  const outlinePath = sheetNumber.fill + figLabel.fill;
   const attrsFor = (width: number) =>
     `fill="none" stroke="#000000" stroke-width="${r3(width)}" stroke-linecap="round" stroke-linejoin="round"`;
   const attrs = attrsFor(stroke);
@@ -422,9 +604,15 @@ export const composeSheet = (input: {
     A.length(input.shading) === 0
       ? []
       : [`<path id="shading" d="${pathOf(input.shading)}" ${attrsFor(options.shadingWeightMm * PT_PER_MM)}/>`];
+  // Each label layer is emitted only when it has marks, so a sheet without
+  // label styles keeps exactly the one stroked `labels` path it always had.
+  const labelLayers = [
+    ...(A.length(labels) === 0 ? [] : [`<path id="labels" d="${labelPath}" ${attrs}/>`]),
+    ...(outlinePath === "" ? [] : [`<path id="label-outlines" d="${outlinePath}" fill="#000000" stroke="none"/>`]),
+  ];
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${r3(page.width)}pt" height="${r3(page.height)}pt" viewBox="0 0 ${r3(page.width)} ${r3(page.height)}">`,
-    `<path id="labels" d="${labelPath}" ${attrs}/>`,
+    ...labelLayers,
     ...shadingLayer,
     `<path id="figure" d="${figurePath}" ${attrs}/>`,
     "</svg>",

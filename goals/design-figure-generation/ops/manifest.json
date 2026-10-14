@@ -5,7 +5,7 @@
     "title": "Design Figure Generation",
     "status": "completed-retained",
     "created": "2026-10-05",
-    "updated": "2026-10-06",
+    "updated": "2026-10-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/design-figure-generation",
@@ -17,6 +17,13 @@
     "exploration": "explorations/patent-drawing-pipeline",
     "graduated": "2026-10-05"
   },
+  "relatedPackets": [
+    {
+      "id": "design-figure-review-loop",
+      "relation": "successor",
+      "notes": "Opened 2026-10-13 by the attorney's 2026-10-10 review of the live sheets; reverses the 2026-10-06 unclaimed-fastening-features row and promotes the carried shading and label-font follow-ups. This packet stays completed-retained."
+    }
+  ],
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,

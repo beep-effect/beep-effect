@@ -1074,11 +1074,11 @@
       }
     },
     "@beep/technical-drawing": {
-      "reviewer": "rsc-d-release policy worker",
-      "reason": "Preserve the exact original design-figure driver review evidence outside the retired pending-note directory. Only these four review references move; projection, task/cache policy, profile, epoch, scope and qualification ledger remain unchanged. The archived evidence retains its original SHA-256. No cache qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (design-figure-review-loop, feat/design-figure-review-1)",
+      "reason": "Re-record the legacy cache posture of @beep/technical-drawing after its package scripts block gained the committed glyph generator (beep:check also type-checks scripts/; generate and generate:check) and the opentype.js dependency. No task command, cache flag, input, output or global configuration changed; no qualification is granted.",
       "basis": {
-        "path": "goals/repository-simplification-confidence/history/receipts/d-cache-review-evidence.md",
-        "sha256": "9b642414a6d87a7ed68955eed76fb5c9468dfe344cffe17e95167931723e510a"
+        "path": "goals/design-figure-review-loop/research/cache-baseline-review-2026-10-14.md",
+        "sha256": "3dd317b1dfd22473ffb6290878d7512904da6d03a1ce8d48915e41fd99ce152e"
       }
     },
     "@beep/tesseract": {
@@ -91731,7 +91731,7 @@
       {
         "computation": "@beep/technical-drawing#audit",
         "command": "bun run --if-present beep:audit",
-        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "commandDigest": "eb53381e74caf45ec2e6447ae2607e3062a4a4803b57cc17d8fd8159d542727a",
         "dependencies": [
           "@beep/identity#audit",
           "@beep/schema#audit",
@@ -91795,7 +91795,7 @@
       {
         "computation": "@beep/technical-drawing#build",
         "command": "bun run beep:build",
-        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "commandDigest": "eb53381e74caf45ec2e6447ae2607e3062a4a4803b57cc17d8fd8159d542727a",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -91846,7 +91846,7 @@
       {
         "computation": "@beep/technical-drawing#check",
         "command": "bun run beep:check",
-        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "commandDigest": "eb53381e74caf45ec2e6447ae2607e3062a4a4803b57cc17d8fd8159d542727a",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -91884,7 +91884,7 @@
       {
         "computation": "@beep/technical-drawing#coverage",
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
-        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "commandDigest": "eb53381e74caf45ec2e6447ae2607e3062a4a4803b57cc17d8fd8159d542727a",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -91934,7 +91934,7 @@
       {
         "computation": "@beep/technical-drawing#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "commandDigest": "eb53381e74caf45ec2e6447ae2607e3062a4a4803b57cc17d8fd8159d542727a",
         "dependencies": [
           "@beep/repo-docgen#transit",
           "@beep/technical-drawing#transit"
@@ -91973,7 +91973,7 @@
       {
         "computation": "@beep/technical-drawing#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "commandDigest": "eb53381e74caf45ec2e6447ae2607e3062a4a4803b57cc17d8fd8159d542727a",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -92008,7 +92008,7 @@
       {
         "computation": "@beep/technical-drawing#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "commandDigest": "eb53381e74caf45ec2e6447ae2607e3062a4a4803b57cc17d8fd8159d542727a",
         "dependencies": [
           "//#lint:policy-fingerprint",
           "@beep/identity#transit",
@@ -92080,7 +92080,7 @@
       {
         "computation": "@beep/technical-drawing#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "commandDigest": "eb53381e74caf45ec2e6447ae2607e3062a4a4803b57cc17d8fd8159d542727a",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -92109,7 +92109,7 @@
       {
         "computation": "@beep/technical-drawing#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "commandDigest": "eb53381e74caf45ec2e6447ae2607e3062a4a4803b57cc17d8fd8159d542727a",
         "dependencies": [
           "//#lint:policy-fingerprint"
         ],
@@ -92164,7 +92164,7 @@
       {
         "computation": "@beep/technical-drawing#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "commandDigest": "eb53381e74caf45ec2e6447ae2607e3062a4a4803b57cc17d8fd8159d542727a",
         "dependencies": [
           "//#lint:policy-fingerprint"
         ],
@@ -92218,7 +92218,7 @@
       {
         "computation": "@beep/technical-drawing#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "commandDigest": "eb53381e74caf45ec2e6447ae2607e3062a4a4803b57cc17d8fd8159d542727a",
         "dependencies": [
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -92262,7 +92262,7 @@
       {
         "computation": "@beep/technical-drawing#test",
         "command": "bun run beep:test",
-        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "commandDigest": "eb53381e74caf45ec2e6447ae2607e3062a4a4803b57cc17d8fd8159d542727a",
         "dependencies": [
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -92309,7 +92309,7 @@
       {
         "computation": "@beep/technical-drawing#test:integration",
         "command": "bun run beep:test:integration",
-        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "commandDigest": "eb53381e74caf45ec2e6447ae2607e3062a4a4803b57cc17d8fd8159d542727a",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",

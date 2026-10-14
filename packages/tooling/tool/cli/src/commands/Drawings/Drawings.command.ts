@@ -11,6 +11,7 @@ import {
   ConfirmationSource,
   EmailAddress,
   FigureSet,
+  isPerspectiveView,
   RenderRequest,
   SheetFormat,
   SheetOptions,
@@ -70,13 +71,83 @@ const renderFindings = (report: ValidationReport): ReadonlyArray<string> =>
         ),
       ];
 
-const renderManifestSummary = (manifest: RenderManifest): ReadonlyArray<string> => [
+const sheetEquivalence = S.toEquivalence(SheetOptions);
+
+const sheetSummary = (manifest: RenderManifest, requested: SheetOptions): ReadonlyArray<string> =>
+  pipe(
+    manifest.sheet,
+    O.match({
+      onNone: () => [],
+      onSome: (sheet) => [
+        `sheet: ${sheet.format}, margins ${sheet.margins}${sheetEquivalence(sheet, requested) ? "" : " (from the spec; the --format flag was not used)"}`,
+      ],
+    })
+  );
+
+// A pictorial camera without a focus is the isometric projection.
+const projectionNote = (figure: RenderManifest["figures"][number]): string =>
+  isPerspectiveView(figure.view)
+    ? pipe(
+        figure.camera,
+        O.match({
+          onNone: () => "",
+          onSome: (camera) => (O.isNone(camera.focus) ? ", isometric" : ", perspective"),
+        })
+      )
+    : "";
+
+/**
+ * Lines `beep drawings render` prints for a finished render.
+ *
+ * **Details**
+ *
+ * Names the effective sheet format and margin standard, and says when the
+ * spec's own sheet options replaced the ones the flags asked for. Pictorial
+ * figures carry their projection (a pictorial camera without a focus is
+ * isometric).
+ *
+ * **Example** (Summarise a manifest)
+ *
+ * ```ts
+ * import { renderManifestSummary } from "@beep/repo-cli/commands/Drawings"
+ * import { BoundingBox, ModelSummary } from "@beep/technical-drawing/Geometry.schemas"
+ * import { EngineInfo, RenderManifest } from "@beep/technical-drawing/Manifest.schemas"
+ * import { SheetOptions } from "@beep/technical-drawing/Sheet.schemas"
+ * import * as O from "effect/Option"
+ *
+ * const manifest = RenderManifest.make({
+ *   title: "Synthetic bracket",
+ *   specSha256: "00",
+ *   engine: EngineInfo.make({ name: "replicad", version: "1.1.0", binarySha256: "00" }),
+ *   model: ModelSummary.make({ boundingBox: BoundingBox.make({ min: [0, 0, 0], max: [1, 1, 1] }), volume: 1, faceCount: 6, edgeCount: 12 }),
+ *   scale: 1,
+ *   figures: [],
+ *   omissions: [],
+ *   pdfFile: "sheets.pdf",
+ *   pdfSha256: "00",
+ *   validation: O.none(),
+ *   sheet: O.some(SheetOptions.make({ margins: "cfr-strict" }))
+ * })
+ * console.log(renderManifestSummary({ manifest, requested: SheetOptions.make({}) }).join("\n"))
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const renderManifestSummary = ({
+  manifest,
+  requested,
+}: {
+  readonly manifest: RenderManifest;
+  readonly requested: SheetOptions;
+}): ReadonlyArray<string> => [
   `rendered "${manifest.title}": ${A.length(manifest.figures)} ${manifest.shaded ? "shaded" : "unshaded"} sheet(s) at ${manifest.scale} pt/unit → ${manifest.pdfFile}`,
   `sheet-set sha256 ${manifest.pdfSha256}`,
+  ...sheetSummary(manifest, requested),
   ...A.map(
     manifest.figures,
     (f) =>
-      `  FIG. ${f.figure} ${f.view}: ${f.svgFile} (${f.visibleSegments} segments${manifest.shaded ? `, ${f.shadingSegments} shading` : ""})`
+      `  FIG. ${f.figure} ${f.view}: ${f.svgFile} (${f.visibleSegments} segments${manifest.shaded ? `, ${f.shadingSegments} shading` : ""}${projectionNote(f)})`
   ),
   ...A.map(manifest.omissions, (o) => `  omitted ${o.omitted}: ${o.relation} to ${o.shown} — proven`),
   ...pipe(
@@ -109,12 +180,13 @@ const runRender = Effect.fn("DrawingsCommand.render")(function* (options: {
   readonly shade: boolean;
 }) {
   const figureSet = yield* FigureSet;
+  const requested = SheetOptions.make({ format: options.format });
   const manifest = yield* figureSet
     .render(
       RenderRequest.make({
         specPath: options.spec,
         outputDir: options.out,
-        sheet: SheetOptions.make({ format: options.format }),
+        sheet: requested,
         validate: !options.noValidate,
         shade: options.shade,
       })
@@ -122,7 +194,7 @@ const runRender = Effect.fn("DrawingsCommand.render")(function* (options: {
     .pipe(
       Effect.mapError((cause) => DrawingsCommandError.new(cause, `Rendering the figure set failed: ${describe(cause)}`))
     );
-  yield* printLines(renderManifestSummary(manifest));
+  yield* printLines(renderManifestSummary({ manifest, requested }));
   yield* failOnFindings(manifest);
 });
 

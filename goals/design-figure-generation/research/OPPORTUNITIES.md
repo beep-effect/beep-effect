@@ -120,3 +120,17 @@
 - **Doing:** resolving #1439's conflicts with `main` so the orchestrator's batch could merge it.
 - **Evidence:** four merges of `main` in about an hour (new packages docket-intake, tesseract, poppler, plus cache-baseline and lane-test changes). Each conflicted in the same appended lists: root `package.json` workspaces, `syncpack.config.ts`, the identity registry, `tsconfig.json` paths, the Vitest alias file, the CI lane bin counts, and the cache baseline. Twice `yeet publish` refused a stale base because `main` moved during its cheap gates, so the last push went out with `git push` after the fast gates.
 - **Would have prevented it:** keeping those lists generated or sorted so concurrent additions merge cleanly, deriving the lane bin counts in the test instead of hard-coding them, and a merge queue so a ready PR is rebased by the server instead of racing `main` by hand.
+
+## 2026-10-13 — attorney markup PDFs arrive through the connector as text only
+
+- **Doing:** reading the attorney's review-round reply (eight Illustrator-annotated figure PDFs plus two photos) to put the markup under the corpus root.
+- **Evidence:** the M365 connector's `read_resource` on an attachment URI returned the JPEGs as image files but each PDF only as its concatenated annotation text, with no page geometry and no bytes. The two Outlook web links in the request carried conversation ids (`AAQk` prefix), which Graph refuses on the message route (`ConversationId isn't supported in the context of this operation`); the messages had to be found by subject search instead. The bytes came through `@beep/m365` on the app-only lane with the outbox credentials, but only via a throwaway script in the git-ignored `.beep/tmp/<script>.ts`, because `beep drawings` has no intake verb and the decision-log note that the driver "has no attachment verb" is stale (it has `listMessageAttachments` and `downloadMessageAttachment`).
+- **Would have prevented it:** `beep drawings intake --message-id <id> --out <corpus dir>` (list + download + sha manifest) on the app-only lane, and a Graph-id resolver that accepts an Outlook web link or conversation id and returns the message ids in that conversation.
+
+## 2026-10-13 — the attorney's reference book sits behind bot walls
+
+- **Doing:** fetching the USPTO "Guide for the Preparation of Patent Drawings" the attorney cites for surface-shading examples (1993 edition, pp. A-4-77..A-4-89).
+- **Evidence:** HathiTrust holds both the 1993 and the June 2002 editions in full view (public domain, US government work), but the catalog sits behind a Cloudflare Turnstile the built-in browser cannot pass, whole-book PDF download needs a member-institution login, and the per-page `imgsrv/download` route answered "Page Blocked" when opened directly. Google Books offered the 2002 edition (149 pages) as a PDF and the operator saved it through Chrome; it has only two shading examples (16, spaced lines; 17, stippling) against seven in 1993's A-4-77..89.
+- **Would have prevented it:** a `research/SOURCES.md` row with the digitised ids (HathiTrust `osu.32437010555650` 1993, `mdp.39015051563529` 2002; Google Books `iu5UAAAAMAAJ` 2002) and the pages per topic, recorded when the exploration's deep research first cited the guide, so a later sitting opens the page instead of rediscovering the catalog.
+
+Later receipts for the attorney review round live in the successor ledger, `goals/design-figure-review-loop/research/OPPORTUNITIES.md`.

@@ -20,7 +20,7 @@
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
     "beep:build": "tsc -p tsconfig.json && bun run babel",
-    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:scripts",
     "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:docgen": "bunx --bun --no-install docgen",
     "beep:lint": "biome check .",
@@ -38,7 +38,11 @@
     "lint:laws": "beep-cli lint laws --package .",
     "package-test-typecheck": "beep-cli quality test-tsgo-package",
     "test": "bun run beep:test",
-    "test:integration": "bun run beep:test:integration"
+    "test:integration": "bun run beep:test:integration",
+    "beep:check:scripts": "tsgo -p tsconfig.scripts.json --noEmit",
+    "check:scripts": "bun run beep:check:scripts",
+    "generate": "bun run scripts/generate-label-glyphs.ts && biome check --write src/internal/LabelGlyphs.ts",
+    "generate:check": "bun run generate && git diff --exit-code -- src/internal/LabelGlyphs.ts"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -68,7 +72,8 @@
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "opentype.js": "catalog:"
   },
   "devDependencies": {
     "@beep/test-runner": "workspace:^",

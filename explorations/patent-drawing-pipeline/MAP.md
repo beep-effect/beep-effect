@@ -12,7 +12,8 @@ explicitly marked NET-NEW.
 | Slug | Mission | Depends on | Capabilities cited |
 | --- | --- | --- | --- |
 | `design-figure-generation` | Spec-as-code → one solid → eight hidden-line design figures → compliant sheets → validator → judge → attorney sign-off, as a `beep drawings` CLI for the live matter. | `agentic-cad-patent-tooling` (OCCT WASM driver, 1.84 compositor P5, `law-practice` CAD domain) — consume when landed, else land the shared brick here and hand it back | `@beep/ffmpeg` subprocess shape (`packages/drivers/ffmpeg/src/FFmpeg.service.ts`); `pdf-lib`/`pdfjs-dist`/`sharp` catalog deps; QA judge (`packages/tooling/tool/cli/src/commands/Qa/JudgeContract.ts`, `Inventory.schemas.ts`, `JudgeCheck.ts`); corpus root (`Corpus.command.ts:60`); `packages/law-practice/domain`; `bun run beep create-package`. NET-NEW: replicad geometry/projection driver, shading generator, sheet composer, drawing validator, `commands/Drawings/`. |
-| `design-figure-intake` (gated) | Seed a matter spec from an Outlook request + attachments via `@beep/m365`; agentic-cad A2 photo→DXF on-ramp. | `design-figure-generation`; attachment-download verbs verified in `@beep/m365` | `@beep/m365`, `@beep/m365-mcp`; agentic-cad P6. Gate: a second live matter arrives or the m365 driver gains attachment reads. |
+| `design-figure-review-loop` | Answer the attorney's round-1 review with a round-2 sheet set (isometric pictorials, outlined labels, strict margins, separate parts, wider shading) and add `beep drawings intake` plus review rounds keyed to the reviewed sheet-set hash. | `design-figure-generation` (completed-retained); `@beep/m365` attachment verbs (#1456) | `@beep/technical-drawing`, `@beep/occt`, `@beep/pdf-tools`, `@beep/m365` (`listMessageAttachments`, `downloadMessageAttachment`); QA judge drawing rubric. NET-NEW: review-round and delivery schemas, label glyph outlines, broken-line parts. |
+| `design-figure-intake` (gated, narrowed 2026-10-13) | agentic-cad A2 photo-to-DXF on-ramp that seeds a matter spec's geometry. Mailbox attachment intake moved to `design-figure-review-loop`. | `design-figure-generation`; agentic-cad P6 | agentic-cad P6. Gate: a second live matter arrives whose geometry cannot be taken from a sketch. |
 | `design-figure-desktop` (gated) | Surface the pipeline in `apps/professional-desktop` on the attorney's Windows box. | `design-figure-generation`; agentic-cad P7 (`release-desktop.yml` has run at least once) | agentic-cad D9/D10. Gate: desktop release lane proven. |
 
 ## Sequencing
@@ -28,6 +29,10 @@ explicitly marked NET-NEW.
    owned by whichever lands first, never duplicated.
 3. `design-figure-intake` and `design-figure-desktop` stay here as
    re-entry points; a fired gate reopens this exploration at `decompose`.
+4. 2026-10-13: the intake gate fired (#1456 plus the attorney's review). The
+   packet reopened at `decompose` and graduated `design-figure-review-loop`
+   as the second promised-now goal; `design-figure-intake` narrowed to the
+   photo-to-DXF on-ramp.
 
 ## First Vertical Slice
 
@@ -43,3 +48,5 @@ A developer runs `bun run beep drawings render --spec <corpus>/<matter>/spec.jso
 - Patent Center blank-page conversion → raster tier mandatory.
 - Description vs. sketch disagreement on base geometry → measure the article first.
 - Collapsed/tabs-up figures → restriction risk; attorney's claim-strategy call.
+- 37 CFR 1.152 broken-line semantics: "dashed" in a review may mean unclaimed or hidden → ask the attorney; only unclaimed visible edges are drawn broken.
+- Vendored glyph outlines (OFL-1.1 Liberation subset) → keep the license text and respect the Reserved Font Name; literal Arial/Times only from an operator-supplied file, never committed.

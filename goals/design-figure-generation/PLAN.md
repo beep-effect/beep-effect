@@ -52,4 +52,5 @@ bun run beep lint reflection-artifacts
 
 ## Current blockers
 
-None. The attorney sign-off on the live shaded set is an operating step outside this packet: run `beep drawings statement`, then `beep drawings sign` on the reply.
+None in this packet. The attorney's 2026-10-10 review of the live sheets, the round-2 render and
+the eventual sign-off are tracked in the successor `goals/design-figure-review-loop`.
