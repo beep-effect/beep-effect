@@ -71,3 +71,32 @@ to CI. Rejected: probes-everywhere-with-bubblewrap (adds the same sandbox
 dependency class that broke the openclaw reviewer), and deferring the decision
 to a later grill (the constraint is load-bearing for P3 wiring, which is now
 unlocked).
+
+## Workstream E — `p1-report-bootstrap-adopt-plan.md` (recorded 2026-10-13)
+
+**Verdict: approved; the Workstream E materializer slice (P4) is unlocked.** Agent-decided
+under the 2026-10-06 autonomy charter by an independent reviewer session (the report was
+authored by another session); the operator reviews asynchronously. Reverse by recording a
+rejection here before any E writer merges.
+
+Re-verified live on 2026-10-13 by re-running
+`bun run beep goals adopt knowledge-surface-automation --plan --json` on the current tree:
+
+- **Ownership table: confirmed.** 31 authored files retained (29 at report time; the
+  difference is research added since), 2 generated markers retained, 1 preserve, 1
+  report, 1 generated create. Authored-file creations remain zero.
+- **Preservation set: confirmed complete.** The unmodeled keys are exactly
+  `agentLaunchers`, `currentSourceOfTruth`, `researchReports`, `stopConditions`, and
+  `verificationCommands`. These are the manifest's top-level keys that `GoalManifest`
+  does not model.
+
+Rulings on the two annotated judgement calls:
+
+1. **`research/.gitkeep` beside real files stays `create/generated`.** It is a byte-exact
+   copy of the template marker, idempotent, and harmless. Downgrading it to `report`
+   would add a classifier special case with no protective value.
+2. **`history/reflections/_TEMPLATE.md` is optional.** The template lives in
+   `goals/_template`. Conforming packets need not carry a copy, and `beep lint
+   reflection-artifacts` validates real reflections, not the template. The adoption
+   classifier gets a documented-convention exclusion for it in E's first mutation PR, and
+   the adoption plan's `report` row disappears.

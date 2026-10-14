@@ -269,7 +269,7 @@ layer(NodeServices.layer)("GoalManifest capability fields", (it) => {
   );
 
   it.effect(
-    "9. renders a byte-identical portfolio index with and without capabilities",
+    "9. keeps the index tables byte-identical with and without capabilities; only the capability-graph section reflects them",
     Effect.fn("GoalsManifestCapabilitiesTest.indexParity")(function* () {
       const legacy = yield* currentConsumerOutputs([
         { slug: "index-parity", manifest: manifestFixture("index-parity") },
@@ -280,7 +280,13 @@ layer(NodeServices.layer)("GoalManifest capability fields", (it) => {
           manifest: manifestFixture("index-parity", ["knowledge/doctor"], ["goals/graph"]),
         },
       ]);
-      expect(capability.index).toBe(legacy.index);
+      // Since the Mermaid section (#1625) the index carries a generated capability graph;
+      // everything above it is the original table projection and must not move.
+      const [legacyTables, legacyGraph] = Str.split("\n## Capability graph\n")(legacy.index);
+      const [capabilityTables, capabilityGraph] = Str.split("\n## Capability graph\n")(capability.index);
+      expect(capabilityTables).toBe(legacyTables);
+      expect(capabilityGraph).not.toBe(legacyGraph);
+      expect(capabilityGraph).toContain('{{"fog:goals/graph"}}');
     })
   );
 

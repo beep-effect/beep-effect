@@ -26,18 +26,28 @@ import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Str from "effect/String";
+import { BUILDABLE_PROVIDER_STATUSES } from "./Graph.projection.ts";
 import type { GoalStatus } from "./Goals.schemas.ts";
 import type { CapabilityGraphAnswers, CapabilityProjection, GraphPacketRow } from "./Graph.schemas.ts";
 
 const NON_TERMINAL: ReadonlyArray<GoalStatus> = ["active", "paused"];
 
-const RENDERED_PROVIDER_STATUSES: ReadonlyArray<GoalStatus> = ["active", "paused", "completed-retained"];
+// Providers the diagram draws are exactly the buildable ones: live nodes or relics.
+const RENDERED_PROVIDER_STATUSES = BUILDABLE_PROVIDER_STATUSES;
 
 const isNonTerminal = (packet: GraphPacketRow): boolean => A.contains(NON_TERMINAL, packet.status);
 
 const nodeId = (slug: string): string => `p_${Str.replaceAll("-", "_")(slug)}`;
 
-const fogId = (capability: string): string => `fog_${Str.replace(/[^a-z0-9]/g, "_")(capability)}`;
+// Injective: capability slugs only use [a-z0-9/-]; every other character is
+// spelled as its hex code, so distinct capabilities never share a node id
+// (knowledge-surface/doctor and knowledge/surface-doctor stay apart).
+const SAFE_ID_CHAR = /^[a-z0-9]$/;
+
+const encodeIdChar = (char: string): string =>
+  SAFE_ID_CHAR.test(char) ? char : `_${char.charCodeAt(0).toString(16)}_`;
+
+const fogId = (capability: string): string => `fog_${A.join(A.map(Str.split("")(capability), encodeIdChar), "")}`;
 
 const quote = (text: string): string => `"${Str.replaceAll('"', "#quot;")(text)}"`;
 

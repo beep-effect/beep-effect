@@ -428,6 +428,17 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "60 seconds" })((it) 
   });
 
   describe("goals capability graph — Mermaid INDEX section", { concurrent: false }, () => {
+    it.effect("gives distinct fog capabilities distinct node ids", () =>
+      Effect.gen(function* () {
+        const { projection, answers } = yield* differential([
+          { id: "pkt-a", status: "active", requires: ["knowledge-surface/doctor", "knowledge/surface-doctor"] },
+        ]);
+        const section = renderCapabilityMermaidSection(projection, answers);
+        assertTrue(Str.includes('fog_knowledge_2d_surface_2f_doctor{{"fog:knowledge-surface/doctor"}}')(section));
+        assertTrue(Str.includes('fog_knowledge_2f_surface_2d_doctor{{"fog:knowledge/surface-doctor"}}')(section));
+      })
+    );
+
     it.effect("renders live packets, relic providers, fog, and blockers; collapses other completed packets", () =>
       Effect.gen(function* () {
         const { projection, answers } = yield* differential([
@@ -443,10 +454,10 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "60 seconds" })((it) 
         has('  p_pkt_live["pkt-live"]:::active');
         has('  p_pkt_next["pkt-next"]:::paused');
         has('  p_pkt_done(["pkt-done"]):::relic');
-        has('  fog_cap_ghost{{"fog:cap/ghost"}}:::fog');
+        has('  fog_cap_2f_ghost{{"fog:cap/ghost"}}:::fog');
         has('  p_pkt_done -->|"cap/done"| p_pkt_live');
         has('  p_pkt_live -.->|"cap/live"| p_pkt_next');
-        has("  fog_cap_ghost -.-> p_pkt_live");
+        has("  fog_cap_2f_ghost -.-> p_pkt_live");
         has("| [pkt-live](./pkt-live/README.md) | `cap/ghost` |");
         has("| [pkt-next](./pkt-next/README.md) | `cap/live` |");
         assertTrue(!Str.includes("pkt-history")(section));

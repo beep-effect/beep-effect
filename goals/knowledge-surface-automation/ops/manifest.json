@@ -5,7 +5,7 @@
     "title": "Knowledge-Surface Audit & Automation",
     "status": "active",
     "created": "2026-07-31",
-    "updated": "2026-10-09",
+    "updated": "2026-10-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/knowledge-surface-automation",
@@ -62,7 +62,10 @@
     "research/p1-report-bootstrap-adopt-plan.md",
     "research/p4-goals-projection-design.md",
     "research/p4-goals-projection-decisions.md",
-    "research/p4-report-goals-projection.md"
+    "research/p4-report-goals-projection.md",
+    "research/p4-skills-warehouse-design.md",
+    "research/p4-goals-materialize-design.md",
+    "research/p4-knowledge-doctor-design.md"
   ],
   "agentLaunchers": [
     {

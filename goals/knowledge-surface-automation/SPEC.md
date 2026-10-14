@@ -313,3 +313,15 @@ Each entry names its record, which carries the reason and the reversal path.
   for the Node coverage workers), instead of a raw `bun:sqlite` handle: a static
   `bun:sqlite` import breaks module load on the hosted Node coverage lane. Reason
   and reversal: `research/p4-report-goals-projection.md` ("Engine deviation").
+- 2026-10-13 — Workstream E phase-0 report approved by an independent reviewer
+  session; the reflection template is an optional adoption convention:
+  `research/p1-fp-eyeball-verdicts.md` (Workstream E).
+- 2026-10-13 — Workstream B lock materialization B5–B10 (tagged-union v2 lock,
+  resolutions migrate into the lock, plan/expect-digest writes, conservative patch
+  labels, owner binding, drift classification + no floating refetch of vendored
+  skills): `research/p4-skills-warehouse-design.md`.
+- 2026-10-13 — Workstream E executor E8–E11 (`--write` requires `--expect <planId>`,
+  claim-then-rename no-replace publish, empty claims are abandoned, printed receipts): `research/p4-goals-materialize-design.md`.
+- 2026-10-13 — Workstream C Stage-2 knowledge doctor K1–K11 (witness-mandatory
+  evaluators, byte-reproducible CI mint, non-laundering mint, CODEOWNERS-bound
+  leases, causal grouping, append-only promotions file): `research/p4-knowledge-doctor-design.md`.
