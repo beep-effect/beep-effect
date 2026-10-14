@@ -812,11 +812,14 @@ describe("stream console", () => {
     "delivers a large block through a pipe before a forced exit under Bun",
     Effect.fnUntraced(function* () {
       const modulePath = new URL("../src/internal/cli/Stdout.ts", import.meta.url).pathname;
-      const script = [
-        "const { streamConsole, drainProcessStreams } = await import(process.argv[1]);",
-        'streamConsole.log("x".repeat(4 * 1024 * 1024) + "FOOTER");',
-        "drainProcessStreams(() => process.exit(0));",
-      ].join("\n");
+      const script = A.join(
+        [
+          "const { streamConsole, drainProcessStreams } = await import(process.argv[1]);",
+          'streamConsole.log("x".repeat(4 * 1024 * 1024) + "FOOTER");',
+          "drainProcessStreams(() => process.exit(0));",
+        ],
+        "\n"
+      );
       const child = yield* StepExec.runCaptured({
         command: "bun",
         args: ["--eval", script, modulePath],

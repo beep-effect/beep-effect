@@ -288,7 +288,7 @@ describe("Lexical.model", { concurrent: false }, () => {
     pipe(SerializedEditorState.decodeOption(fixture), O.isSome, assertTrue);
     assertNone(state.root.direction);
     assertNone(state.root.textFormat);
-    expect(state.root.children.map((node) => node.type)).toEqual([
+    expect(A.map(state.root.children, (node) => node.type)).toEqual([
       "heading",
       "paragraph",
       "quote",

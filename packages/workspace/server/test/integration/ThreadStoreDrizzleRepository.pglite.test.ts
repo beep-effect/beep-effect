@@ -82,7 +82,7 @@ if (!shouldRunPgliteIntegration) {
           });
 
           const threads = yield* store.listThreads(workspaceId);
-          expect(threads.map((t) => t.id)).toEqual([thread.id]);
+          expect(A.map(threads, (t) => t.id)).toEqual([thread.id]);
           expect(A.map(threads, (thread) => thread.title)).toEqual(["Matter intake"]);
 
           const first = yield* store.appendTurn({
@@ -110,8 +110,8 @@ if (!shouldRunPgliteIntegration) {
 
           const timeline = yield* store.timeline(thread.id);
           expect(timeline.threadId).toStrictEqual(thread.id);
-          expect(timeline.turns.map((turn) => turn.turnIndex)).toEqual([0, 1]);
-          expect(timeline.turns.every((turn) => turn.costMicros === 0)).toBe(true);
+          expect(A.map(timeline.turns, (turn) => turn.turnIndex)).toEqual([0, 1]);
+          expect(A.every(timeline.turns, (turn) => turn.costMicros === 0)).toBe(true);
 
           const firstItem = timeline.turns[0]?.items[0];
           expect(firstItem?.kind).toBe("message");

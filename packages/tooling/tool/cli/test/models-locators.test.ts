@@ -12,6 +12,7 @@ import {
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertNone, assertSome, strictEqual } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -75,11 +76,14 @@ layer(Layer.mergeAll(NodeServices.layer, ModelsLocatorReaderLive), { timeout: "3
       assertSome(
         yield* reader.read(
           file(
-            [
-              ' * model: "gpt-6-astra", model: "gpt-daybreak-blue-latest"',
-              ' * model: "gpt-6-astra"',
-              'const model: "not-an-example" = value',
-            ].join("\n")
+            A.join(
+              [
+                ' * model: "gpt-6-astra", model: "gpt-daybreak-blue-latest"',
+                ' * model: "gpt-6-astra"',
+                'const model: "not-an-example" = value',
+              ],
+              "\n"
+            )
           ),
           locator
         ),

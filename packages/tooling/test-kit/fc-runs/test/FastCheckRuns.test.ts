@@ -1,6 +1,7 @@
 import { DEFAULT_FC_NUM_RUNS, envFcSeed, fcRuns, parseFcNumRunsFloor } from "@beep/fc-runs";
 import { describe, expect, it, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
 import * as O from "effect/Option";
@@ -29,12 +30,15 @@ describe("fcRuns (one-round-loop P1 env-max helper)", () => {
     // The floor is read once at process boot (CI exports it before vitest
     // starts), so the end-to-end raise/never-lower semantics need a fresh
     // subprocess with the variable present at spawn.
-    const probe = [
-      'const { fcRuns } = await import("@beep/fc-runs");',
-      "const raised = fcRuns(40).runs;",
-      "const floored = fcRuns(9000).runs;",
-      "process.stdout.write(`${raised}/${floored}`);",
-    ].join("\n");
+    const probe = A.join(
+      [
+        'const { fcRuns } = await import("@beep/fc-runs");',
+        "const raised = fcRuns(40).runs;",
+        "const floored = fcRuns(9000).runs;",
+        "process.stdout.write(`${raised}/${floored}`);",
+      ],
+      "\n"
+    );
     const result = Bun.spawnSync({
       cmd: ["bun", "-e", probe],
       cwd: import.meta.dir,

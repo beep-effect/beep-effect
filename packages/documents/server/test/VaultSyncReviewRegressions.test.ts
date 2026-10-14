@@ -30,6 +30,7 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -138,8 +139,8 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
         expect(status.pendingItems).toBe(0);
         expect(status.queuedOperations).toBe(0);
         const tree = yield* handle.snapshotTree;
-        expect(Object.keys(tree)).toContain("inbox/scan.pdf");
-        expect(Object.keys(tree)).toContain("matters/scan.pdf");
+        expect(R.keys(tree)).toContain("inbox/scan.pdf");
+        expect(R.keys(tree)).toContain("matters/scan.pdf");
         assertSome<string>(
           pipe(
             O.fromUndefinedOr(tree["matters/scan.pdf"]),
@@ -267,7 +268,7 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
         expect(recovered.errorItems).toBe(0);
         expect(recovered.currentItems).toBe(1);
         const tree = yield* handle.snapshotTree;
-        expect(Object.keys(tree)).toContain("resilient.txt");
+        expect(R.keys(tree)).toContain("resilient.txt");
       })
     );
   });
@@ -292,7 +293,7 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
         expect(status.currentItems).toBe(1);
         expect(status.errorItems).toBe(0);
         const tree = yield* handle.snapshotTree;
-        expect(Object.keys(tree)).toEqual(["tracked.txt"]);
+        expect(R.keys(tree)).toEqual(["tracked.txt"]);
       })
     );
   });

@@ -4,8 +4,10 @@ import { it } from "@beep/test-runner";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import type { Curie, Expand, Predicate } from "@beep/identity";
 
@@ -62,21 +64,21 @@ describe("Vocab literal types", () => {
 
 describe("CoreVocab runtime invariants", () => {
   it("uses namespace IRIs ending in # or /", () => {
-    for (const [prefix, vocab] of Object.entries(CoreVocab)) {
+    for (const [prefix, vocab] of R.toEntries(CoreVocab)) {
       expect(vocab.iri.endsWith("#") || vocab.iri.endsWith("/"), prefix).toBe(true);
     }
   });
 
   it("has non-empty term lists", () => {
-    for (const [prefix, vocab] of Object.entries(CoreVocab)) {
+    for (const [prefix, vocab] of R.toEntries(CoreVocab)) {
       expect(vocab.terms.length, prefix).toBeGreaterThan(0);
     }
   });
 
   it("has no duplicate terms", () => {
-    for (const [prefix, vocab] of Object.entries(CoreVocab)) {
+    for (const [prefix, vocab] of R.toEntries(CoreVocab)) {
       const terms: ReadonlyArray<string> = vocab.terms;
-      const duplicates = terms.filter((term, index) => terms.indexOf(term) !== index);
+      const duplicates = A.filter(terms, (term, index) => terms.indexOf(term) !== index);
 
       expect(duplicates, prefix).toEqual([]);
     }

@@ -81,25 +81,28 @@ const encodeInventory = S.encodeEffect(S.fromJsonString(QaInventory));
 const fail = (message: string) => (cause: unknown) => DrawingsCommandError.new(cause, message);
 
 const figuresTable = (manifest: RenderManifest): string =>
-  [
-    "| FIG. | View | Description | Sheet |",
-    "| --- | --- | --- | --- |",
-    ...A.map(
-      manifest.figures,
-      (f) => `| ${f.figure} | ${f.view} | ${f.description} | \`sheets/fig-${f.figure}.png\` |`
-    ),
-    ...(A.length(manifest.omissions) === 0
-      ? []
-      : [
-          "",
-          "Omitted views (proven by render diff, not drawn):",
-          ...A.map(manifest.omissions, (o) => `- ${o.omitted}: ${o.relation} to ${o.shown}`),
-        ]),
-    "",
-    manifest.shaded
-      ? "The figures carry procedural straight-line surface shading."
-      : "The figures are unshaded line drawings.",
-  ].join("\n");
+  A.join(
+    [
+      "| FIG. | View | Description | Sheet |",
+      "| --- | --- | --- | --- |",
+      ...A.map(
+        manifest.figures,
+        (f) => `| ${f.figure} | ${f.view} | ${f.description} | \`sheets/fig-${f.figure}.png\` |`
+      ),
+      ...(A.length(manifest.omissions) === 0
+        ? []
+        : [
+            "",
+            "Omitted views (proven by render diff, not drawn):",
+            ...A.map(manifest.omissions, (o) => `- ${o.omitted}: ${o.relation} to ${o.shown}`),
+          ]),
+      "",
+      manifest.shaded
+        ? "The figures carry procedural straight-line surface shading."
+        : "The figures are unshaded line drawings.",
+    ],
+    "\n"
+  );
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 

@@ -3,23 +3,25 @@ import { NlpToolkit, NlpTools } from "@beep/nlp-processing/Tools/NlpToolkit";
 import { it } from "@beep/test-runner";
 import { WinkNlpToolkitLive } from "@beep/wink";
 import { assert, describe } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as R from "effect/Record";
 import * as Stream from "effect/Stream";
 
 describe("nlp-mcp tool surface", () => {
   it("mounts the full @beep/nlp NlpToolkit", () => {
-    const names = NlpTools.map((tool) => tool.name);
+    const names = A.map(NlpTools, (tool) => tool.name);
     assert.strictEqual(names.length, 25);
     assert.strictEqual(new Set(names).size, names.length);
-    assert.strictEqual(Object.keys(NlpToolkit.tools).length, 25);
+    assert.strictEqual(R.keys(NlpToolkit.tools).length, 25);
     assert.isTrue(names.includes("Tokenize"));
   });
 
   it("exposes a combined 42-tool surface across both mounted toolkits", () => {
     // Guards the server contract from `makeServerLayer`: both toolkits must be
     // mounted, with no cross-toolkit name collision, summing to 42 unique tools.
-    const nlpNames = Object.keys(NlpToolkit.tools);
-    const streamingNames = Object.keys(StreamingToolkit.tools);
+    const nlpNames = R.keys(NlpToolkit.tools);
+    const streamingNames = R.keys(StreamingToolkit.tools);
     const merged = [...nlpNames, ...streamingNames];
 
     assert.strictEqual(streamingNames.length, 17);

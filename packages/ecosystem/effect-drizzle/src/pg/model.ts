@@ -15,7 +15,7 @@
  *
  * @since 0.0.0
  */
-import { every, findFirst, last as lastArray, reduce } from "effect/Array";
+import { every, findFirst, flatMap, forEach, last as lastArray, map, reduce } from "effect/Array";
 import { dual } from "effect/Function";
 import {
   fromUndefinedOr,
@@ -29,7 +29,7 @@ import {
   some,
 } from "effect/Option";
 import { isFunction, isNotUndefined, isNumber, isString, isUint8Array } from "effect/Predicate";
-import { empty, set } from "effect/Record";
+import { empty, set, size, toEntries } from "effect/Record";
 import { flip, is, optionalKey } from "effect/Schema";
 import { split } from "effect/String";
 import { VariantSchema } from "effect/schema";
@@ -442,7 +442,7 @@ const physicalColumnEntry = ([key, input]: [string, Field.Input]): readonly [str
 
 const validateModelNames = (tableName: string, fields: FieldsInput): void => {
   assertSqlName(tableName, "pg", "PostgreSQL table name");
-  assertUniqueSqlNames(Object.entries(fields).map(physicalColumnEntry), "pg", "PostgreSQL column name");
+  assertUniqueSqlNames(map(toEntries(fields), physicalColumnEntry), "pg", "PostgreSQL column name");
 };
 
 const validateLiteralDefault = (field: Field.Any, select: Top, column: PgColumn.Spec, fieldName: string): void => {
@@ -568,7 +568,7 @@ export const makeModelClass: {
   ): object => {
     const tableName = deriveTableName(identifier);
     validateModelNames(tableName, fields);
-    const fieldCount = Object.keys(fields).length;
+    const fieldCount = size(fields);
     if (fieldCount === 0 || fieldCount > 1_600) {
       throw ModelInvariantError.make({
         message: `PostgreSQL models require from 1 through 1,600 columns; '${identifier}' declares ${fieldCount}.`,
@@ -576,7 +576,7 @@ export const makeModelClass: {
       });
     }
     const state = reduce(
-      Object.entries(fields),
+      toEntries(fields),
       {
         columns: empty<string, Meta.Meta<PgColumn.Spec>>(),
         primaryKeys: 0,
@@ -693,7 +693,7 @@ export const makeModelClass: {
         const resolvedColumn = PgColumn.resolveName(key)(classified.column);
         if (PgColumn.Spec.guards.enum(resolvedColumn)) {
           assertSqlName(resolvedColumn.name, "pg", "PostgreSQL enum name");
-          resolvedColumn.values.forEach(assertPgEnumLabel);
+          forEach(resolvedColumn.values, assertPgEnumLabel);
         }
         const resolvedMeta = Meta.merge(field.meta, {
           column: resolvedColumn,
@@ -722,7 +722,8 @@ export const makeModelClass: {
       });
     }
 
-    const harvested = Object.entries(state.columns).flatMap(
+    const harvested = flatMap(
+      toEntries(state.columns),
       ([key, meta]): ReadonlyArray<readonly [string, Meta.IndexIntent, string]> => {
         if (meta.indexed === false) return [];
         const intent = meta.indexed;
@@ -736,7 +737,7 @@ export const makeModelClass: {
     );
     if (harvested.length > 0) {
       assertUniqueSqlNames(
-        harvested.map(([key, , name]): readonly [string, string] => [key, name]),
+        map(harvested, ([key, , name]): readonly [string, string] => [key, name]),
         "pg",
         "PostgreSQL colocated index name"
       );
@@ -745,7 +746,7 @@ export const makeModelClass: {
       harvested.length === 0
         ? extras
         : (columns) => [
-            ...harvested.map(([key, intent, name]) => {
+            ...map(harvested, ([key, intent, name]) => {
               const column = getOrThrow(fromUndefinedOr(columns[key]));
               return intent.unique ? TableExtras.uniqueIndex(name, [column]) : TableExtras.index(name, [column]);
             }),

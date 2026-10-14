@@ -47,6 +47,7 @@ import { assertNone } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Duration from "effect/Duration";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -345,8 +346,11 @@ describe("@beep/openclaw models", () => {
     expect(isOpenclawCliError(timeout)).toBe(true);
     expect(isOpenclawCliError(parse)).toBe(true);
 
-    const encodedExit = exit.pipe(encodeOpenclawCommandExitErrorResult, Result.getOrThrow);
-    expect(Object.keys(encodedExit).sort()).toEqual([
+    const encodedExit: Readonly<Record<string, unknown>> = exit.pipe(
+      encodeOpenclawCommandExitErrorResult,
+      Result.getOrThrow
+    );
+    expect(R.keys(encodedExit).sort()).toEqual([
       "_tag",
       "diagnostics",
       "executable",

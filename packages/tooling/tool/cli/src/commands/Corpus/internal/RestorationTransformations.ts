@@ -742,7 +742,7 @@ const classifyMailError = (error: unknown): "codepage" | "corrupt" | "engine-fai
 
 const signatureExtension = (bytes: Uint8Array): O.Option<string> => {
   const starts = (...values: ReadonlyArray<number>): boolean =>
-    values.length <= bytes.length && values.every((value, index) => bytes[index] === value);
+    values.length <= bytes.length && A.every(values, (value, index) => bytes[index] === value);
   if (starts(0x25, 0x50, 0x44, 0x46)) return O.some("pdf");
   if (starts(0x89, 0x50, 0x4e, 0x47)) return O.some("png");
   if (starts(0xff, 0xd8, 0xff)) return O.some("jpg");
@@ -3447,7 +3447,7 @@ const legacyWordCandidates = (
 };
 
 const isCompoundFileBinary = (bytes: Uint8Array): boolean =>
-  [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1].every((value, index) => bytes[index] === value);
+  A.every([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1], (value, index) => bytes[index] === value);
 
 const runLegacyStep = Effect.fn("CorpusRestoration.runLegacyStep")(function* (
   command: string,

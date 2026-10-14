@@ -132,7 +132,8 @@ export const renderPortfolioIndex: {
   (rows: ReadonlyArray<PortfolioIndexRow>, invalid: ReadonlyArray<string>): string;
 } = dual(2, (rows: ReadonlyArray<PortfolioIndexRow>, invalid: ReadonlyArray<string>): string => {
   const sortedRows = A.sort(rows, rowBySlug);
-  const counts = GoalStatus.literals.map(
+  const counts = A.map(
+    GoalStatus.literals,
     (status) => `${A.length(A.filter(sortedRows, (row) => row.status === status))} ${status}`
   );
   const lines: Array<string> = [

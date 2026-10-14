@@ -21,6 +21,7 @@ import {
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -32,7 +33,7 @@ const isJSDocMigrateInlineText = S.is(JSDocMigrateInlineText);
 const encodeUnknownJsonString = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const encodeUnknownJson = (value: unknown): string => Result.getOrThrow(encodeUnknownJsonString(value));
 
-const lines = (...values: ReadonlyArray<string>): string => values.join("\n");
+const lines = (...values: ReadonlyArray<string>): string => A.join(values, "\n");
 
 const simpleBlock = lines(
   "/**",
@@ -225,7 +226,7 @@ describe("JSDocMigrateRewrite rewriteJSDocMigrateBlock", () => {
       " */"
     );
     const before = documentationShapeViolations(block);
-    expect(before.some((finding) => finding.rule === "multiple-description-paragraphs")).toBe(true);
+    expect(A.some(before, (finding) => finding.rule === "multiple-description-paragraphs")).toBe(true);
     const result = rewriteJSDocMigrateBlock({
       blockText: block,
       indent: "",
@@ -236,7 +237,7 @@ describe("JSDocMigrateRewrite rewriteJSDocMigrateBlock", () => {
       return;
     }
     const after = documentationShapeViolations(result.text);
-    expect(after.some((finding) => finding.rule === "multiple-description-paragraphs")).toBe(false);
+    expect(A.some(after, (finding) => finding.rule === "multiple-description-paragraphs")).toBe(false);
     expect(result.text).toContain("The digest is stable across processes and versions.");
   });
 
@@ -272,7 +273,7 @@ describe("JSDocMigrateRewrite rewriteJSDocMigrateBlock", () => {
     expect(result.text).not.toContain("@template");
     expect(result.text).not.toContain("{string}");
     const order = ["@typeParam", "@param", "@returns", "@defaultValue", "@see", "@category", "@since"];
-    const positions = order.map((tag) => result.text.indexOf(tag));
+    const positions = A.map(order, (tag) => result.text.indexOf(tag));
     for (const [index, position] of positions.entries()) {
       expect(position).toBeGreaterThan(index === 0 ? -1 : (positions[index - 1] ?? -1));
     }
@@ -369,7 +370,7 @@ describe("JSDocMigrateRewrite conservation law", () => {
       allowedAddedTokens: [],
       allowedRemovedTokens: [],
     });
-    expect(findings.some((finding) => finding.startsWith("fence-bytes-changed"))).toBe(true);
+    expect(A.some(findings, (finding) => finding.startsWith("fence-bytes-changed"))).toBe(true);
   });
 
   it("flags dropped prose as a removed token", () => {
@@ -380,7 +381,7 @@ describe("JSDocMigrateRewrite conservation law", () => {
       allowedAddedTokens: [],
       allowedRemovedTokens: [],
     });
-    expect(findings.some((finding) => finding.startsWith("token-removed"))).toBe(true);
+    expect(A.some(findings, (finding) => finding.startsWith("token-removed"))).toBe(true);
   });
 
   it("flags invented prose as an added token", () => {
@@ -391,7 +392,7 @@ describe("JSDocMigrateRewrite conservation law", () => {
       allowedAddedTokens: [],
       allowedRemovedTokens: [],
     });
-    expect(findings.some((finding) => finding.startsWith("token-added"))).toBe(true);
+    expect(A.some(findings, (finding) => finding.startsWith("token-added"))).toBe(true);
   });
 
   it("accepts an identical candidate", () => {
@@ -430,8 +431,11 @@ describe("JSDocMigrateExtract anchors", () => {
       ""
     );
     const blocks = scanJSDocMigrateBlocks("packages/x/src/Foo.ts", source);
-    expect(blocks.map((block) => block.anchor)).toEqual(["packages/x/src/Foo.ts#Foo#0", "packages/x/src/Foo.ts#Foo#1"]);
-    expect(blocks.map((block) => block.kind)).toEqual(["value", "type-level"]);
+    expect(A.map(blocks, (block) => block.anchor)).toEqual([
+      "packages/x/src/Foo.ts#Foo#0",
+      "packages/x/src/Foo.ts#Foo#1",
+    ]);
+    expect(A.map(blocks, (block) => block.kind)).toEqual(["value", "type-level"]);
   });
 
   it("gives each documented overload signature its own ordinal", () => {
@@ -446,7 +450,7 @@ describe("JSDocMigrateExtract anchors", () => {
       "}",
       ""
     );
-    const anchors = scanJSDocMigrateBlocks("packages/x/src/f.ts", source).map((block) => block.anchor);
+    const anchors = A.map(scanJSDocMigrateBlocks("packages/x/src/f.ts", source), (block) => block.anchor);
     expect(anchors).toEqual(["packages/x/src/f.ts#f#0", "packages/x/src/f.ts#f#1", "packages/x/src/f.ts#f#2"]);
   });
 
@@ -462,7 +466,7 @@ describe("JSDocMigrateExtract anchors", () => {
       "}",
       ""
     );
-    const anchors = scanJSDocMigrateBlocks("packages/x/src/X.ts", source).map((block) => block.anchor);
+    const anchors = A.map(scanJSDocMigrateBlocks("packages/x/src/X.ts", source), (block) => block.anchor);
     expect(anchors).toEqual(["packages/x/src/X.ts#X#0", "packages/x/src/X.ts#X#1"]);
   });
 
@@ -479,7 +483,7 @@ describe("JSDocMigrateExtract anchors", () => {
       ""
     );
     const blocks = scanJSDocMigrateBlocks("packages/x/src/a.ts", source);
-    expect(blocks.map((block) => block.symbol)).toEqual(["<fileoverview>", "a"]);
+    expect(A.map(blocks, (block) => block.symbol)).toEqual(["<fileoverview>", "a"]);
   });
 
   it.layer(BunCrypto.layer)((it) => {
@@ -508,7 +512,7 @@ describe("JSDocMigrateExtract anchors", () => {
           ""
         );
         const records = yield* jsdocMigrateExtractRecordsForFile("packages/x/src/mixed.ts", source);
-        expect(records.map((record) => record.symbol)).toEqual(["legacy"]);
+        expect(A.map(records, (record) => record.symbol)).toEqual(["legacy"]);
         expect(records[0]?.sourceHash).toBe(yield* jsdocMigrateSourceHash(records[0]?.blockText ?? ""));
       })
     );
@@ -564,7 +568,7 @@ layer(BunCrypto.layer)("JSDocMigrateApply binding verification", (it) => {
   it.effect("passes when frozen records biject with the extract and hashes match", () =>
     Effect.gen(function* () {
       const extract = yield* jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
-      const titles = extract.map(syntheticJSDocMigrateTitleRecord);
+      const titles = A.map(extract, syntheticJSDocMigrateTitleRecord);
       const report = computeJSDocMigrateBinding({ extract, titles, overrides: [] });
       expect(report.orphanRecordAnchors).toEqual([]);
       expect(report.unmatchedExtractAnchors).toEqual([]);
@@ -577,7 +581,7 @@ layer(BunCrypto.layer)("JSDocMigrateApply binding verification", (it) => {
     Effect.gen(function* () {
       const frozen = yield* jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
       const reordered = yield* jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc B.", "Doc A."));
-      const titles = frozen.map(syntheticJSDocMigrateTitleRecord);
+      const titles = A.map(frozen, syntheticJSDocMigrateTitleRecord);
       const report = computeJSDocMigrateBinding({ extract: reordered, titles, overrides: [] });
       expect(report.extractCount).toBe(report.recordCount);
       expect(report.orphanRecordAnchors).toEqual([]);
@@ -604,7 +608,7 @@ layer(BunCrypto.layer)("JSDocMigrateApply binding verification", (it) => {
           legacyPair("Doc A.", "Doc B.")
         )
       );
-      const titles = frozen.map(syntheticJSDocMigrateTitleRecord);
+      const titles = A.map(frozen, syntheticJSDocMigrateTitleRecord);
       const report = computeJSDocMigrateBinding({ extract: grown, titles, overrides: [] });
       expect(report.unmatchedExtractAnchors.length).toBeGreaterThan(0);
     })
@@ -614,7 +618,7 @@ layer(BunCrypto.layer)("JSDocMigrateApply binding verification", (it) => {
     Effect.gen(function* () {
       const frozen = yield* jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
       const shrunk = frozen.slice(0, 1);
-      const titles = frozen.map(syntheticJSDocMigrateTitleRecord);
+      const titles = A.map(frozen, syntheticJSDocMigrateTitleRecord);
       const report = computeJSDocMigrateBinding({ extract: shrunk, titles, overrides: [] });
       expect(report.orphanRecordAnchors.length).toBeGreaterThan(0);
     })
@@ -627,7 +631,7 @@ layer(BunCrypto.layer)("JSDocMigrateApply binding verification", (it) => {
         "packages/x/src/g.ts",
         legacyPair("Doc A, edited.", "Doc B.")
       );
-      const titles = frozen.map(syntheticJSDocMigrateTitleRecord);
+      const titles = A.map(frozen, syntheticJSDocMigrateTitleRecord);
       const report = computeJSDocMigrateBinding({ extract: edited, titles, overrides: [] });
       expect(report.sourceHashMismatchAnchors).toEqual(["packages/x/src/g.ts#g#0"]);
     })
@@ -669,7 +673,7 @@ layer(BunCrypto.layer)("JSDocMigrateTitles response validation", (it) => {
     Effect.gen(function* () {
       const pending = yield* pendingExtract();
       const content = encodeUnknownJson(
-        pending.map((record) => ({ anchor: record.anchor, titles: ["Use the helper"] }))
+        A.map(pending, (record) => ({ anchor: record.anchor, titles: ["Use the helper"] }))
       );
       const records = yield* jsdocMigrateTitleRecordsFromResponse(content, pending);
       expect(records.length).toBe(pending.length);
@@ -681,7 +685,9 @@ layer(BunCrypto.layer)("JSDocMigrateTitles response validation", (it) => {
   it.effect("rejects a response with a wrong title count", () =>
     Effect.gen(function* () {
       const pending = yield* pendingExtract();
-      const content = encodeUnknownJson(pending.map((record) => ({ anchor: record.anchor, titles: ["One", "Two"] })));
+      const content = encodeUnknownJson(
+        A.map(pending, (record) => ({ anchor: record.anchor, titles: ["One", "Two"] }))
+      );
       const exit = yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(content, pending));
       exit.pipe(Exit.isFailure, assertTrue);
     })
@@ -727,13 +733,15 @@ layer(BunCrypto.layer)("JSDocMigrateTitles response validation", (it) => {
         )
       );
       const duplicate = encodeUnknownJson(
-        twoExample.map((record) => ({ anchor: record.anchor, titles: ["Same", "Same"] }))
+        A.map(twoExample, (record) => ({ anchor: record.anchor, titles: ["Same", "Same"] }))
       );
       (yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(duplicate, twoExample))).pipe(
         Exit.isFailure,
         assertTrue
       );
-      const empty = encodeUnknownJson(twoExample.map((record) => ({ anchor: record.anchor, titles: ["Fine", "  "] })));
+      const empty = encodeUnknownJson(
+        A.map(twoExample, (record) => ({ anchor: record.anchor, titles: ["Fine", "  "] }))
+      );
       (yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(empty, twoExample))).pipe(Exit.isFailure, assertTrue);
     })
   );
@@ -742,10 +750,10 @@ layer(BunCrypto.layer)("JSDocMigrateTitles response validation", (it) => {
     Effect.gen(function* () {
       const pending = yield* pendingExtract();
       const multiline = encodeUnknownJson(
-        pending.map((record) => ({ anchor: record.anchor, titles: ["Use the helper\nconst injected = true"] }))
+        A.map(pending, (record) => ({ anchor: record.anchor, titles: ["Use the helper\nconst injected = true"] }))
       );
       const commentClosing = encodeUnknownJson(
-        pending.map((record) => ({ anchor: record.anchor, titles: ["Close */ const injected = true"] }))
+        A.map(pending, (record) => ({ anchor: record.anchor, titles: ["Close */ const injected = true"] }))
       );
 
       (yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(multiline, pending))).pipe(Exit.isFailure, assertTrue);
@@ -782,14 +790,14 @@ layer(BunCrypto.layer)("JSDocMigrateTitles response validation", (it) => {
         )
       );
       const missingPurpose = encodeUnknownJson(
-        withSee.map((record) => ({ anchor: record.anchor, titles: ["Use it"] }))
+        A.map(withSee, (record) => ({ anchor: record.anchor, titles: ["Use it"] }))
       );
       (yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(missingPurpose, withSee))).pipe(
         Exit.isFailure,
         assertTrue
       );
       const withPurpose = encodeUnknownJson(
-        withSee.map((record) => ({ anchor: record.anchor, titles: ["Use it"], seePurposes: ["for the helper."] }))
+        A.map(withSee, (record) => ({ anchor: record.anchor, titles: ["Use it"], seePurposes: ["for the helper."] }))
       );
       const records = yield* jsdocMigrateTitleRecordsFromResponse(withPurpose, withSee);
       expect(records.length).toBe(withSee.length);

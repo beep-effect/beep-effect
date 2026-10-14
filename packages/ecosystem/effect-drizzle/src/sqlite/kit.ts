@@ -4,9 +4,10 @@
  * @since 0.0.0
  */
 // fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
-import { contains, findFirst } from "effect/Array";
+import { contains, findFirst, map } from "effect/Array";
 import { fromUndefinedOr, isSome, match } from "effect/Option";
 import { isFunction } from "effect/Predicate";
+import { keys, toEntries } from "effect/Record";
 import { assign } from "effect/Struct";
 import * as Field from "../core/Field.ts";
 import { assertUniqueSqlNames } from "../core/names.ts";
@@ -246,18 +247,18 @@ export interface SqliteKit<Defaults extends FieldsInput> {
 
 const makeResolved = (defaults: FieldsInput, defaultExtras: Table.Callback<FieldsInput> | undefined): object => {
   assertUniqueSqlNames(
-    Object.entries(defaults).map(([key, input]): readonly [string, string] => [
+    map(toEntries(defaults), ([key, input]): readonly [string, string] => [
       key,
       Field.from(input).meta.columnName ?? snakeCase(key),
     ]),
     "sqlite",
     "SQLite kit default column name"
   );
-  const defaultKeys = Object.keys(defaults);
+  const defaultKeys = keys<string, Field.Input>(defaults);
   const Entity =
     (identifier: string) =>
     (ownFields: FieldsInput, annotationsOrExtras?: Annotations.Annotations | Table.Callback<FieldsInput>): object => {
-      const collision = findFirst(Object.keys(ownFields), (key) => contains(defaultKeys, key));
+      const collision = findFirst(keys<string, Field.Input>(ownFields), (key) => contains(defaultKeys, key));
       if (isSome(collision)) {
         throw ModelInvariantError.make({
           message: `'${collision.value}' is a kit default column — remove it or use Model.`,
@@ -281,7 +282,7 @@ const makeResolved = (defaults: FieldsInput, defaultExtras: Table.Callback<Field
     };
   const extend = (build: (sqlite: SqliteToolkit) => SqliteKitExtension<FieldsInput, FieldsInput>): object => {
     const extension = build(toolkit);
-    const collision = findFirst(Object.keys(extension.columns), (key) => contains(defaultKeys, key));
+    const collision = findFirst(keys<string, unknown>(extension.columns), (key) => contains(defaultKeys, key));
     if (isSome(collision)) {
       throw ModelInvariantError.make({
         message: `'${collision.value}' is already a kit default column — extensions cannot shadow it.`,

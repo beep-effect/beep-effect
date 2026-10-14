@@ -5,11 +5,11 @@ import { FileSystem, Path } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
-import * as P from "effect/Predicate";
 
 const NFS: typeof import("node:fs") = createRequire(import.meta.url)("node:fs");
 
@@ -78,9 +78,12 @@ it.layer(NodeCrypto.layer, { timeout: "5 seconds" })("FileSystem sync wrappers",
       expect([...names].sort()).toEqual(["file.txt", "sub"]);
 
       const entries = yield* FileSystem.readdirSync(dir, { withFileTypes: true });
-      const subEntry = entries.find((entry) => entry.name === "sub");
-      assertTrue(P.isNotUndefined(subEntry));
-      assertTrue(subEntry.isDirectory());
+      const subEntry = A.findFirst(entries, (entry) => entry.name === "sub");
+      pipe(
+        subEntry,
+        Option.exists((entry) => entry.isDirectory()),
+        assertTrue
+      );
     })
   );
 

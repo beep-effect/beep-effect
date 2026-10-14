@@ -5,6 +5,7 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -132,7 +133,7 @@ describe("Operation constructors", () => {
       const root = yield* EG.makeNode("ab");
       const children = yield* op.apply(root);
       expect(children.length).toBe(2);
-      expect(children.map((n) => n.data)).toEqual(["a", "b"]);
+      expect(A.map(children, (n) => n.data)).toEqual(["a", "b"]);
       expect(O.getOrNull(children[0]!.parentId)).toBe(root.id);
     })
   );
@@ -143,7 +144,7 @@ describe("Operation constructors", () => {
       const op = Operation.transform({ name: "len", description: "", f: (s: string) => s.length });
       const root = yield* EG.makeNode("hello");
       const children = yield* op.apply(root);
-      expect(children.map((n) => n.data)).toEqual([5]);
+      expect(A.map(children, (n) => n.data)).toEqual([5]);
     })
   );
 
@@ -257,7 +258,7 @@ describe("GraphExecutor", () => {
         const graph = yield* EG.singleton("hello");
         const executor = yield* Executor.GraphExecutor;
         const result = yield* executor.execute(graph, upper);
-        expect(result.newNodes.map((n) => n.data)).toEqual(["HELLO"]);
+        expect(A.map(result.newNodes, (n) => n.data)).toEqual(["HELLO"]);
         expect(result.errors.length).toBe(0);
         expect(result.metrics.nodesProcessed).toBe(1);
         expect(result.metrics.nodesCreated).toBe(1);
@@ -280,7 +281,7 @@ describe("GraphExecutor", () => {
             strategy: Types.ExecutionStrategy.Parallel(1_000),
           });
 
-          expect(result.newNodes.map((n) => n.data)).toEqual(["HELLO"]);
+          expect(A.map(result.newNodes, (n) => n.data)).toEqual(["HELLO"]);
           expect(result.errors.length).toBe(0);
         })
       );
@@ -299,7 +300,7 @@ describe("GraphExecutor", () => {
         const validation = yield* pipe(graph, executor.validate(upper));
         const cost = yield* pipe(graph, executor.estimateCost(upper));
 
-        expect(result.newNodes.map((n) => n.data)).toEqual(["HELLO"]);
+        expect(A.map(result.newNodes, (n) => n.data)).toEqual(["HELLO"]);
         expect(validation.valid).toBe(true);
         expect(cost.complexity).toBe("O(1)");
       })

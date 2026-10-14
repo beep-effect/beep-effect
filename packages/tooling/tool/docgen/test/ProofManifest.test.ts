@@ -6,6 +6,7 @@ import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -76,8 +77,8 @@ it.layer(testLayer)("ProofManifest", (it) => {
       expect(manifest.packageName).toBe(packageName);
       expect(manifest.manifestPath).toBe(".beep/docgen/proof.json");
       expect(manifest.fingerprint.inputFileCount).toBe(manifest.inputs.length);
-      expect(manifest.inputs.map((file) => file.path)).toEqual(["package.json", "src/index.ts"]);
-      expect(manifest.outputs.map((file) => file.path)).toEqual(["docs/index.md"]);
+      expect(A.map(manifest.inputs, (file) => file.path)).toEqual(["package.json", "src/index.ts"]);
+      expect(A.map(manifest.outputs, (file) => file.path)).toEqual(["docs/index.md"]);
 
       const verification = yield* ProofManifest.verifyDocgenProofManifest(packagePath, packageName);
       expect(verification.status).toBe("current");

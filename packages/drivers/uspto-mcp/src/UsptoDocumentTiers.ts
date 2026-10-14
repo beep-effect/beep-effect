@@ -29,6 +29,7 @@ import {
 } from "@beep/mcp-kit";
 import { Fn, LiteralKit, URLStr } from "@beep/schema";
 import { UsptoDocumentReference } from "@beep/uspto";
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { PosInt } from "./internal/PosInt.ts";
@@ -310,10 +311,10 @@ export const projectDocumentsWithinBudget: {
     options: ProjectDocumentsWithinBudgetOptions
   ): DocumentsProjectionOutput;
 } = dual(2, (documents: ReadonlyArray<UsptoDocumentReference>, options: ProjectDocumentsWithinBudgetOptions) => {
-  const rows = documents.map(documentToRecord);
+  const rows = A.map(documents, documentToRecord);
 
   for (const tier of TIER_ORDER) {
-    const envelope = toColumnarEnvelope(rows.map((row) => projectFieldTier(row, tier, usptoDocumentFieldTiers)));
+    const envelope = toColumnarEnvelope(A.map(rows, (row) => projectFieldTier(row, tier, usptoDocumentFieldTiers)));
     const inline = DocumentsProjectionOutput.make({ _tag: "Inline", tier, envelope });
     if (estimateJsonSize(inline) <= options.budgetBytes) {
       return inline;
@@ -321,7 +322,7 @@ export const projectDocumentsWithinBudget: {
   }
 
   const minimalEnvelope = toColumnarEnvelope(
-    rows.map((row) => projectFieldTier(row, "minimal", usptoDocumentFieldTiers))
+    A.map(rows, (row) => projectFieldTier(row, "minimal", usptoDocumentFieldTiers))
   );
   const oversized = OversizedFieldProjection.make({
     value: { columns: minimalEnvelope.columns, rows: minimalEnvelope.rows },

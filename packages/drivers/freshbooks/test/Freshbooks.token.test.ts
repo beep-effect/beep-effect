@@ -197,7 +197,7 @@ describe("@beep/freshbooks token rotation", () => {
         expect(count).toBe(1);
 
         // Every fiber observed the same rotated access token.
-        const values = tokens.map(Redacted.value);
+        const values = A.map(tokens, Redacted.value);
         expect(A.every(values, (value) => value === "access-1")).toBe(true);
       })
     );

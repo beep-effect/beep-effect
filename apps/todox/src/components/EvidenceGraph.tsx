@@ -288,7 +288,7 @@ export function EvidenceGraph() {
           </filter>
         </defs>
         <g>
-          {graphEdges.map((edge) => (
+          {A.map(graphEdges, (edge) => (
             <path
               key={`${edge.from}-${edge.to}`}
               className={`graph__edge${edge.live ? " graph__edge--live" : ""}`}
@@ -298,7 +298,7 @@ export function EvidenceGraph() {
           ))}
         </g>
         <g>
-          {graphNodes.map((node) => {
+          {A.map(graphNodes, (node) => {
             const isSelected = O.exists(selected, (id) => id === node.id);
             return (
               <g

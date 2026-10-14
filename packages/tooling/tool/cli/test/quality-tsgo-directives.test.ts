@@ -9,7 +9,7 @@ import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 
 describe("Effect diagnostics directive policy", () => {
-  const directive = ["@effect", "diagnostics"].join("-");
+  const directive = A.join(["@effect", "diagnostics"], "-");
   const conformancePath = "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts";
   const conformanceDirective = `// ${directive} strictEffectProvide:skip-file`;
   const shimPath = "vitest.setup.ts";

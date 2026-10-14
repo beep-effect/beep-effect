@@ -171,7 +171,7 @@ const runTask = Effect.fn("OntoauthorMat.runTask")(function* (fixture: TaskFixtu
   const competencyPass =
     validation.validation.conforms &&
     actualAskValues.length === fixture.expectedAskValues.length &&
-    actualAskValues.every((value) => value) &&
+    A.every(actualAskValues, (value) => value) &&
     inference.disjointnessViolations.length === fixture.expectedDisjointnessViolationCount;
 
   return {
@@ -194,7 +194,7 @@ describe("OntoAuthor-Mat competency fixtures", () => {
         const results = yield* Effect.forEach(taskFixtures, runTask);
 
         expect(results).toEqual(
-          taskFixtures.map((fixture, index) => ({
+          A.map(taskFixtures, (fixture, index) => ({
             id: fixture.id,
             taskTitle: results[index]?.taskTitle,
             shaclConforms: true,

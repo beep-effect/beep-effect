@@ -1,5 +1,6 @@
 import { ChatComposer } from "@beep/editor/chat/chat-composer";
 import { EditorComposer } from "@beep/editor/composer";
+import * as A from "effect/Array";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { draftReplyInitialState as initialState } from "./fixtures.ts";
 import type { MentionOption } from "@beep/editor/chat/config";
@@ -12,7 +13,7 @@ const MENTIONS: ReadonlyArray<MentionOption> = [
   { id: "assistant", label: "assistant", hint: "the workspace agent" },
 ];
 const sampleMentionSource = (query: string): ReadonlyArray<MentionOption> =>
-  MENTIONS.filter((m) => m.label.toLowerCase().includes(query.toLowerCase()));
+  A.filter(MENTIONS, (m) => m.label.toLowerCase().includes(query.toLowerCase()));
 
 const meta = {
   title: "Editor/ChatComposer",

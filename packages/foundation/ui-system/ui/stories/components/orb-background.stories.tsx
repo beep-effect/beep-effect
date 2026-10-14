@@ -1,4 +1,5 @@
 import { OrbBackground } from "@beep/ui/components/orb-background";
+import * as A from "effect/Array";
 import { expect, within } from "storybook/test";
 import type { OrbTone } from "@beep/ui/components/orb-background";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -124,7 +125,7 @@ export const Tones: Story = {
     const tones: ReadonlyArray<OrbTone> = ["green", "emerald", "teal", "sky", "violet", "amber", "rose"];
     return (
       <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3">
-        {tones.map((tone) => (
+        {A.map(tones, (tone) => (
           <Stage key={tone} tone={tone} height={200}>
             <span className="bg-background/60 relative z-10 rounded-md px-2 py-1 text-xs font-medium capitalize backdrop-blur-sm">
               {tone}
@@ -140,7 +141,7 @@ export const Tones: Story = {
 export const Intensities: Story = {
   render: () => (
     <div className="grid gap-4 p-6 sm:grid-cols-3">
-      {(["subtle", "medium", "vivid"] as const).map((intensity) => (
+      {A.map(["subtle", "medium", "vivid"] as const, (intensity) => (
         <Stage key={intensity} intensity={intensity} height={220}>
           <span className="bg-background/60 relative z-10 rounded-md px-2 py-1 text-xs font-medium capitalize backdrop-blur-sm">
             {intensity}

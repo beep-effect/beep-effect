@@ -8,6 +8,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
 import * as fc from "fast-check";
@@ -50,7 +51,7 @@ describe("schema generators", () => {
   it.effect("derives one generator per declared event", () =>
     Effect.gen(function* () {
       const events = yield* pipe(ReleaseEvents, eventsFromSchemas({ count: 4 }));
-      expect(Object.keys(events).sort()).toEqual(["APPROVE", "CANCEL", "RETRY"]);
+      expect(R.keys(events).sort()).toEqual(["APPROVE", "CANCEL", "RETRY"]);
       assertTrue(A.every(fc.sample(events.APPROVE, 4), S.is(ReleaseEvents.APPROVE)));
     })
   );

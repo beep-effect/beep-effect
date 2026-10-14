@@ -3,6 +3,7 @@ import { AtUri } from "@beep/schema/AtURI";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
@@ -85,7 +86,7 @@ describe("AtUri", () => {
       expect(uri).not.toMatch(/[?#]/u);
       expect(uri.endsWith("/")).toBe(false);
       expect(pathSegments.length).toBeLessThanOrEqual(3);
-      expect(pathSegments.every((segment) => segment.length > 0)).toBe(true);
+      expect(A.every(pathSegments, (segment) => segment.length > 0)).toBe(true);
 
       return true;
     }),

@@ -414,7 +414,7 @@ describe("@beep/rdf URI schemas and helpers", () => {
   it.effect("publishes a canonical arbitrary for URI values", () =>
     Effect.gen(function* () {
       pipe(
-        (yield* Arbitrary.sampleEffect(Arbitrary.schema(URI), { count: 20, seed: 0x5eed })).every(S.is(URI)),
+        A.every(yield* Arbitrary.sampleEffect(Arbitrary.schema(URI), { count: 20, seed: 0x5eed }), S.is(URI)),
         assertTrue
       );
     })

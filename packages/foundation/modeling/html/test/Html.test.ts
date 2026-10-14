@@ -31,6 +31,7 @@ import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -350,7 +351,7 @@ describe("ELEMENT_META", () => {
   it("covers every WHATWG element from the pinned dataset (conforming + obsolete)", () => {
     // Snapshot guard tied to the version-pinned webref dataset: a deliberate
     // re-pin / `bun run generate` that changes the element set should update this.
-    expect(Object.keys(ELEMENT_META)).toHaveLength(142);
+    expect(R.keys(ELEMENT_META)).toHaveLength(142);
   });
 
   it("rejects tags outside the generated HtmlNode inventory", () => {

@@ -59,8 +59,9 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import { pipe } from "effect/Function";
@@ -201,7 +202,7 @@ describe("Session use-cases", () => {
         ),
         serialize: Effect.fn("TurtleCodec.serialize")((request) =>
           Effect.sync(() => {
-            serializedQuads = request.dataset.quads.map(serializeQuad);
+            serializedQuads = A.map(request.dataset.quads, serializeQuad);
             return SerializeTurtleResult.make({ source: "serialized turtle" });
           })
         ),
@@ -214,7 +215,7 @@ describe("Session use-cases", () => {
 
       yield* useCases.saveFile(SaveOntologyFileCommand.make({ path: fixturePath, session: opened.session }));
 
-      expect(serializedQuads).toEqual([serializeQuad(aliceNameQuad), ...shapeQuads.map(serializeQuad)]);
+      expect(serializedQuads).toEqual([serializeQuad(aliceNameQuad), ...A.map(shapeQuads, serializeQuad)]);
     })
   );
 
@@ -329,7 +330,7 @@ describe("Session use-cases", () => {
         const opened = yield* useCases.openFile(OpenOntologyFileCommand.make({ sessionId, path: fixturePath }));
         const initial = yield* reasoner.infer(InferOntologySessionInput.make({ session: opened.session }));
 
-        const initialQuads = initial.inferredDataset.quads.map(serializeQuad);
+        const initialQuads = A.map(initial.inferredDataset.quads, serializeQuad);
         pipe(initial.fullRecompute, assertTrue);
         expect(initial.processedChangeCount).toBe(0);
         expect(initial.inferredDataset.quads).toHaveLength(3);
@@ -356,12 +357,18 @@ describe("Session use-cases", () => {
             previous: O.some(initial),
           })
         );
-        const addedQuads = addedInference.inferredDataset.quads.map(serializeQuad);
+        const addedQuads = A.map(addedInference.inferredDataset.quads, serializeQuad);
 
         expect(added.delta.added).toHaveLength(1);
         pipe(addedInference.fullRecompute, assertFalse);
         expect(addedInference.processedChangeCount).toBe(1);
-        expect(addedInference.modules.find((entry) => entry.module === "closure")?.mode).toBe("incremental");
+        assertSome(
+          pipe(
+            A.findFirst(addedInference.modules, (entry) => entry.module === "closure"),
+            O.map((entry) => entry.mode)
+          ),
+          "incremental"
+        );
         expect(addedInference.inferredDataset.quads).toHaveLength(6);
         expect(addedQuads).toEqual(
           expect.arrayContaining([
@@ -385,12 +392,18 @@ describe("Session use-cases", () => {
             previous: O.some(addedInference),
           })
         );
-        const removedQuads = removedInference.inferredDataset.quads.map(serializeQuad);
+        const removedQuads = A.map(removedInference.inferredDataset.quads, serializeQuad);
 
         expect(removed.delta.removed).toHaveLength(1);
         pipe(removedInference.fullRecompute, assertFalse);
         expect(removedInference.processedChangeCount).toBe(2);
-        expect(removedInference.modules.find((entry) => entry.module === "closure")?.mode).toBe("incremental");
+        assertSome(
+          pipe(
+            A.findFirst(removedInference.modules, (entry) => entry.module === "closure"),
+            O.map((entry) => entry.mode)
+          ),
+          "incremental"
+        );
         expect(removedInference.inferredDataset.quads).toHaveLength(3);
         expect(removedQuads).toEqual(
           expect.arrayContaining([
@@ -442,8 +455,20 @@ describe("Session use-cases", () => {
         );
 
         expect(initial.disjointnessViolations).toHaveLength(0);
-        expect(next.modules.find((entry) => entry.module === "domainRange")?.mode).toBe("incremental");
-        expect(next.modules.find((entry) => entry.module === "disjointness")?.mode).toBe("incremental");
+        assertSome(
+          pipe(
+            A.findFirst(next.modules, (entry) => entry.module === "domainRange"),
+            O.map((entry) => entry.mode)
+          ),
+          "incremental"
+        );
+        assertSome(
+          pipe(
+            A.findFirst(next.modules, (entry) => entry.module === "disjointness"),
+            O.map((entry) => entry.mode)
+          ),
+          "incremental"
+        );
         expect(next.disjointnessViolations).toEqual([
           expect.objectContaining({
             individualIri: alice.value,
@@ -671,8 +696,8 @@ describe("Session use-cases", () => {
       const tboxResults = searchOntologyResources(snapshot, { mode: "tbox", query: "pizza" });
       const aboxResults = searchOntologyResources(snapshot, { mode: "abox", query: "margherita" });
 
-      expect(tboxResults.map((resource) => resource.iri)).toEqual(["https://example.test/Pizza"]);
-      expect(aboxResults.map((resource) => resource.iri)).toEqual(["https://example.test/Margherita"]);
+      expect(A.map(tboxResults, (resource) => resource.iri)).toEqual(["https://example.test/Pizza"]);
+      expect(A.map(aboxResults, (resource) => resource.iri)).toEqual(["https://example.test/Margherita"]);
       yield* Effect.void;
     })
   );
@@ -709,8 +734,8 @@ describe("Session use-cases", () => {
         })
       );
 
-      expect(tbox.nodes.map((node) => node.iri)).toEqual(["https://example.test/Pizza"]);
-      expect(abox.nodes.map((node) => node.iri)).toEqual(["https://example.test/Margherita"]);
+      expect(A.map(tbox.nodes, (node) => node.iri)).toEqual(["https://example.test/Pizza"]);
+      expect(A.map(abox.nodes, (node) => node.iri)).toEqual(["https://example.test/Margherita"]);
       yield* Effect.void;
     })
   );
@@ -773,8 +798,8 @@ describe("Session use-cases", () => {
         })
       );
 
-      expect(projection.clusters.map((cluster) => cluster.foldLevel)).toContain("L1");
-      expect(projection.clusters.map((cluster) => cluster.foldLevel)).toContain("L2");
+      expect(A.map(projection.clusters, (cluster) => cluster.foldLevel)).toContain("L1");
+      expect(A.map(projection.clusters, (cluster) => cluster.foldLevel)).toContain("L2");
       expect(projection.stats.foldedResourceCount).toBeGreaterThan(0);
       yield* Effect.void;
     })

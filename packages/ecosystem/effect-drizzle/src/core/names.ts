@@ -4,6 +4,7 @@
  * @since 0.0.0
  */
 
+import { forEach } from "effect/Array";
 import { dual } from "effect/Function";
 import { String as StringSchema, TaggedError } from "effect/Schema";
 
@@ -270,5 +271,5 @@ export const assertUniqueSqlNames: {
       surface,
     });
   }
-  entries.forEach(([, name]) => assertSqlName(name, dialect, surface));
+  forEach(entries, ([, name]) => assertSqlName(name, dialect, surface));
 });

@@ -154,7 +154,7 @@ describe("CourtReporterVocabulary", () => {
     expect(O.getOrThrow(findReporterById(currentReporter.id)).semanticKey).toBe(currentReporter.semanticKey);
     expect(findCourtsByAlias("Ala.").length).toBeGreaterThan(0);
     expect(findReportersByAlias("Woolw.")).toHaveLength(2);
-    expect(findReportersByAlias("Woolw.").map(({ id }) => id)).not.toStrictEqual([
+    expect(A.map(findReportersByAlias("Woolw."), ({ id }) => id)).not.toStrictEqual([
       findReportersByAlias("Woolw.")[0]?.id,
     ]);
   });

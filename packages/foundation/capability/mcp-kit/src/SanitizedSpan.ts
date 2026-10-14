@@ -244,7 +244,7 @@ const isNonNullWildcard = (target: JsonObject): boolean =>
 
 const isObjectInputTarget = (target: JsonObject): boolean =>
   isNonNullWildcard(target) ||
-  (A.isArray(target.anyOf) && target.anyOf.some((branch) => isJsonObject(branch) && branch.type === "object"));
+  (A.isArray(target.anyOf) && A.some(target.anyOf, (branch) => isJsonObject(branch) && branch.type === "object"));
 
 const withTopLevelObjectInputSchema = (schema: JsonObject): JsonObject =>
   schema.type === "object" || !isObjectInputTarget(schema) ? schema : { type: "object", ...schema };

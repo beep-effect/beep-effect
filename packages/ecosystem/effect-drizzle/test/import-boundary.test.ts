@@ -3,6 +3,7 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import { fn, fnUntraced, forEach, map, tryPromise, withSpan } from "effect/Effect";
+import * as R from "effect/Record";
 import { decodeUnknownEffect, Record as RecordSchema, String, Unknown } from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -90,9 +91,10 @@ const sourceEdges = fn("sourceEdges")(function* (directoryUrl: URL, requiredFile
 });
 
 const localModuleUrls = (current: URL, source: string): ReadonlyArray<URL> =>
-  moduleSpecifiers(current.pathname, source)
-    .filter(({ specifier }) => specifier.startsWith("."))
-    .map(({ specifier }) => new URL(specifier, current));
+  A.map(
+    A.filter(moduleSpecifiers(current.pathname, source), ({ specifier }) => specifier.startsWith(".")),
+    ({ specifier }) => new URL(specifier, current)
+  );
 
 const localImportClosure = fn("localImportClosure")(function* (entrypoint: URL) {
   const pending = [entrypoint];
@@ -178,14 +180,16 @@ describe("ecosystem import boundaries", () => {
       for (const section of runtimeSections) {
         if (section in manifest) {
           const dependencies = yield* decodeRecord(manifest[section]);
-          runtimeKeys.push(...Object.keys(dependencies));
-          runtimeValues.push(...Object.values(dependencies));
+          runtimeKeys.push(...R.keys(dependencies));
+          runtimeValues.push(...R.values(dependencies));
         }
       }
-      expect(runtimeKeys.filter((key) => key.startsWith("@beep/"))).toEqual([]);
-      expect(runtimeValues.filter((value) => typeof value === "string" && value.startsWith("npm:@beep/"))).toEqual([]);
+      expect(A.filter(runtimeKeys, (key) => key.startsWith("@beep/"))).toEqual([]);
+      expect(A.filter(runtimeValues, (value) => typeof value === "string" && value.startsWith("npm:@beep/"))).toEqual(
+        []
+      );
       expect(
-        Object.keys(manifest).filter((key) => ["bundleddependencies", "bundledependencies"].includes(key.toLowerCase()))
+        A.filter(R.keys(manifest), (key) => ["bundleddependencies", "bundledependencies"].includes(key.toLowerCase()))
       ).toEqual([]);
     })
   );
@@ -213,10 +217,10 @@ describe("dialect import boundaries", () => {
     fnUntraced(function* () {
       const pg = yield* localImportClosure(new URL("../src/pg/index.ts", import.meta.url));
       const sqlite = yield* localImportClosure(new URL("../src/sqlite/index.ts", import.meta.url));
-      expect(pg.some((path) => path.endsWith("/pg/kit.ts"))).toBe(true);
-      expect(sqlite.some((path) => path.endsWith("/sqlite/kit.ts"))).toBe(true);
-      expect(pg.some((path) => path.includes("/sqlite/"))).toBe(false);
-      expect(sqlite.some((path) => path.includes("/pg/"))).toBe(false);
+      expect(A.some(pg, (path) => path.endsWith("/pg/kit.ts"))).toBe(true);
+      expect(A.some(sqlite, (path) => path.endsWith("/sqlite/kit.ts"))).toBe(true);
+      expect(A.some(pg, (path) => path.includes("/sqlite/"))).toBe(false);
+      expect(A.some(sqlite, (path) => path.includes("/pg/"))).toBe(false);
     })
   );
 });

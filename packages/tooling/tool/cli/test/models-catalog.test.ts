@@ -78,15 +78,18 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
   it("keeps Cursor seats without interpreting headings and usage tips as models", () => {
     expect(
       parseCursorModelLines(
-        [
-          "Available models",
-          "",
-          "auto - Auto (default)",
-          "gpt-6-astra - Astra",
-          "composer-2.5 - Composer 2.5",
-          "",
-          "Tip: use --model <id> to switch.",
-        ].join("\n")
+        A.join(
+          [
+            "Available models",
+            "",
+            "auto - Auto (default)",
+            "gpt-6-astra - Astra",
+            "composer-2.5 - Composer 2.5",
+            "",
+            "Tip: use --model <id> to switch.",
+          ],
+          "\n"
+        )
       )
     ).toEqual(["auto", "gpt-6-astra", "composer-2.5"]);
   });

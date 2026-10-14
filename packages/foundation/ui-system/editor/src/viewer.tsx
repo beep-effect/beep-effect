@@ -9,7 +9,7 @@
 
 import { SerializedEditorState } from "@beep/lexical-schema";
 import { analyzeEditorStateCompatibilityResult } from "@beep/lexical-schema/Lexical.model";
-import { O } from "@beep/utils";
+import { A, O } from "@beep/utils";
 import { useAtomSet } from "@effect/atom-react";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
@@ -47,7 +47,7 @@ const nodeSource = (node: SerializedNodeLike): string => {
   if (node.type === "linebreak") return "\n";
   if (node.type === "tab") return "\t";
   if (P.isString(node.text)) return node.text;
-  return node.children === undefined ? "" : node.children.map(nodeSource).join("");
+  return node.children === undefined ? "" : A.join(A.map(node.children, nodeSource), "");
 };
 
 /**
@@ -69,7 +69,7 @@ const decorateMermaid = (node: SerializedNodeLike): SerializedNodeLike =>
     ? ({ type: "mermaid", version: 1, format: "", source: nodeSource(node) } as SerializedNodeLike)
     : node.children === undefined
       ? node
-      : { ...node, children: node.children.map(decorateMermaid) };
+      : { ...node, children: A.map(node.children, decorateMermaid) };
 
 /**
  * Swap the remaining code blocks for the code-block node, on the same read-only
@@ -93,7 +93,7 @@ const decorateCode = (node: SerializedNodeLike): SerializedNodeLike =>
       } as SerializedNodeLike)
     : node.children === undefined
       ? node
-      : { ...node, children: node.children.map(decorateCode) };
+      : { ...node, children: A.map(node.children, decorateCode) };
 
 /**
  * The encoded forms of a viewer state, computed once and remembered.

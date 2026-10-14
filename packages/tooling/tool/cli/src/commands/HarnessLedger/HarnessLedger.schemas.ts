@@ -238,7 +238,7 @@ export const parseHarnessEditSpec = Effect.fn("HarnessLedger.parseHarnessEditSpe
  */
 export const parseHarnessSurfaceSpec = Effect.fn("HarnessLedger.parseHarnessSurfaceSpec")(function* (spec: string) {
   const invalid = HarnessLedgerInputError.new(
-    `--touched "${spec}" is not <kind>:<name> with kind one of ${ContextSurfaceKind.literals.join(" | ")}.`
+    `--touched "${spec}" is not <kind>:<name> with kind one of ${A.join(ContextSurfaceKind.literals, " | ")}.`
   );
   const [kind, name] = yield* Effect.fromOption(splitPrefixed(spec)).pipe(Effect.mapError(() => invalid));
   return yield* decodeSurfaceRef({ kind, name }).pipe(Effect.mapError(() => invalid));

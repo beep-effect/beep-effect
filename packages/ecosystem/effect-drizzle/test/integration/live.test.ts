@@ -9,7 +9,7 @@ import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { PGlite, types } from "@electric-sql/pglite";
 import { pushSchema } from "drizzle-kit/api-postgres";
 import { drizzle } from "drizzle-orm/pglite";
-import { filter, findFirst, isReadonlyArrayNonEmpty } from "effect/Array";
+import { filter, findFirst, isReadonlyArrayNonEmpty, join, map as mapArray, some as someArray } from "effect/Array";
 import * as Cause from "effect/Cause";
 import { Service } from "effect/Context";
 import { formatIso } from "effect/DateTime";
@@ -241,14 +241,14 @@ it.layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGl
     fnUntraced(function* () {
       const { migrationStatements, noOpStatements } = yield* PgliteHarness;
       expect(isReadonlyArrayNonEmpty(migrationStatements)).toBe(true);
-      expect(migrationStatements.some((statement) => statement.includes('CREATE TABLE "user"'))).toBe(true);
-      expect(migrationStatements.some((statement) => statement.includes("record_status"))).toBe(true);
-      expect(migrationStatements.some((statement) => statement.includes("deduped_status"))).toBe(true);
-      expect(migrationStatements.some((statement) => statement.includes('CREATE TABLE "enum_export_collision"'))).toBe(
-        true
-      );
-      expect(migrationStatements.some((statement) => statement.includes('"labels" text[]'))).toBe(true);
-      expect(migrationStatements.some((statement) => statement.includes('"matrix" text[][]'))).toBe(true);
+      expect(someArray(migrationStatements, (statement) => statement.includes('CREATE TABLE "user"'))).toBe(true);
+      expect(someArray(migrationStatements, (statement) => statement.includes("record_status"))).toBe(true);
+      expect(someArray(migrationStatements, (statement) => statement.includes("deduped_status"))).toBe(true);
+      expect(
+        someArray(migrationStatements, (statement) => statement.includes('CREATE TABLE "enum_export_collision"'))
+      ).toBe(true);
+      expect(someArray(migrationStatements, (statement) => statement.includes('"labels" text[]'))).toBe(true);
+      expect(someArray(migrationStatements, (statement) => statement.includes('"matrix" text[][]'))).toBe(true);
       expect(noOpStatements).toEqual([]);
     })
   );
@@ -324,13 +324,22 @@ it.layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGl
       );
       yield* rejected(
         `create table wave_e_too_many_index_columns (
-            ${Array.from({ length: 33 }, (_, index) => `c${index} integer`).join(", ")},
-            unique (${Array.from({ length: 33 }, (_, index) => `c${index}`).join(", ")})
+            ${join(
+              Array.from({ length: 33 }, (_, index) => `c${index} integer`),
+              ", "
+            )},
+            unique (${join(
+              Array.from({ length: 33 }, (_, index) => `c${index}`),
+              ", "
+            )})
           )`
       );
       yield* rejected(
         `create table wave_e_too_many_table_columns (
-            ${Array.from({ length: 1_601 }, (_, index) => `c${index} integer`).join(", ")}
+            ${join(
+              Array.from({ length: 1_601 }, (_, index) => `c${index} integer`),
+              ", "
+            )}
           )`
       );
 
@@ -580,10 +589,10 @@ it.layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGl
       const child = getOrThrow(findFirst(queried.organizations, (row) => row.id === seeded.child.id));
       expect(direct.org.id).toBe(seeded.root.id);
       expect(child.parentOrg?.id).toBe(seeded.root.id);
-      expect(root.childOrgs.map((row) => row.id)).toContain(seeded.child.id);
-      expect(root.users.map((row) => row.id)).toContain(seeded.direct.id);
-      expect(root.usersThroughMembership.map((row) => row.id)).toContain(seeded.member.id);
-      expect(member.organizationsThroughMembership.map((row) => row.id)).toContain(seeded.root.id);
+      expect(mapArray(root.childOrgs, (row) => row.id)).toContain(seeded.child.id);
+      expect(mapArray(root.users, (row) => row.id)).toContain(seeded.direct.id);
+      expect(mapArray(root.usersThroughMembership, (row) => row.id)).toContain(seeded.member.id);
+      expect(mapArray(member.organizationsThroughMembership, (row) => row.id)).toContain(seeded.root.id);
     })
   );
 });

@@ -85,6 +85,7 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { micromark } from "micromark";
@@ -123,18 +124,20 @@ const markdownHtmlDoc = (): Document => Md.make([Md.h1("Hello"), Md.p("World")])
 const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const decodeDocumentJsonResult = S.decodeUnknownResult(S.fromJsonString(Document));
 
+const isJsonArray = (value: S.Json): value is S.JsonArray => A.isArray(value);
+
 const isJsonObject = (value: S.Json): value is S.JsonObject =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
+  typeof value === "object" && value !== null && !A.isArray(value);
 
 const normalizeJsonBoundaryObject = (value: S.JsonObject): S.JsonObject =>
-  Object.fromEntries(Object.entries(value).map(([key, item]) => [key, normalizeJsonBoundaryValue(item)] as const));
+  R.fromEntries(A.map(R.toEntries(value), ([key, item]) => [key, normalizeJsonBoundaryValue(item)] as const));
 
 const normalizeJsonBoundaryValue = (value: S.Json): S.Json => {
   if (typeof value === "number") {
     return Object.is(value, -0) ? 0 : value;
   }
-  if (Array.isArray(value)) {
-    return value.map(normalizeJsonBoundaryValue);
+  if (isJsonArray(value)) {
+    return A.map(value, normalizeJsonBoundaryValue);
   }
   if (isJsonObject(value)) {
     return normalizeJsonBoundaryObject(value);
@@ -369,8 +372,8 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       Md.admonition("note", [Md.footnoteDef("duplicate", "Nested admonition")]),
     ]);
     const issues = documentSafetyIssues(document);
-    const duplicateIssues = issues.filter(isDuplicateFootnoteDefinitionSafetyViolation);
-    const projectionIssues = issues.filter(isHtmlProjectionSafetyViolation);
+    const duplicateIssues = A.filter(issues, isDuplicateFootnoteDefinitionSafetyViolation);
+    const projectionIssues = A.filter(issues, isHtmlProjectionSafetyViolation);
 
     const expectedDuplicates = [
       { identifier: "duplicate", path: ["children", 0, "identifier"] },
@@ -383,7 +386,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     ];
     expect(duplicateIssues).toMatchObject(expectedDuplicates);
     expect(projectionIssues).toHaveLength(duplicateIssues.length);
-    expect(projectionIssues.every((issue) => issue.rule === "duplicateId")).toBe(true);
+    expect(A.every(projectionIssues, (issue) => issue.rule === "duplicateId")).toBe(true);
     assertFailure(
       Result.mapError(refineSafeDocument(document), (issues) =>
         A.map(A.filter(issues, isDuplicateFootnoteDefinitionSafetyViolation), ({ identifier, path }) => ({
@@ -405,10 +408,10 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     [FootnoteIdentifierArbitrary],
     ([identifier]) => {
       const document = Md.make([Md.footnoteDef(identifier, "One"), Md.footnoteDef(identifier, "Two")]);
-      const duplicateIssues = documentSafetyIssues(document).filter(isDuplicateFootnoteDefinitionSafetyViolation);
+      const duplicateIssues = A.filter(documentSafetyIssues(document), isDuplicateFootnoteDefinitionSafetyViolation);
 
       expect(duplicateIssues).toHaveLength(2);
-      expect(duplicateIssues.every((issue) => issue.identifier === identifier)).toBe(true);
+      expect(A.every(duplicateIssues, (issue) => issue.identifier === identifier)).toBe(true);
       assertFailure(
         Result.mapError(refineSafeDocument(document), (issues) =>
           A.map(A.filter(issues, isDuplicateFootnoteDefinitionSafetyViolation), ({ identifier }) => identifier)
@@ -423,7 +426,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
 
   it("rejects a heading outline that the safe HTML projection cannot render", () => {
     const document = Md.make([Md.h2(""), Md.h5("")]);
-    const projectionIssues = documentSafetyIssues(document).filter(isHtmlProjectionSafetyViolation);
+    const projectionIssues = A.filter(documentSafetyIssues(document), isHtmlProjectionSafetyViolation);
 
     expect(projectionIssues).toMatchObject([
       {
@@ -765,9 +768,9 @@ ${Md.h3("Inside")}
       })
     ).toEqual(["inline:2", "block:p", "inline:1"]);
     expect(
-      segmentInlineRuns({
+      segmentInlineRuns<string, number>({
         isInline: (value): value is string => typeof value === "string",
-        renderInlineRun: (run) => run.join(""),
+        renderInlineRun: (run) => A.join(run, ""),
         renderBlock: (value: number) => `#${value}`,
       })([])
     ).toEqual([]);
@@ -797,7 +800,7 @@ ${Md.h3("Inside")}
       Md.hr,
     ];
 
-    expect(blocks.map(renderPlainTextBlock)).toEqual([
+    expect(A.map(blocks, renderPlainTextBlock)).toEqual([
       "Heading",
       "Paragraph\nText",
       "Quoted\nNested",

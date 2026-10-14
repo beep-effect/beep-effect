@@ -8,7 +8,7 @@ import { assert, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { numeric, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { findFirst } from "effect/Array";
+import { filter, findFirst, join, map as mapArray } from "effect/Array";
 import * as Cause from "effect/Cause";
 import { Service } from "effect/Context";
 import { formatIso, makeUnsafe, toDate } from "effect/DateTime";
@@ -32,7 +32,7 @@ import {
 import { hasDies, hasFails, hasInterrupts, isFailure, isSuccess } from "effect/Exit";
 import { FileSystem } from "effect/FileSystem";
 import { effect as effectLayer, provide, provideMerge, unwrap, withSpan as withLayerSpan } from "effect/Layer";
-import { getOrThrow, getOrUndefined, none, some } from "effect/Option";
+import { getOrElse, getOrThrow, getOrUndefined, none, some } from "effect/Option";
 import { hasProperty, isFunction } from "effect/Predicate";
 import {
   Array as ArraySchema,
@@ -105,12 +105,15 @@ const resolveNodeBinary = (): string => {
   if (override !== undefined && override.length > 0) {
     return override;
   }
-  return (
-    (Bun.env.PATH ?? "")
-      .split(":")
-      .filter((directory) => directory.length > 0)
-      .map((directory) => Bun.which("node", { PATH: directory }))
-      .find((candidate) => candidate !== null && isRealNode(candidate)) ?? "/usr/bin/node"
+  return getOrElse(
+    findFirst(
+      mapArray(
+        filter((Bun.env.PATH ?? "").split(":"), (directory) => directory.length > 0),
+        (directory) => Bun.which("node", { PATH: directory })
+      ),
+      (candidate): candidate is string => candidate !== null && isRealNode(candidate)
+    ),
+    () => "/usr/bin/node"
   );
 };
 
@@ -385,7 +388,10 @@ it.layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQL
       expect(() =>
         client.run(`
           create table wave_e_too_many_columns (
-            ${Array.from({ length: 2_001 }, (_, index) => `c${index} integer`).join(", ")}
+            ${join(
+              Array.from({ length: 2_001 }, (_, index) => `c${index} integer`),
+              ", "
+            )}
           )
         `)
       ).toThrow();
@@ -494,7 +500,7 @@ it.layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQL
       expect(snapshot.rowVersion).toBe(1);
       expect(winner.rowVersion).toBe(2);
       expect(conflict.expectedVersion).toBe(1);
-      expect(concurrentUpdates.filter(isSuccess)).toHaveLength(1);
+      expect(filter(concurrentUpdates, isSuccess)).toHaveLength(1);
       const concurrentWinner = getOrThrow(findFirst(concurrentUpdates, isSuccess));
       const concurrentLoser = getOrThrow(findFirst(concurrentUpdates, isFailure));
       assertTrue(hasFails(concurrentLoser));
@@ -589,9 +595,11 @@ it.layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQL
       const organizationRow = getOrThrow(findFirst(organizationRows, (row) => row.id === organization.id));
 
       expect(directRow.organization.id).toBe(organization.id);
-      expect(memberRow.sharedOrganizationsThroughSharedMembership.map((row) => row.id)).toContain(organization.id);
-      expect(organizationRow.sharedUsers.map((row) => row.id)).toContain(direct.id);
-      expect(organizationRow.sharedUsersThroughSharedMembership.map((row) => row.id)).toContain(member.id);
+      expect(mapArray(memberRow.sharedOrganizationsThroughSharedMembership, (row) => row.id)).toContain(
+        organization.id
+      );
+      expect(mapArray(organizationRow.sharedUsers, (row) => row.id)).toContain(direct.id);
+      expect(mapArray(organizationRow.sharedUsersThroughSharedMembership, (row) => row.id)).toContain(member.id);
     })
   );
 });

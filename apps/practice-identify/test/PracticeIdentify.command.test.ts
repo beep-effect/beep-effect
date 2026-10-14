@@ -1,5 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -118,7 +119,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("practice-identify comma
       ];
       yield* f.run(base);
       yield* f.run([...base, "--split-salt", "pass3"]);
-      expect(f.calls.map((c) => c.input)).toMatchObject([{ splitSalt: "holdout" }, { splitSalt: "pass3" }]);
+      expect(A.map(f.calls, (c) => c.input)).toMatchObject([{ splitSalt: "holdout" }, { splitSalt: "pass3" }]);
     })
   );
   it.effect("rejects unknown commands", () =>

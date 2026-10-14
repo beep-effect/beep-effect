@@ -23,7 +23,7 @@ const headerVersion = (bytes: Uint8Array): string =>
     O.getOrElse(() => "")
   );
 
-const fontProgramKeys = ["FontFile", "FontFile2", "FontFile3"].map((k) => PDFName.of(k));
+const fontProgramKeys = A.map(["FontFile", "FontFile2", "FontFile3"], (k) => PDFName.of(k));
 
 const resolveDict = (doc: PDFDocument, value: unknown): O.Option<PDFDict> => {
   const resolved = value instanceof PDFRef ? doc.context.lookup(value) : value;
@@ -68,14 +68,14 @@ export const structureOf = (options: { readonly bytes: Uint8Array; readonly doc:
   const { bytes, doc } = options;
   const fonts = MutableHashMap.empty<string, PdfFont>();
   let annotationCount = 0;
-  const pages = doc.getPages().map((page) => {
+  const pages = A.map(doc.getPages(), (page) => {
     const annots = page.node.Annots();
     annotationCount += annots === undefined ? 0 : annots.size();
     pipe(
       O.fromUndefinedOr(page.node.Resources()),
       O.flatMap((resources) => resolveDict(doc, resources.get(PDFName.of("Font")))),
       O.map((fontDict) => {
-        fontDict.entries().forEach(([, value]) => {
+        A.forEach(fontDict.entries(), ([, value]) => {
           pipe(
             resolveDict(doc, value),
             O.map((font) => {

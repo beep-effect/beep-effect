@@ -554,7 +554,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
 
           const repaired = yield* loadYeetInboxView(tmpDir);
           expect(repaired.entries).toHaveLength(2);
-          expect(repaired.entries.every((entry) => entry.ack.acked)).toBe(true);
+          expect(A.every(repaired.entries, (entry) => entry.ack.acked)).toBe(true);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

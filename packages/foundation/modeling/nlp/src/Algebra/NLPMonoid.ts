@@ -822,7 +822,7 @@ export const computeTFIDF: {
  * @since 0.0.0
  */
 export const aggregateTokens = (tokens: ReadonlyArray<string>): BagOfWords =>
-  Monoid.fold(TokenBagOfWords)(tokens.map((token) => MutableHashMap.make([token, 1])));
+  Monoid.fold(TokenBagOfWords)(A.map(tokens, (token) => MutableHashMap.make([token, 1])));
 
 /**
  * Aggregate sentences into a single document string.

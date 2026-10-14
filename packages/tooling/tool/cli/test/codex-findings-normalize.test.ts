@@ -8,7 +8,7 @@ import {
   severityCountsOf,
 } from "@beep/repo-cli/test/Codex";
 import { it } from "@beep/test-runner";
-import { A, O } from "@beep/utils";
+import { A, O, Struct } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -180,7 +180,7 @@ describe("codex findings severity tallies", () => {
     const counts = severityCountsOf([{ severity: "Low" }, { severity: "Medium" }, { severity: "Low" }] as const);
 
     expect(counts).toEqual({ Medium: 1, Low: 2 });
-    expect(Object.keys(counts)).toEqual(["Medium", "Low"]);
+    expect(Struct.keys(counts)).toEqual(["Medium", "Low"]);
     expect("High" in counts).toBe(false);
   });
 });

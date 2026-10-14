@@ -2,6 +2,7 @@ import { goalsCommand, PacketEventStoreLive } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -64,7 +65,7 @@ describe("goals doctor provenance path security", () => {
         yield* runGoalsCommand(["doctor"]).pipe(Effect.provideService(FileSystem.FileSystem, instrumentedFileSystem));
 
         expect(yield* Ref.get(unsafeProbeCount)).toBe(0);
-        expect((yield* TestConsole.errorLines).join("\n")).toContain(
+        expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain(
           `provenance.exploration "${absoluteExplorationPath}" is an invalid path`
         );
       })

@@ -49,7 +49,7 @@ const functionTitleTasks = callableSuite.tasks.slice(functionTitleStart);
 it("preserves a Function title with an omitted handler", () => {
   expectTypeOf(functionTitleResult).toEqualTypeOf<void>();
   expect(functionTitleTasks).toHaveLength(1);
-  expect(functionTitleTasks.map(({ mode, name }) => ({ mode, name }))).toEqual([
+  expect(A.map(functionTitleTasks, ({ mode, name }) => ({ mode, name }))).toEqual([
     { mode: "todo", name: "instrumentedFunctionTitle" },
   ]);
 });

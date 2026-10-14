@@ -143,7 +143,7 @@ const pathExists = (fs: FileSystem.FileSystem, target: string): Effect.Effect<bo
   fs.exists(target).pipe(Effect.orElseSucceed(() => false));
 
 const hasPgliteDataDirShape = (entries: ReadonlyArray<string>): boolean =>
-  PgliteDataDirRequiredEntries.every((entry) => entries.includes(entry));
+  A.every(PgliteDataDirRequiredEntries, (entry) => entries.includes(entry));
 
 const writeCompatibilityMarker = Effect.fn("ProfessionalDesktop.Pglite.writeCompatibilityMarker")(function* (
   fs: FileSystem.FileSystem,
@@ -154,7 +154,10 @@ const writeCompatibilityMarker = Effect.fn("ProfessionalDesktop.Pglite.writeComp
   const createdAtMillis = yield* Clock.currentTimeMillis;
   yield* fs.writeFileString(
     path.join(dataDir, ChatDbCompatibilityMarker),
-    ["runtime=professional-desktop-pglite-inprocess", "version=2", `createdAtMillis=${createdAtMillis}`, ""].join("\n")
+    A.join(
+      ["runtime=professional-desktop-pglite-inprocess", "version=2", `createdAtMillis=${createdAtMillis}`, ""],
+      "\n"
+    )
   );
 });
 

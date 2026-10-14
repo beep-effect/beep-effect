@@ -28,6 +28,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
@@ -106,7 +107,7 @@ const roundTrips = Effect.fn("admissionTest.roundTrips")(function* <Schema exten
 });
 
 describe("B8 heavy admission contracts", () => {
-  for (const [name, schema] of Object.entries({ ...heavyAdmissionSchemasForTesting, CiAdmissionInput })) {
+  for (const [name, schema] of R.toEntries({ ...heavyAdmissionSchemasForTesting, CiAdmissionInput })) {
     it.effect(`generated ${name} round-trips`, () => roundTrips(schema));
   }
 
@@ -376,18 +377,21 @@ it.layer(platform)("B8 ci admission command", (layerIt) => {
         expect(yield* HeavyAdmissionJson.decode(printed[0] ?? "")).toEqual(held);
         expect(printed[1]).toContain("heavy admission: skip-satisfied");
         expect(yield* fs.readFileString(output)).toBe(
-          [
-            "prior=1",
-            "verdict=hold",
-            "admitted=false",
-            "docs_only=false",
-            "sources=",
-            "verdict=skip-satisfied",
-            "admitted=false",
-            "docs_only=true",
-            "sources=",
-            "",
-          ].join("\n")
+          A.join(
+            [
+              "prior=1",
+              "verdict=hold",
+              "admitted=false",
+              "docs_only=false",
+              "sources=",
+              "verdict=skip-satisfied",
+              "admitted=false",
+              "docs_only=true",
+              "sources=",
+              "",
+            ],
+            "\n"
+          )
         );
         const unknown = yield* runCiAdmission(
           CiAdmissionInput.make({ eventName: O.some("workflow_dispatch"), cwd: root }),

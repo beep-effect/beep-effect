@@ -490,7 +490,7 @@ export const effectDiagnosticsDirectiveExemptions: readonly [
   }),
 ];
 
-const TsgoDisabledRuleName = LiteralKit(["experimentalApiUsage", "unstableApiUsage"]);
+const TsgoDisabledRuleName = LiteralKit(["apiStabilityLeak", "experimentalApiUsage", "unstableApiUsage"]);
 
 /**
  * One installed `@effect/tsgo` rule the root profile declares `"off"`, with the reason.
@@ -531,9 +531,11 @@ export class TsgoDisabledRule extends S.Class<TsgoDisabledRule>($I`TsgoDisabledR
  *
  * **Details**
  *
- * Both entries are the stability rules from `@effect/tsgo` 0.47: they flag every import of an
- * API tagged `@stability experimental` or `@stability unstable`, and this repository builds on
- * `effect/unstable/*` (HTTP, HttpApi, CLI, and friends) on purpose.
+ * All three entries are the stability rules: `experimentalApiUsage` and `unstableApiUsage` (from
+ * `@effect/tsgo` 0.47) flag every import of an API tagged `@stability experimental` or
+ * `@stability unstable`, and `apiStabilityLeak` (0.50) flags every untagged export whose types
+ * expose one. This repository builds on `effect/unstable/*` (HTTP, HttpApi, CLI, and friends) on
+ * purpose.
  *
  * **Example** (Read the disabled rule names)
  *
@@ -542,13 +544,18 @@ export class TsgoDisabledRule extends S.Class<TsgoDisabledRule>($I`TsgoDisabledR
  * import * as A from "effect/Array"
  *
  * console.log(A.map(tsgoDisabledRules, (disabled) => disabled.rule))
- * // => ["experimentalApiUsage", "unstableApiUsage"]
+ * // => ["apiStabilityLeak", "experimentalApiUsage", "unstableApiUsage"]
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const tsgoDisabledRules: readonly [TsgoDisabledRule, TsgoDisabledRule] = [
+export const tsgoDisabledRules: readonly [TsgoDisabledRule, TsgoDisabledRule, TsgoDisabledRule] = [
+  TsgoDisabledRule.make({
+    rule: "apiStabilityLeak",
+    reason:
+      "Untagged @beep exports count as stable, and they expose effect/unstable/* types by design, so nearly every export would be reported.",
+  }),
   TsgoDisabledRule.make({
     rule: "experimentalApiUsage",
     reason: "Experimental-tagged Effect APIs are adopted deliberately; the stability tag is not a defect signal here.",

@@ -95,15 +95,18 @@ const historyStubCard = Effect.fnUntraced(function* (
     url: candidate.url,
     via: "history-sift",
   });
-  const body = [
-    `# ${candidate.title}`,
-    "",
-    `> Sifted from browser history: ${candidate.visitCount} visits, last on ${chromeMicrosToIso(candidate.lastVisitChrome)}.`,
-    "",
-    `Open: <${candidate.url}>`,
-    "",
-    "Triage: keep (capture it), file it under a topic, or delete this stub.",
-  ].join("\n");
+  const body = A.join(
+    [
+      `# ${candidate.title}`,
+      "",
+      `> Sifted from browser history: ${candidate.visitCount} visits, last on ${chromeMicrosToIso(candidate.lastVisitChrome)}.`,
+      "",
+      `Open: <${candidate.url}>`,
+      "",
+      "Triage: keep (capture it), file it under a topic, or delete this stub.",
+    ],
+    "\n"
+  );
   return { body, frontmatter, relativePath };
 });
 

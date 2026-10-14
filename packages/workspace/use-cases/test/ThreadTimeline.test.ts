@@ -5,7 +5,8 @@ import { fcRuns } from "@beep/test-utils";
 import { Thread } from "@beep/workspace-use-cases/public";
 import { Thread as ServerThread } from "@beep/workspace-use-cases/server";
 import { describe, expect } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -51,7 +52,10 @@ describe("ThreadTimeline", () => {
       expect(timeline.threadId).toStrictEqual(threadId);
       expect(timeline.turns[0]?.turnId).toStrictEqual(turnId);
       expect(timeline.turns[0]?.costMicros).toBe(0);
-      expect(timeline.turns[0]?.items.map((item) => item.kind)).toEqual(["message", "tool_call"]);
+      assertSome(
+        O.map(A.head(timeline.turns), (turn) => A.map(turn.items, (item) => item.kind)),
+        ["message", "tool_call"]
+      );
     })
   );
 
@@ -199,7 +203,7 @@ describe("ThreadTimeline", () => {
 
       const branch = Thread.activeBranchTurns(timeline.turns);
 
-      expect(branch.map((t) => Number(t.turnId))).toEqual([1, 2, 5, 6]);
+      expect(A.map(branch, (t) => Number(t.turnId))).toEqual([1, 2, 5, 6]);
     })
   );
 
@@ -227,7 +231,7 @@ describe("ThreadTimeline", () => {
         ],
       });
 
-      expect(Thread.activeBranchTurns(timeline.turns).map((t) => Number(t.turnId))).toEqual([1, 2]);
+      expect(A.map(Thread.activeBranchTurns(timeline.turns), (t) => Number(t.turnId))).toEqual([1, 2]);
     })
   );
 
@@ -255,7 +259,7 @@ describe("ThreadTimeline", () => {
         ],
       });
 
-      expect(Thread.activeBranchTurns(timeline.turns).map((t) => Number(t.turnId))).toEqual([1, 2, 3, 4]);
+      expect(A.map(Thread.activeBranchTurns(timeline.turns), (t) => Number(t.turnId))).toEqual([1, 2, 3, 4]);
     })
   );
 });

@@ -15,6 +15,7 @@ import {
 } from "@beep/epistemic-domain/values/ExecutionGrant";
 import { GovernedEgressLive, GovernedEgressOptions } from "@beep/epistemic-server/GovernedEgress";
 import { GovernedTierGateLive, GovernedTierGateOptions } from "@beep/epistemic-server/GovernedTierGate";
+import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { sanitizedToolkit } from "@beep/mcp-kit/SanitizedSpan";
 import { OntologyMcpConfig } from "@beep/ontology-config/server";
 import {
@@ -33,15 +34,17 @@ import * as O from "@beep/utils/Option";
 import * as McpProtocol from "effect/ai/McpProtocol";
 import * as McpServer from "effect/ai/McpServer";
 import * as Context from "effect/Context";
-import * as Data from "effect/Data";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as Metric from "effect/Metric";
+import * as S from "effect/Schema";
 import { requireRpcSessionToken } from "./RpcSessionAuth.ts";
 import type * as Redacted from "effect/Redacted";
+
+const $I = $ProfessionalDesktopId.create("server/OntologyMcpTransport");
 
 const ontologyMcpOriginDecisions = Metric.counter("desktop_ontology_mcp_origin_decisions_total", {
   incremental: true,
@@ -57,10 +60,16 @@ const ontologyMcpAllowedOrigins: ReadonlyArray<string> = [
   "http://tauri.localhost",
 ];
 
-class OntologyMcpOriginForbidden extends Data.TaggedError("OntologyMcpOriginForbidden")<{
-  readonly status: 403;
-  readonly message: string;
-}> {}
+class OntologyMcpOriginForbidden extends S.TaggedError<OntologyMcpOriginForbidden>($I`OntologyMcpOriginForbidden`)(
+  "OntologyMcpOriginForbidden",
+  {
+    status: S.Literal(403),
+    message: S.String,
+  },
+  $I.annoteError<OntologyMcpOriginForbidden>("OntologyMcpOriginForbidden", {
+    description: "A request to the ontology MCP endpoint came from an origin outside the allow-list.",
+  })
+) {}
 
 const isAllowedOntologyMcpOrigin = (headers: Headers.Headers): boolean =>
   O.exists(Headers.get(headers, "origin"), (origin) => A.contains(ontologyMcpAllowedOrigins, origin));
@@ -78,7 +87,7 @@ const originMiddleware = HttpMiddleware.make((effect) =>
               Effect.annotateLogs({ method: request.method, subsystem: "ontology_mcp" }),
               Effect.as(
                 HttpServerResponse.jsonUnsafe(
-                  new OntologyMcpOriginForbidden({
+                  OntologyMcpOriginForbidden.make({
                     status: 403,
                     message: "Origin is not allowed for the ontology MCP endpoint.",
                   }),

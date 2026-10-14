@@ -10,6 +10,7 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 
@@ -48,12 +49,15 @@ const verdict = YeetVerdict.make({
 
 // The verdict document written before mergeReady existed: schemaVersion is still
 // v2 and every append-optional key is simply absent.
-const priorVersionVerdictJson = [
-  '{"schemaVersion":"yeet-verdict/v2","base":"origin/main","branch":"feat/merge-loop","committed":true,',
-  '"createdAt":"2026-08-04T00:00:05.000Z","failurePolicy":"fail-fast","head":"HEAD","lanes":[],',
-  '"message":"yeet publish proof passed.","mode":"publish","outcome":"success","packetPaths":[],',
-  '"pushed":true,"runId":"feat_merge-loop"}',
-].join("");
+const priorVersionVerdictJson = A.join(
+  [
+    '{"schemaVersion":"yeet-verdict/v2","base":"origin/main","branch":"feat/merge-loop","committed":true,',
+    '"createdAt":"2026-08-04T00:00:05.000Z","failurePolicy":"fail-fast","head":"HEAD","lanes":[],',
+    '"message":"yeet publish proof passed.","mode":"publish","outcome":"success","packetPaths":[],',
+    '"pushed":true,"runId":"feat_merge-loop"}',
+  ],
+  ""
+);
 
 describe("YeetVerdictJson", () => {
   // Regression: the writer used to render the DECODED verdict through a generic

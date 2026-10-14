@@ -241,8 +241,9 @@ const indexTree = Effect.fn("Provenance.indexTree")(function* (
       if (/^(Attachments|Attachment\d+)$/.test(path.basename(directory))) return;
       const messagePath = relative(path, children, directory);
       const parts = Str.split(messagePath, "/");
-      const artifactIndex = parts.findIndex((part) => /^artifact:[a-f\d]{64}\.export$/.test(part));
-      if (artifactIndex < 0) return;
+      const artifactIndexOption = A.findFirstIndex(parts, (part) => /^artifact:[a-f\d]{64}\.export$/.test(part));
+      if (O.isNone(artifactIndexOption)) return;
+      const artifactIndex = artifactIndexOption.value;
       const artifact = Str.replace(/\.export$/, "")(parts[artifactIndex] ?? "");
       sources = HashSet.add(sources, artifact);
       const headers = parseOutlookHeaders(yield* fs.readFileString(file).pipe(Effect.mapError(fail)));
@@ -653,8 +654,8 @@ const metadataVersion = Effect.fn("Provenance.metadataVersion")(function* (comma
   return Str.trim(result.stdout);
 });
 const decodeNaturalOption = S.decodeOption(S.Natural);
-const selectMetadata = (tags: typeof ExiftoolTagSet.Type | undefined) => {
-  const source = tags ?? {};
+const selectMetadata = (tags: O.Option<typeof ExiftoolTagSet.Type>) => {
+  const source = O.getOrElse(tags, (): typeof ExiftoolTagSet.Type => ({}));
   const fields = R.getSomes(
     R.map(metadataFields, (keys, key) =>
       A.findFirst(keys, (candidate) => source[candidate] !== undefined).pipe(
@@ -691,10 +692,11 @@ const readBatch = Effect.fn("Provenance.readBatch")(function* (
         Effect.fn(function* (file) {
           const safeFile = yield* checked(root, file);
           const info = yield* fs.stat(safeFile);
-          const tags = decoded.find((tags) => tags.SourceFile === file);
-          const errorTag = tags?.["ExifTool:Error"] ?? tags?.Error;
-          const error =
-            tags === undefined ? "exiftool returned no row for file" : O.getOrUndefined(normalizeTag(errorTag));
+          const tags = A.findFirst(decoded, (row) => row.SourceFile === file);
+          const error = O.match(tags, {
+            onNone: () => "exiftool returned no row for file",
+            onSome: (row) => O.getOrUndefined(normalizeTag(row["ExifTool:Error"] ?? row.Error)),
+          });
           const { fields, retained } = selectMetadata(tags);
           return P.MetadataCensusRecord.make({
             engine: "exiftool",

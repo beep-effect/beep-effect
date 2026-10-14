@@ -7,6 +7,7 @@ import {
 } from "@beep/runpod";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const sameRunpodDocsError = S.toEquivalence(RunpodDocsError);
@@ -45,7 +46,7 @@ describe("generated literal schemas carry no codec statics", () => {
   };
 
   it("keeps the LiteralKit keyed helpers and attaches no decode facade", () => {
-    for (const [name, schema] of Object.entries(schemas)) {
+    for (const [name, schema] of R.toEntries(schemas)) {
       expect(Reflect.has(schema, "decodeOption"), name).toBe(false);
       expect(Reflect.has(schema, "fromUnknown"), name).toBe(false);
       expect(Reflect.has(schema, "Enum"), name).toBe(true);

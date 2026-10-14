@@ -218,7 +218,7 @@ const documentFromRecord = (
     return Effect.succeedNone;
   }
   const downloadOptions = O.fromUndefinedOr(record.downloadOptionBag).pipe(
-    O.filter(Array.isArray),
+    O.filter((value): value is ReadonlyArray<unknown> => A.isArray(value)),
     O.flatMap((options) => A.findFirst(options, isDownloadOptionRecord)),
     O.map((option) => option.downloadUrl)
   );

@@ -23,6 +23,7 @@ import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Queue from "effect/Queue";
+import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
@@ -55,7 +56,7 @@ const READ_ONLY_TOOL_NAMES = [
 ];
 
 const sortedNames = (tools: Readonly<Record<string, unknown>>): ReadonlyArray<string> =>
-  pipe(Object.keys(tools), A.sort(Order.String));
+  pipe(R.keys(tools), A.sort(Order.String));
 
 const hints = (tool: Tool.Any) => ({
   destructive: Context.get(tool.annotations, Tool.Destructive),
@@ -131,7 +132,7 @@ describe("@beep/m365-mcp outbox server", () => {
   it("keeps the read-only toolkit free of write tools", () => {
     assert.deepStrictEqual(sortedNames(M365Toolkit.tools), READ_ONLY_TOOL_NAMES);
     assert.deepStrictEqual(A.intersection(sortedNames(M365Toolkit.tools), OUTBOX_TOOL_NAMES), []);
-    for (const tool of Object.values(M365Toolkit.tools)) {
+    for (const tool of R.values(M365Toolkit.tools)) {
       assert.deepStrictEqual(hints(tool), { destructive: false, openWorld: true, readOnly: true }, tool.name);
     }
     assert.isTrue(Str.startsWith("Read-only Microsoft 365")(M365_MCP_INSTRUCTIONS));

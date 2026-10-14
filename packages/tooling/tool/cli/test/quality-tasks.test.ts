@@ -686,23 +686,26 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "quality-bun-audit-" });
             yield* fs.writeFileString(
               path.join(repoRoot, "osv-scanner.toml"),
-              [
-                "[[IgnoredVulns]]",
-                'id = "GHSA-active"',
-                "",
-                "[[IgnoredVulns]]",
-                'id = "GHSA-expired"',
-                "ignoreUntil = definitely-not-a-date",
-                "",
-                "[[PackageOverrides]]",
-                'name = "braces"',
-                'version = "3.0.3"',
-                'ecosystem = "npm"',
-                "ignore = true",
-                "effectiveUntil = 2999-01-01T00:00:00Z",
-                'reason = "GHSA-vfj7-8cjw-p6xm is reviewed for this exact package version."',
-                "",
-              ].join("\n")
+              A.join(
+                [
+                  "[[IgnoredVulns]]",
+                  'id = "GHSA-active"',
+                  "",
+                  "[[IgnoredVulns]]",
+                  'id = "GHSA-expired"',
+                  "ignoreUntil = definitely-not-a-date",
+                  "",
+                  "[[PackageOverrides]]",
+                  'name = "braces"',
+                  'version = "3.0.3"',
+                  'ecosystem = "npm"',
+                  "ignore = true",
+                  "effectiveUntil = 2999-01-01T00:00:00Z",
+                  'reason = "GHSA-vfj7-8cjw-p6xm is reviewed for this exact package version."',
+                  "",
+                ],
+                "\n"
+              )
             );
             yield* fs.writeFileString(path.join(repoRoot, "bun.lock"), '{"packages":{"braces":["braces@3.0.3"]}}');
 
@@ -721,15 +724,18 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     );
 
     it("mirrors exact package overrides only for their sole unexpired lockfile version", () => {
-      const config = [
-        "[[PackageOverrides]]",
-        'name = "braces"',
-        'version = "3.0.3"',
-        'ecosystem = "npm"',
-        "ignore = true",
-        "effectiveUntil = 2026-10-16T00:00:00Z",
-        'reason = "GHSA-vfj7-8cjw-p6xm reviewed."',
-      ].join("\n");
+      const config = A.join(
+        [
+          "[[PackageOverrides]]",
+          'name = "braces"',
+          'version = "3.0.3"',
+          'ecosystem = "npm"',
+          "ignore = true",
+          "effectiveUntil = 2026-10-16T00:00:00Z",
+          'reason = "GHSA-vfj7-8cjw-p6xm reviewed."',
+        ],
+        "\n"
+      );
       const now = DateTime.makeUnsafe("2026-10-02T00:00:00Z");
       const select = (lock: string, at = now) => selectOsvPackageOverrideIdsForAudit(config, lock, at);
 
@@ -3514,10 +3520,13 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     it("collects Effect tsgo warnings from successful package results", () => {
       const diagnostics = collectEffectTsgoDiagnosticLines([
         {
-          output: [
-            "src/example.test.ts:1:1 - warning TS90001: unsafe effect(service) usage",
-            "src/example.test.ts:2:1 - warning TS99999: unrelated diagnostic",
-          ].join("\n"),
+          output: A.join(
+            [
+              "src/example.test.ts:1:1 - warning TS90001: unsafe effect(service) usage",
+              "src/example.test.ts:2:1 - warning TS99999: unrelated diagnostic",
+            ],
+            "\n"
+          ),
         },
       ]);
 
@@ -3987,8 +3996,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             '{"schemaVersion":"lint-policy-sweeps/v1","deprecatedApis":"shards"}'
           );
           yield* fs.makeDirectory(binDir, { recursive: true });
-          yield* fs.writeFileString(fakeBunxPath, ["#!/usr/bin/env sh", "exit 0", ""].join("\n"));
-          yield* fs.writeFileString(fakeBunPath, ["#!/usr/bin/env sh", "exit 0", ""].join("\n"));
+          yield* fs.writeFileString(fakeBunxPath, A.join(["#!/usr/bin/env sh", "exit 0", ""], "\n"));
+          yield* fs.writeFileString(fakeBunPath, A.join(["#!/usr/bin/env sh", "exit 0", ""], "\n"));
           yield* fs.chmod(fakeBunxPath, 0o755);
           yield* fs.chmod(fakeBunPath, 0o755);
 
@@ -7406,7 +7415,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           const repoRoot = process.cwd();
           const filePath = path.join(repoRoot, "packages/example/src/Index.ts");
           const fileWith = (tag: string) =>
-            ["/**", " * Fixture module.", " *", ` * @${tag} example`, " */", "export const v = 1;", ""].join("\n");
+            A.join(["/**", " * Fixture module.", " *", ` * @${tag} example`, " */", "export const v = 1;", ""], "\n");
 
           yield* fs.makeDirectory(path.dirname(filePath), { recursive: true });
           yield* fs.writeFileString(filePath, fileWith("module"));
@@ -8111,25 +8120,31 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           yield* fs.makeDirectory(binDir, { recursive: true });
           yield* fs.writeFileString(
             fakeBunxPath,
-            [
-              "#!/usr/bin/env sh",
-              "printf 'bunx %s\\n' \"$*\" >> quality-commands.log",
-              'if [ "$1" = "turbo" ] && [ "$2" = "run" ] && [ "$3" = "lint" ]; then',
-              "  exit 7",
-              "fi",
-              "exit 0",
-              "",
-            ].join("\n")
+            A.join(
+              [
+                "#!/usr/bin/env sh",
+                "printf 'bunx %s\\n' \"$*\" >> quality-commands.log",
+                'if [ "$1" = "turbo" ] && [ "$2" = "run" ] && [ "$3" = "lint" ]; then',
+                "  exit 7",
+                "fi",
+                "exit 0",
+                "",
+              ],
+              "\n"
+            )
           );
           yield* fs.writeFileString(
             fakeBunPath,
-            [
-              "#!/usr/bin/env sh",
-              "printf 'bun %s\\n' \"$*\" >> quality-commands.log",
-              'case " $* " in *" cache execute -- run lint "*) exit 7 ;; esac',
-              "exit 0",
-              "",
-            ].join("\n")
+            A.join(
+              [
+                "#!/usr/bin/env sh",
+                "printf 'bun %s\\n' \"$*\" >> quality-commands.log",
+                'case " $* " in *" cache execute -- run lint "*) exit 7 ;; esac',
+                "exit 0",
+                "",
+              ],
+              "\n"
+            )
           );
           yield* fs.chmod(fakeBunxPath, 0o755);
           yield* fs.chmod(fakeBunPath, 0o755);

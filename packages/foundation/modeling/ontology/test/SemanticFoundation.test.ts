@@ -178,7 +178,7 @@ it.layer(Layer.merge(TaxonomyLoader.layer, BunFileSystem.layer), { timeout: "30 
             verified: true,
           })
         );
-        const manifest = ['{"format":"owl","id":"folio","verified":true}', entry].join("\n");
+        const manifest = A.join(['{"format":"owl","id":"folio","verified":true}', entry], "\n");
         const slice = yield* encodeVendorConceptSlice(
           VendorConceptSlice.make({
             "@id": folioEmailCommunicationIri,

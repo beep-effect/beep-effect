@@ -21,6 +21,7 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -80,7 +81,7 @@ const isAtProtocolHandle = (value: string): boolean => {
   return (
     labels.length >= 2 &&
     topLevelLabel !== undefined &&
-    labels.every((label) => handleLabelPattern.test(label)) &&
+    A.every(labels, (label) => handleLabelPattern.test(label)) &&
     handleTopLevelLabelPattern.test(topLevelLabel)
   );
 };
@@ -102,9 +103,9 @@ const isNsid = (value: string): boolean => {
     segments.length >= 3 &&
     name !== undefined &&
     firstAuthoritySegment !== undefined &&
-    authority.join(".").length <= MAX_NSID_AUTHORITY_LENGTH &&
+    A.join(authority, ".").length <= MAX_NSID_AUTHORITY_LENGTH &&
     nsidFirstAuthorityLabelPattern.test(firstAuthoritySegment) &&
-    authority.every((segment) => nsidAuthorityLabelPattern.test(segment)) &&
+    A.every(authority, (segment) => nsidAuthorityLabelPattern.test(segment)) &&
     nsidNamePattern.test(name)
   );
 };

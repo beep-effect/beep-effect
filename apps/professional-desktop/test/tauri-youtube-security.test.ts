@@ -1,8 +1,12 @@
 import { YouTubeWatchRequest } from "@beep/editor/youtube-embed";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
+import { pipe } from "effect/Function";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const decodeUnknownYouTubeWatchRequestResult = S.decodeUnknownResult(YouTubeWatchRequest);
 
@@ -38,13 +42,12 @@ const webExtensionSource = await Bun.file("src-tauri/web-extension/youtube_refer
 const youtubeWatchCapability =
   "https://www.youtube.com/watch[?]v=[A-Za-z0-9_-][A-Za-z0-9_-][A-Za-z0-9_-][A-Za-z0-9_-][A-Za-z0-9_-][A-Za-z0-9_-][A-Za-z0-9_-][A-Za-z0-9_-][A-Za-z0-9_-][A-Za-z0-9_-][A-Za-z0-9_-]";
 
-const directiveSources = (policy: string, name: string): ReadonlyArray<string> => {
-  const directive = policy
-    .split(";")
-    .map((value) => value.trim())
-    .find((value) => value.startsWith(`${name} `));
-  return directive === undefined ? [] : directive.split(/\s+/u).slice(1);
-};
+const directiveSources = (policy: string, name: string): ReadonlyArray<string> =>
+  pipe(
+    A.map(policy.split(";"), Str.trim),
+    A.findFirst((value) => value.startsWith(`${name} `)),
+    O.match({ onNone: () => [], onSome: (directive) => directive.split(/\s+/u).slice(1) })
+  );
 
 describe("packaged YouTube security boundaries", () => {
   it("loads the Linux request extension before creating the main WebView", () => {
@@ -87,14 +90,17 @@ describe("packaged YouTube security boundaries", () => {
   });
 
   it("scopes the native opener to canonical YouTube watch URLs", () => {
-    const opener = capability.permissions.find(
+    const opener = A.findFirst(
+      capability.permissions,
       (permission) => typeof permission !== "string" && permission.identifier === "opener:allow-open-url"
     );
 
-    expect(opener).toEqual({
-      identifier: "opener:allow-open-url",
-      allow: [{ url: youtubeWatchCapability }],
-    });
+    expect(opener).toEqual(
+      O.some({
+        identifier: "opener:allow-open-url",
+        allow: [{ url: youtubeWatchCapability }],
+      })
+    );
   });
 
   it("rejects watch-url lookalikes and suffixes at the typed event boundary", () => {

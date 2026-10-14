@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -112,7 +113,7 @@ const isSafeLocalInternal = (local: string): boolean => {
     return false;
   }
 
-  return characters.slice(1, -1).every(isSafeMiddle);
+  return A.every(characters.slice(1, -1), isSafeMiddle);
 };
 
 const isSafePrefixInternal = (prefix: string): boolean => {
@@ -132,7 +133,7 @@ const isSafePrefixInternal = (prefix: string): boolean => {
     return false;
   }
 
-  return characters.slice(1, -1).every((character) => isPnChars(character) || character === ".");
+  return A.every(characters.slice(1, -1), (character) => isPnChars(character) || character === ".");
 };
 
 const percentEncodeCharacter = (character: string): string => {
@@ -339,7 +340,7 @@ const acceptsEscapedUnits = (units: ReadonlyArray<LocalUnit>): boolean => {
     return false;
   }
 
-  return units.slice(1, -1).every(isMiddleUnit);
+  return A.every(units.slice(1, -1), isMiddleUnit);
 };
 
 const acceptsEscapedLocalInternal = (local: string): boolean =>

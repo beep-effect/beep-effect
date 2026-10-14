@@ -443,16 +443,19 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           yield* seedLabWorkspace();
           yield* fs.writeFileString(
             path.join("apps", "labs", "probe", "lab.manifest.json"),
-            [
-              "{",
-              '  "schemaVersion": "lab-manifest/v1",',
-              '  "purpose": "Probe lab",',
-              '  "created": "2026-08-16",',
-              '  "disposition": "active",',
-              '  "postgresSchema": "lab_probe"',
-              "}",
-              "",
-            ].join("\n")
+            A.join(
+              [
+                "{",
+                '  "schemaVersion": "lab-manifest/v1",',
+                '  "purpose": "Probe lab",',
+                '  "created": "2026-08-16",',
+                '  "disposition": "active",',
+                '  "postgresSchema": "lab_probe"',
+                "}",
+                "",
+              ],
+              "\n"
+            )
           );
           yield* runDeletePackage(["probe", "--dry-run"]);
           const lines = yield* TestConsole.logLines;
@@ -473,16 +476,19 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           yield* seedLabWorkspace();
           yield* fs.writeFileString(
             path.join("apps", "labs", "probe", "lab.manifest.json"),
-            [
-              "{",
-              '  "schemaVersion": "lab-manifest/v1",',
-              '  "purpose": "Probe lab",',
-              '  "created": "2026-08-16",',
-              '  "disposition": "active",',
-              '  "postgresSchema": "lab_other"',
-              "}",
-              "",
-            ].join("\n")
+            A.join(
+              [
+                "{",
+                '  "schemaVersion": "lab-manifest/v1",',
+                '  "purpose": "Probe lab",',
+                '  "created": "2026-08-16",',
+                '  "disposition": "active",',
+                '  "postgresSchema": "lab_other"',
+                "}",
+                "",
+              ],
+              "\n"
+            )
           );
 
           const exit = yield* Effect.exit(runDeletePackage(["probe", "--dry-run"]));

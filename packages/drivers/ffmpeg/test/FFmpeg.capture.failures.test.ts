@@ -62,27 +62,30 @@ const numericProbeJson = encodeProbeJson({
   ],
 });
 
-const luminanceEdgeStdout = [
-  // Orphan luma line ahead of any frame header.
-  "lavfi.signalstats.YAVG=99.0",
-  // Malformed frame header: the index is not an integer.
-  "frame:abc  pts:0       pts_time:0",
-  "lavfi.signalstats.YAVG=88.0",
-  "frame:0    pts:0       pts_time:0",
-  // Above the 8-bit ceiling; clamped rather than rejected.
-  "lavfi.signalstats.YAVG=300",
-  // Negative presentation timestamp: the frame header is dropped.
-  "frame:1    pts:512     pts_time:-0.5",
-  "lavfi.signalstats.YAVG=120",
-  "not a frame header and not a luma line",
-  "frame:2    pts:1024    pts_time:0.5",
-  // Matches the luma line shape but is not a number; the sample is dropped.
-  "lavfi.signalstats.YAVG=.",
-  "frame:3    pts:2048    pts_time:1",
-  // Below the floor; clamped rather than rejected.
-  "lavfi.signalstats.YAVG=-12",
-  "",
-].join("\n");
+const luminanceEdgeStdout = A.join(
+  [
+    // Orphan luma line ahead of any frame header.
+    "lavfi.signalstats.YAVG=99.0",
+    // Malformed frame header: the index is not an integer.
+    "frame:abc  pts:0       pts_time:0",
+    "lavfi.signalstats.YAVG=88.0",
+    "frame:0    pts:0       pts_time:0",
+    // Above the 8-bit ceiling; clamped rather than rejected.
+    "lavfi.signalstats.YAVG=300",
+    // Negative presentation timestamp: the frame header is dropped.
+    "frame:1    pts:512     pts_time:-0.5",
+    "lavfi.signalstats.YAVG=120",
+    "not a frame header and not a luma line",
+    "frame:2    pts:1024    pts_time:0.5",
+    // Matches the luma line shape but is not a number; the sample is dropped.
+    "lavfi.signalstats.YAVG=.",
+    "frame:3    pts:2048    pts_time:1",
+    // Below the floor; clamped rather than rejected.
+    "lavfi.signalstats.YAVG=-12",
+    "",
+  ],
+  "\n"
+);
 
 type SpawnScript = {
   readonly ffmpegExitCode: number;

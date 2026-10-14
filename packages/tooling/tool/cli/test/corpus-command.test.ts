@@ -64,6 +64,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import { ChildProcess } from "effect/process";
+import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -296,6 +297,10 @@ const rejectsLegacyPassField = S.is(LiteralKit(["attemptId", "originalSha256", "
 const copiedDerivativeField = S.is(LiteralKit(["childRelativePath", "sha256", "sizeBytes", "sourceObjectId"]));
 const tikaDerivativeField = S.is(LiteralKit(["childRelativePath", "sourceObjectId"]));
 
+// Spreading copies the same own enumerable fields `Object.entries` read, as a plain record.
+const ledgerRecordEntries = (record: TransformationLedgerRecord): ReadonlyArray<readonly [string, unknown]> =>
+  R.toEntries<string, unknown>({ ...record });
+
 const expectedStructuralMutation = (record: TransformationLedgerRecord, field: string): boolean =>
   Match.value(record).pipe(
     Match.when({ recordType: "family-run-start" }, () => !rejectsRunStartField(field)),
@@ -333,7 +338,7 @@ const expectedStructuralMutation = (record: TransformationLedgerRecord, field: s
 
 const expectedSystematicStructuralVerdicts = (records: ReadonlyArray<TransformationLedgerRecord>) =>
   A.flatMap(records, (record) =>
-    A.flatMap(Object.entries(record), ([field, value]) =>
+    A.flatMap(ledgerRecordEntries(record), ([field, value]) =>
       O.match(mutatedEvidenceValue(value), {
         onNone: A.empty,
         onSome: () => [expectedStructuralMutation(record, field)],
@@ -674,7 +679,7 @@ const mutatedEvidenceValue = (value: unknown): O.Option<unknown> => {
   if (typeof value === "string") return O.some(`${value}/mutated`);
   if (typeof value === "number") return O.some(value + 1);
   if (typeof value === "boolean") return O.some(!value);
-  if (Array.isArray(value)) return O.some(A.append(value, value[0] ?? "mutated"));
+  if (A.isArray(value)) return O.some(A.append(value, value[0] ?? "mutated"));
   if (value === undefined) return O.some("mutated");
   return O.none();
 };
@@ -683,7 +688,7 @@ const systematicEvidenceMutations = (
   records: ReadonlyArray<TransformationLedgerRecord>
 ): ReadonlyArray<ReadonlyArray<TransformationLedgerRecord>> =>
   A.flatMap(records, (record, recordIndex) =>
-    A.flatMap(Object.entries(record), ([field, value]) =>
+    A.flatMap(ledgerRecordEntries(record), ([field, value]) =>
       O.match(mutatedEvidenceValue(value), {
         onNone: A.empty,
         onSome: (mutatedValue) => {
@@ -840,7 +845,7 @@ const helperVariantVerdicts = (
   summary: FamilySummary
 ): ReadonlyArray<EvidenceVerdicts> => {
   const fieldExpected = A.flatMap(records, (record) =>
-    A.flatMap(Object.entries(record), ([field, value]) =>
+    A.flatMap(ledgerRecordEntries(record), ([field, value]) =>
       O.match(mutatedEvidenceValue(value), {
         onNone: A.empty,
         onSome: () => [
@@ -875,7 +880,7 @@ const assertDecodedMutations = (
   // typed mutations beside the original whole-ledger-clone exercise.
   let typedIndex = 6;
   A.forEach(records, (record) =>
-    A.forEach(Object.entries(record), ([field, value]) =>
+    A.forEach(ledgerRecordEntries(record), ([field, value]) =>
       O.match(mutatedEvidenceValue(value), {
         onNone: () => {},
         onSome: () => {
@@ -1094,7 +1099,7 @@ const setUint64 = (view: DataView, offset: number, value: bigint): void => {
 };
 
 const writeUtf16 = (view: DataView, offset: number, text: string): void => {
-  Array.from(text).forEach((char, index) => {
+  A.forEach(Array.from(text), (char, index) => {
     view.setUint16(offset + index * 2, char.charCodeAt(0), true);
   });
 };
@@ -1183,9 +1188,9 @@ it.layer(testLayer, { timeout: "30 seconds" })("Corpus recycle-bin parsing", (it
       RecycleBinScanEntry.make({ kind: "content", pairKey: "C3.txt", relativePath: "$RC3.txt" }),
     ]);
 
-    expect(pairing.matched.map((pair) => pair.pairKey)).toStrictEqual(["A1.docx"]);
-    expect(pairing.unmatchedMetadata.map((entry) => entry.relativePath)).toStrictEqual(["$IB2.pdf"]);
-    expect(pairing.unmatchedContent.map((entry) => entry.relativePath)).toStrictEqual(["$RC3.txt"]);
+    expect(A.map(pairing.matched, (pair) => pair.pairKey)).toStrictEqual(["A1.docx"]);
+    expect(A.map(pairing.unmatchedMetadata, (entry) => entry.relativePath)).toStrictEqual(["$IB2.pdf"]);
+    expect(A.map(pairing.unmatchedContent, (entry) => entry.relativePath)).toStrictEqual(["$RC3.txt"]);
   });
 });
 
@@ -1236,7 +1241,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus catalog", (it) => {
         record("source-a", "$RAB12CD.docx", digestContent, 1_024, path.join(sourceADir, "$RAB12CD.docx")),
         record("source-a", "$RZZ99XX.pdf", digestLoose, 5_000, path.join(sourceADir, "$RZZ99XX.pdf")),
       ];
-      yield* fs.writeFileString(path.join(rawDir, "provenance.jsonl"), `${manifestLines.join("\n")}\n`);
+      yield* fs.writeFileString(path.join(rawDir, "provenance.jsonl"), `${A.join(manifestLines, "\n")}\n`);
 
       const summary = yield* catalogCorpus(CorpusCatalogOptions.make({ corpusRoot }));
 
@@ -1756,7 +1761,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus extract and salvage", (it
         record("note.txt", txtDigest, 14, txtPath),
         record("copy/note-copy.txt", txtDigest, 14, txtPath),
       ];
-      yield* fs.writeFileString(path.join(corpusRoot, "raw", "provenance.jsonl"), `${manifestLines.join("\n")}\n`);
+      yield* fs.writeFileString(path.join(corpusRoot, "raw", "provenance.jsonl"), `${A.join(manifestLines, "\n")}\n`);
 
       const summary = yield* extractCorpus(
         CorpusExtractOptions.make({

@@ -50,8 +50,18 @@ const separatedLogLevel = (argv: ReadonlyArray<string>, index: number): string |
  * @category utils
  * @since 0.0.0
  */
-export const shouldRenderFailureCause = (argv: ReadonlyArray<string>): boolean =>
-  argv.some(
-    (entry, index) =>
-      entry === VERBOSE_FLAG || isVerboseLevel(inlineLogLevel(entry)) || isVerboseLevel(separatedLogLevel(argv, index))
-  );
+export const shouldRenderFailureCause = (argv: ReadonlyArray<string>): boolean => {
+  // This module stays import-free (bin-main.ts loads it before every fast path),
+  // so the scan is a plain index loop rather than an effect/Array helper.
+  for (let index = 0; index < argv.length; index++) {
+    const entry = argv[index];
+    if (
+      entry === VERBOSE_FLAG ||
+      (entry !== undefined && isVerboseLevel(inlineLogLevel(entry))) ||
+      isVerboseLevel(separatedLogLevel(argv, index))
+    ) {
+      return true;
+    }
+  }
+  return false;
+};

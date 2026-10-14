@@ -120,7 +120,7 @@ const LinkRelationListArbitrary = Arbitrary.schema(LinkRelationList);
 const htmlUrlValidationBase = pipe(parseURL("https://html.invalid/"), O.fromNullOr);
 const text = (value: string): Text => Text.make({ value });
 const hasRule = (root: Parameters<typeof inspectConformance>[0], rule: string): boolean =>
-  inspectConformance(root).some((issue) => issue.rule === rule);
+  A.some(inspectConformance(root), (issue) => issue.rule === rule);
 const issuesAtPath = (
   root: Parameters<typeof inspectConformance>[0],
   path: ReadonlyArray<string>
@@ -299,10 +299,12 @@ describe("@beep/html numeric and id conformance", () => {
           MapElement.make({ children: [], name: O.some("duplicate") }),
         ],
       });
-      expect(inspectConformance(duplicateMaps).filter((issue) => issue.rule === "duplicateAttribute")).toStrictEqual([
-        expect.objectContaining({ path: ["children.0", "attributes.name"] }),
-        expect.objectContaining({ path: ["children.1", "attributes.name"] }),
-      ]);
+      expect(A.filter(inspectConformance(duplicateMaps), (issue) => issue.rule === "duplicateAttribute")).toStrictEqual(
+        [
+          expect.objectContaining({ path: ["children.0", "attributes.name"] }),
+          expect.objectContaining({ path: ["children.1", "attributes.name"] }),
+        ]
+      );
       assertExitFailure(
         Exit.match(yield* Effect.exit(conform(duplicateMaps)), {
           onSuccess: Exit.succeed,
@@ -430,7 +432,7 @@ describe("@beep/html numeric and id conformance", () => {
       children: [Span.make({ children: [], id: O.some("dup") })],
       id: O.some("dup"),
     });
-    expect(inspectConformance(element).filter((issue) => issue.rule === "duplicateId")).toStrictEqual([
+    expect(A.filter(inspectConformance(element), (issue) => issue.rule === "duplicateId")).toStrictEqual([
       expect.objectContaining({ path: ["attributes.id"] }),
       expect.objectContaining({ path: ["children.0", "attributes.id"] }),
     ]);
@@ -438,7 +440,7 @@ describe("@beep/html numeric and id conformance", () => {
     const fragment = Fragment.make({
       children: [Div.make({ children: [], id: O.some("dup") }), Span.make({ children: [], id: O.some("dup") })],
     });
-    expect(inspectConformance(fragment).filter((issue) => issue.rule === "duplicateId")).toStrictEqual([
+    expect(A.filter(inspectConformance(fragment), (issue) => issue.rule === "duplicateId")).toStrictEqual([
       expect.objectContaining({ path: ["children.0", "attributes.id"] }),
       expect.objectContaining({ path: ["children.1", "attributes.id"] }),
     ]);
@@ -454,7 +456,7 @@ describe("@beep/html numeric and id conformance", () => {
         }),
       ],
     });
-    expect(inspectConformance(mixedNamespace).filter((issue) => issue.rule === "duplicateId")).toStrictEqual([
+    expect(A.filter(inspectConformance(mixedNamespace), (issue) => issue.rule === "duplicateId")).toStrictEqual([
       expect.objectContaining({ path: ["children.0", "attributes.id"] }),
       expect.objectContaining({ path: ["children.1", "attributes.id"] }),
     ]);
@@ -472,7 +474,7 @@ describe("@beep/html numeric and id conformance", () => {
         }),
       ],
     });
-    expect(inspectConformance(document).filter((issue) => issue.rule === "duplicateId")).toStrictEqual([
+    expect(A.filter(inspectConformance(document), (issue) => issue.rule === "duplicateId")).toStrictEqual([
       expect.objectContaining({ path: ["children.0", "children.1", "children.0", "attributes.id"] }),
       expect.objectContaining({ path: ["children.0", "children.1", "children.1", "attributes.id"] }),
     ]);
@@ -656,11 +658,12 @@ describe("@beep/html generated special-child grammars", () => {
 
   it.effect("composes mixed transparent child alternatives with inherited fallback content", () =>
     Effect.gen(function* () {
-      const mixedTransparent = Object.values(ELEMENT_META).filter(
+      const mixedTransparent = A.filter(
+        R.values(ELEMENT_META),
         (meta) => meta.children.includes("transparent") && meta.children.length > 1
       );
       expect(mixedTransparent).toHaveLength(3);
-      expect(mixedTransparent.map((meta) => meta.tag)).toEqual(expect.arrayContaining(["audio", "map", "video"]));
+      expect(A.map(mixedTransparent, (meta) => meta.tag)).toEqual(expect.arrayContaining(["audio", "map", "video"]));
 
       const valid = [
         Div.make({
@@ -1019,7 +1022,7 @@ describe("@beep/html generated special-child grammars", () => {
       }
       const allBodyOk = P.make({
         children: [
-          Link.make({ as: O.some("script"), href: O.some("/resource"), rel: O.some(bodyOkLinkTypes.join(" ")) }),
+          Link.make({ as: O.some("script"), href: O.some("/resource"), rel: O.some(A.join(bodyOkLinkTypes, " ")) }),
         ],
       });
       expect(inspectConformance(allBodyOk)).toStrictEqual([]);
@@ -1322,7 +1325,7 @@ describe("@beep/html generated special-child grammars", () => {
           ],
         });
       const twoVisible = documentWith(Main.make({ children: [] }), Main.make({ children: [] }));
-      expect(inspectConformance(twoVisible).filter((issue) => issue.rule === "documentCardinality")).toStrictEqual([
+      expect(A.filter(inspectConformance(twoVisible), (issue) => issue.rule === "documentCardinality")).toStrictEqual([
         expect.objectContaining({ path: ["children.0", "children.1", "children.0"] }),
         expect.objectContaining({ path: ["children.0", "children.1", "children.1"] }),
       ]);
@@ -2048,15 +2051,15 @@ describe("@beep/html foreign browser fixed points", () => {
     });
 
   it("covers every standard SVG and MathML adjustment entry", () => {
-    for (const [lowercase, canonical] of Object.entries(SVG_ELEMENT_NAME_ADJUSTMENTS)) {
+    for (const [lowercase, canonical] of R.toEntries(SVG_ELEMENT_NAME_ADJUSTMENTS)) {
       expect(hasRule(svgRoot(canonical), "foreignIntegration")).toBe(false);
       expect(hasRule(svgRoot(lowercase), "foreignIntegration")).toBe(true);
     }
-    for (const [lowercase, canonical] of Object.entries(SVG_ATTRIBUTE_NAME_ADJUSTMENTS)) {
+    for (const [lowercase, canonical] of R.toEntries(SVG_ATTRIBUTE_NAME_ADJUSTMENTS)) {
       expect(hasRule(svgRoot("path", { [canonical]: "value" }), "foreignIntegration")).toBe(false);
       expect(hasRule(svgRoot("path", { [lowercase]: "value" }), "foreignIntegration")).toBe(true);
     }
-    for (const [lowercase, canonical] of Object.entries(MATHML_ATTRIBUTE_NAME_ADJUSTMENTS)) {
+    for (const [lowercase, canonical] of R.toEntries(MATHML_ATTRIBUTE_NAME_ADJUSTMENTS)) {
       const valid = ForeignElement.make({
         namespace: "mathml",
         name: "math",

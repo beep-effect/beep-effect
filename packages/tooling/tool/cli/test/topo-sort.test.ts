@@ -1,5 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as R from "effect/Record";
 
 const bucketNames = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"] as const;
 
@@ -11,10 +13,10 @@ const workspaceDependencyNames = (packageJson: {
   readonly peerDependencies?: Readonly<Record<string, string>>;
   readonly optionalDependencies?: Readonly<Record<string, string>>;
 }): ReadonlyArray<string> => [
-  ...Object.keys(packageJson.dependencies ?? {}),
-  ...Object.keys(packageJson.devDependencies ?? {}),
-  ...Object.keys(packageJson.peerDependencies ?? {}),
-  ...Object.keys(packageJson.optionalDependencies ?? {}),
+  ...R.keys(packageJson.dependencies ?? {}),
+  ...R.keys(packageJson.devDependencies ?? {}),
+  ...R.keys(packageJson.peerDependencies ?? {}),
+  ...R.keys(packageJson.optionalDependencies ?? {}),
 ];
 
 describe("topo-sort", () => {
@@ -28,10 +30,10 @@ describe("topo-sort", () => {
         stdout: "pipe",
       });
       const stdout = new TextDecoder().decode(result.stdout);
-      const lines = stdout
-        .split("\n")
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0 && !line.startsWith("$"));
+      const lines = A.filter(
+        A.map(stdout.split("\n"), (line) => line.trim()),
+        (line) => line.length > 0 && !line.startsWith("$")
+      );
       const repoCli = yield* Effect.promise(() =>
         Bun.file(`${repoRoot}/packages/tooling/tool/cli/package.json`).json()
       );

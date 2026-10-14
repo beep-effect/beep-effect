@@ -50,7 +50,6 @@ import * as Console from "effect/Console";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import { Command } from "effect/cli";
-import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
@@ -111,9 +110,9 @@ const decodeFileProcessingFailureRecordLine = (line: string) => decodeFileProces
 const decodeSourceProcessingRecordLine = (line: string) => decodeSourceProcessingRecord(line);
 const isString = (value: unknown): value is string => typeof value === "string";
 
-class FilesTestError extends Data.TaggedError("FilesTestError")<{ readonly cause: unknown }> {}
+class FilesTestError extends S.TaggedError<FilesTestError>()("FilesTestError", { cause: S.Defect() }) {}
 
-const filesTestError = (cause: unknown) => new FilesTestError({ cause });
+const filesTestError = (cause: unknown) => FilesTestError.make({ cause });
 
 const expectFilesCommandFailure = Effect.fn("FilesCommandTest.expectFilesCommandFailure")(function* (
   args: ReadonlyArray<string>
@@ -1125,9 +1124,9 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
       expect(pstRecord.status).toBe("succeeded");
       expect(xlsRecord.status).toBe("skipped");
       expect(childRecords.length).toBeGreaterThan(0);
-      expect(childRecords.every((record) => record.child.relativePath.startsWith("children/"))).toBe(true);
-      expect(childRecords.some((record) => record.child.relativePath.endsWith("/Message.eml"))).toBe(true);
-      expect(childRecords.some((record) => record.child.relativePath.endsWith(".messages.jsonl"))).toBe(true);
+      expect(A.every(childRecords, (record) => record.child.relativePath.startsWith("children/"))).toBe(true);
+      expect(A.some(childRecords, (record) => record.child.relativePath.endsWith("/Message.eml"))).toBe(true);
+      expect(A.some(childRecords, (record) => record.child.relativePath.endsWith(".messages.jsonl"))).toBe(true);
       for (const record of childRecords) {
         expect(yield* fs.exists(path.join(outDir, record.child.relativePath))).toBe(true);
       }
@@ -1466,9 +1465,9 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
       );
       const logLines = A.filter(yield* TestConsole.logLines, isString);
       expect(pstRecord.status).toBe("succeeded");
-      expect(childRecords.some((record) => record.child.relativePath.endsWith("/Message.eml"))).toBe(false);
-      expect(childRecords.some((record) => record.child.relativePath.endsWith(".messages.jsonl"))).toBe(true);
-      expect(logLines.some((line) => line.includes("engine warning(s)"))).toBe(true);
+      expect(A.some(childRecords, (record) => record.child.relativePath.endsWith("/Message.eml"))).toBe(false);
+      expect(A.some(childRecords, (record) => record.child.relativePath.endsWith(".messages.jsonl"))).toBe(true);
+      expect(A.some(logLines, (line) => line.includes("engine warning(s)"))).toBe(true);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -4629,7 +4628,7 @@ exit 74
       expect(manifest.summary.materializedCount).toBe(2);
       expect(manifest.summary.coreCount).toBe(1);
       expect(manifest.summary.archiveCount).toBe(1);
-      expect(manifest.entries.map((entry) => entry.outputRelativePath)).toEqual([
+      expect(A.map(manifest.entries, (entry) => entry.outputRelativePath)).toEqual([
         `canonical/active/core/twv1_${firstBefore.slice("sha256:".length, "sha256:".length + 20)}.png`,
         `archive/technical-quality/twv1_${secondBefore.slice("sha256:".length, "sha256:".length + 20)}.png`,
       ]);
@@ -4683,7 +4682,7 @@ exit 74
       const manifestPath = path.join(outDir, "manifests", "image-curation-manifest.json");
       const manifest = yield* decodeImageCurationManifest(yield* fs.readFileString(manifestPath));
       const hashPrefix = sourceHash.slice("sha256:".length, "sha256:".length + 20);
-      expect(manifest.entries.map((entry) => entry.outputName)).toEqual([
+      expect(A.map(manifest.entries, (entry) => entry.outputName)).toEqual([
         `twv1_${hashPrefix}.png`,
         `twv1_${hashPrefix}_2.png`,
       ]);

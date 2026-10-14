@@ -554,7 +554,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
       reclaimedBytes: 4096,
       warnings: ["size-probe-failed: could not measure eligible worktree /w/eligible; retirement is unaffected."],
     });
-    const rendered = renderWorktreeReapReportLines(report).join("\n");
+    const rendered = A.join(renderWorktreeReapReportLines(report), "\n");
     expect(rendered).toContain("WORKTREE REAP APPLY");
     expect(rendered).toContain("- retired class=merged-pr branch=feat/retired pr=#7 idle=72.3h bytes=4096 /w/retired");
     expect(rendered).toContain("- eligible class=merged-pr branch=feat/eligible pr=#9 idle=96.0h /w/eligible");

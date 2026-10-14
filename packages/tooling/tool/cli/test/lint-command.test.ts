@@ -93,7 +93,7 @@ const writeSchemaFirstFileFixture = Effect.fn("writeSchemaFirstFileFixture")(fun
   );
   yield* fs.writeFileString("tsconfig.json", `${encodeJson({ compilerOptions: { strictNullChecks: true } })}\n`);
   yield* fs.makeDirectory(path.dirname(relativePath), { recursive: true });
-  yield* fs.writeFileString(relativePath, sourceLines.join("\n"));
+  yield* fs.writeFileString(relativePath, A.join(sourceLines, "\n"));
 });
 
 const writeSchemaFirstSourceFixture = Effect.fn("writeSchemaFirstSourceFixture")(function* (
@@ -1150,14 +1150,17 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           const fs = yield* FileSystem.FileSystem;
           yield* fs.writeFileString(
             "packages/example/src/ReactProps.ts",
-            [
-              'import type React from "react";',
-              "export type RendererProps = {",
-              "  readonly title: string;",
-              "  readonly component: React.FunctionComponent;",
-              "};",
-              "",
-            ].join("\n")
+            A.join(
+              [
+                'import type React from "react";',
+                "export type RendererProps = {",
+                "  readonly title: string;",
+                "  readonly component: React.FunctionComponent;",
+                "};",
+                "",
+              ],
+              "\n"
+            )
           );
 
           yield* fs.makeDirectory("standards");
@@ -1237,27 +1240,33 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           const fs = yield* FileSystem.FileSystem;
           yield* fs.writeFileString(
             "packages/example/src/DefaultFunction.ts",
-            [
-              'import * as S from "effect/Schema";',
-              "const Model = S.Struct({ id: S.String });",
-              "export default function(input: { readonly id: string }): void { void input; }",
-              "void Model;",
-              "",
-            ].join("\n")
+            A.join(
+              [
+                'import * as S from "effect/Schema";',
+                "const Model = S.Struct({ id: S.String });",
+                "export default function(input: { readonly id: string }): void { void input; }",
+                "void Model;",
+                "",
+              ],
+              "\n"
+            )
           );
           yield* fs.writeFileString(
             "packages/example/src/DefaultArrow.ts",
-            [
-              'import * as S from "effect/Schema";',
-              "const Model = S.Struct({ id: S.String });",
-              "export default (input: { readonly id: string }): void => { void input; };",
-              "void Model;",
-              "",
-            ].join("\n")
+            A.join(
+              [
+                'import * as S from "effect/Schema";',
+                "const Model = S.Struct({ id: S.String });",
+                "export default (input: { readonly id: string }): void => { void input; };",
+                "void Model;",
+                "",
+              ],
+              "\n"
+            )
           );
           yield* fs.writeFileString(
             "packages/example/src/DefaultStruct.ts",
-            ['import * as S from "effect/Schema";', "export default S.Struct({ id: S.String });", ""].join("\n")
+            A.join(['import * as S from "effect/Schema";', "export default S.Struct({ id: S.String });", ""], "\n")
           );
 
           yield* fs.makeDirectory("standards");
@@ -1551,7 +1560,9 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
 
             const errorLines = yield* TestConsole.errorLines;
             expectReportedExit(exit);
-            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
+            expect(A.join(A.map(errorLines, String), "\n")).toContain(
+              "  - @beep/example (packages/example) [missing-test-tsconfig]"
+            );
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       15_000
@@ -1616,7 +1627,9 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
 
             const errorLines = yield* TestConsole.errorLines;
             expectReportedExit(exit);
-            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [unwired-test-tsconfig]");
+            expect(A.join(A.map(errorLines, String), "\n")).toContain(
+              "  - @beep/example (packages/example) [unwired-test-tsconfig]"
+            );
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       15_000
@@ -1648,7 +1661,9 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
 
             const errorLines = yield* TestConsole.errorLines;
             expectReportedExit(exit);
-            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [unwired-test-tsconfig]");
+            expect(A.join(A.map(errorLines, String), "\n")).toContain(
+              "  - @beep/example (packages/example) [unwired-test-tsconfig]"
+            );
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       15_000
@@ -1719,7 +1734,9 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
 
             const errorLines = yield* TestConsole.errorLines;
             expectReportedExit(exit);
-            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
+            expect(A.join(A.map(errorLines, String), "\n")).toContain(
+              "  - @beep/example (packages/example) [missing-test-tsconfig]"
+            );
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       15_000
@@ -1792,7 +1809,9 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
 
             const errorLines = yield* TestConsole.errorLines;
             expectReportedExit(exit);
-            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
+            expect(A.join(A.map(errorLines, String), "\n")).toContain(
+              "  - @beep/example (packages/example) [missing-test-tsconfig]"
+            );
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       15_000
@@ -1875,7 +1894,9 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
 
             const errorLines = yield* TestConsole.errorLines;
             expectReportedExit(exit);
-            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
+            expect(A.join(A.map(errorLines, String), "\n")).toContain(
+              "  - @beep/example (packages/example) [missing-test-tsconfig]"
+            );
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       15_000

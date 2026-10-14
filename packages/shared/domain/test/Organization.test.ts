@@ -7,6 +7,7 @@ import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const decodeOrganizationLicenseTier = S.decodeEffect(Organization.LicenseTier);
@@ -116,13 +117,13 @@ describe("Organization", () => {
 
   it("materializes product-entity variants for the organization model", () => {
     expect(Organization.Model.sql.tableName).toBe(Shared.OrganizationId.tableName);
-    expect(Object.keys(Organization.Model.insert.fields)).not.toContain("id");
-    expect(Object.keys(Organization.Model.insert.fields)).not.toContain("rowVersion");
-    expect(Object.keys(Organization.Model.insert.fields)).toContain("publicId");
-    expect(Object.keys(Organization.Model.update.fields)).toContain("id");
-    expect(Object.keys(Organization.Model.update.fields)).toContain("rowVersion");
-    expect(Object.keys(Organization.Model.update.fields)).not.toContain("publicId");
-    expect(Object.keys(Organization.Model.jsonCreate.fields)).toEqual([
+    expect(R.keys(Organization.Model.insert.fields)).not.toContain("id");
+    expect(R.keys(Organization.Model.insert.fields)).not.toContain("rowVersion");
+    expect(R.keys(Organization.Model.insert.fields)).toContain("publicId");
+    expect(R.keys(Organization.Model.update.fields)).toContain("id");
+    expect(R.keys(Organization.Model.update.fields)).toContain("rowVersion");
+    expect(R.keys(Organization.Model.update.fields)).not.toContain("publicId");
+    expect(R.keys(Organization.Model.jsonCreate.fields)).toEqual([
       "legalName",
       "licenseTier",
       "name",
@@ -130,7 +131,7 @@ describe("Organization", () => {
       "settings",
       "slug",
     ]);
-    expect(Object.keys(Organization.Model.jsonUpdate.fields)).toEqual([
+    expect(R.keys(Organization.Model.jsonUpdate.fields)).toEqual([
       "legalName",
       "licenseTier",
       "name",

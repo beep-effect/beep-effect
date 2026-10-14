@@ -9,7 +9,6 @@ import {
 } from "@beep/repo-cli/test/Artifacts";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { describe, expect, it } from "@effect/vitest";
-import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -19,8 +18,8 @@ import * as S from "effect/Schema";
 
 const testLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
 
-class ArtifactTestError extends Data.TaggedError("ArtifactTestError")<{ readonly message: string }> {}
-const toArtifactError = (cause: unknown): ArtifactTestError => new ArtifactTestError({ message: String(cause) });
+class ArtifactTestError extends S.TaggedError<ArtifactTestError>()("ArtifactTestError", { message: S.String }) {}
+const toArtifactError = (cause: unknown): ArtifactTestError => ArtifactTestError.make({ message: String(cause) });
 
 const withTempDir = Effect.fn("withTempDir")(function* <A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) {
   const fs = yield* FileSystem.FileSystem;
@@ -94,7 +93,7 @@ describe("internal/artifacts/GeneratedFileDrift", () => {
     it.effect(
       "rejects the mutually-exclusive --write/--check combination",
       Effect.fnUntraced(function* () {
-        const conflict = Effect.fail(new ArtifactTestError({ message: "conflict" }));
+        const conflict = Effect.fail(ArtifactTestError.make({ message: "conflict" }));
         const failure = yield* assertExclusiveModeFlags({
           write: true,
           check: true,
@@ -142,8 +141,8 @@ describe("internal/artifacts/GeneratedFileDrift", () => {
           const missing = yield* checkGeneratedFile({
             path: filePath,
             content,
-            onMissing: Effect.fail(new ArtifactTestError({ message: "missing" })),
-            onStale: Effect.fail(new ArtifactTestError({ message: "stale" })),
+            onMissing: Effect.fail(ArtifactTestError.make({ message: "missing" })),
+            onStale: Effect.fail(ArtifactTestError.make({ message: "stale" })),
             onCurrent: Effect.void,
             onError: toArtifactError,
           }).pipe(Effect.flip);
@@ -153,8 +152,8 @@ describe("internal/artifacts/GeneratedFileDrift", () => {
           const stale = yield* checkGeneratedFile({
             path: filePath,
             content,
-            onMissing: Effect.fail(new ArtifactTestError({ message: "missing" })),
-            onStale: Effect.fail(new ArtifactTestError({ message: "stale" })),
+            onMissing: Effect.fail(ArtifactTestError.make({ message: "missing" })),
+            onStale: Effect.fail(ArtifactTestError.make({ message: "stale" })),
             onCurrent: Effect.void,
             onError: toArtifactError,
           }).pipe(Effect.flip);
@@ -164,8 +163,8 @@ describe("internal/artifacts/GeneratedFileDrift", () => {
           const current = yield* checkGeneratedFile({
             path: filePath,
             content,
-            onMissing: Effect.fail(new ArtifactTestError({ message: "missing" })),
-            onStale: Effect.fail(new ArtifactTestError({ message: "stale" })),
+            onMissing: Effect.fail(ArtifactTestError.make({ message: "missing" })),
+            onStale: Effect.fail(ArtifactTestError.make({ message: "stale" })),
             onCurrent: Effect.succeed("current"),
             onError: toArtifactError,
           });
@@ -186,8 +185,8 @@ describe("internal/artifacts/GeneratedFileDrift", () => {
             path: filePath,
             content: "{}\n",
             onWrote: Effect.void,
-            onMissing: Effect.fail(new ArtifactTestError({ message: "missing" })),
-            onStale: Effect.fail(new ArtifactTestError({ message: "stale" })),
+            onMissing: Effect.fail(ArtifactTestError.make({ message: "missing" })),
+            onStale: Effect.fail(ArtifactTestError.make({ message: "stale" })),
             onCurrent: Effect.void,
             onError: toArtifactError,
           });

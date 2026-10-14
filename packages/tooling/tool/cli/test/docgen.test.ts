@@ -3772,7 +3772,7 @@ export const parseValue = (value: string): string => value.trim();
           ])
         );
 
-        expect((yield* TestConsole.errorLines).join("\n")).toContain("--confirm-runpod-eval");
+        expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain("--confirm-runpod-eval");
         expectReportedExit(exit);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
     { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
@@ -3797,7 +3797,7 @@ export const parseValue = (value: string): string => value.trim();
           ])
         );
 
-        expect((yield* TestConsole.errorLines).join("\n")).toContain("--readiness-timeout-ms");
+        expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain("--readiness-timeout-ms");
         expectReportedExit(exit);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
     { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }

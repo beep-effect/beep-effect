@@ -70,11 +70,14 @@ const acpRegressionFixture: S.Json = {
   },
 };
 
-const rawSchemaModule = [
-  "const __recursive_Example = Schema.suspend((): Schema.Schema<Example> => Example);",
-  "export type Example = Schema.Schema.Type<typeof Example>;",
-  'export const Example = Schema.Struct({ count: Schema.Number.annotate({ description: "count" }), index: Schema.Number.check(Schema.isInt()) }).annotate({ title: "Example", description: "top level" });',
-].join("\n");
+const rawSchemaModule = A.join(
+  [
+    "const __recursive_Example = Schema.suspend((): Schema.Schema<Example> => Example);",
+    "export type Example = Schema.Schema.Type<typeof Example>;",
+    'export const Example = Schema.Struct({ count: Schema.Number.annotate({ description: "count" }), index: Schema.Number.check(Schema.isInt()) }).annotate({ title: "Example", description: "top level" });',
+  ],
+  "\n"
+);
 
 const tinySwagger: S.Json = {
   swagger: "2.0",
@@ -419,17 +422,20 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit", (i
         format: "httpapi",
         output: { path: "http.gen.ts" },
       });
-      const raw = [
-        'import * as Effect from "effect/Effect";',
-        'import * as Schema from "effect/Schema";',
-        'import { HttpApi, HttpApiSchema } from "effect/http-api";',
-        'import { unused } from "fixture";',
-        'export class Api extends HttpApi.make("fixture") {}',
-        "export type Payload = { readonly value: string };",
-        "export const Payload = Schema.Struct({ value: Schema.String });",
-        "export const make = Effect.succeed(Api);",
-        "export const NotFound = HttpApiSchema.Empty(404);",
-      ].join("\n");
+      const raw = A.join(
+        [
+          'import * as Effect from "effect/Effect";',
+          'import * as Schema from "effect/Schema";',
+          'import { HttpApi, HttpApiSchema } from "effect/http-api";',
+          'import { unused } from "fixture";',
+          'export class Api extends HttpApi.make("fixture") {}',
+          "export type Payload = { readonly value: string };",
+          "export const Payload = Schema.Struct({ value: Schema.String });",
+          "export const make = Effect.succeed(Api);",
+          "export const NotFound = HttpApiSchema.Empty(404);",
+        ],
+        "\n"
+      );
       const output = yield* kit.postProcess(raw, httpConfig);
 
       expect(output).toContain("@packageDocumentation");

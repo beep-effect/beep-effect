@@ -129,7 +129,7 @@ describe("codex findings reject-scan traversal of untrusted payloads", () => {
 
     expect(hits.length).toBeGreaterThan(0);
     expect(JSON.stringify(hits)).not.toContain(secret);
-    expect(described.join(" ")).not.toContain(secret);
+    expect(A.join(described, " ")).not.toContain(secret);
     expect(described).toEqual(["payload.findings[0].title (secret-shaped-value)"]);
   });
 });

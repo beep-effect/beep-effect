@@ -255,12 +255,15 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
       const output = path.join(root, "rows");
       yield* fs.writeFileString(
         input,
-        [
-          'import { it } from "@effect/vitest";',
-          'import { Effect } from "effect";',
-          "export const withRepo = () => Effect.acquireRelease(acquire, release);",
-          'it("plain runtime", () => Effect.runSync(program));',
-        ].join("\n")
+        A.join(
+          [
+            'import { it } from "@effect/vitest";',
+            'import { Effect } from "effect";',
+            "export const withRepo = () => Effect.acquireRelease(acquire, release);",
+            'it("plain runtime", () => Effect.runSync(program));',
+          ],
+          "\n"
+        )
       );
       const timing = yield* runEffectVitestLint(
         EffectVitestLintOptions.make({ census: false, write: false, rows: O.some(output) })

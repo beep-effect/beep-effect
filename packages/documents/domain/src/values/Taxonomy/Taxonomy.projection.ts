@@ -244,7 +244,7 @@ export const projectFiledDocumentPath = Effect.fn("Documents.Taxonomy.projectFil
   const segments = [rootSegment, clientSegment, matterSegment, ...taxonomySegments, fileName];
   return ProjectedVaultPath.make({
     fileName,
-    relativePath: segments.join("/"),
+    relativePath: A.join(segments, "/"),
     segments,
     taxonomySegments,
   });
@@ -316,7 +316,7 @@ export const projectInboxDocumentPath = Effect.fn("Documents.Taxonomy.projectInb
   const segments = [inboxSegment, batchSegment, fileName];
   return ProjectedVaultPath.make({
     fileName,
-    relativePath: segments.join("/"),
+    relativePath: A.join(segments, "/"),
     segments,
     taxonomySegments: [],
   });

@@ -91,15 +91,18 @@ const ffprobeJson = flow(
   ],
 });
 
-const luminanceStdout = [
-  "frame:0    pts:0       pts_time:0",
-  "lavfi.signalstats.YAVG=16.5",
-  "frame:1    pts:512     pts_time:0.0333333",
-  "lavfi.signalstats.YAVG=200.25",
-  "frame:2    pts:1024    pts_time:0.0666667",
-  "lavfi.signalstats.YAVG=70.8008",
-  "",
-].join("\n");
+const luminanceStdout = A.join(
+  [
+    "frame:0    pts:0       pts_time:0",
+    "lavfi.signalstats.YAVG=16.5",
+    "frame:1    pts:512     pts_time:0.0333333",
+    "lavfi.signalstats.YAVG=200.25",
+    "frame:2    pts:1024    pts_time:0.0666667",
+    "lavfi.signalstats.YAVG=70.8008",
+    "",
+  ],
+  "\n"
+);
 
 const makeStream = (text: string) => (text.length === 0 ? Stream.empty : Stream.succeed(encoder.encode(text)));
 

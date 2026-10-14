@@ -127,7 +127,7 @@ describe("Sentence Monoids", () => {
     "SentenceArray",
     NLP.SentenceArray,
     Arbitrary.schema(S.Array(S.String).check(S.isMinLength(0), S.isMaxLength(10))),
-    (a, b) => a.length === b.length && a.every((x, i) => x === b[i])
+    (a, b) => a.length === b.length && A.every(a, (x, i) => x === b[i])
   );
 });
 

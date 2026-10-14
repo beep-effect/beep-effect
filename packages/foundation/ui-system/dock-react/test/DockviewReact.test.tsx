@@ -139,7 +139,7 @@ describe("DockviewReact", { concurrent: false }, () => {
       sizeRoot();
       yield* Effect.promise(() => waitFor(() => expect(screen.getByTestId("panel-panel-1").isConnected).toBe(true)));
       const tabs = screen.getAllByRole("tab");
-      expect(tabs.map((tab) => tab.getAttribute("data-panel-id"))).toEqual(["panel-1", "panel-2"]);
+      expect(A.map(tabs, (tab) => tab.getAttribute("data-panel-id"))).toEqual(["panel-1", "panel-2"]);
       const pane = screen.getByTestId("dockview-react").querySelector<HTMLElement>("[data-group-id='group-1']");
       expect(pane?.style.getPropertyValue("--dock-width")).toBe("800px");
       expect(pane?.style.getPropertyValue("--dock-height")).toBe("400px");
@@ -165,7 +165,7 @@ describe("DockviewReact", { concurrent: false }, () => {
       expect(O.getOrThrow(graph.registry.get(graph.activePanelAtom(group1))).id).toBe(panel2Id);
       fireEvent.click(screen.getByRole("button", { name: "Close Two" }));
       yield* graph.awaitIdle;
-      expect(graph.registry.get(graph.panelsAtom).map((panel) => panel.id)).toEqual([panel1Id]);
+      expect(A.map(graph.registry.get(graph.panelsAtom), (panel) => panel.id)).toEqual([panel1Id]);
       fireEvent.click(screen.getByRole("button", { name: "Close One" }));
       yield* graph.awaitIdle;
       expect(graph.registry.get(graph.workspaceAtom).kind).toBe("empty");

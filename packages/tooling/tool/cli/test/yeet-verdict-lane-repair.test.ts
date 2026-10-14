@@ -104,61 +104,70 @@ const cheapGatesStep = wrapperStep("full:00-cheap-gates", "full:cheap-gates", "c
 
 // Sequential pre-push tier: the OSV lane passes and prints its marker, then
 // coverage fails on a property flake. The whole-output scan used to pick OSV.
-const fullProofOutput = [
-  "[beep-cli] pre-push: running lane quality:security",
-  "[beep-cli] quality:security: bun run beep quality github-checks security",
-  "[github-checks] security: osv scan",
-  "[beep-cli] security:osv-scan: docker run --rm ghcr.io/google/osv-scanner:latest --lockfile bun.lock",
-  "No vulnerabilities found (checked 2309 packages, 2 ignored)",
-  "[beep-cli] quality:security: ok in 4200ms",
-  "[beep-cli] pre-push: running lane quality:coverage",
-  "[beep-cli] quality:coverage: bun run beep ci lane coverage",
-  "FAIL packages/acp/test/protocol.test.ts > round-trips every request",
-  "Error: Property failed after 12 tests",
-  "[beep-cli] quality:coverage: failed in 91000ms",
-  "[beep-cli] pre-push: first red quality:coverage; skipped 1 lane(s) after red",
-  '[beep-quality-task-lane-run] {"schemaVersion":"quality-task-lane-run/v1","lanes":[]}',
-].join("\n");
+const fullProofOutput = A.join(
+  [
+    "[beep-cli] pre-push: running lane quality:security",
+    "[beep-cli] quality:security: bun run beep quality github-checks security",
+    "[github-checks] security: osv scan",
+    "[beep-cli] security:osv-scan: docker run --rm ghcr.io/google/osv-scanner:latest --lockfile bun.lock",
+    "No vulnerabilities found (checked 2309 packages, 2 ignored)",
+    "[beep-cli] quality:security: ok in 4200ms",
+    "[beep-cli] pre-push: running lane quality:coverage",
+    "[beep-cli] quality:coverage: bun run beep ci lane coverage",
+    "FAIL packages/acp/test/protocol.test.ts > round-trips every request",
+    "Error: Property failed after 12 tests",
+    "[beep-cli] quality:coverage: failed in 91000ms",
+    "[beep-cli] pre-push: first red quality:coverage; skipped 1 lane(s) after red",
+    '[beep-quality-task-lane-run] {"schemaVersion":"quality-task-lane-run/v1","lanes":[]}',
+  ],
+  "\n"
+);
 
 // Concurrent cheap tier: changeset-status launches last, so its marker is the
 // latest needle inside the first failure-looking window (a benign "0 errors"
 // line), while goals:index-check is the lane that actually went red.
-const cheapGatesOutput = [
-  "[beep-cli] cheap-gates: running lane goals:index-check",
-  "[beep-cli] cheap-gates: running lane lint:effect-imports",
-  "[beep-cli] cheap-gates: running lane quality:changeset-status",
-  "[beep-cli] goals:index-check: bun run beep goals index --check",
-  "[beep-cli] lint:effect-imports: bun run beep laws effect-imports --check",
-  "[beep-cli] quality:changeset-status: bun run changeset:status:since-main",
-  "effect-imports: 0 errors in 412 files",
-  "[beep-cli] lint:effect-imports: ok in 300ms",
-  "🦋  info Changesets cover every changed package.",
-  "[beep-cli] quality:changeset-status: ok in 900ms",
-  "local goals/INDEX.md drifts from goals/*/ops/manifest.json; run bun run beep goals index --write",
-  "[beep-cli] goals:index-check: failed in 1200ms",
-  "[beep-cli] cheap-gates: first red goals:index-check; skipped 0 lane(s) after red",
-  "[beep-cli] cheap-gates: failed 1 step(s)",
-  "[beep-cli]   goals:index-check: exit 1",
-  "[beep-cli]     command: bun run beep goals index --check",
-].join("\n");
+const cheapGatesOutput = A.join(
+  [
+    "[beep-cli] cheap-gates: running lane goals:index-check",
+    "[beep-cli] cheap-gates: running lane lint:effect-imports",
+    "[beep-cli] cheap-gates: running lane quality:changeset-status",
+    "[beep-cli] goals:index-check: bun run beep goals index --check",
+    "[beep-cli] lint:effect-imports: bun run beep laws effect-imports --check",
+    "[beep-cli] quality:changeset-status: bun run changeset:status:since-main",
+    "effect-imports: 0 errors in 412 files",
+    "[beep-cli] lint:effect-imports: ok in 300ms",
+    "🦋  info Changesets cover every changed package.",
+    "[beep-cli] quality:changeset-status: ok in 900ms",
+    "local goals/INDEX.md drifts from goals/*/ops/manifest.json; run bun run beep goals index --write",
+    "[beep-cli] goals:index-check: failed in 1200ms",
+    "[beep-cli] cheap-gates: first red goals:index-check; skipped 0 lane(s) after red",
+    "[beep-cli] cheap-gates: failed 1 step(s)",
+    "[beep-cli]   goals:index-check: exit 1",
+    "[beep-cli]     command: bun run beep goals index --check",
+  ],
+  "\n"
+);
 
 // Concurrent pre-push tier: security launches first, lint-policy launches
 // second, security finishes after lint-policy launched, and only then does
 // lint-policy print its typos marker and fail. A sibling outcome line used to
 // end lint-policy's segment before the marker.
-const concurrentTypoOutput = [
-  "[beep-cli] pre-push: running lane quality:security",
-  "[beep-cli] pre-push: running lane quality:lint-policy",
-  "[beep-cli] quality:security: bun run beep quality github-checks security",
-  "[beep-cli] quality:lint-policy: bun run beep ci lane lint-policy",
-  "No vulnerabilities found (checked 2309 packages, 2 ignored)",
-  "[beep-cli] quality:security: ok in 4200ms",
-  "[beep-cli] lint:typos: typos",
-  "error: misspelling found in docs/README.md",
-  "[beep-cli] lint:typos: failed in 12ms",
-  "[beep-cli] quality:lint-policy: failed in 40ms",
-  "[beep-cli] pre-push: first red quality:lint-policy; skipped 0 lane(s) after red",
-].join("\n");
+const concurrentTypoOutput = A.join(
+  [
+    "[beep-cli] pre-push: running lane quality:security",
+    "[beep-cli] pre-push: running lane quality:lint-policy",
+    "[beep-cli] quality:security: bun run beep quality github-checks security",
+    "[beep-cli] quality:lint-policy: bun run beep ci lane lint-policy",
+    "No vulnerabilities found (checked 2309 packages, 2 ignored)",
+    "[beep-cli] quality:security: ok in 4200ms",
+    "[beep-cli] lint:typos: typos",
+    "error: misspelling found in docs/README.md",
+    "[beep-cli] lint:typos: failed in 12ms",
+    "[beep-cli] quality:lint-policy: failed in 40ms",
+    "[beep-cli] pre-push: first red quality:lint-policy; skipped 0 lane(s) after red",
+  ],
+  "\n"
+);
 
 describe("yeet verdict lane repair commands", () => {
   it("documents the whole-output scan trap the lane-run record replaces", () => {
@@ -199,20 +208,23 @@ describe("yeet verdict lane repair commands", () => {
   });
 
   it("keeps a sub-lane marker found inside the red lane's own segment over its launch command", () => {
-    const output = [
-      "[beep-cli] pre-push: running lane quality:security",
-      "[beep-cli] quality:security: bun run beep quality github-checks security",
-      "[beep-cli] security:osv-scan: docker run --rm ghcr.io/google/osv-scanner:latest",
-      "No vulnerabilities found (checked 2309 packages, 2 ignored)",
-      "[beep-cli] quality:security: ok in 4200ms",
-      "[beep-cli] pre-push: running lane quality:lint-policy",
-      "[beep-cli] quality:lint-policy: bun run beep ci lane lint-policy",
-      "[beep-cli] lint:typos: typos",
-      "error: misspelling found in docs/README.md",
-      "[beep-cli] lint:typos: failed in 12ms",
-      "[beep-cli] quality:lint-policy: failed in 40ms",
-      "[beep-cli] pre-push: first red quality:lint-policy; skipped 2 lane(s) after red",
-    ].join("\n");
+    const output = A.join(
+      [
+        "[beep-cli] pre-push: running lane quality:security",
+        "[beep-cli] quality:security: bun run beep quality github-checks security",
+        "[beep-cli] security:osv-scan: docker run --rm ghcr.io/google/osv-scanner:latest",
+        "No vulnerabilities found (checked 2309 packages, 2 ignored)",
+        "[beep-cli] quality:security: ok in 4200ms",
+        "[beep-cli] pre-push: running lane quality:lint-policy",
+        "[beep-cli] quality:lint-policy: bun run beep ci lane lint-policy",
+        "[beep-cli] lint:typos: typos",
+        "error: misspelling found in docs/README.md",
+        "[beep-cli] lint:typos: failed in 12ms",
+        "[beep-cli] quality:lint-policy: failed in 40ms",
+        "[beep-cli] pre-push: first red quality:lint-policy; skipped 2 lane(s) after red",
+      ],
+      "\n"
+    );
     const verdict = buildVerdict(fullProofStep, output, [
       laneRun("quality:security", "passed", O.some("bun run beep quality github-checks security")),
       laneRun("quality:lint-policy", "failed", O.some("bun run beep ci lane lint-policy")),
@@ -293,41 +305,53 @@ describe("lane-run hint helpers", () => {
     const siblings = HashSet.make("quality:security", "quality:coverage");
     assertSome(
       laneOutputSegment(fullProofOutput, "quality:coverage", siblings),
-      [
-        "[beep-cli] quality:coverage: bun run beep ci lane coverage",
-        "FAIL packages/acp/test/protocol.test.ts > round-trips every request",
-        "Error: Property failed after 12 tests",
-        "[beep-cli] quality:coverage: failed in 91000ms",
-      ].join("\n")
+      A.join(
+        [
+          "[beep-cli] quality:coverage: bun run beep ci lane coverage",
+          "FAIL packages/acp/test/protocol.test.ts > round-trips every request",
+          "Error: Property failed after 12 tests",
+          "[beep-cli] quality:coverage: failed in 91000ms",
+        ],
+        "\n"
+      )
     );
     assertSome(
       laneOutputSegment(fullProofOutput, "quality:security", siblings),
-      [
-        "[beep-cli] quality:security: bun run beep quality github-checks security",
-        "[github-checks] security: osv scan",
-        "[beep-cli] security:osv-scan: docker run --rm ghcr.io/google/osv-scanner:latest --lockfile bun.lock",
-        "No vulnerabilities found (checked 2309 packages, 2 ignored)",
-        "[beep-cli] quality:security: ok in 4200ms",
-      ].join("\n")
+      A.join(
+        [
+          "[beep-cli] quality:security: bun run beep quality github-checks security",
+          "[github-checks] security: osv scan",
+          "[beep-cli] security:osv-scan: docker run --rm ghcr.io/google/osv-scanner:latest --lockfile bun.lock",
+          "No vulnerabilities found (checked 2309 packages, 2 ignored)",
+          "[beep-cli] quality:security: ok in 4200ms",
+        ],
+        "\n"
+      )
     );
     assertNone(laneOutputSegment(fullProofOutput, "quality:docgen", siblings));
   });
 
   it("cuts a segment at a sibling launch line when the lane never printed an outcome", () => {
-    const output = [
-      "[beep-cli] goals:index-check: bun run beep goals index --check",
-      "local goals/INDEX.md drifts from goals/*/ops/manifest.json",
-      "[beep-cli] quality:changeset-status: bun run changeset:status:since-main",
-      "🦋  info Changesets cover every changed package.",
-    ].join("\n");
+    const output = A.join(
+      [
+        "[beep-cli] goals:index-check: bun run beep goals index --check",
+        "local goals/INDEX.md drifts from goals/*/ops/manifest.json",
+        "[beep-cli] quality:changeset-status: bun run changeset:status:since-main",
+        "🦋  info Changesets cover every changed package.",
+      ],
+      "\n"
+    );
     const siblings = HashSet.make("goals:index-check", "quality:changeset-status");
 
     assertSome(
       laneOutputSegment(output, "goals:index-check", siblings),
-      [
-        "[beep-cli] goals:index-check: bun run beep goals index --check",
-        "local goals/INDEX.md drifts from goals/*/ops/manifest.json",
-      ].join("\n")
+      A.join(
+        [
+          "[beep-cli] goals:index-check: bun run beep goals index --check",
+          "local goals/INDEX.md drifts from goals/*/ops/manifest.json",
+        ],
+        "\n"
+      )
     );
   });
 
@@ -336,14 +360,17 @@ describe("lane-run hint helpers", () => {
 
     assertSome(
       laneOutputSegment(concurrentTypoOutput, "quality:lint-policy", siblings),
-      [
-        "[beep-cli] quality:lint-policy: bun run beep ci lane lint-policy",
-        "No vulnerabilities found (checked 2309 packages, 2 ignored)",
-        "[beep-cli] lint:typos: typos",
-        "error: misspelling found in docs/README.md",
-        "[beep-cli] lint:typos: failed in 12ms",
-        "[beep-cli] quality:lint-policy: failed in 40ms",
-      ].join("\n")
+      A.join(
+        [
+          "[beep-cli] quality:lint-policy: bun run beep ci lane lint-policy",
+          "No vulnerabilities found (checked 2309 packages, 2 ignored)",
+          "[beep-cli] lint:typos: typos",
+          "error: misspelling found in docs/README.md",
+          "[beep-cli] lint:typos: failed in 12ms",
+          "[beep-cli] quality:lint-policy: failed in 40ms",
+        ],
+        "\n"
+      )
     );
     assertSome(
       knownSubLaneRemediationFromLaneOutput(concurrentTypoOutput, "quality:lint-policy", siblings),
@@ -354,33 +381,42 @@ describe("lane-run hint helpers", () => {
   it("keeps a passing sibling's outcome label from naming the hint", () => {
     // `docgen` is a catalog needle; the docgen lane passing inside coverage's
     // window must not turn a coverage failure into a docgen hint.
-    const output = [
-      "[beep-cli] quality:docgen: bun run beep ci lane docgen",
-      "[beep-cli] quality:coverage: bun run beep ci lane coverage",
-      "[beep-cli] quality:docgen: ok in 3000ms",
-      "FAIL packages/acp/test/protocol.test.ts > round-trips every request",
-      "[beep-cli] quality:coverage: failed in 91000ms",
-    ].join("\n");
+    const output = A.join(
+      [
+        "[beep-cli] quality:docgen: bun run beep ci lane docgen",
+        "[beep-cli] quality:coverage: bun run beep ci lane coverage",
+        "[beep-cli] quality:docgen: ok in 3000ms",
+        "FAIL packages/acp/test/protocol.test.ts > round-trips every request",
+        "[beep-cli] quality:coverage: failed in 91000ms",
+      ],
+      "\n"
+    );
     const siblings = HashSet.make("quality:docgen", "quality:coverage");
 
     assertSome(
       laneOutputSegment(output, "quality:coverage", siblings),
-      [
-        "[beep-cli] quality:coverage: bun run beep ci lane coverage",
-        "FAIL packages/acp/test/protocol.test.ts > round-trips every request",
-        "[beep-cli] quality:coverage: failed in 91000ms",
-      ].join("\n")
+      A.join(
+        [
+          "[beep-cli] quality:coverage: bun run beep ci lane coverage",
+          "FAIL packages/acp/test/protocol.test.ts > round-trips every request",
+          "[beep-cli] quality:coverage: failed in 91000ms",
+        ],
+        "\n"
+      )
     );
     assertNone(knownSubLaneRemediationFromLaneOutput(output, "quality:coverage", siblings));
   });
 
   it("scans only tagged lines inside the lane segment for markers", () => {
     const siblings = HashSet.make("quality:security", "quality:coverage");
-    const unixNoise = [
-      "[beep-cli] quality:coverage: bun run beep ci lane coverage",
-      "Error: spawn failed on unix socket /tmp/docgen.sock",
-      "[beep-cli] quality:coverage: failed in 91000ms",
-    ].join("\n");
+    const unixNoise = A.join(
+      [
+        "[beep-cli] quality:coverage: bun run beep ci lane coverage",
+        "Error: spawn failed on unix socket /tmp/docgen.sock",
+        "[beep-cli] quality:coverage: failed in 91000ms",
+      ],
+      "\n"
+    );
 
     assertNone(knownSubLaneRemediationFromLaneOutput(fullProofOutput, "quality:coverage", siblings));
     assertNone(knownSubLaneRemediationFromLaneOutput(unixNoise, "quality:coverage", siblings));

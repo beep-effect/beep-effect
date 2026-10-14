@@ -11,13 +11,17 @@ import { defineRelations, is as isDrizzleEntity } from "drizzle-orm";
 import { PgColumn as DrizzlePgColumn, foreignKey, getTableConfig, uniqueKeyName } from "drizzle-orm/pg-core";
 import {
   contains,
+  every,
+  filter,
   findFirst,
   flatMap as flatMapArray,
   forEach,
   get as getArray,
   getSomes,
   head,
+  map as mapArray,
   reduce,
+  some as someArray,
 } from "effect/Array";
 import { equals } from "effect/Equal";
 import {
@@ -33,7 +37,7 @@ import {
   some,
 } from "effect/Option";
 import { hasProperty, isUndefined } from "effect/Predicate";
-import { empty, get as getRecord, set } from "effect/Record";
+import { empty, get as getRecord, keys, set, toEntries } from "effect/Record";
 import { String as StringSchema, TaggedError } from "effect/Schema";
 import { toLowerCase } from "effect/String";
 import {
@@ -330,7 +334,7 @@ const fail = (message: string, sourceTable: string, fieldName: string, targetTab
 const targetFieldKey = (model: AnyModel, columnName: string): Option<string> =>
   hasProperty(model.sql.fields, columnName)
     ? some(columnName)
-    : findFirst(Object.keys(model.sql.columns), (key) =>
+    : findFirst(keys(model.sql.columns), (key) =>
         exists(
           getRecord(model.sql.columns, key),
           (meta) => meta.columnName === columnName || snakeCase(key) === columnName
@@ -345,7 +349,7 @@ const resolveTarget = (
 ): readonly [string, AnyModel] => {
   const exact = findFirst(entries, ([key]) => key === reference.tableName);
   if (isSome(exact)) return exact.value;
-  const physical = entries.filter(([, model]) => model.sql.tableName === reference.tableName);
+  const physical = filter(entries, ([, model]) => model.sql.tableName === reference.tableName);
   if (physical.length === 1) {
     return getOrElse(head(physical), () =>
       fail("Resolved physical table target disappeared.", sourceKey, sourceField, reference.tableName)
@@ -368,8 +372,8 @@ const resolveTarget = (
 };
 
 const collectEnums = (models: ModelRecord): EnumRegistry =>
-  reduce(Object.entries(models), empty<string, PgColumn.EnumInstance>(), (enums, [modelKey, model]) =>
-    reduce(Object.entries(model.sql.columns), enums, (current, [fieldName, meta]) => {
+  reduce(toEntries(models), empty<string, PgColumn.EnumInstance>(), (enums, [modelKey, model]) =>
+    reduce(toEntries(model.sql.columns), enums, (current, [fieldName, meta]) => {
       const column = meta.column;
       if (!PgColumn.Spec.guards.enum(column)) return current;
       if (column.name === "") {
@@ -393,10 +397,10 @@ const collectEnums = (models: ModelRecord): EnumRegistry =>
   );
 
 const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
-  const entries = Object.entries(models);
+  const entries = toEntries(models);
   return flatMapArray(entries, ([sourceKey, model]) =>
     getSomes(
-      Object.keys(model.sql.fields).map((sourceField) =>
+      mapArray(keys<string, Field.Input>(model.sql.fields), (sourceField) =>
         map(
           flatMapOption(getRecord(model.sql.columns, sourceField), (meta) => fromUndefinedOr(meta.references)),
           function collectPgEdge(reference) {
@@ -514,22 +518,22 @@ const collectJunctions = (
   edges: ReadonlyArray<Edge>
 ): ReadonlyArray<Junction> =>
   getSomes(
-    Object.entries(tables).map(([key, table]) => {
+    mapArray(toEntries(tables), ([key, table]) => {
       const primaryKeys = getTableConfig(table).primaryKeys;
       if (primaryKeys.length !== 1) return none();
       const columns = primaryKeys[0]?.columns;
       if (isUndefined(columns) || columns.length !== 2) return none();
-      const columnNames = columns.map((column) => column.name);
-      const candidates = edges.filter((edge) => edge.sourceKey === key);
-      const primaryEdges = candidates.filter((edge) => {
+      const columnNames = mapArray(columns, (column) => column.name);
+      const candidates = filter(edges, (edge) => edge.sourceKey === key);
+      const primaryEdges = filter(candidates, (edge) => {
         if (!hasProperty(table, edge.sourceField)) return false;
         const column = table[edge.sourceField];
         return isDrizzleEntity(column, DrizzlePgColumn) && contains(columnNames, column.name);
       });
       if (
         primaryEdges.length !== 2 ||
-        !columnNames.every((name) =>
-          primaryEdges.some((edge) => {
+        !every(columnNames, (name) =>
+          someArray(primaryEdges, (edge) => {
             if (!hasProperty(table, edge.sourceField)) return false;
             const column = table[edge.sourceField];
             return isDrizzleEntity(column, DrizzlePgColumn) ? column.name === name : false;
@@ -555,40 +559,40 @@ const collectSchemaNames = (
   tables: Readonly<Record<string, TableOf<AnyModel>>>,
   enums: EnumRegistry
 ): ReadonlyArray<SchemaName> => [
-  ...Object.entries(enums).map(([name]): SchemaName => ({ owner: `enum:${name}`, kind: "enum type", name })),
-  ...Object.entries(tables).flatMap(([key, table]) => {
+  ...mapArray(toEntries(enums), ([name]): SchemaName => ({ owner: `enum:${name}`, kind: "enum type", name })),
+  ...flatMapArray(toEntries(tables), ([key, table]) => {
     const config = getTableConfig(table);
     return [
       { owner: `table:${key}`, kind: "table", name: config.name },
-      ...config.indexes.flatMap((value, index) => named(`index:${key}:${index}`, "index", value.config.name)),
-      ...config.primaryKeys.flatMap((value, index) =>
+      ...flatMapArray(config.indexes, (value, index) => named(`index:${key}:${index}`, "index", value.config.name)),
+      ...flatMapArray(config.primaryKeys, (value, index) =>
         named(`primary-key:${key}:${index}`, "primary-key constraint", value.getName())
       ),
-      ...config.uniqueConstraints.flatMap((value, index) =>
+      ...flatMapArray(config.uniqueConstraints, (value, index) =>
         named(`unique:${key}:${index}`, "unique constraint", value.getName())
       ),
-      ...config.columns
-        .filter((column) => column.primary)
-        .map(
-          (_, index): SchemaName => ({
-            owner: `inline-primary-key:${key}:${index}`,
-            kind: "primary-key constraint",
-            name: `${config.name}_pkey`,
-          })
-        ),
-      ...config.columns
-        .filter((column) => column.isUnique)
-        .map(
-          (column, index): SchemaName => ({
-            owner: `inline-unique:${key}:${index}`,
-            kind: "unique constraint",
-            name: column.uniqueName ?? uniqueKeyName(table, [column.name]),
-          })
-        ),
-      ...config.checks.map(
+      ...mapArray(
+        filter(config.columns, (column) => column.primary),
+        (_, index): SchemaName => ({
+          owner: `inline-primary-key:${key}:${index}`,
+          kind: "primary-key constraint",
+          name: `${config.name}_pkey`,
+        })
+      ),
+      ...mapArray(
+        filter(config.columns, (column) => column.isUnique),
+        (column, index): SchemaName => ({
+          owner: `inline-unique:${key}:${index}`,
+          kind: "unique constraint",
+          name: column.uniqueName ?? uniqueKeyName(table, [column.name]),
+        })
+      ),
+      ...mapArray(
+        config.checks,
         (value, index): SchemaName => ({ owner: `check:${key}:${index}`, kind: "check constraint", name: value.name })
       ),
-      ...config.foreignKeys.map(
+      ...mapArray(
+        config.foreignKeys,
         (value, index): SchemaName => ({
           owner: `foreign-key:${key}:${index}`,
           kind: "foreign-key constraint",
@@ -653,16 +657,16 @@ export function schema(models: ModelRecord): unknown {
   // after every table has been projected.
   let runtimeTables = empty<string, TableOf<AnyModel>>();
 
-  forEach(Object.entries(models), ([key, model]) => {
+  forEach(toEntries(models), ([key, model]) => {
     runtimeTables = set(
       runtimeTables,
       key,
       toPgTable(
         model,
         (columns) =>
-          edges
-            .filter((edge) => edge.sourceKey === key)
-            .map((edge) => {
+          mapArray(
+            filter(edges, (edge) => edge.sourceKey === key),
+            (edge) => {
               const targetTable = getOrElse(getRecord(runtimeTables, edge.targetKey), () =>
                 fail("Resolved foreign-key table or column is unavailable.", key, edge.sourceField, edge.targetKey)
               );
@@ -705,7 +709,8 @@ export function schema(models: ModelRecord): unknown {
                 onNone: () => withDelete,
                 onSome: (action) => withDelete.onUpdate(action),
               });
-            }),
+            }
+          ),
         enums
       )
     );
@@ -715,10 +720,10 @@ export function schema(models: ModelRecord): unknown {
   validateSchemaNames(collectSchemaNames(tables, enums), "pg", fail);
   const junctions = collectJunctions(tables, edges);
   const relationsConfig = makeRelationsConfig(models, tables, edges, junctions, fail);
-  const drizzleSchema = reduce(Object.entries(enums), empty<string, unknown>(), (combined, [name, value]) =>
+  const drizzleSchema = reduce(toEntries(enums), empty<string, unknown>(), (combined, [name, value]) =>
     set(combined, `enum:${name}`, value)
   );
-  const combined = reduce(Object.entries(tables), drizzleSchema, (current, [key, value]) =>
+  const combined = reduce(toEntries(tables), drizzleSchema, (current, [key, value]) =>
     set(current, `table:${key}`, value)
   );
 

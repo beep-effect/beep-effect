@@ -20,7 +20,6 @@ import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { and, eq, gt, isNull, lte, or, sql } from "drizzle-orm";
 import { bigint, jsonb, pgTable, serial, text, uniqueIndex } from "drizzle-orm/pg-core";
 import * as Crypto from "effect/Crypto";
-import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -79,9 +78,9 @@ type BeliefRef = {
 
 type MatchBasisKind = "independent-evidence" | "same-source-overlap";
 
-class CandidatePayloadConflict extends Data.TaggedError("CandidatePayloadConflict")<{
-  readonly candidateKey: string;
-}> {}
+class CandidatePayloadConflict extends S.TaggedError<CandidatePayloadConflict>()("CandidatePayloadConflict", {
+  candidateKey: S.String,
+}) {}
 
 const sha256Hex = Effect.fnUntraced(function* (value: string) {
   const crypto = yield* Crypto.Crypto;
@@ -105,12 +104,15 @@ const candidateKey = Effect.fnUntraced(function* (
   basis: { readonly evidenceDigest: string; readonly kind: MatchBasisKind }
 ) {
   return yield* sha256Hex(
-    [
-      "v1",
-      ...pipe(pair, A.fromIterable, A.map(encodeBeliefRef), A.sort(Order.String)),
-      basis.kind,
-      basis.evidenceDigest,
-    ].join("|")
+    A.join(
+      [
+        "v1",
+        ...pipe(pair, A.fromIterable, A.map(encodeBeliefRef), A.sort(Order.String)),
+        basis.kind,
+        basis.evidenceDigest,
+      ],
+      "|"
+    )
   );
 });
 
@@ -342,23 +344,26 @@ const runFirstScope = Effect.fnUntraced(function* () {
     validTo: null,
   };
   const proposalDigest = yield* sha256Hex(
-    [
-      "v1",
-      proposal.proposalId,
-      encodeBeliefRef(proposal.losingBelief),
-      proposal.fact.amount,
-      proposal.validFrom,
-      "<none>",
-      proposal.rationale,
-    ].join("|")
+    A.join(
+      [
+        "v1",
+        proposal.proposalId,
+        encodeBeliefRef(proposal.losingBelief),
+        proposal.fact.amount,
+        `${proposal.validFrom}`,
+        "<none>",
+        proposal.rationale,
+      ],
+      "|"
+    )
   );
-  const payloadDigest = yield* sha256Hex(["v1", "0.95", proposalDigest].join("|"));
+  const payloadDigest = yield* sha256Hex(A.join(["v1", "0.95", proposalDigest], "|"));
 
   const submit = Effect.fnUntraced(function* (key: string, candidatePayloadDigest: string, receivedAt: number) {
     const existing = yield* db.select().from(candidateTable).where(eq(candidateTable.candidateKey, key));
     const current = pipe(existing, A.head);
     if (O.isSome(current) && current.value.payloadDigest !== candidatePayloadDigest) {
-      return yield* new CandidatePayloadConflict({ candidateKey: key });
+      return yield* CandidatePayloadConflict.make({ candidateKey: key });
     }
     const candidate = yield* pipe(
       current,

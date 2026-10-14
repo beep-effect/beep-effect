@@ -59,23 +59,29 @@ const ignoreDecision = Effect.fn("CommitlintConfigTest.ignoreDecision")(function
 
 const bareSubtreeSquash = "Squashed '.repos/effect/' changes from aaaaaaa..bbbbbbb\n\nbody";
 
-const bulletedFullHexSubtreeSquash = [
-  "chore(deps): update dependencies and compatibility (#437)",
-  "",
-  "* Squashed '.repos/effect/' content from commit 1bfce93e6d2bf0794c11733daf51c2390e7de375",
-  "",
-  "git-subtree-dir: .repos/effect",
-  "git-subtree-split: 1bfce93e6d2bf0794c11733daf51c2390e7de375",
-].join("\n");
+const bulletedFullHexSubtreeSquash = A.join(
+  [
+    "chore(deps): update dependencies and compatibility (#437)",
+    "",
+    "* Squashed '.repos/effect/' content from commit 1bfce93e6d2bf0794c11733daf51c2390e7de375",
+    "",
+    "git-subtree-dir: .repos/effect",
+    "git-subtree-split: 1bfce93e6d2bf0794c11733daf51c2390e7de375",
+  ],
+  "\n"
+);
 
-const trailerWithoutMarker = ["chore(deps): update catalog (#587)", "", "git-subtree-dir: .repos/effect"].join("\n");
+const trailerWithoutMarker = A.join(["chore(deps): update catalog (#587)", "", "git-subtree-dir: .repos/effect"], "\n");
 
-const ordinaryConventionalCommit = [
-  "feat(cli): add a knowledge surface command",
-  "",
-  "Adds the command, its schema, and a regression test. The body wraps well",
-  "under the hundred-character limit so `body-max-line-length` stays happy.",
-].join("\n");
+const ordinaryConventionalCommit = A.join(
+  [
+    "feat(cli): add a knowledge surface command",
+    "",
+    "Adds the command, its schema, and a regression test. The body wraps well",
+    "under the hundred-character limit so `body-max-line-length` stays happy.",
+  ],
+  "\n"
+);
 
 layer(TestLayer)("commitlint.config.ts ignores", (it) => {
   it.effect("ignores a GitHub-squash-merged subtree pull (the regression)", () =>

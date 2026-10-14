@@ -53,6 +53,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Queue from "effect/Queue";
+import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -276,7 +277,7 @@ describe("M365 MCP server", () => {
   );
 
   it("exposes the supported read-only Microsoft 365 tools", () => {
-    const toolNames = pipe(Object.keys(M365Toolkit.tools), A.sort(Order.String));
+    const toolNames = pipe(R.keys(M365Toolkit.tools), A.sort(Order.String));
 
     assert.deepStrictEqual(toolNames, [
       "m365_delta_drive_items",

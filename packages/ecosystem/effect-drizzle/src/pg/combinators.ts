@@ -18,9 +18,12 @@ import {
   empty,
   every,
   findFirst,
+  forEach,
   head,
   isArray,
   isReadonlyArrayEmpty,
+  join,
+  map,
   match as matchArray,
   min,
   some,
@@ -403,7 +406,7 @@ export function enum_(name?: string): unknown {
         astTag: "(encoded literals)",
       });
     });
-    values.forEach(assertPgEnumLabel);
+    forEach(values, assertPgEnumLabel);
     const explicitName = fromUndefinedOr(name);
     if (isSome(explicitName)) assertSqlName(explicitName.value, "pg", "PostgreSQL enum name");
     const resolvedName = getOrElse(explicitName, () => "");
@@ -1046,19 +1049,22 @@ const dimension = (suffix: PgColumn.ArrayDimensionString): Exclude<PgColumn.Arra
 const arrayShape = (value: unknown, depth: number): string =>
   depth === 0 || !isArray(value)
     ? "value"
-    : `${value.length}[${value.map((member) => arrayShape(member, depth - 1)).join(",")}]`;
+    : `${value.length}[${join(
+        map(value, (member) => arrayShape(member, depth - 1)),
+        ","
+      )}]`;
 
 const isRectangular = (value: unknown, depth: number): boolean => {
   if (depth < 2 || !isArray(value) || value.length === 0) return true;
   const expected = arrayShape(value[0], depth - 1);
-  return value.every((member) => arrayShape(member, depth - 1) === expected);
+  return every(value, (member) => arrayShape(member, depth - 1) === expected);
 };
 
 const everyArrayElement = (value: unknown, depth: number, accepts: (value: unknown) => boolean): boolean =>
   value === null ||
   (depth === 0
     ? accepts(value)
-    : isArray(value) && value.every((member) => everyArrayElement(member, depth - 1, accepts)));
+    : isArray(value) && every(value, (member) => everyArrayElement(member, depth - 1, accepts)));
 
 /**
  * Declares a PostgreSQL array over an explicitly compiled scalar element.

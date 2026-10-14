@@ -13,6 +13,8 @@ import { M365Toolkit, M365ToolkitHandlersLive } from "@beep/m365-mcp";
 import { sanitizedToolkit } from "@beep/mcp-kit";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import { McpServerClient } from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
 import * as Effect from "effect/Effect";
@@ -121,11 +123,15 @@ describe("m365-mcp sanitized dispatch", () => {
 
         assert.isFalse(result.isError);
 
-        const parameterAttribute = captured.find((entry) => entry.key === "parameters");
-        assert.isUndefined(parameterAttribute);
+        assertNone(A.findFirst(captured, (entry) => entry.key === "parameters"));
 
-        const toolAttribute = captured.find((entry) => entry.key === "tool");
-        assert.strictEqual(toolAttribute?.value, "m365_get_site");
+        assertSome(
+          O.map(
+            A.findFirst(captured, (entry) => entry.key === "tool"),
+            (entry) => entry.value
+          ),
+          "m365_get_site"
+        );
       })
     );
   });

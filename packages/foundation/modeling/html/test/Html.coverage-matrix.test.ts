@@ -63,7 +63,7 @@ const isHtmlDocument = S.is(HtmlDocument);
 const text = Text.fromValue;
 const comment = Comment.fromValue;
 const hasRule = (root: Parameters<typeof inspectConformance>[0], rule: string): boolean =>
-  inspectConformance(root).some((issue) => issue.rule === rule);
+  A.some(inspectConformance(root), (issue) => issue.rule === rule);
 
 describe("@beep/html conformance branch matrix", () => {
   it("rejects a structurally invalid recursive conformance view", () => {
@@ -223,7 +223,7 @@ describe("@beep/html conformance branch matrix", () => {
       children: [text("label"), comment("shape"), sameNamespace, otherNamespace, Span.make({ children: [] })],
     });
     const issues = inspectConformance(root);
-    expect(issues.filter((issue) => issue.rule === "foreignIntegration")).toHaveLength(2);
+    expect(A.filter(issues, (issue) => issue.rule === "foreignIntegration")).toHaveLength(2);
 
     const foreignWithoutTabIndex = ForeignElement.make({
       namespace: "svg",

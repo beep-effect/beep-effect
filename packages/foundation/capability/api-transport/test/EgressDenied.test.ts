@@ -2,6 +2,7 @@ import { EgressDenied } from "@beep/api-transport";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const decodeEgressDenied = S.decodeUnknownEffect(EgressDenied);
@@ -19,7 +20,7 @@ describe("EgressDenied", () => {
       // probing channel, so the error's serialized form carries the tag and
       // nothing else.
       const encoded = yield* encodeEgressDenied(denial);
-      expect(Object.keys(encoded)).toEqual(["_tag"]);
+      expect(R.keys(encoded)).toEqual(["_tag"]);
     })
   );
 

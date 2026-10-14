@@ -91,7 +91,7 @@ it.layer(makeIdentificationStages(lookup).pipe(Layer.provideMerge(NodeServices.l
           I.UsptoQuery.make({ kind: "application", number: "18900001" }),
           I.UsptoQuery.make({ kind: "patent", number: "99000001" }),
         ];
-        const text = (yield* Effect.forEach(queries, (q) => encode(I.UsptoQuery, q))).join("\n");
+        const text = A.join(yield* Effect.forEach(queries, (q) => encode(I.UsptoQuery, q)), "\n");
         yield* fs.writeFileString(file("queries.jsonl"), text);
         const input = UsptoInput.make({
           input: file("queries.jsonl"),

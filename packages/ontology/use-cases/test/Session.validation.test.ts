@@ -41,7 +41,7 @@ import { ShaclValidationServiceLive } from "@beep/shacl";
 import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -73,20 +73,22 @@ const property = makeBlankNode("shape-material-class-property");
 const testActor = OntologyChangeActor.make("urn:beep:test:validation-actor");
 
 const shapeOperations = (): ReadonlyArray<ChangeOperation> =>
-  [
-    makeQuad(shape, RDF_TYPE, SH_NODE_SHAPE),
-    makeQuad(shape, SH_TARGET_NODE, material),
-    makeQuad(shape, SH_PROPERTY, property),
-    makeQuad(property, SH_PATH, RDF_TYPE),
-    makeQuad(property, SH_HAS_VALUE, OWL_CLASS),
-    makeQuad(property, SH_MIN_COUNT, makeLiteral("1", XSD_INTEGER.value)),
-  ].map((quad) =>
-    ChangeOperation.make({
-      kind: "addQuad",
-      partition: "shapes",
-      quad,
-      actor: testActor,
-    })
+  A.map(
+    [
+      makeQuad(shape, RDF_TYPE, SH_NODE_SHAPE),
+      makeQuad(shape, SH_TARGET_NODE, material),
+      makeQuad(shape, SH_PROPERTY, property),
+      makeQuad(property, SH_PATH, RDF_TYPE),
+      makeQuad(property, SH_HAS_VALUE, OWL_CLASS),
+      makeQuad(property, SH_MIN_COUNT, makeLiteral("1", XSD_INTEGER.value)),
+    ],
+    (quad) =>
+      ChangeOperation.make({
+        kind: "addQuad",
+        partition: "shapes",
+        quad,
+        actor: testActor,
+      })
   );
 
 const testSession = (): Session =>
@@ -110,7 +112,7 @@ describe("Ontology validation and provenance", () => {
       });
     }),
     serialize: Effect.fn("TurtleCodec.serialize")((request) =>
-      Effect.succeed(SerializeTurtleResult.make({ source: request.dataset.quads.map(serializeQuad).join("\n") }))
+      Effect.succeed(SerializeTurtleResult.make({ source: A.join(A.map(request.dataset.quads, serializeQuad), "\n") }))
     ),
   });
   const fileStore = OntologyFileStore.of({
@@ -147,26 +149,28 @@ describe("Ontology validation and provenance", () => {
           baseDataset: makeDataset([makeQuad(material, marker, markerValue)]),
         })
       ),
-      [
-        makeQuad(shapeA, RDF_TYPE, SH_NODE_SHAPE),
-        makeQuad(shapeA, SH_PROPERTY, propertyA),
-        makeQuad(propertyA, SH_PATH, marker),
-        makeQuad(propertyA, SH_HAS_VALUE, requiredA),
-        makeQuad(shapeB, RDF_TYPE, SH_NODE_SHAPE),
-        makeQuad(shapeB, SH_PROPERTY, propertyB),
-        makeQuad(propertyB, SH_PATH, marker),
-        makeQuad(propertyB, SH_HAS_VALUE, requiredB),
-      ].map((quad) =>
-        ChangeOperation.make({
-          kind: "addQuad",
-          partition: "shapes",
-          quad,
-        })
+      A.map(
+        [
+          makeQuad(shapeA, RDF_TYPE, SH_NODE_SHAPE),
+          makeQuad(shapeA, SH_PROPERTY, propertyA),
+          makeQuad(propertyA, SH_PATH, marker),
+          makeQuad(propertyA, SH_HAS_VALUE, requiredA),
+          makeQuad(shapeB, RDF_TYPE, SH_NODE_SHAPE),
+          makeQuad(shapeB, SH_PROPERTY, propertyB),
+          makeQuad(propertyB, SH_PATH, marker),
+          makeQuad(propertyB, SH_HAS_VALUE, requiredB),
+        ],
+        (quad) =>
+          ChangeOperation.make({
+            kind: "addQuad",
+            partition: "shapes",
+            quad,
+          })
       )
     ).session;
     const shacl = ShaclValidationService.of({
       validate: Effect.fn("ShaclValidationService.validate")((request) => {
-        const repaired = request.dataset.quads.map(serializeQuad).includes(serializeQuad(repairQuad));
+        const repaired = A.map(request.dataset.quads, serializeQuad).includes(serializeQuad(repairQuad));
         return Effect.succeed(
           ShaclValidationResult.make({
             conforms: repaired,
@@ -204,9 +208,13 @@ describe("Ontology validation and provenance", () => {
           const result = yield* runner.run(RunOntologyValidationInput.make({ session }));
 
           expect(result.repairs).toHaveLength(1);
-          expect(result.repairs[0]?.operations.map((operation) => serializeQuad(operation.quad))).toEqual([
-            serializeQuad(repairQuad),
-          ]);
+          assertSome(
+            pipe(
+              A.head(result.repairs),
+              O.map((repair) => A.map(repair.operations, (operation) => serializeQuad(operation.quad)))
+            ),
+            [serializeQuad(repairQuad)]
+          );
         })
       );
     });
@@ -322,12 +330,15 @@ describe("Ontology validation and provenance", () => {
           baseDataset: makeDataset([makeQuad(blankFocus, agePath, value)]),
         })
       ),
-      [
-        makeQuad(scenarioShape, RDF_TYPE, SH_NODE_SHAPE),
-        makeQuad(scenarioShape, SH_PROPERTY, propertyNode),
-        makeQuad(propertyNode, SH_PATH, agePath),
-        makeQuad(propertyNode, SH_DATATYPE, XSD_INTEGER),
-      ].map((quad) => ChangeOperation.make({ kind: "addQuad", partition: "shapes", quad }))
+      A.map(
+        [
+          makeQuad(scenarioShape, RDF_TYPE, SH_NODE_SHAPE),
+          makeQuad(scenarioShape, SH_PROPERTY, propertyNode),
+          makeQuad(propertyNode, SH_PATH, agePath),
+          makeQuad(propertyNode, SH_DATATYPE, XSD_INTEGER),
+        ],
+        (quad) => ChangeOperation.make({ kind: "addQuad", partition: "shapes", quad })
+      )
     ).session;
     const shacl = ShaclValidationService.of({
       validate: Effect.fn("ShaclValidationService.validate")(() =>

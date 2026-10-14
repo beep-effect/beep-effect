@@ -231,7 +231,7 @@ const makeLabelLayer = (container: HTMLElement, labels: ReadonlyArray<string>) =
   }
 
   const shown = labels.slice(0, MAX_RENDERED_LABELS);
-  const elements = shown.map((label) => {
+  const elements = A.map(shown, (label) => {
     const element = document.createElement("span");
     element.textContent = label;
     element.setAttribute(
@@ -245,7 +245,7 @@ const makeLabelLayer = (container: HTMLElement, labels: ReadonlyArray<string>) =
 
   container.appendChild(layer);
 
-  const sizes = elements.map((element) => {
+  const sizes = A.map(elements, (element) => {
     const rect = element.getBoundingClientRect();
     return { height: rect.height, width: rect.width };
   });

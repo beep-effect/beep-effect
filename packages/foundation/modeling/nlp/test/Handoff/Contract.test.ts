@@ -110,10 +110,10 @@ describe("AnnotatedDocument round-trip", () => {
     Effect.fnUntraced(function* () {
       const encoded = yield* encodeUnknownContractAnnotatedDocument(sampleDocument);
       const decoded = yield* decodeContractAnnotatedDocument(encoded);
-      expect(decoded.chunks.every((c) => typeof c.provenance.source === "string")).toBe(true);
-      expect(decoded.mentions.every((m) => typeof m.provenance.source === "string")).toBe(true);
-      expect(decoded.entities.every((e) => typeof e.provenance.generatedBy === "string")).toBe(true);
-      expect(decoded.relations.every((r) => typeof r.provenance.timestamp === "number")).toBe(true);
+      expect(A.every(decoded.chunks, (c) => typeof c.provenance.source === "string")).toBe(true);
+      expect(A.every(decoded.mentions, (m) => typeof m.provenance.source === "string")).toBe(true);
+      expect(A.every(decoded.entities, (e) => typeof e.provenance.generatedBy === "string")).toBe(true);
+      expect(A.every(decoded.relations, (r) => typeof r.provenance.timestamp === "number")).toBe(true);
     })
   );
 

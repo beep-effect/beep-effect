@@ -7,6 +7,7 @@ import {
 } from "@beep/utils/HostProcess";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
@@ -49,11 +50,14 @@ it.layer(NodeServices.layer, { timeout: "5 seconds" })("HostProcess browser-eval
     "evaluates the @beep/utils barrel without a process global",
     Effect.fnUntraced(function* () {
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-      const script = [
-        "delete globalThis.process;",
-        'const mod = await import("@beep/utils");',
-        "console.log(JSON.stringify({ platform: mod.currentHostPlatform, arch: mod.currentHostArchitecture }));",
-      ].join("\n");
+      const script = A.join(
+        [
+          "delete globalThis.process;",
+          'const mod = await import("@beep/utils");',
+          "console.log(JSON.stringify({ platform: mod.currentHostPlatform, arch: mod.currentHostArchitecture }));",
+        ],
+        "\n"
+      );
       const command = ChildProcess.make("bun", ["-e", script], {
         cwd: import.meta.dirname,
         stdout: "pipe",

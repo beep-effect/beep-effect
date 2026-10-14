@@ -156,14 +156,6 @@
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
-      "kind": "object-method",
-      "reason": "Corpus CLI client-map loading iterates decoded JSON object entries at the manifest boundary before normalizing labels into a local lookup map.",
-      "owner": "@beep/repo-cli",
-      "issue": "REPO-CLI-CORPUS-CLIENT-MAP-OBJECT-ENTRIES"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
       "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
       "kind": "date-static",
       "reason": "Fallow quality parses ISO timestamps from prior tool reports at the CLI boundary to sort and summarize historical quality envelopes.",

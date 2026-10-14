@@ -133,13 +133,16 @@ it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
       yield* fs.writeFileString(path.join(repoRoot, "turbo.json"), "{}\n");
       yield* fs.writeFileString(
         path.join(repoRoot, ".env"),
-        [
-          "TURBO_API=https://existing.example.test",
-          "TURBO_TOKEN=op://existing/item/field",
-          'TURBO_TEAM=""',
-          "TURBO_CACHE=local:rw,remote:r",
-          "",
-        ].join("\n")
+        A.join(
+          [
+            "TURBO_API=https://existing.example.test",
+            "TURBO_TOKEN=op://existing/item/field",
+            'TURBO_TEAM=""',
+            "TURBO_CACHE=local:rw,remote:r",
+            "",
+          ],
+          "\n"
+        )
       );
 
       const result = yield* Effect.scoped(
@@ -195,13 +198,16 @@ it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
       yield* fs.writeFileString(path.join(repoRoot, "turbo.json"), "{}\n");
       yield* fs.writeFileString(
         path.join(repoRoot, ".env"),
-        [
-          "TURBO_API=https://existing.example.test",
-          "TURBO_TOKEN=op://old-vault/old-item/password",
-          "TURBO_TEAM=existing-team",
-          "TURBO_CACHE=local:rw,remote:r",
-          "",
-        ].join("\n")
+        A.join(
+          [
+            "TURBO_API=https://existing.example.test",
+            "TURBO_TOKEN=op://old-vault/old-item/password",
+            "TURBO_TEAM=existing-team",
+            "TURBO_CACHE=local:rw,remote:r",
+            "",
+          ],
+          "\n"
+        )
       );
 
       const result = yield* Effect.scoped(
@@ -255,13 +261,16 @@ it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
       yield* fs.writeFileString(path.join(repoRoot, "turbo.json"), "{}\n");
       yield* fs.writeFileString(
         path.join(repoRoot, ".env"),
-        [
-          "TURBO_API=https://existing.example.test",
-          "TURBO_TOKEN=resolved-value-must-not-appear",
-          "TURBO_TEAM=existing-team",
-          "TURBO_CACHE=local:rw,remote:r",
-          "",
-        ].join("\n")
+        A.join(
+          [
+            "TURBO_API=https://existing.example.test",
+            "TURBO_TOKEN=resolved-value-must-not-appear",
+            "TURBO_TEAM=existing-team",
+            "TURBO_CACHE=local:rw,remote:r",
+            "",
+          ],
+          "\n"
+        )
       );
 
       const result = yield* Effect.scoped(
@@ -312,13 +321,16 @@ it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
       const setupScriptPath = yield* path.fromFileUrl(new URL("../src/bin.ts", import.meta.url));
       const repoRoot = path.join(tempDir, "repo");
       const envPath = path.join(repoRoot, ".env");
-      const original = [
-        "TURBO_API=https://existing.example.test",
-        "TURBO_TOKEN=op://existing/item/field",
-        "TURBO_TEAM=existing-team",
-        "TURBO_CACHE=local:rw,remote:r",
-        "",
-      ].join("\n");
+      const original = A.join(
+        [
+          "TURBO_API=https://existing.example.test",
+          "TURBO_TOKEN=op://existing/item/field",
+          "TURBO_TEAM=existing-team",
+          "TURBO_CACHE=local:rw,remote:r",
+          "",
+        ],
+        "\n"
+      );
       yield* fs.makeDirectory(repoRoot, { recursive: true });
       yield* fs.writeFileString(path.join(repoRoot, "turbo.json"), "{}\n");
       yield* fs.writeFileString(envPath, original);
@@ -364,14 +376,17 @@ it.layer(testLayer, { timeout: "30 seconds" })("cache remote-reads", (it) => {
       const setupScriptPath = yield* path.fromFileUrl(new URL("../src/bin.ts", import.meta.url));
       const repoRoot = path.join(tempDir, "repo");
       const envPath = path.join(repoRoot, ".env");
-      const original = [
-        "TURBO_API=https://existing.example.test",
-        "TURBO_TOKEN=op://existing/item/field",
-        'TURBO_TEAM=""',
-        "TURBO_TEAM=existing-team",
-        "TURBO_CACHE=local:rw,remote:r",
-        "",
-      ].join("\n");
+      const original = A.join(
+        [
+          "TURBO_API=https://existing.example.test",
+          "TURBO_TOKEN=op://existing/item/field",
+          'TURBO_TEAM=""',
+          "TURBO_TEAM=existing-team",
+          "TURBO_CACHE=local:rw,remote:r",
+          "",
+        ],
+        "\n"
+      );
       yield* fs.makeDirectory(repoRoot, { recursive: true });
       yield* fs.writeFileString(path.join(repoRoot, "turbo.json"), "{}\n");
       yield* fs.writeFileString(envPath, original);

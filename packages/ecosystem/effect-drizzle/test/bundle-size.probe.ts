@@ -1,5 +1,6 @@
 import { BunRuntime } from "@effect/platform-bun";
 import { layer as bunServicesLayer } from "@effect/platform-bun/BunServices";
+import { findFirst, join } from "effect/Array";
 import {
   fail,
   flatMap,
@@ -14,6 +15,7 @@ import {
 } from "effect/Effect";
 import { FileSystem } from "effect/FileSystem";
 import { build as buildLayer } from "effect/Layer";
+import { isNone, isSome } from "effect/Option";
 import { String as StringSchema, TaggedError, Unknown } from "effect/Schema";
 import { buildBundleConsumer, bundleConsumerEntrypointId, esbuildVersion } from "./bundle-build.ts";
 import committedBaseline from "./bundle-size.baseline.json" with { type: "json" };
@@ -56,7 +58,7 @@ const validateBaselineIdentity = () => {
     ? voidEffect
     : fail(
         BundleProbeError.make({
-          message: `Committed baseline identity does not match this probe; re-baseline deliberately: ${mismatches.join("; ")}`,
+          message: `Committed baseline identity does not match this probe; re-baseline deliberately: ${join(mismatches, "; ")}`,
           cause: committedBaseline,
         })
       );
@@ -76,17 +78,17 @@ const writeBaseline = fnUntraced(function* (rawBytes: number) {
 });
 
 const injectedBaseline = (): number | undefined => {
-  const argument = Bun.argv.find((value) => value.startsWith(testBaselineArgumentPrefix));
-  if (argument === undefined) return undefined;
-  const value = Number(argument.slice(testBaselineArgumentPrefix.length));
+  const argument = findFirst(Bun.argv, (value) => value.startsWith(testBaselineArgumentPrefix));
+  if (isNone(argument)) return undefined;
+  const value = Number(argument.value.slice(testBaselineArgumentPrefix.length));
   return Number.isSafeInteger(value) && value >= 0 ? value : undefined;
 };
 
 const resolveBaseline = () => {
-  const argument = Bun.argv.find((value) => value.startsWith(testBaselineArgumentPrefix));
+  const argument = findFirst(Bun.argv, (value) => value.startsWith(testBaselineArgumentPrefix));
   const baseline = injectedBaseline();
-  if (argument !== undefined && baseline === undefined) {
-    return fail(BundleProbeError.make({ message: "Invalid injected test baseline", cause: argument }));
+  if (isSome(argument) && baseline === undefined) {
+    return fail(BundleProbeError.make({ message: "Invalid injected test baseline", cause: argument.value }));
   }
   return succeed(baseline ?? committedBaseline.rawBytes);
 };

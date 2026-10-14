@@ -353,12 +353,12 @@ it.layer(Layer.succeed(Crypto.Crypto, NodeCrypto.make))("@beep/openclaw render a
     };
     const findings = findLossySchemaPlaceholders(placeholderExport, ["channels.telegram", "models.providers.ollama"]);
 
-    expect(findings.map((finding) => Result.getOrThrow(encodeOpenclawSchemaPlaceholderFindingResult(finding)))).toEqual(
-      [
-        { reason: "placeholder", surface: "channels.telegram" },
-        { reason: "placeholder", surface: "models.providers.ollama" },
-      ]
-    );
+    expect(
+      A.map(findings, (finding) => Result.getOrThrow(encodeOpenclawSchemaPlaceholderFindingResult(finding)))
+    ).toEqual([
+      { reason: "placeholder", surface: "channels.telegram" },
+      { reason: "placeholder", surface: "models.providers.ollama" },
+    ]);
   });
 
   it.effect.prop(

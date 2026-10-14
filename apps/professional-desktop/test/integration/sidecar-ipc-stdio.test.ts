@@ -20,7 +20,6 @@ import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect } from "@effect/vitest";
 import * as Chunk from "effect/Chunk";
-import * as Data from "effect/Data";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -28,6 +27,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import { RpcClient, RpcSerialization } from "effect/rpc";
+import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -38,9 +38,12 @@ import { SidecarReadyMarker } from "@/runtime/Migrations";
 const shouldRun = Bun.env.BEEP_TEST_SIDECAR_IPC === "1";
 const bootMarker = SidecarReadyMarker;
 
-class SidecarBinaryResolutionError extends Data.TaggedError("SidecarBinaryResolutionError")<{
-  readonly message: string;
-}> {}
+class SidecarBinaryResolutionError extends S.TaggedError<SidecarBinaryResolutionError>()(
+  "SidecarBinaryResolutionError",
+  {
+    message: S.String,
+  }
+) {}
 
 const resolveSidecarBinaryPath = Effect.try({
   try: () => {
@@ -55,7 +58,7 @@ const resolveSidecarBinaryPath = Effect.try({
     return `${process.cwd()}/src-tauri/binaries/sidecar-${triple}`;
   },
   catch: (cause) =>
-    new SidecarBinaryResolutionError({
+    SidecarBinaryResolutionError.make({
       message: cause instanceof Error ? cause.message : String(cause),
     }),
 });

@@ -601,9 +601,8 @@ const prepareMermaidSvg = (svg: string, renderId: string, source: string): undef
   if (root === null || root.localName !== "svg" || root.namespaceURI !== svgNamespace) return undefined;
 
   for (const style of root.querySelectorAll("style")) {
-    style.textContent = mermaidBuiltInKeyframes.reduce(
-      (styles, keyframes) => Str.replaceAll(keyframes, "")(styles),
-      style.textContent ?? ""
+    style.textContent = A.reduce(mermaidBuiltInKeyframes, style.textContent ?? "", (styles, keyframes) =>
+      Str.replaceAll(keyframes, "")(styles)
     );
   }
   if (!namespaceMermaidIds(root, renderId)) return undefined;

@@ -366,7 +366,7 @@ describe("Pandoc.mapping", () => {
 
       const result = yield* documentToPandoc(document);
 
-      expect(result.pandoc.blocks.map((block) => block._tag)).toEqual(["header", "para", "bulletlist"]);
+      expect(A.map(result.pandoc.blocks, (block) => block._tag)).toEqual(["header", "para", "bulletlist"]);
       expect(result.report.profile).toBe("gap");
       expect(A.map(result.report.issues, (entry) => entry.construct)).toEqual(
         expect.arrayContaining(["rawMarkdown", "TaskList"])
@@ -444,7 +444,7 @@ describe("Pandoc.mapping", () => {
 
       const result = yield* documentToPandoc(document);
 
-      expect(result.pandoc.blocks.map((block) => block._tag)).toEqual(["para", "para"]);
+      expect(A.map(result.pandoc.blocks, (block) => block._tag)).toEqual(["para", "para"]);
       expect(A.map(result.report.issues, (entry) => entry.construct)).toEqual(
         expect.arrayContaining(["Table", "YouTube"])
       );
@@ -487,7 +487,7 @@ describe("Pandoc.mapping", () => {
       const result = yield* documentToPandoc(document);
 
       expect(result.report.issues).toEqual([]);
-      expect(result.pandoc.blocks.map((block) => block._tag)).toEqual(["para", "orderedlist", "para"]);
+      expect(A.map(result.pandoc.blocks, (block) => block._tag)).toEqual(["para", "orderedlist", "para"]);
 
       const paragraph = expectPara(result.pandoc.blocks[0]);
       const link = expectLink(paragraph.children[0]);
@@ -670,7 +670,7 @@ describe("Pandoc.mapping", () => {
       expect(plainResult.report.profile).toBe("supported");
       expect(plainResult.report.issues).toEqual([]);
       expect(paraResult.report.profile).toBe("gap");
-      expect(paraResult.report.issues.map((entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
+      expect(A.map(paraResult.report.issues, (entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
         ["Para", "lossy", "/blocks/0/items/0/blocks/0"],
       ]);
 
@@ -823,7 +823,7 @@ describe("Pandoc.mapping", () => {
       const result = yield* pandocToDocument(pandoc);
 
       expect(result.report.profile).toBe("gap");
-      expect(result.report.issues.map((entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
+      expect(A.map(result.report.issues, (entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
         ["Image", "lossy", "/blocks/0/children/0/children/1"],
         ["Image", "lossy", "/blocks/0/children/1/children"],
       ]);
@@ -868,7 +868,7 @@ describe("Pandoc.mapping", () => {
       const result = yield* pandocToDocument(pandoc);
 
       expect(result.report.profile).toBe("gap");
-      expect(result.report.issues.map((entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
+      expect(A.map(result.report.issues, (entry) => [entry.construct, entry.severity, entry.pointer])).toEqual([
         ["Image", "lossy", "/blocks/0/children/0/children/0"],
         ["Image", "lossy", "/blocks/0/children/1/children/0"],
       ]);
@@ -936,7 +936,7 @@ describe("Pandoc.mapping", () => {
       const result = yield* pandocToDocument(pandoc);
       const code = result.document.children[0];
 
-      expect(result.report.issues.map((entry) => [entry.construct, entry.pointer])).toEqual([
+      expect(A.map(result.report.issues, (entry) => [entry.construct, entry.pointer])).toEqual([
         ["CodeBlock", "/blocks/0"],
         ["Meta", "/meta"],
       ]);

@@ -739,41 +739,47 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         "beep-graft-deep-refresh.timer",
       ]);
       expect(units[0]?.text).toBe(
-        [
-          "[Unit]",
-          "Description=beep graft deep refresh (nightly meaning-tier rebuild + sibling seed)",
-          "",
-          "[Service]",
-          "Type=oneshot",
-          `WorkingDirectory=${owner}`,
-          "Environment=PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin",
-          "Environment=CI=true",
-          `EnvironmentFile=${path.join(stateDir, "env")}`,
-          `ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true /usr/bin/git -C "${owner}" pull --ff-only --quiet origin main`,
-          'ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true "/usr/bin/bun" install --frozen-lockfile --ignore-scripts',
-          `ExecStart="/usr/bin/bun" run beep graft deep refresh --owner "${owner}" --jobs 16`,
-          "TimeoutStartSec=8h",
-          "TimeoutStopSec=90",
-          "KillMode=mixed",
-          "Nice=10",
-          "Slice=background.slice",
-          "",
-        ].join("\n")
+        A.join(
+          [
+            "[Unit]",
+            "Description=beep graft deep refresh (nightly meaning-tier rebuild + sibling seed)",
+            "",
+            "[Service]",
+            "Type=oneshot",
+            `WorkingDirectory=${owner}`,
+            "Environment=PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin",
+            "Environment=CI=true",
+            `EnvironmentFile=${path.join(stateDir, "env")}`,
+            `ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true /usr/bin/git -C "${owner}" pull --ff-only --quiet origin main`,
+            'ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true "/usr/bin/bun" install --frozen-lockfile --ignore-scripts',
+            `ExecStart="/usr/bin/bun" run beep graft deep refresh --owner "${owner}" --jobs 16`,
+            "TimeoutStartSec=8h",
+            "TimeoutStopSec=90",
+            "KillMode=mixed",
+            "Nice=10",
+            "Slice=background.slice",
+            "",
+          ],
+          "\n"
+        )
       );
       expect(units[1]?.text).toBe(
-        [
-          "[Unit]",
-          "Description=Timer for beep graft deep refresh (nightly meaning-tier rebuild + sibling seed)",
-          "",
-          "[Timer]",
-          "OnCalendar=*-*-* 02:30:00",
-          "Persistent=true",
-          "RandomizedDelaySec=600",
-          "",
-          "[Install]",
-          "WantedBy=timers.target",
-          "",
-        ].join("\n")
+        A.join(
+          [
+            "[Unit]",
+            "Description=Timer for beep graft deep refresh (nightly meaning-tier rebuild + sibling seed)",
+            "",
+            "[Timer]",
+            "OnCalendar=*-*-* 02:30:00",
+            "Persistent=true",
+            "RandomizedDelaySec=600",
+            "",
+            "[Install]",
+            "WantedBy=timers.target",
+            "",
+          ],
+          "\n"
+        )
       );
       const calls: Array<GraftDeepRunnerStep> = [];
       const runner = scriptedRunner({ alive: [], calls, replies: happyReplies(owner, FULL_COVERAGE) });

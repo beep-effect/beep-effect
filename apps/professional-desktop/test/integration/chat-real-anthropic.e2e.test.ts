@@ -50,12 +50,15 @@ const anthropicApiKeyEnv = "AI_ANTHROPIC_API_KEY";
 const makeInProcessPgliteLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
-const prompt = [
-  "Return exactly these three rich blocks and no prose:",
-  "1. A mermaid diagram code block with language mermaid. Use: graph TD\\n  A[Client] --> B[Sidecar] --> C[Persisted @beep/md]",
-  "2. A table block with headerRow true, columns Feature and Status, and one row Rich blocks / Ready.",
-  "3. A youtube block with videoId M7lc1UVf-VE.",
-].join("\n");
+const prompt = A.join(
+  [
+    "Return exactly these three rich blocks and no prose:",
+    "1. A mermaid diagram code block with language mermaid. Use: graph TD\\n  A[Client] --> B[Sidecar] --> C[Persisted @beep/md]",
+    "2. A table block with headerRow true, columns Feature and Status, and one row Rich blocks / Ready.",
+    "3. A youtube block with videoId M7lc1UVf-VE.",
+  ],
+  "\n"
+);
 
 const migrateAll = Effect.fnUntraced(function* () {
   yield* migrateProfessionalDesktopDatabase();

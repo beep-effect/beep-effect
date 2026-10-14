@@ -4,16 +4,16 @@ import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 
 const stringEquivalence = (left: string, right: string): boolean => left === right;
 
-class RatchetTestError extends Data.TaggedError("RatchetTestError")<{ readonly message: string }> {}
+class RatchetTestError extends S.TaggedError<RatchetTestError>()("RatchetTestError", { message: S.String }) {}
 
 describe("internal/ratchet/RatchetDiff diffMembership", () => {
   it("classifies introduced and resolved findings against the baseline", () => {
@@ -62,9 +62,9 @@ describe("internal/ratchet/RatchetDiff diffTotals", () => {
       baseline: { grew: 2, shrank: 4, steady: 3, gone: 7 },
     });
 
-    expect(diff.increased.map((delta) => delta.metric)).toEqual(["grew"]);
+    expect(A.map(diff.increased, (delta) => delta.metric)).toEqual(["grew"]);
     expect(diff.increased[0]?.delta).toBe(3);
-    expect(diff.decreased.map((delta) => delta.metric)).toEqual(["shrank"]);
+    expect(A.map(diff.decreased, (delta) => delta.metric)).toEqual(["shrank"]);
     expect(diff.decreased[0]?.delta).toBe(-3);
     expect(diff.missing).toEqual(["gone"]);
     expect(diff.currentTotalCount).toBe(3);
@@ -77,7 +77,7 @@ describe("internal/ratchet/RatchetDiff diffTotals", () => {
       baseline: { fresh: 0 },
     });
 
-    expect(diff.increased.map((delta) => [delta.metric, delta.baseline, delta.current, delta.delta])).toEqual([
+    expect(A.map(diff.increased, (delta) => [delta.metric, delta.baseline, delta.current, delta.delta])).toEqual([
       ["fresh", 0, 4, 4],
     ]);
   });
@@ -101,10 +101,10 @@ describe("internal/ratchet/RatchetDiff diffTotals", () => {
       baseline: { grew: 2, shrank: 4, gone: 7 },
     });
 
-    expect(diff.increased.map((delta) => [delta.metric, delta.baseline, delta.current, delta.delta])).toEqual([
+    expect(A.map(diff.increased, (delta) => [delta.metric, delta.baseline, delta.current, delta.delta])).toEqual([
       ["grew", 2, 5, 3],
     ]);
-    expect(diff.decreased.map((delta) => [delta.metric, delta.baseline, delta.current, delta.delta])).toEqual([
+    expect(A.map(diff.decreased, (delta) => [delta.metric, delta.baseline, delta.current, delta.delta])).toEqual([
       ["shrank", 4, 1, -3],
     ]);
     expect(diff.missing).toEqual(["gone"]);
@@ -124,11 +124,11 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
   it.effect(
     "fails with the first present regression's error",
     Effect.fnUntraced(function* () {
-      const error = new RatchetTestError({ message: "baseline grew" });
+      const error = RatchetTestError.make({ message: "baseline grew" });
       const exit = yield* Effect.exit(
         enforceRatchet({
           regressions: [
-            { present: false, lines: ["skipped"], error: new RatchetTestError({ message: "not this one" }) },
+            { present: false, lines: ["skipped"], error: RatchetTestError.make({ message: "not this one" }) },
             { present: true, lines: ["[demo] regression: 1 finding(s)"], error },
           ],
           okLine: "[demo] ok",
@@ -149,7 +149,7 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
       const logged = A.length(yield* TestConsole.logLines);
       const exit = yield* Effect.exit(
         enforceRatchet({
-          regressions: [{ present: false, lines: ["skipped"], error: new RatchetTestError({ message: "unused" }) }],
+          regressions: [{ present: false, lines: ["skipped"], error: RatchetTestError.make({ message: "unused" }) }],
           okLine: "[demo] ok: current=0 baseline=0 introduced=0",
           tighten: O.some(["[demo] tighten-baseline: 1 finding(s) are no longer present"]),
         })

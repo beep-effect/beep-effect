@@ -853,7 +853,7 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
         ["negative-margin", "margin: -100vh -100vw"],
         ["viewport-sizing", "min-width: 100vw; min-height: 100vh; max-width: none; max-height: none"],
       ] as const;
-      const attacks = declarations.flatMap(([key, declaration]) => [
+      const attacks = A.flatMap(declarations, ([key, declaration]) => [
         {
           key: `stylesheet-${key}`,
           svg: (renderId: string) => mermaidSvg(renderId, `<style>#${renderId} { ${declaration}; }</style>`),

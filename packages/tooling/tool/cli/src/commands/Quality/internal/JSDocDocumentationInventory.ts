@@ -501,7 +501,7 @@ export const documentationShapeViolations = (commentText: string): ReadonlyArray
 const missingRequiredTags = (
   presentTags: ReadonlyArray<string>,
   requiredTags: ReadonlyArray<string>
-): ReadonlyArray<string> => requiredTags.filter((tag) => !presentTags.includes(tag));
+): ReadonlyArray<string> => A.filter(requiredTags, (tag) => !presentTags.includes(tag));
 
 const malformedConditionalTags = (commentText: string): ReadonlyArray<DocumentationIssue> => {
   const findings: Array<DocumentationIssue> = [];
@@ -728,7 +728,7 @@ const unsafeExampleViolations = (commentText: string): ReadonlyArray<Documentati
 };
 
 const forbiddenTagsIn = (presentTags: ReadonlyArray<string>): ReadonlyArray<string> =>
-  presentTags.filter((tag) => A.contains(forbiddenTags, tag));
+  A.filter(presentTags, (tag) => A.contains(forbiddenTags, tag));
 
 const categoryViolations = (commentText: string): ReadonlyArray<DocumentationIssue> =>
   A.map(
@@ -1410,7 +1410,7 @@ const analyzeRootPolicy = Effect.fn("JSDocDocumentationInventory.analyzeRootPoli
   const supportForTags: JsonRecord = (tsdoc.supportForTags ?? {}) as JsonRecord;
 
   const customTags = A.map(requiredTsdocCustomTags, (tagName) => {
-    const hasDefinition = tagDefinitions.some((entry) => entry?.tagName === tagName);
+    const hasDefinition = A.some(tagDefinitions, (entry) => entry?.tagName === tagName);
     const hasSupport = supportForTags[tagName] === true;
     return {
       tagName,
@@ -1430,7 +1430,7 @@ const analyzeRootPolicy = Effect.fn("JSDocDocumentationInventory.analyzeRootPoli
 });
 
 const inventoryTotals = (packages: ReadonlyArray<PackageInventory>, rootPolicy: RootPolicyInventory) => {
-  const openPackageCount = packages.filter((entry) => entry.status === "needs-remediation").length;
+  const openPackageCount = A.filter(packages, (entry) => entry.status === "needs-remediation").length;
   const documentationTotals = R.fromEntries(
     A.map(newDocumentationRuleCodes, (rule) => [
       rule,
@@ -1442,24 +1442,25 @@ const inventoryTotals = (packages: ReadonlyArray<PackageInventory>, rootPolicy: 
   );
   return {
     packages: packages.length,
-    cleanPackages: packages.filter((entry) => entry.status === "clean").length,
-    packagesWithoutPublicSrcSurface: packages.filter((entry) => entry.status === "no-public-src-surface").length,
+    cleanPackages: A.filter(packages, (entry) => entry.status === "clean").length,
+    packagesWithoutPublicSrcSurface: A.filter(packages, (entry) => entry.status === "no-public-src-surface").length,
     packagesNeedingRemediation: openPackageCount,
-    publicModules: packages.reduce((total, entry) => total + entry.sourceCoverage.publicModuleCount, 0),
-    publicExports: packages.reduce((total, entry) => total + entry.sourceCoverage.publicExportCount, 0),
-    openModules: packages.reduce((total, entry) => total + entry.counts.openModules, 0),
-    openExports: packages.reduce((total, entry) => total + entry.counts.openExports, 0),
-    missingExportExamples: packages.reduce((total, entry) => total + entry.counts.missingExportExamples, 0),
-    missingExportCategories: packages.reduce((total, entry) => total + entry.counts.missingExportCategories, 0),
-    missingExportSince: packages.reduce((total, entry) => total + entry.counts.missingExportSince, 0),
-    forbiddenTagFindings: packages.reduce((total, entry) => total + entry.counts.forbiddenTagFindings, 0),
-    malformedConditionalTagFindings: packages.reduce(
-      (total, entry) => total + entry.counts.malformedConditionalTagFindings,
-      0
+    publicModules: A.reduce(packages, 0, (total, entry) => total + entry.sourceCoverage.publicModuleCount),
+    publicExports: A.reduce(packages, 0, (total, entry) => total + entry.sourceCoverage.publicExportCount),
+    openModules: A.reduce(packages, 0, (total, entry) => total + entry.counts.openModules),
+    openExports: A.reduce(packages, 0, (total, entry) => total + entry.counts.openExports),
+    missingExportExamples: A.reduce(packages, 0, (total, entry) => total + entry.counts.missingExportExamples),
+    missingExportCategories: A.reduce(packages, 0, (total, entry) => total + entry.counts.missingExportCategories),
+    missingExportSince: A.reduce(packages, 0, (total, entry) => total + entry.counts.missingExportSince),
+    forbiddenTagFindings: A.reduce(packages, 0, (total, entry) => total + entry.counts.forbiddenTagFindings),
+    malformedConditionalTagFindings: A.reduce(
+      packages,
+      0,
+      (total, entry) => total + entry.counts.malformedConditionalTagFindings
     ),
-    exampleImportFindings: packages.reduce((total, entry) => total + entry.counts.exampleImportFindings, 0),
-    unsafeExampleFindings: packages.reduce((total, entry) => total + entry.counts.unsafeExampleFindings, 0),
-    schemaAnnotationFindings: packages.reduce((total, entry) => total + entry.counts.schemaAnnotationFindings, 0),
+    exampleImportFindings: A.reduce(packages, 0, (total, entry) => total + entry.counts.exampleImportFindings),
+    unsafeExampleFindings: A.reduce(packages, 0, (total, entry) => total + entry.counts.unsafeExampleFindings),
+    schemaAnnotationFindings: A.reduce(packages, 0, (total, entry) => total + entry.counts.schemaAnnotationFindings),
     ...documentationTotals,
     rootPolicyOpen: rootPolicy.status === "open" ? 1 : 0,
   };

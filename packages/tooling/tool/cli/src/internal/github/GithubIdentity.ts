@@ -20,6 +20,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { GitHubApp, GitHubClient, Repo, RepoRef } from "@effected/github";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -223,7 +224,7 @@ export const selectGithubIdentity = Effect.fn("GithubIdentity.select")(function*
   const appId = yield* configStringOption(GITHUB_APP_ENV.appId);
   const installationRaw = yield* configStringOption(GITHUB_APP_ENV.installationId);
   const privateKeyRef = yield* configStringOption(GITHUB_APP_ENV.privateKeyRef);
-  const present = [appId, installationRaw, privateKeyRef].filter(O.isSome).length;
+  const present = A.filter([appId, installationRaw, privateKeyRef], O.isSome).length;
   if (present === 0) {
     return GithubIdentity.make({
       kind: "gh-cli",

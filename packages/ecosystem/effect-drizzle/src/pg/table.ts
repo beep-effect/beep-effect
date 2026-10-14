@@ -19,7 +19,7 @@
 // fallow-ignore-file code-duplication -- unique-constraint naming intentionally mirrors pg/schema.ts so table-local and assembly-level extras render identical SQL names (doc 14 family; review at next dialect addition)
 import { sql } from "drizzle-orm";
 import { getTableConfig, PgDialect, pgTable, uniqueKeyName } from "drizzle-orm/pg-core";
-import { isArray, reduce } from "effect/Array";
+import { every, filter, flatMap as flatMapArray, isArray, map, reduce } from "effect/Array";
 import { pipe } from "effect/Function";
 import {
   exhaustive,
@@ -31,7 +31,7 @@ import {
 } from "effect/Match";
 import { flatMap, fromUndefinedOr, getOrElse, getOrUndefined, match } from "effect/Option";
 import { isFunction } from "effect/Predicate";
-import { empty, get, set } from "effect/Record";
+import { empty, get, set, toEntries, values } from "effect/Record";
 import { validateSchemaNames } from "../core/assembly.ts";
 import * as Field from "../core/Field.ts";
 import * as Meta from "../core/Meta.ts";
@@ -375,7 +375,7 @@ export type AdditionalExtras<M extends AnyModel> = (
 ) => ReadonlyArray<PgTableExtraConfigValue>;
 
 const isDeclaredExtras = (value: unknown): value is ReadonlyArray<TableExtras.Node> =>
-  isArray(value) && value.every(TableExtras.isNode);
+  isArray(value) && every(value, TableExtras.isNode);
 
 const invokeDeclaredExtras = (
   callback: unknown,
@@ -438,7 +438,7 @@ export function toPgTable(
 ): unknown {
   const [model, additionalExtras, enums] = args;
   const builders = reduce(
-    Object.entries(model.sql.fields),
+    toEntries(model.sql.fields),
     empty<string, PgColumn.DrizzleBuilder>(),
     (builders, [key, input]) => {
       const meta = getOrElse(get(model.sql.columns, key), () => {
@@ -457,9 +457,9 @@ export function toPgTable(
       onNone: () => [],
       onSome: (extras) => {
         const nodes = invokeDeclaredExtras(extras, bound);
-        const inlinePrimaryKeys = Object.values(model.sql.columns).filter((meta) => meta.primaryKey).length;
+        const inlinePrimaryKeys = filter(values(model.sql.columns), (meta) => meta.primaryKey).length;
         TableExtras.validateNodes(nodes, inlinePrimaryKeys);
-        return nodes.map(TableExtras.emit);
+        return map(nodes, TableExtras.emit);
       },
     });
     const additional = match(fromUndefinedOr(additionalExtras), {
@@ -475,35 +475,35 @@ export function toPgTable(
     validateSchemaNames(
       [
         { owner: "table", kind: "table", name: config.name },
-        ...config.indexes.flatMap((value, index) => named(`index:${index}`, "index", value.config.name)),
-        ...config.primaryKeys.flatMap((value, index) =>
+        ...flatMapArray(config.indexes, (value, index) => named(`index:${index}`, "index", value.config.name)),
+        ...flatMapArray(config.primaryKeys, (value, index) =>
           named(`primary-key:${index}`, "primary-key constraint", value.getName())
         ),
-        ...config.uniqueConstraints.flatMap((value, index) =>
+        ...flatMapArray(config.uniqueConstraints, (value, index) =>
           named(`unique:${index}`, "unique constraint", value.getName())
         ),
-        ...config.columns
-          .filter((column) => column.primary)
-          .map(
-            (_, index): SchemaName => ({
-              owner: `inline-primary-key:${index}`,
-              kind: "primary-key constraint",
-              name: `${config.name}_pkey`,
-            })
-          ),
-        ...config.columns
-          .filter((column) => column.isUnique)
-          .map(
-            (column, index): SchemaName => ({
-              owner: `inline-unique:${index}`,
-              kind: "unique constraint",
-              name: column.uniqueName ?? uniqueKeyName(table, [column.name]),
-            })
-          ),
-        ...config.checks.map(
+        ...map(
+          filter(config.columns, (column) => column.primary),
+          (_, index): SchemaName => ({
+            owner: `inline-primary-key:${index}`,
+            kind: "primary-key constraint",
+            name: `${config.name}_pkey`,
+          })
+        ),
+        ...map(
+          filter(config.columns, (column) => column.isUnique),
+          (column, index): SchemaName => ({
+            owner: `inline-unique:${index}`,
+            kind: "unique constraint",
+            name: column.uniqueName ?? uniqueKeyName(table, [column.name]),
+          })
+        ),
+        ...map(
+          config.checks,
           (value, index): SchemaName => ({ owner: `check:${index}`, kind: "check constraint", name: value.name })
         ),
-        ...config.foreignKeys.map(
+        ...map(
+          config.foreignKeys,
           (value, index): SchemaName => ({
             owner: `foreign-key:${index}`,
             kind: "foreign-key constraint",

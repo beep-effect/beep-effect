@@ -12,7 +12,7 @@ import { CurrentMcpCaller, sanitizedToolkit } from "@beep/mcp-kit";
 import { connectHttp, layerConformanceHttp } from "@beep/mcp-kit/test/Conformance";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
-import { assertExitFailure } from "@effect/vitest/utils";
+import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import { Tool, Toolkit } from "effect/ai";
 import { McpServerClient } from "effect/ai/McpSchema";
@@ -248,11 +248,15 @@ describe("sanitizedToolkit", () => {
 
         assert.isFalse(result.isError);
 
-        const parameterAttribute = captured.find((entry) => entry.key === "parameters");
-        assert.isUndefined(parameterAttribute);
+        assertNone(A.findFirst(captured, (entry) => entry.key === "parameters"));
 
-        const toolAttribute = captured.find((entry) => entry.key === "tool");
-        assert.strictEqual(toolAttribute?.value, "fixture_tool");
+        assertSome(
+          O.map(
+            A.findFirst(captured, (entry) => entry.key === "tool"),
+            (entry) => entry.value
+          ),
+          "fixture_tool"
+        );
       })
     );
 
@@ -260,11 +264,11 @@ describe("sanitizedToolkit", () => {
       "registers described tools with their wire description, _meta and outputSchema",
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
-        const entry = server.tools.find((candidate) => candidate.tool.name === "annotated_tool");
+        const entry = O.getOrThrow(A.findFirst(server.tools, (candidate) => candidate.tool.name === "annotated_tool"));
 
-        assert.strictEqual(entry?.tool.description, "Annotated fixture tool");
-        assert.deepStrictEqual(entry?.tool._meta, { fixture: true });
-        assert.deepStrictEqual(entry?.tool.outputSchema, { type: "string" });
+        assert.strictEqual(entry.tool.description, "Annotated fixture tool");
+        assert.deepStrictEqual(entry.tool._meta, { fixture: true });
+        assert.deepStrictEqual(entry.tool.outputSchema, { type: "string" });
 
         const result = yield* server.callTool({ name: "annotated_tool", arguments: {} });
         assert.isFalse(result.isError);
@@ -371,12 +375,11 @@ describe("sanitizedToolkit", () => {
         "inlines a ref-backed input schema to an object root for strict MCP clients",
         Effect.fnUntraced(function* () {
           const server = yield* McpServer.McpServer;
-          const registered = server.tools.find(({ tool }) => tool.name === "ref_tool");
+          const registered = O.getOrThrow(A.findFirst(server.tools, ({ tool }) => tool.name === "ref_tool"));
 
           // rc.117 inlines the top-level `$ref` (Effect#8326); the root is the
           // object itself and the definition stays under `$defs`.
-          assert.isDefined(registered);
-          const inputSchema = registered?.tool.inputSchema as {
+          const inputSchema = registered.tool.inputSchema as {
             readonly $ref?: unknown;
             readonly type?: unknown;
             readonly properties?: Record<string, unknown>;
@@ -391,13 +394,12 @@ describe("sanitizedToolkit", () => {
         "adds a top-level object type to a no-argument tool's input schema",
         Effect.fnUntraced(function* () {
           const server = yield* McpServer.McpServer;
-          const registered = server.tools.find(({ tool }) => tool.name === "empty_params_tool");
+          const registered = O.getOrThrow(A.findFirst(server.tools, ({ tool }) => tool.name === "empty_params_tool"));
 
           // Registration itself validates against `McpSchema.Tool`, so a missing
           // top-level `type` here would fail the whole layer build, not just
           // this assertion.
-          assert.isDefined(registered);
-          const inputSchema = registered?.tool.inputSchema as { readonly type?: unknown };
+          const inputSchema = registered.tool.inputSchema as { readonly type?: unknown };
           assert.strictEqual(inputSchema.type, "object");
         })
       );
@@ -534,11 +536,11 @@ describe("sanitizedToolkit", () => {
         "registers a dynamic tool's raw JSON Schema verbatim",
         Effect.fnUntraced(function* () {
           const server = yield* McpServer.McpServer;
-          const registered = server.tools.find(({ tool }) => tool.name === "dynamic_tool");
+          const registered = O.getOrThrow(A.findFirst(server.tools, ({ tool }) => tool.name === "dynamic_tool"));
 
           // A dynamic tool's schema is the host's own document: the kit must
           // not re-render it from the (absent) Effect Schema.
-          assert.deepStrictEqual(registered?.tool.inputSchema, {
+          assert.deepStrictEqual(registered.tool.inputSchema, {
             type: "object",
             properties: { q: { type: "string" } },
           });

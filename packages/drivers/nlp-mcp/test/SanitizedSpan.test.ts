@@ -13,10 +13,13 @@ import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
 import { it } from "@beep/test-runner";
 import { WinkNlpToolkitLive } from "@beep/wink";
 import { assert, describe } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import { McpServerClient } from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Tracer from "effect/Tracer";
 
 interface RecordedAttribute {
@@ -79,11 +82,14 @@ describe("nlp-mcp sanitized dispatch", () => {
 
         assert.isFalse(result.isError);
 
-        const parameterAttribute = captured.find((entry) => entry.key === "parameters");
-        assert.isUndefined(parameterAttribute);
+        const parameterAttribute = A.findFirst(captured, (entry) => entry.key === "parameters");
+        assertNone(parameterAttribute);
 
-        const toolAttribute = captured.find((entry) => entry.key === "tool");
-        assert.strictEqual(toolAttribute?.value, "Tokenize");
+        const toolAttribute = A.findFirst(captured, (entry) => entry.key === "tool");
+        assertSome(
+          O.map(toolAttribute, (entry) => entry.value),
+          "Tokenize"
+        );
       })
     );
   });

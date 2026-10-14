@@ -104,22 +104,25 @@ describe("commands/Qa Inventory.schemas", () => {
 
 describe("commands/Qa JudgeCheck JSON extraction", () => {
   it("takes the last fenced json block out of noisy judge output", () => {
-    const stdout = [
-      "Reading the frames now.",
-      "```json",
-      '{ "draft": true }',
-      "```",
-      "On reflection, the inventory is:",
-      "```json",
-      '{ "final": true }',
-      "```",
-      "REQUIRED FINDINGS: 0",
-    ].join("\n");
+    const stdout = A.join(
+      [
+        "Reading the frames now.",
+        "```json",
+        '{ "draft": true }',
+        "```",
+        "On reflection, the inventory is:",
+        "```json",
+        '{ "final": true }',
+        "```",
+        "REQUIRED FINDINGS: 0",
+      ],
+      "\n"
+    );
     expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "final": true }');
   });
 
   it("falls back to an unlabelled fence when the judge omits the json tag", () => {
-    const stdout = ["chatter", "```", '{ "final": true }', "```", "REQUIRED FINDINGS: 0"].join("\n");
+    const stdout = A.join(["chatter", "```", '{ "final": true }', "```", "REQUIRED FINDINGS: 0"], "\n");
     expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "final": true }');
   });
 
@@ -128,7 +131,7 @@ describe("commands/Qa JudgeCheck JSON extraction", () => {
   });
 
   it("salvages a correct unfenced object when the judge omits fences entirely", () => {
-    const stdout = ["REQUIRED FINDINGS: 0", 'Inventory follows: { "round": 3, "findings": [] }'].join("\n");
+    const stdout = A.join(["REQUIRED FINDINGS: 0", 'Inventory follows: { "round": 3, "findings": [] }'], "\n");
     expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "round": 3, "findings": [] }');
   });
 
@@ -167,7 +170,7 @@ describe("commands/Qa JudgeCheck JSON extraction", () => {
   });
 
   it("prefers a fenced block over later unfenced objects", () => {
-    const stdout = ["```json", '{ "final": true }', "```", 'afterthought: { "not": "the inventory" }'].join("\n");
+    const stdout = A.join(["```json", '{ "final": true }', "```", 'afterthought: { "not": "the inventory" }'], "\n");
     expect(O.getOrElse(extractLastJsonBlock(stdout), () => "")).toBe('{ "final": true }');
   });
 

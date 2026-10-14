@@ -23,7 +23,7 @@ describe("TypeClass pure operations", () => {
       const splitOp = TC.pureOperation("split", (s: string) => s.split(" "));
       const out = yield* splitOp.apply(node);
       expect(out.length).toBe(2);
-      expect(out.map((n) => n.data)).toEqual(["hello", "world"]);
+      expect(A.map(out, (n) => n.data)).toEqual(["hello", "world"]);
     })
   );
 
@@ -59,7 +59,7 @@ describe("TypeClass functor laws", () => {
       const mapped = TC.map(op, (s) => s);
       const a = yield* op.apply(node);
       const b = yield* mapped.apply(node);
-      expect(a.map((n) => n.data)).toEqual(b.map((n) => n.data));
+      expect(A.map(a, (n) => n.data)).toEqual(A.map(b, (n) => n.data));
     })
   );
 
@@ -72,7 +72,7 @@ describe("TypeClass functor laws", () => {
       const g = (s: string): string => `${s}!`;
       const composed = yield* TC.map(op, (s) => f(g(s))).apply(node);
       const sequential = yield* TC.map(TC.map(op, g), f).apply(node);
-      expect(composed.map((n) => n.data)).toEqual(sequential.map((n) => n.data));
+      expect(A.map(composed, (n) => n.data)).toEqual(A.map(sequential, (n) => n.data));
     })
   );
 });
@@ -85,7 +85,7 @@ describe("TypeClass monad & applicative", () => {
       const split = TC.pureOperation("split", (s: string) => s.split(" "));
       const chained = TC.chain(split, (token) => TC.mapOperation(`up-${token}`, (s: string) => s.toUpperCase()));
       const out = yield* chained.apply(node);
-      expect(out.map((n) => n.data).sort()).toEqual(["A", "B"]);
+      expect(A.map(out, (n) => n.data).sort()).toEqual(["A", "B"]);
     })
   );
 

@@ -155,7 +155,10 @@ const scriptBody = (rendered: string): string =>
 
 /** Index of the first line matching `needle`, or `-1` when absent. */
 const lineIndexOf = (script: string, needle: string): number =>
-  script.split("\n").findIndex((line) => line.includes(needle));
+  O.getOrElse(
+    A.findFirstIndex(script.split("\n"), (line) => line.includes(needle)),
+    () => -1
+  );
 
 /**
  * The executed part of a script, with the leading shell function definitions
@@ -164,9 +167,9 @@ const lineIndexOf = (script: string, needle: string): number =>
  */
 const mainSequence = (script: string): string => {
   const lines = script.split("\n");
-  const lastFunctionEnd = lines.reduce((acc, line, index) => (line === "}" ? index : acc), -1);
+  const lastFunctionEnd = A.reduce(lines, -1, (acc, line, index) => (line === "}" ? index : acc));
 
-  return lines.slice(lastFunctionEnd + 1).join("\n");
+  return A.join(lines.slice(lastFunctionEnd + 1), "\n");
 };
 
 const goldenUnitText = `# BEEP_OPENCLAW_MANAGED

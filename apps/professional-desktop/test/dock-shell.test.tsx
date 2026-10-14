@@ -4,7 +4,9 @@ import { validateWorkspace } from "@beep/dock/Dock.reducer";
 import { it } from "@beep/test-runner";
 import { afterEach, describe, expect } from "@effect/vitest";
 import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/react";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { AtomRegistry } from "effect/reactivity";
 import { App } from "@/App";
 import {
@@ -53,16 +55,18 @@ describe("Desktop dock shell", { concurrent: false }, () => {
   );
 
   it("registers contradiction triage as the thirteenth direct shell panel", () => {
-    const panel = DESKTOP_PANELS.find(({ key }) => key === "contradiction-triage");
+    const panel = A.findFirst(DESKTOP_PANELS, ({ key }) => key === "contradiction-triage");
 
     expect(DESKTOP_PANELS).toHaveLength(14);
-    expect(panel).toEqual({
-      cluster: "shell",
-      description: "Review contradictory beliefs against their verified source text.",
-      key: "contradiction-triage",
-      label: "Beliefs",
-      title: "Contradiction Triage",
-    });
+    expect(panel).toEqual(
+      O.some({
+        cluster: "shell",
+        description: "Review contradictory beliefs against their verified source text.",
+        key: "contradiction-triage",
+        label: "Beliefs",
+        title: "Contradiction Triage",
+      })
+    );
   });
 
   it.effect(

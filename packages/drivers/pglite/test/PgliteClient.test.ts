@@ -4,6 +4,7 @@ import { it } from "@beep/test-runner";
 import * as Pg from "@effect/sql-pg/PgClient";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -104,7 +105,7 @@ it.layer(PgliteTestLayer, { timeout: "30 seconds" })("PgliteClient (in-memory)",
       yield* sql`INSERT INTO notes (body) VALUES ('hello'), ('world')`;
       const rows = yield* sql<{ readonly body: string }>`SELECT body FROM notes ORDER BY id`;
 
-      expect(rows.map((row) => row.body)).toEqual(["hello", "world"]);
+      expect(A.map(rows, (row) => row.body)).toEqual(["hello", "world"]);
     })
   );
 

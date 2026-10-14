@@ -6,9 +6,13 @@ import * as Effect from "effect/Effect";
 
 const repoRoot = Str.replace(/\/$/u, "")(fileURLToPath(new URL("../../../../..", import.meta.url)));
 const joinPath = (base: string, ...segments: ReadonlyArray<string>): string =>
-  [Str.replace(/\/+$/u, "")(base), ...segments.map((segment) => Str.replace(/^\/+|\/+$/gu, "")(segment))]
-    .filter((segment) => segment.length > 0)
-    .join("/");
+  A.join(
+    A.filter(
+      [Str.replace(/\/+$/u, "")(base), ...A.map(segments, (segment) => Str.replace(/^\/+|\/+$/gu, "")(segment))],
+      (segment) => segment.length > 0
+    ),
+    "/"
+  );
 const relativeToRepo = (path: string): string =>
   Str.startsWith(`${repoRoot}/`)(path) ? Str.replace(`${repoRoot}/`, "")(path) : path;
 const pathExistsSync = (path: string): boolean =>

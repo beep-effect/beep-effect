@@ -1,6 +1,7 @@
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { failureMessageOr } from "@/lib/failureMessage";
 
@@ -30,7 +31,7 @@ describe("failureMessageOr", () => {
   it("reads a message exposed as a prototype getter", () => {
     const failure = new PrototypeMessageFailure();
 
-    expect(Object.hasOwn(failure, "message")).toBe(false);
+    expect(R.has(failure, "message")).toBe(false);
     expect(orFallback(failure)).toBe("message from the prototype");
   });
 

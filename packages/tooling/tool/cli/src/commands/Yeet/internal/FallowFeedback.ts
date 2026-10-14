@@ -341,7 +341,7 @@ const familyMismatchRefs: (envelopes: ReadonlyArray<FallowEnvelope>) => Readonly
   A.filter(
     (envelope: FallowEnvelope) =>
       envelope.status === "ok" &&
-      !envelope.report.findings.every((finding) => finding.featureFamily === envelope.subcommand)
+      !A.every(envelope.report.findings, (finding) => finding.featureFamily === envelope.subcommand)
   ),
   A.map((envelope) => envelope.reportPath)
 );

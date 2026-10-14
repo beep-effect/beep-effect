@@ -297,7 +297,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       const semantic = yield* decodePandocJsonStrict(wire);
       const encoded = yield* encodePandocJson(semantic);
       expect(encoded.meta).toEqual(meta);
-      expect(Object.hasOwn(encoded.meta, "__proto__")).toBe(true);
+      expect(R.has(encoded.meta, "__proto__")).toBe(true);
       expect(Object.getPrototypeOf(encoded.meta)).toBe(Object.prototype);
 
       const lossless = yield* decodePandocJsonLossless(wire);
@@ -364,7 +364,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
 
         expect((yield* Effect.exit(decodePandocJsonStrict(wire)))._tag).toBe("Failure");
         const lossless = yield* decodePandocJsonLossless(wire);
-        expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+        expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
           [constructor, "block", pointer],
         ]);
         expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
@@ -475,7 +475,9 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       for (const { expected, wire } of unsupported) {
         expect((yield* Effect.exit(decodePandocJsonStrict(wire)))._tag).toBe("Failure");
         const lossless = yield* decodePandocJsonLossless(wire);
-        expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([expected]);
+        expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+          expected,
+        ]);
         expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
       }
 
@@ -551,7 +553,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       for (const { expected, wire } of malformed) {
         expect((yield* Effect.exit(decodePandocJsonStrict(wire)))._tag).toBe("Failure");
         const lossless = yield* decodePandocJsonLossless(wire);
-        expect(lossless.issues.map((issue) => [issue.constructor, issue.pointer])).toEqual(expected);
+        expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.pointer])).toEqual(expected);
         expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
       }
     })
@@ -598,7 +600,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       for (const { expected, wire } of wrongContext) {
         expect((yield* Effect.exit(decodePandocJsonStrict(wire)))._tag).toBe("Failure");
         const lossless = yield* decodePandocJsonLossless(wire);
-        expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual(expected);
+        expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual(expected);
         expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
       }
     })
@@ -673,7 +675,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       for (const { expected, wire } of malformed) {
         expect((yield* Effect.exit(decodePandocJsonStrict(wire)))._tag).toBe("Failure");
         const lossless = yield* decodePandocJsonLossless(wire);
-        expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+        expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
           ["Str", "inline", expected],
         ]);
         expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
@@ -706,7 +708,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       for (const { expected, wire } of wrongContext) {
         expect((yield* Effect.exit(decodePandocJsonStrict(wire)))._tag).toBe("Failure");
         const lossless = yield* decodePandocJsonLossless(wire);
-        expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+        expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
           [expected[0], "block", expected[1]],
         ]);
         expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
@@ -737,7 +739,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       for (const { expected, wire } of malformed) {
         expect((yield* Effect.exit(decodePandocJsonStrict(wire)))._tag).toBe("Failure");
         const lossless = yield* decodePandocJsonLossless(wire);
-        expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+        expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
           [expected[0], "block", expected[1]],
         ]);
         expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
@@ -775,7 +777,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       for (const { expected, wire } of malformed) {
         expect((yield* Effect.exit(decodePandocJsonStrict(wire)))._tag).toBe("Failure");
         const lossless = yield* decodePandocJsonLossless(wire);
-        expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+        expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
           [expected[0], "block", expected[1]],
         ]);
         expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
@@ -804,7 +806,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       for (const { expected, wire } of malformed) {
         expect((yield* Effect.exit(decodePandocJsonStrict(wire)))._tag).toBe("Failure");
         const lossless = yield* decodePandocJsonLossless(wire);
-        expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+        expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
           ["Table", "block", expected],
         ]);
         expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
@@ -952,7 +954,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         const document = yield* decodePandocJsonString(source);
 
         expect(document.apiVersion).toEqual([1, 23, 1]);
-        expect(document.blocks.map((block) => block._tag)).toEqual([
+        expect(A.map(document.blocks, (block) => block._tag)).toEqual([
           "header",
           "para",
           "blockquote",
@@ -1070,7 +1072,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         const source = yield* fixture("gap-docx-styles.pandoc.json");
         const document = yield* decodePandocJsonString(source);
 
-        expect(document.blocks.map((block) => block._tag)).toEqual(["div", "table"]);
+        expect(A.map(document.blocks, (block) => block._tag)).toEqual(["div", "table"]);
       })
     );
   });
@@ -1198,9 +1200,9 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       };
 
       expect((yield* Effect.exit(decodePandocJsonStrict(wire)))._tag).toBe("Failure");
-      expect((yield* decodePandocJsonLossless(wire)).issues.map((issue) => [issue.constructor, issue.pointer])).toEqual(
-        [["FutureCitationMode", "/blocks/0/c/0/c/0/0/citationMode"]]
-      );
+      expect(
+        A.map((yield* decodePandocJsonLossless(wire)).issues, (issue) => [issue.constructor, issue.pointer])
+      ).toEqual([["FutureCitationMode", "/blocks/0/c/0/c/0/0/citationMode"]]);
     })
   );
 
@@ -1311,7 +1313,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
 
         expect((yield* Effect.exit(decodePandocJsonStrict(wire)))._tag).toBe("Failure");
         const lossless = yield* decodePandocJsonLossless(wire);
-        expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+        expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
           [expected, "inline", "/blocks/0/c/0/c/0"],
         ]);
         expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
@@ -1372,7 +1374,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
 
       expect(document.blocks).toEqual(wire.blocks);
       expect(document.meta).toEqual(wire.meta);
-      expect(document.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+      expect(A.map(document.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
         ["Plain", "block", "/blocks/1/c/0/0"],
       ]);
       expect(yield* encodePandocJsonLossless(document)).toEqual(wire);
@@ -1404,7 +1406,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       const lossless = yield* decodePandocJsonLossless(wire);
 
       expect(lossless.blocks).toEqual(wire.blocks);
-      expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+      expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
         ["Str", "inline", "/blocks/0/c/1/c/1/0"],
       ]);
       expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);
@@ -1453,7 +1455,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
       expect((yield* Effect.exit(decodePandocJson(wire)))._tag).toBe("Failure");
       const lossless = yield* decodePandocJsonLossless(wire);
       expect(lossless.meta).toEqual(wire.meta);
-      expect(lossless.issues.map((issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
+      expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.context, issue.pointer])).toEqual([
         ["MetaString", "meta", "/meta/title"],
       ]);
       expect(yield* encodePandocJsonLossless(lossless)).toEqual(wire);

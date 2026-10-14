@@ -2,41 +2,48 @@ import {
   collectTsgoPluginOptionParityDiagnosticsForTesting,
   extractEffectTsgoReadmePluginOptionNamesForTesting,
 } from "@beep/repo-cli/commands/Quality/Quality.command";
+import * as A from "effect/Array";
 import { describe, expect, it } from "vitest";
 
 const readmeWithExample = (pluginJsonc: string): string =>
-  [
-    "# Effect Language Service",
-    "",
-    "## Plugin Options",
-    "",
-    "<!-- example-config:start -->",
-    "```jsonc",
-    "{",
-    '  "compilerOptions": {',
-    '    "plugins": [',
-    "      {",
-    pluginJsonc,
-    "      }",
-    "    ]",
-    "  }",
-    "}",
-    "```",
-    "<!-- example-config:end -->",
-    "",
-  ].join("\n");
+  A.join(
+    [
+      "# Effect Language Service",
+      "",
+      "## Plugin Options",
+      "",
+      "<!-- example-config:start -->",
+      "```jsonc",
+      "{",
+      '  "compilerOptions": {',
+      '    "plugins": [',
+      "      {",
+      pluginJsonc,
+      "      }",
+      "    ]",
+      "  }",
+      "}",
+      "```",
+      "<!-- example-config:end -->",
+      "",
+    ],
+    "\n"
+  );
 
 describe("quality tsgo plugin option parity", () => {
   it("reads the documented option names from the README example config, ignoring name and comments", () => {
     const readme = readmeWithExample(
-      [
-        '        "name": "@effect/language-service",',
-        "        // Controls Effect refactors. (default: true)",
-        '        "refactors": true,',
-        '        "keyPatterns": [{ "target": "service", "pattern": "default", "skipLeadingPath": ["src/"] }],',
-        '        "diagnosticSeverity": {},',
-        '        "overrides": [],',
-      ].join("\n")
+      A.join(
+        [
+          '        "name": "@effect/language-service",',
+          "        // Controls Effect refactors. (default: true)",
+          '        "refactors": true,',
+          '        "keyPatterns": [{ "target": "service", "pattern": "default", "skipLeadingPath": ["src/"] }],',
+          '        "diagnosticSeverity": {},',
+          '        "overrides": [],',
+        ],
+        "\n"
+      )
     );
     expect(extractEffectTsgoReadmePluginOptionNamesForTesting(readme)).toEqual([
       "diagnosticSeverity",
@@ -57,11 +64,14 @@ describe("quality tsgo plugin option parity", () => {
 
   it("returns no names when the example config is malformed JSONC", () => {
     const readme = readmeWithExample(
-      [
-        '        "name": "@effect/language-service",',
-        '        "refactors": true,',
-        '        "diagnosticSeverity": {',
-      ].join("\n")
+      A.join(
+        [
+          '        "name": "@effect/language-service",',
+          '        "refactors": true,',
+          '        "diagnosticSeverity": {',
+        ],
+        "\n"
+      )
     );
     expect(extractEffectTsgoReadmePluginOptionNamesForTesting(readme)).toEqual([]);
   });

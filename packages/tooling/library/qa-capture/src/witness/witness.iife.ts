@@ -1,10 +1,11 @@
 /**
- * Zero-import in-page witness script for QA capture sessions.
+ * In-page witness script for QA capture sessions.
  *
- * This file is deliberately outside the Effect world: it is bundled by
- * `Bun.build` into a browser IIFE served at `GET /witness.js` and injected
+ * This file is deliberately outside the Effect runtime: its only import is the
+ * pure `effect/Array` helper module, which `Bun.build` inlines and tree-shakes
+ * while bundling it into a browser IIFE served at `GET /witness.js` and injected
  * into pages under test (playwright `addInitScript` or a single JS eval in a
- * real Chrome session). It therefore uses only browser platform APIs,
+ * real Chrome session). Beyond that it uses only browser platform APIs,
  * declared module-locally below so the package never links the DOM lib.
  *
  * Privacy invariant: key-down capture records non-printable key identities
@@ -17,6 +18,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import * as A from "effect/Array";
 
 // Module-local structural declarations of the browser surface this script
 // touches. They shadow any Node globals and erase at bundle time.
@@ -179,10 +182,11 @@ declare const decodeURIComponent: (value: string) => string;
 
 // The whole in-page witness is one IIFE by construction: it is bundled to a
 // browser script and guarded by `window.__beepQa`, so its helpers cannot be
-// hoisted to module scope without breaking the zero-import bundling contract.
+// hoisted to module scope without breaking the bundling contract (one IIFE whose
+// only import, the pure `effect/Array` module, `Bun.build` inlines).
 // The arrow is the module body rather than a unit of logic, and the script is
 // exercised by live capture rounds, not by Node unit tests.
-// fallow-ignore-next-line complexity -- browser IIFE bundled by Bun.build; its helpers cannot hoist to module scope without breaking the zero-import contract
+// fallow-ignore-next-line complexity -- browser IIFE bundled by Bun.build; its helpers cannot hoist to module scope without breaking the single-IIFE bundling contract
 (() => {
   if (window.__beepQa !== undefined) {
     return;
@@ -270,7 +274,7 @@ declare const decodeURIComponent: (value: string) => string;
     if (buffer.length === 0) {
       return;
     }
-    const body = buffer.join("\n");
+    const body = A.join(buffer, "\n");
     buffer.length = 0;
     send(body, useBeacon);
   };
@@ -348,13 +352,13 @@ declare const decodeURIComponent: (value: string) => string;
       const terminal = terminalToken(current);
       if (terminal !== null) {
         segments.unshift(terminal);
-        return segments.join(" > ");
+        return A.join(segments, " > ");
       }
       segments.unshift(nthOfTypeToken(current));
       current = current.parentElement;
       depth += 1;
     }
-    return segments.join(" > ");
+    return A.join(segments, " > ");
   };
 
   const rectOf = (element: WitnessElement | null): WitnessRect | undefined => {

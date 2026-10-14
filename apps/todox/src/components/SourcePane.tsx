@@ -53,7 +53,7 @@ export function SourcePane({
         <span>{artifact.dated}</span>
       </p>
       <div className="source__body">
-        {artifact.spans.map((span) => (
+        {A.map(artifact.spans, (span) => (
           <p
             key={span.id}
             className={`span${isLit(span.id) ? " span--lit" : dimOthers ? " span--dim" : ""}`}

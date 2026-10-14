@@ -6,6 +6,7 @@ import "@testing-library/jest-dom/vitest";
 import { it } from "@beep/test-runner";
 import { afterAll, afterEach, beforeAll, describe, expect } from "@effect/vitest";
 import { cleanup, render, waitFor, within } from "@testing-library/react";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 
@@ -103,12 +104,10 @@ describe("persisted mermaid rendering", { concurrent: false }, () => {
   it.effect(
     "preserves authored Mermaid accessibility text",
     Effect.fnUntraced(function* () {
-      const source = [
-        "graph TD",
-        "accTitle: Checkout flow",
-        "accDescr: Start proceeds to End",
-        "A[Start] --> B[End]",
-      ].join("\n");
+      const source = A.join(
+        ["graph TD", "accTitle: Checkout flow", "accDescr: Start proceeds to End", "A[Start] --> B[End]"],
+        "\n"
+      );
       const { container } = render(<MermaidView renderKey="authored-accessibility" source={source} />);
       const screen = within(container);
 
@@ -171,7 +170,10 @@ describe("persisted mermaid rendering", { concurrent: false }, () => {
       );
 
       const svg = screen.getByTestId("mermaid-diagram").querySelector("svg");
-      const styles = Array.from(svg?.querySelectorAll("style") ?? [], (style) => style.textContent ?? "").join("\n");
+      const styles = A.join(
+        Array.from(svg?.querySelectorAll("style") ?? [], (style) => style.textContent ?? ""),
+        "\n"
+      );
       expect(styles).not.toMatch(/position\s*:\s*fixed|inset\s*:|z-index\s*:\s*2147483647|pointer-events\s*:\s*all/iu);
       expect(globalThis.getComputedStyle(svg as SVGSVGElement).position).not.toBe("fixed");
       expectInertDiagram(container);

@@ -31,7 +31,7 @@ import type { ChildProcessSpawner } from "effect/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/PackageVerify");
 
-const PACKAGE_TARGET_DIFF_FILTER = ["A", "C", "D", "M", "R", "T", "U", "X", "B"].join("");
+const PACKAGE_TARGET_DIFF_FILTER = A.join(["A", "C", "D", "M", "R", "T", "U", "X", "B"], "");
 const PACKAGE_VERIFY_STEP_CONCURRENCY = 3;
 const VERIFY_STEP_NAMES = ["audit", "docgen", "lint", "check"] as const;
 

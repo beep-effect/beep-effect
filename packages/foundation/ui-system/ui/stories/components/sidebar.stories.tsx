@@ -23,7 +23,7 @@ import {
   SidebarSeparator,
   SidebarTrigger,
 } from "@beep/ui/components/sidebar";
-import { A } from "@beep/utils";
+import { A, O } from "@beep/utils";
 import {
   CalendarIcon,
   GearIcon,
@@ -309,14 +309,16 @@ export const IconCollapsible: Story = {
   play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const triggers = canvas.getAllByRole("button", { name: "Toggle Sidebar" });
-    const trigger = triggers.find((button) => button.getAttribute("data-slot") === "sidebar-trigger");
-    expect(trigger).toBeDefined();
-    if (trigger === undefined) {
-      return Promise.resolve();
-    }
-    expect(trigger).toBeVisible();
-    return userEvent.click(trigger).then(() => {
-      expect(trigger).toBeVisible();
+    const trigger = A.findFirst(triggers, (button) => button.getAttribute("data-slot") === "sidebar-trigger");
+    expect(O.isSome(trigger)).toBe(true);
+    return O.match(trigger, {
+      onNone: () => Promise.resolve(),
+      onSome: (button) => {
+        expect(button).toBeVisible();
+        return userEvent.click(button).then(() => {
+          expect(button).toBeVisible();
+        });
+      },
     });
   },
 };

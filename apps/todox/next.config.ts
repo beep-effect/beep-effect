@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import type { NextConfig } from "next";
 
 // Transitional guard for the coverage lane's job-wide node wrapper (removed
@@ -6,7 +7,7 @@ import type { NextConfig } from "next";
 // process.execArgv into its build workers' NODE_OPTIONS, where V8 rejects
 // feature flags. Strip it before any worker spawns; once the wrapper is gone
 // from main this filter matches nothing.
-process.execArgv = process.execArgv.filter((flag) => flag !== "--js-float16array");
+process.execArgv = A.filter(process.execArgv, (flag) => flag !== "--js-float16array");
 
 const nextConfig: NextConfig = {};
 

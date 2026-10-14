@@ -109,7 +109,7 @@ const recycleMetadataV2 = (originalPath: string, sizeBytes: bigint): Uint8Array 
   view.setBigUint64(8, sizeBytes, true);
   view.setBigUint64(16, 132_223_104_000_000_000n, true);
   view.setUint32(24, originalPath.length + 1, true);
-  Array.from(originalPath).forEach((char, index) => {
+  A.forEach(Array.from(originalPath), (char, index) => {
     view.setUint16(28 + index * 2, char.charCodeAt(0), true);
   });
   return bytes;
@@ -225,9 +225,15 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       expect(RT.safeRestoredPath(path, "C:\\bad<name>\\file. ")).toBe("bad_name_/file");
       expect(RT.safeRestoredPath(path, "")).toBe("_");
       expect(RT.safeRestoredPath(path, "x".repeat(200))).toContain("__");
-      expect(RT.safeRestoredPath(path, Array.from({ length: 33 }, (_, index) => `s${index}`).join("/"))).toContain(
-        "_long-path"
-      );
+      expect(
+        RT.safeRestoredPath(
+          path,
+          A.join(
+            Array.from({ length: 33 }, (_, index) => `s${index}`),
+            "/"
+          )
+        )
+      ).toContain("_long-path");
 
       const used = MutableHashMap.empty<string, string>();
       const first = RT.collisionAllocatedPath(path, "mail/file.msg", "one", used);
@@ -321,8 +327,8 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       yield* fs.writeFileString(path.join(tree, "a.txt"), "a");
       yield* fs.writeFileString(path.join(tree, "nested", "b.txt"), "bb");
       expect(yield* RT.measureTransformationTreeBytes(tree)).toBe(3);
-      expect((yield* RT.walkFiles(tree)).map((entry) => entry.relativePath)).toEqual(["a.txt", "nested/b.txt"]);
-      expect((yield* RT.walkTransformationEntries(tree)).map((entry) => entry.kind)).toEqual([
+      expect(A.map(yield* RT.walkFiles(tree), (entry) => entry.relativePath)).toEqual(["a.txt", "nested/b.txt"]);
+      expect(A.map(yield* RT.walkTransformationEntries(tree), (entry) => entry.kind)).toEqual([
         "file",
         "directory",
         "file",
@@ -534,9 +540,9 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       ];
 
       const mail = RT.mailCandidates(path, "/archive", records);
-      expect(mail.map((candidate) => candidate.family)).toEqual(["eml", "pst", "pst", "pst", "pst", "residue"]);
+      expect(A.map(mail, (candidate) => candidate.family)).toEqual(["eml", "pst", "pst", "pst", "pst", "residue"]);
       expect(RT.selectMailCandidates(path, "full", mail)).toEqual(mail);
-      expect(RT.selectMailCandidates(path, "slice", mail).map((candidate) => candidate.objectId)).toEqual(["pst"]);
+      expect(A.map(RT.selectMailCandidates(path, "slice", mail), (candidate) => candidate.objectId)).toEqual(["pst"]);
 
       const legacy = RT.legacyWordCandidates(path, "/archive", records);
       expect(legacy.occurrenceCount).toBe(2);
@@ -592,23 +598,23 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       const outcome = yield* RT.appendRecycleJoins(grouped, RT.recycleSurfaceCounts(grouped), recycleContext, []);
       expect(outcome).toEqual({ joinOutcomeCount: 2, missingContentCount: 0 });
       const surfaceId = `surface-${sha("$Recycle.Bin/S-1").slice(0, 16)}`;
-      const joins = (
+      const joins = A.map(
         [
           ["duplicate", 1, ["content-duplicate"]],
           ["missing-content", 0, []],
           ["orphan-content", 0, []],
           ["valid-pair", 1, ["meta", "content"]],
-        ] as const
-      ).map(([joinClass, count, sourceObjectIds]) =>
-        TransformationLedgerRecord.cases["recycle-join"].make({
-          ...identity,
-          count: S.Natural.make(count),
-          family: "recycle",
-          joinClass,
-          recordType: "recycle-join",
-          sourceObjectIds,
-          surfaceId,
-        })
+        ] as const,
+        ([joinClass, count, sourceObjectIds]) =>
+          TransformationLedgerRecord.cases["recycle-join"].make({
+            ...identity,
+            count: S.Natural.make(count),
+            family: "recycle",
+            joinClass,
+            recordType: "recycle-join",
+            sourceObjectIds,
+            surfaceId,
+          })
       );
       expect(
         RT.recycleJoinCheckpointMatches(joins[0]!, {
@@ -834,7 +840,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         [recycleStart, recycleAttempt],
         encodeTransformationLedgerRecordJson
       );
-      yield* fs.writeFileString(recycleContext.ledgerPath, `${encodedInterruptedSeed.join("\n")}\n`);
+      yield* fs.writeFileString(recycleContext.ledgerPath, `${A.join(encodedInterruptedSeed, "\n")}\n`);
       yield* RT.recoverRecycleInterruptedAttempts(recycleContext, [pair]);
       expect(yield* fs.exists(path.join(recycleContext.outputRoot, `interrupted/${recycleAttempt.attemptId}`))).toBe(
         true
@@ -844,7 +850,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         [recycleStart, recycleAttempt, mapping],
         encodeTransformationLedgerRecordJson
       );
-      yield* fs.writeFileString(recycleContext.ledgerPath, `${encodedTooManyMappings.join("\n")}\n`);
+      yield* fs.writeFileString(recycleContext.ledgerPath, `${A.join(encodedTooManyMappings, "\n")}\n`);
       const tooManyMappingsError = yield* RT.recycleResumeState(
         recycleContext,
         MutableHashMap.empty(),
@@ -855,7 +861,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         "Prior recycle checkpoints do not form a complete deterministic mapping prefix"
       );
 
-      yield* fs.writeFileString(recycleContext.ledgerPath, `${encodedInterruptedSeed.join("\n")}\n`);
+      yield* fs.writeFileString(recycleContext.ledgerPath, `${A.join(encodedInterruptedSeed, "\n")}\n`);
       const invalidLifecycleError = yield* RT.recycleResumeState(
         recycleContext,
         MutableHashMap.empty(),
@@ -877,7 +883,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         [recycleStart, prematureJoin],
         encodeTransformationLedgerRecordJson
       );
-      yield* fs.writeFileString(recycleContext.ledgerPath, `${encodedPrematureJoin.join("\n")}\n`);
+      yield* fs.writeFileString(recycleContext.ledgerPath, `${A.join(encodedPrematureJoin, "\n")}\n`);
       const prematureJoinError = yield* RT.recycleResumeState(
         recycleContext,
         RT.groupRecycleEntries([pair.metadata, pair.content]),
@@ -898,7 +904,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         records: ReadonlyArray<TransformationLedgerRecord>
       ) {
         const encoded = yield* Effect.forEach(records, encodeTransformationLedgerRecordJson);
-        yield* fs.writeFileString(ledgerPath, `${encoded.join("\n")}\n`);
+        yield* fs.writeFileString(ledgerPath, `${A.join(encoded, "\n")}\n`);
       });
 
       const mailLedger = path.join(root, "mail.jsonl");
@@ -954,7 +960,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         ],
         11
       );
-      expect(mailResume.candidates.map((candidate) => candidate.objectId)).toEqual(["pending-mail"]);
+      expect(A.map(mailResume.candidates, (candidate) => candidate.objectId)).toEqual(["pending-mail"]);
       expect(mailResume.counters).toMatchObject({ exceptionCount: 2, inputBytes: 3, outputBytes: 11 });
       const unknownCandidateError = yield* RT.mailResumeState(
         mailContext,
@@ -1032,7 +1038,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         ],
         13
       );
-      expect(legacyResume.candidates.map((candidate) => candidate.digest)).toEqual([sha("pending-legacy")]);
+      expect(A.map(legacyResume.candidates, (candidate) => candidate.digest)).toEqual([sha("pending-legacy")]);
       expect(legacyResume.counters).toMatchObject({ exceptionCount: 1, inputBytes: 6, outputBytes: 13, passCount: 1 });
       yield* writeRecords(legacyLedger, [familyRunStart("legacy-word", 1), legacyStart]);
       (yield* RT.legacyResumeState(legacyContext, [], 0).pipe(Effect.option)).pipe(assertNone);
@@ -1656,7 +1662,7 @@ else exit 92; fi
       const unsealed = yield* RT.currentPreservationEvidence(corpusRoot, "run-1").pipe(Effect.option);
       unsealed.pipe(assertNone);
       const encoded = yield* Effect.forEach([preflight, seal], encodeArchiveLedgerRecordJson);
-      yield* fs.writeFileString(path.join(ledgerDirectory, "archive-ledger.jsonl"), `${encoded.join("\n")}\n`);
+      yield* fs.writeFileString(path.join(ledgerDirectory, "archive-ledger.jsonl"), `${A.join(encoded, "\n")}\n`);
       const evidence = yield* RT.currentPreservationEvidence(corpusRoot, "run-1");
       expect(evidence.records).toHaveLength(2);
       expect(evidence.seal.runId).toBe("preservation-1");
@@ -1698,7 +1704,7 @@ else exit 92; fi
         unapprovedCount: 0,
       });
       const encoded = yield* Effect.forEach([runStart, summary, acceptance], encodeTransformationLedgerRecordJson);
-      yield* fs.writeFileString(ledgerPath, `${encoded.join("\n")}\n`);
+      yield* fs.writeFileString(ledgerPath, `${A.join(encoded, "\n")}\n`);
       const evidence = yield* RT.readStrictFamilyEvidence(strictContext);
       expect(evidence.segment).toEqual([runStart]);
       expect(evidence.summary).toEqual(summary);
@@ -3174,7 +3180,7 @@ printf '%%PDF-1.4 synthetic attachment' > "$item/Attachment00001/report.bin"
         expect((yield* decodeTransformationLedgerRecordJson(lastRecycleLine)).recordType).toBe(
           "family-acceptance-pass"
         );
-        yield* fs.writeFileString(recycleLedgerPath, `${recycleLines.slice(0, -1).join("\n")}\n`);
+        yield* fs.writeFileString(recycleLedgerPath, `${A.join(recycleLines.slice(0, -1), "\n")}\n`);
         yield* restoreRecycle(recycleOptions(runLabel));
         const legacyWordOptions = legacyOptions(runLabel);
         yield* restoreLegacyWord(legacyWordOptions);
@@ -3188,16 +3194,16 @@ printf '%%PDF-1.4 synthetic attachment' > "$item/Attachment00001/report.bin"
         const lastLegacyLine = legacyLines.at(-1);
         if (lastLegacyLine === undefined) return yield* Effect.die("Legacy ledger was unexpectedly empty.");
         expect((yield* decodeTransformationLedgerRecordJson(lastLegacyLine)).recordType).toBe("family-acceptance-pass");
-        yield* fs.writeFileString(legacyLedgerPath, `${legacyLines.slice(0, -1).join("\n")}\n`);
+        yield* fs.writeFileString(legacyLedgerPath, `${A.join(legacyLines.slice(0, -1), "\n")}\n`);
         yield* restoreLegacyWord(legacyWordOptions);
         const acceptances = yield* reconcileRestorationAcceptance({ corpusRoot, runLabel });
-        expect(acceptances.map((acceptance) => acceptance.family)).toEqual([
+        expect(A.map(acceptances, (acceptance) => acceptance.family)).toEqual([
           "preservation",
           "mail",
           "recycle",
           "legacy-word",
         ]);
-        expect(acceptances.every((acceptance) => acceptance.status === "pass")).toBe(true);
+        expect(A.every(acceptances, (acceptance) => acceptance.status === "pass")).toBe(true);
 
         yield* preserveRestorationArchive(preserveRun("mail-denominator"));
         const mailDenominatorError = yield* restoreMail(mailOptions("mail-denominator", 2)).pipe(Effect.flip);

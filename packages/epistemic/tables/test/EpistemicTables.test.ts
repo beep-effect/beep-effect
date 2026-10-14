@@ -227,7 +227,7 @@ describe("EpistemicTables", () => {
     expect(columns.provider.columnType).toBe("PgText");
     expect(columns.costUsdApproxMicros.name).toBe("cost_usd_approx_micros");
     expect(columns.costUsdApproxMicros.notNull).toBe(false);
-    const indexNames = config.indexes.map((index) => index.config.name);
+    const indexNames = A.map(config.indexes, (index) => index.config.name);
     expect(indexNames).toHaveLength(3);
     expect(indexNames).toEqual(
       expect.arrayContaining([

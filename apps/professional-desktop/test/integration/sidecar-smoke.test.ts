@@ -24,6 +24,7 @@ import { ChatRpcs } from "@beep/agents-use-cases/public";
 import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -51,8 +52,8 @@ const smokeProgram = Effect.gen(function* () {
   expect(Chunk.size(blocks)).toBeGreaterThan(0);
 
   const timeline = yield* client.GetTimeline({ threadId: thread.id });
-  const roles = timeline.turns.flatMap((turn) =>
-    turn.items.flatMap((item) => (item.kind === "message" ? [item.role] : []))
+  const roles = A.flatMap(timeline.turns, (turn) =>
+    A.flatMap(turn.items, (item) => (item.kind === "message" ? [item.role] : []))
   );
   expect(roles).toContain("user");
   expect(roles).toContain("assistant");

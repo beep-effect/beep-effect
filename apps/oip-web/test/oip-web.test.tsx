@@ -674,7 +674,7 @@ describe("@beep/oip-web", { concurrent: false }, () => {
 
     return waitFor(() =>
       pipe(
-        setIntervalSpy.mock.calls.some(([, ms]) => ms === HERO_ROTATE_MS),
+        A.some(setIntervalSpy.mock.calls, ([, ms]) => ms === HERO_ROTATE_MS),
         assertTrue
       )
     )
@@ -682,7 +682,9 @@ describe("@beep/oip-web", { concurrent: false }, () => {
         expect(container.querySelector('[data-hero-clip="0"]')?.className).toContain("opacity-100");
         expect(container.querySelector('[data-hero-clip="1"]')?.className).toContain("opacity-0");
 
-        const rotate = setIntervalSpy.mock.calls.find(([, ms]) => ms === HERO_ROTATE_MS)?.[0] as () => void;
+        const rotate = O.getOrUndefined(
+          A.findFirst(setIntervalSpy.mock.calls, ([, ms]) => ms === HERO_ROTATE_MS)
+        )?.[0] as () => void;
 
         return act(() => {
           rotate();
@@ -728,7 +730,7 @@ describe("@beep/oip-web", { concurrent: false }, () => {
       .then(() => act(() => {}))
       .then(() => {
         pipe(
-          setIntervalSpy.mock.calls.some(([, ms]) => ms === HERO_ROTATE_MS),
+          A.some(setIntervalSpy.mock.calls, ([, ms]) => ms === HERO_ROTATE_MS),
           assertFalse
         );
         expect(container.querySelector('[data-hero-clip="0"]')?.className).toContain("opacity-100");

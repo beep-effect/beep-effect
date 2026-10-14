@@ -150,7 +150,7 @@ export {
   UnexpectedQualityTaskFailure,
 } from "./Quality.errors.ts";
 
-const CHANGED_PATH_DIFF_FILTER = ["A", "C", "M", "R", "T", "U", "X", "B"].join("");
+const CHANGED_PATH_DIFF_FILTER = A.join(["A", "C", "M", "R", "T", "U", "X", "B"], "");
 const LOCAL_BIOME_BIN = "./node_modules/.bin/biome";
 const BIOME_FIX_CHANGED_ARGS = ["check", "--write", "--files-ignore-unknown=true", "--no-errors-on-unmatched"] as const;
 const LINT_FIX_AGGREGATE_ARGS = ["--full", "--repo"] as const;
@@ -425,7 +425,7 @@ const resolvePackageDir = Effect.fn("QualityTasks.resolvePackageDir")(function* 
 });
 
 const isSafeWorkspacePattern = (pattern: string): boolean =>
-  pattern.length > 0 && !pattern.startsWith("/") && !pattern.split("/").some((segment) => segment === "..");
+  pattern.length > 0 && !pattern.startsWith("/") && !A.some(pattern.split("/"), (segment) => segment === "..");
 
 const workspaceCandidateDirsForPattern = Effect.fn("QualityTasks.workspaceCandidateDirsForPattern")(function* (
   repoRoot: string,

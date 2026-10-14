@@ -281,10 +281,13 @@ describe("resolver", () => {
       truth(document("alex@acme.example", { contentHash: I.ContentHash.make("b".repeat(64)) }), other),
     ];
     const filter = I.fitTokenFilter(train, c);
-    expect(filter.ownership.find((t) => t.token === "contact-address:alex@acme.example")?.clients).toEqual([
-      client,
-      other,
-    ]);
+    expect(
+      pipe(
+        A.findFirst(filter.ownership, (t) => t.token === "contact-address:alex@acme.example"),
+        O.map((t) => t.clients),
+        O.getOrUndefined
+      )
+    ).toEqual([client, other]);
     expect(I.resolve(document("alex@acme.example"), c, filter).evidence).toEqual([]);
   });
   it("keeps a bare docket ambiguous when two clients own it", () => {
@@ -376,13 +379,11 @@ describe("evaluation and codecs", () => {
     expect(split.train.length + split.test.length).toBe(100);
     expect(split.test.length).toBeGreaterThan(5);
     expect(split.test.length).toBeLessThan(40);
-    expect(
-      I.holdOutSplit([...docs].reverse(), "fixture")
-        .test.map((d) => d.document.contentHash)
-        .sort()
-    ).toEqual(split.test.map((d) => d.document.contentHash).sort());
-    expect(I.holdOutSplit(docs, "other").test.map((d) => d.document.contentHash)).not.toEqual(
-      split.test.map((d) => d.document.contentHash)
+    expect(A.map(I.holdOutSplit([...docs].reverse(), "fixture").test, (d) => d.document.contentHash).sort()).toEqual(
+      A.map(split.test, (d) => d.document.contentHash).sort()
+    );
+    expect(A.map(I.holdOutSplit(docs, "other").test, (d) => d.document.contentHash)).not.toEqual(
+      A.map(split.test, (d) => d.document.contentHash)
     );
     const held = split.test[0]!;
     const duplicates = I.holdOutSplit([held, held], "fixture");
@@ -402,7 +403,7 @@ describe("evaluation and codecs", () => {
       I.EvaluationCase.make({ truth: truth(document()), resolution: wrong }),
     ];
     const report = I.evaluate(cases, 8);
-    const tier = report.tiers.find((t) => t.tier === "candidate")!;
+    const tier = O.getOrThrow(A.findFirst(report.tiers, (t) => t.tier === "candidate"));
     expect({ resolved: tier.resolved, right: tier.right, wrong: tier.wrong, coverage: tier.coverage }).toEqual({
       resolved: 2,
       right: 1,
@@ -427,7 +428,13 @@ describe("evaluation and codecs", () => {
     // "fixture-6" holds the all-zero fixture hash out, so the copy would have scored without the switch.
     const report = I.evaluateHoldOut([truth(doc)], context(), "fixture-6");
     expect(report.testSize).toBe(1);
-    expect(report.tiers.find((t) => t.tier === "identified")?.resolved).toBe(0);
+    expect(
+      pipe(
+        A.findFirst(report.tiers, (t) => t.tier === "identified"),
+        O.map((t) => t.resolved),
+        O.getOrUndefined
+      )
+    ).toBe(0);
   });
   it.effect("roundtrips the private document and resolution codecs", () =>
     Effect.gen(function* () {

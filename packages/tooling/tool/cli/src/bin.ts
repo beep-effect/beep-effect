@@ -11,10 +11,11 @@
  * @since 0.0.0
  */
 
-const CHANGED_PATH_DIFF_FILTER = ["A", "C", "M", "R", "T", "U", "X", "B"].join("");
 const rawArgv = Bun.argv.slice(2);
 
 if (rawArgv.length === 2 && rawArgv[0] === "lint" && rawArgv[1] === "--fix") {
+  const A = await import("effect/Array");
+  const CHANGED_PATH_DIFF_FILTER = "ACMRTUXB";
   const runGit = (args: ReadonlyArray<string>) =>
     Bun.spawnSync({
       cmd: ["git", ...args],
@@ -27,13 +28,9 @@ if (rawArgv.length === 2 && rawArgv[0] === "lint" && rawArgv[1] === "--fix") {
     runGit(["ls-files", "--others", "--exclude-standard"]),
   ];
 
-  if (outputs.every((output) => output.success)) {
-    const changedFiles = outputs.flatMap((output) =>
-      output.stdout
-        .toString()
-        .trim()
-        .split(/\r?\n/)
-        .filter((line) => line.length > 0)
+  if (A.every(outputs, (output) => output.success)) {
+    const changedFiles = A.flatMap(outputs, (output) =>
+      A.filter(output.stdout.toString().trim().split(/\r?\n/), (line) => line.length > 0)
     );
 
     if (changedFiles.length === 0) {

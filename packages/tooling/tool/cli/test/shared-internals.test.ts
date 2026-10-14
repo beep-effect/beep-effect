@@ -14,7 +14,6 @@ Bun.env.BEEP_SI_BOOL_NO = "no";
 
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
-import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
@@ -81,9 +80,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
-class SharedInternalsTestError extends Data.TaggedError("SharedInternalsTestError")<{
-  readonly message: string;
-}> {}
+class SharedInternalsTestError extends S.TaggedError<SharedInternalsTestError>()("SharedInternalsTestError", {
+  message: S.String,
+}) {}
 
 it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((it) => {
   describe("SchemaFirstPolicyFinding wire contract", { concurrent: false }, () => {
@@ -203,7 +202,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
 
     it.effect("decodeOrFail maps schema errors to a domain error", () =>
       Effect.gen(function* () {
-        const decode = decodeOrFail(Point, (error) => new SharedInternalsTestError({ message: `bad: ${error._tag}` }));
+        const decode = decodeOrFail(Point, (error) => SharedInternalsTestError.make({ message: `bad: ${error._tag}` }));
         const exit = yield* Effect.exit(decode("not json"));
         expect(exit._tag).toBe("Failure");
         expect(yield* decode('{"x":3,"y":4}')).toEqual({ x: 3, y: 4 });
@@ -347,7 +346,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         const result = yield* nextCursor({
           pageInfo: GhPageInfo.make({ endCursor: null, hasNextPage: false }),
           label: "comments",
-          onMissingCursor: (label) => new SharedInternalsTestError({ message: label }),
+          onMissingCursor: (label) => SharedInternalsTestError.make({ message: label }),
         });
         result.pipe(assertNone);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -358,7 +357,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         const result = yield* nextCursor({
           pageInfo: GhPageInfo.make({ endCursor: "next", hasNextPage: true }),
           label: "comments",
-          onMissingCursor: (label) => new SharedInternalsTestError({ message: label }),
+          onMissingCursor: (label) => SharedInternalsTestError.make({ message: label }),
         });
         assertSome(result, "next");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -370,7 +369,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           nextCursor({
             pageInfo: GhPageInfo.make({ endCursor: null, hasNextPage: true }),
             label: "comments",
-            onMissingCursor: (label) => new SharedInternalsTestError({ message: `${label} missing cursor` }),
+            onMissingCursor: (label) => SharedInternalsTestError.make({ message: `${label} missing cursor` }),
           })
         );
         expect(exit._tag).toBe("Failure");

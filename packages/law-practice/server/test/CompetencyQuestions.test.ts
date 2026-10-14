@@ -76,6 +76,7 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const isActFrameFieldsSlots = S.is(ActFrame.fields.slots);
@@ -171,7 +172,7 @@ const FLINT_OUT_OF_SCOPE = {
 
 const flatten = (grouped: Readonly<Record<string, ReadonlyArray<string>>>): ReadonlyArray<string> =>
   A.sort(
-    A.flatMap(Object.values(grouped), (queries) => queries),
+    A.flatMap(R.values(grouped), (queries) => queries),
     Order.String
   );
 
@@ -1027,7 +1028,7 @@ describe("UFO-L power-subjection competency questions — expressed in this runt
 
 describe("FLINT's out-of-scope competency questions are excluded from porting", () => {
   it("the exclusion list is exactly the donor README's own out-of-scope sections", () => {
-    expect(Object.keys(FLINT_OUT_OF_SCOPE).sort()).toEqual([
+    expect(R.keys(FLINT_OUT_OF_SCOPE).sort()).toEqual([
       "Duty violations",
       "Events",
       "Hohfeldian relations",

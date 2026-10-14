@@ -30,7 +30,7 @@ import type { Receipt } from "@/session/Session.schema";
 export function ActionName({ value }: { readonly value: string }) {
   return (
     <>
-      {Str.split(value, "_").map((part, index) => (
+      {A.map(Str.split(value, "_"), (part, index) => (
         <Fragment key={`${index}-${part}`}>
           {index > 0 ? (
             <>

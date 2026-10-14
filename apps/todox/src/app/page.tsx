@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import * as A from "effect/Array";
 import { ContactForm } from "@/components/ContactForm";
 import { Hero } from "@/components/Hero";
 import { SessionDemo } from "@/components/SessionDemo";
@@ -56,7 +57,7 @@ export default function Home() {
               <p className="lede">{pillars.intro}</p>
             </div>
             <ol className="pillars">
-              {pillars.items.map((item) => (
+              {A.map(pillars.items, (item) => (
                 <li className="pillar" key={item.title}>
                   <h3>{item.title}</h3>
                   <p>{item.body}</p>
@@ -75,7 +76,7 @@ export default function Home() {
               <p className="lede">{howItWorks.intro}</p>
             </div>
             <ol className="steps">
-              {howItWorks.steps.map((step) => (
+              {A.map(howItWorks.steps, (step) => (
                 <li className="step" key={step.title}>
                   <h3>{step.title}</h3>
                   <p>{step.body}</p>
@@ -96,7 +97,7 @@ export default function Home() {
                 <p className="lede">{skills.intro}</p>
               </div>
               <dl className="tiers">
-                {skills.tiers.map((tier) => (
+                {A.map(skills.tiers, (tier) => (
                   <div className="tier" key={tier.title}>
                     <dt>{tier.title}</dt>
                     <dd>{tier.body}</dd>
@@ -127,7 +128,7 @@ export default function Home() {
               <table className="compare">
                 <thead>
                   <tr>
-                    {whyTodox.columns.map((column, index) => (
+                    {A.map(whyTodox.columns, (column, index) => (
                       <th scope="col" key={column === "" ? `col-${index}` : column}>
                         {column === "" ? <span className="sr-only">Dimension</span> : column}
                       </th>
@@ -135,7 +136,7 @@ export default function Home() {
                   </tr>
                 </thead>
                 <tbody>
-                  {whyTodox.rows.map(([dimension, notetaker, todox]) => (
+                  {A.map(whyTodox.rows, ([dimension, notetaker, todox]) => (
                     <tr key={dimension}>
                       <th scope="row">{dimension}</th>
                       <td>{notetaker}</td>
@@ -156,7 +157,7 @@ export default function Home() {
               </h2>
             </div>
             <ul className="trust__list">
-              {trust.points.map((point) => (
+              {A.map(trust.points, (point) => (
                 <li key={point}>
                   <CheckIcon />
                   <span>{point}</span>
@@ -174,7 +175,7 @@ export default function Home() {
               </h2>
             </div>
             <div className="faq">
-              {faq.items.map((item, index) => (
+              {A.map(faq.items, (item, index) => (
                 <details key={item.question} open={index === 0}>
                   <summary>{item.question}</summary>
                   <p>{item.answer}</p>

@@ -5,13 +5,14 @@ import "@testing-library/jest-dom/vitest";
 import { it } from "@beep/test-runner";
 import { afterEach, describe, expect } from "@effect/vitest";
 import { cleanup, render } from "@testing-library/react";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 
 // The wide table the reviewers used: twelve columns, each holding one long unbroken
 // token. Nothing here can wrap without wrapping *inside* a word.
 const cell = (value: string) => MdModel.TableCell.make({ children: [MdModel.Text.make({ value })] });
 
-const row = (values: ReadonlyArray<string>) => MdModel.TableRow.make({ children: values.map(cell) });
+const row = (values: ReadonlyArray<string>) => MdModel.TableRow.make({ children: A.map(values, cell) });
 
 const columns = Array.from({ length: 12 }, (_, i) => i + 1);
 
@@ -19,7 +20,7 @@ const document = MdModel.Document.make({
   children: [
     MdModel.Table.make({
       headerRow: true,
-      children: [row(columns.map((n) => `C${n}`)), row(columns.map((n) => `verylongvaluecolumn${n}`))],
+      children: [row(A.map(columns, (n) => `C${n}`)), row(A.map(columns, (n) => `verylongvaluecolumn${n}`))],
     }),
   ],
 });

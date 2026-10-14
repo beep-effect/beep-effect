@@ -8,6 +8,7 @@
 "use client";
 import { $OipWebId } from "@beep/identity";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import { Atom } from "effect/reactivity";
@@ -173,7 +174,10 @@ const heroVideoAutoplayAtom = Atom.family((key: string) =>
 export const HERO_ROTATE_MS = 7000;
 
 const rotationSetKey = (clips: ReadonlyArray<HeroClipMedia>): string =>
-  `${clips.length}::${clips.map((clip) => heroClipKey(clip.poster, clip.mp4, clip.webm)).join("||")}`;
+  `${clips.length}::${A.join(
+    A.map(clips, (clip) => heroClipKey(clip.poster, clip.mp4, clip.webm)),
+    "||"
+  )}`;
 
 const heroRotationIndexAtom = Atom.family((_key: string) => Atom.make(0));
 
@@ -322,7 +326,7 @@ export function HeroVideo({ clips }: { readonly clips: ReadonlyArray<HeroClipMed
 
   return (
     <>
-      {clips.map((clip, index) => (
+      {A.map(clips, (clip, index) => (
         <HeroClipLayer
           key={heroClipKey(clip.poster, clip.mp4, clip.webm)}
           active={index === activeIndex}

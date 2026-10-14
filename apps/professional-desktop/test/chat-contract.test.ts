@@ -119,7 +119,7 @@ describe("@beep/professional-desktop chat contract", () => {
         // is the lifted Document
         const timeline = yield* operations.getTimeline(thread.id);
         const items = messageItems(timeline);
-        expect(items.map((m) => m.role)).toEqual(["user", "assistant"]);
+        expect(A.map(items, (m) => m.role)).toEqual(["user", "assistant"]);
         expect(items[0]?.content).toStrictEqual(content);
         expect(items[1]?.content).toStrictEqual(assistantContentToDocument([...expectedBlocks]));
 
@@ -223,7 +223,7 @@ describe("@beep/professional-desktop chat contract", () => {
 
         expect([...emitted]).toStrictEqual([...expectedBlocks]);
         const timeline = yield* operations.getTimeline(thread.id);
-        expect(messageItems(timeline).map((m) => m.role)).toEqual(["user", "assistant"]);
+        expect(A.map(messageItems(timeline), (m) => m.role)).toEqual(["user", "assistant"]);
         const usage = yield* Ref.get(usageRef);
         expect(usage).toHaveLength(1);
       })
@@ -369,7 +369,7 @@ describe("@beep/professional-desktop chat contract", () => {
         // the prompt is answered by a turn that says it was stopped
         const timeline = yield* operations.getTimeline(thread.id);
         const items = messageItems(timeline);
-        expect(items.map((m) => m.role)).toEqual(["user", "assistant"]);
+        expect(A.map(items, (m) => m.role)).toEqual(["user", "assistant"]);
 
         // the stopped turn carries the marker and none of the streamed content
         const stopped = items[1];
@@ -445,7 +445,7 @@ describe("@beep/professional-desktop chat contract", () => {
           operations.sendMessage(thread.id, userDocument("Do not append this yet"), "after-orphaned-user")
         ).pipe(Effect.exit);
         const timeline = yield* operations.getTimeline(thread.id);
-        expect(messageItems(timeline).map((item) => item.role)).toEqual(["user"]);
+        expect(A.map(messageItems(timeline), (item) => item.role)).toEqual(["user"]);
         const captured = yield* Ref.get(histories);
         expect(A.map(captured, (history) => A.map(history, (item) => item.role))).toStrictEqual([["user"]]);
       })
@@ -487,7 +487,7 @@ describe("@beep/professional-desktop chat contract", () => {
         expect(yield* operations.getTurnRequestStatus("assistant-committed")).toBe("persisted");
         expect(yield* operations.getTurnRequestStatus("assistant-committed")).toBe("persisted");
         const timeline = yield* operations.getTimeline(thread.id);
-        expect(messageItems(timeline).map((item) => item.role)).toEqual(["user", "assistant"]);
+        expect(A.map(messageItems(timeline), (item) => item.role)).toEqual(["user", "assistant"]);
       })
     );
   });
@@ -505,9 +505,9 @@ describe("@beep/professional-desktop chat contract", () => {
 
         const timeline = yield* operations.getTimeline(thread.id);
         // user, assistant, user, assistant — strictly increasing turn indices
-        expect(timeline.turns.map((t) => t.turnIndex)).toEqual([0, 1, 2, 3]);
+        expect(A.map(timeline.turns, (t) => t.turnIndex)).toEqual([0, 1, 2, 3]);
         const items = messageItems(timeline);
-        expect(items.map((m) => m.role)).toEqual(["user", "assistant", "user", "assistant"]);
+        expect(A.map(items, (m) => m.role)).toEqual(["user", "assistant", "user", "assistant"]);
         expect(documentToPlainText(items[2]!.content)).toBe("second");
       })
     );
@@ -612,7 +612,7 @@ describe("@beep/professional-desktop chat contract", () => {
         // The second turn's history must already contain the first turn's answer:
         // it must never end in two prompts in a row.
         const secondHistory = seen[1]!;
-        expect(secondHistory.map((item) => item.role)).toEqual(["user", "assistant", "user"]);
+        expect(A.map(secondHistory, (item) => item.role)).toEqual(["user", "assistant", "user"]);
         // ...and the prompt it is being asked to answer is its own.
         expect(secondHistory[2]!.text).toContain("BRAVO");
       })
@@ -655,7 +655,9 @@ describe("@beep/professional-desktop chat contract", () => {
         expect(yield* operations.getTurnRequestStatus("window-b")).toBe("not_persisted");
         const timeline = yield* operations.getTimeline(thread.id);
         expect(
-          timeline.turns.some((turn) => turn.items.some((item) => item.kind === "message" && item.role === "assistant"))
+          A.some(timeline.turns, (turn) =>
+            A.some(turn.items, (item) => item.kind === "message" && item.role === "assistant")
+          )
         ).toBe(true);
       })
     );

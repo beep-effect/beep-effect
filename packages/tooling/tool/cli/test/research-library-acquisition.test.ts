@@ -36,6 +36,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -101,15 +102,15 @@ const headerlessPdf = (body: string) => {
   ];
   let pdf = "%PDF-1.4\n";
   const offsets = [0];
-  objects.forEach((object, index) => {
+  A.forEach(objects, (object, index) => {
     offsets.push(pdf.length);
     pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
   });
   const xref = pdf.length;
-  pdf += `xref\n0 6\n0000000000 65535 f \n${offsets
-    .slice(1)
-    .map((offset) => `${String(offset).padStart(10, "0")} 00000 n \n`)
-    .join("")}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  pdf += `xref\n0 6\n0000000000 65535 f \n${A.join(
+    A.map(offsets.slice(1), (offset) => `${String(offset).padStart(10, "0")} 00000 n \n`),
+    ""
+  )}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
   return pdf;
 };
 
@@ -418,14 +419,14 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
         });
         const valid = yield* acquireLibraryGithub(fixture.root, issue, "captures/rename");
         expect(valid.status).toBe("readable");
-        expect(valid.artifacts.filter((a) => a.role === "repository-identity-response")).toHaveLength(2);
-        expect(valid.artifacts.some((a) => a.role === "repository-identity-provenance")).toBe(true);
+        expect(A.filter(valid.artifacts, (a) => a.role === "repository-identity-response")).toHaveLength(2);
+        expect(A.some(valid.artifacts, (a) => a.role === "repository-identity-provenance")).toBe(true);
         yield* fixture.fs.writeFileString(mismatch, "different stable id");
         const invalid = yield* acquireLibraryGithub(fixture.root, issue, "captures/rename-mismatch");
         expect(invalid.complete).toBe(false);
         expect(invalid.status).toBe("blocked");
         expect(invalid.reason).toContain("stable repository ID/node identity");
-        expect(invalid.artifacts.filter((a) => a.role === "repository-identity-response")).toHaveLength(2);
+        expect(A.filter(invalid.artifacts, (a) => a.role === "repository-identity-response")).toHaveLength(2);
       })
   );
 
@@ -473,11 +474,11 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       const capture = yield* acquireLibraryGithub(fixture.root, code, "captures/large-patch");
       expect(capture.status, capture.reason).toBe("readable");
       expect(capture.complete, capture.reason).toBe(true);
-      const patch = capture.artifacts.find((artifact) => artifact.role === "raw-diff");
-      expect(patch?.bytes).toBeGreaterThan(8_000_000);
-      expect(
-        patch === undefined ? "" : yield* fixture.fs.readFileString(fixture.path.join(fixture.root, patch.path))
-      ).toContain("actual cited patch content");
+      const patch = O.getOrThrow(A.findFirst(capture.artifacts, (artifact) => artifact.role === "raw-diff"));
+      expect(patch.bytes).toBeGreaterThan(8_000_000);
+      expect(yield* fixture.fs.readFileString(fixture.path.join(fixture.root, patch.path))).toContain(
+        "actual cited patch content"
+      );
     })
   );
 
@@ -512,7 +513,7 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       expect(capture.status, capture.reason).toBe("readable");
       expect(capture.revision).toBe("v3");
       expect(requested).toContain("https://arxiv.org/pdf/2608.23992v3");
-      expect(capture.artifacts.some((artifact) => artifact.role === "arxiv-version-proof")).toBe(true);
+      expect(A.some(capture.artifacts, (artifact) => artifact.role === "arxiv-version-proof")).toBe(true);
       const altered = HttpClient.make((request) =>
         Effect.succeed(
           HttpClientResponse.fromWeb(
@@ -561,8 +562,8 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       );
       expect(capture.status).toBe("blocked");
       expect(capture.complete).toBe(false);
-      expect(capture.artifacts.some((artifact) => artifact.role === "publisher-landing-page")).toBe(true);
-      expect(capture.artifacts.some((artifact) => artifact.role === "extracted-full-text")).toBe(false);
+      expect(A.some(capture.artifacts, (artifact) => artifact.role === "publisher-landing-page")).toBe(true);
+      expect(A.some(capture.artifacts, (artifact) => artifact.role === "extracted-full-text")).toBe(false);
       expect(capture.reason).toContain("Abstract or portal text is incomplete");
     })
   );
@@ -596,8 +597,8 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       expect(requested).toEqual(["https://publisher.example/article", "https://publisher.example/pdf?id=paper"]);
       expect(capture.complete).toBe(false);
       expect(capture.reason).toContain("HTTP 403");
-      expect(capture.artifacts.some((artifact) => artifact.role === "raw-response")).toBe(true);
-      expect(capture.artifacts.some((artifact) => artifact.role === "publisher-landing-page")).toBe(true);
+      expect(A.some(capture.artifacts, (artifact) => artifact.role === "raw-response")).toBe(true);
+      expect(A.some(capture.artifacts, (artifact) => artifact.role === "publisher-landing-page")).toBe(true);
     })
   );
 
@@ -626,11 +627,12 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       expect(capture.status).toBe("blocked");
       expect(capture.complete).toBe(false);
       expect(
-        capture.artifacts.some(
+        A.some(
+          capture.artifacts,
           (artifact) => artifact.mediaType === "application/pdf" && artifact.role === "raw-full-text"
         )
       ).toBe(true);
-      expect(capture.artifacts.some((artifact) => artifact.role === "publisher-landing-page")).toBe(false);
+      expect(A.some(capture.artifacts, (artifact) => artifact.role === "publisher-landing-page")).toBe(false);
     })
   );
 
@@ -646,7 +648,7 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
         },
         ["source.en.vtt", "source.en-orig.vtt", "source.fr.vtt"]
       );
-      expect(tracks.map((track) => [track.language, track.origin, track.downloadedFilename])).toEqual([
+      expect(A.map(tracks, (track) => [track.language, track.origin, track.downloadedFilename])).toEqual([
         ["en", "creator", "source.en.vtt"],
         ["en-orig", "automatic", "source.en-orig.vtt"],
       ]);
@@ -663,18 +665,16 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       const capture = A.getUnsafe(corrected.captures, 0);
       expect(capture?.status).toBe("blocked");
       expect(capture?.complete).toBe(false);
-      const artifact = capture?.artifacts.find((entry) => entry.role === "capture-correction");
+      const artifact = O.getOrThrow(A.findFirst(capture.artifacts, (entry) => entry.role === "capture-correction"));
       expect(artifact).toBeDefined();
-      if (artifact !== undefined) {
-        const receipt = yield* S.decodeEffect(LibraryCaptureCorrectionJson)(
-          yield* fixture.fs.readFileString(fixture.path.join(fixture.root, artifact.path))
-        );
-        const before = yield* fixture.fs.readFile(fixture.path.join(fixture.root, receipt.before.path));
-        expect(yield* hashBytes(before)).toBe(receipt.before.sha256);
-        expect(receipt.after.status).toBe("blocked");
-        const afterText = yield* S.encodeEffect(UnknownJson)(receipt.after);
-        expect(yield* hashBytes(new TextEncoder().encode(afterText))).toBe(receipt.afterSha256);
-      }
+      const receipt = yield* S.decodeEffect(LibraryCaptureCorrectionJson)(
+        yield* fixture.fs.readFileString(fixture.path.join(fixture.root, artifact.path))
+      );
+      const before = yield* fixture.fs.readFile(fixture.path.join(fixture.root, receipt.before.path));
+      expect(yield* hashBytes(before)).toBe(receipt.before.sha256);
+      expect(receipt.after.status).toBe("blocked");
+      const afterText = yield* S.encodeEffect(UnknownJson)(receipt.after);
+      expect(yield* hashBytes(new TextEncoder().encode(afterText))).toBe(receipt.afterSha256);
       const repeated = yield* withCatalog(fixture.root, (catalog) => correctLibraryCaptures(fixture.root, catalog));
       expect(A.getUnsafe(repeated.captures, 0)?.artifacts.length).toBe(capture?.artifacts.length);
       expect(A.getUnsafe(original.captures, 0)?.status).toBe("readable");
@@ -699,7 +699,7 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
               run_id: "fixture-run",
               name: "deep-research",
               status: "complete",
-              phases: ["Plan", "Research", "Verify", "Report"].map((title) => ({ title, state: "done" })),
+              phases: A.map(["Plan", "Research", "Verify", "Report"], (title) => ({ title, state: "done" })),
             },
           },
         },
@@ -818,7 +818,7 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
       const fixture = yield* prepare();
       const payload = LibraryImportPayload.make({
         ...fixture.payload,
-        artifacts: fixture.payload.artifacts.map((artifact) =>
+        artifacts: A.map(fixture.payload.artifacts, (artifact) =>
           LibraryArtifact.make({ ...artifact, role: "ai-interpretation" })
         ),
       });
@@ -851,7 +851,7 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
         reason: "Provider supplied interpretation without original returned body.",
         reviewer: "fixture-reviewer",
         reviewedAt: "2026-10-06T00:00:00Z",
-        artifacts: fixture.payload.artifacts.map((artifact) =>
+        artifacts: A.map(fixture.payload.artifacts, (artifact) =>
           LibraryArtifact.make({ ...artifact, role: "ai-interpretation" })
         ),
       });

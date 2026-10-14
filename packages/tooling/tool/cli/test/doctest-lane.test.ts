@@ -193,15 +193,18 @@ describe("doctest lane fixture", { concurrent: false }, () => {
       yield* fs.writeFileString(path.join(root, "src/template.ts"), 'export const marker = "import.meta." + "vitest";');
       yield* fs.writeFileString(
         path.join(root, "src/marked.ts"),
-        [
-          "/**",
-          " * **Example** (Add numbers)",
-          ` * \`\`\`${doctestFenceInfo("Add numbers")}`,
-          " * 1 + 1 // => 2",
-          " * ```",
-          " */",
-          "export const sum = 2;",
-        ].join("\n")
+        A.join(
+          [
+            "/**",
+            " * **Example** (Add numbers)",
+            ` * \`\`\`${doctestFenceInfo("Add numbers")}`,
+            " * 1 + 1 // => 2",
+            " * ```",
+            " */",
+            "export const sum = 2;",
+          ],
+          "\n"
+        )
       );
       const { test: config } = yield* Effect.promise(() =>
         resolveConfig({

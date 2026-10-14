@@ -401,7 +401,7 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
       expect(result.outputJsonPath).toBe(outputJsonPath);
       expect(result.outputMarkdownPath).toBe(outputMarkdownPath);
       expect(inventory.generatedAt).toBe(fixedGeneratedAt);
-      expect(inventory.packages.map((pkg) => pkg.packageName)).toEqual(["@beep/demo"]);
+      expect(A.map(inventory.packages, (pkg) => pkg.packageName)).toEqual(["@beep/demo"]);
       expect(inventory.packages[0]?.counts.schemaAnnotationFindings).toBe(0);
       expect(markdown).toContain("# JSDoc Documentation Compliance Inventory");
     })
@@ -456,7 +456,7 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
 
       expect(result.outputJsonPath).toBe(outputJsonPath);
       expect(result.outputMarkdownPath).toBe(outputMarkdownPath);
-      expect(inventory.packages.map((pkg) => pkg.packageName)).toEqual(["@beep/demo"]);
+      expect(A.map(inventory.packages, (pkg) => pkg.packageName)).toEqual(["@beep/demo"]);
       expect(markdown).toContain("# JSDoc Documentation Compliance Inventory");
       expect(markdown).not.toContain("@beep/lab-demo");
     })

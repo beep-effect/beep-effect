@@ -109,8 +109,8 @@ describe("Ontology Session aggregate", () => {
 
     const partitions = deriveSessionGraphPartitions(session);
 
-    expect(partitions.asserted.quads.map(serializeQuad)).toEqual([serializeQuad(nameQuad)]);
-    expect(partitions.shapes.quads.map(serializeQuad)).toEqual(shapeQuads.map(serializeQuad));
+    expect(A.map(partitions.asserted.quads, serializeQuad)).toEqual([serializeQuad(nameQuad)]);
+    expect(A.map(partitions.shapes.quads, serializeQuad)).toEqual(A.map(shapeQuads, serializeQuad));
   });
 
   it("applies remove operations without mutating other partitions", () => {

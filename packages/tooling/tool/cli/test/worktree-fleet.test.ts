@@ -165,15 +165,18 @@ describe("parseStatusPorcelainZ", () => {
 describe("parseMergeTreeConflictNames", () => {
   it("skips the tree OID line and stops before the informational messages", () => {
     const names = parseMergeTreeConflictNames(
-      [
-        "df76511529ca37ffd9e887e628954239fb22a302",
-        "README.md",
-        "turbo.json",
-        "",
-        "Auto-merging README.md",
-        "CONFLICT (content): Merge conflict in README.md",
-        "",
-      ].join("\n")
+      A.join(
+        [
+          "df76511529ca37ffd9e887e628954239fb22a302",
+          "README.md",
+          "turbo.json",
+          "",
+          "Auto-merging README.md",
+          "CONFLICT (content): Merge conflict in README.md",
+          "",
+        ],
+        "\n"
+      )
     );
     expect(names).toEqual(["README.md", "turbo.json"]);
   });
@@ -195,7 +198,7 @@ describe("buildContestedIndex", () => {
       ["/fleet/gamma", ["shared.ts"]],
     ]);
 
-    expect(contested.map((entry) => entry.path)).toEqual(["alpha.ts", "shared.ts"]);
+    expect(A.map(contested, (entry) => entry.path)).toEqual(["alpha.ts", "shared.ts"]);
     expect(contested[0]?.checkouts).toEqual(["/fleet/alpha", "/fleet/beta"]);
     expect(contested[1]?.checkouts).toEqual(["/fleet/alpha", "/fleet/beta", "/fleet/gamma"]);
   });
@@ -206,7 +209,7 @@ describe("buildContestedIndex", () => {
       ["/fleet/beta", [".repos/effect-v4/pin.txt", "node_modules/pkg/index.js", ".git/index", "real.ts"]],
     ]);
 
-    expect(contested.map((entry) => entry.path)).toEqual(["real.ts"]);
+    expect(A.map(contested, (entry) => entry.path)).toEqual(["real.ts"]);
   });
 
   it("reports nothing when no path is claimed twice", () => {

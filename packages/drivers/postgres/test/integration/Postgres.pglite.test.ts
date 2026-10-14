@@ -57,16 +57,19 @@ const bundleNotes = pgTable("driver_bundle_notes", {
 // the legacy statement split on the in-memory path.
 const bundleNotesMigration = {
   name: "20260102000000_create_driver_bundle_notes",
-  sql: [
-    "CREATE TABLE driver_bundle_notes (",
-    "  id SERIAL PRIMARY KEY,",
-    "  body TEXT NOT NULL",
-    ");",
-    "",
-    "CREATE UNIQUE INDEX driver_bundle_notes_body_unique_idx",
-    "  ON driver_bundle_notes (body);",
-    "",
-  ].join("\n"),
+  sql: A.join(
+    [
+      "CREATE TABLE driver_bundle_notes (",
+      "  id SERIAL PRIMARY KEY,",
+      "  body TEXT NOT NULL",
+      ");",
+      "",
+      "CREATE UNIQUE INDEX driver_bundle_notes_body_unique_idx",
+      "  ON driver_bundle_notes (body);",
+      "",
+    ],
+    "\n"
+  ),
 };
 
 const makePostgresClientLayer = () =>

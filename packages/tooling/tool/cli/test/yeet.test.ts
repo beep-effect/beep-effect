@@ -1857,13 +1857,13 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         })
       );
 
-      const followUps = states.find((state) => state.name === "review-follow-ups");
+      const followUps = O.getOrThrow(A.findFirst(states, (state) => state.name === "review-follow-ups"));
       expect(followUps).toMatchObject({ status: "blocked", count: 1 });
-      expect(followUps?.detail).toContain("bun run beep yeet reply");
+      expect(followUps.detail).toContain("bun run beep yeet reply");
       // An advisory is a number the operator reads, never a condition the merge waits on.
-      const advisories = states.find((state) => state.name === "review-advisories");
+      const advisories = O.getOrThrow(A.findFirst(states, (state) => state.name === "review-advisories"));
       expect(advisories).toMatchObject({ status: "passed", count: 13 });
-      expect(advisories?.detail).toContain("coderabbitai=11, greptile-apps=2");
+      expect(advisories.detail).toContain("coderabbitai=11, greptile-apps=2");
     });
 
     it("classifies a resolved thread a reviewer spoke on last as a blocking follow-up", () => {
@@ -1911,7 +1911,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
       );
 
       expect(triage.counts).toMatchObject({ unresolved: 0, followUp: 1, acknowledged: 1, answered: 1 });
-      expect(triage.followUpThreads.map((value) => value.id)).toEqual(["PRRT_followup"]);
+      expect(A.map(triage.followUpThreads, (value) => value.id)).toEqual(["PRRT_followup"]);
       const issue = reviewFollowUpThreadIssue(triage.followUpThreads[0]!);
       expect(issue).toMatchObject({ blocking: true, category: "pr-review", id: "pr-review-follow-up:PRRT_followup" });
       expect(issue.message).toContain("src/file.ts:42");
@@ -1984,7 +1984,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         })
       );
 
-      expect(states.find((state) => state.name === "review-follow-ups")).toMatchObject({ status: "blocked", count: 1 });
+      expect(O.getOrThrow(A.findFirst(states, (state) => state.name === "review-follow-ups"))).toMatchObject({
+        status: "blocked",
+        count: 1,
+      });
     });
 
     it("counts advisories from the newest review body per author, minus findings a thread carries", () => {
@@ -4173,12 +4176,15 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
                   exitCode: 1,
                   // The typos marker sits inside the red lint lane's own segment;
                   // the record names that lane, so no whole-output scan runs.
-                  output: [
-                    "[beep-cli] quality:lint: bun run beep ci lane lint",
-                    "[beep-cli] lint:typos: typos",
-                    "error: misspelling found",
-                    "[beep-cli] quality:lint: failed in 12ms",
-                  ].join("\n"),
+                  output: A.join(
+                    [
+                      "[beep-cli] quality:lint: bun run beep ci lane lint",
+                      "[beep-cli] lint:typos: typos",
+                      "error: misspelling found",
+                      "[beep-cli] quality:lint: failed in 12ms",
+                    ],
+                    "\n"
+                  ),
                 }),
                 step: proofStep,
               }),
@@ -4510,7 +4516,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         }
 
         const stashList = yield* runGitOutputLines(tmpDir, ["stash", "list"]);
-        expect(stashList.join("\n")).toContain("yeet-staged-only/");
+        expect(A.join(stashList, "\n")).toContain("yeet-staged-only/");
       })
     );
 
@@ -4552,7 +4558,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const stillParked = yield* runGitStatus(tmpDir);
         expect(stillParked).toBe("");
         const stashList = yield* runGitOutputLines(tmpDir, ["stash", "list"]);
-        expect(stashList.join("\n")).toContain("yeet-staged-only/");
+        expect(A.join(stashList, "\n")).toContain("yeet-staged-only/");
       })
     );
 
@@ -5653,7 +5659,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         resolveThreads: "PRRT_a,PRRT_b",
       });
       ok.error.pipe(assertNone);
-      expect(ok.intents.map((intent) => `${intent.kind}:${intent.threadId}`)).toEqual([
+      expect(A.map(ok.intents, (intent) => `${intent.kind}:${intent.threadId}`)).toEqual([
         "reply:PRRT_a",
         "resolve:PRRT_a",
         "resolve:PRRT_b",

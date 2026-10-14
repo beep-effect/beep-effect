@@ -17,6 +17,7 @@ import {
 } from "@beep/repo-cli/test/Goals";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -146,7 +147,7 @@ describe("planGoalPacketMigration", () => {
       expect(O.getOrNull(readmeLifecycleToken(plan.readmeText ?? ""))).toBe("completed-retained");
 
       const phases = parse(plan.manifestText ?? "").phases as ReadonlyArray<{ status: string }>;
-      expect(phases.map((phase) => phase.status)).toEqual(["complete", "pending"]);
+      expect(A.map(phases, (phase) => phase.status)).toEqual(["complete", "pending"]);
     })
   );
 
@@ -214,7 +215,7 @@ describe("planGoalPacketMigration", () => {
 
   it.effect("backfills v2 manifests for the five recorded manifest-less packets", () =>
     Effect.gen(function* () {
-      expect(GOAL_MANIFEST_BACKFILLS.map((backfill) => backfill.slug)).toEqual([
+      expect(A.map(GOAL_MANIFEST_BACKFILLS, (backfill) => backfill.slug)).toEqual([
         "agentic-cad-patent-tooling",
         "dedup-clone-engine",
         "knowledge-workspace",

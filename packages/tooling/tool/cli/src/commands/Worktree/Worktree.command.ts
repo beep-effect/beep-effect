@@ -1075,14 +1075,17 @@ const worktreeDoctorCommand = Command.make(
  */
 export const worktreeCommand = Command.make("worktree", {}, () =>
   Console.log(
-    [
-      "Worktree commands:",
-      "- bun run beep worktree new <name> [--branch <branch>]",
-      "- bun run beep worktree remove <name> [--archive] [--delete-branch]",
-      "- bun run beep worktree doctor",
-      "- bun run beep worktree reap [--apply] [--json] [--idle-hours <hours>]",
-      "- bun run beep worktree fleet [--json]",
-    ].join("\n")
+    A.join(
+      [
+        "Worktree commands:",
+        "- bun run beep worktree new <name> [--branch <branch>]",
+        "- bun run beep worktree remove <name> [--archive] [--delete-branch]",
+        "- bun run beep worktree doctor",
+        "- bun run beep worktree reap [--apply] [--json] [--idle-hours <hours>]",
+        "- bun run beep worktree fleet [--json]",
+      ],
+      "\n"
+    )
   )
 ).pipe(
   Command.withDescription("Manage sibling git worktrees under the canonical worktrees root"),

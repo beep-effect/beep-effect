@@ -24,6 +24,7 @@ import {
 } from "@beep/ontology-use-cases/aggregates/Session";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { AtomRegistry } from "effect/reactivity";
@@ -292,7 +293,7 @@ describe("workbench graph renderer toggle", () => {
       // selection flows through the bridge into the mounted 3D renderer
       registry.set(selectedOntologyResourceIriAtom, O.some("https://example.test/Pizza"));
       yield* waitFor("3D selection applied", () =>
-        renderers.graph3d.mock.calls.some(([handle]) => handle.stats().selectedNodeIndex === 0)
+        A.some(renderers.graph3d.mock.calls, ([handle]) => handle.stats().selectedNodeIndex === 0)
       );
       const handle = renderers.graph3d.mock.calls.at(-1)![0];
       expect(handle.stats().selectedNodeIndex).toBe(0);

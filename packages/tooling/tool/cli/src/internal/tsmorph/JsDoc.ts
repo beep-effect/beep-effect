@@ -5,7 +5,9 @@
  * @since 0.0.0
  */
 
-import { Str } from "@beep/utils";
+import { Str, thunkEmptyStr } from "@beep/utils";
+import * as A from "effect/Array";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import type { Node, SourceFile } from "ts-morph";
 
@@ -26,11 +28,13 @@ import type { Node, SourceFile } from "ts-morph";
  * @since 0.0.0
  */
 export const leadingJsDocText = (node: Node): string =>
-  node
-    .getLeadingCommentRanges()
-    .map((range) => range.getText())
-    .filter((text: string) => Str.startsWith("/**")(text))
-    .at(-1) ?? "";
+  pipe(
+    node.getLeadingCommentRanges(),
+    A.map((range) => range.getText()),
+    A.filter(Str.startsWith("/**")),
+    A.last,
+    O.getOrElse(thunkEmptyStr)
+  );
 
 /**
  * Return the top-level file overview JSDoc block, when one exists.

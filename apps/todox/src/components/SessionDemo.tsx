@@ -95,13 +95,13 @@ export function SessionDemo() {
   const gate = O.fromUndefinedOr(reviewPassage.gate);
   const briefSections = A.filter(packet.sections, (section) => A.contains(BRIEF_SECTIONS, section.heading));
   const groups = A.prepend(
-    briefSections.map((section) =>
+    A.map(briefSections, (section) =>
       RowGroup.make({
         heading: O.some(`BRIEF · ${section.heading}`),
-        rows: section.entries.map(entryRow(section.heading)),
+        rows: A.map(section.entries, entryRow(section.heading)),
       })
     ),
-    RowGroup.make({ heading: O.some("REVIEW AT THE GATE"), rows: reviewPassage.records.map(recordRow) })
+    RowGroup.make({ heading: O.some("REVIEW AT THE GATE"), rows: A.map(reviewPassage.records, recordRow) })
   );
 
   return (
@@ -126,7 +126,7 @@ export function SessionDemo() {
                 </p>
                 <p className="gate__policy">POLICY BASIS: “{g.policyBasis}”</p>
                 <p className="gate__actions">
-                  {g.requestedActions.map((action) => (
+                  {A.map(g.requestedActions, (action) => (
                     <span key={action}>
                       <ActionName value={action} />
                     </span>

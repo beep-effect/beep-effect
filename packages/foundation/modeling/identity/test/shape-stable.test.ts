@@ -3,6 +3,7 @@ import { make } from "@beep/identity";
 import * as IdentityPackages from "@beep/identity/packages";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import type {
   DeclarationAnnotationExtras,
@@ -280,7 +281,7 @@ const expectExistingAnnotationShape = (
   expectRecord(annotation, "annotation");
   const existingKeys = ["identifier", "schemaId", "title", ...expectedExtraKeys];
 
-  expect(Object.keys(annotation)).toEqual(expect.arrayContaining(existingKeys));
+  expect(R.keys(annotation)).toEqual(expect.arrayContaining(existingKeys));
   expect(annotation.identifier).toBe(expectedIdentifier);
   expect(annotation.schemaId).toBe(Symbol.for(expectedIdentifier));
   expect(annotation.title).toBe(expectedTitle);
@@ -379,7 +380,7 @@ describe("@beep/identity shape-stable harness", () => {
   });
 
   it("pins every generated package composer export to today's literal identity", () => {
-    for (const [exportName, expectedIdentity] of Object.entries(expectedPackageComposerIdentities)) {
+    for (const [exportName, expectedIdentity] of R.toEntries(expectedPackageComposerIdentities)) {
       assertComposerExport("@beep/identity/packages", IdentityPackages, exportName, expectedIdentity);
       assertComposerExport("@beep/identity", Identity, exportName, expectedIdentity);
     }
@@ -390,7 +391,7 @@ describe("@beep/identity shape-stable harness", () => {
 
     expectRecord(repoPkgs, "@beep/identity/packages.RepoPkgs");
 
-    for (const [exportName, expectedIdentity] of Object.entries(expectedPackageComposerIdentities)) {
+    for (const [exportName, expectedIdentity] of R.toEntries(expectedPackageComposerIdentities)) {
       if (exportName !== "$I") {
         assertComposerShape(`RepoPkgs.${exportName}`, repoPkgs[exportName], expectedIdentity);
       }
@@ -411,7 +412,7 @@ describe("@beep/identity shape-stable harness", () => {
       const made = make(current.base);
       const composer = getProperty(made, current.accessor);
 
-      expect(Object.keys(made)).toEqual([current.accessor]);
+      expect(R.keys(made)).toEqual([current.accessor]);
       assertComposerShape(`make(${current.base}).${current.accessor}`, composer, current.identity);
     }
   });

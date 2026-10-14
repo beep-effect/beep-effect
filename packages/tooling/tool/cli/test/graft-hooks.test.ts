@@ -238,12 +238,15 @@ layer(NodeServices.layer)("Graft hook installation trust", (it) => {
       // proves the guard ran before Graft's own code, the ordering upkeep depends on.
       yield* fs.writeFileString(
         path.join(fixture.pkg, "dist", "claude", "hooks.js"),
-        [
-          'import { readFileSync } from "node:fs";',
-          "export const main = (event) =>",
-          '  console.log(event + ":" + JSON.parse(readFileSync(process.env.CLAUDE_PROJECT_DIR + "/graft/.cache/wiring-stamp.json", "utf8")).version);',
-          "",
-        ].join("\n")
+        A.join(
+          [
+            'import { readFileSync } from "node:fs";',
+            "export const main = (event) =>",
+            '  console.log(event + ":" + JSON.parse(readFileSync(process.env.CLAUDE_PROJECT_DIR + "/graft/.cache/wiring-stamp.json", "utf8")).version);',
+            "",
+          ],
+          "\n"
+        )
       );
       const stampPath = path.join(fixture.project, "graft", ".cache", "wiring-stamp.json");
       const readStamp = Effect.flatMap(fs.readFileString(stampPath), decodeWiringStamp);

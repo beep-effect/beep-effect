@@ -9,6 +9,7 @@ import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const decodeUnknown = <Schema extends S.ConstraintDecoder<unknown, never>>(schema: Schema) =>
@@ -67,9 +68,11 @@ describe("Interop and Metadata", () => {
 
   it("audits semantic schema metadata coverage for public schema families", () => {
     for (const moduleAudit of auditModules) {
+      const moduleExports: Readonly<Record<string, unknown>> = moduleAudit.exports;
       const schemaEntries = A.filter(
-        Object.entries(moduleAudit.exports),
-        ([name, value]) => /^[A-Z]/.test(name) && S.isSchema(value) && !moduleAudit.exclude.has(name)
+        R.toEntries(moduleExports),
+        (entry): entry is [string, S.Top] =>
+          /^[A-Z]/.test(entry[0]) && S.isSchema(entry[1]) && !moduleAudit.exclude.has(entry[0])
       );
 
       expect(schemaEntries.length, moduleAudit.name).toBeGreaterThan(0);

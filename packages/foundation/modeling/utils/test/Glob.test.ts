@@ -5,9 +5,11 @@ import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as S from "effect/Schema";
@@ -17,9 +19,11 @@ import type { GlobOptions, Pattern } from "@beep/utils/Glob";
 const isGlobError = S.is(GlobError);
 
 const joinPath = (base: string, ...segments: ReadonlyArray<string>): string =>
-  [Str.replace(/\/+$/u, "")(base), ...segments.map((segment) => Str.replace(/^\/+|\/+$/gu, "")(segment))]
-    .filter((segment) => segment.length > 0)
-    .join("/");
+  pipe(
+    [Str.replace(/\/+$/u, "")(base), ...A.map(segments, Str.replace(/^\/+|\/+$/gu, ""))],
+    A.filter(Str.isNonEmpty),
+    A.join("/")
+  );
 const withFileSystem = <E>(use: (fs: FileSystem.FileSystem) => Effect.Effect<void, E>) =>
   FileSystem.FileSystem.pipe(Effect.flatMap(use), Effect.orDie);
 const makeDirectory = (path: string) => withFileSystem((fs) => fs.makeDirectory(path, { recursive: true }));

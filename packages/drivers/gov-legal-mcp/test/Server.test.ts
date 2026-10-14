@@ -787,7 +787,7 @@ describe("gov-legal-mcp production stdio host", () => {
         assert.isUndefined(listed.error);
         const { tools } = yield* decodeHandshakeToolList(listed.result);
         assert.include(
-          tools.map((tool) => tool.name),
+          A.map(tools, (tool) => tool.name),
           "ecfr_search_results"
         );
       })
@@ -802,7 +802,7 @@ describe("gov-legal-mcp production stdio host", () => {
         assert.strictEqual(discovery.instructions, GOV_LEGAL_MCP_INSTRUCTIONS);
         const { tools } = yield* rpc["tools/list"]({});
         assert.include(
-          tools.map((tool) => tool.name),
+          A.map(tools, (tool) => tool.name),
           "ecfr_search_results"
         );
       })

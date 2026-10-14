@@ -12,7 +12,7 @@ import { catchTag, fail as failEffect, gen, withSpan } from "effect/Effect";
 import { dual } from "effect/Function";
 import { getOrElse, isSome, map } from "effect/Option";
 import { isTagged } from "effect/Predicate";
-import { filter, get, isEmptyReadonlyRecord } from "effect/Record";
+import { filter, get, isEmptyReadonlyRecord, toEntries } from "effect/Record";
 import { Int, is, isSchema, NonEmptyString, TaggedError, Unknown } from "effect/Schema";
 import { toEncoded } from "effect/SchemaAST";
 import { VariantSchema } from "effect/schema";
@@ -214,7 +214,7 @@ export type Repository<M extends RepositoryModel, Id extends IdKey<M>> = Pick<
 const findVersionColumn = (model: AnyModel): string =>
   getOrElse(
     map(
-      findFirst(Object.entries(model.sql.columns), ([, metadata]) => metadata.version),
+      findFirst(toEntries(model.sql.columns), ([, metadata]) => metadata.version),
       ([key]) => key
     ),
     () => {
@@ -251,7 +251,7 @@ const requireVersion = (record: UnknownRecord, key: string, table: string): numb
 };
 
 const validateRepositoryModel = (model: AnyModel, idColumn: string): void => {
-  const override = findFirst(Object.entries(model.sql.columns), ([, metadata]) => metadata.columnName !== undefined);
+  const override = findFirst(toEntries(model.sql.columns), ([, metadata]) => metadata.columnName !== undefined);
   if (isSome(override)) {
     throw ModelInvariantError.make({
       message: `Repository for '${model.sql.tableName}' does not support columnName override on '${override.value[0]}'.`,

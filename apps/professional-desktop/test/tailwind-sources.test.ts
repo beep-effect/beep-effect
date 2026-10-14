@@ -1,8 +1,10 @@
 import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../vitest.shared.ts";
 
@@ -38,13 +40,13 @@ it.layer(BunFileSystem.layer, { timeout: filesystemLayerTimeout })("tailwind sou
       const manifest = yield* decodeManifest(yield* fs.readFileString("package.json"));
       const globals = yield* fs.readFileString("src/styles/globals.css");
 
-      const rendered = Object.keys(uiPackageSources).filter((name) => manifest.dependencies?.[name] !== undefined);
+      const rendered = A.filter(R.keys(uiPackageSources), (name) => manifest.dependencies?.[name] !== undefined);
 
       // Guard the guard: were the app to stop depending on the UI packages entirely,
       // this test would otherwise pass while asserting nothing.
       expect(rendered.length).toBeGreaterThan(0);
 
-      const undeclared = rendered.filter((name) => !globals.includes(uiPackageSources[name] ?? " "));
+      const undeclared = A.filter(rendered, (name) => !globals.includes(uiPackageSources[name] ?? " "));
 
       expect(undeclared).toStrictEqual([]);
     })

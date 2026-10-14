@@ -256,8 +256,8 @@ describe("classifyGoalDoctorFindings", () => {
 
   it("splits current findings into introduced and inherited, and reports resolved keys", () => {
     const result = classifyGoalDoctorFindings([findingFor("demo a"), findingFor("demo b")], ["demo b", "demo gone"]);
-    expect(result.introduced.map((item) => item.key)).toEqual(["demo a"]);
-    expect(result.inherited.map((item) => item.key)).toEqual(["demo b"]);
+    expect(A.map(result.introduced, (item) => item.key)).toEqual(["demo a"]);
+    expect(A.map(result.inherited, (item) => item.key)).toEqual(["demo b"]);
     expect(result.resolved).toEqual(["demo gone"]);
   });
 

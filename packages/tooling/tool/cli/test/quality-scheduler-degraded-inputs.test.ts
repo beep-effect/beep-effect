@@ -12,6 +12,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -19,15 +20,18 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 
-const meminfoFixture = [
-  "MemTotal:       131072000 kB",
-  "MemFree:          8000000 kB",
-  "MemAvailable:    65536000 kB",
-  "Buffers:           512000 kB",
-  "",
-].join("\n");
+const meminfoFixture = A.join(
+  [
+    "MemTotal:       131072000 kB",
+    "MemFree:          8000000 kB",
+    "MemAvailable:    65536000 kB",
+    "Buffers:           512000 kB",
+    "",
+  ],
+  "\n"
+);
 
-const degradedMeminfoFixture = ["MemTotal:", "MemAvailable:    lots kB", ""].join("\n");
+const degradedMeminfoFixture = A.join(["MemTotal:", "MemAvailable:    lots kB", ""], "\n");
 
 const meminfoReadError = PlatformError.systemError({
   _tag: "PermissionDenied",

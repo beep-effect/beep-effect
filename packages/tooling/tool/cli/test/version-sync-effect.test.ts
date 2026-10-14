@@ -32,7 +32,7 @@ import {
 } from "@beep/repo-cli/test/VersionSync";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
-import { A } from "@beep/utils";
+import { A, R } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
@@ -869,7 +869,7 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync installed
       expect(exactVersionFromSpecifier("~2.5.6")).toBe("2.5.6");
       expect(exactVersionFromSpecifier(">=1.0.0")).toBe("1.0.0");
       expect(exactVersionFromSpecifier(42)).toBe("42");
-      expect(Object.keys(RootPackageJsonDocument.make({}).catalog)).toHaveLength(0);
+      expect(R.keys(RootPackageJsonDocument.make({}).catalog)).toHaveLength(0);
     });
   });
 

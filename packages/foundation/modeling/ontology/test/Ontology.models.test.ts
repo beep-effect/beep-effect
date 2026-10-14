@@ -15,6 +15,7 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Result from "effect/Result";
@@ -112,7 +113,7 @@ describe("@beep/ontology models", () => {
   it.effect("owns constructive HTTP URL metadata and codec statics", () =>
     Effect.gen(function* () {
       pipe(
-        (yield* Arbitrary.sampleEffect(Arbitrary.schema(HttpUrl), { count: 20, seed: 0x5eed })).every(isHttpUrl),
+        A.every(yield* Arbitrary.sampleEffect(Arbitrary.schema(HttpUrl), { count: 20, seed: 0x5eed }), isHttpUrl),
         assertTrue
       );
       expect(Result.getOrThrow(S.decodeResult(HttpUrl)("https://example.com/ontology.owl"))).toBe(

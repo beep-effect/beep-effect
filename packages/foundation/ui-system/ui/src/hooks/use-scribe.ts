@@ -32,14 +32,15 @@
  * @since 0.0.0
  */
 
+import { $UiId } from "@beep/identity";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { useAtom } from "@effect/atom-react";
 import { AudioFormat, CommitStrategy, RealtimeEvents, Scribe } from "@elevenlabs/client";
-import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import { Atom } from "effect/reactivity";
+import * as S from "effect/Schema";
 import { useCallback, useEffect, useId, useRef } from "react";
 import type {
   CommittedTranscriptMessage,
@@ -50,6 +51,8 @@ import type {
   ScribeErrorMessage,
   ScribeQuotaExceededErrorMessage,
 } from "@elevenlabs/client";
+
+const $I = $UiId.create("hooks/use-scribe");
 
 /**
  * ElevenLabs Scribe enum exports used by the `@beep/ui` speech components.
@@ -171,12 +174,15 @@ const unknownToError = (cause: unknown): Error =>
 const closeEventToError = (event: CloseEvent): Error =>
   makeScribeError(event.reason === "" ? `Scribe connection closed with code ${event.code}` : event.reason);
 
-class ScribeConnectionFailure extends Data.TaggedError("ScribeConnectionFailure")<{
-  readonly error: Error;
-}> {}
+class ScribeConnectionFailure extends S.TaggedError<ScribeConnectionFailure>($I`ScribeConnectionFailure`)(
+  "ScribeConnectionFailure",
+  {
+    error: S.ErrorInstance(),
+  }
+) {}
 
 const toScribeConnectionFailure = (cause: unknown): ScribeConnectionFailure =>
-  new ScribeConnectionFailure({ error: unknownToError(cause) });
+  ScribeConnectionFailure.make({ error: unknownToError(cause) });
 
 const toMicrophoneOptions = (
   microphone: undefined | UseScribeMicrophoneOptions
@@ -313,7 +319,7 @@ export function useScribe(options: UseScribeOptions): UseScribeResult {
               if (!settled) {
                 settled = true;
                 setState((current) => ({ ...current, status: "idle" }));
-                resume(Effect.fail(new ScribeConnectionFailure({ error: scribeError_1 })));
+                resume(Effect.fail(ScribeConnectionFailure.make({ error: scribeError_1 })));
               }
             };
 

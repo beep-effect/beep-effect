@@ -28,6 +28,16 @@
       "reason": "Stage runtime test decodes the files each stage wrote to prove the private output contract (0600, explicit paths, no overwrite); schema-derived round-trip property coverage for IdentificationIndex, EvaluationReport and Resolution lives with the use-case schemas in packages/law-practice/use-cases/test/DocumentIdentification/Identification.test.ts."
     },
     {
+      "file": "apps/professional-desktop/server/OntologyMcpTransport.ts",
+      "symbol": "makeOntologyMcpTransportLayer",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 175,
+      "owner": "@beep/professional-desktop",
+      "reason": "Layer-factory options are runtime capabilities, not a data contract: a Redacted bearer token, an injected egress fetch function, and a test-only mutation-tool allowlist. None crosses a serialization boundary, so an Fn schema would only wrap a function value in S.declare. The file became schema-modeled when OntologyMcpOriginForbidden moved from Data.TaggedError to S.TaggedError."
+    },
+    {
       "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
       "symbol": "DocumentIntakeSurface",
       "kind": "exported-interface",
@@ -273,7 +283,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 117,
+      "line": 119,
       "owner": "@beep/epistemic-server",
       "reason": "P0 persistence spike decodes fixed commands and rows to prove duplicate suppression, visibility, ordering, and transactional boundaries against PGlite; schema law coverage lives in domain and use-case tests."
     },
@@ -619,7 +629,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 558,
+      "line": 559,
       "owner": "@beep/law-practice-server",
       "reason": "Competency-question acceptance fixtures assert recorded and derived answers over one deliberately seeded practice; the questions are donor-fixed golden coverage, and schema-derived arbitrary coverage for the underlying entities lives with the law-practice domain model tests."
     },

@@ -15,6 +15,7 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -139,7 +140,7 @@ describe("practice KG bundle compare", () => {
     });
     const withdrawn = diff(base, renumbered);
     expect([withdrawn.lost, withdrawn.mattersRemoved, withdrawn.docketsRemoved]).toStrictEqual([true, [], []]);
-    expect(withdrawn.numbersChanged.map((change) => [change.docketKey, change.patentNumbersRemoved])).toStrictEqual([
+    expect(A.map(withdrawn.numbersChanged, (change) => [change.docketKey, change.patentNumbersRemoved])).toStrictEqual([
       ["11111.12345US", ["10,000,001"]],
     ]);
   });
@@ -154,12 +155,12 @@ describe("practice KG bundle compare", () => {
       matters: base.matters,
     });
     const renumbered = diff(base, shuffled);
-    expect(renumbered.numbersChanged.map((change) => change.docketKey)).toStrictEqual([
+    expect(A.map(renumbered.numbersChanged, (change) => change.docketKey)).toStrictEqual([
       "11111.12345EP",
       "11111.23456US",
     ]);
     expect(
-      renumbered.numbersChanged.map((change) => [change.applicationNumbersAdded, change.patentNumbersAdded])
+      A.map(renumbered.numbersChanged, (change) => [change.applicationNumbersAdded, change.patentNumbersAdded])
     ).toStrictEqual([
       [["EP20000009"], []],
       [[], ["10,000,002"]],

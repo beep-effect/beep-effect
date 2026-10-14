@@ -34,6 +34,7 @@ import { Thread } from "@beep/workspace-use-cases/server";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
+import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -94,15 +95,17 @@ if (!shouldRunPgliteIntegration) {
           const timeline = yield* ops.getTimeline(thread.id);
           expect(timeline.turns.length).toBe(2);
 
-          const roles = timeline.turns.flatMap((turn) =>
-            turn.items.flatMap((item) => (item.kind === "message" ? [item.role] : []))
+          const roles = A.flatMap(timeline.turns, (turn) =>
+            A.flatMap(turn.items, (item) => (item.kind === "message" ? [item.role] : []))
           );
           expect(roles).toEqual(["user", "assistant"]);
 
           const assistantItem = timeline.turns[1]?.items[0];
           expect(assistantItem?.kind).toBe("message");
           if (assistantItem?.kind === "message") {
-            const codeBlock = assistantItem.content.children.find((child) => child._tag === "pre");
+            const codeBlock = O.getOrUndefined(
+              A.findFirst(assistantItem.content.children, (child) => child._tag === "pre")
+            );
             expect(codeBlock?._tag).toBe("pre");
             if (codeBlock?._tag === "pre") {
               // The Option-bearing field survived the jsonb round-trip.

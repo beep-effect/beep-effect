@@ -16,7 +16,19 @@ import {
   getTableConfig,
   uniqueKeyName,
 } from "drizzle-orm/sqlite-core";
-import { contains, findFirst, flatMap as flatMapArray, forEach, get as getArray, getSomes, head } from "effect/Array";
+import {
+  contains,
+  every,
+  filter,
+  findFirst,
+  flatMap as flatMapArray,
+  forEach,
+  get as getArray,
+  getSomes,
+  head,
+  map as mapArray,
+  some as someArray,
+} from "effect/Array";
 import { equals } from "effect/Equal";
 import {
   exists,
@@ -31,7 +43,7 @@ import {
   some,
 } from "effect/Option";
 import { hasProperty, isUndefined } from "effect/Predicate";
-import { empty, get as getRecord, set } from "effect/Record";
+import { empty, get as getRecord, keys, set, toEntries } from "effect/Record";
 import { String as StringSchema, TaggedError } from "effect/Schema";
 import {
   makeRelationsConfig,
@@ -322,7 +334,7 @@ const fail = (message: string, sourceTable: string, fieldName: string, targetTab
 const targetFieldKey = (model: AnyModel, columnName: string): Option<string> =>
   hasProperty(model.sql.fields, columnName)
     ? some(columnName)
-    : findFirst(Object.keys(model.sql.columns), (key) =>
+    : findFirst(keys(model.sql.columns), (key) =>
         exists(
           getRecord(model.sql.columns, key),
           (meta) => meta.columnName === columnName || snakeCase(key) === columnName
@@ -337,7 +349,7 @@ const resolveTarget = (
 ): readonly [string, AnyModel] => {
   const exact = findFirst(entries, ([key]) => key === reference.tableName);
   if (isSome(exact)) return exact.value;
-  const physical = entries.filter(([, model]) => model.sql.tableName === reference.tableName);
+  const physical = filter(entries, ([, model]) => model.sql.tableName === reference.tableName);
   if (physical.length === 1) {
     return getOrElse(head(physical), () =>
       fail("Resolved physical table target disappeared.", sourceKey, sourceField, reference.tableName)
@@ -360,10 +372,10 @@ const resolveTarget = (
 };
 
 const collectEdges = (models: ModelRecord): ReadonlyArray<Edge> => {
-  const entries = Object.entries(models);
+  const entries = toEntries(models);
   return flatMapArray(entries, ([sourceKey, model]) =>
     getSomes(
-      Object.keys(model.sql.fields).map((sourceField) =>
+      mapArray(keys<string, Field.Input>(model.sql.fields), (sourceField) =>
         map(
           flatMapOption(getRecord(model.sql.columns, sourceField), (meta) => fromUndefinedOr(meta.references)),
           function collectSqliteEdge(reference) {
@@ -481,22 +493,22 @@ const collectJunctions = (
   edges: ReadonlyArray<Edge>
 ): ReadonlyArray<Junction> =>
   getSomes(
-    Object.entries(tables).map(([key, table]) => {
+    mapArray(toEntries(tables), ([key, table]) => {
       const primaryKeys = getTableConfig(table).primaryKeys;
       if (primaryKeys.length !== 1) return none();
       const columns = primaryKeys[0]?.columns;
       if (isUndefined(columns) || columns.length !== 2) return none();
-      const columnNames = columns.map((column) => column.name);
-      const candidates = edges.filter((edge) => edge.sourceKey === key);
-      const primaryEdges = candidates.filter((edge) => {
+      const columnNames = mapArray(columns, (column) => column.name);
+      const candidates = filter(edges, (edge) => edge.sourceKey === key);
+      const primaryEdges = filter(candidates, (edge) => {
         if (!hasProperty(table, edge.sourceField)) return false;
         const column = table[edge.sourceField];
         return isDrizzleEntity(column, DrizzleSqliteColumn) && contains(columnNames, column.name);
       });
       if (
         primaryEdges.length !== 2 ||
-        !columnNames.every((name) =>
-          primaryEdges.some((edge) => {
+        !every(columnNames, (name) =>
+          someArray(primaryEdges, (edge) => {
             if (!hasProperty(table, edge.sourceField)) return false;
             const column = table[edge.sourceField];
             return isDrizzleEntity(column, DrizzleSqliteColumn) ? column.name === name : false;
@@ -519,36 +531,39 @@ const named = (owner: string, kind: string, name: string | undefined): ReadonlyA
   name === undefined ? [] : [{ owner, kind, name }];
 
 const collectSchemaNames = (tables: Readonly<Record<string, TableOf<AnyModel>>>): ReadonlyArray<SchemaName> =>
-  Object.entries(tables).flatMap(([key, table]) => {
+  flatMapArray(toEntries(tables), ([key, table]) => {
     const config = getTableConfig(table);
     return [
       { owner: `table:${key}`, kind: "table", name: config.name },
-      ...config.indexes.map(
+      ...mapArray(
+        config.indexes,
         (value, index): SchemaName => ({ owner: `index:${key}:${index}`, kind: "index", name: value.config.name })
       ),
-      ...config.primaryKeys.flatMap((value, index) =>
+      ...flatMapArray(config.primaryKeys, (value, index) =>
         named(`primary-key:${key}:${index}`, "primary-key constraint", value.getName())
       ),
-      ...config.uniqueConstraints.map(
+      ...mapArray(
+        config.uniqueConstraints,
         (value, index): SchemaName => ({
           owner: `unique:${key}:${index}`,
           kind: "unique constraint",
           name: value.getName(),
         })
       ),
-      ...config.columns
-        .filter((column) => column.isUnique)
-        .map(
-          (column, index): SchemaName => ({
-            owner: `inline-unique:${key}:${index}`,
-            kind: "unique constraint",
-            name: column.uniqueName ?? uniqueKeyName(table, [column.name]),
-          })
-        ),
-      ...config.checks.map(
+      ...mapArray(
+        filter(config.columns, (column) => column.isUnique),
+        (column, index): SchemaName => ({
+          owner: `inline-unique:${key}:${index}`,
+          kind: "unique constraint",
+          name: column.uniqueName ?? uniqueKeyName(table, [column.name]),
+        })
+      ),
+      ...mapArray(
+        config.checks,
         (value, index): SchemaName => ({ owner: `check:${key}:${index}`, kind: "check constraint", name: value.name })
       ),
-      ...config.foreignKeys.map(
+      ...mapArray(
+        config.foreignKeys,
         (value, index): SchemaName => ({
           owner: `foreign-key:${key}:${index}`,
           kind: "foreign-key constraint",
@@ -609,14 +624,14 @@ export function schema(models: ModelRecord): unknown {
   // after every table has been projected.
   let runtimeTables = empty<string, TableOf<AnyModel>>();
 
-  forEach(Object.entries(models), ([key, model]) => {
+  forEach(toEntries(models), ([key, model]) => {
     runtimeTables = set(
       runtimeTables,
       key,
       toSqliteTable(model, (columns) =>
-        edges
-          .filter((edge) => edge.sourceKey === key)
-          .map((edge) => {
+        mapArray(
+          filter(edges, (edge) => edge.sourceKey === key),
+          (edge) => {
             const targetTable = getOrElse(getRecord(runtimeTables, edge.targetKey), () =>
               fail("Resolved foreign-key table or column is unavailable.", key, edge.sourceField, edge.targetKey)
             );
@@ -645,7 +660,8 @@ export function schema(models: ModelRecord): unknown {
               onNone: () => withDelete,
               onSome: (action) => withDelete.onUpdate(action),
             });
-          })
+          }
+        )
       )
     );
   });

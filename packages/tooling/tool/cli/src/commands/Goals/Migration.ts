@@ -495,7 +495,7 @@ const planPhaseEntryEdit = (
 const planPhaseEdits = (manifest: Readonly<Record<string, unknown>>, edit: ManifestEdit): void => {
   const phases = R.get(manifest, "phases");
   if (O.isSome(phases) && A.isArray(phases.value)) {
-    phases.value.forEach((entry: unknown, index: number) => {
+    A.forEach(phases.value, (entry: unknown, index: number) => {
       if (isJsonRecord(entry)) {
         planPhaseEntryEdit(entry, ["phases", index, "status"], `phases[${index}]`, edit);
       }

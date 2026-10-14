@@ -14,6 +14,7 @@
  * registry through the `@beep/lint-rules` alias.
  */
 import { rulePath } from "@beep/lint-rules";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -107,14 +108,15 @@ export const runRule = Effect.fn("harness.runRule")(function* (ruleName: RuleNam
 
         yield* validateLinterProcess(result);
         const report = yield* parseReport(result.stdout.toString());
-        const diagnostics: ReadonlyArray<PluginDiagnostic> = (report.diagnostics ?? [])
-          .filter((d) => d.category === "plugin")
-          .map((d) => ({
+        const diagnostics: ReadonlyArray<PluginDiagnostic> = A.map(
+          A.filter(report.diagnostics ?? [], (d) => d.category === "plugin"),
+          (d) => ({
             message: d.message ?? "",
             severity: d.severity ?? "",
             line: d.location?.start?.line ?? -1,
             column: d.location?.start?.column ?? -1,
-          }));
+          })
+        );
 
         return { status: result.exitCode, diagnostics } as const;
       }),

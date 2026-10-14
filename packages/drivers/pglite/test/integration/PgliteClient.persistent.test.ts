@@ -5,6 +5,7 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { expect } from "@effect/vitest";
 import * as PgDrizzle from "drizzle-orm/effect-postgres";
 import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -44,7 +45,7 @@ const readPersistentBodies = Effect.fnUntraced(function* () {
     ORDER BY id ASC
   `;
 
-  return rows.map((row) => row.body);
+  return A.map(rows, (row) => row.body);
 });
 
 const createDriverNotesTable = Effect.fnUntraced(function* () {
@@ -120,7 +121,7 @@ it.layer(PersistentTestServices, { timeout: "30 seconds" })("PgliteClient (file-
       );
       yield* Effect.log("PGlite Drizzle phase: database closed; verify ordered rows");
 
-      expect(rows.map((row) => `${row.body}:${row.rating}`)).toEqual(["beta:1", "alpha:2"]);
+      expect(A.map(rows, (row) => `${row.body}:${row.rating}`)).toEqual(["beta:1", "alpha:2"]);
     })
   );
 });

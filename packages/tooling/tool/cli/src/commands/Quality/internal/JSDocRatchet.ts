@@ -417,13 +417,16 @@ const formatBaseline = Effect.fn("JSDocRatchet.formatBaseline")(function* (
   const jsonc = yield* formatJsonc(baseline).pipe(
     QualityScriptCommandError.mapError("Failed to format JSDoc totals regression baseline.")
   );
-  return [
-    "// JSDoc totals regression baseline. Do not edit by hand.",
-    `// Full inventory regeneration: ${jsdocInventoryRegenerationCommand}`,
-    `// Refresh this totals snapshot after regenerating inventory: ${jsdocTotalsSnapshotCommand}`,
-    "// Comparison: fail-on-growth for every metric in tracked_totals.",
-    jsonc,
-  ].join("\n");
+  return A.join(
+    [
+      "// JSDoc totals regression baseline. Do not edit by hand.",
+      `// Full inventory regeneration: ${jsdocInventoryRegenerationCommand}`,
+      `// Refresh this totals snapshot after regenerating inventory: ${jsdocTotalsSnapshotCommand}`,
+      "// Comparison: fail-on-growth for every metric in tracked_totals.",
+      jsonc,
+    ],
+    "\n"
+  );
 });
 
 const writeBaseline = Effect.fn("JSDocRatchet.writeBaseline")(function* (

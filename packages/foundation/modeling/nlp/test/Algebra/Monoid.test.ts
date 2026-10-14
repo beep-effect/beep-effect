@@ -3,6 +3,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
 const testMonoidLaws = <A>(
@@ -67,7 +68,7 @@ testMonoidLaws(
   "ArrayConcat<number>",
   Monoid.ArrayConcat<number>(),
   Arbitrary.schema(S.Array(S.Int).check(S.isMinLength(0), S.isMaxLength(10))),
-  (a, b) => a.length === b.length && a.every((x, i) => x === b[i])
+  (a, b) => a.length === b.length && A.every(a, (x, i) => x === b[i])
 );
 
 // Boolean monoids
@@ -98,7 +99,7 @@ describe("Endo<number> Monoid Laws", () => {
     )
   );
   const equals = (f: (n: number) => number, g: (n: number) => number) =>
-    [0, 1, -1, 42, 100].every((input) => f(input) === g(input));
+    A.every([0, 1, -1, 42, 100], (input) => f(input) === g(input));
   testMonoidLaws("Endo<number>", endoMonoid, funcArbitrary, equals);
 });
 
@@ -124,7 +125,7 @@ describe("VectorAdd Monoid", () => {
     "VectorAdd(3)",
     vectorMonoid,
     Arbitrary.schema(S.Array(S.Int).check(S.isMinLength(3), S.isMaxLength(3))),
-    (a, b) => a.length === b.length && a.every((x, i) => x === b[i])
+    (a, b) => a.length === b.length && A.every(a, (x, i) => x === b[i])
   );
 });
 

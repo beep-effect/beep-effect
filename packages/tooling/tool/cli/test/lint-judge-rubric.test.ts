@@ -38,20 +38,23 @@ const decodeUnknownJudgeRubricDrift = S.decodeUnknownEffect(JudgeRubricDrift);
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const runLintJudgeRubricCommand = Command.runWith(lintJudgeRubricCommand, { version: "0.0.0" });
 
-const syncedPrompt = [
-  "# Judge",
-  "",
-  "## Lenses",
-  "",
-  `Use EXACTLY these \`lens\` slugs: ${A.join(
-    A.map(BrowserQaLens.literals, (lens) => `\`${lens}\``),
-    ", "
-  )}.`,
-  "",
-  "## Output contract",
-  "",
-  "Emit JSON.",
-].join("\n");
+const syncedPrompt = A.join(
+  [
+    "# Judge",
+    "",
+    "## Lenses",
+    "",
+    `Use EXACTLY these \`lens\` slugs: ${A.join(
+      A.map(BrowserQaLens.literals, (lens) => `\`${lens}\``),
+      ", "
+    )}.`,
+    "",
+    "## Output contract",
+    "",
+    "Emit JSON.",
+  ],
+  "\n"
+);
 
 it.layer(PlatformLayer, { timeout: "5 seconds" })((it) => {
   describe("commands/Lint JudgeRubric lens drift", () => {

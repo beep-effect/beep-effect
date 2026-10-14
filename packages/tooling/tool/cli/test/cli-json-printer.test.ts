@@ -161,17 +161,20 @@ describe("internal/cli/Json printCommandJson", () => {
   it("emits payloads larger than 64 KiB intact in bounded stdout writes", () => {
     const payload = { value: "x".repeat(70_000) };
     const moduleUrl = new URL("../src/internal/cli/Json.ts", import.meta.url).href;
-    const program = [
-      `import { printCommandJson } from ${JSON.stringify(moduleUrl)};`,
-      'import * as Effect from "effect/Effect";',
-      "const rawWrite = process.stdout.write.bind(process.stdout);",
-      "process.stdout.write = (chunk, ...args) => {",
-      '  const bytes = typeof chunk === "string" ? new TextEncoder().encode(chunk) : chunk;',
-      '  if (bytes.byteLength > 8_192) throw new Error("oversized stdout write");',
-      "  return rawWrite(bytes, ...args);",
-      "};",
-      'await Effect.runPromise(printCommandJson({ value: "x".repeat(70_000) }));',
-    ].join("\n");
+    const program = A.join(
+      [
+        `import { printCommandJson } from ${JSON.stringify(moduleUrl)};`,
+        'import * as Effect from "effect/Effect";',
+        "const rawWrite = process.stdout.write.bind(process.stdout);",
+        "process.stdout.write = (chunk, ...args) => {",
+        '  const bytes = typeof chunk === "string" ? new TextEncoder().encode(chunk) : chunk;',
+        '  if (bytes.byteLength > 8_192) throw new Error("oversized stdout write");',
+        "  return rawWrite(bytes, ...args);",
+        "};",
+        'await Effect.runPromise(printCommandJson({ value: "x".repeat(70_000) }));',
+      ],
+      "\n"
+    );
     const result = Bun.spawnSync(["bun", "--eval", program], {
       stderr: "pipe",
       stdout: "pipe",
@@ -201,7 +204,7 @@ describe("internal/cli/Json printCommandJson", () => {
         yield* output("");
         yield* output("x".repeat(20_000));
 
-        expect(chunks.map((chunk) => chunk.byteLength)).toEqual([8_192, 8_192, 3_616]);
+        expect(A.map(chunks, (chunk) => chunk.byteLength)).toEqual([8_192, 8_192, 3_616]);
         expect(Buffer.concat(chunks).toString()).toBe("x".repeat(20_000));
       } finally {
         stdoutWrite.mockRestore();

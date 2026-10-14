@@ -105,7 +105,7 @@ const renderMigrationsGenModule = Effect.fn("ProfessionalDesktop.syncMigrationBu
       "",
     ];
 
-    return lines.join("\n");
+    return A.join(lines, "\n");
   }
 );
 

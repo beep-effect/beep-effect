@@ -124,13 +124,16 @@ describe("doctest analyzer", () => {
 
 describe("doctest rewrite planning", () => {
   it("plans literal-like console rewrites and normalizes Option aliases", () => {
-    const code = [
-      'import * as O from "effect/Option"',
-      'console.log("ok") // "ok"',
-      "console.log({ ok: true }) // { ok: true }",
-      'console.log(O.some("x")) // Option.some("x")',
-      'console.log("skip") // displayed prose',
-    ].join("\n");
+    const code = A.join(
+      [
+        'import * as O from "effect/Option"',
+        'console.log("ok") // "ok"',
+        "console.log({ ok: true }) // { ok: true }",
+        'console.log(O.some("x")) // Option.some("x")',
+        'console.log("skip") // displayed prose',
+      ],
+      "\n"
+    );
     const plans = planConsoleRewrites(code, 10);
     expect(plans).toHaveLength(3);
     expect(plans[0]).toMatchObject({ line: 11, expression: '"ok"', expectedExpression: '"ok"' });
@@ -146,16 +149,19 @@ describe("doctest rewrite planning", () => {
   });
 
   it("plans canonical metadata and rewrites without mutating the analyzed source", () => {
-    const source = [
-      "/**",
-      " * **Example** (Literal result)",
-      " *",
-      " * ```ts",
-      " * console.log(1 + 1) // 2",
-      " * ```",
-      " */",
-      "export const value = 2",
-    ].join("\n");
+    const source = A.join(
+      [
+        "/**",
+        " * **Example** (Literal result)",
+        " *",
+        " * ```ts",
+        " * console.log(1 + 1) // 2",
+        " * ```",
+        " */",
+        "export const value = 2",
+      ],
+      "\n"
+    );
     const analysis = analyzeDoctestSourceForTesting("packages/example/src/index.ts", source);
     expect(analysis.fences).toBe(1);
     expect(analysis.findings[0]?.kind).toBe("pure-unmarked");
@@ -172,17 +178,20 @@ describe("doctest rewrite planning", () => {
   });
 
   it("retains console-only plans for canonical fences and honors leading blank lines", () => {
-    const source = [
-      "/**",
-      " * **Example** (Canonical observation)",
-      " *",
-      ' * ```ts import.meta.vitest name="Canonical observation"',
-      " *",
-      " * console.log(1 + 1) // 2",
-      " * ```",
-      " */",
-      "export const value = 2",
-    ].join("\n");
+    const source = A.join(
+      [
+        "/**",
+        " * **Example** (Canonical observation)",
+        " *",
+        ' * ```ts import.meta.vitest name="Canonical observation"',
+        " *",
+        " * console.log(1 + 1) // 2",
+        " * ```",
+        " */",
+        "export const value = 2",
+      ],
+      "\n"
+    );
     const analysis = analyzeDoctestSourceForTesting("packages/example/src/index.ts", source);
 
     expect(analysis.findings).toHaveLength(1);
@@ -197,7 +206,7 @@ describe("doctest rewrite planning", () => {
   });
 
   it("refuses a stale rewrite plan before producing content", () => {
-    const source = ["/**", " * **Example** (Stale plan)", " *", " * ```ts", " * 1 + 1", " * ```", " */"].join("\n");
+    const source = A.join(["/**", " * **Example** (Stale plan)", " *", " * ```ts", " * 1 + 1", " * ```", " */"], "\n");
     const analysis = analyzeDoctestSourceForTesting("packages/example/src/index.ts", source);
     expect(analysis.fences).toBe(1);
     const plan = O.getOrThrow(O.fromUndefinedOr(analysis.findings[0]?.plan));

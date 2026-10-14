@@ -2,6 +2,7 @@ import * as Core from "@beep/repo-docgen/Core";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -70,7 +71,7 @@ describe("Core", () =>
       const [details] = Core.extractFencedCodeBlockDetails(source);
 
       expect(blocks).toEqual([{ code: "const view = <div />", extension: ".tsx" }]);
-      expect(details.map(({ code, extension }) => ({ code, extension }))).toEqual(blocks);
+      expect(A.map(details, ({ code, extension }) => ({ code, extension }))).toEqual(blocks);
       expect(details[0]?.infoString).toBe("tsx custom=value");
     });
 

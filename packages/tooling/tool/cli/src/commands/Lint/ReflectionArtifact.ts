@@ -16,7 +16,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { A, thunkFalse } from "@beep/utils";
+import { A, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as Console from "effect/Console";
 import { Command } from "effect/cli";
 import * as Effect from "effect/Effect";
@@ -233,11 +233,14 @@ export const reflectionFileNameIsArtifact = (file: string): boolean => REFLECTIO
 const readManifestStatus = (manifest: unknown): { readonly status: string; readonly reflectionRequired: boolean } => {
   const record = (manifest ?? {}) as Record<string, unknown>;
   const initiative = (record.initiative ?? {}) as Record<string, unknown>;
-  const status = [initiative.status, record.status, record.lifecycle]
-    .map((value) => (P.isString(value) ? value : ""))
-    .find((value) => value.length > 0);
+  const status = pipe(
+    [initiative.status, record.status, record.lifecycle],
+    A.map((value) => (P.isString(value) ? value : "")),
+    A.findFirst((value) => value.length > 0),
+    O.getOrElse(thunkEmptyStr)
+  );
   const reflectionRequired = record.reflectionRequired === true || initiative.reflectionRequired === true;
-  return { status: status ?? "", reflectionRequired };
+  return { status, reflectionRequired };
 };
 
 const makeFinding = (

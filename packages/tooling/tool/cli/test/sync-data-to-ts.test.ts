@@ -792,8 +792,8 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
               },
             ])
           );
-          expect(courtVocabulary.every(({ contextualAliases }) => contextualAliases.length === 1)).toBe(true);
-          expect(reporterVocabulary.every(({ contextualAliases }) => contextualAliases.length === 1)).toBe(true);
+          expect(A.every(courtVocabulary, ({ contextualAliases }) => contextualAliases.length === 1)).toBe(true);
+          expect(A.every(reporterVocabulary, ({ contextualAliases }) => contextualAliases.length === 1)).toBe(true);
         },
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
       )

@@ -34,7 +34,6 @@ import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
-import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -52,13 +51,11 @@ const decodeRunModeEffect = S.decodeEffect(RunMode);
 
 const toError = (cause: unknown) => new Error(String(cause));
 
-class InvalidPathSegment extends Data.TaggedError("InvalidPathSegment")<{
-  readonly message: string;
-}> {}
+class InvalidPathSegment extends S.TaggedError<InvalidPathSegment>()("InvalidPathSegment", { message: S.String }) {}
 
-class FsGuardTestError extends Data.TaggedError("FsGuardTestError")<{ readonly message: string }> {}
+class FsGuardTestError extends S.TaggedError<FsGuardTestError>()("FsGuardTestError", { message: S.String }) {}
 
-const hashTestError = (_cause: unknown, filePath: string) => new FsGuardTestError({ message: `hash: ${filePath}` });
+const hashTestError = (_cause: unknown, filePath: string) => FsGuardTestError.make({ message: `hash: ${filePath}` });
 
 // The digest the previous whole-file implementation produced.
 const decodeSha256FromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
@@ -215,9 +212,10 @@ describe("internal/cli/FsGuards", () => {
         const root = yield* fs.makeTempDirectoryScoped();
         const missing = path.join(root, "missing");
         const directoryErrors = {
-          onStatError: (_cause: unknown, entry: string) => new FsGuardTestError({ message: `stat: ${entry}` }),
-          onNotDirectory: (entry: string) => new FsGuardTestError({ message: `not directory: ${entry}` }),
-          onRealPathError: (_cause: unknown, entry: string) => new FsGuardTestError({ message: `real path: ${entry}` }),
+          onStatError: (_cause: unknown, entry: string) => FsGuardTestError.make({ message: `stat: ${entry}` }),
+          onNotDirectory: (entry: string) => FsGuardTestError.make({ message: `not directory: ${entry}` }),
+          onRealPathError: (_cause: unknown, entry: string) =>
+            FsGuardTestError.make({ message: `real path: ${entry}` }),
         };
         const directory = yield* validateDirectory(root, directoryErrors);
         expect(directory.canonicalDir).toBe(root);
@@ -226,7 +224,7 @@ describe("internal/cli/FsGuards", () => {
         expect(directoryError.message).toBe(`stat: ${missing}`);
 
         const renameError = yield* renameOrFail(missing, path.join(root, "renamed"), {
-          onError: (_cause, source) => new FsGuardTestError({ message: `rename: ${source}` }),
+          onError: (_cause, source) => FsGuardTestError.make({ message: `rename: ${source}` }),
         }).pipe(Effect.flip);
         expect(renameError.message).toBe(`rename: ${missing}`);
       })
@@ -258,15 +256,15 @@ describe("internal/cli/FsGuards", () => {
   it.effect("validatePathSegment works data-first and data-last", () =>
     Effect.gen(function* () {
       const options = {
-        onInvalid: (label: string, value: string) => new InvalidPathSegment({ message: `${label}: ${value}` }),
+        onInvalid: (label: string, value: string) => InvalidPathSegment.make({ message: `${label}: ${value}` }),
       };
       expect(yield* validatePathSegment("source", "ok", options)).toBeUndefined();
       expect(yield* validatePathSegment("ok", options)("source")).toBeUndefined();
       expect(yield* validatePathSegment("source", "..", options).pipe(Effect.flip)).toEqual(
-        new InvalidPathSegment({ message: "source: .." })
+        InvalidPathSegment.make({ message: "source: .." })
       );
       expect(yield* validatePathSegment("..", options)("source").pipe(Effect.flip)).toEqual(
-        new InvalidPathSegment({ message: "source: .." })
+        InvalidPathSegment.make({ message: "source: .." })
       );
     })
   );
@@ -414,7 +412,7 @@ describe("internal/cli/FsGuards", () => {
 
         const error = yield* hashFileSha256(missing, hashTestError).pipe(Effect.flip);
 
-        expect(error).toEqual(new FsGuardTestError({ message: `hash: ${missing}` }));
+        expect(error).toEqual(FsGuardTestError.make({ message: `hash: ${missing}` }));
       })
     );
   });

@@ -1090,7 +1090,7 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           messages: [messageAt("m-later", "2030-01-10T15:00:00Z")],
         }));
         yield* intake.pollOnce(addDays(TODAY, 1));
-        const ledger = O.map(A.last(yield* Ref.get(harness.saves)), (state) => Object.keys(state.ledger));
+        const ledger = O.map(A.last(yield* Ref.get(harness.saves)), (state) => R.keys(state.ledger));
 
         assertTrue(Str.includes("event event:docket:")(digest.bodyText));
         assertSome(ledger, ["m-later"]);
@@ -1227,16 +1227,14 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           O.map(reviewOf(outcome), (review) => [review.status, review.rounds, review.finalScore]),
           ["accepted", 2, 1]
         );
-        expect(A.map(revises, (input) => Object.keys(input))).toStrictEqual([["disputes", "message", "previous"]]);
+        expect(A.map(revises, (input) => R.keys(input))).toStrictEqual([["disputes", "message", "previous"]]);
         expect(A.flatMap(revises, (input) => A.map(input.disputes, (dispute) => dispute.field))).toStrictEqual([
           "response-period",
           "due-date",
           "source-document",
         ]);
         // The disputes carry the fields and the reasons. The period the critic read is in none of them.
-        assertTrue(
-          A.every(revises, (input) => A.every(input.disputes, (dispute) => Object.keys(dispute).length === 2))
-        );
+        assertTrue(A.every(revises, (input) => A.every(input.disputes, (dispute) => R.keys(dispute).length === 2)));
         assertTrue(!Str.includes("47")(reasons) && !Str.includes("days")(reasons));
         // The critic re-read only the disputed fields it can read, against the extractor's cited text.
         expect(A.map(rereads, (input) => input.fields)).toStrictEqual([["response-period", "due-date"]]);

@@ -97,9 +97,12 @@ describe("canonical package scripts schemas", () => {
         const actual = A.map(PackageKind.literals, (kind) =>
           A.findFirst(taskScriptRules, (row) => row.kind === kind && row.name === name)
         );
-        expect(A.map(actual, (row) => (row._tag === "Some" ? row.value.presence._tag : "missing")).join(" ")).toBe(
-          expected
-        );
+        expect(
+          A.join(
+            A.map(actual, (row) => (row._tag === "Some" ? row.value.presence._tag : "missing")),
+            " "
+          )
+        ).toBe(expected);
       }
       expect(TaskScriptName.literals).toHaveLength(17);
       expect(implScriptDefaults).toHaveLength(55);

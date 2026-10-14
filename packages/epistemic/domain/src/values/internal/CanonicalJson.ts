@@ -32,11 +32,15 @@ export const canonicalJson = (value: unknown): string => {
     return JSON.stringify(value);
   }
   if (A.isArray(value)) {
-    return `[${value.map(canonicalJson).join(",")}]`;
+    return `[${A.join(A.map(value, canonicalJson), ",")}]`;
   }
-  const defined: ReadonlyArray<CanonicalEntry> = R.toEntries(value as R.ReadonlyRecord<string, unknown>).filter(
+  const defined: ReadonlyArray<CanonicalEntry> = A.filter(
+    R.toEntries(value as R.ReadonlyRecord<string, unknown>),
     ([, entry]) => entry !== undefined
   );
   const entries = A.sort(defined, byKeyAscending);
-  return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`).join(",")}}`;
+  return `{${A.join(
+    A.map(entries, ([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`),
+    ","
+  )}}`;
 };

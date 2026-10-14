@@ -13,7 +13,7 @@ import * as primitives from "@beep/shared-domain/entity/primitives";
 import * as SourceKind from "@beep/shared-domain/entity/SourceKind";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { Str } from "@beep/utils";
+import { A, R, Str } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { getTableConfig } from "drizzle-orm/pg-core";
@@ -185,8 +185,8 @@ describe("PublicEntityId", () => {
 
 describe("ProductEntity", () => {
   it("preserves the six product variant memberships", () => {
-    expect(Object.keys(ProductDocument.fields)).toContain("id");
-    expect(Object.keys(ProductDocument.insert.fields)).toEqual(
+    expect(R.keys(ProductDocument.fields)).toContain("id");
+    expect(R.keys(ProductDocument.insert.fields)).toEqual(
       expect.arrayContaining([
         "createdAt",
         "createdByPrincipal",
@@ -200,16 +200,16 @@ describe("ProductEntity", () => {
         "updatedByPrincipal",
       ])
     );
-    expect(Object.keys(ProductDocument.insert.fields)).not.toContain("id");
-    expect(Object.keys(ProductDocument.insert.fields)).not.toContain("rowVersion");
-    expect(Object.keys(ProductDocument.update.fields)).toEqual(
+    expect(R.keys(ProductDocument.insert.fields)).not.toContain("id");
+    expect(R.keys(ProductDocument.insert.fields)).not.toContain("rowVersion");
+    expect(R.keys(ProductDocument.update.fields)).toEqual(
       expect.arrayContaining(["id", "note", "rowVersion", "updatedAt"])
     );
-    expect(Object.keys(ProductDocument.update.fields)).not.toContain("createdAt");
-    expect(Object.keys(ProductDocument.update.fields)).not.toContain("publicId");
-    expect(Object.keys(ProductDocument.json.fields)).toEqual(expect.arrayContaining(["id", "publicId", "rowVersion"]));
-    expect(Object.keys(ProductDocument.jsonCreate.fields)).toEqual(["note"]);
-    expect(Object.keys(ProductDocument.jsonUpdate.fields)).toEqual(["note"]);
+    expect(R.keys(ProductDocument.update.fields)).not.toContain("createdAt");
+    expect(R.keys(ProductDocument.update.fields)).not.toContain("publicId");
+    expect(R.keys(ProductDocument.json.fields)).toEqual(expect.arrayContaining(["id", "publicId", "rowVersion"]));
+    expect(R.keys(ProductDocument.jsonCreate.fields)).toEqual(["note"]);
+    expect(R.keys(ProductDocument.jsonUpdate.fields)).toEqual(["note"]);
   });
 
   it.effect(
@@ -237,7 +237,7 @@ describe("ProductEntity", () => {
     const membership = Membership.Model.pipe(toPgTable, getTableConfig);
     const organization = Organization.Model.pipe(toPgTable, getTableConfig);
     const indexNames = (config: { indexes: ReadonlyArray<{ config: { name?: string } }> }) =>
-      config.indexes.map((index) => index.config.name);
+      A.map(config.indexes, (index) => index.config.name);
 
     expect(indexNames(membership)).toEqual(
       expect.arrayContaining(["shared_membership_user_id_btree_idx", "shared_membership_public_id_unique_idx"])
@@ -279,20 +279,20 @@ export type _EntityTypeLiteralKept = Expect<
 
 describe("entity tier family", () => {
   it("scales column sets down the tier ladder", () => {
-    expect(Object.keys(BaseDocument.fields)).toEqual(
+    expect(R.keys(BaseDocument.fields)).toEqual(
       expect.arrayContaining(["createdAt", "rowVersion", "updatedAt", "note", "entityType", "id"])
     );
-    expect(Object.keys(BaseDocument.fields)).not.toContain("orgId");
-    expect(Object.keys(BaseDocument.fields)).not.toContain("publicId");
-    expect(Object.keys(OrgDocument.fields)).toEqual(
+    expect(R.keys(BaseDocument.fields)).not.toContain("orgId");
+    expect(R.keys(BaseDocument.fields)).not.toContain("publicId");
+    expect(R.keys(OrgDocument.fields)).toEqual(
       expect.arrayContaining(["createdByPrincipal", "orgId", "source", "schemaVersion"])
     );
-    expect(Object.keys(OrgDocument.fields)).not.toContain("publicId");
+    expect(R.keys(OrgDocument.fields)).not.toContain("publicId");
   });
 
   it("derives colocated default indexes per tier", () => {
     const orgConfig = OrgDocument.pipe(toPgTable, getTableConfig);
-    const names = orgConfig.indexes.map((index) => index.config.name);
+    const names = A.map(orgConfig.indexes, (index) => index.config.name);
     expect(names).toEqual(
       expect.arrayContaining(["shared_document_org_id_btree_idx", "shared_document_source_btree_idx"])
     );

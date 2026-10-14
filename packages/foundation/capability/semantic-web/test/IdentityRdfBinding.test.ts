@@ -325,7 +325,7 @@ it.effect.prop(
         SchemaAST.decodeTo(link.to, SchemaAST.toType(IdentityRdfBinding.ast), link.transformation)
       );
       const encoded = yield* S.encodeEffect(codec)(value);
-      expect(encoded).toEqual(Object.keys(value.fiberPaths));
+      expect(encoded).toEqual(R.keys(value.fiberPaths));
       return true;
     }),
   { arbitrary: fcRuns(50) }

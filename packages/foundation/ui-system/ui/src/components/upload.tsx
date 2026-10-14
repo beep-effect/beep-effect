@@ -243,7 +243,7 @@ const UploadPreviewGrid: React.FC<{
   readonly previews: ReadonlyArray<UploadImagePreview>;
 }> = ({ previews }) => (
   <div className="grid w-full max-w-sm grid-cols-3 gap-2">
-    {previews.map((preview) => (
+    {A.map(previews, (preview) => (
       <figure
         key={`${preview.file.name}:${preview.file.lastModified}:${preview.file.size}`}
         className="border-border bg-muted/30 overflow-hidden rounded-md border"

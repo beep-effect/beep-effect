@@ -85,6 +85,7 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -419,8 +420,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
     it("lists every probe and names the blocking ones", () => {
       const lines = renderDoctorReport([probe("ffmpeg", "fail", true), probe("obs", "warn", false)]);
       expect(lines[0]).toBe("qa doctor");
-      expect(lines.join("\n")).toContain("FAIL");
-      expect(lines.join("\n")).toContain("warn");
+      expect(A.join(lines, "\n")).toContain("FAIL");
+      expect(A.join(lines, "\n")).toContain("warn");
       expect(lines[lines.length - 1]).toBe("missing required tooling: ffmpeg");
     });
 
@@ -460,7 +461,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
     });
 
     it("renders the window table, gif spec, budget line, and dropped rows", () => {
-      const lines = renderExtractionPlanTable(plan, 3).join("\n");
+      const lines = A.join(renderExtractionPlanTable(plan, 3), "\n");
       expect(lines).toContain("1 window(s), 3 driver request(s)");
       expect(lines).toContain("drag-w0");
       expect(lines).toContain("640px@12fps");
@@ -476,7 +477,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         schemaVersion: "beep.qa.extraction-plan.v1",
         windows: [ExtractionWindow.make({ ...window, gif: O.none() })],
       });
-      expect(renderExtractionPlanTable(noGif, 0).join("\n")).toContain("| - |");
+      expect(A.join(renderExtractionPlanTable(noGif, 0), "\n")).toContain("| - |");
     });
 
     it("formats byte counts as mebibytes", () => {

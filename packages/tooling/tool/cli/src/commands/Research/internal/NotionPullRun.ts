@@ -81,13 +81,16 @@ export const notionPullImpl = Effect.fn("Research.notionPullImpl")(function* (
       url: urlNorm.value,
       via: "notion-pull",
     });
-    const body = [
-      `# ${link.title}`,
-      "",
-      `> Saved to Notion ("${options.database}") on ${Str.isEmpty(link.createdIso) ? "(unknown)" : link.createdIso}.`,
-      "",
-      `Open: <${urlNorm.value}>`,
-    ].join("\n");
+    const body = A.join(
+      [
+        `# ${link.title}`,
+        "",
+        `> Saved to Notion ("${options.database}") on ${Str.isEmpty(link.createdIso) ? "(unknown)" : link.createdIso}.`,
+        "",
+        `Open: <${urlNorm.value}>`,
+      ],
+      "\n"
+    );
     const slug = yield* slugFor(link.title, urlNorm.value);
     cards.push({
       body,

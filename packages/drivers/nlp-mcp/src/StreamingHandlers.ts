@@ -15,13 +15,14 @@
  * @packageDocumentation
  */
 
+import { $NlpMcpId } from "@beep/identity";
 import { AiToolError } from "@beep/nlp-processing/Tools";
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
-import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as DatasetLoader from "./Streaming/DatasetLoader.ts";
 import * as Jsonl from "./Streaming/Jsonl.ts";
@@ -33,6 +34,8 @@ import type * as FileSystem from "effect/FileSystem";
 import type * as HttpClient from "effect/http/HttpClient";
 import type * as Layer from "effect/Layer";
 import type * as Path from "effect/Path";
+
+const $I = $NlpMcpId.create("StreamingHandlers");
 
 const toStreamToolError =
   (toolName: string, operation: string) =>
@@ -49,10 +52,16 @@ const pathAttribute = (path: string): Record<string, string> => ({ path_length: 
 
 const countAttribute = (name: string, count: number): Record<string, string> => ({ [name]: `${count}` });
 
-class InvalidPatternError extends Data.TaggedError("InvalidPatternError")<{
-  readonly cause: unknown;
-  readonly message: string;
-}> {}
+class InvalidPatternError extends S.TaggedError<InvalidPatternError>($I`InvalidPatternError`)(
+  "InvalidPatternError",
+  {
+    cause: S.Unknown,
+    message: S.String,
+  },
+  $I.annoteError<InvalidPatternError>("InvalidPatternError", {
+    description: "Tool-supplied regex pattern that is too long or fails to compile.",
+  })
+) {}
 
 /**
  * Upper bound on tool-supplied regex length. Patterns above this are rejected
@@ -65,14 +74,14 @@ const MAX_PATTERN_LENGTH = 1_000;
 const compileRegex = (pattern: string, flags: string): Effect.Effect<RegExp, InvalidPatternError> =>
   pattern.length > MAX_PATTERN_LENGTH
     ? Effect.fail(
-        new InvalidPatternError({
+        InvalidPatternError.make({
           cause: undefined,
           message: `Pattern exceeds the maximum supported length of ${MAX_PATTERN_LENGTH} characters`,
         })
       )
     : Effect.try({
         catch: (cause) =>
-          new InvalidPatternError({ cause, message: cause instanceof Error ? cause.message : String(cause) }),
+          InvalidPatternError.make({ cause, message: cause instanceof Error ? cause.message : String(cause) }),
         try: () => new RegExp(pattern, flags),
       });
 

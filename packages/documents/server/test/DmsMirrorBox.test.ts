@@ -139,10 +139,10 @@ const makeFakeBox = (overrides: FakeBoxOverrides = {}) => {
   };
 
   const childrenOf = (parentId: string): ReadonlyArray<FakeItem> =>
-    [...items.values()].filter((item) => item.parentId === parentId);
+    A.filter([...items.values()], (item) => item.parentId === parentId);
 
   const hasFolderNamed = (parentId: string, name: string): boolean =>
-    childrenOf(parentId).some((item) => item.type === "folder" && item.name === name);
+    A.some(childrenOf(parentId), (item) => item.type === "folder" && item.name === name);
 
   const folderResponse = (item: FakeItem) => ({
     id: item.id,
@@ -222,7 +222,7 @@ const makeFakeBox = (overrides: FakeBoxOverrides = {}) => {
       getFolderItems: (folderId) => {
         counts.getFolderItems += 1;
         return Promise.resolve({
-          entries: childrenOf(folderId).map((item) =>
+          entries: A.map(childrenOf(folderId), (item) =>
             item.type === "folder" ? folderResponse(item) : fileEntry(item)
           ),
         });
@@ -362,10 +362,16 @@ describe("@beep/documents-server DmsMirrorBox", () => {
         const mirror = yield* DmsMirror;
         const item = yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "matters" }));
 
-        const root = [...fake.items.values()].find((candidate) => candidate.name === BOX_MIRROR_DEFAULT_ROOT_NAME);
+        const root = A.findFirst(
+          [...fake.items.values()],
+          (candidate) => candidate.name === BOX_MIRROR_DEFAULT_ROOT_NAME
+        );
 
         assertNone(item.parentRemoteId);
-        expect(root?.parentId).toBe("0");
+        assertSome(
+          O.map(root, (candidate) => candidate.parentId),
+          "0"
+        );
         expect(fake.counts.createFolder).toBe(2);
       })
     );
@@ -385,9 +391,12 @@ describe("@beep/documents-server DmsMirrorBox", () => {
         const mirror = yield* DmsMirror;
         yield* mirror.ensureFolder(EnsureFolderInput.make({ name: "matters" }));
 
-        const root = [...fake.items.values()].find((candidate) => candidate.name === "custom-vault");
+        const root = A.findFirst([...fake.items.values()], (candidate) => candidate.name === "custom-vault");
 
-        expect(root?.parentId).toBe("0");
+        assertSome(
+          O.map(root, (candidate) => candidate.parentId),
+          "0"
+        );
       })
     );
   });

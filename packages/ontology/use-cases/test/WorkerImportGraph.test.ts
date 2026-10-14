@@ -3,6 +3,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertFalse } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as R from "effect/Record";
 
 describe("@beep/ontology-use-cases worker import graph", () => {
   it.effect(
@@ -31,7 +32,7 @@ describe("@beep/ontology-use-cases worker import graph", () => {
 
       expect(tools.OntologyToolkit).toBeDefined();
       expect(tools.OntologyToolService).toBeDefined();
-      expect(Object.keys(tools.OntologyToolkit.tools)).toHaveLength(9);
+      expect(R.keys(tools.OntologyToolkit.tools)).toHaveLength(9);
     })
   );
 });

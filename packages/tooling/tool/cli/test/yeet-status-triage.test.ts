@@ -1144,14 +1144,17 @@ describe("yeet status snapshot rendering and encoding", () => {
 
   it.effect("decodes a status artifact written before merge readiness and thread triage existed", () =>
     Effect.gen(function* () {
-      const legacy = [
-        '{"base":"origin/main","branch":"feature","closeout":{"detail":"missing","path":"pr-closeout.json",',
-        '"state":"missing"},"createdAt":"2026-06-11T00:00:00.000Z","head":"HEAD","nextCommand":"bun run beep yeet verify",',
-        '"remote":{"available":false,"checked":false,"detail":"pass --remote"},"runId":"feature",',
-        '"schemaVersion":"yeet-status/v1","statusPath":"status.json",',
-        '"verdict":{"detail":"missing","path":"verdict.json","state":"missing"},',
-        '"worktree":{"clean":true,"staged":0,"unstaged":0,"untracked":0}}',
-      ].join("");
+      const legacy = A.join(
+        [
+          '{"base":"origin/main","branch":"feature","closeout":{"detail":"missing","path":"pr-closeout.json",',
+          '"state":"missing"},"createdAt":"2026-06-11T00:00:00.000Z","head":"HEAD","nextCommand":"bun run beep yeet verify",',
+          '"remote":{"available":false,"checked":false,"detail":"pass --remote"},"runId":"feature",',
+          '"schemaVersion":"yeet-status/v1","statusPath":"status.json",',
+          '"verdict":{"detail":"missing","path":"verdict.json","state":"missing"},',
+          '"worktree":{"clean":true,"staged":0,"unstaged":0,"untracked":0}}',
+        ],
+        ""
+      );
       const decoded = yield* YeetStatusSnapshotJson.decode(legacy);
 
       assertNone(decoded.mergeReady);

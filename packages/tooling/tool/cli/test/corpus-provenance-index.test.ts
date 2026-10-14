@@ -32,7 +32,9 @@ import { Command } from "effect/cli";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -181,7 +183,7 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
         lines(yield* fs.readFileString(path.join(root, "staging/provenance/messages-extract.jsonl"))),
         MailMessageIndexRecordJson.decode
       );
-      const parent = rows.find((row) => row.internet !== undefined);
+      const parent = O.getOrThrow(A.findFirst(rows, (row) => row.internet !== undefined));
       expect(parent).toMatchObject({
         folderPath: "Inbox",
         embeddedDepth: 0,
@@ -193,11 +195,11 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
           references: ["<one>", "<two>"],
         },
       });
-      expect(parent?.recipients.map((r) => r.kind)).toEqual(["to", "cc"]);
-      expect(parent?.attachments.find((a) => a.kind === "embedded-message")?.embeddedMessagePath).toContain(
-        "Attachments/Attachment5/Message00001"
-      );
-      expect(rows.find((row) => row.embeddedDepth === 1)?.messagePath).toContain("Attachment5");
+      expect(A.map(parent.recipients, (r) => r.kind)).toEqual(["to", "cc"]);
+      expect(
+        O.getOrThrow(A.findFirst(parent.attachments, (a) => a.kind === "embedded-message")).embeddedMessagePath
+      ).toContain("Attachments/Attachment5/Message00001");
+      expect(O.getOrThrow(A.findFirst(rows, (row) => row.embeddedDepth === 1)).messagePath).toContain("Attachment5");
       yield* indexMailExportTrees(ProvenanceMessagesOptions.make({ corpusRoot: root, trees: ["extract"] }));
       expect(
         lines(yield* fs.readFileString(path.join(root, "staging/provenance/messages-extract.jsonl")))
@@ -211,7 +213,7 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
       const path = yield* Path.Path;
       const sniffer = yield* AttachmentMagicSniffer;
       const verdicts = yield* sniffer.sniff([path.join(attachments, "1_report.p")]);
-      expect(verdicts.map((v) => v.mimeType)).toEqual(["application/pdf"]);
+      expect(A.map(verdicts, (v) => v.mimeType)).toEqual(["application/pdf"]);
     })
   );
 
@@ -238,10 +240,14 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
         lines(yield* fs.readFileString(path.join(root, "staging/provenance/metadata.jsonl"))),
         MetadataCensusRecordJson.decode
       );
-      expect(rows.find((row) => row.relativePath.endsWith("1_report.p"))?.fields.fileType).toBe("PDF");
-      expect(rows.find((row) => row.relativePath.endsWith("2_photo.j"))?.fields.fileType).toBe("JPEG");
-      expect(rows.find((row) => row.relativePath.endsWith("4_blob"))?.status).toBe("error");
-      for (const row of rows) expect(Object.keys(row.tags).some((key) => /^(System|File):/.test(key))).toBe(false);
+      expect(O.getOrThrow(A.findFirst(rows, (row) => row.relativePath.endsWith("1_report.p"))).fields.fileType).toBe(
+        "PDF"
+      );
+      expect(O.getOrThrow(A.findFirst(rows, (row) => row.relativePath.endsWith("2_photo.j"))).fields.fileType).toBe(
+        "JPEG"
+      );
+      expect(O.getOrThrow(A.findFirst(rows, (row) => row.relativePath.endsWith("4_blob"))).status).toBe("error");
+      for (const row of rows) expect(A.some(R.keys(row.tags), (key) => /^(System|File):/.test(key))).toBe(false);
     })
   );
 });
@@ -268,7 +274,7 @@ it.layer(RepairServices, { timeout: "30 seconds" })((it) => {
       // text/plain has no file(1) extension; the fallback table completes the fully eaten name.
       expect(yield* fs.exists(path.join(attachments, "3_notes.txt"))).toBe(true);
       const journal = yield* AttachmentRepairJournal;
-      expect((yield* journal.readAll(journalPath)).map((r) => r.outcome)).toEqual(A.makeBy(4, () => "renamed"));
+      expect(A.map(yield* journal.readAll(journalPath), (r) => r.outcome)).toEqual(A.makeBy(4, () => "renamed"));
       const undo = yield* repairAttachmentExtensions(
         AttachmentRepairOptions.make({ corpusRoot: root, trees: [], mode: "undo", journalPath })
       );
@@ -391,7 +397,7 @@ it.layer(CommandServices, { timeout: "60 seconds" })((it) => {
       const summaries = yield* service.indexMailExportTrees(
         ProvenanceMessagesOptions.make({ corpusRoot: root, trees: ["extract"] })
       );
-      expect(summaries.map((summary) => summary.messageCount)).toEqual([3]);
+      expect(A.map(summaries, (summary) => summary.messageCount)).toEqual([3]);
       const plan = yield* service.repairAttachmentExtensions(
         AttachmentRepairOptions.make({ corpusRoot: root, trees: ["extract"], mode: "plan" })
       );

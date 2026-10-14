@@ -387,22 +387,25 @@ describe("parseWorktreePorcelain", () => {
   it.effect("parses a branch entry, a detached+locked entry, and a prunable entry", () =>
     Effect.gen(function* () {
       const entries = yield* parseWorktreePorcelain(
-        [
-          "worktree /repo",
-          "HEAD 1111111111111111111111111111111111111111",
-          "branch refs/heads/main",
-          "",
-          "worktree /repo-worktrees/pinned",
-          "HEAD 2222222222222222222222222222222222222222",
-          "detached",
-          "locked pinned for a while",
-          "",
-          "worktree /tmp/stale",
-          "HEAD 3333333333333333333333333333333333333333",
-          "detached",
-          "prunable gitdir file points to non-existent location",
-          "",
-        ].join("\0")
+        A.join(
+          [
+            "worktree /repo",
+            "HEAD 1111111111111111111111111111111111111111",
+            "branch refs/heads/main",
+            "",
+            "worktree /repo-worktrees/pinned",
+            "HEAD 2222222222222222222222222222222222222222",
+            "detached",
+            "locked pinned for a while",
+            "",
+            "worktree /tmp/stale",
+            "HEAD 3333333333333333333333333333333333333333",
+            "detached",
+            "prunable gitdir file points to non-existent location",
+            "",
+          ],
+          "\0"
+        )
       );
 
       expect(entries).toHaveLength(3);
@@ -1110,20 +1113,20 @@ describe("worktree git operations", () => {
           expect(targetPath).toBe(path.join(context.worktreesRoot, "demo"));
 
           const copies = yield* copyLocalFiles(context.mainCheckout, targetPath);
-          const envCopy = copies.find((copy) => copy.entry === ".env");
-          const claudeCopy = copies.find((copy) => copy.entry === ".claude/settings.local.json");
-          expect(envCopy?.status).toBe("copied");
-          expect(claudeCopy?.status).toBe("skipped");
+          const envCopy = O.getOrThrow(A.findFirst(copies, (copy) => copy.entry === ".env"));
+          const claudeCopy = O.getOrThrow(A.findFirst(copies, (copy) => copy.entry === ".claude/settings.local.json"));
+          expect(envCopy.status).toBe("copied");
+          expect(claudeCopy.status).toBe("skipped");
           expect(yield* fs.exists(path.join(targetPath, ".env"))).toBe(true);
 
           const refreshed = yield* resolveWorktreeContext(repoRoot);
           const report = yield* worktreeDoctorReportForContext(refreshed);
           expect(report.worktreesRoot).toBe(context.worktreesRoot);
-          const demoEntry = report.entries.find((entry) => entry.path === targetPath);
-          expect(demoEntry?.branch).toBe("feat/demo");
-          expect(demoEntry?.unpushed).toBe(false);
-          expect(demoEntry?.hasEnv).toBe(true);
-          expect(demoEntry?.hasNodeModules).toBe(false);
+          const demoEntry = O.getOrThrow(A.findFirst(report.entries, (entry) => entry.path === targetPath));
+          expect(demoEntry.branch).toBe("feat/demo");
+          expect(demoEntry.unpushed).toBe(false);
+          expect(demoEntry.hasEnv).toBe(true);
+          expect(demoEntry.hasNodeModules).toBe(false);
         })
       )
     );

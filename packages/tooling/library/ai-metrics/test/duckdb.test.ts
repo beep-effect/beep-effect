@@ -3,6 +3,7 @@ import { aiMetricsDerivedDuckDbPath, withAiMetricsDuckDb } from "@beep/repo-ai-m
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -46,7 +47,7 @@ describe("@beep/repo-ai-metrics duckdb helpers", () => {
           );
 
           expect(rows).toHaveLength(2);
-          expect(rows.map((row) => row.n)).toEqual([1, 2]);
+          expect(A.map(rows, (row) => row.n)).toEqual([1, 2]);
         })
       )
     );

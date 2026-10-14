@@ -20,23 +20,26 @@ import * as O from "effect/Option";
 
 const boxTs2589Line = "@beep/box:build: error TS2589: Type instantiation is excessively deep and possibly infinite.";
 
-const quarantinableBuildOutput = [
-  "• turbo 2.10.7",
-  "@beep/types:build: cache hit, replaying logs 0123456789abcdef",
-  "@beep/box:build: cache bypass, force executing 64ee9ecf7492516e",
-  "@beep/box:build: $ bun run beep:build",
-  "@beep/box:build: $ tsc -b tsconfig.json && bun run babel",
-  boxTs2589Line,
-  "@beep/box:build: ERROR: command finished with error: command (/repo/packages/common/box) bun run beep:build exited (2)",
-  "@beep/box#build: command (/repo/packages/common/box) bun run beep:build exited (2)",
-  " Tasks:    128 successful, 129 total",
-  "Cached:    120 cached, 129 total",
-  "  Time:    26.12s ",
-  "Failed:    @beep/box#build",
-  "",
-  " ERROR  run failed: command  exited (2)",
-  'error: script "build" exited with code 2',
-].join("\n");
+const quarantinableBuildOutput = A.join(
+  [
+    "• turbo 2.10.7",
+    "@beep/types:build: cache hit, replaying logs 0123456789abcdef",
+    "@beep/box:build: cache bypass, force executing 64ee9ecf7492516e",
+    "@beep/box:build: $ bun run beep:build",
+    "@beep/box:build: $ tsc -b tsconfig.json && bun run babel",
+    boxTs2589Line,
+    "@beep/box:build: ERROR: command finished with error: command (/repo/packages/common/box) bun run beep:build exited (2)",
+    "@beep/box#build: command (/repo/packages/common/box) bun run beep:build exited (2)",
+    " Tasks:    128 successful, 129 total",
+    "Cached:    120 cached, 129 total",
+    "  Time:    26.12s ",
+    "Failed:    @beep/box#build",
+    "",
+    " ERROR  run failed: command  exited (2)",
+    'error: script "build" exited with code 2',
+  ],
+  "\n"
+);
 
 const laneStep = QualityTaskStep.make({
   label: "quality:build",
@@ -56,56 +59,71 @@ describe("detectNoLocationTs2589Flake", () => {
   });
 
   it("quarantines check-lane task ids", () => {
-    const output = [
-      "@beep/schema:check: error TS2589: Type instantiation is excessively deep and possibly infinite.",
-      "Failed:    @beep/schema#check",
-    ].join("\n");
+    const output = A.join(
+      [
+        "@beep/schema:check: error TS2589: Type instantiation is excessively deep and possibly infinite.",
+        "Failed:    @beep/schema#check",
+      ],
+      "\n"
+    );
     const tasks = O.getOrThrow(detectNoLocationTs2589Flake(output));
     expect(tasks[0]).toMatchObject({ taskId: "@beep/schema#check", packageName: "@beep/schema", task: "check" });
   });
 
   it("quarantines multiple attributed tasks up to the cap", () => {
-    const output = [
-      "@beep/box:build: error TS2589: Type instantiation is excessively deep and possibly infinite.",
-      "@beep/ui:build: error TS2589: Type instantiation is excessively deep and possibly infinite.",
-      "Failed:    @beep/box#build, @beep/ui#build",
-    ].join("\n");
+    const output = A.join(
+      [
+        "@beep/box:build: error TS2589: Type instantiation is excessively deep and possibly infinite.",
+        "@beep/ui:build: error TS2589: Type instantiation is excessively deep and possibly infinite.",
+        "Failed:    @beep/box#build, @beep/ui#build",
+      ],
+      "\n"
+    );
     const tasks = O.getOrThrow(detectNoLocationTs2589Flake(output));
     expect(A.map(tasks, (task) => task.taskId)).toEqual(["@beep/box#build", "@beep/ui#build"]);
   });
 
   it("detects through ANSI escapes", () => {
-    const output = [`\u001B[31m${boxTs2589Line}\u001B[0m`, "\u001B[1mFailed:    @beep/box#build\u001B[0m"].join("\n");
+    const output = A.join(
+      [`\u001B[31m${boxTs2589Line}\u001B[0m`, "\u001B[1mFailed:    @beep/box#build\u001B[0m"],
+      "\n"
+    );
     detectNoLocationTs2589Flake(output).pipe(O.isSome, assertTrue);
   });
 
   it("keeps a located TS2589 hard", () => {
-    const output = [
-      "@beep/box:build: src/internal/Foo.ts(12,5): error TS2589: Type instantiation is excessively deep and possibly infinite.",
-      "Failed:    @beep/box#build",
-    ].join("\n");
+    const output = A.join(
+      [
+        "@beep/box:build: src/internal/Foo.ts(12,5): error TS2589: Type instantiation is excessively deep and possibly infinite.",
+        "Failed:    @beep/box#build",
+      ],
+      "\n"
+    );
     detectNoLocationTs2589Flake(output).pipe(assertNone);
   });
 
   it("keeps mixed diagnostics hard", () => {
-    const output = [
-      boxTs2589Line,
-      "@beep/box:build: src/internal/Foo.ts(3,1): error TS2322: Type 'string' is not assignable to type 'number'.",
-      "Failed:    @beep/box#build",
-    ].join("\n");
+    const output = A.join(
+      [
+        boxTs2589Line,
+        "@beep/box:build: src/internal/Foo.ts(3,1): error TS2322: Type 'string' is not assignable to type 'number'.",
+        "Failed:    @beep/box#build",
+      ],
+      "\n"
+    );
     detectNoLocationTs2589Flake(output).pipe(assertNone);
   });
 
   it("keeps an unattributed no-location TS2589 hard", () => {
-    const output = [
-      "error TS2589: Type instantiation is excessively deep and possibly infinite.",
-      "Failed:    @beep/box#build",
-    ].join("\n");
+    const output = A.join(
+      ["error TS2589: Type instantiation is excessively deep and possibly infinite.", "Failed:    @beep/box#build"],
+      "\n"
+    );
     detectNoLocationTs2589Flake(output).pipe(assertNone);
   });
 
   it("keeps a failed task without TS2589 attribution hard", () => {
-    const output = [boxTs2589Line, "Failed:    @beep/box#build, @beep/ui#build"].join("\n");
+    const output = A.join([boxTs2589Line, "Failed:    @beep/box#build, @beep/ui#build"], "\n");
     detectNoLocationTs2589Flake(output).pipe(assertNone);
   });
 
@@ -115,16 +133,19 @@ describe("detectNoLocationTs2589Flake", () => {
 
   it("keeps failures beyond the per-lane task cap hard", () => {
     const packages = A.makeBy(MAX_QUARANTINED_TASKS_PER_LANE + 1, (index) => `@beep/pkg-${index}`);
-    const output = [
-      ...A.map(
-        packages,
-        (name) => `${name}:build: error TS2589: Type instantiation is excessively deep and possibly infinite.`
-      ),
-      `Failed:    ${A.join(
-        A.map(packages, (name) => `${name}#build`),
-        ", "
-      )}`,
-    ].join("\n");
+    const output = A.join(
+      [
+        ...A.map(
+          packages,
+          (name) => `${name}:build: error TS2589: Type instantiation is excessively deep and possibly infinite.`
+        ),
+        `Failed:    ${A.join(
+          A.map(packages, (name) => `${name}#build`),
+          ", "
+        )}`,
+      ],
+      "\n"
+    );
     detectNoLocationTs2589Flake(output).pipe(assertNone);
   });
 

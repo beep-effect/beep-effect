@@ -13,11 +13,13 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import {
@@ -94,8 +96,11 @@ describe("@beep/law-practice-server", () => {
           // trivial `match_exact`). This is what makes the re-slice below a real
           // grounding proof, and it rules out the fabricated span-undefined anchor
           // fallback in IrToLaw (which would yield `unaligned`/no span).
-          const distinctionExtraction = extractions.find((e) => e.label === "distinction");
-          expect(distinctionExtraction?.alignmentStatus).toBe("match_lesser");
+          const distinctionExtraction = A.findFirst(extractions, (e) => e.label === "distinction");
+          assertSome(
+            O.map(distinctionExtraction, (e) => e.alignmentStatus),
+            "match_lesser"
+          );
 
           const law = yield* irToLaw.toLaw(extractions);
 
@@ -147,11 +152,15 @@ describe("@beep/law-practice-server", () => {
           const langExtract = yield* LangExtractService;
           const irToLaw = yield* IrToLaw;
           const extractionResult = yield* langExtract.extract(makeExtractionRequest());
-          const distinctionExtraction = extractionResult.extractions.find(
+          const distinctionExtraction = A.findFirst(
+            extractionResult.extractions,
             (extraction) => extraction.label === "distinction"
           );
 
-          expect(distinctionExtraction?.alignmentStatus).toBe("match_minimal_fold");
+          assertSome(
+            O.map(distinctionExtraction, (extraction) => extraction.alignmentStatus),
+            "match_minimal_fold"
+          );
 
           const law = yield* irToLaw.toLaw(extractionResult.extractions);
 

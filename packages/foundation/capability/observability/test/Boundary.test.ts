@@ -1,18 +1,21 @@
 import { redactString, VERSION } from "@beep/observability";
 import { it } from "@beep/test-runner";
-import { Str } from "@beep/utils";
+import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 
 const pathFromUrl = (url: URL): string => Str.replace(/\/$/u, "")(decodeURIComponent(url.pathname));
 const joinPath = (base: string, ...segments: ReadonlyArray<string>): string =>
-  [Str.replace(/\/+$/u, "")(base), ...segments.map((segment) => Str.replaceAll(/^\/+|\/+$/gu, "")(segment))]
-    .filter((segment) => segment.length > 0)
-    .join("/");
+  pipe(
+    [Str.replace(/\/+$/u, "")(base), ...A.map(segments, Str.replaceAll(/^\/+|\/+$/gu, ""))],
+    A.filter((segment) => segment.length > 0),
+    A.join("/")
+  );
 
 const packageRoot = pathFromUrl(new URL("..", import.meta.url));
 const repoRoot = pathFromUrl(new URL("../../../../..", import.meta.url));

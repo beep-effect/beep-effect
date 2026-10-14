@@ -729,7 +729,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("residue reap", (it) => 
         }),
       ],
     });
-    const rendered = renderResidueReportLinesForTesting(applied).join("\n");
+    const rendered = A.join(renderResidueReportLinesForTesting(applied), "\n");
     expect(rendered).toContain("RESIDUE REAP APPLY");
     expect(rendered).toContain("home root: /home/me");
     expect(rendered).toContain("thresholds: default=30d turbo=14d");
@@ -743,9 +743,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("residue reap", (it) => 
     expect(rendered).toContain("totals: candidates=2 reaped=1 reclaimed-bytes=4096");
     expect(rendered).toContain("warning: Failed to remove /home/me/.codex/worktrees/stuck.");
 
-    const dryRun = renderResidueReportLinesForTesting(
-      ResidueReapReport.make({ ...base, applied: false, candidates: [], reapedCount: 0, reclaimedBytes: 0 })
-    ).join("\n");
+    const dryRun = A.join(
+      renderResidueReportLinesForTesting(
+        ResidueReapReport.make({ ...base, applied: false, candidates: [], reapedCount: 0, reclaimedBytes: 0 })
+      ),
+      "\n"
+    );
     expect(dryRun).toContain("RESIDUE REAP DRY RUN");
   });
 
@@ -1369,7 +1372,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("residue reap", (it) => 
       reclaimedBytes: 0,
       warnings: [],
     });
-    const rendered = renderResidueReportLinesForTesting(report).join("\n");
+    const rendered = A.join(renderResidueReportLinesForTesting(report), "\n");
     expect(rendered).toContain("checkouts: 2 (fleet)");
     expect(rendered).toContain("== checkout: /repo-a ==");
     expect(rendered).toContain("turbo-cache: candidates=30 eligible=30 skipped=0 eligible-bytes=300");

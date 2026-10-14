@@ -1208,7 +1208,10 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         yield* librarySourceEvidenceValid(
           root,
           source,
-          LibraryCapture.make({ ...imported, artifacts: imported.artifacts.filter((a) => a.role !== "raw-response") })
+          LibraryCapture.make({
+            ...imported,
+            artifacts: A.filter(imported.artifacts, (a) => a.role !== "raw-response"),
+          })
         )
       ).toBe(false);
       expect(
@@ -1507,7 +1510,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         html_url: "https://github.com/owner/renamed",
       };
       const identity = yield* make("identity.json", yield* fixtureJson(identityBody), "repository-identity-response");
-      const receipts = ["owner/repo", "owner/renamed"].map((slug) => ({
+      const receipts = A.map(["owner/repo", "owner/renamed"], (slug) => ({
         ...identityBody,
         requestedEndpoint: `https://api.github.com/repos/${slug}`,
         observedAt: "2026-10-06",
@@ -1544,7 +1547,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       ).toBe(false);
       const wrongIdentityProof = yield* make(
         "wrong-identity-receipts.json",
-        yield* fixtureJson(receipts.map((item) => ({ ...item, id: 999 }))),
+        yield* fixtureJson(A.map(receipts, (item) => ({ ...item, id: 999 }))),
         "repository-identity-provenance"
       );
       expect(
@@ -1604,7 +1607,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         yield* librarySourceEvidenceValid(
           root,
           prSource,
-          LibraryCapture.make({ ...emptyCapture, artifacts: emptyCapture.artifacts.filter((a) => a !== filesProof) })
+          LibraryCapture.make({ ...emptyCapture, artifacts: A.filter(emptyCapture.artifacts, (a) => a !== filesProof) })
         )
       ).toBe(false);
       const changedPull = yield* make(

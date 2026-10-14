@@ -10,6 +10,8 @@
  * `*.test.ts` gate of `no-manual-effect-runtime-in-tests`, and the host-process reference
  * file exemption of `no-global-process-runtime`.
  */
+
+import * as A from "effect/Array";
 import type { OxlintRule } from "./oxlint-harness.ts";
 
 /** One fixture: a source, its expected finding count, and an optional path override. */
@@ -26,7 +28,7 @@ export type OxlintRuleSources = {
   readonly valid: ReadonlyArray<OxlintCase>;
 };
 
-const lines = (...parts: ReadonlyArray<string>): string => parts.join("\n");
+const lines = (...parts: ReadonlyArray<string>): string => A.join(parts, "\n");
 
 /** The repo path the host-process reference exemption keys on (suffix-matched by the rule). */
 const HOST_PROCESS_FILE = "packages/foundation/capability/chalk/src/internal/SupportsColor.ts";

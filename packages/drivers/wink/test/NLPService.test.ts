@@ -11,6 +11,7 @@ import { it } from "@beep/test-runner";
 import * as WinkEngine from "@beep/wink";
 import { WinkBackendLive } from "@beep/wink";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as EffectGraph from "effect/Graph";
 import * as Layer from "effect/Layer";
@@ -24,7 +25,7 @@ describe("NLPService", () => {
       Effect.fnUntraced(function* () {
         const graph = yield* NLPService.processText("The cat sat. The dog ran.");
         expect(EffectGraph.nodeCount(graph)).toBeGreaterThan(0);
-        const docs = Graph.getTextNodes(graph).filter((entry) => entry.node.type === "document");
+        const docs = A.filter(Graph.getTextNodes(graph), (entry) => entry.node.type === "document");
         expect(docs.length).toBe(1);
       })
     );

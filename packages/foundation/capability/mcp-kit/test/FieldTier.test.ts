@@ -13,6 +13,7 @@ import { fcRuns } from "@beep/test-utils";
 import { assert, describe } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const documentTiers = defineFieldTiers({
@@ -65,7 +66,7 @@ describe("field-tier projector", () => {
   });
 
   it("names minimal/balanced/complete as actual Schema.Struct variants", () => {
-    assert.deepStrictEqual(Object.keys(documentTiers.minimal.fields).sort(), ["documentId", "title"]);
+    assert.deepStrictEqual(R.keys(documentTiers.minimal.fields).sort(), ["documentId", "title"]);
     assert.isTrue(S.isSchema(documentTiers.minimal));
     assert.isTrue(S.isSchema(documentTiers.balanced));
     assert.isTrue(S.isSchema(documentTiers.complete));
@@ -98,7 +99,7 @@ describe("field-tier projector", () => {
   it("projects a single named tier's field set", () => {
     const projected = projectFieldTier(largeDocumentBagPayload, "balanced", documentTiers);
 
-    assert.deepStrictEqual(Object.keys(projected).sort(), ["abstractText", "documentId", "title"]);
+    assert.deepStrictEqual(R.keys(projected).sort(), ["abstractText", "documentId", "title"]);
     assert.deepStrictEqual(projected, {
       abstractText: largeDocumentBagPayload.abstractText,
       documentId: largeDocumentBagPayload.documentId,

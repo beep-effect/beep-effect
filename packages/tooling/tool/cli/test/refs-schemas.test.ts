@@ -41,7 +41,7 @@ describe("reference manifest schemas", () => {
       const file = yield* path.fromFileUrl(new URL("../../../../../scripts/references.json", import.meta.url));
       const manifest = yield* ReferenceWorkspaceManifest.decodeJson(yield* fs.readFileString(file));
       expect(manifest.rootDefault).toBe("$HOME/YeeBois/references/effect");
-      expect(manifest.members.map((member) => [member.name, member.tier])).toEqual([
+      expect(A.map(manifest.members, (member) => [member.name, member.tier])).toEqual([
         ["effect", "deep"],
         ["effect-tsgo", "deep"],
         ["ai-plugin-marketplace-manager", "deep"],

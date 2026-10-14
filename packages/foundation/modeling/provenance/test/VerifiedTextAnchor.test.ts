@@ -18,6 +18,7 @@ import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
@@ -301,7 +302,7 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("@beep/provenance VerifiedTe
         })
       );
 
-      expect(failures.map(({ reason }) => reason)).toEqual(["stale-source", "stale-source"]);
+      expect(A.map(failures, ({ reason }) => reason)).toEqual(["stale-source", "stale-source"]);
       expect(replacement.sourceText).toBe("\ufffd");
     })
   );

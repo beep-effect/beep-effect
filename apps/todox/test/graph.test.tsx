@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { cleanup, fireEvent, render, within } from "@testing-library/react";
+import * as A from "effect/Array";
 import { EvidenceGraph, graphEdges, graphNodes } from "@/components/EvidenceGraph";
 import { TodoxAtomProvider } from "@/runtime/TodoxAtomProvider";
 
@@ -14,7 +15,7 @@ const renderGraph = () =>
 
 describe("evidence graph", () => {
   it("wires every edge to a real node and opens on the core claim", () => {
-    const ids = graphNodes.map((node) => node.id);
+    const ids = A.map(graphNodes, (node) => node.id);
     for (const edge of graphEdges) {
       expect(ids, edge.from).toContain(edge.from);
       expect(ids, edge.to).toContain(edge.to);

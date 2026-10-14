@@ -104,7 +104,7 @@ const renderModule = (entry: ModuleEntry, content: string): string => {
     if (isNoiseLine(line)) return state;
     return { inCode: state.inCode, out: A.append(state.out, demote(entry)(line)) };
   });
-  return rendered.out.join("\n").replaceAll("\n\n\n\n", "\n\n").replaceAll("\n\n\n", "\n\n").trim();
+  return A.join(rendered.out, "\n").replaceAll("\n\n\n\n", "\n\n").replaceAll("\n\n\n", "\n\n").trim();
 };
 
 const program = Effect.gen(function* () {
@@ -131,18 +131,21 @@ const program = Effect.gen(function* () {
     { concurrency: 8 }
   );
 
-  const generated = [
-    START_MARKER,
-    "",
-    "## API reference",
-    "",
-    "Generated from the package JSDoc by `bun run docgen && bun run readme` — edit the",
-    "source doc comments, never this section.",
-    "",
-    sections.join("\n\n"),
-    "",
-    END_MARKER,
-  ].join("\n");
+  const generated = A.join(
+    [
+      START_MARKER,
+      "",
+      "## API reference",
+      "",
+      "Generated from the package JSDoc by `bun run docgen && bun run readme` — edit the",
+      "source doc comments, never this section.",
+      "",
+      A.join(sections, "\n\n"),
+      "",
+      END_MARKER,
+    ],
+    "\n"
+  );
 
   const next = readme.slice(0, startIndex) + generated + readme.slice(endIndex + END_MARKER.length);
   yield* fs.writeFileString(readmePath, next);

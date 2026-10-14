@@ -218,7 +218,7 @@ export function InspectorList({
 
   return (
     <div className="rowsets" onKeyDown={onKeyDown} data-inspector-list={passageId}>
-      {groups.map((group, groupIndex) => (
+      {A.map(groups, (group, groupIndex) => (
         <div className="packet__section" key={O.getOrElse(group.heading, () => `group-${groupIndex}`)}>
           {O.match(group.heading, {
             onNone: () => null,
@@ -233,7 +233,7 @@ export function InspectorList({
             </div>
           ) : null}
           <ol className="rows" aria-label={O.getOrElse(group.heading, () => label)}>
-            {group.rows.map((row) => {
+            {A.map(group.rows, (row) => {
               const isOpen = O.exists(openRow, (open) => open.id === row.id);
               return (
                 <li key={row.id}>
@@ -300,7 +300,7 @@ export function InspectorList({
                   onSome: (receipt) => <ReceiptView receipt={receipt} />,
                 })}
                 <p className="inspector__detail">
-                  {row.detail.map(([key, value]) => (
+                  {A.map(row.detail, ([key, value]) => (
                     <span key={key}>
                       {key} {value}
                     </span>

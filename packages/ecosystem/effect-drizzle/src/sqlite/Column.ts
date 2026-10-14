@@ -7,7 +7,7 @@
 // fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
 
 import { blob, integer, numeric, real, text } from "drizzle-orm/sqlite-core";
-import { append, contains, empty, isArray, isReadonlyArrayNonEmpty, some as someArray } from "effect/Array";
+import { append, contains, empty, every, isArray, isReadonlyArrayNonEmpty, some as someArray } from "effect/Array";
 import { taggedEnum } from "effect/Data";
 import { equals } from "effect/Equal";
 import { dual } from "effect/Function";
@@ -389,7 +389,7 @@ export const isSpec = (value: unknown): value is Spec => {
       hasProperty(value, "values") &&
       isArray(value.values) &&
       isReadonlyArrayNonEmpty(value.values) &&
-      value.values.every(isString)
+      every(value.values, isString)
     );
   }
   if (value._tag === "integer") {

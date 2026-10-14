@@ -7,13 +7,14 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { defineRelations, getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { findFirst, head, sort } from "effect/Array";
+import { findFirst, head, map, sort } from "effect/Array";
 import { catchTag, exit, fail as failEffect, fnUntraced, gen, succeed } from "effect/Effect";
 import { equals } from "effect/Equal";
 import { isFailure } from "effect/Exit";
 import { flatMap, fromUndefinedOr, getOrThrowWith, getOrUndefined, none } from "effect/Option";
 import { String as StringOrder } from "effect/Order";
 import { hasProperty } from "effect/Predicate";
+import { keys } from "effect/Record";
 import {
   Array as ArraySchema,
   Boolean as BooleanSchema,
@@ -255,7 +256,7 @@ describe("toPgTable", () => {
     expect(getTableName(userTable)).toBe("user");
     expect(
       sort(
-        userConfig.columns.map((candidate) => candidate.name),
+        map(userConfig.columns, (candidate) => candidate.name),
         StringOrder
       )
     ).toEqual(
@@ -301,23 +302,23 @@ describe("toPgTable", () => {
     expect(userIndex.config.name).toBe("user_email_idx");
     expect(userIndex.config.method).toBe("btree");
     expect(userIndex.config.where).toBeDefined();
-    expect(userConfig.uniqueConstraints.map((constraint) => constraint.name)).toContain("user_org_email_unique");
-    expect(userConfig.checks.map((check) => check.name)).toContain("user_email_check");
+    expect(map(userConfig.uniqueConstraints, (constraint) => constraint.name)).toContain("user_org_email_unique");
+    expect(map(userConfig.checks, (check) => check.name)).toContain("user_email_check");
 
     const membershipConfig = getTableConfig(effectDrizzleSchema.tables.membership);
     expect(membershipConfig.primaryKeys).toHaveLength(1);
     const membershipPrimaryKey = first(membershipConfig.primaryKeys, "membership primary key");
     expect(membershipPrimaryKey.name).toBe("membership_pk");
-    expect(membershipPrimaryKey.columns.map((candidate) => candidate.name)).toEqual(["organization_id", "user_id"]);
+    expect(map(membershipPrimaryKey.columns, (candidate) => candidate.name)).toEqual(["organization_id", "user_id"]);
   });
 
   it("emits partial unique indexes and explicitly unsafe checks", () => {
     const config = getTableConfig(extraCoverageRecordTable);
 
-    expect(config.indexes.map((candidate) => candidate.config.name)).toContain(
+    expect(map(config.indexes, (candidate) => candidate.config.name)).toContain(
       "extra_coverage_record_email_unique_idx"
     );
-    expect(config.checks.map((candidate) => candidate.name)).toContain("extra_coverage_record_code_check");
+    expect(map(config.checks, (candidate) => candidate.name)).toContain("extra_coverage_record_code_check");
     expect(pg.Table.Node.is(pg.Table.unsafeCheckSql("positive_count", "count > 0"))).toBe(true);
     expect(pg.Table.Node.is({ _tag: "unknown", name: "unknown" })).toBe(false);
   });
@@ -327,10 +328,10 @@ describe("variant truth table", () => {
   it.effect(
     "keeps identity row locators in update and omits generated expressions",
     fnUntraced(function* () {
-      expect(Object.keys(User.insert.fields)).not.toContain("id");
-      expect(Object.keys(User.update.fields)).toContain("id");
-      expect(Object.keys(User.insert.fields)).not.toContain("searchName");
-      expect(Object.keys(User.update.fields)).not.toContain("searchName");
+      expect(keys(User.insert.fields)).not.toContain("id");
+      expect(keys(User.update.fields)).toContain("id");
+      expect(keys(User.insert.fields)).not.toContain("searchName");
+      expect(keys(User.update.fields)).not.toContain("searchName");
       const insert = yield* makeEffect(User.insert)({
         orgId: OrganizationId.make(1),
         email: "a@example.com",
@@ -350,13 +351,13 @@ describe("variant truth table", () => {
       expect(is(User.update)(update)).toBe(true);
       expect(is(User.update)(withoutVersion)).toBe(false);
       expect(is(User.update)({})).toBe(false);
-      expect(Object.keys(User.jsonCreate.fields)).not.toContain("searchName");
+      expect(keys(User.jsonCreate.fields)).not.toContain("searchName");
     })
   );
 
   it("keeps identity-by-default present in update and optional in insert", () => {
-    expect(Object.keys(Organization.insert.fields)).toContain("id");
-    expect(Object.keys(Organization.update.fields)).toContain("id");
+    expect(keys(Organization.insert.fields)).toContain("id");
+    expect(keys(Organization.update.fields)).toContain("id");
     expect(
       is(Organization.insert)({
         parentOrgId: null,
@@ -375,21 +376,21 @@ describe("variant truth table", () => {
   });
 
   it("preserves author-supplied VariantSchema.Field membership", () => {
-    expect(Object.keys(ExplicitVariantModel.insert.fields)).toContain("value");
-    expect(Object.keys(ExplicitVariantModel.update.fields)).toContain("value");
+    expect(keys(ExplicitVariantModel.insert.fields)).toContain("value");
+    expect(keys(ExplicitVariantModel.update.fields)).toContain("value");
   });
 });
 
 describe("kit write strategies", () => {
   it("injects defaults while preserving Effect variant membership", () => {
-    expect(Object.keys(AuditedRecord.fields)).toEqual(
+    expect(keys(AuditedRecord.fields)).toEqual(
       expect.arrayContaining(["createdAt", "updatedAt", "rowVersion", "name", "status", "source", "search"])
     );
-    expect(Object.keys(AuditedRecord.update.fields)).not.toContain("createdAt");
-    expect(Object.keys(AuditedRecord.insert.fields)).toContain("updatedAt");
-    expect(Object.keys(AuditedRecord.update.fields)).toContain("updatedAt");
-    expect(Object.keys(AuditedRecord.update.fields)).toContain("rowVersion");
-    expect(Object.keys(AuditedRecord.json.fields)).toContain("rowVersion");
+    expect(keys(AuditedRecord.update.fields)).not.toContain("createdAt");
+    expect(keys(AuditedRecord.insert.fields)).toContain("updatedAt");
+    expect(keys(AuditedRecord.update.fields)).toContain("updatedAt");
+    expect(keys(AuditedRecord.update.fields)).toContain("rowVersion");
+    expect(keys(AuditedRecord.json.fields)).toContain("rowVersion");
     expect(AuditedRecord.sql.columns.createdAt.column.kind).toBe("timestamp");
     expect(AuditedRecord.sql.columns.updatedAt.column.kind).toBe("timestamp");
   });
@@ -415,7 +416,7 @@ describe("kit write strategies", () => {
 
   it("emits default extras before model extras", () => {
     const config = getTableConfig(auditSchema.tables.audited_record);
-    expect(config.checks.map((check) => check.name)).toEqual([
+    expect(map(config.checks, (check) => check.name)).toEqual([
       "audited_record_row_version_positive",
       "audited_record_name_non_empty",
     ]);

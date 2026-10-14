@@ -2164,16 +2164,19 @@ const formatBaseline = Effect.fn("CoverageRegression.formatBaseline")(function* 
   const jsonc = yield* formatJsonc(encoded).pipe(
     QualityTaskConfigurationError.mapError("Failed to format coverage regression baseline.")
   );
-  return [
-    "// Coverage regression baseline. Do not edit by hand.",
-    `// Regenerate the rows you changed with: ${coverageScopedBaselineWriteCommand(["<package>"])}`,
-    "// A write adopts only packages that own a changed file (dependents included);",
-    "// every other measured package is held at its committed row. Add --replace-all",
-    "// to adopt every package the run measured instead.",
-    `// Regenerate the whole document with: ${coverageRegressionRegenerationCommand}`,
-    "// Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.",
-    jsonc,
-  ].join("\n");
+  return A.join(
+    [
+      "// Coverage regression baseline. Do not edit by hand.",
+      `// Regenerate the rows you changed with: ${coverageScopedBaselineWriteCommand(["<package>"])}`,
+      "// A write adopts only packages that own a changed file (dependents included);",
+      "// every other measured package is held at its committed row. Add --replace-all",
+      "// to adopt every package the run measured instead.",
+      `// Regenerate the whole document with: ${coverageRegressionRegenerationCommand}`,
+      "// Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.",
+      jsonc,
+    ],
+    "\n"
+  );
 });
 
 const writeBaselineDocument = Effect.fn("CoverageRegression.writeBaselineDocument")(function* (

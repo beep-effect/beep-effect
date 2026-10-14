@@ -274,9 +274,10 @@ describe("@beep/html attribute microsyntaxes", () => {
     "obeys the enumerated-attribute ASCII-case fixed-point law",
     [Arbitrary.schema(S.Array(S.Boolean).check(S.isMinLength(5), S.isMaxLength(5)))],
     ([uppercase]) => {
-      const encoded = [..."image"]
-        .map((character, index) => (uppercase[index] === true ? character.toUpperCase() : character))
-        .join("");
+      const encoded = A.join(
+        A.map([..."image"], (character, index) => (uppercase[index] === true ? character.toUpperCase() : character)),
+        ""
+      );
       const canonical = Result.getOrThrow(decodeEnumeratedResult(encoded));
       expect(canonical).toBe("image");
       const reencoded = Result.getOrThrow(encodeEnumeratedResult(canonical));

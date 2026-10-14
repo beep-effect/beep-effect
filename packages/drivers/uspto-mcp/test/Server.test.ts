@@ -43,6 +43,7 @@ import {
 import { assert, describe } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import { McpServerClient } from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -51,6 +52,7 @@ import * as Equal from "effect/Equal";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -368,13 +370,13 @@ describe("uspto-mcp schema parity", () => {
   );
 
   it("keeps the USPTO document tier field sets stable", () => {
-    assert.deepEqual(Object.keys(usptoDocumentFieldTiers.minimal.fields), ["documentIdentifier"]);
-    assert.deepEqual(Object.keys(usptoDocumentFieldTiers.balanced.fields), [
+    assert.deepEqual(R.keys(usptoDocumentFieldTiers.minimal.fields), ["documentIdentifier"]);
+    assert.deepEqual(R.keys(usptoDocumentFieldTiers.balanced.fields), [
       "documentCode",
       "documentIdentifier",
       "officialDate",
     ]);
-    assert.deepEqual(Object.keys(usptoDocumentFieldTiers.complete.fields), [
+    assert.deepEqual(R.keys(usptoDocumentFieldTiers.complete.fields), [
       "documentCode",
       "documentCodeDescriptionText",
       "documentIdentifier",
@@ -647,7 +649,7 @@ describe("uspto-mcp production stdio host", () => {
         assert.isUndefined(listed.error);
         const { tools } = yield* decodeHandshakeToolList(listed.result);
         assert.include(
-          tools.map((tool) => tool.name),
+          A.map(tools, (tool) => tool.name),
           "uspto_search_applications"
         );
       })
@@ -662,7 +664,7 @@ describe("uspto-mcp production stdio host", () => {
         assert.strictEqual(discovery.instructions, USPTO_MCP_INSTRUCTIONS);
         const { tools } = yield* rpc["tools/list"]({});
         assert.include(
-          tools.map((tool) => tool.name),
+          A.map(tools, (tool) => tool.name),
           "uspto_search_applications"
         );
       })

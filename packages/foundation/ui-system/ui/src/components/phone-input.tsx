@@ -347,7 +347,7 @@ const PhoneInputInner: React.FC<PhoneInputProps> = ({
           <ComboboxContent>
             <ComboboxEmpty>No countries found.</ComboboxEmpty>
             <ComboboxList>
-              {phoneCountryOptions.map((option) => (
+              {A.map(phoneCountryOptions, (option) => (
                 <ComboboxItem key={option.code} value={option.code}>
                   <CountryOptionContent option={option} />
                 </ComboboxItem>

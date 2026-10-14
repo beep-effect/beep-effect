@@ -6,10 +6,11 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { defineRelations, getTableName, is as isDrizzleEntity, SQL } from "drizzle-orm";
 import { getTableConfig, SQLiteDialect } from "drizzle-orm/sqlite-core";
-import { findFirst } from "effect/Array";
+import { findFirst, map } from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { getOrThrowWith } from "effect/Option";
+import { keys } from "effect/Record";
 import * as S from "effect/Schema";
 import { Boolean, Finite, is, NullOr, String, Struct, suspend } from "effect/Schema";
 import {
@@ -144,7 +145,7 @@ describe("SQLite projection", () => {
   });
 
   it("emits enum and kit checks plus SQLite partial indexes", () => {
-    expect(config.checks.map((current) => current.name)).toEqual(
+    expect(map(config.checks, (current) => current.name)).toEqual(
       expect.arrayContaining(["shared_user_status_enum_check", "sqlite_row_version_positive"])
     );
     const membership = getTableConfig(sqliteAssembly.tables.shared_membership);
@@ -217,7 +218,14 @@ describe("SQLite derivation and family invariants", () => {
     expect(CarrierProjection.sql.columns.active.column.mode).toBe("boolean");
     expect(CarrierProjection.sql.columns.payload.column.mode).toBe("json");
     expect(CarrierProjection.sql.columns.lazy.column.kind).toBe("text");
-    expect(columns.find((column) => column.name === "lazy")?.notNull).toBe(false);
+    expect(
+      O.getOrUndefined(
+        O.map(
+          findFirst(columns, (column) => column.name === "lazy"),
+          (column) => column.notNull
+        )
+      )
+    ).toBe(false);
   });
 
   it("rejects cross-dialect descriptors and array dimensions at runtime", () => {
@@ -263,6 +271,6 @@ describe("SQLite relations", () => {
     expect(users && "sharedOrganizationsThroughSharedMembership" in users).toBe(true);
     expect(organizations && "sharedUsers" in organizations).toBe(true);
     expect(organizations && "sharedUsersThroughSharedMembership" in organizations).toBe(true);
-    expect(Object.keys(SqliteUser.update.fields)).toContain("id");
+    expect(keys(SqliteUser.update.fields)).toContain("id");
   });
 });

@@ -8,10 +8,12 @@
 import { sanitizeTracerAttributes, withSanitizedToolSpan } from "@beep/mcp-kit";
 import { withTopLevelObjectInputSchemaForTesting } from "@beep/mcp-kit/SanitizedSpan";
 import { it } from "@beep/test-runner";
-import { assert, describe, expect } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import { Tool, Toolkit } from "effect/ai";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Tracer from "effect/Tracer";
@@ -63,11 +65,15 @@ describe("withSanitizedToolSpan", () => {
 
         yield* dispatch.pipe(withSanitizedToolSpan("mcp.tool.call"), Effect.withTracer(tracer));
 
-        const parameterAttribute = captured.find((entry) => entry.key === "parameters");
-        assert.isUndefined(parameterAttribute);
+        assertNone(A.findFirst(captured, (entry) => entry.key === "parameters"));
 
-        const toolAttribute = captured.find((entry) => entry.key === "tool");
-        assert.strictEqual(toolAttribute?.value, "fixture_tool");
+        assertSome(
+          O.map(
+            A.findFirst(captured, (entry) => entry.key === "tool"),
+            (entry) => entry.value
+          ),
+          "fixture_tool"
+        );
       })
     );
   });
@@ -81,8 +87,13 @@ describe("withSanitizedToolSpan", () => {
         Effect.withTracer(tracer)
       );
 
-      const outcomeAttribute = captured.find((entry) => entry.key === "outcome");
-      assert.strictEqual(outcomeAttribute?.value, "ok");
+      assertSome(
+        O.map(
+          A.findFirst(captured, (entry) => entry.key === "outcome"),
+          (entry) => entry.value
+        ),
+        "ok"
+      );
     })
   );
 });

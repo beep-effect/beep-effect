@@ -28,6 +28,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -138,7 +139,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
       reason: "claims batch not yet loaded",
     });
 
-    expect(Object.keys(PracticeKgToolkit.tools)).toHaveLength(11);
+    expect(R.keys(PracticeKgToolkit.tools)).toHaveLength(11);
     pipe(S.is(PracticeKgCandidateClaimsResult)(notLoaded), assertTrue);
   });
 

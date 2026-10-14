@@ -8,6 +8,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -37,11 +38,11 @@ const freshCursorRow = {
 describe("SyncCursor entity", () => {
   it("wires SyncCursor to the documents identity", () => {
     expect(SyncCursor.SyncCursor.sql.tableName).toBe(DocumentsIdentity.SyncCursorId.tableName);
-    expect(Object.keys(SyncCursor.SyncCursor.insert.fields)).not.toContain("id");
-    expect(Object.keys(SyncCursor.SyncCursor.insert.fields)).not.toContain("rowVersion");
-    expect(Object.keys(SyncCursor.SyncCursor.update.fields)).toContain("id");
-    expect(Object.keys(SyncCursor.SyncCursor.update.fields)).toContain("rowVersion");
-    expect(Object.keys(SyncCursor.SyncCursor.jsonCreate.fields)).toEqual([
+    expect(R.keys(SyncCursor.SyncCursor.insert.fields)).not.toContain("id");
+    expect(R.keys(SyncCursor.SyncCursor.insert.fields)).not.toContain("rowVersion");
+    expect(R.keys(SyncCursor.SyncCursor.update.fields)).toContain("id");
+    expect(R.keys(SyncCursor.SyncCursor.update.fields)).toContain("rowVersion");
+    expect(R.keys(SyncCursor.SyncCursor.jsonCreate.fields)).toEqual([
       "lastError",
       "lastEventId",
       "provider",

@@ -42,6 +42,7 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import * as Struct from "effect/Struct";
 import type * as LanguageModel from "effect/ai/LanguageModel";
 import type * as HttpClientError from "effect/http/HttpClientError";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
@@ -357,8 +358,18 @@ describe("OpenAiCompat language model", () => {
       expect(captured).toHaveLength(1);
       expect(captured[0]?.model).toBe("compat-model");
       expect(captured[0]?.messages).toEqual([{ content: [{ text: "hello", type: "text" }], role: "user" }]);
-      expect(Object.hasOwn(captured[0] ?? {}, "tools")).toBe(false);
-      expect(Object.hasOwn(captured[0] ?? {}, "tool_choice")).toBe(false);
+      expect(
+        pipe(
+          A.head(captured),
+          O.exists((request) => A.contains(Struct.keys(request), "tools"))
+        )
+      ).toBe(false);
+      expect(
+        pipe(
+          A.head(captured),
+          O.exists((request) => A.contains(Struct.keys(request), "tool_choice"))
+        )
+      ).toBe(false);
     })
   );
 
@@ -410,7 +421,12 @@ describe("OpenAiCompat language model", () => {
       const captured = yield* Ref.get(requests);
 
       expect(captured).toHaveLength(4);
-      expect(Object.hasOwn(captured[0] ?? {}, "tools")).toBe(true);
+      expect(
+        pipe(
+          A.head(captured),
+          O.exists((request) => A.contains(Struct.keys(request), "tools"))
+        )
+      ).toBe(true);
       expect(captured[0]?.tool_choice).toBe("auto");
       expect(captured[1]?.tool_choice).toEqual({ function: { name: "weather" }, type: "function" });
       expect(captured[2]?.tool_choice).toEqual({ function: { name: "weather" }, type: "function" });

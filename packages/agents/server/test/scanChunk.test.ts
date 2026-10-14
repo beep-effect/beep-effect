@@ -84,6 +84,6 @@ describe("scanChunk", () => {
       envelope,
       Array.from({ length: envelope.length }, (_, i) => i)
     );
-    expect(slices.map((s) => Result.getOrThrow(S.decodeResult(json)(s)))).toEqual(blocks);
+    expect(A.map(slices, (s) => Result.getOrThrow(S.decodeResult(json)(s)))).toEqual(blocks);
   });
 });

@@ -3,6 +3,7 @@ import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
 import { PatentClaimCandidateInput, patentClaimCandidateFrom } from "@beep/law-practice-use-cases/PatentClaimCandidate";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -12,12 +13,15 @@ const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive in
 
 const claimText = "A sensor (optical) comprising a detector.";
 const evidenceQuote = "A sensor (optical)\ncomprising a detector.";
-const sourceText = [
-  "DETAILED DESCRIPTION OF THE INVENTION",
-  `The phrase ${claimText} appears before the claim itself.`,
-  "CLAIMS (CONTINUED)",
-  `1. ${evidenceQuote}`,
-].join("\n");
+const sourceText = A.join(
+  [
+    "DETAILED DESCRIPTION OF THE INVENTION",
+    `The phrase ${claimText} appears before the claim itself.`,
+    "CLAIMS (CONTINUED)",
+    `1. ${evidenceQuote}`,
+  ],
+  "\n"
+);
 const digest = ContentDigest.make("sha256:0000000000000000000000000000000000000000000000000000000000000000");
 const operationId = OperationId.make("operation:0000000000000000000000000000000000000000000000000000000000000000");
 const claim = PatentClaim.cases.independent.make({
@@ -99,7 +103,7 @@ describe("PatentClaimCandidate", () => {
   it.effect(
     "uses structural claims-section bounds when earlier content duplicates the heading and claim",
     Effect.fnUntraced(function* () {
-      const duplicateHeadingSource = ["CLAIMS (CONTINUED)", `1. ${evidenceQuote}`, sourceText].join("\n");
+      const duplicateHeadingSource = A.join(["CLAIMS (CONTINUED)", `1. ${evidenceQuote}`, sourceText], "\n");
       const mapped = yield* patentClaimCandidateFrom(
         input(Str.repeat(64)("5"), "CLAIMS (CONTINUED)", claim, duplicateHeadingSource)
       );

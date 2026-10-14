@@ -10,7 +10,9 @@ import { it } from "@beep/test-runner";
 import { O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Base64 from "effect/encoding/Base64";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 
 const octets = (value: string): number => new TextEncoder().encode(value).length;
@@ -26,12 +28,12 @@ describe("foldHeaderLine", () => {
 
     expect(original.length).toBeGreaterThan(998);
     expect(folded.length).toBeGreaterThan(1);
-    expect(folded.every((line) => octets(line) <= 998)).toBe(true);
+    expect(A.every(folded, (line) => octets(line) <= 998)).toBe(true);
     // Continuations carry the single-space indent that marks them as folded.
-    expect(folded.slice(1).every((line) => line.startsWith(" "))).toBe(true);
+    expect(A.every(folded.slice(1), (line) => line.startsWith(" "))).toBe(true);
     expect(folded[0]?.startsWith(" ")).toBe(false);
     // Unfolding per RFC 5322 restores the original byte for byte.
-    expect(folded.join("")).toBe(original);
+    expect(A.join(folded, "")).toBe(original);
   });
 
   it("passes through a line with no fold point at all", () => {
@@ -51,7 +53,7 @@ describe("foldHeaderLine", () => {
     // The space after the field name is a legitimate fold point, so it is used;
     // the value itself is never cut.
     expect(folded).toStrictEqual(["X-Blob:", ` ${token}`]);
-    expect(folded.join("")).toBe(original);
+    expect(A.join(folded, "")).toBe(original);
   });
 
   it("folds up to the unbreakable run and leaves that run whole", () => {
@@ -61,10 +63,10 @@ describe("foldHeaderLine", () => {
 
     expect(folded.length).toBeGreaterThan(1);
     // Every foldable line respects the limit; only the unbreakable token is over.
-    expect(folded.filter((line) => octets(line) > 998)).toHaveLength(1);
-    expect(folded.some((line) => line.includes(token))).toBe(true);
+    expect(A.filter(folded, (line) => octets(line) > 998)).toHaveLength(1);
+    expect(A.some(folded, (line) => line.includes(token))).toBe(true);
     // Still byte-for-byte reversible, because every break sat on a real space.
-    expect(folded.join("")).toBe(original);
+    expect(A.join(folded, "")).toBe(original);
   });
 
   it("measures octets rather than characters", () => {
@@ -75,7 +77,7 @@ describe("foldHeaderLine", () => {
     expect(original.length).toBeLessThan(998);
     expect(octets(original)).toBeGreaterThan(998);
     expect(foldHeaderLine(original).length).toBeGreaterThan(1);
-    expect(foldHeaderLine(original).every((line) => octets(line) <= 998)).toBe(true);
+    expect(A.every(foldHeaderLine(original), (line) => octets(line) <= 998)).toBe(true);
   });
 });
 
@@ -137,7 +139,7 @@ describe("stripMimeStructuralHeaders", () => {
     const stripped = stripMimeStructuralHeaders(`Subject: hi\r\n${long}\r\n`);
 
     expect(octets(long)).toBeGreaterThan(998);
-    expect(stripped.split("\r\n").every((line) => octets(line) <= 998)).toBe(true);
+    expect(A.every(stripped.split("\r\n"), (line) => octets(line) <= 998)).toBe(true);
     expect(stripped.startsWith("Subject: hi\r\n")).toBe(true);
   });
 
@@ -162,20 +164,23 @@ describe("assembleEml", () => {
   // Strips the RFC 2045 76-column wrapping and decodes the payload back to
   // the body string the part was assembled from.
   const decodeBase64Payload = (payload: string): string =>
-    Result.getOrElse(Base64.decodeString(payload.split("\r\n").join("")), () => "");
+    Result.getOrElse(Base64.decodeString(A.join(payload.split("\r\n"), "")), () => "");
 
   const singlePartPayload = (eml: string): string => eml.slice(eml.indexOf("\r\n\r\n") + 4);
 
   it("keeps a short body 8bit and byte-identical", () => {
     expect(singlePart("hello")).toBe(
-      [
-        "Subject: hi",
-        "MIME-Version: 1.0",
-        "Content-Type: text/plain; charset=utf-8",
-        "Content-Transfer-Encoding: 8bit",
-        "",
-        "hello",
-      ].join("\r\n")
+      A.join(
+        [
+          "Subject: hi",
+          "MIME-Version: 1.0",
+          "Content-Type: text/plain; charset=utf-8",
+          "Content-Transfer-Encoding: 8bit",
+          "",
+          "hello",
+        ],
+        "\r\n"
+      )
     );
   });
 
@@ -185,7 +190,7 @@ describe("assembleEml", () => {
 
     expect(eml).toContain("Content-Transfer-Encoding: base64");
     const payload = singlePartPayload(eml);
-    expect(payload.split("\r\n").every((line) => line.length <= 76)).toBe(true);
+    expect(A.every(payload.split("\r\n"), (line) => line.length <= 76)).toBe(true);
     expect(decodeBase64Payload(payload)).toBe(content);
   });
 
@@ -250,14 +255,17 @@ describe("assembleEml", () => {
 
   it("keeps a missing body 8bit with an empty part", () => {
     expect(assembleEml({ attachments: [], body: O.none(), boundary, headerBlock: "Subject: hi" })).toBe(
-      [
-        "Subject: hi",
-        "MIME-Version: 1.0",
-        "Content-Type: text/plain; charset=utf-8",
-        "Content-Transfer-Encoding: 8bit",
-        "",
-        "",
-      ].join("\r\n")
+      A.join(
+        [
+          "Subject: hi",
+          "MIME-Version: 1.0",
+          "Content-Type: text/plain; charset=utf-8",
+          "Content-Transfer-Encoding: 8bit",
+          "",
+          "",
+        ],
+        "\r\n"
+      )
     );
   });
 });
@@ -272,7 +280,8 @@ describe("synthesizeEmlHeaderBlock", () => {
     });
 
     expect(block).toBe(
-      ['From: "Ada Lovelace" <ada@example.com>', "Subject: Quarterly report", "Date: 26 Nov 2020 22:18:29 +0000"].join(
+      A.join(
+        ['From: "Ada Lovelace" <ada@example.com>', "Subject: Quarterly report", "Date: 26 Nov 2020 22:18:29 +0000"],
         "\r\n"
       )
     );
@@ -293,7 +302,7 @@ describe("synthesizeEmlHeaderBlock", () => {
   it("folds a synthesized line that the flattened Outlook value made over-long", () => {
     const block = synthesizeEmlHeaderBlock({ Subject: "word ".repeat(400) });
 
-    expect(block.split("\r\n").every((line) => octets(line) <= 998)).toBe(true);
+    expect(A.every(block.split("\r\n"), (line) => octets(line) <= 998)).toBe(true);
     expect(block.split("\r\n").length).toBeGreaterThan(1);
   });
 });
@@ -317,7 +326,7 @@ describe("parseInternetHeaders", () => {
 
   it("keeps prototype-named header fields as ordinary own keys", () => {
     const headers = parseInternetHeaders("Subject: hi\nConstructor: x\n__proto__: y\nHasOwnProperty: z\n");
-    expect(Object.entries(headers)).toStrictEqual([
+    expect(R.toEntries(headers)).toStrictEqual([
       ["subject", ["hi"]],
       ["constructor", ["x"]],
       ["__proto__", ["y"]],

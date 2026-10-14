@@ -23,6 +23,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 
@@ -226,7 +227,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           const references = extractLibraryReferences(
             "端点 https://api.ip930.com/api/mcp，Streamable HTTP。 Live `data.uspto.gov/support`."
           );
-          expect(references.map((reference) => reference.locator)).toEqual([
+          expect(A.map(references, (reference) => reference.locator)).toEqual([
             "https://api.ip930.com/api/mcp",
             "data.uspto.gov/support",
           ]);
@@ -397,7 +398,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const text = "[Paper][p] then [p][] and [p].\n\n[p]: https://arxiv.org/abs/2610.00609v1\n";
         const references = extractLibraryReferences(text);
         expect(references).toHaveLength(4);
-        expect(references.filter((r) => r.form === "reference-use")).toHaveLength(3);
+        expect(A.filter(references, (r) => r.form === "reference-use")).toHaveLength(3);
         expect(A.getUnsafe(references, 0)).toMatchObject({
           citationText: "[Paper][p]",
           locator: "https://arxiv.org/abs/2610.00609v1",
@@ -489,20 +490,28 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           yield* fs.writeFileString(payloadPath, yield* fixtureJson(payload));
           yield* importLibraryResult(root, payloadPath);
           const resolved = yield* loadCatalog(root);
-          const target = resolved.sources.find((s) => s.kind === "github-pr");
-          if (target === undefined) throw new Error("Missing resolved source fixture");
+          const target = O.getOrThrowWith(
+            A.findFirst(resolved.sources, (s) => s.kind === "github-pr"),
+            () => new Error("Missing resolved source fixture")
+          );
           expect(target.id).toBe(preexisting.id);
-          expect(resolved.sources.filter((s) => s.kind === "github-pr")).toHaveLength(1);
+          expect(A.filter(resolved.sources, (s) => s.kind === "github-pr")).toHaveLength(1);
           expect(target.aliasIds).toContain(source.id);
           expect(target.locators).toContain(occurrence.locator);
           expect(A.getUnsafe(resolved.occurrences, 0)).toEqual({ ...occurrence, sourceId: target.id });
-          expect(resolved.sources.some((s) => s.kind === "github-repository")).toBe(true);
-          expect(resolved.artifacts.filter((a) => a.role.startsWith("reference-resolution"))).toHaveLength(2);
+          expect(A.some(resolved.sources, (s) => s.kind === "github-repository")).toBe(true);
+          expect(A.filter(resolved.artifacts, (a) => a.role.startsWith("reference-resolution"))).toHaveLength(2);
           yield* importLibraryResult(root, payloadPath);
           expect(yield* loadCatalog(root)).toEqual(resolved);
-          const other = before.occurrences.find((o) => o.sourceId !== source.id);
-          const otherDocument = before.documents.find((d) => d.id === other?.documentId);
-          if (other === undefined || otherDocument === undefined) throw new Error("Missing second report fixture");
+          const missingSecondReport = () => new Error("Missing second report fixture");
+          const other = O.getOrThrowWith(
+            A.findFirst(before.occurrences, (o) => o.sourceId !== source.id),
+            missingSecondReport
+          );
+          const otherDocument = O.getOrThrowWith(
+            A.findFirst(before.documents, (d) => d.id === other.documentId),
+            missingSecondReport
+          );
           const singleton = `[${proof}]`;
           const singletonBytes = new TextEncoder().encode(singleton);
           yield* fs.writeFileString(proofPath, singleton);
@@ -538,13 +547,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           yield* fs.writeFileString(payloadPath, yield* fixtureJson(secondPayload));
           yield* importLibraryResult(root, payloadPath);
           const merged = yield* loadCatalog(root);
-          expect(merged.sources.filter((s) => s.kind === "github-pr")).toHaveLength(1);
-          expect(merged.sources.find((s) => s.id === preexisting.id)?.aliasIds).toContain(other.sourceId);
-          expect(merged.occurrences.every((o) => o.sourceId === preexisting.id)).toBe(true);
+          expect(A.filter(merged.sources, (s) => s.kind === "github-pr")).toHaveLength(1);
+          expect(O.getOrThrow(A.findFirst(merged.sources, (s) => s.id === preexisting.id)).aliasIds).toContain(
+            other.sourceId
+          );
+          expect(A.every(merged.occurrences, (o) => o.sourceId === preexisting.id)).toBe(true);
           yield* importLibraryResult(root, payloadPath);
           expect(yield* loadCatalog(root)).toEqual(merged);
           const rerun = yield* inventoryLibrary(options);
-          expect(rerun.sources.some((s) => s.kind === "unresolved")).toBe(false);
+          expect(A.some(rerun.sources, (s) => s.kind === "unresolved")).toBe(false);
           expect(rerun.occurrences).toEqual(merged.occurrences);
           expect(yield* fs.readFileString(path.join(root, document.snapshotPath))).toBe(
             "# Report\nCites modelcontextprotocol/conformance#330.\n"
@@ -556,7 +567,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const text =
           "[openclaw.ai/blog](https://openclaw.ai/blog/security) [x.ai/cli](https://x.ai/build) [arxiv.org/html/2606.18037v3](https://arxiv.org/html/2606.18037v3)\narxiv.org/list/cs.AI|cs.CR/new\nhttps://arxiv.org/list/cs.AI|cs.CR|cs.SE/new";
         const refs = extractLibraryReferences(text);
-        expect(refs.map((r) => r.locator)).toEqual([
+        expect(A.map(refs, (r) => r.locator)).toEqual([
           "https://openclaw.ai/blog/security",
           "https://x.ai/build",
           "https://arxiv.org/html/2606.18037v3",
@@ -636,12 +647,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           Effect.succeed(
             LibraryCatalog.make({
               ...catalog,
-              sources: catalog.sources.map((source) =>
+              sources: A.map(catalog.sources, (source) =>
                 source.kind === "github-code"
                   ? LibrarySource.make({
                       ...source,
                       revision: "",
-                      versions: source.versions.map((version) => LibraryVersion.make({ ...version, revision: "" })),
+                      versions: A.map(source.versions, (version) => LibraryVersion.make({ ...version, revision: "" })),
                     })
                   : source
               ),
@@ -649,9 +660,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           )
         );
         const rerun = yield* inventoryLibrary(options);
-        const code = rerun.sources.find((source) => source.kind === "github-code");
-        expect(code?.revision).toBe("main");
-        expect(code?.versions.map((version) => version.revision)).toEqual(["main"]);
+        const code = O.getOrThrow(A.findFirst(rerun.sources, (source) => source.kind === "github-code"));
+        expect(code.revision).toBe("main");
+        expect(A.map(code.versions, (version) => version.revision)).toEqual(["main"]);
         expect(A.getUnsafe(rerun.occurrences, 0)?.id).toBe(A.getUnsafe(before.occurrences, 0)?.id);
       })
     );
@@ -660,7 +671,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         '{"arxiv":"2610.02204v2"}\nRPG (2610.02204v2); unrelated 2610.09999.\n[2610.02204](https://arxiv.org/abs/2610.02204)\nTrustShiftProbe (2608.23763)\nmodelcontextprotocol/conformance#330',
         ["arxiv:2608.23763"]
       );
-      expect(references.map((reference) => reference.locator)).toEqual([
+      expect(A.map(references, (reference) => reference.locator)).toEqual([
         "2610.02204v2",
         "2610.02204v2",
         "https://arxiv.org/abs/2610.02204",
@@ -694,19 +705,21 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const catalog = yield* inventoryLibrary(
           LibraryInventoryOptions.make({ libraryRoot: path.join(temporary, "library"), inputRoots: [input] })
         );
-        expect(catalog.documents.find((d) => d.filenameDate === "2026-09-12")).toMatchObject({
+        expect(O.getOrThrow(A.findFirst(catalog.documents, (d) => d.filenameDate === "2026-09-12"))).toMatchObject({
           reportDate: "",
           headingDate: "12 September 2026",
           filenameDate: "2026-09-12",
         });
-        expect(catalog.documents.find((d) => d.filenameDate === "2026-09-14")).toMatchObject({
+        expect(O.getOrThrow(A.findFirst(catalog.documents, (d) => d.filenameDate === "2026-09-14"))).toMatchObject({
           reportDate: "2026-09-13",
           headingDate: "2026-09-13",
           filenameDate: "2026-09-14",
         });
-        expect(catalog.documents.find((d) => d.filenameDate === "2026-09-15")?.reportDate).toBe("");
-        const proseDocument = catalog.documents.find((d) => d.originalPath.endsWith("/a.md"));
-        expect(catalog.occurrences.find((o) => o.documentId === proseDocument?.id)).toMatchObject({
+        expect(O.getOrThrow(A.findFirst(catalog.documents, (d) => d.filenameDate === "2026-09-15")).reportDate).toBe(
+          ""
+        );
+        const proseDocument = O.getOrThrow(A.findFirst(catalog.documents, (d) => d.originalPath.endsWith("/a.md")));
+        expect(O.getOrThrow(A.findFirst(catalog.occurrences, (o) => o.documentId === proseDocument.id))).toMatchObject({
           locator: "2610.02204",
         });
       })
@@ -732,16 +745,21 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           LibraryInventoryOptions.make({ libraryRoot: root, inputRoots: [input] })
         );
         expect(catalog.documents).toHaveLength(2);
-        expect(catalog.documents.find((d) => d.filenameDate === "2026-10-24")?.topics).toContain("law-practice");
+        expect(O.getOrThrow(A.findFirst(catalog.documents, (d) => d.filenameDate === "2026-10-24")).topics).toContain(
+          "law-practice"
+        );
         expect(
-          catalog.sources.find((source) => source.canonicalUrl === "https://example.com/report")?.topics
+          O.getOrThrow(A.findFirst(catalog.sources, (source) => source.canonicalUrl === "https://example.com/report"))
+            .topics
         ).toContain("law-practice");
         expect(catalog.intakes).toHaveLength(1);
         expect(A.getUnsafe(catalog.intakes, 0)?.files).toHaveLength(3);
-        expect(catalog.documents.find((d) => d.filenameDate === "2026-10-24")).toMatchObject({
+        expect(O.getOrThrow(A.findFirst(catalog.documents, (d) => d.filenameDate === "2026-10-24"))).toMatchObject({
           headingDate: "6 October 2026",
         });
-        expect(catalog.occurrences.find((o) => o.locator === "https://example.com/finding")).toMatchObject({
+        expect(
+          O.getOrThrow(A.findFirst(catalog.occurrences, (o) => o.locator === "https://example.com/finding"))
+        ).toMatchObject({
           findingId: "f-law-01",
         });
         expect(yield* fs.exists(path.join(root, "catalog/library.json"))).toBe(true);
@@ -831,10 +849,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           Effect.succeed(
             LibraryCatalog.make({
               ...catalog,
-              documents: catalog.documents.map((document) =>
+              documents: A.map(catalog.documents, (document) =>
                 LibraryDocument.make({ ...document, expectedOccurrences: 1, topics: [] })
               ),
-              occurrences: catalog.occurrences.filter((occurrence) => occurrence.form === "url"),
+              occurrences: A.filter(catalog.occurrences, (occurrence) => occurrence.form === "url"),
             })
           )
         );
@@ -922,7 +940,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         expect(A.getUnsafe(result.occurrences, 0)?.revision).toBe("");
         expect(A.getUnsafe(result.captures, 0)?.requestedRevision).toBe("");
         expect(
-          A.getUnsafe(result.sources, 0)?.versions.find((version) => version.revision === "v1")?.locators
+          O.getOrThrow(A.findFirst(A.getUnsafe(result.sources, 0).versions, (version) => version.revision === "v1"))
+            .locators
         ).toHaveLength(2);
       })
     );

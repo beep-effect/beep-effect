@@ -7,11 +7,11 @@
  * @since 0.0.0
  */
 // fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
-import { last, reduce } from "effect/Array";
+import { flatMap, last, map, reduce } from "effect/Array";
 import { dual } from "effect/Function";
 import { fromUndefinedOr, getOrElse, getOrThrow, getOrUndefined, match, none, orElse, some } from "effect/Option";
 import { isFunction, isNotUndefined, isNumber, isString, isUint8Array } from "effect/Predicate";
-import { empty, set } from "effect/Record";
+import { empty, set, size, toEntries } from "effect/Record";
 import { Finite, flip, is, makeFilter, optionalKey } from "effect/Schema";
 import { split } from "effect/String";
 import { VariantSchema } from "effect/schema";
@@ -372,7 +372,7 @@ const physicalColumnEntry = ([key, input]: [string, Field.Input]): readonly [str
 
 const validateModelNames = (tableName: string, fields: FieldsInput): void => {
   assertSqlName(tableName, "sqlite", "SQLite table name");
-  assertUniqueSqlNames(Object.entries(fields).map(physicalColumnEntry), "sqlite", "SQLite column name");
+  assertUniqueSqlNames(map(toEntries(fields), physicalColumnEntry), "sqlite", "SQLite column name");
 };
 
 const validateLiteralDefault = (field: Field.Any, select: Top, column: SqliteColumn.Spec, fieldName: string): void => {
@@ -515,7 +515,7 @@ export const makeModelClass: {
   ): object => {
     const tableName = deriveTableName(identifier);
     validateModelNames(tableName, fields);
-    const fieldCount = Object.keys(fields).length;
+    const fieldCount = size(fields);
     if (fieldCount === 0 || fieldCount > 2_000) {
       throw ModelInvariantError.make({
         message: `SQLite models require from 1 through 2,000 columns; '${identifier}' declares ${fieldCount}.`,
@@ -523,7 +523,7 @@ export const makeModelClass: {
       });
     }
     const state = reduce(
-      Object.entries(fields),
+      toEntries(fields),
       {
         columns: empty<string, Meta.Meta<SqliteColumn.Spec>>(),
         primaryKeys: 0,
@@ -648,7 +648,8 @@ export const makeModelClass: {
         fieldName: "(model)",
       });
     }
-    const harvested = Object.entries(state.columns).flatMap(
+    const harvested = flatMap(
+      toEntries(state.columns),
       ([key, meta]): ReadonlyArray<readonly [string, Meta.IndexIntent, string]> => {
         if (meta.indexed === false) return [];
         const intent = meta.indexed;
@@ -662,7 +663,7 @@ export const makeModelClass: {
     );
     if (harvested.length > 0) {
       assertUniqueSqlNames(
-        harvested.map(([key, , name]): readonly [string, string] => [key, name]),
+        map(harvested, ([key, , name]): readonly [string, string] => [key, name]),
         "sqlite",
         "SQLite colocated index name"
       );
@@ -671,7 +672,7 @@ export const makeModelClass: {
       harvested.length === 0
         ? extras
         : (columns) => [
-            ...harvested.map(([key, intent, name]) => {
+            ...map(harvested, ([key, intent, name]) => {
               const column = getOrThrow(fromUndefinedOr(columns[key]));
               return intent.unique ? TableExtras.uniqueIndex(name, [column]) : TableExtras.index(name, [column]);
             }),

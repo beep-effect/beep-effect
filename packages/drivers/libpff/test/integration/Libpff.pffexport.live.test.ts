@@ -14,6 +14,7 @@ import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -105,12 +106,12 @@ describe("@beep/libpff live pffexport", () => {
 
           expect(result.engine).toBe("libpff");
           expect(result.children.length).toBeGreaterThan(0);
-          expect(result.children.every((child) => child.id.startsWith("artifact:"))).toBe(true);
+          expect(A.every(result.children, (child) => child.id.startsWith("artifact:"))).toBe(true);
 
           const jsonlName = `${operation.source.id}${PFFEXPORT_MESSAGES_SUFFIX}`;
-          const hasItems = result.children.some((child) => child.relativePath === jsonlName);
+          const hasItems = A.some(result.children, (child) => child.relativePath === jsonlName);
           if (hasItems) {
-            const emlChildren = result.children.filter((child) => child.relativePath.endsWith("/Message.eml"));
+            const emlChildren = A.filter(result.children, (child) => child.relativePath.endsWith("/Message.eml"));
             expect(emlChildren.length).toBeGreaterThan(0);
             const jsonl = yield* fs.readFileString(path.join(exportRoot, jsonlName));
             const record = yield* decodeMessageRecord(jsonl.trimEnd().split("\n")[0]);
@@ -135,7 +136,10 @@ describe("@beep/libpff live pffexport", () => {
             for (const child of emlChildren) {
               const eml = yield* fs.readFileString(path.join(exportRoot, child.relativePath));
               const headerBlock = eml.slice(0, eml.indexOf("\r\n\r\n"));
-              const overLong = eml.split(/\r?\n/).filter((line) => foldable(line) && encoder.encode(line).length > 998);
+              const overLong = A.filter(
+                eml.split(/\r?\n/),
+                (line) => foldable(line) && encoder.encode(line).length > 998
+              );
               expect(overLong).toStrictEqual([]);
               expect(headerBlock).not.toContain("X-Beep-Libpff-Client-Submit-Time");
               if (headerBlock.includes("\r\nDate: ") || headerBlock.startsWith("Date: ")) {

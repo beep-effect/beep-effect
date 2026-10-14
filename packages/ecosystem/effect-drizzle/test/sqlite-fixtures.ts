@@ -4,6 +4,7 @@ import { make, VariantField } from "@beep/effect-drizzle";
 import { Table as SqliteTable } from "@beep/effect-drizzle/sqlite";
 import { sql } from "drizzle-orm";
 import { getTableConfig as getSqliteTableConfig } from "drizzle-orm/sqlite-core";
+import { fromEntries } from "effect/Record";
 import {
   BigInt,
   brand,
@@ -426,7 +427,7 @@ export const _sqliteGeneratedOnlyModel = () => {
   return GeneratedOnly;
 };
 export const _sqliteTooManyColumns = () => {
-  const fields: Record<string, typeof SqliteWaveEString> = Object.fromEntries(
+  const fields: Record<string, typeof SqliteWaveEString> = fromEntries(
     globalThis.Array.from({ length: 2_001 }, (_, index) => [`field_${index}`, SqliteWaveEString])
   );
   // @ts-expect-error invariant: dynamic widened keys defer to the runtime model validator

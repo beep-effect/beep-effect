@@ -127,7 +127,10 @@ const renderIanaTimezonesModule = (
   sha256: string,
   values: ReadonlyArray<IanaTimezoneEntry>
 ): string => {
-  const sample: IanaTimezoneEntry = values.find((entry) => entry.name === "UTC") ?? new IanaTimezoneEntry("UTC");
+  const sample: IanaTimezoneEntry = pipe(
+    A.findFirst(values, (entry) => entry.name === "UTC"),
+    O.getOrElse(() => new IanaTimezoneEntry("UTC"))
+  );
 
   return `/**
  * Generated IANA tzdb timezone data.

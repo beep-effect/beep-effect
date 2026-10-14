@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import * as A from "effect/Array";
 import { nav } from "@/content/copy";
 import { Wordmark } from "./Wordmark";
 
@@ -29,7 +30,7 @@ export function SiteNav() {
       <div className="frame nav__bar">
         <Wordmark href="#top" />
         <nav className="nav__links" aria-label="Sections">
-          {nav.links.map((link) => (
+          {A.map(nav.links, (link) => (
             <a key={link.href} href={link.href}>
               {link.label}
             </a>

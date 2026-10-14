@@ -8,6 +8,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -45,12 +46,12 @@ const fileRow = {
 describe("SyncItem entity", () => {
   it("wires SyncItem to the documents identity", () => {
     expect(SyncItem.SyncItem.sql.tableName).toBe(DocumentsIdentity.SyncItemId.tableName);
-    expect(Object.keys(SyncItem.SyncItem.insert.fields)).not.toContain("id");
-    expect(Object.keys(SyncItem.SyncItem.insert.fields)).not.toContain("rowVersion");
-    expect(Object.keys(SyncItem.SyncItem.update.fields)).toContain("id");
-    expect(Object.keys(SyncItem.SyncItem.update.fields)).toContain("rowVersion");
-    expect(Object.keys(SyncItem.SyncItem.jsonCreate.fields)).toHaveLength(14);
-    expect(Object.keys(SyncItem.SyncItem.jsonUpdate.fields)).toHaveLength(14);
+    expect(R.keys(SyncItem.SyncItem.insert.fields)).not.toContain("id");
+    expect(R.keys(SyncItem.SyncItem.insert.fields)).not.toContain("rowVersion");
+    expect(R.keys(SyncItem.SyncItem.update.fields)).toContain("id");
+    expect(R.keys(SyncItem.SyncItem.update.fields)).toContain("rowVersion");
+    expect(R.keys(SyncItem.SyncItem.jsonCreate.fields)).toHaveLength(14);
+    expect(R.keys(SyncItem.SyncItem.jsonUpdate.fields)).toHaveLength(14);
   });
 
   it.effect("decodes and encodes a full file row", () =>

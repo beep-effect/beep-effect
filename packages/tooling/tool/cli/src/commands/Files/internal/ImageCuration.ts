@@ -702,15 +702,17 @@ const candidateSessionClusters = (entries: ReadonlyArray<ImageAuditEntry>): Read
     );
   }
 
-  return A.fromIterable(groups)
-    .filter(([, names]) => names.length > 1)
-    .sort(([left], [right]) => Number(left) - Number(right))
-    .map(([prefix, names]) =>
+  return pipe(
+    A.fromIterable(groups),
+    A.filter(([, names]) => names.length > 1),
+    A.sort(Order.mapInput(Order.Number, ([prefix]: readonly [string, ReadonlyArray<string>]) => Number(prefix))),
+    A.map(([prefix, names]) =>
       ImageAuditCluster.make({
         id: `filename-session-${prefix}`,
         sourceNames: A.sort(names, Order.String) as [string, ...Array<string>],
       })
-    );
+    )
+  );
 };
 
 const renderJsonContent = Effect.fn("Files.renderImageCurationJson")(function* (
@@ -1043,20 +1045,24 @@ const indexCurationDecisions = Effect.fn("Files.indexImageCurationDecisions")(fu
   return decisionsByName;
 });
 
-const namesOrNone = (names: ReadonlyArray<string>): string => (names.length === 0 ? "none" : names.join(", "));
+const namesOrNone = (names: ReadonlyArray<string>): string => (names.length === 0 ? "none" : A.join(names, ", "));
 
 const requireExactDecisionCoverage = Effect.fn("Files.requireExactImageCurationDecisionCoverage")(function* (
   sources: ReadonlyArray<AuditSourceFile>,
   decisions: ReadonlyArray<ImageCurationDecision>,
   decisionsByName: MutableHashMap.MutableHashMap<string, ImageCurationDecision>
 ): Effect.fn.Return<void, FilesCommandError> {
-  const sourceNames = MutableHashSet.fromIterable(sources.map((source) => source.name));
-  const missing = sources
-    .filter((source) => !MutableHashMap.has(decisionsByName, source.name))
-    .map((source) => source.name);
-  const extra = decisions
-    .filter((decision) => !MutableHashSet.has(sourceNames, decision.sourceName))
-    .map((decision) => decision.sourceName);
+  const sourceNames = MutableHashSet.fromIterable(A.map(sources, (source) => source.name));
+  const missing = pipe(
+    sources,
+    A.filter((source) => !MutableHashMap.has(decisionsByName, source.name)),
+    A.map((source) => source.name)
+  );
+  const extra = pipe(
+    decisions,
+    A.filter((decision) => !MutableHashSet.has(sourceNames, decision.sourceName)),
+    A.map((decision) => decision.sourceName)
+  );
   if (missing.length > 0 || extra.length > 0) {
     return yield* FilesCommandError.make({
       message: `Curation ledger must contain exactly one decision per source (missing: ${namesOrNone(
@@ -1117,7 +1123,7 @@ const allocateCurationOutputNames = (
   validated: ReadonlyArray<ValidatedSourceDecision>
 ): ReadonlyArray<NamedSourceDecision> => {
   const usedNames = MutableHashMap.empty<string, FileSha256Hash>();
-  return validated.map((entry) => {
+  return A.map(validated, (entry) => {
     const outputName = collisionSafeOutputName(entry.hash, usedNames);
     MutableHashMap.set(usedNames, outputName, entry.hash);
     return { ...entry, outputName };
@@ -1129,7 +1135,7 @@ const prepareCurationEntries = (
   outputDirectory: string,
   entries: ReadonlyArray<NamedSourceDecision>
 ): ReadonlyArray<PreparedCurationEntry> =>
-  entries.map(({ decision, outputName, source }) => {
+  A.map(entries, ({ decision, outputName, source }) => {
     const outputRelativePath = path.join(dispositionDirectory(decision.disposition), outputName);
     return {
       decision,
@@ -1530,7 +1536,7 @@ export const curateImagesImpl = Effect.fn("FilesCommandService.curateImages")(fu
       const nextSummary = curationSummary(validated.decisions.decisions, false, A.length(staged));
       const manifest = ImageCurationManifest.make({
         decisionDocumentPath: path.resolve(options.decisionsPath),
-        entries: staged.map((entry) => entry.manifestEntry),
+        entries: A.map(staged, (entry) => entry.manifestEntry),
         manifestPath: validated.manifestPath,
         outputDirectory: validated.outputDirectory,
         schemaVersion: "beep.files.image-curation.v1",

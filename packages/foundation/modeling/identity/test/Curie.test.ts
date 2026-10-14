@@ -13,9 +13,11 @@ import {
 import { it } from "@beep/test-runner";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const decodeUnknownCurieFromIriOption = S.decodeUnknownOption(CurieFromIri);
@@ -24,8 +26,8 @@ const encodeCurieFromIriOption = S.encodeOption(CurieFromIri);
 const decodeCurie = S.decodeUnknownEffect(CurieFromIri);
 const encodeIri = S.encodeUnknownEffect(CurieFromIri);
 
-const coreCurieCases = Object.entries(CoreVocab).flatMap(([prefix, vocab]) =>
-  vocab.terms.map((term) => ({
+const coreCurieCases = A.flatMap(R.toEntries(CoreVocab), ([prefix, vocab]) =>
+  A.map(vocab.terms, (term) => ({
     curie: `${prefix}:${term}`,
     iri: `${vocab.iri}${term}`,
     prefix,

@@ -21,17 +21,17 @@ const ROOT_CLI_GLOBAL_FLAG_NAMES: ReadonlyArray<string> = [
   "-h",
   "-v",
 ];
-const CHANGED_PATH_DIFF_FILTER = ["A", "C", "M", "R", "T", "U", "X", "B"].join("");
 
 const rawArgv = Bun.argv.slice(2);
 
 const { A } = await import("@beep/utils");
 const { flow } = await import("effect/Function");
+const CHANGED_PATH_DIFF_FILTER = A.join(["A", "C", "M", "R", "T", "U", "X", "B"], "");
 const nonEmptyLines = (text: string): ReadonlyArray<string> =>
-  text
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
+  A.filter(
+    A.map(text.split(/\r?\n/), (line) => line.trim()),
+    (line) => line.length > 0
+  );
 
 const unique: (values: ReadonlyArray<string>) => ReadonlyArray<string> = flow(A.fromIterable, A.dedupe);
 
@@ -56,11 +56,11 @@ const fastLintFixNoop = (): boolean => {
     spawnTextOption(["ls-files", "--others", "--exclude-standard"]),
   ];
 
-  if (outputs.some((output) => output === undefined)) {
+  if (A.some(outputs, (output) => output === undefined)) {
     return false;
   }
 
-  const changedFiles = unique(outputs.flatMap((output) => nonEmptyLines(output ?? "")));
+  const changedFiles = unique(A.flatMap(outputs, (output) => nonEmptyLines(output ?? "")));
   if (changedFiles.length > 0) {
     return false;
   }
@@ -80,9 +80,10 @@ const isLintPolicySubcommand = (value: string | undefined): boolean =>
   value !== undefined && LINT_POLICY_SUBCOMMAND_NAMES.includes(value);
 
 const isRootCliGlobalFlag = (value: string): boolean =>
-  ROOT_CLI_GLOBAL_FLAG_NAMES.includes(value) || ROOT_CLI_GLOBAL_FLAG_NAMES.some((name) => value.startsWith(`${name}=`));
+  ROOT_CLI_GLOBAL_FLAG_NAMES.includes(value) ||
+  A.some(ROOT_CLI_GLOBAL_FLAG_NAMES, (name) => value.startsWith(`${name}=`));
 
-const hasRootCliGlobalFlag = (argv: ReadonlyArray<string>): boolean => argv.some(isRootCliGlobalFlag);
+const hasRootCliGlobalFlag = (argv: ReadonlyArray<string>): boolean => A.some(argv, isRootCliGlobalFlag);
 
 const canUseQualityTaskFastPath = (argv: ReadonlyArray<string>): boolean =>
   isQualityTaskName(argv[0]) && !hasRootCliGlobalFlag(argv) && !(argv[0] === "lint" && isLintPolicySubcommand(argv[1]));

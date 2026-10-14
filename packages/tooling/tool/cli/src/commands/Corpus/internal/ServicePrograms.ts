@@ -64,6 +64,7 @@ import * as Num from "effect/Number";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -2972,7 +2973,7 @@ const loadClientMap = Effect.fn("CorpusCommandService.loadClientMap")(function* 
   const clientMap = yield* decodeClientMapJson(clientMapText).pipe(
     CorpusCommandError.mapError("Client map failed schema validation.")
   );
-  for (const [label, client] of Object.entries(clientMap)) {
+  for (const [label, client] of R.toEntries(clientMap)) {
     clientByLabel.set(label, sanitizeSegment(client));
   }
   return clientByLabel;
@@ -3079,7 +3080,7 @@ const assignVersionIndexes = (
       group,
       Order.mapInput(Order.Number, (row: OrganizePlanRow) => row.mtimeEpoch)
     );
-    ordered.forEach((row, index) => {
+    A.forEach(ordered, (row, index) => {
       versionIndexByRow.set(row, index + 1);
     });
   }

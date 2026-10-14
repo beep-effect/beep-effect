@@ -173,7 +173,7 @@ const makeCatalogSources = Effect.fnUntraced(function* () {
     decode: (input: unknown) => Effect.Effect<AA, S.SchemaError>,
     source: CatalogSource
   ): Effect.fn.Return<O.Option<AA>, ModelsCatalogError> {
-    const absolutePath = [home, ...relative].join("/");
+    const absolutePath = A.join([home, ...relative], "/");
     const text = yield* withFs(readOptionalFile(absolutePath));
     return yield* pipe(
       text,

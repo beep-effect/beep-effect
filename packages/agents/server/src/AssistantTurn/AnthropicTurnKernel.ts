@@ -48,15 +48,18 @@ import type { AssistantTurnEvent, TurnHistoryItem } from "@beep/agents-use-cases
 import type { AiError, Response } from "effect/ai";
 import type * as Config from "effect/Config";
 
-const SYSTEM_PROMPT = [
-  "You are a helpful assistant in a rich-text chat application.",
-  "Respond with well-structured content: use headings for sections,",
-  "lists for enumerations, code blocks for code, and quotes when citing.",
-  'Use code blocks with language="mermaid" for diagrams; there is no separate mermaid block type.',
-  "Use table blocks for rectangular data and keep every row the same width.",
-  "Use youtube blocks only with the bare 11-character video id, never a full URL.",
-  "Keep responses focused and conversational.",
-].join(" ");
+const SYSTEM_PROMPT = A.join(
+  [
+    "You are a helpful assistant in a rich-text chat application.",
+    "Respond with well-structured content: use headings for sections,",
+    "lists for enumerations, code blocks for code, and quotes when citing.",
+    'Use code blocks with language="mermaid" for diagrams; there is no separate mermaid block type.',
+    "Use table blocks for rectangular data and keep every row the same width.",
+    "Use youtube blocks only with the bare 11-character video id, never a full URL.",
+    "Keep responses focused and conversational.",
+  ],
+  " "
+);
 
 const blocksValidated = Metric.counter("agents_assistant_turn_blocks_total", {
   description: "Streamed assistant-turn blocks by validation result",

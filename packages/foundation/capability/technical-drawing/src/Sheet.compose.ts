@@ -610,12 +610,15 @@ export const composeSheet = (input: {
     ...(A.length(labels) === 0 ? [] : [`<path id="labels" d="${labelPath}" ${attrs}/>`]),
     ...(outlinePath === "" ? [] : [`<path id="label-outlines" d="${outlinePath}" fill="#000000" stroke="none"/>`]),
   ];
-  return [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${r3(page.width)}pt" height="${r3(page.height)}pt" viewBox="0 0 ${r3(page.width)} ${r3(page.height)}">`,
-    ...labelLayers,
-    ...shadingLayer,
-    `<path id="figure" d="${figurePath}" ${attrs}/>`,
-    "</svg>",
-    "",
-  ].join("\n");
+  return pipe(
+    [
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${r3(page.width)}pt" height="${r3(page.height)}pt" viewBox="0 0 ${r3(page.width)} ${r3(page.height)}">`,
+      ...labelLayers,
+      ...shadingLayer,
+      `<path id="figure" d="${figurePath}" ${attrs}/>`,
+      "</svg>",
+      "",
+    ],
+    A.join("\n")
+  );
 };

@@ -7,6 +7,7 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
@@ -59,7 +60,7 @@ describe("Pandoc current constructor semantic conformance", () => {
       };
 
       const semantic = yield* decodePandocJsonStrict(wire);
-      expect(semantic.blocks.map((block) => block._tag)).toEqual([
+      expect(A.map(semantic.blocks, (block) => block._tag)).toEqual([
         "para",
         "lineBlock",
         "rawBlock",
@@ -95,7 +96,7 @@ describe("Pandoc current constructor semantic conformance", () => {
 
       expect((yield* Effect.exit(decodePandocJsonStrict(wire)))._tag).toBe("Failure");
       const lossless = yield* decodePandocJsonLossless(wire);
-      expect(lossless.issues.map((issue) => [issue.constructor, issue.pointer])).toEqual([
+      expect(A.map(lossless.issues, (issue) => [issue.constructor, issue.pointer])).toEqual([
         ["FutureQuoteType", "/blocks/0/c/0/c/0"],
         ["FutureCitationMode", "/blocks/1/c/0/c/0/0/citationMode"],
         ["LineBlock", "/blocks/2"],
@@ -139,12 +140,12 @@ describe("Pandoc current constructor semantic conformance", () => {
       };
 
       expect((yield* Effect.exit(decodePandocJsonStrict(wire)))._tag).toBe("Failure");
-      expect((yield* decodePandocJsonLossless(wire)).issues.map((issue) => [issue.constructor, issue.pointer])).toEqual(
-        [
-          ["RawInline", "/blocks/0/c/0"],
-          ["RawBlock", "/blocks/1"],
-        ]
-      );
+      expect(
+        A.map((yield* decodePandocJsonLossless(wire)).issues, (issue) => [issue.constructor, issue.pointer])
+      ).toEqual([
+        ["RawInline", "/blocks/0/c/0"],
+        ["RawBlock", "/blocks/1"],
+      ]);
     })
   );
 
@@ -200,7 +201,7 @@ describe("Pandoc current constructor semantic conformance", () => {
       });
 
       const mapped = yield* pandocToDocument(semantic);
-      expect(mapped.report.issues.map(({ construct, severity }) => [construct, severity])).toEqual([
+      expect(A.map(mapped.report.issues, ({ construct, severity }) => [construct, severity])).toEqual([
         ["Underline", "lossy"],
         ["Superscript", "lossy"],
         ["Subscript", "lossy"],
@@ -213,7 +214,7 @@ describe("Pandoc current constructor semantic conformance", () => {
         ["DefinitionList", "unsupported"],
         ["Figure", "unsupported"],
       ]);
-      expect(mapped.document.children.map((block) => block._tag)).toEqual(["p", "p", "p", "p", "blockquote"]);
+      expect(A.map(mapped.document.children, (block) => block._tag)).toEqual(["p", "p", "p", "p", "blockquote"]);
     })
   );
 });
@@ -268,7 +269,7 @@ describe("Pandoc conformance facade", () => {
 
       expect(result._tag).toBe("invalid");
       if (result._tag === "invalid") {
-        expect(result.issues.map((issue) => [issue.constructor, issue.pointer])).toEqual([["Figure", "/blocks/0"]]);
+        expect(A.map(result.issues, (issue) => [issue.constructor, issue.pointer])).toEqual([["Figure", "/blocks/0"]]);
         assertSome(result.wire, {
           "pandoc-api-version": [1, 23, 1],
           blocks: [{ c: {}, t: "Figure" }],
@@ -303,7 +304,7 @@ describe("Pandoc conformance facade", () => {
 
       expect(result._tag).toBe("unsupported");
       if (result._tag === "unsupported") {
-        expect(result.issues.map((issue) => issue._tag)).toEqual(["nonCanonicalWire"]);
+        expect(A.map(result.issues, (issue) => issue._tag)).toEqual(["nonCanonicalWire"]);
       }
     })
   );

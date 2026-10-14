@@ -118,12 +118,12 @@ const writeWorkspaceFixture = Effect.fn("writeWorkspaceFixture")(function* (opti
   if (options.widgetSourceLines !== undefined) {
     yield* fs.writeFileString(
       path.join("packages", "widget", "src", "Widget.ts"),
-      options.widgetSourceLines.join("\n")
+      A.join(options.widgetSourceLines, "\n")
     );
   }
 
   if (options.widgetRootFileLines !== undefined) {
-    yield* fs.writeFileString(path.join("packages", "widget", "Tool.ts"), options.widgetRootFileLines.join("\n"));
+    yield* fs.writeFileString(path.join("packages", "widget", "Tool.ts"), A.join(options.widgetRootFileLines, "\n"));
   }
 });
 

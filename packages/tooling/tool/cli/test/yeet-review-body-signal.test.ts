@@ -6,6 +6,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -46,11 +47,11 @@ describe("review body signal parsing", () => {
     }
     expect(parsed.actionable).toBe(2);
     expect(parsed.items).toHaveLength(2);
-    expect(parsed.items.map((item) => item.path)).toEqual([
+    expect(A.map(parsed.items, (item) => item.path)).toEqual([
       "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofShadow.ts",
       "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
     ]);
-    expect(parsed.items.map((item) => O.getOrNull(item.line))).toEqual([410, 1146]);
+    expect(A.map(parsed.items, (item) => O.getOrNull(item.line))).toEqual([410, 1146]);
     expect(parsed.nitpicks).toBe(0);
     expect(parsed.outsideDiff).toBe(0);
   });
@@ -66,11 +67,14 @@ describe("review body signal parsing", () => {
   it("counts nitpick and outside-diff summaries whatever emoji prefixes them", () => {
     const parsed = signal(
       "coderabbitai[bot]",
-      [
-        "**Actionable comments posted: 0**",
-        "<summary>🧹 Nitpick comments (3)</summary>",
-        "<summary>⚠️ Outside diff range comments (2)</summary>",
-      ].join("\n")
+      A.join(
+        [
+          "**Actionable comments posted: 0**",
+          "<summary>🧹 Nitpick comments (3)</summary>",
+          "<summary>⚠️ Outside diff range comments (2)</summary>",
+        ],
+        "\n"
+      )
     );
 
     expect(parsed.signal === "coderabbit" && parsed.nitpicks).toBe(3);
@@ -129,13 +133,16 @@ describe("review body signal parsing", () => {
     // this P2 entirely.
     const parsed = signal(
       "kriegcloud",
-      [
-        "### Greptile Review (r9)",
-        "",
-        "**Confidence:** 4/5 · **Findings:** P0:0 P1:0 P2:0 NEW",
-        "",
-        "**NEW:** 1×P2 — closeout reads the first comment page only.",
-      ].join("\n")
+      A.join(
+        [
+          "### Greptile Review (r9)",
+          "",
+          "**Confidence:** 4/5 · **Findings:** P0:0 P1:0 P2:0 NEW",
+          "",
+          "**NEW:** 1×P2 — closeout reads the first comment page only.",
+        ],
+        "\n"
+      )
     );
 
     expect(parsed.signal).toBe("greptile");
@@ -152,20 +159,23 @@ describe("review body signal parsing", () => {
     // than dropped, and a trailing path with no line closes the same way.
     const parsed = signal(
       "coderabbitai[bot]",
-      [
-        "**Actionable comments posted: 3**",
-        "In `@src/a.ts`:",
-        "In `@src/b.ts`:",
-        "- Line 7: fix b",
-        "In `@src/c.ts`:",
-      ].join("\n")
+      A.join(
+        [
+          "**Actionable comments posted: 3**",
+          "In `@src/a.ts`:",
+          "In `@src/b.ts`:",
+          "- Line 7: fix b",
+          "In `@src/c.ts`:",
+        ],
+        "\n"
+      )
     );
 
     expect(parsed.signal).toBe("coderabbit");
     if (parsed.signal !== "coderabbit") {
       return;
     }
-    expect(parsed.items.map((item) => [item.path, O.getOrNull(item.line)])).toEqual([
+    expect(A.map(parsed.items, (item) => [item.path, O.getOrNull(item.line)])).toEqual([
       ["src/a.ts", null],
       ["src/b.ts", 7],
       ["src/c.ts", null],
@@ -175,20 +185,23 @@ describe("review body signal parsing", () => {
   it("ignores a line item that precedes any path", () => {
     const parsed = signal(
       "coderabbitai[bot]",
-      ["**Actionable comments posted: 1**", "- Line 3: stray item", "In `@src/a.ts`:", "- Line 9: real item"].join("\n")
+      A.join(
+        ["**Actionable comments posted: 1**", "- Line 3: stray item", "In `@src/a.ts`:", "- Line 9: real item"],
+        "\n"
+      )
     );
 
     expect(parsed.signal).toBe("coderabbit");
     if (parsed.signal !== "coderabbit") {
       return;
     }
-    expect(parsed.items.map((item) => [item.path, O.getOrNull(item.line)])).toEqual([["src/a.ts", 9]]);
+    expect(A.map(parsed.items, (item) => [item.path, O.getOrNull(item.line)])).toEqual([["src/a.ts", 9]]);
   });
 
   it("sums NEW items per severity when a body lists several", () => {
     const parsed = signal(
       "kriegcloud",
-      ["## Review", "Confidence: 3/5", "**NEW:** 1×P0, 2×P1, 3×P2", "1 x P2 more in the same round"].join("\n")
+      A.join(["## Review", "Confidence: 3/5", "**NEW:** 1×P0, 2×P1, 3×P2", "1 x P2 more in the same round"], "\n")
     );
 
     expect(parsed.signal).toBe("greptile");
@@ -248,11 +261,14 @@ describe("review body advisory counting", () => {
   it("adds nitpick and outside-diff counts no thread ever carries", () => {
     const parsed = signal(
       "coderabbitai[bot]",
-      [
-        "**Actionable comments posted: 0**",
-        "<summary>🧹 Nitpick comments (3)</summary>",
-        "<summary>Outside diff range comments (1)</summary>",
-      ].join("\n")
+      A.join(
+        [
+          "**Actionable comments posted: 0**",
+          "<summary>🧹 Nitpick comments (3)</summary>",
+          "<summary>Outside diff range comments (1)</summary>",
+        ],
+        "\n"
+      )
     );
 
     expect(yeetReviewBodyAdvisoryCount(parsed, [])).toBe(4);

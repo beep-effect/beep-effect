@@ -1,4 +1,5 @@
 import { deflateSync } from "node:zlib";
+import * as A from "effect/Array";
 
 const textEncoder = new TextEncoder();
 
@@ -19,7 +20,7 @@ const crc32 = (bytes: Uint8Array): number => {
 };
 
 const concatBytes = (chunks: ReadonlyArray<Uint8Array>): Uint8Array => {
-  const total = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const total = A.reduce(chunks, 0, (sum, chunk) => sum + chunk.length);
   const output = new Uint8Array(total);
   let offset = 0;
   for (const chunk of chunks) {
@@ -92,13 +93,16 @@ export const makeLivePdf = (text = "hello live tika corpus"): Uint8Array => {
   let pdf = "%PDF-1.4\n";
   const offsets: Array<number> = [];
 
-  objects.forEach((object, index) => {
+  A.forEach(objects, (object, index) => {
     offsets.push(textEncoder.encode(pdf).length);
     pdf = `${pdf}${index + 1} 0 obj\n${object}\nendobj\n`;
   });
 
   const startXref = textEncoder.encode(pdf).length;
-  const entries = offsets.map((offset) => `${`${offset}`.padStart(10, "0")} 00000 n \n`).join("");
+  const entries = A.join(
+    A.map(offsets, (offset) => `${`${offset}`.padStart(10, "0")} 00000 n \n`),
+    ""
+  );
 
   pdf = `${pdf}xref\n0 ${objects.length + 1}\n0000000000 65535 f \n${entries}`;
   pdf = `${pdf}trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${startXref}\n%%EOF\n`;
@@ -275,7 +279,7 @@ const cfbDirectoryEntry = (
 // (empty text, no error).
 const makeCompoundFile = (streams: ReadonlyArray<CfbStream>): Uint8Array => {
   let cursor = 0;
-  const placed = streams.map((stream) => {
+  const placed = A.map(streams, (stream) => {
     const startSector = cursor;
     cursor = cursor + cfbSectorsFor(stream.data.length);
     return { startSector, stream };
@@ -311,7 +315,7 @@ const makeCompoundFile = (streams: ReadonlyArray<CfbStream>): Uint8Array => {
     cfbDirectoryEntry("Root Entry", 5, placed.length === 0 ? cfbFreeSector : 1, cfbFreeSector, cfbEndOfChain, 0),
     0
   );
-  placed.forEach(({ startSector, stream }, index) => {
+  A.forEach(placed, ({ startSector, stream }, index) => {
     directory.set(
       cfbDirectoryEntry(
         stream.name,

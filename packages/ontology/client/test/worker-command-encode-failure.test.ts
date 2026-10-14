@@ -2,6 +2,7 @@ import { ontologyGraphErrorAtom, ontologyGraphWorkerBridgeAtom } from "@beep/ont
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -18,15 +19,18 @@ vi.mock("@beep/ontology-use-cases/aggregates/Session", (importOriginal) =>
   Promise.all([
     importOriginal<typeof import("@beep/ontology-use-cases/aggregates/Session")>(),
     import("effect/Result"),
-    import("effect/Data"),
-  ]).then(([actual, ResultModule, DataModule]) => {
-    class ForcedWorkerCommandEncodeFailure extends DataModule.TaggedError("ForcedWorkerCommandEncodeFailure")<{
-      readonly message: string;
-    }> {}
+    import("effect/Schema"),
+  ]).then(([actual, ResultModule, SchemaModule]) => {
+    class ForcedWorkerCommandEncodeFailure extends SchemaModule.TaggedError<ForcedWorkerCommandEncodeFailure>()(
+      "ForcedWorkerCommandEncodeFailure",
+      {
+        message: SchemaModule.String,
+      }
+    ) {}
     return {
       ...actual,
       encodeWorkerCommand: () =>
-        ResultModule.fail(new ForcedWorkerCommandEncodeFailure({ message: "forced worker command encode failure" })),
+        ResultModule.fail(ForcedWorkerCommandEncodeFailure.make({ message: "forced worker command encode failure" })),
     };
   })
 );
@@ -85,7 +89,7 @@ describe("ontology graph worker command encoding", () => {
                 "The graph worker command could not be encoded for the worker boundary."
               );
               pipe(
-                workers.every((worker) => worker.messages.length === 0),
+                A.every(workers, (worker) => worker.messages.length === 0),
                 assertTrue
               );
             })

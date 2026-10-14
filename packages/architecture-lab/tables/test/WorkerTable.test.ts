@@ -7,7 +7,10 @@ import { describe, expect } from "@effect/vitest";
 import { getColumns, getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeWorkerId = S.decodeUnknownEffect(ArchitectureLabIdentity.WorkerId);
@@ -38,7 +41,7 @@ describe("Worker table", () => {
       expect(DomainWorker.Worker.sql.tableName).toBe("architecture_lab_worker");
       expect(columns.id.primary).toBe(true);
       expect(columns.displayName.name).toBe("display_name");
-      const indexNames = config.indexes.map((index) => index.config.name);
+      const indexNames = A.map(config.indexes, (index) => index.config.name);
       expect(indexNames).toHaveLength(4);
       expect(indexNames).toEqual(
         expect.arrayContaining([
@@ -49,8 +52,10 @@ describe("Worker table", () => {
         ])
       );
       expect(
-        config.indexes.find((index) => index.config.name === "architecture_lab_worker_public_id_unique_idx")?.config
-          .unique
+        pipe(
+          A.findFirst(config.indexes, (index) => index.config.name === "architecture_lab_worker_public_id_unique_idx"),
+          O.exists((index) => index.config.unique)
+        )
       ).toBe(true);
       expect(
         fromWorkerRow({

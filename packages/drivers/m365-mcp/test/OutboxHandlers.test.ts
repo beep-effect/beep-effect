@@ -17,6 +17,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import {
@@ -596,7 +597,7 @@ describe("@beep/m365-mcp outbox handlers", () => {
             A.map(observed, ([name]) => name),
             A.sort(Order.String)
           ),
-          pipe(Object.keys(OutboxToolkit.tools), A.sort(Order.String))
+          pipe(R.keys(OutboxToolkit.tools), A.sort(Order.String))
         );
         assert.deepStrictEqual(
           A.filter(observed, ([, sent]) => sent > 0),
@@ -609,9 +610,9 @@ describe("@beep/m365-mcp outbox handlers", () => {
   it("gives no tool a mailbox, user or attendee parameter", () => {
     const forbidden = ["attendees", "mailbox", "userId", "from", "sender"];
     const parameterKeys = (schema: unknown): ReadonlyArray<string> =>
-      P.hasProperty(schema, "fields") && P.isObject(schema.fields) ? Object.keys(schema.fields) : [];
+      P.hasProperty(schema, "fields") && P.isObject(schema.fields) ? R.keys(schema.fields) : [];
 
-    for (const tool of Object.values(OutboxToolkit.tools)) {
+    for (const tool of R.values(OutboxToolkit.tools)) {
       const keys = parameterKeys(tool.parametersSchema);
       assert.isAbove(A.length(keys), 0, tool.name);
       assert.deepStrictEqual(A.intersection(keys, forbidden), [], tool.name);

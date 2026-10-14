@@ -176,27 +176,30 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
       const settingsPath = path.join(root, "settings.json");
       yield* fs.writeFileString(
         manifestPath,
-        [
-          "version: beep-models/v1",
-          "bindings:",
-          "  - role: orchestrator",
-          "    surface: claude-code",
-          "    modelId: claude-opus-5",
-          "    effort: medium",
-          "targets:",
-          "  - id: claude.settings",
-          "    root: repo",
-          "    path: settings.json",
-          "    optional: false",
-          "    locators:",
-          "      - _tag: json-key",
-          "        binding: { role: orchestrator, surface: claude-code, field: effort }",
-          "        render: { _tag: verbatim }",
-          '        pointer: [modelSettings, "{model}", effortLevel]',
-          "        fallbacks: [[effortLevel]]",
-          "superseded: []",
-          "",
-        ].join("\n")
+        A.join(
+          [
+            "version: beep-models/v1",
+            "bindings:",
+            "  - role: orchestrator",
+            "    surface: claude-code",
+            "    modelId: claude-opus-5",
+            "    effort: medium",
+            "targets:",
+            "  - id: claude.settings",
+            "    root: repo",
+            "    path: settings.json",
+            "    optional: false",
+            "    locators:",
+            "      - _tag: json-key",
+            "        binding: { role: orchestrator, surface: claude-code, field: effort }",
+            "        render: { _tag: verbatim }",
+            '        pointer: [modelSettings, "{model}", effortLevel]',
+            "        fallbacks: [[effortLevel]]",
+            "superseded: []",
+            "",
+          ],
+          "\n"
+        )
       );
       const effortFindings = Effect.fnUntraced(function* (settings: unknown) {
         yield* fs.writeFileString(settingsPath, yield* encodeJsonText(settings));

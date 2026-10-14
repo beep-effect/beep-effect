@@ -72,32 +72,34 @@ describe("Ontology.fold", () => {
 
       expect(claim.iri).toBe("https://ns.beep.sh/patent/Claim");
       expect(spec.iri).toBe("https://ns.beep.sh/patent/Spec");
-      expect(assembled.facts.map((fact) => [fact.subjectIri, fact.predicateIri, fact.object, fact.reverse])).toEqual([
+      expect(A.map(assembled.facts, (fact) => [fact.subjectIri, fact.predicateIri, fact.object, fact.reverse])).toEqual(
         [
-          "https://ns.beep.sh/patent/Claim",
-          "http://www.w3.org/2000/01/rdf-schema#subClassOf",
-          "http://www.w3.org/2002/07/owl#Thing",
-          false,
-        ],
-        [
-          "https://ns.beep.sh/patent/Claim",
-          "http://www.w3.org/2002/07/owl#sameAs",
-          "https://schema.org/CreativeWork",
-          false,
-        ],
-        [
-          "https://ns.beep.sh/patent/Spec",
-          "http://www.w3.org/2004/02/skos/core#related",
-          "https://ns.beep.sh/patent/Claim",
-          false,
-        ],
-        [
-          "https://ns.beep.sh/patent/Claim",
-          "http://www.w3.org/2000/01/rdf-schema#subClassOf",
-          "https://ns.beep.sh/patent/Spec",
-          true,
-        ],
-      ]);
+          [
+            "https://ns.beep.sh/patent/Claim",
+            "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+            "http://www.w3.org/2002/07/owl#Thing",
+            false,
+          ],
+          [
+            "https://ns.beep.sh/patent/Claim",
+            "http://www.w3.org/2002/07/owl#sameAs",
+            "https://schema.org/CreativeWork",
+            false,
+          ],
+          [
+            "https://ns.beep.sh/patent/Spec",
+            "http://www.w3.org/2004/02/skos/core#related",
+            "https://ns.beep.sh/patent/Claim",
+            false,
+          ],
+          [
+            "https://ns.beep.sh/patent/Claim",
+            "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+            "https://ns.beep.sh/patent/Spec",
+            true,
+          ],
+        ]
+      );
     })
   );
 
@@ -184,7 +186,11 @@ describe("Ontology.fold projections", () => {
   it.effect("projects bounded JSON-LD graph nodes and reverse facts", () =>
     Effect.gen(function* () {
       const jsonLd = toJsonLd(yield* assemble);
-      const claimNode = jsonLd["@graph"].find((node) => node["@id"] === "https://ns.beep.sh/patent/Claim");
+      const claimNode = pipe(
+        jsonLd["@graph"],
+        A.findFirst((node) => node["@id"] === "https://ns.beep.sh/patent/Claim"),
+        O.getOrUndefined
+      );
 
       expect(claimNode).toMatchObject({
         "@id": "https://ns.beep.sh/patent/Claim",
@@ -204,7 +210,11 @@ describe("Ontology.fold projections", () => {
         schemas: [Claim],
         triples: [[externalSubject, "rdfs:seeAlso", Claim]],
       });
-      const externalNode = toJsonLd(assembled)["@graph"].find((node) => node["@id"] === externalSubject);
+      const externalNode = pipe(
+        toJsonLd(assembled)["@graph"],
+        A.findFirst((node) => node["@id"] === externalSubject),
+        O.getOrUndefined
+      );
 
       expect(externalNode).toMatchObject({
         "@id": externalSubject,
@@ -220,7 +230,8 @@ describe("Ontology.fold projections", () => {
       const turtle = toTurtle(assembled);
 
       pipe(
-        jsonLd["@graph"].some(
+        A.some(
+          jsonLd["@graph"],
           (node) => node["@id"] === "http://www.w3.org/2004/02/skos/core#prefLabel" && node["@type"] !== undefined
         ),
         assertFalse
@@ -240,7 +251,11 @@ describe("Ontology.fold projections", () => {
           [Claim, "rdfs:comment", { value: "Authored comment" }],
         ],
       });
-      const claimNode = toJsonLd(assembled)["@graph"].find((node) => node["@id"] === "https://ns.beep.sh/patent/Claim");
+      const claimNode = pipe(
+        toJsonLd(assembled)["@graph"],
+        A.findFirst((node) => node["@id"] === "https://ns.beep.sh/patent/Claim"),
+        O.getOrUndefined
+      );
 
       expect(claimNode?.["rdfs:label"]).toEqual(["Claim", { "@value": "Authored claim", "@language": "en" }]);
       expect(claimNode?.["rdfs:comment"]).toEqual([
@@ -308,7 +323,11 @@ describe("Ontology.fold SKOS gate", () => {
         ],
       });
       const jsonLd = toJsonLd(assembled);
-      const conceptNode = jsonLd["@graph"].find((node) => node["@id"] === "https://ns.beep.sh/vocab/Concept");
+      const conceptNode = pipe(
+        jsonLd["@graph"],
+        A.findFirst((node) => node["@id"] === "https://ns.beep.sh/vocab/Concept"),
+        O.getOrUndefined
+      );
       const turtle = toTurtle(assembled);
 
       expect(conceptNode?.["@type"]).toEqual(["rdfs:Class", "skos:Concept"]);
@@ -423,7 +442,7 @@ describe("Ontology.fold SKOS gate", () => {
         triples: [[Concept, "skos:prefLabel", { value: "Concept", language: "en" }]],
       });
 
-      expect(assembled.warnings.map((warning) => warning.code)).toEqual(["missingConceptScheme"]);
+      expect(A.map(assembled.warnings, (warning) => warning.code)).toEqual(["missingConceptScheme"]);
     })
   );
 
@@ -695,14 +714,16 @@ describe("Ontology.fold FOLIO-derived module", () => {
       expect(toMarkdown(assembled)).toBe(toMarkdown(second));
       expect(toContext(assembled)).toEqual(toContext(second));
 
-      const claimClass = assembled.classes[0];
-      expect(claimClass?.iri).toBe("https://ns.beep.sh/ontology/Ontology.models/OWLClass");
-      const subClassOf = claimClass?.predicates.find((predicate) => predicate.key === "sub_class_of");
-      const parentClassOf = claimClass?.predicates.find((predicate) => predicate.key === "parent_class_of");
-      expect(subClassOf?.termIri).toBe("http://www.w3.org/2000/01/rdf-schema#subClassOf");
-      strictEqual(subClassOf?.reverse, false);
-      expect(parentClassOf?.termIri).toBe("http://www.w3.org/2000/01/rdf-schema#subClassOf");
-      strictEqual(parentClassOf?.reverse, true);
+      const claimClass = O.getOrThrow(A.head(assembled.classes));
+      strictEqual(claimClass.iri, "https://ns.beep.sh/ontology/Ontology.models/OWLClass");
+      const predicate = (key: string) =>
+        O.getOrThrow(A.findFirst(claimClass.predicates, (candidate) => candidate.key === key));
+      const subClassOf = predicate("sub_class_of");
+      const parentClassOf = predicate("parent_class_of");
+      strictEqual(subClassOf.termIri, "http://www.w3.org/2000/01/rdf-schema#subClassOf");
+      strictEqual(subClassOf.reverse, false);
+      strictEqual(parentClassOf.termIri, "http://www.w3.org/2000/01/rdf-schema#subClassOf");
+      strictEqual(parentClassOf.reverse, true);
     })
   );
 });

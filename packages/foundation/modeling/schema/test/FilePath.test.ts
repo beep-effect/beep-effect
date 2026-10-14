@@ -4,6 +4,7 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -283,7 +284,8 @@ describe("FilePath", () => {
     "publishes codec statics and a canonical arbitrary for file paths",
     Effect.fnUntraced(function* () {
       expect(
-        (yield* Arbitrary.sampleEffect(Arbitrary.schema(FilePathSchema.FilePath), { count: 20, seed: 0x5eed })).every(
+        A.every(
+          yield* Arbitrary.sampleEffect(Arbitrary.schema(FilePathSchema.FilePath), { count: 20, seed: 0x5eed }),
           S.is(FilePathSchema.FilePath)
         )
       ).toBe(true);

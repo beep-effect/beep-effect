@@ -9,11 +9,13 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -280,14 +282,14 @@ export const emptyExample = 1;
         }),
         Effect.fnUntraced(function* (repoRoot) {
           const inventory = yield* buildInventory(repoRoot);
-          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
-          const sectionless = pkg?.exports.find((entry) => entry.symbolName === "Sectionless");
-          const emptyExample = pkg?.exports.find((entry) => entry.symbolName === "emptyExample");
+          const pkg = O.getOrThrow(A.findFirst(inventory.packages, (entry) => entry.packageName === "@beep/demo"));
+          const sectionless = O.getOrThrow(A.findFirst(pkg.exports, (entry) => entry.symbolName === "Sectionless"));
+          const emptyExample = O.getOrThrow(A.findFirst(pkg.exports, (entry) => entry.symbolName === "emptyExample"));
 
-          expect(sectionless?.documentationShapeViolations.map((issue) => issue.rule)).toEqual(
+          expect(A.map(sectionless.documentationShapeViolations, (issue) => issue.rule)).toEqual(
             expect.arrayContaining(["multiple-description-paragraphs", "loose-ts-fence"])
           );
-          expect(emptyExample?.documentationShapeViolations.map((issue) => issue.rule)).toEqual(
+          expect(A.map(emptyExample.documentationShapeViolations, (issue) => issue.rule)).toEqual(
             expect.arrayContaining(["empty-section", "malformed-example"])
           );
         })
@@ -348,26 +350,28 @@ export const directHelperWithoutExample = (): void => {};
           }),
           Effect.fnUntraced(function* (repoRoot) {
             const inventory = yield* buildInventory(repoRoot);
-            const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+            const pkg = O.getOrThrow(A.findFirst(inventory.packages, (entry) => entry.packageName === "@beep/demo"));
             expect(pkg).toBeDefined();
 
-            const reExportEntry = pkg?.exports.find((entry) => entry.exportKind === "re-export");
+            const reExportEntry = O.getOrThrow(A.findFirst(pkg.exports, (entry) => entry.exportKind === "re-export"));
             expect(reExportEntry).toBeDefined();
-            expect(reExportEntry?.missingRequiredTags).toEqual([]);
-            expect(reExportEntry?.missingSummary).toBe(false);
-            expect(reExportEntry?.remediationStatus).toBe("resolved");
+            expect(reExportEntry.missingRequiredTags).toEqual([]);
+            expect(reExportEntry.missingSummary).toBe(false);
+            expect(reExportEntry.remediationStatus).toBe("resolved");
 
-            const directEntry = pkg?.exports.find((entry) => entry.symbolName === "directHelperWithoutExample");
+            const directEntry = O.getOrThrow(
+              A.findFirst(pkg.exports, (entry) => entry.symbolName === "directHelperWithoutExample")
+            );
             expect(directEntry).toBeDefined();
-            expect(directEntry?.missingRequiredTags).toContain("@example");
-            expect(directEntry?.remediationStatus).toBe("open");
+            expect(directEntry.missingRequiredTags).toContain("@example");
+            expect(directEntry.remediationStatus).toBe("open");
 
             // Re-export declarations remain counted as public surface; only
             // their findings stop. Total public exports = the re-export node +
             // the direct helper (from index.ts) + libValue (from lib.ts).
-            expect(pkg?.sourceCoverage.publicExportCount).toBe(3);
+            expect(pkg.sourceCoverage.publicExportCount).toBe(3);
             // The re-export no longer contributes to the missing-@example total.
-            expect(pkg?.counts.missingExportExamples).toBe(1);
+            expect(pkg.counts.missingExportExamples).toBe(1);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -413,8 +417,8 @@ export const demoValue = "demo";
         Effect.fnUntraced(function* (repoRoot) {
           const inventory = yield* buildInventory(repoRoot);
 
-          expect(inventory.packages.map((entry) => entry.packageName)).toEqual(["@beep/demo"]);
-          expect(inventory.packages.some((entry) => entry.status === "missing-workspace-metadata")).toBe(false);
+          expect(A.map(inventory.packages, (entry) => entry.packageName)).toEqual(["@beep/demo"]);
+          expect(A.some(inventory.packages, (entry) => entry.status === "missing-workspace-metadata")).toBe(false);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -489,7 +493,7 @@ export const demoTwoValue = "demo-two";
         Effect.fnUntraced(function* (repoRoot) {
           const inventory = yield* buildInventory(repoRoot);
 
-          expect(inventory.packages.map((entry) => entry.packageName)).toEqual(["@beep/demo", "@beep/demo-two"]);
+          expect(A.map(inventory.packages, (entry) => entry.packageName)).toEqual(["@beep/demo", "@beep/demo-two"]);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -560,21 +564,25 @@ export const realUnsafeExample = (): void => {};
           }),
           Effect.fnUntraced(function* (repoRoot) {
             const inventory = yield* buildInventory(repoRoot);
-            const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+            const pkg = O.getOrThrow(A.findFirst(inventory.packages, (entry) => entry.packageName === "@beep/demo"));
             expect(pkg).toBeDefined();
 
-            const safeEntry = pkg?.exports.find((entry) => entry.symbolName === "multiLineImportAliasExample");
+            const safeEntry = O.getOrThrow(
+              A.findFirst(pkg.exports, (entry) => entry.symbolName === "multiLineImportAliasExample")
+            );
             expect(safeEntry).toBeDefined();
-            expect(safeEntry?.unsafeExampleViolations).toEqual([]);
-            expect(safeEntry?.remediationStatus).toBe("resolved");
+            expect(safeEntry.unsafeExampleViolations).toEqual([]);
+            expect(safeEntry.remediationStatus).toBe("resolved");
 
-            const unsafeEntry = pkg?.exports.find((entry) => entry.symbolName === "realUnsafeExample");
+            const unsafeEntry = O.getOrThrow(
+              A.findFirst(pkg.exports, (entry) => entry.symbolName === "realUnsafeExample")
+            );
             expect(unsafeEntry).toBeDefined();
-            const rules = unsafeEntry?.unsafeExampleViolations.map((violation) => violation.rule);
+            const rules = A.map(unsafeEntry.unsafeExampleViolations, (violation) => violation.rule);
             expect(rules).toEqual(
               expect.arrayContaining(["no-declare-statements", "no-any-in-examples", "no-type-assertions-in-examples"])
             );
-            expect(unsafeEntry?.unsafeExampleViolations.length).toBe(3);
+            expect(unsafeEntry.unsafeExampleViolations.length).toBe(3);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -624,10 +632,10 @@ export function formatValue(value: number | string): string {
           }),
           Effect.fnUntraced(function* (repoRoot) {
             const inventory = yield* buildInventory(repoRoot);
-            const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+            const pkg = O.getOrThrow(A.findFirst(inventory.packages, (entry) => entry.packageName === "@beep/demo"));
             expect(pkg).toBeDefined();
 
-            const groupEntries = pkg?.exports.filter((entry) => entry.symbolName === "formatValue") ?? [];
+            const groupEntries = A.filter(pkg.exports, (entry) => entry.symbolName === "formatValue");
             // One overload signature + one continuation signature + the
             // implementation must score as ONE entry, not three.
             expect(groupEntries.length).toBe(1);
@@ -684,10 +692,10 @@ export function rawConvert(value: number | string): string {
         }),
         Effect.fnUntraced(function* (repoRoot) {
           const inventory = yield* buildInventory(repoRoot);
-          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+          const pkg = O.getOrThrow(A.findFirst(inventory.packages, (entry) => entry.packageName === "@beep/demo"));
           expect(pkg).toBeDefined();
 
-          const groupEntries = pkg?.exports.filter((entry) => entry.symbolName === "rawConvert") ?? [];
+          const groupEntries = A.filter(pkg.exports, (entry) => entry.symbolName === "rawConvert");
           // Zero doc blocks anywhere in the group must still yield exactly
           // ONE open entry (not one per signature/implementation line).
           expect(groupEntries.length).toBe(1);
@@ -745,10 +753,10 @@ export function parseValue(value: string, radix?: number): number {
         }),
         Effect.fnUntraced(function* (repoRoot) {
           const inventory = yield* buildInventory(repoRoot);
-          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+          const pkg = O.getOrThrow(A.findFirst(inventory.packages, (entry) => entry.packageName === "@beep/demo"));
           expect(pkg).toBeDefined();
 
-          const groupEntries = pkg?.exports.filter((entry) => entry.symbolName === "parseValue") ?? [];
+          const groupEntries = A.filter(pkg.exports, (entry) => entry.symbolName === "parseValue");
           expect(groupEntries.length).toBe(1);
           // The anchor (first, documented) signature satisfies every
           // required tag, but the second signature's malformed conditional
@@ -816,20 +824,24 @@ export default defineRule({
           }),
           Effect.fnUntraced(function* (repoRoot) {
             const inventory = yield* buildInventory(repoRoot);
-            const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+            const pkg = O.getOrThrow(A.findFirst(inventory.packages, (entry) => entry.packageName === "@beep/demo"));
             expect(pkg).toBeDefined();
 
-            const documented = pkg?.exports.find((entry) => entry.repoPath.endsWith("/documentedRule.ts"));
+            const documented = O.getOrThrow(
+              A.findFirst(pkg.exports, (entry) => entry.repoPath.endsWith("/documentedRule.ts"))
+            );
             expect(documented).toBeDefined();
-            expect(documented?.missingRequiredTags).toEqual([]);
-            expect(documented?.remediationStatus).toBe("resolved");
+            expect(documented.missingRequiredTags).toEqual([]);
+            expect(documented.remediationStatus).toBe("resolved");
 
-            const undocumented = pkg?.exports.find((entry) => entry.repoPath.endsWith("/undocumentedRule.ts"));
+            const undocumented = O.getOrThrow(
+              A.findFirst(pkg.exports, (entry) => entry.repoPath.endsWith("/undocumentedRule.ts"))
+            );
             expect(undocumented).toBeDefined();
-            expect(undocumented?.missingRequiredTags).toEqual(
+            expect(undocumented.missingRequiredTags).toEqual(
               expect.arrayContaining(["@example", "@category", "@since"])
             );
-            expect(undocumented?.remediationStatus).toBe("open");
+            expect(undocumented.remediationStatus).toBe("open");
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -878,23 +890,23 @@ export const {
         }),
         Effect.fnUntraced(function* (repoRoot) {
           const inventory = yield* buildInventory(repoRoot);
-          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+          const pkg = O.getOrThrow(A.findFirst(inventory.packages, (entry) => entry.packageName === "@beep/demo"));
           expect(pkg).toBeDefined();
 
           // Documented binding element: the /** */ block sits in its leading
           // comment range (ts-morph's getJsDocs cannot see it) — R24 reads it.
-          const documented = pkg?.exports.find((entry) => entry.symbolName === "documentedMember");
+          const documented = O.getOrThrow(A.findFirst(pkg.exports, (entry) => entry.symbolName === "documentedMember"));
           expect(documented).toBeDefined();
-          expect(documented?.missingRequiredTags).toEqual([]);
-          expect(documented?.remediationStatus).toBe("resolved");
+          expect(documented.missingRequiredTags).toEqual([]);
+          expect(documented.remediationStatus).toBe("resolved");
 
           // Undocumented binding element still fires.
-          const undocumented = pkg?.exports.find((entry) => entry.symbolName === "undocumentedMember");
-          expect(undocumented).toBeDefined();
-          expect(undocumented?.missingRequiredTags).toEqual(
-            expect.arrayContaining(["@example", "@category", "@since"])
+          const undocumented = O.getOrThrow(
+            A.findFirst(pkg.exports, (entry) => entry.symbolName === "undocumentedMember")
           );
-          expect(undocumented?.remediationStatus).toBe("open");
+          expect(undocumented).toBeDefined();
+          expect(undocumented.missingRequiredTags).toEqual(expect.arrayContaining(["@example", "@category", "@since"]));
+          expect(undocumented.remediationStatus).toBe("open");
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -961,17 +973,21 @@ export const realUnsafeStringLiteralExample = (): void => {};
           }),
           Effect.fnUntraced(function* (repoRoot) {
             const inventory = yield* buildInventory(repoRoot);
-            const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+            const pkg = O.getOrThrow(A.findFirst(inventory.packages, (entry) => entry.packageName === "@beep/demo"));
             expect(pkg).toBeDefined();
 
-            const safeEntry = pkg?.exports.find((entry) => entry.symbolName === "describeRuleExample");
+            const safeEntry = O.getOrThrow(
+              A.findFirst(pkg.exports, (entry) => entry.symbolName === "describeRuleExample")
+            );
             expect(safeEntry).toBeDefined();
-            expect(safeEntry?.unsafeExampleViolations).toEqual([]);
-            expect(safeEntry?.remediationStatus).toBe("resolved");
+            expect(safeEntry.unsafeExampleViolations).toEqual([]);
+            expect(safeEntry.remediationStatus).toBe("resolved");
 
-            const unsafeEntry = pkg?.exports.find((entry) => entry.symbolName === "realUnsafeStringLiteralExample");
+            const unsafeEntry = O.getOrThrow(
+              A.findFirst(pkg.exports, (entry) => entry.symbolName === "realUnsafeStringLiteralExample")
+            );
             expect(unsafeEntry).toBeDefined();
-            const rules = unsafeEntry?.unsafeExampleViolations.map((violation) => violation.rule);
+            const rules = A.map(unsafeEntry.unsafeExampleViolations, (violation) => violation.rule);
             expect(rules).toEqual(
               expect.arrayContaining(["no-declare-statements", "no-any-in-examples", "no-type-assertions-in-examples"])
             );
@@ -1032,28 +1048,35 @@ export * from "./flatTarget.ts";
           }),
           Effect.fnUntraced(function* (repoRoot) {
             const inventory = yield* buildInventory(repoRoot);
-            const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+            const pkg = O.getOrThrow(A.findFirst(inventory.packages, (entry) => entry.packageName === "@beep/demo"));
             expect(pkg).toBeDefined();
 
-            const nsTargetEntry = pkg?.exports.find((entry) => entry.symbolName === "undocumentedNs");
+            const nsTargetEntry = O.getOrThrow(
+              A.findFirst(pkg.exports, (entry) => entry.symbolName === "undocumentedNs")
+            );
             expect(nsTargetEntry).toBeDefined();
-            expect(nsTargetEntry?.remediationStatus).toBe("open");
-            expect(nsTargetEntry?.missingRequiredTags).toEqual(
+            expect(nsTargetEntry.remediationStatus).toBe("open");
+            expect(nsTargetEntry.missingRequiredTags).toEqual(
               expect.arrayContaining(["@example", "@category", "@since"])
             );
 
-            const flatTargetEntry = pkg?.exports.find((entry) => entry.symbolName === "undocumentedFlat");
+            const flatTargetEntry = O.getOrThrow(
+              A.findFirst(pkg.exports, (entry) => entry.symbolName === "undocumentedFlat")
+            );
             expect(flatTargetEntry).toBeDefined();
-            expect(flatTargetEntry?.remediationStatus).toBe("open");
-            expect(flatTargetEntry?.missingRequiredTags).toEqual(
+            expect(flatTargetEntry.remediationStatus).toBe("open");
+            expect(flatTargetEntry.missingRequiredTags).toEqual(
               expect.arrayContaining(["@example", "@category", "@since"])
             );
 
-            const namespacedBarrelLine = pkg?.exports.find(
-              (entry) => entry.exportKind === "re-export" && entry.symbolName?.includes("Ns")
+            const namespacedBarrelLine = O.getOrThrow(
+              A.findFirst(
+                pkg.exports,
+                (entry) => entry.exportKind === "re-export" && entry.symbolName?.includes("Ns") === true
+              )
             );
             expect(namespacedBarrelLine).toBeDefined();
-            expect(namespacedBarrelLine?.remediationStatus).toBe("resolved");
+            expect(namespacedBarrelLine.remediationStatus).toBe("resolved");
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -1162,14 +1185,17 @@ export const consumerValue = 1;
         }),
         Effect.fnUntraced(function* (repoRoot) {
           const inventory = yield* buildInventory(repoRoot);
-          const consumer = inventory.packages.find((entry) => entry.packageName === "@beep/consumer");
-          const value = consumer?.exports.find((entry) => entry.symbolName === "consumerValue");
-          const rootFindings = value?.exampleImportViolations.filter(
+          const consumer = O.getOrThrow(
+            A.findFirst(inventory.packages, (entry) => entry.packageName === "@beep/consumer")
+          );
+          const value = O.getOrThrow(A.findFirst(consumer.exports, (entry) => entry.symbolName === "consumerValue"));
+          const rootFindings = A.filter(
+            value.exampleImportViolations,
             (finding) => finding.rule === "no-root-package-import"
           );
 
           expect(rootFindings).toHaveLength(6);
-          expect(rootFindings?.map((finding) => finding.detail)).toEqual([
+          expect(A.map(rootFindings, (finding) => finding.detail)).toEqual([
             "Import stable public modules instead of the effect package root.",
             "Import stable public modules instead of the @beep/foundation-demo package root.",
             "Import stable public modules instead of the @beep/foundation-demo package root.",
@@ -1177,8 +1203,8 @@ export const consumerValue = 1;
             "Import stable public modules instead of the effect package root.",
             "Import stable public modules instead of the effect package root.",
           ]);
-          expect(consumer?.counts.exampleImportFindings).toBe(8);
-          expect(consumer?.counts.documentationRuleFindings["no-root-package-import"]).toBe(8);
+          expect(consumer.counts.exampleImportFindings).toBe(8);
+          expect(consumer.counts.documentationRuleFindings["no-root-package-import"]).toBe(8);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );

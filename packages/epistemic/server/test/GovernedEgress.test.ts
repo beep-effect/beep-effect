@@ -22,6 +22,7 @@ import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import { TestClock } from "effect/testing";
 import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
@@ -266,7 +267,7 @@ describe("GovernedEgress", () => {
 
       pipe(EgressDenied.is(error), assertTrue);
       // Field-free by construction: there is nothing on it for an agent to read.
-      expect(Object.keys(error as object).filter((key) => key !== "_tag")).toEqual([]);
+      expect(A.filter(R.keys(error as R.ReadonlyRecord<string, unknown>), (key) => key !== "_tag")).toEqual([]);
     })
   );
 

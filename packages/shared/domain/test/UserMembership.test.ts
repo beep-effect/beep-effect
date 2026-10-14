@@ -5,6 +5,7 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const decodeUnknownMembershipModel = S.decodeUnknownEffect(Membership.Model);
@@ -42,9 +43,9 @@ describe("User and Membership", () => {
       });
 
       expect(User.Model.sql.tableName).toBe(Shared.UserId.tableName);
-      expect(Object.keys(User.Model.insert.fields)).not.toContain("id");
-      expect(Object.keys(User.Model.update.fields)).toContain("id");
-      expect(Object.keys(User.Model.jsonCreate.fields)).toEqual(["displayName"]);
+      expect(R.keys(User.Model.insert.fields)).not.toContain("id");
+      expect(R.keys(User.Model.update.fields)).toContain("id");
+      expect(R.keys(User.Model.jsonCreate.fields)).toEqual(["displayName"]);
       expect(user.displayName).toBe("Jordan Miles");
     })
   );
@@ -62,9 +63,9 @@ describe("User and Membership", () => {
       expect(Membership.Model.sql.tableName).toBe(Shared.MembershipId.tableName);
       assertTrue(Membership.Role.is.owner(membership.role));
       assertTrue(Membership.Status.is.active(membership.status));
-      expect(Object.keys(Membership.Model.insert.fields)).not.toContain("id");
-      expect(Object.keys(Membership.Model.update.fields)).toContain("rowVersion");
-      expect(Object.keys(Membership.Model.jsonCreate.fields)).toEqual(["role", "status", "userId"]);
+      expect(R.keys(Membership.Model.insert.fields)).not.toContain("id");
+      expect(R.keys(Membership.Model.update.fields)).toContain("rowVersion");
+      expect(R.keys(Membership.Model.jsonCreate.fields)).toEqual(["role", "status", "userId"]);
       expect(membership.orgId).toBe(1);
       expect(membership.userId).toBe(2);
     })

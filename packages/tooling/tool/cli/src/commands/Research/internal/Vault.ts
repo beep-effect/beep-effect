@@ -9,6 +9,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -117,11 +118,12 @@ export const normalizeUrl = (rawUrl: string): Effect.Effect<string, ResearchComm
     try: () => {
       const url = new URL(rawUrl);
       url.hash = "";
-      const params = [...url.searchParams.entries()]
-        .filter(([key]) => !key.startsWith("utm_") && key !== "fbclid" && key !== "gclid" && key !== "ref")
-        .sort(([a], [b]) => a.localeCompare(b));
+      const params = A.filter(
+        [...url.searchParams.entries()],
+        ([key]) => !key.startsWith("utm_") && key !== "fbclid" && key !== "gclid" && key !== "ref"
+      ).sort(([a], [b]) => a.localeCompare(b));
       url.search = "";
-      params.forEach(([key, value]) => url.searchParams.append(key, value));
+      A.forEach(params, ([key, value]) => url.searchParams.append(key, value));
       if (url.pathname !== "/" && url.pathname.endsWith("/")) {
         url.pathname = url.pathname.slice(0, -1);
       }
@@ -187,7 +189,7 @@ export const renderCard: {
   (body: string): (frontmatter: KnowledgeCardFrontmatter) => string;
   (frontmatter: KnowledgeCardFrontmatter, body: string): string;
 } = dual(2, (frontmatter: KnowledgeCardFrontmatter, body: string): string => {
-  const yamlSource: Array<readonly [string, unknown]> = FRONTMATTER_KEYS.flatMap(([prop, key]) => {
+  const yamlSource: Array<readonly [string, unknown]> = A.flatMap(FRONTMATTER_KEYS, ([prop, key]) => {
     const value = frontmatter[prop];
     return P.isUndefined(value) ? [] : [[key, value] as const];
   });
@@ -214,7 +216,7 @@ export const parseCard = Effect.fn("ResearchVault.parseCard")(function* (
     catch: (cause) => ResearchCommandError.new(cause, `Card "${cardPath}" has malformed YAML frontmatter.`),
     try: () => Yaml.parse(match[1] ?? "") as Record<string, unknown>,
   });
-  const presentEntries: Array<readonly [string, unknown]> = FRONTMATTER_KEYS.flatMap(([prop, key]) =>
+  const presentEntries: Array<readonly [string, unknown]> = A.flatMap(FRONTMATTER_KEYS, ([prop, key]) =>
     P.isUndefined(raw[key]) ? [] : [[prop, raw[key]] as const]
   );
   const withDefaults = {

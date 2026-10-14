@@ -8,6 +8,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -45,12 +46,12 @@ const uploadRow = {
 describe("SyncOperation entity", () => {
   it("wires SyncOperation to the documents identity", () => {
     expect(SyncOperation.SyncOperation.sql.tableName).toBe(DocumentsIdentity.SyncOperationId.tableName);
-    expect(Object.keys(SyncOperation.SyncOperation.insert.fields)).not.toContain("id");
-    expect(Object.keys(SyncOperation.SyncOperation.insert.fields)).not.toContain("rowVersion");
-    expect(Object.keys(SyncOperation.SyncOperation.update.fields)).toContain("id");
-    expect(Object.keys(SyncOperation.SyncOperation.update.fields)).toContain("rowVersion");
-    expect(Object.keys(SyncOperation.SyncOperation.jsonCreate.fields)).toHaveLength(13);
-    expect(Object.keys(SyncOperation.SyncOperation.jsonUpdate.fields)).toHaveLength(13);
+    expect(R.keys(SyncOperation.SyncOperation.insert.fields)).not.toContain("id");
+    expect(R.keys(SyncOperation.SyncOperation.insert.fields)).not.toContain("rowVersion");
+    expect(R.keys(SyncOperation.SyncOperation.update.fields)).toContain("id");
+    expect(R.keys(SyncOperation.SyncOperation.update.fields)).toContain("rowVersion");
+    expect(R.keys(SyncOperation.SyncOperation.jsonCreate.fields)).toHaveLength(13);
+    expect(R.keys(SyncOperation.SyncOperation.jsonUpdate.fields)).toHaveLength(13);
   });
 
   it.effect("decodes and encodes a full upload outbox row", () =>

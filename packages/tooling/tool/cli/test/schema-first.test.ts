@@ -134,12 +134,15 @@ describe("packages/tooling/tool/cli schema-first models", () => {
   it("recognizes repo-owned schema arbitrary helpers as schema-derived property coverage", () => {
     expect(
       sourceTextHasSchemaArbitraryPropertyCoverage(
-        [
-          'import * as S from "effect/Schema";',
-          'import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";',
-          "const Worker = S.Struct({ id: S.String, retryCount: S.Int });",
-          "assertSchemaArbitraryDecodesToSelf(Worker);",
-        ].join("\n")
+        A.join(
+          [
+            'import * as S from "effect/Schema";',
+            'import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";',
+            "const Worker = S.Struct({ id: S.String, retryCount: S.Int });",
+            "assertSchemaArbitraryDecodesToSelf(Worker);",
+          ],
+          "\n"
+        )
       )
     ).toBe(true);
     expect(
@@ -147,24 +150,30 @@ describe("packages/tooling/tool/cli schema-first models", () => {
     ).toBe(false);
     expect(
       sourceTextHasSchemaArbitraryPropertyCoverage(
-        [
-          'import * as fc from "fast-check";',
-          'import * as S from "effect/Schema";',
-          "const Worker = S.Struct({ id: S.String });",
-          "const WorkerArbitrary = S.toArbitrary(Worker)(fc);",
-          "fc.property(WorkerArbitrary, (worker) => typeof worker.id === 'string');",
-        ].join("\n")
+        A.join(
+          [
+            'import * as fc from "fast-check";',
+            'import * as S from "effect/Schema";',
+            "const Worker = S.Struct({ id: S.String });",
+            "const WorkerArbitrary = S.toArbitrary(Worker)(fc);",
+            "fc.property(WorkerArbitrary, (worker) => typeof worker.id === 'string');",
+          ],
+          "\n"
+        )
       )
     ).toBe(true);
     expect(
       sourceTextHasSchemaArbitraryPropertyCoverage(
-        [
-          'import * as fc from "fast-check";',
-          'import * as S from "effect/Schema";',
-          "const Worker = S.Struct({ id: S.String });",
-          "const WorkerArbitrary = S.toArbitrary(Worker)(fc);",
-          "fc.property(fc.array(WorkerArbitrary), (workers) => workers.every((worker) => typeof worker.id === 'string'));",
-        ].join("\n")
+        A.join(
+          [
+            'import * as fc from "fast-check";',
+            'import * as S from "effect/Schema";',
+            "const Worker = S.Struct({ id: S.String });",
+            "const WorkerArbitrary = S.toArbitrary(Worker)(fc);",
+            "fc.property(fc.array(WorkerArbitrary), (workers) => workers.every((worker) => typeof worker.id === 'string'));",
+          ],
+          "\n"
+        )
       )
     ).toBe(true);
     expect(
@@ -306,7 +315,7 @@ describe("fnSchemaEntryFromFunctionLike", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(
       "fixture.ts",
-      ["export function identity<T>(input: { value: T }): T {", "  return input.value;", "}"].join("\n")
+      A.join(["export function identity<T>(input: { value: T }): T {", "  return input.value;", "}"], "\n")
     );
     const functionDeclaration = O.getOrThrow(A.head(sourceFile.getFunctions()));
     const entry = fnSchemaEntryFromFunctionLike(functionDeclaration, { file: "fixture.ts", owner: "@beep/test" });
@@ -320,20 +329,23 @@ describe("normalizationEntryFromCallExpression", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(
       "fixture.ts",
-      [
-        'import * as S from "effect/Schema";',
-        "const Name = S.String;",
-        "export function normalizeName(input: unknown): string {",
-        "  return S.decodeUnknownSync(Name)(input).trim();",
-        "}",
-      ].join("\n")
+      A.join(
+        [
+          'import * as S from "effect/Schema";',
+          "const Name = S.String;",
+          "export function normalizeName(input: unknown): string {",
+          "  return S.decodeUnknownSync(Name)(input).trim();",
+          "}",
+        ],
+        "\n"
+      )
     );
-    const callExpression = sourceFile
-      .getDescendantsOfKind(SyntaxKind.CallExpression)
-      .find((candidate) => candidate.getExpression().getText().endsWith(".trim"));
-    if (callExpression === undefined) {
-      throw new Error("Expected trim call expression fixture.");
-    }
+    const callExpression = O.getOrThrowWith(
+      A.findFirst(sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression), (candidate) =>
+        candidate.getExpression().getText().endsWith(".trim")
+      ),
+      () => new Error("Expected trim call expression fixture.")
+    );
     const entry = normalizationEntryFromCallExpression({ file: "fixture.ts", owner: "@beep/test" })(callExpression);
 
     entry.pipe(O.isSome, assertTrue);
@@ -362,7 +374,7 @@ describe("nullReturnEntryFromFunctionLike", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(
       "fixture.ts",
-      ["export function findUser(id: string): string | null {", "  return null;", "}"].join("\n")
+      A.join(["export function findUser(id: string): string | null {", "  return null;", "}"], "\n")
     );
     const functionDeclaration = O.getOrThrow(A.head(sourceFile.getFunctions()));
     const entry = nullReturnEntryFromFunctionLike({ file: "fixture.ts", owner: "@beep/test" })(functionDeclaration);
@@ -382,7 +394,7 @@ describe("nullReturnEntryFromFunctionLike", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(
       "fixture.ts",
-      ["export function findUser(id: string) {", "  return null;", "}"].join("\n")
+      A.join(["export function findUser(id: string) {", "  return null;", "}"], "\n")
     );
     const functionDeclaration = O.getOrThrow(A.head(sourceFile.getFunctions()));
     const entry = nullReturnEntryFromFunctionLike(functionDeclaration, {
@@ -397,12 +409,15 @@ describe("nullReturnEntryFromFunctionLike", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(
       "fixture.ts",
-      [
-        "export function effectful(): Effect.Effect<string | undefined> { return Effect.void; }",
-        "export function optional(): O.Option<string | null> { return O.none(); }",
-        "export function result(): Result.Result<string | undefined> { return Result.succeed(undefined); }",
-        "export function exited(): Exit.Exit<string | null> { return Exit.succeed(null); }",
-      ].join("\n")
+      A.join(
+        [
+          "export function effectful(): Effect.Effect<string | undefined> { return Effect.void; }",
+          "export function optional(): O.Option<string | null> { return O.none(); }",
+          "export function result(): Result.Result<string | undefined> { return Result.succeed(undefined); }",
+          "export function exited(): Exit.Exit<string | null> { return Exit.succeed(null); }",
+        ],
+        "\n"
+      )
     );
 
     for (const functionDeclaration of sourceFile.getFunctions()) {
@@ -420,7 +435,7 @@ describe("getsomesStructEntryFromCallExpression", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(
       "fixture.ts",
-      ["export function pickSomes() {", "  return R.getSomes({ a: 1, b: 2 });", "}"].join("\n")
+      A.join(["export function pickSomes() {", "  return R.getSomes({ a: 1, b: 2 });", "}"], "\n")
     );
     const callExpression = O.getOrThrow(A.head(sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)));
     const entry = getsomesStructEntryFromCallExpression({ file: "fixture.ts", owner: "@beep/test" })(callExpression);
@@ -440,7 +455,7 @@ describe("getsomesStructEntryFromCallExpression", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(
       "fixture.ts",
-      ["export function pickSomes(dict: Record<string, number>) {", "  return R.getSomes(dict);", "}"].join("\n")
+      A.join(["export function pickSomes(dict: Record<string, number>) {", "  return R.getSomes(dict);", "}"], "\n")
     );
     const callExpression = O.getOrThrow(A.head(sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)));
     const entry = getsomesStructEntryFromCallExpression(callExpression, {

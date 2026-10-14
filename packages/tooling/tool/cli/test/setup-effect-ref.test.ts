@@ -2,6 +2,7 @@ import { ReferenceWorkspace, referenceWorkspaceLayer } from "@beep/repo-cli/comm
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -39,14 +40,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("setup-effect-ref", (it)
         );
         yield* writeExecutable(
           path.join(binDir, "git"),
-          [
-            "#!/bin/sh",
-            'printf "%s\\n" "$*" >> "$HOME/git.log"',
-            '[ "$1" = "clone" ] || exit 92',
-            "for argument do target=$argument; done",
-            'mkdir -p "$target/.git"',
-            "",
-          ].join("\n")
+          A.join(
+            [
+              "#!/bin/sh",
+              'printf "%s\\n" "$*" >> "$HOME/git.log"',
+              '[ "$1" = "clone" ] || exit 92',
+              "for argument do target=$argument; done",
+              'mkdir -p "$target/.git"',
+              "",
+            ],
+            "\n"
+          )
         );
         yield* writeExecutable(
           path.join(binDir, "realpath"),
@@ -79,7 +83,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("setup-effect-ref", (it)
             ),
             Effect.scoped
           );
-          return { stderr: lines.filter((line) => line.startsWith("warning:")).join("\n"), stdout: lines.join("\n") };
+          return {
+            stderr: A.join(
+              A.filter(lines, (line) => line.startsWith("warning:")),
+              "\n"
+            ),
+            stdout: A.join(lines, "\n"),
+          };
         });
         const links = [
           "effect",
@@ -106,20 +116,23 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("setup-effect-ref", (it)
         yield* assertLinks();
         const clones = yield* fs.readFileString(gitLog);
         expect(clones).toBe(
-          [
-            `clone --quiet --branch main -- git@github.com:Effect-TS/effect.git ${expectedRoot}/effect`,
-            `clone --quiet --branch main -- git@github.com:Effect-TS/tsgo.git ${expectedRoot}/effect-tsgo`,
-            `clone --quiet --branch main -- git@github.com:spencerbeggs/ai-plugin-marketplace-manager.git ${expectedRoot}/ai-plugin-marketplace-manager`,
-            `clone --quiet --branch main -- git@github.com:spencerbeggs/okfit.git ${expectedRoot}/okfit`,
-            `clone --quiet --branch main -- git@github.com:spencerbeggs/tsdoctor.git ${expectedRoot}/tsdoctor`,
-            `clone --quiet --branch main -- git@github.com:spencerbeggs/effected.git ${expectedRoot}/effected`,
-            `clone --quiet --branch main -- git@github.com:spencerbeggs/pluginfinity.git ${expectedRoot}/pluginfinity`,
-            `clone --quiet --branch main -- git@github.com:spencerbeggs/vitest-agent.git ${expectedRoot}/vitest-agent`,
-            `clone --quiet --branch main -- https://github.com/pingdotgg/t3code.git ${expectedRoot}/t3code`,
-            `clone --quiet --branch v2 -- https://github.com/anomalyco/opencode.git ${expectedRoot}/opencode`,
-            `clone --quiet --branch main -- https://github.com/alchemy-run/alchemy.git ${expectedRoot}/alchemy`,
-            "",
-          ].join("\n")
+          A.join(
+            [
+              `clone --quiet --branch main -- git@github.com:Effect-TS/effect.git ${expectedRoot}/effect`,
+              `clone --quiet --branch main -- git@github.com:Effect-TS/tsgo.git ${expectedRoot}/effect-tsgo`,
+              `clone --quiet --branch main -- git@github.com:spencerbeggs/ai-plugin-marketplace-manager.git ${expectedRoot}/ai-plugin-marketplace-manager`,
+              `clone --quiet --branch main -- git@github.com:spencerbeggs/okfit.git ${expectedRoot}/okfit`,
+              `clone --quiet --branch main -- git@github.com:spencerbeggs/tsdoctor.git ${expectedRoot}/tsdoctor`,
+              `clone --quiet --branch main -- git@github.com:spencerbeggs/effected.git ${expectedRoot}/effected`,
+              `clone --quiet --branch main -- git@github.com:spencerbeggs/pluginfinity.git ${expectedRoot}/pluginfinity`,
+              `clone --quiet --branch main -- git@github.com:spencerbeggs/vitest-agent.git ${expectedRoot}/vitest-agent`,
+              `clone --quiet --branch main -- https://github.com/pingdotgg/t3code.git ${expectedRoot}/t3code`,
+              `clone --quiet --branch v2 -- https://github.com/anomalyco/opencode.git ${expectedRoot}/opencode`,
+              `clone --quiet --branch main -- https://github.com/alchemy-run/alchemy.git ${expectedRoot}/alchemy`,
+              "",
+            ],
+            "\n"
+          )
         );
         const before = yield* Effect.forEach(links, (name) => fs.stat(path.join(repoRoot, ".repos", name)));
         const second = yield* run();

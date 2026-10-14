@@ -16,7 +16,7 @@ import {
   sqliteTable,
   uniqueKeyName,
 } from "drizzle-orm/sqlite-core";
-import { isArray, reduce } from "effect/Array";
+import { every, filter, flatMap, isArray, map, reduce } from "effect/Array";
 import {
   exhaustive,
   tag as matchTag,
@@ -27,7 +27,7 @@ import {
 } from "effect/Match";
 import { fromUndefinedOr, getOrElse, match } from "effect/Option";
 import { hasProperty, isFunction } from "effect/Predicate";
-import { empty, get, set } from "effect/Record";
+import { empty, get, values as recordValues, set, toEntries } from "effect/Record";
 import { validateSchemaNames } from "../core/assembly.ts";
 import * as Field from "../core/Field.ts";
 import * as Meta from "../core/Meta.ts";
@@ -262,7 +262,7 @@ export type AdditionalExtras<M extends AnyModel> = (
 ) => ReadonlyArray<SQLiteTableExtraConfigValue>;
 
 const isDeclaredExtras = (value: unknown): value is ReadonlyArray<TableExtras.Node> =>
-  isArray(value) && value.every(TableExtras.isNode);
+  isArray(value) && every(value, TableExtras.isNode);
 const invokeDeclaredExtras = (
   callback: unknown,
   columns: TableExtras.BoundColumns<FieldsInput>
@@ -287,12 +287,12 @@ const enumChecks = (
   model: AnyModel,
   columns: TableExtras.BoundColumns<FieldsInput>
 ): ReadonlyArray<SQLiteTableExtraConfigValue> =>
-  Object.entries(model.sql.columns).flatMap(([key, meta]) => {
+  flatMap(toEntries(model.sql.columns), ([key, meta]) => {
     if (!SqliteColumn.Spec.guards.enum(meta.column) || !hasProperty(columns, key)) return [];
     const column = columns[key];
     if (!isDrizzleEntity(column, SQLiteColumn)) return [];
     const values = sql.join(
-      meta.column.values.map((value) => sql.raw(`'${value.replaceAll("'", "''")}'`)),
+      map(meta.column.values, (value) => sql.raw(`'${value.replaceAll("'", "''")}'`)),
       sql`, `
     );
     return [check(`${model.sql.tableName}_${snakeCase(key)}_enum_check`, sql`${column} in (${values})`)];
@@ -340,7 +340,7 @@ export function toSqliteTable(
 ): unknown {
   const [model, additionalExtras] = args;
   const builders = reduce(
-    Object.entries(model.sql.fields),
+    toEntries(model.sql.fields),
     empty<string, SqliteColumn.DrizzleBuilder>(),
     (builders, [key, input]) => {
       const meta = getOrElse(get(model.sql.columns, key), () => {
@@ -360,9 +360,9 @@ export function toSqliteTable(
       onNone: () => [],
       onSome: (extras) => {
         const nodes = invokeDeclaredExtras(extras, bound);
-        const inlinePrimaryKeys = Object.values(model.sql.columns).filter((meta) => meta.primaryKey).length;
+        const inlinePrimaryKeys = filter(recordValues(model.sql.columns), (meta) => meta.primaryKey).length;
         TableExtras.validateNodes(nodes, inlinePrimaryKeys);
-        return nodes.map(TableExtras.emit);
+        return map(nodes, TableExtras.emit);
       },
     });
     const additional = match(fromUndefinedOr(additionalExtras), {
@@ -378,28 +378,31 @@ export function toSqliteTable(
     validateSchemaNames(
       [
         { owner: "table", kind: "table", name: config.name },
-        ...config.indexes.map(
+        ...map(
+          config.indexes,
           (value, index): SchemaName => ({ owner: `index:${index}`, kind: "index", name: value.config.name })
         ),
-        ...config.primaryKeys.flatMap((value, index) =>
+        ...flatMap(config.primaryKeys, (value, index) =>
           named(`primary-key:${index}`, "primary-key constraint", value.getName())
         ),
-        ...config.uniqueConstraints.map(
+        ...map(
+          config.uniqueConstraints,
           (value, index): SchemaName => ({ owner: `unique:${index}`, kind: "unique constraint", name: value.getName() })
         ),
-        ...config.columns
-          .filter((column) => column.isUnique)
-          .map(
-            (column, index): SchemaName => ({
-              owner: `inline-unique:${index}`,
-              kind: "unique constraint",
-              name: column.uniqueName ?? uniqueKeyName(table, [column.name]),
-            })
-          ),
-        ...config.checks.map(
+        ...map(
+          filter(config.columns, (column) => column.isUnique),
+          (column, index): SchemaName => ({
+            owner: `inline-unique:${index}`,
+            kind: "unique constraint",
+            name: column.uniqueName ?? uniqueKeyName(table, [column.name]),
+          })
+        ),
+        ...map(
+          config.checks,
           (value, index): SchemaName => ({ owner: `check:${index}`, kind: "check constraint", name: value.name })
         ),
-        ...config.foreignKeys.map(
+        ...map(
+          config.foreignKeys,
           (value, index): SchemaName => ({
             owner: `foreign-key:${index}`,
             kind: "foreign-key constraint",

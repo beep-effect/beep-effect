@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { ReferenceFixture, referenceFixtureLayer, workspace, writeExecutable } from "./refs-test-utils.ts";
@@ -15,41 +16,47 @@ describe("reference refresh timer", () => {
             service.renderTimerUnits(f.home, f.root, "*-*-* 03:30:00", "/opt/bun runtime/bun")
           );
           expect(units[0]?.text).toBe(
-            [
-              "[Unit]",
-              "Description=beep reference workspace refresh",
-              "After=beep-graft-deep-refresh.service",
-              "",
-              "[Service]",
-              "Type=oneshot",
-              `WorkingDirectory=${f.owner}`,
-              "Environment=PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin",
-              "Environment=CI=true",
-              `EnvironmentFile=${f.home}/.config/beep-graft/env`,
-              'ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true "/opt/bun runtime/bun" install --frozen-lockfile --ignore-scripts',
-              `ExecStart="/opt/bun runtime/bun" run beep refs refresh --root "${f.root}" --jobs 16`,
-              "TimeoutStartSec=12h",
-              "TimeoutStopSec=90",
-              "KillMode=mixed",
-              "Nice=10",
-              "Slice=background.slice",
-              "",
-            ].join("\n")
+            A.join(
+              [
+                "[Unit]",
+                "Description=beep reference workspace refresh",
+                "After=beep-graft-deep-refresh.service",
+                "",
+                "[Service]",
+                "Type=oneshot",
+                `WorkingDirectory=${f.owner}`,
+                "Environment=PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin",
+                "Environment=CI=true",
+                `EnvironmentFile=${f.home}/.config/beep-graft/env`,
+                'ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true "/opt/bun runtime/bun" install --frozen-lockfile --ignore-scripts',
+                `ExecStart="/opt/bun runtime/bun" run beep refs refresh --root "${f.root}" --jobs 16`,
+                "TimeoutStartSec=12h",
+                "TimeoutStopSec=90",
+                "KillMode=mixed",
+                "Nice=10",
+                "Slice=background.slice",
+                "",
+              ],
+              "\n"
+            )
           );
           expect(units[1]?.text).toBe(
-            [
-              "[Unit]",
-              "Description=Timer for beep reference workspace refresh",
-              "",
-              "[Timer]",
-              "OnCalendar=*-*-* 03:30:00",
-              "Persistent=true",
-              "RandomizedDelaySec=600",
-              "",
-              "[Install]",
-              "WantedBy=timers.target",
-              "",
-            ].join("\n")
+            A.join(
+              [
+                "[Unit]",
+                "Description=Timer for beep reference workspace refresh",
+                "",
+                "[Timer]",
+                "OnCalendar=*-*-* 03:30:00",
+                "Persistent=true",
+                "RandomizedDelaySec=600",
+                "",
+                "[Install]",
+                "WantedBy=timers.target",
+                "",
+              ],
+              "\n"
+            )
           );
           // Ordering only: refs must still run when the beep deep unit is not installed.
           expect(units[0]?.text).not.toMatch(/^(?:Wants|Requires|BindsTo|Requisite)=/mu);
@@ -89,15 +96,18 @@ describe("reference refresh timer", () => {
           expect(removed).toHaveLength(2);
           expect(yield* f.fs.readDirectory(unitDir)).toEqual([]);
           expect(yield* f.fs.readFileString(f.path.join(f.home, "systemctl.log"))).toBe(
-            [
-              "--user daemon-reload",
-              "--user enable --now beep-refs-refresh.timer",
-              "--user daemon-reload",
-              "--user enable --now beep-refs-refresh.timer",
-              "--user disable --now beep-refs-refresh.timer",
-              "--user daemon-reload",
-              "",
-            ].join("\n")
+            A.join(
+              [
+                "--user daemon-reload",
+                "--user enable --now beep-refs-refresh.timer",
+                "--user daemon-reload",
+                "--user enable --now beep-refs-refresh.timer",
+                "--user disable --now beep-refs-refresh.timer",
+                "--user daemon-reload",
+                "",
+              ],
+              "\n"
+            )
           );
           const missing = yield* workspace.use((service) => service.refreshTimer(f.home, O.none())).pipe(Effect.result);
           expect(missing._tag).toBe("Failure");

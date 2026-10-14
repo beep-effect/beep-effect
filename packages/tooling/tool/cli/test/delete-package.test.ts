@@ -456,21 +456,24 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           );
           yield* fs.writeFileString(
             "syncpack.config.ts",
-            [
-              'import type { RcFile } from "syncpack";',
-              "",
-              "const config = {",
-              "  source: [",
-              '    "package.json",',
-              '    "packages/drivers/courtlistener/package.json",',
-              "  ],",
-              "  customTypes: {},",
-              "  versionGroups: [],",
-              "} satisfies RcFile;",
-              "",
-              "export default config;",
-              "",
-            ].join("\n")
+            A.join(
+              [
+                'import type { RcFile } from "syncpack";',
+                "",
+                "const config = {",
+                "  source: [",
+                '    "package.json",',
+                '    "packages/drivers/courtlistener/package.json",',
+                "  ],",
+                "  customTypes: {},",
+                "  versionGroups: [],",
+                "} satisfies RcFile;",
+                "",
+                "export default config;",
+                "",
+              ],
+              "\n"
+            )
           );
 
           const packageDir = path.join("packages", "drivers", "courtlistener");
@@ -485,11 +488,14 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           yield* fs.makeDirectory(identityDir, { recursive: true });
           yield* fs.writeFileString(
             path.join(identityDir, "packages.ts"),
-            [
-              'const composers = $I.compose("courtlistener");',
-              "export const $CourtlistenerId = composers.$CourtlistenerId;",
-              "",
-            ].join("\n")
+            A.join(
+              [
+                'const composers = $I.compose("courtlistener");',
+                "export const $CourtlistenerId = composers.$CourtlistenerId;",
+                "",
+              ],
+              "\n"
+            )
           );
 
           const exit = yield* Effect.exit(

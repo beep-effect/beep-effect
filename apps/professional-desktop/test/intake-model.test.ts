@@ -101,7 +101,7 @@ describe("document intake statechart model", { concurrent: false }, () => {
       );
       expect(A.every(results, (result) => result.passed)).toBe(true);
       expect(results.length).toBeGreaterThan(0);
-      const visited = coverage.states.covered.join("\n");
+      const visited = A.join(coverage.states.covered, "\n");
       for (const state of ["loadFailed", "loading", "unconfigured", "sidecar", "configured", "dragging"]) {
         expect(visited).toContain(state);
       }
@@ -120,7 +120,7 @@ describe("document intake statechart model", { concurrent: false }, () => {
           invariant: ({ snapshot }) => intakeInvariant(snapshot as DocumentIntakeSnapshot),
         })
       );
-      const visited = coverage.states.covered.join("\n");
+      const visited = A.join(coverage.states.covered, "\n");
       for (const state of ["loading", "unconfigured", "sidecar", "dragging", "busy"]) {
         expect(visited).toContain(state);
       }

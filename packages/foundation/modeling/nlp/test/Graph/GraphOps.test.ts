@@ -56,7 +56,7 @@ describe("GraphOps functor laws", () => {
     const g = sample();
     const lengths = GraphOps.mapNodes(g, (s) => s.length);
     expect(GraphOps.nodeCount(lengths)).toBe(4);
-    expect(GraphOps.collectNodes(lengths).every((n) => n === 1)).toBe(true);
+    expect(A.every(GraphOps.collectNodes(lengths), (n) => n === 1)).toBe(true);
   });
 
   it("mapEdges transforms edge data and keeps structure", () => {

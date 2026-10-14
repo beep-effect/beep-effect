@@ -6,10 +6,12 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const BiomePluginSection = S.Struct({ plugins: S.Array(S.String).pipe(S.optionalKey) });
@@ -29,7 +31,7 @@ const repoRoot = decodeURIComponent(new URL("../../../../../", import.meta.url).
 
 describe("rule registry", () => {
   it("RULES keys match RULE_NAMES exactly", () => {
-    expect(Object.keys(RULES).sort()).toEqual(sortedRuleNames);
+    expect(R.keys(RULES).sort()).toEqual(sortedRuleNames);
   });
 
   it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) =>
@@ -54,10 +56,10 @@ describe("rule registry", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const entries = yield* fs.readDirectory(rulesDir());
-        const gritFiles = entries
-          .filter((f) => f.endsWith(".grit"))
-          .map((f) => path.basename(f, ".grit"))
-          .sort();
+        const gritFiles = A.map(
+          A.filter(entries, (f) => f.endsWith(".grit")),
+          (f) => path.basename(f, ".grit")
+        ).sort();
         expect(gritFiles).toEqual(sortedRuleNames);
       })
     )
@@ -125,10 +127,10 @@ describe("rule registry", () => {
         const path = yield* Path.Path;
         const biomeConfig = yield* fs.readFileString(path.join(repoRoot, "biome.jsonc"));
         const config = yield* decodeBiomePluginConfig(biomeConfig);
-        const plugins = [
-          ...(config.plugins ?? []),
-          ...(config.overrides ?? []).flatMap((override) => override.plugins ?? []),
-        ].map((plugin) => path.resolve(repoRoot, plugin));
+        const plugins = A.map(
+          [...(config.plugins ?? []), ...A.flatMap(config.overrides ?? [], (override) => override.plugins ?? [])],
+          (plugin) => path.resolve(repoRoot, plugin)
+        );
         for (const name of RULE_NAMES) {
           expect(plugins, `${name} must be registered in biome.jsonc`).toContain(rulePath(name));
         }

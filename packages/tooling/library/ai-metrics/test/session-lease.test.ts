@@ -12,6 +12,7 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -341,11 +342,14 @@ describe("telemetry-v2 session leases", () => {
       const candidate = yield* candidateFrom(lease);
       const evidence = yield* reconciliationEvidence();
       const result = reconcileExpiredSessionLease(candidate, O.some(candidate.leaseDigest), evidence);
-      const encoded = [
-        yield* encodeCandidateJson(candidate),
-        yield* encodeEvidenceJson(evidence),
-        yield* S.encodeUnknownEffect(SessionLeaseReconciliationJson)(result),
-      ].join("\n");
+      const encoded = A.join(
+        [
+          yield* encodeCandidateJson(candidate),
+          yield* encodeEvidenceJson(evidence),
+          yield* S.encodeUnknownEffect(SessionLeaseReconciliationJson)(result),
+        ],
+        "\n"
+      );
 
       for (const forbidden of [
         "prompt",

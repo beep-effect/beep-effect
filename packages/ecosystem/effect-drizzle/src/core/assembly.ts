@@ -8,11 +8,11 @@
  */
 
 import { is as isDrizzleEntity, Relation, RelationsBuilderColumn } from "drizzle-orm";
-import { reduce } from "effect/Array";
+import { filter, forEach, map, reduce } from "effect/Array";
 import { dual } from "effect/Function";
 import { fromUndefinedOr, getOrElse } from "effect/Option";
 import { hasProperty, isFunction } from "effect/Predicate";
-import { empty, get, set } from "effect/Record";
+import { empty, get, set, toEntries } from "effect/Record";
 import { capitalize, slice } from "effect/String";
 import { camelCase } from "../internal/case.ts";
 import { findSqlNameCollision, sqlNameIssue } from "./names.ts";
@@ -72,7 +72,7 @@ const plural = (value: string): string => `${camelCase(value)}s`;
 /** @internal */
 const reverseRelationName = (edge: Edge, edges: ReadonlyArray<Edge>): string => {
   const ambiguous =
-    edges.filter((candidate) => candidate.sourceKey === edge.sourceKey && candidate.targetKey === edge.targetKey)
+    filter(edges, (candidate) => candidate.sourceKey === edge.sourceKey && candidate.targetKey === edge.targetKey)
       .length > 1;
   if (edge.sourceKey === edge.targetKey && edge.relationName.startsWith("parent")) {
     return `child${capitalize(slice(6)(edge.relationName))}s`;
@@ -124,7 +124,7 @@ export const validatePhysicalTableNames: {
   (dialect: Dialect, fail: AssemblyFailure): (models: RelationModels) => void;
   (models: RelationModels, dialect: Dialect, fail: AssemblyFailure): void;
 } = /* @__PURE__ */ dual(3, (models: RelationModels, dialect: Dialect, fail: AssemblyFailure): void => {
-  const entries = Object.entries(models).map(([key, model]): readonly [string, string] => [key, model.sql.tableName]);
+  const entries = map(toEntries(models), ([key, model]): readonly [string, string] => [key, model.sql.tableName]);
   const collision = findSqlNameCollision(entries, dialect);
   if (collision !== undefined) {
     fail(
@@ -134,7 +134,7 @@ export const validatePhysicalTableNames: {
       collision.firstOwner
     );
   }
-  entries.forEach(([key, name]) => {
+  forEach(entries, ([key, name]) => {
     const issue = sqlNameIssue(name, dialect);
     if (issue !== undefined) fail(`Physical table name '${name}' ${issue}.`, key, "(tableName)", key);
   });
@@ -162,7 +162,7 @@ export const validateSchemaNames: {
   (dialect: Dialect, fail: AssemblyFailure): (names: ReadonlyArray<SchemaName>) => void;
   (names: ReadonlyArray<SchemaName>, dialect: Dialect, fail: AssemblyFailure): void;
 } = /* @__PURE__ */ dual(3, (names: ReadonlyArray<SchemaName>, dialect: Dialect, fail: AssemblyFailure): void => {
-  const entries = names.map(({ owner, name }): readonly [string, string] => [owner, name]);
+  const entries = map(names, ({ owner, name }): readonly [string, string] => [owner, name]);
   const collision = findSqlNameCollision(entries, dialect);
   if (collision !== undefined) {
     fail(
@@ -172,7 +172,7 @@ export const validateSchemaNames: {
       collision.firstOwner
     );
   }
-  names.forEach(({ owner, name, kind }) => {
+  forEach(names, ({ owner, name, kind }) => {
     const issue = sqlNameIssue(name, dialect);
     if (issue !== undefined) fail(`${kind} name '${name}' ${issue}.`, owner, "(schema namespace)", owner);
   });

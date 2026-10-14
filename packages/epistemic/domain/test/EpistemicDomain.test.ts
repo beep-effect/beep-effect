@@ -24,9 +24,11 @@ import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-u
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -75,14 +77,14 @@ describe("@beep/epistemic-domain", () => {
   it.effect("derives valid Confidence samples", () =>
     Effect.gen(function* () {
       const samples = yield* Arbitrary.sampleEffect(Arbitrary.schema(Confidence), { count: 25 });
-      expect(samples.every(isConfidence)).toBe(true);
+      expect(A.every(samples, isConfidence)).toBe(true);
     })
   );
 
   it("wires CandidateClaim to the epistemic product identity", () => {
     expect(CandidateClaim.sql.tableName).toBe(Epistemic.CandidateClaimId.tableName);
     expect(Epistemic.CandidateClaimId.entityType).toBe("EpistemicCandidateClaim");
-    expect(Object.keys(CandidateClaim.fields)).toEqual(expect.arrayContaining(["id", "snapshot"]));
+    expect(R.keys(CandidateClaim.fields)).toEqual(expect.arrayContaining(["id", "snapshot"]));
   });
 
   it.effect.prop(

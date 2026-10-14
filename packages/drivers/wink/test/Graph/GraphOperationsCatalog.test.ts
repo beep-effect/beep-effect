@@ -1,4 +1,5 @@
 import { assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 /**
  * Proofs for the GraphOperations Catalog: the backend-backed linguistic operations
@@ -26,7 +27,7 @@ describe("Catalog backend-backed operations", () => {
         const root = yield* EG.makeNode("Hello world. How are you?");
         const children = yield* Catalog.sentencize.apply(root);
         expect(children.length).toBe(2);
-        expect(children.every((c) => typeof c.data === "string")).toBe(true);
+        expect(A.every(children, (c) => typeof c.data === "string")).toBe(true);
       })
     );
   });

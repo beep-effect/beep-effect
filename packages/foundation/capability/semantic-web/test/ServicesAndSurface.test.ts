@@ -21,7 +21,7 @@ import {
 } from "@beep/semantic-web/services/sparql-query";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { A } from "@beep/utils";
+import { A, R } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -78,7 +78,8 @@ describe("Services and Surface", () => {
   it.effect("publishes a canonical arbitrary for SHACL severity", () =>
     Effect.gen(function* () {
       pipe(
-        (yield* Arbitrary.sampleEffect(Arbitrary.schema(ShaclSeverity), { count: 20, seed: 0x5eed })).every(
+        A.every(
+          yield* Arbitrary.sampleEffect(Arbitrary.schema(ShaclSeverity), { count: 20, seed: 0x5eed }),
           isShaclSeverity
         ),
         assertTrue
@@ -98,7 +99,7 @@ describe("Services and Surface", () => {
   });
 
   it("keeps the package root surface curated to the service contracts", () => {
-    const surface = pipe(Object.keys(SemanticWeb), A.sort(Order.String));
+    const surface = pipe(R.keys(SemanticWeb), A.sort(Order.String));
     expect(surface).toEqual(
       expect.arrayContaining(["CanonicalizationService", "ShaclValidationService", "SparqlQueryService"])
     );
@@ -109,7 +110,11 @@ describe("Services and Surface", () => {
   });
 
   it("audits semantic schema metadata coverage for the service contract families", () => {
-    const auditModules = [
+    const auditModules: ReadonlyArray<{
+      readonly exclude: ReadonlyArray<string>;
+      readonly exports: R.ReadonlyRecord<string, unknown>;
+      readonly name: string;
+    }> = [
       {
         exclude: ["CanonicalizationAlgorithm"],
         exports: CanonicalizationServiceModule,
@@ -124,9 +129,10 @@ describe("Services and Surface", () => {
 
     for (const moduleAudit of auditModules) {
       const schemaEntries = pipe(
-        Object.entries(moduleAudit.exports),
+        R.toEntries(moduleAudit.exports),
         A.filter(
-          ([name, value]) => /^[A-Z]/.test(name) && S.isSchema(value) && !pipe(moduleAudit.exclude, A.contains(name))
+          (entry): entry is [string, S.Top] =>
+            /^[A-Z]/.test(entry[0]) && S.isSchema(entry[1]) && !pipe(moduleAudit.exclude, A.contains(entry[0]))
         )
       );
 

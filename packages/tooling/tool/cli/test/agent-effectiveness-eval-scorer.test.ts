@@ -219,20 +219,23 @@ const writeRepoBiomeConfig = Effect.fn("AgentEffectivenessEvalScorerTest.writeRe
   const path = yield* Path.Path;
   yield* writeText(
     path.join(repoRoot, "biome.jsonc"),
-    [
-      "{",
-      "  // repo biome config stand-in",
-      '  "vcs": { "enabled": true, "useIgnoreFile": true },',
-      '  "plugins": ["./rules/root.grit", 7],',
-      '  "files": { "includes": ["**", "!**/out"] },',
-      '  "overrides": [',
-      '    { "includes": ["**/src/**"], "plugins": ["./rules/src.grit"] },',
-      '    { "includes": ["**/test/**"], "linter": { "enabled": false } },',
-      '    "not-an-override"',
-      "  ]",
-      "}",
-      "",
-    ].join("\n")
+    A.join(
+      [
+        "{",
+        "  // repo biome config stand-in",
+        '  "vcs": { "enabled": true, "useIgnoreFile": true },',
+        '  "plugins": ["./rules/root.grit", 7],',
+        '  "files": { "includes": ["**", "!**/out"] },',
+        '  "overrides": [',
+        '    { "includes": ["**/src/**"], "plugins": ["./rules/src.grit"] },',
+        '    { "includes": ["**/test/**"], "linter": { "enabled": false } },',
+        '    "not-an-override"',
+        "  ]",
+        "}",
+        "",
+      ],
+      "\n"
+    )
   );
 });
 
@@ -300,14 +303,17 @@ it.layer(TestLayer, { concurrent: false, timeout: "10 seconds" })("agent-effecti
       const path = yield* Path.Path;
       yield* writeText(
         path.join(fixtureDir, "src", "Contact.ts"),
-        [
-          'import * as S from "effect/Schema";',
-          "",
-          'export class ContactPayload extends S.Class<ContactPayload>("ContactPayload")({',
-          "  email: S.String,",
-          "}) {}",
-          "",
-        ].join("\n")
+        A.join(
+          [
+            'import * as S from "effect/Schema";',
+            "",
+            'export class ContactPayload extends S.Class<ContactPayload>("ContactPayload")({',
+            "  email: S.String,",
+            "}) {}",
+            "",
+          ],
+          "\n"
+        )
       );
       const task = yield* makeTask({
         requiredExports: ["ContactPayload"],
@@ -328,7 +334,7 @@ it.layer(TestLayer, { concurrent: false, timeout: "10 seconds" })("agent-effecti
       const path = yield* Path.Path;
       yield* writeText(
         path.join(fixtureDir, "src", "Contact.ts"),
-        ["export interface ContactPayload {", "  email: string;", "}", ""].join("\n")
+        A.join(["export interface ContactPayload {", "  email: string;", "}", ""], "\n")
       );
       const task = yield* makeTask({
         requiredExports: ["ContactPayloadModel"],
@@ -549,11 +555,14 @@ it.layer(TestLayer, { concurrent: false, timeout: "10 seconds" })("agent-effecti
           exitCode: 1,
         },
         tsgo: {
-          stdout: [
-            "error TS5083: Cannot read file '/elsewhere/tsconfig.base.json'.",
-            "../../node_modules/effect/dist/Effect.d.ts(12175,52): error TS2304: Cannot find name 'AsyncDisposable'.",
-            "src/Contact.ts(1,14): error TS2322: Type 'string' is not assignable to type 'number'.",
-          ].join("\n"),
+          stdout: A.join(
+            [
+              "error TS5083: Cannot read file '/elsewhere/tsconfig.base.json'.",
+              "../../node_modules/effect/dist/Effect.d.ts(12175,52): error TS2304: Cannot find name 'AsyncDisposable'.",
+              "src/Contact.ts(1,14): error TS2322: Type 'string' is not assignable to type 'number'.",
+            ],
+            "\n"
+          ),
           exitCode: 2,
         },
       });

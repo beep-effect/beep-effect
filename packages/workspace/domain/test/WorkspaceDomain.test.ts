@@ -26,6 +26,7 @@ import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const systemPrincipal = { kind: "System", component: "Runtime" } as const;
@@ -101,9 +102,9 @@ describe("@beep/workspace-domain", () => {
   it("wires Workspace to the workspace ProductEntity identity", () => {
     expect(WorkspaceEntity.sql.tableName).toBe(WorkspaceIdentity.WorkspaceId.tableName);
     expect(WorkspaceIdentity.WorkspaceId.entityType).toBe("WorkspaceWorkspace");
-    expect(Object.keys(WorkspaceEntity.insert.fields)).not.toContain("id");
-    expect(Object.keys(WorkspaceEntity.update.fields)).toContain("id");
-    expect(Object.keys(WorkspaceEntity.jsonCreate.fields)).toEqual([
+    expect(R.keys(WorkspaceEntity.insert.fields)).not.toContain("id");
+    expect(R.keys(WorkspaceEntity.update.fields)).toContain("id");
+    expect(R.keys(WorkspaceEntity.jsonCreate.fields)).toEqual([
       "fixtureKey",
       "name",
       "organizationFixtureKey",
@@ -196,9 +197,9 @@ describe("@beep/workspace-domain", () => {
     expect(Thread.sql.tableName).toBe(WorkspaceIdentity.ThreadId.tableName);
     expect(Turn.sql.tableName).toBe(WorkspaceIdentity.TurnId.tableName);
     expect(Message.sql.tableName).toBe(WorkspaceIdentity.MessageId.tableName);
-    expect(Object.keys(Thread.jsonCreate.fields)).toEqual(["title", "workspaceId"]);
-    expect(Object.keys(Turn.jsonCreate.fields)).toEqual(["items", "parentTurnId", "threadId", "turnIndex"]);
-    expect(Object.keys(Message.jsonCreate.fields)).toEqual(["content", "role", "threadId", "turnId"]);
+    expect(R.keys(Thread.jsonCreate.fields)).toEqual(["title", "workspaceId"]);
+    expect(R.keys(Turn.jsonCreate.fields)).toEqual(["items", "parentTurnId", "threadId", "turnIndex"]);
+    expect(R.keys(Message.jsonCreate.fields)).toEqual(["content", "role", "threadId", "turnId"]);
   });
 
   it.effect("decodes thread branching and md-aligned message content", () =>

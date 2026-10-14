@@ -140,7 +140,7 @@ export const fold =
 export const combineAll =
   <A>(monoid: Monoid<A>) =>
   (values: ReadonlyArray<A>): A =>
-    values.reduce(monoid.combine, monoid.empty);
+    A.reduce(values, monoid.empty, monoid.combine);
 
 // =============================================================================
 // String Monoids

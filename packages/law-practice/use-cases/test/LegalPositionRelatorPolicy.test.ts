@@ -294,7 +294,8 @@ describe("LegalPositionRelatorPolicy — kind and content move together, or not 
         ? true
         : false = true;
       pipe(exported, assertTrue);
-      expect(A.filter(halves, (half) => Object.hasOwn(LawPracticeDomain, half))).toEqual([]);
+      const domainExports: R.ReadonlyRecord<string, unknown> = LawPracticeDomain;
+      expect(A.filter(halves, (half) => R.has(domainExports, half))).toEqual([]);
     })
   );
 });

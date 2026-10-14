@@ -144,7 +144,7 @@ const listTestFiles = (directory: string): ReadonlyArray<string> => {
     return [];
   }
 };
-const toPosixRelative = (root: string, file: string): string => relative(root, file).split(sep).join("/");
+const toPosixRelative = (root: string, file: string): string => A.join(relative(root, file).split(sep), "/");
 const propertyTestInclude = (packageRoot: string): ReadonlyArray<string> =>
   pipe(
     listTestFiles(join(packageRoot, "test")),

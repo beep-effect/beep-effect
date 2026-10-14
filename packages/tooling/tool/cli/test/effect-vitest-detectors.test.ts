@@ -13,11 +13,14 @@ import { createWrappedNode, Node, Project, SyntaxKind, ts } from "ts-morph";
 import type { EffectVitestRuleId } from "@beep/repo-cli/test/Lint";
 import type { Node as MorphNode } from "ts-morph";
 
-const effectImports = [
-  'import { Console, Context, Effect as Fx, Exit as X, FileSystem, Layer as L, Option as O, Result as R, Schedule as S } from "effect";',
-  'import * as TC from "effect/testing/TestClock";',
-  'import * as fc from "effect/testing/FastCheck";',
-].join("\n");
+const effectImports = A.join(
+  [
+    'import { Console, Context, Effect as Fx, Exit as X, FileSystem, Layer as L, Option as O, Result as R, Schedule as S } from "effect";',
+    'import * as TC from "effect/testing/TestClock";',
+    'import * as fc from "effect/testing/FastCheck";',
+  ],
+  "\n"
+);
 const imports = `${effectImports}\nimport { beforeEach, expect, it, test, vi } from "@effect/vitest";`;
 
 const findings = Effect.fnUntraced(function* (body: string) {
@@ -436,7 +439,16 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       const second = A.filter(yield* findings(source), (finding) => finding.ruleId === "EV001");
       assertTrue(first.length === 2);
       assertTrue(first[0]?.id !== first[1]?.id);
-      assertTrue(A.map(first, (finding) => finding.id).join("|") === A.map(second, (finding) => finding.id).join("|"));
+      assertTrue(
+        A.join(
+          A.map(first, (finding) => finding.id),
+          "|"
+        ) ===
+          A.join(
+            A.map(second, (finding) => finding.id),
+            "|"
+          )
+      );
     })
   );
 

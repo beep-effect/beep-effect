@@ -27,7 +27,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { append, contains, empty, isArray, isReadonlyArrayNonEmpty, some as someArray } from "effect/Array";
+import { append, contains, empty, every, isArray, isReadonlyArrayNonEmpty, some as someArray } from "effect/Array";
 import { taggedEnum } from "effect/Data";
 import { equals } from "effect/Equal";
 import { dual } from "effect/Function";
@@ -955,7 +955,7 @@ export const isSpec = (value: unknown): value is Spec => {
         hasProperty(value, "values") &&
         isArray(value.values) &&
         isReadonlyArrayNonEmpty(value.values) &&
-        value.values.every(isString) &&
+        every(value.values, isString) &&
         value.ident === `enum<${value.name}>`
     ),
     matchWhen(

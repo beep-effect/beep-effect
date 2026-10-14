@@ -13,6 +13,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
@@ -30,23 +31,26 @@ const removalLayer = Layer.mergeAll(
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
 );
 
-const REGISTRY_FIXTURE = [
-  'const composers = $I.compose("alpha", "target-pkg", "langextract");',
-  LAB_COMPOSERS_START_MARKER,
-  'const generatedLabComposers = $I.compose("gamma-lab");',
-  LAB_COMPOSERS_END_MARKER,
-  'const labComposers = $I.compose("gamma");',
-  "export const $AlphaId = composers.$AlphaId;",
-  'export const $TargetPkgId: Identity.IdentityComposer<"@beep/target-pkg"> = composers.$TargetPkgId;',
-  'export const $LangExtractId: Identity.IdentityComposer<"@beep/langextract"> = composers.$LangextractId;',
-  "export const $GammaId = composers.$GammaId;",
-  LAB_EXPORTS_START_MARKER,
-  'export const $GammaLabId: Identity.IdentityComposer<"@beep/gamma-lab"> = composers.$GammaLabId;',
-  LAB_EXPORTS_END_MARKER,
-  "const internalNote = buildInternalNote();",
-  "export const registryHelpers = buildRegistryHelpers();",
-  "",
-].join("\n");
+const REGISTRY_FIXTURE = A.join(
+  [
+    'const composers = $I.compose("alpha", "target-pkg", "langextract");',
+    LAB_COMPOSERS_START_MARKER,
+    'const generatedLabComposers = $I.compose("gamma-lab");',
+    LAB_COMPOSERS_END_MARKER,
+    'const labComposers = $I.compose("gamma");',
+    "export const $AlphaId = composers.$AlphaId;",
+    'export const $TargetPkgId: Identity.IdentityComposer<"@beep/target-pkg"> = composers.$TargetPkgId;',
+    'export const $LangExtractId: Identity.IdentityComposer<"@beep/langextract"> = composers.$LangextractId;',
+    "export const $GammaId = composers.$GammaId;",
+    LAB_EXPORTS_START_MARKER,
+    'export const $GammaLabId: Identity.IdentityComposer<"@beep/gamma-lab"> = composers.$GammaLabId;',
+    LAB_EXPORTS_END_MARKER,
+    "const internalNote = buildInternalNote();",
+    "export const registryHelpers = buildRegistryHelpers();",
+    "",
+  ],
+  "\n"
+);
 
 const runRemoval = (packageName: string) =>
   withTempWorkingDirectory(

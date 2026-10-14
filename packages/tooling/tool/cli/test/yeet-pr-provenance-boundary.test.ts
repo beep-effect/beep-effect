@@ -119,7 +119,7 @@ describe("Yeet PR provenance public boundary", () => {
             assert.notInclude(footer, "$BEEP_PROJECTS/");
             const twin = pipeTwin(footer);
             assert.notInclude(twin, "-->");
-            const fences = pipeLines(footer).filter((line) => /^bun run beep yeet resume [1-9][0-9]*$/u.test(line));
+            const fences = A.filter(pipeLines(footer), (line) => /^bun run beep yeet resume [1-9][0-9]*$/u.test(line));
             assert.lengthOf(fences, 1);
 
             return true;

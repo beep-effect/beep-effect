@@ -253,11 +253,11 @@ describe("@beep/pdf-tools service", () => {
           const tools = yield* PdfTools;
           const structure = yield* tools.inspect(file);
           expect(structure.headerVersion).toBe("1.7");
-          expect(structure.pages.map((p) => [p.widthPt, p.heightPt])).toEqual([
+          expect(A.map(structure.pages, (p) => [p.widthPt, p.heightPt])).toEqual([
             [612, 792],
             [612, 792],
           ]);
-          expect(structure.fonts.map((f) => [f.name, f.embedded])).toEqual([["Helvetica", false]]);
+          expect(A.map(structure.fonts, (f) => [f.name, f.embedded])).toEqual([["Helvetica", false]]);
           expect(structure.annotationCount).toBe(0);
           expect(structure.hasOptionalContent).toBe(false);
           expect(structure.encrypted).toBe(false);

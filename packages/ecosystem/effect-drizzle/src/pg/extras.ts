@@ -16,7 +16,7 @@ import {
   uniqueIndex as drizzleUniqueIndex,
   PgDialect,
 } from "drizzle-orm/pg-core";
-import { isArray } from "effect/Array";
+import { every, filter, forEach, isArray, map, some } from "effect/Array";
 import { taggedEnum } from "effect/Data";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
@@ -442,7 +442,7 @@ const hasColumns = (value: unknown, minimum: number): boolean =>
   hasProperty(value, "columns") &&
   isArray(value.columns) &&
   value.columns.length >= minimum &&
-  value.columns.every(isColumn);
+  every(value.columns, isColumn);
 const hasOptionalWhere = (value: unknown): boolean =>
   hasProperty(value, "where") && (isUndefined(value.where) || isDrizzleEntity(value.where, SQL));
 const hasOptionalIndexMethod = (value: unknown): boolean =>
@@ -825,14 +825,15 @@ const emitUniqueIndex = (node: UniqueIndex): PgTableExtraConfigValue => {
 
 const validateColumns = (node: Node): void => {
   if (!hasProperty(node, "columns") || !isArray(node.columns)) return;
-  const names = node.columns.map((column) => column.name);
+  const columns: ReadonlyArray<BoundColumn> = node.columns;
+  const names = map(columns, (column) => column.name);
   if (HashSet.size(HashSet.fromIterable(names)) !== names.length) {
     fail(`PostgreSQL table extra '${node.name}' repeats a physical column.`);
   }
   if (names.length > 32) {
     fail(`PostgreSQL table extra '${node.name}' exceeds the 32-column index limit.`);
   }
-  if (Nodes.$is("compositePrimaryKey")(node) && node.columns.some((column) => !column.notNull)) {
+  if (Nodes.$is("compositePrimaryKey")(node) && some(columns, (column) => !column.notNull)) {
     fail(`PostgreSQL composite primary key '${node.name}' contains a nullable column.`);
   }
 };
@@ -848,15 +849,15 @@ export const validateNodes: {
   (inlinePrimaryKeys: number): (nodes: ReadonlyArray<Node>) => void;
   (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: number): void;
 } = /* @__PURE__ */ dual(2, (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: number): void => {
-  const names = nodes.map((node) => node.name);
+  const names = map(nodes, (node) => node.name);
   if (HashSet.size(HashSet.fromIterable(names)) !== names.length) {
     fail("PostgreSQL table-extra names must be unique within their owning table.");
   }
-  const primaryKeys = inlinePrimaryKeys + nodes.filter(Nodes.$is("compositePrimaryKey")).length;
+  const primaryKeys = inlinePrimaryKeys + filter(nodes, Nodes.$is("compositePrimaryKey")).length;
   if (primaryKeys > 1) {
     fail("A PostgreSQL table can declare at most one primary key across inline and composite forms.");
   }
-  nodes.forEach(validateColumns);
+  forEach(nodes, validateColumns);
 });
 
 /**

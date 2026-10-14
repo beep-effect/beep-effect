@@ -46,18 +46,21 @@ const cloneCardOf = (info: ClonedRepoInfo, capturedAt: string): Pick<CardPersist
     via: "repo-card",
     ...(O.isNone(info.remoteUrl) ? {} : { url: info.remoteUrl.value }),
   });
-  const body = [
-    `# ${title}`,
-    "",
-    `- Local clone: \`${info.localPath}\``,
-    `- Remote: ${O.getOrElse(info.remoteUrl, () => "(none)")}`,
-    `- License file: ${info.hasLicense ? "yes" : "no"}`,
-    `- Last commit: ${O.getOrElse(info.lastCommitIso, () => "(unknown)")}`,
-    "",
-    "## README excerpt",
-    "",
-    O.getOrElse(info.readmeExcerpt, () => "_No README found._"),
-  ].join("\n");
+  const body = A.join(
+    [
+      `# ${title}`,
+      "",
+      `- Local clone: \`${info.localPath}\``,
+      `- Remote: ${O.getOrElse(info.remoteUrl, () => "(none)")}`,
+      `- License file: ${info.hasLicense ? "yes" : "no"}`,
+      `- Last commit: ${O.getOrElse(info.lastCommitIso, () => "(unknown)")}`,
+      "",
+      "## README excerpt",
+      "",
+      O.getOrElse(info.readmeExcerpt, () => "_No README found._"),
+    ],
+    "\n"
+  );
   return { body, frontmatter };
 };
 
@@ -75,15 +78,18 @@ const starCardOf = (star: StarredRepo, capturedAt: string): Pick<CardPersistRow,
     url: star.html_url,
     via: "repo-card",
   });
-  const body = [
-    `# ${star.full_name}`,
-    "",
-    `- Remote: ${star.html_url}`,
-    `- Language: ${star.language ?? "(unknown)"}`,
-    A.length(topics) > 0 ? `- Topics: ${A.join(topics, ", ")}` : "- Topics: (none)",
-    "",
-    star.description ?? "_No description._",
-  ].join("\n");
+  const body = A.join(
+    [
+      `# ${star.full_name}`,
+      "",
+      `- Remote: ${star.html_url}`,
+      `- Language: ${star.language ?? "(unknown)"}`,
+      A.length(topics) > 0 ? `- Topics: ${A.join(topics, ", ")}` : "- Topics: (none)",
+      "",
+      star.description ?? "_No description._",
+    ],
+    "\n"
+  );
   return { body, frontmatter };
 };
 

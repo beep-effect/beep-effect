@@ -41,16 +41,20 @@ const makeTempDirectory = (prefix: string) =>
 const repoRoot = fileURLToPath(new URL("../../../../..", import.meta.url));
 const isString = (value: unknown): value is string => typeof value === "string";
 const joinPath = (base: string, ...segments: ReadonlyArray<string>): string =>
-  [Str.replace(/\/+$/u, "")(base), ...segments.map((segment) => Str.replace(/^\/+|\/+$/gu, "")(segment))]
-    .filter((segment) => segment.length > 0)
-    .join("/");
+  A.join(
+    A.filter(
+      [Str.replace(/\/+$/u, "")(base), ...A.map(segments, (segment) => Str.replace(/^\/+|\/+$/gu, "")(segment))],
+      (segment) => segment.length > 0
+    ),
+    "/"
+  );
 const runFileCommandSync = (command: string, args: ReadonlyArray<string>) => {
   const result = Bun.spawnSync([command, ...args], {
     stderr: "ignore",
     stdout: "ignore",
   });
   if (result.exitCode !== 0) {
-    throw new Error(`${command} ${args.join(" ")} failed with exit code ${result.exitCode}`);
+    throw new Error(`${command} ${A.join(args, " ")} failed with exit code ${result.exitCode}`);
   }
 };
 const pathExistsSync = (path: string): boolean =>

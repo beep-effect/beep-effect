@@ -2,8 +2,10 @@ import { it } from "@beep/test-runner";
 import { Str, Struct } from "@beep/utils";
 import { assert, describe, expect, expectTypeOf } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 
 describe("@beep/utils Struct.dotGet", () => {
   it("supports data-first and data-last calls", () => {
@@ -340,11 +342,11 @@ describe("@beep/utils Struct.fromEntries", () => {
     const assigned = Object.assign({}, result);
 
     expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
-    expect(Object.hasOwn(result, "__proto__")).toBe(true);
+    expect(R.has<string, unknown>(result, "__proto__")).toBe(true);
     expect(descriptor?.enumerable).toBe(false);
     expect(descriptor?.value).toEqual({ polluted: true });
     expect(Object.getPrototypeOf(assigned)).toBe(Object.prototype);
-    expect(Object.hasOwn(result, "polluted")).toBe(false);
+    expect(R.has<string, unknown>(result, "polluted")).toBe(false);
   });
 
   it("creates an object from entries", () => {
@@ -357,7 +359,7 @@ describe("@beep/utils Struct.fromEntries", () => {
 
   it("preserves a literal union in the key slot of homogeneous entries", () => {
     const keys = ["alpha", "beta"] as const;
-    const result = Struct.fromEntries(keys.map((key) => [key, 1] as const));
+    const result = Struct.fromEntries(A.map(keys, (key) => [key, 1] as const));
 
     expectTypeOf(result).toEqualTypeOf<{ alpha: 1; beta: 1 }>();
     expect(result).toEqual({ alpha: 1, beta: 1 });
@@ -399,8 +401,8 @@ describe("@beep/utils Struct.deepMerge", () => {
 
     expect(result).toEqual({ safe: 2 });
     expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
-    expect(Object.hasOwn(result, "__proto__")).toBe(false);
-    expect(Object.hasOwn(result, "constructor")).toBe(false);
+    expect(R.has<string, unknown>(result, "__proto__")).toBe(false);
+    expect(R.has<string, unknown>(result, "constructor")).toBe(false);
     expect("polluted" in result).toBe(false);
   });
 });

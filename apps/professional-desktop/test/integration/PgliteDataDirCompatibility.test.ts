@@ -5,6 +5,7 @@ import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue, strictEqual } from "@effect/vitest/utils";
 import { PGlite as LegacyPglite046 } from "@electric-sql/pglite-legacy-046";
+import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
@@ -101,7 +102,7 @@ const readPgliteFixture = Effect.fn("ProfessionalDesktop.PgliteCompatibilityTest
         ORDER BY id ASC
       `;
 
-    return rows.map((row) => row.body);
+    return A.map(rows, (row) => row.body);
   }).pipe(Effect.scoped);
 });
 
@@ -110,7 +111,7 @@ const backupNames = Effect.fn("ProfessionalDesktop.PgliteCompatibilityTest.backu
   dataDirName: string
 ) {
   const fs = yield* FileSystem.FileSystem;
-  return (yield* fs.readDirectory(rootDir)).filter((entry) => entry.startsWith(`${dataDirName}.pre-inprocess-`));
+  return A.filter(yield* fs.readDirectory(rootDir), (entry) => entry.startsWith(`${dataDirName}.pre-inprocess-`));
 });
 
 it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds" })(

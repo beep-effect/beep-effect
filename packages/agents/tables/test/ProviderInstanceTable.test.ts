@@ -73,7 +73,7 @@ describe("ProviderInstance table", () => {
     expect(columns.label.name).toBe("label");
     expect(columns.lastProbe.name).toBe("last_probe");
     expect(columns.lastProbe.notNull).toBe(false);
-    const indexNames = getTableConfig(providerInstanceTable).indexes.map((index) => index.config.name);
+    const indexNames = A.map(getTableConfig(providerInstanceTable).indexes, (index) => index.config.name);
     expect(indexNames).toHaveLength(3);
     expect(indexNames).toEqual(
       expect.arrayContaining([

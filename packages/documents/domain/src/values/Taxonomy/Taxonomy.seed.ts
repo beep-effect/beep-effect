@@ -7,6 +7,7 @@
 
 import { IRIReference } from "@beep/rdf";
 import { ValidWindowsPlainPathSegment } from "@beep/schema/FilePath";
+import * as A from "effect/Array";
 import { FolioAlignment, LegalDocumentTaxonomy, LegalDocumentTaxonomyConcept } from "./Taxonomy.model.ts";
 
 const SCHEME_IRI = IRIReference.make("https://ns.beep.sh/documents/taxonomy/legal-document");
@@ -355,7 +356,7 @@ export const legalDocumentTaxonomy = LegalDocumentTaxonomy.make({
  */
 export const legalDocumentTaxonomyJsonLd = {
   "@context": legalDocumentTaxonomyJsonLdContext,
-  "@graph": legalDocumentTaxonomy.concepts.map((item) => ({
+  "@graph": A.map(legalDocumentTaxonomy.concepts, (item) => ({
     "@id": item.iri,
     "@type": "skos:Concept",
     "beep:folderSegment": item.folderSegment,

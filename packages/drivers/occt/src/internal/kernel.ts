@@ -39,7 +39,7 @@ const place = (shape: Shape3D, rotate: ReadonlyArray<Rotation>, translate: reado
 const buildPrimitive: (primitive: Primitive) => Shape3D = Primitive.match({
   box: (box) => place(replicad.makeBox([...box.min], [...box.max]), box.rotate, box.translate),
   prism: (prism) => {
-    const face = replicad.makePolygon(prism.profile.map((p) => [...p] as const));
+    const face = replicad.makePolygon(A.map(prism.profile, (p) => [...p] as const));
     const solid = replicad.basicFaceExtrusion(face, new replicad.Vector([...prism.extrusion]));
     return place(solid, prism.rotate, prism.translate);
   },
@@ -74,7 +74,7 @@ const buildPart = (add: ReadonlyArray<Primitive>, subtract: ReadonlyArray<Primit
  * @internal
  */
 export const buildCompound = (spec: ModelSpec): { readonly compound: Shape3D } => {
-  const parts = spec.parts.map((part) => buildPart(part.add, part.subtract));
+  const parts = A.map(spec.parts, (part) => buildPart(part.add, part.subtract));
   const compound = A.length(parts) === 1 ? parts[0] : replicad.makeCompound(parts);
   if (!(compound instanceof replicad.Compound || compound instanceof replicad.Solid)) {
     throw OcctError.make({ reason: "solid-build", message: "The parts did not form a solid or a compound." });
@@ -145,7 +145,7 @@ const edgesOf = (shape: Parameters<typeof replicad.cast>[0], oc: OpenCascadeInst
     return [] as ReadonlyArray<replicad.Edge>;
   }
   const edges = replicad.cast(shape).edges;
-  edges.forEach((e) => oc.BRepLib.BuildCurves3d(e.wrapped));
+  A.forEach(edges, (e) => oc.BRepLib.BuildCurves3d(e.wrapped));
   return edges;
 };
 

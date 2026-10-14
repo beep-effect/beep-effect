@@ -18,6 +18,7 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
@@ -54,15 +55,18 @@ const preview = YeetMergePreview.make({
 // `git merge-tree --write-tree` prints the written tree, then — on conflict —
 // one `<mode> <object> <stage>\t<path>` line per merge stage, then its own
 // messages. These fixtures keep that exact layout.
-const conflictedOutput = [
-  TREE_SHA,
-  `100644 ${BASE_SHA} 1\tgoals/INDEX.md`,
-  `100644 ${HEAD_SHA} 2\tgoals/INDEX.md`,
-  `100644 ${COMMIT_SHA} 3\tgoals/INDEX.md`,
-  "",
-  "Auto-merging goals/INDEX.md",
-  "CONFLICT (content): Merge conflict in goals/INDEX.md",
-].join("\n");
+const conflictedOutput = A.join(
+  [
+    TREE_SHA,
+    `100644 ${BASE_SHA} 1\tgoals/INDEX.md`,
+    `100644 ${HEAD_SHA} 2\tgoals/INDEX.md`,
+    `100644 ${COMMIT_SHA} 3\tgoals/INDEX.md`,
+    "",
+    "Auto-merging goals/INDEX.md",
+    "CONFLICT (content): Merge conflict in goals/INDEX.md",
+  ],
+  "\n"
+);
 
 describe("yeet merge-tree parsing", () => {
   it("reads a clean merge as the written tree object", () => {

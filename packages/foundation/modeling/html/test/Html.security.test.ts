@@ -57,6 +57,7 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const encodeJsonUnknown = S.encodeEffect(S.fromJsonString(S.Unknown));
@@ -90,12 +91,12 @@ describe("@beep/html conformance", () => {
         }),
       ],
     });
-    expect(inspectConformance(transparentBlock).some((issue) => issue.rule === "contentModel")).toBe(true);
+    expect(A.some(inspectConformance(transparentBlock), (issue) => issue.rule === "contentModel")).toBe(true);
 
     const nestedForm = Form.make({
       children: [Form.make({ children: [] })],
     });
-    expect(inspectConformance(nestedForm).some((issue) => issue.rule === "forbiddenDescendant")).toBe(true);
+    expect(A.some(inspectConformance(nestedForm), (issue) => issue.rule === "forbiddenDescendant")).toBe(true);
   });
 
   it("checks document structure and cross-attribute registries", () => {
@@ -689,7 +690,7 @@ describe("@beep/html proof provenance", () => {
       ] as const) {
         expect(Object.getPrototypeOf(value)).toBeNull();
         expect(Reflect.get(value, "constructor")).toBeUndefined();
-        expect(Object.keys(value)).toStrictEqual([]);
+        expect(R.keys(value)).toStrictEqual([]);
         const serialized = yield* encodeJsonUnknown(value);
         expect(serialized).toBe("{}");
         expect(S.is(schema)({ ...value })).toBe(false);

@@ -172,7 +172,7 @@ describe("dock pointer gestures", { concurrent: false }, () => {
                 DockNode.splits(leftWorkspace.root),
                 (split) =>
                   split.layout.axis === "horizontal" &&
-                  DockNode.panels(SplitLayout.children(split.layout)[0]).some((panel) => panel.id === panel1.id)
+                  A.some(DockNode.panels(SplitLayout.children(split.layout)[0]), (panel) => panel.id === panel1.id)
               )
             ).toBe(true);
           }

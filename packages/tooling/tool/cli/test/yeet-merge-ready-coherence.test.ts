@@ -10,6 +10,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -44,12 +45,15 @@ const currentCriteria = (
 // A verdict document whose only variable part is the merge-readiness record, so
 // a decode failure can only come from the cross-field check.
 const verdictJsonWithMergeReady = (mergeReady: string): string =>
-  [
-    '{"schemaVersion":"yeet-verdict/v2","base":"origin/main","branch":"feat/merge-loop","committed":true,',
-    '"createdAt":"2026-08-04T00:00:05.000Z","failurePolicy":"fail-fast","head":"HEAD","lanes":[],',
-    '"message":"yeet publish proof passed.","mode":"publish","outcome":"success","packetPaths":[],',
-    `"pushed":true,"runId":"feat_merge-loop","mergeReady":${mergeReady}}`,
-  ].join("");
+  A.join(
+    [
+      '{"schemaVersion":"yeet-verdict/v2","base":"origin/main","branch":"feat/merge-loop","committed":true,',
+      '"createdAt":"2026-08-04T00:00:05.000Z","failurePolicy":"fail-fast","head":"HEAD","lanes":[],',
+      '"message":"yeet publish proof passed.","mode":"publish","outcome":"success","packetPaths":[],',
+      `"pushed":true,"runId":"feat_merge-loop","mergeReady":${mergeReady}}`,
+    ],
+    ""
+  );
 
 describe("YeetMergeReady coherence", () => {
   it.effect("decodes a blocked record whose named criterion is the unsatisfied one", () =>

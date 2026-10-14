@@ -6,6 +6,7 @@
  */
 "use client";
 
+import * as A from "effect/Array";
 import { cn } from "../lib/index.ts";
 import type * as React from "react";
 
@@ -237,7 +238,7 @@ function OrbBackground({
       className={cn("pointer-events-none absolute inset-0 -z-10 isolate overflow-hidden", className)}
       {...props}
     >
-      {LAYERS.map((layer) => (
+      {A.map(LAYERS, (layer) => (
         <div
           key={layer.key}
           data-slot="orb-background-orb"

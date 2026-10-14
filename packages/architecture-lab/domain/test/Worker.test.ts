@@ -4,7 +4,9 @@ import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/Architect
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { getTableConfig } from "drizzle-orm/pg-core";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const decodeWorkerId = S.decodeUnknownEffect(ArchitectureLabIdentity.WorkerId);
@@ -29,20 +31,20 @@ describe("Worker entity", () => {
       expect(worker.id).toBe(1);
       expect(worker.status).toBe("active");
       expect(Worker.Worker.sql.tableName).toBe("architecture_lab_worker");
-      expect(Object.keys(Worker.Worker.insert.fields)).not.toContain("id");
-      expect(Object.keys(Worker.Worker.insert.fields)).not.toContain("rowVersion");
-      expect(Object.keys(Worker.Worker.insert.fields)).toContain("publicId");
-      expect(Object.keys(Worker.Worker.update.fields)).toContain("id");
-      expect(Object.keys(Worker.Worker.update.fields)).toContain("rowVersion");
-      expect(Object.keys(Worker.Worker.update.fields)).not.toContain("publicId");
-      expect(Object.keys(Worker.Worker.jsonCreate.fields)).toEqual(["displayName", "status"]);
-      expect(Object.keys(Worker.Worker.jsonUpdate.fields)).toEqual(["displayName", "status"]);
+      expect(R.keys(Worker.Worker.insert.fields)).not.toContain("id");
+      expect(R.keys(Worker.Worker.insert.fields)).not.toContain("rowVersion");
+      expect(R.keys(Worker.Worker.insert.fields)).toContain("publicId");
+      expect(R.keys(Worker.Worker.update.fields)).toContain("id");
+      expect(R.keys(Worker.Worker.update.fields)).toContain("rowVersion");
+      expect(R.keys(Worker.Worker.update.fields)).not.toContain("publicId");
+      expect(R.keys(Worker.Worker.jsonCreate.fields)).toEqual(["displayName", "status"]);
+      expect(R.keys(Worker.Worker.jsonUpdate.fields)).toEqual(["displayName", "status"]);
     })
   );
 
   it("materializes Worker model extras into table indexes", () => {
     const worker = Worker.Worker.pipe(toPgTable, getTableConfig);
-    const workerIndexNames = worker.indexes.map((index) => index.config.name);
+    const workerIndexNames = A.map(worker.indexes, (index) => index.config.name);
 
     expect(workerIndexNames).toEqual(expect.arrayContaining(["architecture_lab_worker_status_lookup_idx"]));
   });

@@ -177,7 +177,7 @@ describe("recorded public responses", () => {
       expect(facts[0]).toEqual(facts[1]);
       assertSome(O.getOrThrow(facts[0]!).docketNumber, "90001.10001US01");
       expect(urls[0]).toContain("18900001");
-      expect(urls.join(" ")).not.toContain("Acme");
+      expect(A.join(urls, " ")).not.toContain("Acme");
     })
   );
   it.effect("treats not-found as None and rejects content-bearing queries before any request", () =>

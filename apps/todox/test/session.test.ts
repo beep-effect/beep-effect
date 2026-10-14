@@ -69,7 +69,7 @@ describe("Terminal of Record session", () => {
       "No external money movement instruction is included.",
       "No accepted financial recommendation is included.",
     ]);
-    expect(packet.sections.map((section) => section.heading)).toEqual([
+    expect(A.map(packet.sections, (section) => section.heading)).toEqual([
       "WHAT CHANGED",
       "CURRENT GOALS AND CONSTRAINTS",
       "OPEN DECISIONS",

@@ -1,6 +1,7 @@
 import { Runpod } from "@beep/runpod";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -33,7 +34,7 @@ describe("@beep/runpod live", () => {
 
         const runpod = yield* Runpod;
         const pods = yield* runpod.listPods();
-        expect(Array.isArray(pods)).toBe(true);
+        expect(A.isArray(pods)).toBe(true);
       })
     );
   });

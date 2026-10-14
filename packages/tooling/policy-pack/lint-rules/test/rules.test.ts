@@ -3,6 +3,7 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -22,8 +23,8 @@ describe("GritQL rules", () => {
           Effect.gen(function* () {
             const { diagnostics } = yield* runRule(rule, invalid);
             expect(diagnostics.length).toBe(invalidCount);
-            expect(diagnostics.every((d) => d.message.includes(messageIncludes))).toBe(true);
-            expect(diagnostics.every((d) => d.severity === expectedSeverity)).toBe(true);
+            expect(A.every(diagnostics, (d) => d.message.includes(messageIncludes))).toBe(true);
+            expect(A.every(diagnostics, (d) => d.severity === expectedSeverity)).toBe(true);
           })
         )
       );

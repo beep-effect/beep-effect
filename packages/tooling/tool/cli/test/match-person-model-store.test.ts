@@ -5,7 +5,6 @@ import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
-import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -92,7 +91,7 @@ const respondWithPayload = (
     Match.orElse((range) => Effect.die(`Unexpected fixture range: ${range ?? "missing"}`))
   );
 
-class FixtureDecodeFailure extends Data.TaggedError("FixtureDecodeFailure") {}
+class FixtureDecodeFailure extends S.TaggedError<FixtureDecodeFailure>()("FixtureDecodeFailure", {}) {}
 
 const makeMidBodyFailureResponse = (
   request: HttpClientRequest.HttpClientRequest,
@@ -107,7 +106,7 @@ const makeMidBodyFailureResponse = (
           emitted = true;
           controller.enqueue(firstChunk);
         }),
-        Match.orElse(() => controller.error(new FixtureDecodeFailure()))
+        Match.orElse(() => controller.error(FixtureDecodeFailure.make({})))
       );
     },
   });

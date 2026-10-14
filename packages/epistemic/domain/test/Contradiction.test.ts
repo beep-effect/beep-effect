@@ -467,7 +467,7 @@ describe("Contradiction domain invariants", () => {
             ),
           "same-source-overlap": () => undefined,
         });
-        expect(A.dedupe(arbitraryAssessment.proposals.map(({ proposalId }) => proposalId))).toHaveLength(
+        expect(A.dedupe(A.map(arbitraryAssessment.proposals, ({ proposalId }) => proposalId))).toHaveLength(
           arbitraryAssessment.proposals.length
         );
         expect(

@@ -3,9 +3,10 @@ import { it } from "@beep/test-runner";
 import { Message, Thread, Turn } from "@beep/workspace-domain";
 import { describe, expect } from "@effect/vitest";
 import { getTableConfig } from "drizzle-orm/pg-core";
+import * as A from "effect/Array";
 
 const indexNames = (config: { indexes: ReadonlyArray<{ config: { name?: string } }> }) =>
-  config.indexes.map((index) => index.config.name);
+  A.map(config.indexes, (index) => index.config.name);
 
 describe("workspace entity materialization", () => {
   it("materializes model extras into table indexes", () => {

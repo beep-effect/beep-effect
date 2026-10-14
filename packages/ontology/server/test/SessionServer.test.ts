@@ -45,6 +45,7 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { Dataset } from "@beep/rdf/Rdf";
@@ -203,7 +204,7 @@ describe("Ontology server Turtle round-trip", () => {
       Effect.fnUntraced(function* () {
         for (const relativePath of turtleFixtures) {
           const result = yield* roundTripFixture(fixturePath(relativePath));
-          const prefixLabels = Object.keys(result.prefixes);
+          const prefixLabels = R.keys(result.prefixes);
 
           expect(result.quadCount).toBeGreaterThan(0);
           expect(result.after.fingerprint).toBe(result.before.fingerprint);

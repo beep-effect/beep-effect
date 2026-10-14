@@ -154,9 +154,16 @@ const config = {
       // minors ahead of a 0.19.0 wrapper.
       // A bump also arms every rule absent from tsconfig.base.json's
       // diagnosticSeverity map, because omitted rules run at their upstream
-      // default rather than off. 0.33.0 is adopted with eleven such rules
-      // parked at "off" pending a one-rule-per-PR ratchet; moving off 0.33.0
-      // without clearing that queue lands them all at once.
+      // default rather than off. `beep quality tsgo-rules` therefore requires
+      // every installed rule in that map: "error", or "off" only when
+      // `tsgoDisabledRules` declares it with a reason. Held at 0.51.1, the
+      // rule set tsc-rs ports, so editor, gate and tsc-rs agree. The code is
+      // already clean against 0.52.0 (proved 2026-10-13); that bump adds
+      // effectSleepZeroToYieldNow, flatMapToTap, preferEffectArray,
+      // preferEffectRecord and preferSchemaTaggedError at "error", parks
+      // schemaClassMissingBrand "off" pending the S.Class/S.Struct/S.Opaque
+      // decision, drops the removed `debug` option, and must also sweep
+      // apps/labs, which `bun run check` filters out.
       // @biomejs/biome 2.5.7 stops formatting JSON piped through
       // `biome format --stdin-file-path`, so `renderBiomeJson` — the writer
       // behind `beep tsconfig-sync` for docgen.json/tsconfig.json — emits

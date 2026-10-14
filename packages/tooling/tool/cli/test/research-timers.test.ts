@@ -187,62 +187,74 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       ]);
       expect(yield* unitsPresent).toEqual([true, true, true, true]);
       expect(yield* readUnit("beep-research-daily.service")).toBe(
-        [
-          "[Unit]",
-          "Description=beep research daily pipeline (sift, notion-pull, cognify, digest)",
-          "",
-          "[Service]",
-          "Type=oneshot",
-          `WorkingDirectory=${process.cwd()}`,
-          `EnvironmentFile=-${home}/.config/beep-research/env`,
-          'ExecStartPre=-/bin/sh -c "command -v nm-online >/dev/null 2>&1 && exec nm-online -q --timeout=90"',
-          `ExecStart="${bunPath}" run beep research daily --commit --page ${PAGE_ID}`,
-          "TimeoutStartSec=1800",
-          "",
-        ].join("\n")
+        A.join(
+          [
+            "[Unit]",
+            "Description=beep research daily pipeline (sift, notion-pull, cognify, digest)",
+            "",
+            "[Service]",
+            "Type=oneshot",
+            `WorkingDirectory=${process.cwd()}`,
+            `EnvironmentFile=-${home}/.config/beep-research/env`,
+            'ExecStartPre=-/bin/sh -c "command -v nm-online >/dev/null 2>&1 && exec nm-online -q --timeout=90"',
+            `ExecStart="${bunPath}" run beep research daily --commit --page ${PAGE_ID}`,
+            "TimeoutStartSec=1800",
+            "",
+          ],
+          "\n"
+        )
       );
       expect(yield* readUnit("beep-research-daily.timer")).toBe(
-        [
-          "[Unit]",
-          "Description=Timer for beep research daily pipeline (sift, notion-pull, cognify, digest)",
-          "",
-          "[Timer]",
-          "OnCalendar=*-*-* 21:00:00",
-          "Persistent=true",
-          "",
-          "[Install]",
-          "WantedBy=timers.target",
-          "",
-        ].join("\n")
+        A.join(
+          [
+            "[Unit]",
+            "Description=Timer for beep research daily pipeline (sift, notion-pull, cognify, digest)",
+            "",
+            "[Timer]",
+            "OnCalendar=*-*-* 21:00:00",
+            "Persistent=true",
+            "",
+            "[Install]",
+            "WantedBy=timers.target",
+            "",
+          ],
+          "\n"
+        )
       );
       expect(yield* readUnit("beep-research-repo-card.service")).toBe(
-        [
-          "[Unit]",
-          "Description=beep research weekly repo-card refresh",
-          "",
-          "[Service]",
-          "Type=oneshot",
-          `WorkingDirectory=${process.cwd()}`,
-          `EnvironmentFile=-${home}/.config/beep-research/env`,
-          'ExecStartPre=-/bin/sh -c "command -v nm-online >/dev/null 2>&1 && exec nm-online -q --timeout=90"',
-          `ExecStart="${bunPath}" run beep research repo-card`,
-          "TimeoutStartSec=1800",
-          "",
-        ].join("\n")
+        A.join(
+          [
+            "[Unit]",
+            "Description=beep research weekly repo-card refresh",
+            "",
+            "[Service]",
+            "Type=oneshot",
+            `WorkingDirectory=${process.cwd()}`,
+            `EnvironmentFile=-${home}/.config/beep-research/env`,
+            'ExecStartPre=-/bin/sh -c "command -v nm-online >/dev/null 2>&1 && exec nm-online -q --timeout=90"',
+            `ExecStart="${bunPath}" run beep research repo-card`,
+            "TimeoutStartSec=1800",
+            "",
+          ],
+          "\n"
+        )
       );
       expect(yield* readUnit("beep-research-repo-card.timer")).toBe(
-        [
-          "[Unit]",
-          "Description=Timer for beep research weekly repo-card refresh",
-          "",
-          "[Timer]",
-          "OnCalendar=Sun *-*-* 20:30:00",
-          "Persistent=true",
-          "",
-          "[Install]",
-          "WantedBy=timers.target",
-          "",
-        ].join("\n")
+        A.join(
+          [
+            "[Unit]",
+            "Description=Timer for beep research weekly repo-card refresh",
+            "",
+            "[Timer]",
+            "OnCalendar=Sun *-*-* 20:30:00",
+            "Persistent=true",
+            "",
+            "[Install]",
+            "WantedBy=timers.target",
+            "",
+          ],
+          "\n"
+        )
       );
     })
   );

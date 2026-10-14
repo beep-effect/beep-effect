@@ -66,7 +66,7 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
           tEpochMs: 1753838000100,
         });
         const validLines = yield* Effect.forEach([down, marker], (event) => encodeActionEventJson(event));
-        const batch = [...validLines, "this is not json"].join("\n");
+        const batch = A.join([...validLines, "this is not json"], "\n");
 
         // This shorter scope is the subject of the cleanup assertions below:
         // the collector must finish before we inspect its files and handle.
@@ -169,7 +169,7 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
           tEpochMs: 1753838000100,
         });
         const validLines = yield* Effect.forEach([down, marker], (event) => encodeActionEventJson(event));
-        const batch = [...validLines, "this is not json"].join("\n");
+        const batch = A.join([...validLines, "this is not json"], "\n");
         const secondPage = [
           MarkerEvent.make({ ...marker, seq: 8, label: "second-page:first" }),
           MarkerEvent.make({ ...marker, seq: 2, label: "second-page:second" }),
@@ -222,7 +222,7 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
 
             const secondLines = yield* Effect.forEach(secondPage, (event) => encodeActionEventJson(event));
             const secondResponse = yield* HttpClient.post(`${base}/events`, {
-              body: HttpBody.text([...secondLines, "still not json"].join("\n"), "text/plain;charset=UTF-8"),
+              body: HttpBody.text(A.join([...secondLines, "still not json"], "\n"), "text/plain;charset=UTF-8"),
               headers: { origin: appOrigin },
             });
             const secondAccepted = yield* Effect.flatMap(secondResponse.text, decodeEventsAccepted);

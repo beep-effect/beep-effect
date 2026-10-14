@@ -16,6 +16,7 @@ import * as MdModel from "@beep/md/Md.model";
 import { describe, expect } from "@effect/vitest";
 import { createHeadlessEditor } from "@lexical/headless";
 import { $generateNodesFromDOM } from "@lexical/html";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -123,15 +124,16 @@ describe("@beep/editor node registration", () => {
         assertSome(artifact.label, "Quarterly report");
       }
       pipe(
-        decoded.root.children.some((node) => node.type === "table"),
+        A.some(decoded.root.children, (node) => node.type === "table"),
         assertTrue
       );
       pipe(
-        decoded.root.children.some((node) => node.type === "youtube"),
+        A.some(decoded.root.children, (node) => node.type === "youtube"),
         assertTrue
       );
       pipe(
-        decoded.root.children.some(
+        A.some(
+          decoded.root.children,
           (node) => node.type === "code" && O.isSome(node.language) && node.language.value === "mermaid"
         ),
         assertTrue

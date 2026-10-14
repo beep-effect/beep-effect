@@ -111,7 +111,7 @@ export default defineRule({
       if (node.id.type === "Identifier" && node.id.name === "process") currentScope().shadowed = true;
     };
 
-    const isProcessShadowed = (): boolean => scopeStack.some((scope) => scope.shadowed);
+    const isProcessShadowed = (): boolean => A.some(scopeStack, (scope) => scope.shadowed);
 
     // `globalThis.process` — the namespaced spelling, unaffected by a local `process` binding.
     const isGlobalThisProcess = (node: MaybeNode): boolean =>

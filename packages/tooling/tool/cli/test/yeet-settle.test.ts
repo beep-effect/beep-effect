@@ -70,6 +70,7 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -243,7 +244,7 @@ const roundTrips = Effect.fn("settleTest.roundTrips")(function* <Schema extends 
 });
 
 describe("B7 settle contracts", () => {
-  for (const [name, schema] of Object.entries({
+  for (const [name, schema] of R.toEntries({
     ...yeetSettleSchemasForTesting,
     YeetMonitorLoopPolicy,
     YeetUntilReadyPolicy,
@@ -280,7 +281,7 @@ describe("B7 settle contracts", () => {
         {
           type: "required_status_checks",
           ruleset_id: 10240248,
-          parameters: { required_status_checks: contexts.map((context) => ({ context })) },
+          parameters: { required_status_checks: A.map(contexts, (context) => ({ context })) },
         },
         {
           type: "required_status_checks",

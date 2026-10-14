@@ -59,6 +59,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Queue from "effect/Queue";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as Terminal from "effect/Terminal";
@@ -609,7 +610,7 @@ const runLive = Effect.fn("runLive")(function* <A, E>(
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "accounts-usage-test-" });
   yield* fs.makeDirectory(path.join(root, "snapshots"));
   yield* Effect.forEach(
-    Object.entries(files),
+    R.toEntries(files),
     ([name, content]) =>
       fs
         .makeDirectory(path.dirname(path.join(root, name)), { recursive: true })

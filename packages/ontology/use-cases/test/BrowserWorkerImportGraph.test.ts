@@ -21,6 +21,7 @@ import { it } from "@beep/test-runner";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -28,6 +29,7 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { build } from "esbuild";
 
@@ -90,11 +92,11 @@ it.layer(testPlatformLayer, { timeout: "30 seconds" })(
           })
         );
 
-        const inputs = Object.keys(result.metafile.inputs);
+        const inputs = R.keys(result.metafile.inputs);
 
         // The precise regression: the browser build of this micromark dependency
         // calls `document.createElement` at module top level.
-        const domCharacterReference = inputs.filter((input) =>
+        const domCharacterReference = A.filter(inputs, (input) =>
           input.includes("decode-named-character-reference/index.dom.js")
         );
         expect(domCharacterReference).toEqual([]);
@@ -102,7 +104,7 @@ it.layer(testPlatformLayer, { timeout: "30 seconds" })(
         // The class of regression: the worker needs no markdown support, so any
         // micromark module in the graph is a barrel leak (worker.ts's docstring
         // requires the entrypoint stay free of root package barrels).
-        const markdownStack = inputs.filter((input) => /node_modules\/micromark(-[^/]+)?\//.test(input));
+        const markdownStack = A.filter(inputs, (input) => /node_modules\/micromark(-[^/]+)?\//.test(input));
         expect(markdownStack).toEqual([]);
 
         // Strongest form: the bundle's top-level code must run where no DOM

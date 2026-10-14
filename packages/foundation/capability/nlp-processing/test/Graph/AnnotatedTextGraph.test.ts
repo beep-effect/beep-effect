@@ -7,9 +7,11 @@ import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
   Schema extends S.Codec<unknown, unknown, never, never>,
@@ -19,7 +21,7 @@ const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
   expect(S.toEquivalence(schema)(decoded, value), label).toBe(true);
 });
 
-const words = (text: string): ReadonlyArray<string> => text.split(/\s+/).filter((w) => w.length > 0);
+const words = (text: string): ReadonlyArray<string> => A.filter(text.split(/\s+/), (w) => w.length > 0);
 
 const StubBackend = Layer.succeed(
   NLPBackend,
@@ -40,21 +42,26 @@ const StubBackend = Layer.succeed(
       return words(text);
     }),
     sentencize: Effect.fn("StubBackend.sentencize")(function* (text: string) {
-      return text
-        .split(/(?<=[.!?])\s+/)
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
+      return pipe(
+        text.split(/(?<=[.!?])\s+/),
+        A.map(Str.trim),
+        A.filter((s) => s.length > 0)
+      );
     }),
     posTag: Effect.fn("StubBackend.posTag")(function* (text: string) {
-      return words(text).map((w, i) => POSNode.make({ text: w, tag: "NN", position: i, timestamp: 0 }));
+      return A.map(words(text), (w, i) => POSNode.make({ text: w, tag: "NN", position: i, timestamp: 0 }));
     }),
     lemmatize: Effect.fn("StubBackend.lemmatize")(function* (text: string) {
-      return words(text).map((w, i) => LemmaNode.make({ token: w, lemma: w.toLowerCase(), position: i, timestamp: 0 }));
+      return A.map(words(text), (w, i) =>
+        LemmaNode.make({ token: w, lemma: w.toLowerCase(), position: i, timestamp: 0 })
+      );
     }),
     extractEntities: Effect.fn("StubBackend.extractEntities")(function* (text: string) {
-      return words(text)
-        .filter((w) => w.length > 0 && w[0] === w[0]?.toUpperCase())
-        .map((w) => EntityNode.make({ text: w, entityType: "MISC", span: { start: 0, end: w.length }, timestamp: 0 }));
+      return pipe(
+        words(text),
+        A.filter((w) => w.length > 0 && w[0] === w[0]?.toUpperCase()),
+        A.map((w) => EntityNode.make({ text: w, entityType: "MISC", span: { start: 0, end: w.length }, timestamp: 0 }))
+      );
     }),
     parseDependencies: Effect.fn("StubBackend.parseDependencies")(function* () {
       return [];
@@ -147,7 +154,7 @@ describe("AnnotatedTextGraph queries", () => {
       }).pipe(provideScopedLayer(StubBackend));
       const nn = ATG.filterByPOSTag(g, "NN");
       expect(nn.length).toBeGreaterThan(0);
-      expect(nn.every((p) => p.tag === "NN")).toBe(true);
+      expect(A.every(nn, (p) => p.tag === "NN")).toBe(true);
       expect(ATG.filterByPOSTag(g, "VB").length).toBe(0);
     })
   );
@@ -161,9 +168,9 @@ describe("AnnotatedTextGraph queries", () => {
         includeEntities: false,
       }).pipe(provideScopedLayer(StubBackend));
       const nodes = ATG.toArray(g);
-      expect(nodes.some(ATG.isTextNode)).toBe(true);
-      expect(nodes.some(ATG.isPOSNode)).toBe(true);
-      expect(nodes.some(ATG.isRelationNode)).toBe(false);
+      expect(A.some(nodes, ATG.isTextNode)).toBe(true);
+      expect(A.some(nodes, ATG.isPOSNode)).toBe(true);
+      expect(A.some(nodes, ATG.isRelationNode)).toBe(false);
     })
   );
 });

@@ -161,7 +161,7 @@ describe("reference planning and refresh", () => {
             yield* f.fs.writeFileString(f.path.join(directory, marker ?? ""), "preserve");
           }
           const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 3));
-          expect(status.members.map((report) => report.outcome)).toEqual(["skipped-dirty", "skipped-off-branch"]);
+          expect(A.map(status.members, (report) => report.outcome)).toEqual(["skipped-dirty", "skipped-off-branch"]);
           const log = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
           expect(log).not.toContain("pull");
           expect(log).not.toContain("graft effect ");
@@ -235,7 +235,7 @@ describe("reference planning and refresh", () => {
             yield* f.fs.makeDirectory(f.path.join(f.root, member.name, ".git"), { recursive: true });
           yield* f.fs.writeFileString(f.path.join(f.root, "effect", "advance"), "");
           const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 3));
-          expect(status.members.map((report) => report.outcome)).toEqual(["pulled", "unchanged"]);
+          expect(A.map(status.members, (report) => report.outcome)).toEqual(["pulled", "unchanged"]);
           const exclude = yield* f.fs.readFileString(f.path.join(f.root, "effect", ".git", "info", "exclude"));
           expect(exclude).toBe("graft/\n.graft/\n.ignore\n");
           const log = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
@@ -267,7 +267,7 @@ describe("reference planning and refresh", () => {
           const f = yield* prepare();
           for (const name of ["effect", "effect-tsgo"]) yield* f.fs.makeDirectory(f.path.join(f.root, name));
           const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 2));
-          expect(status.members.map((report) => report.outcome)).toEqual(["pull-failed", "pull-failed"]);
+          expect(A.map(status.members, (report) => report.outcome)).toEqual(["pull-failed", "pull-failed"]);
           expect(O.getOrElse(status.members[0]?.detail ?? O.none(), () => "")).toContain("No Git metadata at");
           expect(yield* f.fs.readFileString(f.path.join(f.home, "commands.log"))).not.toContain("git ");
         })
@@ -290,7 +290,7 @@ describe("reference planning and refresh", () => {
             yield* f.fs.writeFileString(f.path.join(f.root, name ?? "", marker ?? ""), "");
           }
           const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 2));
-          expect(status.members.map((report) => report.outcome)).toEqual(["pull-failed", "build-failed"]);
+          expect(A.map(status.members, (report) => report.outcome)).toEqual(["pull-failed", "build-failed"]);
           expect(O.getOrElse(status.members[0]?.detail ?? O.none(), () => "")).toBe(
             "git pull --ff-only origin main exited 7"
           );
@@ -315,7 +315,7 @@ describe("reference planning and refresh", () => {
               }),
             seen
           );
-          expect(status.members.map((report) => report.outcome)).toEqual(["skipped-cooldown", "skipped-cooldown"]);
+          expect(A.map(status.members, (report) => report.outcome)).toEqual(["skipped-cooldown", "skipped-cooldown"]);
           expect(log).not.toContain("--deep");
           expect(log).toContain("graft effect build env=1");
           expect(log).toContain("graft effect-tsgo build env=1");
@@ -325,7 +325,7 @@ describe("reference planning and refresh", () => {
               /^model claude-opus-5 cooling down at http:\/\/127\.0\.0\.1:8317\/v1; retry-after 55516s \(until \d{4}-\d{2}-\d{2}T[^)]+\)$/u
             );
           }
-          expect(seen.map((request) => [request.method, request.url])).toEqual([
+          expect(A.map(seen, (request) => [request.method, request.url])).toEqual([
             ["POST", "http://127.0.0.1:8317/v1/chat/completions"],
             ["POST", "http://127.0.0.1:8317/v1/chat/completions"],
           ]);
@@ -353,7 +353,7 @@ describe("reference planning and refresh", () => {
           ];
           const { status, log } = yield* refreshWithProxy(() => answers.shift(), seen);
           expect(seen.length).toBe(2);
-          expect(status.members.map((report) => report.outcome)).toEqual(["skipped-cooldown", "skipped-cooldown"]);
+          expect(A.map(status.members, (report) => report.outcome)).toEqual(["skipped-cooldown", "skipped-cooldown"]);
           expect(log).not.toContain("--deep");
           expect(O.getOrElse(status.members[0]?.detail ?? O.none(), () => "")).toMatch(
             /^model claude-opus-5 cooling down at http:\/\/127\.0\.0\.1:8317\/v1; retry-after \d+s \(until 2099-10-21T07:28:00\.000Z\)$/u
@@ -373,7 +373,7 @@ describe("reference planning and refresh", () => {
       Effect.fnUntraced(function* () {
         const seen: Array<HttpClientRequest.HttpClientRequest> = [];
         const { f, status, log } = yield* refreshWithProxy(() => new Response("{}", { status: 200 }), seen);
-        expect(status.members.map((report) => report.outcome)).toEqual(["unchanged", "unchanged"]);
+        expect(A.map(status.members, (report) => report.outcome)).toEqual(["unchanged", "unchanged"]);
         expect(log).toContain("graft effect build --deep --allow-partial -j 4 env=1");
         expect(log).toContain("graft effect-tsgo build --deep --allow-partial -j 4 env=1");
         expect(seen.length).toBe(2);
@@ -401,7 +401,7 @@ describe("reference planning and refresh", () => {
             seen,
             (f) => f.fs.writeFileString(f.path.join(f.owner, "patch-kit-missing"), "").pipe(Effect.orDie)
           );
-          expect(status.members.map((report) => report.outcome)).toEqual(["skipped-preflight", "skipped-preflight"]);
+          expect(A.map(status.members, (report) => report.outcome)).toEqual(["skipped-preflight", "skipped-preflight"]);
           // A downgraded member is never probed for a model cooldown.
           expect(seen).toEqual([]);
           expect(log).not.toContain("--deep");
@@ -455,7 +455,7 @@ describe("reference planning and refresh", () => {
               seen,
               (f) => arrange(f, script)
             );
-            expect([label, status.members.map((report) => report.outcome)]).toEqual([
+            expect([label, A.map(status.members, (report) => report.outcome)]).toEqual([
               label,
               ["skipped-preflight", "skipped-preflight"],
             ]);
@@ -507,7 +507,7 @@ describe("reference planning and refresh", () => {
         const seen: Array<HttpClientRequest.HttpClientRequest> = [];
         const { status, log } = yield* refreshWithProxy(() => undefined, seen);
         expect(seen.length).toBe(2);
-        expect(status.members.map((report) => report.outcome)).toEqual(["unchanged", "unchanged"]);
+        expect(A.map(status.members, (report) => report.outcome)).toEqual(["unchanged", "unchanged"]);
         expect(log).toContain("graft effect build --deep --allow-partial -j 4 env=1");
         expect(log).toContain("graft effect-tsgo build --deep --allow-partial -j 4 env=1");
       })
@@ -524,7 +524,7 @@ describe("reference planning and refresh", () => {
             yield* f.fs.makeDirectory(f.path.join(f.root, name, ".git"), { recursive: true });
           yield* f.fs.writeFileString(f.path.join(f.root, "effect", "rev-parse-fail"), "");
           const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 2));
-          expect(status.members.map((report) => report.outcome)).toEqual(["pull-failed", "unchanged"]);
+          expect(A.map(status.members, (report) => report.outcome)).toEqual(["pull-failed", "unchanged"]);
           assertSome(status.members[0]?.detail ?? O.none(), "git rev-parse HEAD exited 128: fatal: bad object HEAD");
           expect(yield* f.fs.readFileString(f.path.join(f.home, "commands.log"))).not.toContain("git effect pull");
         })
@@ -551,7 +551,7 @@ describe("reference planning and refresh", () => {
                 ConfigProvider.fromUnknown({ ...f.configValues, PATH: f.bin })
               )
             );
-          expect(status.members.map((report) => report.outcome)).toEqual(["build-failed", "build-failed"]);
+          expect(A.map(status.members, (report) => report.outcome)).toEqual(["build-failed", "build-failed"]);
           assertSome(status.members[0]?.detail ?? O.none(), "graft failed to run.");
           expect(status.workspaceCheck.buildExitCode).toBe(1);
           expect(status.workspaceCheck.exitCode).toBe(1);

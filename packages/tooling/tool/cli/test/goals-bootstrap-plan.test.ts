@@ -480,7 +480,7 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
         if (A.contains(BLOCKING_KINDS, kind)) {
           expect(A.isReadonlyArrayNonEmpty(requirements)).toBe(true);
         } else {
-          expect(Array.isArray(requirements)).toBe(true);
+          expect(A.isArray(requirements)).toBe(true);
         }
       }
     });

@@ -115,7 +115,7 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
     const blocks = fixtureBlocksFor([assistantItem("ignored"), userItem("hello world")]);
 
     expect(blocks).toHaveLength(4);
-    expect(blocks.map((block) => block.type)).toEqual(["heading", "paragraph", "list", "code"]);
+    expect(A.map(blocks, (block) => block.type)).toEqual(["heading", "paragraph", "list", "code"]);
 
     const [heading, paragraph, list, code] = blocks;
     expect(heading).toStrictEqual(HeadingBlock.make({ level: "h2", children: [TextInline.make({ text: "Echo" })] }));
@@ -146,7 +146,7 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
         const emitted = yield* Stream.runCollect(kernel.streamTurn(history));
         const expected = fixtureBlocksFor(history);
 
-        expect(emitted.map((event) => event.type)).toEqual(["block", "block", "block", "block", "finalization"]);
+        expect(A.map(emitted, (event) => event.type)).toEqual(["block", "block", "block", "block", "finalization"]);
         expect([...emitted]).toStrictEqual([...fixtureEventsFor(history)]);
         const events = A.fromIterable(emitted);
         const blocks = A.map(A.filter(events, AssistantTurnEvent.guards.block), (event) => event.block);

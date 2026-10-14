@@ -65,6 +65,9 @@
         "completions": true,
         "goto": true,
         "renames": true,
+        // Stability allow-lists stay empty: experimentalApiUsage and unstableApiUsage are declared off.
+        "allowedExperimentalApis": [],
+        "allowedUnstableApis": [],
         // Debug-only language-service output stays off; it is noise in tsc mode.
         "debug": false,
         // Inlay hints are an editor concern; the upstream default is kept explicit.
@@ -107,12 +110,13 @@
           // `beep quality tsgo-rules` enforces both halves: the listed set must match the
           // installed compiler exactly, and every entry is "error" unless
           // `tsgoDisabledRules` in the Quality command declares it "off" with a reason.
-          // Declared off: experimentalApiUsage and unstableApiUsage (the repo builds on
-          // `effect/unstable/*` by design).
+          // Declared off: experimentalApiUsage, unstableApiUsage and apiStabilityLeak (the repo
+          // builds on `effect/unstable/*` by design).
           "abortControllerInEffect": "error",
           "acquireReleaseDisposable": "error",
           "allOfMapToForEach": "error",
           "anyUnknownInErrorContext": "error",
+          "apiStabilityLeak": "off",
           "asyncFunction": "error",
           "catchAllTagDispatchToCatchTag": "error",
           "catchAllToMapError": "error",
