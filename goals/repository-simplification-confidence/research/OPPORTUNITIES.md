@@ -1158,3 +1158,18 @@ on the new head if it appears.
   while preserving its reviewed golden-test exception and explanation.
 - Prevention: require zero-warning documentation and the existing coverage
   ratchets on the integrated source before a broad compiler migration lands.
+
+
+### 2026-10-14 — publication state during an inherited repair wave
+
+- Work: qualify additional compiler and skill-lock coverage repairs after the
+  first shared baseline repair was published.
+- Evidence: PR #1640 merged while the additional local test and documentation
+  wave was still unpublished. Its latest published head remained the earlier
+  final repair; the local qualification alone did not update that public state.
+- Action: preserve the qualified wave, integrate the landed repairs, and publish
+  it from a new follow-up branch. Adopt independent main fixes instead of
+  retaining duplicate patches.
+- Prevention: when a ready PR needs another local wave, mark it draft at the
+  start of that work and return it to ready after the final push. Keep the
+  session ledger explicit about whether the owner is still pushing.
