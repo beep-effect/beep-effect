@@ -100,3 +100,53 @@ Rulings on the two annotated judgement calls:
    reflection-artifacts` validates real reflections, not the template. The adoption
    classifier gets a documented-convention exclusion for it in E's first mutation PR, and
    the adoption plan's `report` row disappears.
+
+## Workstream D projection — `p4-report-goals-projection.md` (recorded 2026-10-14)
+
+**Verdict: approved with corrections.** Independent reviewer: a native Claude subagent
+run by the orchestrator session. The full review is kept outside the repo in the
+orchestrator's gate records. The corrections are applied to the report in the same PR
+as this record.
+
+1. **Fog rows: accepted as true positives (undeclared `provides`).** Two provider
+   corrections are applied. Row 2: `practice-kg-mcp` is `completed-retained`, not
+   active. Row 3: the provider is `practice-docket-intake` (the category verbs landed in
+   #1456), not an M365 driver packet. With all three providers completed,
+   `practice-mail-tagging` turns ready once the manifest-only `provides` PR lands; that
+   PR must state the expected frontier (44). The `practice/` vs `law-practice/`
+   namespace settlement is **NEEDS-EVIDENCE** (the drift is wider than two namespaces)
+   and is deferred to its own ruled decision.
+2. **Zero engine false positives: accepted.** The census table is corrected to 211
+   packets, 51 active, and 7 blocked (`goals/_template` had been counted). **Unlocked:**
+   design PR 3 (doctor findings for duplicate declarations, stranded capabilities, and
+   reference-provides) and the manifest-only `provides` PR. PR 2 (Mermaid) already
+   merged as #1625.
+3. **`SqlClient` engine deviation: accepted.** Hosted Node coverage ran
+   `goals-graph.test.ts` green on the merged head.
+
+## Workstream B lock plan — `p4-report-skills-lock-plan.md` (recorded 2026-10-14)
+
+**Verdict: ask 1 rejected; asks 2–3 ruled.** Independent reviewer: a native Claude
+subagent, with the orchestrator ruling on ask 2.
+
+1. **Drift classification as the B-3 input: REJECTED.** Three of the five files the
+   report listed as differing are byte-equal to older upstream path revisions that the
+   floating updater pulled on 2026-09-22:
+   - portless `SKILL.md`: `vercel-labs/portless@c7f38a6f33`;
+   - shadcn `SKILL.md`: `shadcn-ui/ui@6cd3f4c65c` (the seed's own `observedPathRevision`);
+   - teach `SKILL.md`: `mattpocock/skills@321658273c`.
+
+   Only oracle's two files (`SKILL.md`, `agents/openai.yaml`) are genuinely local. #1633
+   already stops the plan from asserting "local" (`differs-from-upstream-head`).
+   **Required before B-3:** classify against the upstream path history and pin each
+   skill at the newest revision that makes its tree pristine. The real patch series is
+   then oracle's two files. The plan must also record the revision it classified
+   against, and include that revision in its digest.
+2. **turborepo fork: ruled, keep upstream.** The local fork was overwritten by
+   `49b70014b1` (#661, 2026-08-11) and later reduced by `f590617f15` (#1330). It is not
+   restored wholesale. The repo-specific rules are salvaged as a targeted follow-up, and
+   the old files stay recoverable from git history. The report's "26 installed files"
+   claim is superseded by this record.
+3. **adhd: queued.** The report alone cannot settle it (NEEDS-EVIDENCE), but the
+   reviewer verified the installed file matches `UditAkhourii/adhd@55ed38514c` (a single
+   MIT file). Its resolution seed is a bounded follow-up task (about one hour).

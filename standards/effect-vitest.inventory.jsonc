@@ -26328,6 +26328,27 @@
       "status": "open"
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/knowledge-doctor.test.ts:26:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/knowledge-doctor.test.ts",
+      "line": 26,
+      "endLine": 26,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/knowledge-refs-rewrite.test.ts:7:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",

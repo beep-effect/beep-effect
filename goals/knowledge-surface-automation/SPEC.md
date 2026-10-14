@@ -325,3 +325,8 @@ Each entry names its record, which carries the reason and the reversal path.
 - 2026-10-13 — Workstream C Stage-2 knowledge doctor K1–K11 (witness-mandatory
   evaluators, byte-reproducible CI mint, non-laundering mint, CODEOWNERS-bound
   leases, causal grouping, append-only promotions file): `research/p4-knowledge-doctor-design.md`.
+- 2026-10-14 — #1626 round-3 follow-ups recorded as K12 (narrow promotion-row admission)
+  and E12 (publish sweeps stale staging directories): the two design docs.
+- 2026-10-14 — Workstream C Stage-2 PR 1 deviations (line-based historical-marker
+  block scope, three-verdict counterfactual harness, multi-failure `Failed`, gating
+  mode refuses until a sealed baseline exists): `research/p4-report-knowledge-doctor.md`.

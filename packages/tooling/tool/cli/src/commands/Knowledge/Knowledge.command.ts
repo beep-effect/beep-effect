@@ -34,11 +34,15 @@ import {
 import {
   encodeKnowledgeSemanticDeltaReportJson,
   KNOWLEDGE_PROBE_DEPENDENT_KINDS,
+  KnowledgeFindingKind,
   KnowledgeProbePolicy,
 } from "./Knowledge.schemas.ts";
 import { KnowledgeService, KnowledgeServiceLive } from "./Knowledge.service.ts";
+import { encodeKnowledgeDoctorReportJson, KnowledgeSpanClass } from "./KnowledgeDoctor.schemas.ts";
+import { KnowledgeDoctor, KnowledgeDoctorLive } from "./KnowledgeDoctor.service.ts";
 import type { KnowledgeRef, KnowledgeRefObservation, KnowledgeRefsReport } from "./Knowledge.refs.ts";
 import type { KnowledgeFinding, KnowledgeSemanticDeltaReport } from "./Knowledge.schemas.ts";
+import type { KnowledgeDoctorFinding, KnowledgeDoctorReport } from "./KnowledgeDoctor.schemas.ts";
 
 const baseFlag = Flag.String("base").pipe(
   Flag.withDescription("Local base ref used to resolve the merge-base; the command never fetches"),
@@ -590,6 +594,167 @@ export const knowledgeRefsCommand = Command.make(
   Command.provide(KnowledgeServiceLive)
 );
 
+const doctorReportFlag = Flag.Boolean("report").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Print the read-only report: reads no baseline, writes nothing, exits 0 on findings")
+);
+const doctorJsonFlag = Flag.Boolean("json").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Render the whole doctor report, every finding included, as one JSON line")
+);
+
+const renderDoctorFinding = (row: KnowledgeDoctorFinding): string => {
+  const line = O.getOrElse(O.fromNullishOr(row.finding.location.line), () => 0);
+  const column = O.getOrElse(O.fromNullishOr(row.finding.location.column), () => 0);
+  return `  ${row.finding.kind} [${row.spanClass}] ${row.finding.location.path}:${line}:${column} ${row.finding.subject}`;
+};
+
+// Human listing reads document by document; JSON keeps the canonical identity order.
+const doctorListingOrder: Order.Order<KnowledgeDoctorFinding> = Order.combine(
+  Order.mapInput(Order.String, (row: KnowledgeDoctorFinding) => row.finding.location.path),
+  Order.combine(
+    Order.mapInput(Order.Number, (row: KnowledgeDoctorFinding) => row.finding.location.line ?? 0),
+    Order.mapInput(Order.Number, (row: KnowledgeDoctorFinding) => row.finding.location.column ?? 0)
+  )
+);
+
+// One line per finding kind present, in finding-kind domain order.
+const doctorKindCounts = (report: KnowledgeDoctorReport): ReadonlyArray<string> =>
+  A.getSomes(
+    A.map(KnowledgeFindingKind.literals, (kind) =>
+      pipe(
+        A.length(A.filter(report.findings, (row) => row.finding.kind === kind)),
+        O.liftPredicate((count) => count > 0),
+        O.map((count) => `  ${Str.padEnd(34)(kind)} ${count}`)
+      )
+    )
+  );
+
+/**
+ * Renders a knowledge-doctor report for local human inspection.
+ *
+ * **Details**
+ *
+ * The headline names the tree, the per-class span totals, the unchecked option tokens, and the
+ * per-kind finding totals. Blocking findings are listed one per line; advisory findings (the
+ * unclassified worklist) fold into one count line, because `--json` carries every row.
+ *
+ * **Example** (Render an empty report)
+ *
+ * ```ts
+ * import { KnowledgeDoctorReport, KnowledgeSpanCounts } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ * import { renderKnowledgeDoctorHumanReport } from "@beep/repo-cli/test/Knowledge"
+ *
+ * const output = renderKnowledgeDoctorHumanReport(
+ *   KnowledgeDoctorReport.make({
+ *     treeish: "HEAD",
+ *     tree: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4",
+ *     mode: "report",
+ *     spanCounts: KnowledgeSpanCounts.make({
+ *       verified: 0,
+ *       "generated-example": 0,
+ *       "historical-with-commit": 0,
+ *       unclassified: 0,
+ *     }),
+ *     uncheckedOptionCount: 0,
+ *     findings: [],
+ *   })
+ * )
+ *
+ * console.log(output.includes("blocking findings (0)")) // true
+ * ```
+ *
+ * @internal
+ * @param report - Doctor report to format.
+ * @returns A stable multiline summary.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderKnowledgeDoctorHumanReport = (report: KnowledgeDoctorReport): string => {
+  const blocking = A.sort(
+    A.filter(report.findings, (row) => row.finding.severity === "blocking"),
+    doctorListingOrder
+  );
+  const advisory = A.length(report.findings) - A.length(blocking);
+  return A.join(
+    [
+      `knowledge doctor --report @ ${report.treeish} (${report.tree})`,
+      "spans:",
+      ...A.map(
+        KnowledgeSpanClass.literals,
+        (spanClass) => `  ${Str.padEnd(24)(spanClass)} ${report.spanCounts[spanClass]}`
+      ),
+      `unchecked options: ${report.uncheckedOptionCount}`,
+      `findings (${A.length(report.findings)}):`,
+      ...doctorKindCounts(report),
+      `blocking findings (${A.length(blocking)}):`,
+      ...A.map(blocking, renderDoctorFinding),
+      ...(advisory > 0 ? [`advisory findings: ${advisory} ${OMITTED_DOCTOR_HINT}`] : []),
+    ],
+    "\n"
+  );
+};
+
+const OMITTED_DOCTOR_HINT = "row(s) omitted (--json lists them)";
+
+const runDoctor = Effect.fn("KnowledgeCommand.runDoctor")(function* (options: {
+  readonly report: boolean;
+  readonly tree: string;
+  readonly json: boolean;
+}) {
+  if (!options.report) {
+    return yield* KnowledgeOperationalError.make({
+      message:
+        "knowledge doctor: only the read-only report is available until the sealed baseline lands; rerun with --report.",
+    });
+  }
+  const doctor = yield* KnowledgeDoctor;
+  const report = yield* doctor.report(options.tree);
+  if (options.json) {
+    const json = yield* encodeKnowledgeDoctorReportJson(report).pipe(
+      KnowledgeOperationalError.mapError("Failed to encode the knowledge doctor JSON report.")
+    );
+    yield* Console.log(json);
+  } else {
+    yield* Console.log(renderKnowledgeDoctorHumanReport(report));
+  }
+});
+
+/**
+ * The `beep knowledge doctor` subcommand.
+ *
+ * **Details**
+ *
+ * `--report` is the phase-0 form: it classifies every reference-shaped span in the knowledge corpus
+ * of one tracked tree, evaluates live spans with the witness-bearing paths and commands evaluators,
+ * and prints the result. It reads no baseline, writes nothing, gates nothing, and exits 0 whatever
+ * it finds. `--tree` accepts any commit-ish (default `HEAD`); no fetch ever occurs.
+ *
+ * **Gotchas**
+ *
+ * Without `--report` the command fails: the gating form needs the sealed baseline, which has not
+ * landed. Human output folds advisory findings into a count; `--json` keeps every finding.
+ *
+ * **Example** (Read the subcommand identity)
+ *
+ * ```ts
+ * import { knowledgeDoctorCommand } from "@beep/repo-cli/commands/Knowledge/Knowledge.command"
+ *
+ * console.log(knowledgeDoctorCommand.name) // "doctor"
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const knowledgeDoctorCommand = Command.make(
+  "doctor",
+  { report: doctorReportFlag, tree: treeFlag, json: doctorJsonFlag },
+  runDoctor
+).pipe(
+  Command.withDescription("Classify and check every knowledge reference span; --report is read-only and exits 0"),
+  Command.provide(KnowledgeDoctorLive)
+);
+
 /**
  * The `beep knowledge` command family root.
  *
@@ -607,19 +772,20 @@ export const knowledgeRefsCommand = Command.make(
  * const subcommands = A.flatMap(knowledgeCommand.subcommands, (group) => group.commands)
  *
  * console.log(knowledgeCommand.name) // "knowledge"
- * console.log(A.map(subcommands, (command) => command.name)) // [ "refs", "semantic-delta" ]
+ * console.log(A.map(subcommands, (command) => command.name)) // [ "refs", "semantic-delta", "doctor" ]
  * ```
  *
  * @see {@link knowledgeRefsCommand} for the read-only phase-0 census.
  * @see {@link knowledgeSemanticDeltaCommand} for the gating Stage-1 comparison.
+ * @see {@link knowledgeDoctorCommand} for the read-only Stage-2 span report.
  * @category cli-commands
  * @since 0.0.0
  */
 export const knowledgeCommand = Command.make("knowledge", {}, () =>
   Console.log(
-    "Knowledge commands: refs [--tree <rev>] [--surface live|archival|all] [--json] [--check] [--verbose], semantic-delta [--base <ref>] [--json]"
+    "Knowledge commands: refs [--tree <rev>] [--surface live|archival|all] [--json] [--check] [--verbose], semantic-delta [--base <ref>] [--json], doctor --report [--tree <rev>] [--json]"
   )
 ).pipe(
   Command.withDescription("Knowledge-surface verification commands"),
-  Command.withSubcommands([knowledgeRefsCommand, knowledgeSemanticDeltaCommand])
+  Command.withSubcommands([knowledgeRefsCommand, knowledgeSemanticDeltaCommand, knowledgeDoctorCommand])
 );

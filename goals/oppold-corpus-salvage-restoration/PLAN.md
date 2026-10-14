@@ -233,3 +233,74 @@ Run-9: nine inputs at most 536,870,912 bytes, range 61,727,744 to 456,877,056;
 eighteen larger remaining occurrences await a later ceiling ruling. Membership
 is pinned in history/evidence/p2-first-wave-membership.json. PR6 adds the public
 bounded selector; run 10 launches the wave after content-final. No family started.
+
+
+## P2 bounded-wave launch — 2026-10-13
+
+PR6 #1611 merged at 6eb3d03677. Run-10 go and its branch correction
+authorize the first wave. All nine source identities match the sealed archive;
+each has a pre-launch freeze record. Family 1 is active under detached
+beep-heavy; zero families sealed at the first transformation observation.
+Its policy matches the freeze record. Four focused tests and both real
+sandbox smokes pass. See the dated handoff and first-wave progress record.
+
+P2 is in-progress, not complete. Continue one family at a time, reconcile
+acceptance before progressing, wait 60 seconds between successful seals,
+and stop at the first failure. No source/engine/launcher changes inside
+the wave. Existing blockers about the absent public selector are historical:
+PR6 closes that precondition. Later estate, recycle and DOC obligations
+remain open; P3 remains pending. PR7 records the terminal wave outcome.
+
+
+**Run-11 progress 2026-10-13:** family 1 accepted and fully reconciled:
+3,785 children, zero warnings/exceptions, 2.389373197x amplification,
+769,470 ms attempt / 847,540 ms family. After renewed preflight and sixty
+seconds, family 2 is active under the same frozen launcher. One of nine
+sealed; seven not launched. Continue sequentially from the dated handoff,
+stop at the first failure, retain all sealed state. P2 remains incomplete.
+
+
+**Run-12 progress 2026-10-13:** family 2 accepted and fully reconciled:
+4,310 children, zero warnings/exceptions, 2.689816620x amplification,
+2,588,015 ms attempt / 2,611,137 ms family. Both derived digest sets
+match 123 distinct repaired digests. Two of nine sealed; ordinal 3 awaits
+renewed preflight through shared heavy admission. The full sixty-second
+interval is complete. Continue with the same frozen launcher sequentially,
+stop at the first failure and retain all state. P2 remains incomplete.
+
+
+**Runs 13+ progress 2026-10-13:** renewed real engine smokes and four
+focused restoration tests pass after shared admission. All frozen identities
+match; two of nine accepted families retain their ledger hashes. After a
+full sixty-second interval and 332,194,398,208 free bytes, ordinal 3 was
+submitted to the sole detached family unit with the unchanged frozen script.
+The watcher reconciles its terminal result before ordinal 4. P2 remains
+incomplete; stop at the first failure, retain all state and never retry seals.
+
+
+**Standing continuation 2026-10-13:** family 3 accepted and fully reconciled:
+4,416 children, zero warnings/exceptions, 2.494159146x amplification,
+2,409,929 ms attempt / 2,430,372 ms family; 154 repair digest pairs.
+After renewed admitted smokes/focused proof and sixty seconds, ordinal 4
+was submitted with the SAME frozen launcher as the sole wave unit.
+Three of nine accepted; P2 remains incomplete. The watcher resumes after
+the unit ends. Retain every family; stop at the first failure.
+
+
+**Standing continuation 2026-10-14:** family 4 accepted and fully reconciled:
+836 children, zero warnings/exceptions, 2.833357835x amplification,
+4,789,718 ms attempt / 4,797,300 ms family; 20 repair digest pairs.
+Renewed admitted smokes and four focused tests passed; a full sixty-second
+interval followed. Ordinal 5 submitted with the SAME frozen launcher as the
+sole wave family unit, with 422,327,496,704 free bytes. Four of nine accepted;
+P2 remains incomplete. Watcher resumes after unit 5 ends and reconciles all
+acceptance conditions before ordinal 6. Stop at the first failure; retain state.
+
+
+**Standing stop 2026-10-14:** family 5 exited 1 and sealed one unapproved
+engine-failure. Four families accepted, one failed, four unstarted.
+A read-only reproduction of the unmatched GIF repair copy gives Tika exit 1,
+empty stdout and TikaException. All frozen identities and retained ceilings
+hold; no terminal children or store pass were published for family 5.
+The wave is stopped; ordinal 6 must not launch and family 5 must not retry.
+P2 remains in-progress. See history/p2/2026-10-14-first-wave-stop.md.

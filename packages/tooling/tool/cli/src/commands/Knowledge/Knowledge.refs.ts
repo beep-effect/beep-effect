@@ -1625,6 +1625,7 @@ type OpenFence = {
   readonly marker: string;
   readonly length: number;
   readonly depth: number;
+  readonly info: string;
 };
 
 const openedFence = (line: ContainerLine): O.Option<OpenFence> => {
@@ -1632,7 +1633,12 @@ const openedFence = (line: ContainerLine): O.Option<OpenFence> => {
   if (fence === null || !P.isString(fence[1]) || !P.isString(fence[1][0])) {
     return O.none();
   }
-  return O.some({ marker: fence[1][0], length: Str.length(fence[1]), depth: line.depth });
+  return O.some({
+    marker: fence[1][0],
+    length: Str.length(fence[1]),
+    depth: line.depth,
+    info: Str.trim(P.isString(fence[2]) ? fence[2] : ""),
+  });
 };
 
 const closesFence = (line: ContainerLine, open: OpenFence): boolean => {
@@ -1710,7 +1716,56 @@ export type KnowledgeDocumentLine = {
  * @category parsing
  * @since 0.0.0
  */
-export const knowledgeDocumentLines = (text: string): ReadonlyArray<KnowledgeDocumentLine> => {
+export const knowledgeDocumentLines = (text: string): ReadonlyArray<KnowledgeDocumentLine> =>
+  A.map(knowledgeDocumentFenceLines(text), (line) => ({ text: line.text, number: line.number, prose: line.prose }));
+
+/**
+ * One document line with its fence verdict and the info string of the fence it belongs to.
+ *
+ * @see {@link knowledgeDocumentFenceLines} for the reader that produces them.
+ * @category models
+ * @since 0.0.0
+ */
+export type KnowledgeDocumentFenceLine = KnowledgeDocumentLine & {
+  readonly fenceInfo: O.Option<string>;
+  readonly opensFence: boolean;
+};
+
+/**
+ * Splits a decoded document into numbered lines carrying the fence verdict and fence info string.
+ *
+ * **Details**
+ *
+ * `fenceInfo` is the trimmed info string of the fence a line belongs to — its opening delimiter, its
+ * content, and its closing delimiter — and `O.none()` for prose. `opensFence` is true only on an
+ * opening delimiter, which is what separates two adjacent fences. It is read from the opening
+ * delimiter only, so a marker written in prose, or inside an HTML comment within the fence body,
+ * never makes a fence carry it. The `prose` verdict is exactly the one {@link knowledgeDocumentLines}
+ * reports, because that reader is a projection of this one.
+ *
+ * **Example** (Read the info string of a fenced line)
+ *
+ * The delimiter is assembled rather than written literally, because a fence cannot appear inside
+ * this documentation block.
+ *
+ * ```ts
+ * import { knowledgeDocumentFenceLines } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
+ * import * as A from "effect/Array"
+ * import * as O from "effect/Option"
+ *
+ * const fence = A.join(A.replicate("~", 3), "")
+ * const lines = knowledgeDocumentFenceLines(A.join(["intro", `${fence}text beep:generated=x`, "body", fence], "\n"))
+ *
+ * console.log(A.map(lines, (line) => O.getOrNull(line.fenceInfo)))
+ * // [ null, "text beep:generated=x", "text beep:generated=x", "text beep:generated=x" ]
+ * ```
+ *
+ * @param text - Whole decoded document text.
+ * @returns Every line, 1-based numbered, with its fence verdict and fence info string.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const knowledgeDocumentFenceLines = (text: string): ReadonlyArray<KnowledgeDocumentFenceLine> => {
   // Single-allocation map with fence state threaded through the closure: per-line `A.append`
   // re-copies the whole accumulator and turns a large document quadratic.
   let fence = O.none<OpenFence>();
@@ -1718,8 +1773,13 @@ export const knowledgeDocumentLines = (text: string): ReadonlyArray<KnowledgeDoc
     const nextFence = advanceFence(fence, containerLine(lineText));
     // Prose only: fence delimiters and fenced content alike are excluded.
     const prose = O.isNone(fence) && O.isNone(nextFence);
+    const fenceInfo = O.map(
+      O.orElse(fence, () => nextFence),
+      (open) => open.info
+    );
+    const opensFence = O.isNone(fence) && O.isSome(nextFence);
     fence = nextFence;
-    return { text: lineText, number: index + 1, prose };
+    return { text: lineText, number: index + 1, prose, fenceInfo, opensFence };
   });
 };
 

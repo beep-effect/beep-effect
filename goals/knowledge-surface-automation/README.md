@@ -40,22 +40,30 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 in progress — Workstream D's projection slice. `beep goals next|explain|catalog`
-ship as read-only commands over an in-memory SQLite projection, differential-tested
-against a pure-TS evaluator. The live-census FP-eyeball report is
-[`research/p4-report-goals-projection.md`](./research/p4-report-goals-projection.md);
-`goals index` now also renders the capability graph as a Mermaid section in the local
-`goals/INDEX.md` (design PR 2, relic collapse per G4). The report's verdict gates the
-D5/D8 doctor findings (PR 3) and a manifest-only PR that declares four missing
-`provides`. Design and
-mini-grill outcomes:
-[`research/p4-goals-projection-design.md`](./research/p4-goals-projection-design.md),
-[`research/p4-goals-projection-decisions.md`](./research/p4-goals-projection-decisions.md).
-P1-P3 outcomes stay as recorded: all 24 P2 decisions in
-[`research/p2-grill-decisions.md`](./research/p2-grill-decisions.md), A/B/C/D Phase-0
-verdicts in [`research/p1-fp-eyeball-verdicts.md`](./research/p1-fp-eyeball-verdicts.md).
-Workstream E's pure-plan report still awaits its eyeball verdict before any
-materializer exists.
+P4 in progress. Shipped on main so far:
+
+- **D:** `beep goals next|explain|catalog` (in-memory SQLite projection,
+  differential-tested) and the Mermaid capability-graph section in `goals/INDEX.md`.
+- **E:** `goals bootstrap|adopt --write --expect <planId>` (atomic publish, exclusive
+  adoption). This packet adopted itself with its own executor (self-hosting test case
+  #1).
+- **B:** the read-only `beep skills lock-plan` with six ratified resolution seeds.
+- **Designs:** B, E, and C Stage 2
+  ([`research/p4-skills-warehouse-design.md`](./research/p4-skills-warehouse-design.md),
+  [`research/p4-goals-materialize-design.md`](./research/p4-goals-materialize-design.md),
+  [`research/p4-knowledge-doctor-design.md`](./research/p4-knowledge-doctor-design.md)).
+
+This PR adds C Stage-2 PR 1, the read-only `beep knowledge doctor --report`, with its
+FP-eyeball report
+([`research/p4-report-knowledge-doctor.md`](./research/p4-report-knowledge-doctor.md)).
+
+Waiting on verdicts:
+
+- the D and B reports gate D's doctor findings and B's lock write;
+- the C report gates PR 2 (domain evaluators and the assertion/planned-command
+  classification fixes).
+
+Phase-0 verdicts: [`research/p1-fp-eyeball-verdicts.md`](./research/p1-fp-eyeball-verdicts.md).
 
 ## Latest Evidence
 

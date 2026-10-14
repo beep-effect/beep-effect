@@ -318,7 +318,7 @@ dedicated GitHub App token, the same unprovisioned prerequisite that keeps
   row to `goals/knowledge-doctor.promotions.jsonc` (never touching the sealed baseline).
   The next CI mint reads the promotion at its SHA and admits that kind's inherited keys.
 
-## Decisions (K1..K11)
+## Decisions (K1..K12)
 
 - **K1 Witness-mandatory evaluators.** Reason: makes the counterfactual test total;
   vacuous passes cannot be represented. Reverse: if some evaluator legitimately cannot
@@ -364,3 +364,10 @@ dedicated GitHub App token, the same unprovisioned prerequisite that keeps
   a `promotedKinds` field edited by promotion PRs would break the seal (review on #1626).
   Reverse: fold promotions back into the baseline only if the mint App opens promotion PRs
   itself.
+- **K12 Promotion rows are admitted narrowly.** A promotion PR changes
+  `goals/knowledge-doctor.promotions.jsonc` and nothing else, appends exactly one row
+  whose `kind` is not already promoted, and cites C7 window evidence that CI re-checks
+  at the merge-base. Any other diff to the promotions file is `baseline-tamper`.
+  Reason: without these rules any branch could append a promotion and reopen the
+  laundering route the seal closed (review round 3 on #1626). Reverse: relax the
+  single-file rule only if promotions start being minted by the CI App.

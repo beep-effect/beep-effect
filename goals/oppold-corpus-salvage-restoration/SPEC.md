@@ -886,3 +886,173 @@ Decision: fix these three contracts in one PR6 push. Reversal: revert this
 review-fix commit while retaining both sealed P1 families and their manifests.
 P1 remains complete; P2 remains pending. No transformation family is launched
 in this run. Run 10 starts only after PR6 merges under the orchestrator gate.
+
+
+### 2026-10-13: launch the nine bounded P2 families after PR6 merge
+
+Run-10 go and its branch correction follow merged #1611 at 6eb3d03677.
+The committed membership still contains nine ordered occurrences, all matching
+the sealed archive by objectId, source digest and input bytes. Retain ratio 4,
+attempt 7,200,000 ms, family 43,200,000 ms, total output 2,147,483,648 bytes
+per family and the 100,000,000,000-byte free-space floor. Scope remains slice,
+with explicit occurrence, committed membership and expected stores one.
+
+Decision: use nine fresh date-stamped output labels under the restoration
+runs parent, each selecting the original archive with preservationLabel.
+Each family has a pre-launch freeze record with source, engine, code, script,
+membership and policy identities. Record the computed policy digest before
+launch and compare it to family-run-start; never change a manifest to fit
+runtime drift. Launch one detached beep-heavy family at a time, reconcile
+acceptance before continuing, and wait 60 seconds after each successful seal.
+Stop at the first failure and diagnose before further execution; never retry
+a sealed family. No engine or launcher code changes inside the wave.
+Reversal: revert the packet launch decision while retaining every family,
+ledger, output and freeze record. P2 remains incomplete until all estate,
+recycle and legacy-Word obligations close.
+
+
+### 2026-10-13: family 1 accepted; continue the frozen wave
+
+Run-11 resumes after family 1 ended with result zero and an accepted seal.
+All 3,785 children reconcile, including 81 repair-copy/Tika pairs; 82
+repaired occurrences, 233 unsupported dispositions, zero unchanged. There
+are no warnings, exceptions or interruptions. Input 61,727,744 bytes,
+output 147,490,617 bytes, amplification 2.389373197x; attempt 769,470 ms
+and family 847,540 ms remain within the retained ceilings. Source, policy,
+engine, membership and script identities match its pre-launch freeze record.
+
+Decision: continue to ordinal 2 after complete reconciliation, renewed
+preflight and a full sixty-second interval. Only its detached family unit
+runs; all subsequent ordinals remain gated on their predecessors' accepted
+reconciliation. Retain all nine immutable manifests and the unchanged
+launcher. Stop and diagnose the first failure, never retry a sealed family.
+Reversal: revert this packet continuation decision while retaining every
+ledger, output and manifest. P2 remains in-progress, with later estate,
+recycle and legacy-Word obligations open. No merge or new code is authorized.
+
+
+### 2026-10-13: family 2 accepted; continue the frozen wave
+
+Standing Runs 12+ ruling resumes after family 2 ended with result zero and
+accepted seal. All 4,310 children reconcile: 4,064 engine children and
+123 repair-copy/Tika pairs with identical digest sets. Dispositions: 125
+repaired occurrences / 123 distinct digests, 218 unsupported, zero unchanged.
+Zero warnings, exceptions or interruptions. Input 98,804,736 bytes; output
+265,766,621 bytes, amplification 2.689816620x; attempt 2,588,015 ms,
+family 2,611,137 ms. Source, runtime policy, engine, membership and launcher
+identities match its immutable pre-launch record; all ceilings hold.
+
+Decision: continue to ordinal 3 after renewed preflight and a full sixty-second
+interval, one detached family unit at a time. Stop and diagnose the first
+failure; never retry a sealed family or change code inside this wave.
+Reversal: revert this packet continuation decision while retaining all
+ledgers, outputs and freeze records. P2 stays incomplete; eighteen larger
+occurrences and remaining estate, recycle and legacy-Word obligations remain open.
+
+
+### 2026-10-13: bounded handoff on shared admission delay
+
+Renewed engine smokes and focused proof remained queued for approximately
+20 minutes after family 2 reconciled. Neither command emitted an execution
+result. Admission holders were live jobs; no outside job, slot limit or
+configuration was changed. Both worker-owned queued command trees were
+terminated before handoff, without admitting ordinal 3 or changing its script.
+Termination statuses are not proof of an engine smoke or test execution.
+
+Decision: report shared admission as a continuation blocker instead of
+holding a worker indefinitely or bypassing the required preflight. Family 2
+is accepted; two of nine are sealed. Ordinal 3 has no started/result stamp
+or run directory. P2 remains in-progress. Reversal: resume renewed preflight
+through beep-heavy, wait a full sixty-second interval, and launch the unchanged
+frozen script with ordinal 3 after all checks pass. Retain every sealed family,
+output and pre-launch freeze record. No family failure or retry is claimed.
+
+
+### 2026-10-13: renew admitted preflight after shared-admission handoff
+
+Runs 13+ permits continuation after shared heavy admission becomes available.
+Family 2 remains accepted; both existing family ledger digests are unchanged.
+All nine source, engine, membership, policy and launcher freeze identities
+match. Ordinals 3-9 remain unstarted. No source change or main integration
+is performed during the frozen wave.
+
+Decision: pass the existing workstation user-bus address and runtime directory
+to beep-heavy because this tool session omitted those environment variables.
+The user bus is present. Initial wrappers failed before admission and therefore
+are not engine or test execution evidence. Rerun both required preflight
+commands through the unchanged shared queue; never bypass admission or stop
+another lane. Launch ordinal 3 only after both proofs pass, refreshed free
+space remains above 100 GB, and a full sixty-second interval completes.
+Reversal: stop only worker-owned queued preflight commands and hand off the
+unchanged next ordinal, retaining every sealed family and freeze record.
+
+
+### 2026-10-13: family 3 accepted; continue the frozen wave
+
+Standing Runs 12+/13+ ruling governs this continuation. Family 3 exited zero,
+sealed acceptance and reconciled all 4,416 children: 4,108 engine children,
+154 repair-copy and 154 Tika children. Both derived identity sets match all
+154 distinct repaired digests; 176 repaired occurrences / 181 unsupported,
+zero unchanged. Zero warnings, exceptions or interruptions. Input 98,804,736
+bytes; output 246,434,736 bytes (2.494159146x); attempt 2,409,929 ms,
+family 2,430,372 ms. All retained ceilings and frozen identities hold.
+Three of nine accepted; eighteen larger occurrences remain excluded.
+
+Decision: accept family 3 and continue to ordinal 4 with the SAME frozen
+launcher only after renewed admitted smokes/focused proof, a full sixty-second
+interval and the 100 GB floor. No code/engine/launcher change or merged-main
+integration inside the wave. If admission stalls, hold after at most twenty
+minutes without disturbing other lanes. P2 remains incomplete.
+Reversal: revert packet continuation decisions while retaining every family,
+output, ledger and freeze record. PR7 follows the terminal wave record.
+
+
+### 2026-10-14: family 4 accepted; continue the frozen bounded wave
+
+Standing Runs 12+/13+ ruling governs this continuation. Family 4 exited zero
+and sealed acceptance, reconciling 836 children: 796 engine, 20 repair-copy
+and 20 Tika children. Both derived digest sets match all 20 distinct repaired
+digests; dispositions 23 repaired occurrences / 62 unsupported, zero unchanged.
+Zero warnings, exceptions or interruptions. Input 119,120,896 bytes, output
+337,512,124 bytes (2.833357835x); attempt 4,789,718 ms, family 4,797,300 ms.
+All retained ceilings and nine frozen source/engine/launcher/membership/policy
+identities hold. Earlier ledger hashes remain unchanged; four of nine accepted.
+
+Decision: continue ordinal 5 only after renewed admitted real sandbox smokes
+and focused tests, a full sixty-second interval, fresh state checks and the
+100 GB floor. Renewed direct smokes and four focused tests passed. No main
+integration, code, engine or frozen launcher change inside the wave. P2 stays
+incomplete; eighteen larger occurrences and estate/recycle/DOC gates remain open.
+Reversal: revert packet continuation decisions while retaining every family,
+ledger, output and immutable pre-launch freeze record. PR7 follows the
+terminal wave record; never retry a sealed family or merge from this worker.
+
+
+### 2026-10-14: stop the first bounded P2 wave at family 5
+
+Standing Runs 12+/13+ ruling stops this wave at its first sealed failure.
+Family 5 result is 1, with one unapproved engine-failure and a terminal
+family-acceptance-failure. Four preceding families remain accepted and
+reconciled; ordinals 6-9 are unstarted. All nine frozen source, engine,
+launcher, membership and policy identities match, and earlier ledger hashes
+remain unchanged. Input 157,975,552 bytes; retained output 354,621,626 bytes,
+amplification 2.244788016x; family 1,491,085 ms. These fit retained ceilings.
+
+The retained attempt has 99 repair copies and 98 Tika outputs. Its unmatched
+3,020-byte GIF copy reproduces frozen second-pass exit 1, empty stdout and
+TikaException in a disposable read-only sandbox. The engine version smoke
+passes. Attribution is an input-sensitive Tika/parser failure; the precise
+original parser cause is unavailable from the generic ledger catch.
+The 108 repaired occurrences / 98 distinct digests and 217 unsupported
+dispositions are partial evidence. Zero terminal child rows and zero store
+passes mean no acceptance or complete child reconciliation is claimed.
+
+Decision: stop, diagnose and publish the terminal record; launch nothing,
+change no frozen engine/launcher code, and never retry the sealed family.
+P2 remains in-progress with eighteen larger occurrences, four unstarted wave
+members and remaining estate/recycle/legacy-Word obligations open. P0/P1/P4
+remain complete; P3 pending. Any new execution needs an orchestrator ruling
+and its own freeze record. Follow up with sanitized failure-stage/class
+evidence and a synthetic failing-GIF fixture. Reversal: revert these packet
+decisions while retaining all families, ledgers, outputs, claims and manifests.
+See history/p2/2026-10-14-first-wave-stop.md for aggregate evidence.

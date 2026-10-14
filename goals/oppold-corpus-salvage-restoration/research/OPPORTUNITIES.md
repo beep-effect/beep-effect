@@ -737,3 +737,62 @@ Free bytes 204492922880, above retained floor. Zero P2 families started.
   socket for the current user restored the approved heavy lane.
 - **Prevented by:** preserve XDG_RUNTIME_DIR and DBUS_SESSION_BUS_ADDRESS in
   every worker launch, as the lane mechanics specify. No unit/config changed.
+
+
+## 2026-10-13 — Literal newline escapes blocked the launch-evidence commit
+
+- **Doing:** committing the bounded-wave launch evidence before handoff.
+- **Evidence:** commitlint rejected the body for exceeding 100 characters
+  because the shell argument held literal newline escapes. No commit or push
+  occurred. Replaced the argument with a message file containing real newlines.
+- **Prevented by:** use a file for every multiline commit message and keep
+  body lines below the repository limit.
+
+
+## 2026-10-13 — Shared heavy admission delays resumed-wave preflight
+
+- **Doing:** remeasuring engine smokes and focused restoration proof after
+  reconciling accepted family 2, before ordinal 3.
+- **Evidence:** both approved wrappers report `all 5 slots busy, waiting`.
+  The family 2 unit has ended; no new family launches while its required
+  preflight remains queued. Admission is retained; no cap or configuration changes.
+- **Prevented by:** expose queue position and estimated slot availability in
+  the lane handoff so the wave driver can distinguish admission from execution.
+
+
+## 2026-10-13 — Relaunch did not inherit the user-bus environment
+
+- **Doing:** renewing admitted sandbox smokes and focused restoration proof
+  before the next frozen wave family.
+- **Evidence:** both beep-heavy wrappers stopped before admission with
+  `DBUS_SESSION_BUS_ADDRESS and XDG_RUNTIME_DIR not defined`. The existing
+  user bus was present; explicit workstation runtime/bus variables restored
+  access. Both renewed commands then entered the unchanged shared slot queue.
+- **Prevented by:** preserve the user-bus environment on every worker relaunch
+  and check manager reachability before issuing admitted work. No engine,
+  launcher, unit configuration or outside job was changed.
+
+
+## 2026-10-14 — Composite smoke wrapper failed before engine execution
+
+- **Doing:** renewing admitted sandbox engine smokes before ordinal 5.
+- **Evidence:** the composite shell wrapper returned `bwrap: execvp` before
+  an engine ran. Both direct approved invocations then exited zero through
+  beep-heavy. The failure is wrapper evidence, not a failed corpus family.
+- **Prevented by:** use the brief's direct smoke invocations, preserving their
+  argument boundaries; keep the frozen live launcher unchanged.
+
+
+### 2026-10-14: a GIF second pass sealed the bounded wave without parser detail
+
+Doing: reconcile ordinal 5 under the frozen first-wave contract.
+Evidence: result 1, one unapproved engine-failure, zero terminal child rows.
+The retained repair directory has 99 copies and 98 Tika outputs. The unmatched
+3,020-byte GIF copy reproduces exit 1, empty stdout and one TikaException
+under the frozen Java/Tika sandbox. Tika's version smoke exits zero.
+The failure catch replaces the original cause with a generic ledger reason,
+so the precise parser cause is unavailable from the sealed ledger.
+What would prevent this: preserve a sanitized exception class and execution
+stage at the failure boundary, with a synthetic nonzero/empty GIF second-pass
+fixture. This is a follow-up, not authorization to change the frozen wave,
+approve an exception, retry a sealed family or launch ordinal 6.

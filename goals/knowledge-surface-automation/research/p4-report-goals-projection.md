@@ -52,13 +52,17 @@ Design: `research/p4-goals-projection-design.md`. Mini-grill outcomes:
 
 ## Live census
 
+Corrected 2026-10-14 per the independent verdict (`research/p1-fp-eyeball-verdicts.md`,
+Workstream D projection): the first draft counted `goals/_template`, which the loader
+excludes, and misattributed two fog providers.
+
 | Measure | Value |
 | --- | --- |
-| Packets | 212 (52 active, 15 paused, 140 completed-retained, 4 reference, 1 superseded) |
+| Packets | 211 (51 active, 15 paused, 140 completed-retained, 4 reference, 1 superseded) |
 | Packets declaring any capability | 28 |
 | Capabilities | 45 |
 | Actionable frontier | 43 |
-| Active but blocked | 8 |
+| Active but blocked | 7 |
 | Active, not execution-capable | 1 (`agentic-professional-runtime`) |
 | Fog capabilities | 4 |
 | Cycles | 0 |
@@ -91,14 +95,14 @@ delivered or is building but never declared:
 | Fog capability | Consumer | Likely provider (undeclared) |
 | --- | --- | --- |
 | `box/driver` | `practice-mail-tagging` | `box-driver` (completed-retained, `provides` absent) |
-| `law-practice/practice-kg-matter-lookup` | `practice-mail-tagging` | `practice-kg-mcp` (active, `provides` absent) |
-| `m365/message-category-write` | `practice-mail-tagging` | an M365 packet (`m365-driver` or `m365-mcp`, both completed-retained, `provides` absent) |
+| `law-practice/practice-kg-matter-lookup` | `practice-mail-tagging` | `practice-kg-mcp` (completed-retained, `provides` absent) |
+| `m365/message-category-write` | `practice-mail-tagging` | `practice-docket-intake` (completed-retained; the category verbs landed in #1456, `provides` absent) |
 | `goals/packet-core` | `packet-convention-migration` (completed) | `packet-control-plane-core` (`provides` absent) |
 
 Remedy, after the verdict: one manifest-only PR that adds the missing `provides`
-declarations. `practice-mail-tagging` stays blocked after the fix while
-`practice-kg-mcp` is still active, which is the honest state: its matter lookup is
-not finished.
+declarations. All three providers are `completed-retained`, so after the fix
+`practice-mail-tagging` turns ready (frontier 44), which matches its README and SPEC
+D-43 (live, unattended category writes).
 
 Two observations that are not engine findings:
 

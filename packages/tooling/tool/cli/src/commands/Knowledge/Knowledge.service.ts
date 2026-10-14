@@ -83,7 +83,11 @@ import type { CapturedStreams } from "../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 import type { KnowledgeStaticCommandTree } from "./Knowledge.command-surface.ts";
 import type { KnowledgeInlineSpan, KnowledgeRefsReport, KnowledgeTreeOracle } from "./Knowledge.refs.ts";
-import type { KnowledgeCommandProbeResult, KnowledgeRewriteRule } from "./Knowledge.schemas.ts";
+import type {
+  KnowledgeCommandProbeResult,
+  KnowledgeFindingSeverity,
+  KnowledgeRewriteRule,
+} from "./Knowledge.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.service");
 const KnowledgeRewriteRulesJson = S.fromJsonString(KnowledgeRewriteRules);
@@ -414,7 +418,23 @@ const failedAssertionCandidate = (
     remediation: "Update the assertion or add the tracked target.",
   });
 
-const commandWords = (span: string): ReadonlyArray<string> => {
+/**
+ * The words of a documented `bun run beep` span after the command prefix.
+ *
+ * **Example** (Split a documented command)
+ *
+ * ```ts
+ * import { knowledgeCommandWords } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
+ *
+ * console.log(knowledgeCommandWords("bun run beep goals doctor --json")) // [ "goals", "doctor", "--json" ]
+ * ```
+ *
+ * @param span - Inline span already accepted by `isKnowledgeCommandSpan`.
+ * @returns The whitespace-separated words after the prefix; empty for a bare prefix.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const knowledgeCommandWords = (span: string): ReadonlyArray<string> => {
   const tail = Str.trim(Str.slice(Str.length(COMMAND_PREFIX))(span));
   return Str.isEmpty(tail) ? A.empty<string>() : Str.split(/\s+/u)(tail);
 };
@@ -464,7 +484,7 @@ const commandOccurrence = (
         KnowledgeCommandOccurrence.make({
           documentId,
           location: findingLocation(documentPath, lineNumber, inline.column),
-          words: commandWords(inline.span),
+          words: knowledgeCommandWords(inline.span),
         })
       )
     : O.none();
@@ -792,8 +812,34 @@ const resolveProbeCandidates = Effect.fn("Knowledge.resolveProbeCandidates")(fun
 const candidateGroupKey = (candidate: KnowledgeFindingCandidate): string =>
   A.join(A.map([candidate.kind, candidate.documentId, candidate.subject], knowledgeLengthPrefix), "");
 
-const findingsFromCandidates = Effect.fn("Knowledge.findingsFromCandidates")(function* (
-  candidates: ReadonlyArray<KnowledgeFindingCandidate>
+/**
+ * Assigns occurrence indices and v1 identities to candidates, returning findings in input order.
+ *
+ * **Details**
+ *
+ * Candidates sharing a kind, document id, and subject receive increasing zero-based occurrence
+ * indices in the order given, which is why callers pass candidates in source order. Every public
+ * text field is sanitized for terminal and JSON report surfaces. The result is aligned one-to-one
+ * with the input, so a caller can zip its own per-candidate metadata back onto the findings.
+ *
+ * **Example** (Mint no findings from no candidates)
+ *
+ * ```ts
+ * import { knowledgeFindingsFromCandidates } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(knowledgeFindingsFromCandidates([]))) // true
+ * ```
+ *
+ * @param candidates - Normalized candidates in source order.
+ * @param severityOf - Severity per candidate; Stage-1 findings are all blocking.
+ * @returns One identity-bearing finding per candidate, in input order.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const knowledgeFindingsFromCandidates = Effect.fn("Knowledge.findingsFromCandidates")(function* (
+  candidates: ReadonlyArray<KnowledgeFindingCandidate>,
+  severityOf: (candidate: KnowledgeFindingCandidate) => KnowledgeFindingSeverity = () => "blocking"
 ) {
   const occurrences = MutableHashMap.empty<string, number>();
   let findings = A.empty<KnowledgeFinding>();
@@ -815,7 +861,7 @@ const findingsFromCandidates = Effect.fn("Knowledge.findingsFromCandidates")(fun
       KnowledgeFinding.make({
         findingId,
         kind: candidate.kind,
-        severity: "blocking",
+        severity: severityOf(candidate),
         documentId: sanitizePublicFindingText(candidate.documentId),
         subject: sanitizePublicFindingText(candidate.subject),
         occurrence: S.Natural.make(occurrence),
@@ -906,8 +952,8 @@ export const scanKnowledgePair = Effect.fn("Knowledge.scanPair")(function* (inpu
     { commands: baseDocuments.commands, indexDocumentId: documentIdForBase(INDEX_PATH) },
     { commands: headDocuments.commands, indexDocumentId: headIndexDocumentId }
   );
-  const baseFindings = yield* findingsFromCandidates(A.appendAll(baseDocuments.candidates, probe.base));
-  const headFindings = yield* findingsFromCandidates(A.appendAll(headDocuments.candidates, probe.head));
+  const baseFindings = yield* knowledgeFindingsFromCandidates(A.appendAll(baseDocuments.candidates, probe.base));
+  const headFindings = yield* knowledgeFindingsFromCandidates(A.appendAll(headDocuments.candidates, probe.head));
   const baseIds = HashSet.fromIterable(A.map(baseFindings, (finding) => finding.findingId));
   const headIds = HashSet.fromIterable(A.map(headFindings, (finding) => finding.findingId));
   return KnowledgeSemanticDeltaReport.make({
@@ -1008,8 +1054,30 @@ const gitRefSpanNames = (fullRef: string): ReadonlyArray<string> => {
  */
 export const gitRefSpanNamesForTesting = gitRefSpanNames;
 
-/** Collects local branch, remote-tracking branch, and tag names with one Git process per comparison. */
-const readGitRefNames = Effect.fn("Knowledge.readGitRefNames")(function* (repoRoot: string) {
+/**
+ * Collects local branch, remote-tracking branch, and tag names with one Git process per comparison.
+ *
+ * **Details**
+ *
+ * Every spelling a ref can be cited by — the full ref, the short branch or tag name, and the
+ * `<remote>/<branch>` form — so an inline code span that exactly names a ref is never read as a
+ * missing repository path.
+ *
+ * **Example** (Read the ref census of a repository)
+ *
+ * ```ts
+ * import { readKnowledgeGitRefNames } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readKnowledgeGitRefNames("/repo"))) // true
+ * ```
+ *
+ * @param repoRoot - Repository whose refs are listed.
+ * @returns Every accepted ref spelling.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const readKnowledgeGitRefNames = Effect.fn("Knowledge.readGitRefNames")(function* (repoRoot: string) {
   const fullRefs = yield* runGitLines(
     repoRoot,
     ["for-each-ref", "--format=%(refname)", "refs/heads", "refs/remotes", "refs/tags"],
@@ -1559,7 +1627,7 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
     KnowledgeOperationalError.mapError("Failed to locate the repository root for semantic-delta.")
   );
   yield* guardKnowledgeCloneAttributes(repoRoot);
-  const gitRefNames = yield* readGitRefNames(repoRoot);
+  const gitRefNames = yield* readKnowledgeGitRefNames(repoRoot);
   const historyAdapter = historyGitAdapter(baseRef);
   const headCommit = yield* resolveGitCommit(repoRoot, "HEAD", historyAdapter);
   const baseCommit = yield* resolveGitMergeBase(repoRoot, baseRef, headCommit, historyAdapter);
@@ -1659,6 +1727,57 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
  * @since 0.0.0
  */
 export const makeKnowledgeTreeOracle = Effect.fn("Knowledge.makeTreeOracle")(function* (treeish: string) {
+  const materialized = yield* materializeKnowledgeTree(treeish);
+  return materialized.oracle;
+});
+
+/**
+ * A tree oracle together with the scoped directory its archive was extracted into.
+ *
+ * **Details**
+ *
+ * `archiveRoot` is what lets a caller derive tree-scoped facts that need a filesystem view, such as
+ * the static command surface, from exactly the bytes the oracle reads. `repoRoot` is the live
+ * repository the archive was taken from, for Git questions about history rather than tree content.
+ *
+ * @see {@link materializeKnowledgeTree} for the constructor.
+ * @category models
+ * @since 0.0.0
+ */
+export interface KnowledgeMaterializedTree {
+  readonly archiveRoot: string;
+  readonly oracle: KnowledgeTreeOracle;
+  readonly repoRoot: string;
+}
+
+/**
+ * Materializes one commit-ish as a scoped archive and returns the oracle plus its archive root.
+ *
+ * **Details**
+ *
+ * This is the archive step behind {@link makeKnowledgeTreeOracle}: the same clone-attributes guard,
+ * commit resolution, archive extraction, and `git ls-tree` entry list, with the extraction root and
+ * repository root kept for callers that read more than file bytes.
+ *
+ * **Gotchas**
+ *
+ * The archive root is a scoped temporary directory and disappears when the enclosing scope closes.
+ *
+ * **Example** (Materialize the working commit)
+ *
+ * ```ts
+ * import { materializeKnowledgeTree } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(Effect.scoped(materializeKnowledgeTree("HEAD")))) // true
+ * ```
+ *
+ * @param treeish - Any commit-ish; no fetch ever occurs.
+ * @returns The oracle, its archive root, and the repository root.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const materializeKnowledgeTree = Effect.fn("Knowledge.materializeTree")(function* (treeish: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const runtime = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
@@ -1686,14 +1805,15 @@ export const makeKnowledgeTreeOracle = Effect.fn("Knowledge.makeTreeOracle")(fun
       .pipe(KnowledgeOperationalError.mapError(`Failed to read archived tracked file "${repoPath}".`));
   });
 
-  return {
+  const oracle: KnowledgeTreeOracle = {
     treeish,
     commit,
     trackedEntries: A.map(tree, (entry) =>
       KnowledgeTrackedEntry.make({ path: entry.path, mode: entry.mode, objectId: entry.objectId })
     ),
     readBytes: (repoPath: string) => readBytes(repoPath).pipe(Effect.provide(runtime)),
-  } satisfies KnowledgeTreeOracle;
+  };
+  return { archiveRoot, oracle, repoRoot } satisfies KnowledgeMaterializedTree;
 });
 
 const refsTreeLive = (treeish: string) =>

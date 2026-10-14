@@ -116,11 +116,13 @@ type KnowledgePublicDetail = typeof KnowledgePublicDetail.Type;
  *
  * **Details**
  *
- * Stage 1 emits only `broken-tracked-path`, `unknown-beep-command`, `index-drift`, and
- * `failed-assertion`. A `broken-tracked-path` excludes inline spans that exactly name a live local
- * branch, remote-tracking branch, or tag. `unknown-beep-option` and the other members are reserved
- * for later evaluators and are never emitted by this scanner, so a report containing them came from
- * a newer producer.
+ * The Stage-1 semantic delta emits only `broken-tracked-path`, `unknown-beep-command`, `index-drift`,
+ * and `failed-assertion`. A `broken-tracked-path` excludes inline spans that exactly name a live
+ * local branch, remote-tracking branch, or tag. The Stage-2 knowledge doctor additionally emits
+ * `unknown-beep-option` and the span-classification kinds (`historical-claim-unverified`,
+ * `historical-commit-not-ancestor`, `historical-marker-on-live-surface`, and
+ * `unclassified-reference-span`); members are only ever added, never repurposed. The remaining
+ * members are reserved for later evaluators.
  *
  * **Example** (Classify a Stage-1 finding kind)
  *
@@ -128,7 +130,7 @@ type KnowledgePublicDetail = typeof KnowledgePublicDetail.Type;
  * import { KnowledgeFindingKind } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
  *
  * console.log(KnowledgeFindingKind.is["index-drift"]("index-drift")) // true
- * console.log(KnowledgeFindingKind.literals.length) // 14
+ * console.log(KnowledgeFindingKind.literals.length) // 18
  * ```
  *
  * @category models
@@ -149,6 +151,10 @@ export const KnowledgeFindingKind = LiteralKit([
   "unknown-beep-command",
   "failed-assertion",
   "unknown-beep-option",
+  "historical-claim-unverified",
+  "historical-commit-not-ancestor",
+  "historical-marker-on-live-surface",
+  "unclassified-reference-span",
 ]).pipe(
   $I.annoteSchema("KnowledgeFindingKind", {
     description: "Stable classes emitted or reserved by knowledge-surface evaluators.",

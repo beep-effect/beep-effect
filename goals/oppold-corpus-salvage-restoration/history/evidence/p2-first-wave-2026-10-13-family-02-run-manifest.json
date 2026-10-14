@@ -1,0 +1,34 @@
+{
+  "schema": "p2-mail-family-run-manifest/v1",
+  "createdAt": "2026-10-13T19:07:36.826815+00:00",
+  "waveOrdinal": 2,
+  "runLabel": "t7-salvage-2026-08-10-p2-2026-10-13-wave-02",
+  "preservationLabel": "t7-salvage-2026-08-10",
+  "scope": "slice",
+  "expectedStores": 1,
+  "objectId": "886bd60cee359bcca9ee313bdeb4c08a4c7c3de3e676c021d50425741bfbac14",
+  "sourceSha256": "4501c21643be4ec9bb146983cd3760c73a8ddb41604c68126198f734dba0f95d",
+  "inputBytes": 98804736,
+  "codeHead": "6eb3d036771e868768846b3c56a5aafac69c3b2b",
+  "launchScriptSha256": "5b1d87cb5c420a53e56340bbc092c21826666c9e25ef210a421b8e20955e65e6",
+  "membershipSha256": "00c2bf191c03874664b6167b614b6dfeb1dddac27fadc0407d673eb35b8bd3b2",
+  "ceilings": {
+    "maxAmplificationRatio": 4,
+    "maxElapsedMillis": 7200000,
+    "maxTotalElapsedMillis": 43200000,
+    "maxTotalOutputBytes": 2147483648
+  },
+  "freeSpaceFloorBytes": 100000000000,
+  "engines": {
+    "pffexportPath": "/usr/bin/pffexport",
+    "pffexportVersion": "pffexport 20260917",
+    "bwrapPath": "/usr/bin/bwrap",
+    "bwrapVersion": "bubblewrap 0.13.0",
+    "javaPath": "/usr/bin/java",
+    "javaRealPath": "/usr/lib/jvm/java-27-openjdk/bin/java",
+    "javaVersion": "openjdk version \"27\" 2026-09-15",
+    "tikaJar": "~/.local/share/tika/tika-app-3.3.1.jar",
+    "tikaJarSha256": "0e8ee9795ac4244feab466f4a5a9c3b94675af392848243842cb6e1e69d27103"
+  },
+  "policySha256": "bd8566190e0a528375ec8489c87d59309db09e4eca72125a5f2fd8680134f899"
+}

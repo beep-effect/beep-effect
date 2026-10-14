@@ -787,11 +787,51 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
+      "symbol": "KnowledgeMaterializedTree",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Scoped archive handle, not a record: it carries the KnowledgeTreeOracle read seam (already a recorded exception) plus the temporary archive root and repository root that seam was extracted from, so tree-scoped derivations such as the static command surface read the same bytes. Built in-process inside an Effect scope and never decoded or persisted."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
       "symbol": "KnowledgePairedOracleInput",
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Two-sided comparison boundary that carries the base and HEAD KnowledgeArchiveOracle runtime seams; only renames is data, and it is already schema-backed by KnowledgeRename. The pair is assembled in-process before every scan and is never decoded or persisted."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
+      "symbol": "KnowledgeDoctorMemoryTreeInput",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "In-memory fixture constructor input for golden, adversarial, and counterfactual tests: it carries HashSet ref names, an Option command surface, and already-built KnowledgeDoctorTree seams keyed by commit. Its plain data (files, producers, flags) is schema-backed where it leaves the fixture; the input itself is assembled in test code and never decoded or persisted."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
+      "symbol": "KnowledgeDoctorTree",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Injected tree read seam extending the recorded KnowledgeTreeOracle exception: readBytes, commandTree, isAncestor, and atCommit are Effectful reads over an extracted Git archive and its history, and entryIndex is a derived HashSet lookup. Every data member is already schema-backed (KnowledgeTrackedEntry, KnowledgeProducerOutput, KnowledgeStaticCommandFlag); the seam is built in-process by the live layer and by fixtures, so it has no decode or persistence boundary."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
+      "symbol": "KnowledgeEvaluator",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Evaluator service contract, not a record: evaluate is an Effectful check over a KnowledgeDoctorTree seam, and its descriptive members (id, forms, kinds) are already LiteralKit-backed domains. Evaluators are values constructed in-process and never decoded or persisted."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
+      "symbol": "KnowledgeSpanClassificationRule",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Row of the ordered classification rule table: applies is a predicate function, and the row's class is the LiteralKit-backed KnowledgeSpanClass. The table is a module constant evaluated in-process and never decoded or persisted."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.render.ts",
