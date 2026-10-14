@@ -1143,3 +1143,18 @@ on the new head if it appears.
   the temporary settings expire when the command exits.
 - Prevention: bounded transport timeouts and an authenticated transport retry
   would keep a network stall from holding the publication indefinitely.
+
+
+### 2026-10-14 — compiler integration uncovered inherited quality gaps
+
+- Work: rerun the eight requested root checks after integrating the canonical
+  compiler upgrade while preserving the dependency update.
+- Evidence: root lint and hosted main both report one `jsdoc/informative-docs`
+  error and fourteen missing-tag warnings in the drawing and knowledge command
+  sources. Hosted coverage on PR #1640 reports drops in the knowledge command,
+  timezone generator, and NLP streaming handlers after the compiler migration.
+- Action: repair documentation and add focused behavioral tests in the shared
+  main-based repair PR. Regenerate the dependency branch's stale schema anchor
+  while preserving its reviewed golden-test exception and explanation.
+- Prevention: require zero-warning documentation and the existing coverage
+  ratchets on the integrated source before a broad compiler migration lands.
