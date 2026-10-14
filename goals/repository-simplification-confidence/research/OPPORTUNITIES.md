@@ -1237,3 +1237,15 @@ the live-repository command test in the isolated follow-up. The new repair
 preserves every incumbent floor, adds truthful measured identities and tests
 the public refusal boundary. New-source identity checks and policy checks at
 feature admission would prevent this repeated expansion of inherited reds.
+
+### 2026-10-14 — root test run interrupted before a verdict
+
+- Work: qualify the integrated dependency candidate with `bun run test`.
+- Evidence: the command exited 130 after reporting “All fibers interrupted
+  without error”; the CLI suite did not emit its final test summary. No agent
+  cancellation was issued by this repair session. The interrupt source remains
+  unverified, so this is an incomplete run rather than a passing test proof or
+  an attributed test assertion failure.
+- Prevention: retain command/process ownership and a terminal completion receipt
+  for long root proofs. Re-run the whole command on the final integrated
+  candidate after the consolidated repair lands.
