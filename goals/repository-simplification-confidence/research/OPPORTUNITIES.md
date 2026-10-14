@@ -1115,3 +1115,31 @@ on the new head if it appears.
 - Prevention: a resource-aware inventory schedule and partial timeout output
   would distinguish code failures from interrupted scans sooner. Preserve every
   lint rule and quality threshold.
+
+### 2026-10-13 — inherited example and graph coverage repairs
+
+- Work: finish the dependency-update proofs after integrating landed main changes.
+- Evidence: full root lint reported `unsafeExampleFindings: 1 > 0` for the
+  GitHubApp example introduced by #1631. The new goal materialization and Mermaid
+  files from #1632 and #1625 also had no coverage-baseline identities; focused
+  main-based coverage measured uncovered paths in both files.
+- Action: repair the declaration stub with a typed, deferred configuration load
+  and generate only the missing file identities in a main-based repair lane.
+  Preserve all existing baseline entries, totals, floors, and exemptions. Compare
+  the focused measurements with the full dependency-update coverage report.
+- Prevention: run executable-example policy and coverage identity checks before
+  landing source changes. Keep inherited repairs separate from dependency repairs
+  so dependent lanes can integrate one landed fix.
+
+### 2026-10-14 — stalled SSH publication
+
+- Work: publish the inherited quality repair through Yeet after cheap gates and
+  the committed-head frozen install passed.
+- Evidence: GitHub SSH transport remained connected with unacknowledged queued
+  data and repeated retransmissions for more than seven minutes.
+- Action: stop only the owned stalled transport and retry Yeet with a
+  command-scoped HTTPS URL rewrite and the existing `gh auth git-credential`
+  helper. The shared origin URL and credential configuration remain unchanged;
+  the temporary settings expire when the command exits.
+- Prevention: bounded transport timeouts and an authenticated transport retry
+  would keep a network stall from holding the publication indefinitely.
