@@ -1079,7 +1079,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 37,
+      "line": 50,
       "owner": "@beep/repo-cli",
       "reason": "Store regression scenarios use exact SQLite rows, staged process termination and injected audit-write failure to prove transaction, lease and resolution recovery contracts. Arbitrary operator-evidence transport properties live in agent-message-models.test.ts; random codec round-trips cannot replace these deterministic failure points."
     },

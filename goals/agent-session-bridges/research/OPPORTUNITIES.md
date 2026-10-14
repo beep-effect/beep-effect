@@ -511,3 +511,15 @@ and one `preferTypedSchemaDecoder` diagnostic. The same log carried the main-own
 Skills test context error, now corrected by landed #1745. Keep attribution
 separate and run the package-owned strict test task for changed fixtures; a source
 check alone does not validate those fixtures. Logs: PR #1571, job 116038351034.
+
+### 2026-10-14: full lint policy finished after the external merge
+
+PR #1571 merged while two hosted checks were still running. Lint Policy job
+116049622872 later failed its global diagnostic-directive guard and Oxlint. The
+owned store constructor disabled `missingPipeableSignature`, and seven fixture
+codec expressions were built inline. Hoist those codecs and express the factory
+through the canonical Effect function wrapper without disabling diagnostics.
+Twenty-one other schema-hoist findings already have a main repair in #1748;
+verify that repair and keep this follow-up scoped to the remaining owned files.
+Package source checks do not substitute for the global directive and Oxlint
+gates. The job's broken-target census is context, not the failing criterion.

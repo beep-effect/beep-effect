@@ -19,6 +19,8 @@ import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 
 const EnvelopeJson = S.fromJsonString(Envelope);
+const ResolutionJson = S.fromJsonString(AmbiguityResolution);
+const ReceiptJson = S.fromJsonString(Receipt);
 
 const program = Effect.scoped(
   Effect.gen(function* () {
@@ -39,11 +41,9 @@ const program = Effect.scoped(
     }
     if (stage === "resolve") {
       const input = yield* Config.String("BEEP_MESSAGE_FIXTURE_ENVELOPE");
-      const request = yield* fs
-        .readFileString(input)
-        .pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(AmbiguityResolution))));
+      const request = yield* fs.readFileString(input).pipe(Effect.flatMap(S.decodeEffect(ResolutionJson)));
       const receipt = yield* store.resolveAmbiguity(request, 202);
-      yield* fs.writeFileString(checkpoint, yield* S.encodeEffect(S.fromJsonString(Receipt))(receipt), { mode: 0o600 });
+      yield* fs.writeFileString(checkpoint, yield* S.encodeEffect(ReceiptJson)(receipt), { mode: 0o600 });
       return yield* Effect.never;
     }
     if (stage === "accept") {
