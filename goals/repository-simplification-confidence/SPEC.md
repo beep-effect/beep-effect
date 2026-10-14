@@ -952,3 +952,10 @@ prior gates and quick integrated gates separately; hosted exact-head checks
 remain authoritative.
 
 - B (2026-10-13): keep detector acceptance pending until its durable final receipt exists. The codec-test handoff records bounded progress only; the valid #1616 review identified an ambiguous evidence-map link. Reversal: restore the final receipt link when detector fixtures and individual admissions are complete.
+
+
+### 2026-10-14 — dependency quality candidate during concurrent main changes
+
+| Decision | Reason and evidence | Reversal |
+| --- | --- | --- |
+| Bind the requested root proof to a reviewed integration candidate. Use a stale-base publication override only after reviewing the overlapping base changes and proving a clean three-way merge; hosted checks and the review window still gate that published head. | Concurrent main changes repeatedly superseded qualified test and inventory waves during dependency repair. A fixed candidate keeps each proof attributable without replacing later base work. No requested root command, coverage floor, or hosted check is waived. | Merge the newer base into the candidate, resolve any conflict, and rerun the affected qualification before another push. |
