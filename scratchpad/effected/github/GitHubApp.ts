@@ -478,8 +478,8 @@ export interface GitHubAppOptions {
  *   return accessible.total_count;
  * });
  *
- * // The app's PEM private key, loaded from your secret store.
- * declare const appPrivateKeyPem: string
+ * // The app's PEM private key; load the real value from your secret store.
+ * const appPrivateKeyPem = "<PEM private key from your secret store>"
  *
  * // Mints an installation token on build, re-mints before expiry, revokes on release.
  * const layer = GitHubApp.clientLayer({
