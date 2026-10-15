@@ -60,3 +60,4 @@ stack-installer lessons give the repair and evidence discipline for setup.
   → [`goals/practice-claude-mod`](../../practice-claude-mod/README.md).
 - Pattern archive this packet re-enters: [`explorations/stack-installer`](../../../explorations/stack-installer/README.md).
 - Exploration: [`RESEARCH.md`](../../../explorations/harness-the-harness/RESEARCH.md), [`DECISIONS.md`](../../../explorations/harness-the-harness/DECISIONS.md).
+- [Onboarding distribution research (B1/B2)](onboarding-distribution.md) — primary sources on MCPB prompts, plugins, Claude Desktop install, `.mcpb` install and `claude://` links

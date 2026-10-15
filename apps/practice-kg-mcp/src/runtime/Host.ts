@@ -1,144 +1,18 @@
 /**
- * App-owned bundle loading and long-lived MCP host resource composition.
+ * App-owned stdio MCP host composition over the shared practice KG host resources.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import {
-  makePracticeKgServerLayer,
-  PracticeKgBundle,
-  PracticeKgBundleContext,
-  PracticeKgBundleManifest,
-  PracticeKgMcpServerConfig,
-} from "@beep/law-practice-server";
-import * as OptionUtils from "@beep/utils/Option";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
+import { makePracticeKgServerLayer, PracticeKgMcpServerConfig } from "@beep/law-practice-server";
+import { makePracticeKgHostResourcesLayer } from "@beep/law-practice-server/PracticeKgHost";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
-import * as Path from "effect/Path";
-import * as S from "effect/Schema";
-import { PracticeKgHostError } from "../PracticeKgMcp.errors.ts";
 import { PRACTICE_KG_EXTENSION_VERSION } from "../Version.ts";
-import { makePracticeKgDuckDbLayer } from "./DuckDb.ts";
-import { makePracticeKgPgliteLayer } from "./Pglite.ts";
-
-const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(PracticeKgBundleManifest));
-// Mirrors `PracticeKgSchemaVersions`; bumped with every breaking kg_node/kg_edge or DuckDB table layout change.
-const supportedStoreVersions = { duckdb: "4", pglite: "4" } as const;
-const decodeStoreVersionProbe = S.decodeUnknownEffect(
-  S.fromJsonString(S.Struct({ schemaVersion: S.Struct({ duckdb: S.String, pglite: S.String }) }))
-);
+import type { PracticeKgBundleContext } from "@beep/law-practice-server";
 
 /**
- * Host error re-exported from the runtime-neutral errors module for callers that import it here.
- *
- * @category errors
- * @since 0.0.0
- */
-export { PracticeKgHostError } from "../PracticeKgMcp.errors.ts";
-
-/**
- * Read and validate the bundle manifest before either database is opened.
- *
- * **Example** (Load bundle context effect)
- *
- * ```ts
- * import { loadPracticeKgBundleContext } from "../../src/runtime/Host.ts"
- * import * as Effect from "effect/Effect";
- * const loading = loadPracticeKgBundleContext("/bundle")
- * console.log(Effect.isEffect(loading))
- * ```
- *
- * @param bundleDir - Directory containing `bundle.manifest.json` and both stores.
- * @param corpusRoot - Optional pointer to the external corpus content tree.
- * @category constructors
- * @since 0.0.0
- */
-export const loadPracticeKgBundleContext = Effect.fn("PracticeKgHost.loadBundle")(function* (
-  bundleDir: string,
-  corpusRoot?: string | undefined
-) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const manifestPath = path.join(bundleDir, "bundle.manifest.json");
-  const manifestText = yield* fs.readFileString(manifestPath).pipe(
-    Effect.mapError((cause) =>
-      PracticeKgHostError.make({
-        cause,
-        message: `Failed reading practice KG bundle manifest at "${manifestPath}".`,
-      })
-    )
-  );
-  // An older bundle lacks columns the tools read (format 1 keys families on
-  // the bare docket number; format 2 has no `matters.client_name`; format 3
-  // has no correspondent tables), so it is
-  // refused by store version before the strict decode can report it as merely
-  // "invalid".
-  const storeVersion = yield* decodeStoreVersionProbe(manifestText).pipe(Effect.option);
-  if (
-    O.isSome(storeVersion) &&
-    (storeVersion.value.schemaVersion.pglite !== supportedStoreVersions.pglite ||
-      storeVersion.value.schemaVersion.duckdb !== supportedStoreVersions.duckdb)
-  ) {
-    const found = storeVersion.value.schemaVersion;
-    return yield* PracticeKgHostError.make({
-      message: `Practice KG bundle at "${bundleDir}" uses store format pglite ${found.pglite} / duckdb ${found.duckdb}; this server reads pglite ${supportedStoreVersions.pglite} / duckdb ${supportedStoreVersions.duckdb}. Install the rebuilt bundle that matches this server.`,
-    });
-  }
-  const manifest = yield* decodeManifest(manifestText).pipe(
-    Effect.mapError((cause) =>
-      PracticeKgHostError.make({
-        cause,
-        message: `Practice KG bundle manifest at "${manifestPath}" is invalid.`,
-      })
-    )
-  );
-  return PracticeKgBundleContext.make({
-    bundleDir,
-    manifest,
-    ...OptionUtils.getSomesStruct({ corpusRoot: O.fromUndefinedOr(corpusRoot) }),
-  });
-});
-
-/**
- * Open the bundle's PGlite and DuckDB stores and publish the bundle context.
- *
- * **Details**
- *
- * This is the one place the host decides which files back its stores, so the
- * stdio server and the headless self-check read the same resources.
- *
- * **Example** (Compose the host resources)
- *
- * ```ts
- * import { makePracticeKgHostResourcesLayer } from "../../src/runtime/Host.ts"
- * import type { PracticeKgBundleContext } from "@beep/law-practice-server"
- *
- * const compose = (context: PracticeKgBundleContext) => makePracticeKgHostResourcesLayer(context)
- * console.log(typeof compose)
- * ```
- *
- * @param context - Validated bundle paths and manifest metadata.
- * @category layers
- * @since 0.0.0
- */
-export const makePracticeKgHostResourcesLayer = (context: PracticeKgBundleContext) =>
-  Path.Path.pipe(
-    Effect.service,
-    Effect.map((path) =>
-      Layer.mergeAll(
-        makePracticeKgPgliteLayer(path.join(context.bundleDir, "kg.pglite")),
-        makePracticeKgDuckDbLayer(path.join(context.bundleDir, "practice.duckdb")),
-        Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(context))
-      )
-    ),
-    Layer.unwrap
-  );
-
-/**
- * Compose the stdio server with app-owned PGlite and DuckDB resources.
+ * Compose the stdio server with the bundle's PGlite and DuckDB resources.
  *
  * **Example** (Compose practice host layer)
  *

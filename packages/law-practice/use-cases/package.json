@@ -49,6 +49,7 @@
     "./MailTagging": "./src/MailTagging/index.ts",
     "./OfficeActionReview": "./src/OfficeActionReview/index.ts",
     "./PatentClaimCandidate": "./src/PatentClaimCandidate/index.ts",
+    "./PracticeSetup": "./src/PracticeSetup/index.ts",
     "./ReviewQueue": "./src/ReviewQueue/index.ts",
     "./test": "./src/test.ts",
     "./internal/*": null,

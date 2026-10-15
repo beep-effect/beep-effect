@@ -73,6 +73,8 @@
     "./values/AnswerRow": "./src/values/AnswerRow/index.ts",
     "./values/Question": "./src/values/Question/index.ts",
     "./values/DocStructure": "./src/values/DocStructure/index.ts",
+    "./values/PracticeProfile": "./src/values/PracticeProfile/index.ts",
+    "./values/SetupRequirement": "./src/values/SetupRequirement/index.ts",
     "./package.json": "./package.json"
   },
   "files": [

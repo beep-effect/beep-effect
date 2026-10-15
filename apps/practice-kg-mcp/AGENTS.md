@@ -7,7 +7,7 @@ runtime layers, and calls into `@beep/law-practice-server` projections.
 | Surface | Key exports | Notes |
 | --- | --- | --- |
 | `src/build.ts` | bundle-build entrypoint | contract §5 flags (`--corpus-root`, `--bundle-out`, `--include-refresh`, `--skip-emails`, `--max-text-bytes`, `--overwrite`) |
-| `src/runtime` | `Layer.ts`, `Pglite.ts` | app-local file-backed PGlite provider (professional-desktop precedent); the DuckDb layer arrives with PR-3's injected host seam |
+| `src/runtime` | `Host.ts`, `Layer.ts`, `SelfCheck.ts` | app-only composition: stdio server name/version, build layer, `--self-check` printing. Store layers, bundle loading and the self-check itself live in `@beep/law-practice-server/PracticeKgHost`, shared with the practice gateway |
 
 Rules that bind here:
 

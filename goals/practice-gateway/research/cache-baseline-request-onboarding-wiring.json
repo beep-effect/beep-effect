@@ -1,0 +1,20 @@
+{
+  "previous": "1c934f1e4a6d450faf1639223ec9ca106105c343c55c3e82ecbdeae35925781d",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (practice-gateway, feat/practice-gateway)",
+    "reason": "Re-record @beep/practice-gateway after its manifest gained the sync:onboarding-skill script; task commands, inputs, outputs, env and cache flags are unchanged and no qualification is granted.",
+    "basis": {
+      "path": "goals/practice-gateway/research/cache-baseline-review-onboarding-wiring.md",
+      "sha256": "66c11137771f9d86a6c85e0a275c81432e96d9d0c1b15ebe6f0e050d27e99c38"
+    }
+  },
+  "subjects": ["@beep/practice-gateway"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

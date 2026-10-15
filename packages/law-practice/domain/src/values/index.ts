@@ -680,6 +680,13 @@ export * from "./PracticeKgEpistemicStatus/index.ts";
  */
 export * from "./PracticeKgProvenanceKind/index.ts";
 /**
+ * Practice profile value-object exports (onboarding interview outcome).
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./PracticeProfile/index.ts";
+/**
  * Priority basis value-object exports.
  *
  * @category value-objects
@@ -810,6 +817,13 @@ export * from "./SeniorityTier/index.ts";
  * @since 0.0.0
  */
 export * from "./SessionLawCitation/index.ts";
+/**
+ * Setup requirement value-object exports (workstation setup doctor).
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./SetupRequirement/index.ts";
 /**
  * Short-form-citation-type value-object exports.
  *

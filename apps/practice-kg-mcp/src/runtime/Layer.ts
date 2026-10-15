@@ -6,8 +6,8 @@
  */
 
 import { PracticeKgProjectionsLive } from "@beep/law-practice-server";
+import { makePracticeKgPgliteLayer } from "@beep/law-practice-server/PracticeKgHost";
 import * as Layer from "effect/Layer";
-import { makePracticeKgPgliteLayer } from "./Pglite.ts";
 
 /**
  * Compose the injected projection service with its app-owned PGlite store.

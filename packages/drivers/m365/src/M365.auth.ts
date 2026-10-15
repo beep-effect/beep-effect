@@ -194,6 +194,69 @@ export class M365AuthorizationRequest extends S.Opaque<M365AuthorizationRequest,
  */
 export type M365InteractiveAuthorizer = (req: M365AuthorizationRequest) => Effect.Effect<string, M365Error>;
 
+/**
+ * Host-supplied storage for the serialized MSAL token cache.
+ *
+ * **Details**
+ *
+ * An alternative to `tokenCachePath` (which needs the optional
+ * `@azure/msal-node-extensions` peer): the host decides where the cache lives
+ * and how it is protected, for example a DPAPI-protected file. `load` answers
+ * `None` before the first sign-in. The driver deserializes the loaded cache
+ * before every MSAL cache access and calls `save` only when MSAL changed the
+ * cache. The contents are the serialized MSAL cache, refresh tokens included:
+ * never store them in clear.
+ *
+ * **Example** (Keep the cache in memory)
+ *
+ * ```ts
+ * import type { M365TokenCachePersistence } from "@beep/m365"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * let stored = O.none<string>()
+ * const persistence: M365TokenCachePersistence = {
+ *   load: Effect.sync(() => stored),
+ *   save: (contents) => Effect.sync(() => { stored = O.some(contents) }),
+ * }
+ * console.log(Effect.isEffect(persistence.load))
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export type M365TokenCachePersistence = {
+  readonly load: Effect.Effect<O.Option<string>, M365Error>;
+  readonly save: (contents: string) => Effect.Effect<void, M365Error>;
+};
+
+/**
+ * Options of the delegated token provider beyond its configuration.
+ *
+ * **Example** (Supply an authorizer)
+ *
+ * ```ts
+ * import type { M365DelegatedAuthOptions } from "@beep/m365"
+ * import * as Effect from "effect/Effect"
+ *
+ * const options: M365DelegatedAuthOptions = { interactiveAuthorizer: () => Effect.succeed("code") }
+ * console.log(typeof options.interactiveAuthorizer)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type M365DelegatedAuthOptions = {
+  /**
+   * Captures the authorization redirect for the interactive flow.
+   */
+  readonly interactiveAuthorizer?: M365InteractiveAuthorizer;
+  /**
+   * Host-owned token cache storage; takes precedence over `tokenCachePath`.
+   */
+  readonly tokenCache?: M365TokenCachePersistence;
+};
+
 const importMsalNode = Effect.tryPromise({
   try: () => import("@azure/msal-node"),
   catch: (cause) => M365Error.fromReason("config", { cause }),
@@ -218,7 +281,34 @@ const cachedAccount = (accounts: ReadonlyArray<AccountInfo>): Effect.Effect<O.Op
     ? M365Error.failEffectFromReason("auth", { cause: ambiguousCachedAccountsCause })
     : Effect.succeed(A.head(accounts));
 
-const buildCachePlugin = (resolved: ResolvedM365Config): Effect.Effect<O.Option<ICachePlugin>, M365Error> =>
+// MSAL calls the plugin from promise land; the host's effects carry no
+// requirements, so they run on the default runtime.
+const persistencePlugin = (persistence: M365TokenCachePersistence): ICachePlugin => ({
+  beforeCacheAccess: (context) =>
+    Effect.runPromise(
+      persistence.load.pipe(
+        Effect.map(
+          O.match({
+            onNone: () => undefined,
+            onSome: (contents) => context.tokenCache.deserialize(contents),
+          })
+        )
+      )
+    ),
+  afterCacheAccess: (context) =>
+    context.cacheHasChanged ? Effect.runPromise(persistence.save(context.tokenCache.serialize())) : Promise.resolve(),
+});
+
+const buildCachePlugin = (
+  resolved: ResolvedM365Config,
+  tokenCache: O.Option<M365TokenCachePersistence>
+): Effect.Effect<O.Option<ICachePlugin>, M365Error> =>
+  O.match(tokenCache, {
+    onNone: () => buildPathCachePlugin(resolved),
+    onSome: (persistence) => Effect.succeedSome(persistencePlugin(persistence)),
+  });
+
+const buildPathCachePlugin = (resolved: ResolvedM365Config): Effect.Effect<O.Option<ICachePlugin>, M365Error> =>
   O.match(resolved.tokenCachePath, {
     onNone: () => Effect.succeed(O.none<ICachePlugin>()),
     onSome: (cachePath) =>
@@ -393,6 +483,7 @@ export class M365Auth extends Context.Service<M365Auth, M365AuthShape>()($I`M365
 
   /**
    * Build the live MSAL-backed token provider (auth-code + PKCE, silent refresh,
+   * a host-owned cache when `options.tokenCache` is given, otherwise an
    * encrypted cache when `tokenCachePath` is configured).
    *
    * **Example** (Build live MSAL layer)
@@ -411,14 +502,14 @@ export class M365Auth extends Context.Service<M365Auth, M365AuthShape>()($I`M365
    */
   static readonly makeLayer = (
     config: M365ConfigInput,
-    options: { readonly interactiveAuthorizer?: M365InteractiveAuthorizer } = {}
+    options: M365DelegatedAuthOptions = {}
   ): Layer.Layer<M365Auth, M365Error> =>
     Layer.effect(
       M365Auth,
       Effect.gen(function* () {
         const resolved = resolveM365Config(config);
         const Msal = yield* importMsalNode;
-        const cachePlugin = yield* buildCachePlugin(resolved);
+        const cachePlugin = yield* buildCachePlugin(resolved, O.fromUndefinedOr(options.tokenCache));
         const pca = new Msal.PublicClientApplication({
           auth: { authority: resolved.authority, clientId: resolved.clientId },
           cache: getSomesStruct({ cachePlugin }),

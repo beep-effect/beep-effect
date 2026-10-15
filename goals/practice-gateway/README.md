@@ -34,11 +34,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P1 Implement — schemas first. P0 findings: [history/p0](history/p0/2026-10-14-research.md).
 
 ## Latest Evidence
 
-Not started.
+P0 inventory and decisions recorded 2026-10-14.
 
 ## Notes
 

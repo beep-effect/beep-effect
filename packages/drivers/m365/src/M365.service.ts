@@ -62,7 +62,7 @@ import {
 } from "./M365.schemas.ts";
 import type { LocalDate } from "@beep/schema/LocalDate";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
-import type { M365AuthShape, M365InteractiveAuthorizer } from "./M365.auth.ts";
+import type { M365AuthShape, M365DelegatedAuthOptions } from "./M365.auth.ts";
 import type { M365AppOnlyConfigInput } from "./M365.config.ts";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
@@ -3609,7 +3609,7 @@ export class M365 extends Context.Service<M365, M365Shape>()($I`M365`) {
    */
   static readonly makeLiveLayer = (
     config: M365ConfigInput,
-    options: { readonly interactiveAuthorizer?: M365InteractiveAuthorizer } = {}
+    options: M365DelegatedAuthOptions = {}
   ): Layer.Layer<M365, M365Error> =>
     M365.makeLayer(config).pipe(
       Layer.provide(M365Auth.makeLayer(config, options)),

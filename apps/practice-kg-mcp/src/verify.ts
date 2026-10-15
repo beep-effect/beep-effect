@@ -16,6 +16,8 @@ import {
   readPracticeKgMatterTables,
   verifyPracticeKgBundle,
 } from "@beep/law-practice-server";
+import { makePracticeKgPgliteLayer } from "@beep/law-practice-server/PracticeKgHost";
+import { runMcpbEntrypoint } from "@beep/mcpb-kit";
 import * as Console from "effect/Console";
 import { Command, Flag } from "effect/cli";
 import * as Effect from "effect/Effect";
@@ -23,8 +25,6 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { runEntrypoint } from "./entrypoint.ts";
-import { makePracticeKgPgliteLayer } from "./runtime/index.ts";
 import type { PracticeKgMatterTables } from "@beep/law-practice-server";
 
 const bundleDir = Flag.Directory("bundle-dir", { mustExist: true });
@@ -104,4 +104,4 @@ const verifyCommand = Command.make(
 );
 
 const program = Command.run(verifyCommand, { version: "0.0.0" });
-runEntrypoint({ isMain: import.meta.main, program });
+runMcpbEntrypoint({ isMain: import.meta.main, program });

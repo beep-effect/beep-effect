@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
 
+import { loadPracticeKgBundleContext, PracticeKgHostError } from "@beep/law-practice-server/PracticeKgHost";
+import { runMcpbEntrypoint } from "@beep/mcpb-kit";
 import * as Bool from "effect/Boolean";
 /**
  * Stdio entrypoint for the portable practice knowledge-graph MCP host.
@@ -13,15 +15,8 @@ import { Command, Flag } from "effect/cli";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { runEntrypoint } from "./entrypoint.ts";
 import { SelfCheckFailure } from "./PracticeKgMcp.errors.ts";
-import { PracticeKgHostError } from "./runtime/Host.ts";
-import {
-  loadPracticeKgBundleContext,
-  makePracticeKgHostLayer,
-  printPracticeKgSelfCheck,
-  runPracticeKgSelfCheck,
-} from "./runtime/index.ts";
+import { makePracticeKgHostLayer, printPracticeKgSelfCheck, runPracticeKgMcpSelfCheck } from "./runtime/index.ts";
 import "../../../node_modules/@electric-sql/pglite/dist/initdb.wasm" with { type: "file" };
 import "../../../node_modules/@electric-sql/pglite/dist/pglite.data" with { type: "file" };
 import "../../../node_modules/@electric-sql/pglite/dist/pglite.wasm" with { type: "file" };
@@ -58,7 +53,7 @@ const resolveBundle = Effect.fnUntraced(function* (flags: BundleFlags) {
 const serve = Effect.fnUntraced(function* (flags: BundleFlags) {
   return yield* Effect.gen(function* () {
     const resolved = yield* resolveBundle(flags);
-    yield* runPracticeKgSelfCheck(resolved.bundleDir, resolved.corpusRoot);
+    yield* runPracticeKgMcpSelfCheck(resolved.bundleDir, resolved.corpusRoot);
     const context = yield* loadPracticeKgBundleContext(resolved.bundleDir, resolved.corpusRoot);
     return yield* Layer.launch(makePracticeKgHostLayer(context));
   }).pipe(
@@ -74,7 +69,7 @@ const check = (flags: BundleFlags) =>
     Effect.catchTag("ConfigError", (cause) =>
       PracticeKgHostError.make({ cause, message: "Failed reading the practice KG bundle configuration." })
     ),
-    Effect.flatMap((resolved) => runPracticeKgSelfCheck(resolved.bundleDir, resolved.corpusRoot)),
+    Effect.flatMap((resolved) => runPracticeKgMcpSelfCheck(resolved.bundleDir, resolved.corpusRoot)),
     printPracticeKgSelfCheck
   );
 
@@ -87,4 +82,4 @@ const serverCommand = Command.make(
 );
 
 const program = Command.run(serverCommand, { version: "0.0.0" });
-runEntrypoint({ isMain: import.meta.main, program });
+runMcpbEntrypoint({ isMain: import.meta.main, program });

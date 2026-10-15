@@ -43,14 +43,14 @@ Naming rules the catalog check enforces:
 
 | Family | Spans | Conforming | Non-conforming |
 | --- | --- | --- | --- |
-| slice | 452 | 384 | 68 |
+| slice | 458 | 390 | 68 |
 | foundation | 253 | 209 | 44 |
-| driver | 569 | 465 | 104 |
-| tooling | 3861 | 3609 | 252 |
+| driver | 574 | 470 | 104 |
+| tooling | 3866 | 3614 | 252 |
 | ecosystem | 1 | 1 | 0 |
-| app | 147 | 108 | 39 |
+| app | 165 | 120 | 45 |
 | lab | 176 | 165 | 11 |
-| **total** | 5459 | 4941 | 518 |
+| **total** | 5493 | 4969 | 524 |
 
 Declared: 15 attribute keys, 7 metrics, 0 events, 3 spans.
 

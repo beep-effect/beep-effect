@@ -462,6 +462,12 @@
         ]
       },
       {
+        "name": "@beep/mcpb-kit",
+        "patterns": [
+          "packages/tooling/library/mcpb-kit/src/**"
+        ]
+      },
+      {
         "name": "@beep/md",
         "patterns": [
           "packages/foundation/modeling/md/src/**"
@@ -636,6 +642,12 @@
         ]
       },
       {
+        "name": "@beep/practice-gateway",
+        "patterns": [
+          "apps/practice-gateway/src/**"
+        ]
+      },
+      {
         "name": "@beep/practice-identify",
         "patterns": [
           "apps/practice-identify/src/**"
@@ -657,6 +669,12 @@
         "name": "@beep/practice-mail-tagging",
         "patterns": [
           "apps/practice-mail-tagging/src/**"
+        ]
+      },
+      {
+        "name": "@beep/practice-setup",
+        "patterns": [
+          "apps/practice-setup/src/**"
         ]
       },
       {
@@ -891,6 +909,12 @@
         "name": "@beep/venice-ai",
         "patterns": [
           "packages/drivers/venice-ai/src/**"
+        ]
+      },
+      {
+        "name": "@beep/windows-secrets",
+        "patterns": [
+          "packages/drivers/windows-secrets/src/**"
         ]
       },
       {
@@ -2664,6 +2688,21 @@
         ]
       },
       {
+        "from": "@beep/mcpb-kit",
+        "allow": [
+          "@beep/identity",
+          "@beep/mcpb-kit",
+          "@beep/schema",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/mcpb-kit",
+          "@beep/schema",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/md",
         "allow": [
           "@beep/html",
@@ -3285,6 +3324,47 @@
         ]
       },
       {
+        "from": "@beep/practice-gateway",
+        "allow": [
+          "@beep/doc-text",
+          "@beep/duckdb",
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/law-practice-domain",
+          "@beep/law-practice-server",
+          "@beep/law-practice-use-cases",
+          "@beep/m365",
+          "@beep/m365-mcp",
+          "@beep/mcp-kit",
+          "@beep/mcpb-kit",
+          "@beep/practice-gateway",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils",
+          "@beep/windows-secrets"
+        ],
+        "allowTypeOnly": [
+          "@beep/doc-text",
+          "@beep/duckdb",
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/law-practice-domain",
+          "@beep/law-practice-server",
+          "@beep/law-practice-use-cases",
+          "@beep/m365",
+          "@beep/m365-mcp",
+          "@beep/mcp-kit",
+          "@beep/mcpb-kit",
+          "@beep/practice-gateway",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils",
+          "@beep/windows-secrets"
+        ]
+      },
+      {
         "from": "@beep/practice-identify",
         "allow": [
           "@beep/identity",
@@ -3310,7 +3390,7 @@
           "@beep/duckdb",
           "@beep/identity",
           "@beep/law-practice-server",
-          "@beep/pglite",
+          "@beep/mcpb-kit",
           "@beep/practice-kg-mcp",
           "@beep/schema",
           "@beep/test-runner",
@@ -3322,7 +3402,7 @@
           "@beep/duckdb",
           "@beep/identity",
           "@beep/law-practice-server",
-          "@beep/pglite",
+          "@beep/mcpb-kit",
           "@beep/practice-kg-mcp",
           "@beep/schema",
           "@beep/test-runner",
@@ -3375,6 +3455,25 @@
           "@beep/law-practice-use-cases",
           "@beep/m365",
           "@beep/practice-mail-tagging",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils"
+        ]
+      },
+      {
+        "from": "@beep/practice-setup",
+        "allow": [
+          "@beep/identity",
+          "@beep/mcpb-kit",
+          "@beep/practice-setup",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/mcpb-kit",
+          "@beep/practice-setup",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils"
@@ -4323,6 +4422,19 @@
           "@beep/test-utils",
           "@beep/utils",
           "@beep/venice-ai"
+        ]
+      },
+      {
+        "from": "@beep/windows-secrets",
+        "allow": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/windows-secrets"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/windows-secrets"
         ]
       },
       {

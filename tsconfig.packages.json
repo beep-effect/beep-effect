@@ -19,6 +19,9 @@
       "path": "apps/practice-claude-mod"
     },
     {
+      "path": "apps/practice-gateway"
+    },
+    {
       "path": "apps/practice-identify"
     },
     {
@@ -29,6 +32,9 @@
     },
     {
       "path": "apps/practice-mail-tagging"
+    },
+    {
+      "path": "apps/practice-setup"
     },
     {
       "path": "apps/professional-desktop"
@@ -244,6 +250,9 @@
       "path": "packages/drivers/venice-ai"
     },
     {
+      "path": "packages/drivers/windows-secrets"
+    },
+    {
       "path": "packages/drivers/wink"
     },
     {
@@ -410,6 +419,9 @@
     },
     {
       "path": "packages/tooling/library/codegen-kit"
+    },
+    {
+      "path": "packages/tooling/library/mcpb-kit"
     },
     {
       "path": "packages/tooling/library/qa-capture"

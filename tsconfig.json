@@ -2133,6 +2133,29 @@
       ],
       "@beep/law-practice-server/UsptoClaims": [
         "./packages/law-practice/server/src/UsptoClaims/index.ts"
+      ],
+      "@beep/law-practice-domain/values/PracticeProfile": [
+        "./packages/law-practice/domain/src/values/PracticeProfile/index.ts"
+      ],
+      "@beep/law-practice-domain/values/SetupRequirement": [
+        "./packages/law-practice/domain/src/values/SetupRequirement/index.ts"
+      ],
+      "@beep/law-practice-server/PracticeKgHost": [
+        "./packages/law-practice/server/src/PracticeKgHost/index.ts"
+      ],
+      "@beep/law-practice-use-cases/PracticeSetup": [
+        "./packages/law-practice/use-cases/src/PracticeSetup/index.ts"
+      ],
+      "@beep/mcpb-kit": ["./packages/tooling/library/mcpb-kit/src/index.ts"],
+      "@beep/mcpb-kit/*": ["./packages/tooling/library/mcpb-kit/src/*"],
+      "@beep/practice-gateway": ["./apps/practice-gateway/src/index.ts"],
+      "@beep/practice-gateway/*": ["./apps/practice-gateway/src/*"],
+      "@beep/windows-secrets": [
+        "./packages/drivers/windows-secrets/src/index.ts"
+      ],
+      "@beep/windows-secrets/*": ["./packages/drivers/windows-secrets/src/*"],
+      "@beep/windows-secrets/internal/*": [
+        "./packages/drivers/windows-secrets/src/internal/*"
       ]
     }
   }

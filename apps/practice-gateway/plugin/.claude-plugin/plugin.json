@@ -1,0 +1,8 @@
+{
+  "name": "practice-onboarding",
+  "version": "0.1.0",
+  "description": "Onboards a lawyer's computer through the Beep Practice Gateway: a short interview, a saved practice profile, then checks and approved repairs until setup is complete.",
+  "author": { "name": "Beep Effect contributors" },
+  "license": "MIT",
+  "keywords": ["law-practice", "onboarding", "setup"]
+}
