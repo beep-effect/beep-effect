@@ -22,7 +22,7 @@ import { parseDocument } from "yaml";
 import { runCaptured } from "../../internal/process/index.ts";
 import { ChangesetGraphError } from "./Quality.errors.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 /**
  * Public changeset graph error export.

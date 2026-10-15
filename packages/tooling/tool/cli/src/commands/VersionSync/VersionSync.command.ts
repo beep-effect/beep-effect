@@ -5,7 +5,8 @@
  * @since 0.0.0
  */
 import * as Console from "effect/Console";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { resolveRunMode } from "../../internal/cli/RunMode.ts";
@@ -38,7 +39,7 @@ const resolveMode = (write: boolean, dryRun: boolean): VersionSyncMode =>
  *
  * ```ts
  * import { versionSyncCommand } from "@beep/repo-cli/commands/VersionSync"
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * import * as Effect from "effect/Effect";
  * const run = Command.run(versionSyncCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true

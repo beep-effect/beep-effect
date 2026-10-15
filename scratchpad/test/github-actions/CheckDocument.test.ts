@@ -12,7 +12,7 @@ import * as S from "effect/Schema";
 import { CheckFlushOutcome } from "../../effected/github-actions/CheckDocument.ts";
 import * as Result from "effect/Result";
 import * as MutableRef from "effect/MutableRef";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import { CheckDocument, CheckDocumentError, type CheckDocumentSnapshot, CheckDocumentStamp, CheckReport } from "../../effected/github-actions/CheckDocument.ts";
 import { ManagedDocument } from "../../effected/github-actions/ManagedDocument.ts";
 

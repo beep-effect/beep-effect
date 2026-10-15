@@ -39,7 +39,7 @@ import {
 } from "../Doctest.schemas.ts";
 import { DoctestFenceAnalyzer, DoctestFenceRewriter } from "../Doctest.service.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
 import type { DoctestCliConfig, ImpurityReason, PurityVerdict } from "../Doctest.schemas.ts";
 import type { DoctestFenceAnalyzerShape, DoctestFenceRewriterShape } from "../Doctest.service.ts";

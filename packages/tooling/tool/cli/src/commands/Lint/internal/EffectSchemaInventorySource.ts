@@ -37,7 +37,7 @@ import {
 } from "../Lint.errors.ts";
 import { parseEffectSchemaInventoryPin } from "./EffectSchemaInventoryModules.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
 
 const $I = $RepoCliId.create("commands/Lint/internal/EffectSchemaInventorySource");

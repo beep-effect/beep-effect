@@ -58,7 +58,7 @@ import { hasProperty, isBigInt, isBoolean, isNumber, isString, isTagged, not } f
 import { isSchema } from "effect/Schema";
 import { toEncoded } from "effect/SchemaAST";
 import { get as getStruct } from "effect/Struct";
-import { VariantSchema } from "effect/schema";
+import * as VariantSchema from "effect/schema/VariantSchema";
 import { classify as classifyCore, DeriveColumnError, flattenEncoded } from "../core/classification.ts";
 import { EntityIdLike as EntityIdLikeSchema, isEntityIdLike } from "../core/entity-id.ts";
 import { stringLiteralValues as collectStringLiteralValues } from "../core/literals.ts";

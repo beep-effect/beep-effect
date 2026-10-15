@@ -36,8 +36,12 @@ import * as McpServer from "effect/ai/McpServer";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as Headers from "effect/http/Headers";
+import * as HttpMiddleware from "effect/http/HttpMiddleware";
+import * as HttpRouter from "effect/http/HttpRouter";
+import * as HttpServerRequest from "effect/http/HttpServerRequest";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Layer from "effect/Layer";
 import * as Metric from "effect/Metric";
 import * as S from "effect/Schema";
@@ -105,7 +109,7 @@ const originMiddleware = HttpMiddleware.make((effect) =>
 
 const ontologyMcpSecurityMiddleware = (token: Redacted.Redacted) =>
   HttpRouter.middleware(originMiddleware)
-    .combine(HttpRouter.middleware(requireRpcSessionToken(token)))
+    .combine(token.pipe(requireRpcSessionToken, (middleware) => HttpRouter.middleware(middleware)))
     .combine(
       HttpRouter.middleware(
         HttpMiddleware.cors({

@@ -36,7 +36,7 @@ import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { Reactivity } from "effect/reactivity";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { vi } from "vitest";

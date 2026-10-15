@@ -22,7 +22,7 @@ import * as O from "effect/Option";
 import type { PlatformError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import type * as S from "effect/Schema";
-import { Prompt } from "effect/ai";
+import * as Prompt from "effect/ai/Prompt";
 import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
 import type { ImageForPrompt, ImageRef } from "../Domain/Model/Image.ts";
 import { dual2 } from "../Utils/Dual.ts";

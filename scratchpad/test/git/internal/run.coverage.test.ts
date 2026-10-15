@@ -3,7 +3,7 @@ import { assertExitFailure, assertFalse, assertTrue } from "@effect/vitest/utils
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as PlatformError from "effect/PlatformError";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import { available, runCollected } from "../../../effected/git/internal/run.ts";
 import { scripted } from "../fixtures.ts";
 

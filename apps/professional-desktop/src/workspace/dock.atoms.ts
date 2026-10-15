@@ -42,8 +42,10 @@ import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { KeyValueStore } from "effect/persistence";
-import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
+import * as KeyValueStore from "effect/persistence/KeyValueStore";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { professionalBrowserRuntime, professionalStorageRuntime } from "@/runtime/ProfessionalAtomRuntime";
@@ -492,8 +494,7 @@ export const makeDesktopDockGraph = Effect.gen(function* () {
  * ```ts
  * import { desktopDockGraphAtom } from "@/workspace/dock.atoms"
  * import { useAtomValue } from "@effect/atom-react"
- * import { AsyncResult } from "effect/reactivity"
- *
+ * import * as AsyncResult from "effect/reactivity/AsyncResult";
  * const useDockPanelCount = (): number => {
  *   const result = useAtomValue(desktopDockGraphAtom)
  *   return AsyncResult.isSuccess(result) ? result.value.registry.get(result.value.panelsAtom).length : 0

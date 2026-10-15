@@ -38,7 +38,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 
 const migrationsFolder = fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();

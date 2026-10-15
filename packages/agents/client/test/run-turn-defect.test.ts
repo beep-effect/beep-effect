@@ -19,7 +19,8 @@ import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { AtomRegistry, Reactivity } from "effect/reactivity";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import * as Stream from "effect/Stream";
 
 const threadId = WorkspaceIdentity.ThreadId.make(1);

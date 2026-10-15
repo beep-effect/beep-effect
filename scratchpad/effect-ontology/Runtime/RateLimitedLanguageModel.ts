@@ -22,7 +22,7 @@ import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
 import * as O from "effect/Option";
-import { AiError } from "effect/ai";
+import * as AiError from "effect/ai/AiError";
 import * as RateLimiter from "effect/persistence/RateLimiter";
 import { ConfigService } from "../Service/Config.ts";
 import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";

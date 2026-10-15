@@ -26,7 +26,7 @@ import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
-import { Tool } from "effect/ai";
+import * as Tool from "effect/ai/Tool";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";

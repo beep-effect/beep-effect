@@ -14,7 +14,8 @@ import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
-import { AsyncResult, Atom } from "effect/reactivity";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { DockNode, DockWorkspace as DockWorkspaceModel, TabsNode } from "./Dock.tree.ts";
@@ -175,8 +176,8 @@ export const titleMinima: Dual3<FontMetrics, DockWorkspace, TabChrome, GroupMini
  * import { PretextCaptureFixture } from "@beep/pretext"
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer"
- * import { Atom, AtomRegistry } from "effect/reactivity"
- *
+ * import * as Atom from "effect/reactivity/Atom";
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const groupId = GroupId.make("group-one")
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "The dragon", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId, active: panel }) })

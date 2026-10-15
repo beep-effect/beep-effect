@@ -11,6 +11,7 @@
 import { assert, describe, layer } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
+import * as TestClock from "effect/testing/TestClock";
 import * as Exit from "effect/Exit";
 import type * as PlatformError from "effect/PlatformError";
 import * as Effect from "effect/Effect";
@@ -20,7 +21,6 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as Stream from "effect/Stream";
-import { TestClock } from "effect/testing";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 
 const encoder = new TextEncoder();

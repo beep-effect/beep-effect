@@ -3,8 +3,8 @@ import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
-
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 /**
  * One scripted outcome for a spawned `git` invocation: a completed run
  * (stdout/stderr/exit, or `hang: true` to never resolve `exitCode` — used to

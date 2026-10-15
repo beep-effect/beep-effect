@@ -43,7 +43,7 @@ import { assertFalse, assertInclude, assertNone, assertTrue, deepStrictEqual, st
 import * as Bool from "effect/Boolean";
 import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
@@ -53,7 +53,8 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as TestClock from "effect/testing/TestClock";
 import type { EffectSchemaInventorySourceShape } from "@beep/repo-cli/commands/Lint";

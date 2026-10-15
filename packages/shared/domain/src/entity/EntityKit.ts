@@ -27,7 +27,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { Model as M } from "effect/schema";
+import * as M from "effect/schema/Model";
 import * as Shared from "../identity/Shared/index.ts";
 import { PosInt } from "../internal/PosInt.ts";
 import { Principal } from "./Principal.ts";
@@ -35,7 +35,7 @@ import * as PublicEntityId from "./PublicEntityId.ts";
 import { SourceKind } from "./SourceKind.ts";
 import type { FieldsInput, ModelClass, PatchedField } from "@beep/effect-drizzle";
 import type { Annotations } from "effect/Schema";
-import type { VariantSchema } from "effect/schema";
+import type * as VariantSchema from "effect/schema/VariantSchema";
 import type * as EntityId from "./EntityId.ts";
 
 /**
@@ -80,18 +80,20 @@ export const baseColumns = {
  */
 export const auditColumns = {
   createdByPrincipal: M.GeneratedByApp(Principal).pipe(Pg.jsonb()),
-  deletedAt: M.GeneratedByApp(
-    S.OptionFromNullOr(S.DateTimeUtcFromMillis).pipe(
-      S.withConstructorDefault(Effect.succeedNone),
-      S.withDecodingDefaultKey(Effect.succeed(null))
-    )
-  ).pipe(Pg.bigint("number")),
-  deletedByPrincipal: M.GeneratedByApp(
-    S.OptionFromNullOr(Principal).pipe(
-      S.withConstructorDefault(Effect.succeedNone),
-      S.withDecodingDefaultKey(Effect.succeed(null))
-    )
-  ).pipe(Pg.jsonb()),
+  deletedAt: S.DateTimeUtcFromMillis.pipe(
+    S.OptionFromNullOr,
+    S.withConstructorDefault(Effect.succeedNone),
+    S.withDecodingDefaultKey(Effect.succeed(null)),
+    M.GeneratedByApp,
+    Pg.bigint("number")
+  ),
+  deletedByPrincipal: Principal.pipe(
+    S.OptionFromNullOr,
+    S.withConstructorDefault(Effect.succeedNone),
+    S.withDecodingDefaultKey(Effect.succeed(null)),
+    M.GeneratedByApp,
+    Pg.jsonb()
+  ),
   schemaVersion: M.GeneratedByApp(SemanticVersion).pipe(Pg.text()),
   source: M.GeneratedByApp(SourceKind).pipe(Pg.text(), Pg.index()),
   updatedByPrincipal: M.GeneratedByApp(Principal).pipe(Pg.jsonb()),

@@ -8,7 +8,9 @@
 import { Firecrawl, FirecrawlScrapePayload } from "@beep/firecrawl";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
-import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";

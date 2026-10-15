@@ -30,7 +30,9 @@ import {
 } from "@beep/agents-use-cases/public";
 import { AnthropicTurnPlan } from "@beep/anthropic";
 import * as A from "effect/Array";
-import { LanguageModel, Tool, Toolkit } from "effect/ai";
+import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Tool from "effect/ai/Tool";
+import * as Toolkit from "effect/ai/Toolkit";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Metric from "effect/Metric";
@@ -45,7 +47,8 @@ import { IssueReport, repairInvalidBlocks } from "./BlockRepair.ts";
 import { initialScanState, scanChunk } from "./ScanState.ts";
 import type { BlockRepairFailed } from "@beep/agents-use-cases/AssistantTurn.repair-errors";
 import type { AssistantTurnEvent, TurnHistoryItem } from "@beep/agents-use-cases/public";
-import type { AiError, Response } from "effect/ai";
+import type * as AiError from "effect/ai/AiError";
+import type * as Response from "effect/ai/Response";
 import type * as Config from "effect/Config";
 
 const SYSTEM_PROMPT = A.join(

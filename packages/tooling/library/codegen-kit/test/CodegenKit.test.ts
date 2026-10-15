@@ -6,7 +6,9 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
-import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
@@ -451,10 +453,52 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit", (i
       expect(output).toContain("**Example** (Inspect Api)");
       expect(output).toContain("**Example** (Inspect make)");
       expect(output).toContain("**Example** (Inspect NotFound)");
+      expect(output).toContain('import * as HttpApi from "effect/http-api/HttpApi";');
+      expect(output).toContain('import * as HttpApiSchema from "effect/http-api/HttpApiSchema";');
       expect(output).toContain("HttpApiSchema.Empty(404)");
       expect(output).not.toContain("HttpApiS.Empty");
       expect(output).toContain("@category tools");
       expect(output).toContain("@since 0.0.0");
+    })
+  );
+
+  it.effect("emits leaf HTTP module imports while preserving aliases and type-only bindings", () =>
+    Effect.gen(function* () {
+      const kit = yield* CodegenKit;
+      const httpConfig = GenerateConfig.make({
+        packageName: "@beep/codegen-kit-fixture",
+        identity: { composer: "$CodegenKitId", moduleId: "fixture/imports.gen" },
+        source: { _tag: "file", path: "fixture.json" },
+        dialect: "openapi-3.1",
+        format: "httpapi",
+        output: { path: "imports.gen.ts" },
+      });
+      const raw = A.join(
+        [
+          'import { HttpApi as Api, type HttpApiEndpoint as Endpoint, HttpApiSecurity } from "effect/http-api";',
+          'import type { HttpApiGroup as Group } from "effect/http-api";',
+          'import { Multipart as Parts } from "effect/http";',
+          'import type { Multipart as PartTypes } from "effect/http";',
+          'import { make as makeApi } from "effect/http-api/HttpApi";',
+          'export const api = Api.make("fixture");',
+          "export const multipart = Parts.FileSchema;",
+          "export const leaf = makeApi;",
+          "export type EndpointValue = Endpoint.Any;",
+          "export type GroupValue = Group.Any;",
+          "export type FileValue = PartTypes.File;",
+        ],
+        "\n"
+      );
+      const output = yield* kit.postProcess(raw, httpConfig);
+      expect(output).toContain('import * as Api from "effect/http-api/HttpApi";');
+      expect(output).toContain('import type * as Endpoint from "effect/http-api/HttpApiEndpoint";');
+      expect(output).toContain('import type * as Group from "effect/http-api/HttpApiGroup";');
+      expect(output).toContain('import * as Parts from "effect/http/Multipart";');
+      expect(output).toContain('import type * as PartTypes from "effect/http/Multipart";');
+      expect(output).toContain('import { make as makeApi } from "effect/http-api/HttpApi";');
+      expect(output).not.toContain('from "effect/http-api"');
+      expect(output).not.toContain('from "effect/http"');
+      expect(output).not.toContain("HttpApiSecurity");
     })
   );
 

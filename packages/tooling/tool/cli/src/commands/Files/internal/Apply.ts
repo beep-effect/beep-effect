@@ -40,7 +40,7 @@ import {
 } from "../Files.schemas.ts";
 import { cropImageBordersToTemp, normalizeImageToTemp, stripMetadataToTemp } from "./MediaExec.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Terminal from "effect/Terminal";
 import type {
   ArchivePoorCandidatesPlan,

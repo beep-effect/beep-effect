@@ -22,7 +22,7 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import { runRepoCommandCapture } from "../repo-run/index.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GhPageInfo } from "./GhSchema.ts";
 
 /**

@@ -11,7 +11,9 @@
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
-import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";

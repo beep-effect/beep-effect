@@ -16,7 +16,7 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import { ProvisionOptions, ReadOptions } from "../../effected/github-actions/GitHubToken.ts";
 import {
   ActionOutputs,

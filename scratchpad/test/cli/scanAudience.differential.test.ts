@@ -4,15 +4,16 @@ import * as Result from "effect/Result";
 // core's REAL parser over a set of edge argvs, reads the parsed audience flags back out, and requires the scan to
 // agree. A change in core's lexer or boolean spellings fails here instead of silently drifting.
 import * as Layer from "effect/Layer";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Path from "effect/Path";
 import * as Stdio from "effect/Stdio";
 import * as Terminal from "effect/Terminal";
-import { ChildProcessSpawner } from "effect/process";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
 import { assert, it } from "@effect/vitest";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
-import { Argument, Command } from "effect/cli";
 import { CliAudience } from "../../effected/cli/index.ts";
 import type { AudienceFlagValues } from "../../effected/cli/internal/scanAudience.ts";
 import { scanAudience, tallyAudience } from "../../effected/cli/internal/scanAudience.ts";

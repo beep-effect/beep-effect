@@ -24,7 +24,9 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
-import { HttpMiddleware, HttpServerRequest, HttpServerResponse } from "effect/http";
+import * as HttpMiddleware from "effect/http/HttpMiddleware";
+import * as HttpServerRequest from "effect/http/HttpServerRequest";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import { ConflictActor } from "../Domain/Schema/Timeline.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { sha256 as sha256Effect } from "../Utils/Hash.ts";
@@ -101,7 +103,8 @@ const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<stri
  * ```ts
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
- * import { HttpServerRequest, HttpServerResponse } from "effect/http"
+ * import * as HttpServerRequest from "effect/http/HttpServerRequest";
+ * import * as HttpServerResponse from "effect/http/HttpServerResponse";
  * import { makeAuthMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
  * import { ConfigService, DEFAULT_CONFIG } from "@effect-ontology/Service/Config"
  *
@@ -194,7 +197,7 @@ export const makeAuthMiddleware = Effect.gen(function* () {
  *
  * ```ts
  * import * as Effect from "effect/Effect";
- * import { HttpServerResponse } from "effect/http"
+ * import * as HttpServerResponse from "effect/http/HttpServerResponse";
  * import { makeShutdownMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
  * import { ShutdownService } from "@effect-ontology/Runtime/Shutdown"
  *
@@ -232,7 +235,8 @@ export const makeShutdownMiddleware = Effect.gen(function* () {
  *
  * ```ts
  * import * as Effect from "effect/Effect";
- * import { HttpServerRequest, HttpServerResponse } from "effect/http"
+ * import * as HttpServerRequest from "effect/http/HttpServerRequest";
+ * import * as HttpServerResponse from "effect/http/HttpServerResponse";
  * import { makeLoggingMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
  *
  * const middleware = Effect.runSync(makeLoggingMiddleware)

@@ -15,8 +15,7 @@
  * import { threadsAtoms } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
- * import { Atom } from "effect/reactivity"
- *
+ * import * as Atom from "effect/reactivity/Atom";
  * const workspaceId = S.decodeUnknownSync(Workspace.WorkspaceId)(1)
  *
  * console.log(Atom.isSerializable(threadsAtoms(workspaceId))) // true

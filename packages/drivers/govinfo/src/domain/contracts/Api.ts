@@ -9,8 +9,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { HttpApi, HttpApiGroup, OpenApi } from "effect/http-api";
+import * as HttpApi from "effect/http-api/HttpApi";
+import * as HttpApiGroup from "effect/http-api/HttpApiGroup";
+import * as OpenApi from "effect/http-api/OpenApi";
 import * as Search from "./Search/index.ts";
 
 /**

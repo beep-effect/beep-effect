@@ -23,7 +23,7 @@ import {
   FourHintAnnotations,
 } from "@beep/mcp-kit";
 import { LiteralKit } from "@beep/schema";
-import { Tool } from "effect/ai";
+import * as Tool from "effect/ai/Tool";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { PosInt } from "./internal/PosInt.ts";

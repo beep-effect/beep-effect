@@ -9,7 +9,7 @@
 
 import * as BrowserHttpClient from "@effect/platform-browser/BrowserHttpClient";
 import * as Layer from "effect/Layer";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 
 const oipAtomRuntimeFactory = Atom.context({
   memoMap: Layer.makeMemoMapUnsafe(),

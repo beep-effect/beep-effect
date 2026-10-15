@@ -9,10 +9,12 @@ import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { dual, flow, pipe } from "effect/Function";
-import { HttpClient, HttpClientRequest } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -30,7 +32,7 @@ import {
   TailscaleStatusParseError,
 } from "./Tailscale.errors.ts";
 import { TailnetIpv4Address, TailscaleStatus, TailscaleStatusJson } from "./Tailscale.models.ts";
-import type { HttpClientResponse } from "effect/http";
+import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import type { TailscaleCommandError } from "./Tailscale.errors.ts";
 import type { TailnetIpv4Address as TailnetIpv4AddressType } from "./Tailscale.models.ts";
 

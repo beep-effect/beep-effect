@@ -40,7 +40,7 @@ import { ProofLedger } from "./ProofLedger.ts";
 import { captureRepoCommandStrict, readYeetChangedPathsStrict } from "./Settle.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as Path from "effect/Path";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import type { QualityTaskLaneRun, QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetAttemptStarted } from "./AttemptJournal.ts";

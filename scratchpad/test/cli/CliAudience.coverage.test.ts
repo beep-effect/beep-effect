@@ -10,7 +10,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Stdio from "effect/Stdio";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import { Audience } from "../../effected/env/index.ts";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { TestTerminal } from "../../effected/cli/testing.ts";

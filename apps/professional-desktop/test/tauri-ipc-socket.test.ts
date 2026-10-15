@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Scope from "effect/Scope";
-import { Socket } from "effect/socket";
+import * as Socket from "effect/socket/Socket";
 import { vi } from "vitest";
 import { TauriIpcSocketLive } from "@/transport/TauriIpcSocket";
 import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../vitest.shared.ts";

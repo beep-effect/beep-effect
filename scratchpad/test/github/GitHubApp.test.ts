@@ -16,7 +16,7 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as R from "effect/Record";
 import { vi } from "vitest";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import { AppIdentity, BotIdentity, GitHubApp, InstallationToken } from "../../effected/github/GitHubApp.ts";
 import { GitHubClient } from "../../effected/github/GitHubClient.ts";
 import { RetryPolicy } from "../../effected/github/Resilience.ts";

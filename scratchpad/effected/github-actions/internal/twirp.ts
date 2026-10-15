@@ -5,7 +5,8 @@
 // policy live here once. Generic over nothing at all: each caller maps a
 // `TwirpFailure` into its own typed error, because the failure a caller
 // reports is about *its* operation, not about HTTP.
-
+import type * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
@@ -13,8 +14,6 @@ import type * as Redacted from "effect/Redacted";
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
 import * as Function from "effect/Function";
-import type { HttpClient } from "effect/http";
-import { HttpClientRequest } from "effect/http";
 import * as P from "effect/Predicate";
 import * as O from "@beep/utils/Option";
 
@@ -185,8 +184,7 @@ const RETRIES = 4;
  * import { twirpCall } from "@beep/scratchpad/effected/github-actions/internal/twirp"
  * import * as Effect from "effect/Effect"
  * import * as Redacted from "effect/Redacted"
- * import { HttpClient } from "effect/http"
- *
+ * import * as HttpClient from "effect/http/HttpClient";
  * const program = Effect.flatMap(HttpClient.HttpClient, (http) => twirpCall({
  *   http,
  *   baseUrl: "https://results.example.com/",

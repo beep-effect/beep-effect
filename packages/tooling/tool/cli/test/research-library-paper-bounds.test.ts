@@ -5,10 +5,12 @@ import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { HttpClient, HttpClientResponse } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 

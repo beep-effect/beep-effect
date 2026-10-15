@@ -1,7 +1,7 @@
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as MutableHashSet from "effect/MutableHashSet";
-import { CliOutput } from "effect/cli";
+import * as CliOutput from "effect/cli/CliOutput";
 import * as P from "effect/Predicate";
 
 /**

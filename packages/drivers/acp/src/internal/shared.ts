@@ -6,7 +6,7 @@ import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as AcpSchema from "../_generated/schema.gen.ts";
 import * as AcpError from "../Acp.errors.ts";
-import type { RpcClientError } from "effect/rpc";
+import type * as RpcClientError from "effect/rpc/RpcClientError";
 import type {
   AcpExtensionRegistrars,
   AcpUnknownExtNotificationHandler,

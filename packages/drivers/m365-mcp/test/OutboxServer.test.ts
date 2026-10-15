@@ -13,7 +13,7 @@ import { conformance2026 } from "@beep/mcp-kit/test/Conformance";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
 import * as A from "effect/Array";
-import { Tool } from "effect/ai";
+import * as Tool from "effect/ai/Tool";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";

@@ -9,7 +9,7 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
 import * as DateTime from "effect/DateTime";
-import { TestConsole } from "effect/testing";
+import * as TestConsole from "effect/testing/TestConsole";
 import {
 	ActionEnvironment,
 	type ActionOutputError,

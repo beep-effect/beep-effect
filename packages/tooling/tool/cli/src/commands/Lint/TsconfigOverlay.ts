@@ -37,7 +37,7 @@ import { LiteralKit, normalizePath } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, O, pipe, R, Str } from "@beep/utils";
 import * as Console from "effect/Console";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";

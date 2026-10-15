@@ -11,10 +11,12 @@ import * as A from "effect/Array";
 import * as McpSchema from "effect/ai/McpSchema";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
-import { HttpClient, HttpClientRequest } from "effect/http";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
-import { RpcClient, RpcSerialization } from "effect/rpc";
+import * as RpcClient from "effect/rpc/RpcClient";
+import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as S from "effect/Schema";
 import { rpcSessionAuthorizationHeader } from "../../../apps/professional-desktop/server/RpcSessionAuth.ts";
 

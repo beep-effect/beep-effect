@@ -7,10 +7,11 @@
 
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { CodegenGenerateError } from "./CodegenKit.errors.ts";

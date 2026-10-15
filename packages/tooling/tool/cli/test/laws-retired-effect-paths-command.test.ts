@@ -6,7 +6,7 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as ConfigProvider from "effect/ConfigProvider";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";

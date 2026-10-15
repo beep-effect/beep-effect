@@ -13,7 +13,9 @@
  */
 
 import * as Console from "effect/Console";
-import { Argument, Command, Flag } from "effect/cli";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

@@ -5,7 +5,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
-import { OpenApi } from "effect/http-api";
+import * as OpenApi from "effect/http-api/OpenApi";
 import { Catalog, resolveCatalogSpecPath } from "@/Catalog";
 import { CatalogSource } from "@/Catalog.models";
 

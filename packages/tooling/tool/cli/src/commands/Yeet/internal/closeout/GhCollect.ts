@@ -28,7 +28,7 @@ import {
 } from "./Gh.schemas.ts";
 import { REPLY_THREAD_MUTATION, RESOLVE_THREAD_MUTATION } from "./WritePlan.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GhComment, GhPrView } from "../../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../../internal/repo-run/index.ts";
 import type { GhRepoView, GhReview, GhReviewThread } from "./Gh.schemas.ts";

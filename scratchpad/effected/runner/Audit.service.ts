@@ -26,7 +26,7 @@ import type { EffectVitestLintError } from "@beep/repo-cli/commands/Lint";
 import type * as Config from "effect/Config";
 import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AuditError, CommandFailed, LedgerInvalid, LedgerMissing } from "./Audit.errors.ts";
 import { type CarryReport, carryDocs, collectNotices, type CopyReport, copyModule, registerExisting, upstreamEntries } from "./Copy.ts";
 import { readExportFacets } from "./Exports.ts";

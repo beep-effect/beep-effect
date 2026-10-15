@@ -3,7 +3,8 @@ import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Stream from "effect/Stream";
 
 // Exercise native sockets and the installed dependency graph in a bounded child.

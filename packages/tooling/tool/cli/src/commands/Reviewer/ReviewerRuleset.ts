@@ -11,7 +11,7 @@ import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";

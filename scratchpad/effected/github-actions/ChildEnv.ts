@@ -168,51 +168,50 @@ export abstract class ChildEnv {
 	}
 
 	/**
-	 * The environment additions that prepend `dirs` to the child's `PATH`,
-	 * paired with the `extendEnv: true` that keeps them a *prepend*.
-	 *
-	 * **Details**
-	 *
-	 * `dirs` are joined ahead of the inherited value **in the order given** —
-	 * order is the caller's policy, because the first directory wins any name
-	 * collision (a package manager's shim directory leads so it beats a runtime
-	 * of the same name). POSIX uses the exact `PATH` key. On Windows, the
-	 * entry is written under the base's own `PATH`
-	 * spelling ({@link ChildEnv.pathKeyOf}), so a Windows child never receives
-	 * `PATH` beside its inherited `Path`. An absent or empty inherited value
-	 * appends nothing — deliberately not an empty trailing entry, which both
-	 * platforms historically read as "the current directory".
-	 *
-	 * Two consumers, two compositions, and the difference is exactly trap 1:
-	 *
-	 * - A spawner call takes the **whole pair** — spread it into the command
-	 *   options, as in the example below, so the `extendEnv: true` that makes
-	 *   `env` a merge rather than a replacement cannot be forgotten.
-	 * - An API that already merges additions over the parent itself —
-	 *   `DetachedProcess.spawn`, whose `env` is documented as merged — takes
-	 *   `.env` alone; `extendEnv` would be meaningless there.
-	 *
-	 * On a runner, pass `{ base: process.env, platform: process.platform }`.
-	 *
-	 * **Example** (Prepend a pnpm directory to the child environment)
-	 *
-	 * ```ts
-	 * import { ChildEnv } from "@beep/scratchpad/effected/github-actions/ChildEnv";
-	 * import { ChildProcess } from "effect/process";
-	 *
-	 * const command = ChildProcess.make("pnpm", ["install"], {
-	 *   ...ChildEnv.prependPath(["/opt/hostedtoolcache/pnpm/10.13.1/x64/bin"], {
-	 *     base: { PATH: "/usr/bin" },
-	 *     platform: "linux",
-	 *   }),
-	 *   ...(ChildEnv.needsShell("linux") ? { shell: true } : {}),
-	 * });
-	 * console.log(command.options.extendEnv) // true
-	 * ```
-	 *
-	 * @category utilities
-	 * @since 0.0.0
-	 */
+     * The environment additions that prepend `dirs` to the child's `PATH`,
+     * paired with the `extendEnv: true` that keeps them a *prepend*.
+     *
+     * **Details**
+     *
+     * `dirs` are joined ahead of the inherited value **in the order given** —
+     * order is the caller's policy, because the first directory wins any name
+     * collision (a package manager's shim directory leads so it beats a runtime
+     * of the same name). POSIX uses the exact `PATH` key. On Windows, the
+     * entry is written under the base's own `PATH`
+     * spelling ({@link ChildEnv.pathKeyOf}), so a Windows child never receives
+     * `PATH` beside its inherited `Path`. An absent or empty inherited value
+     * appends nothing — deliberately not an empty trailing entry, which both
+     * platforms historically read as "the current directory".
+     *
+     * Two consumers, two compositions, and the difference is exactly trap 1:
+     *
+     * - A spawner call takes the **whole pair** — spread it into the command
+     *   options, as in the example below, so the `extendEnv: true` that makes
+     *   `env` a merge rather than a replacement cannot be forgotten.
+     * - An API that already merges additions over the parent itself —
+     *   `DetachedProcess.spawn`, whose `env` is documented as merged — takes
+     *   `.env` alone; `extendEnv` would be meaningless there.
+     *
+     * On a runner, pass `{ base: process.env, platform: process.platform }`.
+     *
+     * **Example** (Prepend a pnpm directory to the child environment)
+     *
+     * ```ts
+     * import { ChildEnv } from "@beep/scratchpad/effected/github-actions/ChildEnv";
+     * import * as ChildProcess from "effect/process/ChildProcess";
+     * const command = ChildProcess.make("pnpm", ["install"], {
+     *   ...ChildEnv.prependPath(["/opt/hostedtoolcache/pnpm/10.13.1/x64/bin"], {
+     *     base: { PATH: "/usr/bin" },
+     *     platform: "linux",
+     *   }),
+     *   ...(ChildEnv.needsShell("linux") ? { shell: true } : {}),
+     * });
+     * console.log(command.options.extendEnv) // true
+     * ```
+     *
+     * @category utilities
+     * @since 0.0.0
+     */
 	static prependPath(dirs: readonly [string, ...ReadonlyArray<string>], options: PathPrependOptions): PathPrependEnv {
 		const delimiter = options.platform === "win32" ? ";" : ":";
 		const key = options.platform === "win32" ? ChildEnv.pathKeyOf(options.base) : "PATH";

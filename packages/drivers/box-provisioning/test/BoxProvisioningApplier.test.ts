@@ -18,7 +18,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import { desiredFixture, observedAfterApplyFixture, observedFixture, postApplyAdoptionsFixture } from "./fixtures.ts";
 
 const makeMutationFixture = () => {

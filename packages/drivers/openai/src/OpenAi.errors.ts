@@ -4,8 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import type { AiError } from "effect/ai";
+import type * as AiError from "effect/ai/AiError";
 import type * as Config from "effect/Config";
 
 /**
@@ -22,8 +21,7 @@ import type * as Config from "effect/Config";
  * ```ts
  * import { strictEqual } from "node:assert"
  * import type { OpenAiError } from "@beep/openai"
- * import { AiError } from "effect/ai"
- *
+ * import * as AiError from "effect/ai/AiError";
  * const error: OpenAiError = AiError.make({
  *   method: "createEmbedding",
  *   module: "OpenAiClient",

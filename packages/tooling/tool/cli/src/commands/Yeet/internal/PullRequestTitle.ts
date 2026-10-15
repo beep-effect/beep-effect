@@ -25,7 +25,7 @@ import * as Str from "effect/String";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runGitOutput } from "./GitExec.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/PullRequestTitle");

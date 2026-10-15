@@ -25,7 +25,7 @@ import * as AcpProtocol from "./AcpProtocol.service.ts";
 import * as AcpRpcs from "./AcpRpc.models.ts";
 import { callRpc, makeExtensionRegistrars, runHandler } from "./internal/shared.ts";
 import { makeChildStdio, makeTerminationError } from "./internal/stdio.ts";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type * as Stdio from "effect/Stdio";
 import type * as Stream from "effect/Stream";
@@ -42,8 +42,7 @@ const ACP_CLIENT_PENDING_NOTIFICATION_CAPACITY = 256;
  *
  * ```ts
  * import { makeTerminationError } from "@beep/acp/client"
- * import type { ChildProcessSpawner } from "effect/process"
- *
+ * import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
  * const toTerminationError = (handle: ChildProcessSpawner.ChildProcessHandle) => makeTerminationError(handle)
  * console.log(toTerminationError)
  * ```
@@ -694,7 +693,7 @@ export const make = Effect.fn($I`AcpClient_make`)(function* (
  * **Example** (Configuring a child-process client)
  *
  * ```ts
- * import type { ChildProcessSpawner } from "effect/process"
+ * import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
  * import type { AcpClientChildProcessOptions } from "@beep/acp/client"
  *
  * const fromHandle = (
@@ -716,7 +715,7 @@ export interface AcpClientChildProcessOptions extends AcpClientOptions {
  * **Example** (Layer from process handle)
  *
  * ```ts
- * import type { ChildProcessSpawner } from "effect/process"
+ * import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
  * import { layerChildProcess } from "@beep/acp/client"
  *
  * const fromHandle = (handle: ChildProcessSpawner.ChildProcessHandle) => layerChildProcess({ handle })

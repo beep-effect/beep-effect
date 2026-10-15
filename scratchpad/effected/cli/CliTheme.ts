@@ -1,5 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import { Prompt } from "effect/cli";
+import * as Prompt from "effect/cli/Prompt";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";

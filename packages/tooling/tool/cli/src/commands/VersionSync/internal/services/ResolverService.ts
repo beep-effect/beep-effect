@@ -27,7 +27,7 @@ import { buildTurboReport, resolveTurboSchema, TurboSchemaState } from "../resol
 import { CategorySelectionService } from "./CategorySelectionService.ts";
 import type { FsUtils } from "@beep/repo-utils";
 import type * as FileSystem from "effect/FileSystem";
-import type { HttpClient } from "effect/http";
+import type * as HttpClient from "effect/http/HttpClient";
 import type * as Path from "effect/Path";
 import type { VersionCategoryReport, VersionSyncError, VersionSyncOptions } from "../../VersionSync.schemas.ts";
 

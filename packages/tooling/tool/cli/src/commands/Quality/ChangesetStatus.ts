@@ -17,7 +17,8 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as Console from "effect/Console";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
@@ -32,7 +33,7 @@ import { runCaptured } from "../../internal/process/index.ts";
 import { changesetPackageReferencesFromText, collectWorkspacePackageJsonFiles } from "./ChangesetGraph.ts";
 import { ChangesetStatusError } from "./Quality.errors.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import type { ChangesetGraphPackageReference } from "./ChangesetGraph.ts";
 

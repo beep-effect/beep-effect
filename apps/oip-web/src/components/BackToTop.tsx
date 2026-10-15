@@ -11,7 +11,7 @@ import { thunkUndefined } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 
 const REVEAL_OFFSET_PX = 560;
 

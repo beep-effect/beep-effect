@@ -39,7 +39,8 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as ErrorReporter from "effect/ErrorReporter";
 import { dual } from "effect/Function";
-import { Headers, HttpServerRequest } from "effect/http";
+import * as Headers from "effect/http/Headers";
+import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -587,7 +588,8 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
  * import { sanitizedToolkit } from "@beep/mcp-kit"
- * import { Tool, Toolkit } from "effect/ai"
+ * import * as Tool from "effect/ai/Tool";
+ * import * as Toolkit from "effect/ai/Toolkit";
  * import * as S from "effect/Schema"
  *
  * const ExampleTool = Tool.make("example_tool", { success: S.String })

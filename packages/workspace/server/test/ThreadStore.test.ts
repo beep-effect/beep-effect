@@ -28,7 +28,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 

@@ -39,7 +39,7 @@ import { VectorizerError, WinkVectorizer } from "./WinkVectorizer.service.ts";
 import type { Token } from "@beep/nlp/Core/Token";
 import type { BM25Norm } from "@beep/nlp/Core/Vectorization";
 import type { AiToolError } from "@beep/nlp-processing/Tools";
-import type { Tool } from "effect/ai";
+import type * as Tool from "effect/ai/Tool";
 
 const decodeNonEmptyBracketStringToPatternElementArray = S.decodeEffect(S.NonEmptyArray(BracketStringToPatternElement));
 

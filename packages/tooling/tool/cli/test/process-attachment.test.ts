@@ -16,7 +16,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as Path from "effect/Path";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import type { ProcessAttachment } from "@beep/repo-cli/test/RepoRun";
 
 const ownAttachments = (scan: O.Option<ReadonlyArray<ProcessAttachment>>): ReadonlyArray<ProcessAttachment> =>

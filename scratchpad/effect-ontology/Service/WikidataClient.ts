@@ -28,7 +28,9 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import { ErrorMessage, OptionalErrorCause, OptionalHttpStatusCode } from "../Domain/Error/Base.ts";
 import { PosInt } from "../Schema/PosInt.ts";
 

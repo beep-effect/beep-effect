@@ -6,7 +6,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
 import * as Path from "effect/Path";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";

@@ -14,7 +14,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import { CodexSecurityError, toCodexSecurityError } from "./Security.errors.ts";
 import { SECURITY_PACKAGE_VERSION, SECURITY_PLUGIN_VERSION } from "./Security.schemas.ts";

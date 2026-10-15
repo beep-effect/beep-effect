@@ -35,7 +35,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { LanguageModel } from "effect/ai";
+import * as LanguageModel from "effect/ai/LanguageModel";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import type { ExtractionError } from "../Domain/Error/Extraction.ts";
 import type { OntologyFileNotFound, OntologyParsingFailed } from "../Domain/Error/Ontology.ts";

@@ -27,7 +27,7 @@ import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { AtomRegistry } from "effect/reactivity";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import { vi } from "vitest";
 import type { CosmosRenderHandle } from "@beep/cosmos";
 import type { Graph3DRenderHandle } from "@beep/graph-3d/browser";

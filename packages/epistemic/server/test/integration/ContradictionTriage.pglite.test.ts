@@ -85,7 +85,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import type { EvidenceRow } from "@beep/epistemic-tables/entities/Evidence";
 

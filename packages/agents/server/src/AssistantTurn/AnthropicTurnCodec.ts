@@ -28,7 +28,7 @@ import { $AgentsServerId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { thunkFalse } from "@beep/utils";
 import * as A from "effect/Array";
-import { AnthropicStructuredOutput } from "effect/ai";
+import * as AnthropicStructuredOutput from "effect/ai/AnthropicStructuredOutput";
 import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

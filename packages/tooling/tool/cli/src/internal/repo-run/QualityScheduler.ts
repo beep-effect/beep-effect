@@ -87,7 +87,7 @@ import {
 } from "./RunScope.schemas.ts";
 import { enterRunScope, readRunScopeTelemetry, runScopeUnitName, stopRunScopeForReap } from "./RunScope.ts";
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { UUID } from "../schema/Uuid.ts";
 import type { AdmissionJournalLeaseEvicted, AdmissionJournalTicketEvicted } from "./AdmissionJournal.ts";
 

@@ -11,7 +11,7 @@
 
 import { fromUndefinedOr, getOrElse } from "effect/Option";
 import { BigInt as BigIntSchema, Finite, flip, is, isBetweenBigInt, isFinite, isInt, makeFilter } from "effect/Schema";
-import { VariantSchema } from "effect/schema";
+import * as VariantSchema from "effect/schema/VariantSchema";
 import * as Field from "../core/Field.ts";
 import * as Meta from "../core/Meta.ts";
 import { ModelInvariantError } from "../core/model.ts";

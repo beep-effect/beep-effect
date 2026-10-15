@@ -10,7 +10,7 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import * as fc from "fast-check";
 import { createMachine, types } from "xstate";
 import { Deployments, deploymentsSucceeding, ReleaseEvents, releaseMachine } from "./fixtures/Release.machine.ts";

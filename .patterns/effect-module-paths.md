@@ -1,6 +1,7 @@
 # Effect Module Paths
 
-Import every Effect module from its current top-level path. This file is the
+Import every Effect module from its dedicated public leaf path, including nested
+modules such as `effect/cli/Command` and `effect/http/HttpClient`. This file is the
 only place in the repository (outside `patches/`) that spells out the retired
 `unstable` paths, so agents searching for an old path land here.
 
@@ -64,3 +65,32 @@ copies).
 | D7 | Agent memory and rule files outside the repo are rewritten too; session transcripts are not. | Memory is read as current guidance; transcripts are logs. | Not applicable (outside the repo). |
 | D8 | Rewrite, record, and gate ship in one PR. | The gate lands green against a clean tree. | Revert the PR. |
 | D9 | `.gitleaksignore` is exempt, like `patches/`. | Its fingerprints name the path as it was in the fingerprinted commit; rewriting them un-ignores those findings. | None needed. |
+
+## Per-module enforcement
+
+`bun run beep laws effect-imports --check` rejects imports through both the
+root barrel and public nested barrels. The checker discovers nested barrels
+from the installed Effect export map and their namespace re-exports, then
+validates each destination against the public exports. Leaf imports remain
+valid, including named functions from `effect/Function`.
+
+Use the same command with `--write` for mechanical repairs. Run `--mode jsdoc`
+and `--mode markdown` for examples; `--check --enforce-documentation` makes
+those checks blocking. Unknown bindings and unsupported barrel usages require
+review and fail the check. The write command never guesses their destinations.
+
+On 2026-10-14, a published `@effect/tsgo` 0.53.0 compiler probe verified that
+`preferNamespaceImport` reports `Command` imported from `effect/cli` and
+suggests `effect/cli/Command`. It also reports the required named `pipe` import
+from `effect/Function` and named type imports from leaf modules. Its upstream
+rule documentation marks it as non-fixable. The installed 0.51.1 compiler does
+not ship that rule. Keep the compiler pin unchanged for this migration: the
+existing import law enforces barrel avoidance without changing leaf import
+syntax or the Function exception.
+
+Source: [upstream preferNamespaceImport rule](https://github.com/Effect-TS/tsgo/blob/main/docs/rules/prefer-namespace-import.md).
+
+The follow-up migration extends the law, rewrites code and examples, checks
+idempotence, and ships in one PR. It creates no goal or exploration packet.
+The previous miss occurred because the checker only registered the root
+`effect` barrel; relocated nested barrels were outside its mapping.

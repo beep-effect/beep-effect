@@ -21,7 +21,7 @@ import { expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

@@ -22,7 +22,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-import { ChildProcessSpawner } from "effect/process";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";

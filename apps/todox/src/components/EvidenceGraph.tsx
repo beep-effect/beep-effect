@@ -16,7 +16,7 @@ import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as A from "effect/Array";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import { nav } from "@/content/copy";
 import { RecordState } from "@/session/Session.schema";

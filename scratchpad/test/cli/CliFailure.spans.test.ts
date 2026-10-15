@@ -12,8 +12,8 @@ import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Stdio from "effect/Stdio";
+import * as Command from "effect/cli/Command";
 import * as Terminal from "effect/Terminal";
-import { Command } from "effect/cli";
 import type { CliFailureOptions, CliLogOptions, FailureDetails } from "../../effected/cli/index.ts";
 import { CliAudience, CliFailure, CliRuntime, Render } from "../../effected/cli/index.ts";
 

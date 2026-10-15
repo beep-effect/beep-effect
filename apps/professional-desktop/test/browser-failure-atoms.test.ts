@@ -6,7 +6,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as References from "effect/References";
-import { AtomRegistry } from "effect/reactivity";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import {
   BrowserFailure,
   browserFailureListenersAtom,

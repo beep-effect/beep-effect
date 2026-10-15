@@ -3,7 +3,7 @@ import { LocalExec } from "../commands/index.ts";
 import * as Effect from "effect/Effect";
 import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import { PublishError } from "./PublishError.ts";
 
 const $I = $ScratchpadId.create("effected/npm/NpmExecutor");

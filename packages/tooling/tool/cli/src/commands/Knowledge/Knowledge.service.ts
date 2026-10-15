@@ -78,7 +78,7 @@ import {
   KnowledgeTrackedEntry,
 } from "./Knowledge.schemas.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CapturedStreams } from "../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 import type { KnowledgeStaticCommandTree } from "./Knowledge.command-surface.ts";
@@ -1146,7 +1146,7 @@ import { BunRuntime, BunServices } from "@effect/platform-bun"
 import * as Console from "effect/Console"
 import * as Effect from "effect/Effect"
 import * as Result from "effect/Result"
-import { Command } from "effect/cli"
+import * as Command from "effect/cli/Command"
 import { rootCommand } from ${JSON.stringify(rootCommandModule)}
 
 const input = await Bun.file(${JSON.stringify(inputPath)}).text()

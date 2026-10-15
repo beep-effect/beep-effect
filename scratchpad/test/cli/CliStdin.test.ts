@@ -4,6 +4,9 @@
 // running the package sources through Node's type stripping (fixtures/register-ts.mjs).
 //
 // Two preconditions, neither of which is checked for you:
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+
 // - It is NOT build-free. The sources import `@effected/env`, which resolves to that package's BUILT output, so
 //   `@effected/env` must have been built (`pnpm build --filter @effected/env`, or the `prepare` build on install).
 // - Every module reachable from the fixture must be type-strip-clean: no parameter properties, enums or namespaces.
@@ -15,8 +18,6 @@ import { NodeServices } from "@effect/platform-node";
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
-
 const HOST_PATH = Config.String("PATH").pipe(Config.withDefault(""));
 
 const FIXTURES = `${import.meta.dirname}/fixtures`;

@@ -34,11 +34,12 @@ import {
 import { A } from "@beep/utils";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { dual, flow, pipe } from "effect/Function";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -62,7 +63,7 @@ import type {
   AgentEffectivenessPhoenixSyncResult,
   AgentEffectivenessPromptBundle,
 } from "@beep/repo-ai-metrics";
-import type { HttpClient } from "effect/http";
+import type * as HttpClient from "effect/http/HttpClient";
 import type * as Scope from "effect/Scope";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.command");
@@ -704,8 +705,7 @@ const evalsCommand = Command.make("evals", {}, () =>
  * ```ts
  * import { agentEffectivenessCommand } from "@beep/repo-cli/commands/AgentEffectiveness/index"
  * import * as Effect from "effect/Effect";
- * import { Command } from "effect/cli"
- *
+ * import * as Command from "effect/cli/Command";
  * const run = Command.run(agentEffectivenessCommand, { version: "0.0.0" })
  *
  * console.log(Effect.isEffect(run)) // true

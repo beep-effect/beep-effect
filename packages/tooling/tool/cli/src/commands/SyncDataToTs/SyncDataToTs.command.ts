@@ -10,7 +10,8 @@ import { Md } from "@beep/md";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, Struct, thunkEffectVoid, thunkTrue } from "@beep/utils";
 import * as Console from "effect/Console";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
@@ -32,7 +33,7 @@ import {
 } from "./SyncDataToTs.schemas.ts";
 import { syncDataTargets } from "./targets/index.ts";
 import type * as Crypto from "effect/Crypto";
-import type { HttpClient } from "effect/http";
+import type * as HttpClient from "effect/http/HttpClient";
 import type * as JsonPatch from "effect/JsonPatch";
 import type { SyncDataTarget } from "./SyncDataToTs.schemas.ts";
 
@@ -546,7 +547,7 @@ const renderSyncDataError = (error: SyncDataToTsError): string =>
  *
  * ```ts
  * import { syncDataToTsCommand } from "@beep/repo-cli/commands/SyncDataToTs"
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * import * as Effect from "effect/Effect";
  * const run = Command.run(syncDataToTsCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true

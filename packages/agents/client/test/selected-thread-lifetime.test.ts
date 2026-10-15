@@ -6,7 +6,8 @@ import { assertFalse, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { Atom, AtomRegistry } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 
 // The desktop registry disposes any atom with no listeners and no dependents once
 // its idle TTL elapses. A tiny TTL reproduces in milliseconds what took the real

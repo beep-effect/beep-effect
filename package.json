@@ -470,7 +470,7 @@
     "lint:effect-vitest": "bun run beep lint effect-vitest",
     "jsdoc:ratchet:check": "bun run beep quality jsdoc-ratchet --inventory .beep/ci/jsdoc-documentation.inventory.jsonc",
     "lint:circular": "bun run beep lint circular",
-    "lint:effect-imports-markdown": "bun run beep laws effect-imports --mode markdown --check",
+    "lint:effect-imports-markdown": "bun run beep laws effect-imports --mode markdown --check --enforce-documentation",
     "lint:retired-effect-paths": "bun run beep laws retired-effect-paths --check",
     "lint:ecosystem-polarity": "bun run beep lint ecosystem-polarity",
     "goals:index-check": "bun run beep goals index --check",

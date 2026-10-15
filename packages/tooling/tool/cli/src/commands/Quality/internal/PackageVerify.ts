@@ -27,7 +27,7 @@ import { recordYeetLocalShardOutcome, YeetLocalShardOutcome } from "../../Yeet/i
 import { QualityScriptCommandError } from "../Quality.errors.ts";
 import type { DomainError, FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Quality/internal/PackageVerify");
 

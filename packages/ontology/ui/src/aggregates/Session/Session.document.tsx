@@ -36,7 +36,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@beep/ui/components/too
 import { O, Str } from "@beep/utils";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { pipe } from "effect/Function";
-import { AsyncResult } from "effect/reactivity";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as S from "effect/Schema";
 import { valueFromEvent } from "./Session.workbench.shared.ts";
 import type { JSX } from "react";
@@ -140,9 +140,9 @@ export function OntologyDocumentRegion(): JSX.Element {
   // triggering button must say so and refuse re-entry, otherwise a slow open
   // or save reads as "the button does nothing".
   const toolbar = documentToolbarState({
-    opening: AsyncResult.isWaiting(useAtomValue(openOntologyDocumentAtom)),
-    saving: AsyncResult.isWaiting(useAtomValue(saveOntologyDocumentAtom)),
-    previewing: AsyncResult.isWaiting(useAtomValue(previewOntologyTurtleAtom)),
+    opening: useAtomValue(openOntologyDocumentAtom).pipe(AsyncResult.isWaiting),
+    saving: useAtomValue(saveOntologyDocumentAtom).pipe(AsyncResult.isWaiting),
+    previewing: useAtomValue(previewOntologyTurtleAtom).pipe(AsyncResult.isWaiting),
     sessionOpen: O.isSome(session),
     dirty,
   });

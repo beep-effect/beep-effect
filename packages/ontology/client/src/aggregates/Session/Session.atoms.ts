@@ -58,7 +58,9 @@ import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
-import { Atom, AtomRpc, Reactivity } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
+import * as AtomRpc from "effect/reactivity/AtomRpc";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import type { CosmosBackend, CosmosRenderHandle } from "@beep/cosmos";
@@ -75,7 +77,7 @@ import type {
   RunOntologySparqlResult,
   RunOntologyValidationResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
-import type { RpcClient } from "effect/rpc";
+import type * as RpcClient from "effect/rpc/RpcClient";
 
 const $I = $OntologyClientId.create("aggregates/Session/Session.atoms");
 

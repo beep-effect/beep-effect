@@ -8,7 +8,7 @@
 import { $NlpProcessingId } from "@beep/identity";
 import { MarkRange } from "@beep/nlp/Core/Pattern";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Tool } from "effect/ai";
+import * as Tool from "effect/ai/Tool";
 import * as S from "effect/Schema";
 import { AiToolError } from "./_schemas.ts";
 

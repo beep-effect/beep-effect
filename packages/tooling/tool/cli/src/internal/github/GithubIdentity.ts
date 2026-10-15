@@ -32,7 +32,7 @@ import * as Str from "effect/String";
 import { configStringOption } from "../cli/EnvConfig.ts";
 import { runRepoCommandCaptureRaw } from "../repo-run/RepoRun.executor.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("internal/github/GithubIdentity");
 

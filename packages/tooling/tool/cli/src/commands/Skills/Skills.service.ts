@@ -15,7 +15,10 @@ import * as FileSystem from "effect/FileSystem";
 import { dual, flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
-import { Headers, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
+import * as Headers from "effect/http/Headers";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
@@ -707,8 +710,7 @@ const makeSkillUpstreamContentSource = Effect.gen(function* () {
  * ```ts
  * import { SkillUpstreamContentSourceLive } from "@beep/repo-cli/commands/Skills/Skills.service"
  * import * as Layer from "effect/Layer";
- * import { FetchHttpClient } from "effect/http"
- *
+ * import * as FetchHttpClient from "effect/http/FetchHttpClient";
  * const ready = SkillUpstreamContentSourceLive.pipe(Layer.provide(FetchHttpClient.layer))
  *
  * console.log(Layer.isLayer(ready)) // true
@@ -1304,8 +1306,7 @@ export const SkillProvenanceServiceLayer = Layer.effect(SkillProvenanceService, 
  * ```ts
  * import { SkillProvenanceServiceLive } from "@beep/repo-cli/commands/Skills/Skills.service"
  * import * as Layer from "effect/Layer";
- * import { FetchHttpClient } from "effect/http"
- *
+ * import * as FetchHttpClient from "effect/http/FetchHttpClient";
  * const withHttp = SkillProvenanceServiceLive.pipe(Layer.provide(FetchHttpClient.layer))
  *
  * console.log(Layer.isLayer(withHttp)) // true

@@ -12,6 +12,8 @@ import * as Redacted from "effect/Redacted";
 //     bunx --bun vitest run --config vitest.config.ts test/Runtime/MigrationRunner.pg.test.ts
 //   docker stop effect-ontology-pg && docker rm effect-ontology-pg
 import { makeDrizzleLayer, PostgresDrizzle } from "@beep/postgres";
+import * as SqlClient from "effect/sql/SqlClient";
+import * as SqlSchema from "effect/sql/SqlSchema";
 import { BunServices } from "@effect/platform-bun";
 import * as PgClient from "@effect/sql-pg/PgClient";
 import { assert, describe, it } from "@effect/vitest";
@@ -19,7 +21,6 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { SqlClient, SqlSchema } from "effect/sql";
 import { databaseReady } from "../../Runtime/Persistence/DatabaseReady.ts";
 import { migrateFromFolder, migrateOnBoot, migrationsFolder } from "../../Runtime/Persistence/MigrationRunner.ts";
 

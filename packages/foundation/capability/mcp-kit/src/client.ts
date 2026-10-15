@@ -23,13 +23,16 @@ import * as McpSchema from "effect/ai/McpSchema";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
-import { HttpClient, HttpClientRequest } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { Rpc, RpcClient, RpcGroup } from "effect/rpc";
+import * as Rpc from "effect/rpc/Rpc";
+import * as RpcClient from "effect/rpc/RpcClient";
+import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -506,8 +509,7 @@ export class ResourcesRead extends Rpc.make("resources/read", {
  *
  * ```ts
  * import { McpClientRpcs } from "@beep/mcp-kit/client"
- * import { RpcClient } from "effect/rpc"
- *
+ * import * as RpcClient from "effect/rpc/RpcClient";
  * const client = RpcClient.make(McpClientRpcs)
  * console.log(typeof client)
  * // "object"

@@ -6,7 +6,7 @@ import { RegistryProvider } from "@effect/atom-react";
 import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import * as Effect from "effect/Effect";
-import { AtomRegistry } from "effect/reactivity";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import * as S from "effect/Schema";
 import { ThemeToggle } from "@/chat/ui/ThemeToggle";
 import { ProfessionalStorageLive } from "@/runtime/ProfessionalAtomRuntime";

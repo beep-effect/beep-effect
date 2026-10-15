@@ -18,7 +18,7 @@ import * as O from "effect/Option";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import { PracticeMailTaggingError } from "@/PracticeMailTagging.errors";
 import {
   ProcessProbe,

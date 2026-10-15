@@ -10,7 +10,7 @@ import * as Latch from "effect/Latch";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Schema from "effect/Schema";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import { Attestation } from "../../effected/github/Attestation.ts";
 import { Annotation, CheckRun, CheckRunOutput } from "../../effected/github/CheckRun.ts";
 import { GitHubError } from "../../effected/github/GitHubError.ts";

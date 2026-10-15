@@ -10,7 +10,7 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import type { SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
@@ -103,7 +103,10 @@ export const editorProofInitialStateAtom = Atom.readable((get) =>
  * @category atoms
  * @since 0.0.0
  */
-export const editorProofJsonAtom = Atom.make(Result.getOrThrow(encodeEditorProofJson(editorProofDocument)));
+export const editorProofJsonAtom = encodeEditorProofJson(editorProofDocument).pipe(
+  Result.getOrThrow,
+  Atom.make<string>
+);
 /** Latest typed canonical import failure, when present.
  *
  * **Example** (Reference the atom)

@@ -132,8 +132,8 @@ export const make = Effect.fn("LangExtractService.make")(function* () {
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
  * import * as Stream from "effect/Stream";
- * import { LanguageModel, Response } from "effect/ai"
- *
+ * import * as LanguageModel from "effect/ai/LanguageModel";
+ * import * as Response from "effect/ai/Response";
  * const usage = Response.Usage.make({
  *   inputTokens: { cacheRead: undefined, cacheWrite: undefined, total: 10, uncached: 10 },
  *   outputTokens: { reasoning: undefined, text: 8, total: 8 }

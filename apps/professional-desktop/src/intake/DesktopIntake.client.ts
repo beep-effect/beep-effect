@@ -8,7 +8,7 @@
 import { chatProtocolLayerAtom } from "@beep/agents-client";
 import { DocumentsRpcs } from "@beep/documents-use-cases/public";
 import { WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public";
-import { AtomRpc } from "effect/reactivity";
+import * as AtomRpc from "effect/reactivity/AtomRpc";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import { VaultDirectoryPickerRpcs } from "./VaultDirectoryPicker.rpc.ts";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";

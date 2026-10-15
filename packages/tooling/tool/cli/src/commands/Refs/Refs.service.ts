@@ -47,7 +47,7 @@ import {
 } from "./Refs.schemas.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as Duration from "effect/Duration";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ReferenceMember } from "./Refs.schemas.ts";
 
 const isPositiveInteger = S.is(S.Int.check(S.isGreaterThan(0)));

@@ -12,7 +12,7 @@ import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as Path from "effect/Path";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -26,7 +26,7 @@ import {
 } from "./ProvenanceIndex.contracts.ts";
 import * as P from "./ProvenanceIndex.schemas.ts";
 import { resolveWithinRoot } from "./Shared.ts";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { MailExportTreeIndexResult } from "./ProvenanceIndex.schemas.ts";
 
 type Io = FileSystem.FileSystem | Path.Path;

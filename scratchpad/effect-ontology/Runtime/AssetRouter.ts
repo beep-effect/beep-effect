@@ -13,7 +13,8 @@ import * as Effect from "effect/Effect";
 import * as Inspectable from "effect/Inspectable";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { HttpRouter, HttpServerResponse } from "effect/http";
+import * as HttpRouter from "effect/http/HttpRouter";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import { BatchId, DocumentId } from "../Domain/Identity.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
 import { LinkIngestionService } from "../Service/LinkIngestionService.ts";
@@ -37,7 +38,7 @@ const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
  *
  * ```ts
  * import * as Layer from "effect/Layer";
- * import { HttpRouter } from "effect/http"
+ * import * as HttpRouter from "effect/http/HttpRouter";
  * import { AssetRouter } from "@effect-ontology/Runtime/AssetRouter"
  *
  * const served = Layer.provide(AssetRouter, HttpRouter.layer)

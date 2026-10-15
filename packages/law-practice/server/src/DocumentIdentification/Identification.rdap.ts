@@ -10,7 +10,7 @@ import {
 } from "@beep/law-practice-use-cases/DocumentIdentification";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { HttpClient } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";

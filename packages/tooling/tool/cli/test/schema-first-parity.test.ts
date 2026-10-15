@@ -16,7 +16,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";

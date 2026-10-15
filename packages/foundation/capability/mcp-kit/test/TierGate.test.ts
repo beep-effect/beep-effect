@@ -13,7 +13,7 @@ import { assert, describe } from "@effect/vitest";
 import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import { Tool } from "effect/ai";
+import * as Tool from "effect/ai/Tool";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";

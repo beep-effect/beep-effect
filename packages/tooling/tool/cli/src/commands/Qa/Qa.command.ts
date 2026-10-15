@@ -14,7 +14,9 @@ import { Exiftool } from "@beep/exiftool";
 import { FFmpeg } from "@beep/ffmpeg";
 import { CaptureLane, ClockCorrelator, Collector, ExtractionRuleSet, SessionStore, Witness } from "@beep/qa-capture";
 import { A } from "@beep/utils";
-import { Argument, Command, Flag } from "effect/cli";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -312,7 +314,7 @@ const qaJudgeSkillCommand = Command.make(
  *
  * ```ts
  * import { qaCommand } from "@beep/repo-cli/commands/Qa/index"
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * import * as Effect from "effect/Effect";
  * const run = Command.run(qaCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true

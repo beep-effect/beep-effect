@@ -12,8 +12,8 @@ import * as Order from "effect/Order";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { HttpRouter } from "effect/http";
-import { SqlClient } from "effect/sql";
+import * as HttpRouter from "effect/http/HttpRouter";
+import * as SqlClient from "effect/sql/SqlClient";
 import { describe } from "vitest";
 import {
   ConflictActor,

@@ -11,7 +11,7 @@ import type * as Terminal from "effect/Terminal";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as LayerModule from "effect/Layer";
 import * as O from "@beep/utils/Option";
-import type { CliOutput } from "effect/cli";
+import type * as CliOutput from "effect/cli/CliOutput";
 import { CliInteractive } from "./CliInteractive.ts";
 import type { CliLinks, EditorLinks } from "./CliLinks.ts";
 import { ambientLinksLayer } from "./CliLinks.ts";

@@ -14,14 +14,16 @@ import { getSomesStruct } from "@beep/utils/Option";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
-import { Argument, Command, Flag } from "effect/cli";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
 import * as HM from "effect/HashMap";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -123,7 +125,7 @@ import {
 } from "./Quality.schemas.ts";
 import { runQualityTaskGithubCheckLaneWaves, runQualityTaskStreamingStepGroup } from "./Tasks.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ParseError } from "jsonc-parser";
 import type { AdmissionSnapshot } from "../../internal/repo-run/index.ts";
 import type {

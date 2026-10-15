@@ -16,7 +16,7 @@ import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";

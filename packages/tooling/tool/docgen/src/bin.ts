@@ -7,7 +7,7 @@
 import { FsUtilsLive } from "@beep/repo-utils";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";

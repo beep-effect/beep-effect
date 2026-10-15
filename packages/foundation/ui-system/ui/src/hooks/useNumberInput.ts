@@ -12,7 +12,7 @@ import * as Effect from "effect/Effect";
 import { constVoid, dual, flow, identity, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";

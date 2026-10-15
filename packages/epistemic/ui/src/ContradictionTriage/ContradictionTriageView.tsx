@@ -54,7 +54,7 @@ import { EvidenceSourcePanel } from "./EvidenceSourcePanel.tsx";
 import type { ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
 import type { ContradictionResolutionProposal } from "@beep/epistemic-domain/values/Contradiction";
 import type { ContradictionCandidateId } from "@beep/shared-domain/identity/Epistemic";
-import type { RpcClientError } from "effect/rpc";
+import type * as RpcClientError from "effect/rpc/RpcClientError";
 import type { JSX } from "react";
 
 const $I = $EpistemicUiId.create("ContradictionTriage/ContradictionTriageView");

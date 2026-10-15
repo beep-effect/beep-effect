@@ -49,7 +49,7 @@ import * as Data from "effect/Data";
 import * as Equal from "effect/Equal";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import {
   $createParagraphNode,
   $getSelection,

@@ -4,7 +4,7 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
-import { Response } from "effect/ai";
+import * as Response from "effect/ai/Response";
 import * as Effect from "effect/Effect";
 import { constTrue } from "effect/Function";
 import * as O from "effect/Option";

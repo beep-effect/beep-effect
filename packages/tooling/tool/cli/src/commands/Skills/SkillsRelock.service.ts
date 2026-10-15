@@ -555,8 +555,7 @@ export const SkillUpdateTrainLayer = Layer.effect(SkillUpdateTrain, makeSkillUpd
  * ```ts
  * import { SkillUpdateTrainLive } from "@beep/repo-cli/commands/Skills/SkillsRelock.service"
  * import * as Layer from "effect/Layer"
- * import { FetchHttpClient } from "effect/http"
- *
+ * import * as FetchHttpClient from "effect/http/FetchHttpClient";
  * console.log(Layer.isLayer(SkillUpdateTrainLive.pipe(Layer.provide(FetchHttpClient.layer)))) // true
  * ```
  *

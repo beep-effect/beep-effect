@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import * as Effect from "effect/Effect";
-import { Reactivity } from "effect/reactivity";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import { ProviderInstanceClient } from "./ProviderInstance.service.ts";
 import type {
   AddProviderInstanceCommand,

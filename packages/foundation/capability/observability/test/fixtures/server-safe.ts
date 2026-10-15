@@ -17,7 +17,7 @@ import {
 } from "@beep/observability/server";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
-import { HttpApiSchema } from "effect/http-api";
+import * as HttpApiSchema from "effect/http-api/HttpApiSchema";
 import * as Metric from "effect/Metric";
 import * as S from "effect/Schema";
 

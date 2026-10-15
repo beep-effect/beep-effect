@@ -5,7 +5,7 @@ import { describe, expect } from "@effect/vitest";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import { Socket } from "effect/socket";
+import * as Socket from "effect/socket/Socket";
 
 const OBS_WEBSOCKET_URL = "ws://127.0.0.1:4455";
 

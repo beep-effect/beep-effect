@@ -2,8 +2,8 @@
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as S from "effect/Schema";
-import { FetchHttpClient } from "effect/http";
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 

@@ -24,7 +24,9 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import { HttpStatusCode, Milliseconds } from "../Domain/Error/Base.ts";
 import type { ImageError } from "../Domain/Error/Image.ts";
 import {

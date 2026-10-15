@@ -63,7 +63,7 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";

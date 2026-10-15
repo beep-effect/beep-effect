@@ -1,7 +1,6 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
-import type { CliConfig } from "effect/cli";
-
+import type * as CliConfig from "effect/cli/CliConfig";
 const $I = $ScratchpadId.create("effected/cli/internal/wizardGate");
 
 /** The shape of the ambient config, as `CliConfig.make` returns it. */

@@ -12,6 +12,8 @@
 //
 // The ladder reads the real disk (it must — the pnpm store is real even when
 // a FileSystem is virtual), so the root here is a real temp directory whose
+import * as TestClock from "effect/testing/TestClock";
+
 // `.pnpm-config/<name>` entries are installed at `1.0.0` with a pnpmfile the
 // scripted spawner never actually loads.
 
@@ -29,7 +31,6 @@ import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { TestClock } from "effect/testing";
 import { ConfigDependencyHooks } from "../../effected/workspaces/index.ts";
 
 const ManifestText = S.fromJsonString(S.Struct({ name: S.String, version: S.String }));

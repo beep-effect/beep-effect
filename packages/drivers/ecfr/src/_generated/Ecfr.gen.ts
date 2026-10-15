@@ -9,13 +9,11 @@
 
 import { $EcfrId } from "@beep/identity";
 import * as S from "effect/Schema";
-import {
-  HttpApi,
-  HttpApiEndpoint,
-  HttpApiGroup,
-  HttpApiSchema,
-  OpenApi,
-} from "effect/http-api";
+import * as HttpApi from "effect/http-api/HttpApi";
+import * as HttpApiEndpoint from "effect/http-api/HttpApiEndpoint";
+import * as HttpApiGroup from "effect/http-api/HttpApiGroup";
+import * as HttpApiSchema from "effect/http-api/HttpApiSchema";
+import * as OpenApi from "effect/http-api/OpenApi";
 
 const $I = $EcfrId.create("_generated/Ecfr.gen");
 // non-recursive definitions

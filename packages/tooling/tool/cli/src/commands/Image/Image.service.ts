@@ -36,7 +36,7 @@ import {
 } from "./Image.schemas.ts";
 import type { ExtractFramesResult, FFmpegError } from "@beep/ffmpeg";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ExtractFramesDirOptions } from "./Image.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Image/Image.service");

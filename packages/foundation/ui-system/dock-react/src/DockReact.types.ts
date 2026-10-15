@@ -12,7 +12,7 @@ import type { PretextCapture } from "@beep/pretext";
 import type * as Effect from "effect/Effect";
 import type * as Layer from "effect/Layer";
 import type * as O from "effect/Option";
-import type { Atom } from "effect/reactivity";
+import type * as Atom from "effect/reactivity/Atom";
 import type React from "react";
 import type { RatioOverride, TabDrag } from "./internal/Gesture.models.ts";
 

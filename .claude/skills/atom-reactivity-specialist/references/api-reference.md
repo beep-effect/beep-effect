@@ -18,7 +18,6 @@
 Import as:
 
 ```ts
-import { Atom } from "effect/reactivity"
 // or
 import * as Atom from "effect/reactivity/Atom"
 ```
@@ -133,8 +132,7 @@ The runtime bridges Effect services into the atom world. Services are shared
 via a `MemoMap` across all atoms created from the same runtime.
 
 ```ts
-import { Atom } from "effect/reactivity"
-
+import * as Atom from "effect/reactivity/Atom";
 // Default runtime (uses Atom.defaultMemoMap)
 const myAtom = Atom.runtime(MyServiceLayer)
 
@@ -186,8 +184,7 @@ The `waiting` flag on `Success` indicates an in-flight re-fetch (stale data disp
 ### Key operations
 
 ```ts
-import { AsyncResult } from "effect/reactivity"
-
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 AsyncResult.match(result, {
   onInitial: (r) => "loading...",
   onFailure: (r) => `error: ${Cause.squash(r.cause)}`,
@@ -211,8 +208,7 @@ Key-based invalidation service. Mutations invalidate keys, queries
 re-execute when their keys are invalidated.
 
 ```ts
-import { Reactivity } from "effect/reactivity"
-
+import * as Reactivity from "effect/reactivity/Reactivity";
 // In service code
 Reactivity.mutation(effect, ["users"])         // Invalidate "users" key after effect
 Reactivity.invalidate(["users", "posts"])      // Manual invalidation
@@ -238,7 +234,7 @@ Reactivity.mutation(effect, { users: [userId], posts: [postId] })
 Typed RPC service atoms bridging `RpcGroup` to the atom world.
 
 ```ts
-import { AtomRpc } from "effect/reactivity"
+import * as AtomRpc from "effect/reactivity/AtomRpc";
 
 class TodoClient extends AtomRpc.Service<TodoClient>()(
   "TodoClient",

@@ -30,7 +30,7 @@ import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
-import { Prompt } from "effect/cli";
+import * as Prompt from "effect/cli/Prompt";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -69,7 +69,7 @@ import {
 import type * as Crypto from "effect/Crypto";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Terminal from "effect/Terminal";
 import type { HunkLedgerKey } from "./internal/HunkLedger.ts";
 import type { SkillGitRevision, SkillPatchLabel } from "./Skills.schemas.ts";
@@ -823,8 +823,7 @@ export const SkillHunkReviewLayer = Layer.effect(
  * ```ts
  * import { SkillHunkReviewLive } from "@beep/repo-cli/commands/Skills/SkillsReview.service"
  * import * as Layer from "effect/Layer"
- * import { FetchHttpClient } from "effect/http"
- *
+ * import * as FetchHttpClient from "effect/http/FetchHttpClient";
  * console.log(Layer.isLayer(SkillHunkReviewLive.pipe(Layer.provide(FetchHttpClient.layer)))) // true
  * ```
  *

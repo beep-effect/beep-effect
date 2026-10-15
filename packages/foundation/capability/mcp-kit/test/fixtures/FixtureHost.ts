@@ -14,8 +14,9 @@ import {
   SourceAuthRegistration,
   sanitizedToolkit,
 } from "@beep/mcp-kit";
-import { Tool, Toolkit } from "effect/ai";
 import * as McpServer from "effect/ai/McpServer";
+import * as Tool from "effect/ai/Tool";
+import * as Toolkit from "effect/ai/Toolkit";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";

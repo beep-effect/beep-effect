@@ -6,7 +6,7 @@ import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Console from "effect/Console";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
@@ -109,7 +109,7 @@ const writeDemoFoundationPackage = Effect.fn(function* (
 const demoSource = A.join(
   [
     'import { Effect as Fx, MutableList, pipe as p, type Scope } from "effect";',
-    'import * as Command from "effect/cli";',
+    'import * as Command from "effect/cli/Command";',
     "",
     "export const program: Fx.Effect<void> = Fx.void;",
     "export const items = MutableList.make<number>();",
@@ -479,7 +479,7 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(source).toContain('import * as MutableList from "effect/MutableList";');
           expect(source).toContain('import type * as Scope from "effect/Scope";');
           expect(source).toContain('import { pipe as p } from "effect/Function";');
-          expect(source).toContain('import * as Command from "effect/cli";');
+          expect(source).toContain('import * as Command from "effect/cli/Command";');
           expect(source).not.toContain('from "effect"');
 
           const second = yield* runEffectImportRules(
@@ -496,6 +496,309 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(second.emittedImports).toBe(0);
           expect(second.strictFailure).toBe(false);
           expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(source);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("rewrites nested barrel aliases, types, and namespace reexports to public leaves", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeProjectFile(
+            "packages/demo/src/index.ts",
+            A.join(
+              [
+                'import { Command as Cmd, type Flag } from "effect/cli";',
+                'import type { HttpClient as Client } from "effect/http";',
+                'import { SchemaJITCompiler as JIT } from "effect/schema";',
+                'export { Command as CliCommand } from "effect/cli";',
+                'export type { HttpServer } from "effect/http";',
+                'import { make } from "effect/cli/Command";',
+                'import { pipe } from "effect/Function";',
+                "",
+              ],
+              "\n"
+            )
+          );
+          const options = EffectImportRulesOptions.make({
+            write: true,
+            strictCheck: true,
+            effectOnly: true,
+            promotedFamilyPrefixes: ["packages/demo"],
+            excludePaths: [],
+          });
+          const summary = yield* runEffectImportRules(options);
+          const source = yield* readProjectFile("packages/demo/src/index.ts");
+          expect(summary.rootImportsRewritten).toBe(3);
+          expect(summary.rootExportsRewritten).toBe(2);
+          expect(summary.manualReviews).toEqual([]);
+          expect(source).toContain('import * as Cmd from "effect/cli/Command";');
+          expect(source).toContain('import type * as Flag from "effect/cli/Flag";');
+          expect(source).toContain('import type * as Client from "effect/http/HttpClient";');
+          expect(source).toContain('import * as JIT from "effect/schema/SchemaJITCompiler";');
+          expect(source).toContain('export * as CliCommand from "effect/cli/Command";');
+          expect(source).toContain('export type * as HttpServer from "effect/http/HttpServer";');
+          expect(source).toContain('import { make } from "effect/cli/Command";');
+          expect(source).toContain('import { pipe } from "effect/Function";');
+          const second = yield* runEffectImportRules(options);
+          expect(second.strictFailure).toBe(false);
+          expect(second.touchedFiles).toBe(0);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("discovers every installed public Effect barrel family", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const families = [
+            ["ai", "AiError"],
+            ["cli", "Argument"],
+            ["cluster", "ClusterCron"],
+            ["devtools", "DevTools"],
+            ["encoding", "Base64"],
+            ["eventlog", "Event"],
+            ["http", "Cookies"],
+            ["http-api", "HttpApi"],
+            ["net", "IpInterface"],
+            ["observability", "Otlp"],
+            ["persistence", "KeyValueStore"],
+            ["process", "ChildProcess"],
+            ["reactivity", "AsyncResult"],
+            ["rpc", "Rpc"],
+            ["schema", "Model"],
+            ["socket", "Socket"],
+            ["sql", "Migrator"],
+            ["testing", "TestClock"],
+            ["workers", "Transferable"],
+            ["workflow", "Activity"],
+          ] as const;
+          yield* writeProjectFile(
+            "packages/demo/src/index.ts",
+            A.join(
+              A.map(families, ([family, binding]) => `import { ${binding} } from "effect/${family}";`),
+              "\n"
+            )
+          );
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              effectOnly: true,
+              promotedFamilyPrefixes: ["packages/demo"],
+              excludePaths: [],
+            })
+          );
+          expect(summary.rootImportsRewritten).toBe(families.length);
+          expect(summary.manualReviews).toEqual([]);
+          const source = yield* readProjectFile("packages/demo/src/index.ts");
+          for (const [family, binding] of families) {
+            expect(source).toContain(`import * as ${binding} from "effect/${family}/${binding}";`);
+          }
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("fails closed when the installed Effect export map is malformed or conditional", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const original = 'import { Effect } from "effect";\n';
+          yield* writeProjectFile("packages/demo/src/index.ts", original);
+          const fs = yield* FileSystem.FileSystem;
+          const invalidManifests = [
+            {},
+            { exports: 42 },
+            { exports: { ".": 42 } },
+            { exports: { ".": { import: "./dist/index.js", default: "./dist/index.js" } } },
+          ];
+          for (const manifest of invalidManifests) {
+            const fixtureFs: FileSystem.FileSystem = {
+              ...fs,
+              readFileString: (filePath, encoding) =>
+                Str.endsWith("/effect/package.json")(filePath)
+                  ? Effect.succeed(encodeJson(manifest))
+                  : fs.readFileString(filePath, encoding),
+            };
+            const failure = yield* runEffectImportRules(
+              EffectImportRulesOptions.make({
+                write: true,
+                effectOnly: true,
+                promotedFamilyPrefixes: ["packages/demo"],
+                excludePaths: [],
+              })
+            ).pipe(Effect.provideService(FileSystem.FileSystem, fixtureFs), Effect.flip);
+            expect(failure).toMatchObject({
+              _tag: "EffectImportRulesConfigurationError",
+              message: "The installed Effect package must expose an unconditional string-or-null export map.",
+            });
+            expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(original);
+          }
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("validates discovered namespaces against blocked exports and existing target files", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeProjectFile(
+            "packages/demo/src/index.ts",
+            'import { Allowed } from "effect/future";\nimport { Blocked, Private, Missing } from "effect/future";\n'
+          );
+          const fs = yield* FileSystem.FileSystem;
+          const manifestCodec = S.fromJsonString(
+            S.Struct({ exports: S.Record(S.String, S.Union([S.String, S.Null])) })
+          );
+          const fixtureFs: FileSystem.FileSystem = {
+            ...fs,
+            exists: (filePath) =>
+              Str.includes("/dist/future/")(filePath)
+                ? Effect.succeed(!Str.endsWith("/Missing.js")(filePath))
+                : fs.exists(filePath),
+            readFileString: (filePath, encoding) => {
+              if (Str.endsWith("/effect/package.json")(filePath)) {
+                return fs.readFileString(filePath, encoding).pipe(
+                  Effect.map(flow(S.decodeUnknownResult(manifestCodec), Result.getOrThrow)),
+                  Effect.map((manifest) =>
+                    encodeJson({
+                      exports: {
+                        ...manifest.exports,
+                        "./future": "./dist/future/index.js",
+                        "./future/Blocked": null,
+                        "./future/internal/*": null,
+                      },
+                    })
+                  )
+                );
+              }
+              if (Str.endsWith("/dist/future/index.js")(filePath)) {
+                return Effect.succeed(
+                  A.join(
+                    [
+                      'export * as Allowed from "./Allowed.js";',
+                      'export * as Blocked from "./Blocked.js";',
+                      'export * as Private from "./internal/Private.js";',
+                      'export * as Missing from "./Missing.js";',
+                    ],
+                    "\n"
+                  )
+                );
+              }
+              return fs.readFileString(filePath, encoding);
+            },
+          };
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              effectOnly: true,
+              promotedFamilyPrefixes: ["packages/demo"],
+              excludePaths: [],
+            })
+          ).pipe(Effect.provideService(FileSystem.FileSystem, fixtureFs));
+          expect(summary.rootImportsRewritten).toBe(1);
+          expect(A.map(summary.manualReviews, (review) => review.binding)).toEqual(["Blocked", "Private", "Missing"]);
+          const source = yield* readProjectFile("packages/demo/src/index.ts");
+          expect(source).toContain('import * as Allowed from "effect/future/Allowed";');
+          expect(source).toContain('import { Blocked, Private, Missing } from "effect/future";');
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("leaves unsupported nested barrel forms for manual review", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const original = A.join(
+            [
+              'import * as Cli from "effect/cli";',
+              'const http = import("effect/http");',
+              'const rpc = require("effect/rpc");',
+              'type Command = import("effect/cli").Command;',
+              'import { FutureModule } from "effect/http";',
+              "",
+            ],
+            "\n"
+          );
+          yield* writeProjectFile("packages/demo/src/index.ts", original);
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              effectOnly: true,
+              promotedFamilyPrefixes: ["packages/demo"],
+              excludePaths: [],
+            })
+          );
+          expect(summary.strictFailure).toBe(true);
+          expect(summary.rootImportsRewritten).toBe(0);
+          expect(A.map(summary.manualReviews, (review) => review.kind)).toEqual(
+            expect.arrayContaining(["root-namespace", "dynamic-import", "require", "import-type", "missing-mapping"])
+          );
+          expect(summary.rootSpecifierCounts).toEqual({ "effect/cli": 2, "effect/http": 2, "effect/rpc": 1 });
+          expect(yield* readProjectFile("packages/demo/src/index.ts")).toBe(original);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("rewrites nested barrels in markdown and JSDoc fences", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeProjectFile("docs/guide.md", '```ts\nimport { Command as Cmd } from "effect/cli";\n```\n');
+          yield* writeProjectFile(
+            "packages/demo/src/index.ts",
+            '/**\n * ```ts\n * import { HttpClient } from "effect/http";\n * ```\n */\nexport const value = 1;\n'
+          );
+          for (const mode of ["markdown", "jsdoc"] as const) {
+            const summary = yield* runEffectImportRules(
+              EffectImportRulesOptions.make({ mode, write: true, effectOnly: true, excludePaths: [] })
+            );
+            expect(summary.rootImportsRewritten).toBe(1);
+            expect(summary.manualReviews).toEqual([]);
+          }
+          expect(yield* readProjectFile("docs/guide.md")).toContain('import * as Cmd from "effect/cli/Command";');
+          expect(yield* readProjectFile("packages/demo/src/index.ts")).toContain(
+            'import * as HttpClient from "effect/http/HttpClient";'
+          );
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("rewrites commented module specifiers in markdown and JSDoc fences", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeProjectFile(
+            "docs/commented.md",
+            '```ts\nimport { Command } from /* rationale */ "effect/cli";\n```\n'
+          );
+          yield* writeProjectFile(
+            "packages/demo/src/commented.ts",
+            '/**\n * ```ts\n * import { HttpClient } from // rationale\n * "effect/http";\n * ```\n */\nexport const value = 1;\n'
+          );
+          const summaries = yield* Effect.forEach(
+            ["markdown", "jsdoc"] as const,
+            (mode) =>
+              runEffectImportRules(
+                EffectImportRulesOptions.make({ mode, write: true, effectOnly: true, excludePaths: [] })
+              ),
+            { concurrency: 1 }
+          );
+          expect(A.map(summaries, (summary) => summary.rootImportsRewritten)).toEqual([1, 1]);
+          expect(A.flatMap(summaries, (summary) => summary.manualReviews)).toEqual([]);
+          expect(yield* readProjectFile("docs/commented.md")).toContain(
+            'import * as Command from "effect/cli/Command";'
+          );
+          expect(yield* readProjectFile("packages/demo/src/commented.ts")).toContain(
+            'import * as HttpClient from "effect/http/HttpClient";'
+          );
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -682,6 +985,53 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(rewritten).toContain('import { another, helper as renamedHelper } from "@beep/demo/Helper";');
           expect(rewritten).toContain('import type { Model } from "@beep/demo/Models";');
           expect(rewritten).not.toContain('from "@beep/demo"');
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("validates external Effect leaves reexported by a foundation barrel", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeDemoFoundationPackage(true);
+          const rootIndex = "packages/foundation/modeling/demo/src/index.ts";
+          yield* writeProjectFile(
+            rootIndex,
+            A.join(
+              [
+                yield* readProjectFile(rootIndex),
+                'export * as Client from "effect/http/HttpClient";',
+                'export * as Internal from "effect/internal/effect";',
+                'export * as Index from "effect/http/index";',
+              ],
+              "\n"
+            )
+          );
+          yield* writeProjectFile(
+            "apps/demo/src/index.ts",
+            A.join(
+              [
+                'import { Client as Http } from "@beep/demo";',
+                'import { Internal } from "@beep/demo";',
+                'import { Index } from "@beep/demo";',
+              ],
+              "\n"
+            )
+          );
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["apps/demo"],
+            })
+          );
+          expect(summary.rootImportsRewritten).toBe(1);
+          expect(A.map(summary.manualReviews, (review) => review.binding)).toEqual(["Internal", "Index"]);
+          const source = yield* readProjectFile("apps/demo/src/index.ts");
+          expect(source).toContain('import * as Http from "effect/http/HttpClient";');
+          expect(source).toContain('import { Internal } from "@beep/demo";');
+          expect(source).toContain('import { Index } from "@beep/demo";');
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

@@ -28,7 +28,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { LanguageModel } from "effect/ai";
+import * as LanguageModel from "effect/ai/LanguageModel";
 import {
   EntityExtractionFailed,
   MentionExtractionFailed,

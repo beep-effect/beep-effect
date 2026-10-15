@@ -22,7 +22,8 @@ import {
 import { GovinfoErrorReason, Search } from "@beep/govinfo";
 import { $GovLegalMcpId } from "@beep/identity/packages";
 import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
-import { Tool, Toolkit } from "effect/ai";
+import * as Tool from "effect/ai/Tool";
+import * as Toolkit from "effect/ai/Toolkit";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { resolveProductionToolName, ToolNameCandidate } from "./ToolNames.ts";

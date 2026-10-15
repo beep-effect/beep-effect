@@ -172,7 +172,7 @@ export const segmentInlineRuns: {
 
 **6. Hand fixtures → schema-derived property laws.**
 ```ts
-import { FastCheck as fc } from "effect/testing";
+import * as fc from "fast-check";
 const DocumentArbitrary = S.toArbitrary(Document);                 // Md.test.ts:47
 it("round-trips losslessly", () => fc.assert(fc.property(DocumentArbitrary, (doc) =>
   expect(decode(encode(doc))).toEqual(doc)), { numRuns: 50 }));

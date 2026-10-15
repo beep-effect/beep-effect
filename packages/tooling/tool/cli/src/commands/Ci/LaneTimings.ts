@@ -44,7 +44,8 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -62,7 +63,7 @@ import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { nearestRank } from "../../internal/stats/NearestRank.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Ci/LaneTimings");

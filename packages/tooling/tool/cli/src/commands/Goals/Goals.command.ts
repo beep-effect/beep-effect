@@ -9,8 +9,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { goalsAdoptCommand } from "./Adopt.ts";
 import { goalsBootstrapCommand } from "./Bootstrap.ts";

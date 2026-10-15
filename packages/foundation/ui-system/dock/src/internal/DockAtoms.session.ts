@@ -17,7 +17,9 @@ import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
-import { AsyncResult, AtomRegistry, Reactivity } from "effect/reactivity";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import * as Semaphore from "effect/Semaphore";
 import {
   DockAtomFeedFailure,
@@ -26,7 +28,7 @@ import {
   DockMutationCompleted,
   DockSnapshotSaved,
 } from "../Dock.protocol.ts";
-import type { Atom } from "effect/reactivity";
+import type * as Atom from "effect/reactivity/Atom";
 import type { DockAtomFeedEntry, DockAtomOperationOutcome, DockAtomSessionError } from "../Dock.protocol.ts";
 
 export { DockAtomSessionError } from "../Dock.protocol.ts";

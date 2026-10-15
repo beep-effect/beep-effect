@@ -42,7 +42,7 @@ import type { OcctError } from "@beep/occt";
 import type { Camera, ModelSpec, ShadingPlan, SheetFonts } from "@beep/technical-drawing";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const engineFromOcct = Effect.fn("DrawingsLayer.engineFromOcct")(function* () {
   const occt = yield* Occt;

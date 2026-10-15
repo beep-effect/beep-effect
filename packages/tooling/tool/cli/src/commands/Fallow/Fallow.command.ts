@@ -9,7 +9,8 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { buildRepoDependencyIndex, findRepoRoot, jsonStringifyPretty, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
@@ -574,7 +575,7 @@ const boundariesCommand = Command.make(
  *
  * ```ts
  * import { fallowCommand } from "@beep/repo-cli/commands/Fallow"
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * import * as Effect from "effect/Effect";
  * const run = Command.run(fallowCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true

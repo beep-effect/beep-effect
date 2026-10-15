@@ -9,7 +9,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { ChildProcessSpawner } from "effect/process";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import { PackageManagerPin } from "../../effected/npm/index.ts";
 import { ActionEnvironment } from "../../effected/github-actions/ActionEnvironment.ts";

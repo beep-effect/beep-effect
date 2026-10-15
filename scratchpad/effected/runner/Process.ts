@@ -9,7 +9,8 @@
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Stream from "effect/Stream";
 import { CommandFailed } from "./Audit.errors.ts";
 

@@ -7,7 +7,7 @@
  */
 import * as O from "@beep/utils/Option";
 import { dual } from "effect/Function";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import type { GroupId } from "@beep/dock/Dock.ids";
 import type { DockviewAdapterApi } from "@beep/dock-react/DockReact.types";
 import type { DesktopDockGraph } from "./dock.atoms.ts";

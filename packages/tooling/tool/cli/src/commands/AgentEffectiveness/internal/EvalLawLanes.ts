@@ -28,7 +28,7 @@ import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.
 import { AgentEffectivenessEvalLaneReport, AgentEffectivenessEvalViolation } from "../AgentEffectiveness.schemas.ts";
 import { LawEvaluation, sortViolations } from "./EvalScoring.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { SchemaFirstPolicyFinding } from "../../../internal/quality/SchemaFirstPolicyFinding.ts";
 import type { AgentEffectivenessEvalLawLane } from "../AgentEffectiveness.schemas.ts";

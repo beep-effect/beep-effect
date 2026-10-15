@@ -7,7 +7,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { Reactivity } from "effect/reactivity";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import * as fc from "fast-check";
 import { DesktopIntakeClient } from "@/intake/DesktopIntake.client";
 import { documentIntakeMachine, documentIntakeStateOf, vaultStatusOf } from "@/intake/DocumentIntake.machine";

@@ -23,7 +23,9 @@ import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import { ShardingConfig, SqlMessageStorage, SqlRunnerStorage } from "effect/cluster";
+import * as ShardingConfig from "effect/cluster/ShardingConfig";
+import * as SqlMessageStorage from "effect/cluster/SqlMessageStorage";
+import * as SqlRunnerStorage from "effect/cluster/SqlRunnerStorage";
 import { databaseReady } from "./DatabaseReady.ts";
 import {flow} from "effect/Function";
 

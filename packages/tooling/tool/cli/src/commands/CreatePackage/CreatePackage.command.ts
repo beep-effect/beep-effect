@@ -23,7 +23,9 @@ import { today } from "@beep/schema/LocalDate";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Console from "effect/Console";
-import { Argument, Command, Flag } from "effect/cli";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -1136,7 +1138,7 @@ const refreshBunLockfile = Effect.fn("CreatePackage.refreshBunLockfile")(functio
  *
  * ```ts
  * import { createPackageCommand } from "@beep/repo-cli/commands/CreatePackage"
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * import * as Effect from "effect/Effect";
  * const run = Command.run(createPackageCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true

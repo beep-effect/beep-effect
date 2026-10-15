@@ -107,7 +107,7 @@ export type AnnotatedTool<T extends AiTool.Any> = T extends unknown ? T : never;
  * **Example** (Annotate tool with four hints)
  *
  * ```ts
- * import { Tool } from "effect/ai"
+ * import * as Tool from "effect/ai/Tool";
  * import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit"
  *
  * const searchTool = annotateFourHints(Tool.make("search_patents"), readOnlyToolHints)

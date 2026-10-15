@@ -58,7 +58,7 @@ import {
 } from "effect/Schema";
 import { toType } from "effect/SchemaAST";
 import { toLowerCase } from "effect/String";
-import { VariantSchema } from "effect/schema";
+import * as VariantSchema from "effect/schema/VariantSchema";
 import * as Field from "../core/Field.ts";
 import * as Meta from "../core/Meta.ts";
 import { ModelInvariantError } from "../core/model.ts";

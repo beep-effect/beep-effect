@@ -14,7 +14,7 @@ import * as Str from "effect/String";
 import { runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { SkillsCommandError } from "../Skills.errors.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const git = (repoRoot: string, args: ReadonlyArray<string>) =>
   runCapturedStreams({ command: "git", args, cwd: repoRoot, extendEnv: true }).pipe(

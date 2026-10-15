@@ -21,7 +21,7 @@ import { findRepoRoot } from "@beep/repo-utils/Root";
 import { LiteralKit } from "@beep/schema";
 import { A, thunkEmptyStr } from "@beep/utils";
 import * as Console from "effect/Console";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";

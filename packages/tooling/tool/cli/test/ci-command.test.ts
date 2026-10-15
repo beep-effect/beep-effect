@@ -3,7 +3,7 @@ import { FsUtilsLive } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";

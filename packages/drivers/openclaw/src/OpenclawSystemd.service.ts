@@ -20,7 +20,7 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
-import { ChildProcessSpawner } from "effect/process";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { spawnProcessResult } from "./internal/spawn.ts";

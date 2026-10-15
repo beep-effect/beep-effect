@@ -9,7 +9,7 @@ import * as Layer from "effect/Layer";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { SqlClient } from "effect/sql";
+import * as SqlClient from "effect/sql/SqlClient";
 import { describe } from "vitest";
 import { ArticleRepository } from "../../Repository/Article.ts";
 import { CachedClaimRepository } from "../../Repository/CachedClaim.ts";

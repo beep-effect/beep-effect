@@ -12,7 +12,7 @@ import * as MutableRef from "effect/MutableRef";
 import * as Runtime from "effect/Runtime";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { CliError } from "effect/cli";
+import * as CliError from "effect/cli/CliError";
 import { Cancelled } from "./Cancelled.ts";
 import { CliColor } from "./CliColor.ts";
 import type { CliEnvOptions, CliEnvServices } from "./CliEnv.ts";

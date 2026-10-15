@@ -31,11 +31,12 @@
 
 import { O, P, Str, thunkEmptyReadonlyRecord } from "@beep/utils";
 import * as Effect from "effect/Effect";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as LogLevel from "effect/LogLevel";
 import * as Metric from "effect/Metric";
-import { Otlp, OtlpSerialization } from "effect/observability";
+import * as Otlp from "effect/observability/Otlp";
+import * as OtlpSerialization from "effect/observability/OtlpSerialization";
 import * as References from "effect/References";
 import * as S from "effect/Schema";
 import { resolveBrowserHttpUrl } from "./internal/BrowserHttpUrl.ts";

@@ -7,7 +7,7 @@
 
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as Effect from "effect/Effect";
-import { HttpApiBuilder } from "effect/http-api";
+import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
 import * as Layer from "effect/Layer";
 import { Api, Health } from "../Api.ts";
 

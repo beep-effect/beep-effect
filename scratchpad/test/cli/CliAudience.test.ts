@@ -13,7 +13,8 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Exit from "effect/Exit";
 import * as Runtime from "effect/Runtime";
-import { Argument, Command } from "effect/cli";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
 import { CliAudience, CliInteractive, CliRuntime } from "../../effected/cli/index.ts";
 
 const memoryPlatform = (fs: FileSystem.FileSystem) =>

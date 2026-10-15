@@ -8,7 +8,7 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Queue from "effect/Queue";
 import * as Stream from "effect/Stream";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import { Box, Text } from "ink";
 import type { ReactElement } from "react";
 import { createElement } from "react";

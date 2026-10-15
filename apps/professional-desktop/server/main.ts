@@ -36,11 +36,14 @@ import { OntologyMcpMutationsEnabledConfig } from "@beep/ontology-config/server"
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
-import { HttpMiddleware, HttpRouter, HttpServerResponse } from "effect/http";
+import * as HttpMiddleware from "effect/http/HttpMiddleware";
+import * as HttpRouter from "effect/http/HttpRouter";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
-import { RpcSerialization, RpcServer } from "effect/rpc";
+import * as RpcSerialization from "effect/rpc/RpcSerialization";
+import * as RpcServer from "effect/rpc/RpcServer";
 import { RuntimeLive } from "@/runtime/Layer";
 import { SidecarReadyMarker } from "@/runtime/Migrations";
 import { PgliteDrizzleLive } from "@/runtime/Pglite";

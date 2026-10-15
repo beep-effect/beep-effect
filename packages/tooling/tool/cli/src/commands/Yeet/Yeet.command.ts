@@ -12,7 +12,9 @@ import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
-import { Argument, Command, Flag } from "effect/cli";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -1374,7 +1376,7 @@ const yeetPlanContractCheckCommand = Command.make(
  *
  * ```ts
  * import { yeetCommand } from "@beep/repo-cli/commands/Yeet"
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * import * as Effect from "effect/Effect"
  *
  * const run = Command.run(yeetCommand, { version: "0.0.0" })

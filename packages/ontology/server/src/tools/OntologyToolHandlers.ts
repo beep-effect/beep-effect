@@ -28,7 +28,8 @@ import {
 } from "@beep/ontology-use-cases/tools";
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
 import * as Effect from "effect/Effect";
-import { HttpClient, HttpClientRequest } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

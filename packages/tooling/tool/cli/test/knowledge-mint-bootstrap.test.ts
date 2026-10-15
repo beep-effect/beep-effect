@@ -5,7 +5,7 @@ import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as Stream from "effect/Stream";
 
 const bootstrapUrl = new URL("../scripts/CreateKnowledgeMintApp.ts", import.meta.url).href;

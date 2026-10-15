@@ -22,7 +22,8 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as S from "effect/Schema";
-import { Workflow, WorkflowEngine } from "effect/workflow";
+import * as Workflow from "effect/workflow/Workflow";
+import * as WorkflowEngine from "effect/workflow/WorkflowEngine";
 import { WorkflowInstance } from "effect/workflow/WorkflowEngine";
 import {
   ExtractionActivityInput,

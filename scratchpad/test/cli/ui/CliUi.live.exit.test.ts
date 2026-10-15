@@ -5,12 +5,12 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, it } from "@effect/vitest";
 import * as Clock from "effect/Clock";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
 import * as Stream from "effect/Stream";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
-
 it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true })(
 	"CliUi.live in a real process: the tick never holds it open",
 	(it) => {

@@ -1,5 +1,7 @@
 // The archiver command lines this package spawns, spelled once.
 //
+import * as ChildProcess from "effect/process/ChildProcess";
+
 // `Artifact` (pack and unpack) and `ToolInstaller` (unpack only) each spawn
 // the same three shapes — a zip, an unzip, a tar extraction — and each has a
 // Windows half that no test on a POSIX host can execute. Two hand-written
@@ -60,8 +62,6 @@
 // GitHub SDK imports (`__test__/reachability.test.ts`).
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/process";
-
 const $I = $ScratchpadId.create("effected/github-actions/internal/archiveCommands");
 
 /** A PowerShell single-quoted literal: `'` becomes `''`, nothing else is special. */

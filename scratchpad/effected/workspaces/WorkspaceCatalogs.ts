@@ -21,13 +21,13 @@ import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
-import type { ChildProcessSpawner } from "effect/process";
 import type {
 	ConfigDependencyHooksShape,
 	HookInjection,

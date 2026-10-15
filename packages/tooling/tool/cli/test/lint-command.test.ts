@@ -7,7 +7,7 @@ import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Console from "effect/Console";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";

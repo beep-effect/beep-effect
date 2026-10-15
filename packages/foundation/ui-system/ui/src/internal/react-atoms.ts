@@ -1,8 +1,7 @@
 "use client";
 
 import * as O from "effect/Option";
-import { Atom } from "effect/reactivity";
-
+import * as Atom from "effect/reactivity/Atom";
 /**
  * Resolves to `true` after the client tree has mounted.
  */

@@ -51,7 +51,7 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import type * as HttpClientError from "effect/http/HttpClientError";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));

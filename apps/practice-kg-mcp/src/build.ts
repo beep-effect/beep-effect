@@ -10,7 +10,8 @@ import { buildPracticeKgBundle, PracticeKgOptions, PracticeKgRunLabel } from "@b
 import * as OptionUtils from "@beep/utils/Option";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";

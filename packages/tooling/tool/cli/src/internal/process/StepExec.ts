@@ -33,14 +33,14 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as P from "effect/Predicate";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { JsonStringCodec } from "../schema/JsonCodec.ts";
 import { PosInt } from "../schema/PosInt.ts";
 import type * as PlatformError from "effect/PlatformError";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("internal/process/StepExec");
 

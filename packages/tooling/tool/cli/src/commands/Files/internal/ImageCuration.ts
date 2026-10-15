@@ -57,7 +57,7 @@ import {
 } from "./ImageCuration.schemas.ts";
 import { FileSha256Hash } from "./Media.schemas.ts";
 import type { LoadedFaceDetector } from "@beep/face-detection";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Terminal from "effect/Terminal";
 import type { ImageAuditOptions } from "./ImageAudit.schemas.ts";
 import type {

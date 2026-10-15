@@ -14,8 +14,9 @@ import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { pipe } from "effect/Function";
 import * as Base64 from "effect/encoding/Base64";
-import { HttpClient } from "effect/http";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as HttpClient from "effect/http/HttpClient";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { IntegrityHash } from "./IntegrityHash.ts";
 import type { PublishedVersion } from "./NpmRegistry.ts";
 

@@ -5,7 +5,7 @@ import * as Latch from "effect/Latch";
 import * as Layer from "effect/Layer";
 import * as References from "effect/References";
 import * as S from "effect/Schema";
-import { TestConsole } from "effect/testing";
+import * as TestConsole from "effect/testing/TestConsole";
 import { ActionEnvironment, ActionLogger } from "../../effected/github-actions/index.ts";
 
 /** Everything written to `Console.log`, as strings, in order. */

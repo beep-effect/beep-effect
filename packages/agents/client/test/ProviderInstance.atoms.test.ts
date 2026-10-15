@@ -15,8 +15,9 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { Atom, AtomRegistry } from "effect/reactivity";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import * as RpcTest from "effect/rpc/RpcTest";
 import * as S from "effect/Schema";
 

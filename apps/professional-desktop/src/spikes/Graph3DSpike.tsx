@@ -30,7 +30,8 @@ import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
-import { AsyncResult, Atom } from "effect/reactivity";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
@@ -314,7 +315,10 @@ export function Graph3DSpike(): JSX.Element {
   const preset = useAtomValue(selectedPresetAtom);
   const selectPreset = useAtomSet(selectStressPresetAtom);
   const stress = useAtomValue(stressReportAtom);
-  const status = AsyncResult.value(useAtomValue(graphStatusAtom)).pipe(O.getOrElse(() => renderingStatus));
+  const status = useAtomValue(graphStatusAtom).pipe(
+    AsyncResult.value,
+    O.getOrElse(() => renderingStatus)
+  );
   const setContainer = useAtomSet(setGraphContainerAtom);
   const runStress = useAtomSet(runGraphStressAtom);
   const fps = useAtomValue(graphFpsAtom);

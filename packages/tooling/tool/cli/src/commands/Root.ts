@@ -5,8 +5,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import { accountsCommand } from "./Accounts/index.ts";
 import { agentEffectivenessCommand } from "./AgentEffectiveness/index.ts";
 import { agentMessageCommand } from "./AgentMessage/index.ts";

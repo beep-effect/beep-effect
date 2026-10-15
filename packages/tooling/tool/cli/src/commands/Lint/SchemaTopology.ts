@@ -9,7 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { normalizePath } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as Console from "effect/Console";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";

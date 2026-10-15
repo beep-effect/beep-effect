@@ -7,7 +7,7 @@
 import { $UiId } from "@beep/identity";
 import { useAtomMount, useAtomSet } from "@effect/atom-react";
 import * as Match from "effect/Match";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import { useId } from "react";
 

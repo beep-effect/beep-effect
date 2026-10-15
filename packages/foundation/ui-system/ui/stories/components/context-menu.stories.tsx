@@ -16,7 +16,7 @@ import {
 } from "@beep/ui/components/context-menu";
 import { A } from "@beep/utils";
 import { useAtom } from "@effect/atom-react";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import { useId } from "react";
 import { expect, fireEvent, screen, userEvent, waitFor, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";

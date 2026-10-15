@@ -49,7 +49,7 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";

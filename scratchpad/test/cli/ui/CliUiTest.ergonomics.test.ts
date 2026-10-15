@@ -16,7 +16,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Context from "effect/Context";
 import { assertSome, assertNone } from "@effect/vitest/utils";
 import { MemoryFileSystem } from "../../../effected/memfs/index.ts";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import { Cancelled, CliExit } from "../../../effected/cli/index.ts";
 import type { KeyName } from "../../../effected/cli/ui.ts";
 import { CliUi, Select, TextInput } from "../../../effected/cli/ui.ts";

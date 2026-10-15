@@ -12,7 +12,7 @@ import { RunMode } from "../../internal/cli/RunMode.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as Effect from "effect/Effect";
 import type * as FileSystem from "effect/FileSystem";
-import type { HttpClient } from "effect/http";
+import type * as HttpClient from "effect/http/HttpClient";
 import type * as Path from "effect/Path";
 import type { RunMode as RunModeValue } from "../../internal/cli/RunMode.ts";
 import type { SyncDataToTsError } from "./SyncDataToTs.errors.ts";

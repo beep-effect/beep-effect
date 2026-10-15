@@ -19,7 +19,7 @@ import {
   String,
   Uint8Array as Uint8ArraySchema,
 } from "effect/Schema";
-import { Model as EffectModel } from "effect/schema";
+import * as EffectModel from "effect/schema/Model";
 import { makeRepository as makeSqlRepository } from "effect/sql/SqlModel";
 import type { Top } from "effect/Schema";
 

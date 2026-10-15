@@ -16,7 +16,9 @@ import * as Effect from "effect/Effect";
 import * as Inspectable from "effect/Inspectable";
 import * as Match from "effect/Match";
 import * as S from "effect/Schema";
-import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
+import * as HttpRouter from "effect/http/HttpRouter";
+import * as HttpServerRequest from "effect/http/HttpServerRequest";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import { ErrorMessage } from "../Domain/Error/Base.ts";
 import { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
 
@@ -193,7 +195,7 @@ const processBackgroundJob = Effect.fn("processBackgroundJob")(function* (job: B
  *
  * ```ts
  * import * as Layer from "effect/Layer";
- * import { HttpRouter } from "effect/http"
+ * import * as HttpRouter from "effect/http/HttpRouter";
  * import { JobPushRouter } from "@effect-ontology/Runtime/JobPushHandler"
  *
  * const served = Layer.provide(JobPushRouter, HttpRouter.layer)

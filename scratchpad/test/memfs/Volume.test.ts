@@ -5,12 +5,12 @@
 // routing every assertion through an Effect read.
 
 import { assert, describe, it } from "@effect/vitest";
+import * as TestClock from "effect/testing/TestClock";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { TestClock } from "effect/testing";
 import { MemoryFileSystem } from "../../effected/memfs/index.ts";
 import * as internal from "../../effected/memfs/internal/volume.ts";
 import { denied } from "./helpers.ts";

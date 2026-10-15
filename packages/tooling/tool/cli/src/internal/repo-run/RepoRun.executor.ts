@@ -17,7 +17,7 @@ import * as Path from "effect/Path";
 import { repoRunOutputBound, runCaptured } from "../process/StepExec.ts";
 import { commandTextForStep, RepoStepRunResult } from "./RepoRun.models.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CaptureSource } from "../process/StepExec.ts";
 import type { RepoPlanStep } from "./RepoRun.models.ts";
 

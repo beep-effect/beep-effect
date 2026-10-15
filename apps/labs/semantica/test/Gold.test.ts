@@ -7,7 +7,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Response from "effect/ai/Response";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

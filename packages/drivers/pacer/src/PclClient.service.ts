@@ -21,7 +21,7 @@ import { constant, pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
-import { HttpApiClient } from "effect/http-api";
+import * as HttpApiClient from "effect/http-api/HttpApiClient";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";

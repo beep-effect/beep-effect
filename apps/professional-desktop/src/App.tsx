@@ -47,7 +47,8 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { AsyncResult, Atom } from "effect/reactivity";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import { Component, lazy, Suspense } from "react";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
@@ -785,7 +786,7 @@ const DesktopShell = ({
         ),
     });
   const navigate = useAtomSet(navigateDesktopPanelAtom);
-  const surfaceRenderers = AsyncResult.getOrThrow(useAtomValue(panelRendererAtoms(graph)));
+  const surfaceRenderers = useAtomValue(panelRendererAtoms(graph)).pipe(AsyncResult.getOrThrow);
   // Debounced snapshot persistence for every workspace change (drag, split,
   // float, activate, close) — the reload-restores-layout half of the contract.
   useAtomMount(dockPersistenceBindingAtom(graph));

@@ -9,8 +9,11 @@ import { escapeHtml } from "@beep/utils/Html";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { HttpRouter, HttpServerResponse } from "effect/http";
-import { HttpApiScalar, OpenApi } from "effect/http-api";
+import { pipe } from "effect/Function";
+import * as HttpRouter from "effect/http/HttpRouter";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as HttpApiScalar from "effect/http-api/HttpApiScalar";
+import * as OpenApi from "effect/http-api/OpenApi";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as S from "effect/Schema";
@@ -21,7 +24,10 @@ import type { CatalogEntry, CatalogSlug, CatalogSource, SpecFormat } from "./Cat
 const apiBasePath = (slug: CatalogSlug): `/${string}` => `/apis/${slug}`;
 const docsPath = (slug: CatalogSlug): `/${string}` => `${apiBasePath(slug)}/docs`;
 const SCALAR_SCRIPT_PATH = "/assets/scalar-api-reference-1.43.5.js";
-const ScalarScriptModuleUrl = new URL("./internal/httpApiScalar.js", import.meta.resolve("effect/http-api"));
+const ScalarScriptModuleUrl = new URL(
+  "./internal/httpApiScalar.js",
+  import.meta.resolve("effect/http-api/HttpApiScalar")
+);
 const ScalarScriptModule = S.Struct({ javascript: S.String });
 const decodeScalarScriptModule = S.decodeUnknownEffect(ScalarScriptModule);
 const SPEC_DOCS_SECURITY_HEADERS = {
@@ -150,13 +156,13 @@ const specDocsHtml = (entry: CatalogEntry): string => `<!doctype html>
 </html>`;
 
 const specDocsResponse = (entry: CatalogEntry): HttpServerResponse.HttpServerResponse =>
-  HttpServerResponse.html(specDocsHtml(entry)).pipe(HttpServerResponse.setHeaders(SPEC_DOCS_SECURITY_HEADERS));
+  pipe(entry, specDocsHtml, HttpServerResponse.html, HttpServerResponse.setHeaders(SPEC_DOCS_SECURITY_HEADERS));
 
 const contractLayer = (entry: CatalogEntry, source: Extract<CatalogSource, { readonly _tag: "ContractSource" }>) =>
   source.withApi((api) =>
     Layer.merge(
       HttpApiScalar.layer(api, { path: docsPath(entry.meta.slug) }),
-      HttpRouter.add("GET", rawSpecPath(entry), HttpServerResponse.jsonUnsafe(OpenApi.fromApi(api)))
+      HttpRouter.add("GET", rawSpecPath(entry), api.pipe(OpenApi.fromApi, HttpServerResponse.jsonUnsafe))
     )
   );
 

@@ -4,7 +4,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { TerminalEnv } from "../../effected/env/index.ts";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
-import { Prompt } from "effect/cli";
+import * as Prompt from "effect/cli/Prompt";
 import type { NamedColor, Style, TokenName } from "../../effected/cli/index.ts";
 import { CliTheme, Status, Token } from "../../effected/cli/index.ts";
 import * as Layer from "effect/Layer";

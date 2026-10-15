@@ -6,7 +6,7 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import { ActionEnvironment, OidcClaims, OidcTokenIssuer } from "../../effected/github-actions/index.ts";
 import { UnstubbedMemberError } from "../../effected/github-actions/internal/unstubbed.ts";
 

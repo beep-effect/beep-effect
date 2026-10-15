@@ -20,11 +20,11 @@ import { assertNone, assertSome, assertSuccess, strictEqual } from "@effect/vite
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";

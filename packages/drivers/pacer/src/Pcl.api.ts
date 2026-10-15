@@ -12,8 +12,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { HttpApi, HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
+import * as HttpApi from "effect/http-api/HttpApi";
+import * as HttpApiEndpoint from "effect/http-api/HttpApiEndpoint";
+import * as HttpApiGroup from "effect/http-api/HttpApiGroup";
+import * as OpenApi from "effect/http-api/OpenApi";
 import * as S from "effect/Schema";
 import { CaseReportList, CourtCaseSearchDto, PartyReportList, PartySearchDto, ReportInfoType } from "./Pcl.models.ts";
 

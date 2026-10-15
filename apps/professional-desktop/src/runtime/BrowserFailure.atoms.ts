@@ -10,7 +10,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Effect from "effect/Effect";
 import * as Metric from "effect/Metric";
 import * as O from "effect/Option";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import { professionalBrowserRuntime } from "./ProfessionalAtomRuntime.ts";
 

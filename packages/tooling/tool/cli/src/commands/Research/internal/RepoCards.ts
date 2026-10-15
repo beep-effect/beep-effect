@@ -23,7 +23,7 @@ import * as Str from "effect/String";
 import { runCaptured } from "../../../internal/process/StepExec.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Research/internal/RepoCards");
 

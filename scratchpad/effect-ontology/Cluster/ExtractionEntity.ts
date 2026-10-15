@@ -16,7 +16,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { Percentage } from "@beep/schema/Percentage";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
-import { Entity } from "effect/cluster";
+import * as Entity from "effect/cluster/Entity";
 import * as Rpc from "effect/rpc/Rpc";
 import { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 import { ExtractionError } from "../Domain/Error/Extraction.ts";

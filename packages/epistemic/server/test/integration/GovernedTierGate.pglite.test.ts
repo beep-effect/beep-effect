@@ -24,7 +24,7 @@ import { A, O } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
-import { Tool } from "effect/ai";
+import * as Tool from "effect/ai/Tool";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";

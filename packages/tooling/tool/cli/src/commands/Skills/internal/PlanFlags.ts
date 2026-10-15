@@ -5,9 +5,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Flag } from "effect/cli";
-
+import * as Flag from "effect/cli/Flag";
 /**
  * `--expect <planDigest>`: the reviewed digest a write must match.
  *

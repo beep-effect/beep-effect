@@ -51,7 +51,7 @@ import { YeetPrWave } from "./InboxView.ts";
 import { distinctPrSessions, PrNumber, PrRepository } from "./Provenance.ts";
 import { makePrSessionRegistryLive } from "./PrSessionRegistry.ts";
 import { isClaudeSessionLive, selectResumeRecord } from "./Resume.ts";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { PrSessionRecord } from "./Provenance.ts";
 import type { PrSessionRegistryError } from "./PrSessionRegistry.ts";
 

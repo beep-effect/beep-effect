@@ -126,7 +126,7 @@ import {
 } from "./Quality.schemas.ts";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
 import type { CoverageBaselineRowDelta, CoverageScopeOwner } from "./internal/CoverageScope.ts";

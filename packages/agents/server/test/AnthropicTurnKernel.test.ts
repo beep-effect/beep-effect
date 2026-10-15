@@ -4,13 +4,13 @@ import { it } from "@beep/test-runner";
 import { beforeEach, describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import { AiError } from "effect/ai";
+import * as AiError from "effect/ai/AiError";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
 import { vi } from "vitest";
-import type { Response } from "effect/ai";
+import type * as Response from "effect/ai/Response";
 
 const providerState = vi.hoisted(
   (): {

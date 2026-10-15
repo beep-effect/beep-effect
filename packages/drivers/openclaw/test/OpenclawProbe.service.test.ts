@@ -17,7 +17,8 @@ import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { HttpClient, HttpClientResponse } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 

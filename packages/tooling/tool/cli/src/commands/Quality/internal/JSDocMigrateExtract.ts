@@ -34,7 +34,7 @@ import { jsdocMigrateExtractCodec } from "./JSDocMigrateData.ts";
 import { jsdocMigrateBlockStats } from "./JSDocMigrateRewrite.ts";
 import { hasGeneratedFileHeader, isPackageSourceFile, jsdocGitErrorAdapter } from "./JSDocRatchet.ts";
 import { tagsFromComment } from "./QualityArtifactSupport.ts";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocMigrateExtract");
 

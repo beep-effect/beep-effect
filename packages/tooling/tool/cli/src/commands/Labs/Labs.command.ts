@@ -18,7 +18,8 @@ import { findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Console from "effect/Console";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
@@ -184,7 +185,7 @@ const labsListHandler = Effect.fn("Labs.list")(function* (options: { readonly js
  *
  * ```ts
  * import { labsListCommand } from "@beep/repo-cli/commands/Labs"
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * import * as Effect from "effect/Effect";
  * const run = Command.run(labsListCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
@@ -211,7 +212,7 @@ export const labsListCommand = Command.make(
  *
  * ```ts
  * import { labsCommand } from "@beep/repo-cli/commands/Labs"
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * import * as Effect from "effect/Effect";
  * const run = Command.run(labsCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true

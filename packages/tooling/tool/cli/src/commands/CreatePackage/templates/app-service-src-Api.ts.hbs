@@ -7,7 +7,9 @@
 
 import { {{identityAccessor}} } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
+import * as HttpApi from "effect/http-api/HttpApi";
+import * as HttpApiEndpoint from "effect/http-api/HttpApiEndpoint";
+import * as HttpApiGroup from "effect/http-api/HttpApiGroup";
 
 const $I = {{identityAccessor}}.create("Api");
 

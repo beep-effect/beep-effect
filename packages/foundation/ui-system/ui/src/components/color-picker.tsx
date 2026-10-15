@@ -14,7 +14,7 @@ import { make as makeScopedAtom, useAtom } from "@effect/atom-react";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import { HexColorPicker } from "react-colorful";
 import { cn } from "../lib/index.ts";

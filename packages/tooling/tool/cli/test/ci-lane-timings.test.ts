@@ -46,7 +46,7 @@ import {
   strictEqual,
 } from "@effect/vitest/utils";
 import * as Crypto from "effect/Crypto";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";

@@ -13,7 +13,9 @@ import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientError from "effect/http/HttpClientError";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import { DEFAULT_REGISTRY, NpmRegistry, PublishedVersion, RegistryReadError, type RegistrySeed } from "../../effected/npm/NpmRegistry.ts";
 
 const WireCause = S.Struct({ name: S.String, message: S.String, stack: S.String });

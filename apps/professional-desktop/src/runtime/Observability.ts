@@ -26,7 +26,7 @@ import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as HashSet from "effect/HashSet";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as References from "effect/References";
 import * as Result from "effect/Result";

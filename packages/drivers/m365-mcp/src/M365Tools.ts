@@ -37,7 +37,8 @@ import {
   M365SiteCollection,
 } from "@beep/m365";
 import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
-import { Tool, Toolkit } from "effect/ai";
+import * as Tool from "effect/ai/Tool";
+import * as Toolkit from "effect/ai/Toolkit";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 

@@ -42,7 +42,7 @@ import {
 import { currentCommitSha, runGitOutput } from "./GitExec.ts";
 import { renderJson, writeTextFile } from "./IssueArtifacts.ts";
 import { YeetProofTier } from "./Planner.ts";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofState");

@@ -21,7 +21,7 @@ import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";

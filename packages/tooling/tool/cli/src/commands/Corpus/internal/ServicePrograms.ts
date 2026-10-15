@@ -136,7 +136,7 @@ import type { PopplerError } from "@beep/poppler";
 import type { TesseractScript } from "@beep/tesseract";
 import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CorpusArchiveMoveError } from "../Corpus.errors.ts";
 import type {
   CorpusArchiveMoveOptions,

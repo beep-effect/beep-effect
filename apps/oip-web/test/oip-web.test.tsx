@@ -12,7 +12,7 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";

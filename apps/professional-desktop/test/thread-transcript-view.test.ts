@@ -14,7 +14,8 @@ import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
-import { AsyncResult, AtomRegistry } from "effect/reactivity";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import * as S from "effect/Schema";
 import { visibleThreadTurnsAtoms } from "@/chat/ui/Thread.atoms";
 

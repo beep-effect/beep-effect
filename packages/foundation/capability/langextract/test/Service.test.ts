@@ -25,7 +25,7 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 
 const TestUsage = Response.Usage.make({
   inputTokens: { cacheRead: undefined, cacheWrite: undefined, total: 0, uncached: 0 },

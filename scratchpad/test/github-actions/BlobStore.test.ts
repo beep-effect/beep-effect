@@ -9,7 +9,10 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as DateTime from "effect/DateTime";
 import * as TestClock from "effect/testing/TestClock";
-import { FetchHttpClient, HttpClient, HttpClientResponse, type HttpClientRequest } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 import type { S3Config } from "../../effected/github-actions/index.ts";
 import {
 	ActionOutputs,

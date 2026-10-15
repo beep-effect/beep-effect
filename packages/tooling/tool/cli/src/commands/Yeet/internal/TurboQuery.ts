@@ -26,7 +26,7 @@ import { emptyTurboPlanSnapshot, YEET_FEEDBACK_TASKS, YeetRunMode } from "./Plan
 import type * as Crypto from "effect/Crypto";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { YeetRunOptions } from "../Yeet.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/TurboQuery");

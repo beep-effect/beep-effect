@@ -23,7 +23,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as Rec from "effect/Record";
 import * as R from "effect/Result";
 import * as S from "effect/Schema";

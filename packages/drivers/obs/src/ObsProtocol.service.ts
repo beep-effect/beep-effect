@@ -32,7 +32,7 @@ import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { Socket } from "effect/socket";
+import * as Socket from "effect/socket/Socket";
 import { ObsError } from "./Obs.errors.ts";
 import { resolveObsConfig } from "./Obs.models.ts";
 import {
@@ -583,8 +583,7 @@ export class ObsProtocol extends Context.Service<ObsProtocol, ObsProtocolShape>(
    * ```ts
    * import { ObsProtocol } from "@beep/obs"
    * import * as Layer from "effect/Layer"
-   * import { Socket } from "effect/socket"
-   *
+   * import * as Socket from "effect/socket/Socket";
    * const layer = ObsProtocol.makeLayer().pipe(Layer.provide(Socket.layerWebSocketConstructorGlobal))
    * console.log(layer)
    * ```

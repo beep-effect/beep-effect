@@ -31,7 +31,7 @@ import { assertNone, assertSome, assertSuccess, strictEqual } from "@effect/vite
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Dur from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

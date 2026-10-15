@@ -41,7 +41,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 177,
+      "line": 181,
       "owner": "@beep/professional-desktop",
       "reason": "Layer-factory options are runtime capabilities, not a data contract: a Redacted bearer token, an injected egress fetch function, and a test-only mutation-tool allowlist. None crosses a serialization boundary, so an Fn schema would only wrap a function value in S.declare. The file became schema-modeled when OntologyMcpOriginForbidden moved from Data.TaggedError to S.TaggedError."
     },
@@ -317,7 +317,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 36,
+      "line": 42,
       "owner": "@beep/professional-desktop",
       "reason": "Shared test harness module rather than a test: it defines the MCP request/response codecs both professional-desktop integration suites consume. Round-trip property coverage for those schemas lives with the suite that owns them, in ontology-mcp-http.test.ts via assertSchemaRoundTrip."
     },
@@ -711,7 +711,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 62,
+      "line": 63,
       "owner": "@beep/epistemic-server",
       "reason": "External-Postgres race regression uses deterministic candidate identifiers to prove concurrent repository behavior; arbitrary values would make the race non-reproducible, and schema-derived identifier laws live with the owning domain models."
     },
@@ -1937,7 +1937,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 50,
+      "line": 51,
       "owner": "@beep/test-utils",
       "reason": "Subprocess regression driver: these codecs decode child-runner evidence for explicit watchdog, cancellation and finalizer-order scenarios. Native schema-derived property behavior is exercised by the runtime.test.ts.txt child fixture and Vitest.test.ts; adding a codec round-trip in the parent would not test the process lifecycle contract."
     },
@@ -2465,7 +2465,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 57,
+      "line": 58,
       "owner": "@beep/repo-cli",
       "reason": "CI lane regression writes fixed JSON fixture documents through the compact S.fromJsonString(S.Unknown) codec; the codec calls serialize fixtures and assert no schema law, so schema-derived arbitrary coverage does not apply."
     },
@@ -2488,6 +2488,16 @@
       "line": 15,
       "owner": "@beep/repo-cli",
       "reason": "Turbo input regression encodes fixed JSON fixture documents and decodes turbo summaries through S.fromJsonString codecs; the schemas are external turbo shapes exercised against real output, not domain schemas with a round-trip law."
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-imports.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 23,
+      "owner": "@beep/repo-cli",
+      "reason": "Import-rewriter regression fixtures use codecs to write tsconfig/package manifests and decode the installed export map. Assertions cover exact source syntax, aliases, collisions and blocked public routes; these are code-transformation contracts, not schema round-trip laws."
     },
     {
       "file": "packages/tooling/tool/cli/test/explore-graduate-write.test.ts",
@@ -2515,7 +2525,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 90,
+      "line": 92,
       "owner": "@beep/repo-cli",
       "reason": "Golden/adversarial provenance regression suite uses fixed hash-bound originals, deliberately corrupted receipts, provider envelopes and exact native filesystem/Git/PDF relationships. Codec calls decode fixed receipts to prove the integrity boundary; random schema-generated values would not preserve the independently authored evidence relationships. This suite is intentionally golden/regression-only rather than broad domain-schema law coverage."
     },

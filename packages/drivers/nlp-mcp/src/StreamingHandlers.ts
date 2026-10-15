@@ -29,7 +29,7 @@ import * as Jsonl from "./Streaming/Jsonl.ts";
 import * as Pipeline from "./Streaming/Pipeline.ts";
 import * as TextStream from "./Streaming/TextStream.ts";
 import { StreamingToolkit } from "./StreamingTools.ts";
-import type { Tool } from "effect/ai";
+import type * as Tool from "effect/ai/Tool";
 import type * as FileSystem from "effect/FileSystem";
 import type * as HttpClient from "effect/http/HttpClient";
 import type * as Layer from "effect/Layer";
@@ -104,8 +104,7 @@ const compileRegex = (pattern: string, flags: string): Effect.Effect<RegExp, Inv
  * import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
  * import * as NodePath from "@effect/platform-node/NodePath"
  * import { StreamingToolkitHandlersLive } from "@beep/nlp-mcp/StreamingHandlers"
- * import { FetchHttpClient } from "effect/http"
- *
+ * import * as FetchHttpClient from "effect/http/FetchHttpClient";
  * const handlers = StreamingToolkitHandlersLive.pipe(
  *   Layer.provide(NodeFileSystem.layer),
  *   Layer.provide(NodePath.layer),

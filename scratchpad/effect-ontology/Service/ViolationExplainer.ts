@@ -23,7 +23,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { LanguageModel } from "effect/ai";
+import * as LanguageModel from "effect/ai/LanguageModel";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";

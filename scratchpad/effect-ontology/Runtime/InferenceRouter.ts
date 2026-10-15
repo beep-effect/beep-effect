@@ -24,7 +24,9 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
+import * as HttpRouter from "effect/http/HttpRouter";
+import * as HttpServerRequest from "effect/http/HttpServerRequest";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import {
   InferenceRunRequest,
   InferenceRunResponse,
@@ -391,7 +393,7 @@ const InferenceRouterDefinition = HttpRouter.addAll([
  *
  * ```ts
  * import * as Layer from "effect/Layer";
- * import { HttpRouter } from "effect/http"
+ * import * as HttpRouter from "effect/http/HttpRouter";
  * import { InferenceRouter } from "@effect-ontology/Runtime/InferenceRouter"
  *
  * const served = Layer.provide(InferenceRouter, HttpRouter.layer)

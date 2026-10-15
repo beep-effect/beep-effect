@@ -12,7 +12,8 @@
 
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, Str } from "@beep/utils";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";

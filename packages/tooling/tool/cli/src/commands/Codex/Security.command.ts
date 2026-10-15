@@ -8,13 +8,15 @@ import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { findRepoRoot } from "@beep/repo-utils";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as F from "effect/Function";
 import * as Path from "effect/Path";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { printLines } from "../../internal/cli/Printer.ts";
@@ -326,7 +328,7 @@ const securitySubcommand = (mode: SecurityScanMode) =>
  * **Example** (Composing the command group)
  * ```ts
  * import { securityCommand } from "@beep/repo-cli/commands/Codex/Security.command"
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * const root = Command.make("example").pipe(Command.withSubcommands([securityCommand]))
  * console.log(securityCommand.name) // "security"
  * ```

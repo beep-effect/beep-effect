@@ -14,7 +14,7 @@ import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";

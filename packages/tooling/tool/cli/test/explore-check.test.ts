@@ -16,7 +16,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";

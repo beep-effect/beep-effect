@@ -24,7 +24,9 @@ import {
 } from "@beep/technical-drawing";
 import { A, Str } from "@beep/utils";
 import * as Config from "effect/Config";
-import { Argument, Command, Flag } from "effect/cli";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -936,7 +938,7 @@ const drawingsCriticsCommand = Command.make("critics", {}, () =>
  *
  * ```ts
  * import { drawingsCommand } from "@beep/repo-cli"
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * import * as Effect from "effect/Effect";
  * const run = Command.run(drawingsCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true

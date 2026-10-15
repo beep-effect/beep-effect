@@ -6,7 +6,7 @@
  */
 
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";

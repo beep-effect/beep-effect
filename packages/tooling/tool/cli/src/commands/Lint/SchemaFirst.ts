@@ -4,8 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import { SchemaFirstDetectors } from "./internal/SchemaFirstDetectors.ts";
@@ -444,7 +444,7 @@ export const schemaFirstParityEntriesFromSourceFile: {
  *
  * ```ts
  * import { lintSchemaFirstCommand } from "@beep/repo-cli/commands/Lint"
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * import * as Effect from "effect/Effect";
  * const run = Command.run(lintSchemaFirstCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true

@@ -16,7 +16,7 @@ import { assert, describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Console from "effect/Console";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";

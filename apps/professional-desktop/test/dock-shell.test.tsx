@@ -7,7 +7,7 @@ import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/re
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { AtomRegistry } from "effect/reactivity";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import { App } from "@/App";
 import {
   DESKTOP_PANELS,

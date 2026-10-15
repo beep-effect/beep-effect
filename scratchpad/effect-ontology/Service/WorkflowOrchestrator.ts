@@ -38,7 +38,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Workflow, WorkflowEngine } from "effect/workflow";
+import * as Workflow from "effect/workflow/Workflow";
+import * as WorkflowEngine from "effect/workflow/WorkflowEngine";
 import {
   AnyWorkflowError,
   WorkflowError,

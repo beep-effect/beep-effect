@@ -9,7 +9,7 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Console from "effect/Console";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
@@ -1633,6 +1633,21 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             // check, test, and the effect-vitest inventory for the service template.
             const serviceMain = yield* fs.readFileString(path.join(serviceDir, "src", "main.ts"));
             expect(serviceMain).toContain(`Config.Port("PORT")`);
+            for (const [filePath, family, module] of [
+              ["src/Api.ts", "http-api", "HttpApi"],
+              ["src/Api.ts", "http-api", "HttpApiEndpoint"],
+              ["src/Api.ts", "http-api", "HttpApiGroup"],
+              ["src/runtime/Layer.ts", "http-api", "HttpApiBuilder"],
+              ["src/main.ts", "http", "HttpRouter"],
+              ["test/health.test.ts", "http", "FetchHttpClient"],
+              ["test/health.test.ts", "http", "HttpClient"],
+              ["test/health.test.ts", "http", "HttpRouter"],
+              ["test/health.test.ts", "http", "HttpServer"],
+            ] as const) {
+              const source = yield* fs.readFileString(path.join(serviceDir, filePath));
+              expect(source).not.toMatch(/from\s+["']effect(?:\/http(?:-api)?)?["']/u);
+              expect(source).toContain(`import * as ${module} from "effect/${family}/${module}";`);
+            }
             const serviceTest = yield* fs.readFileString(path.join(serviceDir, "test", "health.test.ts"));
             expect(serviceTest).toContain(`Match.tag("InetAddressV4", "InetAddressV6"`);
             expect(serviceTest).toContain(`it.layer(TestLayer, { timeout: "10 seconds" })`);

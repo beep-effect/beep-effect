@@ -8,7 +8,9 @@
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
-import { Argument, Command, Flag } from "effect/cli";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";

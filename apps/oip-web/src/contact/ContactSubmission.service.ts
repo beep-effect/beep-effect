@@ -18,7 +18,7 @@ import { A, O } from "@beep/utils";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { makeRedactedConfigOptionReader, makeTextConfigOptionReader } from "../runtime/OipRuntimeConfig.ts";

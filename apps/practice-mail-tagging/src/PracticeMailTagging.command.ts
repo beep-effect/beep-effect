@@ -9,7 +9,8 @@
 import { TaggingRunId } from "@beep/law-practice-domain/values/MailTagging";
 import { RunMailTaggingRequest, UndoMailTaggingRequest } from "@beep/law-practice-use-cases/MailTagging";
 import * as A from "effect/Array";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";

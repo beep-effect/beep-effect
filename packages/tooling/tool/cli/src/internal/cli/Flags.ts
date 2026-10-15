@@ -7,8 +7,7 @@
 
 import { A, flow, P, Str, Text } from "@beep/utils";
 import * as Config from "effect/Config";
-import { Flag } from "effect/cli";
-
+import * as Flag from "effect/cli/Flag";
 /**
  * `--json` flag with a caller-supplied description.
  *

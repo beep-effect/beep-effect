@@ -15,7 +15,8 @@ import { A, Str, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
@@ -1208,7 +1209,7 @@ const docgenDoctestCommand = Command.make("doctest", {}).pipe(
  *
  * ```ts
  * import { docgenCommand } from "@beep/repo-cli/commands/Docgen"
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * const runDocgen = Command.runWith(docgenCommand, { version: "0.0.0" })
  * const qualityArgs = ["quality", "-p", "packages/tooling/tool/cli", "--json", "--score", "codex"]
  * const program = runDocgen(qualityArgs)

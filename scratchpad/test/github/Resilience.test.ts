@@ -3,7 +3,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Ref from "effect/Ref";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import { GitHubError } from "../../effected/github/GitHubError.ts";
 import type { RetryableFailure } from "../../effected/github/Resilience.ts";
 import { RateLimitSnapshot, RetryPolicy } from "../../effected/github/Resilience.ts";

@@ -21,7 +21,7 @@ import * as Cache from "effect/Cache";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpApiClient from "effect/http-api/HttpApiClient";
 import * as Layer from "effect/Layer";
 import * as RateLimiter from "effect/persistence/RateLimiter";

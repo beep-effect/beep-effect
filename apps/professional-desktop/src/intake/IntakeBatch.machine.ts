@@ -17,7 +17,7 @@ import * as O from "@beep/utils/Option";
 import * as P from "@beep/utils/Predicate";
 import { fromEffect, setupEffect } from "@xstate/effect";
 import * as Effect from "effect/Effect";
-import { Reactivity } from "effect/reactivity";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import { failureMessageOr } from "@/lib/failureMessage";
 import { DesktopIntakeClient, workspaceVaultKey } from "./DesktopIntake.client.ts";
 import {

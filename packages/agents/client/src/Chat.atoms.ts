@@ -28,16 +28,21 @@ import * as Effect from "effect/Effect";
 import { constant } from "effect/Function";
 import * as Match from "effect/Match";
 import * as Metric from "effect/Metric";
-import { KeyValueStore } from "effect/persistence";
+import * as KeyValueStore from "effect/persistence/KeyValueStore";
 import * as Random from "effect/Random";
-import { AsyncResult, Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/reactivity";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import * as AtomRpc from "effect/reactivity/AtomRpc";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { HttpChatProtocolLive } from "./Chat.layer.ts";
 import { ClientObservabilityLive } from "./ClientObservability.ts";
 import type { TurnRequestStatus } from "@beep/agents-use-cases/public";
 import type * as Layer from "effect/Layer";
-import type { RpcClient, RpcClientError } from "effect/rpc";
+import type * as RpcClient from "effect/rpc/RpcClient";
+import type * as RpcClientError from "effect/rpc/RpcClientError";
 
 const isChatActionError = S.is(ChatActionError);
 
@@ -89,8 +94,7 @@ export { HttpChatProtocolLive } from "./Chat.layer.ts";
  * ```ts
  * import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client"
  * import * as Layer from "effect/Layer";
- * import { AtomRegistry } from "effect/reactivity"
- *
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const registry = AtomRegistry.make()
  * registry.set(chatProtocolLayerAtom, HttpChatProtocolLive)
  *
@@ -119,8 +123,7 @@ export const chatProtocolLayerAtom: Atom.Writable<Layer.Layer<RpcClient.Protocol
  * import { ChatClient } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
- * import { Atom } from "effect/reactivity"
- *
+ * import * as Atom from "effect/reactivity/Atom";
  * const workspaceId = S.decodeUnknownSync(Workspace.WorkspaceId)(1)
  * const threads = ChatClient.query("ListThreads", { workspaceId }, { reactivityKeys: ["threads"] })
  *
@@ -161,8 +164,7 @@ const workspaceThreadsKey = (workspaceId: WorkspaceId) => `${THREADS_KEY}:${work
  * import { threadsAtoms } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
- * import { Atom } from "effect/reactivity"
- *
+ * import * as Atom from "effect/reactivity/Atom";
  * const workspaceId = S.decodeUnknownSync(Workspace.WorkspaceId)(1)
  * const atom = threadsAtoms(workspaceId)
  *
@@ -192,8 +194,7 @@ export const threadsAtoms = Atom.family((workspaceId: WorkspaceId) =>
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { AtomRegistry } from "effect/reactivity"
- *
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const registry = AtomRegistry.make()
  * console.log(O.isNone(registry.get(selectedThreadAtom))) // true
  *
@@ -215,7 +216,7 @@ export const threadsAtoms = Atom.family((workspaceId: WorkspaceId) =>
 // and nothing to explain it. Anything they typed next went to the wrong
 // conversation. Under 30 seconds the same trip preserved the selection, which is
 // what made it look intermittent.
-export const selectedThreadAtom = Atom.keepAlive(Atom.make<O.Option<ThreadId>>(O.none()));
+export const selectedThreadAtom = O.none<ThreadId>().pipe(Atom.make<O.Option<ThreadId>>, Atom.keepAlive);
 
 const timelineKey = (threadId: ThreadId) => `timeline:${threadId}`;
 
@@ -229,8 +230,7 @@ const timelineKey = (threadId: ThreadId) => `timeline:${threadId}`;
  * import { threadTimelineAtoms } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
- * import { Atom } from "effect/reactivity"
- *
+ * import * as Atom from "effect/reactivity/Atom";
  * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
  * const atom = threadTimelineAtoms(threadId)
  *
@@ -296,8 +296,7 @@ export class CreateThreadAtomInput extends S.Opaque<CreateThreadAtomInput, { rea
  * ```ts
  * import { createThreadAtom, CreateThreadAtomInput } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
- * import { Atom } from "effect/reactivity"
- *
+ * import * as Atom from "effect/reactivity/Atom";
  * type WriteValue<A> = A extends Atom.Writable<unknown, infer W> ? W : never
  *
  * const workspaceId = Workspace.WorkspaceId.make(1)
@@ -349,8 +348,7 @@ const draftsRuntime = Atom.runtime(KeyValueStore.layerStorage(() => globalThis.l
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { Atom } from "effect/reactivity"
- *
+ * import * as Atom from "effect/reactivity/Atom";
  * type WriteValue<A> = A extends Atom.Writable<unknown, infer W> ? W : never
  *
  * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
@@ -391,8 +389,7 @@ export const draftAtoms = Atom.family((threadId: ThreadId) =>
  * import { draftRevisionAtoms } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
- * import { AtomRegistry } from "effect/reactivity"
- *
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
  * const registry = AtomRegistry.make()
  *
@@ -499,8 +496,7 @@ export class StreamingTurn extends S.Opaque<StreamingTurn, { readonly brand: uni
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { AtomRegistry } from "effect/reactivity"
- *
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
  * const userContent = Document.make({ children: [P.make({ children: [Text.make({ value: "Hi" })] })] })
  * const block = S.decodeUnknownSync(AssistantBlock)({ type: "paragraph", children: [{ type: "text", text: "Hello" }] })
@@ -529,7 +525,7 @@ export const streamingTurnAtom = Atom.make<O.Option<StreamingTurn>>(O.none());
  * ```ts
  * import { unreconciledTurnAtoms } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
- * import { AtomRegistry } from "effect/reactivity"
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const registry = AtomRegistry.make()
  * console.log(registry.get(unreconciledTurnAtoms(Workspace.ThreadId.make(1))).length)
  * ```
@@ -550,8 +546,7 @@ export const unreconciledTurnAtoms = Atom.family((_threadId: ThreadId) =>
  * import { turnErrorAtom } from "@beep/agents-client"
  * import { ChatActionError } from "@beep/agents-use-cases/public"
  * import * as O from "effect/Option"
- * import { AtomRegistry } from "effect/reactivity"
- *
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const registry = AtomRegistry.make()
  * registry.set(turnErrorAtom, O.some(ChatActionError.new("thread not found")))
  *
@@ -625,8 +620,7 @@ export class EditTarget extends S.Opaque<EditTarget, { readonly brand: unique sy
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { AtomRegistry } from "effect/reactivity"
- *
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
  * const turnId = S.decodeUnknownSync(Workspace.TurnId)(20)
  * const content = Document.make({ children: [P.make({ children: [Text.make({ value: "Edit me" })] })] })
@@ -674,8 +668,7 @@ const turnDuration = Metric.timer("ui_turn_duration", {
  *
  * ```ts
  * import { reportDecodeFailureAtom } from "@beep/agents-client"
- * import { Atom } from "effect/reactivity"
- *
+ * import * as Atom from "effect/reactivity/Atom";
  * type WriteValue<A> = A extends Atom.Writable<unknown, infer W> ? W : never
  *
  * const write: WriteValue<typeof reportDecodeFailureAtom> = undefined
@@ -870,8 +863,7 @@ const turnGenerationAtom = Atom.keepAlive(Atom.make(0));
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
- * import { Atom } from "effect/reactivity"
- *
+ * import * as Atom from "effect/reactivity/Atom";
  * type WriteValue<A> = A extends Atom.Writable<unknown, infer W> ? W : never
  *
  * const threadId = Result.getOrThrow(S.decodeUnknownResult(Workspace.ThreadId)(10))
@@ -1317,8 +1309,7 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
  *
  * ```ts
  * import { turnActiveAtom } from "@beep/agents-client"
- * import { Atom } from "effect/reactivity"
- *
+ * import * as Atom from "effect/reactivity/Atom";
  * console.log(Atom.isAtom(turnActiveAtom)) // true
  * ```
  *

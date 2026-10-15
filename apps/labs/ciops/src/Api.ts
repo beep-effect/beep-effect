@@ -6,7 +6,9 @@
  */
 
 import { $CiopsId } from "@beep/identity/packages";
-import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "effect/http-api";
+import * as HttpApi from "effect/http-api/HttpApi";
+import * as HttpApiEndpoint from "effect/http-api/HttpApiEndpoint";
+import * as HttpApiGroup from "effect/http-api/HttpApiGroup";
 import * as S from "effect/Schema";
 
 // fallow-ignore-next-line code-duplication -- labs health-endpoint scaffold intentionally mirrors apps/labs/api-docs; shared extraction is graduation-time work

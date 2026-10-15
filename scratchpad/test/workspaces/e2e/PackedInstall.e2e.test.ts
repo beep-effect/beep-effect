@@ -10,6 +10,8 @@
 // bins, and the scratch directory's removal — is proven here.
 //
 // Hermetic by construction: the fixture has no external dependencies, and
+import * as ChildProcess from "effect/process/ChildProcess";
+
 // every install runs with its network routed to a dead proxy and corepack's
 // network switched off. A manager that tried to reach the registry (an
 // override that missed) or to download itself (a `packageManager` pin that
@@ -31,7 +33,6 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/process";
 import type { PackageManagerName } from "../../../effected/workspaces/index.ts";
 import { Workspaces } from "../../../effected/workspaces/index.ts";
 import type { InstalledConsumer, PackedInstallBudget } from "../../../effected/workspaces/testing.ts";

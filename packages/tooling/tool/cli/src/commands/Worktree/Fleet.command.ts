@@ -16,7 +16,7 @@
 
 import { A, O } from "@beep/utils";
 import * as Console from "effect/Console";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";

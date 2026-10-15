@@ -4,8 +4,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { HttpApiEndpoint, HttpApiSchema, OpenApi } from "effect/http-api";
+import * as HttpApiEndpoint from "effect/http-api/HttpApiEndpoint";
+import * as HttpApiSchema from "effect/http-api/HttpApiSchema";
+import * as OpenApi from "effect/http-api/OpenApi";
 import * as Contract from "./Search.contract.ts";
 
 /**
@@ -15,8 +16,7 @@ import * as Contract from "./Search.contract.ts";
  *
  * ```ts
  * import { Http } from "@beep/govinfo/domain/contracts/Search/Search.http"
- * import { HttpApiEndpoint } from "effect/http-api"
- *
+ * import * as HttpApiEndpoint from "effect/http-api/HttpApiEndpoint";
  * const isEndpoint = HttpApiEndpoint.isHttpApiEndpoint(Http)
  *
  * console.log(isEndpoint)

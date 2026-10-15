@@ -2,7 +2,7 @@ import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
-import { HttpRouter } from "effect/http";
+import * as HttpRouter from "effect/http/HttpRouter";
 import * as Layer from "effect/Layer";
 import { ApiLive } from "./runtime/Layer.ts";
 
@@ -15,7 +15,7 @@ const main = Effect.fnUntraced(function* () {
   // never succeeds, and the effect-LSP requires the explicit return for
   // narrowing (TS377006 missingReturnYieldStar).
   return yield* Layer.launch(
-    HttpRouter.serve(ApiLive).pipe(Layer.provideMerge(BunHttpServer.layer({ hostname: "127.0.0.1", port })))
+    ApiLive.pipe(HttpRouter.serve, Layer.provideMerge(BunHttpServer.layer({ hostname: "127.0.0.1", port })))
   );
 });
 

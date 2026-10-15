@@ -35,7 +35,7 @@ import { FALLOW_AUDIT_CACHE_SEGMENTS } from "./FallowAuditCache.ts";
 import { runRepoCommandCapture } from "./RepoRun.executor.ts";
 import { TmpfsReapCandidate, TmpfsReapClass, TmpfsReapReport } from "./TmpfsReap.schemas.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { TmpfsReapSkipReason } from "./TmpfsReap.schemas.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/TmpfsReap");

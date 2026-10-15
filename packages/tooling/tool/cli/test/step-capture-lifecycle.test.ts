@@ -29,13 +29,13 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
-import { ChildProcessSpawner } from "effect/process";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
-import type { ChildProcess } from "effect/process";
+import type * as ChildProcess from "effect/process/ChildProcess";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 

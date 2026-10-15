@@ -11,8 +11,11 @@ import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
+import * as CliError from "effect/cli/CliError";
+import * as CliOutput from "effect/cli/CliOutput";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Runtime from "effect/Runtime";
-import { CliError, CliOutput, Command, Flag } from "effect/cli";
 import { CliRuntime } from "../../effected/cli/index.ts";
 
 const platformServices = Layer.mergeAll(

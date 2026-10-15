@@ -7,7 +7,8 @@ import { it } from "@beep/test-runner";
 import { afterEach, describe, expect, vi } from "@effect/vitest";
 import { cleanup, fireEvent, render, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
-import { Atom, AtomRegistry } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 
 // The desktop registry sweeps atoms with an idle TTL (`ProfessionalAtomProvider`
 // sets 30s). Any node with no listeners and no dependents is disposed once its

@@ -15,7 +15,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { Base64Url } from "effect/encoding";
+import * as Base64Url from "effect/encoding/Base64Url";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";

@@ -2,8 +2,8 @@ import type * as PlatformError from "effect/PlatformError";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
 import type * as Scope from "effect/Scope";
-import type { ChildProcess } from "effect/process";
-import { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 /**
  * The stdout, stderr, and exit code of one completed run of a `Command`,
@@ -36,8 +36,7 @@ export interface Collected {
  * ```ts
  * import { runCollected } from "@beep/scratchpad/effected/git/internal/run"
  * import * as Effect from "effect/Effect"
- * import { ChildProcess } from "effect/process"
- *
+ * import * as ChildProcess from "effect/process/ChildProcess";
  * const program = runCollected(ChildProcess.make("git", ["--version"]))
  *
  * console.log(Effect.isEffect(program)) // true
@@ -86,8 +85,7 @@ export const runCollected = Effect.fnUntraced(
  * ```ts
  * import { available } from "@beep/scratchpad/effected/git/internal/run"
  * import * as Effect from "effect/Effect"
- * import { ChildProcess } from "effect/process"
- *
+ * import * as ChildProcess from "effect/process/ChildProcess";
  * const program = available(ChildProcess.make("git", ["--version"]))
  *
  * console.log(Effect.isEffect(program)) // true

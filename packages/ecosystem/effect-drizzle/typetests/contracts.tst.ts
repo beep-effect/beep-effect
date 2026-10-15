@@ -18,7 +18,7 @@ import {
   Struct,
 } from "effect/Schema";
 import { transformEffect } from "effect/SchemaGetter";
-import { Model as EffectModel } from "effect/schema";
+import * as EffectModel from "effect/schema/Model";
 import { expect, it } from "tstyche";
 import type { DefaultSqlExpr, DefaultValue, Dialect, References } from "@beep/effect-drizzle";
 import type { Custom, Numeric, Timestamp, Varchar } from "@beep/effect-drizzle/pg";

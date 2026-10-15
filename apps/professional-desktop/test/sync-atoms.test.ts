@@ -10,7 +10,8 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
-import { AtomRegistry, Reactivity } from "effect/reactivity";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import * as Stream from "effect/Stream";
 import {
   DesktopSyncClient,

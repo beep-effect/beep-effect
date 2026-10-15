@@ -17,7 +17,8 @@ import { RegistryProvider, useAtom, useAtomSet, useAtomValue } from "@effect/ato
 import * as BrowserCrypto from "@effect/platform-browser/BrowserCrypto";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { AsyncResult, Atom } from "effect/reactivity";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 

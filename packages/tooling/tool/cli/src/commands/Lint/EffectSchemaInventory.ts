@@ -7,7 +7,8 @@
  */
 
 import { findRepoRoot } from "@beep/repo-utils";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import {
   effectSchemaInventoryRequestFromFlags,
@@ -72,8 +73,7 @@ const effectSchemaInventoryCommandDefinition = Command.make(
  * ```ts
  * import { lintEffectSchemaInventoryCommand } from "@beep/repo-cli/commands/Lint"
  * import * as Effect from "effect/Effect"
- * import { Command } from "effect/cli"
- *
+ * import * as Command from "effect/cli/Command";
  * const run = Command.run(lintEffectSchemaInventoryCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true
  * ```

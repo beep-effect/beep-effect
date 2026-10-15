@@ -16,12 +16,12 @@ import type {
 	UnresolvedDependencyError,
 	WorkspaceResolver,
 } from "../npm/index.ts";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import type { ChildProcessSpawner } from "effect/process";
 import { ChangeDetector } from "./ChangeDetector.ts";
 import { ConfigDependencyHooks } from "./ConfigDependencyHooks.ts";
 import { LockfileReader, LockfileReaderOptions } from "./LockfileReader.ts";

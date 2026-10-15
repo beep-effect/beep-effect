@@ -28,8 +28,7 @@ One wiring serves every program: share the audience flags on the root command, r
 import { CliAudience, CliExit, CliMessage, CliRuntime, Doc } from "@beep/scratchpad/effected/cli";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as Effect from "effect/Effect";
-import { Command } from "effect/cli";
-
+import * as Command from "effect/cli/Command";
 const sync = Command.make("sync", {}, () =>
   Effect.gen(function* () {
     yield* CliMessage.info("syncing 2 repositories");
@@ -120,8 +119,8 @@ A prompt fires only when `CliInteractive` is true: a human audience, a terminal 
 
 ```ts
 import { CliPrompt } from "@beep/scratchpad/effected/cli";
-import { Flag, Prompt } from "effect/cli";
-
+import * as Flag from "effect/cli/Flag";
+import * as Prompt from "effect/cli/Prompt";
 // Core's prompt as a flag fallback: asks at a terminal, uses "library" in a pipe.
 const profile = Flag.String("profile").pipe(
   Flag.withFallbackPrompt(
@@ -153,8 +152,7 @@ const profile = CliUi.prompt(pickProfile, { otherwise: "library" });
 
 ```ts
 import { CliUi, Confirm } from "@beep/scratchpad/effected/cli/ui";
-import { Flag } from "effect/cli";
-
+import * as Flag from "effect/cli/Flag";
 const yes = Flag.Boolean("yes").pipe(
   Flag.withFallbackPrompt(
     CliUi.fallback(

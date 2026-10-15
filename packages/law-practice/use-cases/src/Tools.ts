@@ -4,8 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Toolkit } from "effect/ai";
+import * as Toolkit from "effect/ai/Toolkit";
 import {
   CorpusGetDocumentTool,
   CorpusSearchTextTool,

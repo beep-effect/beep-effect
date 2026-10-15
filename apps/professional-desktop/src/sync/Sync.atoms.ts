@@ -17,7 +17,10 @@ import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/C
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId";
 import * as Effect from "effect/Effect";
-import { Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import * as AtomRpc from "effect/reactivity/AtomRpc";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Tuple from "effect/Tuple";

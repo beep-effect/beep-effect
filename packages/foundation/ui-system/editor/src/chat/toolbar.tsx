@@ -43,7 +43,7 @@ import { TextStrikethroughIcon } from "@phosphor-icons/react/TextStrikethrough";
 import { TextUnderlineIcon } from "@phosphor-icons/react/TextUnderline";
 import * as F from "effect/Function";
 import * as Match from "effect/Match";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import {
   $createParagraphNode,
   $getSelection,
@@ -211,8 +211,7 @@ const computeSelectionState = (): SelectionState => {
  * ```ts
  * import { toolbarSelectionAtom } from "@beep/editor/chat/toolbar"
  * import { createHeadlessEditor } from "@lexical/headless"
- * import { AtomRegistry } from "effect/reactivity"
- *
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const editor = createHeadlessEditor({ namespace: "example" })
  * const registry = AtomRegistry.make()
  * console.log(registry.get(toolbarSelectionAtom(editor)).blockType) // "paragraph"

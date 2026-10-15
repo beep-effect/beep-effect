@@ -11,7 +11,7 @@ import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import Image from "next/image";

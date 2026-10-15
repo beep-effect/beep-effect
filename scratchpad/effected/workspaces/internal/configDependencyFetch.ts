@@ -13,6 +13,9 @@ import * as Result from "effect/Result";
 // subprocess goes through `@effected/commands`' `Run` over core's
 // `ChildProcessSpawner`, the same seam the replay itself uses.
 //
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+
 // How the fetch is verified. pnpm is run in a SCRATCH workspace whose
 // `pnpm-workspace.yaml` declares the config dependency as a bare version and
 // whose `pnpm-lock.yaml` env preamble records it with the expected integrity,
@@ -53,7 +56,6 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import type { HookReplayContext } from "../ConfigDependencyHooks.ts";
 import { carries, manifestVersion, messageOf, sideLabel } from "./configDependencyShared.ts";
 import { splitConfigDependencySpec } from "./configDependencySpecGrammar.ts";

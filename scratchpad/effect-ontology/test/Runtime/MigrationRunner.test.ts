@@ -9,7 +9,8 @@ import * as Layer from "effect/Layer";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { SqlClient, SqlSchema } from "effect/sql";
+import * as SqlClient from "effect/sql/SqlClient";
+import * as SqlSchema from "effect/sql/SqlSchema";
 import { describe } from "vitest";
 import { migrationsFolder } from "../../Runtime/Persistence/MigrationRunner.ts";
 

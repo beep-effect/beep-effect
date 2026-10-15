@@ -8,7 +8,7 @@ import * as Stream from "effect/Stream";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { KeyValueStore } from "effect/persistence";
+import * as KeyValueStore from "effect/persistence/KeyValueStore";
 import { BatchId, OntologyName } from "../../Domain/Identity.ts";
 import { BatchState } from "../../Domain/Model/BatchWorkflow.ts";
 import { PathLayout } from "../../Domain/PathLayout.ts";

@@ -20,7 +20,8 @@ describe("OidcTokenIssuer schema property floor", () => {
 
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
-import { HttpClient, HttpClientResponse } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import { ActionEnvironment } from "../../effected/github-actions/ActionEnvironment.ts";
 import { OidcTokenIssuer } from "../../effected/github-actions/OidcTokenIssuer.ts";
 const Json = S.fromJsonString(S.Unknown);

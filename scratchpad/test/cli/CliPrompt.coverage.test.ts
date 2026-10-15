@@ -2,7 +2,8 @@ import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Terminal from "effect/Terminal";
-import { CliConfig, GlobalFlag } from "effect/cli";
+import * as CliConfig from "effect/cli/CliConfig";
+import * as GlobalFlag from "effect/cli/GlobalFlag";
 import { CliInteractive } from "../../effected/cli/CliInteractive.ts";
 import { CliPrompt } from "../../effected/cli/CliPrompt.ts";
 

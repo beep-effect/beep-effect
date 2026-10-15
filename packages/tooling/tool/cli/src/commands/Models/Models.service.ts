@@ -41,7 +41,7 @@ import { ModelsTargetFile, ModelsTargetLocation, resolveTargetPath } from "./Mod
 import { expectedLocatorValue, renderGeneratedBlockBody } from "./Models.render.ts";
 import { DriftFinding, ModelsCheckReport } from "./Models.report.schemas.ts";
 import type * as Crypto from "effect/Crypto";
-import type { HttpClient } from "effect/http";
+import type * as HttpClient from "effect/http/HttpClient";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CatalogModel, CatalogSource, ModelId } from "./Models.catalog.schemas.ts";

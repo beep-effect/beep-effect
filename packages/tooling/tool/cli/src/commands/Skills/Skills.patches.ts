@@ -30,7 +30,7 @@ import { diffLines, sameDiffLine } from "./internal/DiffLines.ts";
 import { readAtMergeBase } from "./internal/MergeBase.ts";
 import { SkillsCommandError } from "./Skills.errors.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { DiffLine } from "./internal/DiffLines.ts";
 
 const $I = $RepoCliId.create("commands/Skills/Skills.patches");

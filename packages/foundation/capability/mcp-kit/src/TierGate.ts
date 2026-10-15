@@ -265,7 +265,7 @@ export type TierGateVerdict = typeof TierGateVerdict.Type;
  *
  * ```ts
  * import type { ToolCallRequest } from "@beep/mcp-kit"
- * import { Tool } from "effect/ai"
+ * import * as Tool from "effect/ai/Tool";
  * import * as O from "effect/Option"
  *
  * const request: ToolCallRequest = {
@@ -452,7 +452,7 @@ const auditReason = (approved: boolean, destructive: boolean, readOnly: boolean)
  * ```ts
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
- * import { Tool } from "effect/ai"
+ * import * as Tool from "effect/ai/Tool";
  * import { fromApprovedToolsPolicy, TierGatePolicy } from "@beep/mcp-kit"
  *
  * const writeTool = Tool.make("delete_document").annotate(Tool.Destructive, true)
@@ -583,7 +583,7 @@ const settlementOf = <A, E>(exit: Exit.Exit<A, E>): TierGateSettlement => {
  * ```ts
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
- * import { Tool } from "effect/ai"
+ * import * as Tool from "effect/ai/Tool";
  * import { dispatchWithTierGate, fromApprovedToolsPolicy, TierGate, TierGatePolicy } from "@beep/mcp-kit"
  *
  * const writeTool = Tool.make("delete_document").annotate(Tool.Destructive, true)
@@ -628,7 +628,7 @@ export const dispatchWithTierGate = Effect.fn("dispatchWithTierGate")(function* 
  * **Example** (Annotate list visibility only)
  *
  * ```ts
- * import { Tool } from "effect/ai"
+ * import * as Tool from "effect/ai/Tool";
  * import { TierGatePolicy, withEnabledWhenApprovedTool } from "@beep/mcp-kit"
  *
  * const writeTool = Tool.make("delete_document").annotate(Tool.Destructive, true)

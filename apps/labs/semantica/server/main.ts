@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { CanaryCommand } from "@/canary/Command";

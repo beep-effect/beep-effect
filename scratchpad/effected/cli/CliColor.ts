@@ -2,7 +2,7 @@ import { TerminalEnv } from "../env/index.ts";
 import type * as Stdio from "effect/Stdio";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import { CliOutput } from "effect/cli";
+import * as CliOutput from "effect/cli/CliOutput";
 
 /**
  * Whether a CLI's output should carry ANSI colour, decided once and shared by

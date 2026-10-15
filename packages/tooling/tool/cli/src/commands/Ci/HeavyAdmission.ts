@@ -41,7 +41,7 @@ import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import { ciOperationalPatterns } from "./CiOperational.schemas.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Ci/HeavyAdmission");
 

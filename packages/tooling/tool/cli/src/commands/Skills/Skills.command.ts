@@ -11,13 +11,16 @@ import { LiteralKit } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Crypto from "effect/Crypto";
-import { Argument, Command, Flag } from "effect/cli";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
-import { HttpClient, HttpClientResponse } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -1579,7 +1582,7 @@ const skillsTrainIssueCommand = Command.make(
  *
  * ```ts
  * import { skillsCommand } from "@beep/repo-cli/commands/Skills"
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * import * as Effect from "effect/Effect";
  * const run = Command.run(skillsCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true

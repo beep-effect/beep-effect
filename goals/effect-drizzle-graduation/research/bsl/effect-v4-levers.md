@@ -18,8 +18,10 @@ import * as S from "effect/Schema"
 import * as AST from "effect/SchemaAST"
 import * as Representation from "effect/SchemaRepresentation"
 import * as Pipeable from "effect/Pipeable"
-import { Model, VariantSchema } from "effect/schema"
-import { SqlModel, SqlSchema } from "effect/sql"
+import * as Model from "effect/schema/Model";
+import * as VariantSchema from "effect/schema/VariantSchema";
+import * as SqlModel from "effect/sql/SqlModel";
+import * as SqlSchema from "effect/sql/SqlSchema";
 ```
 
 The unstable barrels export those modules as namespaces (`.repos/effect/packages/effect/src/schema/index.ts:5-15`, `.repos/effect/packages/effect/src/sql/index.ts:5-40`). Direct paths such as `effect/schema/VariantSchema` also match the package's `./*` export, but the barrel is the source's own usage and is less coupled to file layout.

@@ -40,7 +40,7 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeStdio from "@effect/platform-node/NodeStdio";
 import * as NodeTerminal from "@effect/platform-node/NodeTerminal";
 import { afterEach, describe, expect, vi } from "@effect/vitest";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";

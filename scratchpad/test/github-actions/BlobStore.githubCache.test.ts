@@ -4,8 +4,8 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import { FetchHttpClient } from "effect/http";
-import { TestClock } from "effect/testing";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as TestClock from "effect/testing/TestClock";
 import type { DataBlobTransfer } from "../../effected/github-actions/index.ts";
 import {
 	BlobStore,

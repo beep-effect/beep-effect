@@ -7,7 +7,7 @@
  */
 import * as P from "@beep/utils/Predicate";
 import * as Duration from "effect/Duration";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 
 const FPS_SAMPLE_INTERVAL = Duration.millis(500);
 const fpsSampleIntervalMillis = Duration.toMillis(FPS_SAMPLE_INTERVAL);

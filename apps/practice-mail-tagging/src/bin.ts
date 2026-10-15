@@ -6,8 +6,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import { runEntrypoint } from "./entrypoint.ts";
 import { makePracticeMailTaggingCommand } from "./PracticeMailTagging.command.ts";
 import { MailTaggingPassesLive, MailTaggingStateLive, StateLockLive } from "./runtime/Layer.ts";

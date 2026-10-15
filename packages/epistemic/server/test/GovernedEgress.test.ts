@@ -24,7 +24,7 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
 import type { ExecutionLedgerShape } from "@beep/epistemic-use-cases/ExecutionLedger";
 

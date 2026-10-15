@@ -9,8 +9,8 @@ import { resolveThemeMode, ThemeMode } from "@beep/ui/themes";
 import * as P from "@beep/utils/Predicate";
 import * as Effect from "effect/Effect";
 import * as F from "effect/Function";
-import { KeyValueStore } from "effect/persistence";
-import { Atom } from "effect/reactivity";
+import * as KeyValueStore from "effect/persistence/KeyValueStore";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import { professionalBrowserRuntime, professionalStorageRuntime } from "@/runtime/ProfessionalAtomRuntime";
 

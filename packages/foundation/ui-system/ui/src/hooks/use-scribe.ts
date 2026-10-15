@@ -39,7 +39,7 @@ import { useAtom } from "@effect/atom-react";
 import { AudioFormat, CommitStrategy, RealtimeEvents, Scribe } from "@elevenlabs/client";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import { useCallback, useEffect, useId, useRef } from "react";
 import type {

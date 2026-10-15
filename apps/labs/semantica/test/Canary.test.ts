@@ -4,7 +4,7 @@ import { ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as ConfigProvider from "effect/ConfigProvider";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";

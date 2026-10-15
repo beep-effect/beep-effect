@@ -30,7 +30,8 @@ import {
   useBasicTypeaheadTriggerMatch,
 } from "@lexical/react/LexicalTypeaheadMenuPlugin";
 import * as Effect from "effect/Effect";
-import { AsyncResult, Atom } from "effect/reactivity";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import { $createTextNode, $getSelection, $isRangeSelection } from "lexical";
 import { createPortal } from "react-dom";

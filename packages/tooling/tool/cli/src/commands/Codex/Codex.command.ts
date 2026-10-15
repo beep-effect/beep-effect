@@ -7,16 +7,17 @@
 
 import { findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
-import { Argument, Command } from "effect/cli";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as Stream from "effect/Stream";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { CodexCommandError } from "./Codex.errors.ts";
 import { findingsCommand } from "./Findings.command.ts";
 import { securityCommand } from "./Security.command.ts";
 import type * as FileSystem from "effect/FileSystem";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const textEncoder = new TextEncoder();
 

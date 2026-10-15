@@ -4,8 +4,7 @@
  * @since 0.0.0
  * @packageDocumentation
  */
-
-import { Toolkit } from "effect/ai";
+import * as Toolkit from "effect/ai/Toolkit";
 import { Analyze } from "./Analyze.ts";
 import { BagOfWords } from "./BagOfWords.ts";
 import { BowCosineSimilarity } from "./BowCosineSimilarity.ts";

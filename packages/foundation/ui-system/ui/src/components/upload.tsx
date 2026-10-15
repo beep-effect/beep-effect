@@ -16,7 +16,7 @@ import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import { useDropzone } from "react-dropzone";
 import { cn } from "../lib/index.ts";

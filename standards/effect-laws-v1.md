@@ -10,14 +10,14 @@ Compact, enforceable laws for this codebase. Keep agent-facing files terse; keep
    - `import * as P from "effect/Predicate"`
    - `import * as R from "effect/Record"`
    - `import * as S from "effect/Schema"`
-2. Import every Effect module from its dedicated path (`effect/Effect`, `effect/Match`, `effect/String` as `Str`, etc.). Import `pipe`, `flow`, and `identity` from `effect/Function`. The root `effect` barrel is not used, including in JSDoc and Markdown examples.
+2. Import every Effect module from its dedicated path (`effect/Effect`, `effect/Match`, `effect/String` as `Str`, etc.). Import `pipe`, `flow`, and `identity` from `effect/Function`. The root `effect` barrel and nested barrels such as `effect/cli` and `effect/http` are not used, including in JSDoc and Markdown examples. Use leaf paths such as `effect/cli/Command` and `effect/http/HttpClient`.
 3. `effect/*` imports are allowed when needed.
 4. No `any`, type assertions, `@ts-ignore`, or non-null assertions.
 5. No runtime `typeof ... === ...`; use `effect/Predicate` guards.
 6. No native `Object/Map/Set/Date` in domain logic.
 7. No native `Error` in production source; extend `S.TaggedError` from `effect/Schema` directly for typed errors, and record intentional low-level runtime exceptions in the allowlist.
 8. No `node:path` in runtime source; use `Path.Path` service APIs.
-9. No native `fetch` in runtime source; use `effect/http` and provide platform client layers.
+9. No native `fetch` in runtime source; use `effect/http/HttpClient` and provide platform client layers.
 10. No native `Array.prototype.sort`; use `A.sort` with explicit `Order`.
 11. No native `switch` statements; use `Match`, `Match.tagsExhaustive` for `_tag` unions, and schema `.match` for tagged-union schemas.
 12. Use `Bool.match` for boolean branching in domain/runtime orchestration code.

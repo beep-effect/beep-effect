@@ -169,7 +169,8 @@ Runbook: `docs/runbooks/agent-pools.md`.
   import every Effect module from its current `effect/<Module>` path
   (`.patterns/effect-module-paths.md`). Import `pipe`,
   `flow`, and `identity` from `effect/Function`. Do not import from the root
-  `effect` barrel in code, JSDoc examples, or Markdown code blocks.
+  `effect` barrel or nested barrels such as `effect/cli` and `effect/http` in
+  code, JSDoc examples, or Markdown code blocks; use dedicated public leaves.
 - Use every module and feature Effect ships, `@stability unstable` ones
   included: the tag means the API may change on a bump, not that it is unfit
   for production. Never hand-roll what an Effect module provides (e.g.

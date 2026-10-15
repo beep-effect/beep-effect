@@ -22,7 +22,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { LanguageModel } from "effect/ai";
+import * as LanguageModel from "effect/ai/LanguageModel";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithRetry } from "./LlmWithRetry.ts";

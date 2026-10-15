@@ -62,7 +62,7 @@ import {
   T7PreservationOptions,
 } from "./Preservation.schemas.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { PreservationCommandError } from "../Corpus.errors.ts";
 import type { ArchiveWriterShape, PreservationManifestStoreShape } from "./Preservation.contracts.ts";
 import type { ArchiveWriterLiveOptions, CorpusLedgerRecord } from "./Preservation.schemas.ts";

@@ -3,7 +3,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { AtomRegistry } from "effect/reactivity";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import * as S from "effect/Schema";
 import {
   clampSidebarPercent,

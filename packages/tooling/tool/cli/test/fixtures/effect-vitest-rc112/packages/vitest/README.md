@@ -124,8 +124,7 @@ Here are examples that demonstrate how you can work with time in your tests usin
 import { it } from "@effect/vitest"
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
-import { TestClock } from "effect/testing"
-
+import * as TestClock from "effect/testing/TestClock";
 // Effect to log the current time
 const logNow = Effect.gen(function*() {
   const now = yield* Clock.currentTimeMillis // Fetch the current time from the clock

@@ -17,7 +17,8 @@
 import { $M365McpId } from "@beep/identity/packages";
 import { GraphBodyContentType, GraphPathSegment, M365EventDraft, M365EventPatch, M365MailAddress } from "@beep/m365";
 import { annotateFourHints, destructiveWriteToolHints, FourHintAnnotations, readOnlyToolHints } from "@beep/mcp-kit";
-import { Tool, Toolkit } from "effect/ai";
+import * as Tool from "effect/ai/Tool";
+import * as Toolkit from "effect/ai/Toolkit";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { emptyByDefault } from "./internal/OutboxFields.ts";

@@ -38,7 +38,7 @@ import { YeetExecutedStep } from "./Verdict.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GhCommandFailure } from "../../../internal/github/index.ts";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrNumber } from "./Provenance.ts";

@@ -17,7 +17,7 @@ import { decodeLines, layerProtocolNdjson } from "./client.ts";
 import type { PlatformError } from "effect/PlatformError";
 import type * as ChildProcess from "effect/process/ChildProcess";
 import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
-import type { RpcClient } from "effect/rpc";
+import type * as RpcClient from "effect/rpc/RpcClient";
 import type { McpClientOptions } from "./client.ts";
 
 const encoder = new TextEncoder();

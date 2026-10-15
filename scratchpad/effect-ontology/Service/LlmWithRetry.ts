@@ -21,7 +21,7 @@ import * as Ref from "effect/Ref";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Prompt } from "effect/ai";
+import * as Prompt from "effect/ai/Prompt";
 import type * as AiError from "effect/ai/AiError";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import type { StructuredPrompt } from "../Prompt/PromptGenerator.ts";

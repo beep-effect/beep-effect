@@ -23,7 +23,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { ChildProcessSpawner } from "effect/process";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

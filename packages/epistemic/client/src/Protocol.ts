@@ -7,12 +7,13 @@
 
 import { $EpistemicClientId } from "@beep/identity/packages";
 import { O, pipe, Str } from "@beep/utils";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
-import { Atom } from "effect/reactivity";
-import { RpcClient, RpcSerialization } from "effect/rpc";
+import * as Atom from "effect/reactivity/Atom";
+import * as RpcClient from "effect/rpc/RpcClient";
+import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as S from "effect/Schema";
 
 const $I = $EpistemicClientId.create("Protocol");
@@ -114,8 +115,7 @@ export const HttpEpistemicProtocolLive: Layer.Layer<RpcClient.Protocol> = RpcCli
  *   epistemicProtocolLayerAtom,
  *   HttpEpistemicProtocolLive,
  * } from "@beep/epistemic-client"
- * import { AtomRegistry } from "effect/reactivity"
- *
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const registry = AtomRegistry.make()
  * registry.set(epistemicProtocolLayerAtom, HttpEpistemicProtocolLive)
  * console.log(registry.get(epistemicProtocolLayerAtom))

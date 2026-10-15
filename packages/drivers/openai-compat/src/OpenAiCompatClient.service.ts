@@ -12,7 +12,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Sse from "effect/encoding/Sse";
 import { dual, flow, pipe } from "effect/Function";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Headers from "effect/http/Headers";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";

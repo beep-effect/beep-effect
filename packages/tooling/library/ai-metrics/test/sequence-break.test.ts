@@ -29,14 +29,14 @@ import { pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import type { SequenceBreakNotificationStage } from "@beep/repo-ai-metrics";
 
 // Writes the capture to a temporary file and renames it, so a reader that polls for opened.txt never sees it empty.

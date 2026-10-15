@@ -6,7 +6,7 @@
  *
  * @since 0.0.0
  */
-import { VariantSchema } from "effect/schema";
+import * as VariantSchema from "effect/schema/VariantSchema";
 import type { Top } from "effect/Schema";
 import type { Apply, Lambda } from "effect/Struct";
 

@@ -19,7 +19,7 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import {
   GoldenReplayReceipt,
   GoldenReplayReceiptFromJsonString,

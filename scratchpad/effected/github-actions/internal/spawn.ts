@@ -4,6 +4,9 @@
 // **One spawn, not two — load-bearing.** The spawner's convenience members
 // each spawn independently: `string` collects output without inspecting the
 // exit code, and `exitCode` runs the command AGAIN (core's
+import type * as ChildProcess from "effect/process/ChildProcess";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+
 // `ChildProcessSpawner.make` derives both from `spawn`). Calling them
 // back-to-back double-executes every archive operation — harmless for
 // idempotent `tar`/`unzip -o`, but .NET's `ZipFile.ExtractToDirectory`
@@ -22,8 +25,6 @@ import type * as PlatformError from "effect/PlatformError";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
 import * as Function from "effect/Function";
-import type { ChildProcess, ChildProcessSpawner } from "effect/process";
-
 const $I = $ScratchpadId.create("effected/github-actions/internal/spawn");
 
 /**
@@ -65,8 +66,8 @@ export type SpawnOnceResult = typeof SpawnOnceResult.Type;
  * ```ts
  * import { spawnOnce } from "@beep/scratchpad/effected/github-actions/internal/spawn"
  * import * as Effect from "effect/Effect"
- * import { ChildProcess, ChildProcessSpawner } from "effect/process"
- *
+ * import * as ChildProcess from "effect/process/ChildProcess";
+ * import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
  * const program = Effect.flatMap(ChildProcessSpawner.ChildProcessSpawner, (spawner) =>
  *   spawnOnce(spawner, ChildProcess.make("tar", ["--version"]))
  * )

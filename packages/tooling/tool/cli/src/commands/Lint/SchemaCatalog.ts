@@ -12,7 +12,8 @@ import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/sc
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import * as Console from "effect/Console";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
@@ -792,7 +793,7 @@ export const runSchemaCatalog = Effect.fn("SchemaCatalog.run")(function* (option
  *
  * ```ts
  * import { lintSchemaCatalogCommand } from "@beep/repo-cli/commands/Lint"
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * import * as Effect from "effect/Effect";
  * const run = Command.run(lintSchemaCatalogCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true

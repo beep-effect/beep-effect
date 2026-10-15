@@ -33,7 +33,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { Socket } from "effect/socket";
+import * as Socket from "effect/socket/Socket";
 import { readOptionalRedactedConfigString } from "../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
@@ -54,7 +54,7 @@ import {
 } from "./Qa.session.ts";
 import type { CollectorRunning, RoundLayout, RoundNumber } from "@beep/qa-capture";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import type { QaRecordOptions } from "./Qa.schemas.ts";

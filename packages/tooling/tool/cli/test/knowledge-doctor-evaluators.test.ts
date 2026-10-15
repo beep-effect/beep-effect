@@ -40,7 +40,7 @@ import type {
   KnowledgeFindingKind,
   KnowledgeSpan,
 } from "@beep/repo-cli/commands/Knowledge";
-import type { HttpClient } from "effect/http";
+import type * as HttpClient from "effect/http/HttpClient";
 
 const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 

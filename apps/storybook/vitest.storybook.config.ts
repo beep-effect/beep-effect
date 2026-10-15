@@ -5,7 +5,24 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   optimizeDeps: {
-    include: ["effect/Number", "effect/Utils"],
+    // Workspace story imports expose these leaves after the initial Vite crawl.
+    // Optimize them before tests start so discovery cannot reload the browser.
+    include: [
+      "effect/Number",
+      "effect/Utils",
+      "effect/encoding/Hex",
+      "effect/http/FetchHttpClient",
+      "effect/reactivity/AsyncResult",
+      "effect/reactivity/Atom",
+      "effect/reactivity/AtomRegistry",
+      "effect/reactivity/AtomRpc",
+      "effect/reactivity/Reactivity",
+      "effect/rpc/Rpc",
+      "effect/rpc/RpcClient",
+      "effect/rpc/RpcGroup",
+      "effect/rpc/RpcSerialization",
+      "effect/schema/Model",
+    ],
   },
   plugins: [
     storybookTest({

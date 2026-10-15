@@ -9,7 +9,7 @@ import * as O from "effect/Option";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as References from "effect/References";
-import { Prompt } from "effect/cli";
+import * as Prompt from "effect/cli/Prompt";
 import * as Path from "effect/Path";
 import * as Stdio from "effect/Stdio";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";

@@ -9,7 +9,7 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { AtomRegistry } from "effect/reactivity";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import * as Stream from "effect/Stream";
 import { composerSerializedChangeHandlerAtoms } from "@/chat/ui/Composer.atoms";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";

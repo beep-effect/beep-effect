@@ -124,7 +124,7 @@ import {
   TreeEntryWitness,
 } from "./KnowledgeDoctor.schemas.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 import type { KnowledgeStaticCommandTree } from "./Knowledge.command-surface.ts";

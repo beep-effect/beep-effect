@@ -12,7 +12,7 @@ import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
@@ -361,8 +361,7 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedSanityConfig
  * import { Sanity, SanityConfigInput, SanityQueryRequest } from "@beep/sanity"
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
- * import { FetchHttpClient } from "effect/http"
- *
+ * import * as FetchHttpClient from "effect/http/FetchHttpClient";
  * const layer = Sanity.makeLayer(
  *   SanityConfigInput.make({
  *     dataset: "production",
@@ -390,8 +389,7 @@ export class Sanity extends Context.Service<Sanity, SanityShape>()($I`Sanity`) {
    * ```ts
    * import { Sanity, SanityConfigInput } from "@beep/sanity"
    * import * as Layer from "effect/Layer";
-   * import { FetchHttpClient } from "effect/http"
-   *
+   * import * as FetchHttpClient from "effect/http/FetchHttpClient";
    * const layer = Sanity.makeLayer(
    *   SanityConfigInput.make({
    *     dataset: "production",

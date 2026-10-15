@@ -16,7 +16,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
-import { RpcTest } from "effect/rpc";
+import * as RpcTest from "effect/rpc/RpcTest";
 import * as S from "effect/Schema";
 import { RuntimeTest } from "@/runtime/Layer";
 import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.shared.ts";

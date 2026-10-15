@@ -2,8 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
 import * as S from "effect/Schema";
-import { ChildProcess } from "effect/process";
-
+import * as ChildProcess from "effect/process/ChildProcess";
 import type { GitInvocation } from "../../effected/git/GitCommand.ts";
 import { GitCommand, GitConfigScope } from "../../effected/git/GitCommand.ts";
 import * as GitModule from "../../effected/git/index.ts";

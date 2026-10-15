@@ -427,8 +427,7 @@ export const SkillMaterializerLayer = Layer.effect(SkillMaterializer, makeSkillM
  * ```ts
  * import { SkillMaterializerLive } from "@beep/repo-cli/commands/Skills/SkillsMaterialize.service"
  * import * as Layer from "effect/Layer"
- * import { FetchHttpClient } from "effect/http"
- *
+ * import * as FetchHttpClient from "effect/http/FetchHttpClient";
  * console.log(Layer.isLayer(SkillMaterializerLive.pipe(Layer.provide(FetchHttpClient.layer)))) // true
  * ```
  *

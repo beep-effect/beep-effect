@@ -13,7 +13,7 @@ import { flow, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import { forwardRef, useEffect, useId, useImperativeHandle, useRef } from "react";
 import { cn } from "../lib/index.ts";
 import type { CSSProperties } from "react";

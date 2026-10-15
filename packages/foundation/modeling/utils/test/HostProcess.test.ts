@@ -9,7 +9,8 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 
 const decodeGuardOutput = S.decodeUnknownEffect(S.fromJsonString(S.Struct({ platform: S.String, arch: S.String })));

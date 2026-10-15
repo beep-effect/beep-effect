@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as DateTime from "effect/DateTime";
 import * as Cause from "effect/Cause";
-import { TestConsole } from "effect/testing";
+import * as TestConsole from "effect/testing/TestConsole";
 import { ActionEnvironment } from "../../effected/github-actions/ActionEnvironment.ts";
 import { ActionLogger } from "../../effected/github-actions/ActionLogger.ts";
 

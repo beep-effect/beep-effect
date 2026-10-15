@@ -28,7 +28,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { runGitPathList } from "./GitExec.ts";
 import { failPublishScopeWithPacket } from "./PublishScope.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetStagedPublishIntent } from "../Yeet.schemas.ts";
 

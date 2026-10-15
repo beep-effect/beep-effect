@@ -5,7 +5,7 @@ import * as Layer from "effect/Layer";
 import * as References from "effect/References";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
-import { TestConsole } from "effect/testing";
+import * as TestConsole from "effect/testing/TestConsole";
 import { ActionEnvironment, ActionLogger, ActionOutputs } from "../../effected/github-actions/index.ts";
 import { commandLines, isCommand } from "./helpers/runnerCommands.ts";
 

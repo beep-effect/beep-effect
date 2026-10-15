@@ -32,7 +32,7 @@ import {
   suspend,
 } from "effect/Schema";
 import { makeEffect } from "effect/SchemaParser";
-import { Model as EffectModel } from "effect/schema";
+import * as EffectModel from "effect/schema/Model";
 import {
   _arrayDepthFkMismatch,
   _badArrayCarrier,

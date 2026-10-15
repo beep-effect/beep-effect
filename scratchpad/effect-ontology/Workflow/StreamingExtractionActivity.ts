@@ -31,7 +31,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Activity } from "effect/workflow";
+import * as Activity from "effect/workflow/Activity";
 import { ActivityError, notFoundError, toActivityError } from "../Domain/Error/Activity.ts";
 import { ContentHash, DocumentId, GcsUri, Namespace, OntologyName } from "../Domain/Identity.ts";
 import { Entity, KnowledgeGraph } from "../Domain/Model/Entity.ts";

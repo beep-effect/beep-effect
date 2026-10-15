@@ -18,7 +18,7 @@ import { ResolverService, ResolverServiceLive } from "./services/ResolverService
 import { UpdateApplierService, UpdateApplierServiceLive } from "./services/UpdateApplierService.ts";
 import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type * as FileSystem from "effect/FileSystem";
-import type { HttpClient } from "effect/http";
+import type * as HttpClient from "effect/http/HttpClient";
 import type * as Path from "effect/Path";
 import type { VersionSyncError, VersionSyncOptions } from "../VersionSync.schemas.ts";
 

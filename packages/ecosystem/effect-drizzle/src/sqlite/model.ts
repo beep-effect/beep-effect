@@ -14,7 +14,7 @@ import { isFunction, isNotUndefined, isNumber, isString, isUint8Array } from "ef
 import { empty, set, size, toEntries } from "effect/Record";
 import { Finite, flip, is, makeFilter, optionalKey } from "effect/Schema";
 import { split } from "effect/String";
-import { VariantSchema } from "effect/schema";
+import * as VariantSchema from "effect/schema/VariantSchema";
 import * as Field from "../core/Field.ts";
 import * as Meta from "../core/Meta.ts";
 import { ModelInvariantError } from "../core/model.ts";

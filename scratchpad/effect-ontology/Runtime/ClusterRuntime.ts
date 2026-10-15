@@ -19,8 +19,8 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
-import { ShardingConfig, SingleRunner } from "effect/cluster";
-
+import * as ShardingConfig from "effect/cluster/ShardingConfig";
+import * as SingleRunner from "effect/cluster/SingleRunner";
 /**
  * Build a durable single-runner cluster layer using sqlite (dev-friendly).
  *

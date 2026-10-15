@@ -15,7 +15,8 @@ import {
 } from "@beep/law-practice-server/DocketIntake";
 import { DocketIntakeError, DocketPollOptions } from "@beep/law-practice-use-cases/DocketIntake";
 import * as Console from "effect/Console";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";

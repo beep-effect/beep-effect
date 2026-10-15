@@ -1,8 +1,8 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { CliError, Prompt } from "effect/cli";
-
+import * as CliError from "effect/cli/CliError";
+import * as Prompt from "effect/cli/Prompt";
 const $I = $ScratchpadId.create("effected/cli/internal/fallbackAnswer");
 
 const FlagTarget = S.Struct({

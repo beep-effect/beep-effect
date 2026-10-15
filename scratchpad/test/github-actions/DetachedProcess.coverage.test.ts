@@ -26,7 +26,9 @@ describe("DetachedProcess coverage", () => {
 });
 
 import * as Layer from "effect/Layer";
-import { HttpClient, HttpClientResponse } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
+
 class InformationalResponse extends Response {
   override readonly status = 199;
 }

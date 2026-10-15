@@ -8,7 +8,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
-import { Reactivity } from "effect/reactivity";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import * as Stream from "effect/Stream";
 import { DesktopIntakeClient, workspaceVaultKey } from "@/intake/DesktopIntake.client";
 import { batchIdFor, IntakeBatchInput } from "@/intake/DocumentIntake.models";

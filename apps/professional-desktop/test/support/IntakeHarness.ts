@@ -4,7 +4,7 @@ import { createEffectActor } from "@xstate/effect";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Queue from "effect/Queue";
-import { Reactivity } from "effect/reactivity";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import { DesktopIntakeClient } from "@/intake/DesktopIntake.client";
 import { documentIntakeMachine } from "@/intake/DocumentIntake.machine";
 import { DocumentIntakeInput } from "@/intake/DocumentIntake.models";

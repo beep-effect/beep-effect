@@ -558,8 +558,7 @@ export const SkillPatchRecorderLayer = Layer.effect(SkillPatchRecorder, makeSkil
  * ```ts
  * import { SkillPatchRecorderLive } from "@beep/repo-cli/commands/Skills/SkillsPatch.service"
  * import * as Layer from "effect/Layer"
- * import { FetchHttpClient } from "effect/http"
- *
+ * import * as FetchHttpClient from "effect/http/FetchHttpClient";
  * console.log(Layer.isLayer(SkillPatchRecorderLive.pipe(Layer.provide(FetchHttpClient.layer)))) // true
  * ```
  *

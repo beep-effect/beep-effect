@@ -29,7 +29,7 @@ const $I = $ScratchpadId.create("effect-ontology/Repository/EntityRegistry");
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, sql as drizzleSql, eq, inArray } from "drizzle-orm";
 import { dual, flow } from "effect/Function";
-import { SqlClient } from "effect/sql";
+import * as SqlClient from "effect/sql/SqlClient";
 import { formatPgVector, normalizeDrizzleError } from "../Utils/Sql.ts";
 import { tokenizeMentionForBlocking } from "../Utils/Text.ts";
 import type {

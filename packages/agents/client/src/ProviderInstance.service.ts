@@ -10,8 +10,9 @@ import { $AgentsClientId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { Atom, AtomRpc } from "effect/reactivity";
-import { RpcClient } from "effect/rpc";
+import * as Atom from "effect/reactivity/Atom";
+import * as AtomRpc from "effect/reactivity/AtomRpc";
+import * as RpcClient from "effect/rpc/RpcClient";
 import { chatProtocolLayerAtom } from "./Chat.atoms.ts";
 
 const $I = $AgentsClientId.create("ProviderInstance.service");
@@ -54,8 +55,7 @@ const ProviderInstanceTransportLive = (get: Atom.AtomContext): Layer.Layer<Provi
  *
  * ```ts
  * import { providerInstanceTransportLayerAtom } from "@beep/agents-client/ProviderInstance.service"
- * import { AtomRegistry } from "effect/reactivity"
- *
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const registry = AtomRegistry.make()
  * console.log(registry.get(providerInstanceTransportLayerAtom))
  * ```

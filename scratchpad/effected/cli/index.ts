@@ -17,8 +17,7 @@
  * ```ts
  * import { CliAudience, CliRuntime } from "@beep/scratchpad/effected/cli/index"
  * import { NodeRuntime, NodeServices } from "@effect/platform-node"
- * import { Command } from "effect/cli"
- *
+ * import * as Command from "effect/cli/Command";
  * const init = Command.make("init")
  * const verify = Command.make("verify")
  * const root = Command.make("tool").pipe(

@@ -10,8 +10,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { Prompt } from "effect/ai";
+import * as Prompt from "effect/ai/Prompt";
 import type { StructuredPrompt } from "../Prompt/PromptGenerator.ts";
 import { dual2, dual3 } from "../Utils/Dual.ts";
 

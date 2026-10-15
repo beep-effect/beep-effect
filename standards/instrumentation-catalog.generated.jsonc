@@ -1857,6 +1857,7 @@
     {"name":"EditorCapability.resolveEditorProfile","owner":"@beep/editor","family":"foundation","conforms":true},
     {"name":"EffectDrizzleRepository.updateOptimistic","owner":"@beep/effect-drizzle","family":"ecosystem","conforms":true},
     {"name":"EffectFn.runEffectFnRules","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"EffectImports.buildEffectBarrelMapping","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EffectImports.buildEffectRootMapping","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EffectImports.buildFoundationRootMappings","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EffectImports.runEffectImportRules","owner":"@beep/repo-cli","family":"tooling","conforms":true},

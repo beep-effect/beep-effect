@@ -26,8 +26,7 @@ import type * as Clock from "effect/Clock";
  * import { expect } from "@effect/vitest";
  * import * as Clock from "effect/Clock";
  * import * as Effect from "effect/Effect";
- * import { TestClock } from "effect/testing";
- *
+ * import * as TestClock from "effect/testing/TestClock";
  * const it = makeIt(Effect.runSync(Clock.Clock));
  * it.effect("keeps the body clock independent", () =>
  *   Effect.gen(function* () {

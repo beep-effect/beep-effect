@@ -8,7 +8,8 @@
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

@@ -8,7 +8,7 @@
 import { OpenAiClient, OpenAiEmbeddingModel, OpenAiLanguageModel } from "@effect/ai-openai";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import {

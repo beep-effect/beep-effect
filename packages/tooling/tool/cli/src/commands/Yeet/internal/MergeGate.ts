@@ -61,7 +61,7 @@ import {
 import { readYeetReviewWindow, renderYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
 import { readYeetRulesetRequiredContexts } from "./Settle.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GhCommandFailure } from "../../../internal/github/index.ts";
 
 export { MergeGateCheckRun } from "./MergeGate.schemas.ts";

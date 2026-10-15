@@ -45,7 +45,7 @@ Create a kit once — usually where several models share audit columns or table 
 ```ts
 import { getTableName, sql } from "drizzle-orm"
 import { Int, Literals, NullOr, String, Struct, isMaxLength } from "effect/Schema"
-import { Model as EffectModel } from "effect/schema"
+import * as EffectModel from "effect/schema/Model";
 import { make } from "@beep/effect-drizzle"
 
 const db = make("pg", (pg) => ({
@@ -131,7 +131,7 @@ enums become table-local `CHECK` constraints:
 
 ```ts
 import { Int, Literals, OptionFromNullOr, String } from "effect/Schema"
-import { Model as EffectModel } from "effect/schema"
+import * as EffectModel from "effect/schema/Model";
 import { make } from "@beep/effect-drizzle"
 
 const sqliteDb = make("sqlite", (sqlite) => ({

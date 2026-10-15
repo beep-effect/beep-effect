@@ -21,9 +21,9 @@ import * as Fiber from "effect/Fiber";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
+import * as TestClock from "effect/testing/TestClock";
 import * as Queue from "effect/Queue";
 import * as Stream from "effect/Stream";
-import { TestClock } from "effect/testing";
 import type { ReactElement } from "react";
 import { CliInteractive } from "../../CliInteractive.ts";
 import { CliTheme } from "../../CliTheme.ts";
@@ -1014,80 +1014,80 @@ export class CliUiTest {
 		);
 
 	/**
-	 * A terminal for a whole program that runs screens of its own (a wizard, a handler calling `CliUi.prompt` several
-	 * times): provide its `layer` around the program, then take each screen as it mounts with `next`.
-	 *
-	 * **Details**
-	 * The same environment and the same waiting as {@link CliUiTest.render}, with the same options. The session also
-	 * keeps what the program writes through `Console`, its own output beside the screens, as `stdout` and `stderr`.
-	 *
-	 * Run the program forked (`Effect.forkScoped`) and drive it from the test: `next` returns each screen once it has
-	 * mounted and drawn, `press` and `type` settle as they do on a rendered screen, and joining the program's fiber
-	 * gives its exit. Screens still run one at a time, process-wide, so `next` sees them in the order they mount.
-	 *
-	 * By default, as with `render`, a screen run with `clear` leaves its frames unchanged here: Ink renders screens in
-	 * debug mode, where its `clear` does nothing. Pass `renderPath: "production"` to render them as a terminal does, and
-	 * read `transcript` to see what stays on it: a cleared screen leaves nothing there. A live view a handler mounts
-	 * (`CliUi.live`) always renders on the production path, and the lines it writes above its frame through
-	 * `handle.logConsole` are in `transcript` and `written`.
-	 * The waits are real time: a session test that itself sleeps or times out needs `it.live`. To assert that no screen
-	 * mounted (a non-interactive run, a flag that skips a prompt), check that `mounts` is `0` once the program has
-	 * finished.
-	 *
-	 * A screen that crashes (its thunk or a component throws) is never swallowed: `next` dies with the crash when it has
-	 * happened by then, whatever `contains` waited for, and otherwise the screen's next frame read, key or resize does.
-	 * The program's own fiber dies with it too.
-	 *
-	 * Driving a whole `Command` handler: provide `layer`, a fresh `CliExit.layer` if the handler records a code, a
-	 * `ConfigProvider` that sandboxes what the handler reads (`HOME`, the XDG directories), and the platform core's
-	 * runner needs, then fork the program and take each screen with `next`:
-	 *
-	 * To exercise `CliRuntime.main` as well (its failure report and exit code), run the program through it with the
-	 * session's layer provided around it instead; `main` provides its own `CliExit`.
-	 *
-	 * **Example** (Drive a command handler through a session)
-	 *
-	 * ```ts
-	 * import { Command } from "effect/cli"
-	 * import * as ConfigProvider from "effect/ConfigProvider"
-	 * import * as Fiber from "effect/Fiber"
-	 * import * as MutableRef from "effect/MutableRef"
-	 * import * as NodeServices from "@effect/platform-node/NodeServices"
-	 * import { CliUiTest } from "@beep/scratchpad/effected/cli/ui/testing/CliUiTest"
-	 * import { CliExit } from "@beep/scratchpad/effected/cli/CliExit"
-	 * import { CliUi } from "@beep/scratchpad/effected/cli/ui/CliUi"
-	 * import { Select } from "@beep/scratchpad/effected/cli/ui/Select"
-	 * import * as Effect from "effect/Effect"
-	 *
-	 * const root = Command.make("tool").pipe(Command.withSubcommands([
-	 *   Command.make("init", {}, () => CliUi.prompt(Select.screen({
-	 *     message: "Profile", choices: [{ label: "Default", value: "default" }],
-	 *   }))),
-	 * ]))
-	 * const version = "1.0.0"
-	 * const test = Effect.gen(function* () {
-	 *   const session = yield* CliUiTest.session()
-	 *   const program = Effect.gen(function* () {
-	 *     yield* Command.runWith(root, { version })(["init"])
-	 *     return MutableRef.get((yield* CliExit).code)
-	 *   }).pipe(
-	 *     Effect.provide(session.layer),
-	 *     Effect.provide(CliExit.layer),
-	 *     Effect.provide(NodeServices.layer),
-	 *     Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ HOME: "/sandbox/home" })),
-	 *   )
-	 *   const fiber = yield* Effect.forkScoped(program)
-	 *   yield* (yield* session.next({ contains: "Profile" })).press("enter")
-	 *   const code = yield* Fiber.join(fiber)
-	 *   console.log(code) // 0
-	 * }).pipe(Effect.scoped)
-	 * console.log(Effect.isEffect(test)) // true
-	 * ```
-	 *
-	 * @param options - the terminal's size, colour and glyphs, whether the run is interactive, and the screens' render path
-	 * @category testing
-	 * @since 0.0.0
-	 */
+     * A terminal for a whole program that runs screens of its own (a wizard, a handler calling `CliUi.prompt` several
+     * times): provide its `layer` around the program, then take each screen as it mounts with `next`.
+     *
+     * **Details**
+     * The same environment and the same waiting as {@link CliUiTest.render}, with the same options. The session also
+     * keeps what the program writes through `Console`, its own output beside the screens, as `stdout` and `stderr`.
+     *
+     * Run the program forked (`Effect.forkScoped`) and drive it from the test: `next` returns each screen once it has
+     * mounted and drawn, `press` and `type` settle as they do on a rendered screen, and joining the program's fiber
+     * gives its exit. Screens still run one at a time, process-wide, so `next` sees them in the order they mount.
+     *
+     * By default, as with `render`, a screen run with `clear` leaves its frames unchanged here: Ink renders screens in
+     * debug mode, where its `clear` does nothing. Pass `renderPath: "production"` to render them as a terminal does, and
+     * read `transcript` to see what stays on it: a cleared screen leaves nothing there. A live view a handler mounts
+     * (`CliUi.live`) always renders on the production path, and the lines it writes above its frame through
+     * `handle.logConsole` are in `transcript` and `written`.
+     * The waits are real time: a session test that itself sleeps or times out needs `it.live`. To assert that no screen
+     * mounted (a non-interactive run, a flag that skips a prompt), check that `mounts` is `0` once the program has
+     * finished.
+     *
+     * A screen that crashes (its thunk or a component throws) is never swallowed: `next` dies with the crash when it has
+     * happened by then, whatever `contains` waited for, and otherwise the screen's next frame read, key or resize does.
+     * The program's own fiber dies with it too.
+     *
+     * Driving a whole `Command` handler: provide `layer`, a fresh `CliExit.layer` if the handler records a code, a
+     * `ConfigProvider` that sandboxes what the handler reads (`HOME`, the XDG directories), and the platform core's
+     * runner needs, then fork the program and take each screen with `next`:
+     *
+     * To exercise `CliRuntime.main` as well (its failure report and exit code), run the program through it with the
+     * session's layer provided around it instead; `main` provides its own `CliExit`.
+     *
+     * **Example** (Drive a command handler through a session)
+     *
+     * ```ts
+     * import * as Command from "effect/cli/Command";
+     * import * as ConfigProvider from "effect/ConfigProvider"
+     * import * as Fiber from "effect/Fiber"
+     * import * as MutableRef from "effect/MutableRef"
+     * import * as NodeServices from "@effect/platform-node/NodeServices"
+     * import { CliUiTest } from "@beep/scratchpad/effected/cli/ui/testing/CliUiTest"
+     * import { CliExit } from "@beep/scratchpad/effected/cli/CliExit"
+     * import { CliUi } from "@beep/scratchpad/effected/cli/ui/CliUi"
+     * import { Select } from "@beep/scratchpad/effected/cli/ui/Select"
+     * import * as Effect from "effect/Effect"
+     *
+     * const root = Command.make("tool").pipe(Command.withSubcommands([
+     *   Command.make("init", {}, () => CliUi.prompt(Select.screen({
+     *     message: "Profile", choices: [{ label: "Default", value: "default" }],
+     *   }))),
+     * ]))
+     * const version = "1.0.0"
+     * const test = Effect.gen(function* () {
+     *   const session = yield* CliUiTest.session()
+     *   const program = Effect.gen(function* () {
+     *     yield* Command.runWith(root, { version })(["init"])
+     *     return MutableRef.get((yield* CliExit).code)
+     *   }).pipe(
+     *     Effect.provide(session.layer),
+     *     Effect.provide(CliExit.layer),
+     *     Effect.provide(NodeServices.layer),
+     *     Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ HOME: "/sandbox/home" })),
+     *   )
+     *   const fiber = yield* Effect.forkScoped(program)
+     *   yield* (yield* session.next({ contains: "Profile" })).press("enter")
+     *   const code = yield* Fiber.join(fiber)
+     *   console.log(code) // 0
+     * }).pipe(Effect.scoped)
+     * console.log(Effect.isEffect(test)) // true
+     * ```
+     *
+     * @param options - the terminal's size, colour and glyphs, whether the run is interactive, and the screens' render path
+     * @category testing
+     * @since 0.0.0
+     */
 	static readonly session = (
 		options: CliUiTestSessionOptions = {},
 	): Effect.Effect<CliUiTestSession, never, Scope.Scope> =>

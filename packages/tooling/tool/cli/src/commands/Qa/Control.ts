@@ -13,7 +13,9 @@
 import { MarkAccepted, SessionStore } from "@beep/qa-capture";
 import { O } from "@beep/utils";
 import * as Effect from "effect/Effect";
-import { HttpBody, HttpClient, HttpClientResponse } from "effect/http";
+import * as HttpBody from "effect/http/HttpBody";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as S from "effect/Schema";
 import { QaCommandError } from "./Qa.errors.ts";
 import type { CollectorHandle } from "@beep/qa-capture";

@@ -10,7 +10,8 @@ import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Stream from "effect/Stream";
 
 // Live lane: exercises the real ffmpeg binary on PATH. A missing binary is an

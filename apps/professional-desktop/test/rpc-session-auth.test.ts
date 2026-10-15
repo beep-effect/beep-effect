@@ -3,10 +3,15 @@ import { it } from "@beep/test-runner";
 import { NodeHttpServer } from "@effect/platform-node";
 import { describe, expect, vi } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import { Headers, HttpClient, HttpClientRequest, HttpRouter } from "effect/http";
+import * as Headers from "effect/http/Headers";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpRouter from "effect/http/HttpRouter";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
-import { RpcGroup, RpcSerialization, RpcServer } from "effect/rpc";
+import * as RpcGroup from "effect/rpc/RpcGroup";
+import * as RpcSerialization from "effect/rpc/RpcSerialization";
+import * as RpcServer from "effect/rpc/RpcServer";
 import * as S from "effect/Schema";
 import {
   isAuthorizedRpcSessionHeaders,

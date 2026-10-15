@@ -1,7 +1,7 @@
 import { assert, it } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
-import { CliError } from "effect/cli";
+import * as CliError from "effect/cli/CliError";
 import * as Path from "effect/Path";
 import * as Layer from "effect/Layer";
 import { TestTerminal } from "../../../effected/cli/testing.ts";

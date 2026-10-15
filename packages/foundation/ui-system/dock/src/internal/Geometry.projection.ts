@@ -14,7 +14,7 @@ import * as Match from "effect/Match";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import { DockNode as DockNodeModel, DockWorkspace as DockWorkspaceModel, SplitLayout, TabsNode } from "../Dock.tree.ts";
 import {
@@ -449,8 +449,8 @@ export const rows = (node: DockNode): ReadonlyArray<DockRow> =>
  *
  * ```ts
  * import { DockBox, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeDockGeometryAtoms } from "@beep/dock"
- * import { Atom, AtomRegistry } from "effect/reactivity"
- *
+ * import * as Atom from "effect/reactivity/Atom";
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
  * const atoms = makeDockGeometryAtoms({ workspaceAtom: Atom.make(workspace), containerAtom: Atom.make(DockBox.make({ width: 800, height: 600 })) })

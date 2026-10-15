@@ -35,9 +35,8 @@ import * as EntityId from "@beep/shared-domain/entity/EntityId";
 import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Model as M } from "effect/schema";
-import type { VariantSchema } from "effect/schema";
-
+import * as M from "effect/schema/Model";
+import type * as VariantSchema from "effect/schema/VariantSchema";
 const $I = $ScratchpadId.create("identity-kit-probe");
 
 // --- type-level truth: the IdentityLambda output (finding 2, working shape) --

@@ -57,6 +57,7 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
+import * as TestClock from "effect/testing/TestClock";
 import { expectBothWritersWaiting } from "./PostgresLock.test-kit.ts";
 
 const decodeUnknownRecordEdgeFactResult = S.decodeUnknownResult(RecordEdgeFact);
@@ -70,7 +71,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
-import { TestClock } from "effect/testing";
 import type { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));

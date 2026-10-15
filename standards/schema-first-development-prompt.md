@@ -614,7 +614,7 @@ For every changed named schema:
 import { expect } from "@effect/vitest";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import * as fc from "fast-check";
 
 const arbitrary = S.toArbitrary(MySchema, { report: true });
 

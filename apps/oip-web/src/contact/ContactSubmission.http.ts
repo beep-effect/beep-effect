@@ -6,9 +6,12 @@
  */
 
 import { $OipWebId } from "@beep/identity/packages";
-import { FetchHttpClient } from "effect/http";
-import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/http-api";
-import { AtomHttpApi } from "effect/reactivity";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as HttpApi from "effect/http-api/HttpApi";
+import * as HttpApiEndpoint from "effect/http-api/HttpApiEndpoint";
+import * as HttpApiGroup from "effect/http-api/HttpApiGroup";
+import * as HttpApiSchema from "effect/http-api/HttpApiSchema";
+import * as AtomHttpApi from "effect/reactivity/AtomHttpApi";
 import * as S from "effect/Schema";
 import { ContactResponseMessage, ContactSubmissionFormPayload } from "./ContactSubmission.model.ts";
 

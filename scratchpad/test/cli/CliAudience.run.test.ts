@@ -16,11 +16,15 @@ import * as FileSystem from "effect/FileSystem";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Terminal from "effect/Terminal";
 import * as Stdio from "effect/Stdio";
+import * as CliConfig from "effect/cli/CliConfig";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
+import * as GlobalFlag from "effect/cli/GlobalFlag";
+import * as Prompt from "effect/cli/Prompt";
 import * as Path from "effect/Path";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as Runtime from "effect/Runtime";
-import { CliConfig, Command, Flag, GlobalFlag, Prompt } from "effect/cli";
 import { CliAudience, CliInteractive, CliPrompt, CliRuntime } from "../../effected/cli/index.ts";
 import { TestTerminal } from "../../effected/cli/testing.ts";
 

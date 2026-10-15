@@ -20,7 +20,7 @@ import { expect } from "@effect/vitest";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import { RpcTest } from "effect/rpc";
+import * as RpcTest from "effect/rpc/RpcTest";
 import * as S from "effect/Schema";
 import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
 import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../vitest.shared.ts";

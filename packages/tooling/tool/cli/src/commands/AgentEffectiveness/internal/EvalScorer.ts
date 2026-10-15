@@ -29,7 +29,7 @@ import { evaluateLaw } from "./EvalLawLanes.ts";
 import { RecordAgentEffectivenessEvalScoreOptions, recordAgentEffectivenessEvalScore } from "./EvalRecord.ts";
 import { EvalScoring } from "./EvalScoring.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AgentEffectivenessEvalScoreReport } from "../AgentEffectiveness.schemas.ts";
 
 export * from "../AgentEffectiveness.errors.ts";

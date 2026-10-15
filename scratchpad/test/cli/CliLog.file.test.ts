@@ -15,7 +15,7 @@ import * as Option from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as Scope from "effect/Scope";
 import * as Tracer from "effect/Tracer";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import { CliLog } from "../../effected/cli/index.ts";
 import { CliLogFile } from "../../effected/cli/CliLog.ts";
 

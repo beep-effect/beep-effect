@@ -11,7 +11,8 @@ import { annotateFourHints, destructiveWriteToolHints, readOnlyToolHints } from 
 import { ChangeOperation, SessionChangeDelta, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { PrefixMap } from "@beep/rdf/Rdf";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import { Tool, Toolkit } from "effect/ai";
+import * as Tool from "effect/ai/Tool";
+import * as Toolkit from "effect/ai/Toolkit";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { OntologyFilePath } from "../aggregates/Session/Session.ports.ts";

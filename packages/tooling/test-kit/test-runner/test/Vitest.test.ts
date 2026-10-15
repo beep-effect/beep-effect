@@ -17,7 +17,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import type { TestContext, Vitest } from "@effect/vitest";
 
 class Probe extends Context.Service<Probe, { readonly value: number }>()("@beep/test-runner/test/Vitest.test/Probe") {}

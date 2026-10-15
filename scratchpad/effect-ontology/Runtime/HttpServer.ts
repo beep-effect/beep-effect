@@ -26,7 +26,9 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
+import * as HttpRouter from "effect/http/HttpRouter";
+import * as HttpServerRequest from "effect/http/HttpServerRequest";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import { BatchId, DocumentId, GcsUri, UUID } from "../Domain/Identity.ts";
 import { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
@@ -364,7 +366,7 @@ const conflictRecordToClaimConflict = Effect.fn("HttpServer.conflictRecordToClai
  *
  * ```ts
  * import * as Layer from "effect/Layer";
- * import { HttpRouter } from "effect/http"
+ * import * as HttpRouter from "effect/http/HttpRouter";
  * import { TimelineRouter } from "@effect-ontology/Runtime/HttpServer"
  *
  * const served = Layer.provide(TimelineRouter, HttpRouter.layer)
@@ -663,7 +665,7 @@ export const TimelineRouter = HttpRouter.addAll([
  *
  * ```ts
  * import * as Layer from "effect/Layer";
- * import { HttpRouter } from "effect/http"
+ * import * as HttpRouter from "effect/http/HttpRouter";
  * import { SearchRouter } from "@effect-ontology/Runtime/HttpServer"
  *
  * const served = Layer.provide(SearchRouter, HttpRouter.layer)
@@ -1061,7 +1063,7 @@ const extractionRouteHandler = Effect.gen(function* () {
  *
  * ```ts
  * import * as Layer from "effect/Layer";
- * import { HttpRouter } from "effect/http"
+ * import * as HttpRouter from "effect/http/HttpRouter";
  * import { ExtractionRouter } from "@effect-ontology/Runtime/HttpServer"
  *
  * const served = Layer.provide(ExtractionRouter, HttpRouter.layer)
@@ -1112,7 +1114,7 @@ export const ExtractionRouter = HttpRouter.addAll([
  *
  * ```ts
  * import * as Layer from "effect/Layer";
- * import { HttpRouter } from "effect/http"
+ * import * as HttpRouter from "effect/http/HttpRouter";
  * import { HealthRouter } from "@effect-ontology/Runtime/HttpServer"
  *
  * const served = Layer.provide(HealthRouter, HttpRouter.layer)
@@ -1166,7 +1168,7 @@ export const HealthRouter = HttpRouter.addAll([
  *
  * ```ts
  * import * as Layer from "effect/Layer";
- * import { HttpRouter } from "effect/http"
+ * import * as HttpRouter from "effect/http/HttpRouter";
  * import { OntologyRouter } from "@effect-ontology/Runtime/HttpServer"
  *
  * const served = Layer.provide(OntologyRouter, HttpRouter.layer)

@@ -1,7 +1,7 @@
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import { HttpRouter } from "effect/http";
+import * as HttpRouter from "effect/http/HttpRouter";
 import * as S from "effect/Schema";
 import { Health } from "@/Api";
 import { ApiLive } from "@/runtime/Layer";

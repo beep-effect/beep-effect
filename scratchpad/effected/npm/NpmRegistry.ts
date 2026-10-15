@@ -12,8 +12,8 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as A from "effect/Array";
-import type { HttpClientError } from "effect/http";
-import { HttpClient } from "effect/http";
+import type * as HttpClientError from "effect/http/HttpClientError";
+import * as HttpClient from "effect/http/HttpClient";
 import { IntegrityHash } from "./IntegrityHash.ts";
 import { RegistryCredential } from "./RegistryCredential.ts";
 import { classifyRegistry } from "./RegistryKind.ts";
@@ -621,8 +621,7 @@ export type RegistrySeed = typeof RegistrySeed.Type;
  * import { NpmRegistry } from "@beep/scratchpad/effected/npm/NpmRegistry";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option";
- * import { FetchHttpClient } from "effect/http";
- *
+ * import * as FetchHttpClient from "effect/http/FetchHttpClient";
  * const program = Effect.gen(function* () {
  *   const registry = yield* NpmRegistry;
  *   const found = yield* registry.version("effect", "4.0.0");

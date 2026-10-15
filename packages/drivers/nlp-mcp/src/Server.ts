@@ -90,7 +90,7 @@ export class NlpMcpServerConfig extends S.Opaque<NlpMcpServerConfig, { readonly 
  * import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
  * import * as NodePath from "@effect/platform-node/NodePath"
  * import * as NodeStdio from "@effect/platform-node/NodeStdio"
- * import { FetchHttpClient } from "effect/http"
+ * import * as FetchHttpClient from "effect/http/FetchHttpClient";
  *
  * const server = makeServerLayer(NlpMcpServerConfig.make({ name: "beep-nlp", version: "0.0.0" })).pipe(
  *   Layer.provide(NodeStdio.layer),

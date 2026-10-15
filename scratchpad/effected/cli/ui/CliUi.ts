@@ -9,10 +9,10 @@ import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import type * as Param from "effect/cli/Param";
+import * as Prompt from "effect/cli/Prompt";
 import * as O from "@beep/utils/Option";
 import * as Semaphore from "effect/Semaphore";
-import type { Param } from "effect/cli";
-import { Prompt } from "effect/cli";
 import type { ReactElement, ReactNode } from "react";
 import { Cancelled } from "../Cancelled.ts";
 import { CliInteractive } from "../CliInteractive.ts";
@@ -701,41 +701,41 @@ export class CliUi {
 	) => (state: S, frame: number) => ReactElement = lazyView;
 
 	/**
-	 * A screen whose answer is `f` of `screen`'s: it mounts `screen` and resolves with `f(value)` when `screen` resolves
-	 * with `value`.
-	 *
-	 * **Details**
-	 *
-	 * Only the resolve is mapped. A cancel passes through unchanged, as the same `Cancelled`, and so does everything
-	 * else about the screen: what it draws, its keys, a lazy load. `f` runs when the screen resolves; what it throws is
-	 * thrown from the screen's resolve, so it is a defect of the run, as any other throw in a key handler is.
-	 *
-	 * The mapped screen is a `Screen` like any other, so it goes wherever a screen goes: `CliUi.run`, `CliUi.prompt`,
-	 * `CliUi.fallback`, or around a `CliUi.lazy` one. The commonest use is a `Confirm` behind a boolean flag, where the
-	 * fallback needs a `Screen<boolean>` and `Confirm` answers a whole `ConfirmResult`:
-	 *
-	 * **Example** (Use a confirmation answer for a boolean flag)
-	 *
-	 * ```ts
-	 * import { CliUi } from "@beep/scratchpad/effected/cli/ui/CliUi"
-	 * import { Confirm } from "@beep/scratchpad/effected/cli/ui/Confirm"
-	 * import { Flag } from "effect/cli"
-	 * const yes = Flag.Boolean("yes").pipe(
-	 *   Flag.withFallbackPrompt(
-	 *     CliUi.fallback(
-	 *       CliUi.map(Confirm.screen({ message: "Publish?" }), (result) => result.confirmed),
-	 *       { flag: "yes", otherwise: false },
-	 *     ),
-	 *   ),
-	 * )
-	 * console.log(yes.kind) // flag
-	 * ```
-	 *
-	 * @param screen - the screen to show
-	 * @param f - turns its answer into the mapped screen's
-	 * @category mapping
-	 * @since 0.0.0
-	 */
+     * A screen whose answer is `f` of `screen`'s: it mounts `screen` and resolves with `f(value)` when `screen` resolves
+     * with `value`.
+     *
+     * **Details**
+     *
+     * Only the resolve is mapped. A cancel passes through unchanged, as the same `Cancelled`, and so does everything
+     * else about the screen: what it draws, its keys, a lazy load. `f` runs when the screen resolves; what it throws is
+     * thrown from the screen's resolve, so it is a defect of the run, as any other throw in a key handler is.
+     *
+     * The mapped screen is a `Screen` like any other, so it goes wherever a screen goes: `CliUi.run`, `CliUi.prompt`,
+     * `CliUi.fallback`, or around a `CliUi.lazy` one. The commonest use is a `Confirm` behind a boolean flag, where the
+     * fallback needs a `Screen<boolean>` and `Confirm` answers a whole `ConfirmResult`:
+     *
+     * **Example** (Use a confirmation answer for a boolean flag)
+     *
+     * ```ts
+     * import { CliUi } from "@beep/scratchpad/effected/cli/ui/CliUi"
+     * import { Confirm } from "@beep/scratchpad/effected/cli/ui/Confirm"
+     * import * as Flag from "effect/cli/Flag";
+     * const yes = Flag.Boolean("yes").pipe(
+     *   Flag.withFallbackPrompt(
+     *     CliUi.fallback(
+     *       CliUi.map(Confirm.screen({ message: "Publish?" }), (result) => result.confirmed),
+     *       { flag: "yes", otherwise: false },
+     *     ),
+     *   ),
+     * )
+     * console.log(yes.kind) // flag
+     * ```
+     *
+     * @param screen - the screen to show
+     * @param f - turns its answer into the mapped screen's
+     * @category mapping
+     * @since 0.0.0
+     */
 	static readonly map =
 		<A, B>(screen: Screen<A>, f: (value: A) => B): Screen<B> =>
 		(control) =>

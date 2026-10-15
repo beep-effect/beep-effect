@@ -8,7 +8,7 @@
 import { $NlpProcessingId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
-import { Tool } from "effect/ai";
+import * as Tool from "effect/ai/Tool";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
@@ -20,7 +20,8 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Obs from "../internal/observability.ts";
 import { NlpToolkit, NlpTools } from "./NlpToolkit.ts";
-import type { AiError, Toolkit } from "effect/ai";
+import type * as AiError from "effect/ai/AiError";
+import type * as Toolkit from "effect/ai/Toolkit";
 
 const $I = $NlpProcessingId.create("Tools/ToolExport");
 

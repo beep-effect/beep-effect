@@ -12,8 +12,8 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as Stdio from "effect/Stdio";
+import * as Command from "effect/cli/Command";
 import * as Terminal from "effect/Terminal";
-import { Command } from "effect/cli";
 import { CliRuntime } from "../../effected/cli/index.ts";
 import { LINE_BREAK, isCommand } from "./helpers/runnerCommands.ts";
 

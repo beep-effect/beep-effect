@@ -23,7 +23,7 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Console from "effect/Console";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";

@@ -17,8 +17,8 @@ import * as Layer from "effect/Layer";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
+import * as Command from "effect/cli/Command";
 import * as Terminal from "effect/Terminal";
-import { Command } from "effect/cli";
 import type { Block, Document } from "../../effected/cli/index.ts";
 import {
 	Cancelled,

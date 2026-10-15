@@ -15,7 +15,7 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import { AiError } from "effect/ai";
+import * as AiError from "effect/ai/AiError";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";

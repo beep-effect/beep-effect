@@ -50,7 +50,7 @@ import {
 } from "./CoverageScope.ts";
 import { discoverWorkspacePackages, repoRelative } from "./QualityArtifactSupport.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
 import type { WorkspacePackageInfo } from "./QualityArtifactSupport.ts";
 

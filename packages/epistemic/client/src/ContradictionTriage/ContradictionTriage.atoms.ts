@@ -16,7 +16,10 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
-import { AsyncResult, Atom, AtomRpc, Reactivity } from "effect/reactivity";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
+import * as AtomRpc from "effect/reactivity/AtomRpc";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import * as S from "effect/Schema";
 import { epistemicProtocolLayerAtom } from "../Protocol.ts";
 import type {
@@ -82,8 +85,7 @@ const sourceKey = (
  *
  * ```ts
  * import { contradictionDispositionFilterAtom } from "@beep/epistemic-client"
- * import { AtomRegistry } from "effect/reactivity"
- *
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * console.log(AtomRegistry.make().get(contradictionDispositionFilterAtom))
  * ```
  *
@@ -117,8 +119,8 @@ const makeTemporalAxisAtom = () => {
  *
  * ```ts
  * import { contradictionValidAtAtom } from "@beep/epistemic-client"
- * import { AsyncResult, AtomRegistry } from "effect/reactivity"
- *
+ * import * as AsyncResult from "effect/reactivity/AsyncResult";
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const validAt = AtomRegistry.make().get(contradictionValidAtAtom)
  * console.log(AsyncResult.isAsyncResult(validAt)) // true
  * ```
@@ -135,8 +137,8 @@ export const contradictionValidAtAtom = makeTemporalAxisAtom();
  *
  * ```ts
  * import { contradictionKnownAtAtom } from "@beep/epistemic-client"
- * import { AsyncResult, AtomRegistry } from "effect/reactivity"
- *
+ * import * as AsyncResult from "effect/reactivity/AsyncResult";
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const knownAt = AtomRegistry.make().get(contradictionKnownAtAtom)
  * console.log(AsyncResult.isAsyncResult(knownAt)) // true
  * ```
@@ -158,8 +160,7 @@ export const contradictionKnownAtAtom = makeTemporalAxisAtom();
  *
  * ```ts
  * import { contradictionQueueOffsetAtom } from "@beep/epistemic-client"
- * import { AtomRegistry } from "effect/reactivity"
- *
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * console.log(AtomRegistry.make().get(contradictionQueueOffsetAtom)) // 0
  * ```
  *
@@ -235,7 +236,7 @@ export const contradictionQueueAtom = Atom.readable((get) =>
  *
  * ```ts
  * import { selectedContradictionCandidateIdAtom } from "@beep/epistemic-client"
- * import { AtomRegistry } from "effect/reactivity"
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * import * as O from "effect/Option"
  *
  * console.log(O.isNone(AtomRegistry.make().get(selectedContradictionCandidateIdAtom)))
@@ -261,7 +262,7 @@ export const selectedContradictionCandidateIdAtom: Atom.Writable<
  *
  * ```ts
  * import { contradictionReviewCandidateIdAtom } from "@beep/epistemic-client"
- * import { AtomRegistry } from "effect/reactivity"
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * import * as O from "effect/Option"
  *
  * console.log(O.isNone(AtomRegistry.make().get(contradictionReviewCandidateIdAtom)))
@@ -335,7 +336,7 @@ export const selectedContradictionCandidateAtom = Atom.readable((get) =>
  *
  * ```ts
  * import { selectedContradictionEvidenceSourceAtom } from "@beep/epistemic-client"
- * import { AtomRegistry } from "effect/reactivity"
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * import * as O from "effect/Option"
  *
  * console.log(O.isNone(AtomRegistry.make().get(selectedContradictionEvidenceSourceAtom)))

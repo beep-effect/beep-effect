@@ -18,7 +18,7 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";

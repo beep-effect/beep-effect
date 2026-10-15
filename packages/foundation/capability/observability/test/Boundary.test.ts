@@ -5,7 +5,8 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 

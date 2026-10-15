@@ -17,7 +17,7 @@ import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import { runRepoCommandCapture, runRepoCommandCaptureRaw } from "./RepoRun.executor.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const WORKTREE_RECORD_PREFIX = "worktree ";
 

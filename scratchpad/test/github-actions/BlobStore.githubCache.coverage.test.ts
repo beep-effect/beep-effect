@@ -7,7 +7,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import { BlobEnvelope } from "../../effected/github-actions/BlobEnvelope.ts";
 import { BlobStore, BlobStoreError } from "../../effected/github-actions/BlobStore.ts";
 import { GitHubCacheBlobStore } from "../../effected/github-actions/BlobStore.githubCache.ts";

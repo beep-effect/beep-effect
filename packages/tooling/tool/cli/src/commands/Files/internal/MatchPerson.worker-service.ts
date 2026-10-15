@@ -27,8 +27,8 @@ import { MatchPersonError } from "./MatchPerson.errors.ts";
 import { prepareAdaFaceArtifacts, verifyPersonMatchModelArtifacts } from "./MatchPerson.model-store.ts";
 import { decodePersonMatchWorkerReportJson, PERSON_MATCH_MAX_REPORTED_FACES } from "./MatchPerson.schemas.ts";
 import type * as Crypto from "effect/Crypto";
-import type { HttpClient } from "effect/http";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as HttpClient from "effect/http/HttpClient";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type {
   MatchPersonConfigError,
   MatchPersonLicenseError,

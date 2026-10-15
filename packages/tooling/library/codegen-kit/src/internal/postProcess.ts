@@ -763,6 +763,42 @@ const pruneNamedImports = (bindings: ts.NamedImports, used: ReadonlyArray<string
   return A.length(elements) > 0 ? ts.factory.updateNamedImports(bindings, elements) : undefined;
 };
 
+const moduleImportDeclarations = (
+  declaration: ts.ImportDeclaration,
+  clause: ts.ImportClause
+): ReadonlyArray<ts.ImportDeclaration> => {
+  const updated = ts.factory.updateImportDeclaration(
+    declaration,
+    declaration.modifiers,
+    clause,
+    declaration.moduleSpecifier,
+    declaration.attributes
+  );
+  if (
+    !ts.isStringLiteral(declaration.moduleSpecifier) ||
+    !A.contains(["effect/http-api", "effect/http"], declaration.moduleSpecifier.text) ||
+    clause.name !== undefined ||
+    clause.namedBindings === undefined ||
+    !ts.isNamedImports(clause.namedBindings)
+  ) {
+    return A.of(updated);
+  }
+  const barrel = declaration.moduleSpecifier.text;
+  return A.map(A.fromIterable(clause.namedBindings.elements), (element) =>
+    ts.factory.updateImportDeclaration(
+      declaration,
+      declaration.modifiers,
+      ts.factory.createImportClause(
+        element.isTypeOnly ? ts.SyntaxKind.TypeKeyword : clause.phaseModifier,
+        undefined,
+        ts.factory.createNamespaceImport(element.name)
+      ),
+      ts.factory.createStringLiteral(`${barrel}/${(element.propertyName ?? element.name).text}`),
+      declaration.attributes
+    )
+  );
+};
+
 const pruneImport = (
   declaration: ts.ImportDeclaration,
   used: ReadonlyArray<string>,
@@ -774,16 +810,13 @@ const pruneImport = (
     Match.orElse((clause) =>
       pipe(
         prunedImportClause(clause, used),
-        O.map((updatedClause) =>
-          ts.factory.updateImportDeclaration(
-            declaration,
-            declaration.modifiers,
-            updatedClause,
-            declaration.moduleSpecifier,
-            declaration.attributes
+        O.map((updatedClause) => moduleImportDeclarations(declaration, updatedClause)),
+        O.map(
+          flow(
+            A.map((updated) => printer.printNode(ts.EmitHint.Unspecified, updated, sourceFile)),
+            A.join("\n")
           )
         ),
-        O.map((updated) => printer.printNode(ts.EmitHint.Unspecified, updated, sourceFile)),
         O.getOrElse(() => "")
       )
     )

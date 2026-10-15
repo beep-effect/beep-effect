@@ -26,7 +26,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { fromEffect, fromEffectStream, setupEffect } from "@xstate/effect";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
-import { Reactivity } from "effect/reactivity";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";

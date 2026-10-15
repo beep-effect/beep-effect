@@ -29,7 +29,7 @@ import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { SqlClient } from "effect/sql";
+import * as SqlClient from "effect/sql/SqlClient";
 import { formatPgVector, normalizeDrizzleError } from "../Utils/Sql.ts";
 import type { LlmExampleRow } from "./schema.ts";
 import { LlmExamples, llmExamples } from "./schema.ts";

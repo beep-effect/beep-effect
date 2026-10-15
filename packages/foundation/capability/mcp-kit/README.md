@@ -106,7 +106,8 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option"
 import * as S from "effect/Schema"
-import { Tool, Toolkit } from "effect/ai"
+import * as Tool from "effect/ai/Tool";
+import * as Toolkit from "effect/ai/Toolkit";
 import * as McpServer from "effect/ai/McpServer"
 import { composeGatedLayers, gatedLayer, sanitizedToolkit, SourceAuthRegistration, statelessMcpProtocols } from "@beep/mcp-kit"
 

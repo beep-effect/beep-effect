@@ -8,7 +8,7 @@ import { afterEach, describe, expect } from "@effect/vitest";
 import { cleanup, render, waitFor, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import { Reactivity } from "effect/reactivity";
+import * as Reactivity from "effect/reactivity/Reactivity";
 
 describe("a failed sync query is not a dead end", () => {
   afterEach(cleanup);

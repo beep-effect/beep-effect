@@ -13,7 +13,7 @@
 import * as A from "effect/Array";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
 import { GroupId } from "./Dock.ids.ts";
 import type { DockEvent } from "./Dock.events.ts";
@@ -104,8 +104,8 @@ export const touchedGroups: (entries: ReadonlyArray<DockAtomFeedEntry>) => Reado
  * ```ts
  * import * as S from "effect/Schema"
  * import { ApiCommandOrigin, CommandId, DockAtomFeedSuccess, DockChanged, DockMutationCompleted, DockMutationOutcome, GroupId, GroupUpdatedEvent, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeMruGroupsAtom } from "@beep/dock"
- * import { Atom, AtomRegistry } from "effect/reactivity"
- *
+ * import * as Atom from "effect/reactivity/Atom";
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const groupId = GroupId.make("group-one")
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId, active: panel }) })

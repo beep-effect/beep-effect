@@ -24,7 +24,7 @@ import {
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const gitErrorAdapter: GitCommandErrorAdapter<YeetCommandError> = {

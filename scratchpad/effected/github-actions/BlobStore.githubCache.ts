@@ -3,7 +3,7 @@ import type * as S from "effect/Schema";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import { HttpClient } from "effect/http";
+import * as HttpClient from "effect/http/HttpClient";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
 import { BlobEnvelope } from "./BlobEnvelope.ts";
 import type { BlobStoreShape, StoredBlob } from "./BlobStore.ts";

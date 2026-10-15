@@ -11,6 +11,9 @@
 // dynamic `import()` — no subprocess is spawned — and lives behind an opt-in,
 // Node-coupled layer, the same shape as the other Node-only overlays in this
 // package. `layerNoop` returns the seed untouched and is the safe default for
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+
 // tests and consumers who want the topology without the execution.
 //
 // Every replaying layer loads the pnpmfile of the version each entry DECLARES,
@@ -40,7 +43,6 @@ import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import type { CatalogEntries } from "./internal/catalogs.ts";
 import { normalize } from "./internal/catalogs.ts";
 import { makeFetchConfigDependency } from "./internal/configDependencyFetch.ts";

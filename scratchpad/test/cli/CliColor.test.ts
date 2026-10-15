@@ -4,7 +4,8 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Stdio from "effect/Stdio";
-import { CliError, CliOutput } from "effect/cli";
+import * as CliError from "effect/cli/CliError";
+import * as CliOutput from "effect/cli/CliOutput";
 import { CliColor } from "../../effected/cli/index.ts";
 
 describe("CliColor.enabled", () => {

@@ -43,7 +43,7 @@ import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
-import { RpcTest } from "effect/rpc";
+import * as RpcTest from "effect/rpc/RpcTest";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../vitest.shared.ts";

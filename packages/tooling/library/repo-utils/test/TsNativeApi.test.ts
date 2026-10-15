@@ -16,7 +16,8 @@ import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Scope from "effect/Scope";
 import type { Node } from "@typescript/native/unstable/ast";
 

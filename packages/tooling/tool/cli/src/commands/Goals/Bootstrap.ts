@@ -15,7 +15,8 @@
 
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";

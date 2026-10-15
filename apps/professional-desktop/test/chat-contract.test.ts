@@ -32,7 +32,7 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import { decodeWorkspaceId, userDocument, userParagraphDocument } from "@/chat/ChatFixtures";
 import { documentToPlainText, makeChatOperations } from "@/chat/ChatOrchestrator";
 import { makeInMemoryUsageRecordSink, UsageRecordSink, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink";

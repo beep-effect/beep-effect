@@ -7,7 +7,7 @@
 
 import { $NlpProcessingId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Tool } from "effect/ai";
+import * as Tool from "effect/ai/Tool";
 import * as S from "effect/Schema";
 import { PosInt } from "../internal/PosInt.ts";
 import { AiNGram, AiToolError } from "./_schemas.ts";

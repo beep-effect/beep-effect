@@ -22,7 +22,7 @@ import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";

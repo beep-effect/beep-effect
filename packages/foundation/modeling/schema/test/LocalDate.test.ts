@@ -34,7 +34,7 @@ import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 
 const decodeLocalDate = S.decodeEffect(LocalDate);
 const decodeLocalDateFromString = S.decodeEffect(LocalDateFromString);

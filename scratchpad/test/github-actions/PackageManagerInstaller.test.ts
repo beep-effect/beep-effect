@@ -19,9 +19,10 @@ import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Result from "effect/Result";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { flow, identity } from "effect/Function";
-import { FetchHttpClient } from "effect/http";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import {
 	ActionEnvironment,
 	AmbientPackageManager,

@@ -36,10 +36,12 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
-import { AsyncResult, AtomRegistry, Reactivity } from "effect/reactivity";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import * as Reactivity from "effect/reactivity/Reactivity";
 import * as RpcTest from "effect/rpc/RpcTest";
 import * as S from "effect/Schema";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 
 const decodeSourceRequest = S.decodeUnknownResult(EvidenceSourcePagePayload);
 const decodeDetailRequest = S.decodeUnknownResult(GetContradictionCandidate);

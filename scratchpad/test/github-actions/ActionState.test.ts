@@ -5,7 +5,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
-import { TestConsole } from "effect/testing";
+import * as TestConsole from "effect/testing/TestConsole";
 import { ActionEnvironment, ActionOutputs, ActionState } from "../../effected/github-actions/index.ts";
 import { assertExitFailure, assertNone } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";

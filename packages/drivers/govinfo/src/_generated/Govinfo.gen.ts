@@ -10,15 +10,13 @@
 
 import { $GovinfoId } from "@beep/identity";
 import * as S from "effect/Schema";
-import {
-  HttpApi,
-  HttpApiEndpoint,
-  HttpApiGroup,
-  HttpApiMiddleware,
-  HttpApiSchema,
-  HttpApiSecurity,
-  OpenApi,
-} from "effect/http-api";
+import * as HttpApi from "effect/http-api/HttpApi";
+import * as HttpApiEndpoint from "effect/http-api/HttpApiEndpoint";
+import * as HttpApiGroup from "effect/http-api/HttpApiGroup";
+import * as HttpApiMiddleware from "effect/http-api/HttpApiMiddleware";
+import * as HttpApiSchema from "effect/http-api/HttpApiSchema";
+import * as HttpApiSecurity from "effect/http-api/HttpApiSecurity";
+import * as OpenApi from "effect/http-api/OpenApi";
 
 const $I = $GovinfoId.create("_generated/Govinfo.gen");
 // non-recursive definitions

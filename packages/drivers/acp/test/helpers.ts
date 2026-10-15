@@ -7,7 +7,7 @@ import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import type * as Cause from "effect/Cause";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const encoder = new TextEncoder();
 

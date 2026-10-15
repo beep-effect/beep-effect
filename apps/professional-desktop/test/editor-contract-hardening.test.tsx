@@ -33,7 +33,8 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
-import { AsyncResult, AtomRegistry } from "effect/reactivity";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import * as S from "effect/Schema";
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor } from "lexical";
 import {
@@ -42,7 +43,7 @@ import {
   prepareComposerDocumentSafetyGate,
 } from "@/chat/ui/Composer.atoms";
 import { composerDocumentFromEditorState } from "@/chat/ui/ComposerPolicy";
-import type { Atom } from "effect/reactivity";
+import type * as Atom from "effect/reactivity/Atom";
 
 const decodeYouTubeWatchRequestResult = S.decodeResult(YouTubeWatchRequest);
 const decodeComposerFeatures = S.decodeEffect(ComposerFeatures);

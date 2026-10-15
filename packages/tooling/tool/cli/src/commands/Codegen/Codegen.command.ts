@@ -13,7 +13,8 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { FsUtils } from "@beep/repo-utils";
 import { A, Str, Text, thunkFalse, thunkUndefined } from "@beep/utils";
 import * as Console from "effect/Console";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
@@ -459,8 +460,7 @@ const barrelCommand = Command.make(
  *
  * ```ts
  * import { codegenCommand } from "@beep/repo-cli/commands/Codegen"
- * import { Command } from "effect/cli"
- *
+ * import * as Command from "effect/cli/Command";
  * const run = Command.runWith(codegenCommand, { version: "0.0.0" })
  * const preview = run(["barrel", "--package", "packages/foundation/modeling/identity", "--dry-run"])
  * ```

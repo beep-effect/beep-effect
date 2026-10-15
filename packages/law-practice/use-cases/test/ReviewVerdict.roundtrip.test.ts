@@ -36,7 +36,7 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 
 const decodeItem = S.decodeUnknownEffect(ReviewItem);
 const decodeClaimFinding = S.decodeUnknownEffect(ReviewItem.cases["claim-finding"]);

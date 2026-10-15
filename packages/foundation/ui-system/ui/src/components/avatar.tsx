@@ -9,7 +9,7 @@
 import { useAtomSubscribe, useAtomValue } from "@effect/atom-react";
 import { cva } from "class-variance-authority";
 import * as P from "effect/Predicate";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import { cn } from "../lib/index.ts";
 import type { VariantProps } from "class-variance-authority";
 import type * as React from "react";

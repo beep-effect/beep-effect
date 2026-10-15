@@ -30,7 +30,7 @@ import { FleetLivenessReadings, parseWorktreePorcelain, WorktreeRemovalRequest }
 import { runWorktreeGitCapture, WorktreeRemovalService } from "./Worktree.service.ts";
 import type { DomainError } from "@beep/repo-utils";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { WorktreeReapSkipReason } from "./Reap.schemas.ts";
 import type { FleetLivenessVerdict, FleetProbeReading, WorktreeListEntry } from "./Worktree.schemas.ts";
 

@@ -148,7 +148,7 @@ import { collectRemoteChecks, collectYeetStatus, renderYeetStatusSummary, writeY
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
 import { BuildYeetVerdictInput, buildYeetVerdict, YeetExecutedStep, YeetVerdictJson } from "./Verdict.ts";
 import { classifyYeetCheckOutcome, YeetCheckSignal } from "./WatchStream.ts";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AdmissionOriginGate, MemoryStats, RepoRunPlan } from "../../../internal/repo-run/index.ts";
 import type { ProcessIdentityStatus } from "../../../internal/repo-run/ProcessIdentity.ts";
 import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";

@@ -21,7 +21,7 @@ import type * as Crypto from "effect/Crypto";
 
 export { QualityArtifactGeneratorError } from "./QualityArtifactSupport.ts";
 
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 

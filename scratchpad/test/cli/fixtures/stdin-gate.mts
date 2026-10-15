@@ -3,10 +3,12 @@
 // runner that attached to stdin in the meantime would have eaten the piped bytes.
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as Console from "effect/Console";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
+import * as Prompt from "effect/cli/Prompt";
 import * as Effect from "effect/Effect";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
-import { Command, Flag, Prompt } from "effect/cli";
 import { CliPrompt, CliRuntime } from "../../../effected/cli/index.ts";
 
 const profile = Flag.String("profile").pipe(

@@ -14,8 +14,7 @@ import { CatalogResolver } from "../../effected/npm/index.ts";
 import { CatalogSet, WorkspaceCatalogs } from "../../effected/workspaces/WorkspaceCatalogs.ts";
 import { LockfileReadError, LockfileReader } from "../../effected/workspaces/LockfileReader.ts";
 import { WorkspaceRoot, WorkspaceRootNotFoundError } from "../../effected/workspaces/WorkspaceRoot.ts";
-import { ChildProcessSpawner } from "effect/process";
-
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 const JsonValue = S.fromJsonString(S.Unknown);
 
 const missingLock = LockfileReadError.make({ lockfilePath: "/repo/pnpm-lock.yaml", format: "pnpm", cause: undefined });

@@ -6,7 +6,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";

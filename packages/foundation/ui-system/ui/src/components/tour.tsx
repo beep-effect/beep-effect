@@ -24,7 +24,7 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import Link from "next/link";
 import * as React from "react";
 import { createPortal } from "react-dom";

@@ -72,7 +72,7 @@ import {
   ResidueReapReport,
   ResidueRetentionRuling,
 } from "./ResidueReap.schemas.ts";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { BoundRemovalOutcome, DirectoryHandleError } from "./DirectoryHandle.ts";
 import type { QualitySchedulerError } from "./QualityScheduler.schemas.ts";

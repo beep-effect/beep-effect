@@ -37,7 +37,7 @@ import * as Exit from "effect/Exit";
 import * as Hash from "effect/Hash";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 
 const decodeLocalDateFromString = S.decodeEffect(LocalDateFromString);
 const decodeModel = S.decodeEffect(Model);
@@ -175,7 +175,7 @@ describe("constructors", () => {
   it.effect(
     "constructs today's date from TestClock",
     Effect.fnUntraced(function* () {
-      yield* TestClock.setTime(DateTime.toEpochMillis(DateTime.makeUnsafe("2024-06-15T12:00:00.000Z")));
+      yield* DateTime.makeUnsafe("2024-06-15T12:00:00.000Z").pipe(DateTime.toEpochMillis, TestClock.setTime);
       const today = yield* todayEffect;
       assert.strictEqual(today.toISOString(), "2024-06-15");
 

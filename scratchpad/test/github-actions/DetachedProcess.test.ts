@@ -10,9 +10,9 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as S from "effect/Schema";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as TestClock from "effect/testing/TestClock";
 import * as Result from "effect/Result";
-import { FetchHttpClient } from "effect/http";
-import { TestClock } from "effect/testing";
 import * as Context from "effect/Context";
 import * as Layer from "effect/Layer";
 import {

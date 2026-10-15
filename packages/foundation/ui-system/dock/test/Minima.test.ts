@@ -41,7 +41,8 @@ import * as O from "effect/Option";
 import * as Queue from "effect/Queue";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
-import { Atom, AtomRegistry } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import * as S from "effect/Schema";
 import type { DockNode, DockWorkspace } from "@beep/dock";
 

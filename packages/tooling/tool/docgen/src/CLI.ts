@@ -9,7 +9,8 @@
 
 import { TSConfigCompilerOptions } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
-import { Command, Flag } from "effect/cli";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -140,7 +141,7 @@ const options = {
  * **Example** (Run docgen command help)
  *
  * ```ts
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * import { docgenCommand } from "@beep/repo-docgen/CLI"
  * const runDocgen = Command.runWith(docgenCommand, { version: "v0.0.0" })
  * const helpProgram = runDocgen(["--help"])

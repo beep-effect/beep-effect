@@ -1,6 +1,6 @@
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import { CliConfig } from "effect/cli";
+import * as CliConfig from "effect/cli/CliConfig";
 import { WizardDropped } from "../../../effected/cli/internal/wizardGate.ts";
 it.effect("wizard dropped reference defaults to absence and retains the provided config identity", () => Effect.gen(function* () {
   assert.strictEqual(yield* WizardDropped, undefined);

@@ -7,7 +7,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";

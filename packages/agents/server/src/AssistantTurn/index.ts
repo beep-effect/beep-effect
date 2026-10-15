@@ -58,8 +58,7 @@ export * from "./AnthropicTurnKernel.ts";
  * import { IssueReport, makeRepairInvalidBlocks } from "@beep/agents-server/AssistantTurn"
  * import { AnthropicToolJsonResponse } from "@beep/anthropic"
  * import * as Effect from "effect/Effect";
- * import { Response } from "effect/ai"
- *
+ * import * as Response from "effect/ai/Response";
  * const repair = makeRepairInvalidBlocks(() =>
  *   Effect.succeed(AnthropicToolJsonResponse.make({
  *     paramsJson: '{"repairs":[{"index":0,"block":{"type":"paragraph","children":[{"type":"text","text":"Fixed"}]}}]}',

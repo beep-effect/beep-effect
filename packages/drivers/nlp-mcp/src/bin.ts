@@ -14,7 +14,7 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeStdio from "@effect/platform-node/NodeStdio";
-import { FetchHttpClient } from "effect/http";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import { makeServerLayer, NlpMcpServerConfig } from "./Server.ts";
 

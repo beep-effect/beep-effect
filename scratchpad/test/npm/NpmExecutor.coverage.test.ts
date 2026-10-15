@@ -1,6 +1,6 @@
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import { ExecContext, LocalExec, LocalExecError } from "../../effected/commands/LocalExec.ts";
 import { NpmExecutor } from "../../effected/npm/NpmExecutor.ts";
 

@@ -10,7 +10,7 @@ import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import { Atom } from "effect/reactivity";
+import * as Atom from "effect/reactivity/Atom";
 import type { JSX } from "react";
 
 const COPIED_FOR = Duration.millis(1_500);

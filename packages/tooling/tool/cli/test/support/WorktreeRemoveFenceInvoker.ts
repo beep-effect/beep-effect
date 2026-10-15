@@ -17,7 +17,7 @@ import { WorktreeRemovalServiceLive, worktreeCommand } from "@beep/repo-cli/comm
 import { NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
-import { Command } from "effect/cli";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as ManagedRuntime from "effect/ManagedRuntime";

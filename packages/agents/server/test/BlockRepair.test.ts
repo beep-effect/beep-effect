@@ -5,7 +5,7 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import { Response } from "effect/ai";
+import * as Response from "effect/ai/Response";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";

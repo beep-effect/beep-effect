@@ -41,7 +41,7 @@ import * as Metric from "effect/Metric";
 import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import { Socket } from "effect/socket";
+import * as Socket from "effect/socket/Socket";
 import { SidecarTransport } from "./SidecarTransport.ts";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import type * as Scope from "effect/Scope";

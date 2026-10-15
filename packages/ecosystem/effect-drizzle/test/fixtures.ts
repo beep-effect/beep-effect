@@ -32,8 +32,8 @@ import {
   Uint8Array as Uint8ArraySchema,
   Union,
 } from "effect/Schema";
-import { Model as EffectModel } from "effect/schema";
-import { SqlModel } from "effect/sql";
+import * as EffectModel from "effect/schema/Model";
+import * as SqlModel from "effect/sql/SqlModel";
 import type { Top } from "effect/Schema";
 
 const PosInt = Int.check(

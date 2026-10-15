@@ -27,7 +27,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { TestClock } from "effect/testing";
+import * as TestClock from "effect/testing/TestClock";
 import {
   ActiveModelIdentityLive,
   AnthropicExtractionLanguageModelLive,

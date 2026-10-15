@@ -10,7 +10,9 @@ import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { Fn } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
-import { Argument, Command, Flag } from "effect/cli";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -52,7 +54,7 @@ import {
 } from "./internal/FallowEnvelope.schema.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { FallowFeature, FindingAttributionKind } from "./internal/FallowEnvelope.schema.ts";
 
 const $I = $RepoCliId.create("commands/Quality/FallowQuality");
@@ -2533,7 +2535,7 @@ const fallowFixPreviewCommand = makeFallowFeatureCommand("fix-preview");
  *
  * ```ts
  * import { qualityFallowCommand } from "@beep/repo-cli/commands/Quality"
- * import { Command } from "effect/cli"
+ * import * as Command from "effect/cli/Command";
  * import * as Effect from "effect/Effect";
  * const run = Command.run(qualityFallowCommand, { version: "0.0.0" })
  * console.log(Effect.isEffect(run)) // true

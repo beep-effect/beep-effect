@@ -19,7 +19,8 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PubSub from "effect/PubSub";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as Schedule from "effect/Schedule";
 import { ObsError } from "./Obs.errors.ts";
@@ -44,7 +45,7 @@ import {
 import { ObsProtocol } from "./ObsProtocol.service.ts";
 import type * as Scope from "effect/Scope";
 import type * as Stream from "effect/Stream";
-import type { Socket } from "effect/socket";
+import type * as Socket from "effect/socket/Socket";
 import type { ObsConfig, ObsConfigInputOptions, StartRecordingRequest } from "./Obs.models.ts";
 import type { ObsEvent, ObsOutputState, ObsRequestType } from "./ObsProtocol.models.ts";
 import type { ObsProtocolShape } from "./ObsProtocol.service.ts";

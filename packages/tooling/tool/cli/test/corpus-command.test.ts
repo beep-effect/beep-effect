@@ -65,7 +65,7 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import { ChildProcess } from "effect/process";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";

@@ -67,7 +67,7 @@ import {
 } from "./ReviewThreadState.ts";
 import type { GitHubError, Repo } from "@effected/github";
 import type * as Crypto from "effect/Crypto";
-import type { ChildProcessSpawner } from "effect/process";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import type {
   GithubIdentityError,

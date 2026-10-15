@@ -29,7 +29,7 @@
 
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
-import { Flag } from "effect/cli";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
