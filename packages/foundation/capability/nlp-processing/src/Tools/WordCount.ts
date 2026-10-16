@@ -67,4 +67,8 @@ export const WordCount = Tool.make("WordCount", {
   failureMode: "return",
   parameters: WordCountParameters,
   success: S.toEncoded(WordCountSuccess),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

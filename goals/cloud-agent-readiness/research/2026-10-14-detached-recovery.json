@@ -1,0 +1,47 @@
+{
+  "recovered_existing_fixture": {
+    "jobId": "47540838-76d6-4560-abb9-a24c15026688",
+    "phase": "terminated",
+    "outcome": null,
+    "systemd": {
+      "serviceResult": "timeout",
+      "exitCode": "killed",
+      "exitStatus": "15",
+      "invocationId": "9b6eddf494d548b4bdb75e90fda44a10",
+      "finalizedAt": "2026-10-14T11:00:04.024Z"
+    },
+    "terminationReason": "timeout",
+    "publishedAt": "2026-10-14T11:00:04.069Z",
+    "synthetic_fixture": true,
+    "source_base": "d0d865431e plus task-accounting sentinel fix",
+    "reset_failed_used_for_recovery": false,
+    "wait_exit_code": 3
+  },
+  "fresh_final_source_fixture": {
+    "jobId": "d46b276a-48a4-4294-aaa4-de42a80a2e9b",
+    "phase": "terminated",
+    "terminationReason": "timeout",
+    "systemd": {
+      "serviceResult": "timeout",
+      "exitCode": "killed",
+      "exitStatus": "15",
+      "invocationId": "2f8012666792438a9549e719a45b0418",
+      "finalizedAt": "2026-10-14T11:10:38.261Z"
+    },
+    "unitAfterRecovery": "LoadState=loaded\nActiveState=failed\nMainPID=0\nControlPID=0\nResult=timeout\nTasksCurrent=[not set]",
+    "resetFailedUsed": false,
+    "syntheticFixture": true,
+    "fixture_exit_code": 0
+  },
+  "source_sha256": "ca57d21619688b9e23595a57139c8a9e381bcd275f24f9bbfbade35e6ca48543",
+  "validation": {
+    "proof_job_tests": 104,
+    "new_regressions": 16
+  },
+  "observer_budget": {
+    "memory_max_bytes": 1073741824,
+    "swap_max_bytes": 67108864,
+    "cpu_percent": 100,
+    "tasks_max": 128
+  }
+}

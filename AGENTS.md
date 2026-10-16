@@ -21,8 +21,8 @@ Named roles below are explicit assignments, not substitutions. Preserve the
 lightweight route (`child.lightweight` = `gpt-6-luna`,
 `ANTHROPIC_DEFAULT_HAIKU_MODEL`) for lightweight tasks.
 
-**Fallback chains**, keyed by the originating orchestrator, medium effort
-wherever the route supports it:
+**Fallback chains**, only on confirmed quota, availability or unsupported-model
+failures, with existing subscriptions and authorized billing:
 
 | Originator | 1 | 2 | 3 |
 | --- | --- | --- | --- |
@@ -98,8 +98,15 @@ reports drift against the manifest):
   tree dirty for the orchestrator to commit, and follow the same data
   boundary as Cursor lanes (D11).
 
-Manifest projection (tool-owned; `beep models check` compares it with
-`~/.config/beep/models.yaml`):
+**Surface pins.** Codex CLI uses `--model gpt-6.1-sol` and
+`-c 'model_reasoning_effort="medium"'`; plugins use `--effort medium`; proxy
+Workflow children use `gpt-6.1-sol(medium)`. Native Claude children use the
+explicit Opus id with medium effort. Cursor CLI uses the medium-suffixed id;
+its SDK has a separate model/effort contract. Keep Cursor's existing sandbox,
+D11 corpus boundary and D21 git/sudo/pkexec denials. grok-build uses grok-4.7
+medium and must return its result or blocker without further delegation.
+
+Manifest projection (tool-owned; `beep models check`):
 
 <!-- beep-models:begin volume-pools -->
 | Role | Surface | Model | Effort |

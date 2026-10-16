@@ -5,11 +5,18 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as S from "effect/Schema";
 import { readTurboCacheEnvironmentSync } from "../../../internal/cli/EnvConfig.ts";
 import { resolveTurboCachePlan, turboCachePlanArgs } from "../../../internal/cli/TurboCache.ts";
 import { QualityTaskStep } from "../../../internal/process/index.ts";
@@ -609,15 +616,23 @@ export const githubCheckPrePushExternalLanes = (repoRoot: string): ReadonlyArray
   githubCheckLane("quality:nix", "pre-push", "environment", "preflight", ciLaneStep(repoRoot, "quality:nix", "nix")),
 ];
 
+const CheapGateConcurrency = LiteralKit(["1", "2", "3", "4"]).annotate(
+  $RepoCliId.create("commands/Quality/internal/GithubChecks").annote("CheapGateConcurrency", {
+    description: "Explicit cheap-gate lane widths, bounded by the workstation default of four.",
+  })
+);
+const decodeCheapGateConcurrency = S.decodeUnknownOption(CheapGateConcurrency);
+
 /**
  * Lanes one local proof tier runs at once.
  *
  * **Details**
  *
- * The cheap tier is sixteen-odd sub-second gates that each pay a
- * `bun run beep` boot, so it runs four abreast; wave order still decides
- * which red is reported first. Pre-push lanes are heavy Turbo runs that already saturate
- * the machine, so that tier stays serial (quality-lane audit 2026-09-09, D9).
+ * Cheap gates default to four lanes. Constrained workers can set
+ * `BEEP_QUALITY_CHEAP_GATE_CONCURRENCY` to 1, 2, 3 or 4. Missing settings
+ * retain the default; malformed settings warn and clamp to one lane.
+ * Pre-push lanes stay serial. The width is read
+ * at call time, and does not change wave order or which gates are required.
  *
  * **Example** (Read the cheap tier's width)
  *
@@ -633,7 +648,38 @@ export const githubCheckPrePushExternalLanes = (repoRoot: string): ReadonlyArray
  * @since 0.0.0
  */
 export const githubCheckTierConcurrency = (tier: GithubCheckLaneTier): number =>
-  GithubCheckLaneTier.$match(tier, { "cheap-gates": () => 4, "pre-push": () => 1 });
+  GithubCheckLaneTier.$match(tier, {
+    "cheap-gates": () =>
+      O.match(
+        Effect.runSync(
+          Config.option(Config.String("BEEP_QUALITY_CHEAP_GATE_CONCURRENCY")).parse(
+            ConfigProvider.fromEnv({ preserveEmptyStrings: true })
+          )
+        ),
+        {
+          onNone: () => 4,
+          onSome: (value) =>
+            O.match(decodeCheapGateConcurrency(value), {
+              onNone: () => {
+                Effect.runSync(
+                  Console.warn(
+                    "[quality] Invalid BEEP_QUALITY_CHEAP_GATE_CONCURRENCY; expected 1, 2, 3 or 4. Using 1 lane."
+                  )
+                );
+                return 1;
+              },
+              onSome: (width) =>
+                CheapGateConcurrency.$match(width, {
+                  "1": () => 1,
+                  "2": () => 2,
+                  "3": () => 3,
+                  "4": () => 4,
+                }),
+            }),
+        }
+      ),
+    "pre-push": () => 1,
+  });
 
 const fallowGithubCheckLaneId = (featureFamily: FallowQualityFeatureFamily): string => `fallow:${featureFamily}`;
 

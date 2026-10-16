@@ -1,0 +1,10 @@
+# beep-worker-graft-guard/v1
+[Unit]
+Description=Shared resource budget for worker Graft commands
+
+[Slice]
+MemoryHigh=6G
+MemoryMax=8G
+MemorySwapMax=256M
+CPUQuota=200%
+TasksMax=128

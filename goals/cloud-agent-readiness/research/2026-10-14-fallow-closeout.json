@@ -1,0 +1,87 @@
+{
+  "source_head": "83658c6ab5f1d33aba817375cafcf225822d27fd",
+  "main_merged": "09b24dba55861cf6e69e2c4aa81ac05ad66b00b6",
+  "merge_commit": "3dd9e7d6f5",
+  "local_audit": {
+    "schemaVersion": "fallow-report-envelope/v1",
+    "toolVersion": "fallow 3.32.0",
+    "command": "beep quality fallow audit --base origin/main --check --out .beep/fallow/audit.readiness-fix.json --quiet",
+    "subcommand": "audit",
+    "baseRef": "origin/main",
+    "generatedAt": "2026-10-14T12:56:09.990Z",
+    "advisory": false,
+    "dirtyWorktree": false,
+    "reportPath": ".beep/fallow/audit.readiness-fix.json",
+    "rawOutputRef": ".beep/fallow/raw/audit.readiness-fix.combined.txt",
+    "attributionKinds": ["not-applicable"],
+    "findingAttributionSummary": {
+      "introduced": 0,
+      "inheritedAdjacent": 0,
+      "notApplicable": 0
+    },
+    "status": "ok",
+    "exitStatus": 0,
+    "report": {
+      "findingCount": 0,
+      "findings": []
+    }
+  },
+  "focused_tests": 121,
+  "package_quick": "lint and tsc-rs type checks pass after frozen install and dependency rebuild",
+  "first_worker_run": {
+    "source_head": "83658c6ab5f1d33aba817375cafcf225822d27fd",
+    "jobId": "ce1ce0b9-d0ff-420f-b7d5-6fd5d8641b06",
+    "phase": "finished",
+    "outcome": {
+      "verdictOutcome": "failure",
+      "verdictPath": "/home/elpresidank/YeeBois/projects/beep-effect-worktrees/yeet-fallow-proof/.beep/yeet/runs/chore_worker-fallow-proof-da75fb418f59/verdict.json",
+      "elapsedMs": 770456,
+      "endedAt": "2026-10-14T13:09:12.302Z"
+    },
+    "systemd": {
+      "serviceResult": "exit-code",
+      "exitCode": "exited",
+      "exitStatus": "1",
+      "invocationId": "58d2e1bffbd3413a8e0b9552841cdfcb",
+      "finalizedAt": "2026-10-14T13:09:15.865Z"
+    },
+    "wait_exit_code": 1,
+    "blocking_gate": "quality:cache-policy",
+    "all_fallow_gates": "passed",
+    "archive_sha256": "04036f41bf8a6f68410de9ae8e4f9ee384665ce9f2ea28cd34b2d42be5922a8a"
+  },
+  "cache_integration_correction": {
+    "source_head": "bc1ff53d58",
+    "change": "Removed unused scheduling variable from Turbo pass-through; top-level proof forwarding preserved.",
+    "local_blocking_findings": 0,
+    "unassessed_cached_computations": 1335
+  },
+  "final_worker_run": {
+    "source_head": "bc1ff53d5857f9b70edffc4bef3970d175f3caf6",
+    "jobId": "7d824a2f-ef10-4748-a6fa-7884fa0e438d",
+    "phase": "finished",
+    "outcome": {
+      "verdictOutcome": "success",
+      "verdictPath": "/home/elpresidank/YeeBois/projects/beep-effect-worktrees/yeet-fallow-proof/.beep/yeet/runs/chore_worker-fallow-proof-da75fb418f59/verdict.json",
+      "elapsedMs": 613502,
+      "endedAt": "2026-10-14T13:24:01.243Z"
+    },
+    "systemd": {
+      "serviceResult": "success",
+      "exitCode": "exited",
+      "exitStatus": "0",
+      "invocationId": "b41866bc35ef4fbab97994e25e1551a3",
+      "finalizedAt": "2026-10-14T13:24:04.859Z"
+    },
+    "publishedAt": "2026-10-14T13:24:04.913Z",
+    "wait_exit_code": 0,
+    "runtime_ceiling_seconds": 900,
+    "proof_tier": "cheap-gates",
+    "submission_base": "HEAD",
+    "fallow_audit_base": "origin/main",
+    "observed_service_peak_bytes": 7352356864,
+    "observation_is_final_maximum": false,
+    "cleanup_intervention_required": false,
+    "archive_sha256": "571234116c59b9916a076e7a9637e0c3b75f7e60834fb4096aa2a231f926372e"
+  }
+}

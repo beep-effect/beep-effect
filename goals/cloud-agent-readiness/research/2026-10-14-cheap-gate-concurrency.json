@@ -1,0 +1,30 @@
+{
+  "jobId": "ab46f014-63e0-4b26-8641-6dfb8ed19c6b",
+  "source_head": "b54d6becdfbf6c73936ff548dbe1113a198e2b30",
+  "base": "HEAD",
+  "runtime_seconds": 600,
+  "width": 1,
+  "live_setting_verified": true,
+  "live_ssh_agent_absent": true,
+  "phase": "terminated",
+  "outcome": null,
+  "terminationReason": "finalizer-missing",
+  "systemd": {
+    "serviceResult": "unknown",
+    "invocationId": "b152fd9415924f6eac145d54d084543a",
+    "finalizedAt": "2026-10-14T11:43:39.260Z"
+  },
+  "wait_exit_code": 3,
+  "observed_service_result": "timeout",
+  "observed_peak_bytes": 8004046848,
+  "tasks_after_failed": 39,
+  "steady_pressure": "some avg10=0.00 avg60=0.14 avg300=0.22 total=1259479\nfull avg10=0.00 avg60=0.14 avg300=0.22 total=1258898\n",
+  "late_pressure": "some avg10=79.91 avg60=57.88 avg300=18.70 total=64508091\nfull avg10=79.81 avg60=57.81 avg300=18.68 total=64473252\n",
+  "soft_limit_restored_bytes": 7516192768,
+  "hard_limit_unchanged_bytes": 8589934592,
+  "archive_sha256": "777cd5ea44b3c079d89d76a21a4cbc10f585e3c9e030e467f33f9c3530230dd2",
+  "tests": {
+    "quality_and_proof": 361,
+    "final_forwarding_proof_suite": 104
+  }
+}

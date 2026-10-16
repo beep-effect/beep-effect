@@ -1,0 +1,23 @@
+{
+  "jobId": "e37b3d3c-c737-43f0-9171-36cc5bc79217",
+  "head": "ad60586d52e14782fc432cc75c0e609edaa24930",
+  "base": "HEAD",
+  "runtime_seconds": 600,
+  "phase": "terminated",
+  "outcome": null,
+  "terminationReason": "finalizer-missing",
+  "systemd": {
+    "serviceResult": "unknown",
+    "invocationId": "c0a61b73a47243b584f86d0492e1ecd2",
+    "finalizedAt": "2026-10-14T11:25:27.658Z"
+  },
+  "wait_exit_code": 3,
+  "observed_unit_result": "timeout",
+  "observed_unit_peak_bytes": 8402550784,
+  "remaining_tasks_after_failed": 88,
+  "memory_pressure_snapshot": "memory.events\nlow 0\nhigh 289751\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 3\nmemory.pressure\nsome avg10=98.34 avg60=95.15 avg300=54.20 total=379643433\nfull avg10=98.25 avg60=94.62 avg300=53.48 total=368967425\nmemory.current\n8259739648\nmemory.max\n8589934592\nmemory.high\n7516192768\ncpu.max\n200000 100000\n",
+  "cleanup_soft_threshold_bytes": 8589934592,
+  "restored_soft_threshold_bytes": 7516192768,
+  "unchanged_hard_ceiling_bytes": 8589934592,
+  "archive_sha256": "86bca6da28b1405e0aff22ea88798425a25b280896ee4f46f653ff7fa4b9d3e9"
+}

@@ -347,6 +347,38 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("checks and persists every file across a released multi-file corpus", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const files = A.makeBy(80, (index) => `apps/bounded/source-${index}.ts`);
+          const source = 'import { Effect } from "effect";\nexport const value = Effect.void;\n';
+          for (const file of files) yield* writeProjectFile(file, source);
+          const options = EffectImportRulesOptions.make({
+            effectOnly: true,
+            strictCheck: true,
+            promotedFamilyPrefixes: ["apps"],
+          });
+          const dryRun = yield* runEffectImportRules(options);
+          expect(dryRun.scannedFiles).toBe(80);
+          expect(dryRun.rootImportsRewritten).toBe(80);
+          expect(dryRun.strictFailure).toBe(true);
+          for (const file of files) expect(yield* readProjectFile(file)).toBe(source);
+          const written = yield* runEffectImportRules(EffectImportRulesOptions.make({ ...options, write: true }));
+          expect(written.scannedFiles).toBe(80);
+          expect(written.rootImportsRewritten).toBe(80);
+          for (const file of files) {
+            expect(yield* readProjectFile(file)).toContain('import * as Effect from "effect/Effect";');
+          }
+          const checked = yield* runEffectImportRules(options);
+          expect(checked.scannedFiles).toBe(80);
+          expect(checked.touchedFiles).toBe(0);
+          expect(checked.strictFailure).toBe(false);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("scans the union of explicit files and include prefixes", () =>
       Effect.andThen(
         temporaryWorkingDirectory,

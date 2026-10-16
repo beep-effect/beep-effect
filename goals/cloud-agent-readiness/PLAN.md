@@ -1,4 +1,4 @@
-# Cloud Agent Readiness Plan
+# Agent and Linux Development Readiness Plan
 
 > Bootstrap history: references to `scripts/cloud-session-setup.sh` below record
 > the original 2026-10-01 acceptance. That script is retired by workstream C;
@@ -111,3 +111,42 @@ shellcheck scripts/cloud-session-setup.sh
 bash scripts/cloud-session-setup.sh --check
 bun run beep lint reflection-artifacts
 ```
+
+## Managed Linux workstreams — added 2026-10-14
+
+| Phase | Status | Work | Exit |
+| --- | --- | --- | --- |
+| L0 Inventory | complete (beep-worker) | Compare workstation tooling and live host state; record exact sudo mechanism on dankserver. | Sanitized inventory with explicit reuse decisions. |
+| L1 Access and hardening | complete (beep-worker) | Finish beep-worker tailnet enrollment, pam_rssh YubiKey sudo and OpenSSH hardening; verify fresh access before retiring bootstrap access. | Fresh SSH and sudo proofs plus recovery receipt. |
+| L2 Tools and authentication | in-progress | Install language/build/container/agent tools and the approved 1Password shim; reuse the authorized service account securely; prove required provider and registry operations. | Version, runtime and authentication receipts with remaining human sign-ins named. |
+| L3 Development proof | complete (beep-worker) | Clean checkout, frozen install, Beep CLI and representative package verification; document resource budgets and tailnet development access. | Real package proof on each admitted worker. |
+| L4 Fleet closeout | pending | Reconcile Linux and cloud acceptance, PR readiness and reflection. | All admitted surfaces proven or explicitly recorded as blocked; existing closeout gate passes. |
+
+Staking host provisioning stays isolated from its running validators. Do not
+migrate them to VMs, install a development stack on the staking host, or expose
+its credentials as a shortcut to making a worker ready.
+
+## Workstation parity and headless qualification
+
+1. Scan DankStation's CLI/version/manager/wrapper/service surfaces; decide reuse
+   from live evidence and architecture doctrine, not copied home directories.
+2. Install the admitted baseline and explicit GUI additions on beep-worker;
+   separate install/configuration/authentication/runtime proof for every row.
+3. Run bounded headless sessions without an admin agent in a disposable checkout.
+   Collect reports and logs; reconcile Yeet/docs/config assumptions against this
+   host rather than silently teaching agents DankStation's absolute commands.
+4. Convert friction into named additions in this plan and the normative spec.
+   Commit progress on feat/linux-agent-readiness; publish only through repo gates.
+
+## Findings-driven additions (headless wave 1)
+
+| Owner / work item | Required proof | State |
+| --- | --- | --- |
+| Linux bootstrap: bunx, native dependencies, model manifest, GUI launch PATH and project trust | Fresh SSH/GUI command resolution and fresh headless startup | in-progress; bunx fixed |
+| Audit harness: independent dependencies and correct ledger attribution | Independent frozen install; intended checkout/state root identified | pending |
+| Managed-host capabilities: systemd/network/write/desktop availability | Same probes per admitted execution profile | pending |
+| MCP workflow matrix and connector authentication | Expected tools connect; optional IDE tools do not stall headless startup | Seven read-only worker tool paths and native Codex calls pass; Stately OAuth, optional IDE/browser/outbox workflows and Claude quota rerun remain open |
+| Graft and Effect references | Structural graph and reference query, without deep-model work | worker Beep/Effect and scoped federation qualified; eleven member graphs fresh; Alchemy parse coverage and aggregate resource limits remain open |
+| Current bootstrap and closeout doctrine | Retired commands historical only; one closeout boundary per host | pending |
+| Detached Yeet qualification | Bounded job/slice lifecycle and terminal receipt | partial: complete serial cheap-gate tier passes with normal detached finalization and wait 0; guarded terminal recovery and cancellation also proven; heavy/full proof remains open; repeat boot, guarded proxy startup and headless GitHub credential retrieval pass |
+| Cloud credentials: Azure/Vercel/Cloudflare/AWS/Pulumi | Actual output-suppressed authenticated operation per selected account/project | complete for worker read-only access: Azure/Vercel/Cloudflare checks, AWS identity/state bucket, and S3 Pulumi stack discovery pass; deployments remain separate |

@@ -1,0 +1,80 @@
+{
+  "source_head": "eb88285357",
+  "isolated_exit_code": 0,
+  "wall_seconds": 107.5,
+  "max_rss_kib": 6149228,
+  "service_memory_peak": "5.8G",
+  "service_swap_peak_bytes": 0,
+  "scanned_files": 3698,
+  "summary_sha256": "f860ffa90f7f7ca654947cec837bfe890a18ec05855c5f23fffa66b13534416b",
+  "summary_equals_cache_release_probe": true,
+  "cache_release_probe": {
+    "wall_seconds": 152.1,
+    "max_rss_kib": 6901564,
+    "service_memory_peak": "6.7G",
+    "exit_code": 0
+  },
+  "result_lines": [
+    "[schema-first] live_entries=123",
+    "[schema-first] tracked_entries=123",
+    "[schema-first] missing_entries=0",
+    "[schema-first] stale_entries=0",
+    "[schema-first] enforced_candidates=0",
+    "[schema-first] literal_kit_const_assertions=0",
+    "[schema-first] sfv4_boundary_codec_advisories=0",
+    "[schema-first] sfv4_defaults_advisories=0",
+    "[schema-first] sfv4_static_api_advisories=0",
+    "[schema-first] sfv4_equivalence_advisories=0",
+    "[schema-first] sfv4_precision_audit_advisories=0",
+    "[schema-first] sfv4_arbitrary_tests_advisories=0",
+    "[schema-first] sfv4_numeric_domain_advisories=0",
+    "[schema-first] sfv4_fn_schema_advisories=0",
+    "[schema-first] sfv4_normalization_advisories=0",
+    "[schema-first] sfv4_null_return_advisories=0",
+    "[schema-first] sfv4_getsomes_struct_advisories=0",
+    "[schema-first] sfv4_default_wrapper_occurrences=0 baseline=0 introduced=0 resolved=0",
+    "[schema-first] sfv4_opaque_wrapper_occurrences=0 baseline=0 introduced=0 resolved=0",
+    "[schema-first] sfv4_codec_static_occurrences=0 baseline=0 introduced=0 resolved=0",
+    "[schema-first] crispening_policy_exempt=0",
+    "[schema-first] parity ratchet ok: current=0 baseline=0 introduced=0 resolved=0"
+  ],
+  "tests": 91,
+  "detached_rerun": {
+    "jobId": "40549b52-5329-4e74-af9a-7132707f5ebc",
+    "phase": "terminated",
+    "terminationReason": "timeout",
+    "systemd": {
+      "serviceResult": "timeout",
+      "exitCode": "exited",
+      "exitStatus": "130",
+      "invocationId": "7ba0599d652d48ce80436dada9abd260",
+      "finalizedAt": "2026-10-14T12:27:29.350Z"
+    },
+    "publishedAt": "2026-10-14T12:27:29.394Z",
+    "wait_exit_code": 3,
+    "runtime_seconds": 600,
+    "schema_first_gate_duration_ms": 117123.948587,
+    "import_gate_duration_ms": 97126.077077,
+    "observed_service_peak_bytes": 7497584640,
+    "soft_limit_bytes": 7516192768,
+    "hard_limit_bytes": 8589934592,
+    "pressure_during_schema_first": "some avg10=0.00 avg60=0.00 avg300=0.00 total=10744\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=10742\n",
+    "cleanup_relief_used": false,
+    "last_active_gate": "fallow:health",
+    "introduced_audit_findings": [
+      {
+        "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJobLauncher.ts",
+        "symbol": "readLocked",
+        "cyclomatic": 23,
+        "cognitive": 21
+      },
+      {
+        "file": "packages/tooling/tool/cli/src/commands/Models/Models.service.ts",
+        "symbol": "bindingProblem",
+        "cyclomatic": 13,
+        "cognitive": 14
+      }
+    ],
+    "archive_sha256": "b544d0356a2d8609e1b74cdd1c80b34c5f651a0bd73a4bff7325e3fab419c336"
+  }
+}

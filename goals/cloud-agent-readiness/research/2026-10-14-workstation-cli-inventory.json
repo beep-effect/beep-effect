@@ -1,0 +1,287 @@
+{
+  "date": "2026-10-14",
+  "scope": "development, cloud, agent and headless CLI candidates; explicit GUI exceptions tracked separately",
+  "method": "PATH resolution in the invoking workstation environment; presence is not runtime/authentication proof",
+  "tools": [
+    {
+      "tool": "git",
+      "path": "/usr/bin/git"
+    },
+    {
+      "tool": "gh",
+      "path": "/usr/bin/gh"
+    },
+    {
+      "tool": "node",
+      "path": "~/.local/share/vite-plus/bin/node"
+    },
+    {
+      "tool": "npm",
+      "path": "~/.local/share/vite-plus/bin/npm"
+    },
+    {
+      "tool": "bun",
+      "path": "~/.local/share/vite-plus/bin/bun"
+    },
+    {
+      "tool": "pnpm",
+      "path": "~/.local/share/vite-plus/bin/pnpm"
+    },
+    {
+      "tool": "yarn",
+      "path": "~/.local/share/vite-plus/bin/yarn"
+    },
+    {
+      "tool": "corepack",
+      "path": "~/.local/share/mise/installs/node/24.19.0/bin/corepack"
+    },
+    {
+      "tool": "vp",
+      "path": "~/.local/share/vite-plus/bin/vp"
+    },
+    {
+      "tool": "portless",
+      "path": "~/.local/share/mise/installs/npm-portless/latest/node_modules/.bin/portless"
+    },
+    {
+      "tool": "python",
+      "path": "~/.local/share/mise/installs/python/latest/bin/python"
+    },
+    {
+      "tool": "python3",
+      "path": "~/.local/share/mise/installs/python/latest/bin/python3"
+    },
+    {
+      "tool": "uv",
+      "path": "~/.local/bin/uv"
+    },
+    {
+      "tool": "pipx",
+      "path": "/usr/bin/pipx"
+    },
+    {
+      "tool": "rustc",
+      "path": "~/.cargo/bin/rustc"
+    },
+    {
+      "tool": "cargo",
+      "path": "~/.cargo/bin/cargo"
+    },
+    {
+      "tool": "rustup",
+      "path": "~/.cargo/bin/rustup"
+    },
+    {
+      "tool": "go",
+      "path": "~/.local/share/mise/shims/go"
+    },
+    {
+      "tool": "mise",
+      "path": "/usr/bin/mise"
+    },
+    {
+      "tool": "direnv",
+      "path": "~/.local/share/mise/installs/direnv/latest/direnv"
+    },
+    {
+      "tool": "docker",
+      "path": "/usr/local/bin/docker"
+    },
+    {
+      "tool": "kubectl",
+      "path": "/usr/bin/kubectl"
+    },
+    {
+      "tool": "minikube",
+      "path": "/usr/bin/minikube"
+    },
+    {
+      "tool": "kind",
+      "path": "/usr/bin/kind"
+    },
+    {
+      "tool": "terraform",
+      "path": "~/.local/share/mise/shims/terraform"
+    },
+    {
+      "tool": "pulumi",
+      "path": "~/.local/share/mise/installs/pulumi/latest/pulumi/pulumi"
+    },
+    {
+      "tool": "aws",
+      "path": "/usr/bin/aws"
+    },
+    {
+      "tool": "aws-vault",
+      "path": "/usr/bin/aws-vault"
+    },
+    {
+      "tool": "az",
+      "path": "/usr/bin/az"
+    },
+    {
+      "tool": "vercel",
+      "path": "~/.bun/bin/vercel"
+    },
+    {
+      "tool": "cloudflared",
+      "path": "/usr/bin/cloudflared"
+    },
+    {
+      "tool": "rclone",
+      "path": "/usr/bin/rclone"
+    },
+    {
+      "tool": "ansible",
+      "path": "/usr/bin/ansible"
+    },
+    {
+      "tool": "ansible-playbook",
+      "path": "/usr/bin/ansible-playbook"
+    },
+    {
+      "tool": "ssh",
+      "path": "/usr/bin/ssh"
+    },
+    {
+      "tool": "rsync",
+      "path": "/usr/bin/rsync"
+    },
+    {
+      "tool": "jq",
+      "path": "/usr/bin/jq"
+    },
+    {
+      "tool": "yq",
+      "path": "~/.local/share/mise/shims/yq"
+    },
+    {
+      "tool": "rg",
+      "path": "/usr/bin/rg"
+    },
+    {
+      "tool": "fd",
+      "path": "/usr/bin/fd"
+    },
+    {
+      "tool": "fzf",
+      "path": "/usr/bin/fzf"
+    },
+    {
+      "tool": "bat",
+      "path": "/usr/bin/bat"
+    },
+    {
+      "tool": "eza",
+      "path": "/usr/bin/eza"
+    },
+    {
+      "tool": "just",
+      "path": "~/.local/share/mise/shims/just"
+    },
+    {
+      "tool": "make",
+      "path": "/usr/bin/make"
+    },
+    {
+      "tool": "gcc",
+      "path": "/usr/bin/gcc"
+    },
+    {
+      "tool": "cmake",
+      "path": "/usr/bin/cmake"
+    },
+    {
+      "tool": "ninja",
+      "path": "/usr/bin/ninja"
+    },
+    {
+      "tool": "sqlite3",
+      "path": "/usr/bin/sqlite3"
+    },
+    {
+      "tool": "redis-cli",
+      "path": "/usr/bin/redis-cli"
+    },
+    {
+      "tool": "chromium",
+      "path": "/usr/bin/chromium"
+    },
+    {
+      "tool": "google-chrome-stable",
+      "path": "/usr/bin/google-chrome-stable"
+    },
+    {
+      "tool": "firefox",
+      "path": "/usr/bin/firefox"
+    },
+    {
+      "tool": "codex",
+      "path": "~/.local/bin/codex"
+    },
+    {
+      "tool": "claude",
+      "path": "~/.local/bin/claude"
+    },
+    {
+      "tool": "cursor-agent",
+      "path": "~/.local/bin/cursor-agent"
+    },
+    {
+      "tool": "grok",
+      "path": "~/.local/bin/grok"
+    },
+    {
+      "tool": "muse",
+      "path": "~/.local/bin/muse"
+    },
+    {
+      "tool": "opencode",
+      "path": "/usr/bin/opencode"
+    },
+    {
+      "tool": "t3code",
+      "path": "~/.local/bin/t3code"
+    },
+    {
+      "tool": "graft",
+      "path": "~/.local/bin/graft"
+    },
+    {
+      "tool": "gpg",
+      "path": "/usr/bin/gpg"
+    },
+    {
+      "tool": "op",
+      "path": "~/.local/bin/op"
+    },
+    {
+      "tool": "op-doctor",
+      "path": "~/.local/bin/op-doctor"
+    },
+    {
+      "tool": "op-agent-auth",
+      "path": "~/.local/bin/op-agent-auth"
+    },
+    {
+      "tool": "ffmpeg",
+      "path": "/usr/bin/ffmpeg"
+    },
+    {
+      "tool": "convert",
+      "path": "/usr/bin/convert"
+    },
+    {
+      "tool": "pdftotext",
+      "path": "/usr/bin/pdftotext"
+    },
+    {
+      "tool": "pandoc",
+      "path": "/usr/bin/pandoc"
+    },
+    {
+      "tool": "tesseract",
+      "path": "/usr/bin/tesseract"
+    }
+  ]
+}

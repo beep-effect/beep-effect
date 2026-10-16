@@ -240,7 +240,8 @@ const handle = (output: string) =>
   });
 
 // The loop's triage lists the head's workflow runs (none here) and the job
-// launcher asks systemd whether the job's unit is still loaded.
+// launcher asks systemd whether the job's unit is still loaded and recoverable.
+// These wave tests retain a live runner, so recovery must leave the job pending.
 const platform = Layer.mergeAll(
   NodeFileSystem.layer,
   NodePath.layer,
@@ -251,6 +252,31 @@ const platform = Layer.mergeAll(
       if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected piped process");
       if (command.args[0] === "run" && command.args[1] === "list") return Effect.succeed(handle("[]"));
       if (A.contains(command.args, "LoadState")) return Effect.succeed(handle("loaded\n"));
+      if (
+        command.command === "systemctl" &&
+        A.contains(command.args, `beep-proof-${jobUuid}.service`) &&
+        A.contains(command.args, "ActiveState")
+      ) {
+        return Effect.succeed(
+          handle(
+            A.join(
+              [
+                "ActiveState=active",
+                "SubState=running",
+                "MainPID=1",
+                "ControlPID=0",
+                "TasksCurrent=1",
+                "ControlGroup=/agent-runs.slice/wave-test",
+                "Result=success",
+                "ExecMainCode=0",
+                "ExecMainStatus=0",
+                "InvocationID=",
+              ],
+              "\n"
+            )
+          )
+        );
+      }
       return Effect.die(`unexpected process: ${command.command} ${A.join(command.args, " ")}`);
     })
   )

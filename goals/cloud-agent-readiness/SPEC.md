@@ -1,4 +1,4 @@
-# Cloud Agent Readiness Spec
+# Agent and Linux Development Readiness Spec
 
 > Bootstrap history: references to `scripts/cloud-session-setup.sh` below record
 > the original 2026-10-01 acceptance. That script is retired by workstream C;
@@ -31,7 +31,7 @@ surfaced by a preflight that names the remedy instead of failing silently.
 
 ## Source Hierarchy
 
-1. The operator's request of 2026-10-01 that created this packet.
+1. The operator's requests of 2026-10-01 and 2026-10-14 that created and expanded this packet.
 2. `AGENTS.md`, `CLAUDE.md`, and the required skills (`yeet`,
    `effect-first-development`).
 3. `standards/ARCHITECTURE.md`, `standards/git-worktrees.md`,
@@ -156,3 +156,86 @@ Higher sources outrank lower sources when they conflict.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | Yeet closeout stays operator-side | D4 end state | operator | `gh` token invalid and no user bus in the container (F8, F9) | Yeet gains a `gh`-free, systemd-free publish and monitor path |
+
+## Managed Linux scope expansion — 2026-10-14
+
+This section extends the objective to make the operator's Linux machines usable
+for beep-effect development and agent work. The cloud-only non-goals and D4/D5
+continue to apply to ephemeral cloud containers; they do not prohibit the
+explicitly authorized credentials and native Codex tools on managed Linux hosts.
+
+### Decisions
+
+| Id | Decision | Reason and reversal |
+| --- | --- | --- |
+| D8 | Rename the display title to Agent and Linux Development Readiness; retain the packet path and initiative id. | Broader scope without breaking launchers or historical links; reverse by restoring the display title. |
+| D9 | Inventory the workstation's actual executable paths, versions, managers, and authentication routes before provisioning each host. Repository pins outrank workstation global versions. | A copied dotfiles directory is not a reproducible toolchain; change host configuration through dated receipts and saved originals. |
+| D10 | Managed Linux may reuse the workstation's 1Password service account, explicitly authorized by the operator. Transfer it directly over authenticated SSH into a mode-0600 file, preserve the canonical PATH shim, and suppress secret verification output. | Agents need the same approved secret route; revoke access by removing the host credential or rotating the shared account. No raw secrets, token-bearing config, session ids, or credential files enter the public repository. |
+| D11 | Use hardware-backed OpenSSH and remote sudo through a forwarded admin agent, matching dankserver's live pam_rssh configuration. Agent workloads receive neither the forwarded admin socket nor blanket passwordless sudo. Applications are reachable over the tailnet, with explicit port bindings/rules or Tailscale Serve and no public Funnel by default. | Ergonomic administration with bounded access; retain a verified recovery session and saved PAM/SSH configuration before tightening access. |
+| D12 | Keep staking services on tbk-ubuntu bare metal. Development deployment on that host requires an isolated guest with explicit CPU/RAM/I/O limits and separate storage; no staking credentials, host Docker socket, or admin agent enter it. | Resource sharing must preserve validator operation. Initial sizing is provisional until peak load and guest tests are measured; disable the guest to reverse deployment. |
+
+### Linux acceptance criteria
+
+- [ ] A sanitized inventory records each target host's role, OS, CPU/RAM/storage,
+      installed tool paths and versions, package managers, readiness and blockers.
+- [ ] beep-worker has verified Tailscale connectivity, fresh hardware-backed SSH,
+      sudo requiring a fresh YubiKey touch, fail2ban, controlled inbound access,
+      security updates without forced reboot, and a tested recovery path.
+- [ ] Git, build dependencies, Rust/Cargo, Python/uv, Node 24/nvm, pinned Bun,
+      Docker Compose/Buildx, Codex, Claude, Cursor, Grok, Muse and CLIProxyAPI are installed from official
+      sources, configured for interactive and noninteractive shells, and checked
+      with actual commands. Install optional tools only for a named workflow.
+- [ ] Docker runs a disposable container and a representative compose service;
+      expose services only on loopback or the approved tailnet surface. Choose
+      rootless operation for agent work where compatible, and document exceptions.
+- [ ] 1Password uses the approved shim and service-account lane, tested with the
+      actual required op operation and output suppressed. GitHub push/PR access,
+      private registry pulls, and agent provider access each have separate proofs
+      or a concrete human-authentication blocker. Installation is not sign-in.
+- [ ] A clean beep-effect checkout installs with the frozen lockfile using repo
+      pins, runs `bun run beep --help`, and completes a representative package
+      proof. The receipt distinguishes environment failures from source failures.
+- [ ] Each Linux machine is marked ready only for the workflows actually proven;
+      tbk-ubuntu is not marked a development worker based on spare RAM alone.
+
+### Additional verification and closure
+
+Record dated sanitized receipts under `history/` for Linux installation,
+authentication, package proof, resource limits, and recovery. Extend the existing
+PR/mergeable/reflection gate to cover these criteria. Do not mark the original
+cloud phases complete as a side effect of Linux setup. The operator excluded
+staking backup work from this task; do not add it as a setup approval gate.
+
+### Agent and proxy parity amendment
+
+The operator explicitly included Grok, Muse and CLIProxyAPI on 2026-10-14.
+Inventory native agent and proxy authentication separately: one does not prove
+the other. Preserve the workstation's sanctioned model routes, including native
+Codex and direct Claude defaults, and opt-in proxy wrappers. A proxy model
+catalog is discovery evidence, not proof of inference or every account pool.
+Account-pool sizes must be recorded; do not imply that the worker has all of the
+workstation's provider accounts after authenticating one account per provider.
+Do not copy session stores, private corpora or token-bearing configs wholesale.
+For infrastructure utilities, record exact authenticated AWS/ECR and other
+required operations separately from installing their CLI binaries.
+
+### Workstation scan and headless friction acceptance
+
+- Inventory installed development/cloud/agent CLIs, package managers, wrappers,
+  headless services and portable agent configuration on DankStation. Assume they
+  belong on admitted workers unless a documented compatibility, ownership or
+  host-specific reason changes that decision. Include Azure, Vercel, Cloudflare,
+  Cursor, Grok, Muse and CLIProxyAPI explicitly.
+- CLI/agent/headless parity is the default baseline. Chrome as default browser,
+  1Password Desktop, the workstation's ChatGPT/Codex desktop application and T3
+  Code are explicit GUI additions; the operator handles Google/extension sign-in.
+- After setup, run bounded headless agent sessions in a disposable checkout.
+  Require command/evidence-backed friction reports covering Yeet, authentication,
+  PATH, systemd, desktop hooks and absolute workstation assumptions. No forwarded
+  admin agent, secret-store inspection, cloud mutations or staking access.
+- Record introduced, inherited, host-specific and unsupported-workflow findings
+  separately in research/OPPORTUNITIES.md; add owners, remedies, verification
+  commands and reversibility to the plan before claiming environment independence.
+- This is repo-operations work under the tooling family, not new product language
+  or a foundation/shared package. Keep goal-specific host evidence in this packet;
+  any reusable typed CLI changes belong in existing tooling ownership boundaries.

@@ -674,3 +674,9 @@ remains an incomplete meaning tier: retain the pending targets and strict
 failure receipt, and report the exact coverage. Do not fabricate summaries or
 exclude the file to claim complete ingestion. Repeated identical requests do
 not provide additional diagnostic evidence.
+
+<!-- beep-models:begin graft-deep -->
+| Role | Surface | Model | Effort |
+| --- | --- | --- | --- |
+| graft.deep | proxy-workflow | `claude-opus-5-5` | — |
+<!-- beep-models:end graft-deep -->

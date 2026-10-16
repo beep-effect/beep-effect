@@ -1,0 +1,10 @@
+# Install as: ~/.config/systemd/user/agent-runs.slice
+[Unit]
+Description=Shared budget for beep-worker detached proof jobs
+
+[Slice]
+MemoryHigh=7G
+MemoryMax=8G
+MemorySwapMax=256M
+CPUQuota=200%
+TasksMax=512

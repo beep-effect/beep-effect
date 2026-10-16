@@ -749,6 +749,26 @@ const buildFoundationRootMappings = Effect.fn("EffectImports.buildFoundationRoot
   return rootMappings;
 });
 
+const foundationMappingsForFiles = Effect.fn("EffectImports.foundationMappingsForFiles")(function* (
+  discoveredSourceFiles: ReadonlyArray<string>,
+  effectExports: FlatPackageExports
+) {
+  const path = yield* Path.Path;
+  // Semantic export resolution belongs only to the foundation mapping phase.
+  // Never seed it with the complete executable corpus.
+  const mappingProject = createRepoTsMorphProject({
+    tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
+    sourceFileGlobs: [],
+  });
+  for (const filePath of discoveredSourceFiles) {
+    const relativePath = toPosixPath(path.relative(process.cwd(), filePath));
+    if (Str.startsWith("packages/foundation/")(relativePath)) {
+      mappingProject.addSourceFileAtPathIfExists(filePath);
+    }
+  }
+  return yield* buildFoundationRootMappings(mappingProject, effectExports);
+});
+
 const buildEffectRootMapping = Effect.fn("EffectImports.buildEffectRootMapping")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const manifest = yield* fs.readFileString(EFFECT_PACKAGE_JSON_PATH).pipe(Effect.flatMap(jsonParse));
@@ -1749,14 +1769,10 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
     tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
     sourceFileGlobs: [],
   });
-  for (const filePath of discoveredSourceFiles) {
-    project.addSourceFileAtPathIfExists(filePath);
-  }
-
   const effectMapping = yield* buildEffectRootMapping();
   const foundationMappings = options.effectOnly
     ? R.empty<string, ImportTargetCandidates>()
-    : yield* buildFoundationRootMappings(project, effectMapping.exports);
+    : yield* foundationMappingsForFiles(discoveredSourceFiles, effectMapping.exports);
   const rootMappings = R.set(foundationMappings, "effect", effectMapping.mappings);
 
   let rootImportsRewritten = 0;
@@ -1831,24 +1847,26 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
       }
     }
   } else {
-    const sourceFiles = pipe(
-      project.getSourceFiles(),
-      A.map((sourceFile) => ({
-        sourceFile,
-        relativePath: toPosixPath(path.relative(process.cwd(), sourceFile.getFilePath())),
-      })),
-      A.filter(({ relativePath }) => isPathInActiveScope(options, excludePaths, relativePath))
+    const sourcePaths = pipe(
+      discoveredSourceFiles,
+      A.map((filePath) => ({ filePath, relativePath: toPosixPath(path.relative(process.cwd(), filePath)) })),
+      A.filter(({ relativePath }) => isPathInActiveScope(options, excludePaths, relativePath)),
+      A.sortBy(Order.mapInput(Order.String, ({ relativePath }) => relativePath))
     );
-    scannedFiles = A.length(sourceFiles);
 
-    for (const { sourceFile, relativePath } of sourceFiles) {
+    for (const { filePath, relativePath } of sourcePaths) {
+      // These checks inspect syntax, not cross-file types. Retain only the current
+      // source tree; forgetting it releases ts-morph's descendant wrapper cache.
+      const sourceFile = project.addSourceFileAtPathIfExists(filePath);
+      if (P.isUndefined(sourceFile)) continue;
+      scannedFiles += 1;
       let fileAffected = false;
       if (options.mode === "code") {
         const transformed = tryTransformSourceFile(rootMappings, relativePath, sourceFile);
         if (O.isNone(transformed)) {
           parserWarnings = A.append(parserWarnings, `${relativePath}: cannot parse root Effect import`);
           changedFiles = A.append(changedFiles, relativePath);
-          sourceFile.refreshFromFileSystemSync();
+          sourceFile.forget();
           continue;
         }
         const sourceSummary = transformed.value;
@@ -1891,17 +1909,17 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
       if (fileAffected) {
         changedFiles = A.append(changedFiles, relativePath);
       }
+      if (options.write) {
+        yield* Effect.tryPromise({
+          try: () => sourceFile.save(),
+          catch: (cause) =>
+            EffectImportRulesPersistenceError.new(
+              `Failed to persist per-module import updates: ${Inspectable.toStringUnknown(cause, 0)}`
+            ),
+        });
+      }
+      sourceFile.forget();
     }
-  }
-
-  if (options.write && options.mode !== "markdown") {
-    yield* Effect.tryPromise({
-      try: () => project.save(),
-      catch: (cause) =>
-        EffectImportRulesPersistenceError.new(
-          `Failed to persist per-module import updates: ${Inspectable.toStringUnknown(cause, 0)}`
-        ),
-    });
   }
 
   const touchedFiles = A.length(changedFiles);

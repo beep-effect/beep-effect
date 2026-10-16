@@ -1,0 +1,53 @@
+{
+  "source_head": "76dd934bb2",
+  "command": "laws effect-imports --check --json",
+  "scope": "full CLI corpus; effectOnly=true",
+  "exit_code": 0,
+  "wall_seconds": 92.03,
+  "max_rss_kib": 1092008,
+  "systemd_service_memory_peak": "1008.2M",
+  "systemd_swap_peak_bytes": 0,
+  "summary": {
+    "mappingTableVersion": "root-export-graph/v1",
+    "mode": "code",
+    "write": false,
+    "candidate": false,
+    "scannedFiles": 8079,
+    "scannedFences": 27822,
+    "touchedFiles": 0,
+    "rootImportsRewritten": 0,
+    "rootExportsRewritten": 0,
+    "emittedImports": 0,
+    "emittedExports": 0,
+    "rootSpecifierCounts": {},
+    "strictFailure": false,
+    "changedFiles": [],
+    "manualReviews": [],
+    "parserWarnings": []
+  },
+  "tests": 32,
+  "package_quick": "lint and type checks pass",
+  "first_measurement_attempt": "wrong Bun path; exited 127 before scan; corrected and reran",
+  "detached_rerun": {
+    "jobId": "ec7c5807-deb0-4a8d-b966-5b71facd6f31",
+    "phase": "terminated",
+    "terminationReason": "cancelled",
+    "systemd": {
+      "serviceResult": "exit-code",
+      "exitCode": "exited",
+      "exitStatus": "130",
+      "invocationId": "0c7ac3f17489429c88d2c8bdc8611595",
+      "finalizedAt": "2026-10-14T11:59:33.309Z"
+    },
+    "publishedAt": "2026-10-14T11:59:33.355Z",
+    "wait_exit_code": 3,
+    "import_gate_duration_ms": 97494.781077,
+    "import_scanned_files": 8079,
+    "import_scanned_fences": 27822,
+    "later_blocker": "schema-first scan memory growth",
+    "observed_schema_first_pressure": "some avg10=53.15 avg60=23.98 avg300=6.21 total=19875316\nfull avg10=52.34 avg60=23.69 avg300=6.14 total=19681081\n",
+    "cancellation_exit_code": 0,
+    "soft_threshold_relief_used": false,
+    "archive_sha256": "03bf4b6bf88b6d2935b73fb7dd7e2556f61a777a8329b7e64e5b34e2e1bd15e2"
+  }
+}

@@ -187,3 +187,9 @@ correlated against recorded `transitionstart`/`transitionend` events.
   mechanics in `motion-evidence-review`.
 - Long publishes/proofs during the loop: nohup-detached + Monitor, never a
   harness background task (10-minute cap kills them).
+
+<!-- beep-models:begin qa-judge -->
+| Role | Surface | Model | Effort |
+| --- | --- | --- | --- |
+| qa.judge | claude-code | `claude-opus-5-5` | — |
+<!-- beep-models:end qa-judge -->

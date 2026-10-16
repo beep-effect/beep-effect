@@ -197,7 +197,7 @@ export class TierGateAuditRecord extends S.Opaque<TierGateAuditRecord, { readonl
  * **Example** (Decode approved verdict)
  *
  * ```ts
- * import { TierGateVerdict } from "@beep/mcp-kit"
+ * import { TierGateVerdict } from "@beep/mcp-kit/TierGate"
  * import * as S from "effect/Schema"
  *
  * const verdict = S.decodeUnknownSync(TierGateVerdict)({

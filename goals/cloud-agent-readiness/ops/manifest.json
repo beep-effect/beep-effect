@@ -2,18 +2,18 @@
   "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "cloud-agent-readiness",
-    "title": "Cloud Agent Readiness",
+    "title": "Agent and Linux Development Readiness",
     "status": "active",
     "created": "2026-10-01",
-    "updated": "2026-10-01",
+    "updated": "2026-10-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/cloud-agent-readiness",
   "lifecycle": "active",
-  "mission": "Make a fresh hosted agent container able to install, prove, and publish from this repo without a workstation: pinned bun, reachable registries, host-aware hooks, and a documented publish handoff where gh, systemd, and 1Password do not exist.",
+  "mission": "Prove development and agent readiness in hosted containers and on managed Linux workers: secure access, pinned toolchains, authorized authentication, isolated compute, and real beep-effect package proof.",
   "executionCapable": true,
   "reflectionRequired": true,
-  "statusNote": "Opened 2026-10-01 at the operator's request after the first cloud probe session could not install dependencies (bun 1.3.14 vs pinned 1.4.2; bun.sh and pkg.pr.new denied by the environment's network policy). Accelerator: runs in parallel, takes no lane slot. Original cloud-session-setup.sh verification commands are historical; current bootstrap is scripts/cloud/bootstrap.sh. Lifecycle is unchanged.",
+  "statusNote": "Opened 2026-10-01 at the operator's request after the first cloud probe session could not install dependencies (bun 1.3.14 vs pinned 1.4.2; bun.sh and pkg.pr.new denied by the environment's network policy). Accelerator: runs in parallel, takes no lane slot. Original cloud-session-setup.sh verification commands are historical; current bootstrap is scripts/cloud/bootstrap.sh. Lifecycle is unchanged. Expanded 2026-10-14 to managed Linux readiness under D8-D12 and L0-L4; stable packet id/path retained.",
   "provenance": {
     "request": "operator",
     "captured": "2026-10-01",
@@ -87,6 +87,34 @@
     {
       "id": "P6",
       "name": "Close",
+      "status": "pending"
+    },
+    {
+      "id": "L0",
+      "name": "Linux inventory",
+      "status": "complete",
+      "exit": "beep-worker proof recorded in history/2026-10-14-linux-worker-readiness.md; other hosts have separate admission boundaries."
+    },
+    {
+      "id": "L1",
+      "name": "Linux access and hardening",
+      "status": "complete",
+      "exit": "beep-worker proof recorded in history/2026-10-14-linux-worker-readiness.md; other hosts have separate admission boundaries."
+    },
+    {
+      "id": "L2",
+      "name": "Linux tools and authentication",
+      "status": "in-progress"
+    },
+    {
+      "id": "L3",
+      "name": "Linux development proof",
+      "status": "complete",
+      "exit": "beep-worker proof recorded in history/2026-10-14-linux-worker-readiness.md; other hosts have separate admission boundaries."
+    },
+    {
+      "id": "L4",
+      "name": "Linux fleet closeout",
       "status": "pending"
     }
   ],

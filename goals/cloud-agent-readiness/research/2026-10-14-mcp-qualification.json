@@ -1,0 +1,216 @@
+{
+  "worker_checkout": "c080bf6f6d plus WordCount annotation patch",
+  "servers": [
+    {
+      "server": "beep-m365-outbox",
+      "ssh_agent_present": false,
+      "initialized": true,
+      "serverInfo": {
+        "name": "beep-m365-outbox",
+        "version": "0.1.0"
+      },
+      "protocolVersion": "2025-06-18",
+      "tool_count": 6,
+      "owned_process_exited": true
+    },
+    {
+      "server": "chrome-devtools",
+      "ssh_agent_present": false,
+      "initialized": true,
+      "serverInfo": {
+        "name": "chrome_devtools",
+        "title": "Chrome DevTools MCP server",
+        "version": "1.6.0"
+      },
+      "protocolVersion": "2025-06-18",
+      "tool_count": 3,
+      "owned_process_exited": true
+    },
+    {
+      "server": "fallow",
+      "ssh_agent_present": false,
+      "initialized": true,
+      "serverInfo": {
+        "name": "fallow-mcp",
+        "version": "3.32.0",
+        "description": "Codebase analysis for TypeScript/JavaScript projects"
+      },
+      "protocolVersion": "2025-06-18",
+      "tool_count": 40,
+      "call": {
+        "name": "project_info",
+        "isError": false,
+        "content_types": ["text"],
+        "content_bytes": 923036
+      },
+      "owned_process_exited": true
+    },
+    {
+      "server": "graft",
+      "ssh_agent_present": false,
+      "initialized": true,
+      "serverInfo": {
+        "name": "graft",
+        "version": "0.21.1"
+      },
+      "protocolVersion": "2025-06-18",
+      "tool_count": 6,
+      "call": {
+        "name": "graft_find_all",
+        "isError": false,
+        "content_types": ["text"],
+        "content_bytes": 921
+      },
+      "owned_process_exited": true
+    },
+    {
+      "server": "next-devtools",
+      "ssh_agent_present": false,
+      "initialized": true,
+      "serverInfo": {
+        "name": "next-devtools-mcp",
+        "version": "0.4.0"
+      },
+      "protocolVersion": "2025-06-18",
+      "tool_count": 4,
+      "call": {
+        "name": "nextjs_index",
+        "isError": false,
+        "content_types": ["text"],
+        "content_bytes": 653
+      },
+      "owned_process_exited": true
+    },
+    {
+      "server": "nlp",
+      "ssh_agent_present": false,
+      "initialized": true,
+      "serverInfo": {
+        "name": "beep-nlp",
+        "version": "0.0.0"
+      },
+      "protocolVersion": "2025-06-18",
+      "tool_count": 42,
+      "call": {
+        "name": "WordCount",
+        "isError": false,
+        "content_types": ["text"],
+        "content_bytes": 161
+      },
+      "owned_process_exited": true
+    },
+    {
+      "server": "phoenix-docs",
+      "ssh_agent_present": false,
+      "initialized": true,
+      "serverInfo": {
+        "name": "Phoenix",
+        "version": "1.0.0"
+      },
+      "protocolVersion": "2025-06-18",
+      "tool_count": 3,
+      "call": {
+        "name": "search_phoenix",
+        "isError": false,
+        "content_types": [
+          "text",
+          "text",
+          "text",
+          "text",
+          "text",
+          "text",
+          "text",
+          "text",
+          "text",
+          "text"
+        ],
+        "content_bytes": 19010
+      }
+    },
+    {
+      "server": "phoenix",
+      "ssh_agent_present": false,
+      "initialized": true,
+      "serverInfo": {
+        "name": "Arize Phoenix",
+        "version": "20.19.0"
+      },
+      "protocolVersion": "2025-06-18",
+      "tool_count": 109,
+      "call": {
+        "name": "getProjects",
+        "isError": false,
+        "content_types": ["text"],
+        "content_bytes": 151
+      }
+    },
+    {
+      "server": "serena",
+      "ssh_agent_present": false,
+      "failure": {
+        "type": "FileNotFoundError",
+        "message": "Transport or launch failed",
+        "http_status": null
+      }
+    },
+    {
+      "server": "shadcn",
+      "ssh_agent_present": false,
+      "initialized": true,
+      "serverInfo": {
+        "name": "shadcn",
+        "version": "1.0.0"
+      },
+      "protocolVersion": "2025-06-18",
+      "tool_count": 7,
+      "call": {
+        "name": "get_project_registries",
+        "isError": false,
+        "content_types": ["text"],
+        "content_bytes": 338
+      },
+      "owned_process_exited": true
+    },
+    {
+      "server": "stately",
+      "ssh_agent_present": false,
+      "failure": {
+        "type": "HTTPError",
+        "message": "Transport or launch failed",
+        "http_status": 401
+      }
+    },
+    {
+      "server": "webstorm",
+      "ssh_agent_present": false,
+      "failure": {
+        "type": "URLError",
+        "message": "Transport or launch failed",
+        "http_status": null
+      }
+    }
+  ],
+  "codex_mcp_calls": [
+    {
+      "server": "phoenix-docs",
+      "tool": "search_phoenix",
+      "status": "completed",
+      "error": null
+    },
+    {
+      "server": "nlp",
+      "tool": "WordCount",
+      "status": "completed",
+      "error": null
+    }
+  ],
+  "codex_profile": {
+    "model": "gpt-6.1-sol",
+    "effort": "medium",
+    "sandbox": "read-only",
+    "approval": "never",
+    "ephemeral": true
+  },
+  "claude_native": "quota-blocked before tool calls",
+  "word_count": 5
+}

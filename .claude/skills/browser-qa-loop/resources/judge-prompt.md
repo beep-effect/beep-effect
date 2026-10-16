@@ -102,3 +102,9 @@ Your FINAL message must be exactly:
 2. Then the single line: `REQUIRED FINDINGS: <n>`
 
 Nothing after that line. No prose before the JSON block.
+
+<!-- beep-models:begin qa-judge -->
+| Role | Surface | Model | Effort |
+| --- | --- | --- | --- |
+| qa.judge | claude-code | `claude-opus-5-5` | — |
+<!-- beep-models:end qa-judge -->

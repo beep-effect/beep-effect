@@ -1,0 +1,83 @@
+{
+  "host": "beep-worker",
+  "head": "4199d132f6",
+  "jobs": [
+    {
+      "schemaVersion": "yeet-proof-job/v1",
+      "jobId": "2224ea7b-f347-45e0-9bc6-57795feb06b6",
+      "phase": "terminated",
+      "submittedAt": "2026-10-14T10:17:36.668Z",
+      "systemd": {
+        "serviceResult": "timeout",
+        "exitCode": "exited",
+        "exitStatus": "130",
+        "invocationId": "b14af95591f44d1f955a9ef58b4a59bb",
+        "finalizedAt": "2026-10-14T10:20:40.351Z"
+      },
+      "terminationReason": "timeout",
+      "publishedAt": "2026-10-14T10:20:40.395Z",
+      "returnedWaveRowIds": []
+    },
+    {
+      "schemaVersion": "yeet-proof-job/v1",
+      "jobId": "cbc6b437-9395-4283-8d6a-74214d33802f",
+      "phase": "terminated",
+      "submittedAt": "2026-10-14T10:22:11.407Z",
+      "systemd": {
+        "serviceResult": "unknown",
+        "invocationId": "763a1c2114ff4e56948c203862219ef9",
+        "finalizedAt": "2026-10-14T10:29:33.622Z"
+      },
+      "terminationReason": "finalizer-missing",
+      "publishedAt": "2026-10-14T10:29:33.679Z",
+      "returnedWaveRowIds": []
+    },
+    {
+      "schemaVersion": "yeet-proof-job/v1",
+      "jobId": "72ae2c71-9cd1-46ff-9524-aa9bb062dc01",
+      "phase": "finished",
+      "submittedAt": "2026-10-14T10:30:07.336Z",
+      "outcome": {
+        "verdictOutcome": "failure",
+        "elapsedMs": 1182,
+        "endedAt": "2026-10-14T10:30:11.764Z"
+      },
+      "systemd": {
+        "serviceResult": "exit-code",
+        "exitCode": "exited",
+        "exitStatus": "1",
+        "invocationId": "e3ec2fbcf3d64db3bf3face26cb22d63",
+        "finalizedAt": "2026-10-14T10:30:15.169Z"
+      },
+      "publishedAt": "2026-10-14T10:30:15.218Z",
+      "returnedWaveRowIds": []
+    }
+  ],
+  "live_evidence": {
+    "jobId": "cbc6b437-9395-4283-8d6a-74214d33802f",
+    "unit_properties": {
+      "ActiveState": "active",
+      "SubState": "running",
+      "DropInPaths": "/home/elpresidank/.config/systemd/user/beep-proof-.service.d/20-worker-environment.conf",
+      "RuntimeMaxUSec": "3min",
+      "MainPID": "71812",
+      "Slice": "agent-runs.slice",
+      "ControlGroup": "/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/beep-proof-cbc6b437-9395-4283-8d6a-74214d33802f.service",
+      "MemoryCurrent": "905891840",
+      "UnsetEnvironment": "SSH_AUTH_SOCK"
+    },
+    "submitter_exited": true,
+    "ssh_agent_present": false,
+    "slice_kernel_limits": {
+      "memory.max": "8589934592",
+      "memory.swap.max": "268435456",
+      "cpu.max": "200000 100000",
+      "pids.max": "512"
+    }
+  },
+  "finalizer_starvation_observed_unit": "ActiveState=failed\nSubState=failed\nMainPID=0\nControlPID=0\nResult=timeout\n",
+  "final_memory_high_bytes": 7516192768,
+  "max_memory_bytes": 8589934592,
+  "max_swap_bytes": 268435456,
+  "successful_full_cheap_gate_verdict": false
+}

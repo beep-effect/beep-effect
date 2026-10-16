@@ -32,18 +32,11 @@ bounded implementation, exploration and second-opinion review lanes to Junie fir
 below). Junie is not a chain step: a quota failure elsewhere still steps the originating chain
 down, and a Junie worker never delegates onward.
 
-Step down a chain only on a confirmed quota, availability, or unsupported-model failure. Direct
-Claude never appears in the Codex chain and direct Codex never in the Claude chain. Cursor and
-grok-build workers never delegate onward: they return a result or blocker to the originating
-orchestrator, which owns every cross-provider decision and launch. An unfavorable review or an
-ordinary code failure is remediated on the same route. Only existing subscriptions and
-explicitly authorized API billing are used; when a chain is exhausted, report the concrete
-blockers and hold the dependent work. Every route may implement, explore, research, and review
-(goal admission reviews included) under the same reviewer separation, source-bound evidence,
-and acceptance gates.
-
-**Codex is no longer opt-in.** The 2026-09-24 restriction is superseded; a Codex orchestrator
-runs its own chain. The meter and recipe below describe that route.
+Keep GPT-6 Luna lightweight routes and Grok 4.7 web research. Graft deep uses
+Opus 5.5 through the proxy. Junie is a bounded spend-down pool when JetBrains
+credits remain, not a fallback; Muse remains opt-in. The manifest's separate
+JSDoc title-migration specialist uses Grok 4.7. Historical probes below retain
+their dates and results; current recipes use the live declared pins.
 
 ## Meters
 

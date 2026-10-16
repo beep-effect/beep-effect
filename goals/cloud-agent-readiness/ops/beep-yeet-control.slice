@@ -1,0 +1,8 @@
+[Unit]
+Description=Worker Yeet observation budget outside proof workload pressure
+
+[Slice]
+MemoryMax=1G
+MemorySwapMax=64M
+CPUQuota=100%
+TasksMax=128

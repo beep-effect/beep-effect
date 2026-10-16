@@ -1143,6 +1143,41 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(githubCheckTierConcurrency("pre-push")).toBe(1);
     });
 
+    it("keeps cheap gates within the configured worker budget and warns on malformed settings", () => {
+      const warning = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      try {
+        for (const [value, expected, malformed] of [
+          [undefined, 4, false],
+          ["1", 1, false],
+          ["2", 2, false],
+          ["3", 3, false],
+          ["4", 4, false],
+          ["0", 1, true],
+          ["5", 1, true],
+          ["2.5", 1, true],
+          ["01", 1, true],
+          ["serial", 1, true],
+          ["", 1, true],
+        ] as const) {
+          warning.mockClear();
+          withEnvVar("BEEP_QUALITY_CHEAP_GATE_CONCURRENCY", value, () => {
+            expect(githubCheckTierConcurrency("cheap-gates")).toBe(expected);
+            expect(warning).toHaveBeenCalledTimes(malformed ? 1 : 0);
+            if (malformed) {
+              expect(warning).toHaveBeenCalledWith(
+                "[quality] Invalid BEEP_QUALITY_CHEAP_GATE_CONCURRENCY; expected 1, 2, 3 or 4. Using 1 lane."
+              );
+            }
+            warning.mockClear();
+            expect(githubCheckTierConcurrency("pre-push")).toBe(1);
+            expect(warning).not.toHaveBeenCalled();
+          });
+        }
+      } finally {
+        warning.mockRestore();
+      }
+    });
+
     // ship-velocity B1: a local green must mean what a hosted green means, so the
     // pre-push collector dispatches the hosted lane bodies verbatim instead of
     // running cousin root commands that only approximate them.

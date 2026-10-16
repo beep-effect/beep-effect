@@ -266,6 +266,33 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("SFV4-default-wrapper", 
       ).toEqual(["SFV4-default-wrapper title::withEncodeDefault@<hash>"]);
     })
   );
+  it.effect("retains barrel symbol resolution after completed source descendants are released", () =>
+    Effect.gen(function* () {
+      const project = new Project({ useInMemoryFileSystem: true });
+      project.createSourceFile(
+        "packages/foundation/modeling/schema/src/SchemaUtils/withEncodeDefault.ts",
+        "export const withEncodeDefault = <A>(schema: A): A => schema;"
+      );
+      project.createSourceFile(
+        "packages/example/src/schema.ts",
+        'export { withEncodeDefault } from "../../foundation/modeling/schema/src/SchemaUtils/withEncodeDefault";'
+      );
+      const first = yield* parityEntriesIn(project, [
+        'import * as S from "effect/Schema";',
+        'import { withEncodeDefault } from "./schema";',
+        "export const title = S.String.pipe(withEncodeDefault);",
+      ]);
+      for (const file of project.getSourceFiles()) file.forgetDescendants();
+      const source = project.getSourceFileOrThrow(fixtureFile);
+      const repeated = yield* schemaFirstParityEntriesFromSourceFile(source, {
+        file: fixtureFile,
+        owner: "@beep/test",
+      });
+      expect(readable(repeated)).toEqual(readable(first));
+      expect(readable(repeated)).toEqual(["SFV4-default-wrapper title::withEncodeDefault@<hash>"]);
+    })
+  );
+
   it.effect("names the upstream form for every live SchemaUtils default wrapper, resolved to its declaration", () =>
     Effect.gen(function* () {
       const project = schemaUtilsProject();
@@ -1080,6 +1107,55 @@ it.layer(testLayer, { timeout: "60 seconds" })("schema-first parity ratchet comm
             )(line) && Str.includes('"symbol":"Widget.title","occurrence":"Widget.title::withEncodeDefault@')(line)
         )
       ).toBe(true);
+    })
+  );
+
+  it.effect("keeps ambient inheritance and test arbitrary coverage in separate scan phases", () =>
+    Effect.gen(function* () {
+      yield* enterTempWorkingDirectory;
+      yield* writeFixture(["export interface Payload extends AmbientPayload {}"]);
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.writeFileString("packages/example/src/Ambient.d.ts", "interface AmbientPayload { id: string }");
+      yield* fs.makeDirectory("packages/example/test", { recursive: true });
+      yield* fs.writeFileString(
+        "packages/example/test/Codec.test.ts",
+        [
+          'import * as S from "effect/Schema";',
+          "S.decodeUnknownEffect(S.String);",
+          "S.decodeUnknownResult(S.String);",
+          "S.encodeUnknownEffect(S.String);",
+        ].join("\n")
+      );
+      yield* runSchemaFirst(["--write"]);
+      const inventory = yield* decodeInventory(yield* fs.readFileString("standards/schema-first.inventory.jsonc"));
+      expect(
+        A.some(inventory.entries, (entry) => entry.symbol === "Payload" && entry.kind === "exported-interface")
+      ).toBe(true);
+      expect(
+        A.some(
+          inventory.entries,
+          (entry) => entry.file === "packages/example/test/Codec.test.ts" && entry.ruleId === "SFV4-arbitrary-tests"
+        )
+      ).toBe(true);
+    })
+  );
+
+  it.effect("keeps schema classes referenced only by excluded test roots", () =>
+    Effect.gen(function* () {
+      yield* enterTempWorkingDirectory;
+      yield* writeFixture([
+        'import * as S from "effect/Schema";',
+        'export class Kept extends S.Class<Kept, { readonly brand: unique symbol }>($I`Kept`)({ id: S.String }, $I.annote("Kept", {})) {}',
+        'export class Plain extends S.Class<Plain, { readonly brand: unique symbol }>($I`Plain`)({ id: S.String }, $I.annote("Plain", {})) {}',
+      ]);
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.makeDirectory("packages/example/test", { recursive: true });
+      yield* fs.writeFileString("packages/example/test/Kept.test.ts", "const check = value instanceof Kept;");
+      yield* runSchemaFirst(["--write"]);
+      const inventory = yield* decodeInventory(yield* fs.readFileString("standards/schema-first.inventory.jsonc"));
+      const candidates = A.filter(inventory.entries, (entry) => entry.kind === "plain-data-schema-class");
+      expect(A.some(candidates, (entry) => entry.symbol === "Plain")).toBe(true);
+      expect(A.some(candidates, (entry) => entry.symbol === "Kept")).toBe(false);
     })
   );
 
