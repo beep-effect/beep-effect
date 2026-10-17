@@ -774,6 +774,13 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     "preflight",
     bunRunLane(repoRoot, "observability:catalog-check", ["beep", "observability", "catalog", "--check"])
   ),
+  githubCheckLane(
+    "quality:catalog-usage",
+    "cheap-gates",
+    "repo-sanity",
+    "preflight",
+    repoCliLane(repoRoot, "quality:catalog-usage", ["catalog-usage"])
+  ),
   tsconfigSyncLane(repoRoot, "cheap-gates"),
   githubCheckLane(
     "lint:effect-imports",

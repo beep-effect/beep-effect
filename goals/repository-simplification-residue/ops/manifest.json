@@ -111,7 +111,7 @@
     {
       "issue": "https://github.com/beep-effect/beep-effect/issues/1860",
       "lane": "residue-catalog",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "issue": "https://github.com/beep-effect/beep-effect/issues/1861",
@@ -164,5 +164,5 @@
       "status": "pending"
     }
   ],
-  "statusNote": "Opened 2026-10-17 under S36; P0 issue/source reconciliation complete, fleet admission and implementation waves next."
+  "statusNote": "Opened 2026-10-17 under S36; P0 issue/source reconciliation complete, fleet admission and implementation waves next. #1860 residue-catalog complete in the third A-train PR (history/receipts/catalog-removals-record.md)."
 }

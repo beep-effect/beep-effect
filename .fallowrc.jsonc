@@ -296,7 +296,6 @@
     { "package": "@effect/tsgo-win32-arm64", "source": "package.json" },
     { "package": "@effect/tsgo-win32-x64", "source": "package.json" },
     { "package": "@hono/node-server", "source": "package.json" },
-    { "package": "@opentelemetry/propagator-jaeger", "source": "package.json" },
     { "package": "brace-expansion", "source": "package.json" },
     { "package": "detailed-xml-validator", "source": "package.json" },
     { "package": "fast-uri", "source": "package.json" },

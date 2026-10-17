@@ -76,6 +76,57 @@ export class ChangesetGraphError extends S.TaggedError<ChangesetGraphError, { re
 }
 
 /**
+ * Failure raised while checking root catalog entries and overrides for consumers.
+ *
+ * **Example** (Raise a catalog usage error)
+ *
+ * ```ts
+ * import { CatalogUsageError } from "@beep/repo-cli/commands/Quality/Quality.errors"
+ *
+ * const error = CatalogUsageError.make({ message: "Root catalog has unused entries." })
+ * console.log(error.message)
+ * ```
+ *
+ * @category error-handling
+ * @since 0.0.0
+ */
+export class CatalogUsageError extends S.TaggedError<CatalogUsageError, { readonly brand: unique symbol }>(
+  $I`CatalogUsageError`
+)(
+  "CatalogUsageError",
+  {
+    message: S.String,
+    file: S.optionalKey(S.String),
+    cause: S.optionalKey(OpaqueDefect),
+  },
+  $I.annoteError<CatalogUsageError>("CatalogUsageError", {
+    description: "Failure raised while checking root catalog entries and overrides for consumers.",
+  })
+) {
+  /**
+   * Construct a catalog usage error from a cause and context.
+   *
+   * @category constructors
+   */
+  static readonly new: {
+    (cause: unknown, message: string, file?: string): CatalogUsageError;
+    (message: string, file?: string): (cause: unknown) => CatalogUsageError;
+  } = dual(
+    3,
+    (cause, message, file): CatalogUsageError =>
+      CatalogUsageError.make({
+        cause,
+        message,
+        ...O.getSomesStruct({
+          file: O.fromUndefinedOr(file),
+        }),
+      })
+  );
+
+  static readonly mapError = Err.mapToError(this.new);
+}
+
+/**
  * Failure raised while running the path-aware changeset status wrapper.
  *
  * **Example** (Raise a changeset status error)
