@@ -1,0 +1,15 @@
+{
+  "previous": "53b15d6c03d9046db4dfebfc53a03345d3ebcac0ca8affa248fe4e9bf39f2470",
+  "review": {
+    "reviewer": "Claude Opus 5.5 medium (repository-simplification-residue driver)",
+    "reason": "Record the root scripts-digest change from removing the impeccable:detect script and Impeccable-only root dependencies in #1900; no root task command, input, output, env or dependency changed; preserve scope, profile, epoch and qualification ledger without granting reuse qualification.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/impeccable-root-script-baseline-review.md",
+      "sha256": "d8cb8787d4f08850c8d6a5bbdd9fc70e70548f31156cea80afafd35bccc0720c"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint", "@beep/fc-runs#lint", "@beep/test-runner#lint"],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": ["//"]
+}
