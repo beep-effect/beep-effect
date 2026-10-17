@@ -5,6 +5,9 @@
  * @since 0.0.0
  */
 
+export * from "@beep/repo-cli/commands/Quality/CatalogUsage";
+export * from "@beep/repo-cli/commands/Quality/CatalogUsage.schemas";
+export * from "@beep/repo-cli/commands/Quality/CatalogUsage.service";
 export * from "@beep/repo-cli/commands/Quality/ChangesetGraph";
 export {
   CHANGESET_STATUS_NEUTRAL_PATH_PREFIXES,

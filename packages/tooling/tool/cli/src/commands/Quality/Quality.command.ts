@@ -55,6 +55,7 @@ import {
 import { CacheQualificationLive, runCachePolicyAudit } from "../Cache/index.ts";
 import { FleetMirrorService, FleetMirrorServiceLive } from "../Worktree/Fleet.service.ts";
 import { WaveOrder } from "../Yeet/internal/WaveOrder.ts";
+import { CatalogUsageSourceLive, runCatalogUsageCheck } from "./CatalogUsage.ts";
 import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
 import { changesetStatusCommand } from "./ChangesetStatus.ts";
 import { checkCensusCommand } from "./CheckCensus.ts";
@@ -3735,6 +3736,25 @@ const changesetGraphCommand = Command.make("changeset-graph", {}, () =>
   )
 ).pipe(Command.withDescription("Validate changesets against the current workspace package graph"));
 
+const catalogUsageCommand = Command.make("catalog-usage", {}, () =>
+  runQualityProgram(
+    findRepoRoot().pipe(
+      QualityScriptCommandError.mapError("Failed to locate repository root."),
+      Effect.flatMap((repoRoot) =>
+        runCatalogUsageCheck(repoRoot).pipe(
+          Effect.provide(CatalogUsageSourceLive),
+          Effect.mapError((error) =>
+            QualityScriptCommandError.new(error, error.message, {
+              command: "bun run beep quality catalog-usage",
+              exitCode: 1,
+            })
+          )
+        )
+      )
+    )
+  )
+).pipe(Command.withDescription("Fail when a root catalog entry or root override has no consumer"));
+
 const qualityProfileDetectCommand = Command.make(
   "detect",
   {
@@ -4302,6 +4322,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     "- bun run beep quality residue-reap [--apply] [--json] [--fleet] [--classes <class>]",
     "- bun run beep quality package-verify @beep/repo-cli",
     "- bun run beep quality changeset-graph",
+    "- bun run beep quality catalog-usage",
     "- bun run beep quality fallow audit --advisory",
   ])
 ).pipe(
@@ -4329,6 +4350,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     residueReapCommand,
     packageVerifyCommand,
     changesetGraphCommand,
+    catalogUsageCommand,
     changesetStatusCommand,
     qualityFallowCommand,
   ])

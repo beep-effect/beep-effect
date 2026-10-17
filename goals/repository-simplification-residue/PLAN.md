@@ -34,6 +34,9 @@ and make progress on independent admitted work under S23.
 | 8 | #1879 `residue-target-exchange`; #1880 `residue-exchange-recovery`; #1881 `residue-skill-publication` | Qualify target filesystem capability first, then journal recovery, then skill publication. At most two PRs when admitted; shared protocol files have one owner and sequential integration. Disposable target fixtures only, no implied native apply. |
 | 9 | #1882 `residue-dependency-review` | Manifest-aware security integration and actual permission fixtures, retaining production transitive detection. |
 
+Workstream status: #1860 `residue-catalog` is complete (third A-train PR,
+`history/receipts/catalog-removals-record.md`). #1851 continues in the A-train.
+
 Workstreams are one per issue even when a train shares a PR. Future owners must
 record source acceptance and head-bound results per issue. Slot availability
 changes concurrency, not ownership or acceptance. Size alone cannot park a lane.

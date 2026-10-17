@@ -588,36 +588,53 @@ const memberAccess = (node: MorphNode, member: string): O.Option<MorphNode> => {
     : O.none();
 };
 
+const isBundleBinding = (imported: string, subpath: boolean): boolean =>
+  imported === "*" || (subpath ? imported === "layer" : A.contains(servicesBundleNames, imported));
+
+// Some(None) skips a non-bundle namespace member; None makes the provenance opaque.
+const namespaceBundleMember = (reference: Identifier): O.Option<O.Option<MorphNode>> => {
+  const member = platformReferenceMember(reference);
+  if (O.exists(member, (name) => name !== "opaque" && !A.contains(servicesBundleNames, name))) return O.some(O.none());
+  const parent = reference.getParent();
+  return O.exists(member, (name) => A.contains(servicesBundleNames, name)) && parent !== undefined
+    ? O.some(O.some(parent))
+    : O.none();
+};
+
+// None means a bundle reference that is not a `layer` value; an empty array skips the reference.
+const bundleReferenceLayers = (
+  reference: Identifier,
+  imported: string,
+  namespacedBundle: boolean
+): O.Option<ReadonlyArray<MorphNode>> =>
+  O.flatMap(
+    namespacedBundle ? namespaceBundleMember(reference) : O.some(O.some<MorphNode>(reference)),
+    O.match({
+      onNone: () => O.some(A.empty<MorphNode>()),
+      onSome: (node) => (imported === "layer" ? O.some(A.of(node)) : O.map(memberAccess(node, "layer"), A.of)),
+    })
+  );
+
 // None means a bundle reference that is not a `layer` value, so provenance stays opaque.
 const servicesBundleLayers = (
   declaration: ImportDeclaration,
   imports: EffectVitestImports
 ): O.Option<ReadonlyArray<MorphNode>> => {
   const subpath = A.contains(platformServicesModules, declaration.getModuleSpecifierValue());
-  const layers = A.empty<MorphNode>();
-  for (const binding of A.filter(imports.bindings, (candidate) => candidate.declaration === declaration)) {
-    const namespace = binding.imported === "*";
-    const bundle =
-      namespace || (subpath ? binding.imported === "layer" : A.contains(servicesBundleNames, binding.imported));
-    if (!bundle) continue;
-    for (const reference of bindingReferences(declaration, binding.local, imports)) {
-      let node: MorphNode = reference;
-      if (namespace && !subpath) {
-        const member = platformReferenceMember(reference);
-        if (O.exists(member, (name) => name !== "opaque" && !A.contains(servicesBundleNames, name))) continue;
-        const parent = reference.getParent();
-        if (!O.exists(member, (name) => A.contains(servicesBundleNames, name)) || parent === undefined) return O.none();
-        node = parent;
-      }
-      if (binding.imported !== "layer") {
-        const layer = memberAccess(node, "layer");
-        if (O.isNone(layer)) return O.none();
-        node = layer.value;
-      }
-      layers.push(node);
-    }
-  }
-  return O.some(layers);
+  const bundles = A.filter(
+    imports.bindings,
+    (candidate) => candidate.declaration === declaration && isBundleBinding(candidate.imported, subpath)
+  );
+  return O.map(
+    O.all(
+      A.flatMap(bundles, (binding) =>
+        A.map(bindingReferences(declaration, binding.local, imports), (reference) =>
+          bundleReferenceLayers(reference, binding.imported, binding.imported === "*" && !subpath)
+        )
+      )
+    ),
+    A.flatten
+  );
 };
 
 const providesWorkspaceSubject = (target: MorphNode, imports: EffectVitestImports): boolean =>
@@ -665,6 +682,78 @@ const isLayerPipe = (stage: MorphNode, imports: EffectVitestImports): boolean =>
   return !A.isReadonlyArrayEmpty(stages) && A.every(stages, (candidate) => isDataLastLayerStage(candidate, imports));
 };
 
+// One step up the parent chain: climb with the subject flag, or stop with the flows found.
+type FlowStep =
+  | { readonly _tag: "climb"; readonly provided: boolean }
+  | { readonly _tag: "done"; readonly flows: O.Option<ReadonlyArray<HarnessFlow>> };
+
+const climb = (provided: boolean): FlowStep => ({ _tag: "climb", provided });
+const done = (flows: O.Option<ReadonlyArray<HarnessFlow>>): FlowStep => ({ _tag: "done", flows });
+
+const isPreservingLayerCall = (parent: CallExpression, imports: EffectVitestImports): boolean =>
+  isDataLastLayerStage(parent, imports)
+    ? O.exists(O.fromUndefinedOr(parent.getParent()), (stage) => isLayerPipe(stage, imports))
+    : isProvenanceCall(parent, imports, LAYER_MODULES, "Layer", ["provide", "provideMerge", "merge", "mergeAll"]);
+
+const suppliesSubject = (parent: CallExpression, current: MorphNode, imports: EffectVitestImports): boolean =>
+  isProvenanceCall(parent, imports, LAYER_MODULES, "Layer", ["provide", "provideMerge"]) &&
+  O.exists(providerTarget(parent, current, imports), (target) => providesWorkspaceSubject(target, imports));
+
+const callStep = (
+  parent: CallExpression,
+  current: MorphNode,
+  imports: EffectVitestImports,
+  provided: boolean
+): FlowStep => {
+  if (!isArgumentOf(parent, current)) return done(O.none());
+  if (isProvenanceCall(parent, imports, ["@effect/vitest"], "it", ["layer"]))
+    return done(parent.getArguments()[0] === current ? O.some([{ harness: parent, subject: provided }]) : O.none());
+  if (isDataLastLayerStage(current, imports) && isLayerPipe(parent, imports)) return climb(provided);
+  if (!isPreservingLayerCall(parent, imports)) return done(O.none());
+  return climb(provided || suppliesSubject(parent, current, imports));
+};
+
+const isFollowableBinding = (
+  declaration: VariableDeclaration,
+  current: MorphNode,
+  seen: ReadonlyArray<VariableDeclaration>
+): boolean =>
+  declaration.getInitializer() === current &&
+  declaration.getVariableStatement()?.getDeclarationKind() === "const" &&
+  Node.isIdentifier(declaration.getNameNode()) &&
+  !A.some(seen, (prior) => prior === declaration);
+
+const declarationFlows = (
+  declaration: VariableDeclaration,
+  current: MorphNode,
+  imports: EffectVitestImports,
+  seen: ReadonlyArray<VariableDeclaration>,
+  provided: boolean,
+  visited: FlowCache
+): O.Option<ReadonlyArray<HarnessFlow>> => {
+  if (!isFollowableBinding(declaration, current, seen)) return O.none();
+  const reached = visited.get(declaration) ?? bindingFlows(declaration, imports, [...seen, declaration], visited);
+  return O.map(
+    reached,
+    A.map((flow) => ({ ...flow, subject: flow.subject || provided }))
+  );
+};
+
+const parentStep = (
+  parent: MorphNode,
+  current: MorphNode,
+  imports: EffectVitestImports,
+  seen: ReadonlyArray<VariableDeclaration>,
+  provided: boolean,
+  visited: FlowCache
+): FlowStep => {
+  if (Node.isParenthesizedExpression(parent)) return climb(provided);
+  if (Node.isCallExpression(parent)) return callStep(parent, current, imports, provided);
+  if (Node.isVariableDeclaration(parent))
+    return done(declarationFlows(parent, current, imports, seen, provided, visited));
+  return done(O.none());
+};
+
 // Follow a layer value through const bindings and Layer composition to the
 // `@effect/vitest` layer harnesses it provides; any other use stays opaque.
 const harnessFlows = (
@@ -677,38 +766,9 @@ const harnessFlows = (
   let provided = subject;
   let current = node;
   for (let parent = current.getParent(); parent !== undefined; current = parent, parent = parent.getParent()) {
-    if (Node.isParenthesizedExpression(parent)) continue;
-    if (Node.isCallExpression(parent)) {
-      if (!isArgumentOf(parent, current)) return O.none();
-      if (isProvenanceCall(parent, imports, ["@effect/vitest"], "it", ["layer"]))
-        return parent.getArguments()[0] === current ? O.some([{ harness: parent, subject: provided }]) : O.none();
-      if (isDataLastLayerStage(current, imports) && isLayerPipe(parent, imports)) continue;
-      const preserved = isDataLastLayerStage(parent, imports)
-        ? O.exists(O.fromUndefinedOr(parent.getParent()), (stage) => isLayerPipe(stage, imports))
-        : isProvenanceCall(parent, imports, LAYER_MODULES, "Layer", ["provide", "provideMerge", "merge", "mergeAll"]);
-      if (!preserved) return O.none();
-      if (isProvenanceCall(parent, imports, LAYER_MODULES, "Layer", ["provide", "provideMerge"]))
-        provided =
-          provided ||
-          O.exists(providerTarget(parent, current, imports), (target) => providesWorkspaceSubject(target, imports));
-      continue;
-    }
-    if (Node.isVariableDeclaration(parent)) {
-      const declaration = parent;
-      if (
-        declaration.getInitializer() !== current ||
-        declaration.getVariableStatement()?.getDeclarationKind() !== "const" ||
-        !Node.isIdentifier(declaration.getNameNode()) ||
-        A.some(seen, (prior) => prior === declaration)
-      )
-        return O.none();
-      const reached = visited.get(declaration) ?? bindingFlows(declaration, imports, [...seen, declaration], visited);
-      return O.map(
-        reached,
-        A.map((flow) => ({ ...flow, subject: flow.subject || provided }))
-      );
-    }
-    return O.none();
+    const step = parentStep(parent, current, imports, seen, provided, visited);
+    if (step._tag === "done") return step.flows;
+    provided = step.provided;
   }
   return O.none();
 };
