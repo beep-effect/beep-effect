@@ -2,7 +2,8 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained` (closed 2026-10-16; reflection
+[`history/reflections/2026-10-16-claude.md`](./history/reflections/2026-10-16-claude.md))
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -40,7 +41,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 in progress. Shipped on main so far:
+All phases are complete. P6 (this PR) records the first sealed knowledge baseline (#1790,
+minted by `beep-knowledge-mint[bot]` and admitted by the seal guard), writes the closeout
+reflection, and flips the lifecycle. Shipped on main:
 
 - **D:** `beep goals next|explain|catalog` (in-memory SQLite projection,
   differential-tested) and the Mermaid capability-graph section in `goals/INDEX.md`.

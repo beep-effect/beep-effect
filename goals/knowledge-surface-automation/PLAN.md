@@ -83,6 +83,11 @@ Ritual 1 ran on 2026-10-15: the operator classified oracle `SKILL.md` and shadcn
 
 Same-PR packet-state flip, closeout reflection via `/reflect`, gates remain standing.
 
+Status: complete (2026-10-16). The first sealed baseline (#1790) is on main, so the
+knowledge-doctor gate is live; this PR writes the reflection
+(`history/reflections/2026-10-16-claude.md`) and flips the lifecycle to
+`completed-retained`. The gates stay standing: the baseline mint runs weekly.
+
 ## Deliverable discipline
 
 - Every workstream's first shipped artifact is its Phase-0 report command.

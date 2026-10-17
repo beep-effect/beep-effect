@@ -3,15 +3,15 @@
   "initiative": {
     "id": "knowledge-surface-automation",
     "title": "Knowledge-Surface Audit & Automation",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-31",
-    "updated": "2026-10-14",
+    "updated": "2026-10-16",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/knowledge-surface-automation",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Turn the agent-facing knowledge surfaces (goals, explorations, skills, agent docs) into audited, gated, self-proving infrastructure with permanent new-violation gates.",
-  "statusNote": "Hand-rolled self-hosting seed packet; Workstream E's doctor adopts this packet as its first adoption test case.",
+  "statusNote": "Completed 2026-10-16. All five workstreams shipped; Ritual 1 classified the vendored patches (#1826); the first sealed knowledge baseline (#1790, minted by beep-knowledge-mint[bot]) is on main and the knowledge-doctor gate is live. Closeout reflection: history/reflections/2026-10-16-claude.md.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provides": [
@@ -87,7 +87,7 @@
     {
       "id": "P1",
       "name": "Phase-0 read-only reports",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
@@ -102,7 +102,7 @@
     {
       "id": "P4",
       "name": "Workstreams B, D, E behind gates; C Stage 2",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P5",
@@ -112,7 +112,7 @@
     {
       "id": "P6",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
