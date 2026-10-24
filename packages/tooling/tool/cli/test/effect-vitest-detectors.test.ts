@@ -35,6 +35,24 @@ const hasRule = Effect.fnUntraced(function* (body: string, ruleId: EffectVitestR
   return A.some(yield* findings(body), (finding) => finding.ruleId === ruleId);
 });
 
+// A fixture test file beside the other in-memory sources it imports, resolved like the scan resolves them.
+const findingsAcrossFiles = Effect.fnUntraced(function* (
+  files: ReadonlyArray<readonly [path: string, text: string]>,
+  body: string
+) {
+  const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
+  for (const [path, text] of files) project.createSourceFile(path, `${effectImports}\n${text}`);
+  const source = project.createSourceFile("/repo/test/fixture.test.ts", `${imports}\n${body}`);
+  return yield* detectEffectVitestFindings(source, "packages/example/test/fixture.test.ts", "@beep/example");
+});
+const hasRuleAcrossFiles = Effect.fnUntraced(function* (
+  files: ReadonlyArray<readonly [path: string, text: string]>,
+  body: string,
+  ruleId: EffectVitestRuleId
+) {
+  return A.some(yield* findingsAcrossFiles(files, body), (finding) => finding.ruleId === ruleId);
+});
+
 const findingsWithHarness = Effect.fnUntraced(function* (harnessImport: string, body: string) {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
   const source = project.createSourceFile(
@@ -473,6 +491,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `const withFake = (adapter) => L.unwrap(Fx.map(Fake, adapter)).pipe(L.provideMerge(L.sync(Fake, makeFake))); it.layer(L.fresh(withFake(mirror)))((it) => { ${block} });`,
         `const withFake = (adapter) => { return L.unwrap(Fx.map(Fake, adapter)); }; it.layer(withFake(mirror))((it) => { ${block} });`,
         `const withStore = (dataDir) => L.scoped(Store, openStore(dataDir)); it.layer(withStore("fixtures/a"))((it) => { ${block} });`,
+        // A function expression owns its returns (#1855 wave 6): ts-morph's isFunctionLikeDeclaration skips it.
+        `const withFake = function (adapter) { return L.unwrap(Fx.map(Fake, adapter)); }; it.layer(withFake(mirror))((it) => { ${block} });`,
       ];
       for (const body of factories) assertFalse(yield* hasRule(body, "EV003"));
 
@@ -673,12 +693,7 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
 
   it.effect("judges imported and unknown layer constructors but permits proven pure compositions", () =>
     Effect.gen(function* () {
-      for (const layer of [
-        "ImportedLive",
-        "NodeServices.layer",
-        "mockLayer()",
-        "L.unwrap(Fx.succeed(L.succeed(Service, {})))",
-      ])
+      for (const layer of ["ImportedLive", "NodeServices.layer", "mockLayer()"])
         assertTrue(
           A.some(
             yield* findings(`it.layer(${layer})("x", it => {});`),
@@ -692,6 +707,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         )
       );
       for (const pure of [
+        // #1855 wave 6: unwrapping a stub layer acquires nothing.
+        'it.layer(L.unwrap(Fx.succeed(L.succeed(Service, {}))))("x", it => {});',
         'it.layer(L.empty)("x", it => {});',
         'it.layer(L.empty, { excludeTestServices: true })("x", it => {});',
         'const stub = L.mergeAll(L.empty, L.succeed(A, {})); it.layer(stub)("x", it => {});',
@@ -744,6 +761,256 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'import * as NodeServices from "@effect/platform-node/NodeServices"; const f = (NodeServices) => it.layer(NodeServices.layer)("x", it => {});',
       ])
         assertTrue(A.some(yield* findings(body), (row) => row.ruleId === "EV014" && row.mechanization === "judgment"));
+    })
+  );
+
+  it.effect("resolves imported test layers across files and classifies them like same-file layers", () =>
+    Effect.gen(function* () {
+      const block = '("x", (it) => { it.effect("y", () => Fx.void); });';
+      const layers = [
+        "/repo/test/layers.ts",
+        A.join(
+          [
+            "export const StubLive = L.succeed(Service, {});",
+            "export const PromiseLive = L.effect(Service, Fx.promise(() => open()));",
+            "export const makeStub = (value) => L.succeed(Service, value);",
+            "export class Runner { static readonly makeLayerFromRunner = (runner) => L.succeed(Service, runner); static layer(value) { return L.sync(Service, () => value); } }",
+          ],
+          "\n"
+        ),
+      ] as const;
+      const barrel = [
+        "/repo/src/index.ts",
+        'export * from "./impl.ts";\nexport { ImplLive as RenamedLive } from "./impl.ts";\nexport * as Impl from "./impl.ts";',
+      ] as const;
+      const impl = [
+        "/repo/src/impl.ts",
+        "export const ImplLive = L.mergeAll(L.succeed(A, {}), L.mock(B, {}));",
+      ] as const;
+      const files = [layers, barrel, impl];
+
+      for (const body of [
+        `import { StubLive } from "./layers.ts"; it.layer(StubLive)${block}`,
+        `import * as Layers from "./layers.ts"; it.layer(L.fresh(Layers.StubLive))${block}`,
+        `import { makeStub } from "./layers.ts"; it.layer(makeStub(1))${block}`,
+        `import { Runner } from "./layers.ts"; it.layer(Runner.makeLayerFromRunner(run))${block}`,
+        `import { Runner } from "./layers.ts"; it.layer(Runner.layer(1))${block}`,
+        `import { ImplLive } from "../src/index.ts"; it.layer(ImplLive)${block}`,
+        `import { RenamedLive } from "../src/index.ts"; it.layer(RenamedLive)${block}`,
+        `import { Impl } from "../src/index.ts"; it.layer(Impl.ImplLive)${block}`,
+        `import { StubLive } from "./layers.ts"; const Local = StubLive.pipe(L.provideMerge(L.sync(B, () => []))); it.layer(Local)${block}`,
+      ])
+        assertFalse(yield* hasRuleAcrossFiles(files, body, "EV014"), body);
+
+      for (const body of [
+        `import { PromiseLive } from "./layers.ts"; it.layer(PromiseLive)${block}`,
+        `import * as Layers from "./layers.ts"; it.layer(L.merge(Layers.StubLive, Layers.PromiseLive))${block}`,
+        `import { StubLive } from "./missing.ts"; it.layer(StubLive)${block}`,
+        `import { Absent } from "./layers.ts"; it.layer(Absent)${block}`,
+        `import type { StubLive } from "./layers.ts"; it.layer(StubLive)${block}`,
+        `import { Runner } from "./layers.ts"; it.layer(Runner.missing(1))${block}`,
+      ])
+        assertTrue(yield* hasRuleAcrossFiles(files, body, "EV014"), body);
+
+      // Re-export cycles terminate and stay unresolved.
+      const cycle = [
+        ["/repo/test/a.ts", 'export { Loop } from "./b.ts";'],
+        ["/repo/test/b.ts", 'export { Loop } from "./a.ts";'],
+      ] as const;
+      assertTrue(yield* hasRuleAcrossFiles(cycle, `import { Loop } from "./a.ts"; it.layer(Loop)${block}`, "EV014"));
+    })
+  );
+
+  it.effect("binds factory parameters to call arguments when classifying test layers", () =>
+    Effect.gen(function* () {
+      const block = '("x", (it) => { it.effect("y", () => Fx.void); });';
+      const helper =
+        "const withDb = (db) => L.mergeAll(L.succeed(A, {}), db); const testLayer = (respond) => L.succeed(Http, make(respond));";
+      for (const body of [
+        `${helper} it.layer(testLayer(stub(() => Fx.succeed(1))))${block}`,
+        `${helper} it.layer(withDb(L.succeed(Db, {})))${block}`,
+        `const withDefault = (db = L.succeed(Db, {})) => db; it.layer(withDefault())${block}`,
+      ])
+        assertFalse(yield* hasRule(body, "EV014"), body);
+      for (const body of [
+        `${helper} it.layer(withDb(L.effect(Db, Fx.promise(() => open()))))${block}`,
+        `${helper} it.layer(withDb(ImportedLive))${block}`,
+        `const withDb = (...layers) => L.mergeAll(...layers); it.layer(withDb(L.succeed(Db, {})))${block}`,
+        `const withDefault = (db = L.effect(Db, Fx.promise(() => open()))) => db; it.layer(withDefault())${block}`,
+      ])
+        assertTrue(yield* hasRule(body, "EV014"), body);
+    })
+  );
+
+  it.effect("permits hermetic in-memory acquisitions under it.layer and keeps real acquisitions judged", () =>
+    Effect.gen(function* () {
+      const block = '("x", (it) => { it.effect("y", () => Fx.void); });';
+      const services =
+        'import * as Ref from "effect/Ref"; import * as Deferred from "effect/Deferred"; class Recorder extends Context.Service<Recorder, Array<string>>()("Recorder") {}';
+      for (const body of [
+        `it.layer(L.effect(Store, Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; const ref = yield* Ref.make(0); return { fs, ref }; })))${block}`,
+        `it.layer(L.effect(Started, Deferred.make()))${block}`,
+        `it.layer(L.effect(Store)(Fx.map(Recorder, (calls) => ({ calls }))))${block}`,
+        `it.layer(L.unwrap(Fx.map(Recorder, (calls) => L.succeed(Svc, calls))).pipe(L.provideMerge(L.sync(Recorder, () => []))))${block}`,
+        `it.layer(L.unwrap(Fx.gen(function* () { const calls = yield* Recorder; return L.succeed(Svc, calls); })))${block}`,
+        `const makeStore = Fx.fn("makeStore")(function* (seed) { return yield* Ref.make(seed); }); it.layer(L.effect(Store, makeStore(0)))${block}`,
+        `const makeStore = Fx.gen(function* () { const calls = yield* Recorder; return { calls }; }); const StoreLive = L.effect(Store, makeStore); it.layer(StoreLive)${block}`,
+        `it.layer(L.effect(Probe, Fx.acquireRelease(Fx.succeed(1), () => Fx.sync(() => released++))))${block}`,
+        `it.layer(L.suspend(() => L.succeed(Svc, {})))${block}`,
+      ])
+        assertFalse(yield* hasRule(`${services}\n${body}`, "EV014"), body);
+      for (const body of [
+        `it.layer(L.effect(Store, Fx.gen(function* () { yield* Fx.promise(() => open()); })))${block}`,
+        `it.layer(L.effect(Store, Fx.gen(function* () { yield* Fx.sleep("1 second"); })))${block}`,
+        `it.layer(L.effect(Engine, Fx.gen(function* () { return yield* Fx.try({ try: loadModel, catch: toError }); })))${block}`,
+        `it.layer(L.effect(Store, Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; return yield* fs.makeTempDirectory(); })))${block}`,
+        `it.layer(L.effect(Store, Fx.gen(function* () { yield fs; })))${block}`,
+        `it.layer(L.effect(Started, Deferred.make().pipe(Fx.flatMap((started) => Deferred.await(started)))))${block}`,
+        `it.layer(L.unwrap(Fx.map(Recorder, () => L.effect(Db, Fx.promise(() => open())))))${block}`,
+        `it.layer(L.unwrap(Fx.promise(() => import("./layer.ts"))))${block}`,
+        `it.layer(L.effect(Store, Fx.gen(function* () { return yield* Fx.gen(function* () { yield* Fx.promise(() => open()); }); })))${block}`,
+        `it.layer(L.effect(Probe, Fx.acquireRelease(Fx.promise(() => open()), () => Fx.void)))${block}`,
+      ])
+        assertTrue(yield* hasRule(`${services}\n${body}`, "EV014"), body);
+    })
+  );
+
+  it.effect("follows aliases, dual implementations, this-bound statics and local re-exports", () =>
+    Effect.gen(function* () {
+      const block = '("x", (it) => { it.effect("y", () => Fx.void); });';
+      const files = [
+        [
+          "/repo/test/stores.ts",
+          A.join(
+            [
+              'import { dual } from "effect/Function";',
+              "const LocalLive = L.succeed(A, {});",
+              "export { LocalLive as ExportedLive };",
+              'const makeInMemory = Fx.fn("makeInMemory")(function* () { return yield* Fx.void; });',
+              "export const makeStore = makeInMemory;",
+              "export const openStore = dual(2, (self, options) => L.succeed(Store, { self, options }));",
+              "export function makeLive() { return L.succeed(A, {}); }",
+              "export class Store { static readonly make = Fx.succeed({}); static readonly layer = L.effect(Store, this.make); }",
+              "export declare function declaredLive(): unknown;",
+              "export const { DestructuredLive } = { DestructuredLive: L.succeed(A, {}) };",
+              "export type { TypeOnlyLive } from './types.ts';",
+            ],
+            "\n"
+          ),
+        ],
+        ["/repo/test/barrel.ts", 'export type * from "./stores.ts";\nexport * from "./stores.ts";'],
+        ["/repo/test/decl.d.ts", "export declare const DeclLive: unknown;"],
+        ["/repo/node_modules/installed/package.json", '{ "name": "installed", "exports": "./index.ts" }'],
+        ["/repo/node_modules/installed/index.ts", "export const InstalledLive = L.succeed(A, {});"],
+      ] as const;
+      for (const body of [
+        `import { ExportedLive } from "./stores.ts"; it.layer(ExportedLive)${block}`,
+        `import { makeStore } from "./barrel.ts"; it.layer(L.effect(Store, makeStore()))${block}`,
+        `import { openStore } from "./stores.ts"; it.layer(openStore(1, {}))${block}`,
+        `import { makeLive } from "./stores.ts"; it.layer(makeLive())${block}`,
+        `import { Store } from "./stores.ts"; it.layer(Store.layer)${block}`,
+        `it.layer(L.provide(L.succeed(A, {}), [L.succeed(B, {}), L.mock(C, {})]))${block}`,
+      ])
+        assertFalse(yield* hasRuleAcrossFiles(files, body, "EV014"), body);
+      for (const body of [
+        `import { declaredLive } from "./stores.ts"; it.layer(declaredLive())${block}`,
+        `import { DestructuredLive } from "./stores.ts"; it.layer(DestructuredLive)${block}`,
+        `import { TypeOnlyLive } from "./stores.ts"; it.layer(TypeOnlyLive)${block}`,
+        `import { DeclLive } from "./decl"; it.layer(DeclLive)${block}`,
+        `import { InstalledLive } from "installed"; it.layer(InstalledLive)${block}`,
+        `import Default from "./stores.ts"; it.layer(Default)${block}`,
+        `const loop = other; const other = loop; it.layer(loop)${block}`,
+        `const loop = () => loop(); it.layer(loop())${block}`,
+        `const makeStore = 1; it.layer(L.effect(Store, makeStore()))${block}`,
+        `const makeStore = Fx.fn(name)(function* () { return yield* Fx.void; }); it.layer(L.effect(Store, makeStore()))${block}`,
+        `const makeStore = Fx.fnUntraced(function* () { return yield* Fx.void; }, Fx.orDie); it.layer(L.effect(Store, makeStore()))${block}`,
+        `it.layer(L.effect(Store))${block}`,
+        `it.layer(L.unwrap())${block}`,
+        `it.layer(L.suspend(lazyLayer))${block}`,
+        `it.layer(L.succeed(A, {}).pipe(L.provide(L.effect(B, Fx.promise(() => open())))))${block}`,
+        `it.layer(L.succeed(A, {}).pipe(L.orDie))${block}`,
+        `it.layer(L.merge(L.succeed(A, {}))(L.succeed(B, {})))${block}`,
+      ])
+        assertTrue(yield* hasRuleAcrossFiles(files, body, "EV014"), body);
+    })
+  );
+
+  it.effect("judges hermetic effect combinators by every effect they run during acquisition", () =>
+    Effect.gen(function* () {
+      const block = '("x", (it) => { it.effect("y", () => Fx.void); });';
+      const services =
+        'import * as Ref from "effect/Ref"; import * as Scope from "effect/Scope"; import * as Clock from "effect/Clock"; import * as DateTime from "effect/DateTime"; import * as FileSystem from "effect/FileSystem"; class Recorder extends Context.Service<Recorder, Array<string>>()("Recorder") {} const Seed = Context.Reference("Seed", { defaultValue: () => 0 });';
+      const acquire = (effect: string) => `${services}\nit.layer(L.effect(Store, ${effect}))${block}`;
+      for (const effect of [
+        "Fx.gen(function* () { yield* Fx.void; const scope = yield* Fx.scope; yield* Scope.addFinalizer(scope, Fx.void); yield* Fx.addFinalizer(() => Fx.void); return yield* Clock.currentTimeMillis; })",
+        "Fx.gen(function* () { const now = yield* DateTime.now; const fs = yield* FileSystem.FileSystem; const seed = yield* Seed; return { now, fs, seed }; })",
+        "Fx.flatMap(Ref.make(0), (ref) => Ref.get(ref))",
+        "Ref.make(0).pipe(Fx.flatMap((ref) => Ref.update(ref, (n) => n + 1)), Fx.map(() => ({})), Fx.asVoid)",
+        "Fx.as(Recorder, {})",
+        'Fx.serviceOption(Recorder).pipe(Fx.withSpan("acquire"))',
+      ])
+        assertFalse(yield* hasRule(acquire(effect), "EV014"), effect);
+      for (const effect of [
+        "Fx.flatMap(Ref.make(0), (ref) => Fx.promise(() => persist(ref)))",
+        "Fx.flatMap(Ref.make(0))",
+        "Fx.map((value) => value)",
+        "Ref.make(0).pipe(Fx.flatMap((ref) => Fx.promise(() => persist(ref))))",
+        'Ref.make(0).pipe(Fx.timeout("1 second"))',
+        "Ref.make(0).pipe(Fx.retry)",
+        "Fx.addFinalizer(() => Fx.promise(() => close()))",
+        "Fx.gen(function* () { const scope = yield* Fx.scope; yield* Scope.addFinalizer(scope); })",
+        "Fx.acquireRelease(Fx.succeed(1))",
+        "Fx.gen(function* () { yield* Fixtures.Fixtures; })",
+        "Fx.gen(function* () { yield* Plain; }); class Plain extends Base {}",
+        "Fx.gen(function* () { yield* notAKey; }); const notAKey = makeKey();",
+        "Fx.gen({ self: this })",
+      ])
+        assertTrue(yield* hasRule(acquire(effect), "EV014"), effect);
+
+      const unwrap = (effect: string) => `${services}\nit.layer(L.unwrap(${effect}))${block}`;
+      for (const effect of [
+        "Fx.sync(() => L.succeed(A, {}))",
+        "Fx.succeed(L.succeed(A, {}))",
+        "freeLayerEffect); const freeLayerEffect = Fx.succeed(L.succeed(A, {})",
+      ])
+        assertFalse(yield* hasRule(unwrap(effect), "EV014"), effect);
+      for (const effect of [
+        "Fx.sync(() => L.effect(A, Fx.promise(() => open())))",
+        "Fx.map(Fx.promise(() => open()), () => L.succeed(A, {}))",
+        "Fx.map(Recorder)",
+        "Fx.gen(function* () { yield* Recorder; })",
+        "Fx.gen(function* () { yield* Fx.promise(() => open()); return L.succeed(A, {}); })",
+        "Fx.succeed()",
+      ])
+        assertTrue(yield* hasRule(unwrap(effect), "EV014"), effect);
+    })
+  );
+
+  it.effect("names the Effect library layers that build in memory", () =>
+    Effect.gen(function* () {
+      const block = '("x", (it) => { it.effect("y", () => Fx.void); });';
+      for (const body of [
+        `it.layer(TC.layer())${block}`,
+        `import * as Path from "effect/Path"; it.layer(Path.layer)${block}`,
+        `import * as AtomRegistry from "effect/reactivity/AtomRegistry"; it.layer(L.fresh(AtomRegistry.layer))${block}`,
+        `import * as AtomRegistry from "effect/reactivity/AtomRegistry"; it.layer(AtomRegistry.layerOptions({ initialValues: [] }))${block}`,
+        `import * as FetchHttpClient from "effect/http/FetchHttpClient"; it.layer(FetchHttpClient.layer)${block}`,
+        `import * as ConfigProvider from "effect/ConfigProvider"; it.layer(ConfigProvider.layer(ConfigProvider.fromUnknown({ CI: false })))${block}`,
+        `import * as Logger from "effect/Logger"; it.layer(Logger.layer([Logger.make(() => undefined)]))${block}`,
+        `import * as Toolkit from "effect/ai/Toolkit"; const Kit = Toolkit.make(); it.layer(Kit.toLayer({ lookup: () => Fx.void }))${block}`,
+        `import * as Toolkit from "effect/ai/Toolkit"; class Engine extends Context.Service<Engine, {}>()("Engine") {} const Kit = Toolkit.make(); it.layer(Kit.toLayer(Fx.gen(function* () { const engine = yield* Engine; return { lookup: () => Fx.succeed(engine) }; })))${block}`,
+        `import * as LanguageModel from "effect/ai/LanguageModel"; it.layer(L.effect(LanguageModel.LanguageModel, LanguageModel.make({ generateText: () => Fx.succeed([]) })))${block}`,
+      ])
+        assertFalse(yield* hasRule(body, "EV014"), body);
+      for (const body of [
+        `import * as Path from "@beep/fake/Path"; it.layer(Path.layer)${block}`,
+        `import * as ConfigProvider from "effect/ConfigProvider"; it.layer(ConfigProvider.layer(loadProvider))${block}`,
+        `import * as Logger from "effect/Logger"; it.layer(Logger.layer([fileLogger]))${block}`,
+        `const Kit = makeKit(); it.layer(Kit.toLayer({ lookup: () => Fx.void }))${block}`,
+        `import * as Toolkit from "effect/ai/Toolkit"; const Kit = Toolkit.make(); it.layer(Kit.toLayer(Fx.promise(() => loadHandlers())))${block}`,
+        `import * as McpServer from "effect/ai/McpServer"; it.layer(McpServer.McpServer.layer)${block}`,
+      ])
+        assertTrue(yield* hasRule(body, "EV014"), body);
     })
   );
 
