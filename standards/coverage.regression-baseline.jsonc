@@ -11801,7 +11801,7 @@
             "functions": 0
           }
         },
-        "packages/drivers/github/src/internal/unstubbed.ts": {
+        "packages/drivers/github/src/internal/scopedStoreMembers.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

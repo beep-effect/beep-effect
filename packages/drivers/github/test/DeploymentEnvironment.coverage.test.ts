@@ -6,7 +6,7 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
-const UnstubbedError = S.TaggedStruct("UnstubbedError", { message: S.String });
+const UnstubbedError = S.TaggedStruct("UnstubbedMemberError", { message: S.String });
 
 describe("DeploymentEnvironment test doubles", () => {
   it.layer(Repo.layer(RepoRef.make({ owner: "acme", repo: "widget" })), { timeout: "30 seconds" })((it) => {

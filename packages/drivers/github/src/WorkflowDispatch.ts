@@ -11,6 +11,7 @@
  */
 import { $GithubId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
+import { unstubbedFor } from "@beep/utils/TestDouble";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -24,7 +25,6 @@ import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
 import { numericId } from "./internal/ids.ts";
-import { unstubbedFor } from "./internal/unstubbed.ts";
 import { Repo } from "./Repo.ts";
 import { PageOptions } from "./Rest.ts";
 

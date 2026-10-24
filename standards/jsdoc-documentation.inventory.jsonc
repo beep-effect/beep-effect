@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-24T22:00:55.993Z",
+  "generatedAt": "2026-10-24T22:27:24.122Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 79,
     "publicModules": 3548,
-    "publicExports": 25250,
+    "publicExports": 25258,
     "openModules": 411,
     "openExports": 1382,
     "missingExportExamples": 7,
@@ -8729,7 +8729,7 @@
         "srcDir": "src",
         "sourceFileCount": 29,
         "publicModuleCount": 29,
-        "publicExportCount": 220
+        "publicExportCount": 228
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -9339,7 +9339,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 2,
+          "exportCount": 10,
           "remediationStatus": "resolved"
         },
         {
@@ -13477,8 +13477,8 @@
           "exportKind": "class",
           "filePath": "src/TestDouble.ts",
           "repoPath": "packages/foundation/modeling/utils/src/TestDouble.ts",
-          "line": 37,
-          "anchor": "packages-foundation-modeling-utils-src-testdouble-ts-37-unstubbedmembererror",
+          "line": 41,
+          "anchor": "packages-foundation-modeling-utils-src-testdouble-ts-41-unstubbedmembererror",
           "currentTags": [
             "@category",
             "@since"
@@ -13499,8 +13499,184 @@
           "exportKind": "const",
           "filePath": "src/TestDouble.ts",
           "repoPath": "packages/foundation/modeling/utils/src/TestDouble.ts",
-          "line": 68,
-          "anchor": "packages-foundation-modeling-utils-src-testdouble-ts-68-unstubbed",
+          "line": 76,
+          "anchor": "packages-foundation-modeling-utils-src-testdouble-ts-76-unstubbed",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "UnstubbedAccess",
+          "exportKind": "const",
+          "filePath": "src/TestDouble.ts",
+          "repoPath": "packages/foundation/modeling/utils/src/TestDouble.ts",
+          "line": 101,
+          "anchor": "packages-foundation-modeling-utils-src-testdouble-ts-101-unstubbedaccess",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "UnstubbedAccess",
+          "exportKind": "type",
+          "filePath": "src/TestDouble.ts",
+          "repoPath": "packages/foundation/modeling/utils/src/TestDouble.ts",
+          "line": 113,
+          "anchor": "packages-foundation-modeling-utils-src-testdouble-ts-113-unstubbedaccess",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "UnstubbedTarget",
+          "exportKind": "class",
+          "filePath": "src/TestDouble.ts",
+          "repoPath": "packages/foundation/modeling/utils/src/TestDouble.ts",
+          "line": 130,
+          "anchor": "packages-foundation-modeling-utils-src-testdouble-ts-130-unstubbedtarget",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "UnstubbedTarget",
+          "exportKind": "namespace",
+          "filePath": "src/TestDouble.ts",
+          "repoPath": "packages/foundation/modeling/utils/src/TestDouble.ts",
+          "line": 157,
+          "anchor": "packages-foundation-modeling-utils-src-testdouble-ts-157-unstubbedtarget",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "unstubbedFor",
+          "exportKind": "const",
+          "filePath": "src/TestDouble.ts",
+          "repoPath": "packages/foundation/modeling/utils/src/TestDouble.ts",
+          "line": 196,
+          "anchor": "packages-foundation-modeling-utils-src-testdouble-ts-196-unstubbedfor",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "UnstubbedMember",
+          "exportKind": "const",
+          "filePath": "src/TestDouble.ts",
+          "repoPath": "packages/foundation/modeling/utils/src/TestDouble.ts",
+          "line": 221,
+          "anchor": "packages-foundation-modeling-utils-src-testdouble-ts-221-unstubbedmember",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "UnstubbedMember",
+          "exportKind": "type",
+          "filePath": "src/TestDouble.ts",
+          "repoPath": "packages/foundation/modeling/utils/src/TestDouble.ts",
+          "line": 233,
+          "anchor": "packages-foundation-modeling-utils-src-testdouble-ts-233-unstubbedmember",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "unstubbedShapeFor",
+          "exportKind": "const",
+          "filePath": "src/TestDouble.ts",
+          "repoPath": "packages/foundation/modeling/utils/src/TestDouble.ts",
+          "line": 266,
+          "anchor": "packages-foundation-modeling-utils-src-testdouble-ts-266-unstubbedshapefor",
           "currentTags": [
             "@category",
             "@since"
@@ -221530,8 +221706,8 @@
           "exportKind": "const",
           "filePath": "src/RepositorySecret.ts",
           "repoPath": "packages/drivers/github/src/RepositorySecret.ts",
-          "line": 52,
-          "anchor": "packages-drivers-github-src-repositorysecret-ts-52-secretscope",
+          "line": 53,
+          "anchor": "packages-drivers-github-src-repositorysecret-ts-53-secretscope",
           "currentTags": [
             "@public",
             "@category",
@@ -221553,8 +221729,8 @@
           "exportKind": "type",
           "filePath": "src/RepositorySecret.ts",
           "repoPath": "packages/drivers/github/src/RepositorySecret.ts",
-          "line": 63,
-          "anchor": "packages-drivers-github-src-repositorysecret-ts-63-secretscope",
+          "line": 64,
+          "anchor": "packages-drivers-github-src-repositorysecret-ts-64-secretscope",
           "currentTags": [
             "@public",
             "@category",
@@ -221576,8 +221752,8 @@
           "exportKind": "class",
           "filePath": "src/RepositorySecret.ts",
           "repoPath": "packages/drivers/github/src/RepositorySecret.ts",
-          "line": 89,
-          "anchor": "packages-drivers-github-src-repositorysecret-ts-89-secretinfo",
+          "line": 90,
+          "anchor": "packages-drivers-github-src-repositorysecret-ts-90-secretinfo",
           "currentTags": [
             "@public",
             "@category",
@@ -221599,8 +221775,8 @@
           "exportKind": "interface",
           "filePath": "src/RepositorySecret.ts",
           "repoPath": "packages/drivers/github/src/RepositorySecret.ts",
-          "line": 107,
-          "anchor": "packages-drivers-github-src-repositorysecret-ts-107-repositorysecretshape",
+          "line": 108,
+          "anchor": "packages-drivers-github-src-repositorysecret-ts-108-repositorysecretshape",
           "currentTags": [
             "@public",
             "@category",
@@ -221622,8 +221798,8 @@
           "exportKind": "class",
           "filePath": "src/RepositorySecret.ts",
           "repoPath": "packages/drivers/github/src/RepositorySecret.ts",
-          "line": 218,
-          "anchor": "packages-drivers-github-src-repositorysecret-ts-218-repositorysecret",
+          "line": 219,
+          "anchor": "packages-drivers-github-src-repositorysecret-ts-219-repositorysecret",
           "currentTags": [
             "@public",
             "@category",
@@ -221691,8 +221867,8 @@
           "exportKind": "class",
           "filePath": "src/RepositoryVariable.ts",
           "repoPath": "packages/drivers/github/src/RepositoryVariable.ts",
-          "line": 51,
-          "anchor": "packages-drivers-github-src-repositoryvariable-ts-51-variableinfo",
+          "line": 52,
+          "anchor": "packages-drivers-github-src-repositoryvariable-ts-52-variableinfo",
           "currentTags": [
             "@public",
             "@category",
@@ -221714,8 +221890,8 @@
           "exportKind": "interface",
           "filePath": "src/RepositoryVariable.ts",
           "repoPath": "packages/drivers/github/src/RepositoryVariable.ts",
-          "line": 70,
-          "anchor": "packages-drivers-github-src-repositoryvariable-ts-70-repositoryvariableshape",
+          "line": 71,
+          "anchor": "packages-drivers-github-src-repositoryvariable-ts-71-repositoryvariableshape",
           "currentTags": [
             "@public",
             "@category",
@@ -221737,8 +221913,8 @@
           "exportKind": "class",
           "filePath": "src/RepositoryVariable.ts",
           "repoPath": "packages/drivers/github/src/RepositoryVariable.ts",
-          "line": 175,
-          "anchor": "packages-drivers-github-src-repositoryvariable-ts-175-repositoryvariable",
+          "line": 176,
+          "anchor": "packages-drivers-github-src-repositoryvariable-ts-176-repositoryvariable",
           "currentTags": [
             "@public",
             "@category",

@@ -353,6 +353,7 @@ end-to-end suite in `test/ci-runner-security.test.ts` reads the new blocks uncha
 | repo-cli Ci/CiRerunRunnerLoss.ts | #96 | partial | adopted in W5 | The decision summary appends through `ActionOutputs.summary`; the tests use the `ActionOutputs.recording()` double and pin the summary bytes to the printed report. `CiRerunRunnerLossInput.stepSummaryPath` becomes `stepSummary`. |
 | repo-cli Ci/CiOperational.service.ts, Ci/HeavyAdmission (runner files) | #271 | partial | adopted in W5 | Covered by #93 and #95 above; the `change-profile` `key=value` lines are the recorded exclusion. |
 | repo-cli Ci | #312 | partial | adopted in W5 | Umbrella for #87 and #93..#96, all adopted; `reportCiCommandError` is now one shared reporter for the `ci` subcommands. |
+| `@beep/github` `makeTest` doubles (18 resource modules) | - | confirmed | consolidated in W5 (W4-w) | The driver's own unstubbed helper (`UnstubbedError`, target, access and member kinds, shape builder) is folded into `@beep/utils/TestDouble`, which becomes the one owner of the concept: one `UnstubbedMemberError` raised both by `unstubbed` (an `Effect` that dies) and by `unstubbedFor` (a synchronous throw), with `unstubbedShapeFor` building a whole double. Messages are unchanged; the defect tag in five coverage suites reads `UnstubbedMemberError`. The github-only `scopedStoreMembers` record stays in `@beep/github/internal/scopedStoreMembers`. |
 
 ### Follow-up goal: repo-cli gh/git consolidation (W4-l)
 
