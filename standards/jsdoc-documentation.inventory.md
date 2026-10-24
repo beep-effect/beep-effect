@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-24T20:34:25.293Z
+Generated: 2026-10-24T22:54:04.450Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 79 |
 | publicModules | 3559 |
-| publicExports | 25303 |
+| publicExports | 25305 |
 | openModules | 449 |
 | openExports | 1382 |
 | missingExportExamples | 7 |
@@ -187,7 +187,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 129 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
 | 130 | `@beep/graph-3d` | `packages/drivers/graph-3d` | needs-remediation | 7 | 17 | 2 | 0 |
 | 131 | `@beep/ontology` | `packages/foundation/modeling/ontology` | needs-remediation | 15 | 157 | 5 | 54 |
-| 132 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 472 | 4447 | 47 | 35 |
+| 132 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 472 | 4449 | 47 | 35 |
 | 133 | `@beep/dock-react` | `packages/foundation/ui-system/dock-react` | needs-remediation | 3 | 12 | 0 | 10 |
 | 134 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 135 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 22 | 181 | 0 | 0 |
@@ -2254,7 +2254,7 @@ Export findings:
 - `src/commands/Qa/JudgeCheck.ts:512` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:628` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:732` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:1052` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:1053` `runBunAudit` (const) - 1 documentation section/link violation(s)
 - `src/commands/Runners/Runners.schemas.ts:120` `BakeConfig` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:167` `BakeReport` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:276` `BakePlan` (class) - 1 example import violation(s)
