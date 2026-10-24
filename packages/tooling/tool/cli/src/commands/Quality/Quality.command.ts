@@ -103,6 +103,7 @@ import {
 } from "./internal/JSDocRatchet.ts";
 import { runPackageVerifyCli } from "./internal/PackageVerify.ts";
 import { collectFiles, repoRelative } from "./internal/QualityArtifactSupport.ts";
+import { ResidueTerminalLaneProbeLive } from "./internal/ResidueTerminalLaneLive.ts";
 import { testTsgoPrograms } from "./internal/TestTsgoPrograms.ts";
 import {
   renderTurboConfigProofReport,
@@ -4372,7 +4373,7 @@ const residueReapCommand = Command.make(
   Command.withDescription(
     "Dry-run-first janitor for bounded Codex, Turbo, merged-preview, qualification-view, and beep cache residue"
   ),
-  Command.provide(FleetMirrorServiceLive)
+  Command.provide(Layer.merge(FleetMirrorServiceLive, ResidueTerminalLaneProbeLive))
 );
 
 /**

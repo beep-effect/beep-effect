@@ -72,11 +72,13 @@ import {
   ResidueReapReport,
   ResidueRetentionRuling,
 } from "./ResidueReap.schemas.ts";
+import { ResidueTerminalLaneProbe } from "./ResidueTerminalLane.ts";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { BoundRemovalOutcome, DirectoryHandleError } from "./DirectoryHandle.ts";
 import type { QualitySchedulerError } from "./QualityScheduler.schemas.ts";
-import type { ResidueReapSkipReason } from "./ResidueReap.schemas.ts";
+import type { ResidueReapSkipReason, ResidueTerminalLaneAuthority } from "./ResidueReap.schemas.ts";
+import type { ResidueTerminalLaneProbeShape } from "./ResidueTerminalLane.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/ResidueReap");
 
@@ -153,13 +155,17 @@ type CwdProbe = (candidatePath: string) => Effect.Effect<O.Option<boolean>, neve
 type PidProbe = (pid: string) => Effect.Effect<O.Option<boolean>, never, FileSystem.FileSystem | Path.Path>;
 
 // Internal evaluation policy shared by discovery and apply-time reassessment.
+// `ownerCheckout` is the invoking checkout's real path: only its rows consult
+// the terminal-lane probe.
 type ReapPolicy = {
   readonly cwdProbe: CwdProbe;
   readonly entryCap: number;
   readonly homeBoundary: string;
   readonly maxAgeDays: number;
   readonly nowMillis: number;
+  readonly ownerCheckout: O.Option<string>;
   readonly pidProbe: PidProbe;
+  readonly terminalLane: ResidueTerminalLaneProbeShape["verify"];
   readonly qualificationViewsKeep: number;
   readonly turboMaxAgeDays: number;
   readonly turboRunsMaxAgeDays: number;
@@ -1743,24 +1749,73 @@ export const isRetainedCheckoutResidueName = (name: string): boolean =>
   isProtectedResidueName(name) ||
   Str.Equivalence(classifyCheckoutName(name), CheckoutResidueClass.Enum["checkout-material"]);
 
-const readRuling = Effect.fnUntraced(function* (entry: ResidueReapCandidate) {
+// Where a checkout row's ruling came from: an owner file, or the terminal-lane
+// authority synthesized when no file names the row.
+type CheckoutRuling = {
+  readonly ruling: O.Option<ResidueRetentionRuling>;
+  readonly terminalLane: boolean;
+};
+
+const TerminalLaneOwner = S.String.check(S.isPattern(/^terminal-lane#[1-9][0-9]*$/u));
+const isTerminalLaneOwner = S.is(TerminalLaneOwner);
+
+// The ruling a terminal-lane authority stands for. Its evidence is the merged pull
+// request and head, not a tracked file, so it never passes `checkoutAuthoritySkip`.
+const terminalLaneRuling = (relativePath: string, authority: ResidueTerminalLaneAuthority) =>
+  ResidueRetentionRuling.make({
+    path: relativePath,
+    owner: `terminal-lane#${authority.pullRequest}`,
+    state: "completed",
+    disposition: "redundant",
+    evidence: `pull/${authority.pullRequest}@${authority.head}`,
+    regeneration: `none: merged pull request #${authority.pullRequest}`,
+    reason:
+      `terminal lane: PR #${authority.pullRequest} MERGED at ${authority.pullRequestHead}; ` +
+      `HEAD ${authority.headRelation} (${authority.head}); linked worktree, clean tree, ` +
+      `${authority.liveProcesses} live cwd processes, ${authority.liveSessionRows} live session rows; ` +
+      `verified ${DateTime.formatIso(authority.verifiedAt)}`,
+  });
+
+// Only the invoking checkout's own rows consult the probe, and only an authority for
+// that same checkout counts; foreign rows keep their owner-ruling fence.
+const terminalLaneAuthority = Effect.fnUntraced(function* (checkout: string, realCheckout: string, policy: ReapPolicy) {
+  const fs = yield* FileSystem.FileSystem;
+  const isCheckout = (candidate: string) => Str.Equivalence(candidate, realCheckout);
+  if (!O.exists(policy.ownerCheckout, isCheckout)) return O.none<ResidueTerminalLaneAuthority>();
+  const authority = yield* policy.terminalLane(checkout);
+  if (O.isNone(authority)) return authority;
+  const proven = yield* fs.realPath(authority.value.checkoutRoot).pipe(Effect.option);
+  return O.exists(proven, isCheckout) ? authority : O.none<ResidueTerminalLaneAuthority>();
+});
+
+const resolveCheckoutRuling = Effect.fnUntraced(function* (entry: ResidueReapCandidate, policy: ReapPolicy) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const unruled: CheckoutRuling = { ruling: O.none(), terminalLane: false };
   const checkout = optionOr(entry.checkoutRoot, path.dirname(entry.root));
   const realRoot = yield* fs.realPath(checkout).pipe(Effect.option);
   const realTarget = yield* fs.realPath(entry.path).pipe(Effect.option);
-  if (O.isNone(realRoot) || O.isNone(realTarget)) return O.none<ResidueRetentionRuling>();
+  if (O.isNone(realRoot) || O.isNone(realTarget)) return unruled;
   const realCheckout = realRoot.value;
-  const realEntry = realTarget.value;
+  const relativePath = path.relative(realCheckout, realTarget.value);
   const content = yield* fs
     .readFileString(path.join(realCheckout, ".beep", "retention", `${entry.reapClass}.json`))
     .pipe(Effect.option);
-  if (O.isNone(content)) return O.none<ResidueRetentionRuling>();
-  const rulings = yield* decodeRulings(content.value).pipe(Effect.option);
-  return O.flatMap(
+  const rulings = O.isSome(content)
+    ? yield* decodeRulings(content.value).pipe(Effect.option)
+    : O.some(A.empty<ResidueRetentionRuling>());
+  const recorded = O.flatMap(
     rulings,
-    A.findFirst((ruling) => Str.Equivalence(ruling.path, path.relative(realCheckout, realEntry)))
+    A.findFirst((ruling) => Str.Equivalence(ruling.path, relativePath))
   );
+  // An owner ruling always governs, and a malformed ruling file fails closed rather
+  // than falling through to the authority.
+  if (O.isSome(recorded) || O.isNone(rulings)) return { ...unruled, ruling: recorded };
+  const authority = yield* terminalLaneAuthority(checkout, realCheckout, policy);
+  return {
+    ruling: O.map(authority, (proof) => terminalLaneRuling(relativePath, proof)),
+    terminalLane: O.isSome(authority),
+  } satisfies CheckoutRuling;
 });
 
 // Index relative citations across all authored evidence roots. A failed listing or
@@ -2079,7 +2134,7 @@ const nestedCheckoutSkip = Effect.fnUntraced(function* (checkout: string, marker
 
 const checkoutResidueMetadata = Effect.fnUntraced(function* (entry: ResidueReapCandidate, policy: ReapPolicy) {
   const fs = yield* FileSystem.FileSystem;
-  const ruling = yield* readRuling(entry);
+  const { ruling, terminalLane } = yield* resolveCheckoutRuling(entry, policy);
   const info = yield* fs.stat(entry.path).pipe(Effect.option);
   const tree = O.exists(info, (stat) => Str.Equivalence(stat.type, "Directory"))
     ? yield* censusDirectory(entry.path, policy.entryCap)
@@ -2094,7 +2149,7 @@ const checkoutResidueMetadata = Effect.fnUntraced(function* (entry: ResidueReapC
     terminalState: O.match(ruling, { onNone: () => "unverified", onSome: (r) => r.state }),
     retentionReason: O.match(ruling, { onNone: () => "owner-ruling-required", onSome: (r) => r.reason }),
   });
-  return { ruling, info, tree, enriched };
+  return { ruling, terminalLane, info, tree, enriched };
 });
 const checkoutDispositionSkip = (entry: ResidueReapCandidate, ruling: ResidueRetentionRuling) => {
   if (Str.Equivalence(ruling.disposition, "retain") || Str.Equivalence(entry.reapClass, "checkout-material"))
@@ -2102,24 +2157,51 @@ const checkoutDispositionSkip = (entry: ResidueReapCandidate, ruling: ResidueRet
   return isNonTerminalState(ruling.state) ? O.some<ResidueReapSkipReason>("terminal-state-unverified") : O.none();
 };
 
+// A row planned under the terminal-lane authority whose proof no longer holds at
+// apply (or resume) is unverified, not merely unruled.
+const unruledSkip = (entry: ResidueReapCandidate): ResidueReapSkipReason =>
+  O.exists(O.fromUndefinedOr(entry.owner), isTerminalLaneOwner) ? "terminal-state-unverified" : "owner-ruling-required";
+
+// The terminal-lane authority replaces only the tracked-evidence check; every other
+// fence still runs and can still refuse.
+const checkoutEligibilitySkip = Effect.fnUntraced(function* (
+  entry: ResidueReapCandidate,
+  policy: ReapPolicy,
+  metadata: {
+    readonly ruling: ResidueRetentionRuling;
+    readonly terminalLane: boolean;
+    readonly gitMarkers: ReadonlyArray<string>;
+    readonly enriched: ResidueReapCandidate;
+  }
+) {
+  const path = yield* Path.Path;
+  const { ruling, terminalLane, gitMarkers, enriched } = metadata;
+  const checkout = optionOr(entry.checkoutRoot, path.dirname(entry.root));
+  const evidenceSkip = terminalLane ? A.empty() : [checkoutAuthoritySkip(entry, ruling)];
+  return yield* firstSafetySkip([
+    Effect.succeed(checkoutDispositionSkip(entry, ruling)),
+    ...evidenceSkip,
+    gitCleanSkip(gitMarkers),
+    ...A.map(gitMarkers, (marker) => nestedCheckoutSkip(checkout, marker)),
+    checkoutSafetySkip(enriched, policy, ruling.evidence),
+  ]);
+});
+
 const assessCheckoutResidue = Effect.fnUntraced(function* (entry: ResidueReapCandidate, policy: ReapPolicy) {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const { ruling, info, tree, enriched } = yield* checkoutResidueMetadata(entry, policy);
+  const { ruling, terminalLane, info, tree, enriched } = yield* checkoutResidueMetadata(entry, policy);
   const skip = (reason: ResidueReapSkipReason) =>
     ResidueReapCandidate.make({ ...enriched, action: "skip", skipReason: reason });
   if (O.isNone(info)) return skip("stat-failed");
   if (O.isSome(yield* fs.readLink(entry.path).pipe(Effect.option))) return skip("path-changed");
   if (O.isSome(tree.skipReason)) return skip(tree.skipReason.value);
-  if (O.isNone(ruling)) return skip("owner-ruling-required");
-  const checkout = optionOr(entry.checkoutRoot, path.dirname(entry.root));
-  const eligibility = yield* firstSafetySkip([
-    Effect.succeed(checkoutDispositionSkip(entry, ruling.value)),
-    checkoutAuthoritySkip(entry, ruling.value),
-    gitCleanSkip(tree.gitMarkers),
-    ...A.map(tree.gitMarkers, (marker) => nestedCheckoutSkip(checkout, marker)),
-    checkoutSafetySkip(enriched, policy, ruling.value.evidence),
-  ]);
+  if (O.isNone(ruling)) return skip(unruledSkip(entry));
+  const eligibility = yield* checkoutEligibilitySkip(entry, policy, {
+    ruling: ruling.value,
+    terminalLane,
+    gitMarkers: tree.gitMarkers,
+    enriched,
+  });
   if (O.isSome(eligibility)) return skip(eligibility.value);
   const newest = O.orElse(tree.newestFileMillis, () => O.flatMap(info, mtimeMillis));
   if (O.isNone(newest) || ageDays(policy.nowMillis, newest.value) < policy.maxAgeDays) return skip("too-young");
@@ -2299,13 +2381,16 @@ const resolveSettings = Effect.fnUntraced(function* (options: ResidueReapOptions
   );
   const beepCacheRoot = path.join(homeRoot, ".cache", "beep");
   const now = yield* Clock.currentTimeMillis;
+  const terminalLane = yield* ResidueTerminalLaneProbe;
   const policy: ReapPolicy = {
     cwdProbe: optionOr<CwdProbe>(options.probeLiveCwd, procCwdProbe),
     entryCap: optionOr(options.censusEntryCap, DEFAULT_CENSUS_ENTRY_CAP),
     homeBoundary: yield* fs.realPath(homeRoot),
     maxAgeDays: yield* decodeResidueReapAgeDays(optionOr(options.maxAgeDays, DEFAULT_MAX_AGE_DAYS)),
     nowMillis: optionOr(options.nowMillis, now),
+    ownerCheckout: yield* fs.realPath(repoRoot).pipe(Effect.option),
     pidProbe: optionOr<PidProbe>(options.probePidAlive, procPidProbe),
+    terminalLane: terminalLane.verify,
     qualificationViewsKeep: yield* decodeResidueReapKeepCount(
       optionOr(options.qualificationViewsKeep, DEFAULT_QUALIFICATION_VIEWS_KEEP)
     ),

@@ -6,8 +6,10 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { GitObjectId } from "@beep/schema/Conformance";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
+import { PosInt } from "../schema/PosInt.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/ResidueReap.schemas");
 const ResidueTerminalState = LiteralKit([
@@ -484,6 +486,105 @@ export class ResidueRetentionRuling extends S.Opaque<ResidueRetentionRuling, { r
   }).pipe(
     $I.annoteSchema("ResidueRetentionRuling", {
       description: "Explicit owner, terminal state, and recovery policy for checkout residue.",
+    })
+  )
+) {}
+
+/**
+ * How a terminal lane's HEAD relates to the head of its merged pull request.
+ *
+ * **Details**
+ *
+ * `equal` means the checkout sits exactly on the merged head; `ancestor` means
+ * HEAD is an ancestor of it, so every local commit is part of what merged. A
+ * HEAD with commits beyond the merged head has no relation and is never
+ * terminal.
+ *
+ * **Example** (Recognize an ancestor relation)
+ *
+ * ```ts
+ * import { ResidueTerminalLaneHeadRelation } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(ResidueTerminalLaneHeadRelation.is.ancestor("ancestor")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ResidueTerminalLaneHeadRelation = LiteralKit(["equal", "ancestor"]).pipe(
+  $I.annoteSchema("ResidueTerminalLaneHeadRelation", {
+    description: "Whether a terminal lane's HEAD equals, or is an ancestor of, its merged pull request head.",
+  })
+);
+
+/**
+ * How a terminal lane's HEAD relates to its merged pull request head.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ResidueTerminalLaneHeadRelation = typeof ResidueTerminalLaneHeadRelation.Type;
+
+/**
+ * Git and pull-request proof that a lane worktree is finished, checked live.
+ *
+ * **Details**
+ *
+ * The record names every fact the probe checked: the checkout is a linked
+ * worktree (not the primary clone) on `branch`, the branch's pull request is
+ * merged, HEAD equals or precedes the merged head, the tree is clean, no live
+ * process has its cwd inside, and no live session-ledger row names the
+ * checkout. The passed checks are fixed literals (`true`, `0`, `"MERGED"`), so
+ * a record describing a dirty, live or unmerged lane cannot be constructed or
+ * decoded. Residue reap accepts it in place of the tracked evidence a
+ * retention ruling needs; it never makes `checkout-material` eligible.
+ *
+ * **Example** (Describe a merged lane)
+ *
+ * ```ts
+ * import { ResidueTerminalLaneAuthority } from "@beep/repo-cli/test/RepoRun"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const head = "1ed08f66df016a18c6d7d56bd97aa778912cb37b"
+ * const authority = ResidueTerminalLaneAuthority.make({
+ *   checkoutRoot: "/work/beep-effect-worktrees/lane",
+ *   commonDir: "/work/beep-effect/.git",
+ *   branch: "feat/lane",
+ *   pullRequest: 1871,
+ *   pullRequestHead: head,
+ *   head,
+ *   headRelation: "equal",
+ *   verifiedAt: DateTime.makeUnsafe(0),
+ * })
+ * console.log(authority.pullRequestState, authority.liveProcesses) // "MERGED" 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ResidueTerminalLaneAuthority extends S.Opaque<
+  ResidueTerminalLaneAuthority,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    schemaVersion: S.tag("residue-terminal-lane/v1"),
+    checkoutRoot: S.NonEmptyString,
+    commonDir: S.NonEmptyString,
+    branch: S.NonEmptyString,
+    pullRequest: PosInt,
+    pullRequestState: S.tag("MERGED"),
+    pullRequestHead: GitObjectId,
+    head: GitObjectId,
+    headRelation: ResidueTerminalLaneHeadRelation,
+    linkedWorktree: S.tag(true),
+    cleanTree: S.tag(true),
+    liveProcesses: S.tag(0),
+    liveSessionRows: S.tag(0),
+    verifiedAt: S.DateTimeUtcFromString,
+  }).pipe(
+    $I.annoteSchema("ResidueTerminalLaneAuthority", {
+      description:
+        "Live git and pull-request proof that a linked lane worktree is merged, clean, and unused, accepted in place of tracked retention evidence.",
     })
   )
 ) {}

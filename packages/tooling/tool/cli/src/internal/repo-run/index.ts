@@ -24,6 +24,7 @@ export * from "./RepoRun.proofs.ts";
 export * from "./RepoRunArtifacts.ts";
 export * from "./ResidueReap.schemas.ts";
 export * from "./ResidueReap.ts";
+export * from "./ResidueTerminalLane.ts";
 export * from "./RunScope.schemas.ts";
 export * from "./RunScope.ts";
 export * from "./RuntimeRoot.schemas.ts";

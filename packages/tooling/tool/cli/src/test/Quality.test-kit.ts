@@ -97,6 +97,7 @@ export {
   listSourceFiles,
   tagsFromComment,
 } from "../commands/Quality/internal/QualityArtifactSupport.ts";
+export * from "../commands/Quality/internal/ResidueTerminalLaneLive.ts";
 export { testTsgoPrograms } from "../commands/Quality/internal/TestTsgoPrograms.ts";
 export * from "../commands/Quality/internal/TurboConfigProof.ts";
 export * from "../commands/Quality/internal/TurboLaneDigest.ts";
