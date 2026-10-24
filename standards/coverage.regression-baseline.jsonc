@@ -31214,6 +31214,90 @@
             "functions": 29
           }
         },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.compare.ts": {
+          "lines": 92.3,
+          "statements": 91.97,
+          "branches": 74.41,
+          "functions": 86.91,
+          "uncovered": {
+            "lines": 13,
+            "statements": 15,
+            "branches": 22,
+            "functions": 14
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.corpus.ts": {
+          "lines": 92.13,
+          "statements": 92.39,
+          "branches": 80.95,
+          "functions": 81.48,
+          "uncovered": {
+            "lines": 7,
+            "statements": 7,
+            "branches": 4,
+            "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.native.ts": {
+          "lines": 79.12,
+          "statements": 76.47,
+          "branches": 78.49,
+          "functions": 77.27,
+          "uncovered": {
+            "lines": 38,
+            "statements": 48,
+            "branches": 20,
+            "functions": 15
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": {
+          "lines": 88.32,
+          "statements": 87.67,
+          "branches": 83.33,
+          "functions": 73.52,
+          "uncovered": {
+            "lines": 16,
+            "statements": 18,
+            "branches": 8,
+            "functions": 18
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 66.66,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.ts": {
+          "lines": 94.9,
+          "statements": 94.25,
+          "branches": 88.33,
+          "functions": 93.33,
+          "uncovered": {
+            "lines": 8,
+            "statements": 10,
+            "branches": 7,
+            "functions": 6
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts": {
+          "lines": 96.41,
+          "statements": 96.1,
+          "branches": 84.88,
+          "functions": 92.45,
+          "uncovered": {
+            "lines": 17,
+            "statements": 20,
+            "branches": 13,
+            "functions": 12
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.schemas.ts": {
           "lines": 100,
           "statements": 100,
