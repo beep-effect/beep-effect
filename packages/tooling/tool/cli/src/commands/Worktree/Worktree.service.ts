@@ -116,7 +116,33 @@ const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeWorktreeRepositoryHash = S.decodeUnknownEffect(WorktreeRepositoryHash);
 const encodeResidueManifest = S.encodeEffect(S.fromJsonString(WorktreeResidueManifest, { space: 2 }));
 
-const MergedPullRequestRows = S.Struct({ number: PosInt, headRefOid: S.String }).pipe(
+/**
+ * One merged pull request of a branch, as `gh pr list --json number,headRefOid` reports it.
+ *
+ * **Example** (Describe a merged pull request)
+ *
+ * ```ts
+ * import { WorktreeMergedPullRequest } from "@beep/repo-cli/commands/Worktree"
+ *
+ * const merged = WorktreeMergedPullRequest.make({
+ *   number: 1098,
+ *   headRefOid: "1ed08f66df016a18c6d7d56bd97aa778912cb37b",
+ * })
+ * console.log(merged.number) // 1098
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WorktreeMergedPullRequest extends S.Opaque<WorktreeMergedPullRequest, { readonly brand: unique symbol }>()(
+  S.Struct({ number: PosInt, headRefOid: S.String }).pipe(
+    $I.annoteSchema("WorktreeMergedPullRequest", {
+      description: "One merged pull-request row decoded from gh pr list --json number,headRefOid output.",
+    })
+  )
+) {}
+
+const MergedPullRequestRows = WorktreeMergedPullRequest.pipe(
   S.Array,
   S.fromJsonString,
   $I.annoteSchema("MergedPullRequestRows", {
@@ -124,6 +150,50 @@ const MergedPullRequestRows = S.Struct({ number: PosInt, headRefOid: S.String })
   })
 );
 const decodeMergedPullRequestRows = S.decodeUnknownEffect(MergedPullRequestRows);
+
+/**
+ * List the merged pull requests whose head branch is `branch`, newest first.
+ *
+ * **Details**
+ *
+ * Runs this command in `cwd`:
+ * `gh pr list --head <branch> --state merged --json number,headRefOid --limit 100`.
+ * Any `gh` spawn failure, non-zero exit, truncated capture or undecodable
+ * payload answers `None`, so an unavailable or unauthenticated `gh` can only
+ * make a caller more conservative.
+ *
+ * **Example** (Build the listing effect)
+ *
+ * ```ts
+ * import { mergedPullRequestsForBranch } from "@beep/repo-cli/commands/Worktree"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(mergedPullRequestsForBranch("/work/lane", "feat/lane"))) // true
+ * ```
+ *
+ * @param cwd - Any directory inside the repository.
+ * @param branch - The pull requests' head branch name.
+ * @returns The merged pull requests, or `None` when `gh` could not answer.
+ * @category queries
+ * @since 0.0.0
+ */
+export const mergedPullRequestsForBranch = Effect.fn("WorktreeMergedPullRequestProbe.mergedPullRequestsForBranch")(
+  function* (
+    cwd: string,
+    branch: string
+  ): Effect.fn.Return<
+    O.Option<ReadonlyArray<WorktreeMergedPullRequest>>,
+    never,
+    Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  > {
+    return yield* ghOutput({
+      args: ["pr", "list", "--head", branch, "--state", "merged", "--json", "number,headRefOid", "--limit", "100"],
+      cwd,
+      label: `gh pr list --head ${branch} --state merged`,
+      onFailure: (failure) => failure,
+    }).pipe(Effect.flatMap(decodeMergedPullRequestRows), Effect.option);
+  }
+);
 
 /**
  * Service contract answering whether a merged pull request landed exactly the tip being retired.
@@ -187,12 +257,7 @@ const ghMergedAtHead = Effect.fn("WorktreeMergedPullRequestProbe.ghMergedAtHead"
 ): Effect.fn.Return<O.Option<PosInt>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   // Any gh failure or undecodable payload answers none: an unavailable probe can only
   // make the retirement more conservative, never fail it.
-  const rows = yield* ghOutput({
-    args: ["pr", "list", "--head", branch, "--state", "merged", "--json", "number,headRefOid", "--limit", "100"],
-    cwd,
-    label: `gh pr list --head ${branch} --state merged`,
-    onFailure: (failure) => failure,
-  }).pipe(Effect.flatMap(decodeMergedPullRequestRows), Effect.option);
+  const rows = yield* mergedPullRequestsForBranch(cwd, branch);
   return pipe(
     rows,
     O.flatMap(A.findFirst((row) => Str.Equivalence(row.headRefOid, head))),
