@@ -44,7 +44,7 @@ describe("SpdxLicense schema", () => {
       }
       for (const value of ["NOT-A-LICENSE", "SEE LICENSE IN ", ""]) {
         const error = yield* Effect.flip(S.decodeEffect(SpdxLicense)(value));
-        assert.include(error.message, "Expected a valid SPDX license expression");
+        assert.strictEqual(error.message, "Manifest SPDX License");
       }
     })
   );

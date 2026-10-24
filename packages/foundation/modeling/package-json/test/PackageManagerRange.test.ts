@@ -41,10 +41,7 @@ describe("PackageManagerRange.FromString", () => {
       const decoded = S.decodeResult(range)(value);
       const failed = Result.isFailure(decoded);
       assertTrue(failed);
-      assert.include(
-        decoded.failure.toString(),
-        "Expected a semver range (an exact version, a caret/tilde range, a comparator set, ...)"
-      );
+      assert.strictEqual(decoded.failure.message, "Non-empty SemVer Range");
     }
   });
 
