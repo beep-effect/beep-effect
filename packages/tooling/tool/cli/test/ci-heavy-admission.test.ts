@@ -18,6 +18,7 @@ import {
   renderHeavyAdmissionSummary,
   runCiAdmission,
 } from "@beep/repo-cli/commands/Ci";
+import { provideScopedLayer } from "@beep/test-utils/Layer";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
